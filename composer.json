@@ -1,0 +1,26 @@
+{
+  "name": "tuxxedo/engine",
+  "description": "Tuxxedo Engine",
+  "minimum-stability": "stable",
+  "license": "MIT",
+  "version": "0.1.0",
+  "authors": [
+    {
+      "name": "Kalle Sommer Nielsen",
+      "email": "kalle@php.net"
+    }
+  ],
+  "require": {
+    "php": ">=8.3"
+  },
+  "require-dev": {
+    "phpstan/phpstan": "2.0.*",
+    "phpunit/phpunit": "11.4.*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Tuxxedo\\": "src/Tuxxedo/",
+      "Unit\\": "tests/Unit"
+    }
+  }
+}

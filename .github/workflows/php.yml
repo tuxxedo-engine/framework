@@ -1,0 +1,18 @@
+name: PHPStan
+
+on: [push]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: php-actions/composer@v6
+        with:
+          php_version: "8.3"
+          php_extensions: mbstring pdo_mysql
+          version: 2.x
+      - uses: php-actions/phpstan@v3
+        with:
+          path: app/ public/ src/
