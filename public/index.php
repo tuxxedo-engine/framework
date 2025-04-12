@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace
 {
     use Tuxxedo\Application\Application;
-    use Tuxxedo\Application\ApplicationFactory;
     use Tuxxedo\Application\ApplicationState;
     use Tuxxedo\Config\ConfigInterface;
     use Tuxxedo\Container\Container;
@@ -18,21 +17,36 @@ namespace
 
     require_once __DIR__ . '/../vendor/autoload.php';
 
-    class AppInfo
+    interface A
     {
-        public function __construct(
-            #[App] public readonly Application $app,
-        ) {
+        public function foo(): string;
+    }
+
+    class B implements A
+    {
+        public function foo(): string
+        {
+            return __METHOD__;
         }
     }
 
-    $app = ApplicationFactory::createFromDirectory(
+    class C
+    {
+        public function foo(): string
+        {
+            return __METHOD__;
+        }
+    }
+
+    $app = Application::createFromDirectory(
         directory: __DIR__ . '/../app',
     );
 
     echo '<pre>';
     var_dump(
-        $app->container->resolve(AppInfo::class)->app->container->resolve($app::class)->appState,
+        $app->container->persistent(B::class)->resolve(A::class)->foo(),
+        $app->container->persistent(C::class)->resolve(A::class)->foo(),
+        $app->container->persistent(C::class)->alias(A::class, C::class)->resolve(A::class)->foo(),
     );
     echo '</pre>';
 }

@@ -15,7 +15,6 @@ namespace Tuxxedo\Container\Resolvers;
 
 use Tuxxedo\Application\Application;
 use Tuxxedo\Application\ApplicationState;
-use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Container\DependencyResolverInterface;
 

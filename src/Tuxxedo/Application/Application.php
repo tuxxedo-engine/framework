@@ -47,6 +47,20 @@ class Application
         // @todo Once the router is registered, look into the routes and where it retrieve its
         //       internal database, which could for example be static, app/routes.php,
         //       static attributes (via precompiled file) or dynamic attributes via reflection
+
+        // @todo Register middleware and create FIFO stack
+    }
+
+    public static function createFromDirectory(string $directory): Application
+    {
+        $config = Config::createFromDirectory($directory . '/config');
+
+        return new Application(
+            appName: $config->getString('app.name'),
+            appVersion: $config->getString('app.version'),
+            appState: $config->getEnum('app.state', ApplicationState::class),
+            config: $config,
+        );
     }
 
     public function dispatch(): void

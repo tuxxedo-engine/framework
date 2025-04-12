@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Tuxxedo\Container\Resolvers;
 
 use Tuxxedo\Application\Application;
-use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Container\DependencyResolverInterface;
 
