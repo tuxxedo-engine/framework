@@ -14,11 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Application;
 
 use Tuxxedo\Config\Config;
-use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\Container;
-use Tuxxedo\Container\ServiceLoader;
-use Tuxxedo\Http\HttpException;
-use Tuxxedo\Http\ResponseCode;
 
 class Application
 {
@@ -53,34 +49,19 @@ class Application
         //       static attributes (via precompiled file) or dynamic attributes via reflection
     }
 
-    public function dispatch(DispatchableRoute|string $route): void
+    public function dispatch(): void
     {
         // @todo Implement Dispatching logic here by resolving the router, looking up the input
         //       from the current request, error handling and then initializing the controller
         //       code. This needs some extra thought for how the best possible way to avoid
         //       adding boilerplate code for things like
-        if (!$route instanceof DispatchableRoute) {
-            $route = $this->container->resolve(RouterInterface::class)->getByName($route);
-        }
-
-        $route->dispatch($this);
     }
 
-    /**
-     * @throws \Exception
-     */
     public function run(?string $uri = null): void
     {
         // @todo Implement Dispatching logic here by resolving the router, looking up the input
         //       from the current request, error handling and then initializing the controller
         //       code. This needs some extra thought for how the best possible way to avoid
         //       adding boilerplate code for things like
-        if ($uri === null) {
-            $uri = $this->container->resolve(RequestInterface::class)->getUri();
-        }
-
-        // @todo This may need some sort of handling for outputs returned as a return value instead
-        //       of expecting that to be sent directly to STDOUT
-        $this->dispatch($this->container->resolve(RouterInterface::class)->getRouteByUri($uri));
     }
 }
