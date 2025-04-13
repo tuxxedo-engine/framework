@@ -11,11 +11,12 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Application;
+namespace Tuxxedo\Http;
 
-// @todo Rename to profile?
-enum ApplicationState
+interface WeightedHeaderInterface extends HeaderInterface
 {
-    case RELEASE;
-    case DEBUG;
+    /**
+     * @return string[]
+     */
+    public function getWeightedOrder(): array;
 }

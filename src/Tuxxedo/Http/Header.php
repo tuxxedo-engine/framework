@@ -11,11 +11,13 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Application;
+namespace Tuxxedo\Http;
 
-// @todo Rename to profile?
-enum ApplicationState
+readonly class Header implements HeaderInterface
 {
-    case RELEASE;
-    case DEBUG;
+    final public function __construct(
+        public private(set) string $name,
+        public private(set) string $value,
+    ) {
+    }
 }

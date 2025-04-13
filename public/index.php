@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace
 {
     use Tuxxedo\Application\Application;
+    use Tuxxedo\Application\ApplicationFactory;
     use Tuxxedo\Application\ApplicationState;
     use Tuxxedo\Config\ConfigInterface;
     use Tuxxedo\Container\Container;
@@ -14,6 +15,7 @@ namespace
     use Tuxxedo\Container\Resolvers\AppState;
     use Tuxxedo\Container\Resolvers\AppContainer;
     use Tuxxedo\Container\Resolvers\ConfigValue;
+    use Tuxxedo\Http\ResponseCode;
 
     require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -38,7 +40,7 @@ namespace
         }
     }
 
-    $app = Application::createFromDirectory(
+    $app = ApplicationFactory::createFromDirectory(
         directory: __DIR__ . '/../app',
     );
 

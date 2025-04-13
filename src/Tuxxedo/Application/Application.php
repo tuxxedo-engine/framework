@@ -49,33 +49,16 @@ class Application
         //       static attributes (via precompiled file) or dynamic attributes via reflection
 
         // @todo Register middleware and create FIFO stack
+
+        // @todo Register error middleware and create FILO stack
     }
 
-    public static function createFromDirectory(string $directory): Application
-    {
-        $config = Config::createFromDirectory($directory . '/config');
-
-        return new Application(
-            appName: $config->getString('app.name'),
-            appVersion: $config->getString('app.version'),
-            appState: $config->getEnum('app.state', ApplicationState::class),
-            config: $config,
-        );
-    }
-
-    public function dispatch(): void
+    public function run(): void
     {
         // @todo Implement Dispatching logic here by resolving the router, looking up the input
         //       from the current request, error handling and then initializing the controller
         //       code. This needs some extra thought for how the best possible way to avoid
-        //       adding boilerplate code for things like
-    }
-
-    public function run(?string $uri = null): void
-    {
-        // @todo Implement Dispatching logic here by resolving the router, looking up the input
-        //       from the current request, error handling and then initializing the controller
-        //       code. This needs some extra thought for how the best possible way to avoid
-        //       adding boilerplate code for things like
+        //       adding boilerplate code for things like. This likely needs to accept some form
+        //       of incoming request to dispatch
     }
 }

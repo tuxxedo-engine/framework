@@ -11,11 +11,10 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Application;
+namespace Tuxxedo\Net;
 
-// @todo Rename to profile?
-enum ApplicationState
+enum IpAddressKind
 {
-    case RELEASE;
-    case DEBUG;
+    case V4;
+    case V6;
 }
