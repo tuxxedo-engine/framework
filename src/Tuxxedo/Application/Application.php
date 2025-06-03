@@ -121,6 +121,9 @@ class Application
         return $this;
     }
 
+    /**
+     * @throws \Throwable
+     */
     protected function handleException(
         RequestInterface $request,
         \Throwable $e,
@@ -132,6 +135,10 @@ class Application
         }
 
         $handlers = \array_merge($handlers, $this->defaultExceptionHandlers);
+
+        if (\sizeof($handlers) === 0) {
+            throw $e;
+        }
 
         foreach ($handlers as $handler) {
             ($handler())->handle($request, $e);
@@ -151,6 +158,15 @@ class Application
             //       code. This needs some extra thought for how the best possible way to avoid
             //       adding boilerplate code for things like. This likely needs to accept some form
             //       of incoming request to dispatch
+            $middlewares = $this->middleware;
+
+            \krsort($middlewares);
+
+            foreach ($middlewares as $middleware) {
+                $response = ($middleware)()->handle($request, $response);
+            }
+
+            echo $response->body;
         } catch (\Throwable $e) {
             $this->handleException($request, $e);
         }
