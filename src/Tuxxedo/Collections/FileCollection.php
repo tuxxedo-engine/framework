@@ -27,7 +27,7 @@ class FileCollection
         int $flags = 0,
     ): Collection {
         return new Collection(
-            \glob($pattern, $flags) ?: [],
+            ($glob = \glob($pattern, $flags)) !== false ? $glob : [],
         );
     }
 

@@ -21,12 +21,14 @@ class IpAddress implements IpAddressInterface
     ) {
     }
 
-    public function create(string $address): static
+    public static function create(string $address): static
     {
         // @todo Use dedicated validator API for v4
-        // @todo Use dedicated validator API for v5
+        // @todo Use dedicated validator API for v6
         // @todo Use dedicated validator Exception
-        return match (true) {
+        // @todo Move to dedicated factory?
+
+        return match ($address) {
             \filter_var($address, \FILTER_VALIDATE_IP, \FILTER_FLAG_IPV4) => new static(
                 address: $address,
                 kind: IpAddressKind::V4,

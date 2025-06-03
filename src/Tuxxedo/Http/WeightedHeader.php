@@ -20,7 +20,7 @@ readonly class WeightedHeader extends Header implements WeightedHeaderInterface
         $parsed = [];
 
         foreach (\explode(',', $this->value) as $part) {
-            if (\preg_match('/^\s*([^;]+)(?:;\s*q=([0-9.]+))?\s*$/', $part, $matches)) {
+            if (\preg_match('/^\s*([^;]+)(?:;\s*q=([0-9.]+))?\s*$/', $part, $matches) !== false) {
                 $parsed[] = [
                     $matches[1],
                     isset($matches[2])

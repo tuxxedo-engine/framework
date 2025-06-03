@@ -17,7 +17,7 @@ use Tuxxedo\Config\Config;
 
 class ApplicationFactory
 {
-    private function __construct()
+    final private function __construct()
     {
     }
 

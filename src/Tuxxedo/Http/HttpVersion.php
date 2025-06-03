@@ -13,17 +13,11 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http;
 
-interface HeaderInterface
+enum HttpVersion: string
 {
-    public string $name {
-        get;
-    }
-
-    public string $value {
-        get;
-    }
-
-    public function withValue(
-        string $value,
-    ): static;
+    case V0_9 = 'HTTP/0.9';
+    case V1_0 = 'HTTP/1.0';
+    case V1_1 = 'HTTP/1.1';
+    case V2_0 = 'HTTP/2.0';
+    case V3_0 = 'HTTP/3.0';
 }

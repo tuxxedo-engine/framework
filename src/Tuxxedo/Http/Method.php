@@ -24,4 +24,15 @@ enum Method
     case OPTIONS;
     case TRACE;
     case PATCH;
+
+    public static function from(string $name): static
+    {
+        foreach (self::cases() as $case) {
+            if ($case->name === $name) {
+                return $case;
+            }
+        }
+
+        return self::GET;
+    }
 }

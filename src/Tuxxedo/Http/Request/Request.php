@@ -13,14 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request;
 
-interface RequestInterface
+class Request implements RequestInterface
 {
-    public ServerContextInterface $context {
-        get;
+    public function __construct(
+        public private(set) ServerContextInterface $context,
+    ) {
     }
-
-    // @todo Support for custom headers
-    // @todo Support GET
-    // @todo Support POST
-    // @todo Support Uploaded files
 }

@@ -47,7 +47,7 @@ class Container
         $aliases = [];
 
         if ($bindInterfaces) {
-            $aliases = \class_implements($class) ?: [];
+            $aliases = ($aliases = \class_implements($class)) !== false ? $aliases : [];
         }
 
         if ($bindParent && ($parentClassName = \get_parent_class($class)) !== false) {

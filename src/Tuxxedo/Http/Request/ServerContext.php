@@ -13,14 +13,11 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request;
 
-interface RequestInterface
+class ServerContext implements ServerContextInterface
 {
-    public ServerContextInterface $context {
-        get;
+    public bool $https {
+        get {
+            return isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+        }
     }
-
-    // @todo Support for custom headers
-    // @todo Support GET
-    // @todo Support POST
-    // @todo Support Uploaded files
 }

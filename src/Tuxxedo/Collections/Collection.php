@@ -212,7 +212,7 @@ class Collection implements CollectionInterface
                 if (!$this->contains(...$value->toArray())) {
                     return false;
                 }
-            } elseif (!\in_array($value, $this->collection)) {
+            } elseif (!\in_array($value, $this->collection, true)) {
                 return false;
             }
         }

@@ -11,19 +11,14 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Http;
+namespace Tuxxedo\Application;
 
-interface HeaderInterface
+use Tuxxedo\Http\Request\RequestInterface;
+
+interface ErrorHandlerInterface
 {
-    public string $name {
-        get;
-    }
-
-    public string $value {
-        get;
-    }
-
-    public function withValue(
-        string $value,
-    ): static;
+    public function handle(
+        RequestInterface $request,
+        \Throwable $exception,
+    ): void;
 }

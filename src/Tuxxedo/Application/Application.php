@@ -15,10 +15,22 @@ namespace Tuxxedo\Application;
 
 use Tuxxedo\Config\Config;
 use Tuxxedo\Container\Container;
+use Tuxxedo\Http\Request\RequestFactory;
+use Tuxxedo\Http\Request\RequestInterface;
 
 class Application
 {
     public readonly Container $container;
+
+    /**
+     * @var array<class-string<\Throwable>, array<\Closure(): ErrorHandlerInterface>>
+     */
+    private array $exceptions = [];
+
+    /**
+     * @var array<(\Closure(): ErrorHandlerInterface)>
+     */
+    private array $defaultExceptionHandlers = [];
 
     final public function __construct(
         public readonly string $appName = '',
@@ -36,13 +48,11 @@ class Application
 
         // @todo Register error handling, depending on what the turn out from the $this->appName
         //       verdict above, this may need similar treatment. $this->appState will be the main thing
-        //       that affects the error handling
+        //       that affects the error handling. This needs to likely include a set_error_handler() call.
 
         // @todo Register Request and Response objects here, unless they are passed in directly
 
-        // @todo Register the Router, this needs some sort of configuration for how to intercept
-        //       the incoming URI to parse, e.g. PATH_INFO for php -S, auto detection may be
-        //       possible via the previous registered Request object.
+        // @todo Register the Router
 
         // @todo Once the router is registered, look into the routes and where it retrieve its
         //       internal database, which could for example be static, app/routes.php,
@@ -53,12 +63,68 @@ class Application
         // @todo Register error middleware and create FILO stack
     }
 
-    public function run(): void
+    /**
+     * @param class-string<\Throwable> $exceptionClass
+     * @param (\Closure(): ErrorHandlerInterface)|ErrorHandlerInterface $handler
+     */
+    public function whenException(
+        string $exceptionClass,
+        \Closure|ErrorHandlerInterface $handler,
+    ): static {
+        if (!$handler instanceof \Closure) {
+            $handler = static fn(): ErrorHandlerInterface => $handler;
+        }
+
+        $this->exceptions[$exceptionClass] ??= [];
+        $this->exceptions[$exceptionClass][] = $handler;
+
+        return $this;
+    }
+
+    /**
+     * @param (\Closure(): ErrorHandlerInterface)|ErrorHandlerInterface $handler
+     */
+    public function defaultExceptionHandler(
+        \Closure|ErrorHandlerInterface $handler,
+    ): static {
+        if (!$handler instanceof \Closure) {
+            $handler = static fn(): ErrorHandlerInterface => $handler;
+        }
+
+        $this->defaultExceptionHandlers[] = $handler;
+
+        return $this;
+    }
+
+    protected function handleException(
+        RequestInterface $request,
+        \Throwable $e,
+    ): void {
+        $handlers = [];
+
+        if (\array_key_exists($e::class, $this->exceptions)) {
+            $handlers = $this->exceptions[$e::class];
+        }
+
+        $handlers = \array_merge($handlers, $this->defaultExceptionHandlers);
+
+        foreach ($handlers as $handler) {
+            ($handler())->handle($request, $e);
+        }
+    }
+
+    public function run(?RequestInterface $request): void
     {
-        // @todo Implement Dispatching logic here by resolving the router, looking up the input
-        //       from the current request, error handling and then initializing the controller
-        //       code. This needs some extra thought for how the best possible way to avoid
-        //       adding boilerplate code for things like. This likely needs to accept some form
-        //       of incoming request to dispatch
+        $request ??= RequestFactory::createFromEnvironment();
+
+        try {
+            // @todo Implement Dispatching logic here by resolving the router, looking up the input
+            //       from the current request, error handling and then initializing the controller
+            //       code. This needs some extra thought for how the best possible way to avoid
+            //       adding boilerplate code for things like. This likely needs to accept some form
+            //       of incoming request to dispatch
+        } catch (\Throwable $e) {
+            $this->handleException($request, $e);
+        }
     }
 }

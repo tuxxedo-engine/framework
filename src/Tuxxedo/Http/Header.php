@@ -20,4 +20,13 @@ readonly class Header implements HeaderInterface
         public private(set) string $value,
     ) {
     }
+
+    public function withValue(
+        string $value,
+    ): static {
+        return new static(
+            name: $this->name,
+            value: $value,
+        );
+    }
 }

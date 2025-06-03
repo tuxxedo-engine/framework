@@ -13,14 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request;
 
-interface RequestInterface
+interface ServerContextInterface
 {
-    public ServerContextInterface $context {
+    public bool $https {
         get;
     }
-
-    // @todo Support for custom headers
-    // @todo Support GET
-    // @todo Support POST
-    // @todo Support Uploaded files
 }

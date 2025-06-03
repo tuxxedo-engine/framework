@@ -4,18 +4,9 @@ declare(strict_types=1);
 
 namespace
 {
-    use Tuxxedo\Application\Application;
     use Tuxxedo\Application\ApplicationFactory;
-    use Tuxxedo\Application\ApplicationState;
-    use Tuxxedo\Config\ConfigInterface;
-    use Tuxxedo\Container\Container;
-    use Tuxxedo\Container\Resolvers\App;
-    use Tuxxedo\Container\Resolvers\AppName;
-    use Tuxxedo\Container\Resolvers\AppVersion;
-    use Tuxxedo\Container\Resolvers\AppState;
-    use Tuxxedo\Container\Resolvers\AppContainer;
-    use Tuxxedo\Container\Resolvers\ConfigValue;
-    use Tuxxedo\Http\ResponseCode;
+    use Tuxxedo\Http\Request\RequestFactory;
+    use Tuxxedo\Http\Request\RequestInterface;
 
     require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -44,11 +35,11 @@ namespace
         directory: __DIR__ . '/../app',
     );
 
+    $app->container->persistent(RequestFactory::createFromEnvironment());
+
     echo '<pre>';
     var_dump(
-        $app->container->persistent(B::class)->resolve(A::class)->foo(),
-        $app->container->persistent(C::class)->resolve(A::class)->foo(),
-        $app->container->persistent(C::class)->alias(A::class, C::class)->resolve(A::class)->foo(),
+        $app->container->resolve(RequestInterface::class)->context->https,
     );
     echo '</pre>';
 }

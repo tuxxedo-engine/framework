@@ -13,14 +13,16 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request;
 
-interface RequestInterface
+class RequestFactory
 {
-    public ServerContextInterface $context {
-        get;
+    final private function __construct()
+    {
     }
 
-    // @todo Support for custom headers
-    // @todo Support GET
-    // @todo Support POST
-    // @todo Support Uploaded files
+    public static function createFromEnvironment(): Request
+    {
+        return new Request(
+            context: new ServerContext(),
+        );
+    }
 }
