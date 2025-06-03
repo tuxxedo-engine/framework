@@ -13,9 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http;
 
+use Tuxxedo\Http\Response\ResponseCode;
+use Tuxxedo\Http\Response\ResponseCodeInterface;
+
 class HttpException extends \Exception implements ResponseCodeInterface
 {
-    private readonly ResponseCode $responseCode;
+    public readonly ResponseCode $responseCode;
 
     public function __construct(ResponseCode $responseCode)
     {
@@ -24,11 +27,6 @@ class HttpException extends \Exception implements ResponseCodeInterface
         parent::__construct(
             message: $responseCode->getStatusText(),
         );
-    }
-
-    public function getResponseCode(): ResponseCode
-    {
-        return $this->responseCode;
     }
 
     public static function fromNotFound(): self

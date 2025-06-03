@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Http;
+namespace Tuxxedo\Http\Response;
 
 enum ResponseCode: int
 {

@@ -11,9 +11,11 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Http;
+namespace Tuxxedo\Http\Response;
 
 interface ResponseCodeInterface
 {
-    public function getResponseCode(): ResponseCode;
+    public ResponseCode $responseCode {
+        get;
+    }
 }

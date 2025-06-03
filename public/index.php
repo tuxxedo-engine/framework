@@ -6,40 +6,35 @@ namespace
 {
     use Tuxxedo\Application\ApplicationFactory;
     use Tuxxedo\Http\Request\RequestFactory;
+    use Tuxxedo\Http\Request\RequestHandlerInterface;
     use Tuxxedo\Http\Request\RequestInterface;
+    use Tuxxedo\Http\Response\ResponseInterface;
+    use Tuxxedo\Middleware\MiddlewareInterface;
 
     require_once __DIR__ . '/../vendor/autoload.php';
 
-    interface A
+    class M1 implements MiddlewareInterface
     {
-        public function foo(): string;
-    }
-
-    class B implements A
-    {
-        public function foo(): string
+        public function handle(RequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
         {
-            return __METHOD__;
+            return $handler->handle($request)->withBody(static::class);
         }
     }
 
-    class C
+    class M2 extends M1
     {
-        public function foo(): string
-        {
-            return __METHOD__;
-        }
     }
 
     $app = ApplicationFactory::createFromDirectory(
         directory: __DIR__ . '/../app',
     );
 
+    $app->middleware(new M1());
+    $app->middleware(static fn(): MiddlewareInterface => new M2());
+
     $app->container->persistent(RequestFactory::createFromEnvironment());
 
     echo '<pre>';
-    var_dump(
-        $app->container->resolve(RequestInterface::class)->context->https,
-    );
+    $app->run();
     echo '</pre>';
 }

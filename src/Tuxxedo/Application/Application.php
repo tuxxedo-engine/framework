@@ -16,11 +16,20 @@ namespace Tuxxedo\Application;
 use Tuxxedo\Config\Config;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Http\Request\RequestFactory;
+use Tuxxedo\Http\Request\RequestHandler;
 use Tuxxedo\Http\Request\RequestInterface;
+use Tuxxedo\Http\Response\Response;
+use Tuxxedo\Http\Response\ResponseInterface;
+use Tuxxedo\Middleware\MiddlewareInterface;
 
 class Application
 {
     public readonly Container $container;
+
+    /**
+     * @var array<(\Closure(): MiddlewareInterface)>
+     */
+    private array $middleware = [];
 
     /**
      * @var array<class-string<\Throwable>, array<\Closure(): ErrorHandlerInterface>>
@@ -61,6 +70,22 @@ class Application
         // @todo Register middleware and create FIFO stack
 
         // @todo Register error middleware and create FILO stack
+    }
+
+    /**
+     * @param (\Closure(): MiddlewareInterface)|MiddlewareInterface $middleware
+     * @return $this
+     */
+    public function middleware(
+        \Closure|MiddlewareInterface $middleware,
+    ): static {
+        if (!$middleware instanceof \Closure) {
+            $middleware = static fn(): MiddlewareInterface => $middleware;
+        }
+
+        $this->middleware[] = $middleware;
+
+        return $this;
     }
 
     /**
@@ -113,9 +138,12 @@ class Application
         }
     }
 
-    public function run(?RequestInterface $request): void
-    {
+    public function run(
+        ?RequestInterface $request = null,
+        ?ResponseInterface $response = null,
+    ): void {
         $request ??= RequestFactory::createFromEnvironment();
+        $response ??= new Response();
 
         try {
             // @todo Implement Dispatching logic here by resolving the router, looking up the input
