@@ -83,7 +83,7 @@ class Application
         \Closure|RequestHandlerInterface $middleware,
     ): static {
         if (!$middleware instanceof \Closure) {
-            $middleware = static fn(): RequestHandlerInterface => $middleware;
+            $middleware = static fn (): RequestHandlerInterface => $middleware;
         }
 
         $this->middleware[] = $middleware;
@@ -100,7 +100,7 @@ class Application
         \Closure|ErrorHandlerInterface $handler,
     ): static {
         if (!$handler instanceof \Closure) {
-            $handler = static fn(): ErrorHandlerInterface => $handler;
+            $handler = static fn (): ErrorHandlerInterface => $handler;
         }
 
         $this->exceptions[$exceptionClass] ??= [];
@@ -116,7 +116,7 @@ class Application
         \Closure|ErrorHandlerInterface $handler,
     ): static {
         if (!$handler instanceof \Closure) {
-            $handler = static fn(): ErrorHandlerInterface => $handler;
+            $handler = static fn (): ErrorHandlerInterface => $handler;
         }
 
         $this->defaultExceptionHandlers[] = $handler;

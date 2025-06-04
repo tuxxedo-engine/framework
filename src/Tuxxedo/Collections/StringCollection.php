@@ -37,7 +37,7 @@ class StringCollection
     ): Collection {
         return new Collection(
             \array_map(
-                static fn(\BackedEnum $enum): string => (string) $enum->value,
+                static fn (\BackedEnum $enum): string => (string) $enum->value,
                 $enum::cases(),
             ),
         );

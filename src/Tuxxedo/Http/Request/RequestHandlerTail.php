@@ -40,7 +40,7 @@ class RequestHandlerTail
     private function buildTail(): RequestHandlerInterface
     {
         $next = new RequestHandler(
-            handler: fn(RequestInterface $request): ResponseInterface => ($this->resolver)($this->container),
+            handler: fn (RequestInterface $request): ResponseInterface => ($this->resolver)($this->container),
         );
 
         foreach ($this->middleware as $middleware) {

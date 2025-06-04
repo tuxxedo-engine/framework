@@ -32,7 +32,7 @@ readonly class WeightedHeader extends Header implements WeightedHeaderInterface
 
         \usort(
             $parsed,
-            static fn(array $a, array $b): int => $b[1] <=> $a[1],
+            static fn (array $a, array $b): int => $b[1] <=> $a[1],
         );
 
         return \array_column($parsed, 0);

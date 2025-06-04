@@ -49,7 +49,7 @@ class IntCollection
     ): Collection {
         return new Collection(
             \array_map(
-                static fn(\BackedEnum $enum): int => (int) $enum->value,
+                static fn (\BackedEnum $enum): int => (int) $enum->value,
                 $enum::cases(),
             ),
         );

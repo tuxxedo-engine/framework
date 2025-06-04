@@ -1,0 +1,22 @@
+name: PHP CS Fixer
+
+on: [push]
+
+jobs:
+  php-cs-fixer:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Install PHP-CS-Fixer
+        run: composer global require friendsofphp/php-cs-fixer
+
+      - name: Run PHP-CS-Fixer (PSR-12)
+        run: PHP_CS_FIXER_IGNORE_ENV=1 ~/.composer/vendor/bin/php-cs-fixer check --verbose --config=.php-cs-fixer.php --allow-risky=yes --diff

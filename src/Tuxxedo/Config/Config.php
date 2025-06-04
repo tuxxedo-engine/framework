@@ -31,7 +31,7 @@ class Config implements ConfigInterface
      */
     protected static function isolatedInclude(string $configFileName): array
     {
-        return (static fn(): array => (array) require $configFileName)();
+        return (static fn (): array => (array) require $configFileName)();
     }
 
     public static function createFromDirectory(string $directory): static
