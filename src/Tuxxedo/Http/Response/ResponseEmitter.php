@@ -52,6 +52,7 @@ class ResponseEmitter implements ResponseEmitterInterface
         }
     }
 
+    // @todo Investigate whether ResponseInterface also needs to have such a check, but it is immutable
     public function isSent(): bool
     {
         return $this->sent;
