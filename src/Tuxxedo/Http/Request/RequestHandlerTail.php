@@ -44,26 +44,10 @@ class RequestHandlerTail
         );
 
         foreach ($this->middleware as $middleware) {
-            $next = new class ($middleware, $next) implements RequestHandlerInterface {
-                /**
-                 * @param \Closure(): RequestHandlerInterface $current
-                 */
-                public function __construct(
-                    private readonly \Closure $current,
-                    private readonly RequestHandlerInterface $next,
-                ) {
-                }
-
-                public function handle(
-                    RequestInterface $request,
-                    RequestHandlerInterface $next,
-                ): ResponseInterface {
-                    return ($this->current)()->handle(
-                        request: $request,
-                        next: $this->next,
-                    );
-                }
-            };
+            $next = new RequestHandlerNode(
+                current: $middleware,
+                next: $next,
+            );
         }
 
         return $next;
