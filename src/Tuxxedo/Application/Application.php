@@ -166,7 +166,7 @@ class Application
                 response: (new RequestHandlerTail(
                     container: $this->container,
                     resolver: $resolver,
-                    middleware: \array_reverse($this->middleware),
+                    middleware: $this->middleware,
                 ))->run($request),
             );
         } catch (\Throwable $e) {
