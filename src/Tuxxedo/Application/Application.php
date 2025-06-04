@@ -17,8 +17,12 @@ use Tuxxedo\Config\Config;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Http\Request\RequestFactory;
 use Tuxxedo\Http\Request\RequestHandler;
+use Tuxxedo\Http\Request\RequestHandlerInterface;
+use Tuxxedo\Http\Request\RequestHandlerTail;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
+use Tuxxedo\Http\Response\ResponseEmitter;
+use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Middleware\MiddlewareInterface;
 
@@ -60,6 +64,7 @@ class Application
         //       that affects the error handling. This needs to likely include a set_error_handler() call.
 
         // @todo Register Request and Response objects here, unless they are passed in directly
+        $this->container->persistent(new ResponseEmitter());
 
         // @todo Register the Router
 
@@ -158,15 +163,16 @@ class Application
             //       code. This needs some extra thought for how the best possible way to avoid
             //       adding boilerplate code for things like. This likely needs to accept some form
             //       of incoming request to dispatch
-            $middlewares = $this->middleware;
 
-            \krsort($middlewares);
+            // @todo This needs to wrap around each middleware and finally access the controller
 
-            foreach ($middlewares as $middleware) {
-                $response = ($middleware)()->handle($request, $response);
-            }
-
-            echo $response->body;
+            $this->container->resolve(ResponseEmitterInterface::class)->emit(
+                response: (new RequestHandlerTail(
+                    container: $this->container,
+                    response: $response,
+                    middleware: $this->middleware,
+                ))->run($request),
+            );
         } catch (\Throwable $e) {
             $this->handleException($request, $e);
         }

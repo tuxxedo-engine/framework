@@ -11,15 +11,14 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Middleware;
+namespace Tuxxedo\Http\Response;
 
-use Tuxxedo\Container\Container;
-use Tuxxedo\Http\Request\RequestInterface;
-
-interface MiddlewareInterface
+interface ResponseEmitterInterface
 {
-    public function handle(
-        Container $container,
-        RequestInterface $request,
+    public function emit(
+        ResponseInterface $response,
+        bool $sendHeaders = true,
     ): void;
+
+    public function isSent(): bool;
 }
