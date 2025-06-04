@@ -11,5 +11,13 @@
 
 declare(strict_types=1);
 
-return [
-];
+namespace App\Services\Logger;
+
+interface LoggerInterface
+{
+    public function log(
+        LogEntry|string $entry,
+    ): static;
+
+    public function formatEntries(): string;
+}

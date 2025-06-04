@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Application;
 
+use App\Controllers\IndexController;
 use Tuxxedo\Config\Config;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Http\Request\RequestFactory;
@@ -152,10 +153,8 @@ class Application
 
     public function run(
         ?RequestInterface $request = null,
-        ?ResponseInterface $response = null,
     ): void {
         $request ??= RequestFactory::createFromEnvironment();
-        $response ??= new Response();
 
         try {
             // @todo Implement Dispatching logic here by resolving the router, looking up the input
@@ -164,12 +163,12 @@ class Application
             //       adding boilerplate code for things like. This likely needs to accept some form
             //       of incoming request to dispatch
 
-            // @todo This needs to wrap around each middleware and finally access the controller
+            $resolver = fn (): ResponseInterface => $this->container->resolve(IndexController::class)->index();
 
             $this->container->resolve(ResponseEmitterInterface::class)->emit(
                 response: (new RequestHandlerTail(
                     container: $this->container,
-                    response: $response,
+                    resolver: $resolver,
                     middleware: $this->middleware,
                 ))->run($request),
             );

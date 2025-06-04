@@ -20,11 +20,12 @@ use Tuxxedo\Middleware\MiddlewareInterface;
 class RequestHandlerTail
 {
     /**
+     * @param (\Closure(): ResponseInterface) $resolver
      * @param array<(\Closure(): MiddlewareInterface)> $middleware
      */
     public function __construct(
-        private Container $container,
-        private ResponseInterface $response,
+        private readonly Container $container,
+        private readonly \Closure $resolver,
         private readonly array $middleware,
     ) {
     }
@@ -46,7 +47,7 @@ class RequestHandlerTail
         array $middleware,
     ): RequestHandlerInterface {
         $next = new RequestHandler(
-            handler: fn(RequestInterface $request): ResponseInterface => $this->response,
+            handler: fn(RequestInterface $request): ResponseInterface => ($this->resolver)(),
         );
 
         foreach ($middleware as $resolver) {

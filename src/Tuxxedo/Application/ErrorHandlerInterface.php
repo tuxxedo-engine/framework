@@ -15,6 +15,7 @@ namespace Tuxxedo\Application;
 
 use Tuxxedo\Http\Request\RequestInterface;
 
+// @todo Implement default handler?
 interface ErrorHandlerInterface
 {
     public function handle(

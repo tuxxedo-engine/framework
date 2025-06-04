@@ -24,8 +24,9 @@
   },
   "autoload": {
     "psr-4": {
+      "App\\": "app/",
       "Tuxxedo\\": "src/Tuxxedo/",
-      "Unit\\": "tests/Unit"
+      "Unit\\": "tests/Unit/"
     }
   },
   "config": {
