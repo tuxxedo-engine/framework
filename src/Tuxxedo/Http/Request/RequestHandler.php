@@ -18,7 +18,7 @@ use Tuxxedo\Http\Response\ResponseInterface;
 class RequestHandler implements RequestHandlerInterface
 {
     /**
-     * @param (\Closure(RequestInterface): ResponseInterface) $handler
+     * @param (\Closure(RequestInterface, RequestHandlerInterface): ResponseInterface) $handler
      */
     public function __construct(
         private readonly \Closure $handler,
@@ -29,6 +29,6 @@ class RequestHandler implements RequestHandlerInterface
         RequestInterface $request,
         RequestHandlerInterface $next,
     ): ResponseInterface {
-        return ($this->handler)($request);
+        return ($this->handler)($request, $next);
     }
 }

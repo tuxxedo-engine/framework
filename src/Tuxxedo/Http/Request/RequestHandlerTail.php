@@ -15,13 +15,12 @@ namespace Tuxxedo\Http\Request;
 
 use Tuxxedo\Container\Container;
 use Tuxxedo\Http\Response\ResponseInterface;
-use Tuxxedo\Middleware\MiddlewareInterface;
 
 class RequestHandlerTail
 {
     /**
-     * @param (\Closure(): ResponseInterface) $resolver
-     * @param array<(\Closure(): MiddlewareInterface)> $middleware
+     * @param (\Closure(Container): ResponseInterface) $resolver
+     * @param array<(\Closure(): RequestHandlerInterface)> $middleware
      */
     public function __construct(
         private readonly Container $container,
@@ -33,37 +32,38 @@ class RequestHandlerTail
     public function run(
         RequestInterface $request,
     ): ResponseInterface {
-        $handler = $this->buildHandler(
-            middleware: \array_reverse($this->middleware),
-        );
+        $handler = $this->buildTail();
 
         return $handler->handle($request, $handler);
     }
 
-    /**
-     * @param array<(\Closure(): MiddlewareInterface)> $middleware
-     */
-    private function buildHandler(
-        array $middleware,
-    ): RequestHandlerInterface {
+    private function buildTail(): RequestHandlerInterface
+    {
         $next = new RequestHandler(
-            handler: fn(RequestInterface $request): ResponseInterface => ($this->resolver)(),
+            handler: fn(RequestInterface $request): ResponseInterface => ($this->resolver)($this->container),
         );
 
-        foreach ($middleware as $resolver) {
-            $next = new RequestHandler(
-                handler: function (RequestInterface $request) use ($resolver, $next): ResponseInterface {
-                    ($resolver())->handle(
-                        container: $this->container,
-                        request: $request,
-                    );
+        foreach ($this->middleware as $middleware) {
+            $next = new class ($middleware, $next) implements RequestHandlerInterface {
+                /**
+                 * @param \Closure(): RequestHandlerInterface $current
+                 */
+                public function __construct(
+                    private readonly \Closure $current,
+                    private readonly RequestHandlerInterface $next,
+                ) {
+                }
 
-                    return $next->handle(
+                public function handle(
+                    RequestInterface $request,
+                    RequestHandlerInterface $next,
+                ): ResponseInterface {
+                    return ($this->current)()->handle(
                         request: $request,
-                        next: $next,
+                        next: $this->next,
                     );
                 }
-            );
+            };
         }
 
         return $next;

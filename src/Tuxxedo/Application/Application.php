@@ -17,22 +17,19 @@ use App\Controllers\IndexController;
 use Tuxxedo\Config\Config;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Http\Request\RequestFactory;
-use Tuxxedo\Http\Request\RequestHandler;
 use Tuxxedo\Http\Request\RequestHandlerInterface;
 use Tuxxedo\Http\Request\RequestHandlerTail;
 use Tuxxedo\Http\Request\RequestInterface;
-use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseEmitter;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
-use Tuxxedo\Middleware\MiddlewareInterface;
 
 class Application
 {
     public readonly Container $container;
 
     /**
-     * @var array<(\Closure(): MiddlewareInterface)>
+     * @var array<(\Closure(): RequestHandlerInterface)>
      */
     private array $middleware = [];
 
@@ -79,14 +76,14 @@ class Application
     }
 
     /**
-     * @param (\Closure(): MiddlewareInterface)|MiddlewareInterface $middleware
+     * @param (\Closure(): RequestHandlerInterface)|RequestHandlerInterface $middleware
      * @return $this
      */
     public function middleware(
-        \Closure|MiddlewareInterface $middleware,
+        \Closure|RequestHandlerInterface $middleware,
     ): static {
         if (!$middleware instanceof \Closure) {
-            $middleware = static fn(): MiddlewareInterface => $middleware;
+            $middleware = static fn(): RequestHandlerInterface => $middleware;
         }
 
         $this->middleware[] = $middleware;
@@ -163,13 +160,13 @@ class Application
             //       adding boilerplate code for things like. This likely needs to accept some form
             //       of incoming request to dispatch
 
-            $resolver = fn (): ResponseInterface => $this->container->resolve(IndexController::class)->index();
+            $resolver = static fn (Container $container): ResponseInterface => $container->resolve(IndexController::class)->index();
 
             $this->container->resolve(ResponseEmitterInterface::class)->emit(
                 response: (new RequestHandlerTail(
                     container: $this->container,
                     resolver: $resolver,
-                    middleware: $this->middleware,
+                    middleware: \array_reverse($this->middleware),
                 ))->run($request),
             );
         } catch (\Throwable $e) {
