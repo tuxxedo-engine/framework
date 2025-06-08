@@ -24,6 +24,7 @@ class AppContainer implements DependencyResolverInterface
 {
     public function resolve(Container $container): mixed
     {
+        // @todo Redundant?
         return $container;
     }
 }

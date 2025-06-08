@@ -13,12 +13,24 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Router;
 
+use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Method;
+use Tuxxedo\Http\Request\RequestInterface;
 
 interface RouterInterface
 {
-    public function findUri(
+    /**
+     * @throws HttpException
+     */
+    public function findByUri(
         Method $method,
         string $uri,
+    ): ?RouteInterface;
+
+    /**
+     * @throws HttpException
+     */
+    public function findByRequest(
+        RequestInterface $request,
     ): ?RouteInterface;
 }

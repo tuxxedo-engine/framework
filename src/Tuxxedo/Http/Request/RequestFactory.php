@@ -22,7 +22,7 @@ class RequestFactory
     public static function createFromEnvironment(): Request
     {
         return new Request(
-            context: new ServerContext(),
+            context: new EnvironmentServerContext(),
         );
     }
 }

@@ -49,4 +49,11 @@ class HttpException extends \Exception implements ResponseCodeInterface
             responseCode: ResponseCode::UNAUTHORIZED,
         );
     }
+
+    public static function fromMethodNotAllowed(): self
+    {
+        return new self(
+            responseCode: ResponseCode::METHOD_NOT_ALLOWED,
+        );
+    }
 }

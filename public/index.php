@@ -5,15 +5,19 @@ declare(strict_types=1);
 namespace
 {
 
+    use App\Controllers\IndexController;
     use App\Services\Logger\Logger;
     use App\Services\Logger\LoggerInterface;
     use Tuxxedo\Application\ApplicationFactory;
     use Tuxxedo\Application\ErrorHandlerInterface;
     use Tuxxedo\Container\Container;
+    use Tuxxedo\Http\Method;
     use Tuxxedo\Http\Request\Handler\RequestHandlerInterface;
     use Tuxxedo\Http\Request\RequestInterface;
     use Tuxxedo\Http\Response\ResponseInterface;
+    use Tuxxedo\Router\Route;
     use Tuxxedo\Router\RouterFactory;
+    use Tuxxedo\Router\StaticRouter;
 
     require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -119,7 +123,18 @@ namespace
 
     $app->container->persistent(Logger::class);
 
-    // $app->run();
+    $app->container->persistent(
+        new StaticRouter(
+            routes: [
+                new Route(
+                    method: Method::GET,
+                    uri: '/',
+                    controller: IndexController::class,
+                    action: 'index',
+                ),
+            ],
+        ),
+    );
 
-    RouterFactory::createFromDirectory(__DIR__ . '/../app/Controllers');
+    $app->run();
 }

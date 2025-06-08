@@ -19,6 +19,7 @@ use Tuxxedo\Container\Resolvers\AppContainer;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
+use Tuxxedo\Router\Attributes\Route;
 
 class IndexController
 {
@@ -28,6 +29,7 @@ class IndexController
     ) {
     }
 
+    #[Route\Get(uri: '/')]
     public function index(): ResponseInterface
     {
         $this->container->resolve(LoggerInterface::class)->log('Inside action');

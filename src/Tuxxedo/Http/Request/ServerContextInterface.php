@@ -13,9 +13,19 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request;
 
+use Tuxxedo\Http\Method;
+
 interface ServerContextInterface
 {
     public bool $https {
+        get;
+    }
+
+    public Method $method {
+        get;
+    }
+
+    public string $uri {
         get;
     }
 }

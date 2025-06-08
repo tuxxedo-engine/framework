@@ -21,8 +21,9 @@ class ApplicationFactory
     {
     }
 
-    public static function createFromDirectory(string $directory): Application
-    {
+    public static function createFromDirectory(
+        string $directory,
+    ): Application {
         $config = Config::createFromDirectory($directory . '/config');
 
         return new Application(

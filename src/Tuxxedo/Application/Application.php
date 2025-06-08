@@ -16,6 +16,7 @@ namespace Tuxxedo\Application;
 use App\Controllers\IndexController;
 use Tuxxedo\Config\Config;
 use Tuxxedo\Container\Container;
+use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Request\RequestFactory;
 use Tuxxedo\Http\Request\Handler\RequestHandlerInterface;
 use Tuxxedo\Http\Request\Handler\RequestHandlerTail;
@@ -23,6 +24,7 @@ use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseEmitter;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
+use Tuxxedo\Router\RouterInterface;
 
 class Application
 {
@@ -160,8 +162,27 @@ class Application
             //       code. This needs some extra thought for how the best possible way to avoid
             //       adding boilerplate code for things like. This likely needs to accept some form
             //       of incoming request to dispatch
+            $route = $this->container->resolve(RouterInterface::class)->findByRequest(
+                request: $request,
+            );
 
-            $resolver = static fn (Container $container): ResponseInterface => $container->resolve(IndexController::class)->index();
+            if ($route === null) {
+                throw HttpException::fromNotFound();
+            }
+
+            $resolver = static function (Container $container) use ($route): ResponseInterface {
+                $callback = [
+                    $container->resolve($route->controller),
+                    $route->action,
+                ];
+
+                if (!\is_callable($callback)) {
+                    throw HttpException::fromInternalServerError();
+                }
+
+                /** @var ResponseInterface */
+                return \call_user_func($callback);
+            };
 
             $this->container->resolve(ResponseEmitterInterface::class)->emit(
                 response: (new RequestHandlerTail(
