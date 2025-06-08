@@ -10,9 +10,10 @@ namespace
     use Tuxxedo\Application\ApplicationFactory;
     use Tuxxedo\Application\ErrorHandlerInterface;
     use Tuxxedo\Container\Container;
-    use Tuxxedo\Http\Request\RequestHandlerInterface;
+    use Tuxxedo\Http\Request\Handler\RequestHandlerInterface;
     use Tuxxedo\Http\Request\RequestInterface;
     use Tuxxedo\Http\Response\ResponseInterface;
+    use Tuxxedo\Router\RouterFactory;
 
     require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -118,5 +119,7 @@ namespace
 
     $app->container->persistent(Logger::class);
 
-    $app->run();
+    // $app->run();
+
+    RouterFactory::createFromDirectory(__DIR__ . '/../app/Controllers');
 }

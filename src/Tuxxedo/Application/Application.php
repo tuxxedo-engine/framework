@@ -17,8 +17,8 @@ use App\Controllers\IndexController;
 use Tuxxedo\Config\Config;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Http\Request\RequestFactory;
-use Tuxxedo\Http\Request\RequestHandlerInterface;
-use Tuxxedo\Http\Request\RequestHandlerTail;
+use Tuxxedo\Http\Request\Handler\RequestHandlerInterface;
+use Tuxxedo\Http\Request\Handler\RequestHandlerTail;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseEmitter;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
@@ -61,10 +61,11 @@ class Application
         //       verdict above, this may need similar treatment. $this->appState will be the main thing
         //       that affects the error handling. This needs to likely include a set_error_handler() call.
 
-        // @todo Register Request and Response objects here, unless they are passed in directly
         $this->container->persistent(new ResponseEmitter());
 
         // @todo Register the Router
+
+        // @todo Register the ResponseRenderer
 
         // @todo Once the router is registered, look into the routes and where it retrieve its
         //       internal database, which could for example be static, app/routes.php,

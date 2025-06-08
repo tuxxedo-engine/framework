@@ -11,9 +11,10 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Http\Request;
+namespace Tuxxedo\Http\Request\Handler;
 
 use Tuxxedo\Container\Container;
+use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
 class RequestHandlerTail
