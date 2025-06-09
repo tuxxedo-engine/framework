@@ -29,7 +29,7 @@ class ApplicationFactory
         return new Application(
             appName: $config->getString('app.name'),
             appVersion: $config->getString('app.version'),
-            appState: $config->getEnum('app.state', ApplicationState::class),
+            appProfile: $config->getEnum('app.profile', ApplicationProfile::class),
             config: $config,
         );
     }

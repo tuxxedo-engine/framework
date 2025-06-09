@@ -48,19 +48,20 @@ class Application
     final public function __construct(
         public readonly string $appName = '',
         public readonly string $appVersion = '',
-        public readonly ApplicationState $appState = ApplicationState::RELEASE,
+        public readonly ApplicationProfile $appProfile = ApplicationProfile::RELEASE,
         ?Container $container = null,
         ?Config $config = null,
     ) {
         $this->container = $container ?? new Container();
 
         $this->container->persistent($this);
+        $this->container->persistent($this->container);
         $this->container->persistent($config ?? new Config());
 
         // @todo Implement loading of app/services.php into $this->container, providers?
 
         // @todo Register error handling, depending on what the turn out from the $this->appName
-        //       verdict above, this may need similar treatment. $this->appState will be the main thing
+        //       verdict above, this may need similar treatment. $this->appProfile will be the main thing
         //       that affects the error handling. This needs to likely include a set_error_handler() call.
 
         $this->container->persistent(new ResponseEmitter());
@@ -73,9 +74,7 @@ class Application
         //       internal database, which could for example be static, app/routes.php,
         //       static attributes (via precompiled file) or dynamic attributes via reflection
 
-        // @todo Register middleware and create FIFO stack
-
-        // @todo Register error middleware and create FILO stack
+        // @todo Register error middleware
     }
 
     /**

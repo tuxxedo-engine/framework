@@ -15,7 +15,6 @@ namespace App\Controllers;
 
 use App\Services\Logger\LoggerInterface;
 use Tuxxedo\Container\Container;
-use Tuxxedo\Container\Resolvers\AppContainer;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
@@ -24,7 +23,7 @@ use Tuxxedo\Router\Attributes\Route;
 class IndexController
 {
     public function __construct(
-        #[AppContainer] private readonly Container $container,
+        private readonly Container $container,
         private readonly LoggerInterface $logger,
     ) {
     }

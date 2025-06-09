@@ -13,8 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Application;
 
-// @todo Rename to profile?
-enum ApplicationState
+enum ApplicationProfile
 {
     case RELEASE;
     case DEBUG;

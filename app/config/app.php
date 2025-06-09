@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-use Tuxxedo\Application\ApplicationState;
+use Tuxxedo\Application\ApplicationProfile;
 
 return [
     /**
@@ -35,12 +35,12 @@ return [
     'version' => 'v0.1.0',
 
     /**
-     * app.state (required)
+     * app.profile (required)
      *
-     * This can be used to identify the state an application is in
+     * This can be used to identify the profile an application is in
      *
-     * @type ApplicationState
+     * @type ApplicationProfile
      * @required
      */
-    'state' => ApplicationState::DEBUG,
+    'profile' => ApplicationProfile::DEBUG,
 ];
