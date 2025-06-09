@@ -33,17 +33,17 @@ class Application
     /**
      * @var array<(\Closure(): RequestHandlerInterface)>
      */
-    private array $middleware = [];
+    public private(set) array $middleware = [];
 
     /**
      * @var array<class-string<\Throwable>, array<\Closure(): ErrorHandlerInterface>>
      */
-    private array $exceptions = [];
+    public private(set) array $exceptions = [];
 
     /**
      * @var array<(\Closure(): ErrorHandlerInterface)>
      */
-    private array $defaultExceptionHandlers = [];
+    public private(set) array $defaultExceptionHandlers = [];
 
     final public function __construct(
         public readonly string $appName = '',
@@ -157,11 +157,6 @@ class Application
         $request ??= RequestFactory::createFromEnvironment();
 
         try {
-            // @todo Implement Dispatching logic here by resolving the router, looking up the input
-            //       from the current request, error handling and then initializing the controller
-            //       code. This needs some extra thought for how the best possible way to avoid
-            //       adding boilerplate code for things like. This likely needs to accept some form
-            //       of incoming request to dispatch
             $route = $this->container->resolve(RouterInterface::class)->findByRequest(
                 request: $request,
             );
@@ -180,15 +175,25 @@ class Application
                     throw HttpException::fromInternalServerError();
                 }
 
-                /** @var ResponseInterface */
-                return \call_user_func($callback);
+                $response = \call_user_func($callback);
+
+                if (!$response instanceof ResponseInterface) {
+                    throw HttpException::fromInternalServerError();
+                }
+
+                return $response;
             };
 
             $this->container->resolve(ResponseEmitterInterface::class)->emit(
                 response: (new RequestHandlerTail(
                     container: $this->container,
                     resolver: $resolver,
-                    middleware: $this->middleware,
+                    middleware: \array_reverse(
+                        \array_merge(
+                            $this->middleware,
+                            $route->middleware,
+                        ),
+                    ),
                 ))->run($request),
             );
         } catch (\Throwable $e) {

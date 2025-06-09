@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Router;
 
 use Tuxxedo\Http\Method;
+use Tuxxedo\Http\Request\Handler\RequestHandlerInterface;
 
 interface RouteInterface
 {
@@ -36,6 +37,12 @@ interface RouteInterface
         get;
     }
 
+    /**
+     * @var array<(\Closure(): RequestHandlerInterface)>
+     */
+    public array $middleware {
+        get;
+    }
+
     // @todo Add support for route arguments
-    // @todo Add support for middleware
 }

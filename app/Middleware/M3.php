@@ -11,19 +11,18 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Http\Request\Handler;
+namespace App\Middleware;
 
+use App\Services\Logger\LoggerInterface;
+use Tuxxedo\Container\Container;
+use Tuxxedo\Http\Request\Handler\RequestHandlerInterface;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
-// @todo This needs to be an attribute too?
-class RequestHandler implements RequestHandlerInterface
+class M3 implements RequestHandlerInterface
 {
-    /**
-     * @param (\Closure(RequestInterface, RequestHandlerInterface): ResponseInterface) $handler
-     */
     public function __construct(
-        private readonly \Closure $handler,
+        protected readonly Container $container,
     ) {
     }
 
@@ -31,6 +30,13 @@ class RequestHandler implements RequestHandlerInterface
         RequestInterface $request,
         RequestHandlerInterface $next,
     ): ResponseInterface {
-        return ($this->handler)($request, $next);
+        $this->container->resolve(LoggerInterface::class)->log(
+            entry: \sprintf(
+                'Middleware: %s',
+                static::class,
+            ),
+        );
+
+        return $next->handle($request, $next);
     }
 }

@@ -31,7 +31,7 @@ class Container
     protected array $resolvedArguments = [];
 
     /**
-     * @param class-string $class
+     * @param class-string|object $class
      */
     public function persistent(
         string|object $class,

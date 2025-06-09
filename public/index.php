@@ -6,6 +6,7 @@ namespace
 {
 
     use App\Controllers\IndexController;
+    use App\Middleware\M3;
     use App\Services\Logger\Logger;
     use App\Services\Logger\LoggerInterface;
     use Tuxxedo\Application\ApplicationFactory;
@@ -53,23 +54,12 @@ namespace
         }
     }
 
-    class M3 implements RequestHandlerInterface
-    {
-        public function handle(
-            RequestInterface $request,
-            RequestHandlerInterface $next,
-        ): ResponseInterface {
-            throw new Exception('Always throws');
-        }
-    }
-
     $app = ApplicationFactory::createFromDirectory(
         directory: __DIR__ . '/../app',
     );
 
     $app->middleware(new M1($app->container));
     $app->middleware(new M2($app->container));
-    // $app->middleware(new M3());
 
     $app->defaultExceptionHandler(
         new class ($app->container) implements ErrorHandlerInterface {
@@ -131,6 +121,9 @@ namespace
                     uri: '/',
                     controller: IndexController::class,
                     action: 'index',
+                    middleware: [
+                        static fn (): RequestHandlerInterface => new M3($app->container),
+                    ],
                 ),
             ],
         ),
