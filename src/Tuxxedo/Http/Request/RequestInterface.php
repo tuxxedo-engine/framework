@@ -23,4 +23,5 @@ interface RequestInterface
     // @todo Support GET
     // @todo Support POST
     // @todo Support Uploaded files
+    // @todo Support body stream reading, e.g. Json
 }
