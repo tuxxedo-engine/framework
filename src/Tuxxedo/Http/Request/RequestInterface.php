@@ -19,7 +19,8 @@ interface RequestInterface
         get;
     }
 
-    // @todo Support for custom headers
+    // @todo Support for headers
+    // @todo Support for cookies
     // @todo Support GET
     // @todo Support POST
     // @todo Support Uploaded files

@@ -19,7 +19,7 @@ use Tuxxedo\Container\Container;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Request\RequestFactory;
 use Tuxxedo\Http\Request\Handler\RequestHandlerInterface;
-use Tuxxedo\Http\Request\Handler\RequestHandlerTail;
+use Tuxxedo\Http\Request\Handler\RequestHandlerPipeline;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseEmitter;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
@@ -164,29 +164,27 @@ class Application
                 throw HttpException::fromNotFound();
             }
 
-            $resolver = static function (Container $container) use ($route): ResponseInterface {
-                $callback = [
-                    $container->resolve($route->controller),
-                    $route->action,
-                ];
-
-                if (!\is_callable($callback)) {
-                    throw HttpException::fromInternalServerError();
-                }
-
-                $response = \call_user_func($callback);
-
-                if (!$response instanceof ResponseInterface) {
-                    throw HttpException::fromInternalServerError();
-                }
-
-                return $response;
-            };
-
             $this->container->resolve(ResponseEmitterInterface::class)->emit(
-                response: (new RequestHandlerTail(
+                response: (new RequestHandlerPipeline(
                     container: $this->container,
-                    resolver: $resolver,
+                    resolver: static function (Container $container) use ($route): ResponseInterface {
+                        $callback = [
+                            $container->resolve($route->controller),
+                            $route->action,
+                        ];
+
+                        if (!\is_callable($callback)) {
+                            throw HttpException::fromInternalServerError();
+                        }
+
+                        $response = \call_user_func($callback);
+
+                        if (!$response instanceof ResponseInterface) {
+                            throw HttpException::fromInternalServerError();
+                        }
+
+                        return $response;
+                    },
                     middleware: \array_reverse(
                         \array_merge(
                             $this->middleware,
