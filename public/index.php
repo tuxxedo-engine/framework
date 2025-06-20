@@ -16,6 +16,7 @@ namespace
     use Tuxxedo\Http\Request\Handler\RequestHandlerInterface;
     use Tuxxedo\Http\Request\RequestInterface;
     use Tuxxedo\Http\Response\ResponseInterface;
+    use Tuxxedo\Mapper\Mapper;
     use Tuxxedo\Router\Route;
     use Tuxxedo\Router\RouterFactory;
     use Tuxxedo\Router\StaticRouter;
@@ -112,6 +113,7 @@ namespace
     );
 
     $app->container->persistent(Logger::class);
+    $app->container->persistent(Mapper::class);
 
     $app->container->persistent(
         new StaticRouter(
@@ -124,6 +126,12 @@ namespace
                     middleware: [
                         static fn (): RequestHandlerInterface => new M3($app->container),
                     ],
+                ),
+                new Route(
+                    method: Method::GET,
+                    uri: '/map',
+                    controller: IndexController::class,
+                    action: 'map',
                 ),
             ],
         ),
