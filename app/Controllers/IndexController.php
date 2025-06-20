@@ -52,7 +52,7 @@ class IndexController
                 input: [
                     'name' => 'Engine',
                 ],
-                className: new class {
+                className: new class () {
                     public string $name = '';
                 },
             ),
@@ -68,7 +68,7 @@ class IndexController
                         'name' => 'baz',
                     ],
                 ],
-                className: new class {
+                className: new class () {
                     public string $name = '';
                 },
             ),
