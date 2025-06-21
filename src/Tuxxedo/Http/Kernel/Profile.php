@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Application;
+namespace Tuxxedo\Http\Kernel;
 
-enum ApplicationProfile
+enum Profile
 {
     case RELEASE;
     case DEBUG;

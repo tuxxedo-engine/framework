@@ -13,19 +13,19 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container\Resolvers;
 
-use Tuxxedo\Application\Application;
-use Tuxxedo\Application\ApplicationProfile;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Container\DependencyResolverInterface;
+use Tuxxedo\Http\Kernel\Kernel;
+use Tuxxedo\Http\Kernel\Profile;
 
 /**
- * @implements DependencyResolverInterface<ApplicationProfile>
+ * @implements DependencyResolverInterface<Profile>
  */
 #[\Attribute(\Attribute::TARGET_PARAMETER)]
 class AppProfile implements DependencyResolverInterface
 {
     public function resolve(Container $container): mixed
     {
-        return $container->resolve(Application::class)->appProfile;
+        return $container->resolve(Kernel::class)->appProfile;
     }
 }

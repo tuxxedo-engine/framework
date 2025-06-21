@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-use Tuxxedo\Application\ApplicationProfile;
+use Tuxxedo\Http\Kernel\Profile;
 
 return [
     /**
@@ -35,12 +35,12 @@ return [
     'version' => 'v0.1.0',
 
     /**
-     * app.profile (required)
+     * app.profile
      *
      * This can be used to identify the profile an application is in
      *
-     * @type ApplicationProfile
+     * @type Profile
      * @required
      */
-    'profile' => ApplicationProfile::DEBUG,
+    'profile' => Profile::DEBUG,
 ];

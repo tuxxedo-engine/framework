@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Application;
+namespace Tuxxedo\Http\Kernel;
 
 use Tuxxedo\Http\Request\RequestInterface;
 

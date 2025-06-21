@@ -11,22 +11,22 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Application;
+namespace Tuxxedo\Http\Kernel;
 
+use Closure;
 use Tuxxedo\Config\Config;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Http\HttpException;
-use Tuxxedo\Http\Request\RequestFactory;
 use Tuxxedo\Http\Request\Handler\RequestHandlerInterface;
 use Tuxxedo\Http\Request\Handler\RequestHandlerPipeline;
+use Tuxxedo\Http\Request\RequestFactory;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseEmitter;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\RouterInterface;
 
-// @todo Maybe this needs to be a kernel?
-class Application
+class Kernel
 {
     public readonly Container $container;
 
@@ -48,7 +48,7 @@ class Application
     final public function __construct(
         public readonly string $appName = '',
         public readonly string $appVersion = '',
-        public readonly ApplicationProfile $appProfile = ApplicationProfile::RELEASE,
+        public readonly Profile $appProfile = Profile::RELEASE,
         ?Container $container = null,
         ?Config $config = null,
     ) {
@@ -75,6 +75,19 @@ class Application
         //       static attributes (via precompiled file) or dynamic attributes via reflection
 
         // @todo Register error middleware
+    }
+
+    public static function createFromDirectory(
+        string $directory,
+    ): Kernel {
+        $config = Config::createFromDirectory($directory . '/config');
+
+        return new Kernel(
+            appName: $config->getString('app.name'),
+            appVersion: $config->getString('app.version'),
+            appProfile: $config->getEnum('app.profile', Profile::class),
+            config: $config,
+        );
     }
 
     /**

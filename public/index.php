@@ -5,22 +5,16 @@ declare(strict_types=1);
 namespace
 {
 
-    use App\Controllers\IndexController;
-    use App\Middleware\M3;
     use App\Services\Logger\Logger;
     use App\Services\Logger\LoggerInterface;
-    use Tuxxedo\Application\ApplicationFactory;
-    use Tuxxedo\Application\ErrorHandlerInterface;
     use Tuxxedo\Container\Container;
-    use Tuxxedo\Http\Method;
+    use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
+    use Tuxxedo\Http\Kernel\Kernel;
     use Tuxxedo\Http\Request\Handler\RequestHandlerInterface;
     use Tuxxedo\Http\Request\RequestInterface;
     use Tuxxedo\Http\Response\ResponseInterface;
     use Tuxxedo\Mapper\Mapper;
     use Tuxxedo\Router\DynamicRouter;
-    use Tuxxedo\Router\Route;
-    use Tuxxedo\Router\RouterFactory;
-    use Tuxxedo\Router\StaticRouter;
 
     require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -56,7 +50,7 @@ namespace
         }
     }
 
-    $app = ApplicationFactory::createFromDirectory(
+    $app = Kernel::createFromDirectory(
         directory: __DIR__ . '/../app',
     );
 
