@@ -13,13 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Kernel;
 
-use Closure;
 use Tuxxedo\Config\Config;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Request\Handler\RequestHandlerInterface;
 use Tuxxedo\Http\Request\Handler\RequestHandlerPipeline;
-use Tuxxedo\Http\Request\RequestFactory;
+use Tuxxedo\Http\Request\Request;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseEmitter;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
@@ -45,6 +44,7 @@ class Kernel
      */
     public private(set) array $defaultExceptionHandlers = [];
 
+    // @todo Redesign part of this so services can be more centralized and registered prior
     final public function __construct(
         public readonly string $appName = '',
         public readonly string $appVersion = '',
@@ -68,13 +68,13 @@ class Kernel
 
         // @todo Register the Router
 
-        // @todo Register the ResponseRenderer
+        // @todo Register the ResponseRenderer (Middleware?)
 
         // @todo Once the router is registered, look into the routes and where it retrieve its
         //       internal database, which could for example be static, app/routes.php,
         //       static attributes (via precompiled file) or dynamic attributes via reflection
 
-        // @todo Register error middleware
+        // @todo Register error middleware in debug profile?
     }
 
     public static function createFromDirectory(
@@ -166,7 +166,7 @@ class Kernel
     public function run(
         ?RequestInterface $request = null,
     ): void {
-        $request ??= RequestFactory::createFromEnvironment();
+        $request ??= Request::createFromEnvironment();
 
         try {
             $route = $this->container->resolve(RouterInterface::class)->findByRequest(

@@ -16,7 +16,6 @@ namespace Tuxxedo\Http\Request\Handler;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
-// @todo This needs to be an attribute too?
 class RequestHandler implements RequestHandlerInterface
 {
     /**

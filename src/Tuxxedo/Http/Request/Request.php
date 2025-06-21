@@ -19,4 +19,11 @@ class Request implements RequestInterface
         public private(set) ServerContextInterface $context,
     ) {
     }
+
+    public static function createFromEnvironment(): Request
+    {
+        return new Request(
+            context: new EnvironmentServerContext(),
+        );
+    }
 }
