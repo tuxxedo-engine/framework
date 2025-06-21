@@ -15,6 +15,7 @@ namespace Tuxxedo\Application;
 
 use Tuxxedo\Config\Config;
 
+// @todo Re-consider the factory approach
 class ApplicationFactory
 {
     final private function __construct()

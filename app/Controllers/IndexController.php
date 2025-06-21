@@ -13,14 +13,17 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Middleware\M3;
 use App\Services\Logger\LoggerInterface;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Mapper\MapperInterface;
+use Tuxxedo\Router\Attributes\Middleware;
 use Tuxxedo\Router\Attributes\Route;
 
+#[Middleware(M3::class)]
 class IndexController
 {
     public function __construct(
@@ -75,6 +78,9 @@ class IndexController
         );
 
         return new Response(
+            headers: [
+                new Header('Content-Type', 'text/plain'),
+            ],
             body: !\is_bool($body = \ob_get_clean()) ? $body : '',
         );
     }

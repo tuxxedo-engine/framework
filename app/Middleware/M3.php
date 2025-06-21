@@ -19,6 +19,7 @@ use Tuxxedo\Http\Request\Handler\RequestHandlerInterface;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
+#[\Attribute(\Attribute::TARGET_METHOD)]
 class M3 implements RequestHandlerInterface
 {
     public function __construct(

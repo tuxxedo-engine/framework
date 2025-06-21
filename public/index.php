@@ -17,6 +17,7 @@ namespace
     use Tuxxedo\Http\Request\RequestInterface;
     use Tuxxedo\Http\Response\ResponseInterface;
     use Tuxxedo\Mapper\Mapper;
+    use Tuxxedo\Router\DynamicRouter;
     use Tuxxedo\Router\Route;
     use Tuxxedo\Router\RouterFactory;
     use Tuxxedo\Router\StaticRouter;
@@ -115,6 +116,7 @@ namespace
     $app->container->persistent(Logger::class);
     $app->container->persistent(Mapper::class);
 
+    /**
     $app->container->persistent(
         new StaticRouter(
             routes: [
@@ -134,6 +136,14 @@ namespace
                     action: 'map',
                 ),
             ],
+        ),
+    );
+    */
+
+    $app->container->persistent(
+        new DynamicRouter(
+            container: $app->container,
+            directory: __DIR__ . '/../app/Controllers',
         ),
     );
 

@@ -28,6 +28,7 @@ class Route implements RouteInterface
         public readonly string $controller,
         public readonly string $action,
         public readonly array $middleware = [],
+        public readonly RoutePriority $priority = RoutePriority::NORMAL,
     ) {
     }
 }

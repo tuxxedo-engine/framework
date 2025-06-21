@@ -20,11 +20,22 @@ use Tuxxedo\Http\Request\RequestInterface;
 class StaticRouter implements RouterInterface
 {
     /**
+     * @var RouteInterface[]
+     */
+    private readonly array $routes;
+
+    /**
      * @param RouteInterface[] $routes
      */
     public function __construct(
-        private readonly array $routes,
+        array $routes,
     ) {
+        \uasort(
+            $routes,
+            static fn (RouteInterface $a, RouteInterface $b): int => $a->priority->value <=> $b->priority->value,
+        );
+
+        $this->routes = $routes;
     }
 
     public function findByUri(

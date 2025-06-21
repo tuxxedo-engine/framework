@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request;
 
+// @todo Re-consider the factory approach
 class RequestFactory
 {
     final private function __construct()

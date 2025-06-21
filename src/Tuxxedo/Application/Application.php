@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Application;
 
-use App\Controllers\IndexController;
 use Tuxxedo\Config\Config;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Http\HttpException;
@@ -26,6 +25,7 @@ use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\RouterInterface;
 
+// @todo Maybe this needs to be a kernel?
 class Application
 {
     public readonly Container $container;

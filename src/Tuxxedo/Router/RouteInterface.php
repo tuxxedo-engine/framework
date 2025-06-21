@@ -44,5 +44,9 @@ interface RouteInterface
         get;
     }
 
+    public RoutePriority $priority {
+        get;
+    }
+
     // @todo Add support for route arguments
 }
