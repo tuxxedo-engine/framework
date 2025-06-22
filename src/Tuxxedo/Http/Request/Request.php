@@ -13,10 +13,18 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request;
 
+use Tuxxedo\Http\HeaderInterface;
+
 class Request implements RequestInterface
 {
+    /**
+     * @param HeaderContextInterface<array-key, HeaderInterface> $headers
+     * @param HeaderContextInterface<string, string> $cookies
+     */
     public function __construct(
         public private(set) ServerContextInterface $context,
+        public private(set) HeaderContextInterface $headers,
+        public private(set) HeaderContextInterface $cookies,
     ) {
     }
 
@@ -24,6 +32,8 @@ class Request implements RequestInterface
     {
         return new Request(
             context: new EnvironmentServerContext(),
+            headers: new EnvironmentHeaderContext(),
+            cookies: new EnvironmentCookieContext(),
         );
     }
 }

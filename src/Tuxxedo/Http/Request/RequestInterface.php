@@ -13,14 +13,28 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request;
 
+use Tuxxedo\Http\HeaderInterface;
+
 interface RequestInterface
 {
     public ServerContextInterface $context {
         get;
     }
 
-    // @todo Support for headers
-    // @todo Support for cookies
+    /**
+     * @var HeaderContextInterface<array-key, HeaderInterface>
+     */
+    public HeaderContextInterface $headers {
+        get;
+    }
+
+    /**
+     * @var HeaderContextInterface<string, string>
+     */
+    public HeaderContextInterface $cookies {
+        get;
+    }
+
     // @todo Support GET
     // @todo Support POST
     // @todo Support Uploaded files

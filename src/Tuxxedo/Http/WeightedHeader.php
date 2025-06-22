@@ -20,9 +20,15 @@ readonly class WeightedHeader extends Header implements WeightedHeaderInterface
         $parsed = [];
 
         foreach (\explode(',', $this->value) as $part) {
-            if (\preg_match('/^\s*([^;]+)(?:;\s*q=([0-9.]+))?\s*$/', $part, $matches) !== false) {
+            if (
+                \preg_match(
+                    '/^\s*("?[^";\s]+"?)(?:;[^=]+=[^;]*)*(?:;\s*[qv]="?([0-9.]+)"?)?\s*$/i',
+                    $part,
+                    $matches,
+                ) === 1
+            ) {
                 $parsed[] = [
-                    $matches[1],
+                    \trim($matches[1], " \t\n\r\0\x0B\""),
                     isset($matches[2])
                         ? (float) $matches[2]
                         : 1.0,
@@ -35,6 +41,14 @@ readonly class WeightedHeader extends Header implements WeightedHeaderInterface
             static fn (array $a, array $b): int => $b[1] <=> $a[1],
         );
 
-        return \array_column($parsed, 0);
+        return \array_filter(
+            \array_column($parsed, 0),
+            static fn (?string $value): bool => $value !== null,
+        );
+    }
+
+    public static function isWeightedValue(string $value): bool
+    {
+        return \preg_match('/;\s*[qv]=("?)[0-9.]+\1/', $value) === 1;
     }
 }

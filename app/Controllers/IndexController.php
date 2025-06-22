@@ -18,9 +18,11 @@ use App\Services\Logger\LoggerInterface;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Http\Cookie;
 use Tuxxedo\Http\Header;
+use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
+use Tuxxedo\Http\WeightedHeaderInterface;
 use Tuxxedo\Mapper\MapperInterface;
 use Tuxxedo\Router\Attributes\Middleware;
 use Tuxxedo\Router\Attributes\Route;
@@ -36,8 +38,6 @@ class IndexController
     }
 
     #[Route\Get(uri: '/')]
-    #[Middleware(M3::class)]
-    #[Middleware(M3::class)]
     public function index(): ResponseInterface
     {
         $this->container->resolve(LoggerInterface::class)->log('Inside action');
@@ -109,7 +109,7 @@ class IndexController
     #[Route\Get(uri: '/cookies')]
     public function cookies(RequestInterface $request): ResponseInterface
     {
-        $count = (int) (\is_string($_COOKIE['count']) ? $_COOKIE['count'] : 1);
+        $count = $request->cookies->has('count') ? $request->cookies->getInt('count') : 1;
 
         return Response::html(
             html: \sprintf(
@@ -123,6 +123,29 @@ class IndexController
                     expires: \time() + 3600,
                 ),
             ],
+        );
+    }
+
+    #[Route\Get(uri: '/headers')]
+    public function headers(RequestInterface $request): ResponseInterface
+    {
+        return Response::json(
+            json: [
+                \array_map(
+                    static fn (HeaderInterface $header): array => $header instanceof WeightedHeaderInterface
+                        ? [
+                            'name' => $header->name,
+                            'value' => $header->value,
+                            'weightedValue' => $header->getWeightedOrder(),
+                        ]
+                        : [
+                            'name' => $header->name,
+                            'value' => $header->value,
+                        ],
+                    $request->headers->all(),
+                ),
+            ],
+            prettyPrint: true,
         );
     }
 }
