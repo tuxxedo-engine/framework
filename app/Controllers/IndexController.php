@@ -16,6 +16,7 @@ namespace App\Controllers;
 use App\Middleware\M3;
 use App\Services\Logger\LoggerInterface;
 use Tuxxedo\Container\Container;
+use Tuxxedo\Http\Cookie;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
@@ -35,6 +36,8 @@ class IndexController
     }
 
     #[Route\Get(uri: '/')]
+    #[Middleware(M3::class)]
+    #[Middleware(M3::class)]
     public function index(): ResponseInterface
     {
         $this->container->resolve(LoggerInterface::class)->log('Inside action');
@@ -95,11 +98,31 @@ class IndexController
     public function json(RequestInterface $request): ResponseInterface
     {
         return Response::json(
-            [
+            json: [
                 'uri' => $request->context->uri,
                 'https' => $request->context->https,
             ],
             prettyPrint: true,
+        );
+    }
+
+    #[Route\Get(uri: '/cookies')]
+    public function cookies(RequestInterface $request): ResponseInterface
+    {
+        $count = (int) (\is_string($_COOKIE['count']) ? $_COOKIE['count'] : 1);
+
+        return Response::html(
+            html: \sprintf(
+                '<p>Visitor count: %d</p>',
+                $count,
+            ),
+            headers: [
+                new Cookie(
+                    name: 'count',
+                    value: (string) ++$count,
+                    expires: \time() + 3600,
+                ),
+            ],
         );
     }
 }

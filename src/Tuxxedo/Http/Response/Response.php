@@ -93,6 +93,42 @@ class Response implements ResponseInterface
     /**
      * @param HeaderInterface[] $headers
      */
+    public static function html(
+        string $html,
+        array $headers = [],
+        ResponseCode $responseCode = ResponseCode::OK,
+    ): static {
+        return new static(
+            headers: $headers,
+            responseCode: $responseCode,
+            body: $html,
+        )->withHeader(
+            header: new Header('Content-Type', 'text/html'),
+            replace: true,
+        );
+    }
+
+    /**
+     * @param HeaderInterface[] $headers
+     */
+    public static function text(
+        string $text,
+        array $headers = [],
+        ResponseCode $responseCode = ResponseCode::OK,
+    ): static {
+        return new static(
+            headers: $headers,
+            responseCode: $responseCode,
+            body: $text,
+        )->withHeader(
+            header: new Header('Content-Type', 'text/plain'),
+            replace: true,
+        );
+    }
+
+    /**
+     * @param HeaderInterface[] $headers
+     */
     protected function getHeaderIndex(
         array $headers,
         HeaderInterface|string $lookupHeader,

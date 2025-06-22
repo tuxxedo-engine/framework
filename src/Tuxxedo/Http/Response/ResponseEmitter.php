@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Response;
 
+use Tuxxedo\Http\CookieInterface;
+
 class ResponseEmitter implements ResponseEmitterInterface
 {
     private bool $sent = false;
@@ -29,9 +31,22 @@ class ResponseEmitter implements ResponseEmitterInterface
             );
 
             foreach ($response->headers as $header) {
-                if ($header->name === 'Content-Length') {
+                if ($header instanceof CookieInterface) {
+                    \setcookie(
+                        name: $header->name,
+                        value: $header->value,
+                        expires_or_options: $header->expires,
+                        path: $header->path,
+                        domain: $header->domain,
+                        secure: $header->secure,
+                        httponly: $header->httpOnly,
+                    );
+
+                    continue;
+                } elseif ($header->name === 'Content-Length') {
                     $maxLength = (int) $header->value;
                 }
+
 
                 \header(
                     \sprintf(
@@ -52,7 +67,6 @@ class ResponseEmitter implements ResponseEmitterInterface
         }
     }
 
-    // @todo Investigate whether ResponseInterface also needs to have such a check, but it is immutable
     public function isSent(): bool
     {
         return $this->sent;

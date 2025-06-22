@@ -16,8 +16,8 @@ namespace Tuxxedo\Http;
 readonly class Header implements HeaderInterface
 {
     final public function __construct(
-        public private(set) string $name,
-        public private(set) string $value,
+        public string $name,
+        public string $value,
     ) {
     }
 
