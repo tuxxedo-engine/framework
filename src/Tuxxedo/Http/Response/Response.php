@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Response;
 
+use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HeaderInterface;
+use Tuxxedo\Http\HttpException;
 
 class Response implements ResponseInterface
 {
@@ -25,6 +27,67 @@ class Response implements ResponseInterface
         public readonly ResponseCode $responseCode = ResponseCode::OK,
         public readonly string $body = '',
     ) {
+    }
+
+    /**
+     * @param HeaderInterface[] $headers
+     *
+     * @throws HttpException
+     */
+    public static function json(
+        mixed $json,
+        bool $prettyPrint = false,
+        int $flags = 0,
+        array $headers = [],
+        ResponseCode $responseCode = ResponseCode::OK,
+    ): static {
+        try {
+            if ($prettyPrint) {
+                $flags |= \JSON_PRETTY_PRINT;
+            }
+
+            $body = \json_encode(
+                value: $json,
+                flags: $flags | \JSON_THROW_ON_ERROR,
+            );
+        } catch (\Exception) {
+            throw HttpException::fromInternalServerError();
+        }
+
+        return new static(
+            headers: $headers,
+            responseCode: $responseCode,
+            body: $body,
+        )->withHeader(
+            header: new Header('Content-Type', 'application/json'),
+            replace: true,
+        );
+    }
+
+    /**
+     * @param HeaderInterface[] $headers
+     *
+     * @throws HttpException
+     */
+    public static function capture(
+        \Closure $callback,
+        array $headers = [],
+        ResponseCode $responseCode = ResponseCode::OK,
+    ): static {
+        \ob_start();
+        $callback();
+
+        $contents = \ob_get_clean();
+
+        if (\is_bool($contents)) {
+            throw HttpException::fromInternalServerError();
+        }
+
+        return new static(
+            headers: $headers,
+            responseCode: $responseCode,
+            body: $contents,
+        );
     }
 
     /**

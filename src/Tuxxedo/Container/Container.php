@@ -54,7 +54,7 @@ class Container
             $aliases[] = $parentClassName;
         }
 
-        $this->alias($aliases, \is_object($class) ? $class::class : $class);
+        $this->alias($aliases, $className);
 
         return $this;
     }

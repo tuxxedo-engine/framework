@@ -17,6 +17,7 @@ use App\Middleware\M3;
 use App\Services\Logger\LoggerInterface;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Http\Header;
+use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Mapper\MapperInterface;
@@ -49,39 +50,56 @@ class IndexController
     #[Route\Get(uri: '/map')]
     public function map(): ResponseInterface
     {
-        \ob_start();
-        var_dump(
-            $this->mapper->mapArrayTo(
-                input: [
-                    'name' => 'Engine',
-                ],
-                className: new class () {
-                    public string $name = '';
-                },
+        return Response::capture(
+            callback: fn () => var_dump(
+                $this->mapper->mapArrayTo(
+                    input: [
+                        'name' => 'Engine',
+                    ],
+                    className: new class () {
+                        public string $name = '';
+                    },
+                ),
+                $this->mapper->mapToArrayOf(
+                    input: [
+                        [
+                            'name' => 'foo',
+                        ],
+                        [
+                            'name' => 'bar',
+                        ],
+                        [
+                            'name' => 'baz',
+                        ],
+                    ],
+                    className: new class () {
+                        public string $name = '';
+                    },
+                ),
             ),
-            $this->mapper->mapToArrayOf(
-                input: [
-                    [
-                        'name' => 'foo',
-                    ],
-                    [
-                        'name' => 'bar',
-                    ],
-                    [
-                        'name' => 'baz',
-                    ],
-                ],
-                className: new class () {
-                    public string $name = '';
-                },
-            ),
-        );
-
-        return new Response(
             headers: [
                 new Header('Content-Type', 'text/plain'),
             ],
-            body: !\is_bool($body = \ob_get_clean()) ? $body : '',
+        );
+    }
+
+    #[Route\Get(uri: '/info')]
+    public function info(): ResponseInterface
+    {
+        return Response::capture(
+            \phpinfo(...),
+        );
+    }
+
+    #[Route\Get(uri: '/json')]
+    public function json(RequestInterface $request): ResponseInterface
+    {
+        return Response::json(
+            [
+                'uri' => $request->context->uri,
+                'https' => $request->context->https,
+            ],
+            prettyPrint: true,
         );
     }
 }

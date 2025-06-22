@@ -180,7 +180,7 @@ class Kernel
             $this->container->resolve(ResponseEmitterInterface::class)->emit(
                 response: (new RequestHandlerPipeline(
                     container: $this->container,
-                    resolver: static function (Container $container) use ($route): ResponseInterface {
+                    resolver: static function (Container $container) use ($route, $request): ResponseInterface {
                         $callback = [
                             $container->resolve($route->controller),
                             $route->action,
@@ -190,7 +190,7 @@ class Kernel
                             throw HttpException::fromInternalServerError();
                         }
 
-                        $response = \call_user_func($callback);
+                        $response = \call_user_func($callback, $request);
 
                         if (!$response instanceof ResponseInterface) {
                             throw HttpException::fromInternalServerError();

@@ -110,30 +110,6 @@ namespace
     $app->container->persistent(Logger::class);
     $app->container->persistent(Mapper::class);
 
-    /**
-    $app->container->persistent(
-        new StaticRouter(
-            routes: [
-                new Route(
-                    method: Method::GET,
-                    uri: '/',
-                    controller: IndexController::class,
-                    action: 'index',
-                    middleware: [
-                        static fn (): RequestHandlerInterface => new M3($app->container),
-                    ],
-                ),
-                new Route(
-                    method: Method::GET,
-                    uri: '/map',
-                    controller: IndexController::class,
-                    action: 'map',
-                ),
-            ],
-        ),
-    );
-    */
-
     $app->container->persistent(
         new DynamicRouter(
             container: $app->container,
