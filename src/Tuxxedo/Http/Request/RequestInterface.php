@@ -13,25 +13,25 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request;
 
-use Tuxxedo\Http\HeaderInterface;
-
 interface RequestInterface
 {
-    public ServerContextInterface $context {
+    public ServerContextInterface $server {
         get;
     }
 
-    /**
-     * @var HeaderContextInterface<array-key, HeaderInterface>
-     */
     public HeaderContextInterface $headers {
         get;
     }
 
-    /**
-     * @var HeaderContextInterface<string, string>
-     */
-    public HeaderContextInterface $cookies {
+    public InputContextInterface $cookies {
+        get;
+    }
+
+    public InputContextInterface $get {
+        get;
+    }
+
+    public InputContextInterface $post {
         get;
     }
 

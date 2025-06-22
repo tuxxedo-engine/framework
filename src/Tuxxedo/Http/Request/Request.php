@@ -17,23 +17,29 @@ use Tuxxedo\Http\HeaderInterface;
 
 class Request implements RequestInterface
 {
-    /**
-     * @param HeaderContextInterface<array-key, HeaderInterface> $headers
-     * @param HeaderContextInterface<string, string> $cookies
-     */
     public function __construct(
-        public private(set) ServerContextInterface $context,
+        public private(set) ServerContextInterface $server,
         public private(set) HeaderContextInterface $headers,
-        public private(set) HeaderContextInterface $cookies,
+        public private(set) InputContextInterface $cookies,
+        public private(set) InputContextInterface $get,
+        public private(set) InputContextInterface $post,
     ) {
     }
 
     public static function createFromEnvironment(): Request
     {
         return new Request(
-            context: new EnvironmentServerContext(),
+            server: new EnvironmentServerContext(),
             headers: new EnvironmentHeaderContext(),
-            cookies: new EnvironmentCookieContext(),
+            cookies: new EnvironmentInputContext(
+                superglobal: \INPUT_COOKIE,
+            ),
+            get: new EnvironmentInputContext(
+                superglobal: \INPUT_GET,
+            ),
+            post: new EnvironmentInputContext(
+                superglobal: \INPUT_POST,
+            ),
         );
     }
 }

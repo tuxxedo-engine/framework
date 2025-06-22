@@ -61,8 +61,8 @@ class StaticRouter implements RouterInterface
         RequestInterface $request,
     ): ?RouteInterface {
         return $this->findByUri(
-            method: $request->context->method,
-            uri: $request->context->uri,
+            method: $request->server->method,
+            uri: $request->server->uri,
         );
     }
 }

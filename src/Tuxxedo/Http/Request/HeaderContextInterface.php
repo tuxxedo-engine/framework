@@ -13,16 +13,13 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request;
 
+use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
 
-/**
- * @template TKey
- * @template TValue
- */
 interface HeaderContextInterface
 {
     /**
-     * @return array<TKey, TValue>
+     * @return HeaderInterface[]
      */
     public function all(): array;
 

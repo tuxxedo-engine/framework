@@ -99,8 +99,8 @@ class IndexController
     {
         return Response::json(
             json: [
-                'uri' => $request->context->uri,
-                'https' => $request->context->https,
+                'uri' => $request->server->uri,
+                'https' => $request->server->https,
             ],
             prettyPrint: true,
         );
@@ -146,6 +146,28 @@ class IndexController
                 ),
             ],
             prettyPrint: true,
+        );
+    }
+
+    #[Route\Get(uri: '/form')]
+    public function form(): ResponseInterface
+    {
+        return Response::html(
+            html: '<form action="/input" method="post"><input type="text" name="test"><input type="submit"></form>',
+        );
+    }
+
+    #[Route\Post(uri: '/input')]
+    public function input(RequestInterface $request): ResponseInterface
+    {
+        return Response::json(
+            [
+                'string' => $request->post->getString('test'),
+                'int' => $request->post->getInt('test'),
+                'bool' => $request->post->getBool('test'),
+                'floatDot' => $request->post->getFloat('test'),
+                'floatComma' => $request->post->getFloat('test', decimalPoint: ','),
+            ],
         );
     }
 }

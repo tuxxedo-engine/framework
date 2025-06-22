@@ -14,13 +14,9 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Request;
 
 use Tuxxedo\Http\Header;
-use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\WeightedHeader;
 
-/**
- * @implements HeaderContextInterface<array-key, HeaderInterface>
- */
 class EnvironmentHeaderContext implements HeaderContextInterface
 {
     /**
@@ -143,7 +139,7 @@ class EnvironmentHeaderContext implements HeaderContextInterface
         }
 
         foreach ($enum::cases() as $case) {
-            if ($case->name === $name) {
+            if ($case->name === $this->headers[$name]) {
                 return $case;
             }
         }
