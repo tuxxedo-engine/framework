@@ -44,6 +44,5 @@ interface RequestInterface
         get;
     }
 
-    // @todo Support Uploaded files
     // @todo Support body stream reading, e.g. Json
 }
