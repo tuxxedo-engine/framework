@@ -23,6 +23,7 @@ use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseEmitter;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
+use Tuxxedo\Mapper\Mapper;
 use Tuxxedo\Router\RouterInterface;
 
 class Kernel
@@ -44,13 +45,13 @@ class Kernel
      */
     private array $defaultExceptionHandlers = [];
 
-    // @todo Redesign part of this so services can be more centralized and registered prior
     final public function __construct(
         public readonly string $appName = '',
         public readonly string $appVersion = '',
         public readonly Profile $appProfile = Profile::RELEASE,
         ?Container $container = null,
         ?Config $config = null,
+        bool $loadDefaultServices = true,
     ) {
         $this->container = $container ?? new Container();
 
@@ -58,21 +59,15 @@ class Kernel
         $this->container->persistent($this->container);
         $this->container->persistent($config ?? new Config());
 
-        // @todo Implement loading of app/services.php into $this->container, providers?
+        if ($loadDefaultServices) {
+            $this->loadDefaultServices();
+        }
+    }
 
-        // @todo Register error handling, depending on what the turn out from the $this->appName
-        //       verdict above, this may need similar treatment. $this->appProfile will be the main thing
-        //       that affects the error handling. This needs to likely include a set_error_handler() call.
-
-        $this->container->persistent(new ResponseEmitter());
-
-        // @todo Register the Router
-
-        // @todo Once the router is registered, look into the routes and where it retrieve its
-        //       internal database, which could for example be static, app/routes.php,
-        //       static attributes (via precompiled file) or dynamic attributes via reflection
-
-        // @todo Register error middleware in debug profile?
+    private function loadDefaultServices(): void
+    {
+        $this->container->persistent(ResponseEmitter::class);
+        $this->container->persistent(Mapper::class);
     }
 
     public static function createFromDirectory(

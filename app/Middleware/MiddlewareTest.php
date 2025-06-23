@@ -20,7 +20,7 @@ use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
 #[\Attribute(\Attribute::TARGET_METHOD)]
-class M3 implements RequestHandlerInterface
+class MiddlewareTest implements RequestHandlerInterface
 {
     public function __construct(
         protected readonly Container $container,

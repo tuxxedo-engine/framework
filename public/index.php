@@ -2,120 +2,61 @@
 
 declare(strict_types=1);
 
-namespace
-{
+use App\Services\Logger\Logger;
+use App\Services\Logger\LoggerInterface;
+use Tuxxedo\Container\Container;
+use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
+use Tuxxedo\Http\Kernel\Kernel;
+use Tuxxedo\Http\Request\RequestInterface;
+use Tuxxedo\Router\DynamicRouter;
 
-    use App\Services\Logger\Logger;
-    use App\Services\Logger\LoggerInterface;
-    use Tuxxedo\Container\Container;
-    use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
-    use Tuxxedo\Http\Kernel\Kernel;
-    use Tuxxedo\Http\Request\Handler\RequestHandlerInterface;
-    use Tuxxedo\Http\Request\RequestInterface;
-    use Tuxxedo\Http\Response\ResponseInterface;
-    use Tuxxedo\Mapper\Mapper;
-    use Tuxxedo\Router\DynamicRouter;
+require_once __DIR__ . '/../vendor/autoload.php';
 
-    require_once __DIR__ . '/../vendor/autoload.php';
+$app = Kernel::createFromDirectory(
+    directory: __DIR__ . '/../app',
+);
 
-    class M1 implements RequestHandlerInterface
-    {
+// @todo Register error handling, depending on what the turn out from the $this->appName
+//       verdict above, this may need similar treatment. $this->appProfile will be the main thing
+//       that affects the error handling. This needs to likely include a set_error_handler() call.
+
+// @todo Turn this into a debug error handler and register it in the Kernel if DEBUG profile
+$app->defaultExceptionHandler(
+    new class ($app->container) implements ErrorHandlerInterface {
         public function __construct(
-            protected readonly Container $container,
+            private readonly Container $container,
         ) {
         }
 
         public function handle(
             RequestInterface $request,
-            RequestHandlerInterface $next,
-        ): ResponseInterface {
-            $this->container->resolve(LoggerInterface::class)->log(
-                entry: \sprintf(
-                    'Middleware: %s',
-                    static::class,
-                ),
-            );
+            \Throwable $exception,
+        ): void {
+            echo '<h2>Exception</h2>';
+            echo '<pre>';
+            echo $exception;
+            echo '</pre>';
 
-            return $next->handle($request, $next);
+            echo '<h2>Logger</h2>';
+            echo '<pre>';
+            echo $this->container->resolve(LoggerInterface::class)->formatEntries();
+            echo '</pre>';
         }
-    }
+    },
+);
 
-    class M2 extends M1
-    {
-        public function handle(
-            RequestInterface $request,
-            RequestHandlerInterface $next,
-        ): ResponseInterface {
-            return parent::handle($request, $next);
-        }
-    }
+// @todo Implement loading of app/services.php into $this->container, providers?
+$app->container->persistent(Logger::class);
 
-    $app = Kernel::createFromDirectory(
-        directory: __DIR__ . '/../app',
-    );
+// @todo Once the router is registered, look into the routes and where it retrieve its
+//       internal database, which could for example be static, app/routes.php,
+//       static attributes (via precompiled file) or dynamic attributes via reflection
 
-    $app->middleware(new M1($app->container));
-    $app->middleware(new M2($app->container));
+$app->container->persistent(
+    new DynamicRouter(
+        container: $app->container,
+        directory: __DIR__ . '/../app/Controllers',
+    ),
+);
 
-    $app->defaultExceptionHandler(
-        new class ($app->container) implements ErrorHandlerInterface {
-            public function __construct(
-                private readonly Container $container,
-            ) {
-            }
-
-            public function handle(
-                RequestInterface $request,
-                \Throwable $exception,
-            ): void {
-                echo '<h2>Exception</h2>';
-                echo '<pre>';
-                echo $exception;
-                echo '</pre>';
-
-                echo '<h2>Logger</h2>';
-                echo '<pre>';
-                echo $this->container->resolve(LoggerInterface::class)->formatEntries();
-                echo '</pre>';
-            }
-        },
-    );
-
-    $app->whenException(
-        Exception::class,
-        new class ($app->container) implements ErrorHandlerInterface {
-            public function __construct(
-                private readonly Container $container,
-            ) {
-            }
-
-            public function handle(
-                RequestInterface $request,
-                \Throwable $exception,
-            ): void {
-                $this->container->resolve(
-                    LoggerInterface::class,
-                )->log(
-                    entry: sprintf(
-                        'Caught exception %s[%s]: %s',
-                        $exception::class,
-                        $exception->getCode(),
-                        $exception->getMessage(),
-                    ),
-                );
-            }
-        },
-    );
-
-    $app->container->persistent(Logger::class);
-    $app->container->persistent(Mapper::class);
-
-    $app->container->persistent(
-        new DynamicRouter(
-            container: $app->container,
-            directory: __DIR__ . '/../app/Controllers',
-        ),
-    );
-
-    $app->run();
-}
+$app->run();

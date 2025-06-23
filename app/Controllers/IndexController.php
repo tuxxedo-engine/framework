@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Middleware\M3;
+use App\Middleware\MiddlewareTest;
 use App\Services\Logger\LoggerInterface;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Http\Cookie;
@@ -28,7 +28,7 @@ use Tuxxedo\Mapper\MapperInterface;
 use Tuxxedo\Router\Attributes\Middleware;
 use Tuxxedo\Router\Attributes\Route;
 
-#[Middleware(M3::class)]
+#[Middleware(MiddlewareTest::class)]
 class IndexController
 {
     public function __construct(
