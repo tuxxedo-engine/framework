@@ -33,12 +33,12 @@ class RequestHandlerPipeline
     public function run(
         RequestInterface $request,
     ): ResponseInterface {
-        $handler = $this->buildTail();
+        $handler = $this->buildPipeline();
 
         return $handler->handle($request, $handler);
     }
 
-    private function buildTail(): RequestHandlerInterface
+    private function buildPipeline(): RequestHandlerInterface
     {
         $next = new RequestHandler(
             handler: fn (RequestInterface $request): ResponseInterface => ($this->resolver)($this->container),
