@@ -161,7 +161,7 @@ class IndexController
     public function input(RequestInterface $request): ResponseInterface
     {
         return Response::json(
-            [
+            json: [
                 'string' => $request->post->getString('test'),
                 'int' => $request->post->getInt('test'),
                 'bool' => $request->post->getBool('test'),

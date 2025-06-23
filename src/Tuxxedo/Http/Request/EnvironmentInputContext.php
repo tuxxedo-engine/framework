@@ -88,6 +88,7 @@ class EnvironmentInputContext implements InputContextInterface
         string $name,
         float $default = 0.0,
         string $decimalPoint = '.',
+        string $thousandSeparator = ',',
     ): float {
         if (!\filter_has_var($this->superglobal, $name)) {
             return $default;
@@ -100,6 +101,7 @@ class EnvironmentInputContext implements InputContextInterface
             [
                 'options' => [
                     'decimal' => $decimalPoint,
+                    'thousand' => $thousandSeparator,
                 ],
             ],
         );
@@ -117,7 +119,7 @@ class EnvironmentInputContext implements InputContextInterface
             return $default;
         }
 
-        $value = \filter_input($this->superglobal, $name, \FILTER_DEFAULT);
+        $value = \filter_input($this->superglobal, $name);
 
         if (!\is_string($value)) {
             return $default;
@@ -161,13 +163,13 @@ class EnvironmentInputContext implements InputContextInterface
     public function getArrayOfInt(string $name): array
     {
         if (!\filter_has_var($this->superglobal, $name)) {
-            throw HttpException::fromInternalServerError();
+            return [];
         }
 
         $value = \filter_input($this->superglobal, $name, \FILTER_VALIDATE_INT, \FILTER_REQUIRE_ARRAY);
 
         if (!\is_array($value)) {
-            throw HttpException::fromInternalServerError();
+            return [];
         }
 
         return $value;
@@ -176,22 +178,25 @@ class EnvironmentInputContext implements InputContextInterface
     public function getArrayOfBool(string $name): array
     {
         if (!\filter_has_var($this->superglobal, $name)) {
-            throw HttpException::fromInternalServerError();
+            return [];
         }
 
         $value = \filter_input($this->superglobal, $name, \FILTER_VALIDATE_BOOL, \FILTER_REQUIRE_ARRAY);
 
         if (!\is_array($value)) {
-            throw HttpException::fromInternalServerError();
+            return [];
         }
 
         return $value;
     }
 
-    public function getArrayOfFloat(string $name, string $decimalPoint = '.'): array
-    {
+    public function getArrayOfFloat(
+        string $name,
+        string $decimalPoint = '.',
+        string $thousandSeparator = ',',
+    ): array {
         if (!\filter_has_var($this->superglobal, $name)) {
-            throw HttpException::fromInternalServerError();
+            return [];
         }
 
         $value = \filter_input(
@@ -202,12 +207,13 @@ class EnvironmentInputContext implements InputContextInterface
                 'flags' => \FILTER_REQUIRE_ARRAY,
                 'options' => [
                     'decimal' => $decimalPoint,
+                    'thousand' => $thousandSeparator,
                 ],
             ],
         );
 
         if (!\is_array($value)) {
-            throw HttpException::fromInternalServerError();
+            return [];
         }
 
         return $value;
@@ -216,13 +222,13 @@ class EnvironmentInputContext implements InputContextInterface
     public function getArrayOfString(string $name): array
     {
         if (!\filter_has_var($this->superglobal, $name)) {
-            throw HttpException::fromInternalServerError();
+            return [];
         }
 
         $value = \filter_input($this->superglobal, $name, \FILTER_DEFAULT, \FILTER_REQUIRE_ARRAY);
 
         if (!\is_array($value)) {
-            throw HttpException::fromInternalServerError();
+            return [];
         }
 
         return $value;
