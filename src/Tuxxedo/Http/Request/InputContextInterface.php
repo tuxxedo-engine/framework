@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Request;
 
 use Tuxxedo\Http\HttpException;
+use Tuxxedo\Mapper\MapperException;
 use UnitEnum as T;
 
 interface InputContextInterface
@@ -113,5 +114,33 @@ interface InputContextInterface
     public function getArrayOfEnum(
         string $name,
         string $enum,
+    ): array;
+
+    /**
+     * @template T of object
+     *
+     * @param class-string<T>|(\Closure(): T)|T $class
+     * @return T
+     *
+     * @throws HttpException
+     * @throws MapperException
+     */
+    public function mapTo(
+        string $name,
+        string|object $class,
+    ): object;
+
+    /**
+     * @template T of object
+     *
+     * @param class-string<T>|(\Closure(): T)|T $class
+     * @return T[]
+     *
+     * @throws HttpException
+     * @throws MapperException
+     */
+    public function mapToArrayOf(
+        string $name,
+        string|object $class,
     ): array;
 }

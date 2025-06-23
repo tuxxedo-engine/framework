@@ -44,4 +44,15 @@ class MapperException extends \Exception
             ),
         );
     }
+
+    public static function fromInvalidIterable(
+        string $type,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid iterable type "%s" supplied to array of',
+                $type,
+            ),
+        );
+    }
 }

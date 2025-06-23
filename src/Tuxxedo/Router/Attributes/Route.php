@@ -16,7 +16,8 @@ namespace Tuxxedo\Router\Attributes;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Router\RoutePriority;
 
-abstract readonly class Route
+#[\Attribute(flags: \Attribute::IS_REPEATABLE | \Attribute::TARGET_CLASS | \Attribute::TARGET_METHOD)]
+readonly class Route
 {
     /**
      * @param Method[] $methods

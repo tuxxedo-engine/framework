@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Request;
 
 use Tuxxedo\Http\HttpException;
+use Tuxxedo\Mapper\MapperInterface;
 
 class EnvironmentInputContext implements InputContextInterface
 {
@@ -22,6 +23,7 @@ class EnvironmentInputContext implements InputContextInterface
      */
     public function __construct(
         private readonly int $superglobal,
+        private readonly MapperInterface $mapper,
     ) {
     }
 
@@ -274,5 +276,31 @@ class EnvironmentInputContext implements InputContextInterface
         }
 
         return $enums;
+    }
+
+    public function mapTo(
+        string $name,
+        string|object $class,
+    ): object {
+        $value = $this->getRaw($name);
+
+        if (!\is_array($value)) {
+            throw HttpException::fromInternalServerError();
+        }
+
+        return $this->mapper->mapArrayTo($value, $class);
+    }
+
+    public function mapToArrayOf(
+        string $name,
+        string|object $class,
+    ): array {
+        $value = $this->getRaw($name);
+
+        if (!\is_array($value)) {
+            throw HttpException::fromInternalServerError();
+        }
+
+        return $this->mapper->mapToArrayOf($value, $class);
     }
 }

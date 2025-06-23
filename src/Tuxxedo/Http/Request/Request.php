@@ -13,33 +13,35 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request;
 
-use Tuxxedo\Http\HeaderInterface;
+use Tuxxedo\Mapper\MapperInterface;
 
-class Request implements RequestInterface
+readonly class Request implements RequestInterface
 {
-    public function __construct(
-        public private(set) ServerContextInterface $server,
-        public private(set) HeaderContextInterface $headers,
-        public private(set) InputContextInterface $cookies,
-        public private(set) InputContextInterface $get,
-        public private(set) InputContextInterface $post,
-    ) {
-    }
+    public ServerContextInterface $server;
+    public HeaderContextInterface $headers;
+    public InputContextInterface $cookies;
+    public InputContextInterface $get;
+    public InputContextInterface $post;
 
-    public static function createFromEnvironment(): Request
-    {
-        return new Request(
-            server: new EnvironmentServerContext(),
-            headers: new EnvironmentHeaderContext(),
-            cookies: new EnvironmentInputContext(
-                superglobal: \INPUT_COOKIE,
-            ),
-            get: new EnvironmentInputContext(
-                superglobal: \INPUT_GET,
-            ),
-            post: new EnvironmentInputContext(
-                superglobal: \INPUT_POST,
-            ),
+    public function __construct(
+        MapperInterface $mapper,
+    ) {
+        $this->server = new EnvironmentServerContext();
+        $this->headers = new EnvironmentHeaderContext();
+
+        $this->cookies = new EnvironmentInputContext(
+            superglobal: \INPUT_COOKIE,
+            mapper: $mapper,
+        );
+
+        $this->get = new EnvironmentInputContext(
+            superglobal: \INPUT_GET,
+            mapper: $mapper,
+        );
+
+        $this->post = new EnvironmentInputContext(
+            superglobal: \INPUT_POST,
+            mapper: $mapper,
         );
     }
 }

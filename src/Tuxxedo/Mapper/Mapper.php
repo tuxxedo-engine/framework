@@ -15,11 +15,23 @@ namespace Tuxxedo\Mapper;
 
 class Mapper implements MapperInterface
 {
+    /**
+     * @template T of object
+     *
+     * @param array<mixed> $input
+     * @param class-string<T>|(\Closure(): T)|T $className
+     * @return T
+     *
+     * @throws MapperException
+     */
     public function mapArrayTo(
         array $input,
         string|object $className,
     ): object {
-        if (\is_object($className)) {
+        if ($className instanceof \Closure) {
+            /** @var T $instance */
+            $instance = $className();
+        } elseif (\is_object($className)) {
             $instance = clone $className;
         } else {
             $instance = new $className();
@@ -75,10 +87,14 @@ class Mapper implements MapperInterface
                     input: $value,
                     className: $className,
                 );
-            } else {
+            } elseif (\is_array($value)) {
                 $mapped[] = $this->mapArrayTo(
                     input: $value,
                     className: $className,
+                );
+            } else {
+                throw MapperException::fromInvalidIterable(
+                    type: \gettype($value),
                 );
             }
         }

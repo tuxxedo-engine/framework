@@ -19,6 +19,7 @@ use Tuxxedo\Container\Container;
 use Tuxxedo\Http\Cookie;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HeaderInterface;
+use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
@@ -166,8 +167,33 @@ class IndexController
                 'int' => $request->post->getInt('test'),
                 'bool' => $request->post->getBool('test'),
                 'floatDot' => $request->post->getFloat('test'),
-                'floatComma' => $request->post->getFloat('test', decimalPoint: ','),
+                'floatComma' => $request->post->getFloat('test', decimalPoint: ',', thousandSeparator: '.'),
             ],
+        );
+    }
+
+    #[Route(uri: '/inputMap', methods: [Method::GET, Method::POST])]
+    public function inputMap(RequestInterface $request): ResponseInterface
+    {
+        if ($request->server->method === Method::GET) {
+            return Response::html(
+                html: '<form action="/inputMap" method="post">' .
+                      '<input type="text" name="struct[name]">' .
+                      '<br>' .
+                      '<input type="text" name="struct[age]">' .
+                      '<br><input type="submit">' .
+                      '</form>',
+            );
+        }
+
+        return Response::json(
+            json: $request->post->mapTo(
+                'struct',
+                new class () {
+                    public string $name;
+                    public int $age;
+                }
+            ),
         );
     }
 }

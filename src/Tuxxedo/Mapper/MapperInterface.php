@@ -19,7 +19,7 @@ interface MapperInterface
      * @template T of object
      *
      * @param array<mixed> $input
-     * @param class-string<T>|T $className
+     * @param class-string<T>|(\Closure(): T)|T $className
      * @return T
      *
      * @throws MapperException
@@ -32,7 +32,7 @@ interface MapperInterface
     /**
      * @template T of object
      *
-     * @param class-string<T>|T $className
+     * @param class-string<T>|(\Closure(): T)|T $className
      * @return T
      *
      * @throws MapperException
@@ -45,8 +45,8 @@ interface MapperInterface
     /**
      * @template T of object
      *
-     * @param array<array<mixed>|object> $input
-     * @param class-string<T>|T $className
+     * @param array<mixed> $input
+     * @param class-string<T>|(\Closure(): T)|T $className
      * @return T[]
      *
      * @throws MapperException

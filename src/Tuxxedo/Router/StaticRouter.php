@@ -42,16 +42,24 @@ class StaticRouter implements RouterInterface
         Method $method,
         string $uri,
     ): ?RouteInterface {
+        $isMethodNotAllowed = false;
+
         foreach ($this->routes as $route) {
             if ($route->uri !== $uri) {
                 continue;
             }
 
             if ($route->method !== null && $route->method !== $method) {
-                throw HttpException::fromMethodNotAllowed();
+                $isMethodNotAllowed = true;
+
+                continue;
             }
 
             return $route;
+        }
+
+        if ($isMethodNotAllowed) {
+            throw HttpException::fromMethodNotAllowed();
         }
 
         return null;

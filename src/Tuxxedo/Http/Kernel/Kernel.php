@@ -32,17 +32,17 @@ class Kernel
     /**
      * @var array<(\Closure(): RequestHandlerInterface)>
      */
-    public private(set) array $middleware = [];
+    private array $middleware = [];
 
     /**
      * @var array<class-string<\Throwable>, array<\Closure(): ErrorHandlerInterface>>
      */
-    public private(set) array $exceptions = [];
+    private array $exceptions = [];
 
     /**
      * @var array<(\Closure(): ErrorHandlerInterface)>
      */
-    public private(set) array $defaultExceptionHandlers = [];
+    private array $defaultExceptionHandlers = [];
 
     // @todo Redesign part of this so services can be more centralized and registered prior
     final public function __construct(
@@ -166,7 +166,7 @@ class Kernel
     public function run(
         ?RequestInterface $request = null,
     ): void {
-        $request ??= Request::createFromEnvironment();
+        $request ??= $this->container->resolve(Request::class);
 
         try {
             $route = $this->container->resolve(RouterInterface::class)->findByRequest(
