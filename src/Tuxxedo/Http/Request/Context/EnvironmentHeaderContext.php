@@ -11,11 +11,12 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Http\Request;
+namespace Tuxxedo\Http\Request\Context;
 
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\WeightedHeader;
+use UnitEnum as T;
 
 class EnvironmentHeaderContext implements HeaderContextInterface
 {

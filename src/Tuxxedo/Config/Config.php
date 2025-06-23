@@ -15,7 +15,6 @@ namespace Tuxxedo\Config;
 
 use Tuxxedo\Collections\FileCollection;
 
-// @todo Consider a $default parameter?
 class Config implements ConfigInterface
 {
     /**

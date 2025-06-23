@@ -11,10 +11,11 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Http\Request;
+namespace Tuxxedo\Http\Request\Context;
 
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Mapper\MapperInterface;
+use UnitEnum as T;
 
 class EnvironmentInputContext implements InputContextInterface
 {

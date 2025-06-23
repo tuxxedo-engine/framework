@@ -196,4 +196,31 @@ class IndexController
             ),
         );
     }
+
+    #[Route(uri: '/fileUpload', methods: [Method::GET, Method::POST])]
+    public function fileUpload(RequestInterface $request): ResponseInterface
+    {
+        if ($request->server->method === Method::GET) {
+            return Response::html(
+                html: '<form action="/fileUpload" method="post" enctype="multipart/form-data">' .
+                      '<input type="file" name="uploadedFile">' .
+                      '<br><input type="submit">' .
+                      '</form>',
+            );
+        }
+
+        $file = $request->files->get('uploadedFile');
+
+        return Response::json(
+            json: [
+                'name' => $file->name,
+                'type' => $file->type,
+                'isTrustedType' => $file->isTrustedType(),
+                'size' => $file->size,
+                'temporaryPath' => $file->temporaryPath,
+                'browserPath' => $file->browserPath,
+                'contents' => $file->getContents(),
+            ],
+        );
+    }
 }
