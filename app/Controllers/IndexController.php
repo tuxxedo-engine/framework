@@ -223,4 +223,12 @@ class IndexController
             ],
         );
     }
+
+    #[Route\Get(uri: '/jsonBody')]
+    public function jsonBody(RequestInterface $request): ResponseInterface
+    {
+        return Response::json(
+            json: $request->body->getJson(),
+        );
+    }
 }
