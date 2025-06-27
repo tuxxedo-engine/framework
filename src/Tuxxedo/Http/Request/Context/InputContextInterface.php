@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request\Context;
 
+use Tuxxedo\Collections\CollectionInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Mapper\MapperException;
 use UnitEnum as T;
@@ -23,6 +24,11 @@ interface InputContextInterface
      * @return mixed[]
      */
     public function all(): array;
+
+    /**
+     * @return CollectionInterface<array-key, mixed>
+     */
+    public function toCollection(): CollectionInterface;
 
     public function has(
         string $name,

@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request\Context;
 
+use Tuxxedo\Collections\Collection;
+use Tuxxedo\Collections\CollectionInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Mapper\MapperInterface;
 use UnitEnum as T;
@@ -35,6 +37,13 @@ class EnvironmentInputContext implements InputContextInterface
             \INPUT_POST => $_POST,
             \INPUT_COOKIE => $_COOKIE,
         };
+    }
+
+    public function toCollection(): CollectionInterface
+    {
+        return new Collection(
+            collection: $this->all(),
+        );
     }
 
     public function has(string $name): bool
