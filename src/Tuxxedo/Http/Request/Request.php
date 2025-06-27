@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request;
 
+use Tuxxedo\Http\Request\Context\BodyContextInterface;
+use Tuxxedo\Http\Request\Context\EnvironmentBodyContext;
 use Tuxxedo\Http\Request\Context\EnvironmentHeaderContext;
 use Tuxxedo\Http\Request\Context\EnvironmentInputContext;
 use Tuxxedo\Http\Request\Context\EnvironmentServerContext;
@@ -31,6 +33,7 @@ readonly class Request implements RequestInterface
     public InputContextInterface $get;
     public InputContextInterface $post;
     public UploadedFilesContextInterface $files;
+    public BodyContextInterface $body;
 
     public function __construct(
         MapperInterface $mapper,
@@ -54,5 +57,9 @@ readonly class Request implements RequestInterface
         );
 
         $this->files = new EnvironmentUploadedFilesContext();
+
+        $this->body = new EnvironmentBodyContext(
+            mapper: $mapper,
+        );
     }
 }

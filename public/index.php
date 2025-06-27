@@ -51,7 +51,6 @@ $app->container->persistent(Logger::class);
 // @todo Once the router is registered, look into the routes and where it retrieve its
 //       internal database, which could for example be static, app/routes.php,
 //       static attributes (via precompiled file) or dynamic attributes via reflection
-
 $app->container->persistent(
     new DynamicRouter(
         container: $app->container,

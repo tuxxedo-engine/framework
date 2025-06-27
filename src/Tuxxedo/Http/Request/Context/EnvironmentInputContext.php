@@ -39,16 +39,15 @@ class EnvironmentInputContext implements InputContextInterface
 
     public function has(string $name): bool
     {
-        return \filter_has_var($this->superglobal, $name);
+        return \filter_has_var(
+            $this->superglobal,
+            $name,
+        );
     }
 
     public function getRaw(string $name): mixed
     {
-        $superglobal = match ($this->superglobal) {
-            \INPUT_GET => $_GET,
-            \INPUT_POST => $_POST,
-            \INPUT_COOKIE => $_COOKIE,
-        };
+        $superglobal = $this->all();
 
         if (!\array_key_exists($name, $superglobal)) {
             throw HttpException::fromInternalServerError();
@@ -63,7 +62,11 @@ class EnvironmentInputContext implements InputContextInterface
             return $default;
         }
 
-        $value = \filter_input($this->superglobal, $name, \FILTER_VALIDATE_INT);
+        $value = \filter_input(
+            $this->superglobal,
+            $name,
+            \FILTER_VALIDATE_INT,
+        );
 
         if (!\is_int($value)) {
             return $default;
@@ -78,7 +81,11 @@ class EnvironmentInputContext implements InputContextInterface
             return $default;
         }
 
-        $value = \filter_input($this->superglobal, $name, \FILTER_VALIDATE_BOOL);
+        $value = \filter_input(
+            $this->superglobal,
+            $name,
+            \FILTER_VALIDATE_BOOL,
+        );
 
         if (!\is_bool($value)) {
             return $default;
@@ -169,7 +176,12 @@ class EnvironmentInputContext implements InputContextInterface
             return [];
         }
 
-        $value = \filter_input($this->superglobal, $name, \FILTER_VALIDATE_INT, \FILTER_REQUIRE_ARRAY);
+        $value = \filter_input(
+            $this->superglobal,
+            $name,
+            \FILTER_VALIDATE_INT,
+            \FILTER_REQUIRE_ARRAY,
+        );
 
         if (!\is_array($value)) {
             return [];
@@ -184,7 +196,12 @@ class EnvironmentInputContext implements InputContextInterface
             return [];
         }
 
-        $value = \filter_input($this->superglobal, $name, \FILTER_VALIDATE_BOOL, \FILTER_REQUIRE_ARRAY);
+        $value = \filter_input(
+            $this->superglobal,
+            $name,
+            \FILTER_VALIDATE_BOOL,
+            \FILTER_REQUIRE_ARRAY,
+        );
 
         if (!\is_array($value)) {
             return [];
@@ -228,7 +245,12 @@ class EnvironmentInputContext implements InputContextInterface
             return [];
         }
 
-        $value = \filter_input($this->superglobal, $name, \FILTER_DEFAULT, \FILTER_REQUIRE_ARRAY);
+        $value = \filter_input(
+            $this->superglobal,
+            $name,
+            \FILTER_DEFAULT,
+            \FILTER_REQUIRE_ARRAY,
+        );
 
         if (!\is_array($value)) {
             return [];
@@ -254,7 +276,12 @@ class EnvironmentInputContext implements InputContextInterface
             throw HttpException::fromInternalServerError();
         }
 
-        $values = \filter_input($this->superglobal, $name, \FILTER_DEFAULT, \FILTER_REQUIRE_ARRAY);
+        $values = \filter_input(
+            $this->superglobal,
+            $name,
+            \FILTER_DEFAULT,
+            \FILTER_REQUIRE_ARRAY,
+        );
 
         if (!\is_array($values)) {
             throw HttpException::fromInternalServerError();
@@ -283,6 +310,10 @@ class EnvironmentInputContext implements InputContextInterface
         string $name,
         string|object $class,
     ): object {
+        if ($this->superglobal === \INPUT_COOKIE) {
+            throw HttpException::fromInternalServerError();
+        }
+
         $value = $this->getRaw($name);
 
         if (!\is_array($value)) {
@@ -296,6 +327,10 @@ class EnvironmentInputContext implements InputContextInterface
         string $name,
         string|object $class,
     ): array {
+        if ($this->superglobal === \INPUT_COOKIE) {
+            throw HttpException::fromInternalServerError();
+        }
+
         $value = $this->getRaw($name);
 
         if (!\is_array($value)) {

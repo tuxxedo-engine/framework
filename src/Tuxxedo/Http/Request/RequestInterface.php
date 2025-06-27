@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request;
 
+use Tuxxedo\Http\Request\Context\BodyContextInterface;
 use Tuxxedo\Http\Request\Context\HeaderContextInterface;
 use Tuxxedo\Http\Request\Context\InputContextInterface;
 use Tuxxedo\Http\Request\Context\ServerContextInterface;
@@ -44,5 +45,7 @@ interface RequestInterface
         get;
     }
 
-    // @todo Support body stream reading, e.g. Json
+    public BodyContextInterface $body {
+        get;
+    }
 }

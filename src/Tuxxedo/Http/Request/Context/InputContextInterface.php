@@ -49,8 +49,8 @@ interface InputContextInterface
     public function getFloat(
         string $name,
         float $default = 0.0,
-        string $decimalPoint = '.', // @todo Consider a flag for both
-        string $thousandSeparator = ',', // @todo consider a flag for both
+        string $decimalPoint = '.',
+        string $thousandSeparator = ',',
     ): float;
 
     public function getString(
@@ -92,8 +92,8 @@ interface InputContextInterface
      */
     public function getArrayOfFloat(
         string $name,
-        string $decimalPoint = '.', // @todo Consider a flag for both
-        string $thousandSeparator = ',', // @todo consider a flag for both
+        string $decimalPoint = '.',
+        string $thousandSeparator = ',',
     ): array;
 
     /**
