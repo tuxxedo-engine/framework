@@ -17,7 +17,6 @@ use Tuxxedo\Collections\Collection;
 use Tuxxedo\Collections\CollectionInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Mapper\MapperInterface;
-use UnitEnum as T;
 
 class EnvironmentInputContext implements InputContextInterface
 {
