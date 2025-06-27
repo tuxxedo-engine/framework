@@ -72,10 +72,10 @@ class Kernel
 
     public static function createFromDirectory(
         string $directory,
-    ): Kernel {
+    ): static {
         $config = Config::createFromDirectory($directory . '/config');
 
-        return new Kernel(
+        return new static(
             appName: $config->getString('app.name'),
             appVersion: $config->getString('app.version'),
             appProfile: $config->getEnum('app.profile', Profile::class),
