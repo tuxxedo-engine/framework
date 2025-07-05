@@ -10,7 +10,7 @@ use Tuxxedo\Http\Kernel\Kernel;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Router\DynamicRouter;
 use Tuxxedo\Services\ComposerServiceProvider;
-use Tuxxedo\Services\EngineServiceProvider;
+use Tuxxedo\Services\EngineDefaultsServiceProvider;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -18,7 +18,7 @@ $app = Kernel::createFromDirectory(
     directory: __DIR__ . '/../app',
 );
 
-$app->serviceProvider(new EngineServiceProvider());
+$app->serviceProvider(new EngineDefaultsServiceProvider());
 $app->serviceProvider(new ComposerServiceProvider());
 
 // @todo Register error handling, depending on what the turn out from the $this->appName

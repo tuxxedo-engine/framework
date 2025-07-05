@@ -17,7 +17,7 @@ use Tuxxedo\Container\Container;
 use Tuxxedo\Http\Response\ResponseEmitter;
 use Tuxxedo\Mapper\Mapper;
 
-class EngineServiceProvider implements ServiceProviderInterface
+class EngineDefaultsServiceProvider implements ServiceProviderInterface
 {
     public function load(Container $container): void
     {
