@@ -20,11 +20,10 @@ use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewarePipeline;
 use Tuxxedo\Http\Request\Request;
 use Tuxxedo\Http\Request\RequestInterface;
-use Tuxxedo\Http\Response\ResponseEmitter;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
-use Tuxxedo\Mapper\Mapper;
 use Tuxxedo\Router\RouterInterface;
+use Tuxxedo\Services\ServiceProviderInterface;
 
 class Kernel
 {
@@ -51,23 +50,12 @@ class Kernel
         public readonly Profile $appProfile = Profile::RELEASE,
         ?Container $container = null,
         ?Config $config = null,
-        bool $loadDefaultServices = true,
     ) {
         $this->container = $container ?? new Container();
 
         $this->container->persistent($this);
         $this->container->persistent($this->container);
         $this->container->persistent($config ?? new Config());
-
-        if ($loadDefaultServices) {
-            $this->loadDefaultServices();
-        }
-    }
-
-    private function loadDefaultServices(): void
-    {
-        $this->container->persistent(ResponseEmitter::class);
-        $this->container->persistent(Mapper::class);
     }
 
     public static function createFromDirectory(
@@ -81,6 +69,22 @@ class Kernel
             appProfile: $config->getEnum('app.profile', Profile::class),
             config: $config,
         );
+    }
+
+    /**
+     * @param ServiceProviderInterface|(\Closure(): ServiceProviderInterface) $provider
+     * @return $this
+     */
+    public function serviceProvider(
+        ServiceProviderInterface|\Closure $provider,
+    ): static {
+        if ($provider instanceof \Closure) {
+            $provider = $provider();
+        }
+
+        $provider->load($this->container);
+
+        return $this;
     }
 
     /**

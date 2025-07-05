@@ -9,12 +9,17 @@ use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
 use Tuxxedo\Http\Kernel\Kernel;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Router\DynamicRouter;
+use Tuxxedo\Services\ComposerServiceProvider;
+use Tuxxedo\Services\EngineServiceProvider;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $app = Kernel::createFromDirectory(
     directory: __DIR__ . '/../app',
 );
+
+$app->serviceProvider(new EngineServiceProvider());
+$app->serviceProvider(new ComposerServiceProvider());
 
 // @todo Register error handling, depending on what the turn out from the $this->appName
 //       verdict above, this may need similar treatment. $this->appProfile will be the main thing
