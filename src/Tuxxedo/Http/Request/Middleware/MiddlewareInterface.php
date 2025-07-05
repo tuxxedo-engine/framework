@@ -11,15 +11,15 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Http\Request\Handler;
+namespace Tuxxedo\Http\Request\Middleware;
 
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
-interface RequestHandlerInterface
+interface MiddlewareInterface
 {
     public function handle(
         RequestInterface $request,
-        RequestHandlerInterface $next,
+        MiddlewareInterface $next,
     ): ResponseInterface;
 }

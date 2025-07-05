@@ -11,25 +11,29 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Http\Request\Handler;
+namespace Tuxxedo\Http\Request\Middleware;
 
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
-class RequestHandler implements RequestHandlerInterface
+class MiddlewareNode implements MiddlewareInterface
 {
     /**
-     * @param (\Closure(RequestInterface, RequestHandlerInterface): ResponseInterface) $handler
+     * @param \Closure(): MiddlewareInterface $current
      */
     public function __construct(
-        private readonly \Closure $handler,
+        private readonly \Closure $current,
+        private readonly MiddlewareInterface $next,
     ) {
     }
 
     public function handle(
         RequestInterface $request,
-        RequestHandlerInterface $next,
+        MiddlewareInterface $next,
     ): ResponseInterface {
-        return ($this->handler)($request, $next);
+        return ($this->current)()->handle(
+            request: $request,
+            next: $this->next,
+        );
     }
-}
+};

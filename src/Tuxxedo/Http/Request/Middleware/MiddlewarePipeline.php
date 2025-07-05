@@ -11,17 +11,17 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Http\Request\Handler;
+namespace Tuxxedo\Http\Request\Middleware;
 
 use Tuxxedo\Container\Container;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
-class RequestHandlerPipeline
+class MiddlewarePipeline
 {
     /**
      * @param (\Closure(Container): ResponseInterface) $resolver
-     * @param array<(\Closure(): RequestHandlerInterface)> $middleware
+     * @param array<(\Closure(): MiddlewareInterface)> $middleware
      */
     public function __construct(
         private readonly Container $container,
@@ -38,14 +38,28 @@ class RequestHandlerPipeline
         return $handler->handle($request, $handler);
     }
 
-    private function buildPipeline(): RequestHandlerInterface
+    private function buildPipeline(): MiddlewareInterface
     {
-        $next = new RequestHandler(
-            handler: fn (RequestInterface $request): ResponseInterface => ($this->resolver)($this->container),
-        );
+        $next = new class ($this->resolver, $this->container) implements MiddlewareInterface {
+            /**
+             * @param (\Closure(Container): ResponseInterface) $resolver
+             */
+            public function __construct(
+                private \Closure $resolver,
+                private Container $container,
+            ) {
+            }
+
+            public function handle(
+                RequestInterface $request,
+                MiddlewareInterface $next,
+            ): ResponseInterface {
+                return ($this->resolver)($this->container);
+            }
+        };
 
         foreach ($this->middleware as $middleware) {
-            $next = new RequestHandlerNode(
+            $next = new MiddlewareNode(
                 current: $middleware,
                 next: $next,
             );

@@ -13,7 +13,8 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Middleware\MiddlewareTest;
+use App\Middleware\LoggerMiddleware;
+use App\Middleware\OutputCaptureMiddleware;
 use App\Services\Logger\LoggerInterface;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Http\Cookie;
@@ -28,7 +29,7 @@ use Tuxxedo\Mapper\MapperInterface;
 use Tuxxedo\Router\Attributes\Middleware;
 use Tuxxedo\Router\Attributes\Route;
 
-#[Middleware(MiddlewareTest::class)]
+#[Middleware(LoggerMiddleware::class)]
 class IndexController
 {
     public function __construct(
@@ -230,5 +231,14 @@ class IndexController
         return Response::json(
             json: $request->body->getJson(),
         );
+    }
+
+    #[Route\Get(uri: '/phpinfo.php')]
+    #[Middleware(OutputCaptureMiddleware::class)]
+    public function phpInfo(RequestInterface $request): ResponseInterface
+    {
+        \phpinfo();
+
+        return new Response();
     }
 }

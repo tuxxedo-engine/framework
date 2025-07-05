@@ -16,7 +16,7 @@ namespace Tuxxedo\Router;
 use Tuxxedo\Collections\FileCollection;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Http\HttpException;
-use Tuxxedo\Http\Request\Handler\RequestHandlerInterface;
+use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Router\Attributes\Middleware;
 use Tuxxedo\Router\Attributes\Route as RouteAttr;
 
@@ -109,7 +109,7 @@ class DynamicRouter extends StaticRouter
 
     /**
      * @param \ReflectionClass<object>|\ReflectionMethod $reflector
-     * @return array<\Closure(): RequestHandlerInterface>
+     * @return array<\Closure(): MiddlewareInterface>
      */
     private function getMiddleware(
         \ReflectionClass|\ReflectionMethod $reflector,
@@ -117,7 +117,7 @@ class DynamicRouter extends StaticRouter
         $middleware = [];
 
         foreach ($reflector->getAttributes(Middleware::class, \ReflectionAttribute::IS_INSTANCEOF) as $attribute) {
-            $middleware[] = fn (): RequestHandlerInterface => $this->container->resolve(
+            $middleware[] = fn (): MiddlewareInterface => $this->container->resolve(
                 $attribute->newInstance()->name,
             );
         }

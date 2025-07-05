@@ -15,12 +15,12 @@ namespace App\Middleware;
 
 use App\Services\Logger\LoggerInterface;
 use Tuxxedo\Container\Container;
-use Tuxxedo\Http\Request\Handler\RequestHandlerInterface;
+use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
 #[\Attribute(\Attribute::TARGET_METHOD)]
-class MiddlewareTest implements RequestHandlerInterface
+class OutputCaptureMiddleware implements MiddlewareInterface
 {
     public function __construct(
         protected readonly Container $container,
@@ -29,15 +29,12 @@ class MiddlewareTest implements RequestHandlerInterface
 
     public function handle(
         RequestInterface $request,
-        RequestHandlerInterface $next,
+        MiddlewareInterface $next,
     ): ResponseInterface {
-        $this->container->resolve(LoggerInterface::class)->log(
-            entry: \sprintf(
-                'Middleware: %s',
-                static::class,
-            ),
-        );
+        \ob_start();
 
-        return $next->handle($request, $next);
+        return $next->handle($request, $next)->withBody(
+            !\is_bool($body = \ob_get_clean()) ? $body : '',
+        );
     }
 }

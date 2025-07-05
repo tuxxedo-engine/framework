@@ -16,8 +16,8 @@ namespace Tuxxedo\Http\Kernel;
 use Tuxxedo\Config\Config;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Http\HttpException;
-use Tuxxedo\Http\Request\Handler\RequestHandlerInterface;
-use Tuxxedo\Http\Request\Handler\RequestHandlerPipeline;
+use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
+use Tuxxedo\Http\Request\Middleware\MiddlewarePipeline;
 use Tuxxedo\Http\Request\Request;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseEmitter;
@@ -31,7 +31,7 @@ class Kernel
     public readonly Container $container;
 
     /**
-     * @var array<(\Closure(): RequestHandlerInterface)>
+     * @var array<(\Closure(): MiddlewareInterface)>
      */
     private array $middleware = [];
 
@@ -84,14 +84,14 @@ class Kernel
     }
 
     /**
-     * @param (\Closure(): RequestHandlerInterface)|RequestHandlerInterface $middleware
+     * @param (\Closure(): MiddlewareInterface)|MiddlewareInterface $middleware
      * @return $this
      */
     public function middleware(
-        \Closure|RequestHandlerInterface $middleware,
+        \Closure|MiddlewareInterface $middleware,
     ): static {
         if (!$middleware instanceof \Closure) {
-            $middleware = static fn (): RequestHandlerInterface => $middleware;
+            $middleware = static fn (): MiddlewareInterface => $middleware;
         }
 
         $this->middleware[] = $middleware;
@@ -171,7 +171,7 @@ class Kernel
             }
 
             $this->container->resolve(ResponseEmitterInterface::class)->emit(
-                response: (new RequestHandlerPipeline(
+                response: (new MiddlewarePipeline(
                     container: $this->container,
                     resolver: static function (Container $container) use ($route, $request): ResponseInterface {
                         $callback = [

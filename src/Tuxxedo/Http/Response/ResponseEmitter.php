@@ -25,7 +25,7 @@ class ResponseEmitter implements ResponseEmitterInterface
     ): void {
         $maxLength = null;
 
-        if ($sendHeaders) {
+        if (!$this->sent && $sendHeaders) {
             \http_response_code(
                 response_code: $response->responseCode->getStatusCode(),
             );

@@ -13,13 +13,13 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Router\Attributes;
 
-use Tuxxedo\Http\Request\Handler\RequestHandlerInterface;
+use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 
 #[\Attribute(flags: \Attribute::IS_REPEATABLE | \Attribute::TARGET_CLASS | \Attribute::TARGET_METHOD)]
 readonly class Middleware
 {
     /**
-     * @param class-string<RequestHandlerInterface> $name
+     * @param class-string<MiddlewareInterface> $name
      */
     public function __construct(
         public string $name,

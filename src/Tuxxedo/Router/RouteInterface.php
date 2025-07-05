@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Router;
 
 use Tuxxedo\Http\Method;
-use Tuxxedo\Http\Request\Handler\RequestHandlerInterface;
+use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 
 interface RouteInterface
 {
@@ -38,7 +38,7 @@ interface RouteInterface
     }
 
     /**
-     * @var array<(\Closure(): RequestHandlerInterface)>
+     * @var array<(\Closure(): MiddlewareInterface)>
      */
     public array $middleware {
         get;

@@ -14,13 +14,13 @@ declare(strict_types=1);
 namespace Tuxxedo\Router;
 
 use Tuxxedo\Http\Method;
-use Tuxxedo\Http\Request\Handler\RequestHandlerInterface;
+use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 
 class Route implements RouteInterface
 {
     /**
      * @param class-string $controller
-     * @param array<(\Closure(): RequestHandlerInterface)> $middleware
+     * @param array<(\Closure(): MiddlewareInterface)> $middleware
      */
     public function __construct(
         public readonly ?Method $method,
