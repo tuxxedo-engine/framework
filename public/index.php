@@ -55,6 +55,7 @@ $app->container->persistent(
     new DynamicRouter(
         container: $app->container,
         directory: __DIR__ . '/../app/Controllers',
+        baseNamespace: '\App\Controllers\\',
     ),
 );
 

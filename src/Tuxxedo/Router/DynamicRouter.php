@@ -28,7 +28,7 @@ class DynamicRouter extends StaticRouter
     public function __construct(
         private readonly Container $container,
         string $directory,
-        string $baseNamespace = '\App\Controllers\\',
+        string $baseNamespace,
     ) {
         parent::__construct(
             routes: $this->getRoutes(

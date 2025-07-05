@@ -170,6 +170,7 @@ class EnvironmentInputContext implements InputContextInterface
         }
 
         foreach ($enum::cases() as $case) {
+            // @todo Check cases like this where casing may cause bugs
             if ($case->name === $value) {
                 return $case;
             }
