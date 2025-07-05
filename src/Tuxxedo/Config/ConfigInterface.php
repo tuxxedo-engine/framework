@@ -43,10 +43,10 @@ interface ConfigInterface
     public function getString(string $path): string;
 
     /**
-     * @template T of \UnitEnum
+     * @template TEnum of \UnitEnum
      *
-     * @param class-string<T> $enum
-     * @return T
+     * @param class-string<TEnum> $enum
+     * @return TEnum
      *
      * @throws ConfigException
      */

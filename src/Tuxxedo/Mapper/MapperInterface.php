@@ -16,11 +16,11 @@ namespace Tuxxedo\Mapper;
 interface MapperInterface
 {
     /**
-     * @template T of object
+     * @template TClassName of object
      *
      * @param array<mixed> $input
-     * @param class-string<T>|(\Closure(): T)|T $className
-     * @return T
+     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
+     * @return TClassName
      *
      * @throws MapperException
      */
@@ -30,10 +30,10 @@ interface MapperInterface
     ): object;
 
     /**
-     * @template T of object
+     * @template TClassName of object
      *
-     * @param class-string<T>|(\Closure(): T)|T $className
-     * @return T
+     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
+     * @return TClassName
      *
      * @throws MapperException
      */
@@ -43,11 +43,11 @@ interface MapperInterface
     ): object;
 
     /**
-     * @template T of object
+     * @template TClassName of object
      *
      * @param array<mixed> $input
-     * @param class-string<T>|(\Closure(): T)|T $className
-     * @return T[]
+     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
+     * @return TClassName[]
      *
      * @throws MapperException
      */

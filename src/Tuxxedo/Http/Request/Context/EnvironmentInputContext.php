@@ -147,10 +147,10 @@ class EnvironmentInputContext implements InputContextInterface
     }
 
     /**
-     * @template T of \UnitEnum
+     * @template TEnum of \UnitEnum
      *
-     * @param class-string<T> $enum
-     * @return T&\UnitEnum
+     * @param class-string<TEnum> $enum
+     * @return TEnum&\UnitEnum
      *
      * @throws HttpException
      */
@@ -268,10 +268,10 @@ class EnvironmentInputContext implements InputContextInterface
     }
 
     /**
-     * @template T of \UnitEnum
+     * @template TEnum of \UnitEnum
      *
-     * @param class-string<T> $enum
-     * @return array<T&\UnitEnum>
+     * @param class-string<TEnum> $enum
+     * @return array<TEnum&\UnitEnum>
      *
      * @throws HttpException
      */

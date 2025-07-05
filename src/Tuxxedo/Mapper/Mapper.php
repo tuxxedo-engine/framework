@@ -16,11 +16,11 @@ namespace Tuxxedo\Mapper;
 class Mapper implements MapperInterface
 {
     /**
-     * @template T of object
+     * @template TClassName of object
      *
      * @param array<mixed> $input
-     * @param class-string<T>|(\Closure(): T)|T $className
-     * @return T
+     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
+     * @return TClassName
      *
      * @throws MapperException
      */
@@ -29,7 +29,7 @@ class Mapper implements MapperInterface
         string|object $className,
     ): object {
         if ($className instanceof \Closure) {
-            /** @var T $instance */
+            /** @var TClassName $instance */
             $instance = $className();
         } elseif (\is_object($className)) {
             $instance = clone $className;

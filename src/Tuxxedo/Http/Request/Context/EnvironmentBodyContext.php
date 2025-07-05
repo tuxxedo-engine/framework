@@ -55,10 +55,10 @@ class EnvironmentBodyContext implements BodyContextInterface
     }
 
     /**
-     * @template T of object
+     * @template TClassName of object
      *
-     * @param class-string<T>|(\Closure(): T)|T $class
-     * @return T
+     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $class
+     * @return TClassName
      *
      * @throws HttpException
      * @throws \JsonException
@@ -81,10 +81,10 @@ class EnvironmentBodyContext implements BodyContextInterface
     }
 
     /**
-     * @template T of object
+     * @template TClassName of object
      *
-     * @param class-string<T>|(\Closure(): T)|T $class
-     * @return T[]
+     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $class
+     * @return TClassName[]
      *
      * @throws HttpException
      * @throws \JsonException

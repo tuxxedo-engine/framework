@@ -154,10 +154,10 @@ class Config implements ConfigInterface
     }
 
     /**
-     * @template T of \UnitEnum
+     * @template TEnum of \UnitEnum
      *
-     * @param class-string<T> $enum
-     * @return T
+     * @param class-string<TEnum> $enum
+     * @return TEnum
      */
     public function getEnum(string $path, string $enum): object
     {
