@@ -14,11 +14,13 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Kernel;
 
 use Tuxxedo\Http\Request\RequestInterface;
+use Tuxxedo\Http\Response\ResponseInterface;
 
 interface ErrorHandlerInterface
 {
     public function handle(
         RequestInterface $request,
+        ResponseInterface $response,
         \Throwable $exception,
-    ): void;
+    ): ResponseInterface;
 }

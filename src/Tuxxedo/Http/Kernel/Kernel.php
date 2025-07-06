@@ -20,8 +20,10 @@ use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewarePipeline;
 use Tuxxedo\Http\Request\Request;
 use Tuxxedo\Http\Request\RequestInterface;
+use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseEmitter;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
+use Tuxxedo\Http\Response\ResponseExceptionInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\RouterInterface;
 use Tuxxedo\Services\ServiceProviderInterface;
@@ -164,13 +166,17 @@ class Kernel
 
         $handlers = \array_merge($handlers, $this->defaultExceptionHandlers);
 
-        if (\sizeof($handlers) === 0) {
-            throw $e;
+        if ($e instanceof ResponseExceptionInterface) {
+            $response = $e->send();
+        } else {
+            $response = new Response();
         }
 
         foreach ($handlers as $handler) {
-            ($handler())->handle($request, $e);
+            $response = ($handler())->handle($request, $response, $e);
         }
+
+        $this->emitter->emit($response);
     }
 
     public function run(

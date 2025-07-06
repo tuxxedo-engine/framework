@@ -11,13 +11,9 @@
 
 declare(strict_types=1);
 
-namespace App\Services\Logger;
+namespace Tuxxedo\Http\Response;
 
-interface LoggerInterface extends \Countable
+interface ResponseExceptionInterface
 {
-    public function log(
-        LogEntry|string $entry,
-    ): static;
-
-    public function formatEntries(): string;
+    public function send(): ResponseInterface;
 }

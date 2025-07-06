@@ -20,9 +20,13 @@ class ResponseEmitter implements ResponseEmitterInterface
     private bool $sent = false;
 
     public function emit(
-        ResponseInterface $response,
+        ResponseInterface|ResponseExceptionInterface $response,
         bool $sendHeaders = true,
     ): void {
+        if ($response instanceof ResponseExceptionInterface) {
+            $response = $response->send();
+        }
+
         $maxLength = null;
 
         if (!$this->sent && $sendHeaders) {

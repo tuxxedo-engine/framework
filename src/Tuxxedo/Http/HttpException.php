@@ -13,10 +13,13 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http;
 
+use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseCode;
 use Tuxxedo\Http\Response\ResponseCodeInterface;
+use Tuxxedo\Http\Response\ResponseExceptionInterface;
+use Tuxxedo\Http\Response\ResponseInterface;
 
-class HttpException extends \Exception implements ResponseCodeInterface
+class HttpException extends \Exception implements ResponseCodeInterface, ResponseExceptionInterface
 {
     public readonly ResponseCode $responseCode;
 
@@ -26,6 +29,13 @@ class HttpException extends \Exception implements ResponseCodeInterface
 
         parent::__construct(
             message: $responseCode->getStatusText(),
+        );
+    }
+
+    public function send(): ResponseInterface
+    {
+        return new Response(
+            responseCode: $this->responseCode,
         );
     }
 

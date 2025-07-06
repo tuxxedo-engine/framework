@@ -8,6 +8,7 @@ use Tuxxedo\Container\Container;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
 use Tuxxedo\Http\Kernel\Kernel;
 use Tuxxedo\Http\Request\RequestInterface;
+use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\DynamicRouter;
 use Tuxxedo\Services\ComposerServiceProvider;
 
@@ -18,8 +19,6 @@ $app = Kernel::createFromDirectory(
 );
 
 $app->serviceProvider(new ComposerServiceProvider());
-
-// @todo No redirection support in Responses
 
 // @todo No session module support
 
@@ -37,17 +36,27 @@ $app->defaultExceptionHandler(
 
         public function handle(
             RequestInterface $request,
+            ResponseInterface $response,
             \Throwable $exception,
-        ): void {
-            echo '<h2>Exception</h2>';
-            echo '<pre>';
-            echo $exception;
-            echo '</pre>';
+        ): ResponseInterface {
+            $html = '';
+            $html .= '<h2>Exception</h2>';
+            $html .= '<pre>';
+            $html .= $exception;
+            $html .= '</pre>';
+            $html .= '<h2>Logger</h2>';
 
-            echo '<h2>Logger</h2>';
-            echo '<pre>';
-            echo $this->container->resolve(LoggerInterface::class)->formatEntries();
-            echo '</pre>';
+            $logger = $this->container->resolve(LoggerInterface::class);
+
+            if (\sizeof($logger) > 0) {
+                $html .= '<pre>';
+                $html .= $logger->formatEntries();
+                $html .= '</pre>';
+            } else {
+                $html .= '<em>No log entries</em>';
+            }
+
+            return $response->withBody($html);
         }
     },
 );

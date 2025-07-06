@@ -49,4 +49,9 @@ class Logger implements LoggerInterface
 
         return $list;
     }
+
+    public function count(): int
+    {
+        return \sizeof($this->entries);
+    }
 }
