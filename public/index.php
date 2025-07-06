@@ -10,6 +10,9 @@ use Tuxxedo\Discovery\Bridges\ComposerDiscoverer;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
 use Tuxxedo\Http\Kernel\Kernel;
 use Tuxxedo\Http\Kernel\Profile;
+use Tuxxedo\Http\Request\Middleware\HttpsRequiredMiddleware;
+use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
+use Tuxxedo\Http\Request\Middleware\StrictTransportSecurityMiddleware;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\DynamicRouter;
@@ -79,6 +82,10 @@ $app->router(
         directory: __DIR__ . '/../app/Controllers',
         baseNamespace: '\App\Controllers\\',
     ),
+);
+
+$app->middleware(
+    static fn (): MiddlewareInterface => new StrictTransportSecurityMiddleware(),
 );
 
 $app->run();

@@ -38,4 +38,20 @@ class EnvironmentServerContext implements ServerContextInterface
             return $_SERVER['REQUEST_URI'];
         }
     }
+
+    public string $host {
+        get {
+            /** @var string */
+            return $_SERVER['SERVER_NAME'];
+        }
+    }
+
+    public int $port {
+        get {
+            /** @var string */
+            $port = $_SERVER['SERVER_PORT'];
+
+            return (int) $port;
+        }
+    }
 }

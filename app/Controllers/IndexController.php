@@ -104,8 +104,11 @@ class IndexController
     {
         return Response::json(
             json: [
+                'method' => $request->server->method->name,
                 'uri' => $request->server->uri,
                 'https' => $request->server->https,
+                'host' => $request->server->host,
+                'port' => $request->server->port,
             ],
             prettyPrint: true,
         );

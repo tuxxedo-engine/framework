@@ -28,4 +28,12 @@ interface ServerContextInterface
     public string $uri {
         get;
     }
+
+    public string $host {
+        get;
+    }
+
+    public int $port {
+        get;
+    }
 }
