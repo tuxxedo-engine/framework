@@ -43,6 +43,7 @@ class Kernel
     private array $exceptions = [];
 
     private ResponseEmitterInterface $emitter;
+    private RouterInterface $router;
 
     /**
      * @var array<(\Closure(): ErrorHandlerInterface)>
@@ -98,6 +99,14 @@ class Kernel
         ResponseEmitter $emitter,
     ): static {
         $this->emitter = $emitter;
+
+        return $this;
+    }
+
+    public function router(
+        RouterInterface $router,
+    ): static {
+        $this->router = $router;
 
         return $this;
     }
@@ -185,7 +194,11 @@ class Kernel
         $request ??= $this->container->resolve(Request::class);
 
         try {
-            $route = $this->container->resolve(RouterInterface::class)->findByRequest(
+            if (!isset($this->router)) {
+                throw HttpException::fromInternalServerError();
+            }
+
+            $route = $this->router->findByRequest(
                 request: $request,
             );
 
