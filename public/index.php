@@ -5,8 +5,10 @@ declare(strict_types=1);
 use App\Services\Logger\Logger;
 use App\Services\Logger\LoggerInterface;
 use Tuxxedo\Container\Container;
+use Tuxxedo\Debug\DebugErrorHandler;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
 use Tuxxedo\Http\Kernel\Kernel;
+use Tuxxedo\Http\Kernel\Profile;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\DynamicRouter;
@@ -20,46 +22,50 @@ $app = Kernel::createFromDirectory(
 
 $app->serviceProvider(new ComposerServiceProvider());
 
-// @todo No session module support
+// @todo session module
+// @todo Escaper module
 
-// @todo Register error handling, depending on what the turn out from the $this->appName
-//       verdict above, this may need similar treatment. $this->appProfile will be the main thing
-//       that affects the error handling. This needs to likely include a set_error_handler() call.
+if ($app->appProfile === Profile::DEBUG) {
+    DebugErrorHandler::registerPhpErrorHandler();
 
-// @todo Turn this into a debug error handler and register it in the Kernel if DEBUG profile
-$app->defaultExceptionHandler(
-    new class ($app->container) implements ErrorHandlerInterface {
-        public function __construct(
-            private readonly Container $container,
-        ) {
-        }
-
-        public function handle(
-            RequestInterface $request,
-            ResponseInterface $response,
-            \Throwable $exception,
-        ): ResponseInterface {
-            $html = '';
-            $html .= '<h2>Exception</h2>';
-            $html .= '<pre>';
-            $html .= $exception;
-            $html .= '</pre>';
-            $html .= '<h2>Logger</h2>';
-
-            $logger = $this->container->resolve(LoggerInterface::class);
-
-            if (\sizeof($logger) > 0) {
-                $html .= '<pre>';
-                $html .= $logger->formatEntries();
-                $html .= '</pre>';
-            } else {
-                $html .= '<em>No log entries</em>';
+    $app->defaultExceptionHandler(
+        static fn (): ErrorHandlerInterface => new DebugErrorHandler(),
+    );
+} else {
+    $app->defaultExceptionHandler(
+        new class ($app->container) implements ErrorHandlerInterface {
+            public function __construct(
+                private readonly Container $container,
+            ) {
             }
 
-            return $response->withBody($html);
-        }
-    },
-);
+            public function handle(
+                RequestInterface $request,
+                ResponseInterface $response,
+                \Throwable $exception,
+            ): ResponseInterface {
+                $html = '';
+                $html .= '<h2>Exception</h2>';
+                $html .= '<pre>';
+                $html .= $exception;
+                $html .= '</pre>';
+                $html .= '<h2>Logger</h2>';
+
+                $logger = $this->container->resolve(LoggerInterface::class);
+
+                if (\sizeof($logger) > 0) {
+                    $html .= '<pre>';
+                    $html .= $logger->formatEntries();
+                    $html .= '</pre>';
+                } else {
+                    $html .= '<em>No log entries</em>';
+                }
+
+                return $response->withBody($html);
+            }
+        },
+    );
+}
 
 // @todo Implement loading of app/services.php into $this->container, providers?
 $app->container->persistent(Logger::class);
