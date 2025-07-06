@@ -23,6 +23,7 @@ use Tuxxedo\Http\Request\Context\HeaderContextInterface;
 use Tuxxedo\Http\Request\Context\InputContextInterface;
 use Tuxxedo\Http\Request\Context\ServerContextInterface;
 use Tuxxedo\Http\Request\Context\UploadedFilesContextInterface;
+use Tuxxedo\Mapper\Mapper;
 use Tuxxedo\Mapper\MapperInterface;
 
 readonly class Request implements RequestInterface
@@ -36,8 +37,10 @@ readonly class Request implements RequestInterface
     public BodyContextInterface $body;
 
     public function __construct(
-        MapperInterface $mapper,
+        ?MapperInterface $mapper = null,
     ) {
+        $mapper ??= new Mapper();
+
         $this->server = new EnvironmentServerContext();
         $this->headers = new EnvironmentHeaderContext();
 

@@ -20,6 +20,7 @@ use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewarePipeline;
 use Tuxxedo\Http\Request\Request;
 use Tuxxedo\Http\Request\RequestInterface;
+use Tuxxedo\Http\Response\ResponseEmitter;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\RouterInterface;
@@ -39,6 +40,8 @@ class Kernel
      */
     private array $exceptions = [];
 
+    private ResponseEmitterInterface $emitter;
+
     /**
      * @var array<(\Closure(): ErrorHandlerInterface)>
      */
@@ -56,6 +59,8 @@ class Kernel
         $this->container->persistent($this);
         $this->container->persistent($this->container);
         $this->container->persistent($config ?? new Config());
+
+        $this->emitter = new ResponseEmitter();
     }
 
     public static function createFromDirectory(
@@ -83,6 +88,14 @@ class Kernel
         }
 
         $provider->load($this->container);
+
+        return $this;
+    }
+
+    public function emitter(
+        ResponseEmitter $emitter,
+    ): static {
+        $this->emitter = $emitter;
 
         return $this;
     }
@@ -174,7 +187,7 @@ class Kernel
                 throw HttpException::fromNotFound();
             }
 
-            $this->container->resolve(ResponseEmitterInterface::class)->emit(
+            $this->emitter->emit(
                 response: (new MiddlewarePipeline(
                     container: $this->container,
                     resolver: static function (Container $container) use ($route, $request): ResponseInterface {

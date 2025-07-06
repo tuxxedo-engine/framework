@@ -129,6 +129,24 @@ class Response implements ResponseInterface
     /**
      * @param HeaderInterface[] $headers
      */
+    public static function redirect(
+        string $uri,
+        array $headers = [],
+        ResponseCode $responseCode = ResponseCode::OK,
+    ): static {
+        return new static(
+            headers: $headers,
+            responseCode: $responseCode,
+            body: '',
+        )->withHeader(
+            header: new Header('Location', $uri),
+            replace: true,
+        );
+    }
+
+    /**
+     * @param HeaderInterface[] $headers
+     */
     protected function getHeaderIndex(
         array $headers,
         HeaderInterface|string $lookupHeader,

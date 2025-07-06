@@ -16,6 +16,7 @@ namespace Tuxxedo\Http\Request\Context;
 use Tuxxedo\Collections\Collection;
 use Tuxxedo\Collections\CollectionInterface;
 use Tuxxedo\Http\HttpException;
+use Tuxxedo\Mapper\Mapper;
 use Tuxxedo\Mapper\MapperInterface;
 
 class EnvironmentInputContext implements InputContextInterface
@@ -25,7 +26,7 @@ class EnvironmentInputContext implements InputContextInterface
      */
     public function __construct(
         private readonly int $superglobal,
-        private readonly MapperInterface $mapper,
+        private readonly MapperInterface $mapper = new Mapper(),
     ) {
     }
 

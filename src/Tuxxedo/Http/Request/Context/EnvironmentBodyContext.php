@@ -14,13 +14,14 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Request\Context;
 
 use Tuxxedo\Http\HttpException;
+use Tuxxedo\Mapper\Mapper;
 use Tuxxedo\Mapper\MapperException;
 use Tuxxedo\Mapper\MapperInterface;
 
 class EnvironmentBodyContext implements BodyContextInterface
 {
     public function __construct(
-        private MapperInterface $mapper,
+        private MapperInterface $mapper = new Mapper(),
     ) {
     }
 

@@ -25,6 +25,7 @@ use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Http\WeightedHeaderInterface;
+use Tuxxedo\Mapper\Mapper;
 use Tuxxedo\Mapper\MapperInterface;
 use Tuxxedo\Router\Attributes\Middleware;
 use Tuxxedo\Router\Attributes\Route;
@@ -32,11 +33,13 @@ use Tuxxedo\Router\Attributes\Route;
 #[Middleware(LoggerMiddleware::class)]
 class IndexController
 {
+    private MapperInterface $mapper;
+
     public function __construct(
         private readonly Container $container,
         private readonly LoggerInterface $logger,
-        private readonly MapperInterface $mapper,
     ) {
+        $this->mapper = new Mapper();
     }
 
     #[Route\Get(uri: '/')]
@@ -240,5 +243,11 @@ class IndexController
         \phpinfo();
 
         return new Response();
+    }
+
+    #[Route\Get(uri: '/redirect')]
+    public function redirect(RequestInterface $request): ResponseInterface
+    {
+        return Response::redirect('/');
     }
 }
