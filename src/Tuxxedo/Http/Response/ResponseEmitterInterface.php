@@ -16,7 +16,7 @@ namespace Tuxxedo\Http\Response;
 interface ResponseEmitterInterface
 {
     public function emit(
-        ResponseInterface $response,
+        ResponseInterface|ResponseExceptionInterface $response,
         bool $sendHeaders = true,
     ): void;
 
