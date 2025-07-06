@@ -26,7 +26,6 @@ use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Response\ResponseExceptionInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\RouterInterface;
-use Tuxxedo\Services\ServiceProviderInterface;
 
 class Kernel
 {

@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Services;
+namespace Tuxxedo\Http\Kernel;
 
 use Tuxxedo\Container\Container;
 

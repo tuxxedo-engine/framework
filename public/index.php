@@ -12,7 +12,6 @@ use Tuxxedo\Http\Kernel\Profile;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\DynamicRouter;
-use Tuxxedo\Services\ComposerServiceProvider;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -20,8 +19,7 @@ $app = Kernel::createFromDirectory(
     directory: __DIR__ . '/../app',
 );
 
-$app->serviceProvider(new ComposerServiceProvider());
-
+// @todo Implement discovery channels
 // @todo session module
 // @todo Escaper module
 
