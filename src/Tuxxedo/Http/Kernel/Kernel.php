@@ -14,7 +14,10 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Kernel;
 
 use Tuxxedo\Config\Config;
+use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\Container;
+use Tuxxedo\Discovery\DiscoveryChannelInterface;
+use Tuxxedo\Discovery\DiscoveryType;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewarePipeline;
@@ -29,6 +32,7 @@ use Tuxxedo\Router\RouterInterface;
 
 class Kernel
 {
+    public readonly ConfigInterface $config;
     public readonly Container $container;
 
     /**
@@ -56,11 +60,11 @@ class Kernel
         ?Container $container = null,
         ?Config $config = null,
     ) {
+        $this->config = $config ?? new Config();
         $this->container = $container ?? new Container();
 
         $this->container->persistent($this);
         $this->container->persistent($this->container);
-        $this->container->persistent($config ?? new Config());
 
         $this->emitter = new ResponseEmitter();
     }
@@ -106,6 +110,20 @@ class Kernel
         RouterInterface $router,
     ): static {
         $this->router = $router;
+
+        return $this;
+    }
+
+    public function discover(
+        DiscoveryChannelInterface $channel,
+    ): static {
+        foreach ($channel->provides() as $type) {
+            foreach ($channel->discover($type) as $discovery) {
+                match ($type) {
+                    DiscoveryType::SERVICES => $this->container->persistent($discovery),
+                };
+            }
+        }
 
         return $this;
     }

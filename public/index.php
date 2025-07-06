@@ -6,6 +6,7 @@ use App\Services\Logger\Logger;
 use App\Services\Logger\LoggerInterface;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Debug\DebugErrorHandler;
+use Tuxxedo\Discovery\Bridges\ComposerDiscoverer;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
 use Tuxxedo\Http\Kernel\Kernel;
 use Tuxxedo\Http\Kernel\Profile;
@@ -19,7 +20,8 @@ $app = Kernel::createFromDirectory(
     directory: __DIR__ . '/../app',
 );
 
-// @todo Implement discovery channels
+$app->discover(new ComposerDiscoverer());
+
 // @todo session module
 // @todo Escaper module
 

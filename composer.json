@@ -4,6 +4,7 @@
   "minimum-stability": "stable",
   "license": "MIT",
   "version": "0.1.0",
+  "type": "library",
   "authors": [
     {
       "name": "Kalle Sommer Nielsen",

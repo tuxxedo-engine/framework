@@ -32,6 +32,12 @@ class ComposerDiscoverer implements DiscoveryChannelInterface
             return;
         }
 
+        $this->packages = [];
+
+        foreach (DiscoveryType::cases() as $type) {
+            $this->packages[$type->name] = [];
+        }
+
         foreach (InstalledVersions::getInstalledPackages() as $package) {
             $path = InstalledVersions::getInstallPath($package);
 
@@ -73,12 +79,18 @@ class ComposerDiscoverer implements DiscoveryChannelInterface
                         \class_exists($discoveredClass) &&
                         $type->isValidSubClass($discoveredClass)
                     ) {
-                        $this->packages[$type->name] ??= [];
                         $this->packages[$type->name][] = $discoveredClass;
                     }
                 }
             }
         }
+    }
+
+    public function provides(): array
+    {
+        return [
+            DiscoveryType::SERVICES,
+        ];
     }
 
     public function discover(DiscoveryType $type): array

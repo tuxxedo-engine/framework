@@ -16,6 +16,11 @@ namespace Tuxxedo\Discovery;
 interface DiscoveryChannelInterface
 {
     /**
+     * @return DiscoveryType[]
+     */
+    public function provides(): array;
+
+    /**
      * @return array<class-string>
      */
     public function discover(DiscoveryType $type): array;
