@@ -140,7 +140,7 @@ class EnvironmentHeaderContext implements HeaderContextInterface
         }
 
         foreach ($enum::cases() as $case) {
-            if ($case->name === $this->headers[$name]) {
+            if (\strcasecmp($case->name, $this->headers[$name]) === 0) {
                 return $case;
             }
         }

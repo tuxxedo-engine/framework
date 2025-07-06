@@ -28,7 +28,7 @@ enum Method
     public static function from(string $name): static
     {
         foreach (self::cases() as $case) {
-            if ($case->name === $name) {
+            if (\strcasecmp($case->name, $name) === 0) {
                 return $case;
             }
         }

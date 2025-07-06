@@ -171,8 +171,7 @@ class EnvironmentInputContext implements InputContextInterface
         }
 
         foreach ($enum::cases() as $case) {
-            // @todo Check cases like this where casing may cause bugs
-            if ($case->name === $value) {
+            if (\mb_strtolower($case->name) === \mb_strtolower($value)) {
                 return $case;
             }
         }
@@ -300,12 +299,14 @@ class EnvironmentInputContext implements InputContextInterface
         $cases = [];
 
         foreach ($enum::cases() as $case) {
-            $cases[$case->name] = $case;
+            $cases[\mb_strtolower($case->name)] = $case;
         }
 
         $enums = [];
 
         foreach ($values as $value) {
+            $value = \mb_strtolower($value);
+
             if (!\array_key_exists($value, $cases)) {
                 throw HttpException::fromInternalServerError();
             }
