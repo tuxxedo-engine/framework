@@ -17,8 +17,7 @@ $app = Kernel::createFromDirectory(
     directory: __DIR__ . '/../app',
 );
 
-// @todo Investigate Warnings
-// $app->serviceProvider(new ComposerServiceProvider());
+$app->serviceProvider(new ComposerServiceProvider());
 
 // @todo No redirection support in Responses
 

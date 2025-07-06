@@ -23,7 +23,13 @@ class ComposerServiceProvider implements ServiceProviderInterface
     public function load(Container $container): void
     {
         foreach (InstalledVersions::getInstalledPackages() as $package) {
-            $json = \file_get_contents(InstalledVersions::getInstallPath($package) . '/composer.json');
+            $path = InstalledVersions::getInstallPath($package);
+
+            if ($path === null) {
+                continue;
+            }
+
+            $json = \file_get_contents($path . '/composer.json');
 
             if (!\is_string($json)) {
                 continue;
