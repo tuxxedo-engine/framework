@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Session;
 
-class Session implements SessionInterface
+use Tuxxedo\Container\AlwaysPersistentInterface;
+
+class Session implements SessionInterface, AlwaysPersistentInterface
 {
     public function __construct(
         public readonly SessionAdapterInterface $adapter,

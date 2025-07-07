@@ -64,28 +64,6 @@ class PhpSessionAdapter implements SessionAdapterInterface
         }
     }
 
-    /**
-     * @return array{
-     *     lifetime: int,
-     *     path: string,
-     *     domain: string,
-     *     httpOnly: bool,
-     *     secure: bool,
-     *     sameSite: 'Lax'|'Strict',
-     *  }
-     */
-    private function getCookieOptions(): array
-    {
-        return [
-            'lifetime' => $this->lifetime,
-            'path' => $this->path,
-            'domain' => $this->domain,
-            'httpOnly' => $this->httpOnly,
-            'secure' => $this->secure,
-            'sameSite' => $this->sameSite->value,
-        ];
-    }
-
     public function isStarted(): bool
     {
         return $this->started;
@@ -94,7 +72,16 @@ class PhpSessionAdapter implements SessionAdapterInterface
     public function start(): static
     {
         if (!$this->started) {
-            \session_set_cookie_params($this->getCookieOptions()) or throw SessionException::fromCannotStart();
+            \session_set_cookie_params(
+                lifetime_or_options: [
+                    'lifetime' => $this->lifetime,
+                    'path' => $this->path,
+                    'domain' => $this->domain,
+                    'httpOnly' => $this->httpOnly,
+                    'secure' => $this->secure,
+                    'sameSite' => $this->sameSite->value,
+                ],
+            ) or throw SessionException::fromCannotStart();
             \session_start() or throw SessionException::fromCannotStart();
 
             $this->started = true;
