@@ -274,7 +274,6 @@ class IndexController
             ),
         );
 
-        /** @var  $constant */
         foreach ($reflector->getConstants() as $name => $value) {
             $versionInfo[$displayName($name)] = $value;
         }
