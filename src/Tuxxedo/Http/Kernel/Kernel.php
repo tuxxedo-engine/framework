@@ -119,9 +119,14 @@ class Kernel
     ): static {
         foreach ($channel->provides() as $type) {
             foreach ($channel->discover($type) as $discovery) {
-                match ($type) {
-                    DiscoveryType::SERVICES => $this->container->persistent($discovery),
-                };
+                switch ($type) {
+                    case DiscoveryType::SERVICES:
+                        /** @var class-string<ServiceProviderInterface> $discovery */
+                        $this->serviceProvider(
+                            static fn (): ServiceProviderInterface => new $discovery(),
+                        );
+                        break;
+                }
             }
         }
 

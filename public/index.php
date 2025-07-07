@@ -10,7 +10,6 @@ use Tuxxedo\Discovery\Bridges\ComposerDiscoverer;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
 use Tuxxedo\Http\Kernel\Kernel;
 use Tuxxedo\Http\Kernel\Profile;
-use Tuxxedo\Http\Request\Middleware\HttpsRequiredMiddleware;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\Middleware\StrictTransportSecurityMiddleware;
 use Tuxxedo\Http\Request\RequestInterface;
