@@ -39,7 +39,7 @@ interface SessionAdapterInterface
     /**
      * @throws SessionException
      */
-    public function clear(): static;
+    public function unset(): static;
 
     /**
      * @throws SessionException
@@ -65,6 +65,11 @@ interface SessionAdapterInterface
         string $name,
         mixed $value,
     ): static;
+
+    /**
+     * @return mixed[]
+     */
+    public function all(): array;
 
     /**
      * @throws SessionException

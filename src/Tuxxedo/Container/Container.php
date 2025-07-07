@@ -18,17 +18,22 @@ class Container
     /**
      * @var array<class-string, object|null>
      */
-    protected array $persistentDependencies = [];
+    private array $persistentDependencies = [];
 
     /**
      * @var array<class-string, class-string>
      */
-    protected array $aliases = [];
+    private array $aliases = [];
 
     /**
      * @var array<class-string, mixed[]>
      */
-    protected array $resolvedArguments = [];
+    private array $resolvedArguments = [];
+
+    /**
+     * @var array<class-string, (\Closure(self): object)>
+     */
+    private array $initializers = [];
 
     /**
      * @param class-string|object $class
@@ -55,6 +60,29 @@ class Container
         }
 
         $this->alias($aliases, $className);
+
+        return $this;
+    }
+
+    /**
+     * @template TClassName of object
+     *
+     * @param class-string<TClassName> $class
+     * @param (\Closure(self): TClassName) $initializer
+     */
+    public function lazy(
+        string $class,
+        \Closure $initializer,
+        bool $bindInterfaces = true,
+        bool $bindParent = true,
+    ): static {
+        $this->persistent(
+            class: $class,
+            bindInterfaces: $bindInterfaces,
+            bindParent: $bindParent,
+        );
+
+        $this->initializers[$class] = $initializer;
 
         return $this;
     }
@@ -97,6 +125,19 @@ class Container
         if (isset($this->persistentDependencies[$className])) {
             /** @var TClassName */
             return $this->persistentDependencies[$className];
+        }
+
+        if (isset($this->initializers[$className])) {
+            /** @var TClassName $instance */
+            $instance = ($this->initializers[$className])($this);
+
+            if ($instance instanceof AlwaysPersistentInterface) {
+                unset($this->initializers[$className]);
+
+                $this->persistentDependencies[$className] = $instance;
+            }
+
+            return $instance;
         }
 
         if (!\array_key_exists($className, $this->resolvedArguments)) {

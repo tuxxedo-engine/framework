@@ -29,6 +29,7 @@ use Tuxxedo\Mapper\Mapper;
 use Tuxxedo\Mapper\MapperInterface;
 use Tuxxedo\Router\Attributes\Middleware;
 use Tuxxedo\Router\Attributes\Route;
+use Tuxxedo\Session\SessionInterface;
 use Tuxxedo\Version;
 
 #[Middleware(LoggerMiddleware::class)]
@@ -39,6 +40,7 @@ class IndexController
     public function __construct(
         private readonly Container $container,
         private readonly LoggerInterface $logger,
+        private readonly SessionInterface $session,
     ) {
         $this->mapper = new Mapper();
     }
@@ -281,6 +283,57 @@ class IndexController
         return Response::json(
             json: $versionInfo,
             prettyPrint: true,
+        );
+    }
+
+    #[Route(uri: '/session', methods: [Method::GET, Method::POST])]
+    public function session(RequestInterface $request): ResponseInterface
+    {
+        if ($request->server->method === Method::POST) {
+            $value = $request->post->getString('value');
+            $value = match ($request->post->getString('type')) {
+                'int' => \intval($value),
+                'bool' => \boolval($value),
+                'float' => \floatval($value),
+                default => $value,
+            };
+
+            $this->session->set(
+                name: $request->post->getString('name'),
+                value: $value,
+            );
+        }
+
+        $html = '';
+        $html .= '<form action="/session" method="post">';
+        $html .= '<label><strong>Name:</strong>';
+        $html .= '<input type="text" name="name"></label><br>';
+        $html .= '<label><strong>Value:</strong>';
+        $html .= '<input type="text" name="value"></label><br>';
+        $html .= '<label><strong>Type:</strong>';
+        $html .= '<select name="type"><option value="string">string</option>';
+        $html .= '<option value="int">integer</option>';
+        $html .= '<option value="bool">boolean</option>';
+        $html .= '<option value="float">float</option></select></label><br>';
+        $html .= '<input type="submit" value="Save">';
+        $html .= '</form>';
+        $html .= '<form action="/session-reset" method="post">';
+        $html .= '<input type="submit" value="Reset">';
+        $html .= '</form>';
+        $html .= '<pre>' . \json_encode($this->session->all()) . '</pre>';
+
+        return Response::html(
+            html: $html,
+        );
+    }
+
+    #[Route\Post(uri: '/session-reset')]
+    public function sessionReset(RequestInterface $request): ResponseInterface
+    {
+        $this->session->adapter->unset();
+
+        return Response::redirect(
+            uri: '/session',
         );
     }
 }

@@ -40,6 +40,11 @@ class Session implements SessionInterface
         return $this;
     }
 
+    public function all(): array
+    {
+        return $this->adapter->all();
+    }
+
     public function getRaw(
         string $name,
         mixed $default = null,

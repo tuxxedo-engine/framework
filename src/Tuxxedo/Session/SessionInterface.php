@@ -40,6 +40,13 @@ interface SessionInterface
     ): static;
 
     /**
+     * @return mixed[]
+     *
+     * @throws SessionException
+     */
+    public function all(): array;
+
+    /**
      * @throws SessionException
      */
     public function getRaw(

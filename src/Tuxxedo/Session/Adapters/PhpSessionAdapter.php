@@ -57,7 +57,7 @@ class PhpSessionAdapter implements SessionAdapterInterface
      */
     private function startCheck(): void
     {
-        if (!$this->started && $this->startMode === SessionStartMode::LAZY) {
+        if ($this->startMode === SessionStartMode::LAZY) {
             $this->start();
         } else {
             throw SessionException::fromNotStarted();
@@ -119,7 +119,7 @@ class PhpSessionAdapter implements SessionAdapterInterface
         return $this->stop()->start();
     }
 
-    public function clear(): static
+    public function unset(): static
     {
         $this->startCheck();
 
@@ -173,6 +173,13 @@ class PhpSessionAdapter implements SessionAdapterInterface
         $_SESSION[$name] = $value;
 
         return $this;
+    }
+
+    public function all(): array
+    {
+        $this->startCheck();
+
+        return $_SESSION;
     }
 
     public function getRaw(

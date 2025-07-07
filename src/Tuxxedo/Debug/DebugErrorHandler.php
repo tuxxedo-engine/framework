@@ -46,7 +46,8 @@ class DebugErrorHandler implements ErrorHandlerInterface
         $html .= '<h1>Tuxxedo Engine Debugger</h1>';
         $html .= 'Exception: ' . $exception::class . '<br>';
         $html .= 'Message: ' . \htmlspecialchars($exception->getMessage()) . '<br>';
-        $html .= 'File: ' . $location;
+        $html .= 'File: ' . $location . '<br>';
+        $html .= '<pre>' . $exception->getTraceAsString() . '</pre>';
 
         return $response->withBody($html);
     }
