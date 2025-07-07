@@ -54,12 +54,12 @@ class EnvironmentInputContext implements InputContextInterface
         );
     }
 
-    public function getRaw(string $name): mixed
+    public function getRaw(string $name, mixed $default = null): mixed
     {
         $superglobal = $this->all();
 
         if (!\array_key_exists($name, $superglobal)) {
-            throw HttpException::fromInternalServerError();
+            return $default;
         }
 
         return $superglobal[$name];

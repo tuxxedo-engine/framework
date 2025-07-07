@@ -15,7 +15,8 @@
     "php": ">=8.4",
     "ext-filter": "*",
     "ext-json": "*",
-    "ext-mbstring": "*"
+    "ext-mbstring": "*",
+    "ext-session": "*"
   },
   "require-dev": {
     "phpstan/phpstan": "2.1.*",

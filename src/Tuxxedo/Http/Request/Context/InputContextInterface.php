@@ -36,6 +36,7 @@ interface InputContextInterface
 
     public function getRaw(
         string $name,
+        mixed $default = null,
     ): mixed;
 
     public function getInt(
