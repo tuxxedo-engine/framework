@@ -89,6 +89,7 @@ class ComposerDiscoverer implements DiscoveryChannelInterface
     public function provides(): array
     {
         return [
+            DiscoveryType::EXTENSIONS,
             DiscoveryType::SERVICES,
         ];
     }
