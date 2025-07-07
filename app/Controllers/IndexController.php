@@ -29,6 +29,7 @@ use Tuxxedo\Mapper\Mapper;
 use Tuxxedo\Mapper\MapperInterface;
 use Tuxxedo\Router\Attributes\Middleware;
 use Tuxxedo\Router\Attributes\Route;
+use Tuxxedo\Version;
 
 #[Middleware(LoggerMiddleware::class)]
 class IndexController
@@ -252,5 +253,35 @@ class IndexController
     public function redirect(RequestInterface $request): ResponseInterface
     {
         return Response::redirect('/');
+    }
+
+    #[Route\Get(uri: '/version')]
+    public function version(RequestInterface $request): ResponseInterface
+    {
+        $versionInfo = [];
+        $reflector = new \ReflectionClass(Version::class);
+        $displayName = static fn (string $name): string => \str_replace(
+            ' ',
+            '',
+            \lcfirst(
+                \ucwords(
+                    \str_replace(
+                        '_',
+                        ' ',
+                        \strtolower($name),
+                    ),
+                ),
+            ),
+        );
+
+        /** @var  $constant */
+        foreach ($reflector->getConstants() as $name => $value) {
+            $versionInfo[$displayName($name)] = $value;
+        }
+
+        return Response::json(
+            json: $versionInfo,
+            prettyPrint: true,
+        );
     }
 }
