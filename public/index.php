@@ -25,7 +25,6 @@ $app = Kernel::createFromDirectory(
 $app->discover(new ComposerDiscoverer());
 
 // @todo session module
-// @todo Escaper module
 
 if ($app->appProfile === Profile::DEBUG) {
     DebugErrorHandler::registerPhpErrorHandler();
