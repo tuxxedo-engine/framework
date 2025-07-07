@@ -120,6 +120,10 @@ class Kernel
         foreach ($channel->provides() as $type) {
             foreach ($channel->discover($type) as $discovery) {
                 switch ($type) {
+                    case DiscoveryType::EXTENSIONS:
+                        /** @var class-string<ExtensionInterface> $discovery */
+                        (new $discovery())->augment($this);
+                        break;
                     case DiscoveryType::SERVICES:
                         /** @var class-string<ServiceProviderInterface> $discovery */
                         $this->serviceProvider(
