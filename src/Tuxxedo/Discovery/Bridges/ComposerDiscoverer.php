@@ -63,7 +63,7 @@ class ComposerDiscoverer implements DiscoveryChannelInterface
                 continue;
             }
 
-            foreach (DiscoveryType::cases() as $type) {
+            foreach ($this->provides() as $type) {
                 $typeIndex = \strtolower($type->name);
 
                 if (
