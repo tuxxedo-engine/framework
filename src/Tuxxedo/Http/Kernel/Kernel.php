@@ -24,7 +24,6 @@ use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewarePipeline;
 use Tuxxedo\Http\Request\Request;
 use Tuxxedo\Http\Request\RequestInterface;
-use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseEmitter;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Response\ResponseExceptionInterface;
@@ -215,7 +214,7 @@ class Kernel
         if ($e instanceof ResponseExceptionInterface) {
             $response = $e->send();
         } else {
-            $response = new Response();
+            $response = HttpException::fromInternalServerError()->send();
         }
 
         foreach ($handlers as $handler) {
