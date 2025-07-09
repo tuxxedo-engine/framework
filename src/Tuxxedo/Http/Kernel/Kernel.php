@@ -117,8 +117,18 @@ class Kernel
 
     public function discover(
         DiscoveryChannelInterface $channel,
+        ?DiscoveryType $type = null,
     ): static {
-        foreach ($channel->provides() as $type) {
+        if ($type !== null) {
+            $types = \array_filter(
+                $channel->provides(),
+                static fn (DiscoveryType $discoveryType): bool => $discoveryType === $type,
+            );
+        } else {
+            $types = $channel->provides();
+        }
+
+        foreach ($types as $type) {
             foreach ($channel->discover($type) as $discovery) {
                 switch ($type) {
                     case DiscoveryType::EXTENSIONS:

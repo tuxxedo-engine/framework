@@ -26,7 +26,9 @@ $app = Kernel::createFromDirectory(
     directory: __DIR__ . '/../app',
 );
 
-$app->discover(new ComposerDiscoverer());
+$app->discover(
+    channel: new ComposerDiscoverer(),
+);
 
 if ($app->appProfile === Profile::DEBUG) {
     DebugErrorHandler::registerPhpErrorHandler();
