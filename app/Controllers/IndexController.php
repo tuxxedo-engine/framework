@@ -16,7 +16,7 @@ namespace App\Controllers;
 use App\Middleware\LoggerMiddleware;
 use App\Middleware\OutputCaptureMiddleware;
 use App\Services\Logger\LoggerInterface;
-use Tuxxedo\Container\Container;
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Cookie;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HeaderInterface;
@@ -38,7 +38,7 @@ readonly class IndexController
     private MapperInterface $mapper;
 
     public function __construct(
-        private Container $container,
+        private ContainerInterface $container,
         private LoggerInterface $logger,
         private SessionInterface $session,
     ) {

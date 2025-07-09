@@ -13,8 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Kernel;
 
-use Tuxxedo\Container\Container;
-
 interface ExtensionInterface
 {
     public function augment(Kernel $app): void;

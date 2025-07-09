@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Router;
 
 use Tuxxedo\Collections\FileCollection;
-use Tuxxedo\Container\Container;
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Router\Attributes\Middleware;
@@ -26,7 +26,7 @@ class DynamicRouter extends StaticRouter
      * @throws HttpException
      */
     public function __construct(
-        private readonly Container $container,
+        private readonly ContainerInterface $container,
         string $directory,
         string $baseNamespace,
     ) {

@@ -13,18 +13,18 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request\Middleware;
 
-use Tuxxedo\Container\Container;
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
 class MiddlewarePipeline
 {
     /**
-     * @param (\Closure(Container): ResponseInterface) $resolver
+     * @param (\Closure(ContainerInterface): ResponseInterface) $resolver
      * @param array<(\Closure(): MiddlewareInterface)> $middleware
      */
     public function __construct(
-        private readonly Container $container,
+        private readonly ContainerInterface $container,
         private readonly \Closure $resolver,
         private readonly array $middleware,
     ) {
@@ -42,11 +42,11 @@ class MiddlewarePipeline
     {
         $next = new class ($this->resolver, $this->container) implements MiddlewareInterface {
             /**
-             * @param (\Closure(Container): ResponseInterface) $resolver
+             * @param (\Closure(ContainerInterface): ResponseInterface) $resolver
              */
             public function __construct(
                 private \Closure $resolver,
-                private Container $container,
+                private ContainerInterface $container,
             ) {
             }
 

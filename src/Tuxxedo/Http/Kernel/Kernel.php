@@ -16,6 +16,7 @@ namespace Tuxxedo\Http\Kernel;
 use Tuxxedo\Config\Config;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\Container;
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Discovery\DiscoveryChannelInterface;
 use Tuxxedo\Discovery\DiscoveryType;
 use Tuxxedo\Http\HttpException;
@@ -33,7 +34,7 @@ use Tuxxedo\Router\RouterInterface;
 class Kernel
 {
     public readonly ConfigInterface $config;
-    public readonly Container $container;
+    public readonly ContainerInterface $container;
 
     /**
      * @var array<(\Closure(): MiddlewareInterface)>
@@ -57,14 +58,14 @@ class Kernel
         public readonly string $appName = '',
         public readonly string $appVersion = '',
         public readonly Profile $appProfile = Profile::RELEASE,
-        ?Container $container = null,
+        ?ContainerInterface $container = null,
         ?Config $config = null,
     ) {
         $this->config = $config ?? new Config();
         $this->container = $container ?? new Container();
 
-        $this->container->persistent($this);
-        $this->container->persistent($this->container);
+        $this->container->bind($this);
+        $this->container->bind($this->container);
 
         $this->emitter = new ResponseEmitter();
     }
@@ -235,7 +236,7 @@ class Kernel
             $this->emitter->emit(
                 response: (new MiddlewarePipeline(
                     container: $this->container,
-                    resolver: static function (Container $container) use ($route, $request): ResponseInterface {
+                    resolver: static function (ContainerInterface $container) use ($route, $request): ResponseInterface {
                         $callback = [
                             $container->resolve($route->controller),
                             $route->action,

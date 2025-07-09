@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace App\Middleware;
 
 use App\Services\Logger\LoggerInterface;
-use Tuxxedo\Container\Container;
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
@@ -23,7 +23,7 @@ use Tuxxedo\Http\Response\ResponseInterface;
 class LoggerMiddleware implements MiddlewareInterface
 {
     public function __construct(
-        protected readonly Container $container,
+        protected readonly ContainerInterface $container,
     ) {
     }
 

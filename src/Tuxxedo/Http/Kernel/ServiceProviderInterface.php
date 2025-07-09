@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Kernel;
 
-use Tuxxedo\Container\Container;
+use Tuxxedo\Container\ContainerInterface;
 
 interface ServiceProviderInterface
 {
-    public function load(Container $container): void;
+    public function load(ContainerInterface $container): void;
 }

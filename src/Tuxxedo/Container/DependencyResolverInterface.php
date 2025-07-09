@@ -23,5 +23,5 @@ interface DependencyResolverInterface
      *
      * @throws UnresolvableDependencyException
      */
-    public function resolve(Container $container): mixed;
+    public function resolve(ContainerInterface $container): mixed;
 }

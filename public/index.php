@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Services\Logger\Logger;
 use App\Services\Logger\LoggerInterface;
-use Tuxxedo\Container\Container;
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Debug\DebugErrorHandler;
 use Tuxxedo\Discovery\Bridges\ComposerDiscoverer;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
@@ -38,7 +38,7 @@ if ($app->appProfile === Profile::DEBUG) {
     $app->defaultExceptionHandler(
         new class ($app->container) implements ErrorHandlerInterface {
             public function __construct(
-                private readonly Container $container,
+                private readonly ContainerInterface $container,
             ) {
             }
 
@@ -71,10 +71,10 @@ if ($app->appProfile === Profile::DEBUG) {
 }
 
 // @todo Implement loading of app/services.php into $this->container, providers?
-$app->container->persistent(Logger::class);
+$app->container->bind(Logger::class);
 $app->container->lazy(
     SessionInterface::class,
-    static fn (Container $container): SessionInterface => new Session(
+    static fn (ContainerInterface $container): SessionInterface => new Session(
         adapter: PhpSessionAdapter::createFromConfig(
             startMode: SessionStartMode::LAZY,
             config: $app->config,

@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
-class Container
+class Container implements ContainerInterface
 {
     /**
      * @var array<class-string, object|null>
@@ -38,7 +38,7 @@ class Container
     /**
      * @param class-string|object $class
      */
-    public function persistent(
+    public function bind(
         string|object $class,
         bool $bindInterfaces = true,
         bool $bindParent = true,
@@ -76,7 +76,7 @@ class Container
         bool $bindInterfaces = true,
         bool $bindParent = true,
     ): static {
-        $this->persistent(
+        $this->bind(
             class: $class,
             bindInterfaces: $bindInterfaces,
             bindParent: $bindParent,
@@ -116,8 +116,9 @@ class Container
      *
      * @throws UnresolvableDependencyException
      */
-    public function resolve(string $className): object
-    {
+    public function resolve(
+        string $className,
+    ): object {
         if (\array_key_exists($className, $this->aliases)) {
             $className = $this->aliases[$className];
         }
@@ -145,7 +146,7 @@ class Container
             $class = new \ReflectionClass($className);
 
             if ($class->implementsInterface(AlwaysPersistentInterface::class)) {
-                $this->persistent($className);
+                $this->bind($className);
             }
 
             if (($ctor = $class->getConstructor()) !== null) {
@@ -172,7 +173,7 @@ class Container
     /**
      * @throws UnresolvableDependencyException
      */
-    protected function resolveParameter(\ReflectionParameter $parameter): mixed
+    private function resolveParameter(\ReflectionParameter $parameter): mixed
     {
         $attrs = $parameter->getAttributes(
             name: DependencyResolverInterface::class,
@@ -210,7 +211,7 @@ class Container
     /**
      * @throws UnresolvableDependencyException
      */
-    protected function resolveNamedType(\ReflectionNamedType $type): mixed
+    private function resolveNamedType(\ReflectionNamedType $type): mixed
     {
         if (!$type->isBuiltin()) {
             try {
@@ -231,7 +232,7 @@ class Container
     /**
      * @throws UnresolvableDependencyException
      */
-    protected function resolveUnionType(\ReflectionUnionType $unionType): mixed
+    private function resolveUnionType(\ReflectionUnionType $unionType): mixed
     {
         foreach ($unionType->getTypes() as $type) {
             if ($type instanceof \ReflectionNamedType) {

@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container\Resolvers;
 
-use Tuxxedo\Container\Container;
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
 use Tuxxedo\Http\Kernel\Kernel;
 
@@ -23,7 +23,7 @@ use Tuxxedo\Http\Kernel\Kernel;
 #[\Attribute(\Attribute::TARGET_PARAMETER)]
 class App implements DependencyResolverInterface
 {
-    public function resolve(Container $container): mixed
+    public function resolve(ContainerInterface $container): mixed
     {
         return $container->resolve(Kernel::class);
     }
