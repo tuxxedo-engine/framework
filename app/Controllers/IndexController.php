@@ -33,14 +33,14 @@ use Tuxxedo\Session\SessionInterface;
 use Tuxxedo\Version;
 
 #[Middleware(LoggerMiddleware::class)]
-class IndexController
+readonly class IndexController
 {
     private MapperInterface $mapper;
 
     public function __construct(
-        private readonly Container $container,
-        private readonly LoggerInterface $logger,
-        private readonly SessionInterface $session,
+        private Container $container,
+        private LoggerInterface $logger,
+        private SessionInterface $session,
     ) {
         $this->mapper = new Mapper();
     }
