@@ -117,12 +117,12 @@ class Kernel
 
     public function discover(
         DiscoveryChannelInterface $channel,
-        ?DiscoveryType $type = null,
+        ?DiscoveryType $discoveryType = null,
     ): static {
-        if ($type !== null) {
+        if ($discoveryType !== null) {
             $types = \array_filter(
                 $channel->provides(),
-                static fn (DiscoveryType $discoveryType): bool => $discoveryType === $type,
+                static fn (DiscoveryType $channelDiscoveryType): bool => $channelDiscoveryType === $discoveryType,
             );
         } else {
             $types = $channel->provides();
