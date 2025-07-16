@@ -286,7 +286,8 @@ readonly class IndexController
         );
     }
 
-    #[Route(uri: '/session', methods: [Method::GET, Method::POST])]
+    #[Route\Get(uri: '/session')]
+    #[Route\Post(uri: '/session')]
     public function session(RequestInterface $request): ResponseInterface
     {
         if ($request->server->method === Method::POST) {
