@@ -38,13 +38,7 @@ class EnvironmentBodyContext implements BodyContextInterface
 
     public function getRaw(): string
     {
-        $contents = \stream_get_contents($this->getStream());
-
-        if ($contents === false) {
-            throw HttpException::fromInternalServerError();
-        }
-
-        return $contents;
+        return \stream_get_contents($this->getStream());
     }
 
     public function getJson(): mixed

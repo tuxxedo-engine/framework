@@ -25,10 +25,6 @@ interface BodyContextInterface
      */
     public function getStream();
 
-    /**
-     * @throws \JsonException
-     * @throws MapperException
-     */
     public function getRaw(): string;
 
     /**
