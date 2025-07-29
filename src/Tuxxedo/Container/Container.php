@@ -170,6 +170,26 @@ class Container implements ContainerInterface
         return $instance;
     }
 
+    public function isBound(string $className): bool
+    {
+        return isset($this->persistentDependencies[$className]);
+    }
+
+    public function isInitialized(string $className): bool
+    {
+        return $this->isBound($className) && !isset($this->initializers[$className]);
+    }
+
+    public function isAlias(string $className): bool
+    {
+        return \array_key_exists($className, $this->aliases);
+    }
+
+    public function isAliasOf(string $alias, string $className): bool
+    {
+        return $this->isAlias($alias) && $this->aliases[$alias] === $className;
+    }
+
     /**
      * @throws UnresolvableDependencyException
      */

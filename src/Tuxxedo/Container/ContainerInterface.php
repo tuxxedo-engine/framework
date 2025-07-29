@@ -57,4 +57,34 @@ interface ContainerInterface
     public function resolve(
         string $className,
     ): object;
+
+    /**
+     * @param class-string $className
+     */
+    public function isBound(
+        string $className,
+    ): bool;
+
+    /**
+     * @param class-string $className
+     */
+    public function isInitialized(
+        string $className,
+    ): bool;
+
+    /**
+     * @param class-string $className
+     */
+    public function isAlias(
+        string $className,
+    ): bool;
+
+    /**
+     * @param class-string $alias
+     * @param class-string $className
+     */
+    public function isAliasOf(
+        string $alias,
+        string $className,
+    ): bool;
 }
