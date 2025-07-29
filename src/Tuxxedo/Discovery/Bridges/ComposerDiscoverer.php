@@ -90,6 +90,7 @@ class ComposerDiscoverer implements DiscoveryChannelInterface
     {
         return [
             DiscoveryType::EXTENSIONS,
+            DiscoveryType::MIDDLEWARE,
             DiscoveryType::SERVICES,
         ];
     }

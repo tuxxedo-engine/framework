@@ -134,12 +134,18 @@ class Kernel implements HttpApplicationInterface
                 switch ($type) {
                     case DiscoveryType::EXTENSIONS:
                         /** @var class-string<ExtensionInterface> $discovery */
-                        (new $discovery())->augment($this);
+                        $this->container->resolve($discovery)->augment($this);
+                        break;
+                    case DiscoveryType::MIDDLEWARE:
+                        /** @var class-string<MiddlewareInterface> $discovery */
+                        $this->middleware(
+                            fn (): MiddlewareInterface => $this->container->resolve($discovery),
+                        );
                         break;
                     case DiscoveryType::SERVICES:
                         /** @var class-string<ServiceProviderInterface> $discovery */
                         $this->serviceProvider(
-                            static fn (): ServiceProviderInterface => new $discovery(),
+                            fn (): ServiceProviderInterface => $this->container->resolve($discovery),
                         );
                         break;
                 }
