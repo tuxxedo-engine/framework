@@ -31,10 +31,10 @@ $app->discover(
 );
 
 if ($app->appProfile === Profile::DEBUG) {
-    DebugErrorHandler::registerPhpErrorHandler();
-
     $app->defaultExceptionHandler(
-        static fn (): ErrorHandlerInterface => new DebugErrorHandler(),
+        static fn (): ErrorHandlerInterface => new DebugErrorHandler(
+            registerPhpErrorHandler: true,
+        ),
     );
 } else {
     $app->defaultExceptionHandler(

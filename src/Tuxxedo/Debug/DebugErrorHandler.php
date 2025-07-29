@@ -19,6 +19,14 @@ use Tuxxedo\Http\Response\ResponseInterface;
 
 class DebugErrorHandler implements ErrorHandlerInterface
 {
+    public function __construct(
+        bool $registerPhpErrorHandler = true,
+    ) {
+        if ($registerPhpErrorHandler) {
+            self::registerPhpErrorHandler();
+        }
+    }
+
     public static function registerPhpErrorHandler(): void
     {
         \set_error_handler(
