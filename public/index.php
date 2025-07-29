@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 use App\Services\Logger\Logger;
 use App\Services\Logger\LoggerInterface;
+use Tuxxedo\Application\Profile;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Debug\DebugErrorHandler;
 use Tuxxedo\Discovery\Bridges\ComposerDiscoverer;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
 use Tuxxedo\Http\Kernel\Kernel;
-use Tuxxedo\Http\Kernel\Profile;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\Middleware\StrictTransportSecurityMiddleware;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\DynamicRouter;
+use Tuxxedo\Session\Adapters\PhpSessionAdapter;
 use Tuxxedo\Session\Session;
 use Tuxxedo\Session\SessionInterface;
 use Tuxxedo\Session\SessionStartMode;
-use Tuxxedo\Session\Adapters\PhpSessionAdapter;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 

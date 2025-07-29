@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-use Tuxxedo\Http\Kernel\Profile;
+use Tuxxedo\Application\Profile;
 
 return [
     /**

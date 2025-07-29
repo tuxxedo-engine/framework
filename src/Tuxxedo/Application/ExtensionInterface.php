@@ -11,10 +11,9 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Http\Kernel;
+namespace Tuxxedo\Application;
 
-enum Profile
+interface ExtensionInterface
 {
-    case RELEASE;
-    case DEBUG;
+    public function augment(ApplicationInterface $app): void;
 }

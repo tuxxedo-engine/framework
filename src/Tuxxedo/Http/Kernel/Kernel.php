@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Kernel;
 
+use Tuxxedo\Application\ExtensionInterface;
+use Tuxxedo\Application\Profile;
+use Tuxxedo\Application\ServiceProviderInterface;
 use Tuxxedo\Config\Config;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\Container;
@@ -30,7 +33,7 @@ use Tuxxedo\Http\Response\ResponseExceptionInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\RouterInterface;
 
-class Kernel
+class Kernel implements HttpApplicationInterface
 {
     public readonly ConfigInterface $config;
     public readonly ContainerInterface $container;
@@ -84,7 +87,6 @@ class Kernel
 
     /**
      * @param ServiceProviderInterface|(\Closure(): ServiceProviderInterface) $provider
-     * @return $this
      */
     public function serviceProvider(
         ServiceProviderInterface|\Closure $provider,
@@ -149,7 +151,6 @@ class Kernel
 
     /**
      * @param (\Closure(): MiddlewareInterface)|MiddlewareInterface $middleware
-     * @return $this
      */
     public function middleware(
         \Closure|MiddlewareInterface $middleware,

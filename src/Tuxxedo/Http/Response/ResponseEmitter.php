@@ -51,7 +51,6 @@ class ResponseEmitter implements ResponseEmitterInterface
                     $maxLength = (int) $header->value;
                 }
 
-
                 \header(
                     \sprintf(
                         '%s: %s',
@@ -64,7 +63,7 @@ class ResponseEmitter implements ResponseEmitterInterface
             $this->sent = true;
         }
 
-        if ($maxLength !== null) {
+        if ($maxLength !== null && $maxLength > -1) {
             echo \mb_substr($response->body, 0, $maxLength);
         } else {
             echo $response->body;

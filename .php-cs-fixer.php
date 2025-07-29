@@ -10,6 +10,7 @@ $finder = (new Finder())
     ->in(
         [
             'app/',
+            'cli/',
             'public/',
             'src/',
         ],

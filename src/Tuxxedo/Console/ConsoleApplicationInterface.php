@@ -11,9 +11,10 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Http\Kernel;
+namespace Tuxxedo\Console;
 
-interface ExtensionInterface
+use Tuxxedo\Application\ApplicationInterface;
+
+interface ConsoleApplicationInterface extends ApplicationInterface
 {
-    public function augment(Kernel $app): void;
 }

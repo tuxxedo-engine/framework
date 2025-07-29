@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Discovery;
 
-use Tuxxedo\Http\Kernel\ExtensionInterface;
-use Tuxxedo\Http\Kernel\ServiceProviderInterface;
+use Tuxxedo\Application\ExtensionInterface;
+use Tuxxedo\Application\ServiceProviderInterface;
 
 enum DiscoveryType
 {
