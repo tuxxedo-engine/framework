@@ -15,15 +15,16 @@ namespace Cli\Commands;
 
 use Tuxxedo\Console\Attributes\Command;
 use Tuxxedo\Console\Attributes\DefaultCommand;
-use Tuxxedo\Console\Io\Output;
-use Tuxxedo\Console\Io\OutputInterface;
+use Tuxxedo\Console\Io\InputInterface;
 
 #[Command(name: 'test')]
 class TestCommand
 {
     #[DefaultCommand]
-    public function default(/** @todo InputInterface */): OutputInterface
+    public function default(InputInterface $input): void
     {
-        return new Output('Hello World');
+        $input->stdout->writeLine('Hello World');
+
+        // @todo Return OutputInterface?
     }
 }

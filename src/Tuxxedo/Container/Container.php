@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
+// @todo Consider a LazyInitializableInterface
 class Container implements ContainerInterface
 {
     /**
@@ -53,6 +54,8 @@ class Container implements ContainerInterface
 
         if ($bindInterfaces) {
             $aliases = ($aliases = \class_implements($class)) !== false ? $aliases : [];
+
+            // @todo Likely needs some filtering for default container like interfaces
         }
 
         if ($bindParent && ($parentClassName = \get_parent_class($class)) !== false) {

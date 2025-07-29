@@ -16,8 +16,10 @@ namespace Tuxxedo\Console\Io;
 interface WritableStreamInterface
 {
     public function write(string $buffer): int;
+    public function writeLine(string $buffer): int;
 
     // @todo Implement ask()
     // @todo Implement question()
     // @todo Implement confirm()
+    // @todo Implement colors
 }
