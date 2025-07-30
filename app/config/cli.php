@@ -15,9 +15,9 @@ use Tuxxedo\Application\Profile;
 
 return [
     /**
-     * app.name
+     * cli.name
      *
-     * This can be used to identify an application's name
+     * This can be used to identify a CLI application's name
      *
      * @type string
      * @required
@@ -25,9 +25,9 @@ return [
     'name' => 'Tuxxedo Engine CLI Demo',
 
     /**
-     * app.version
+     * cli.version
      *
-     * This can be used to identify an application's version
+     * This can be used to identify a CLI application's version
      *
      * @type string
      * @required
@@ -35,9 +35,9 @@ return [
     'version' => 'v0.1.0',
 
     /**
-     * app.profile
+     * cli.profile
      *
-     * This can be used to identify the profile an application is in
+     * This can be used to identify the profile a CLI application is in
      *
      * @type Profile
      * @required
