@@ -64,6 +64,7 @@ class DynamicRouter extends StaticRouter
             );
 
             $baseMiddleware = $this->getMiddleware($reflector);
+            $controllerAttribute = $this->getControllerAttribute($reflector);
 
             foreach ($reflector->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
                 if ($method->isStatic() || $method->isAbstract()) {
@@ -78,12 +79,21 @@ class DynamicRouter extends StaticRouter
                 foreach ($method->getAttributes(RouteAttr::class, \ReflectionAttribute::IS_INSTANCEOF) as $attribute) {
                     /** @var RouteAttr $route */
                     $route = $attribute->newInstance();
+                    $uri = $route->uri;
+
+                    if ($uri === '') {
+                        if ($controllerAttribute === null) {
+                            continue;
+                        }
+
+                        $uri = $controllerAttribute->uri;
+                    }
 
                     if (\sizeof($route->methods) > 0) {
                         foreach ($route->methods as $requestMethod) {
                             $routes[] = new Route(
                                 method: $requestMethod,
-                                uri: $route->uri,
+                                uri: $uri,
                                 controller: $reflector->getName(),
                                 action: $method->getName(),
                                 middleware: $middleware,
@@ -93,7 +103,7 @@ class DynamicRouter extends StaticRouter
                     } else {
                         $routes[] = new Route(
                             method: null,
-                            uri: $route->uri,
+                            uri: $uri,
                             controller: $reflector->getName(),
                             action: $method->getName(),
                             middleware: $middleware,
@@ -151,5 +161,22 @@ class DynamicRouter extends StaticRouter
 
         /** @var class-string */
         return $baseNamespace . $controllerFile;
+    }
+
+    /**
+     * @param \ReflectionClass<object> $reflector
+     */
+    private function getControllerAttribute(\ReflectionClass $reflector): ?RouteAttr\Controller
+    {
+        $attributes = $reflector->getAttributes(
+            name: RouteAttr\Controller::class,
+            flags: \ReflectionAttribute::IS_INSTANCEOF,
+        );
+
+        if (\sizeof($attributes) > 0) {
+            return $attributes[0]->newInstance();
+        }
+
+        return null;
     }
 }

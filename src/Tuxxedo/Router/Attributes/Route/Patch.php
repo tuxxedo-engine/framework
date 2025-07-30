@@ -21,7 +21,7 @@ use Tuxxedo\Router\RoutePriority;
 readonly class Patch extends Route
 {
     public function __construct(
-        string $uri,
+        string $uri = '',
         RoutePriority $priority = RoutePriority::NORMAL,
     ) {
         parent::__construct(
