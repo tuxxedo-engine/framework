@@ -20,6 +20,7 @@ use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Router\Attributes\Middleware;
 use Tuxxedo\Router\Attributes\Route as RouteAttr;
 
+// @todo Consider a verbosity mode for skipped routes
 class DynamicRouter extends StaticRouter
 {
     /**
@@ -86,7 +87,12 @@ class DynamicRouter extends StaticRouter
                             continue;
                         }
 
-                        $uri = $controllerAttribute->uri;
+                        // @todo Make alias?
+                        if ($method->getName() === 'index') {
+                            $uri = $controllerAttribute->uri;
+                        } else {
+                            $uri = $controllerAttribute->uri . $method->getName();
+                        }
                     }
 
                     if (\sizeof($route->methods) > 0) {

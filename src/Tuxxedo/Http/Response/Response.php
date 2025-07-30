@@ -23,9 +23,9 @@ class Response implements ResponseInterface
      * @param HeaderInterface[] $headers
      */
     final public function __construct(
+        public readonly string $body = '',
         public readonly array $headers = [],
         public readonly ResponseCode $responseCode = ResponseCode::OK,
-        public readonly string $body = '',
     ) {
     }
 

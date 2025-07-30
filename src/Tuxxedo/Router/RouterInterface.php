@@ -20,6 +20,13 @@ use Tuxxedo\Http\Request\RequestInterface;
 interface RouterInterface
 {
     /**
+     * @var RouteInterface[]
+     */
+    public array $routes {
+        get;
+    }
+
+    /**
      * @throws HttpException
      */
     public function findByUri(

@@ -22,7 +22,7 @@ class StaticRouter implements RouterInterface
     /**
      * @var RouteInterface[]
      */
-    private readonly array $routes;
+    public readonly array $routes;
 
     /**
      * @param RouteInterface[] $routes

@@ -71,7 +71,7 @@ readonly class SessionController
     }
 
     #[Route\Post]
-    public function sessionReset(RequestInterface $request): ResponseInterface
+    public function reset(RequestInterface $request): ResponseInterface
     {
         $this->session->adapter->unset();
 

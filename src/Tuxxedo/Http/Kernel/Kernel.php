@@ -48,8 +48,8 @@ class Kernel implements HttpApplicationInterface
      */
     private array $exceptions = [];
 
-    private ResponseEmitterInterface $emitter;
-    private RouterInterface $router;
+    public private(set) ResponseEmitterInterface $emitter;
+    public private(set) RouterInterface $router;
 
     /**
      * @var array<(\Closure(): ErrorHandlerInterface)>
