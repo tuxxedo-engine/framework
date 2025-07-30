@@ -4,6 +4,5 @@ parameters:
     level: max
     paths:
         - app/
-        - cli/
         - public/
         - src/

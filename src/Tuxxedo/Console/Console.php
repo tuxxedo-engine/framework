@@ -45,9 +45,9 @@ class Console implements ConsoleApplicationInterface
         $config = Config::createFromDirectory($directory . '/config');
 
         return new static(
-            appName: $config->getString('app.name'),
-            appVersion: $config->getString('app.version'),
-            appProfile: $config->getEnum('app.profile', Profile::class),
+            appName: $config->getString('cli.name'),
+            appVersion: $config->getString('cli.version'),
+            appProfile: $config->getEnum('cli.profile', Profile::class),
             config: $config,
         );
     }

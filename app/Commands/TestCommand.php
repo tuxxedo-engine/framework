@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Cli\Commands;
+namespace App\Commands;
 
 use Tuxxedo\Console\Attributes\DefaultCommand;
 use Tuxxedo\Console\Attributes\DefaultCommandAction;

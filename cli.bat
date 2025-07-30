@@ -1,3 +1,3 @@
 @ECHO OFF
 SETLOCAL DISABLEDELAYEDEXPANSION
-CALL php84 -f "./cli/cli.php" %*
+CALL php84 -f "./app/cli.php" %*
