@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console\Attributes;
 
-#[\Attribute(\Attribute::TARGET_CLASS)]
-class DefaultCommand
+#[\Attribute(\Attribute::TARGET_METHOD)]
+class DefaultCommandAction
 {
 }

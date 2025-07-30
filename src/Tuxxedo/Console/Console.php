@@ -66,4 +66,17 @@ class Console implements ConsoleApplicationInterface
 
         return $this;
     }
+
+    /**
+     * @param non-empty-list<string> $argv
+     */
+    public function run(array $argv): void
+    {
+        \array_shift($argv);
+
+        var_dump($argv);
+
+        // @todo Build arguments into InputInterface (support different syntax switches?)
+        // @todo Route command
+    }
 }

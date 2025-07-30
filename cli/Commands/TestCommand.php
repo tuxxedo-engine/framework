@@ -13,14 +13,14 @@ declare(strict_types=1);
 
 namespace Cli\Commands;
 
-use Tuxxedo\Console\Attributes\Command;
 use Tuxxedo\Console\Attributes\DefaultCommand;
+use Tuxxedo\Console\Attributes\DefaultCommandAction;
 use Tuxxedo\Console\Io\InputInterface;
 
-#[Command(name: 'test')]
+#[DefaultCommand]
 class TestCommand
 {
-    #[DefaultCommand]
+    #[DefaultCommandAction]
     public function default(InputInterface $input): void
     {
         $input->stdout->writeLine('Hello World');
