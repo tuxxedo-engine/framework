@@ -32,12 +32,12 @@ interface RouterInterface
     public function findByUri(
         Method $method,
         string $uri,
-    ): ?RouteInterface;
+    ): ?DispatchableRouteInterface;
 
     /**
      * @throws HttpException
      */
     public function findByRequest(
         RequestInterface $request,
-    ): ?RouteInterface;
+    ): ?DispatchableRouteInterface;
 }

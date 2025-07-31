@@ -11,15 +11,14 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Router\Attributes\Route;
+namespace Tuxxedo\Router;
 
-use Tuxxedo\Router\RoutePriority;
-
-#[\Attribute(flags: \Attribute::TARGET_CLASS)]
-readonly class Controller
+readonly class ArgumentNode
 {
     public function __construct(
-        public string $uri,
+        public string $label,
+        public ArgumentKind $kind,
+        public ?string $constraint = null,
     ) {
     }
 }

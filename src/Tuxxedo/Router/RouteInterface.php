@@ -48,5 +48,14 @@ interface RouteInterface
         get;
     }
 
-    // @todo Add support for route arguments
+    public ?string $regexUri {
+        get;
+    }
+
+    /**
+     * @var RouteArgumentInterface[]
+     */
+    public array $arguments {
+        get;
+    }
 }

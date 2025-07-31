@@ -16,19 +16,22 @@ namespace Tuxxedo\Router;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 
-class Route implements RouteInterface
+readonly class Route implements RouteInterface
 {
     /**
      * @param class-string $controller
      * @param array<(\Closure(): MiddlewareInterface)> $middleware
+     * @param RouteArgumentInterface[] $arguments
      */
     public function __construct(
-        public readonly ?Method $method,
-        public readonly string $uri,
-        public readonly string $controller,
-        public readonly string $action,
-        public readonly array $middleware = [],
-        public readonly RoutePriority $priority = RoutePriority::NORMAL,
+        public ?Method $method,
+        public string $uri,
+        public string $controller,
+        public string $action,
+        public array $middleware = [],
+        public RoutePriority $priority = RoutePriority::NORMAL,
+        public ?string $regexUri = null,
+        public array $arguments = [],
     ) {
     }
 }

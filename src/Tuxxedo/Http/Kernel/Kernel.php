@@ -31,6 +31,7 @@ use Tuxxedo\Http\Response\ResponseEmitter;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Response\ResponseExceptionInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
+use Tuxxedo\Router\RouteArgumentInterface;
 use Tuxxedo\Router\RouterInterface;
 
 class Kernel implements HttpApplicationInterface
@@ -241,28 +242,45 @@ class Kernel implements HttpApplicationInterface
                 throw HttpException::fromInternalServerError();
             }
 
-            $route = $this->router->findByRequest(
+            $dispatchableRoute = $this->router->findByRequest(
                 request: $request,
             );
 
-            if ($route === null) {
+            if ($dispatchableRoute === null) {
                 throw HttpException::fromNotFound();
             }
 
             $this->emitter->emit(
                 response: (new MiddlewarePipeline(
                     container: $this->container,
-                    resolver: static function (ContainerInterface $container) use ($route, $request): ResponseInterface {
+                    resolver: static function (ContainerInterface $container) use ($dispatchableRoute, $request): ResponseInterface {
                         $callback = [
-                            $container->resolve($route->controller),
-                            $route->action,
+                            $container->resolve($dispatchableRoute->route->controller),
+                            $dispatchableRoute->route->action,
                         ];
 
                         if (!\is_callable($callback)) {
                             throw HttpException::fromInternalServerError();
                         }
 
-                        $response = \call_user_func($callback, $request);
+                        $arguments = [];
+
+                        if (\sizeof($dispatchableRoute->arguments) > 0) {
+                            // @todo RequestInterface handling
+                            foreach ($dispatchableRoute->route->arguments as $argument) {
+                                $arguments[$argument->mappedName ?? $argument->name] = $argument->getValue(
+                                    matches: $dispatchableRoute->arguments,
+                                );
+                            }
+                        } else {
+                            // @todo Might be brittle
+                            $arguments[] = $request;
+                        }
+
+                        $response = \call_user_func(
+                            $callback,
+                            ...$arguments,
+                        );
 
                         if (!$response instanceof ResponseInterface) {
                             throw HttpException::fromInternalServerError();
@@ -273,7 +291,7 @@ class Kernel implements HttpApplicationInterface
                     middleware: \array_reverse(
                         \array_merge(
                             $this->middleware,
-                            $route->middleware,
+                            $dispatchableRoute->route->middleware,
                         ),
                     ),
                 ))->run($request),

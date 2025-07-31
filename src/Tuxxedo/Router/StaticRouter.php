@@ -41,11 +41,21 @@ class StaticRouter implements RouterInterface
     public function findByUri(
         Method $method,
         string $uri,
-    ): ?RouteInterface {
+    ): ?DispatchableRouteInterface {
         $isMethodNotAllowed = false;
 
         foreach ($this->routes as $route) {
-            if ($route->uri !== $uri) {
+            $arguments = [];
+
+            if ($route->regexUri !== null) {
+                $regex = \preg_match_all($route->regexUri, $uri, $arguments, \PREG_SET_ORDER);
+
+                if ($regex === false || $regex === 0) {
+                    continue;
+                }
+
+                $arguments = $arguments[0];
+            } elseif ($route->uri !== $uri) {
                 continue;
             }
 
@@ -55,7 +65,10 @@ class StaticRouter implements RouterInterface
                 continue;
             }
 
-            return $route;
+            return new DispatchableRoute(
+                route: $route,
+                arguments: $arguments,
+            );
         }
 
         if ($isMethodNotAllowed) {
@@ -67,7 +80,7 @@ class StaticRouter implements RouterInterface
 
     public function findByRequest(
         RequestInterface $request,
-    ): ?RouteInterface {
+    ): ?DispatchableRouteInterface {
         return $this->findByUri(
             method: $request->server->method,
             uri: $request->server->uri,

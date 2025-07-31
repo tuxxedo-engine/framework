@@ -19,9 +19,10 @@ use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\Attributes\Route;
+use Tuxxedo\Router\RouteInterface;
 use Tuxxedo\Router\RouterInterface;
 
-#[Route\Controller(uri: '/list/')]
+#[\Tuxxedo\Router\Attributes\Controller(uri: '/list/')]
 readonly class ListController
 {
     private RouterInterface $router;
@@ -55,16 +56,25 @@ readonly class ListController
         $html .= '<th><strong>Controller</strong></th>';
         $html .= '<th><strong>Action</strong></th>';
         $html .= '<th><strong>Priority</strong></th>';
+        $html .= '<th><strong>Regex URI</strong></th>';
+        $html .= '<th><strong>Argument count</strong></th>';
+        $html .= '<th><strong>Middleware count</strong></th>';
         $html .= '</tr>';
         $html .= '</thead>';
         $html .= '<tbody>';
 
         foreach ($routes as $method => $items) {
+            /** @var RouteInterface $route */
             foreach ($items as $route) {
                 $uri = $route->uri;
+                $regexUri = '<em>None</em>';
 
-                if ($method === 'any' || $method === 'GET') {
+                if ($route->regexUri === null && ($method === 'any' || $method === 'GET')) {
                     $uri = '<a href="' . $uri . '">' . $uri . '</a>';
+                }
+
+                if ($route->regexUri !== null) {
+                    $regexUri = $route->regexUri;
                 }
 
                 $html .= '<tr>';
@@ -73,6 +83,9 @@ readonly class ListController
                 $html .= '<td>' . $route->controller . '</td>';
                 $html .= '<td>' . $route->action . '</td>';
                 $html .= '<td>' . $route->priority->name . '</td>';
+                $html .= '<td>' . $regexUri . '</td>';
+                $html .= '<td>' . \sizeof($route->arguments) . '</td>';
+                $html .= '<td>' . \sizeof($route->middleware) . '</td>';
                 $html .= '</tr>';
             }
         }

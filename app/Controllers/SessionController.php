@@ -20,7 +20,7 @@ use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\Attributes\Route;
 use Tuxxedo\Session\SessionInterface;
 
-#[Route\Controller(uri: '/session/')]
+#[\Tuxxedo\Router\Attributes\Controller(uri: '/session/')]
 readonly class SessionController
 {
     public function __construct(
@@ -79,12 +79,4 @@ readonly class SessionController
             uri: '/session/',
         );
     }
-
-    /*
-    #[Route\Get(uri: '/session/show/{name:[a-zA-Z_-]}')]
-    public function show(#[Argument] string $name): ResponseInterface
-    {
-        // ...
-    }
-    */
 }
