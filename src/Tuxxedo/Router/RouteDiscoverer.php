@@ -373,6 +373,10 @@ readonly class RouteDiscoverer
         }
 
         if ($type instanceof \ReflectionNamedType && $type->isBuiltin()) {
+            if ($type->getName() === 'object' || $type->getName() === 'array') {
+                return null;
+            }
+
             return $type->getName();
         } elseif ($type->allowsNull()) {
             return 'null';
