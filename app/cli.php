@@ -20,6 +20,5 @@ namespace {
         directory: __DIR__,
     );
 
-    // @todo Put in same directory as app?
     $console->run($argv);
 }

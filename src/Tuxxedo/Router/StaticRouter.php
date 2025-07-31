@@ -13,77 +13,32 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Router;
 
-use Tuxxedo\Http\HttpException;
-use Tuxxedo\Http\Method;
-use Tuxxedo\Http\Request\RequestInterface;
-
-class StaticRouter implements RouterInterface
+class StaticRouter extends AbstractRouter
 {
     /**
-     * @var RouteInterface[]
+     * @param RouteInterface[] $routes
      */
-    public readonly array $routes;
+    final public function __construct(
+        public readonly array $routes,
+    ) {
+    }
 
     /**
      * @param RouteInterface[] $routes
      */
-    public function __construct(
+    public static function createPriorityBased(
         array $routes,
-    ) {
+    ): static {
         \uasort(
             $routes,
             static fn (RouteInterface $a, RouteInterface $b): int => $a->priority->value <=> $b->priority->value,
         );
 
-        $this->routes = $routes;
+        return new static($routes);
     }
 
-    public function findByUri(
-        Method $method,
-        string $uri,
-    ): ?DispatchableRouteInterface {
-        $isMethodNotAllowed = false;
-
-        foreach ($this->routes as $route) {
-            $arguments = [];
-
-            if ($route->regexUri !== null) {
-                $regex = \preg_match_all($route->regexUri, $uri, $arguments, \PREG_SET_ORDER);
-
-                if ($regex === false || $regex === 0) {
-                    continue;
-                }
-
-                $arguments = $arguments[0];
-            } elseif ($route->uri !== $uri) {
-                continue;
-            }
-
-            if ($route->method !== null && $route->method !== $method) {
-                $isMethodNotAllowed = true;
-
-                continue;
-            }
-
-            return new DispatchableRoute(
-                route: $route,
-                arguments: $arguments,
-            );
-        }
-
-        if ($isMethodNotAllowed) {
-            throw HttpException::fromMethodNotAllowed();
-        }
-
-        return null;
-    }
-
-    public function findByRequest(
-        RequestInterface $request,
-    ): ?DispatchableRouteInterface {
-        return $this->findByUri(
-            method: $request->server->method,
-            uri: $request->server->uri,
-        );
+    public function getRoutes(): iterable
+    {
+        return $this->routes;
     }
 }

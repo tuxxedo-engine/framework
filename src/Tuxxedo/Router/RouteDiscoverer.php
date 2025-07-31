@@ -16,6 +16,7 @@ namespace Tuxxedo\Router;
 use Tuxxedo\Collections\FileCollection;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
+use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Router\Attributes\Argument;
 use Tuxxedo\Router\Attributes\Middleware;
 use Tuxxedo\Router\Attributes\Route as RouteAttr;
@@ -27,7 +28,7 @@ readonly class RouteDiscoverer
      * @var array<string, string>
      */
     private const array TYPE_PATTERNS = [
-        'int' => '\d+',
+        'numeric-id' => '\d+',
         'alpha' => '[a-zA-Z]+',
         'slug' => '[a-z0-9-]+',
         'uuid' => '[0-9a-fA-F\-]{36}',
@@ -99,6 +100,8 @@ readonly class RouteDiscoverer
                             route: $route,
                         );
                     } elseif (\sizeof($route->methods) > 0) {
+                        $requestArgumentName = $this->getRequestArgumentName($method);
+
                         foreach ($route->methods as $requestMethod) {
                             yield new Route(
                                 method: $requestMethod,
@@ -107,6 +110,7 @@ readonly class RouteDiscoverer
                                 action: $method->getName(),
                                 middleware: $middleware,
                                 priority: $route->priority,
+                                requestArgumentName: $requestArgumentName,
                             );
                         }
                     } else {
@@ -117,6 +121,7 @@ readonly class RouteDiscoverer
                             action: $method->getName(),
                             middleware: $middleware,
                             priority: $route->priority,
+                            requestArgumentName: $this->getRequestArgumentName($method),
                         );
                     }
                 }
@@ -291,6 +296,8 @@ readonly class RouteDiscoverer
         // @todo Check for double labels
 
         if (\sizeof($route->methods) > 0) {
+            $requestArgumentName = $this->getRequestArgumentName($method);
+
             foreach ($route->methods as $requestMethod) {
                 yield new Route(
                     method: $requestMethod,
@@ -300,6 +307,7 @@ readonly class RouteDiscoverer
                     middleware: $middleware,
                     priority: $route->priority,
                     regexUri: $this->getRegexUri($uri),
+                    requestArgumentName: $requestArgumentName,
                     arguments: $arguments,
                 );
             }
@@ -312,6 +320,7 @@ readonly class RouteDiscoverer
                 middleware: $middleware,
                 priority: $route->priority,
                 regexUri: $this->getRegexUri($uri),
+                requestArgumentName: $this->getRequestArgumentName($method),
                 arguments: $arguments,
             );
         }
@@ -340,6 +349,24 @@ readonly class RouteDiscoverer
 
             if ($instance->label === $name) {
                 return $parameter;
+            }
+        }
+
+        return null;
+    }
+
+    private function getRequestArgumentName(
+        \ReflectionMethod $method,
+    ): ?string {
+        foreach ($method->getParameters() as $parameter) {
+            $type = $parameter->getType();
+
+            if (
+                $type !== null &&
+                $type instanceof \ReflectionNamedType &&
+                $type->getName() === RequestInterface::class
+            ) {
+                return $parameter->getName();
             }
         }
 

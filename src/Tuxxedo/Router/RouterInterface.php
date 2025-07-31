@@ -20,11 +20,9 @@ use Tuxxedo\Http\Request\RequestInterface;
 interface RouterInterface
 {
     /**
-     * @var RouteInterface[]
+     * @return iterable<RouteInterface>
      */
-    public array $routes {
-        get;
-    }
+    public function getRoutes(): iterable;
 
     /**
      * @throws HttpException

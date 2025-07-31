@@ -15,24 +15,21 @@ namespace Tuxxedo\Router;
 
 use Tuxxedo\Container\ContainerInterface;
 
-class DynamicRouter extends StaticRouter
+class DynamicRouter extends AbstractRouter
 {
     public function __construct(
-        ContainerInterface $container,
-        string $directory,
-        string $baseNamespace,
+        private readonly ContainerInterface $container,
+        private readonly string $directory,
+        private readonly string $baseNamespace,
     ) {
-        // @todo Change this so we do not need to use \iterator_to_array() for performance? Unless it will be volatile
-        //       as we cannot use route priorities
-        parent::__construct(
-            routes: \iterator_to_array(
-                iterator: (new RouteDiscoverer(
-                    container: $container,
-                    baseNamespace: $baseNamespace,
-                    directory: $directory,
-                ))->discover(),
-                preserve_keys: false,
-            ),
-        );
+    }
+
+    public function getRoutes(): iterable
+    {
+        yield from (new RouteDiscoverer(
+            container: $this->container,
+            baseNamespace: $this->baseNamespace,
+            directory: $this->directory,
+        ))->discover();
     }
 }

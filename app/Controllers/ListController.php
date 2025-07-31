@@ -38,7 +38,7 @@ readonly class ListController
     {
         $routes = [];
 
-        foreach ($this->router->routes as $route) {
+        foreach ($this->router->getRoutes() as $route) {
             $method = $route->method === null ? 'any' : $route->method->name;
 
             $routes[$method] ??= [];

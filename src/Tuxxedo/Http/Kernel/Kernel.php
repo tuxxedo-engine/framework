@@ -266,14 +266,16 @@ class Kernel implements HttpApplicationInterface
                         $arguments = [];
 
                         if (\sizeof($dispatchableRoute->arguments) > 0) {
-                            // @todo RequestInterface handling
+                            if ($dispatchableRoute->route->requestArgumentName !== null) {
+                                $arguments[$dispatchableRoute->route->requestArgumentName] = $request;
+                            }
+
                             foreach ($dispatchableRoute->route->arguments as $argument) {
                                 $arguments[$argument->mappedName ?? $argument->name] = $argument->getValue(
                                     matches: $dispatchableRoute->arguments,
                                 );
                             }
                         } else {
-                            // @todo Might be brittle
                             $arguments[] = $request;
                         }
 
