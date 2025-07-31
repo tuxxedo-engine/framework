@@ -79,4 +79,12 @@ readonly class SessionController
             uri: '/session/',
         );
     }
+
+    /*
+    #[Route\Get(uri: '/session/show/{name:[a-zA-Z_-]}')]
+    public function show(#[Argument] string $name): ResponseInterface
+    {
+        // ...
+    }
+    */
 }

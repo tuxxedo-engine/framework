@@ -82,6 +82,7 @@ class DynamicRouter extends StaticRouter
                     $route = $attribute->newInstance();
                     $uri = $route->uri;
 
+                    // @todo Consider changing this behavior to always be prefixed if $controllerAttribute is set
                     if ($uri === '') {
                         if ($controllerAttribute === null) {
                             continue;
