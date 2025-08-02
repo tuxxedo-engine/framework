@@ -22,7 +22,7 @@ use Tuxxedo\Router\Attributes\Route;
 #[Controller(uri: '/args/')]
 readonly class ArgumentsController
 {
-    #[Route\Get(uri: '/args/optional/{name?}')]
+    #[Route\Get(uri: '/args/optional/{?name}')]
     public function show(#[Argument(label: 'name')] bool $value = false): ResponseInterface
     {
         return Response::capture(

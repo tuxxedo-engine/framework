@@ -273,13 +273,25 @@ readonly class RouteDiscoverer
                 method: $method,
             );
 
-            if ($argument !== null) {
-                $arguments[] = $argument;
+            if ($argument === null) {
+                return;
             }
+
+            $arguments[] = $argument;
         }
 
-        // @todo Check matching number of arguments to parameters
-        // @todo Check for double labels
+        if (\sizeof($arguments) < $method->getNumberOfRequiredParameters()) {
+            return;
+        }
+
+        $names = \array_map(
+            static fn (ArgumentNode $node): string => $node->name,
+            $nodes
+        );
+
+        if (\sizeof($names) !== \sizeof(\array_unique($names))) {
+            return;
+        }
 
         if (\sizeof($route->methods) > 0) {
             $requestArgumentName = $this->getRequestArgumentName($method);
