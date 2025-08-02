@@ -211,12 +211,12 @@ readonly class RouteDiscoverer
     /**
      * @return ArgumentNode[]
      */
-    private function getUriArgumentNodes(
-        string $uri,
-    ): array {
+    private function getUriArgumentNodes(string $uri): array
+    {
         $nodes = [];
+
         $regex = \preg_match_all(
-            pattern: '/\{([a-zA-Z_][a-zA-Z0-9_]*)(\?|:([^}]+)|<([^>]+)>)?}/',
+            pattern: '/\{(\??)([a-zA-Z_][a-zA-Z0-9_]*)(?::([^}]+)|<([^>]+)>)?}/',
             subject: $uri,
             matches: $matches,
             flags: \PREG_SET_ORDER,
@@ -224,26 +224,26 @@ readonly class RouteDiscoverer
 
         if ($regex !== false && $regex > 0) {
             foreach ($matches as $match) {
-                $label = $match[1];
-                $modifier = $match[2] ?? null;
+                $label = $match[2];
+                $type = $match[3] ?? null;
+                $custom = $match[4] ?? null;
 
                 $kind = ArgumentKind::TYPED_IMPLICIT;
                 $constraint = null;
 
-                if ($modifier === '?') {
-                    $kind = ArgumentKind::OPTIONAL;
-                } elseif (isset($match[3])) {
-                    $kind = ArgumentKind::REGEX;
-                    $constraint = $match[3];
-                } elseif (isset($match[4])) {
+                if ($type !== null) {
                     $kind = ArgumentKind::TYPED_EXPLICIT;
-                    $constraint = $match[4];
+                    $constraint = $type;
+                } elseif ($custom !== null) {
+                    $kind = ArgumentKind::REGEX;
+                    $constraint = $custom;
                 }
 
                 $nodes[] = new ArgumentNode(
-                    label: $label,
+                    name: $label,
                     kind: $kind,
                     constraint: $constraint,
+                    optional: $match[1] === '?',
                 );
             }
         }
@@ -268,24 +268,10 @@ readonly class RouteDiscoverer
         $arguments = [];
 
         foreach ($nodes as $node) {
-            $argument = match ($node->kind) {
-                ArgumentKind::OPTIONAL => $this->discoverOptionalArgument(
-                    node: $node,
-                    method: $method,
-                ),
-                ArgumentKind::REGEX => $this->discoverRegexArgument(
-                    node: $node,
-                    method: $method,
-                ),
-                ArgumentKind::TYPED_EXPLICIT => $this->discoverExplicitlyTypedArgument(
-                    node: $node,
-                    method: $method,
-                ),
-                ArgumentKind::TYPED_IMPLICIT => $this->discoverImplicitlyTypedArgument(
-                    node: $node,
-                    method: $method,
-                ),
-            };
+            $argument = $this->getRouteArgument(
+                node: $node,
+                method: $method,
+            );
 
             if ($argument !== null) {
                 $arguments[] = $argument;
@@ -412,11 +398,11 @@ readonly class RouteDiscoverer
         return null;
     }
 
-    private function discoverOptionalArgument(
+    private function getRouteArgument(
         ArgumentNode $node,
         \ReflectionMethod $method,
     ): ?RouteArgumentInterface {
-        $parameter = $this->getNamedParameter($method, $node->label);
+        $parameter = $this->getNamedParameter($method, $node->name);
 
         if ($parameter === null || !$parameter->isDefaultValueAvailable()) {
             return null;
@@ -428,39 +414,15 @@ readonly class RouteDiscoverer
             return null;
         }
 
-        if ($parameter->getName() !== $node->label) {
+        if ($parameter->getName() !== $node->name) {
             $mappedName = $parameter->getName();
         }
 
-        return new OptionalRouteArgument(
-            name: $node->label,
+        return new RouteArgument(
+            node: $node,
             mappedName: $mappedName ?? null,
             nativeType: $nativeType,
             defaultValue: $parameter->getDefaultValue(),
         );
-    }
-
-    private function discoverRegexArgument(
-        ArgumentNode $node,
-        \ReflectionMethod $method,
-    ): null {
-        // ??? RouteArgumentInterface
-        return null;
-    }
-
-    private function discoverExplicitlyTypedArgument(
-        ArgumentNode $node,
-        \ReflectionMethod $method,
-    ): null {
-        // ??? RouteArgumentInterface
-        return null;
-    }
-
-    private function discoverImplicitlyTypedArgument(
-        ArgumentNode $node,
-        \ReflectionMethod $method,
-    ): null {
-        // ??? RouteArgumentInterface
-        return null;
     }
 }

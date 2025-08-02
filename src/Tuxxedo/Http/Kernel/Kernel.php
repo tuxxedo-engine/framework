@@ -271,7 +271,7 @@ class Kernel implements HttpApplicationInterface
                             }
 
                             foreach ($dispatchableRoute->route->arguments as $argument) {
-                                $arguments[$argument->mappedName ?? $argument->name] = $argument->getValue(
+                                $arguments[$argument->mappedName ?? $argument->node->name] = $argument->getValue(
                                     matches: $dispatchableRoute->arguments,
                                 );
                             }

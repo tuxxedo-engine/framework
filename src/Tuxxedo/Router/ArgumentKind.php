@@ -15,7 +15,6 @@ namespace Tuxxedo\Router;
 
 enum ArgumentKind
 {
-    case OPTIONAL;
     case REGEX;
     case TYPED_EXPLICIT;
     case TYPED_IMPLICIT;

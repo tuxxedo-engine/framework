@@ -15,7 +15,7 @@ namespace Tuxxedo\Router;
 
 interface RouteArgumentInterface
 {
-    public string $name {
+    public ArgumentNode $node {
         get;
     }
 

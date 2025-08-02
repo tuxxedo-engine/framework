@@ -16,9 +16,10 @@ namespace Tuxxedo\Router;
 readonly class ArgumentNode
 {
     public function __construct(
-        public string $label,
+        public string $name,
         public ArgumentKind $kind,
         public ?string $constraint = null,
+        public bool $optional = false,
     ) {
     }
 }

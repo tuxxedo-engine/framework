@@ -13,10 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Router;
 
-readonly class OptionalRouteArgument implements RouteArgumentInterface
+readonly class RouteArgument implements RouteArgumentInterface
 {
     public function __construct(
-        public string $name,
+        public ArgumentNode $node,
         public ?string $mappedName,
         public string $nativeType,
         public mixed $defaultValue,
@@ -26,7 +26,11 @@ readonly class OptionalRouteArgument implements RouteArgumentInterface
     public function getValue(
         array $matches,
     ): mixed {
-        $value = $matches[$this->name] ?? $matches[$this->mappedName ?? ''] ?? $this->defaultValue;
+        $value = $matches[$this->node->name] ?? $matches[$this->mappedName ?? ''] ?? null;
+
+        if ($this->node->optional) {
+            $value ??= $this->defaultValue;
+        }
 
         \settype($value, $this->nativeType);
 

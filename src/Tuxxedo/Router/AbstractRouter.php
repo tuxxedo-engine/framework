@@ -31,6 +31,7 @@ abstract class AbstractRouter implements RouterInterface
             if ($route->regexUri !== null) {
                 $regex = \preg_match_all($route->regexUri, $uri, $arguments, \PREG_SET_ORDER);
 
+                // @todo This integer comparison may not be correct
                 if ($regex === false || $regex === 0) {
                     continue;
                 }
