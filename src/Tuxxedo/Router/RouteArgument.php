@@ -19,6 +19,7 @@ readonly class RouteArgument implements RouteArgumentInterface
         public ArgumentNode $node,
         public ?string $mappedName,
         public string $nativeType,
+        public bool $allowsNull,
         public mixed $defaultValue,
     ) {
     }
@@ -30,6 +31,10 @@ readonly class RouteArgument implements RouteArgumentInterface
 
         if ($this->node->optional) {
             $value ??= $this->defaultValue;
+        }
+
+        if ($value === null && $this->allowsNull) {
+            return null;
         }
 
         \settype($value, $this->nativeType);

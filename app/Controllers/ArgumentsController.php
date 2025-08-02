@@ -45,7 +45,7 @@ readonly class ArgumentsController
     }
 
     #[Route\Get(uri: '/args/regex-optional/{?name:\d+}')]
-    public function show4(#[Argument(label: 'name')] ?int $value): ResponseInterface
+    public function show4(#[Argument(label: 'name')] ?int $value = null): ResponseInterface
     {
         return Response::capture(
             callback: static fn () => var_dump($value),
@@ -60,7 +60,7 @@ readonly class ArgumentsController
     }
 
     #[Route\Get(uri: '/args/explicit-optional/{?name<uuid>}')]
-    public function show6(#[Argument(label: 'name')] ?string $uuid): ResponseInterface
+    public function show6(#[Argument(label: 'name')] ?string $uuid = null): ResponseInterface
     {
         return Response::capture(
             callback: static fn () => var_dump($uuid),

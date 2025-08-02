@@ -436,7 +436,11 @@ readonly class RouteDiscoverer
                 $regex = $matches[3] ?? null;
                 $type = $matches[4] ?? null;
 
-                $pattern = $regex ?? (self::TYPE_PATTERNS[$type] ?? '[^/]+');
+                if ($regex === '') {
+                    $regex = null;
+                }
+
+                $pattern = $regex ?? self::TYPE_PATTERNS[$type] ?? '[^/]+';
                 $segment = '(?<' . $matches[2] . '>' . $pattern . ')';
 
                 return $matches[1] === '?'
@@ -450,6 +454,7 @@ readonly class RouteDiscoverer
     private function getNativeType(
         \ReflectionMethod $method,
         \ReflectionParameter $parameter,
+        bool &$allowsNull = false,
     ): ?string {
         $type = $parameter->getType();
 
@@ -478,6 +483,8 @@ readonly class RouteDiscoverer
 
                 return null;
             }
+
+            $allowsNull = $type->allowsNull();
 
             return $type->getName();
         } elseif ($type->allowsNull()) {
@@ -517,9 +524,11 @@ readonly class RouteDiscoverer
             return null;
         }
 
+        $allowsNull = false;
         $nativeType = $this->getNativeType(
             method: $method,
             parameter: $parameter,
+            allowsNull: $allowsNull,
         );
 
         if ($nativeType === null) {
@@ -534,6 +543,7 @@ readonly class RouteDiscoverer
             node: $node,
             mappedName: $mappedName ?? null,
             nativeType: $nativeType,
+            allowsNull: $allowsNull,
             defaultValue: $parameter->isDefaultValueAvailable()
                 ? $parameter->getDefaultValue()
                 : null,
