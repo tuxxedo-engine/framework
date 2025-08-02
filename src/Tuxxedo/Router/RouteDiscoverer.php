@@ -21,7 +21,6 @@ use Tuxxedo\Router\Attributes\Argument;
 use Tuxxedo\Router\Attributes\Middleware;
 use Tuxxedo\Router\Attributes\Route as RouteAttr;
 
-// @todo Consider a verbosity mode for skipped routes
 readonly class RouteDiscoverer
 {
     /**
@@ -38,7 +37,15 @@ readonly class RouteDiscoverer
         public ContainerInterface $container,
         public string $baseNamespace,
         public string $directory,
+        public bool $strictMode = false,
     ) {
+    }
+
+    private function handleError(RouterException $e): void
+    {
+        if ($this->strictMode) {
+            throw $e;
+        }
     }
 
     /**
@@ -56,11 +63,33 @@ readonly class RouteDiscoverer
                 $this->getControllerClassName($controller),
             );
 
+            if (
+                $reflector->isEnum() ||
+                $reflector->isAbstract() ||
+                $reflector->isInterface() ||
+                $reflector->isTrait()
+            ) {
+                $this->handleError(
+                    RouterException::fromInvalidClassLikeStructure(
+                        className: $reflector->getName(),
+                    ),
+                );
+
+                continue;
+            }
+
             $baseMiddleware = $this->getMiddleware($reflector);
             $controllerAttribute = $this->getControllerAttribute($reflector);
 
             foreach ($reflector->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
                 if ($method->isStatic() || $method->isAbstract()) {
+                    $this->handleError(
+                        RouterException::fromNonInstantiableMethod(
+                            className: $reflector->getName(),
+                            method: $method->getName(),
+                        ),
+                    );
+
                     continue;
                 }
 
@@ -78,6 +107,13 @@ readonly class RouteDiscoverer
                     // @todo Change this to be nullable instead of an empty string
                     if ($uri === '') {
                         if ($controllerAttribute === null) {
+                            $this->handleError(
+                                RouterException::fromEmptyUri(
+                                    className: $reflector->getName(),
+                                    method: $method->getName(),
+                                ),
+                            );
+
                             continue;
                         }
 
@@ -216,31 +252,27 @@ readonly class RouteDiscoverer
         $nodes = [];
 
         $regex = \preg_match_all(
-            pattern: '/\{(\??)([a-zA-Z_][a-zA-Z0-9_]*)(?::([^}]+)|<([^>]+)>)?}/',
-            subject: $uri,
-            matches: $matches,
-            flags: \PREG_SET_ORDER,
+            '/\{(\??)([a-zA-Z_][a-zA-Z0-9_]*)(?::([^}]+)|<([^>]+)>)?}/',
+            $uri,
+            $matches,
+            \PREG_SET_ORDER,
         );
 
         if ($regex !== false && $regex > 0) {
             foreach ($matches as $match) {
-                $label = $match[2];
-                $type = $match[3] ?? null;
-                $custom = $match[4] ?? null;
-
+                $regexConstraint = $match[3] ?? null;
+                $typeConstraint = $match[4] ?? null;
+                $constraint = $regexConstraint ?? $typeConstraint;
                 $kind = ArgumentKind::TYPED_IMPLICIT;
-                $constraint = null;
 
-                if ($type !== null) {
-                    $kind = ArgumentKind::TYPED_EXPLICIT;
-                    $constraint = $type;
-                } elseif ($custom !== null) {
+                if ($regexConstraint !== null) {
                     $kind = ArgumentKind::REGEX;
-                    $constraint = $custom;
+                } elseif ($typeConstraint !== null) {
+                    $kind = ArgumentKind::TYPED_EXPLICIT;
                 }
 
                 $nodes[] = new ArgumentNode(
-                    name: $label,
+                    name: $match[2],
                     kind: $kind,
                     constraint: $constraint,
                     optional: $match[1] === '?',
@@ -280,7 +312,16 @@ readonly class RouteDiscoverer
             $arguments[] = $argument;
         }
 
-        if (\sizeof($arguments) < $method->getNumberOfRequiredParameters()) {
+        if ((\sizeof($arguments) + 1) < $method->getNumberOfRequiredParameters()) {
+            $this->handleError(
+                RouterException::fromTooFewArguments(
+                    className: $className,
+                    method: $method->getName(),
+                    numberOfArguments: \sizeof($arguments) + 1,
+                    requiredNumberOfArguments: $method->getNumberOfRequiredParameters(),
+                ),
+            );
+
             return;
         }
 
@@ -290,6 +331,14 @@ readonly class RouteDiscoverer
         );
 
         if (\sizeof($names) !== \sizeof(\array_unique($names))) {
+            $this->handleError(
+                RouterException::fromNotAllArgumentNameAreUnique(
+                    className: $className,
+                    method: $method->getName(),
+                    names: $names,
+                ),
+            );
+
             return;
         }
 
@@ -339,6 +388,14 @@ readonly class RouteDiscoverer
             );
 
             if (\sizeof($parameterAttributes) === 0) {
+                $this->handleError(
+                    RouterException::fromNoArgumentAttributeFound(
+                        className: $method->getDeclaringClass()->getName(),
+                        method: $method->getName(),
+                        parameter: $parameter->getName(),
+                    ),
+                );
+
                 continue;
             }
 
@@ -374,31 +431,51 @@ readonly class RouteDiscoverer
     private function getRegexUri(string $uri): string
     {
         return '#^' . \preg_replace_callback(
-            '/\/\{([a-zA-Z_][a-zA-Z0-9_]*)(\?|:([^}]+)|<([^>]+)>)?}/',
+            '/\/\{(\??)([a-zA-Z_][a-zA-Z0-9_]*)(?::([^}]+)|<([^>]+)>)?}/',
             static function (array $matches): string {
-                $name = $matches[1];
-                $isOptional = $matches[2] === '?';
-                $type = $matches[3] ?? null;
-                $custom = $matches[4] ?? null;
-                $segment = '(?<' . $name . '>' . ($custom ?? (self::TYPE_PATTERNS[$type] ?? '[^/]+')) . ')';
+                $regex = $matches[3] ?? null;
+                $type = $matches[4] ?? null;
 
-                return $isOptional ? '(?:/' . $segment . ')?' : '/' . $segment;
+                $pattern = $regex ?? (self::TYPE_PATTERNS[$type] ?? '[^/]+');
+                $segment = '(?<' . $matches[2] . '>' . $pattern . ')';
+
+                return $matches[1] === '?'
+                    ? '(?:/' . $segment . ')?'
+                    : '/' . $segment;
             },
             $uri,
-        ) . '/$#';
+        ) . '/?$#';
     }
 
     private function getNativeType(
+        \ReflectionMethod $method,
         \ReflectionParameter $parameter,
     ): ?string {
         $type = $parameter->getType();
 
         if ($type === null) {
+            $this->handleError(
+                RouterException::fromHasNoType(
+                    className: $method->getDeclaringClass()->getName(),
+                    method: $method->getName(),
+                    parameter: $parameter->getName(),
+                ),
+            );
+
             return null;
         }
 
         if ($type instanceof \ReflectionNamedType && $type->isBuiltin()) {
             if ($type->getName() === 'object' || $type->getName() === 'array') {
+                $this->handleError(
+                    RouterException::fromUnsupportedNativeType(
+                        className: $method->getDeclaringClass()->getName(),
+                        method: $method->getName(),
+                        parameter: $parameter->getName(),
+                        type: $type->getName(),
+                    ),
+                );
+
                 return null;
             }
 
@@ -406,6 +483,14 @@ readonly class RouteDiscoverer
         } elseif ($type->allowsNull()) {
             return 'null';
         }
+
+        $this->handleError(
+            RouterException::fromUnsupportedType(
+                className: $method->getDeclaringClass()->getName(),
+                method: $method->getName(),
+                parameter: $parameter->getName(),
+            ),
+        );
 
         return null;
     }
@@ -416,11 +501,26 @@ readonly class RouteDiscoverer
     ): ?RouteArgumentInterface {
         $parameter = $this->getNamedParameter($method, $node->name);
 
-        if ($parameter === null || !$parameter->isDefaultValueAvailable()) {
+        if ($parameter === null) {
             return null;
         }
 
-        $nativeType = $this->getNativeType($parameter);
+        if ($node->optional && !$parameter->isDefaultValueAvailable()) {
+            $this->handleError(
+                RouterException::fromOptionalArgumentHasNoDefaultValue(
+                    className: $method->getDeclaringClass()->getName(),
+                    method: $method->getName(),
+                    parameter: $parameter->getName(),
+                ),
+            );
+
+            return null;
+        }
+
+        $nativeType = $this->getNativeType(
+            method: $method,
+            parameter: $parameter,
+        );
 
         if ($nativeType === null) {
             return null;
@@ -434,7 +534,9 @@ readonly class RouteDiscoverer
             node: $node,
             mappedName: $mappedName ?? null,
             nativeType: $nativeType,
-            defaultValue: $parameter->getDefaultValue(),
+            defaultValue: $parameter->isDefaultValueAvailable()
+                ? $parameter->getDefaultValue()
+                : null,
         );
     }
 }

@@ -18,9 +18,10 @@ use Tuxxedo\Container\ContainerInterface;
 class DynamicRouter extends AbstractRouter
 {
     public function __construct(
-        private readonly ContainerInterface $container,
-        private readonly string $directory,
-        private readonly string $baseNamespace,
+        public readonly ContainerInterface $container,
+        public readonly string $directory,
+        public readonly string $baseNamespace,
+        public readonly bool $strictMode = false,
     ) {
     }
 
@@ -30,6 +31,7 @@ class DynamicRouter extends AbstractRouter
             container: $this->container,
             baseNamespace: $this->baseNamespace,
             directory: $this->directory,
+            strictMode: $this->strictMode,
         ))->discover();
     }
 }

@@ -92,6 +92,7 @@ $app->router(
         container: $app->container,
         directory: __DIR__ . '/../app/Controllers',
         baseNamespace: '\App\Controllers\\',
+        strictMode: true,
     ),
 );
 
