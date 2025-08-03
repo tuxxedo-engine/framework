@@ -69,13 +69,9 @@ if ($app->appProfile === Profile::DEBUG) {
     );
 }
 
-// @todo Implement loading of app/services.php into $this->container, providers?
 $app->container->bind(Logger::class);
 $app->container->bind(Session::class);
 
-// @todo Once the router is registered, look into the routes and where it retrieve its
-//       internal database, which could for example be static, app/routes.php,
-//       static attributes (via precompiled file) or dynamic attributes via reflection
 $app->router(
     DynamicRouter::createFromDirectory(
         container: $app->container,
