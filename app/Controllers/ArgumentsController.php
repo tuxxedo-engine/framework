@@ -127,4 +127,74 @@ readonly class ArgumentsController
             callback: static fn () => var_dump($uuid, $timestamp),
         );
     }
+
+    #[Route\Get(uri: '/args/textual/{alpha<alpha>}/{slug<slug>}')]
+    public function show13(
+        #[Argument(label: 'alpha')] string $alpha,
+        #[Argument(label: 'slug')] string $slug
+    ): ResponseInterface {
+        return Response::capture(
+            callback: static fn () => var_dump($alpha, $slug),
+        );
+    }
+
+    #[Route\Get(uri: '/args/primitive/{bool<bool>}')]
+    public function show14(
+        #[Argument(label: 'bool')] bool $value
+    ): ResponseInterface {
+        return Response::capture(
+            callback: static fn () => var_dump($value),
+        );
+    }
+
+    #[Route\Get(uri: '/args/locale/{country<country-code>}/{currency<currency-code>}/{language<language-code>}')]
+    public function show15(
+        #[Argument(label: 'country')] string $country,
+        #[Argument(label: 'currency')] string $currency,
+        #[Argument(label: 'language')] string $language
+    ): ResponseInterface {
+        return Response::capture(
+            callback: static fn () => var_dump($country, $currency, $language),
+        );
+    }
+
+    #[Route\Get(uri: '/args/temporal/{date<date>}/{timestamp<timestamp>}')]
+    public function show16(
+        #[Argument(label: 'date')] string $date,
+        #[Argument(label: 'timestamp')] int $timestamp
+    ): ResponseInterface {
+        return Response::capture(
+            callback: static fn () => var_dump($date, $timestamp),
+        );
+    }
+
+    #[Route\Get(uri: '/args/encoding/{hex<hex>}')]
+    public function show17(
+        #[Argument(label: 'hex')] string $hex
+    ): ResponseInterface {
+        return Response::capture(
+            callback: static fn () => var_dump($hex),
+        );
+    }
+
+    #[Route\Get(uri: '/args/hash/{sha1<sha1>}/{sha256<sha256>}')]
+    public function show18(
+        #[Argument(label: 'sha1')] string $sha1,
+        #[Argument(label: 'sha256')] string $sha256
+    ): ResponseInterface {
+        return Response::capture(
+            callback: static fn () => var_dump($sha1, $sha256),
+        );
+    }
+
+    #[Route\Get(uri: '/args/identifier/{id<numeric-id>}/{uuid<uuid>}/{uuidv4<uuid-v4>}')]
+    public function show19(
+        #[Argument(label: 'id')] int $id,
+        #[Argument(label: 'uuid')] string $uuid,
+        #[Argument(label: 'uuidv4')] string $uuidv4
+    ): ResponseInterface {
+        return Response::capture(
+            callback: static fn () => var_dump($id, $uuid, $uuidv4),
+        );
+    }
 }

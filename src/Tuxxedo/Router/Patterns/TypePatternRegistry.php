@@ -44,7 +44,6 @@ class TypePatternRegistry implements TypePatternRegistryInterface
             new Types\CountryCode(),
             new Types\CurrencyCode(),
             new Types\Date(),
-            new Types\Datetime(),
             new Types\Hex(),
             new Types\LanguageCode(),
             new Types\NumericId(),

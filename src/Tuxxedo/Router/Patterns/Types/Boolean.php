@@ -18,5 +18,5 @@ use Tuxxedo\Router\Patterns\TypePatternInterface;
 class Boolean implements TypePatternInterface
 {
     public private(set) string $name = 'bool';
-    public private(set) string $regex = 'true|false|1|0';
+    public private(set) string $regex = '1|0';
 }
