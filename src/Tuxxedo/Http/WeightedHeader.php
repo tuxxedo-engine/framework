@@ -59,18 +59,18 @@ readonly class WeightedHeader extends Header implements WeightedHeaderInterface
                     $matches,
                 ) === 1
             ) {
-                $parsed[] = [
-                    'value'  => \trim($matches[1], " \t\n\r\0\x0B\""),
-                    'weight' => isset($matches[2])
+                $parsed[] = new WeightedHeaderPair(
+                    value: \trim($matches[1], " \t\n\r\0\x0B\""),
+                    weight: isset($matches[2])
                         ? (float) $matches[2]
                         : 1.0,
-                ];
+                );
             }
         }
 
         \usort(
             $parsed,
-            static fn (array $a, array $b): int => $b['weight'] <=> $a['weight'],
+            static fn (WeightedHeaderPairInterface $a, WeightedHeaderPairInterface $b): int => $a->weight <=> $b->weight,
         );
 
         return $parsed;
