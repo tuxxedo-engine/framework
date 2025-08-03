@@ -23,7 +23,7 @@ readonly class Route
      * @param Method[] $methods
      */
     public function __construct(
-        public string $uri,
+        public ?string $uri,
         public array $methods = [],
         public RoutePriority $priority = RoutePriority::NORMAL,
     ) {

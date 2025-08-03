@@ -99,20 +99,16 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
                     $route = $attribute->newInstance();
                     $uri = $route->uri;
 
-                    // @todo Consider changing this behavior to always be prefixed if $controllerAttribute is set
-                    // @todo Change this to be nullable instead of an empty string
-                    if ($uri === '') {
-                        if ($controllerAttribute === null) {
-                            $this->handleError(
-                                RouterException::fromEmptyUri(
-                                    className: $reflector->getName(),
-                                    method: $method->getName(),
-                                ),
-                            );
+                    if ($controllerAttribute === null && $uri === null) {
+                        $this->handleError(
+                            RouterException::fromEmptyUri(
+                                className: $reflector->getName(),
+                                method: $method->getName(),
+                            ),
+                        );
 
-                            continue;
-                        }
-
+                        continue;
+                    } elseif ($uri === null) {
                         if ($this->isIndexMethod($controllerAttribute, $method)) {
                             $uri = $controllerAttribute->uri;
                         } else {
