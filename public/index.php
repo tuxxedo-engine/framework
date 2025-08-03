@@ -15,10 +15,7 @@ use Tuxxedo\Http\Request\Middleware\StrictTransportSecurityMiddleware;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\DynamicRouter;
-use Tuxxedo\Session\Adapters\PhpSessionAdapter;
 use Tuxxedo\Session\Session;
-use Tuxxedo\Session\SessionInterface;
-use Tuxxedo\Session\SessionStartMode;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -74,15 +71,7 @@ if ($app->appProfile === Profile::DEBUG) {
 
 // @todo Implement loading of app/services.php into $this->container, providers?
 $app->container->bind(Logger::class);
-$app->container->lazy(
-    SessionInterface::class,
-    static fn (ContainerInterface $container): SessionInterface => new Session(
-        adapter: PhpSessionAdapter::createFromConfig(
-            startMode: SessionStartMode::LAZY,
-            config: $app->config,
-        ),
-    ),
-);
+$app->container->bind(Session::class);
 
 // @todo Once the router is registered, look into the routes and where it retrieve its
 //       internal database, which could for example be static, app/routes.php,

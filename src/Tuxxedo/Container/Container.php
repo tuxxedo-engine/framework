@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
-// @todo Consider a LazyInitializableInterface
 class Container implements ContainerInterface
 {
     private const array PROTECTED_INTERFACES = [
@@ -62,6 +61,11 @@ class Container implements ContainerInterface
             $aliases = $this->filterInterfaces(
                 interfaces: ($aliases = \class_implements($class)) !== false ? $aliases : [],
             );
+
+            if (\is_string($class) && \in_array(LazyInitializableInterface::class, $aliases, true)) {
+                /** @var class-string<LazyInitializableInterface> $class */
+                $this->initializers[$className] = fn (self $container): object => $class::createInstance($container);
+            }
         }
 
         if ($bindParent && ($parentClassName = \get_parent_class($class)) !== false) {
