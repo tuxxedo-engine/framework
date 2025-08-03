@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Collections;
 
-class ImmutableException extends \Exception
+class CollectionException extends \Exception
 {
     public static function fromWriteViolation(): self
     {

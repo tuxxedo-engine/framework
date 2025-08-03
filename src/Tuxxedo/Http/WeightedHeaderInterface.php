@@ -19,4 +19,9 @@ interface WeightedHeaderInterface extends HeaderInterface
      * @return string[]
      */
     public function getWeightedOrder(): array;
+
+    /**
+     * @return array<array{value: string, weight: float}>
+     */
+    public function getWeightedPairs(): array;
 }

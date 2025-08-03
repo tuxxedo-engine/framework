@@ -15,7 +15,7 @@ namespace Unit\Collections;
 
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Collections\Collection;
-use Tuxxedo\Collections\ImmutableException;
+use Tuxxedo\Collections\CollectionException;
 use Tuxxedo\Collections\IntCollection;
 use Tuxxedo\Collections\StringCollection;
 
@@ -261,7 +261,7 @@ class CollectionTest extends TestCase
     {
         $strings = StringCollection::fromEnum(StringTestEnum::class)->toImmutable();
 
-        $this->expectException(ImmutableException::class);
+        $this->expectException(CollectionException::class);
         $strings['abc'] = 'def';
     }
 
@@ -269,7 +269,7 @@ class CollectionTest extends TestCase
     {
         $strings = StringCollection::fromEnum(StringTestEnum::class)->toImmutable();
 
-        $this->expectException(ImmutableException::class);
+        $this->expectException(CollectionException::class);
         unset($strings[$strings->firstKey()]);
     }
 }

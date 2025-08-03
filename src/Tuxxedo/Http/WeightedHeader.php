@@ -47,6 +47,35 @@ readonly class WeightedHeader extends Header implements WeightedHeaderInterface
         );
     }
 
+    public function getWeightedPairs(): array
+    {
+        $parsed = [];
+
+        foreach (\explode(',', $this->value) as $part) {
+            if (
+                \preg_match(
+                    '/^\s*("?[^";\s]+"?)(?:;[^=]+=[^;]*)*(?:;\s*[qv]="?([0-9.]+)"?)?\s*$/i',
+                    $part,
+                    $matches,
+                ) === 1
+            ) {
+                $parsed[] = [
+                    'value'  => \trim($matches[1], " \t\n\r\0\x0B\""),
+                    'weight' => isset($matches[2])
+                        ? (float) $matches[2]
+                        : 1.0,
+                ];
+            }
+        }
+
+        \usort(
+            $parsed,
+            static fn (array $a, array $b): int => $b['weight'] <=> $a['weight'],
+        );
+
+        return $parsed;
+    }
+
     public static function isWeightedValue(string $value): bool
     {
         return \preg_match('/;\s*[qv]=("?)[0-9.]+\1/', $value) === 1;

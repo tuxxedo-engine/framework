@@ -86,21 +86,21 @@ class ImmutableCollection implements CollectionInterface
     /**
      * @return never
      *
-     * @throws ImmutableException
+     * @throws CollectionException
      */
     public function offsetSet(mixed $offset, mixed $value): void
     {
-        throw ImmutableException::fromWriteViolation();
+        throw CollectionException::fromWriteViolation();
     }
 
     /**
      * @return never
      *
-     * @throws ImmutableException
+     * @throws CollectionException
      */
     public function offsetUnset(mixed $offset): void
     {
-        throw ImmutableException::fromWriteViolation();
+        throw CollectionException::fromWriteViolation();
     }
 
     public function firstKey(): mixed
