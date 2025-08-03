@@ -16,6 +16,7 @@ namespace Tuxxedo\Http;
 class UploadedFile implements UploadedFileInterface
 {
     private static ?\finfo $finfo = null;
+    private ?string $resolvedType = null;
 
     public string $type {
         get {
@@ -40,10 +41,8 @@ class UploadedFile implements UploadedFileInterface
     private function resolveType(
         string $unsafeType,
     ): string {
-        static $resolvedType;
-
-        if (\is_string($resolvedType)) {
-            return $resolvedType;
+        if ($this->resolvedType !== null) {
+            return $this->resolvedType;
         }
 
         if (self::$finfo !== null) {
@@ -52,7 +51,7 @@ class UploadedFile implements UploadedFileInterface
             if ($type !== false) {
                 $this->isTrustedType = true;
 
-                return $resolvedType = $type;
+                return $this->resolvedType = $type;
             }
         }
 
