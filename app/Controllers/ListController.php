@@ -15,14 +15,14 @@ namespace App\Controllers;
 
 use Tuxxedo\Container\Resolvers\App;
 use Tuxxedo\Http\Kernel\Kernel;
-use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
+use Tuxxedo\Router\Attributes\Controller;
 use Tuxxedo\Router\Attributes\Route;
 use Tuxxedo\Router\RouteInterface;
 use Tuxxedo\Router\RouterInterface;
 
-#[\Tuxxedo\Router\Attributes\Controller(uri: '/list/')]
+#[Controller(uri: '/list/')]
 readonly class ListController
 {
     private RouterInterface $router;
@@ -34,7 +34,7 @@ readonly class ListController
     }
 
     #[Route\Get]
-    public function index(RequestInterface $request): ResponseInterface
+    public function index(): ResponseInterface
     {
         $routes = [];
 
