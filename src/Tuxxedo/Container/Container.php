@@ -16,6 +16,12 @@ namespace Tuxxedo\Container;
 // @todo Consider a LazyInitializableInterface
 class Container implements ContainerInterface
 {
+    private const array PROTECTED_INTERFACES = [
+        ContainerInterface::class,
+        AlwaysPersistentInterface::class,
+        DependencyResolverInterface::class,
+    ];
+
     /**
      * @var array<class-string, object|null>
      */
@@ -53,9 +59,9 @@ class Container implements ContainerInterface
         $aliases = [];
 
         if ($bindInterfaces) {
-            $aliases = ($aliases = \class_implements($class)) !== false ? $aliases : [];
-
-            // @todo Likely needs some filtering for default container like interfaces
+            $aliases = $this->filterInterfaces(
+                interfaces: ($aliases = \class_implements($class)) !== false ? $aliases : [],
+            );
         }
 
         if ($bindParent && ($parentClassName = \get_parent_class($class)) !== false) {
@@ -191,6 +197,23 @@ class Container implements ContainerInterface
     public function isAliasOf(string $alias, string $className): bool
     {
         return $this->isAlias($alias) && $this->aliases[$alias] === $className;
+    }
+
+    /**
+     * @param class-string[] $interfaces
+     * @return class-string[]
+     */
+    private function filterInterfaces(
+        array $interfaces,
+    ): array {
+        return \array_filter(
+            $interfaces,
+            static fn (string $interface): bool => !\in_array(
+                $interface,
+                self::PROTECTED_INTERFACES,
+                true,
+            ),
+        );
     }
 
     /**
