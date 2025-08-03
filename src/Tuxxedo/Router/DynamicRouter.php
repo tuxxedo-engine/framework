@@ -17,21 +17,37 @@ use Tuxxedo\Container\ContainerInterface;
 
 class DynamicRouter extends AbstractRouter
 {
-    public function __construct(
-        public readonly ContainerInterface $container,
-        public readonly string $directory,
-        public readonly string $baseNamespace,
-        public readonly bool $strictMode = false,
+    private function __construct(
+        public readonly RouteDiscovererInterface $discoverer,
     ) {
+    }
+
+    public static function createFromDirectory(
+        ContainerInterface $container,
+        string $directory,
+        string $baseNamespace,
+        bool $strictMode = false,
+    ): self {
+        return new self(
+            discoverer: new RouteDiscoverer(
+                container: $container,
+                baseNamespace: $baseNamespace,
+                directory: $directory,
+                strictMode: $strictMode,
+            ),
+        );
+    }
+
+    public static function createFromDiscoverer(
+        RouteDiscovererInterface $discoverer,
+    ): self {
+        return new self(
+            discoverer: $discoverer,
+        );
     }
 
     public function getRoutes(): iterable
     {
-        yield from (new RouteDiscoverer(
-            container: $this->container,
-            baseNamespace: $this->baseNamespace,
-            directory: $this->directory,
-            strictMode: $this->strictMode,
-        ))->discover();
+        yield from $this->discoverer->discover();
     }
 }

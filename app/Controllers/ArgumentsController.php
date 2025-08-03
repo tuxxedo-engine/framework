@@ -51,6 +51,7 @@ readonly class ArgumentsController
             callback: static fn () => var_dump($value),
         );
     }
+
     #[Route\Get(uri: '/args/explicit/{name<uuid>}')]
     public function show5(#[Argument(label: 'name')] string $uuid): ResponseInterface
     {
@@ -64,6 +65,66 @@ readonly class ArgumentsController
     {
         return Response::capture(
             callback: static fn () => var_dump($uuid),
+        );
+    }
+
+    #[Route\Get(uri: '/args/optional-mixed/{?name}/{?age}')]
+    public function show7(
+        #[Argument(label: 'name')] bool $value = false,
+        #[Argument(label: 'age')] ?int $age = null,
+    ): ResponseInterface {
+        return Response::capture(
+            callback: static fn () => var_dump($value, $age),
+        );
+    }
+
+    #[Route\Get(uri: '/args/name-mixed/{name}/{country}')]
+    public function show8(
+        #[Argument(label: 'name')] string $value,
+        #[Argument(label: 'country')] string $country
+    ): ResponseInterface {
+        return Response::capture(
+            callback: static fn () => var_dump($value, $country),
+        );
+    }
+
+    #[Route\Get(uri: '/args/regex-mixed/{name:\d+}/{active}')]
+    public function show9(
+        #[Argument(label: 'name')] int $value,
+        #[Argument(label: 'active')] bool $active
+    ): ResponseInterface {
+        return Response::capture(
+            callback: static fn () => var_dump($value, $active),
+        );
+    }
+
+    #[Route\Get(uri: '/args/regex-optional-mixed/{?name:\d+}/{?score}')]
+    public function show10(
+        #[Argument(label: 'name')] ?int $value = null,
+        #[Argument(label: 'score')] ?float $score = null
+    ): ResponseInterface {
+        return Response::capture(
+            callback: static fn () => var_dump($value, $score),
+        );
+    }
+
+    #[Route\Get(uri: '/args/explicit-mixed/{name<uuid>}/{region}')]
+    public function show11(
+        #[Argument(label: 'name')] string $uuid,
+        #[Argument(label: 'region')] string $region
+    ): ResponseInterface {
+        return Response::capture(
+            callback: static fn () => var_dump($uuid, $region),
+        );
+    }
+
+    #[Route\Get(uri: '/args/explicit-optional-mixed/{?name<uuid>}/{?timestamp:\d+}')]
+    public function show12(
+        #[Argument(label: 'name')] ?string $uuid = null,
+        #[Argument(label: 'timestamp')] ?int $timestamp = null
+    ): ResponseInterface {
+        return Response::capture(
+            callback: static fn () => var_dump($uuid, $timestamp),
         );
     }
 }

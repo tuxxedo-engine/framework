@@ -20,25 +20,21 @@ use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Router\Attributes\Argument;
 use Tuxxedo\Router\Attributes\Middleware;
 use Tuxxedo\Router\Attributes\Route as RouteAttr;
+use Tuxxedo\Router\Patterns\TypePatternRegistry;
+use Tuxxedo\Router\Patterns\TypePatternRegistryInterface;
 
-readonly class RouteDiscoverer
+readonly class RouteDiscoverer implements RouteDiscovererInterface
 {
-    /**
-     * @var array<string, string>
-     */
-    private const array TYPE_PATTERNS = [
-        'numeric-id' => '\d+',
-        'alpha' => '[a-zA-Z]+',
-        'slug' => '[a-z0-9-]+',
-        'uuid' => '[0-9a-fA-F\-]{36}',
-    ];
+    public TypePatternRegistryInterface $patterns;
 
     public function __construct(
         public ContainerInterface $container,
         public string $baseNamespace,
         public string $directory,
         public bool $strictMode = false,
+        ?TypePatternRegistryInterface $patterns = null,
     ) {
+        $this->patterns = $patterns ?? TypePatternRegistry::createDefault();
     }
 
     private function handleError(RouterException $e): void
@@ -432,7 +428,7 @@ readonly class RouteDiscoverer
     {
         return '#^' . \preg_replace_callback(
             '/\/\{(\??)([a-zA-Z_][a-zA-Z0-9_]*)(?::([^}]+)|<([^>]+)>)?}/',
-            static function (array $matches): string {
+            function (array $matches): string {
                 $regex = $matches[3] ?? null;
                 $type = $matches[4] ?? null;
 
@@ -440,7 +436,7 @@ readonly class RouteDiscoverer
                     $regex = null;
                 }
 
-                $pattern = $regex ?? self::TYPE_PATTERNS[$type] ?? '[^/]+';
+                $pattern = $regex ?? $this->patterns->get($type ?? '')->regex ?? '[^/]+';
                 $segment = '(?<' . $matches[2] . '>' . $pattern . ')';
 
                 return $matches[1] === '?'

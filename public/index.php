@@ -88,7 +88,7 @@ $app->container->lazy(
 //       internal database, which could for example be static, app/routes.php,
 //       static attributes (via precompiled file) or dynamic attributes via reflection
 $app->router(
-    new DynamicRouter(
+    DynamicRouter::createFromDirectory(
         container: $app->container,
         directory: __DIR__ . '/../app/Controllers',
         baseNamespace: '\App\Controllers\\',
