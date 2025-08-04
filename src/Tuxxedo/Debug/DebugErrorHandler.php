@@ -44,6 +44,8 @@ class DebugErrorHandler implements ErrorHandlerInterface
         ResponseInterface $response,
         \Throwable $exception,
     ): ResponseInterface {
+        \ob_clean();
+
         if ($exception->getFile() === '') {
             $location = 'unknown:' . \strval($exception->getLine());
         } else {

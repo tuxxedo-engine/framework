@@ -26,8 +26,20 @@ readonly class ViewController
     {
         return new View(
             name: 'hello',
-            variables: [
+            scope: [
                 'message' => '<strong>Hello</strong> <em>World</em>',
+            ],
+        );
+    }
+
+    #[Route\Get]
+    public function inc(): ViewInterface
+    {
+        return new View(
+            name: 'include_outer',
+            scope: [
+                'inner' => 'Inner',
+                'outer' => 'Outer',
             ],
         );
     }

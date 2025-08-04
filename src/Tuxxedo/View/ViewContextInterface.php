@@ -13,9 +13,16 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View;
 
-// @todo Support include()
 interface ViewContextInterface
 {
+    /**
+     * @param array<string, mixed> $scope
+     */
+    public function include(
+        string $viewName,
+        array $scope = [],
+    ): string;
+
     public function escapeHtml(
         string $input,
     ): string;

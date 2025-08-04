@@ -25,7 +25,7 @@ interface ViewInterface
     /**
      * @var array<string, mixed>
      */
-    public array $variables {
+    public array $scope {
         get;
     }
 

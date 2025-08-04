@@ -25,12 +25,8 @@ readonly class ViewRender implements ViewRenderInterface
     public function __construct(
         public string $directory,
         public string $extension = '.phtml',
-        ?ViewContextInterface $context = null,
     ) {
-        $this->context = $context ?? new ViewContext(
-            directory: $this->directory,
-            extension: $this->extension,
-        );
+        $this->context = new ViewContext($this);
     }
 
     public function getViewFileName(
@@ -72,7 +68,7 @@ readonly class ViewRender implements ViewRenderInterface
         };
 
         try {
-            return $renderer->bindTo($this->context)($this->getViewFileName($view->name), $view->variables);
+            return $renderer->bindTo($this->context)($this->getViewFileName($view->name), $view->scope);
         } catch (\Throwable $exception) {
             throw ViewException::fromViewRenderException(
                 exception: $exception,

@@ -15,18 +15,31 @@ namespace Tuxxedo\View\Engine;
 
 use Tuxxedo\Escaper\Escaper;
 use Tuxxedo\Escaper\EscaperInterface;
+use Tuxxedo\View\View;
 use Tuxxedo\View\ViewContextInterface;
+use Tuxxedo\View\ViewRenderInterface;
 
 readonly class ViewContext implements ViewContextInterface
 {
     public EscaperInterface $escaper;
 
     public function __construct(
-        public string $directory,
-        public string $extension,
+        public ViewRenderInterface $render,
         ?EscaperInterface $escaper = null,
     ) {
         $this->escaper = $escaper ?? new Escaper();
+    }
+
+    public function include(
+        string $viewName,
+        array $scope = [],
+    ): string {
+        return $this->render->render(
+            new View(
+                name: $viewName,
+                scope: $scope,
+            ),
+        );
     }
 
     public function escapeHtml(

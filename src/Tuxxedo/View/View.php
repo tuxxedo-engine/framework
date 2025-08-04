@@ -20,11 +20,11 @@ use Tuxxedo\Http\Response\ResponseInterface;
 readonly class View implements ViewInterface
 {
     /**
-     * @param array<string, mixed> $variables
+     * @param array<string, mixed> $scope
      */
     public function __construct(
         public string $name,
-        public array $variables = [],
+        public array $scope = [],
     ) {
     }
 
