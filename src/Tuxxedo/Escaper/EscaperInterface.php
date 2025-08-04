@@ -26,4 +26,8 @@ interface EscaperInterface
     public function js(
         string $input,
     ): string;
+
+    public function url(
+        string $input,
+    ): string;
 }

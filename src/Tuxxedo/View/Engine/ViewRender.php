@@ -27,47 +27,33 @@ readonly class ViewRender implements ViewRenderInterface
         public string $extension = '.phtml',
         ?ViewContextInterface $context = null,
     ) {
-        $this->context = $context ?? new ViewContext();
-    }
-
-    public function render(
-        ViewInterface $view,
-    ): string {
-        $file = $this->getViewFileName($view->name);
-
-        if (!$this->viewExists($file)) {
-            throw ViewException::fromViewNotFound(
-                viewName: $view->name,
-            );
-        }
-
-        return $this->isolatedRender(
-            fileName: $file,
-            variables: $view->variables,
+        $this->context = $context ?? new ViewContext(
+            directory: $this->directory,
+            extension: $this->extension,
         );
     }
 
-    private function getViewFileName(
+    public function getViewFileName(
         string $viewName,
     ): string {
         return $this->directory . '/' . \ltrim($viewName, '.') . $this->extension;
     }
 
-    private function viewExists(
-        string $fileName,
+    public function viewExists(
+        string $viewName,
     ): bool {
-        return \is_file($fileName);
+        return \is_file($this->getViewFileName($viewName));
     }
 
-    /**
-     * @param array<string, mixed> $variables
-     *
-     * @throws ViewException
-     */
-    private function isolatedRender(
-        string $fileName,
-        array $variables,
+    public function render(
+        ViewInterface $view,
     ): string {
+        if (!$this->viewExists($view->name)) {
+            throw ViewException::fromViewNotFound(
+                viewName: $view->name,
+            );
+        }
+
         $renderer = function (string $viewFileName, array $variables): string {
             \extract($variables, \EXTR_SKIP);
             \ob_start();
@@ -86,7 +72,7 @@ readonly class ViewRender implements ViewRenderInterface
         };
 
         try {
-            return $renderer->bindTo($this->context)($fileName, $variables);
+            return $renderer->bindTo($this->context)($this->getViewFileName($view->name), $view->variables);
         } catch (\Throwable $exception) {
             throw ViewException::fromViewRenderException(
                 exception: $exception,

@@ -32,4 +32,10 @@ class Escaper implements EscaperInterface
     ): string {
         return \addcslashes($input, '\'');
     }
+
+    public function url(
+        string $input,
+    ): string {
+        return \rawurlencode($input);
+    }
 }

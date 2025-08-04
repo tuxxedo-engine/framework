@@ -22,6 +22,8 @@ readonly class ViewContext implements ViewContextInterface
     public EscaperInterface $escaper;
 
     public function __construct(
+        public string $directory,
+        public string $extension,
         ?EscaperInterface $escaper = null,
     ) {
         $this->escaper = $escaper ?? new Escaper();
@@ -43,5 +45,11 @@ readonly class ViewContext implements ViewContextInterface
         string $input,
     ): string {
         return $this->escaper->js($input);
+    }
+
+    public function escapeUrl(
+        string $input,
+    ): string {
+        return $this->escaper->url($input);
     }
 }

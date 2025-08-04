@@ -27,4 +27,8 @@ interface ViewContextInterface
     public function escapeJs(
         string $input,
     ): string;
+
+    public function escapeUrl(
+        string $input,
+    ): string;
 }
