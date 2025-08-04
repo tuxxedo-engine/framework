@@ -13,10 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Response;
 
+use Tuxxedo\View\ViewInterface;
+
 interface ResponseEmitterInterface
 {
     public function emit(
-        ResponseInterface|ResponseExceptionInterface $response,
+        ViewInterface|ResponseInterface|ResponseExceptionInterface $response,
         bool $sendHeaders = true,
     ): void;
 

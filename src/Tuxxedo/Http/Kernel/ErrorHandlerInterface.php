@@ -15,6 +15,7 @@ namespace Tuxxedo\Http\Kernel;
 
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
+use Tuxxedo\View\ViewInterface;
 
 interface ErrorHandlerInterface
 {
@@ -22,5 +23,5 @@ interface ErrorHandlerInterface
         RequestInterface $request,
         ResponseInterface $response,
         \Throwable $exception,
-    ): ResponseInterface;
+    ): ViewInterface|ResponseInterface;
 }

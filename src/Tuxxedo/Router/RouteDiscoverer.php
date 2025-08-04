@@ -114,6 +114,8 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
                         } else {
                             $uri = $controllerAttribute->uri . $method->getName();
                         }
+                    } else {
+                        $uri = $controllerAttribute->uri . $uri;
                     }
 
                     $argumentNodes = $this->getUriArgumentNodes($uri);

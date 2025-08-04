@@ -16,11 +16,13 @@ namespace App\Controllers;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\Attributes\Argument;
+use Tuxxedo\Router\Attributes\Controller;
 use Tuxxedo\Router\Attributes\Route;
 
+#[Controller(uri: '/args/')]
 readonly class ArgumentsController
 {
-    #[Route\Get(uri: '/args/optional/{?name}')]
+    #[Route\Get(uri: 'optional/{?name}')]
     public function show1(#[Argument(label: 'name')] bool $value = false): ResponseInterface
     {
         return Response::capture(
@@ -28,7 +30,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: '/args/name/{name}')]
+    #[Route\Get(uri: 'name/{name}')]
     public function show2(#[Argument(label: 'name')] string $value): ResponseInterface
     {
         return Response::capture(
@@ -36,7 +38,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: '/args/regex/{name:\d+}')]
+    #[Route\Get(uri: 'regex/{name:\d+}')]
     public function show3(#[Argument(label: 'name')] int $value): ResponseInterface
     {
         return Response::capture(
@@ -44,7 +46,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: '/args/regex-optional/{?name:\d+}')]
+    #[Route\Get(uri: 'regex-optional/{?name:\d+}')]
     public function show4(#[Argument(label: 'name')] ?int $value = null): ResponseInterface
     {
         return Response::capture(
@@ -52,7 +54,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: '/args/explicit/{name<uuid>}')]
+    #[Route\Get(uri: 'explicit/{name<uuid>}')]
     public function show5(#[Argument(label: 'name')] string $uuid): ResponseInterface
     {
         return Response::capture(
@@ -60,7 +62,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: '/args/explicit-optional/{?name<uuid>}')]
+    #[Route\Get(uri: 'explicit-optional/{?name<uuid>}')]
     public function show6(#[Argument(label: 'name')] ?string $uuid = null): ResponseInterface
     {
         return Response::capture(
@@ -68,7 +70,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: '/args/optional-mixed/{?name}/{?age}')]
+    #[Route\Get(uri: 'optional-mixed/{?name}/{?age}')]
     public function show7(
         #[Argument(label: 'name')] bool $value = false,
         #[Argument(label: 'age')] ?int $age = null,
@@ -78,7 +80,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: '/args/name-mixed/{name}/{country}')]
+    #[Route\Get(uri: 'name-mixed/{name}/{country}')]
     public function show8(
         #[Argument(label: 'name')] string $value,
         #[Argument(label: 'country')] string $country
@@ -88,110 +90,110 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: '/args/regex-mixed/{name:\d+}/{active}')]
+    #[Route\Get(uri: 'regex-mixed/{name:\d+}/{active}')]
     public function show9(
         #[Argument(label: 'name')] int $value,
-        #[Argument(label: 'active')] bool $active
+        #[Argument(label: 'active')] bool $active,
     ): ResponseInterface {
         return Response::capture(
             callback: static fn () => var_dump($value, $active),
         );
     }
 
-    #[Route\Get(uri: '/args/regex-optional-mixed/{?name:\d+}/{?score}')]
+    #[Route\Get(uri: 'regex-optional-mixed/{?name:\d+}/{?score}')]
     public function show10(
         #[Argument(label: 'name')] ?int $value = null,
-        #[Argument(label: 'score')] ?float $score = null
+        #[Argument(label: 'score')] ?float $score = null,
     ): ResponseInterface {
         return Response::capture(
             callback: static fn () => var_dump($value, $score),
         );
     }
 
-    #[Route\Get(uri: '/args/explicit-mixed/{name<uuid>}/{region}')]
+    #[Route\Get(uri: 'explicit-mixed/{name<uuid>}/{region}')]
     public function show11(
         #[Argument(label: 'name')] string $uuid,
-        #[Argument(label: 'region')] string $region
+        #[Argument(label: 'region')] string $region,
     ): ResponseInterface {
         return Response::capture(
             callback: static fn () => var_dump($uuid, $region),
         );
     }
 
-    #[Route\Get(uri: '/args/explicit-optional-mixed/{?name<uuid>}/{?timestamp:\d+}')]
+    #[Route\Get(uri: 'explicit-optional-mixed/{?name<uuid>}/{?timestamp:\d+}')]
     public function show12(
         #[Argument(label: 'name')] ?string $uuid = null,
-        #[Argument(label: 'timestamp')] ?int $timestamp = null
+        #[Argument(label: 'timestamp')] ?int $timestamp = null,
     ): ResponseInterface {
         return Response::capture(
             callback: static fn () => var_dump($uuid, $timestamp),
         );
     }
 
-    #[Route\Get(uri: '/args/textual/{alpha<alpha>}/{slug<slug>}')]
+    #[Route\Get(uri: 'textual/{alpha<alpha>}/{slug<slug>}')]
     public function show13(
         #[Argument(label: 'alpha')] string $alpha,
-        #[Argument(label: 'slug')] string $slug
+        #[Argument(label: 'slug')] string $slug,
     ): ResponseInterface {
         return Response::capture(
             callback: static fn () => var_dump($alpha, $slug),
         );
     }
 
-    #[Route\Get(uri: '/args/primitive/{bool<bool>}')]
+    #[Route\Get(uri: 'primitive/{bool<bool>}')]
     public function show14(
-        #[Argument(label: 'bool')] bool $value
+        #[Argument(label: 'bool')] bool $value,
     ): ResponseInterface {
         return Response::capture(
             callback: static fn () => var_dump($value),
         );
     }
 
-    #[Route\Get(uri: '/args/locale/{country<country-code>}/{currency<currency-code>}/{language<language-code>}')]
+    #[Route\Get(uri: 'locale/{country<country-code>}/{currency<currency-code>}/{language<language-code>}')]
     public function show15(
         #[Argument(label: 'country')] string $country,
         #[Argument(label: 'currency')] string $currency,
-        #[Argument(label: 'language')] string $language
+        #[Argument(label: 'language')] string $language,
     ): ResponseInterface {
         return Response::capture(
             callback: static fn () => var_dump($country, $currency, $language),
         );
     }
 
-    #[Route\Get(uri: '/args/temporal/{date<date>}/{timestamp<timestamp>}')]
+    #[Route\Get(uri: 'temporal/{date<date>}/{timestamp<timestamp>}')]
     public function show16(
         #[Argument(label: 'date')] string $date,
-        #[Argument(label: 'timestamp')] int $timestamp
+        #[Argument(label: 'timestamp')] int $timestamp,
     ): ResponseInterface {
         return Response::capture(
             callback: static fn () => var_dump($date, $timestamp),
         );
     }
 
-    #[Route\Get(uri: '/args/encoding/{hex<hex>}')]
+    #[Route\Get(uri: 'encoding/{hex<hex>}')]
     public function show17(
-        #[Argument(label: 'hex')] string $hex
+        #[Argument(label: 'hex')] string $hex,
     ): ResponseInterface {
         return Response::capture(
             callback: static fn () => var_dump($hex),
         );
     }
 
-    #[Route\Get(uri: '/args/hash/{sha1<sha1>}/{sha256<sha256>}')]
+    #[Route\Get(uri: 'hash/{sha1<sha1>}/{sha256<sha256>}')]
     public function show18(
         #[Argument(label: 'sha1')] string $sha1,
-        #[Argument(label: 'sha256')] string $sha256
+        #[Argument(label: 'sha256')] string $sha256,
     ): ResponseInterface {
         return Response::capture(
             callback: static fn () => var_dump($sha1, $sha256),
         );
     }
 
-    #[Route\Get(uri: '/args/identifier/{id<numeric-id>}/{uuid<uuid>}/{uuidv4<uuid-v4>}')]
+    #[Route\Get(uri: 'identifier/{id<numeric-id>}/{uuid<uuid>}/{uuidv4<uuid-v4>}')]
     public function show19(
         #[Argument(label: 'id')] int $id,
         #[Argument(label: 'uuid')] string $uuid,
-        #[Argument(label: 'uuidv4')] string $uuidv4
+        #[Argument(label: 'uuidv4')] string $uuidv4,
     ): ResponseInterface {
         return Response::capture(
             callback: static fn () => var_dump($id, $uuid, $uuidv4),

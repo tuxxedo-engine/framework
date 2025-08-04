@@ -31,8 +31,8 @@ use Tuxxedo\Http\Response\ResponseEmitter;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Response\ResponseExceptionInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
-use Tuxxedo\Router\RouteArgumentInterface;
 use Tuxxedo\Router\RouterInterface;
+use Tuxxedo\View\ViewInterface;
 
 class Kernel implements HttpApplicationInterface
 {
@@ -227,6 +227,10 @@ class Kernel implements HttpApplicationInterface
 
         foreach ($handlers as $handler) {
             $response = ($handler())->handle($request, $response, $e);
+
+            if ($response instanceof ViewInterface) {
+                $response = $response->toResponse();
+            }
         }
 
         $this->emitter->emit($response);
@@ -283,6 +287,10 @@ class Kernel implements HttpApplicationInterface
                             $callback,
                             ...$arguments,
                         );
+
+                        if ($response instanceof ViewInterface) {
+                            $response = $response->toResponse();
+                        }
 
                         if (!$response instanceof ResponseInterface) {
                             throw HttpException::fromInternalServerError();

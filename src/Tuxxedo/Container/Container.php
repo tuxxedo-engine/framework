@@ -16,7 +16,6 @@ namespace Tuxxedo\Container;
 class Container implements ContainerInterface
 {
     private const array PROTECTED_INTERFACES = [
-        ContainerInterface::class,
         AlwaysPersistentInterface::class,
         DependencyResolverInterface::class,
     ];
