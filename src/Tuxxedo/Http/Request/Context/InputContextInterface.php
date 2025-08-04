@@ -16,7 +16,6 @@ namespace Tuxxedo\Http\Request\Context;
 use Tuxxedo\Collections\CollectionInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Mapper\MapperException;
-use UnitEnum as T;
 
 interface InputContextInterface
 {

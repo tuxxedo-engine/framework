@@ -13,10 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View;
 
-use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Http\Response\ResponseInterface;
+use Tuxxedo\Http\Response\ResponsableInterface;
 
-interface ViewInterface
+interface ViewInterface extends ResponsableInterface
 {
     public string $name {
         get;
@@ -28,8 +27,4 @@ interface ViewInterface
     public array $scope {
         get;
     }
-
-    public function toResponse(
-        ContainerInterface $container,
-    ): ResponseInterface;
 }

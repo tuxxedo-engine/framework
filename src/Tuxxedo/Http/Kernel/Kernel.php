@@ -27,12 +27,12 @@ use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewarePipeline;
 use Tuxxedo\Http\Request\Request;
 use Tuxxedo\Http\Request\RequestInterface;
+use Tuxxedo\Http\Response\ResponsableInterface;
 use Tuxxedo\Http\Response\ResponseEmitter;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Response\ResponseExceptionInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\RouterInterface;
-use Tuxxedo\View\ViewInterface;
 
 class Kernel implements HttpApplicationInterface
 {
@@ -228,7 +228,7 @@ class Kernel implements HttpApplicationInterface
         foreach ($handlers as $handler) {
             $response = ($handler())->handle($request, $response, $e);
 
-            if ($response instanceof ViewInterface) {
+            if ($response instanceof ResponsableInterface) {
                 $response = $response->toResponse($this->container);
             }
         }
@@ -288,7 +288,7 @@ class Kernel implements HttpApplicationInterface
                             ...$arguments,
                         );
 
-                        if ($response instanceof ViewInterface) {
+                        if ($response instanceof ResponsableInterface) {
                             $response = $response->toResponse($container);
                         }
 
