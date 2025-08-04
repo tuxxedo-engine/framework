@@ -27,7 +27,7 @@ readonly class ViewController
         return new View(
             name: 'hello',
             variables: [
-                'message' => 'Hello World',
+                'message' => '<strong>Hello</strong> <em>World</em>',
             ],
         );
     }

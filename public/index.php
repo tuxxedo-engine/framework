@@ -16,6 +16,8 @@ use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\DynamicRouter;
 use Tuxxedo\Session\Session;
+use Tuxxedo\View\Engine\ViewRender;
+use Tuxxedo\View\ViewRenderInterface;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -71,6 +73,13 @@ if ($app->appProfile === Profile::DEBUG) {
 
 $app->container->bind(Logger::class);
 $app->container->bind(Session::class);
+
+$app->container->lazy(
+    ViewRenderInterface::class,
+    static fn (ContainerInterface $container): ViewRenderInterface => new ViewRender(
+        directory: __DIR__ . '/../app/views',
+    ),
+);
 
 $app->router(
     DynamicRouter::createFromDirectory(
