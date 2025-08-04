@@ -13,6 +13,11 @@ $finder = (new Finder())
             'public/',
             'src/',
         ],
+    )
+    ->exclude(
+        [
+            'app/views',
+        ],
     );
 
 return (new Config())

@@ -14,22 +14,25 @@ declare(strict_types=1);
 namespace Tuxxedo\View;
 
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
 
-interface ViewInterface
+readonly class View implements ViewInterface
 {
-    public string $name {
-        get;
-    }
-
     /**
-     * @var array<string, mixed>
+     * @param array<string, mixed> $variables
      */
-    public array $variables {
-        get;
+    public function __construct(
+        public string $name,
+        public array $variables = [],
+    ) {
     }
 
     public function toResponse(
         ContainerInterface $container,
-    ): ResponseInterface;
+    ): ResponseInterface {
+        return new Response(
+            body: $container->resolve(ViewRenderInterface::class)->render($this),
+        );
+    }
 }

@@ -1,6 +1,6 @@
 name: PHPStan
 
-on: [push]
+on: [ push ]
 
 jobs:
   build-test:
@@ -15,4 +15,6 @@ jobs:
           version: 2.x
       - uses: php-actions/phpstan@v3
         with:
-          path: app/ public/ src/
+          php_version: "8.4"
+          php_extensions: mbstring pdo_mysql
+          version: 2.x

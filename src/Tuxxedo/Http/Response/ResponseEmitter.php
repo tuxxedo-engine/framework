@@ -14,22 +14,17 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Response;
 
 use Tuxxedo\Http\CookieInterface;
-use Tuxxedo\View\ViewInterface;
 
 class ResponseEmitter implements ResponseEmitterInterface
 {
     private bool $sent = false;
 
     public function emit(
-        ViewInterface|ResponseInterface|ResponseExceptionInterface $response,
+        ResponseInterface|ResponseExceptionInterface $response,
         bool $sendHeaders = true,
     ): void {
         if ($response instanceof ResponseExceptionInterface) {
             $response = $response->send();
-        }
-
-        if ($response instanceof ViewInterface) {
-            $response = $response->toResponse();
         }
 
         $maxLength = null;

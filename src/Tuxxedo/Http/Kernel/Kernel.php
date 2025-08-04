@@ -229,7 +229,7 @@ class Kernel implements HttpApplicationInterface
             $response = ($handler())->handle($request, $response, $e);
 
             if ($response instanceof ViewInterface) {
-                $response = $response->toResponse();
+                $response = $response->toResponse($this->container);
             }
         }
 
@@ -289,7 +289,7 @@ class Kernel implements HttpApplicationInterface
                         );
 
                         if ($response instanceof ViewInterface) {
-                            $response = $response->toResponse();
+                            $response = $response->toResponse($container);
                         }
 
                         if (!$response instanceof ResponseInterface) {
