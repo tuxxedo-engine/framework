@@ -114,7 +114,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
                         } else {
                             $uri = $controllerAttribute->uri . $method->getName();
                         }
-                    } else {
+                    } elseif ($controllerAttribute !== null) {
                         $uri = $controllerAttribute->uri . $uri;
                     }
 
@@ -222,7 +222,10 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
         Attributes\Controller $controllerAttribute,
         \ReflectionMethod $method,
     ): bool {
-        if ($controllerAttribute->autoIndex && $method->getName() === 'index') {
+        if (
+            $controllerAttribute->autoIndex &&
+            $method->getName() === $controllerAttribute->autoIndexMethodName
+        ) {
             return true;
         }
 

@@ -19,6 +19,7 @@ readonly class Controller
     public function __construct(
         public string $uri,
         public bool $autoIndex = true,
+        public string $autoIndexMethodName = 'index',
     ) {
     }
 }
