@@ -68,6 +68,7 @@ class Kernel implements HttpApplicationInterface
         $this->container = $container ?? new Container();
 
         $this->container->bind($this);
+        $this->container->bind($this->config);
         $this->container->bind($this->container);
 
         $this->emitter = new ResponseEmitter();

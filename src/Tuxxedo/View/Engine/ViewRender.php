@@ -13,20 +13,34 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Engine;
 
+use Tuxxedo\Config\ConfigInterface;
+use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Container\LazyInitializableInterface;
 use Tuxxedo\View\ViewContextInterface;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewInterface;
 use Tuxxedo\View\ViewRenderInterface;
 
-readonly class ViewRender implements ViewRenderInterface
+readonly class ViewRender implements LazyInitializableInterface, ViewRenderInterface
 {
     public ViewContextInterface $context;
 
     public function __construct(
         public string $directory,
-        public string $extension = '.phtml',
+        public string $extension,
     ) {
         $this->context = new ViewContext($this);
+    }
+
+    public static function createInstance(
+        ContainerInterface $container,
+    ): self {
+        $config = $container->resolve(ConfigInterface::class);
+
+        return new self(
+            directory: $config->getString('views.directory'),
+            extension: $config->getString('views.extension'),
+        );
     }
 
     public function getViewFileName(

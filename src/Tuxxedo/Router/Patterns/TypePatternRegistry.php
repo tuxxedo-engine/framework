@@ -23,7 +23,7 @@ class TypePatternRegistry implements TypePatternRegistryInterface
     /**
      * @param TypePatternInterface[] $patterns
      */
-    public function __construct(
+    final private function __construct(
         array $patterns,
     ) {
         $this->patterns = [];
@@ -56,9 +56,9 @@ class TypePatternRegistry implements TypePatternRegistryInterface
         ];
     }
 
-    public static function createDefault(): TypePatternRegistryInterface
+    public static function createDefault(): static
     {
-        return new self(
+        return new static(
             patterns: self::getDefaults(),
         );
     }
@@ -68,12 +68,23 @@ class TypePatternRegistry implements TypePatternRegistryInterface
      */
     public static function createWithDefaults(
         array $patterns,
-    ): TypePatternRegistryInterface {
-        return new self(
+    ): static {
+        return new static(
             patterns: \array_merge(
                 self::getDefaults(),
                 $patterns,
             ),
+        );
+    }
+
+    /**
+     * @param TypePatternInterface[] $patterns
+     */
+    public static function createWithoutDefaults(
+        array $patterns,
+    ): static {
+        return new static(
+            patterns: $patterns,
         );
     }
 
