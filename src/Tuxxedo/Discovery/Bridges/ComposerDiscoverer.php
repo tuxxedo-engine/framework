@@ -26,6 +26,14 @@ class ComposerDiscoverer implements DiscoveryChannelInterface
      */
     private array $packages;
 
+    /**
+     * @param string[] $packageWhitelist
+     */
+    public function __construct(
+        public readonly array $packageWhitelist = [],
+    ) {
+    }
+
     private function lazyLoad(): void
     {
         if (isset($this->packages)) {
@@ -34,11 +42,17 @@ class ComposerDiscoverer implements DiscoveryChannelInterface
 
         $this->packages = [];
 
-        foreach (DiscoveryType::cases() as $type) {
+        foreach ($this->provides() as $type) {
             $this->packages[$type->name] = [];
         }
 
+        $whitelistCheck = \sizeof($this->packageWhitelist) > 0;
+
         foreach (InstalledVersions::getInstalledPackages() as $package) {
+            if ($whitelistCheck && !\in_array($package, $this->packageWhitelist, true)) {
+                continue;
+            }
+
             $path = InstalledVersions::getInstallPath($package);
 
             if ($path === null) {

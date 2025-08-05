@@ -63,7 +63,7 @@ class Container implements ContainerInterface
 
             if (\is_string($class) && \in_array(LazyInitializableInterface::class, $aliases, true)) {
                 /** @var class-string<LazyInitializableInterface> $class */
-                $this->initializers[$className] = fn (self $container): object => $class::createInstance($container);
+                $this->initializers[$className] = static fn (self $container): object => $class::createInstance($container);
             }
         }
 
@@ -268,7 +268,7 @@ class Container implements ContainerInterface
                 $className = $type->getName();
 
                 return $this->resolve($className);
-            } catch(\Exception) {
+            } catch (\Exception) {
                 if ($type->allowsNull()) {
                     return null;
                 }
