@@ -26,7 +26,7 @@ readonly class ArgumentsController
     public function show1(#[Argument(label: 'name')] bool $value = false): ResponseInterface
     {
         return Response::capture(
-            callback: static fn () => var_dump($value),
+            callback: static fn () => \var_dump($value),
         );
     }
 
@@ -34,7 +34,7 @@ readonly class ArgumentsController
     public function show2(#[Argument(label: 'name')] string $value): ResponseInterface
     {
         return Response::capture(
-            callback: static fn () => var_dump($value),
+            callback: static fn () => \var_dump($value),
         );
     }
 
@@ -42,7 +42,7 @@ readonly class ArgumentsController
     public function show3(#[Argument(label: 'name')] int $value): ResponseInterface
     {
         return Response::capture(
-            callback: static fn () => var_dump($value),
+            callback: static fn () => \var_dump($value),
         );
     }
 
@@ -50,7 +50,7 @@ readonly class ArgumentsController
     public function show4(#[Argument(label: 'name')] ?int $value = null): ResponseInterface
     {
         return Response::capture(
-            callback: static fn () => var_dump($value),
+            callback: static fn () => \var_dump($value),
         );
     }
 
@@ -58,7 +58,7 @@ readonly class ArgumentsController
     public function show5(#[Argument(label: 'name')] string $uuid): ResponseInterface
     {
         return Response::capture(
-            callback: static fn () => var_dump($uuid),
+            callback: static fn () => \var_dump($uuid),
         );
     }
 
@@ -66,7 +66,7 @@ readonly class ArgumentsController
     public function show6(#[Argument(label: 'name')] ?string $uuid = null): ResponseInterface
     {
         return Response::capture(
-            callback: static fn () => var_dump($uuid),
+            callback: static fn () => \var_dump($uuid),
         );
     }
 
@@ -76,7 +76,7 @@ readonly class ArgumentsController
         #[Argument(label: 'age')] ?int $age = null,
     ): ResponseInterface {
         return Response::capture(
-            callback: static fn () => var_dump($value, $age),
+            callback: static fn () => \var_dump($value, $age),
         );
     }
 
@@ -86,7 +86,7 @@ readonly class ArgumentsController
         #[Argument(label: 'country')] string $country
     ): ResponseInterface {
         return Response::capture(
-            callback: static fn () => var_dump($value, $country),
+            callback: static fn () => \var_dump($value, $country),
         );
     }
 
@@ -96,7 +96,7 @@ readonly class ArgumentsController
         #[Argument(label: 'active')] bool $active,
     ): ResponseInterface {
         return Response::capture(
-            callback: static fn () => var_dump($value, $active),
+            callback: static fn () => \var_dump($value, $active),
         );
     }
 
@@ -106,7 +106,7 @@ readonly class ArgumentsController
         #[Argument(label: 'score')] ?float $score = null,
     ): ResponseInterface {
         return Response::capture(
-            callback: static fn () => var_dump($value, $score),
+            callback: static fn () => \var_dump($value, $score),
         );
     }
 
@@ -116,7 +116,7 @@ readonly class ArgumentsController
         #[Argument(label: 'region')] string $region,
     ): ResponseInterface {
         return Response::capture(
-            callback: static fn () => var_dump($uuid, $region),
+            callback: static fn () => \var_dump($uuid, $region),
         );
     }
 
@@ -126,7 +126,7 @@ readonly class ArgumentsController
         #[Argument(label: 'timestamp')] ?int $timestamp = null,
     ): ResponseInterface {
         return Response::capture(
-            callback: static fn () => var_dump($uuid, $timestamp),
+            callback: static fn () => \var_dump($uuid, $timestamp),
         );
     }
 
@@ -136,7 +136,7 @@ readonly class ArgumentsController
         #[Argument] string $slug,
     ): ResponseInterface {
         return Response::capture(
-            callback: static fn () => var_dump($alpha, $slug),
+            callback: static fn () => \var_dump($alpha, $slug),
         );
     }
 
@@ -145,7 +145,7 @@ readonly class ArgumentsController
         #[Argument(label: 'boolean')] bool $value,
     ): ResponseInterface {
         return Response::capture(
-            callback: static fn () => var_dump($value),
+            callback: static fn () => \var_dump($value),
         );
     }
 
@@ -156,7 +156,7 @@ readonly class ArgumentsController
         #[Argument] string $language,
     ): ResponseInterface {
         return Response::capture(
-            callback: static fn () => var_dump($country, $currency, $language),
+            callback: static fn () => \var_dump($country, $currency, $language),
         );
     }
 
@@ -166,7 +166,7 @@ readonly class ArgumentsController
         #[Argument] int $timestamp,
     ): ResponseInterface {
         return Response::capture(
-            callback: static fn () => var_dump($date, $timestamp),
+            callback: static fn () => \var_dump($date, $timestamp),
         );
     }
 
@@ -175,7 +175,7 @@ readonly class ArgumentsController
         #[Argument] string $hex,
     ): ResponseInterface {
         return Response::capture(
-            callback: static fn () => var_dump($hex),
+            callback: static fn () => \var_dump($hex),
         );
     }
 
@@ -185,7 +185,7 @@ readonly class ArgumentsController
         #[Argument] string $sha256,
     ): ResponseInterface {
         return Response::capture(
-            callback: static fn () => var_dump($sha1, $sha256),
+            callback: static fn () => \var_dump($sha1, $sha256),
         );
     }
 
@@ -196,7 +196,7 @@ readonly class ArgumentsController
         #[Argument] string $uuidv4,
     ): ResponseInterface {
         return Response::capture(
-            callback: static fn () => var_dump($id, $uuid, $uuidv4),
+            callback: static fn () => \var_dump($id, $uuid, $uuidv4),
         );
     }
 }
