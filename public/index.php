@@ -11,18 +11,15 @@
 
 declare(strict_types=1);
 
-use App\Services\Logger\Logger;
+use Tuxxedo\Application\ApplicationFactory;
 use Tuxxedo\Application\Profile;
 use Tuxxedo\Debug\DebugErrorHandler;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
-use Tuxxedo\Http\Kernel\Kernel;
 use Tuxxedo\Router\DynamicRouter;
-use Tuxxedo\Session\Session;
-use Tuxxedo\View\Engine\ViewRender;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-$app = Kernel::createFromDirectory(
+$app = ApplicationFactory::createFromDirectory(
     directory: __DIR__ . '/../app',
 );
 
@@ -33,10 +30,6 @@ if ($app->appProfile === Profile::DEBUG) {
         ),
     );
 }
-
-$app->container->bind(Logger::class);
-$app->container->bind(Session::class);
-$app->container->bind(ViewRender::class);
 
 $app->router(
     DynamicRouter::createFromDirectory(

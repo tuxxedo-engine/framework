@@ -74,19 +74,6 @@ class Kernel implements HttpApplicationInterface
         $this->emitter = new ResponseEmitter();
     }
 
-    public static function createFromDirectory(
-        string $directory,
-    ): static {
-        $config = Config::createFromDirectory($directory . '/config');
-
-        return new static(
-            appName: $config->getString('app.name'),
-            appVersion: $config->getString('app.version'),
-            appProfile: $config->getEnum('app.profile', Profile::class),
-            config: $config,
-        );
-    }
-
     /**
      * @param ServiceProviderInterface|(\Closure(): ServiceProviderInterface) $provider
      */
