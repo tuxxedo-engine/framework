@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Tuxxedo\Application;
 
 use Tuxxedo\Config\Config;
-use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Kernel\Kernel;
 
 class ApplicationFactory
@@ -25,6 +24,7 @@ class ApplicationFactory
 
     public static function createFromDirectory(
         string $directory,
+        bool $loadServices = true,
     ): Kernel {
         $config = Config::createFromDirectory($directory . '/config');
 
@@ -35,23 +35,9 @@ class ApplicationFactory
             config: $config,
         );
 
-        if (\is_file($directory . '/services.php')) {
+        if ($loadServices) {
             $kernel->serviceProvider(
-                new readonly class ($directory . '/services.php') implements ServiceProviderInterface {
-                    public function __construct(
-                        public string $file,
-                    ) {
-                    }
-
-                    public function load(ContainerInterface $container): void
-                    {
-                        $provider = (static fn (string $file): mixed => require $file)($this->file);
-
-                        if ($provider instanceof \Closure) {
-                            $provider($container);
-                        }
-                    }
-                },
+                new FileServiceProvider($directory . '/services.php'),
             );
         }
 
