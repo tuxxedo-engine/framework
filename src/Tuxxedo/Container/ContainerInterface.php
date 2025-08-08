@@ -58,6 +58,10 @@ interface ContainerInterface
         string $className,
     ): object;
 
+    public function call(
+        \Closure $callable,
+    ): mixed;
+
     /**
      * @param class-string $className
      */

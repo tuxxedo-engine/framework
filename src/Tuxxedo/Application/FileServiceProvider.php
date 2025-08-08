@@ -27,7 +27,7 @@ class FileServiceProvider implements ServiceProviderInterface
         $provider = (static fn (string $file): mixed => require $file)($this->file);
 
         if ($provider instanceof \Closure) {
-            $provider($container);
+            $container->call($provider);
         }
     }
 }

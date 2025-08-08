@@ -182,6 +182,18 @@ class Container implements ContainerInterface
         return $instance;
     }
 
+    public function call(
+        \Closure $callable,
+    ): mixed {
+        $arguments = [];
+
+        foreach ((new \ReflectionFunction($callable))->getParameters() as $parameter) {
+            $arguments[$parameter->getName()] = $this->resolveParameter($parameter);
+        }
+
+        return $callable(...$arguments);
+    }
+
     public function isBound(string $className): bool
     {
         return isset($this->persistentDependencies[$className]);
