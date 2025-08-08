@@ -15,6 +15,7 @@ namespace Tuxxedo\Http\Request\Context;
 
 use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
+use Tuxxedo\Http\WeightedHeaderInterface;
 use UnitEnum as T;
 
 interface HeaderContextInterface
@@ -27,6 +28,28 @@ interface HeaderContextInterface
     public function has(
         string $name,
     ): bool;
+
+    /**
+     * @throws HttpException
+     */
+    public function get(
+        string $name,
+    ): HeaderInterface;
+
+    public function isWeighted(
+        string $name,
+    ): bool;
+
+    public function isWeightedValue(
+        HeaderInterface|WeightedHeaderInterface|string $value,
+    ): bool;
+
+    /**
+     * @throws HttpException
+     */
+    public function getWeighted(
+        string $name,
+    ): WeightedHeaderInterface;
 
     /**
      * @throws HttpException

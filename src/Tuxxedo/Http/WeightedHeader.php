@@ -75,9 +75,4 @@ readonly class WeightedHeader extends Header implements WeightedHeaderInterface
 
         return $parsed;
     }
-
-    public static function isWeightedValue(string $value): bool
-    {
-        return \preg_match('/;\s*[qv]=("?)[0-9.]+\1/', $value) === 1;
-    }
 }

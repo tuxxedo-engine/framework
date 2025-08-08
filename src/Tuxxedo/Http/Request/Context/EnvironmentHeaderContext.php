@@ -14,8 +14,10 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Request\Context;
 
 use Tuxxedo\Http\Header;
+use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\WeightedHeader;
+use Tuxxedo\Http\WeightedHeaderInterface;
 use UnitEnum as T;
 
 class EnvironmentHeaderContext implements HeaderContextInterface
@@ -56,7 +58,7 @@ class EnvironmentHeaderContext implements HeaderContextInterface
 
         foreach ($this->headers as $name => $value) {
             $headers[] = match (true) {
-                WeightedHeader::isWeightedValue($value) => new WeightedHeader(
+                $this->isWeightedValue($value) => new WeightedHeader(
                     name: $name,
                     value: $value,
                 ),
@@ -75,6 +77,68 @@ class EnvironmentHeaderContext implements HeaderContextInterface
         $this->lazyLoad();
 
         return \array_key_exists($name, $this->headers);
+    }
+
+    public function get(
+        string $name,
+    ): HeaderInterface {
+        $this->lazyLoad();
+
+        if (!\array_key_exists($name, $this->headers)) {
+            throw HttpException::fromInternalServerError();
+        }
+
+        if ($this->isWeightedValue($this->headers[$name])) {
+            return new WeightedHeader(
+                name: $name,
+                value: $this->headers[$name],
+            );
+        }
+
+        return new Header(
+            name: $name,
+            value: $this->headers[$name],
+        );
+    }
+
+    public function isWeighted(
+        string $name,
+    ): bool {
+        $this->lazyLoad();
+
+        if (!\array_key_exists($name, $this->headers)) {
+            return false;
+        }
+
+        return $this->isWeightedValue($this->headers[$name]);
+    }
+
+    public function isWeightedValue(
+        HeaderInterface|WeightedHeaderInterface|string $value,
+    ): bool {
+        if (!\is_string($value)) {
+            $value = $value->value;
+        }
+
+        return \preg_match('/;\s*[qv]=("?)[0-9.]+\1/', $value) === 1;
+    }
+
+    public function getWeighted(
+        string $name,
+    ): WeightedHeaderInterface {
+        $this->lazyLoad();
+
+        if (
+            !\array_key_exists($name, $this->headers) ||
+            !$this->isWeightedValue($this->headers[$name])
+        ) {
+            throw HttpException::fromInternalServerError();
+        }
+
+        return new WeightedHeader(
+            name: $name,
+            value: $this->headers[$name],
+        );
     }
 
     public function getInt(string $name): int

@@ -135,6 +135,18 @@ readonly class IndexController
         );
     }
 
+    #[Route\Get(uri: '/header')]
+    public function header(RequestInterface $request): ResponseInterface
+    {
+        return Response::json(
+            json: [
+                $request->headers->get('Accept'),
+                $request->headers->isWeighted('Accept'),
+                $request->headers->getWeighted('Accept'),
+            ],
+        );
+    }
+
     #[Route\Get(uri: '/headers')]
     public function headers(RequestInterface $request): ResponseInterface
     {
