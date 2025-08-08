@@ -20,20 +20,28 @@ readonly class WeightedHeader extends Header implements WeightedHeaderInterface
         $parsed = [];
 
         foreach (\explode(',', $this->value) as $part) {
-            if (
-                \preg_match(
-                    '/^\s*("?[^";\s]+"?)(?:;[^=]+=[^;]*)*(?:;\s*[qv]="?([0-9.]+)"?)?\s*$/i',
-                    $part,
-                    $matches,
-                ) === 1
-            ) {
-                $parsed[] = [
-                    \trim($matches[1], " \t\n\r\0\x0B\""),
-                    isset($matches[2])
-                        ? (float) $matches[2]
-                        : 1.0,
-                ];
+            $segments = \explode(';', $part);
+            $value = \trim(\array_shift($segments), " \t\n\r\0\x0B\"");
+            $weight = 1.0;
+
+            foreach ($segments as $parameter) {
+                $parameter = \trim($parameter);
+
+                if (\str_starts_with($parameter, 'q=')) {
+                    $weightedValue = \substr($parameter, 2);
+
+                    if (\is_numeric($weightedValue)) {
+                        $weight = (float) $weightedValue;
+                    }
+
+                    break;
+                }
             }
+
+            $parsed[] = [
+                $value,
+                $weight,
+            ];
         }
 
         \usort(
@@ -52,25 +60,33 @@ readonly class WeightedHeader extends Header implements WeightedHeaderInterface
         $parsed = [];
 
         foreach (\explode(',', $this->value) as $part) {
-            if (
-                \preg_match(
-                    '/^\s*("?[^";\s]+"?)(?:;[^=]+=[^;]*)*(?:;\s*[qv]="?([0-9.]+)"?)?\s*$/i',
-                    $part,
-                    $matches,
-                ) === 1
-            ) {
-                $parsed[] = new WeightedHeaderPair(
-                    value: \trim($matches[1], " \t\n\r\0\x0B\""),
-                    weight: isset($matches[2])
-                        ? (float) $matches[2]
-                        : 1.0,
-                );
+            $segments = \explode(';', $part);
+            $value = \trim(\array_shift($segments), " \t\n\r\0\x0B\"");
+            $weight = 1.0;
+
+            foreach ($segments as $parameter) {
+                $parameter = \trim($parameter);
+
+                if (\str_starts_with($parameter, 'q=')) {
+                    $weightedValue = \substr($parameter, 2);
+
+                    if (\is_numeric($weightedValue)) {
+                        $weight = (float) $weightedValue;
+                    }
+
+                    break;
+                }
             }
+
+            $parsed[] = new WeightedHeaderPair(
+                value: $value,
+                weight: $weight,
+            );
         }
 
         \usort(
             $parsed,
-            static fn (WeightedHeaderPairInterface $a, WeightedHeaderPairInterface $b): int => $a->weight <=> $b->weight,
+            static fn (WeightedHeaderPairInterface $a, WeightedHeaderPairInterface $b): int => $b->weight <=> $a->weight,
         );
 
         return $parsed;

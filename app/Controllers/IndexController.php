@@ -142,7 +142,7 @@ readonly class IndexController
             json: [
                 $request->headers->get('Accept'),
                 $request->headers->isWeighted('Accept'),
-                $request->headers->getWeighted('Accept'),
+                $request->headers->getWeighted('Accept')->getWeightedPairs(),
             ],
         );
     }
