@@ -13,18 +13,13 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer\Tokens;
 
-enum TokenType
+readonly class SetToken implements TokenInterface
 {
-    case TEXT;
-    case IF;
-    case ELSEIF;
-    case ELSE;
-    case ENDIF;
-    case ECHO;
-    case FOR;
-    case ENDFOR;
-    case WHILE;
-    case ENDWHILE;
-    case INCLUDE;
-    case SET;
+    public TokenType $type;
+
+    public function __construct(
+        public string $operand,
+    ) {
+        $this->type = TokenType::SET;
+    }
 }

@@ -22,6 +22,7 @@ use Tuxxedo\View\Lumi\Lexer\Tokens\EndWhileToken;
 use Tuxxedo\View\Lumi\Lexer\Tokens\ForToken;
 use Tuxxedo\View\Lumi\Lexer\Tokens\IfToken;
 use Tuxxedo\View\Lumi\Lexer\Tokens\IncludeToken;
+use Tuxxedo\View\Lumi\Lexer\Tokens\SetToken;
 use Tuxxedo\View\Lumi\Lexer\Tokens\TextToken;
 use Tuxxedo\View\Lumi\Lexer\Tokens\TokenInterface;
 use Tuxxedo\View\Lumi\Lexer\Tokens\WhileToken;
@@ -72,7 +73,10 @@ class BlockHandler implements TokenHandlerInterface
                 'for' => new ForToken($expr),
                 'while' => new WhileToken($expr),
                 'include' => new IncludeToken($expr),
-                default => throw LexerException::fromSequenceNotFound(sequence: $directive),
+                'set' => new SetToken($expr),
+                default => throw LexerException::fromSequenceNotFound(
+                    sequence: $directive,
+                ),
             };
         }
 
@@ -83,7 +87,9 @@ class BlockHandler implements TokenHandlerInterface
             'endif' => new EndIfToken(),
             'endfor' => new EndForToken(),
             'endwhile' => new EndWhileToken(),
-            default => throw LexerException::fromSequenceNotFound(sequence: $directive),
+            default => throw LexerException::fromSequenceNotFound(
+                sequence: $directive,
+            ),
         };
     }
 }
