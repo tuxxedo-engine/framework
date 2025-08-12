@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Node;
 
-interface NodeInterface
+enum UnaryOperator
 {
-    // @todo more reflection later
+    case NOT;
+    case NEGATE;
+    case COMPLEMENT;
 }

@@ -13,7 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Node;
 
-interface NodeInterface
+readonly class BinaryOpNode implements ExpressionNodeInterface
 {
-    // @todo more reflection later
+    public function __construct(
+        public ExpressionNodeInterface $op1,
+        public ExpressionNodeInterface $op2,
+        public BinaryOperator $operator,
+    ) {
+    }
 }

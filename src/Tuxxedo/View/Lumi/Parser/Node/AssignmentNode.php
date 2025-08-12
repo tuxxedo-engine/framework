@@ -13,7 +13,11 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Node;
 
-interface NodeInterface
+readonly class AssignmentNode implements ExpressionNodeInterface
 {
-    // @todo more reflection later
+    public function __construct(
+        public IdentifierNode $name,
+        public ExpressionNodeInterface $value,
+    ) {
+    }
 }

@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Node;
 
-interface NodeInterface
+interface ExpressionNodeInterface extends NodeInterface
 {
     // @todo more reflection later
 }

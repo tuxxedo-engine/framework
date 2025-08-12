@@ -13,7 +13,11 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Node;
 
-interface NodeInterface
+enum NodeNativeType
 {
-    // @todo more reflection later
+    case STRING;
+    case INT;
+    case FLOAT;
+    case BOOL;
+    case NULL;
 }
