@@ -39,17 +39,24 @@ class HttpException extends \Exception implements ResponseCodeInterface, Respons
         );
     }
 
+    public static function fromBadRequest(): self
+    {
+        return new self(
+            responseCode: ResponseCode::BAD_REQUEST,
+        );
+    }
+
+    public static function fromForbidden(): self
+    {
+        return new self(
+            responseCode: ResponseCode::FORBIDDEN,
+        );
+    }
+
     public static function fromNotFound(): self
     {
         return new self(
             responseCode: ResponseCode::NOT_FOUND,
-        );
-    }
-
-    public static function fromInternalServerError(): self
-    {
-        return new self(
-            responseCode: ResponseCode::INTERNAL_SERVER_ERROR,
         );
     }
 
@@ -64,6 +71,20 @@ class HttpException extends \Exception implements ResponseCodeInterface, Respons
     {
         return new self(
             responseCode: ResponseCode::METHOD_NOT_ALLOWED,
+        );
+    }
+
+    public static function fromUnprocessableEntity(): self
+    {
+        return new self(
+            responseCode: ResponseCode::UNPROCESSABLE_ENTITY,
+        );
+    }
+
+    public static function fromInternalServerError(): self
+    {
+        return new self(
+            responseCode: ResponseCode::INTERNAL_SERVER_ERROR,
         );
     }
 }
