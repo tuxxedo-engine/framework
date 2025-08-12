@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
 use Tuxxedo\View\Lumi\Lexer\LexerException;
-use Tuxxedo\View\Lumi\Lexer\Tokens\TokenInterface;
+use Tuxxedo\View\Lumi\Lexer\Token\TokenInterface;
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 
 interface TokenHandlerInterface

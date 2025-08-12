@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer;
 
-use Tuxxedo\View\Lumi\Lexer\Tokens\TokenInterface;
+use Tuxxedo\View\Lumi\Lexer\Token\TokenInterface;
 
 interface LexerInterface
 {

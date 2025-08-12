@@ -39,20 +39,20 @@ class TypePatternRegistry implements TypePatternRegistryInterface
     private static function getDefaults(): array
     {
         return [
-            new Types\Alpha(),
-            new Types\Boolean(),
-            new Types\CountryCode(),
-            new Types\CurrencyCode(),
-            new Types\Date(),
-            new Types\Hex(),
-            new Types\LanguageCode(),
-            new Types\NumericId(),
-            new Types\Sha1(),
-            new Types\Sha256(),
-            new Types\Slug(),
-            new Types\Timestamp(),
-            new Types\Uuid(),
-            new Types\UuidV4(),
+            new Type\Alpha(),
+            new Type\Boolean(),
+            new Type\CountryCode(),
+            new Type\CurrencyCode(),
+            new Type\Date(),
+            new Type\Hex(),
+            new Type\LanguageCode(),
+            new Type\NumericId(),
+            new Type\Sha1(),
+            new Type\Sha256(),
+            new Type\Slug(),
+            new Type\Timestamp(),
+            new Type\Uuid(),
+            new Type\UuidV4(),
         ];
     }
 

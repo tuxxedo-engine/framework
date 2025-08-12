@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer;
 
+use Tuxxedo\View\Lumi\Lexer\Handler\TokenHandlerInterface;
+
 class TokenStream implements TokenStreamInterface
 {
     public readonly int $length;
@@ -47,9 +49,16 @@ class TokenStream implements TokenStreamInterface
         return $this->position >= $this->length;
     }
 
-    public function peekAhead(int $length): string
-    {
+    public function peekAhead(
+        int $length,
+    ): string {
         return \mb_substr($this->input, $this->position, $length, 'UTF-8');
+    }
+
+    public function match(
+        string $sequence,
+    ): bool {
+        return $this->peekAhead(\mb_strlen($sequence, 'UTF-8')) === $sequence;
     }
 
     public function consume(): string
@@ -63,13 +72,9 @@ class TokenStream implements TokenStreamInterface
         return $char;
     }
 
-    public function match(string $sequence): bool
-    {
-        return $this->peekAhead(\mb_strlen($sequence, 'UTF-8')) === $sequence;
-    }
-
-    public function consumeSequence(string $sequence): void
-    {
+    public function consumeSequence(
+        string $sequence,
+    ): void {
         if (!$this->match($sequence)) {
             throw LexerException::fromSequenceNotFound(
                 sequence: $sequence,

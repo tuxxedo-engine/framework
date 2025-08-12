@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Engine;
 
 use Tuxxedo\Container\AlwaysPersistentInterface;
-use Tuxxedo\Container\Resolvers\ConfigValue;
+use Tuxxedo\Container\Resolver\ConfigValue;
 use Tuxxedo\View\ViewContextInterface;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewInterface;

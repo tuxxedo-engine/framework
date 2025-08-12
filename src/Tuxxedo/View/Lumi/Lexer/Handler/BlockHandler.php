@@ -14,18 +14,18 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
 use Tuxxedo\View\Lumi\Lexer\LexerException;
-use Tuxxedo\View\Lumi\Lexer\Tokens\ElseIfToken;
-use Tuxxedo\View\Lumi\Lexer\Tokens\ElseToken;
-use Tuxxedo\View\Lumi\Lexer\Tokens\EndForToken;
-use Tuxxedo\View\Lumi\Lexer\Tokens\EndIfToken;
-use Tuxxedo\View\Lumi\Lexer\Tokens\EndWhileToken;
-use Tuxxedo\View\Lumi\Lexer\Tokens\ForToken;
-use Tuxxedo\View\Lumi\Lexer\Tokens\IfToken;
-use Tuxxedo\View\Lumi\Lexer\Tokens\IncludeToken;
-use Tuxxedo\View\Lumi\Lexer\Tokens\SetToken;
-use Tuxxedo\View\Lumi\Lexer\Tokens\TextToken;
-use Tuxxedo\View\Lumi\Lexer\Tokens\TokenInterface;
-use Tuxxedo\View\Lumi\Lexer\Tokens\WhileToken;
+use Tuxxedo\View\Lumi\Lexer\Token\ElseIfToken;
+use Tuxxedo\View\Lumi\Lexer\Token\ElseToken;
+use Tuxxedo\View\Lumi\Lexer\Token\EndForToken;
+use Tuxxedo\View\Lumi\Lexer\Token\EndIfToken;
+use Tuxxedo\View\Lumi\Lexer\Token\EndWhileToken;
+use Tuxxedo\View\Lumi\Lexer\Token\ForToken;
+use Tuxxedo\View\Lumi\Lexer\Token\IfToken;
+use Tuxxedo\View\Lumi\Lexer\Token\IncludeToken;
+use Tuxxedo\View\Lumi\Lexer\Token\SetToken;
+use Tuxxedo\View\Lumi\Lexer\Token\TextToken;
+use Tuxxedo\View\Lumi\Lexer\Token\TokenInterface;
+use Tuxxedo\View\Lumi\Lexer\Token\WhileToken;
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 
 class BlockHandler implements TokenHandlerInterface

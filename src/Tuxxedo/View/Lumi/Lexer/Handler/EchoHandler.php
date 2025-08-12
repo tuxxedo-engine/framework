@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
-use Tuxxedo\View\Lumi\Lexer\Tokens\EchoToken;
-use Tuxxedo\View\Lumi\Lexer\Tokens\TextToken;
+use Tuxxedo\View\Lumi\Lexer\Token\EchoToken;
+use Tuxxedo\View\Lumi\Lexer\Token\TextToken;
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 
 class EchoHandler implements TokenHandlerInterface

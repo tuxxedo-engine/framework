@@ -18,8 +18,8 @@ use Tuxxedo\View\Lumi\Lexer\Handler\BlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\CommentHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\EchoHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\TokenHandlerInterface;
-use Tuxxedo\View\Lumi\Lexer\Tokens\TextToken;
-use Tuxxedo\View\Lumi\Lexer\Tokens\TokenInterface;
+use Tuxxedo\View\Lumi\Lexer\Token\TextToken;
+use Tuxxedo\View\Lumi\Lexer\Token\TokenInterface;
 
 class Lexer implements LexerInterface
 {
@@ -111,6 +111,8 @@ class Lexer implements LexerInterface
             $buffer = $stream->peekAhead($i);
 
             if (isset($this->sequences[$buffer])) {
+                $stream->consumeSequence($buffer);
+
                 return $this->sequences[$buffer]->tokenize($stream);
             }
         }

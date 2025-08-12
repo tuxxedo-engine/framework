@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Config;
 
-use Tuxxedo\Collections\FileCollection;
+use Tuxxedo\Collection\FileCollection;
 
 class Config implements ConfigInterface
 {
@@ -37,7 +37,7 @@ class Config implements ConfigInterface
     {
         $directives = [];
 
-        foreach (FileCollection::fromFileType($directory, 'php') as $configFile) {
+        foreach (FileCollection::fromFileType($directory, '.php') as $configFile) {
             $directives[\basename($configFile, '.php')] = static::isolatedInclude($configFile);
         }
 

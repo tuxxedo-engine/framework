@@ -29,7 +29,7 @@ class Session implements SessionInterface, AlwaysPersistentInterface, LazyInitia
         ContainerInterface $container,
     ): self {
         return new self(
-            adapter: Adapters\PhpSessionAdapter::createFromConfig(
+            adapter: Adapter\PhpSessionAdapter::createFromConfig(
                 startMode: SessionStartMode::LAZY,
                 config: $container->resolve(Kernel::class)->config,
             ),

@@ -13,13 +13,19 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi;
 
+use Tuxxedo\Collection\FileCollection;
+use Tuxxedo\View\Lumi\Compiler\CompiledFile;
+use Tuxxedo\View\Lumi\Compiler\CompiledFileBatch;
+use Tuxxedo\View\Lumi\Compiler\CompiledFileBatchInterface;
+use Tuxxedo\View\Lumi\Compiler\CompiledFileInterface;
 use Tuxxedo\View\Lumi\Lexer\Lexer;
+use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
 
 class LumiEngine
 {
     final private function __construct(
-        public LexerInterface $lexer, // @todo Fix visibility
+        private LexerInterface $lexer,
         // @todo Parser
         // @todo Compiler
     ) {
@@ -42,17 +48,51 @@ class LumiEngine
         );
     }
 
+    /**
+     * @throws LexerException
+     */
     public function compileFile(
         string $file,
-    ): void {
-        // @todo Implement
-        // @todo Return intermediate object for saving compiled version
+    ): CompiledFileInterface {
+        $tokens = $this->lexer->tokenizeByFile($file);
+
+        var_dump($tokens);
+
+        // @todo Hand $tokens over to $this->parser and then $this->compiler
+
+        return new CompiledFile(
+            name: !\is_bool($name = \strstr($file, '.lumi', true)) ? $name : '',
+            source: '', // @todo Implement
+        );
     }
 
+    /**
+     * @throws LexerException
+     */
     public function compileDirectory(
         string $directory,
-    ): void {
-        // @todo Implement
-        // @todo Return intermediate object for saving compiled version (batch)
+    ): CompiledFileBatchInterface {
+        $files = FileCollection::fromRecursiveFileType(
+            directory: $directory,
+            extension: '.lumi',
+        );
+
+        if (\sizeof($files) === 0) {
+            return new CompiledFileBatch(
+                compiledFiles: [],
+            );
+        }
+
+        $compiledFiles = [];
+
+        foreach ($files as $file) {
+            $tokens = $this->lexer->tokenizeByFile($file);
+
+            // @todo Hand $tokens over to $this->parser and then $this->compiler
+        }
+
+        return new CompiledFileBatch(
+            compiledFiles: $compiledFiles,
+        );
     }
 }

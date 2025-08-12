@@ -14,10 +14,10 @@ declare(strict_types=1);
 namespace Unit\Collections;
 
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Collections\Collection;
-use Tuxxedo\Collections\CollectionException;
-use Tuxxedo\Collections\IntCollection;
-use Tuxxedo\Collections\StringCollection;
+use Tuxxedo\Collection\Collection;
+use Tuxxedo\Collection\CollectionException;
+use Tuxxedo\Collection\IntCollection;
+use Tuxxedo\Collection\StringCollection;
 
 class CollectionTest extends TestCase
 {

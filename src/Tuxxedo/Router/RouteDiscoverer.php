@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Router;
 
-use Tuxxedo\Collections\FileCollection;
+use Tuxxedo\Collection\FileCollection;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\RequestInterface;
@@ -51,7 +51,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
     {
         $controllers = FileCollection::fromRecursiveFileType(
             directory: $this->directory,
-            extension: 'php',
+            extension: '.php',
         );
 
         foreach ($controllers as $controller) {

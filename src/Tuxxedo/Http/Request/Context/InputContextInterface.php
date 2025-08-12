@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request\Context;
 
-use Tuxxedo\Collections\CollectionInterface;
+use Tuxxedo\Collection\CollectionInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Mapper\MapperException;
 
