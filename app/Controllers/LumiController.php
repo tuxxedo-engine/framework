@@ -15,8 +15,8 @@ namespace App\Controllers;
 
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
-use Tuxxedo\Router\Attributes\Controller;
-use Tuxxedo\Router\Attributes\Route;
+use Tuxxedo\Router\Attribute\Controller;
+use Tuxxedo\Router\Attribute\Route;
 use Tuxxedo\View\Lumi\LumiEngine;
 
 #[Controller(uri: '/lumi/')]

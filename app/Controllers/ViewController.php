@@ -15,8 +15,8 @@ namespace App\Controllers;
 
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewInterface;
-use Tuxxedo\Router\Attributes\Controller;
-use Tuxxedo\Router\Attributes\Route;
+use Tuxxedo\Router\Attribute\Controller;
+use Tuxxedo\Router\Attribute\Route;
 
 #[Controller(uri: '/view/')]
 readonly class ViewController

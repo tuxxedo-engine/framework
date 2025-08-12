@@ -27,8 +27,8 @@ use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Http\WeightedHeaderInterface;
 use Tuxxedo\Mapper\Mapper;
 use Tuxxedo\Mapper\MapperInterface;
-use Tuxxedo\Router\Attributes\Middleware;
-use Tuxxedo\Router\Attributes\Route;
+use Tuxxedo\Router\Attribute\Middleware;
+use Tuxxedo\Router\Attribute\Route;
 use Tuxxedo\Version;
 
 #[Middleware(LoggerMiddleware::class)]

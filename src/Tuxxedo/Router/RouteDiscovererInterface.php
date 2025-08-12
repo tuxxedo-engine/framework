@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Router;
 
-use Tuxxedo\Router\Patterns\TypePatternRegistryInterface;
+use Tuxxedo\Router\Pattern\TypePatternRegistryInterface;
 
 interface RouteDiscovererInterface
 {

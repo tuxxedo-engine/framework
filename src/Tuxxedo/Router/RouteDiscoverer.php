@@ -17,11 +17,11 @@ use Tuxxedo\Collection\FileCollection;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\RequestInterface;
-use Tuxxedo\Router\Attributes\Argument;
-use Tuxxedo\Router\Attributes\Middleware;
-use Tuxxedo\Router\Attributes\Route as RouteAttr;
-use Tuxxedo\Router\Patterns\TypePatternRegistry;
-use Tuxxedo\Router\Patterns\TypePatternRegistryInterface;
+use Tuxxedo\Router\Attribute\Argument;
+use Tuxxedo\Router\Attribute\Middleware;
+use Tuxxedo\Router\Attribute\Route as RouteAttr;
+use Tuxxedo\Router\Pattern\TypePatternRegistry;
+use Tuxxedo\Router\Pattern\TypePatternRegistryInterface;
 
 readonly class RouteDiscoverer implements RouteDiscovererInterface
 {
@@ -204,10 +204,10 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
     /**
      * @param \ReflectionClass<object> $reflector
      */
-    private function getControllerAttribute(\ReflectionClass $reflector): ?Attributes\Controller
+    private function getControllerAttribute(\ReflectionClass $reflector): ?Attribute\Controller
     {
         $attributes = $reflector->getAttributes(
-            name: Attributes\Controller::class,
+            name: Attribute\Controller::class,
             flags: \ReflectionAttribute::IS_INSTANCEOF,
         );
 
@@ -219,7 +219,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
     }
 
     private function isIndexMethod(
-        Attributes\Controller $controllerAttribute,
+        Attribute\Controller $controllerAttribute,
         \ReflectionMethod $method,
     ): bool {
         if (
@@ -230,7 +230,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
         }
 
         $indexAttribute = $method->getAttributes(
-            name: Attributes\Index::class,
+            name: Attribute\Index::class,
             flags: \ReflectionAttribute::IS_INSTANCEOF,
         );
 
@@ -292,7 +292,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
         array $nodes,
         string $className,
         \ReflectionMethod $method,
-        Attributes\Route $route,
+        Attribute\Route $route,
     ): \Generator {
         $arguments = [];
 
