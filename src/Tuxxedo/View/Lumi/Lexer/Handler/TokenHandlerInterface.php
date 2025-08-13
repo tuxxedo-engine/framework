@@ -27,6 +27,7 @@ interface TokenHandlerInterface
      *
      * @throws LexerException
      */
+    // @todo This may need to short circuit quicker if no ending sequence is found
     public function tokenize(
         ByteStreamInterface $stream,
     ): array;
