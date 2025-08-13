@@ -15,7 +15,7 @@ namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Lexer\Token\TokenInterface;
-use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
+use Tuxxedo\View\Lumi\ByteStreamInterface;
 
 interface TokenHandlerInterface
 {
@@ -28,6 +28,6 @@ interface TokenHandlerInterface
      * @throws LexerException
      */
     public function tokenize(
-        TokenStreamInterface $stream,
+        ByteStreamInterface $stream,
     ): array;
 }

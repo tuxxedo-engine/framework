@@ -15,7 +15,7 @@ namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
 use Tuxxedo\View\Lumi\Lexer\Token\EchoToken;
 use Tuxxedo\View\Lumi\Lexer\Token\TextToken;
-use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
+use Tuxxedo\View\Lumi\ByteStreamInterface;
 
 class EchoHandler implements TokenHandlerInterface
 {
@@ -29,7 +29,7 @@ class EchoHandler implements TokenHandlerInterface
         return '}}';
     }
 
-    public function tokenize(TokenStreamInterface $stream): array
+    public function tokenize(ByteStreamInterface $stream): array
     {
         $buffer = '';
 

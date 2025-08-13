@@ -20,6 +20,8 @@ use Tuxxedo\View\Lumi\Lexer\Handler\EchoHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\TokenHandlerInterface;
 use Tuxxedo\View\Lumi\Lexer\Token\TextToken;
 use Tuxxedo\View\Lumi\Lexer\Token\TokenInterface;
+use Tuxxedo\View\Lumi\ByteStream;
+use Tuxxedo\View\Lumi\ByteStreamInterface;
 
 class Lexer implements LexerInterface
 {
@@ -68,7 +70,7 @@ class Lexer implements LexerInterface
             new BlockHandler(),
         ];
     }
-    
+
     /**
      * @param TokenHandlerInterface[] $handlers
      */
@@ -98,7 +100,7 @@ class Lexer implements LexerInterface
      * @return TokenInterface[]|null
      */
     private function tryMatchAndTokenize(
-        TokenStreamInterface $stream,
+        ByteStreamInterface $stream,
     ): ?array {
         for ($i = 1; $i <= $this->maxTokenLength && !$stream->eof(); $i++) {
             $buffer = $stream->peekAhead($i);
@@ -114,7 +116,7 @@ class Lexer implements LexerInterface
     }
 
     private function consumeTextUntilNextToken(
-        TokenStreamInterface $stream,
+        ByteStreamInterface $stream,
     ): TokenInterface {
         $buffer = '';
 
@@ -139,7 +141,7 @@ class Lexer implements LexerInterface
      * @throws LexerException
      */
     private function tokenize(
-        TokenStreamInterface $stream,
+        ByteStreamInterface $stream,
     ): array {
         $tokens = [];
 
@@ -163,7 +165,7 @@ class Lexer implements LexerInterface
         string $sourceCode,
     ): array {
         return $this->tokenize(
-            stream: TokenStream::createFromString($sourceCode),
+            stream: ByteStream::createFromString($sourceCode),
         );
     }
 
@@ -171,7 +173,7 @@ class Lexer implements LexerInterface
         string $sourceFile,
     ): array {
         return $this->tokenize(
-            stream: TokenStream::createFromFile($sourceFile),
+            stream: ByteStream::createFromFile($sourceFile),
         );
     }
 }

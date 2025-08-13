@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Lexer;
+namespace Tuxxedo\View\Lumi;
 
-interface TokenStreamInterface
+interface ByteStreamInterface
 {
     public string $input {
         get;

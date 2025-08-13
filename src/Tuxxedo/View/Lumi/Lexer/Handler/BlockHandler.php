@@ -25,7 +25,7 @@ use Tuxxedo\View\Lumi\Lexer\Token\SetToken;
 use Tuxxedo\View\Lumi\Lexer\Token\TextToken;
 use Tuxxedo\View\Lumi\Lexer\Token\TokenInterface;
 use Tuxxedo\View\Lumi\Lexer\Token\WhileToken;
-use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
+use Tuxxedo\View\Lumi\ByteStreamInterface;
 
 class BlockHandler implements TokenHandlerInterface
 {
@@ -39,7 +39,7 @@ class BlockHandler implements TokenHandlerInterface
         return '%}';
     }
 
-    public function tokenize(TokenStreamInterface $stream): array
+    public function tokenize(ByteStreamInterface $stream): array
     {
         $buffer = '';
 

@@ -11,11 +11,11 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Lexer;
+namespace Tuxxedo\View\Lumi;
 
-use Tuxxedo\View\Lumi\Lexer\Handler\TokenHandlerInterface;
+use Tuxxedo\View\Lumi\Lexer\LexerException;
 
-class TokenStream implements TokenStreamInterface
+class ByteStream implements ByteStreamInterface
 {
     public readonly int $length;
     public private(set) int $position = 0;
