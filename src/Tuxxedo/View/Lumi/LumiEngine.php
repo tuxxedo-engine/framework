@@ -34,7 +34,7 @@ class LumiEngine
     public static function createDefault(): static
     {
         return new static(
-            lexer: Lexer::createDefault(),
+            lexer: Lexer::createWithDefaultHandlers(),
         );
     }
 

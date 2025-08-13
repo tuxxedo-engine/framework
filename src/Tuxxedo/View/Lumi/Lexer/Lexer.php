@@ -68,14 +68,7 @@ class Lexer implements LexerInterface
             new BlockHandler(),
         ];
     }
-
-    public static function createDefault(): static
-    {
-        return new static(
-            handlers: self::getDefaults(),
-        );
-    }
-
+    
     /**
      * @param TokenHandlerInterface[] $handlers
      */
