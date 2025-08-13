@@ -13,13 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer\Token;
 
-interface TokenInterface
+interface TokenTypeInterface
 {
-    public \UnitEnum&TokenTypeInterface $type {
-        get;
-    }
-
-    public string $operand {
-        get;
-    }
 }

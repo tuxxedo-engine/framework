@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer\Token;
 
-enum TokenType
+enum TokenType implements TokenTypeInterface
 {
     case TEXT;
     case IF;

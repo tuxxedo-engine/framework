@@ -55,6 +55,16 @@ class ByteStream implements ByteStreamInterface
         return \mb_substr($this->input, $this->position, $length, 'UTF-8');
     }
 
+    public function peekAheadSequence(
+        string $sequence,
+        int $offset,
+    ): bool {
+        return \mb_strpos(
+            \mb_substr($this->input, $this->position + $offset, null, 'UTF-8'),
+            $sequence
+        ) !== false;
+    }
+
     public function match(
         string $sequence,
     ): bool {

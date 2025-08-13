@@ -36,6 +36,11 @@ interface ByteStreamInterface
         int $length,
     ): string;
 
+    public function peekAheadSequence(
+        string $sequence,
+        int $offset,
+    ): bool;
+
     public function match(
         string $sequence,
     ): bool;

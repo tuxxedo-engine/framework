@@ -106,9 +106,19 @@ class Lexer implements LexerInterface
             $buffer = $stream->peekAhead($i);
 
             if (isset($this->sequences[$buffer])) {
+                $handler = $this->sequences[$buffer];
+
+                if (!$stream->peekAheadSequence($handler->getEndingSequence(), $i)) {
+                    $stream->consumeSequence($buffer);
+
+                    return [
+                        new TextToken($buffer),
+                    ];
+                }
+
                 $stream->consumeSequence($buffer);
 
-                return $this->sequences[$buffer]->tokenize($stream);
+                return $handler->tokenize($stream);
             }
         }
 
@@ -158,7 +168,35 @@ class Lexer implements LexerInterface
             }
         }
 
-        return $tokens;
+        $merged = [];
+
+        for ($i = 0, $count = \count($tokens); $i < $count; $i++) {
+            $current = $tokens[$i];
+
+            if (!$current instanceof TextToken) {
+                $merged[] = $current;
+
+                continue;
+            }
+
+            $start = $i;
+            $text = $current->operand;
+
+            while (
+                $i + 1 < $count &&
+                $tokens[$i + 1] instanceof TextToken
+            ) {
+                $text .= $tokens[++$i]->operand;
+            }
+
+            if ($i === $start) {
+                $merged[] = $current;
+            } else {
+                $merged[] = new TextToken($text);
+            }
+        }
+
+        return $merged;
     }
 
     public function tokenizeByString(
