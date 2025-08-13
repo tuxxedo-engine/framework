@@ -25,6 +25,5 @@ enum TokenType
     case ENDFOR;
     case WHILE;
     case ENDWHILE;
-    case INCLUDE;
     case SET;
 }
