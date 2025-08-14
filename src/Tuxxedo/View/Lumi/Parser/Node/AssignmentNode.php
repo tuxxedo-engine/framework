@@ -18,6 +18,7 @@ readonly class AssignmentNode implements ExpressionNodeInterface
     public function __construct(
         public IdentifierNode $name,
         public ExpressionNodeInterface $value,
+        public ?AssignmentOperator $operator = null,
     ) {
     }
 }

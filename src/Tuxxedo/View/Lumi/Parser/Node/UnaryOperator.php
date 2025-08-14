@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Node;
 
-enum UnaryOperator
+enum UnaryOperator: string
 {
-    case NOT;
-    case NEGATE;
-    case COMPLEMENT;
+    case NOT = '!';
+    case NEGATE = '-';
+    case BITWISE_NOT = '~';
 }

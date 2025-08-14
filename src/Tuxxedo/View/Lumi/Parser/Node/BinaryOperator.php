@@ -13,20 +13,28 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Node;
 
-enum BinaryOperator
+enum BinaryOperator: string
 {
-    case ADD;
-    case SUBTRACT;
-    case MULTIPLY;
-    case DIVIDE;
-    case EQUAL;
-    case NOT_EQUAL;
-    case GREATER;
-    case LESS;
-    case GREATER_EQUAL;
-    case LESS_EQUAL;
-    case AND;
-    case OR;
-    case SHIFT_LEFT;
-    case SHIFT_RIGHT;
+    case ADD = '+';
+    case SUBTRACT = '-';
+    case MULTIPLY = '*';
+    case DIVIDE = '/';
+    case MODULUS = '%';
+    case EQUAL = '==';
+    case STRICT_EQUAL = '===';
+    case NOT_EQUAL = '!=';
+    case STRICT_NOT_EQUAL = '!==';
+    case GREATER = '>';
+    case LESS = '<';
+    case GREATER_EQUAL = '>=';
+    case LESS_EQUAL = '<=';
+    case AND = '&&';
+    case OR = '||';
+    case XOR = '^^';
+    case EXPONENTIATE = '**';
+    case BITWISE_AND = '&';
+    case BITWISE_OR = '|';
+    case BITWISE_XOR = '^';
+    case BITWISE_SHIFT_LEFT = '<<';
+    case BITWISE_SHIFT_RIGHT = '>>';
 }
