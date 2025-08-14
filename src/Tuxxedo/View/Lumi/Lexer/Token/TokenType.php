@@ -25,5 +25,5 @@ enum TokenType implements TokenTypeInterface
     case ENDFOR;
     case WHILE;
     case ENDWHILE;
-    case SET;
+    case ASSIGN;
 }

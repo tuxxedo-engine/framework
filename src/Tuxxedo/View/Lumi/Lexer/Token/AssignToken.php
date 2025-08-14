@@ -13,13 +13,13 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer\Token;
 
-readonly class SetToken implements TokenInterface
+readonly class AssignToken implements TokenInterface
 {
     public TokenType $type;
 
     public function __construct(
         public string $operand,
     ) {
-        $this->type = TokenType::SET;
+        $this->type = TokenType::ASSIGN;
     }
 }
