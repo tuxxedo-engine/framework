@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Node;
 
-enum BinaryOperator: string
+enum BinaryOperator: string implements OperatorAssociativityInterface
 {
     case ADD = '+';
     case SUBTRACT = '-';
@@ -37,4 +37,12 @@ enum BinaryOperator: string
     case BITWISE_XOR = '^';
     case BITWISE_SHIFT_LEFT = '<<';
     case BITWISE_SHIFT_RIGHT = '>>';
+
+    public function associativity(): OperatorAssociativity
+    {
+        return match ($this) {
+            self::EXPONENTIATE => OperatorAssociativity::RIGHT,
+            default => OperatorAssociativity::LEFT,
+        };
+    }
 }

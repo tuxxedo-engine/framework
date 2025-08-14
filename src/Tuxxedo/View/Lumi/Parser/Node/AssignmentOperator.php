@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Node;
 
-enum AssignmentOperator: string
+enum AssignmentOperator: string implements OperatorAssociativityInterface
 {
     case ADD = '+=';
     case SUBTRACT = '-=';
@@ -26,4 +26,9 @@ enum AssignmentOperator: string
     case BITWISE_XOR = '^=';
     case BITWISE_SHIFT_LEFT = '<<=';
     case BITWISE_SHIFT_RIGHT = '>>=';
+
+    public function associativity(): OperatorAssociativity
+    {
+        return OperatorAssociativity::RIGHT;
+    }
 }

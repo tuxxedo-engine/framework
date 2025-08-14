@@ -13,14 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Node;
 
-enum UnaryOperator: string implements OperatorAssociativityInterface
+interface OperatorAssociativityInterface
 {
-    case NOT = '!';
-    case NEGATE = '-';
-    case BITWISE_NOT = '~';
-
-    public function associativity(): OperatorAssociativity
-    {
-        return OperatorAssociativity::RIGHT;
-    }
+    public function associativity(): OperatorAssociativity;
 }

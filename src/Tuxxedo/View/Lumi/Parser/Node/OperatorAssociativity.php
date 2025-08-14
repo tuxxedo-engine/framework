@@ -11,9 +11,10 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Parser\Expression;
+namespace Tuxxedo\View\Lumi\Parser\Node;
 
-interface ExpressionHandlerInterface
+enum OperatorAssociativity
 {
-    public function getOperatorSequence(): string;
+    case LEFT;
+    case RIGHT;
 }
