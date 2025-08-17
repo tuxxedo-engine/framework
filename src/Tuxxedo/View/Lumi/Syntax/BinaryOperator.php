@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Parser\Node;
+namespace Tuxxedo\View\Lumi\Syntax;
 
 enum BinaryOperator: string implements OperatorAssociativityInterface
 {

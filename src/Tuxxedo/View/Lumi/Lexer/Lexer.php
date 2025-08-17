@@ -38,6 +38,7 @@ class Lexer implements LexerInterface
      */
     final private function __construct(
         array $handlers,
+        private readonly ExpressionLexerInterface $expressionLexer,
     ) {
         $maxTokenLength = 0;
         $sequences = [];
@@ -76,12 +77,14 @@ class Lexer implements LexerInterface
      */
     public static function createWithDefaultHandlers(
         array $handlers = [],
+        ?ExpressionLexerInterface $expressionLexer = null,
     ): static {
         return new static(
             handlers: \array_merge(
                 self::getDefaults(),
                 $handlers,
             ),
+            expressionLexer: $expressionLexer ?? new ExpressionLexer(),
         );
     }
 
@@ -90,9 +93,11 @@ class Lexer implements LexerInterface
      */
     public static function createWithoutDefaultHandlers(
         array $handlers = [],
+        ?ExpressionLexerInterface $expressionLexer = null,
     ): static {
         return new static(
             handlers: $handlers,
+            expressionLexer: $expressionLexer ?? new ExpressionLexer(),
         );
     }
 
@@ -118,7 +123,7 @@ class Lexer implements LexerInterface
 
                 $stream->consumeSequence($buffer);
 
-                return $handler->tokenize($stream);
+                return $handler->tokenize($stream, $this->expressionLexer);
             }
         }
 
@@ -180,13 +185,14 @@ class Lexer implements LexerInterface
             }
 
             $start = $i;
-            $text = $current->operand;
+            $text = $current->buffer;
 
             while (
                 $i + 1 < $count &&
                 $tokens[$i + 1] instanceof TextToken
             ) {
-                $text .= $tokens[++$i]->operand;
+                $text .= $tokens[$i + 1]->buffer;
+                $i++;
             }
 
             if ($i === $start) {

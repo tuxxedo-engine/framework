@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
+use Tuxxedo\View\Lumi\Lexer\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\Token\TextToken;
 use Tuxxedo\View\Lumi\ByteStreamInterface;
 
@@ -30,6 +31,7 @@ class CommentHandler implements TokenHandlerInterface
 
     public function tokenize(
         ByteStreamInterface $stream,
+        ExpressionLexerInterface $expressionLexer,
     ): array {
         $buffer = '';
 

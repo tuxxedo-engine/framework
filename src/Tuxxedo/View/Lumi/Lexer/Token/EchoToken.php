@@ -15,11 +15,10 @@ namespace Tuxxedo\View\Lumi\Lexer\Token;
 
 readonly class EchoToken implements TokenInterface
 {
-    public TokenType $type;
+    public string $name;
 
-    public function __construct(
-        public string $operand,
-    ) {
-        $this->type = TokenType::ECHO;
+    public function __construct()
+    {
+        $this->name = BuiltinTokenNames::ECHO->name;
     }
 }

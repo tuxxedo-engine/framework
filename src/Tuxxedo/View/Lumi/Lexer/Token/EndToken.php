@@ -13,14 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer\Token;
 
-readonly class EndIfToken implements TokenNoOpInterface
+readonly class EndToken implements TokenInterface
 {
-    public TokenType $type;
-    public string $operand;
+    public string $name;
 
     public function __construct()
     {
-        $this->type = TokenType::ENDIF;
-        $this->operand = '';
+        $this->name = BuiltinTokenNames::END->name;
     }
 }

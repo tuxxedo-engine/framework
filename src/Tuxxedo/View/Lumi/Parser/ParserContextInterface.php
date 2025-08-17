@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Parser;
 
 use Tuxxedo\View\Lumi\Lexer\Token\TokenInterface;
-use Tuxxedo\View\Lumi\Lexer\Token\TokenTypeInterface;
 
 interface ParserContextInterface
 {
@@ -23,7 +22,7 @@ interface ParserContextInterface
     }
 
     /**
-     * @var array<\UnitEnum&TokenTypeInterface>|null
+     * @var string[]|null
      */
     public ?array $expects {
         get;
@@ -37,11 +36,11 @@ interface ParserContextInterface
     }
 
     public function isExpected(
-        \UnitEnum&TokenTypeInterface $tokenType,
+        string $tokenName,
     ): bool;
 
     public function expects(
-        \UnitEnum&TokenTypeInterface ...$tokenType,
+        string ...$tokenName,
     ): self;
 
     public function expectsAny(): self;

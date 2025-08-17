@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
+use Tuxxedo\View\Lumi\Lexer\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\Token\EchoToken;
+use Tuxxedo\View\Lumi\Lexer\Token\EndToken;
 use Tuxxedo\View\Lumi\Lexer\Token\TextToken;
 use Tuxxedo\View\Lumi\ByteStreamInterface;
 
@@ -29,8 +31,10 @@ class EchoHandler implements TokenHandlerInterface
         return '}}';
     }
 
-    public function tokenize(ByteStreamInterface $stream): array
-    {
+    public function tokenize(
+        ByteStreamInterface $stream,
+        ExpressionLexerInterface $expressionLexer,
+    ): array {
         $buffer = '';
 
         while (!$stream->eof()) {
@@ -38,7 +42,9 @@ class EchoHandler implements TokenHandlerInterface
                 $stream->consumeSequence($this->getEndingSequence());
 
                 return [
-                    new EchoToken(\mb_trim($buffer)),
+                    new EchoToken(),
+                    ...$expressionLexer->parse(\mb_trim($buffer)),
+                    new EndToken(),
                 ];
             }
 

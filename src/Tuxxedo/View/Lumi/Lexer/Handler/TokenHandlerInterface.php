@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
+use Tuxxedo\View\Lumi\Lexer\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Lexer\Token\TokenInterface;
 use Tuxxedo\View\Lumi\ByteStreamInterface;
@@ -29,5 +30,6 @@ interface TokenHandlerInterface
      */
     public function tokenize(
         ByteStreamInterface $stream,
+        ExpressionLexerInterface $expressionLexer,
     ): array;
 }

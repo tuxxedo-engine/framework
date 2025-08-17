@@ -13,17 +13,15 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer\Token;
 
-enum TokenType implements TokenTypeInterface
+enum BuiltinTokenNames
 {
-    case TEXT;
-    case IF;
+    case ASSIGN;
+    case ECHO;
     case ELSEIF;
     case ELSE;
-    case ENDIF;
-    case ECHO;
+    case END;
     case FOR;
-    case ENDFOR;
+    case IF;
+    case TEXT;
     case WHILE;
-    case ENDWHILE;
-    case ASSIGN;
 }

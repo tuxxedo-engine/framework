@@ -13,14 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer\Token;
 
-readonly class ElseToken implements TokenNoOpInterface
+readonly class ElseToken implements TokenInterface
 {
-    public TokenType $type;
-    public string $operand;
+    public string $name;
 
     public function __construct()
     {
-        $this->type = TokenType::ELSE;
-        $this->operand = '';
+        $this->name = BuiltinTokenNames::ELSE->name;
     }
 }

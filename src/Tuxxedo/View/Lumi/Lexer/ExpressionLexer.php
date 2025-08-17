@@ -11,21 +11,19 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Parser\Handler;
+namespace Tuxxedo\View\Lumi\Lexer;
 
 use Tuxxedo\View\Lumi\Lexer\Token\TokenInterface;
-use Tuxxedo\View\Lumi\Parser\Node\NodeInterface;
 
-interface ParserHandlerInterface
+class ExpressionLexer implements ExpressionLexerInterface
 {
-    public string $tokenName {
-        get;
-    }
-
     /**
-     * @return NodeInterface[]
+     * @return TokenInterface[]
      */
     public function parse(
-        TokenInterface $token,
-    ): array;
+        string $operand,
+    ): array {
+        // @todo Implement
+        return [];
+    }
 }

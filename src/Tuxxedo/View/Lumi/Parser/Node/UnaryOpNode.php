@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Node;
 
+use Tuxxedo\View\Lumi\Syntax\UnaryOperator;
+
 readonly class UnaryOpNode implements ExpressionNodeInterface
 {
     public function __construct(

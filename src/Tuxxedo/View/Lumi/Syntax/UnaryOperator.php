@@ -11,13 +11,17 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Parser\Node;
+namespace Tuxxedo\View\Lumi\Syntax;
 
 enum UnaryOperator: string implements OperatorAssociativityInterface
 {
     case NOT = '!';
     case NEGATE = '-';
     case BITWISE_NOT = '~';
+    // @todo INCREMENT_PRE (right) ++
+    // @todo INCREMENT_POST (left) ++
+    // @todo DECREMENT_PRE (right) --
+    // @todo DECREMENT_POST (left) --
 
     public function associativity(): OperatorAssociativity
     {

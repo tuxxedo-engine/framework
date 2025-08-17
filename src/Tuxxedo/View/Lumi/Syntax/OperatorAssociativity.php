@@ -11,8 +11,10 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Lexer\Token;
+namespace Tuxxedo\View\Lumi\Syntax;
 
-interface TokenNoOpInterface extends TokenInterface
+enum OperatorAssociativity
 {
+    case LEFT;
+    case RIGHT;
 }

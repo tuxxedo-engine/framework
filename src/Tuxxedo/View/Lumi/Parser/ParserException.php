@@ -13,17 +13,15 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser;
 
-use Tuxxedo\View\Lumi\Lexer\Token\TokenTypeInterface;
-
 class ParserException extends \Exception
 {
     public static function fromUnknownToken(
-        \UnitEnum&TokenTypeInterface $tokenType,
+        string $tokenName,
     ): self {
         return new self(
             message: \sprintf(
                 'Syntax error: Unexpected token "%s"',
-                $tokenType->name,
+                $tokenName,
             ),
         );
     }

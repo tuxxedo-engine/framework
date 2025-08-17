@@ -15,11 +15,11 @@ namespace Tuxxedo\View\Lumi\Lexer\Token;
 
 readonly class TextToken implements TokenInterface
 {
-    public TokenType $type;
+    public string $name;
 
     public function __construct(
-        public string $operand,
+        public string $buffer,
     ) {
-        $this->type = TokenType::TEXT;
+        $this->name = BuiltinTokenNames::TEXT->name;
     }
 }

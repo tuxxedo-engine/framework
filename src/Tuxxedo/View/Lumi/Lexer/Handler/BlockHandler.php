@@ -13,12 +13,11 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
+use Tuxxedo\View\Lumi\Lexer\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Lexer\Token\ElseIfToken;
 use Tuxxedo\View\Lumi\Lexer\Token\ElseToken;
-use Tuxxedo\View\Lumi\Lexer\Token\EndForToken;
-use Tuxxedo\View\Lumi\Lexer\Token\EndIfToken;
-use Tuxxedo\View\Lumi\Lexer\Token\EndWhileToken;
+use Tuxxedo\View\Lumi\Lexer\Token\EndToken;
 use Tuxxedo\View\Lumi\Lexer\Token\ForToken;
 use Tuxxedo\View\Lumi\Lexer\Token\IfToken;
 use Tuxxedo\View\Lumi\Lexer\Token\AssignToken;
@@ -39,17 +38,20 @@ class BlockHandler implements TokenHandlerInterface
         return '%}';
     }
 
-    public function tokenize(ByteStreamInterface $stream): array
-    {
+    public function tokenize(
+        ByteStreamInterface $stream,
+        ExpressionLexerInterface $expressionLexer,
+    ): array {
         $buffer = '';
 
         while (!$stream->eof()) {
             if ($stream->match($this->getEndingSequence())) {
                 $stream->consumeSequence($this->getEndingSequence());
 
-                return [
-                    $this->parseBlock(\mb_trim($buffer)),
-                ];
+                return $this->parseBlock(
+                    expression: \mb_trim($buffer),
+                    expressionLexer: $expressionLexer,
+                );
             }
 
             $buffer .= $stream->consume();
@@ -60,34 +62,45 @@ class BlockHandler implements TokenHandlerInterface
         ];
     }
 
-    private function parseBlock(string $expression): TokenInterface
-    {
+    /**
+     * @return TokenInterface[]
+     *
+     * @throws LexerException
+     */
+    private function parseBlock(
+        string $expression,
+        ExpressionLexerInterface $expressionLexer,
+    ): array {
         if (\mb_strpos($expression, ' ') !== false) {
             [$directive, $expr] = \explode(' ', $expression, 2);
             $directive = \mb_strtolower($directive);
 
-            return match ($directive) {
-                'if' => new IfToken($expr),
-                'elseif' => new ElseIfToken($expr),
-                'for' => new ForToken($expr),
-                'while' => new WhileToken($expr),
-                'set' => new AssignToken($expr),
-                default => throw LexerException::fromSequenceNotFound(
-                    sequence: $directive,
-                ),
-            };
+            return [
+                match ($directive) {
+                    'if' => new IfToken(),
+                    'elseif' => new ElseIfToken(),
+                    'for' => new ForToken(),
+                    'while' => new WhileToken(),
+                    'set' => new AssignToken(),
+                    default => throw LexerException::fromSequenceNotFound(
+                        sequence: $directive,
+                    ),
+                },
+                ...$expressionLexer->parse($expr),
+                new EndToken(),
+            ];
         }
 
         $directive = \mb_strtolower($expression);
 
-        return match ($directive) {
-            'else' => new ElseToken(),
-            'endif' => new EndIfToken(),
-            'endfor' => new EndForToken(),
-            'endwhile' => new EndWhileToken(),
-            default => throw LexerException::fromSequenceNotFound(
-                sequence: $directive,
-            ),
-        };
+        return [
+            match ($directive) {
+                'else' => new ElseToken(),
+                'endif', 'endfor', 'endwhile' => new EndToken(),
+                default => throw LexerException::fromSequenceNotFound(
+                    sequence: $directive,
+                ),
+            },
+        ];
     }
 }
