@@ -108,12 +108,12 @@ class Lexer implements LexerInterface
         ByteStreamInterface $stream,
     ): ?array {
         for ($i = 1; $i <= $this->maxTokenLength && !$stream->eof(); $i++) {
-            $buffer = $stream->peekAhead($i);
+            $buffer = $stream->peek($i);
 
             if (isset($this->sequences[$buffer])) {
                 $handler = $this->sequences[$buffer];
 
-                if (!$stream->peekAheadSequence($handler->getEndingSequence(), $i)) {
+                if (!$stream->peekSequence($handler->getEndingSequence(), $i)) {
                     $stream->consumeSequence($buffer);
 
                     return [
@@ -137,7 +137,7 @@ class Lexer implements LexerInterface
 
         while (!$stream->eof()) {
             for ($i = 1; $i <= $this->maxTokenLength && !$stream->eof(); $i++) {
-                $peek = $stream->peekAhead($i);
+                $peek = $stream->peek($i);
 
                 if (isset($this->sequences[$peek])) {
                     return new TextToken($buffer);

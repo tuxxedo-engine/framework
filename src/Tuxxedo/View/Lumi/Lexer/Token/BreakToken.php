@@ -15,7 +15,7 @@ namespace Tuxxedo\View\Lumi\Lexer\Token;
 
 readonly class BreakToken implements TokenInterface
 {
-    public string $name;
+    public string $type;
 
     /**
      * @param positive-int $depth
@@ -23,6 +23,6 @@ readonly class BreakToken implements TokenInterface
     public function __construct(
         public int $depth,
     ) {
-        $this->name = BuiltinTokenNames::BREAK->name;
+        $this->type = BuiltinTokenNames::BREAK->name;
     }
 }

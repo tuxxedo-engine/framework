@@ -15,10 +15,10 @@ namespace Tuxxedo\View\Lumi\Lexer\Token;
 
 readonly class AssignToken implements TokenInterface
 {
-    public string $name;
+    public string $type;
 
     public function __construct()
     {
-        $this->name = BuiltinTokenNames::ASSIGN->name;
+        $this->type = BuiltinTokenNames::ASSIGN->name;
     }
 }

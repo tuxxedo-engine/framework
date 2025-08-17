@@ -15,10 +15,10 @@ namespace Tuxxedo\View\Lumi\Lexer\Token;
 
 readonly class EndToken implements TokenInterface
 {
-    public string $name;
+    public string $type;
 
     public function __construct()
     {
-        $this->name = BuiltinTokenNames::END->name;
+        $this->type = BuiltinTokenNames::END->name;
     }
 }

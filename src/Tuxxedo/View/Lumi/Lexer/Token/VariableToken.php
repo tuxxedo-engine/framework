@@ -13,12 +13,13 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer\Token;
 
-readonly class EchoToken implements TokenInterface
+readonly class VariableToken implements TokenInterface
 {
     public string $type;
 
-    public function __construct()
-    {
-        $this->type = BuiltinTokenNames::ECHO->name;
+    public function __construct(
+        public string $name,
+    ) {
+        $this->type = BuiltinTokenNames::VARIABLE->name;
     }
 }

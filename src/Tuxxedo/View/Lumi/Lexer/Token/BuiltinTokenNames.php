@@ -25,5 +25,6 @@ enum BuiltinTokenNames
     case FOR;
     case IF;
     case TEXT;
+    case VARIABLE;
     case WHILE;
 }

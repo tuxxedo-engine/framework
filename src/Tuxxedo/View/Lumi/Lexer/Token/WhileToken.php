@@ -15,10 +15,10 @@ namespace Tuxxedo\View\Lumi\Lexer\Token;
 
 readonly class WhileToken implements TokenInterface
 {
-    public string $name;
+    public string $type;
 
     public function __construct()
     {
-        $this->name = BuiltinTokenNames::WHILE->name;
+        $this->type = BuiltinTokenNames::WHILE->name;
     }
 }

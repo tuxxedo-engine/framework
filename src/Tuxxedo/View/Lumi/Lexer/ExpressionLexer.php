@@ -13,17 +13,27 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer;
 
-use Tuxxedo\View\Lumi\Lexer\Token\TokenInterface;
+use Tuxxedo\View\Lumi\Lexer\Token\VariableToken;
 
-class ExpressionLexer implements ExpressionLexerInterface
+final class ExpressionLexer
 {
-    /**
-     * @return TokenInterface[]
-     */
-    public function parse(
-        string $operand,
-    ): array {
-        // @todo Implement
-        return [];
+    public function parse(string $expression): array
+    {
+        $expression = \trim($expression);
+
+        if ($expression === '') {
+            throw LexerException::fromEmptyExpression();
+        }
+
+        if (!$this->isValidIdentifier($expression)) {
+            throw LexerException::fromInvalidIdentifier($expression);
+        }
+
+        return [new VariableToken(name: $expression)];
+    }
+
+    private function isValidIdentifier(string $value): bool
+    {
+        return \preg_match('/^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$/', $value) === 1;
     }
 }

@@ -49,13 +49,31 @@ class ByteStream implements ByteStreamInterface
         return $this->position >= $this->length;
     }
 
-    public function peekAhead(
+    public function peek(
         int $length,
+        bool $skipWhitespace = false,
     ): string {
-        return \mb_substr($this->input, $this->position, $length, 'UTF-8');
+        $input = $this->input;
+        $position = $this->position;
+
+        if ($skipWhitespace) {
+            $len = \mb_strlen($input, 'UTF-8');
+
+            while ($position < $len) {
+                $char = \mb_substr($input, $position, 1, 'UTF-8');
+
+                if (\preg_match('/\s/u', $char) !== 1) {
+                    break;
+                }
+
+                $position++;
+            }
+        }
+
+        return \mb_substr($input, $position, $length, 'UTF-8');
     }
 
-    public function peekAheadSequence(
+    public function peekSequence(
         string $sequence,
         int $offset,
     ): bool {
@@ -68,7 +86,7 @@ class ByteStream implements ByteStreamInterface
     public function match(
         string $sequence,
     ): bool {
-        return $this->peekAhead(\mb_strlen($sequence, 'UTF-8')) === $sequence;
+        return $this->peek(\mb_strlen($sequence, 'UTF-8')) === $sequence;
     }
 
     public function consume(): string
@@ -92,5 +110,14 @@ class ByteStream implements ByteStreamInterface
         }
 
         $this->position += \mb_strlen($sequence, 'UTF-8');
+    }
+
+    public function consumeWhitespace(): bool
+    {
+        while (!$this->eof() && \preg_match('/\s/u', $this->peek(1)) === 1) {
+            $this->consume();
+        }
+
+        return !$this->eof();
     }
 }

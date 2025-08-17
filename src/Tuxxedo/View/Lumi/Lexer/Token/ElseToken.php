@@ -15,10 +15,10 @@ namespace Tuxxedo\View\Lumi\Lexer\Token;
 
 readonly class ElseToken implements TokenInterface
 {
-    public string $name;
+    public string $type;
 
     public function __construct()
     {
-        $this->name = BuiltinTokenNames::ELSE->name;
+        $this->type = BuiltinTokenNames::ELSE->name;
     }
 }

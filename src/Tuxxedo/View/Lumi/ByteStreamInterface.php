@@ -32,11 +32,12 @@ interface ByteStreamInterface
      */
     public function eof(): bool;
 
-    public function peekAhead(
+    public function peek(
         int $length,
+        bool $skipWhitespace = false,
     ): string;
 
-    public function peekAheadSequence(
+    public function peekSequence(
         string $sequence,
         int $offset,
     ): bool;
@@ -50,4 +51,6 @@ interface ByteStreamInterface
     public function consumeSequence(
         string $sequence,
     ): void;
+
+    public function consumeWhitespace(): bool;
 }

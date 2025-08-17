@@ -15,7 +15,7 @@ namespace Tuxxedo\View\Lumi\Lexer\Token;
 
 interface TokenInterface
 {
-    public string $name {
+    public string $type {
         get;
     }
 }

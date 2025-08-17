@@ -15,12 +15,12 @@ namespace Tuxxedo\View\Lumi\Lexer\Token;
 
 readonly class ForToken implements TokenInterface
 {
-    public string $name;
+    public string $type;
 
     public function __construct(
         public string $value,
         public ?string $key = null,
     ) {
-        $this->name = BuiltinTokenNames::FOR->name;
+        $this->type = BuiltinTokenNames::FOR->name;
     }
 }

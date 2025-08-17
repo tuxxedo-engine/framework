@@ -87,15 +87,15 @@ class Parser implements ParserInterface
         $nodes = [];
 
         foreach ($tokens as $token) {
-            if (!\array_key_exists($token->name, $this->handlers)) {
+            if (!\array_key_exists($token->type, $this->handlers)) {
                 throw ParserException::fromUnknownToken(
-                    tokenName: $token->name,
+                    tokenName: $token->type,
                 );
             }
 
             $nodes = \array_merge(
                 $nodes,
-                $this->handlers[$token->name]->parse($token),
+                $this->handlers[$token->type]->parse($token),
             );
         }
 

@@ -15,10 +15,10 @@ namespace Tuxxedo\View\Lumi\Lexer\Token;
 
 readonly class ElseIfToken implements TokenInterface
 {
-    public string $name;
+    public string $type;
 
     public function __construct()
     {
-        $this->name = BuiltinTokenNames::ELSEIF->name;
+        $this->type = BuiltinTokenNames::ELSEIF->name;
     }
 }
