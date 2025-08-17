@@ -26,12 +26,16 @@ readonly class LumiController
     public function hello(): ResponseInterface
     {
         \ob_start();
+        $viewFile = __DIR__ . '/../views/lumi/hello_world.lumi';
+        $contents = @\file_get_contents($viewFile);
+
+        $buffer = '<h3>Source</h3><pre>' . \htmlspecialchars($contents !== false ? $contents : '') . '</pre><h3>Tokens</h3>';
 
         $engine = LumiEngine::createDefault();
-        $engine->compileFile(__DIR__ . '/../views/lumi/hello_world.lumi');
+        $engine->compileFile($viewFile);
 
         return new Response(
-            body: !\is_bool($body = \ob_get_clean()) ? '<pre>' . \htmlspecialchars($body) . '</pre>' : '',
+            body: $buffer . (!\is_bool($body = \ob_get_clean()) ? '<pre>' . \htmlspecialchars($body) . '</pre>' : ''),
         );
     }
 }
