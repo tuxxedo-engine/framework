@@ -54,4 +54,29 @@ class LexerException extends \Exception
             ),
         );
     }
+
+    public static function fromInvalidForSyntax(): self
+    {
+        return new self(
+            message: 'Expected syntax: For loops must be constructed like {% for value[,key] in iterator %%}',
+        );
+    }
+
+    public static function fromInvalidForeachSyntax(): self
+    {
+        return new self(
+            message: 'Expected syntax: Foreach loops must be constructed like {% foreach iterator as [key =>]value %%}',
+        );
+    }
+
+    public static function fromInvalidLoopDepth(
+        string $expression,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid loop depth: "%s". Must be a positive integer',
+                $expression,
+            ),
+        );
+    }
 }

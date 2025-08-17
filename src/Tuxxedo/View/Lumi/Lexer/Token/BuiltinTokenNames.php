@@ -16,6 +16,8 @@ namespace Tuxxedo\View\Lumi\Lexer\Token;
 enum BuiltinTokenNames
 {
     case ASSIGN;
+    case BREAK;
+    case CONTINUE;
     case ECHO;
     case ELSEIF;
     case ELSE;

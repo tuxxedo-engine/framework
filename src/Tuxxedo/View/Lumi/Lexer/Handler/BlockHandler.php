@@ -15,6 +15,8 @@ namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
 use Tuxxedo\View\Lumi\Lexer\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
+use Tuxxedo\View\Lumi\Lexer\Token\BreakToken;
+use Tuxxedo\View\Lumi\Lexer\Token\ContinueToken;
 use Tuxxedo\View\Lumi\Lexer\Token\ElseIfToken;
 use Tuxxedo\View\Lumi\Lexer\Token\ElseToken;
 use Tuxxedo\View\Lumi\Lexer\Token\EndToken;
@@ -75,20 +77,39 @@ class BlockHandler implements TokenHandlerInterface
             [$directive, $expr] = \explode(' ', $expression, 2);
             $directive = \mb_strtolower($directive);
 
-            return [
-                match ($directive) {
-                    'if' => new IfToken(),
-                    'elseif' => new ElseIfToken(),
-                    'for' => new ForToken(),
-                    'while' => new WhileToken(),
-                    'set' => new AssignToken(),
-                    default => throw LexerException::fromSequenceNotFound(
-                        sequence: $directive,
-                    ),
-                },
-                ...$expressionLexer->parse($expr),
-                new EndToken(),
-            ];
+            return match ($directive) {
+                'if' => [
+                    new IfToken(),
+                    ...$expressionLexer->parse($expr),
+                    new EndToken(),
+                ],
+                'elseif' => [
+                    new ElseIfToken(),
+                    ...$expressionLexer->parse($expr),
+                    new EndToken(),
+                ],
+                'for' => $this->parseFor($expr, $expressionLexer),
+                'foreach' => $this->parseForeach($expr, $expressionLexer),
+                'while' => [
+                    new WhileToken(),
+                    ...$expressionLexer->parse($expr),
+                    new EndToken(),
+                ],
+                'set' => [
+                    new AssignToken(),
+                    ...$expressionLexer->parse($expr),
+                    new EndToken(),
+                ],
+                'break' => [
+                    new BreakToken($this->parseLoopDepth($expr)),
+                ],
+                'continue' => [
+                    new ContinueToken($this->parseLoopDepth($expr)),
+                ],
+                default => throw LexerException::fromSequenceNotFound(
+                    sequence: $directive,
+                ),
+            };
         }
 
         $directive = \mb_strtolower($expression);
@@ -96,11 +117,83 @@ class BlockHandler implements TokenHandlerInterface
         return [
             match ($directive) {
                 'else' => new ElseToken(),
-                'endif', 'endfor', 'endwhile' => new EndToken(),
+                'endif', 'endfor', 'endwhile', 'endforeach' => new EndToken(),
                 default => throw LexerException::fromSequenceNotFound(
                     sequence: $directive,
                 ),
             },
         ];
+    }
+
+    /**
+     * @return TokenInterface[]
+     *
+     * @throws LexerException
+     */
+    private function parseFor(
+        string $expression,
+        ExpressionLexerInterface $expressionLexer,
+    ): array {
+        if (\preg_match('/^\s*(\w+)(?:\s*,\s*(\w+))?\s+in\s+(.+)$/i', $expression, $matches) !== 1) {
+            throw LexerException::fromInvalidForSyntax();
+        }
+
+        $value = $matches[1];
+        $key = $matches[2] !== '' ? $matches[2] : null;
+        $expr = $matches[3];
+
+        return [
+            new ForToken($value, $key),
+            ...$expressionLexer->parse($expr),
+            new EndToken(),
+        ];
+    }
+
+    /**
+     * @return TokenInterface[]
+     *
+     * @throws LexerException
+     */
+    private function parseForeach(
+        string $expression,
+        ExpressionLexerInterface $expressionLexer,
+    ): array {
+        if (\preg_match('/^(.+?)\s+as\s+(\w+)(?:\s*=>\s*(\w+))?$/i', $expression, $matches) !== 1) {
+            throw LexerException::fromInvalidForeachSyntax();
+        }
+
+        $expr = $matches[1];
+        $key = $matches[2];
+        $value = isset($matches[3]) ? $matches[3] : null;
+
+        if ($value === null) {
+            $value = $key;
+            $key = null;
+        }
+
+        return [
+            new ForToken($value, $key),
+            ...$expressionLexer->parse($expr),
+            new EndToken(),
+        ];
+    }
+
+    /**
+     * @return positive-int
+     *
+     * @throws LexerException
+     */
+    private function parseLoopDepth(string $expr): int
+    {
+        $expr = \mb_trim($expr);
+
+        if ($expr === '' || \preg_match('/^[1-9][0-9]*$/', $expr) !== 1) {
+            throw LexerException::fromInvalidLoopDepth(
+                expression: $expr,
+            );
+        }
+
+        /** @var positive-int */
+        return (int) $expr;
     }
 }

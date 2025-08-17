@@ -13,14 +13,16 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer\Token;
 
-readonly class ForToken implements TokenInterface
+readonly class ContinueToken implements TokenInterface
 {
     public string $name;
 
+    /**
+     * @param positive-int $depth
+     */
     public function __construct(
-        public string $value,
-        public ?string $key = null,
+        public int $depth,
     ) {
-        $this->name = BuiltinTokenNames::FOR->name;
+        $this->name = BuiltinTokenNames::CONTINUE->name;
     }
 }
