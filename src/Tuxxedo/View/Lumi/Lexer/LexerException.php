@@ -79,4 +79,22 @@ class LexerException extends \Exception
             ),
         );
     }
+
+    public static function fromEmptyExpression(): self
+    {
+        return new self(
+            message: 'Expressions cannot be empty',
+        );
+    }
+
+    public static function fromInvalidIdentifier(
+        string $expression,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'The expression "%s" is invalid and cannot be represent an identifier',
+                $expression,
+            ),
+        );
+    }
 }

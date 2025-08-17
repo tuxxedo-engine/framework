@@ -15,21 +15,26 @@ namespace Tuxxedo\View\Lumi\Lexer;
 
 use Tuxxedo\View\Lumi\Lexer\Token\VariableToken;
 
-final class ExpressionLexer
+class ExpressionLexer implements ExpressionLexerInterface
 {
-    public function parse(string $expression): array
-    {
-        $expression = \trim($expression);
+    public function parse(
+        string $operand,
+    ): array {
+        $operand = \trim($operand);
 
-        if ($expression === '') {
+        if ($operand === '') {
             throw LexerException::fromEmptyExpression();
         }
 
-        if (!$this->isValidIdentifier($expression)) {
-            throw LexerException::fromInvalidIdentifier($expression);
+        if (!$this->isValidIdentifier($operand)) {
+            throw LexerException::fromInvalidIdentifier(
+                expression: $operand,
+            );
         }
 
-        return [new VariableToken(name: $expression)];
+        return [
+            new VariableToken($operand),
+        ];
     }
 
     private function isValidIdentifier(string $value): bool
