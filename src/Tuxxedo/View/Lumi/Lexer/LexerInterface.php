@@ -13,25 +13,23 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer;
 
-use Tuxxedo\View\Lumi\Lexer\Token\TokenInterface;
-
 interface LexerInterface
 {
     /**
-     * @return TokenInterface[]
+     * @return TokenStreamInterface
      *
      * @throws LexerException
      */
     public function tokenizeByString(
         string $sourceCode,
-    ): array;
+    ): TokenStreamInterface;
 
     /**
-     * @return TokenInterface[]
+     * @return TokenStreamInterface
      *
      * @throws LexerException
      */
     public function tokenizeByFile(
         string $sourceFile,
-    ): array;
+    ): TokenStreamInterface;
 }

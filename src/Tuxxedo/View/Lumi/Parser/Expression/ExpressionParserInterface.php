@@ -11,26 +11,18 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Parser\Handler;
+namespace Tuxxedo\View\Lumi\Parser\Expression;
 
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
-use Tuxxedo\View\Lumi\Parser\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Parser\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
-use Tuxxedo\View\Lumi\Parser\ParserInterface;
 
-interface ParserHandlerInterface
+interface ExpressionParserInterface
 {
-    public string $tokenName {
-        get;
-    }
-
     /**
-     * @return NodeInterface[]
-     *
      * @throws ParserException
      */
     public function parse(
-        ParserInterface $parser,
         TokenStreamInterface $stream,
-    ): array;
+    ): ExpressionNodeInterface;
 }

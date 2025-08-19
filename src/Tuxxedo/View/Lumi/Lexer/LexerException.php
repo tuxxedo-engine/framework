@@ -69,14 +69,10 @@ class LexerException extends \Exception
         );
     }
 
-    public static function fromInvalidLoopDepth(
-        string $expression,
-    ): self {
+    public static function fromInvalidLoopDepth(): self
+    {
         return new self(
-            message: \sprintf(
-                'Invalid loop depth: "%s". Must be a positive integer',
-                $expression,
-            ),
+            message: 'Invalid loop depth, must be a positive integer',
         );
     }
 
@@ -95,6 +91,13 @@ class LexerException extends \Exception
                 'The expression "%s" is invalid and cannot be represent an identifier',
                 $expression,
             ),
+        );
+    }
+
+    public static function fromTokenStreamEof(): self
+    {
+        return new self(
+            message: 'Token stream has reached the end of stream unexpectedly',
         );
     }
 }

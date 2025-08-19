@@ -18,4 +18,12 @@ interface TokenInterface
     public string $type {
         get;
     }
+
+    public ?string $op1 {
+        get;
+    }
+
+    public ?string $op2 {
+        get;
+    }
 }

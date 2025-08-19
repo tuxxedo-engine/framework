@@ -134,7 +134,7 @@ class BlockHandler implements TokenHandlerInterface
         string $expression,
         ExpressionLexerInterface $expressionLexer,
     ): array {
-        if (\preg_match('/^\s*(\w+)(?:\s*,\s*(\w+))?\s+in\s+(.+)$/i', $expression, $matches) !== 1) {
+        if (\preg_match('/^\s*(\w+)(?:\s*,\s*(\w+))?\s+in\s+(.+)$/ui', $expression, $matches) !== 1) {
             throw LexerException::fromInvalidForSyntax();
         }
 
@@ -158,7 +158,7 @@ class BlockHandler implements TokenHandlerInterface
         string $expression,
         ExpressionLexerInterface $expressionLexer,
     ): array {
-        if (\preg_match('/^(.+?)\s+as\s+(\w+)(?:\s*=>\s*(\w+))?$/i', $expression, $matches) !== 1) {
+        if (\preg_match('/^(.+?)\s+as\s+(\w+)(?:\s*=>\s*(\w+))?$/ui', $expression, $matches) !== 1) {
             throw LexerException::fromInvalidForeachSyntax();
         }
 
@@ -179,21 +179,22 @@ class BlockHandler implements TokenHandlerInterface
     }
 
     /**
-     * @return positive-int
+     * @return numeric-string|null
      *
      * @throws LexerException
      */
-    private function parseLoopDepth(string $expr): int
+    private function parseLoopDepth(string $expr): ?string
     {
         $expr = \mb_trim($expr);
 
-        if ($expr === '' || \preg_match('/^[1-9][0-9]*$/', $expr) !== 1) {
-            throw LexerException::fromInvalidLoopDepth(
-                expression: $expr,
-            );
+        if ($expr === '') {
+            return null;
         }
 
-        /** @var positive-int */
-        return (int) $expr;
+        if (\preg_match('/^[1-9][0-9]*$/u', $expr) !== 1) {
+            throw LexerException::fromInvalidLoopDepth();
+        }
+
+        return (string) (int) $expr;
     }
 }

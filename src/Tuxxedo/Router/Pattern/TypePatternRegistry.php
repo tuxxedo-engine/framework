@@ -36,7 +36,7 @@ class TypePatternRegistry implements TypePatternRegistryInterface
     /**
      * @return TypePatternInterface[]
      */
-    private static function getDefaults(): array
+    public static function getDefaults(): array
     {
         return [
             new Type\Alpha(),

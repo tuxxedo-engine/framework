@@ -21,30 +21,44 @@ use Tuxxedo\View\Lumi\Compiler\CompiledFileInterface;
 use Tuxxedo\View\Lumi\Lexer\Lexer;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
+use Tuxxedo\View\Lumi\Parser\Parser;
+use Tuxxedo\View\Lumi\Parser\ParserInterface;
 
 class LumiEngine
 {
     final private function __construct(
         private LexerInterface $lexer,
-        // @todo Parser
+        private ParserInterface $parser,
         // @todo Compiler
     ) {
+    }
+
+    public static function createDefaultLexer(): LexerInterface
+    {
+        return Lexer::createWithDefaultHandlers();
+    }
+
+    public static function createDefaultParser(): ParserInterface
+    {
+        return Parser::createWithDefaultHandlers();
     }
 
     public static function createDefault(): static
     {
         return new static(
-            lexer: Lexer::createWithDefaultHandlers(),
+            lexer: self::createDefaultLexer(),
+            parser: self::createDefaultParser(),
         );
     }
 
     public static function createCustom(
         LexerInterface $lexer,
-        // @todo Parser
+        ParserInterface $parser,
         // @todo Compiler
     ): static {
         return new static(
             lexer: $lexer,
+            parser: $parser,
         );
     }
 
@@ -54,11 +68,15 @@ class LumiEngine
     public function compileFile(
         string $file,
     ): CompiledFileInterface {
-        $tokens = $this->lexer->tokenizeByFile($file);
+        $stream = $this->lexer->tokenizeByFile($file);
 
-        var_dump($tokens);
+        var_dump($stream->tokens);
 
-        // @todo Hand $tokens over to $this->parser and then $this->compiler
+        $nodes = $this->parser->parse($stream);
+
+        var_dump($nodes);
+
+        // @todo Hand $tokens over to $this->compiler
 
         return new CompiledFile(
             name: !\is_bool($name = \strstr($file, '.lumi', true)) ? $name : '',

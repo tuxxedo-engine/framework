@@ -16,10 +16,12 @@ namespace Tuxxedo\View\Lumi\Lexer\Token;
 readonly class VariableToken implements TokenInterface
 {
     public string $type;
+    public null $op2;
 
     public function __construct(
-        public string $name,
+        public string $op1,
     ) {
         $this->type = BuiltinTokenNames::VARIABLE->name;
+        $this->op2 = null;
     }
 }

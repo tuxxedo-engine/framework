@@ -63,7 +63,7 @@ class Lexer implements LexerInterface
     /**
      * @return TokenHandlerInterface[]
      */
-    private static function getDefaults(): array
+    public static function getDefaults(): array
     {
         return [
             new EchoHandler(),
@@ -151,13 +151,11 @@ class Lexer implements LexerInterface
     }
 
     /**
-     * @return TokenInterface[]
-     *
      * @throws LexerException
      */
     private function tokenize(
         ByteStreamInterface $stream,
-    ): array {
+    ): TokenStreamInterface {
         $tokens = [];
 
         while (!$stream->eof()) {
@@ -173,41 +171,12 @@ class Lexer implements LexerInterface
             }
         }
 
-        $merged = [];
-
-        for ($i = 0, $count = \count($tokens); $i < $count; $i++) {
-            $current = $tokens[$i];
-
-            if (!$current instanceof TextToken) {
-                $merged[] = $current;
-
-                continue;
-            }
-
-            $start = $i;
-            $text = $current->buffer;
-
-            while (
-                $i + 1 < $count &&
-                $tokens[$i + 1] instanceof TextToken
-            ) {
-                $text .= $tokens[$i + 1]->buffer;
-                $i++;
-            }
-
-            if ($i === $start) {
-                $merged[] = $current;
-            } else {
-                $merged[] = new TextToken($text);
-            }
-        }
-
-        return $merged;
+        return new TokenStream($tokens);
     }
 
     public function tokenizeByString(
         string $sourceCode,
-    ): array {
+    ): TokenStreamInterface {
         return $this->tokenize(
             stream: ByteStream::createFromString($sourceCode),
         );
@@ -215,7 +184,7 @@ class Lexer implements LexerInterface
 
     public function tokenizeByFile(
         string $sourceFile,
-    ): array {
+    ): TokenStreamInterface {
         return $this->tokenize(
             stream: ByteStream::createFromFile($sourceFile),
         );

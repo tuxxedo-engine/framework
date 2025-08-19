@@ -16,13 +16,15 @@ namespace Tuxxedo\View\Lumi\Lexer\Token;
 readonly class ContinueToken implements TokenInterface
 {
     public string $type;
+    public null $op2;
 
     /**
-     * @param positive-int $depth
+     * @param numeric-string $op1
      */
     public function __construct(
-        public int $depth,
+        public ?string $op1,
     ) {
         $this->type = BuiltinTokenNames::CONTINUE->name;
+        $this->op2 = null;
     }
 }

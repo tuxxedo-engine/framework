@@ -18,8 +18,8 @@ readonly class ForToken implements TokenInterface
     public string $type;
 
     public function __construct(
-        public string $value,
-        public ?string $key = null,
+        public string $op1,
+        public ?string $op2 = null,
     ) {
         $this->type = BuiltinTokenNames::FOR->name;
     }

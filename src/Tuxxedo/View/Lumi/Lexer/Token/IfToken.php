@@ -16,9 +16,13 @@ namespace Tuxxedo\View\Lumi\Lexer\Token;
 readonly class IfToken implements TokenInterface
 {
     public string $type;
+    public null $op1;
+    public null $op2;
 
     public function __construct()
     {
         $this->type = BuiltinTokenNames::IF->name;
+        $this->op1 = null;
+        $this->op2 = null;
     }
 }

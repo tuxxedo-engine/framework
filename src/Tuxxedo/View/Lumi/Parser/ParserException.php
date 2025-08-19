@@ -15,7 +15,7 @@ namespace Tuxxedo\View\Lumi\Parser;
 
 class ParserException extends \Exception
 {
-    public static function fromUnknownToken(
+    public static function fromUnexpectedToken(
         string $tokenName,
     ): self {
         return new self(
@@ -26,10 +26,23 @@ class ParserException extends \Exception
         );
     }
 
-    public static function fromStateLevelMismatch(): self
+    public static function fromMalformedToken(): self
     {
         return new self(
-            message: 'State mismatch, the nesting level cannot go below 0',
+            message: 'Internal token is malformed',
+        );
+    }
+
+    public static function fromUnexpectedTokenWithExpects(
+        string $tokenName,
+        string $expectedTokenName,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Syntax error: Unexpected token "%s", expected "%s"',
+                $tokenName,
+                $expectedTokenName,
+            ),
         );
     }
 }

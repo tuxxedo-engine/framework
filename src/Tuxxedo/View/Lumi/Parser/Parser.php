@@ -13,9 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser;
 
-use Tuxxedo\View\Lumi\Lexer\Token\TokenInterface;
+use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
+use Tuxxedo\View\Lumi\Parser\Expression\ExpressionParser;
+use Tuxxedo\View\Lumi\Parser\Expression\ExpressionParserInterface;
+use Tuxxedo\View\Lumi\Parser\Handler\EchoHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\ParserHandlerInterface;
-use Tuxxedo\View\Lumi\Parser\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Parser\Handler\TextHandler;
 
 class Parser implements ParserInterface
 {
@@ -30,7 +33,8 @@ class Parser implements ParserInterface
      * @throws ParserException
      */
     final private function __construct(
-        array $handlers = [],
+        array $handlers,
+        public readonly ExpressionParserInterface $expressionParser,
     ) {
         $parserHandlers = [];
 
@@ -44,11 +48,17 @@ class Parser implements ParserInterface
     /**
      * @return ParserHandlerInterface[]
      */
-    private static function getDefaults(): array
+    public static function getDefaults(): array
     {
         return [
-            // @todo Fill in
+            new TextHandler(),
+            new EchoHandler(),
         ];
+    }
+
+    public static function getDefaultExpressionParser(): ExpressionParserInterface
+    {
+        return new ExpressionParser();
     }
 
     /**
@@ -56,12 +66,14 @@ class Parser implements ParserInterface
      */
     public static function createWithDefaultHandlers(
         array $handlers = [],
+        ?ExpressionParserInterface $expressionParser = null,
     ): static {
         return new static(
             handlers: \array_merge(
                 self::getDefaults(),
                 $handlers,
             ),
+            expressionParser: $expressionParser ?? self::getDefaultExpressionParser(),
         );
     }
 
@@ -70,32 +82,31 @@ class Parser implements ParserInterface
      */
     public static function createWithoutDefaultHandlers(
         array $handlers = [],
+        ?ExpressionParserInterface $expressionParser = null,
     ): static {
         return new static(
             handlers: $handlers,
+            expressionParser: $expressionParser ?? self::getDefaultExpressionParser(),
         );
     }
 
-    /**
-     * @param TokenInterface[] $tokens
-     * @return NodeInterface[]
-     *
-     * @throws ParserException
-     */
-    public function parse(array $tokens): array
-    {
+    public function parse(
+        TokenStreamInterface $stream,
+    ): array {
         $nodes = [];
 
-        foreach ($tokens as $token) {
+        while (!$stream->eof()) {
+            $token = $stream->current();
+
             if (!\array_key_exists($token->type, $this->handlers)) {
-                throw ParserException::fromUnknownToken(
+                throw ParserException::fromUnexpectedToken(
                     tokenName: $token->type,
                 );
             }
 
             $nodes = \array_merge(
                 $nodes,
-                $this->handlers[$token->type]->parse($token),
+                $this->handlers[$token->type]->parse($this, $stream),
             );
         }
 
