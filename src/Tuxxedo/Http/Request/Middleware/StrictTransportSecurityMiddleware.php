@@ -17,9 +17,31 @@ use Tuxxedo\Http\Header;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
-// @todo Allow customization of the value field
 class StrictTransportSecurityMiddleware implements MiddlewareInterface
 {
+    private readonly string $value;
+
+    public function __construct(
+        int $maxAge = 31536000,
+        bool $includeSubDomains = true,
+        bool $preload = true,
+    ) {
+        $value = \sprintf(
+            'max-age=%d',
+            $maxAge,
+        );
+
+        if ($includeSubDomains) {
+            $value .= '; includeSubDomains';
+        }
+
+        if ($preload) {
+            $value .= '; preload';
+        }
+
+        $this->value = $value;
+    }
+
     public function handle(
         RequestInterface $request,
         MiddlewareInterface $next,
@@ -30,7 +52,7 @@ class StrictTransportSecurityMiddleware implements MiddlewareInterface
             $response->withHeader(
                 new Header(
                     name: 'Strict-Transport-Security',
-                    value: 'max-age=31536000; includeSubDomains; preload',
+                    value: $this->value,
                 ),
             );
         }
