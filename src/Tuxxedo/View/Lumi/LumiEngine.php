@@ -18,6 +18,8 @@ use Tuxxedo\View\Lumi\Compiler\CompiledFile;
 use Tuxxedo\View\Lumi\Compiler\CompiledFileBatch;
 use Tuxxedo\View\Lumi\Compiler\CompiledFileBatchInterface;
 use Tuxxedo\View\Lumi\Compiler\CompiledFileInterface;
+use Tuxxedo\View\Lumi\Compiler\Compiler;
+use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Lexer\Lexer;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
@@ -29,7 +31,7 @@ class LumiEngine
     final private function __construct(
         private LexerInterface $lexer,
         private ParserInterface $parser,
-        // @todo Compiler
+        private CompilerInterface $compiler,
     ) {
     }
 
@@ -43,22 +45,29 @@ class LumiEngine
         return Parser::createWithDefaultHandlers();
     }
 
+    public static function createDefaultCompiler(): CompilerInterface
+    {
+        return new Compiler();
+    }
+
     public static function createDefault(): static
     {
         return new static(
             lexer: self::createDefaultLexer(),
             parser: self::createDefaultParser(),
+            compiler: self::createDefaultCompiler(),
         );
     }
 
     public static function createCustom(
-        LexerInterface $lexer,
-        ParserInterface $parser,
-        // @todo Compiler
+        ?LexerInterface $lexer = null,
+        ?ParserInterface $parser = null,
+        ?CompilerInterface $compiler = null,
     ): static {
         return new static(
-            lexer: $lexer,
-            parser: $parser,
+            lexer: $lexer ?? self::createDefaultLexer(),
+            parser: $parser ?? self::createDefaultParser(),
+            compiler: $compiler ?? self::createDefaultCompiler(),
         );
     }
 
@@ -68,19 +77,15 @@ class LumiEngine
     public function compileFile(
         string $file,
     ): CompiledFileInterface {
-        $stream = $this->lexer->tokenizeByFile($file);
-
-        var_dump($stream->tokens);
-
-        $nodes = $this->parser->parse($stream);
-
-        var_dump($nodes);
-
-        // @todo Hand $tokens over to $this->compiler
-
         return new CompiledFile(
             name: !\is_bool($name = \strstr($file, '.lumi', true)) ? $name : '',
-            source: '', // @todo Implement
+            source: $this->compiler->compile(
+                nodes: $this->parser->parse(
+                    stream: $this->lexer->tokenizeByFile(
+                        sourceFile: $file,
+                    ),
+                )
+            ),
         );
     }
 
@@ -104,9 +109,7 @@ class LumiEngine
         $compiledFiles = [];
 
         foreach ($files as $file) {
-            $tokens = $this->lexer->tokenizeByFile($file);
-
-            // @todo Hand $tokens over to $this->parser and then $this->compiler
+            $compiledFiles[] = $this->compileFile($file);
         }
 
         return new CompiledFileBatch(

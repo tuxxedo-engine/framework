@@ -15,6 +15,7 @@ namespace Tuxxedo\Http\Response;
 
 use Tuxxedo\Http\HeaderInterface;
 
+// @todo Implement withHeaders() (plural)
 interface ResponseInterface extends ResponseCodeInterface
 {
     /**

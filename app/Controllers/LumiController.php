@@ -25,17 +25,15 @@ readonly class LumiController
     #[Route\Get]
     public function hello(): ResponseInterface
     {
-        \ob_start();
         $viewFile = __DIR__ . '/../views/lumi/hello_world.lumi';
         $contents = @\file_get_contents($viewFile);
 
-        $buffer = '<h3>Source</h3><pre>' . \htmlspecialchars($contents !== false ? $contents : '') . '</pre><h3>Tokens</h3>';
+        $buffer = '';
+        $buffer .= '<h3>Source</h3>';
+        $buffer .= '<pre>' . \htmlspecialchars($contents !== false ? $contents : '') . '</pre>';
+        $buffer .= '<h3>Compiled Source</h3>';
+        $buffer .= '<pre>' . \htmlspecialchars(LumiEngine::createDefault()->compileFile($viewFile)->source) . '</pre>';
 
-        $engine = LumiEngine::createDefault();
-        $engine->compileFile($viewFile);
-
-        return new Response(
-            body: $buffer . (!\is_bool($body = \ob_get_clean()) ? '<pre>' . \htmlspecialchars($body) . '</pre>' : ''),
-        );
+        return Response::html($buffer);
     }
 }

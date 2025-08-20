@@ -17,6 +17,7 @@ use Tuxxedo\Http\Header;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
+// @todo Allow customization of the value field
 class StrictTransportSecurityMiddleware implements MiddlewareInterface
 {
     public function handle(

@@ -17,6 +17,7 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
+// @todo Consider baking this into the Kernel
 class MiddlewarePipeline
 {
     /**
