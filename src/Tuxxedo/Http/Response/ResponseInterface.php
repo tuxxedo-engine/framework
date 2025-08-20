@@ -15,7 +15,6 @@ namespace Tuxxedo\Http\Response;
 
 use Tuxxedo\Http\HeaderInterface;
 
-// @todo Implement withHeaders() (plural)
 interface ResponseInterface extends ResponseCodeInterface
 {
     /**
@@ -31,6 +30,14 @@ interface ResponseInterface extends ResponseCodeInterface
 
     public function withHeader(
         HeaderInterface $header,
+        bool $replace = false,
+    ): static;
+
+    /**
+     * @param HeaderInterface[] $headers
+     */
+    public function withHeaders(
+        array $headers,
         bool $replace = false,
     ): static;
 

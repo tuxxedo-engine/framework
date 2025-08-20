@@ -25,8 +25,12 @@ class XssProtectionMiddleware implements MiddlewareInterface
         MiddlewareInterface $next,
     ): ResponseInterface {
         return $next->handle($request, $next)
-            ->withHeader(new Header('Content-Security-Policy', 'default-src \'self\''))
-            ->withHeader(new Header('X-XSS-Protection', '1; mode=block'))
-            ->withHeader(new Header('X-Content-Type-Options', 'nosniff'));
+            ->withHeaders(
+                [
+                    new Header('Content-Security-Policy', 'default-src \'self\''),
+                    new Header('X-XSS-Protection', '1; mode=block'),
+                    new Header('X-Content-Type-Options', 'nosniff'),
+                ]
+            );
     }
 }

@@ -164,26 +164,56 @@ class Response implements ResponseInterface
         return null;
     }
 
+    /**
+     * @return HeaderInterface[]
+     */
+    private function getReplacementHeaders(
+        HeaderInterface ...$headers,
+    ): array {
+        $newHeaders = $this->headers;
+
+        foreach ($headers as $header) {
+            $headerIndex = $this->getHeaderIndex($newHeaders, $header);
+
+            if ($headerIndex !== null) {
+                $newHeaders[$headerIndex] = $header;
+            } else {
+                $newHeaders[] = $header;
+            }
+        }
+
+        return $newHeaders;
+    }
+
     public function withHeader(
         HeaderInterface $header,
         bool $replace = false,
     ): static {
-        $headers = $this->headers;
-
-        if ($replace) {
-            $headerIndex = $this->getHeaderIndex($headers, $header);
-
-            if ($headerIndex !== null) {
-                $headers[$headerIndex] = $header;
-            } else {
-                $headers[] = $header;
-            }
-        } else {
-            $headers[] = $header;
-        }
-
         return new static(
-            headers: $headers,
+            headers: $replace
+                ? $this->getReplacementHeaders($header)
+                : \array_merge(
+                    $this->headers,
+                    [
+                        $header,
+                    ],
+                ),
+            responseCode: $this->responseCode,
+            body: $this->body,
+        );
+    }
+
+    public function withHeaders(
+        array $headers,
+        bool $replace = false,
+    ): static {
+        return new static(
+            headers: $replace
+                ? $this->getReplacementHeaders(...$headers)
+                : \array_merge(
+                    $this->headers,
+                    $headers,
+                ),
             responseCode: $this->responseCode,
             body: $this->body,
         );
