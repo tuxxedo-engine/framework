@@ -46,6 +46,29 @@ class ParserException extends \Exception
         );
     }
 
+    /**
+     * @param string[] $expectedSymbols
+     */
+    public static function fromUnexpectedSymbolOneOf(
+        string $symbol,
+        array $expectedSymbols,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Syntax error: Unexpected symbol "%s", expected one of "%s"',
+                $symbol,
+                \join('", "', $expectedSymbols),
+            ),
+        );
+    }
+
+    public static function fromTokenStreamEof(): self
+    {
+        return new self(
+            message: 'Token stream has reached the end of stream unexpectedly',
+        );
+    }
+
     public static function fromNodeStreamEof(): self
     {
         return new self(
