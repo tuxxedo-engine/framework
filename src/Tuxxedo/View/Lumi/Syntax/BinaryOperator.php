@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax;
 
-// @todo Support ??
 enum BinaryOperator implements SymbolInterface, OperatorInterface
 {
     case ASSIGN;
@@ -39,6 +38,7 @@ enum BinaryOperator implements SymbolInterface, OperatorInterface
     case BITWISE_XOR;
     case BITWISE_SHIFT_LEFT;
     case BITWISE_SHIFT_RIGHT;
+    case NULL_COALESCE;
 
     public function symbol(): string
     {
@@ -66,6 +66,7 @@ enum BinaryOperator implements SymbolInterface, OperatorInterface
             self::BITWISE_XOR => '^',
             self::BITWISE_SHIFT_LEFT => '<<',
             self::BITWISE_SHIFT_RIGHT => '>>',
+            self::NULL_COALESCE => '??',
         };
     }
 
@@ -75,7 +76,7 @@ enum BinaryOperator implements SymbolInterface, OperatorInterface
             self::ASSIGN => 1,
             self::OR => 2,
             self::AND => 3,
-            self::EQUAL, self::NOT_EQUAL, self::STRICT_EQUAL, self::STRICT_NOT_EQUAL => 4,
+            self::EQUAL, self::NOT_EQUAL, self::STRICT_EQUAL, self::STRICT_NOT_EQUAL, self::NULL_COALESCE => 4,
             self::LESS, self::GREATER, self::LESS_EQUAL, self::GREATER_EQUAL => 5,
             self::ADD, self::SUBTRACT => 6,
             self::MULTIPLY, self::DIVIDE, self::MODULUS => 7,
