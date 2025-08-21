@@ -13,7 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax;
 
-interface OperatorAssociativityInterface
+interface OperatorInterface
 {
+    public function precedence(): int;
     public function associativity(): OperatorAssociativity;
 }

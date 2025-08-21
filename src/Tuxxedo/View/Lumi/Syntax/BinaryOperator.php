@@ -13,8 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax;
 
-enum BinaryOperator implements SymbolInterface, OperatorAssociativityInterface
+enum BinaryOperator implements SymbolInterface, OperatorInterface
 {
+    case ASSIGN;
     case ADD;
     case SUBTRACT;
     case MULTIPLY;
@@ -41,6 +42,7 @@ enum BinaryOperator implements SymbolInterface, OperatorAssociativityInterface
     public function symbol(): string
     {
         return match ($this) {
+            self::ASSIGN => '=',
             self::ADD => '+',
             self::SUBTRACT => '-',
             self::MULTIPLY => '*',
@@ -63,6 +65,21 @@ enum BinaryOperator implements SymbolInterface, OperatorAssociativityInterface
             self::BITWISE_XOR => '^',
             self::BITWISE_SHIFT_LEFT => '<<',
             self::BITWISE_SHIFT_RIGHT => '>>',
+        };
+    }
+
+    public function precedence(): int
+    {
+        return match ($this) {
+            self::ASSIGN => 1,
+            self::OR => 2,
+            self::AND => 3,
+            self::EQUAL, self::NOT_EQUAL, self::STRICT_EQUAL, self::STRICT_NOT_EQUAL => 4,
+            self::LESS, self::GREATER, self::LESS_EQUAL, self::GREATER_EQUAL => 5,
+            self::ADD, self::SUBTRACT => 6,
+            self::MULTIPLY, self::DIVIDE, self::MODULUS => 7,
+            self::EXPONENTIATE => 8,
+            default => 9,
         };
     }
 

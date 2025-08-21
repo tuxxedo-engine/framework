@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax;
 
-enum AssignmentOperator implements SymbolInterface, OperatorAssociativityInterface
+enum AssignmentOperator implements SymbolInterface, OperatorInterface
 {
     case ADD;
     case SUBTRACT;
@@ -42,6 +42,11 @@ enum AssignmentOperator implements SymbolInterface, OperatorAssociativityInterfa
             self::BITWISE_SHIFT_LEFT => '<<=',
             self::BITWISE_SHIFT_RIGHT => '>>=',
         };
+    }
+
+    public function precedence(): int
+    {
+        return 1;
     }
 
     public function associativity(): OperatorAssociativity

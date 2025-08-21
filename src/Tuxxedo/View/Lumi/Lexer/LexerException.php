@@ -88,7 +88,7 @@ class LexerException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'The expression "%s" is invalid and cannot be represent an identifier',
+                'The expression "%s" is invalid and cannot be represented as an identifier',
                 $expression,
             ),
         );

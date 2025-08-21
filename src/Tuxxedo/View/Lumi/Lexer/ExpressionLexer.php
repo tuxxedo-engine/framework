@@ -26,15 +26,15 @@ class ExpressionLexer implements ExpressionLexerInterface
             throw LexerException::fromEmptyExpression();
         }
 
-        if (!$this->isValidIdentifier($operand)) {
-            throw LexerException::fromInvalidIdentifier(
-                expression: $operand,
-            );
+        if ($this->isValidIdentifier($operand)) {
+            return [
+                new VariableToken($operand),
+            ];
         }
 
-        return [
-            new VariableToken($operand),
-        ];
+        throw LexerException::fromInvalidIdentifier(
+            expression: $operand,
+        );
     }
 
     private function isValidIdentifier(string $value): bool

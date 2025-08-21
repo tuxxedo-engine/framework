@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax;
 
-enum UnaryOperator implements SymbolInterface, OperatorAssociativityInterface
+enum UnaryOperator implements SymbolInterface, OperatorInterface
 {
     case NOT;
     case NEGATE;
@@ -31,6 +31,14 @@ enum UnaryOperator implements SymbolInterface, OperatorAssociativityInterface
             self::BITWISE_NOT => '~',
             self::INCREMENT_PRE, self::INCREMENT_POST => '++',
             self::DECREMENT_PRE, self::DECREMENT_POST => '--',
+        };
+    }
+
+    public function precedence(): int
+    {
+        return match ($this) {
+            self::INCREMENT_POST, self::DECREMENT_POST => 15,
+            self::INCREMENT_PRE, self::DECREMENT_PRE, self::NOT, self::NEGATE, self::BITWISE_NOT => 14,
         };
     }
 

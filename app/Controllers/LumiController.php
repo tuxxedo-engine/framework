@@ -25,7 +25,7 @@ readonly class LumiController
     #[Route\Get]
     public function hello(): ResponseInterface
     {
-        $viewFile = __DIR__ . '/../views/lumi/hello_world.lumi';
+        $viewFile = __DIR__ . '/../views/lumi/hello_world_set.lumi';
         $contents = @\file_get_contents($viewFile);
 
         $buffer = '';
