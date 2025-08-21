@@ -15,17 +15,24 @@ namespace Tuxxedo\View\Lumi\Compiler\Handler;
 
 use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompilerInterface;
 use Tuxxedo\View\Lumi\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Node\TextNode;
 
-// @todo Check if this can be made generic or if an identifier approach should be considered instead of a class-string
-interface CompilerHandlerInterface
+class TextCompilerHandler implements CompilerHandlerInterface
 {
     /**
      * @return class-string<NodeInterface>
      */
-    public function getRootNodeClass(): string;
+    public function getRootNodeClass(): string
+    {
+        return TextNode::class;
+    }
 
     public function compile(
         NodeInterface $node,
         ExpressionCompilerInterface $expressionCompiler,
-    ): string;
+    ): string {
+        /** @var TextNode $node */
+
+        return $node->text;
+    }
 }

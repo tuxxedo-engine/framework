@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Compiler;
 
+use Tuxxedo\View\Lumi\Node\NodeInterface;
+
 class CompilerException extends \Exception
 {
     public static function fromCannotSave(
@@ -24,6 +26,20 @@ class CompilerException extends \Exception
                 'Cannot save compiled view "%s" to: %s',
                 $name,
                 $path,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string<NodeInterface> $nodeClass
+     */
+    public static function fromUnexpectedNode(
+        string $nodeClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unexpected node "%s" encountered: No handler defined',
+                $nodeClass,
             ),
         );
     }

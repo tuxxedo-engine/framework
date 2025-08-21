@@ -92,7 +92,7 @@ class Parser implements ParserInterface
 
     public function parse(
         TokenStreamInterface $stream,
-    ): array {
+    ): NodeStreamInterface {
         $nodes = [];
 
         while (!$stream->eof()) {
@@ -110,6 +110,8 @@ class Parser implements ParserInterface
             );
         }
 
-        return $nodes;
+        return new NodeStream(
+            nodes: $nodes,
+        );
     }
 }

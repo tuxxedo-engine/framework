@@ -45,4 +45,11 @@ class ParserException extends \Exception
             ),
         );
     }
+
+    public static function fromNodeStreamEof(): self
+    {
+        return new self(
+            message: 'Node stream has reached the end of stream unexpectedly',
+        );
+    }
 }

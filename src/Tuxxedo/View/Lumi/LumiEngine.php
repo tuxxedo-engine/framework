@@ -47,7 +47,7 @@ class LumiEngine
 
     public static function createDefaultCompiler(): CompilerInterface
     {
-        return new Compiler();
+        return Compiler::createWithDefaultHandlers();
     }
 
     public static function createDefault(): static
@@ -80,7 +80,7 @@ class LumiEngine
         return new CompiledFile(
             name: !\is_bool($name = \strstr($file, '.lumi', true)) ? $name : '',
             source: $this->compiler->compile(
-                nodes: $this->parser->parse(
+                stream: $this->parser->parse(
                     stream: $this->lexer->tokenizeByFile(
                         sourceFile: $file,
                     ),

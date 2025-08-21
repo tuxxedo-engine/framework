@@ -13,6 +13,30 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser;
 
+use Tuxxedo\View\Lumi\Node\NodeInterface;
+
 interface NodeStreamInterface
 {
+    public int $position {
+        get;
+    }
+
+    /**
+     * @var NodeInterface[]
+     */
+    public array $nodes {
+        get;
+    }
+
+    /**
+     * @phpstan-impure
+     */
+    public function eof(): bool;
+
+    /**
+     * @throws ParserException
+     */
+    public function current(): NodeInterface;
+
+    public function consume(): void;
 }
