@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Parser;
 
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
+use Tuxxedo\View\Lumi\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Parser\Expression\ExpressionParserInterface;
-use Tuxxedo\View\Lumi\Parser\Node\NodeInterface;
 
 interface ParserInterface
 {

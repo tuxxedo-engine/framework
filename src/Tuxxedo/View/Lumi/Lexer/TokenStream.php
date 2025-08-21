@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer;
 
-use Tuxxedo\View\Lumi\Lexer\Token\TokenInterface;
+use Tuxxedo\View\Lumi\Token\TokenInterface;
 
 class TokenStream implements TokenStreamInterface
 {

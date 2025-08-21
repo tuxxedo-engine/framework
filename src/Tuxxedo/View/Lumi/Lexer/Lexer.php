@@ -14,14 +14,14 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer;
 
+use Tuxxedo\View\Lumi\ByteStream;
+use Tuxxedo\View\Lumi\ByteStreamInterface;
 use Tuxxedo\View\Lumi\Lexer\Handler\BlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\CommentHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\EchoHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\TokenHandlerInterface;
-use Tuxxedo\View\Lumi\Lexer\Token\TextToken;
-use Tuxxedo\View\Lumi\Lexer\Token\TokenInterface;
-use Tuxxedo\View\Lumi\ByteStream;
-use Tuxxedo\View\Lumi\ByteStreamInterface;
+use Tuxxedo\View\Lumi\Token\TextToken;
+use Tuxxedo\View\Lumi\Token\TokenInterface;
 
 class Lexer implements LexerInterface
 {

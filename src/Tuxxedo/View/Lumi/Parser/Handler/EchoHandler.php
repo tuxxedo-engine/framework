@@ -13,12 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Handler;
 
-use Tuxxedo\View\Lumi\Lexer\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Lexer\TokenStream;
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
-use Tuxxedo\View\Lumi\Parser\Node\EchoNode;
-use Tuxxedo\View\Lumi\Parser\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Node\EchoNode;
+use Tuxxedo\View\Lumi\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
+use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
 
 class EchoHandler implements ParserHandlerInterface
 {

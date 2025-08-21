@@ -11,16 +11,17 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Compiler;
+namespace Tuxxedo\View\Lumi\Compiler\Expression;
 
-use Tuxxedo\View\Lumi\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Compiler\CompilerException;
+use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 
-interface CompilerInterface
+interface ExpressionCompilerInterface
 {
     /**
-     * @param NodeInterface[] $nodes
+     * @throws CompilerException
      */
     public function compile(
-        array $nodes,
+        NodeStreamInterface $stream,
     ): string;
 }

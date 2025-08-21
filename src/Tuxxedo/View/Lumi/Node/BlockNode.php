@@ -11,16 +11,15 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Lexer;
+namespace Tuxxedo\View\Lumi\Node;
 
-use Tuxxedo\View\Lumi\Token\TokenInterface;
-
-interface ExpressionLexerInterface
+readonly class BlockNode implements NodeInterface
 {
     /**
-     * @return TokenInterface[]
+     * @param NodeInterface[] $nodes
      */
-    public function parse(
-        string $operand,
-    ): array;
+    public function __construct(
+        public array $nodes,
+    ) {
+    }
 }

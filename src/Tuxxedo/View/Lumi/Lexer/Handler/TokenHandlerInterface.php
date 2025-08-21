@@ -13,10 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
+use Tuxxedo\View\Lumi\ByteStreamInterface;
 use Tuxxedo\View\Lumi\Lexer\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
-use Tuxxedo\View\Lumi\Lexer\Token\TokenInterface;
-use Tuxxedo\View\Lumi\ByteStreamInterface;
+use Tuxxedo\View\Lumi\Token\TokenInterface;
 
 interface TokenHandlerInterface
 {
