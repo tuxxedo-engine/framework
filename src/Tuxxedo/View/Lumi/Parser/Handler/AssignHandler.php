@@ -34,6 +34,7 @@ class AssignHandler implements ParserHandlerInterface
         $stream->consume();
 
         $variableToken = $stream->current();
+
         if ($variableToken->type !== BuiltinTokenNames::VARIABLE->name) {
             throw ParserException::fromUnexpectedTokenWithExpects(
                 tokenName: $variableToken->type,
@@ -44,6 +45,7 @@ class AssignHandler implements ParserHandlerInterface
         }
 
         $variableName = $variableToken->op1;
+
         $stream->consume();
 
         $operatorToken = $stream->current();
@@ -57,6 +59,7 @@ class AssignHandler implements ParserHandlerInterface
         }
 
         $operatorSymbol = $operatorToken->op1;
+
         $stream->consume();
 
         $assignmentOperator = null;
@@ -86,6 +89,7 @@ class AssignHandler implements ParserHandlerInterface
         }
 
         $expressionTokens = [];
+
         while (!$stream->eof() && $stream->current()->type !== BuiltinTokenNames::END->name) {
             $expressionTokens[] = $stream->current();
 
@@ -104,7 +108,9 @@ class AssignHandler implements ParserHandlerInterface
                     name: $variableName,
                 ),
                 value: $parser->expressionParser->parse(
-                    stream: new TokenStream(tokens: $expressionTokens),
+                    stream: new TokenStream(
+                        tokens: $expressionTokens,
+                    ),
                 ),
                 operator: $assignmentOperator,
             ),
