@@ -18,6 +18,7 @@ use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\Attribute\Controller;
 use Tuxxedo\Router\Attribute\Route;
+use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\LumiEngine;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
 
@@ -90,12 +91,17 @@ readonly class LumiController
 
         $buffer .= '<h3>Tokens</h3>';
         $buffer .= '<pre>';
-        $stream = LumiEngine::createDefaultLexer()->tokenizeByFile($this->viewFile);
 
-        while (!$stream->eof()) {
-            $buffer .= $this->visualizeToken($stream->current()) . '<br>';
+        try {
+            $stream = LumiEngine::createDefaultLexer()->tokenizeByFile($this->viewFile);
 
-            $stream->consume();
+            while (!$stream->eof()) {
+                $buffer .= $this->visualizeToken($stream->current()) . '<br>';
+
+                $stream->consume();
+            }
+        } catch (LexerException $exception) {
+            $buffer .= $exception;
         }
 
         $buffer .= '</pre>';

@@ -1,2 +1,3 @@
-{% set name = "Kalle" %}
+{% set name += "Kalle" %}
+{# This needs to be 1 operator, not 2 #}
 <h1>Hello, {{ name }}!</h1>
