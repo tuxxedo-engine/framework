@@ -26,6 +26,7 @@ use Tuxxedo\View\Lumi\Token\OperatorToken;
 use Tuxxedo\View\Lumi\Token\CharacterToken;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
 
+// @todo Check filter support
 class ExpressionLexer implements ExpressionLexerInterface
 {
     /**
