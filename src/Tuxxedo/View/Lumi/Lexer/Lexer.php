@@ -38,7 +38,7 @@ class Lexer implements LexerInterface
      */
     final private function __construct(
         array $handlers,
-        private readonly ExpressionLexerInterface $expressionLexer,
+        public readonly ExpressionLexerInterface $expressionLexer,
     ) {
         $maxTokenLength = 0;
         $sequences = [];

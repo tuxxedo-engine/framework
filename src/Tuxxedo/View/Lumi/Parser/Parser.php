@@ -36,6 +36,7 @@ class Parser implements ParserInterface
     final private function __construct(
         array $handlers,
         public readonly ExpressionParserInterface $expressionParser,
+        public readonly ParserStateInterface $state,
     ) {
         $parserHandlers = [];
 
@@ -63,12 +64,18 @@ class Parser implements ParserInterface
         return new ExpressionParser();
     }
 
+    public static function getDefaultParserState(): ParserStateInterface
+    {
+        return new ParserState();
+    }
+
     /**
      * @param ParserHandlerInterface[] $handlers
      */
     public static function createWithDefaultHandlers(
         array $handlers = [],
         ?ExpressionParserInterface $expressionParser = null,
+        ?ParserStateInterface $state = null,
     ): static {
         return new static(
             handlers: \array_merge(
@@ -76,6 +83,7 @@ class Parser implements ParserInterface
                 $handlers,
             ),
             expressionParser: $expressionParser ?? self::getDefaultExpressionParser(),
+            state: $state ?? self::getDefaultParserState(),
         );
     }
 
@@ -85,10 +93,12 @@ class Parser implements ParserInterface
     public static function createWithoutDefaultHandlers(
         array $handlers = [],
         ?ExpressionParserInterface $expressionParser = null,
+        ?ParserStateInterface $state = null,
     ): static {
         return new static(
             handlers: $handlers,
             expressionParser: $expressionParser ?? self::getDefaultExpressionParser(),
+            state: $state ?? self::getDefaultParserState(),
         );
     }
 

@@ -33,7 +33,7 @@ class Compiler implements CompilerInterface
      */
     final private function __construct(
         array $handlers,
-        private readonly ExpressionCompilerInterface $expressionCompiler,
+        public readonly ExpressionCompilerInterface $expressionCompiler,
     ) {
         $compilerHandlers = [];
 

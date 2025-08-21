@@ -75,4 +75,44 @@ class ParserException extends \Exception
             message: 'Node stream has reached the end of stream unexpectedly',
         );
     }
+
+    public static function fromUnexpectedLoopExit(): self
+    {
+        return new self(
+            message: 'Cannot exit loop: no active loop context found',
+        );
+    }
+
+    public static function fromUnexpectedConditionExit(): self
+    {
+        return new self(
+            message: 'Cannot exit condition: no active conditional context found',
+        );
+    }
+
+    public static function fromMissingStateKey(
+        string $key,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'State key "%s" is not defined',
+                $key,
+            ),
+        );
+    }
+
+    public static function fromUnexpectedStateType(
+        string $key,
+        string $type,
+        string $expectedType,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Expected a %s value for key "%s", but received %s',
+                $expectedType,
+                $key,
+                $type,
+            ),
+        );
+    }
 }
