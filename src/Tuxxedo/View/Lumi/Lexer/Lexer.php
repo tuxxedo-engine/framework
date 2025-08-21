@@ -171,8 +171,46 @@ class Lexer implements LexerInterface
             }
         }
 
-        return new TokenStream($tokens);
+        return new TokenStream(
+            tokens: $this->mergeAdjacentTextTokens($tokens),
+        );
     }
+
+    /**
+     * @param TokenInterface[] $tokens
+     * @return TokenInterface[]
+     */
+    private function mergeAdjacentTextTokens(array $tokens): array
+    {
+        $merged = [];
+        $buffer = null;
+
+        foreach ($tokens as $token) {
+            if ($token instanceof TextToken) {
+                if ($buffer === null) {
+                    $buffer = $token;
+                } else {
+                    $buffer = new TextToken(
+                        op1: $buffer->op1 . $token->op1,
+                    );
+                }
+            } else {
+                if ($buffer !== null) {
+                    $merged[] = $buffer;
+                    $buffer = null;
+                }
+
+                $merged[] = $token;
+            }
+        }
+
+        if ($buffer !== null) {
+            $merged[] = $buffer;
+        }
+
+        return $merged;
+    }
+
 
     public function tokenizeByString(
         string $sourceCode,

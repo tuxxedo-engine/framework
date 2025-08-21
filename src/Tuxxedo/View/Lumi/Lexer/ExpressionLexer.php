@@ -84,7 +84,7 @@ class ExpressionLexer implements ExpressionLexerInterface
                     if ($slashes % 2 === 0) {
                         $inQuote = false;
                         $tokens[] = new TypeToken(
-                            op1: $buffer,
+                            op1: \mb_substr($buffer, 1, -1),
                             op2: BuiltinTypeNames::STRING->name,
                         );
                         $buffer = '';
