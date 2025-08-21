@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax;
 
+// @todo Support ??
 enum BinaryOperator implements SymbolInterface, OperatorInterface
 {
     case ASSIGN;

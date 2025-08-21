@@ -83,13 +83,35 @@ class LexerException extends \Exception
         );
     }
 
-    public static function fromInvalidIdentifier(
-        string $expression,
+    public static function fromInvalidQuotedString(
+        string $quoteChar,
     ): self {
         return new self(
             message: \sprintf(
-                'The expression "%s" is invalid and cannot be represented as an identifier',
-                $expression,
+                'Invalid quoted string, no ending %s character found',
+                $quoteChar,
+            ),
+        );
+    }
+
+    public static function fromInvalidNumber(
+        string $value,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid numeric value: %s cannot be represented as a number',
+                $value,
+            ),
+        );
+    }
+
+    public static function fromUnknownSymbol(
+        string $symbol,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unknown symbol "%s" encountered',
+                $symbol,
             ),
         );
     }

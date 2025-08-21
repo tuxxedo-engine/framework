@@ -17,6 +17,7 @@ enum BuiltinTokenNames
 {
     case ASSIGN;
     case BREAK;
+    case CHARACTER;
     case CONTINUE;
     case ECHO;
     case ELSEIF;
@@ -24,7 +25,9 @@ enum BuiltinTokenNames
     case END;
     case FOR;
     case IF;
+    case OPERATOR;
     case TEXT;
+    case TYPE;
     case VARIABLE;
     case WHILE;
 }
