@@ -15,6 +15,8 @@ namespace Tuxxedo\View\Lumi\Compiler\Expression;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Node\IdentifierNode;
+use Tuxxedo\View\Lumi\Node\LiteralNode;
+use Tuxxedo\View\Lumi\Node\NodeNativeType;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 
 // @todo Support mode expressions
@@ -24,14 +26,23 @@ class ExpressionCompiler implements ExpressionCompilerInterface
         NodeStreamInterface $stream,
     ): string {
         $node = $stream->current();
+        $compiledNode = null;
 
-        if (!$node instanceof IdentifierNode) {
+        if ($node instanceof IdentifierNode) {
+            $stream->consume();
+
+            $compiledNode = $this->compileIdentifier($node);
+        } elseif ($node instanceof LiteralNode) {
+            $stream->consume();
+
+            $compiledNode = $this->compileLiteral($node);
+        }
+
+        if ($compiledNode === null) {
             throw CompilerException::fromUnexpectedNode(
                 nodeClass: $node::class,
             );
         }
-
-        $stream->consume();
 
         if (!$stream->eof()) {
             throw CompilerException::fromUnexpectedNode(
@@ -39,7 +50,7 @@ class ExpressionCompiler implements ExpressionCompilerInterface
             );
         }
 
-        return $this->compileIdentifier($node);
+        return $compiledNode;
     }
 
     private function compileIdentifier(
@@ -49,5 +60,14 @@ class ExpressionCompiler implements ExpressionCompilerInterface
             '$%s',
             $node->name,
         );
+    }
+
+    private function compileLiteral(
+        LiteralNode $node,
+    ): string {
+        return match ($node->type) {
+            NodeNativeType::STRING => '\'' . $node->operand . '\'', // @todo This is error prone, quotes may need to be preserved for proper escaping
+            default => $node->operand,
+        };
     }
 }

@@ -18,8 +18,8 @@ use Tuxxedo\View\Lumi\Syntax\BinaryOperator;
 readonly class BinaryOpNode implements ExpressionNodeInterface
 {
     public function __construct(
-        public ExpressionNodeInterface $op1,
-        public ExpressionNodeInterface $op2,
+        public ExpressionNodeInterface $left,
+        public ExpressionNodeInterface $right,
         public BinaryOperator $operator,
     ) {
     }

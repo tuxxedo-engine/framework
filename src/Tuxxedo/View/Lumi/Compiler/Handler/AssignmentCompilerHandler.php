@@ -14,32 +14,36 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Compiler\Handler;
 
 use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompilerInterface;
+use Tuxxedo\View\Lumi\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Node\EchoNode;
 use Tuxxedo\View\Lumi\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
+use Tuxxedo\View\Lumi\Syntax\AssignmentOperator;
 
-class EchoCompilerHandler implements CompilerHandlerInterface
+class AssignmentCompilerHandler implements CompilerHandlerInterface
 {
     /**
      * @return class-string<NodeInterface>
      */
     public function getRootNodeClass(): string
     {
-        return EchoNode::class;
+        return AssignmentNode::class;
     }
 
     public function compile(
         NodeInterface $node,
         ExpressionCompilerInterface $expressionCompiler,
     ): string {
-        /** @var EchoNode $node */
+        /** @var AssignmentNode $node */
 
         return \sprintf(
-            '<?= %s; ?>',
+            '<?php $%s %s %s; ?>',
+            $node->name->name,
+            $node->operator?->symbol() ?? '=',
             $expressionCompiler->compile(
                 stream: new NodeStream(
                     nodes: [
-                        $node->operand,
+                        $node->value,
                     ],
                 ),
             ),

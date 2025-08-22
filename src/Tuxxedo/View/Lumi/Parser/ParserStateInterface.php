@@ -26,7 +26,7 @@ interface ParserStateInterface
     /**
      * @var string[]
      */
-    public array $groupingDepth {
+    public array $groupingStack {
         get;
     }
 

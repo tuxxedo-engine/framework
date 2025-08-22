@@ -47,17 +47,17 @@ class ParserException extends \Exception
     }
 
     /**
-     * @param string[] $expectedSymbols
+     * @param string[] $expectedTokenNames
      */
-    public static function fromUnexpectedSymbolOneOf(
-        string $symbol,
-        array $expectedSymbols,
+    public static function fromUnexpectedTokenWithExpectsOneOf(
+        string $tokenName,
+        array $expectedTokenNames,
     ): self {
         return new self(
             message: \sprintf(
-                'Syntax error: Unexpected symbol "%s", expected one of "%s"',
-                $symbol,
-                \join('", "', $expectedSymbols),
+                'Syntax error: Unexpected token "%s", expected one of "%s"',
+                $tokenName,
+                \join('", "', $expectedTokenNames),
             ),
         );
     }
@@ -132,6 +132,22 @@ class ParserException extends \Exception
                 $expectedType,
                 $key,
                 $type,
+            ),
+        );
+    }
+
+    /**
+     * @param string[] $expectedTokenNativeTypes
+     */
+    public static function fromUnexpectedTokenNativeType(
+        string $tokenNativeType,
+        array $expectedTokenNativeTypes,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unexpected token native type "%s", expected one of "%s"',
+                $tokenNativeType,
+                \join('", "', $expectedTokenNativeTypes),
             ),
         );
     }

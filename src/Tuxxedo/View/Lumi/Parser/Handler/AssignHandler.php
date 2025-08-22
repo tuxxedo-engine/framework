@@ -74,9 +74,9 @@ class AssignHandler implements ParserHandlerInterface
         }
 
         if ($assignmentOperator === null && $operatorSymbol !== '=') {
-            throw ParserException::fromUnexpectedSymbolOneOf(
-                symbol: $operatorSymbol,
-                expectedSymbols: \array_merge(
+            throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
+                tokenName: $operatorSymbol,
+                expectedTokenNames: \array_merge(
                     [
                         BinaryOperator::ASSIGN->symbol(),
                     ],

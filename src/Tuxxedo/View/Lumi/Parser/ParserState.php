@@ -21,7 +21,7 @@ class ParserState implements ParserStateInterface
     /**
      * @var string[]
      */
-    public private(set) array $groupingDepth = [];
+    public private(set) array $groupingStack = [];
 
     /**
      * @var array<string, string|int|bool>
@@ -59,18 +59,18 @@ class ParserState implements ParserStateInterface
     public function enterGrouping(
         string $name,
     ): void {
-        \array_push($this->groupingDepth, $name);
+        \array_push($this->groupingStack, $name);
     }
 
     public function leaveGrouping(
         string $name,
     ): void {
-        if (\sizeof($this->groupingDepth) === 0) {
+        if (\sizeof($this->groupingStack) === 0) {
             throw ParserException::fromUnexpectedGroupingExit();
         }
 
         /** @var string $last */
-        $last = \array_pop($this->groupingDepth);
+        $last = \array_pop($this->groupingStack);
 
         if ($last !== $name) {
             throw ParserException::fromUnexpectedNamedGroupingExit(
@@ -82,7 +82,7 @@ class ParserState implements ParserStateInterface
 
     public function isAllGroupingsClosed(): bool
     {
-        return \sizeof($this->groupingDepth) === 0;
+        return \sizeof($this->groupingStack) === 0;
     }
 
     public function set(

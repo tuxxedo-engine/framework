@@ -15,5 +15,4 @@ namespace Tuxxedo\View\Lumi\Node;
 
 interface ExpressionNodeInterface extends NodeInterface
 {
-    // @todo more reflection later
 }
