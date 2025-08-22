@@ -16,7 +16,7 @@ $finder = (new Finder())
     )
     ->exclude(
         [
-            'app/views',
+            'app/views/cache',
         ],
     );
 

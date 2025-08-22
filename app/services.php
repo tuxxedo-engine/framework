@@ -14,10 +14,10 @@ declare(strict_types=1);
 use App\Services\Logger\Logger;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Session\Session;
-use Tuxxedo\View\Engine\ViewRender;
+use Tuxxedo\View\Lumi\LumiViewRender;
 
 return static function (ContainerInterface $container): void {
     $container->bind(Logger::class);
     $container->bind(Session::class);
-    $container->bind(ViewRender::class);
+    $container->bind(LumiViewRender::class);
 };

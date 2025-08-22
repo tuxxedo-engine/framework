@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Engine;
+namespace Tuxxedo\View\Lumi;
 
 use Tuxxedo\Escaper\Escaper;
 use Tuxxedo\Escaper\EscaperInterface;
@@ -19,7 +19,7 @@ use Tuxxedo\View\View;
 use Tuxxedo\View\ViewContextInterface;
 use Tuxxedo\View\ViewRenderInterface;
 
-readonly class ViewContext implements ViewContextInterface
+readonly class LumiViewContext implements ViewContextInterface
 {
     public EscaperInterface $escaper;
 

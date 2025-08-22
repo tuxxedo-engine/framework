@@ -25,22 +25,18 @@ readonly class ViewController
     public function hello(): ViewInterface
     {
         return new View(
-            name: 'hello',
+            name: 'hello_world',
             scope: [
-                'message' => '<strong>Hello</strong> <em>World</em>',
+                'name' => 'Lumi',
             ],
         );
     }
 
     #[Route\Get]
-    public function inc(): ViewInterface
+    public function set(): ViewInterface
     {
         return new View(
-            name: 'include_outer',
-            scope: [
-                'inner' => 'Inner',
-                'outer' => 'Outer',
-            ],
+            name: 'hello_world_set',
         );
     }
 }

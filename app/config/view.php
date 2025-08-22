@@ -13,20 +13,20 @@ declare(strict_types=1);
 
 return [
     /**
-     * views.directory
+     * view.directory
      *
-     * Directory path for Engine's built in view engine
+     * Directory path for Tuxxedo Engine Lumi templates
      *
      * @type string
      */
     'directory' => __DIR__ . '/../views',
 
     /**
-     * views.extension
+     * view.cacheDirectory
      *
-     * The file extension used for Engine's built in view engine, dot-prefixed
+     * Cache directory path for compiled Tuxxedo Engine Lumi templates
      *
      * @type string
      */
-    'extension' => '.phtml',
+    'cacheDirectory' => __DIR__ . '/../views/cache',
 ];

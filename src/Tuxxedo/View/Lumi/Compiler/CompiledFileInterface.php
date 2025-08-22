@@ -15,11 +15,11 @@ namespace Tuxxedo\View\Lumi\Compiler;
 
 interface CompiledFileInterface
 {
-    public string $name {
+    public string $sourceFile {
         get;
     }
 
-    public string $source {
+    public string $sourceCode {
         get;
     }
 
@@ -27,12 +27,10 @@ interface CompiledFileInterface
      * @throws CompilerException
      */
     public function save(
-        string $path,
-        string $extension = '.php',
+        string $file,
     ): void;
 
     public function saveTo(
-        string $path,
-        string $extension = '.php',
+        string $file,
     ): bool;
 }

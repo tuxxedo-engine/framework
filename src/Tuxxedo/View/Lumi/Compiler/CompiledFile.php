@@ -16,30 +16,28 @@ namespace Tuxxedo\View\Lumi\Compiler;
 readonly class CompiledFile implements CompiledFileInterface
 {
     public function __construct(
-        public string $name,
-        public string $source,
+        public string $sourceFile,
+        public string $sourceCode,
     ) {
     }
 
     public function save(
-        string $path,
-        string $extension = '.php',
+        string $file,
     ): void {
-        if (!$this->saveTo($path, $extension)) {
+        if (!$this->saveTo($file)) {
             throw CompilerException::fromCannotSave(
-                name: $this->name,
-                path: $path . $this->name . $extension,
+                name: $this->sourceFile,
+                path: $file,
             );
         }
     }
 
     public function saveTo(
-        string $path,
-        string $extension = '.php',
+        string $file,
     ): bool {
         return @\file_put_contents(
-            filename: $path . $this->name . $extension,
-            data: $this->source,
+            filename: $file,
+            data: $this->sourceCode,
         ) !== false;
     }
 }

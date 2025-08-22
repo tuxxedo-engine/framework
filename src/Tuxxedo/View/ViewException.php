@@ -44,4 +44,15 @@ class ViewException extends \Exception
             message: 'Unable to render view: Cannot capture output buffer',
         );
     }
+
+    public static function fromUnableToDetermineViewName(
+        string $viewName,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unable to determine view name for: %s',
+                $viewName
+            ),
+        );
+    }
 }
