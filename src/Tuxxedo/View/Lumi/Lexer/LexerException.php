@@ -122,4 +122,15 @@ class LexerException extends \Exception
             message: 'Token stream has reached the end of stream unexpectedly',
         );
     }
+
+    public static function fromInvalidVariableName(
+        string $name,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid variable name "%s"',
+                $name,
+            ),
+        );
+    }
 }

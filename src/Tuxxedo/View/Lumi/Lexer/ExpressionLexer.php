@@ -131,7 +131,12 @@ class ExpressionLexer implements ExpressionLexerInterface
                     }
                 }
 
-                if ($this->isValidNumber($buffer)) {
+                if ($this->isValidInteger($buffer)) {
+                    $tokens[] = new TypeToken(
+                        op1: $buffer,
+                        op2: BuiltinTypeNames::INT->name,
+                    );
+                } elseif ($this->isValidFloat($buffer)) {
                     $tokens[] = new TypeToken(
                         op1: $buffer,
                         op2: BuiltinTypeNames::FLOAT->name,
@@ -158,8 +163,42 @@ class ExpressionLexer implements ExpressionLexerInterface
                 $buffer = '';
             }
 
-            $symbol = $stream->consume();
-            $tokens[] = $this->classifySymbol($symbol);
+            $match = '';
+            $matchLength = 0;
+
+            while (!$stream->eof()) {
+                $char = $stream->peek(1);
+
+                if (\preg_match('/^[^\p{L}\p{N}\s]$/u', $char) !== 1) {
+                    break;
+                }
+
+                $buffer .= $stream->consume();
+
+                if (\in_array($buffer, $this->operators, true) || \in_array($buffer, $this->characterSymbols, true)) {
+                    $match = $buffer;
+                    $matchLength = \mb_strlen($buffer);
+                }
+            }
+
+            if ($match !== '') {
+                $tokens[] = $this->classifySymbol($match);
+
+                $overshot = \mb_substr($buffer, $matchLength);
+                $overshotLength = \mb_strlen($overshot);
+
+                for ($i = 0; $i < $overshotLength; $i++) {
+                    throw LexerException::fromUnknownSymbol(
+                        symbol: \mb_substr($overshot, $i, 1),
+                    );
+                }
+
+                $buffer = '';
+            } else {
+                throw LexerException::fromUnknownSymbol(
+                    symbol: \mb_substr($buffer, 0, 1),
+                );
+            }
         }
 
         if ($buffer !== '') {
@@ -181,14 +220,14 @@ class ExpressionLexer implements ExpressionLexerInterface
 
     private function classifyToken(string $value): TokenInterface
     {
-        if (\preg_match('/^[+-]?(\d*\.\d+|\d+\.\d*)([eE][+-]?\d+)?$/', $value) === 1) {
+        if ($this->isValidFloat($value)) {
             return new TypeToken(
                 op1: $value,
                 op2: BuiltinTypeNames::FLOAT->name,
             );
         }
 
-        if (\is_numeric($value)) {
+        if ($this->isValidInteger($value)) {
             return new TypeToken(
                 op1: $value,
                 op2: BuiltinTypeNames::INT->name,
@@ -214,34 +253,47 @@ class ExpressionLexer implements ExpressionLexerInterface
         );
     }
 
-    private function classifySymbol(string $char): TokenInterface
+    private function classifySymbol(string $symbol): TokenInterface
     {
-        if (\in_array($char, $this->operators, true)) {
-            return new OperatorToken($char);
+        if (\in_array($symbol, $this->operators, true)) {
+            return new OperatorToken(
+                op1: $symbol,
+            );
         }
 
-        if (\in_array($char, $this->characterSymbols, true)) {
-            return new CharacterToken($char);
+        if (\in_array($symbol, $this->characterSymbols, true)) {
+            return new CharacterToken(
+                op1: $symbol,
+            );
         }
 
-        throw LexerException::fromUnknownSymbol(
-            symbol: $char,
-        );
+        throw LexerException::fromUnknownSymbol(symbol: $symbol);
     }
 
     private function isStartOfNumber(
         string $char,
         ByteStreamInterface $stream,
     ): bool {
-        if ($char === '.' && \is_numeric($stream->peek(2)[1] ?? '')) {
+        $next = $stream->peek(2)[1] ?? '';
+
+        if ($char === '-' && (\preg_match('/^\d$/', $next) === 1 || $next === '.')) {
             return true;
         }
 
-        return \is_numeric($char) || ($char === '-' && \is_numeric($stream->peek(2)[1] ?? ''));
+        if ($char === '.' && \preg_match('/^\d$/', $next) === 1) {
+            return true;
+        }
+
+        return \preg_match('/^\d$/', $char) === 1;
     }
 
-    private function isValidNumber(string $value): bool
+    private function isValidInteger(string $value): bool
     {
-        return \preg_match('/^[+-]?(\d*\.\d+|\d+\.\d*|\d+)([eE][+-]?\d+)?$/', $value) === 1;
+        return \preg_match('/^-?\d+$/', $value) === 1;
+    }
+
+    private function isValidFloat(string $value): bool
+    {
+        return \preg_match('/^-?(?:\d*\.\d+|\d+\.\d*)(?:[eE]-?\d+)?$/', $value) === 1;
     }
 }
