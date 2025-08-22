@@ -24,7 +24,7 @@ interface ParserStateInterface
     }
 
     /**
-     * @var array<string, int>
+     * @var string[]
      */
     public array $groupingDepth {
         get;
@@ -45,14 +45,14 @@ interface ParserStateInterface
     public function leaveCondition(): void;
 
     public function enterGrouping(
-        string $symbol,
+        string $name,
     ): void;
 
     /**
      * @throws ParserException
      */
     public function leaveGrouping(
-        string $symbol,
+        string $name,
     ): void;
 
     public function isAllGroupingsClosed(): bool;

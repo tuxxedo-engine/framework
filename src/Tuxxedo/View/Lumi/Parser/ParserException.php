@@ -90,13 +90,22 @@ class ParserException extends \Exception
         );
     }
 
-    public static function fromUnexpectedGroupingExit(
-        string $symbol,
+    public static function fromUnexpectedGroupingExit(): self
+    {
+        return new self(
+            message: 'Cannot exit grouping: no active grouping context found',
+        );
+    }
+
+    public static function fromUnexpectedNamedGroupingExit(
+        string $name,
+        string $expectedName,
     ): self {
         return new self(
             message: \sprintf(
-                'Cannot exit grouping: no active grouping context found for "%s"',
-                $symbol,
+                'Cannot exit grouping for "%s": Invalid sequence, expected to exit "%s"',
+                $name,
+                $expectedName,
             ),
         );
     }
