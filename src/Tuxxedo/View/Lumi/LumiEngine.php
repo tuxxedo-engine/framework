@@ -29,9 +29,9 @@ use Tuxxedo\View\Lumi\Parser\ParserInterface;
 class LumiEngine
 {
     final private function __construct(
-        private LexerInterface $lexer,
-        private ParserInterface $parser,
-        private CompilerInterface $compiler,
+        public readonly LexerInterface $lexer,
+        public readonly ParserInterface $parser,
+        public readonly CompilerInterface $compiler,
     ) {
     }
 

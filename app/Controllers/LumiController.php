@@ -18,8 +18,12 @@ use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\Attribute\Controller;
 use Tuxxedo\Router\Attribute\Route;
+use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\LumiEngine;
+use Tuxxedo\View\Lumi\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Parser\ParserException;
+use Tuxxedo\View\Lumi\Syntax\SymbolInterface;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
 
 #[Controller(uri: '/lumi/')]
@@ -40,26 +44,16 @@ readonly class LumiController
         $this->viewSource = $viewSource;
     }
 
-    #[Route\Get]
-    public function hello(): ResponseInterface
-    {
-        $buffer = '<h3>Source</h3>';
-        $buffer .= '<pre>' . \htmlspecialchars($this->viewSource) . '</pre>';
-        $buffer .= '<h3>Compiled Source</h3>';
-        $buffer .= '<pre>' . \htmlspecialchars(LumiEngine::createDefault()->compileFile($this->viewFile)->source) . '</pre>';
-
-        return Response::html($buffer);
-    }
-
-    private function visualizeToken(TokenInterface $token): string
-    {
+    private function visualizeToken(
+        TokenInterface $token,
+    ): string {
         $output = $token->type;
 
         if ($token->op1 !== null || $token->op2 !== null) {
             $output .= ' (';
 
             if ($token->op1 !== null) {
-                $output .= 'op1=' . $this->visualizeOpValue($token->op1);
+                $output .= 'op1=' . $this->visualizeValue($token->op1);
             }
 
             if ($token->op2 !== null) {
@@ -67,7 +61,7 @@ readonly class LumiController
                     $output .= ', ';
                 }
 
-                $output .= 'op2=' . $this->visualizeOpValue($token->op2);
+                $output .= 'op2=' . $this->visualizeValue($token->op2);
             }
 
             $output .= ')';
@@ -76,13 +70,58 @@ readonly class LumiController
         return $output;
     }
 
-    private function visualizeOpValue(string $op): string
-    {
+    private function visualizeValue(
+        mixed $op,
+    ): string {
         return \str_replace(["\r\n", "\r", "\n"], '\n', \htmlspecialchars(\var_export($op, true)));
     }
 
+    private function visualizeNode(
+        NodeInterface $node,
+    ): string {
+        $class = new \ReflectionObject($node);
+        $properties = $class->getProperties(\ReflectionProperty::IS_PUBLIC);
+        $buffer = $class->getShortName();
+
+        if (\sizeof($properties) > 0) {
+            $visualizedProperties = [];
+
+            foreach ($properties as $property) {
+                $value = $property->getValue($node);
+
+                $visualizedProperties[] = \sprintf(
+                    '%s=%s',
+                    $property->getName(),
+                    match (true) {
+                        $value instanceof NodeInterface => $this->visualizeNode(
+                            node: $value,
+                        ),
+                        $value instanceof \UnitEnum => $this->visualizeEnumValue(
+                            value: $value,
+                        ),
+                        default => $this->visualizeValue($value),
+                    },
+                );
+            }
+
+            $buffer .= '(' . \join(', ', $visualizedProperties) . ')';
+        }
+
+        return $buffer;
+    }
+
+    private function visualizeEnumValue(
+        \UnitEnum $value,
+    ): string {
+        if ($value instanceof SymbolInterface) {
+            return $value->symbol();
+        }
+
+        return $value->name;
+    }
+
     #[Route\Get]
-    public function token(): ResponseInterface
+    public function index(): ResponseInterface
     {
         $buffer = '<h3>Source</h3>';
         $buffer .= '<pre>';
@@ -92,8 +131,11 @@ readonly class LumiController
         $buffer .= '<h3>Tokens</h3>';
         $buffer .= '<pre>';
 
+        $engine = LumiEngine::createDefault();
+        $showNext = true;
+
         try {
-            $stream = LumiEngine::createDefaultLexer()->tokenizeByFile($this->viewFile);
+            $stream = $engine->lexer->tokenizeByFile($this->viewFile);
 
             while (!$stream->eof()) {
                 $buffer .= $this->visualizeToken($stream->current()) . '<br>';
@@ -102,9 +144,55 @@ readonly class LumiController
             }
         } catch (LexerException $exception) {
             $buffer .= $exception;
+            $showNext = false;
         }
 
         $buffer .= '</pre>';
+
+        if ($showNext) {
+            $buffer .= '<h3>Nodes</h3>';
+            $buffer .= '<pre>';
+
+            try {
+                $stream = $engine->parser->parse(
+                    stream: $engine->lexer->tokenizeByString(
+                        sourceCode: $this->viewSource,
+                    ),
+                );
+
+                while (!$stream->eof()) {
+                    $buffer .= $this->visualizeNode($stream->current()) . '<br>';
+
+                    $stream->consume();
+                }
+            } catch (ParserException $exception) {
+                $buffer .= $exception;
+                $showNext = false;
+            }
+
+            $buffer .= '</pre>';
+        }
+
+        if ($showNext) {
+            $buffer .= '<h3>Compiled Source</h3>';
+            $buffer .= '<pre>';
+
+            try {
+                $buffer .= \htmlspecialchars(
+                    $engine->compiler->compile(
+                        stream: $engine->parser->parse(
+                            stream: $engine->lexer->tokenizeByString(
+                                sourceCode: $this->viewSource,
+                            ),
+                        ),
+                    ),
+                );
+            } catch (CompilerException $exception) {
+                $buffer .= $exception;
+            }
+
+            $buffer .= '</pre>';
+        }
 
         return Response::html($buffer);
     }

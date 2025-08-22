@@ -17,6 +17,9 @@ use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 
 interface CompilerInterface
 {
+    /**
+     * @throws CompilerException
+     */
     public function compile(
         NodeStreamInterface $stream,
     ): string;
