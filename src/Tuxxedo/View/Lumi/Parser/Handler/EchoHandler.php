@@ -52,7 +52,10 @@ class EchoHandler implements ParserHandlerInterface
         return [
             new EchoNode(
                 operand: $parser->expressionParser->parse(
-                    stream: new TokenStream($tokens),
+                    stream: new TokenStream(
+                        tokens: $tokens,
+                    ),
+                    state: $parser->state,
                 ),
             ),
         ];

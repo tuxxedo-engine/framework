@@ -15,39 +15,33 @@ namespace Tuxxedo\View\Lumi\Parser\Expression;
 
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Node\ExpressionNodeInterface;
-use Tuxxedo\View\Lumi\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Parser\ParserException;
+use Tuxxedo\View\Lumi\Parser\ParserStateInterface;
 use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Token\TokenInterface;
 
 class ExpressionParser implements ExpressionParserInterface
 {
     public function parse(
         TokenStreamInterface $stream,
+        ParserStateInterface $state,
     ): ExpressionNodeInterface {
-        // @todo Reorganize this to handle all expression grammar
-        $token = $stream->current();
+        throw new \Exception('Not implemented');
+    }
 
-        if ($token->type !== BuiltinTokenNames::VARIABLE->name) {
-            throw ParserException::fromUnexpectedTokenWithExpects(
+    // @todo Fix visibility
+    public function validateToken(TokenInterface $token): void
+    {
+        match ($token->type) {
+            BuiltinTokenNames::CHARACTER->name, BuiltinTokenNames::OPERATOR->name, BuiltinTokenNames::VARIABLE->name => $token->op1 !== null
+                ? null
+                : throw ParserException::fromMalformedToken(),
+            BuiltinTokenNames::TYPE->name => ($token->op1 !== null && $token->op2 !== null)
+                ? null
+                : throw ParserException::fromMalformedToken(),
+            default => throw ParserException::fromUnexpectedToken(
                 tokenName: $token->type,
-                expectedTokenName: BuiltinTokenNames::VARIABLE->name,
-            );
-        } elseif ($token->op1 === null) {
-            throw ParserException::fromMalformedToken();
-        }
-
-        $variable = new IdentifierNode(
-            name: $token->op1,
-        );
-
-        $stream->consume();
-
-        if (!$stream->eof()) {
-            throw ParserException::fromUnexpectedToken(
-                tokenName: $stream->current()->type,
-            );
-        }
-
-        return $variable;
+            ),
+        };
     }
 }

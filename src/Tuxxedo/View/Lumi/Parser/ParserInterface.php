@@ -22,6 +22,10 @@ interface ParserInterface
         get;
     }
 
+    public ParserStateInterface $state {
+        get;
+    }
+
     /**
      * @throws ParserException
      */

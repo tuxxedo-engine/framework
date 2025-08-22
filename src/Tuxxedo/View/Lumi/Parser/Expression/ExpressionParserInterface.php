@@ -16,6 +16,7 @@ namespace Tuxxedo\View\Lumi\Parser\Expression;
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
+use Tuxxedo\View\Lumi\Parser\ParserStateInterface;
 
 interface ExpressionParserInterface
 {
@@ -24,5 +25,6 @@ interface ExpressionParserInterface
      */
     public function parse(
         TokenStreamInterface $stream,
+        ParserStateInterface $state,
     ): ExpressionNodeInterface;
 }

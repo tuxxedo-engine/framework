@@ -23,6 +23,13 @@ interface ParserStateInterface
         get;
     }
 
+    /**
+     * @var array<string, int>
+     */
+    public array $groupingDepth {
+        get;
+    }
+
     public function enterLoop(): void;
 
     /**
@@ -36,6 +43,19 @@ interface ParserStateInterface
      * @throws ParserException
      */
     public function leaveCondition(): void;
+
+    public function enterGrouping(
+        string $symbol,
+    ): void;
+
+    /**
+     * @throws ParserException
+     */
+    public function leaveGrouping(
+        string $symbol,
+    ): void;
+
+    public function isAllGroupingsClosed(): bool;
 
     public function set(
         string $key,

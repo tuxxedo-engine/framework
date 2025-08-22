@@ -17,8 +17,6 @@ enum CharacterSymbol implements SymbolInterface
 {
     case LEFT_PARENTHESIS;
     case RIGHT_PARENTHESIS;
-    case LEFT_CURLY_BRACKET;
-    case RIGHT_CURLY_BRACKET;
     case LEFT_SQUARE_BRACKET;
     case RIGHT_SQUARE_BRACKET;
     case COMMA;
@@ -30,8 +28,6 @@ enum CharacterSymbol implements SymbolInterface
         return match ($this) {
             self::LEFT_PARENTHESIS => '(',
             self::RIGHT_PARENTHESIS => ')',
-            self::LEFT_CURLY_BRACKET => '{',
-            self::RIGHT_CURLY_BRACKET => '}',
             self::LEFT_SQUARE_BRACKET => '[',
             self::RIGHT_SQUARE_BRACKET => ']',
             self::COMMA => ',',

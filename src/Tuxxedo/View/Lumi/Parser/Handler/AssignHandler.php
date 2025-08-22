@@ -111,6 +111,7 @@ class AssignHandler implements ParserHandlerInterface
                     stream: new TokenStream(
                         tokens: $expressionTokens,
                     ),
+                    state: $parser->state,
                 ),
                 operator: $assignmentOperator,
             ),

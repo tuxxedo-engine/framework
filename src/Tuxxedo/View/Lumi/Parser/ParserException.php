@@ -90,6 +90,17 @@ class ParserException extends \Exception
         );
     }
 
+    public static function fromUnexpectedGroupingExit(
+        string $symbol,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot exit grouping: no active grouping context found for "%s"',
+                $symbol,
+            ),
+        );
+    }
+
     public static function fromMissingStateKey(
         string $key,
     ): self {
