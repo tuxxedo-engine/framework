@@ -30,6 +30,13 @@ readonly class LumiViewContext implements ViewContextInterface
         $this->escaper = $escaper ?? new Escaper();
     }
 
+    // @todo Improve this to a better API with whitelisting or local override like include()
+    public function functionCall(
+        string $functionName,
+    ): mixed {
+        return $functionName();
+    }
+
     public function include(
         string $viewName,
         array $scope = [],

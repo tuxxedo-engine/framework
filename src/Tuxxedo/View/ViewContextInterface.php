@@ -16,6 +16,13 @@ namespace Tuxxedo\View;
 interface ViewContextInterface
 {
     /**
+     * @param callable-string $functionName
+     */
+    public function functionCall(
+        string $functionName,
+    ): mixed;
+
+    /**
      * @param array<string, mixed> $scope
      */
     public function include(

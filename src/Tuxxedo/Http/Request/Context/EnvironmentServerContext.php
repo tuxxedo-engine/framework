@@ -38,9 +38,13 @@ class EnvironmentServerContext implements ServerContextInterface
             $uri = $_SERVER['REQUEST_URI'];
 
             /** @var string $query */
-            $query = $_SERVER['QUERY_STRING'];
+            $query = $_SERVER['QUERY_STRING'] ?? '';
 
-            return \rtrim($uri, '?' . $query);
+            if (\strlen($query) > 0) {
+                return \rtrim($uri, '?' . $query);
+            }
+
+            return $uri;
         }
     }
 

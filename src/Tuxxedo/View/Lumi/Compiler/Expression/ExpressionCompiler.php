@@ -91,7 +91,7 @@ class ExpressionCompiler implements ExpressionCompilerInterface
         }
 
         return \sprintf(
-            '%s()',
+            '$this->functionCall(\'%s\')',
             $node->name,
         );
     }
