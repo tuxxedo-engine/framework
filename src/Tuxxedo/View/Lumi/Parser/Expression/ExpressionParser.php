@@ -258,6 +258,7 @@ class ExpressionParser implements ExpressionParserInterface
 
         $stream->expect(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::RIGHT_PARENTHESIS->symbol());
 
+        // @todo Caller may be more expressive, keep that in mind
         return new MethodCallNode(
             caller: new IdentifierNode(
                 name: $token->op1,
