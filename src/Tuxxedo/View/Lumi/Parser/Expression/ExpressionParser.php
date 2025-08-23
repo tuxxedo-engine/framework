@@ -230,10 +230,38 @@ class ExpressionParser implements ExpressionParserInterface
         TokenStreamInterface $stream,
         ParserStateInterface $state,
     ): MethodCallNode {
-        // @todo Implement
+        if ($token->op1 === null) {
+            throw ParserException::fromMalformedToken();
+        }
 
-        throw ParserException::fromNotImplemented(
-            feature: 'Method calls',
+        $stream->expect(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::DOT->symbol());
+        $methodToken = $stream->expect(BuiltinTokenNames::VARIABLE->name);
+
+        if ($methodToken->op1 === null) {
+            throw ParserException::fromMalformedToken();
+        }
+
+        $stream->expect(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::LEFT_PARENTHESIS->symbol());
+
+        $arguments = [];
+        $nextToken = $stream->peek();
+
+        if (
+            $nextToken !== null &&
+            $nextToken->type !== BuiltinTokenNames::CHARACTER->name &&
+            $nextToken->op1 !== CharacterSymbol::RIGHT_PARENTHESIS->symbol()
+        ) {
+            throw ParserException::fromNotImplemented(
+                feature: 'Method call arguments',
+            );
+        }
+
+        $stream->expect(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::RIGHT_PARENTHESIS->symbol());
+
+        return new MethodCallNode(
+            caller: new IdentifierNode(name: $token->op1),
+            name: $methodToken->op1,
+            arguments: $arguments,
         );
     }
 

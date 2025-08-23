@@ -17,6 +17,7 @@ use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Node\LiteralNode;
+use Tuxxedo\View\Lumi\Node\MethodCallNode;
 use Tuxxedo\View\Lumi\Node\NodeNativeType;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 
@@ -39,9 +40,12 @@ class ExpressionCompiler implements ExpressionCompilerInterface
             $compiledNode = $this->compileLiteral($node);
         } elseif ($node instanceof FunctionCallNode) {
             $stream->consume();
-            ;
 
             $compiledNode = $this->compileFunctionCall($node);
+        } elseif ($node instanceof MethodCallNode) {
+            $stream->consume();
+
+            $compiledNode = $this->compileMethodCall($node);
         }
 
         if ($compiledNode === null) {
@@ -88,6 +92,26 @@ class ExpressionCompiler implements ExpressionCompilerInterface
 
         return \sprintf(
             '%s()',
+            $node->name,
+        );
+    }
+
+    private function compileMethodCall(
+        MethodCallNode $node,
+    ): string {
+        if (!$node->caller instanceof IdentifierNode) {
+            throw CompilerException::fromNotImplemented(
+                feature: 'More expressive method calls',
+            );
+        } elseif (\sizeof($node->arguments) > 0) {
+            throw CompilerException::fromNotImplemented(
+                feature: 'Method call arguments',
+            );
+        }
+
+        return \sprintf(
+            '$%s->%s()',
+            $node->caller->name,
             $node->name,
         );
     }

@@ -1,0 +1,1 @@
+<pre>{{ logger.formatEntries() }}</pre>

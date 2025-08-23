@@ -34,7 +34,7 @@ readonly class LumiController
 
     public function __construct()
     {
-        $this->viewFile = __DIR__ . '/../views/hello_world_call.lumi';
+        $this->viewFile = __DIR__ . '/../views/hello_world_method.lumi';
         $viewSource = @\file_get_contents($this->viewFile);
 
         if ($viewSource === false) {

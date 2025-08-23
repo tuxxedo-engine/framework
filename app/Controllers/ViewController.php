@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Services\Logger\LoggerInterface;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewInterface;
 use Tuxxedo\Router\Attribute\Controller;
@@ -21,6 +22,11 @@ use Tuxxedo\Router\Attribute\Route;
 #[Controller(uri: '/view/')]
 readonly class ViewController
 {
+    public function __construct(
+        private LoggerInterface $logger,
+    ) {
+    }
+
     #[Route\Get]
     public function hello(): ViewInterface
     {
@@ -45,6 +51,19 @@ readonly class ViewController
     {
         return new View(
             name: 'hello_world_call',
+        );
+    }
+
+    #[Route\Get]
+    public function method(): ViewInterface
+    {
+        $this->logger->log('Testing method calls');
+
+        return new View(
+            name: 'hello_world_method',
+            scope: [
+                'logger' => $this->logger,
+            ],
         );
     }
 }
