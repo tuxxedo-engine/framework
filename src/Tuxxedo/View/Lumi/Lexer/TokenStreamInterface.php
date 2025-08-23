@@ -60,5 +60,7 @@ interface TokenStreamInterface
      */
     public function expect(
         string $tokenName,
+        ?string $op1 = null,
+        ?string $op2 = null,
     ): TokenInterface;
 }

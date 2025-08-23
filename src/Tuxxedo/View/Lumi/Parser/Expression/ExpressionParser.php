@@ -231,9 +231,20 @@ class ExpressionParser implements ExpressionParserInterface
         TokenStreamInterface $stream,
         ParserStateInterface $state,
     ): FunctionCallNode {
-        // @todo Implement
+        if ($token->op1 === null) {
+            throw ParserException::fromMalformedToken();
+        }
 
-        throw new \Exception('Not implemented');
+        $stream->expect(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::LEFT_PARENTHESIS->symbol());
+
+        // @todo handle arguments
+
+        $stream->expect(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::RIGHT_PARENTHESIS->symbol());
+
+        return new FunctionCallNode(
+            name: $token->op1,
+            arguments: [],
+        );
     }
 
     private function parseArrayAccessByToken(

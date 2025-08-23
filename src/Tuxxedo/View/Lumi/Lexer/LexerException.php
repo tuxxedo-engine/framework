@@ -135,4 +135,26 @@ class LexerException extends \Exception
             ),
         );
     }
+
+    public static function fromMalformedToken(): self
+    {
+        return new self(
+            message: 'Internal token is malformed',
+        );
+    }
+
+    public static function fromUnexpectedTokenOp(
+        string $operand,
+        string $actualOperand,
+        string $expectedOperand,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unexpected token operand for %s, expected "%s" but got "%s"',
+                $operand,
+                $expectedOperand,
+                $actualOperand,
+            ),
+        );
+    }
 }

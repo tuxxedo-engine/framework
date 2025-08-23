@@ -71,6 +71,8 @@ class TokenStream implements TokenStreamInterface
 
     public function expect(
         string $tokenName,
+        ?string $op1 = null,
+        ?string $op2 = null,
     ): TokenInterface {
         $current = $this->current();
 
@@ -78,6 +80,26 @@ class TokenStream implements TokenStreamInterface
             throw LexerException::fromUnexpectedToken(
                 tokenName: $current->type,
                 expectedTokenName: $tokenName,
+            );
+        } elseif ($op1 !== null && $current->op1 !== $op1) {
+            if ($current->op1 === null) {
+                throw LexerException::fromMalformedToken();
+            }
+
+            throw LexerException::fromUnexpectedTokenOp(
+                operand: 'op1',
+                actualOperand: $current->op1,
+                expectedOperand: $op1,
+            );
+        } elseif ($op2 !== null && $current->op2 !== $op2) {
+            if ($current->op1 === null || $current->op2 === null) {
+                throw LexerException::fromMalformedToken();
+            }
+
+            throw LexerException::fromUnexpectedTokenOp(
+                operand: 'op2',
+                actualOperand: $current->op2,
+                expectedOperand: $op2,
             );
         }
 
