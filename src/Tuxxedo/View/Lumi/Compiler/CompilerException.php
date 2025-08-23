@@ -55,4 +55,11 @@ class CompilerException extends \Exception
             ),
         );
     }
+
+    public static function fromCannotCallThis(): self
+    {
+        return new self(
+            message: 'Calling $this in method calls is not allowed',
+        );
+    }
 }

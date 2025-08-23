@@ -251,8 +251,9 @@ class ExpressionParser implements ExpressionParserInterface
             $nextToken->type !== BuiltinTokenNames::CHARACTER->name &&
             $nextToken->op1 !== CharacterSymbol::RIGHT_PARENTHESIS->symbol()
         ) {
-            throw ParserException::fromNotImplemented(
-                feature: 'Method call arguments',
+            $arguments = $this->parseCallArguments(
+                stream: $stream,
+                state: $state,
             );
         }
 
@@ -287,8 +288,9 @@ class ExpressionParser implements ExpressionParserInterface
             $nextToken->type !== BuiltinTokenNames::CHARACTER->name &&
             $nextToken->op1 !== CharacterSymbol::RIGHT_PARENTHESIS->symbol()
         ) {
-            throw ParserException::fromNotImplemented(
-                feature: 'Function call arguments',
+            $arguments = $this->parseCallArguments(
+                stream: $stream,
+                state: $state,
             );
         }
 
@@ -309,6 +311,20 @@ class ExpressionParser implements ExpressionParserInterface
 
         throw ParserException::fromNotImplemented(
             feature: 'Array access',
+        );
+    }
+
+    /**
+     * @return ExpressionNodeInterface[]
+     *
+     * @throws ParserException
+     */
+    private function parseCallArguments(
+        TokenStreamInterface $stream,
+        ParserStateInterface $state,
+    ): array {
+        throw ParserException::fromNotImplemented(
+            feature: 'Call arguments',
         );
     }
 

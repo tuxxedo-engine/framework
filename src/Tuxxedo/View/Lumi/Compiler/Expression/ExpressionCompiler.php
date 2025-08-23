@@ -109,6 +109,10 @@ class ExpressionCompiler implements ExpressionCompilerInterface
             );
         }
 
+        if ($node->caller->name === 'this') {
+            throw CompilerException::fromCannotCallThis();
+        }
+
         return \sprintf(
             '$%s->%s()',
             $node->caller->name,
