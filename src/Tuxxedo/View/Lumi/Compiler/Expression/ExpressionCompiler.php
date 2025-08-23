@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Compiler\Expression;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
+use Tuxxedo\View\Lumi\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Node\NodeNativeType;
@@ -36,6 +37,11 @@ class ExpressionCompiler implements ExpressionCompilerInterface
             $stream->consume();
 
             $compiledNode = $this->compileLiteral($node);
+        } elseif ($node instanceof FunctionCallNode) {
+            $stream->consume();
+            ;
+
+            $compiledNode = $this->compileFunctionCall($node);
         }
 
         if ($compiledNode === null) {
@@ -69,5 +75,20 @@ class ExpressionCompiler implements ExpressionCompilerInterface
             NodeNativeType::STRING => '\'' . $node->operand . '\'', // @todo This is error prone, quotes may need to be preserved for proper escaping
             default => $node->operand,
         };
+    }
+
+    private function compileFunctionCall(
+        FunctionCallNode $node,
+    ): string {
+        if (\sizeof($node->arguments) > 0) {
+            throw CompilerException::fromNotImplemented(
+                feature: 'Function call arguments',
+            );
+        }
+
+        return \sprintf(
+            '%s()',
+            $node->name,
+        );
     }
 }

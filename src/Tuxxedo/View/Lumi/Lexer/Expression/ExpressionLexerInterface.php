@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Lexer;
+namespace Tuxxedo\View\Lumi\Lexer\Expression;
 
 use Tuxxedo\View\Lumi\Token\TokenInterface;
 

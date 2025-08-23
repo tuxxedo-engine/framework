@@ -97,6 +97,7 @@ class ByteStream implements ByteStreamInterface
 
         $char = \mb_substr($this->input, $this->position, 1, 'UTF-8');
         $this->position++;
+
         return $char;
     }
 

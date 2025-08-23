@@ -11,20 +11,21 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Lexer;
+namespace Tuxxedo\View\Lumi\Lexer\Expression;
 
 use Tuxxedo\View\Lumi\ByteStream;
 use Tuxxedo\View\Lumi\ByteStreamInterface;
+use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Syntax\AssignmentOperator;
 use Tuxxedo\View\Lumi\Syntax\BinaryOperator;
 use Tuxxedo\View\Lumi\Syntax\CharacterSymbol;
 use Tuxxedo\View\Lumi\Syntax\UnaryOperator;
 use Tuxxedo\View\Lumi\Token\BuiltinTypeNames;
+use Tuxxedo\View\Lumi\Token\CharacterToken;
+use Tuxxedo\View\Lumi\Token\OperatorToken;
+use Tuxxedo\View\Lumi\Token\TokenInterface;
 use Tuxxedo\View\Lumi\Token\TypeToken;
 use Tuxxedo\View\Lumi\Token\VariableToken;
-use Tuxxedo\View\Lumi\Token\OperatorToken;
-use Tuxxedo\View\Lumi\Token\CharacterToken;
-use Tuxxedo\View\Lumi\Token\TokenInterface;
 
 class ExpressionLexer implements ExpressionLexerInterface
 {
@@ -151,7 +152,7 @@ class ExpressionLexer implements ExpressionLexerInterface
                 continue;
             }
 
-            if (\preg_match('/^\p{L}|\p{N}$/u', $char) === 1) {
+            if (\preg_match('/^\p{L}|\p{N}|_$/u', $char) === 1) {
                 $buffer .= $stream->consume();
 
                 continue;
@@ -161,9 +162,6 @@ class ExpressionLexer implements ExpressionLexerInterface
                 $tokens[] = $this->classifyToken($buffer);
                 $buffer = '';
             }
-
-            $match = '';
-            $matchLength = 0;
 
             while (!$stream->eof()) {
                 $char = $stream->peek(1);
@@ -175,27 +173,15 @@ class ExpressionLexer implements ExpressionLexerInterface
                 $buffer .= $stream->consume();
 
                 if (\in_array($buffer, $this->operators, true) || \in_array($buffer, $this->characterSymbols, true)) {
-                    $match = $buffer;
-                    $matchLength = \mb_strlen($buffer);
+                    $tokens[] = $this->classifySymbol($buffer);
+
+                    $buffer = '';
                 }
             }
 
-            if ($match !== '') {
-                $tokens[] = $this->classifySymbol($match);
-
-                $overshot = \mb_substr($buffer, $matchLength);
-                $overshotLength = \mb_strlen($overshot);
-
-                for ($i = 0; $i < $overshotLength; $i++) {
-                    throw LexerException::fromUnknownSymbol(
-                        symbol: \mb_substr($overshot, $i, 1),
-                    );
-                }
-
-                $buffer = '';
-            } else {
+            if ($buffer !== '') {
                 throw LexerException::fromUnknownSymbol(
-                    symbol: \mb_substr($buffer, 0, 1),
+                    symbol: $buffer,
                 );
             }
         }
@@ -266,7 +252,9 @@ class ExpressionLexer implements ExpressionLexerInterface
             );
         }
 
-        throw LexerException::fromUnknownSymbol(symbol: $symbol);
+        throw LexerException::fromUnknownSymbol(
+            symbol: $symbol,
+        );
     }
 
     private function isStartOfNumber(

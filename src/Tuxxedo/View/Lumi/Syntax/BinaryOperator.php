@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax;
 
+// @todo Concat may be tricky with the Unary overlap
 enum BinaryOperator implements SymbolInterface, OperatorInterface
 {
     case ASSIGN;

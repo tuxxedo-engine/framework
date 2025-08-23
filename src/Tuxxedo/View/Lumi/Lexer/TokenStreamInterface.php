@@ -47,13 +47,9 @@ interface TokenStreamInterface
     ): bool;
 
     /**
-     * @param positive-int $amount
-     *
      * @throws LexerException
      */
-    public function consume(
-        int $amount = 1,
-    ): void;
+    public function consume(): void;
 
     /**
      * @throws LexerException

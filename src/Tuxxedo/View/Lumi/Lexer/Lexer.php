@@ -16,6 +16,8 @@ namespace Tuxxedo\View\Lumi\Lexer;
 
 use Tuxxedo\View\Lumi\ByteStream;
 use Tuxxedo\View\Lumi\ByteStreamInterface;
+use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexer;
+use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\Handler\BlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\CommentHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\EchoHandler;

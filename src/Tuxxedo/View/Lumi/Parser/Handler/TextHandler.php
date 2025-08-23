@@ -34,7 +34,7 @@ class TextHandler implements ParserHandlerInterface
         $nodes = [];
 
         do {
-            $token = $stream->expect($this->tokenName);
+            $token = $stream->current();
 
             if ($token->op1 === null) {
                 throw ParserException::fromMalformedToken();

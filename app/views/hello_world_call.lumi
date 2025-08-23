@@ -1,0 +1,1 @@
+<h1>Hello, {{ php_sapi_name() }}!</h1>

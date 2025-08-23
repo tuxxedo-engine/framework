@@ -44,7 +44,7 @@ class TokenStream implements TokenStreamInterface
     public function peek(
         int $position = 1,
     ): ?TokenInterface {
-        if ($this->eof() || ($this->position + $position) > \sizeof($this->tokens)) {
+        if ($this->eof() || ($this->position + $position) >= \sizeof($this->tokens)) {
             return null;
         }
 
@@ -57,16 +57,15 @@ class TokenStream implements TokenStreamInterface
         return $this->peek()?->type === $tokenName;
     }
 
-    public function consume(
-        int $amount = 1,
-    ): void {
+    public function consume(): void
+    {
         $slots = \sizeof($this->tokens) - $this->position;
 
-        if ($amount > $slots) {
+        if ($slots < 1) {
             throw LexerException::fromTokenStreamEof();
         }
 
-        $this->position += $amount;
+        $this->position++;
     }
 
     public function expect(

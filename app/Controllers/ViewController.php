@@ -39,4 +39,12 @@ readonly class ViewController
             name: 'hello_world_set',
         );
     }
+
+    #[Route\Get]
+    public function call(): ViewInterface
+    {
+        return new View(
+            name: 'hello_world_call',
+        );
+    }
 }

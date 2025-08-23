@@ -116,7 +116,9 @@ class ExpressionParser implements ExpressionParserInterface
 
         // ...
 
-        throw new \Exception('Not implemented');
+        throw ParserException::fromNotImplemented(
+            feature: 'Character parsing',
+        );
     }
 
     /**
@@ -133,7 +135,9 @@ class ExpressionParser implements ExpressionParserInterface
 
         // ...
 
-        throw new \Exception('Not implemented');
+        throw ParserException::fromNotImplemented(
+            feature: 'Operator parsing',
+        );
     }
 
     /**
@@ -148,13 +152,13 @@ class ExpressionParser implements ExpressionParserInterface
             throw ParserException::fromMalformedToken();
         }
 
-        $nextToken = $stream->peek();
-
-        if ($nextToken === null) {
+        if ($stream->eof()) {
             return new IdentifierNode(
                 name: $token->op1,
             );
         }
+
+        $nextToken = $stream->current();
 
         if ($nextToken->type === BuiltinTokenNames::CHARACTER->name) {
             if ($nextToken->op1 === null) {
@@ -223,7 +227,9 @@ class ExpressionParser implements ExpressionParserInterface
     ): MethodCallNode {
         // @todo Implement
 
-        throw new \Exception('Not implemented');
+        throw ParserException::fromNotImplemented(
+            feature: 'Method calls',
+        );
     }
 
     private function parseFunctionCallByToken(
@@ -237,13 +243,24 @@ class ExpressionParser implements ExpressionParserInterface
 
         $stream->expect(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::LEFT_PARENTHESIS->symbol());
 
-        // @todo handle arguments
+        $arguments = [];
+        $nextToken = $stream->peek();
+
+        if (
+            $nextToken !== null &&
+            $nextToken->type !== BuiltinTokenNames::CHARACTER->name &&
+            $nextToken->op1 !== CharacterSymbol::RIGHT_PARENTHESIS->symbol()
+        ) {
+            throw ParserException::fromNotImplemented(
+                feature: 'Function call arguments',
+            );
+        }
 
         $stream->expect(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::RIGHT_PARENTHESIS->symbol());
 
         return new FunctionCallNode(
             name: $token->op1,
-            arguments: [],
+            arguments: $arguments,
         );
     }
 
@@ -254,7 +271,9 @@ class ExpressionParser implements ExpressionParserInterface
     ): ExpressionNodeInterface {
         // @todo Implement
 
-        throw new \Exception('Not implemented');
+        throw ParserException::fromNotImplemented(
+            feature: 'Array access',
+        );
     }
 
     /**
@@ -314,6 +333,8 @@ class ExpressionParser implements ExpressionParserInterface
 
         // ...
 
-        throw new \Exception('Not implemented');
+        throw ParserException::fromNotImplemented(
+            feature: 'Binary expressions',
+        );
     }
 }
