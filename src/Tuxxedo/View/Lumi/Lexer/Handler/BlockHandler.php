@@ -19,9 +19,13 @@ use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Token\AssignToken;
 use Tuxxedo\View\Lumi\Token\BreakToken;
 use Tuxxedo\View\Lumi\Token\ContinueToken;
+use Tuxxedo\View\Lumi\Token\DoToken;
 use Tuxxedo\View\Lumi\Token\ElseIfToken;
 use Tuxxedo\View\Lumi\Token\ElseToken;
+use Tuxxedo\View\Lumi\Token\EndForToken;
+use Tuxxedo\View\Lumi\Token\EndIfToken;
 use Tuxxedo\View\Lumi\Token\EndToken;
+use Tuxxedo\View\Lumi\Token\EndWhileToken;
 use Tuxxedo\View\Lumi\Token\ForToken;
 use Tuxxedo\View\Lumi\Token\IfToken;
 use Tuxxedo\View\Lumi\Token\TextToken;
@@ -88,6 +92,9 @@ class BlockHandler implements TokenHandlerInterface
                     ...$expressionLexer->parse($expr),
                     new EndToken(),
                 ],
+                'do' => [
+                    new DoToken(),
+                ],
                 'for' => $this->parseFor($expr, $expressionLexer),
                 'foreach' => $this->parseForeach($expr, $expressionLexer),
                 'while' => [
@@ -117,7 +124,9 @@ class BlockHandler implements TokenHandlerInterface
         return [
             match ($directive) {
                 'else' => new ElseToken(),
-                'endif', 'endfor', 'endwhile', 'endforeach' => new EndToken(),
+                'endif' => new EndIfToken(),
+                'endfor', 'endforeach' => new EndForToken(),
+                'endwhile' => new EndWhileToken(),
                 default => throw LexerException::fromSequenceNotFound(
                     sequence: $directive,
                 ),

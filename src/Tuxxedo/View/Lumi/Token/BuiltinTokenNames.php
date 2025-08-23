@@ -19,6 +19,7 @@ enum BuiltinTokenNames
     case BREAK;
     case CHARACTER;
     case CONTINUE;
+    case DO;
     case ECHO;
     case ELSEIF;
     case ELSE;
