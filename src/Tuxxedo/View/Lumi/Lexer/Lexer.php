@@ -25,6 +25,7 @@ use Tuxxedo\View\Lumi\Lexer\Handler\TokenHandlerInterface;
 use Tuxxedo\View\Lumi\Token\TextToken;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
 
+// @todo Consider a do...while handler
 class Lexer implements LexerInterface
 {
     /**
