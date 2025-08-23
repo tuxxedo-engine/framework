@@ -13,11 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax;
 
-// @todo Concat may be tricky with the Unary overlap
-// @todo Null safe access ?. to ?->
 enum BinaryOperator implements SymbolInterface, OperatorInterface
 {
     case ASSIGN;
+    case CONCAT;
     case ADD;
     case SUBTRACT;
     case MULTIPLY;
@@ -41,11 +40,13 @@ enum BinaryOperator implements SymbolInterface, OperatorInterface
     case BITWISE_SHIFT_LEFT;
     case BITWISE_SHIFT_RIGHT;
     case NULL_COALESCE;
+    case NULL_SAFE_ACCESS;
 
     public function symbol(): string
     {
         return match ($this) {
             self::ASSIGN => '=',
+            self::CONCAT => '~',
             self::ADD => '+',
             self::SUBTRACT => '-',
             self::MULTIPLY => '*',
@@ -69,6 +70,7 @@ enum BinaryOperator implements SymbolInterface, OperatorInterface
             self::BITWISE_SHIFT_LEFT => '<<',
             self::BITWISE_SHIFT_RIGHT => '>>',
             self::NULL_COALESCE => '??',
+            self::NULL_SAFE_ACCESS => '?.',
         };
     }
 
