@@ -13,7 +13,11 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use Tuxxedo\Collection\CollectionInterface;
+use Tuxxedo\Collection\FileCollection;
+use Tuxxedo\Container\Resolver\ConfigValue;
 use Tuxxedo\Http\HttpException;
+use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\Attribute\Controller;
@@ -29,19 +33,10 @@ use Tuxxedo\View\Lumi\Token\TokenInterface;
 #[Controller(uri: '/lumi/')]
 readonly class LumiController
 {
-    private string $viewFile;
-    private string $viewSource;
-
-    public function __construct()
-    {
-        $this->viewFile = __DIR__ . '/../views/hello_world_method.lumi';
-        $viewSource = @\file_get_contents($this->viewFile);
-
-        if ($viewSource === false) {
-            throw HttpException::fromInternalServerError();
-        }
-
-        $this->viewSource = $viewSource;
+    public function __construct(
+        #[ConfigValue('view.directory')] private string $viewDirectory,
+        #[ConfigValue('view.cacheDirectory')] private string $viewCacheDirectory,
+    ) {
     }
 
     private function visualizeToken(
@@ -120,12 +115,72 @@ readonly class LumiController
         return $value->name;
     }
 
-    #[Route\Get]
-    public function index(): ResponseInterface
+    private function visualizeViewFileName(
+        string $viewFile,
+    ): string {
+        $viewFile = $this->getShortViewName($viewFile);
+        $compiledViewFile = $this->viewCacheDirectory . '/' . \str_replace('.lumi', '.php', $viewFile);
+        $buffer = '<strong>' . $viewFile . '</strong>';
+
+        if (\is_file($compiledViewFile)) {
+            $buffer .= ' (compiled)';
+        }
+
+        $buffer .= '<br>';
+
+        return $buffer;
+    }
+
+    /**
+     * @return CollectionInterface<array-key, string>
+     */
+    private function getViewFiles(): CollectionInterface
     {
-        $buffer = '<h3>Source</h3>';
+        return FileCollection::fromDirectory($this->viewDirectory)
+            ->filter(\is_file(...));
+    }
+
+    private function getShortViewName(
+        string $viewFile,
+    ): string {
+        return \str_replace($this->viewDirectory . '/', '', $viewFile);
+    }
+
+    #[Route\Get]
+    public function index(RequestInterface $request): ResponseInterface
+    {
+        if ($request->get->has('file')) {
+            $selectedViewFile = $this->viewDirectory . '/' . $request->get->getString('file');
+        } else {
+            $selectedViewFile = $this->viewDirectory . '/hello_world_include.lumi';
+        }
+
+        $viewSource = @\file_get_contents($selectedViewFile);
+
+        if ($viewSource === false) {
+            throw HttpException::fromInternalServerError();
+        }
+
+        $buffer = '<h3>File</h3>';
+        $buffer .= '<form>';
+        $buffer .= '<select onchange="window.location = \'?file=\' + this.options[this.selectedIndex].value;">';
+
+        foreach ($this->getViewFiles() as $viewFile) {
+            $viewFile = $this->getShortViewName($viewFile);
+            $selected = $this->getShortViewName($selectedViewFile) === $viewFile
+                ? 'selected '
+                : '';
+
+            $buffer .= '<option ' . $selected . 'value="' . $viewFile . '">' . $viewFile . '</option>';
+        }
+
+        $buffer .= '</select>';
+        $buffer .= '</form>';
+
+        $buffer .= '<h3>Source</h3>';
+        $buffer .= $this->visualizeViewFileName($selectedViewFile);
         $buffer .= '<pre>';
-        $buffer .= \htmlspecialchars($this->viewSource);
+        $buffer .= \htmlspecialchars($viewSource);
         $buffer .= '</pre>';
 
         $buffer .= '<h3>Tokens</h3>';
@@ -135,7 +190,7 @@ readonly class LumiController
         $showNext = true;
 
         try {
-            $stream = $engine->lexer->tokenizeByFile($this->viewFile);
+            $stream = $engine->lexer->tokenizeByString($viewSource);
 
             while (!$stream->eof()) {
                 $buffer .= $this->visualizeToken($stream->current()) . '<br>';
@@ -156,7 +211,7 @@ readonly class LumiController
             try {
                 $stream = $engine->parser->parse(
                     stream: $engine->lexer->tokenizeByString(
-                        sourceCode: $this->viewSource,
+                        sourceCode: $viewSource,
                     ),
                 );
 
@@ -182,7 +237,7 @@ readonly class LumiController
                     $engine->compiler->compile(
                         stream: $engine->parser->parse(
                             stream: $engine->lexer->tokenizeByString(
-                                sourceCode: $this->viewSource,
+                                sourceCode: $viewSource,
                             ),
                         ),
                     ),

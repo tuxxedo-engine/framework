@@ -63,7 +63,7 @@ class FileCollection
         string $directory,
     ): Collection {
         return self::fromGlob(
-            pattern: $directory . '/',
+            pattern: $directory . '/*',
         );
     }
 

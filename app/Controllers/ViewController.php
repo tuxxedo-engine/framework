@@ -66,4 +66,12 @@ readonly class ViewController
             ],
         );
     }
+
+    #[Route\Get]
+    public function include(): ViewInterface
+    {
+        return new View(
+            name: 'hello_world_include',
+        );
+    }
 }

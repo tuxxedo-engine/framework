@@ -227,7 +227,11 @@ class Kernel implements HttpApplicationInterface
     public function run(
         ?RequestInterface $request = null,
     ): void {
-        $request ??= $this->container->resolve(Request::class);
+        if ($request !== null) {
+            $this->container->bind($request);
+        } else {
+            $request = $this->container->resolve(Request::class);
+        }
 
         try {
             if (!isset($this->router)) {
