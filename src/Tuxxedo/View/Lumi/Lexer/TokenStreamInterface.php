@@ -54,4 +54,11 @@ interface TokenStreamInterface
     public function consume(
         int $amount = 1,
     ): void;
+
+    /**
+     * @throws LexerException
+     */
+    public function expect(
+        string $tokenName,
+    ): TokenInterface;
 }

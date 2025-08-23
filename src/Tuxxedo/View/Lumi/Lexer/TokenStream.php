@@ -68,4 +68,21 @@ class TokenStream implements TokenStreamInterface
 
         $this->position += $amount;
     }
+
+    public function expect(
+        string $tokenName,
+    ): TokenInterface {
+        $current = $this->current();
+
+        if ($current->type !== $tokenName) {
+            throw LexerException::fromUnexpectedToken(
+                tokenName: $current->type,
+                expectedTokenName: $tokenName,
+            );
+        }
+
+        $this->consume();
+
+        return $current;
+    }
 }

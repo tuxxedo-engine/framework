@@ -123,13 +123,15 @@ class LexerException extends \Exception
         );
     }
 
-    public static function fromInvalidVariableName(
-        string $name,
+    public static function fromUnexpectedToken(
+        string $tokenName,
+        string $expectedTokenName,
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid variable name "%s"',
-                $name,
+                'Unexpected token "%s" encountered in token stream, expected "%s"',
+                $tokenName,
+                $expectedTokenName,
             ),
         );
     }

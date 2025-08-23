@@ -33,34 +33,21 @@ class AssignHandler implements ParserHandlerInterface
     ): array {
         $stream->consume();
 
-        $variableToken = $stream->current();
+        $variableToken = $stream->expect(BuiltinTokenNames::VARIABLE->name);
 
-        if ($variableToken->type !== BuiltinTokenNames::VARIABLE->name) {
-            throw ParserException::fromUnexpectedTokenWithExpects(
-                tokenName: $variableToken->type,
-                expectedTokenName: BuiltinTokenNames::VARIABLE->name,
-            );
-        } elseif ($variableToken->op1 === null) {
+        if ($variableToken->op1 === null) {
             throw ParserException::fromMalformedToken();
         }
 
         $variableName = $variableToken->op1;
 
-        $stream->consume();
+        $operatorToken = $stream->expect(BuiltinTokenNames::OPERATOR->name);
 
-        $operatorToken = $stream->current();
-        if ($operatorToken->type !== BuiltinTokenNames::OPERATOR->name) {
-            throw ParserException::fromUnexpectedTokenWithExpects(
-                tokenName: $operatorToken->type,
-                expectedTokenName: BuiltinTokenNames::OPERATOR->name,
-            );
-        } elseif ($operatorToken->op1 === null) {
+        if ($operatorToken->op1 === null) {
             throw ParserException::fromMalformedToken();
         }
 
         $operatorSymbol = $operatorToken->op1;
-
-        $stream->consume();
 
         $assignmentOperator = null;
         $assignmentOperators = AssignmentOperator::cases();
@@ -96,11 +83,7 @@ class AssignHandler implements ParserHandlerInterface
             $stream->consume();
         }
 
-        if ($stream->eof()) {
-            throw ParserException::fromTokenStreamEof();
-        }
-
-        $stream->consume();
+        $stream->expect(BuiltinTokenNames::END->name);
 
         return [
             new AssignmentNode(
