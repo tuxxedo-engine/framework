@@ -60,7 +60,7 @@ readonly class IndexController
     public function map(): ResponseInterface
     {
         return Response::capture(
-            callback: fn () => var_dump(
+            callback: fn () => \var_dump(
                 $this->mapper->mapArrayTo(
                     input: [
                         'name' => 'Engine',

@@ -76,7 +76,7 @@ class ExpressionCompiler implements ExpressionCompilerInterface
         LiteralNode $node,
     ): string {
         return match ($node->type) {
-            NodeNativeType::STRING => '\'' . $node->operand . '\'', // @todo This is error prone, quotes may need to be preserved for proper escaping
+            NodeNativeType::STRING => '\'' . \str_replace('\'', '\\\'', $node->operand) . '\'',
             default => $node->operand,
         };
     }

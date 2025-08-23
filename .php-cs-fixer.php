@@ -16,9 +16,10 @@ $finder = (new Finder())
     )
     ->exclude(
         [
-            'app/views/cache/',
+            'views/cache/',
         ],
     );
+
 
 return (new Config())
     ->setParallelConfig(
@@ -28,9 +29,17 @@ return (new Config())
         [
             '@PSR12' => true,
             'strict_param' => true,
-            'single_space_around_construct' => false,
+            'single_space_around_construct' => true,
+            'fully_qualified_strict_types' => true,
+            'no_unused_imports' => true,
             'array_syntax' => [
                 'syntax' => 'short',
+            ],
+            'native_function_invocation' => [
+                'include' => [
+                    '@all',
+                ],
+                'strict' => true,
             ],
         ],
     )

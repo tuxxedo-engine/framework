@@ -83,7 +83,7 @@ interface HeaderContextInterface
      * @template TEnum of \UnitEnum
      *
      * @param class-string<TEnum> $enum
-     * @return TEnum&\UnitEnum
+     * @return TEnum&T
      *
      * @throws HttpException
      */

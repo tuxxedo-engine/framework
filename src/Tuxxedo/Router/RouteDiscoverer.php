@@ -292,7 +292,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
         array $nodes,
         string $className,
         \ReflectionMethod $method,
-        Attribute\Route $route,
+        RouteAttr $route,
     ): \Generator {
         $arguments = [];
 

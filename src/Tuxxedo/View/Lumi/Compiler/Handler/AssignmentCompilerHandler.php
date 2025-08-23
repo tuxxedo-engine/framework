@@ -15,10 +15,8 @@ namespace Tuxxedo\View\Lumi\Compiler\Handler;
 
 use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompilerInterface;
 use Tuxxedo\View\Lumi\Node\AssignmentNode;
-use Tuxxedo\View\Lumi\Node\EchoNode;
 use Tuxxedo\View\Lumi\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
-use Tuxxedo\View\Lumi\Syntax\AssignmentOperator;
 
 class AssignmentCompilerHandler implements CompilerHandlerInterface
 {

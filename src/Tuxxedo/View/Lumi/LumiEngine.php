@@ -13,10 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi;
 
-use Tuxxedo\Collection\FileCollection;
 use Tuxxedo\View\Lumi\Compiler\CompiledFile;
-use Tuxxedo\View\Lumi\Compiler\CompiledFileBatch;
-use Tuxxedo\View\Lumi\Compiler\CompiledFileBatchInterface;
 use Tuxxedo\View\Lumi\Compiler\CompiledFileInterface;
 use Tuxxedo\View\Lumi\Compiler\Compiler;
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
