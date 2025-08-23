@@ -158,6 +158,7 @@ class ExpressionParser implements ExpressionParserInterface
             );
         }
 
+        $node = null;
         $nextToken = $stream->current();
 
         if ($nextToken->type === BuiltinTokenNames::CHARACTER->name) {
@@ -166,7 +167,7 @@ class ExpressionParser implements ExpressionParserInterface
             }
 
             if ($nextToken->op1 === CharacterSymbol::DOT->symbol()) {
-                return $this->parseMethodCallByToken(
+                $node = $this->parseMethodCallByToken(
                     token: $token,
                     stream: $stream,
                     state: $state,
@@ -174,7 +175,7 @@ class ExpressionParser implements ExpressionParserInterface
             }
 
             if ($nextToken->op1 === CharacterSymbol::LEFT_PARENTHESIS->symbol()) {
-                return $this->parseFunctionCallByToken(
+                $node = $this->parseFunctionCallByToken(
                     token: $token,
                     stream: $stream,
                     state: $state,
@@ -182,31 +183,35 @@ class ExpressionParser implements ExpressionParserInterface
             }
 
             if ($nextToken->op1 === CharacterSymbol::LEFT_SQUARE_BRACKET->symbol()) {
-                return $this->parseArrayAccessByToken(
+                $node = $this->parseArrayAccessByToken(
                     token: $token,
                     stream: $stream,
                     state: $state,
                 );
             }
 
-            throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
-                tokenName: $nextToken->type,
-                expectedTokenNames: [
-                    CharacterSymbol::DOT->name,
-                    CharacterSymbol::LEFT_PARENTHESIS->name,
-                    CharacterSymbol::LEFT_SQUARE_BRACKET->name,
-                ],
-            );
+            if ($node === null) {
+                throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
+                    tokenName: $nextToken->type,
+                    expectedTokenNames: [
+                        CharacterSymbol::DOT->name,
+                        CharacterSymbol::LEFT_PARENTHESIS->name,
+                        CharacterSymbol::LEFT_SQUARE_BRACKET->name,
+                    ],
+                );
+            }
         }
 
         if ($nextToken->type === BuiltinTokenNames::OPERATOR->name) {
             return $this->parseBinaryOp(
                 stream: $stream,
                 state: $state,
-                left: new IdentifierNode(
+                left: $node ?? new IdentifierNode(
                     name: $token->op1,
                 ),
             );
+        } elseif ($node !== null) {
+            return $node;
         }
 
         throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
