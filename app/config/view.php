@@ -29,4 +29,13 @@ return [
      * @type string
      */
     'cacheDirectory' => __DIR__ . '/../views/cache',
+
+    /**
+     * view.alwaysCompile
+     *
+     * Whether to always compile Tuxxedo Engine Lumi templates
+     *
+     * @type bool
+     */
+    'alwaysCompile' => true,
 ];

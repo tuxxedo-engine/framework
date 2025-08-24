@@ -27,6 +27,7 @@ readonly class LumiViewRender implements ViewRenderInterface
     public function __construct(
         #[ConfigValue('view.directory')] public string $directory,
         #[ConfigValue('view.cacheDirectory')] public string $cacheDirectory,
+        #[ConfigValue('view.alwaysCompile')] public bool $alwaysCompile,
         ?LumiEngine $lumi = null,
     ) {
         $this->context = new LumiViewContext(
@@ -95,7 +96,7 @@ readonly class LumiViewRender implements ViewRenderInterface
         $compiledViewFile = $this->getCompiledViewFileName($viewName);
 
         // @todo Implement proper caching
-        if (\is_file($compiledViewFile)) {
+        if (!$this->alwaysCompile && \is_file($compiledViewFile)) {
             return $compiledViewFile;
         }
 

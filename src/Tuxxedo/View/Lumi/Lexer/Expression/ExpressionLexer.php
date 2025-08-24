@@ -163,26 +163,48 @@ class ExpressionLexer implements ExpressionLexerInterface
                 $buffer = '';
             }
 
-            while (!$stream->eof()) {
-                $char = $stream->peek(1);
+            if (\preg_match('/^[^\p{L}\p{N}\s]$/u', $char) === 1) {
+                $buffer = '';
+                $lastValid = null;
 
-                if (\preg_match('/^[^\p{L}\p{N}\s]$/u', $char) !== 1) {
-                    break;
+                while (!$stream->eof()) {
+                    $char = $stream->peek(1);
+
+                    if (\preg_match('/^[^\p{L}\p{N}\s]$/u', $char) !== 1) {
+                        break;
+                    }
+
+                    $buffer .= $stream->consume();
+
+                    if (
+                        \in_array($buffer, $this->operators, true) ||
+                        \in_array($buffer, $this->characterSymbols, true)
+                    ) {
+                        $lastValid = $buffer;
+                    }
+
+                    $next = $stream->peek(1);
+                    $isNextSymbol = \preg_match('/^[^\p{L}\p{N}\s]$/u', $next) === 1;
+
+                    if (!$isNextSymbol || !$this->isSymbolPrefix($buffer . $next)) {
+                        break;
+                    }
                 }
 
-                $buffer .= $stream->consume();
+                if ($lastValid !== null) {
+                    $tokens[] = $this->classifySymbol($lastValid);
 
-                if (\in_array($buffer, $this->operators, true) || \in_array($buffer, $this->characterSymbols, true)) {
-                    $tokens[] = $this->classifySymbol($buffer);
+                    $remainingLength = \mb_strlen($buffer) - \mb_strlen($lastValid);
+                    for ($i = 0; $i < $remainingLength; $i++) {
+                        $stream->consume();
+                    }
 
                     $buffer = '';
+                } else {
+                    throw LexerException::fromUnknownSymbol(
+                        symbol: $buffer,
+                    );
                 }
-            }
-
-            if ($buffer !== '') {
-                throw LexerException::fromUnknownSymbol(
-                    symbol: $buffer,
-                );
             }
         }
 
@@ -282,5 +304,22 @@ class ExpressionLexer implements ExpressionLexerInterface
     private function isValidFloat(string $value): bool
     {
         return \preg_match('/^-?(?:\d*\.\d+|\d+\.\d*)(?:[eE]-?\d+)?$/', $value) === 1;
+    }
+
+    private function isSymbolPrefix(string $prefix): bool
+    {
+        foreach ($this->operators as $op) {
+            if (\str_starts_with($op, $prefix)) {
+                return true;
+            }
+        }
+
+        foreach ($this->characterSymbols as $sym) {
+            if (\str_starts_with($sym, $prefix)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

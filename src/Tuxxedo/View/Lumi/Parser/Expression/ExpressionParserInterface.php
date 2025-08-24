@@ -20,6 +20,34 @@ use Tuxxedo\View\Lumi\Parser\ParserStateInterface;
 
 interface ExpressionParserInterface
 {
+    public AtomicParserInterface $atomic {
+        get;
+    }
+
+    public ArrayParserInterface $array {
+        get;
+    }
+
+    public InvocationParserInterface $invocation {
+        get;
+    }
+
+    public GroupingParserInterface $grouping {
+        get;
+    }
+
+    public OperatorParserInterface $operator {
+        get;
+    }
+
+    public TokenStreamInterface $stream {
+        get;
+    }
+
+    public ParserStateInterface $state {
+        get;
+    }
+
     /**
      * @throws ParserException
      */
