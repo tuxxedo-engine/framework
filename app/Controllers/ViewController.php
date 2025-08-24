@@ -74,4 +74,12 @@ readonly class ViewController
             name: 'hello_world_include',
         );
     }
+
+    #[Route\Get]
+    public function cond(): ViewInterface
+    {
+        return new View(
+            name: 'hello_world_cond',
+        );
+    }
 }

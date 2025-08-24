@@ -1,0 +1,7 @@
+{% if true %}
+    <p>Always printed</p>
+{% endif %}
+
+{% if false %}
+    <p>Never printed</p>
+{% endif %}
