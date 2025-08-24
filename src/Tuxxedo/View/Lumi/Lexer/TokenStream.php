@@ -41,6 +41,28 @@ class TokenStream implements TokenStreamInterface
         return $this->tokens[$this->position];
     }
 
+    public function currentIs(
+        string $tokenName,
+        ?string $op1 = null,
+        ?string $op2 = null,
+    ): bool {
+        $token = $this->current();
+
+        if ($token->type !== $tokenName) {
+            return false;
+        }
+
+        if ($op1 !== null && $token->op1 !== $op1) {
+            return false;
+        }
+
+        if ($op2 !== null && $token->op2 !== $op2) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function peek(
         int $position = 1,
     ): ?TokenInterface {
@@ -53,8 +75,24 @@ class TokenStream implements TokenStreamInterface
 
     public function peekIs(
         string $tokenName,
+        ?string $op1 = null,
+        ?string $op2 = null,
     ): bool {
-        return $this->peek()?->type === $tokenName;
+        $token = $this->peek();
+
+        if ($token?->type !== $tokenName) {
+            return false;
+        }
+
+        if ($op1 !== null && $token->op1 !== $op1) {
+            return false;
+        }
+
+        if ($op2 !== null && $token->op2 !== $op2) {
+            return false;
+        }
+
+        return true;
     }
 
     public function consume(): void

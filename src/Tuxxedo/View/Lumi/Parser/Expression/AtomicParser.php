@@ -18,6 +18,7 @@ use Tuxxedo\View\Lumi\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Node\NodeNativeType;
 use Tuxxedo\View\Lumi\Parser\ParserException;
+use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
 
 class AtomicParser implements AtomicParserInterface
@@ -30,7 +31,12 @@ class AtomicParser implements AtomicParserInterface
     public function parseSimpleLiteral(
         TokenInterface $literal,
     ): LiteralNode {
-        if ($literal->op1 === null || $literal->op2 === null) {
+        if ($literal->type !== BuiltinTokenNames::TYPE->name) {
+            throw ParserException::fromUnexpectedTokenWithExpects(
+                tokenName: $literal->type,
+                expectedTokenName: BuiltinTokenNames::TYPE->name,
+            );
+        } elseif ($literal->op1 === null || $literal->op2 === null) {
             throw ParserException::fromMalformedToken();
         }
 
@@ -55,7 +61,12 @@ class AtomicParser implements AtomicParserInterface
     public function parseSimpleVariable(
         TokenInterface $variable,
     ): IdentifierNode {
-        if ($variable->op1 === null) {
+        if ($variable->type !== BuiltinTokenNames::VARIABLE->name) {
+            throw ParserException::fromUnexpectedTokenWithExpects(
+                tokenName: $variable->type,
+                expectedTokenName: BuiltinTokenNames::VARIABLE->name,
+            );
+        } elseif ($variable->op1 === null) {
             throw ParserException::fromMalformedToken();
         }
 

@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Parser\Expression;
 
 use Tuxxedo\View\Lumi\Node\ExpressionNodeInterface;
+use Tuxxedo\View\Lumi\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Parser\ParserException;
+use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
 
 class InvocationParser implements InvocationParserInterface
@@ -25,9 +27,35 @@ class InvocationParser implements InvocationParserInterface
     ) {
     }
 
+    public function parseSimpleFunction(
+        TokenInterface $caller,
+    ): FunctionCallNode {
+        if ($caller->type !== BuiltinTokenNames::VARIABLE->name) {
+            throw ParserException::fromUnexpectedTokenWithExpects(
+                tokenName: $caller->type,
+                expectedTokenName: BuiltinTokenNames::VARIABLE->name,
+            );
+        } elseif ($caller->op1 === null) {
+            throw ParserException::fromMalformedToken();
+        }
+
+        return new FunctionCallNode(
+            name: $caller->op1,
+            arguments: [],
+        );
+    }
+
     public function parseFunction(
         TokenInterface $caller,
     ): ExpressionNodeInterface {
+        if ($this->parser->stream->currentIs(BuiltinTokenNames::CHARACTER->name, ')')) {
+            $this->parser->stream->consume();
+
+            return $this->parseSimpleFunction(
+                caller: $caller,
+            );
+        }
+
         throw ParserException::fromNotImplemented(
             feature: 'parsing function calls',
         );

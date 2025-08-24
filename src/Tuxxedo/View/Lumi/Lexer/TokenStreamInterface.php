@@ -38,12 +38,20 @@ interface TokenStreamInterface
      */
     public function current(): TokenInterface;
 
+    public function currentIs(
+        string $tokenName,
+        ?string $op1 = null,
+        ?string $op2 = null,
+    ): bool;
+
     public function peek(
         int $position = 1,
     ): ?TokenInterface;
 
     public function peekIs(
         string $tokenName,
+        ?string $op1 = null,
+        ?string $op2 = null,
     ): bool;
 
     /**
