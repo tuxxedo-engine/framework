@@ -7,3 +7,12 @@
     <li>{{ true }}</li>
     <li>{{ null }}</li>
 </ul>
+
+{# comment line #}
+<h3>After</h3>
+{#
+    This is a test
+    that happens
+    on
+    many lines!
+#}

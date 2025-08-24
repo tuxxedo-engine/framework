@@ -15,6 +15,7 @@ namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
 use Tuxxedo\View\Lumi\ByteStreamInterface;
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
+use Tuxxedo\View\Lumi\Token\CommentToken;
 use Tuxxedo\View\Lumi\Token\TextToken;
 
 class CommentHandler implements TokenHandlerInterface
@@ -39,7 +40,9 @@ class CommentHandler implements TokenHandlerInterface
             if ($stream->match($this->getEndingSequence())) {
                 $stream->consumeSequence($this->getEndingSequence());
 
-                return [];
+                return [
+                    new CommentToken(\mb_trim($buffer)),
+                ];
             }
 
             $buffer .= $stream->consume();

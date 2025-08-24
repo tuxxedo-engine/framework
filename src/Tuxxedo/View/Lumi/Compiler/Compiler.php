@@ -16,6 +16,7 @@ namespace Tuxxedo\View\Lumi\Compiler;
 use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompiler;
 use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompilerInterface;
 use Tuxxedo\View\Lumi\Compiler\Handler\AssignmentCompilerHandler;
+use Tuxxedo\View\Lumi\Compiler\Handler\CommentCompilerHandler;
 use Tuxxedo\View\Lumi\Compiler\Handler\CompilerHandlerInterface;
 use Tuxxedo\View\Lumi\Compiler\Handler\EchoCompilerHandler;
 use Tuxxedo\View\Lumi\Compiler\Handler\TextCompilerHandler;
@@ -52,6 +53,7 @@ class Compiler implements CompilerInterface
     {
         return [
             new TextCompilerHandler(),
+            new CommentCompilerHandler(),
             new EchoCompilerHandler(),
             new AssignmentCompilerHandler(),
         ];
