@@ -27,4 +27,11 @@ interface ExpressionParserInterface
         TokenStreamInterface $stream,
         ParserStateInterface $state,
     ): ExpressionNodeInterface;
+
+    /**
+     * @throws ParserException
+     */
+    public function dispatch(
+        ?ExpressionParserDispatch $dispatch = null,
+    ): ExpressionNodeInterface;
 }

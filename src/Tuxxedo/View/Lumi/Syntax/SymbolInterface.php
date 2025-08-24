@@ -13,7 +13,26 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax;
 
+use Tuxxedo\View\Lumi\Parser\ParserException;
+use Tuxxedo\View\Lumi\Token\TokenInterface;
+
 interface SymbolInterface
 {
+    /**
+     * @return string[]
+     */
+    public static function all(): array;
+
+    public static function is(
+        TokenInterface $token
+    ): bool;
+
+    /**
+     * @throws ParserException
+     */
+    public static function from(
+        TokenInterface $token,
+    ): static;
+
     public function symbol(): string;
 }

@@ -163,4 +163,11 @@ class ParserException extends \Exception
             ),
         );
     }
+
+    public static function fromEmptyExpression(): self
+    {
+        return new self(
+            message: 'Expressions cannot be empty',
+        );
+    }
 }

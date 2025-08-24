@@ -13,6 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax;
 
+use Tuxxedo\View\Lumi\Parser\ParserException;
+use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Token\TokenInterface;
+
 enum AssignmentOperator implements SymbolInterface, OperatorInterface
 {
     case ADD;
@@ -26,6 +30,41 @@ enum AssignmentOperator implements SymbolInterface, OperatorInterface
     case BITWISE_XOR;
     case BITWISE_SHIFT_LEFT;
     case BITWISE_SHIFT_RIGHT;
+
+    public static function all(): array
+    {
+        return \array_map(
+            static fn (self $operator): string => $operator->symbol(),
+            self::cases(),
+        );
+    }
+
+    public static function is(
+        TokenInterface $token,
+    ): bool {
+        if ($token->type !== BuiltinTokenNames::OPERATOR->name) {
+            return false;
+        }
+
+        return \in_array($token->op1, self::all(), true);
+    }
+
+    public static function from(
+        TokenInterface $token,
+    ): static {
+        if ($token->type === BuiltinTokenNames::OPERATOR->name) {
+            foreach (self::cases() as $operator) {
+                if ($token->op1 === $operator->symbol()) {
+                    return $operator;
+                }
+            }
+        }
+
+        throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
+            tokenName: $token->type,
+            expectedTokenNames: self::all(),
+        );
+    }
 
     public function symbol(): string
     {
