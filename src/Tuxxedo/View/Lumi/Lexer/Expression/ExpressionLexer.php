@@ -24,8 +24,8 @@ use Tuxxedo\View\Lumi\Token\BuiltinTypeNames;
 use Tuxxedo\View\Lumi\Token\CharacterToken;
 use Tuxxedo\View\Lumi\Token\OperatorToken;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
-use Tuxxedo\View\Lumi\Token\TypeToken;
-use Tuxxedo\View\Lumi\Token\VariableToken;
+use Tuxxedo\View\Lumi\Token\LiteralToken;
+use Tuxxedo\View\Lumi\Token\IdentifierToken;
 
 class ExpressionLexer implements ExpressionLexerInterface
 {
@@ -83,7 +83,7 @@ class ExpressionLexer implements ExpressionLexerInterface
 
                     if ($slashes % 2 === 0) {
                         $inQuote = false;
-                        $tokens[] = new TypeToken(
+                        $tokens[] = new LiteralToken(
                             op1: \mb_substr($buffer, 1, -1),
                             op2: BuiltinTypeNames::STRING->name,
                         );
@@ -132,12 +132,12 @@ class ExpressionLexer implements ExpressionLexerInterface
                 }
 
                 if ($this->isValidInteger($buffer)) {
-                    $tokens[] = new TypeToken(
+                    $tokens[] = new LiteralToken(
                         op1: $buffer,
                         op2: BuiltinTypeNames::INT->name,
                     );
                 } elseif ($this->isValidFloat($buffer)) {
-                    $tokens[] = new TypeToken(
+                    $tokens[] = new LiteralToken(
                         op1: $buffer,
                         op2: BuiltinTypeNames::FLOAT->name,
                     );
@@ -228,34 +228,34 @@ class ExpressionLexer implements ExpressionLexerInterface
     private function classifyToken(string $value): TokenInterface
     {
         if ($this->isValidFloat($value)) {
-            return new TypeToken(
+            return new LiteralToken(
                 op1: $value,
                 op2: BuiltinTypeNames::FLOAT->name,
             );
         }
 
         if ($this->isValidInteger($value)) {
-            return new TypeToken(
+            return new LiteralToken(
                 op1: $value,
                 op2: BuiltinTypeNames::INT->name,
             );
         }
 
         if (\in_array(\mb_strtolower($value), ['true', 'false'], true)) {
-            return new TypeToken(
+            return new LiteralToken(
                 op1: $value,
                 op2: BuiltinTypeNames::BOOL->name,
             );
         }
 
         if (\mb_strtolower($value) === 'null') {
-            return new TypeToken(
+            return new LiteralToken(
                 op1: $value,
                 op2: BuiltinTypeNames::NULL->name,
             );
         }
 
-        return new VariableToken(
+        return new IdentifierToken(
             op1: $value,
         );
     }

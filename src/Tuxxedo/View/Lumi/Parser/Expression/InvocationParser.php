@@ -30,10 +30,10 @@ class InvocationParser implements InvocationParserInterface
     public function parseSimpleFunction(
         TokenInterface $caller,
     ): FunctionCallNode {
-        if ($caller->type !== BuiltinTokenNames::VARIABLE->name) {
+        if ($caller->type !== BuiltinTokenNames::IDENTIFIER->name) {
             throw ParserException::fromUnexpectedTokenWithExpects(
                 tokenName: $caller->type,
-                expectedTokenName: BuiltinTokenNames::VARIABLE->name,
+                expectedTokenName: BuiltinTokenNames::IDENTIFIER->name,
             );
         } elseif ($caller->op1 === null) {
             throw ParserException::fromMalformedToken();

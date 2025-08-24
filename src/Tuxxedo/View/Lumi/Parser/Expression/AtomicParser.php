@@ -31,10 +31,10 @@ class AtomicParser implements AtomicParserInterface
     public function parseSimpleLiteral(
         TokenInterface $literal,
     ): LiteralNode {
-        if ($literal->type !== BuiltinTokenNames::TYPE->name) {
+        if ($literal->type !== BuiltinTokenNames::LITERAL->name) {
             throw ParserException::fromUnexpectedTokenWithExpects(
                 tokenName: $literal->type,
-                expectedTokenName: BuiltinTokenNames::TYPE->name,
+                expectedTokenName: BuiltinTokenNames::LITERAL->name,
             );
         } elseif ($literal->op1 === null || $literal->op2 === null) {
             throw ParserException::fromMalformedToken();
@@ -61,10 +61,10 @@ class AtomicParser implements AtomicParserInterface
     public function parseSimpleVariable(
         TokenInterface $variable,
     ): IdentifierNode {
-        if ($variable->type !== BuiltinTokenNames::VARIABLE->name) {
+        if ($variable->type !== BuiltinTokenNames::IDENTIFIER->name) {
             throw ParserException::fromUnexpectedTokenWithExpects(
                 tokenName: $variable->type,
-                expectedTokenName: BuiltinTokenNames::VARIABLE->name,
+                expectedTokenName: BuiltinTokenNames::IDENTIFIER->name,
             );
         } elseif ($variable->op1 === null) {
             throw ParserException::fromMalformedToken();

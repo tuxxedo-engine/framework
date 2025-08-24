@@ -74,7 +74,7 @@ class ExpressionParser implements ExpressionParserInterface
 
         $token = $this->stream->current();
 
-        if ($token->type === BuiltinTokenNames::VARIABLE->name) {
+        if ($token->type === BuiltinTokenNames::IDENTIFIER->name) {
             if ($token->op1 === null) {
                 throw ParserException::fromMalformedToken();
             }
@@ -98,10 +98,10 @@ class ExpressionParser implements ExpressionParserInterface
                     $this->stream->consume();
                     $methodToken = $this->stream->current();
 
-                    if ($methodToken->type !== BuiltinTokenNames::VARIABLE->name) {
+                    if ($methodToken->type !== BuiltinTokenNames::IDENTIFIER->name) {
                         throw ParserException::fromUnexpectedTokenWithExpects(
                             tokenName: $next->type,
-                            expectedTokenName: BuiltinTokenNames::VARIABLE->name,
+                            expectedTokenName: BuiltinTokenNames::IDENTIFIER->name,
                         );
                     } elseif ($methodToken->op1 === null) {
                         throw ParserException::fromMalformedToken();
@@ -188,7 +188,7 @@ class ExpressionParser implements ExpressionParserInterface
             );
         }
 
-        if ($token->type === BuiltinTokenNames::TYPE->name) {
+        if ($token->type === BuiltinTokenNames::LITERAL->name) {
             if ($token->op1 === null || $token->op2 === null) {
                 throw ParserException::fromMalformedToken();
             }
@@ -217,14 +217,14 @@ class ExpressionParser implements ExpressionParserInterface
             if ($operand === null) {
                 throw ParserException::fromTokenStreamEof();
             } elseif (
-                $operand->type !== BuiltinTokenNames::TYPE->name &&
-                $operand->type !== BuiltinTokenNames::VARIABLE->name
+                $operand->type !== BuiltinTokenNames::LITERAL->name &&
+                $operand->type !== BuiltinTokenNames::IDENTIFIER->name
             ) {
                 throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
                     tokenName: $operand->type,
                     expectedTokenNames: [
-                        BuiltinTokenNames::TYPE->name,
-                        BuiltinTokenNames::VARIABLE->name,
+                        BuiltinTokenNames::LITERAL->name,
+                        BuiltinTokenNames::IDENTIFIER->name,
                     ],
                 );
             }
@@ -255,8 +255,8 @@ class ExpressionParser implements ExpressionParserInterface
         throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
             tokenName: $token->type,
             expectedTokenNames: [
-                BuiltinTokenNames::VARIABLE->name,
-                BuiltinTokenNames::TYPE->name,
+                BuiltinTokenNames::IDENTIFIER->name,
+                BuiltinTokenNames::LITERAL->name,
                 BuiltinTokenNames::OPERATOR->name,
                 BuiltinTokenNames::CHARACTER->name,
             ],

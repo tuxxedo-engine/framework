@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Token;
 
-readonly class TypeToken implements TokenInterface
+readonly class LiteralToken implements TokenInterface
 {
     public string $type;
 
@@ -21,6 +21,6 @@ readonly class TypeToken implements TokenInterface
         public string $op1,
         public string $op2,
     ) {
-        $this->type = BuiltinTokenNames::TYPE->name;
+        $this->type = BuiltinTokenNames::LITERAL->name;
     }
 }

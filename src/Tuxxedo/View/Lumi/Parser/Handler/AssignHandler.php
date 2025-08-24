@@ -33,7 +33,7 @@ class AssignHandler implements ParserHandlerInterface
     ): array {
         $stream->consume();
 
-        $variableToken = $stream->expect(BuiltinTokenNames::VARIABLE->name);
+        $variableToken = $stream->expect(BuiltinTokenNames::IDENTIFIER->name);
 
         if ($variableToken->op1 === null) {
             throw ParserException::fromMalformedToken();

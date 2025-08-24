@@ -25,10 +25,10 @@ enum BuiltinTokenNames
     case ELSE;
     case END;
     case FOR;
+    case IDENTIFIER;
     case IF;
+    case LITERAL;
     case OPERATOR;
     case TEXT;
-    case TYPE;
-    case VARIABLE;
     case WHILE;
 }
