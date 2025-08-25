@@ -17,6 +17,7 @@ use Tuxxedo\View\Lumi\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Node\NodeNativeType;
 use Tuxxedo\View\Lumi\Parser\ParserException;
+use Tuxxedo\View\Lumi\Syntax\BinaryOperator;
 use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
 
@@ -27,7 +28,7 @@ class AtomicParser implements AtomicParserInterface
     ) {
     }
 
-    public function parseSimpleLiteral(
+    private function literalTokenToNode(
         TokenInterface $literal,
     ): LiteralNode {
         if ($literal->type !== BuiltinTokenNames::LITERAL->name) {
@@ -49,20 +50,23 @@ class AtomicParser implements AtomicParserInterface
         TokenInterface $literal,
     ): void {
         if ($this->parser->stream->eof()) {
-            if ($literal->type !== BuiltinTokenNames::LITERAL->name) {
-                throw ParserException::fromUnexpectedTokenWithExpects(
-                    tokenName: $literal->type,
-                    expectedTokenName: BuiltinTokenNames::LITERAL->name,
+            $this->parser->state->pushNode(
+                node: $this->literalTokenToNode($literal),
+            );
+
+            return;
+        } elseif ($this->parser->stream->currentIs(BuiltinTokenNames::OPERATOR->name)) {
+            $token = $this->parser->stream->expect(BuiltinTokenNames::OPERATOR->name);
+
+            if (!BinaryOperator::is($token)) {
+                throw ParserException::fromNotImplemented(
+                    feature: 'parsing literals from non binary operators ahead',
                 );
-            } elseif ($literal->op1 === null || $literal->op2 === null) {
-                throw ParserException::fromMalformedToken();
             }
 
-            $this->parser->state->pushNode(
-                node: new LiteralNode(
-                    operand: $literal->op1,
-                    type: NodeNativeType::fromTokenNativeType($literal->op2),
-                ),
+            $this->parser->operator->parseBinaryByNode(
+                left: $this->literalTokenToNode($literal),
+                operator: BinaryOperator::from($token),
             );
 
             return;
@@ -73,23 +77,29 @@ class AtomicParser implements AtomicParserInterface
         );
     }
 
+    private function variableTokenToNode(
+        TokenInterface $variable,
+    ): IdentifierNode {
+        if ($variable->type !== BuiltinTokenNames::IDENTIFIER->name) {
+            throw ParserException::fromUnexpectedTokenWithExpects(
+                tokenName: $variable->type,
+                expectedTokenName: BuiltinTokenNames::IDENTIFIER->name,
+            );
+        } elseif ($variable->op1 === null) {
+            throw ParserException::fromMalformedToken();
+        }
+
+        return new IdentifierNode(
+            name: $variable->op1,
+        );
+    }
+
     public function parseVariable(
         TokenInterface $variable,
     ): void {
         if ($this->parser->stream->eof()) {
-            if ($variable->type !== BuiltinTokenNames::IDENTIFIER->name) {
-                throw ParserException::fromUnexpectedTokenWithExpects(
-                    tokenName: $variable->type,
-                    expectedTokenName: BuiltinTokenNames::IDENTIFIER->name,
-                );
-            } elseif ($variable->op1 === null) {
-                throw ParserException::fromMalformedToken();
-            }
-
             $this->parser->state->pushNode(
-                node: new IdentifierNode(
-                    name: $variable->op1,
-                ),
+                node: $this->variableTokenToNode($variable),
             );
 
             return;

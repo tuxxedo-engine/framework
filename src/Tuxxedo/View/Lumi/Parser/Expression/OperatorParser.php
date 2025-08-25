@@ -31,12 +31,50 @@ class OperatorParser implements OperatorParserInterface
     ) {
     }
 
+    private function parseBinaryRight(): ExpressionNodeInterface
+    {
+        $next = $this->parser->stream->current();
+        $this->parser->stream->consume();
+
+        if (
+            $next->type !== BuiltinTokenNames::IDENTIFIER->name &&
+            $next->type !== BuiltinTokenNames::LITERAL->name
+        ) {
+            throw ParserException::fromNotImplemented(
+                feature: 'only variables and literals are supported in binary operations on the right hand side',
+            );
+        }
+
+        if ($next->type === BuiltinTokenNames::IDENTIFIER->name) {
+            if ($next->op1 === null) {
+                throw ParserException::fromMalformedToken();
+            }
+
+            return new IdentifierNode(
+                name: $next->op1,
+            );
+        } else {
+            if ($next->op1 === null || $next->op2 === null) {
+                throw ParserException::fromMalformedToken();
+            }
+
+            return new LiteralNode(
+                operand: $next->op1,
+                type: NodeNativeType::fromTokenNativeType($next->op2),
+            );
+        }
+    }
+
     public function parseBinaryByNode(
         ExpressionNodeInterface $left,
         BinaryOperator $operator,
     ): void {
-        throw ParserException::fromNotImplemented(
-            feature: 'parsing binary expressions from nodes',
+        $this->parser->state->pushNode(
+            new BinaryOpNode(
+                left: $left,
+                right: $this->parseBinaryRight(),
+                operator: $operator,
+            ),
         );
     }
 
@@ -53,43 +91,12 @@ class OperatorParser implements OperatorParserInterface
             throw ParserException::fromMalformedToken();
         }
 
-        $next = $this->parser->stream->current();
-        $this->parser->stream->consume();
-
-        if (
-            $next->type !== BuiltinTokenNames::IDENTIFIER->name &&
-            $next->type !== BuiltinTokenNames::LITERAL->name
-        ) {
-            throw ParserException::fromNotImplemented(
-                feature: 'only variables and literals are supported in binary operations on the right hand side',
-            );
-        } else {
-            if ($next->type === BuiltinTokenNames::IDENTIFIER->name) {
-                if ($next->op1 === null) {
-                    throw ParserException::fromMalformedToken();
-                }
-
-                $right = new IdentifierNode(
-                    name: $next->op1,
-                );
-            } else {
-                if ($next->op1 === null || $next->op2 === null) {
-                    throw ParserException::fromMalformedToken();
-                }
-
-                $right = new LiteralNode(
-                    operand: $next->op1,
-                    type: NodeNativeType::fromTokenNativeType($next->op2),
-                );
-            }
-        }
-
         $this->parser->state->pushNode(
             new BinaryOpNode(
                 left: new IdentifierNode(
                     name: $left->op1,
                 ),
-                right: $right,
+                right: $this->parseBinaryRight(),
                 operator: $operator,
             ),
         );
