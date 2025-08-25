@@ -90,7 +90,7 @@ class ByteStream implements ByteStreamInterface
     ): bool {
         return \mb_strpos(
             \mb_substr($this->input, $this->position + $offset, null, 'UTF-8'),
-            $sequence
+            $sequence,
         ) !== false;
     }
 

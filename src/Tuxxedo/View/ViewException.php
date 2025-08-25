@@ -51,7 +51,7 @@ class ViewException extends \Exception
         return new self(
             message: \sprintf(
                 'Unable to determine view name for: %s',
-                $viewName
+                $viewName,
             ),
         );
     }

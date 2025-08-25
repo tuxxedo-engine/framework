@@ -95,7 +95,7 @@ class LumiEngine
                     stream: $this->lexer->tokenizeByFile(
                         sourceFile: $file,
                     ),
-                )
+                ),
             ),
         );
     }

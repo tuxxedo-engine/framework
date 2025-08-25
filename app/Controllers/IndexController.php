@@ -212,7 +212,7 @@ readonly class IndexController
                 new class () {
                     public string $name;
                     public int $age;
-                }
+                },
             ),
         );
     }

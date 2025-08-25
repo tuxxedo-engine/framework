@@ -324,7 +324,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
 
         $names = \array_map(
             static fn (ArgumentNode $node): string => $node->name,
-            $nodes
+            $nodes,
         );
 
         if (\sizeof($names) !== \sizeof(\array_unique($names))) {

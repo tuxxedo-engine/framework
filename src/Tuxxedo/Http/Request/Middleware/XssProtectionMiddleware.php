@@ -30,7 +30,7 @@ class XssProtectionMiddleware implements MiddlewareInterface
                     new Header('Content-Security-Policy', 'default-src \'self\''),
                     new Header('X-XSS-Protection', '1; mode=block'),
                     new Header('X-Content-Type-Options', 'nosniff'),
-                ]
+                ],
             );
     }
 }

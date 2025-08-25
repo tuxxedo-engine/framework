@@ -35,6 +35,12 @@ return (new Config())
             'array_syntax' => [
                 'syntax' => 'short',
             ],
+            'trailing_comma_in_multiline' => [
+                'elements' => [
+                    'arrays',
+                    'arguments',
+                ],
+            ],
             'native_function_invocation' => [
                 'include' => [
                     '@all',
