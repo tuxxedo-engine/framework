@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Expression;
 
-use Tuxxedo\View\Lumi\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\BinaryOperator;
 use Tuxxedo\View\Lumi\Syntax\UnaryOperator;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
@@ -23,10 +22,10 @@ interface OperatorParserInterface
     public function parseBinary(
         TokenInterface $left,
         BinaryOperator $operator,
-    ): ExpressionNodeInterface;
+    ): void;
 
     public function parseUnary(
         UnaryOperator $operator,
         TokenInterface $operand,
-    ): ExpressionNodeInterface;
+    ): void;
 }

@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser;
 
+use Tuxxedo\View\Lumi\Node\ExpressionNodeInterface;
+
 interface ParserStateInterface
 {
     public int $loopDepth {
@@ -27,6 +29,13 @@ interface ParserStateInterface
      * @var string[]
      */
     public array $groupingStack {
+        get;
+    }
+
+    /**
+     * @var ExpressionNodeInterface[]
+     */
+    public array $nodeStack {
         get;
     }
 
@@ -55,7 +64,22 @@ interface ParserStateInterface
         string $name,
     ): void;
 
-    public function isAllGroupingsClosed(): bool;
+    public function pushNode(
+        ExpressionNodeInterface $node,
+    ): void;
+
+    /**
+     * @throws ParserException
+     */
+    public function popNode(): ExpressionNodeInterface;
+
+    public function isCleanState(
+        bool $checkLoops = true,
+        bool $checkConditions = true,
+        bool $checkGroupings = true,
+        bool $checkNodes = true,
+        bool $checkCustom = true,
+    ): bool;
 
     public function set(
         string $key,

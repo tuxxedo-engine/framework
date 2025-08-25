@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Expression;
 
-use Tuxxedo\View\Lumi\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\BinaryOperator;
 use Tuxxedo\View\Lumi\Syntax\UnaryOperator;
@@ -30,7 +29,7 @@ class OperatorParser implements OperatorParserInterface
     public function parseBinary(
         TokenInterface $left,
         BinaryOperator $operator,
-    ): ExpressionNodeInterface {
+    ): void {
         throw ParserException::fromNotImplemented(
             feature: 'parsing binary expressions',
         );
@@ -39,7 +38,7 @@ class OperatorParser implements OperatorParserInterface
     public function parseUnary(
         UnaryOperator $operator,
         TokenInterface $operand,
-    ): ExpressionNodeInterface {
+    ): void {
         throw ParserException::fromNotImplemented(
             feature: 'parsing unary expressions',
         );

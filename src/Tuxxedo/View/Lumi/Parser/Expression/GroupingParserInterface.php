@@ -13,9 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Expression;
 
-use Tuxxedo\View\Lumi\Node\ExpressionNodeInterface;
-
 interface GroupingParserInterface
 {
-    public function parseGroup(): ExpressionNodeInterface;
+    public function parseGroup(): void;
 }

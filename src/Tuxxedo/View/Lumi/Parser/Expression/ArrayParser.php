@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Expression;
 
-use Tuxxedo\View\Lumi\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
 
@@ -27,7 +26,7 @@ class ArrayParser implements ArrayParserInterface
 
     public function parseAccess(
         TokenInterface $variable,
-    ): ExpressionNodeInterface {
+    ): void {
         throw ParserException::fromNotImplemented(
             feature: 'parsing array access',
         );

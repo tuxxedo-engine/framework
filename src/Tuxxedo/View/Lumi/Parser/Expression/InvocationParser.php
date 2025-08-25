@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Expression;
 
-use Tuxxedo\View\Lumi\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
@@ -21,39 +20,34 @@ use Tuxxedo\View\Lumi\Token\TokenInterface;
 
 class InvocationParser implements InvocationParserInterface
 {
-    // @todo Fix visibility
     public function __construct(
-        public readonly ExpressionParserInterface $parser,
+        private readonly ExpressionParserInterface $parser,
     ) {
-    }
-
-    public function parseSimpleFunction(
-        TokenInterface $caller,
-    ): FunctionCallNode {
-        if ($caller->type !== BuiltinTokenNames::IDENTIFIER->name) {
-            throw ParserException::fromUnexpectedTokenWithExpects(
-                tokenName: $caller->type,
-                expectedTokenName: BuiltinTokenNames::IDENTIFIER->name,
-            );
-        } elseif ($caller->op1 === null) {
-            throw ParserException::fromMalformedToken();
-        }
-
-        return new FunctionCallNode(
-            name: $caller->op1,
-            arguments: [],
-        );
     }
 
     public function parseFunction(
         TokenInterface $caller,
-    ): ExpressionNodeInterface {
+    ): void {
         if ($this->parser->stream->currentIs(BuiltinTokenNames::CHARACTER->name, ')')) {
             $this->parser->stream->consume();
 
-            return $this->parseSimpleFunction(
-                caller: $caller,
+            if ($caller->type !== BuiltinTokenNames::IDENTIFIER->name) {
+                throw ParserException::fromUnexpectedTokenWithExpects(
+                    tokenName: $caller->type,
+                    expectedTokenName: BuiltinTokenNames::IDENTIFIER->name,
+                );
+            } elseif ($caller->op1 === null) {
+                throw ParserException::fromMalformedToken();
+            }
+
+            $this->parser->state->pushNode(
+                node: new FunctionCallNode(
+                    name: $caller->op1,
+                    arguments: [],
+                ),
             );
+
+            return;
         }
 
         throw ParserException::fromNotImplemented(
@@ -64,7 +58,7 @@ class InvocationParser implements InvocationParserInterface
     public function parseMethodCall(
         TokenInterface $caller,
         TokenInterface $method,
-    ): ExpressionNodeInterface {
+    ): void {
         throw ParserException::fromNotImplemented(
             feature: 'parsing method calls',
         );
@@ -73,7 +67,7 @@ class InvocationParser implements InvocationParserInterface
     public function parseDereferenceChain(
         TokenInterface $caller,
         TokenInterface $method,
-    ): ExpressionNodeInterface {
+    ): void {
         throw ParserException::fromNotImplemented(
             feature: 'parsing dereference chain',
         );

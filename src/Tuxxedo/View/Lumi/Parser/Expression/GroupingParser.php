@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Expression;
 
-use Tuxxedo\View\Lumi\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 
 class GroupingParser implements GroupingParserInterface
@@ -24,7 +23,7 @@ class GroupingParser implements GroupingParserInterface
     ) {
     }
 
-    public function parseGroup(): ExpressionNodeInterface
+    public function parseGroup(): void
     {
         throw ParserException::fromNotImplemented(
             feature: 'parsing group expressions',

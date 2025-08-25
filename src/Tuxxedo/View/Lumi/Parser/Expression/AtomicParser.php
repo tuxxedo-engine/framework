@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Expression;
 
-use Tuxxedo\View\Lumi\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Node\NodeNativeType;
@@ -48,9 +47,25 @@ class AtomicParser implements AtomicParserInterface
 
     public function parseLiteral(
         TokenInterface $literal,
-    ): ExpressionNodeInterface {
+    ): void {
         if ($this->parser->stream->eof()) {
-            return $this->parseSimpleLiteral($literal);
+            if ($literal->type !== BuiltinTokenNames::LITERAL->name) {
+                throw ParserException::fromUnexpectedTokenWithExpects(
+                    tokenName: $literal->type,
+                    expectedTokenName: BuiltinTokenNames::LITERAL->name,
+                );
+            } elseif ($literal->op1 === null || $literal->op2 === null) {
+                throw ParserException::fromMalformedToken();
+            }
+
+            $this->parser->state->pushNode(
+                node: new LiteralNode(
+                    operand: $literal->op1,
+                    type: NodeNativeType::fromTokenNativeType($literal->op2),
+                ),
+            );
+
+            return;
         }
 
         throw ParserException::fromNotImplemented(
@@ -58,28 +73,26 @@ class AtomicParser implements AtomicParserInterface
         );
     }
 
-    public function parseSimpleVariable(
-        TokenInterface $variable,
-    ): IdentifierNode {
-        if ($variable->type !== BuiltinTokenNames::IDENTIFIER->name) {
-            throw ParserException::fromUnexpectedTokenWithExpects(
-                tokenName: $variable->type,
-                expectedTokenName: BuiltinTokenNames::IDENTIFIER->name,
-            );
-        } elseif ($variable->op1 === null) {
-            throw ParserException::fromMalformedToken();
-        }
-
-        return new IdentifierNode(
-            name: $variable->op1,
-        );
-    }
-
     public function parseVariable(
         TokenInterface $variable,
-    ): ExpressionNodeInterface {
+    ): void {
         if ($this->parser->stream->eof()) {
-            return $this->parseSimpleVariable($variable);
+            if ($variable->type !== BuiltinTokenNames::IDENTIFIER->name) {
+                throw ParserException::fromUnexpectedTokenWithExpects(
+                    tokenName: $variable->type,
+                    expectedTokenName: BuiltinTokenNames::IDENTIFIER->name,
+                );
+            } elseif ($variable->op1 === null) {
+                throw ParserException::fromMalformedToken();
+            }
+
+            $this->parser->state->pushNode(
+                node: new IdentifierNode(
+                    name: $variable->op1,
+                ),
+            );
+
+            return;
         }
 
         throw ParserException::fromNotImplemented(

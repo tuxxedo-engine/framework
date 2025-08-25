@@ -110,6 +110,13 @@ class ParserException extends \Exception
         );
     }
 
+    public static function fromUnexpectedNodeStackExit(): self
+    {
+        return new self(
+            message: 'Cannot pop node stack, as the stack is empty',
+        );
+    }
+
     public static function fromMissingStateKey(
         string $key,
     ): self {

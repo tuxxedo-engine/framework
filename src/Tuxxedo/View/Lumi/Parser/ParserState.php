@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser;
 
+use Tuxxedo\View\Lumi\Node\ExpressionNodeInterface;
+
 class ParserState implements ParserStateInterface
 {
     public private(set) int $loopDepth = 0;
@@ -22,6 +24,11 @@ class ParserState implements ParserStateInterface
      * @var string[]
      */
     public private(set) array $groupingStack = [];
+
+    /**
+     * @var ExpressionNodeInterface[]
+     */
+    public private(set) array $nodeStack = [];
 
     /**
      * @var array<string, string|int|bool>
@@ -80,9 +87,50 @@ class ParserState implements ParserStateInterface
         }
     }
 
-    public function isAllGroupingsClosed(): bool
+    public function pushNode(
+        ExpressionNodeInterface $node,
+    ): void {
+        \array_push($this->nodeStack, $node);
+    }
+
+    public function popNode(): ExpressionNodeInterface
     {
-        return \sizeof($this->groupingStack) === 0;
+        if (\sizeof($this->nodeStack) === 0) {
+            throw ParserException::fromUnexpectedNodeStackExit();
+        }
+
+        /** @var ExpressionNodeInterface */
+        return \array_pop($this->nodeStack);
+    }
+
+    public function isCleanState(
+        bool $checkLoops = true,
+        bool $checkConditions = true,
+        bool $checkGroupings = true,
+        bool $checkNodes = true,
+        bool $checkCustom = true,
+    ): bool {
+        if ($checkLoops && $this->loopDepth !== 0) {
+            return false;
+        }
+
+        if ($checkConditions && $this->conditionDepth !== 0) {
+            return false;
+        }
+
+        if ($checkGroupings && \sizeof($this->groupingStack) !== 0) {
+            return false;
+        }
+
+        if ($checkNodes && \sizeof($this->nodeStack) !== 0) {
+            return false;
+        }
+
+        if ($checkCustom && \sizeof($this->state) !== 0) {
+            return false;
+        }
+
+        return true;
     }
 
     public function set(

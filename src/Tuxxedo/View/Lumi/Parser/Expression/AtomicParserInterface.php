@@ -13,26 +13,15 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Expression;
 
-use Tuxxedo\View\Lumi\Node\ExpressionNodeInterface;
-use Tuxxedo\View\Lumi\Node\IdentifierNode;
-use Tuxxedo\View\Lumi\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
 
 interface AtomicParserInterface
 {
-    public function parseSimpleLiteral(
-        TokenInterface $literal,
-    ): LiteralNode;
-
     public function parseLiteral(
         TokenInterface $literal,
-    ): ExpressionNodeInterface;
-
-    public function parseSimpleVariable(
-        TokenInterface $variable,
-    ): IdentifierNode;
+    ): void;
 
     public function parseVariable(
         TokenInterface $variable,
-    ): ExpressionNodeInterface;
+    ): void;
 }

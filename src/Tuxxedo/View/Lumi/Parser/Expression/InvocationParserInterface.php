@@ -13,27 +13,21 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Expression;
 
-use Tuxxedo\View\Lumi\Node\ExpressionNodeInterface;
-use Tuxxedo\View\Lumi\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
 
 interface InvocationParserInterface
 {
-    public function parseSimpleFunction(
-        TokenInterface $caller,
-    ): FunctionCallNode;
-
     public function parseFunction(
         TokenInterface $caller,
-    ): ExpressionNodeInterface;
+    ): void;
 
     public function parseMethodCall(
         TokenInterface $caller,
         TokenInterface $method,
-    ): ExpressionNodeInterface;
+    ): void;
 
     public function parseDereferenceChain(
         TokenInterface $caller,
         TokenInterface $method,
-    ): ExpressionNodeInterface;
+    ): void;
 }
