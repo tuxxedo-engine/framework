@@ -25,10 +25,12 @@ use Tuxxedo\Router\Attribute\Route;
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\LumiEngine;
+use Tuxxedo\View\Lumi\LumiViewRender;
 use Tuxxedo\View\Lumi\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\SymbolInterface;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
+use Tuxxedo\View\View;
 
 #[Controller(uri: '/lumi/')]
 readonly class LumiController
@@ -36,6 +38,8 @@ readonly class LumiController
     public function __construct(
         #[ConfigValue('view.directory')] private string $viewDirectory,
         #[ConfigValue('view.cacheDirectory')] private string $viewCacheDirectory,
+        private LumiViewRender $lumiViewRender,
+        private ViewController $viewController,
     ) {
     }
 
@@ -142,8 +146,40 @@ readonly class LumiController
 
     private function getShortViewName(
         string $viewFile,
+        bool $extension = true,
     ): string {
-        return \str_replace($this->viewDirectory . '/', '', $viewFile);
+        $file = \str_replace($this->viewDirectory . '/', '', $viewFile);
+
+        if (!$extension) {
+            return \str_replace('.lumi', '', $file);
+        }
+
+        return $file;
+    }
+
+    /**
+     * @return array<string, mixed>
+     *
+     * @throws HttpException
+     */
+    private function getTestScopeFor(
+        string $name,
+    ): array {
+        $view = (match ($name) {
+            'hello_world' => $this->viewController->hello(...),
+            'hello_world_set' => $this->viewController->set(...),
+            'hello_world_call' => $this->viewController->call(...),
+            'hello_world_method' => $this->viewController->method(...),
+            'hello_world_include' => $this->viewController->include(...),
+            'hello_world_cond' => $this->viewController->cond(...),
+            default => throw HttpException::fromInternalServerError(),
+        })();
+
+        if (!$view instanceof View) {
+            throw HttpException::fromInternalServerError();
+        }
+
+        return $view->scope;
     }
 
     #[Route\Get]
@@ -247,6 +283,34 @@ readonly class LumiController
             }
 
             $buffer .= '</pre>';
+
+            $viewName = $this->getShortViewName(
+                viewFile: $selectedViewFile,
+                extension: false,
+            );
+
+            $viewScope = $this->getTestScopeFor(
+                name: $viewName,
+            );
+
+            if (\sizeof($viewScope) > 0) {
+                $buffer .= '<h3>Injected scope</h3>';
+                $buffer .= '<pre>';
+
+                foreach ($viewScope as $variable => $value) {
+                    $buffer .= '$' . $variable . ' = ' . \get_debug_type($value) . "\n";
+                }
+
+                $buffer .= '</pre>';
+            }
+
+            $buffer .= '<h3>Output</h3>';
+            $buffer .= $this->lumiViewRender->render(
+                view: new View(
+                    name: $viewName,
+                    scope: $viewScope,
+                ),
+            );
         }
 
         return Response::html($buffer);
