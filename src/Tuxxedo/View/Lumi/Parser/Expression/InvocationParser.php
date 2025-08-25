@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Parser\Expression;
 
 use Tuxxedo\View\Lumi\Node\FunctionCallNode;
+use Tuxxedo\View\Lumi\Node\IdentifierNode;
+use Tuxxedo\View\Lumi\Node\MethodCallNode;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
@@ -51,7 +53,7 @@ class InvocationParser implements InvocationParserInterface
         }
 
         throw ParserException::fromNotImplemented(
-            feature: 'parsing function calls',
+            feature: 'parsing function calls with arguments',
         );
     }
 
@@ -59,8 +61,39 @@ class InvocationParser implements InvocationParserInterface
         TokenInterface $caller,
         TokenInterface $method,
     ): void {
+        if ($this->parser->stream->currentIs(BuiltinTokenNames::CHARACTER->name, ')')) {
+            $this->parser->stream->consume();
+
+            if (
+                $caller->type !== BuiltinTokenNames::IDENTIFIER->name ||
+                $method->type !== BuiltinTokenNames::IDENTIFIER->name
+            ) {
+                throw ParserException::fromUnexpectedTokenWithExpects(
+                    tokenName: $caller->type,
+                    expectedTokenName: BuiltinTokenNames::IDENTIFIER->name,
+                );
+            } elseif (
+                $caller->op1 === null ||
+                $method->op1 === null
+            ) {
+                throw ParserException::fromMalformedToken();
+            }
+
+            $this->parser->state->pushNode(
+                node: new MethodCallNode(
+                    caller: new IdentifierNode(
+                        name: $caller->op1,
+                    ),
+                    name: $method->op1,
+                    arguments: [],
+                ),
+            );
+
+            return;
+        }
+
         throw ParserException::fromNotImplemented(
-            feature: 'parsing method calls',
+            feature: 'parsing method calls with arguments',
         );
     }
 

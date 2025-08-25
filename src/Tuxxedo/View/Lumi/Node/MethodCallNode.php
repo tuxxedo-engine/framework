@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Node;
 
+// @todo Check if we should make $name an ExpressionNodeInterface
 readonly class MethodCallNode implements ExpressionNodeInterface
 {
     /**
