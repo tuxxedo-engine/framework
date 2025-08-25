@@ -13,7 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Expression;
 
+use Tuxxedo\View\Lumi\Parser\ParserException;
+
 interface GroupingParserInterface
 {
+    /**
+     * @throws ParserException
+     */
     public function parseGroup(): void;
 }

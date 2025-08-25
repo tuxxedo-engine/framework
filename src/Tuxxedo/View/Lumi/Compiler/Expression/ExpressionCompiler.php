@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Compiler\Expression;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
+use Tuxxedo\View\Lumi\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Node\LiteralNode;
@@ -46,6 +47,10 @@ class ExpressionCompiler implements ExpressionCompilerInterface
             $stream->consume();
 
             $compiledNode = $this->compileMethodCall($node);
+        } elseif ($node instanceof BinaryOpNode) {
+            $stream->consume();
+
+            $compiledNode = $this->compileBinaryOp($node);
         }
 
         if ($compiledNode === null) {
@@ -118,5 +123,38 @@ class ExpressionCompiler implements ExpressionCompilerInterface
             $node->caller->name,
             $node->name,
         );
+    }
+
+    private function compileBinaryOp(
+        BinaryOpNode $node,
+    ): string {
+        $expression = '';
+
+        if ($node->left instanceof LiteralNode) {
+            $expression .= $this->compileLiteral($node->left);
+        } elseif ($node->left instanceof IdentifierNode) {
+            $expression .= $this->compileIdentifier($node->left);
+        } else {
+            throw CompilerException::fromNotImplemented(
+                feature: 'Only literal and identifier left hand side nodes are supported with binary operators',
+            );
+        }
+
+        $expression .= \sprintf(
+            ' %s ',
+            $node->operator->symbol(),
+        );
+
+        if ($node->right instanceof LiteralNode) {
+            $expression .= $this->compileLiteral($node->right);
+        } elseif ($node->right instanceof IdentifierNode) {
+            $expression .= $this->compileIdentifier($node->right);
+        } else {
+            throw CompilerException::fromNotImplemented(
+                feature: 'Only literal and identifier right hand side nodes are supported with binary operators',
+            );
+        }
+
+        return $expression;
     }
 }

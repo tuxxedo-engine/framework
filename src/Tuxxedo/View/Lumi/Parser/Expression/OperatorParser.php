@@ -13,25 +13,85 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Expression;
 
+use Tuxxedo\View\Lumi\Node\BinaryOpNode;
+use Tuxxedo\View\Lumi\Node\ExpressionNodeInterface;
+use Tuxxedo\View\Lumi\Node\IdentifierNode;
+use Tuxxedo\View\Lumi\Node\LiteralNode;
+use Tuxxedo\View\Lumi\Node\NodeNativeType;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\BinaryOperator;
 use Tuxxedo\View\Lumi\Syntax\UnaryOperator;
+use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
 
 class OperatorParser implements OperatorParserInterface
 {
-    // @todo Fix visibility
     public function __construct(
-        public readonly ExpressionParserInterface $parser,
+        private readonly ExpressionParserInterface $parser,
     ) {
     }
 
-    public function parseBinary(
-        TokenInterface $left,
+    public function parseBinaryByNode(
+        ExpressionNodeInterface $left,
         BinaryOperator $operator,
     ): void {
         throw ParserException::fromNotImplemented(
-            feature: 'parsing binary expressions',
+            feature: 'parsing binary expressions from nodes',
+        );
+    }
+
+    public function parseBinaryByToken(
+        TokenInterface $left,
+        BinaryOperator $operator,
+    ): void {
+        if ($left->type !== BuiltinTokenNames::IDENTIFIER->name) {
+            throw ParserException::fromUnexpectedTokenWithExpects(
+                tokenName: $left->type,
+                expectedTokenName: BuiltinTokenNames::IDENTIFIER->name,
+            );
+        } elseif ($left->op1 === null) {
+            throw ParserException::fromMalformedToken();
+        }
+
+        $next = $this->parser->stream->current();
+        $this->parser->stream->consume();
+
+        if (
+            $next->type !== BuiltinTokenNames::IDENTIFIER->name &&
+            $next->type !== BuiltinTokenNames::LITERAL->name
+        ) {
+            throw ParserException::fromNotImplemented(
+                feature: 'only variables and literals are supported in binary operations on the right hand side',
+            );
+        } else {
+            if ($next->type === BuiltinTokenNames::IDENTIFIER->name) {
+                if ($next->op1 === null) {
+                    throw ParserException::fromMalformedToken();
+                }
+
+                $right = new IdentifierNode(
+                    name: $next->op1,
+                );
+            } else {
+                if ($next->op1 === null || $next->op2 === null) {
+                    throw ParserException::fromMalformedToken();
+                }
+
+                $right = new LiteralNode(
+                    operand: $next->op1,
+                    type: NodeNativeType::fromTokenNativeType($next->op2),
+                );
+            }
+        }
+
+        $this->parser->state->pushNode(
+            new BinaryOpNode(
+                left: new IdentifierNode(
+                    name: $left->op1,
+                ),
+                right: $right,
+                operator: $operator,
+            ),
         );
     }
 

@@ -13,14 +13,21 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Expression;
 
+use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
 
 interface AtomicParserInterface
 {
+    /**
+     * @throws ParserException
+     */
     public function parseLiteral(
         TokenInterface $literal,
     ): void;
 
+    /**
+     * @throws ParserException
+     */
     public function parseVariable(
         TokenInterface $variable,
     ): void;

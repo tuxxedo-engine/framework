@@ -193,7 +193,7 @@ class ExpressionParser implements ExpressionParserInterface
                         continue;
                     }
 
-                    $this->operator->parseBinary(
+                    $this->operator->parseBinaryByToken(
                         left: $token,
                         operator: BinaryOperator::from($next),
                     );
@@ -227,6 +227,13 @@ class ExpressionParser implements ExpressionParserInterface
                 }
 
                 if (!UnaryOperator::is($token)) {
+                    if (BinaryOperator::is($token)) {
+                        $this->operator->parseBinaryByNode(
+                            left: $this->state->popNode(),
+                            operator: BinaryOperator::from($token),
+                        );
+                    }
+
                     throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
                         tokenName: $token->op1,
                         expectedTokenNames: UnaryOperator::all(),
