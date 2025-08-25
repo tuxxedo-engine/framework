@@ -19,6 +19,10 @@ interface TokenInterface
         get;
     }
 
+    public int $line {
+        get;
+    }
+
     public ?string $op1 {
         get;
     }

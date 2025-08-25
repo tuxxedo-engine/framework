@@ -111,6 +111,7 @@ class Lexer implements LexerInterface
     ): ?array {
         for ($i = 1; $i <= $this->maxTokenLength && !$stream->eof(); $i++) {
             $buffer = $stream->peek($i);
+            $line = $stream->line;
 
             if (isset($this->sequences[$buffer])) {
                 $handler = $this->sequences[$buffer];
@@ -119,7 +120,10 @@ class Lexer implements LexerInterface
                     $stream->consumeSequence($buffer);
 
                     return [
-                        new TextToken($buffer),
+                        new TextToken(
+                            line: $line,
+                            op1: $buffer,
+                        ),
                     ];
                 }
 
@@ -136,20 +140,27 @@ class Lexer implements LexerInterface
         ByteStreamInterface $stream,
     ): TokenInterface {
         $buffer = '';
+        $line = $stream->line;
 
         while (!$stream->eof()) {
             for ($i = 1; $i <= $this->maxTokenLength && !$stream->eof(); $i++) {
                 $peek = $stream->peek($i);
 
                 if (isset($this->sequences[$peek])) {
-                    return new TextToken($buffer);
+                    return new TextToken(
+                        line: $stream->line,
+                        op1: $buffer,
+                    );
                 }
             }
 
             $buffer .= $stream->consume();
         }
 
-        return new TextToken($buffer);
+        return new TextToken(
+            line: $line,
+            op1: $buffer,
+        );
     }
 
     /**
@@ -193,6 +204,7 @@ class Lexer implements LexerInterface
                     $buffer = $token;
                 } else {
                     $buffer = new TextToken(
+                        line: $buffer->line,
                         op1: $buffer->op1 . $token->op1,
                     );
                 }

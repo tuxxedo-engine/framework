@@ -18,6 +18,7 @@ readonly class LiteralToken implements TokenInterface
     public string $type;
 
     public function __construct(
+        public int $line,
         public string $op1,
         public string $op2,
     ) {

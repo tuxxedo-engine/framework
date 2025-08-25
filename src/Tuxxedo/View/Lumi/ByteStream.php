@@ -17,12 +17,23 @@ use Tuxxedo\View\Lumi\Lexer\LexerException;
 
 class ByteStream implements ByteStreamInterface
 {
+    public readonly string $input;
     public readonly int $length;
     public private(set) int $position = 0;
+    public private(set) int $line = 1;
 
     final private function __construct(
-        public readonly string $input,
+        string $input,
     ) {
+        $this->input = \str_replace(
+            [
+                "\r\n",
+                "\r",
+            ],
+            "\n",
+            $input,
+        );
+
         $this->length = \mb_strlen($this->input, 'UTF-8');
     }
 
@@ -98,6 +109,10 @@ class ByteStream implements ByteStreamInterface
         $char = \mb_substr($this->input, $this->position, 1, 'UTF-8');
         $this->position++;
 
+        if ($char === "\n") {
+            $this->line++;
+        }
+
         return $char;
     }
 
@@ -111,6 +126,7 @@ class ByteStream implements ByteStreamInterface
         }
 
         $this->position += \mb_strlen($sequence, 'UTF-8');
+        $this->line += \substr_count($sequence, "\n");
     }
 
     public function consumeWhitespace(): bool

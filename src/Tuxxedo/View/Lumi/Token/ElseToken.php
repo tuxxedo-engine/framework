@@ -19,8 +19,9 @@ readonly class ElseToken implements TokenInterface
     public null $op1;
     public null $op2;
 
-    public function __construct()
-    {
+    public function __construct(
+        public int $line,
+    ) {
         $this->type = BuiltinTokenNames::ELSE->name;
         $this->op1 = null;
         $this->op2 = null;

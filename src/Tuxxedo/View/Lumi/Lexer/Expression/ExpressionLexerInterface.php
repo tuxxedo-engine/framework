@@ -21,6 +21,7 @@ interface ExpressionLexerInterface
      * @return TokenInterface[]
      */
     public function parse(
+        int $startingLine,
         string $operand,
     ): array;
 }

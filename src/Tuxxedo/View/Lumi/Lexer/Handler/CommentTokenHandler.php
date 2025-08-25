@@ -35,13 +35,17 @@ class CommentTokenHandler implements TokenHandlerInterface
         ExpressionLexerInterface $expressionLexer,
     ): array {
         $buffer = '';
+        $line = $stream->line;
 
         while (!$stream->eof()) {
             if ($stream->match($this->getEndingSequence())) {
                 $stream->consumeSequence($this->getEndingSequence());
 
                 return [
-                    new CommentToken(\mb_trim($buffer)),
+                    new CommentToken(
+                        line: $stream->line,
+                        op1: \mb_trim($buffer),
+                    ),
                 ];
             }
 
@@ -49,7 +53,10 @@ class CommentTokenHandler implements TokenHandlerInterface
         }
 
         return [
-            new TextToken($buffer),
+            new TextToken(
+                line: $line,
+                op1: $buffer,
+            ),
         ];
     }
 }

@@ -36,15 +36,23 @@ class EchoTokenHandler implements TokenHandlerInterface
         ExpressionLexerInterface $expressionLexer,
     ): array {
         $buffer = '';
+        $line = $stream->line;
 
         while (!$stream->eof()) {
             if ($stream->match($this->getEndingSequence())) {
                 $stream->consumeSequence($this->getEndingSequence());
 
                 return [
-                    new EchoToken(),
-                    ...$expressionLexer->parse(\mb_trim($buffer)),
-                    new EndToken(),
+                    new EchoToken(
+                        line: $stream->line,
+                    ),
+                    ...$expressionLexer->parse(
+                        startingLine: $stream->line,
+                        operand: \mb_trim($buffer),
+                    ),
+                    new EndToken(
+                        line: $stream->line,
+                    ),
                 ];
             }
 
@@ -52,7 +60,10 @@ class EchoTokenHandler implements TokenHandlerInterface
         }
 
         return [
-            new TextToken($this->getStartingSequence() . $buffer),
+            new TextToken(
+                line: $line,
+                op1: $this->getStartingSequence() . $buffer,
+            ),
         ];
     }
 }

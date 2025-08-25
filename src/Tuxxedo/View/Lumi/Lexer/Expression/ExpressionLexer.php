@@ -56,10 +56,13 @@ class ExpressionLexer implements ExpressionLexerInterface
         $this->characterSymbols = $characterSymbols;
     }
 
-    public function parse(string $operand): array
-    {
+    public function parse(
+        int $startingLine,
+        string $operand,
+    ): array {
         $tokens = [];
         $buffer = '';
+        $line = $startingLine;
         $inQuote = false;
         $quoteChar = '';
         $stream = ByteStream::createFromString($operand);
@@ -84,10 +87,13 @@ class ExpressionLexer implements ExpressionLexerInterface
                     if ($slashes % 2 === 0) {
                         $inQuote = false;
                         $tokens[] = new LiteralToken(
+                            line: $line,
                             op1: \mb_substr($buffer, 1, -1),
                             op2: BuiltinTypeNames::STRING->name,
                         );
+
                         $buffer = '';
+                        $line += $stream->line;
                     }
                 }
 
@@ -96,8 +102,9 @@ class ExpressionLexer implements ExpressionLexerInterface
 
             if ($char === '"' || $char === "'") {
                 if ($buffer !== '') {
-                    $tokens[] = $this->classifyToken($buffer);
+                    $tokens[] = $this->classifyToken($line, $buffer);
                     $buffer = '';
+                    $line += $stream->line;
                 }
 
                 $inQuote = true;
@@ -111,8 +118,9 @@ class ExpressionLexer implements ExpressionLexerInterface
                 $stream->consumeWhitespace();
 
                 if ($buffer !== '') {
-                    $tokens[] = $this->classifyToken($buffer);
+                    $tokens[] = $this->classifyToken($line, $buffer);
                     $buffer = '';
+                    $line += $stream->line;
                 }
 
                 continue;
@@ -133,11 +141,13 @@ class ExpressionLexer implements ExpressionLexerInterface
 
                 if ($this->isValidInteger($buffer)) {
                     $tokens[] = new LiteralToken(
+                        line: $line,
                         op1: $buffer,
                         op2: BuiltinTypeNames::INT->name,
                     );
                 } elseif ($this->isValidFloat($buffer)) {
                     $tokens[] = new LiteralToken(
+                        line: $line,
                         op1: $buffer,
                         op2: BuiltinTypeNames::FLOAT->name,
                     );
@@ -148,6 +158,7 @@ class ExpressionLexer implements ExpressionLexerInterface
                 }
 
                 $buffer = '';
+                $line += $stream->line;
 
                 continue;
             }
@@ -159,12 +170,14 @@ class ExpressionLexer implements ExpressionLexerInterface
             }
 
             if ($buffer !== '') {
-                $tokens[] = $this->classifyToken($buffer);
+                $tokens[] = $this->classifyToken($line, $buffer);
                 $buffer = '';
+                $line += $stream->line;
             }
 
             if (\preg_match('/^[^\p{L}\p{N}\s]$/u', $char) === 1) {
                 $buffer = '';
+                $line += $stream->line;
                 $lastValid = null;
 
                 while (!$stream->eof()) {
@@ -192,7 +205,7 @@ class ExpressionLexer implements ExpressionLexerInterface
                 }
 
                 if ($lastValid !== null) {
-                    $tokens[] = $this->classifySymbol($lastValid);
+                    $tokens[] = $this->classifySymbol($line, $lastValid);
 
                     $remainingLength = \mb_strlen($buffer) - \mb_strlen($lastValid);
                     for ($i = 0; $i < $remainingLength; $i++) {
@@ -200,6 +213,7 @@ class ExpressionLexer implements ExpressionLexerInterface
                     }
 
                     $buffer = '';
+                    $line += $stream->line;
                 } else {
                     throw LexerException::fromUnknownSymbol(
                         symbol: $buffer,
@@ -209,7 +223,7 @@ class ExpressionLexer implements ExpressionLexerInterface
         }
 
         if ($buffer !== '') {
-            $tokens[] = $this->classifyToken($buffer);
+            $tokens[] = $this->classifyToken($line, $buffer);
         }
 
         if ($inQuote) {
@@ -225,10 +239,13 @@ class ExpressionLexer implements ExpressionLexerInterface
         return $tokens;
     }
 
-    private function classifyToken(string $value): TokenInterface
-    {
+    private function classifyToken(
+        int $line,
+        string $value,
+    ): TokenInterface {
         if ($this->isValidFloat($value)) {
             return new LiteralToken(
+                line: $line,
                 op1: $value,
                 op2: BuiltinTypeNames::FLOAT->name,
             );
@@ -236,6 +253,7 @@ class ExpressionLexer implements ExpressionLexerInterface
 
         if ($this->isValidInteger($value)) {
             return new LiteralToken(
+                line: $line,
                 op1: $value,
                 op2: BuiltinTypeNames::INT->name,
             );
@@ -243,6 +261,7 @@ class ExpressionLexer implements ExpressionLexerInterface
 
         if (\in_array(\mb_strtolower($value), ['true', 'false'], true)) {
             return new LiteralToken(
+                line: $line,
                 op1: $value,
                 op2: BuiltinTypeNames::BOOL->name,
             );
@@ -250,26 +269,32 @@ class ExpressionLexer implements ExpressionLexerInterface
 
         if (\mb_strtolower($value) === 'null') {
             return new LiteralToken(
+                line: $line,
                 op1: $value,
                 op2: BuiltinTypeNames::NULL->name,
             );
         }
 
         return new IdentifierToken(
+            line: $line,
             op1: $value,
         );
     }
 
-    private function classifySymbol(string $symbol): TokenInterface
-    {
+    private function classifySymbol(
+        int $line,
+        string $symbol,
+    ): TokenInterface {
         if (\in_array($symbol, $this->operators, true)) {
             return new OperatorToken(
+                line: $line,
                 op1: $symbol,
             );
         }
 
         if (\in_array($symbol, $this->characterSymbols, true)) {
             return new CharacterToken(
+                line: $line,
                 op1: $symbol,
             );
         }

@@ -22,6 +22,7 @@ readonly class BreakToken implements TokenInterface
      * @param numeric-string $op1
      */
     public function __construct(
+        public int $line,
         public ?string $op1,
     ) {
         $this->type = BuiltinTokenNames::BREAK->name;

@@ -27,6 +27,10 @@ interface ByteStreamInterface
         get;
     }
 
+    public int $line {
+        get;
+    }
+
     /**
      * @phpstan-impure
      */

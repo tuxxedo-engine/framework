@@ -49,12 +49,14 @@ class BlockTokenHandler implements TokenHandlerInterface
         ExpressionLexerInterface $expressionLexer,
     ): array {
         $buffer = '';
+        $line = $stream->line;
 
         while (!$stream->eof()) {
             if ($stream->match($this->getEndingSequence())) {
                 $stream->consumeSequence($this->getEndingSequence());
 
                 return $this->parseBlock(
+                    startingLine: $stream->line,
                     expression: \mb_trim($buffer),
                     expressionLexer: $expressionLexer,
                 );
@@ -64,7 +66,10 @@ class BlockTokenHandler implements TokenHandlerInterface
         }
 
         return [
-            new TextToken($this->getStartingSequence() . $buffer),
+            new TextToken(
+                line: $line,
+                op1: $this->getStartingSequence() . $buffer,
+            ),
         ];
     }
 
@@ -74,6 +79,7 @@ class BlockTokenHandler implements TokenHandlerInterface
      * @throws LexerException
      */
     private function parseBlock(
+        int $startingLine,
         string $expression,
         ExpressionLexerInterface $expressionLexer,
     ): array {
@@ -83,35 +89,79 @@ class BlockTokenHandler implements TokenHandlerInterface
 
             return match ($directive) {
                 'if' => [
-                    new IfToken(),
-                    ...$expressionLexer->parse($expr),
-                    new EndToken(),
+                    new IfToken(
+                        line: $startingLine,
+                    ),
+                    ...$expressionLexer->parse(
+                        startingLine: $startingLine,
+                        operand: $expr,
+                    ),
+                    new EndToken(
+                        line: $startingLine,
+                    ),
                 ],
                 'elseif' => [
-                    new ElseIfToken(),
-                    ...$expressionLexer->parse($expr),
-                    new EndToken(),
+                    new ElseIfToken(
+                        line: $startingLine,
+                    ),
+                    ...$expressionLexer->parse(
+                        startingLine: $startingLine,
+                        operand: $expr,
+                    ),
+                    new EndToken(
+                        line: $startingLine,
+                    ),
                 ],
                 'do' => [
-                    new DoToken(),
+                    new DoToken(
+                        line: $startingLine,
+                    ),
                 ],
-                'for' => $this->parseFor($expr, $expressionLexer),
-                'foreach' => $this->parseForeach($expr, $expressionLexer),
+                'for' => $this->parseFor(
+                    startingLine: $startingLine,
+                    expression: $expr,
+                    expressionLexer: $expressionLexer,
+                ),
+                'foreach' => $this->parseForeach(
+                    startingLine: $startingLine,
+                    expression: $expr,
+                    expressionLexer: $expressionLexer,
+                ),
                 'while' => [
-                    new WhileToken(),
-                    ...$expressionLexer->parse($expr),
-                    new EndToken(),
+                    new WhileToken(
+                        line: $startingLine,
+                    ),
+                    ...$expressionLexer->parse(
+                        startingLine: $startingLine,
+                        operand: $expr,
+                    ),
+                    new EndToken(
+                        line: $startingLine,
+                    ),
                 ],
                 'set' => [
-                    new AssignToken(),
-                    ...$expressionLexer->parse($expr),
-                    new EndToken(),
+                    new AssignToken(
+                        line: $startingLine,
+                    ),
+                    ...$expressionLexer->parse(
+                        startingLine: $startingLine,
+                        operand: $expr,
+                    ),
+                    new EndToken(
+                        line: $startingLine,
+                    ),
                 ],
                 'break' => [
-                    new BreakToken($this->parseLoopDepth($expr)),
+                    new BreakToken(
+                        line: $startingLine,
+                        op1: $this->parseLoopDepth($expr),
+                    ),
                 ],
                 'continue' => [
-                    new ContinueToken($this->parseLoopDepth($expr)),
+                    new ContinueToken(
+                        line: $startingLine,
+                        op1: $this->parseLoopDepth($expr),
+                    ),
                 ],
                 default => throw LexerException::fromSequenceNotFound(
                     sequence: $directive,
@@ -123,10 +173,18 @@ class BlockTokenHandler implements TokenHandlerInterface
 
         return [
             match ($directive) {
-                'else' => new ElseToken(),
-                'endif' => new EndIfToken(),
-                'endfor', 'endforeach' => new EndForToken(),
-                'endwhile' => new EndWhileToken(),
+                'else' => new ElseToken(
+                    line: $startingLine,
+                ),
+                'endif' => new EndIfToken(
+                    line: $startingLine,
+                ),
+                'endfor', 'endforeach' => new EndForToken(
+                    line: $startingLine,
+                ),
+                'endwhile' => new EndWhileToken(
+                    line: $startingLine,
+                ),
                 default => throw LexerException::fromSequenceNotFound(
                     sequence: $directive,
                 ),
@@ -140,6 +198,7 @@ class BlockTokenHandler implements TokenHandlerInterface
      * @throws LexerException
      */
     private function parseFor(
+        int $startingLine,
         string $expression,
         ExpressionLexerInterface $expressionLexer,
     ): array {
@@ -152,9 +211,18 @@ class BlockTokenHandler implements TokenHandlerInterface
         $expr = $matches[3];
 
         return [
-            new ForToken($value, $key),
-            ...$expressionLexer->parse($expr),
-            new EndToken(),
+            new ForToken(
+                line: $startingLine,
+                op1: $value,
+                op2: $key,
+            ),
+            ...$expressionLexer->parse(
+                startingLine: $startingLine,
+                operand: $expr,
+            ),
+            new EndToken(
+                line: $startingLine,
+            ),
         ];
     }
 
@@ -164,6 +232,7 @@ class BlockTokenHandler implements TokenHandlerInterface
      * @throws LexerException
      */
     private function parseForeach(
+        int $startingLine,
         string $expression,
         ExpressionLexerInterface $expressionLexer,
     ): array {
@@ -181,9 +250,18 @@ class BlockTokenHandler implements TokenHandlerInterface
         }
 
         return [
-            new ForToken($value, $key),
-            ...$expressionLexer->parse($expr),
-            new EndToken(),
+            new ForToken(
+                line: $startingLine,
+                op1: $value,
+                op2: $key,
+            ),
+            ...$expressionLexer->parse(
+                startingLine: $startingLine,
+                operand: $expr,
+            ),
+            new EndToken(
+                line: $startingLine,
+            ),
         ];
     }
 

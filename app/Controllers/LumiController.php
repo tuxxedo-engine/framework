@@ -46,7 +46,11 @@ readonly class LumiController
     private function visualizeToken(
         TokenInterface $token,
     ): string {
-        $output = $token->type;
+        $output = \sprintf(
+            'L%s %s',
+            \str_pad((string) $token->line, 3),
+            $token->type,
+        );
 
         if ($token->op1 !== null || $token->op2 !== null) {
             $output .= ' (';

@@ -19,6 +19,7 @@ readonly class OperatorToken implements TokenInterface
     public null $op2;
 
     public function __construct(
+        public int $line,
         public string $op1,
     ) {
         $this->type = BuiltinTokenNames::OPERATOR->name;
