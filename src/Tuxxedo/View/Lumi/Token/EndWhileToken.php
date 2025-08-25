@@ -21,7 +21,7 @@ readonly class EndWhileToken implements TokenInterface
 
     public function __construct()
     {
-        $this->type = BuiltinTokenNames::END->name;
+        $this->type = BuiltinTokenNames::ENDWHILE->name;
         $this->op1 = null;
         $this->op2 = null;
     }

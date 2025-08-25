@@ -3,5 +3,7 @@
 {% endif %}
 
 {% if false %}
-    <p>Never printed</p>
+    {% if false %}
+        <p>Never printed</p>
+    {% endif %}
 {% endif %}

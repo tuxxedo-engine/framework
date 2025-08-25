@@ -19,6 +19,7 @@ use Tuxxedo\View\Lumi\Parser\Expression\ExpressionParserInterface;
 use Tuxxedo\View\Lumi\Parser\Handler\AssignHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\CommentHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\EchoHandler;
+use Tuxxedo\View\Lumi\Parser\Handler\ConditionHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\ParserHandlerInterface;
 use Tuxxedo\View\Lumi\Parser\Handler\TextHandler;
 
@@ -58,6 +59,7 @@ class Parser implements ParserInterface
             new CommentHandler(),
             new EchoHandler(),
             new AssignHandler(),
+            new ConditionHandler(),
         ];
     }
 

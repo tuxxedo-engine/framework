@@ -280,10 +280,13 @@ readonly class LumiController
                 );
             } catch (CompilerException $exception) {
                 $buffer .= $exception;
+                $showNext = false;
             }
 
             $buffer .= '</pre>';
+        }
 
+        if ($showNext) {
             $viewName = $this->getShortViewName(
                 viewFile: $selectedViewFile,
                 extension: false,

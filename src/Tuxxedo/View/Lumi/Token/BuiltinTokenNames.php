@@ -25,6 +25,9 @@ enum BuiltinTokenNames
     case ELSEIF;
     case ELSE;
     case END;
+    case ENDFOR;
+    case ENDIF;
+    case ENDWHILE;
     case FOR;
     case IDENTIFIER;
     case IF;
