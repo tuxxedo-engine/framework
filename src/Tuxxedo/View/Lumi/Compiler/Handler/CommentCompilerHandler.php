@@ -34,7 +34,7 @@ class CommentCompilerHandler implements CompilerHandlerInterface
         /** @var CommentNode $node */
 
         $commentary = '';
-        $lines = \preg_split('/\r\n|\r|\n/', $node->text);
+        $lines = \preg_split('/\n/u', $node->text);
 
         if ($lines !== false) {
             foreach ($lines as $line) {

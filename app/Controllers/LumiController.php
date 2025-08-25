@@ -74,8 +74,22 @@ readonly class LumiController
     }
 
     private function visualizeValue(
-        mixed $op,
+        mixed $value,
     ): string {
+        \ob_start();
+        \var_dump($value);
+
+        /** @var string $value */
+        $value = \ob_get_clean();
+
+        /** @var list<string> $lines */
+        $lines = \preg_split('/\n/', $value);
+        $value = [];
+
+        foreach ($lines as $line) {
+            $value[] = \mb_trim($line);
+        }
+
         return \str_replace(
             [
                 "\r\n",
@@ -83,7 +97,7 @@ readonly class LumiController
                 "\n",
             ],
             '\n',
-            \htmlspecialchars(\var_export($op, true)),
+            \mb_trim(\htmlspecialchars(\join(' ', $value))),
         );
     }
 
