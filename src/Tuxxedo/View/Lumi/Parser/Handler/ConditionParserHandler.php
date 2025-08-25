@@ -21,7 +21,7 @@ use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
 
-class ConditionHandler implements ParserHandlerInterface
+class ConditionParserHandler implements ParserHandlerInterface
 {
     public private(set) string $tokenName = BuiltinTokenNames::IF->name;
 

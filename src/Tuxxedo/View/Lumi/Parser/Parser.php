@@ -16,13 +16,13 @@ namespace Tuxxedo\View\Lumi\Parser;
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Parser\Expression\ExpressionParser;
 use Tuxxedo\View\Lumi\Parser\Expression\ExpressionParserInterface;
-use Tuxxedo\View\Lumi\Parser\Handler\AssignHandler;
-use Tuxxedo\View\Lumi\Parser\Handler\CommentHandler;
-use Tuxxedo\View\Lumi\Parser\Handler\EchoHandler;
-use Tuxxedo\View\Lumi\Parser\Handler\ConditionHandler;
+use Tuxxedo\View\Lumi\Parser\Handler\AssignParserHandler;
+use Tuxxedo\View\Lumi\Parser\Handler\CommentParserHandler;
+use Tuxxedo\View\Lumi\Parser\Handler\EchoParserHandler;
+use Tuxxedo\View\Lumi\Parser\Handler\ConditionParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\ParserHandlerInterface;
-use Tuxxedo\View\Lumi\Parser\Handler\TextHandler;
-use Tuxxedo\View\Lumi\Parser\Handler\VoidHandler;
+use Tuxxedo\View\Lumi\Parser\Handler\TextParserHandler;
+use Tuxxedo\View\Lumi\Parser\Handler\VoidParserHandler;
 use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
 
 class Parser implements ParserInterface
@@ -57,15 +57,15 @@ class Parser implements ParserInterface
     public static function getDefaults(): array
     {
         return [
-            new TextHandler(),
-            new CommentHandler(),
-            new EchoHandler(),
-            new AssignHandler(),
-            new ConditionHandler(),
-            new VoidHandler(
+            new TextParserHandler(),
+            new CommentParserHandler(),
+            new EchoParserHandler(),
+            new AssignParserHandler(),
+            new ConditionParserHandler(),
+            new VoidParserHandler(
                 tokenName: BuiltinTokenNames::ELSEIF->name,
             ),
-            new VoidHandler(
+            new VoidParserHandler(
                 tokenName: BuiltinTokenNames::ELSE->name,
             ),
         ];

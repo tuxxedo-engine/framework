@@ -20,7 +20,7 @@ use Tuxxedo\View\Lumi\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
 
-class EchoHandler implements ParserHandlerInterface
+class EchoParserHandler implements ParserHandlerInterface
 {
     public private(set) string $tokenName = BuiltinTokenNames::ECHO->name;
 

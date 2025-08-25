@@ -18,7 +18,7 @@ use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
 
-class VoidHandler implements ParserHandlerInterface
+class VoidParserHandler implements ParserHandlerInterface
 {
     public function __construct(
         public readonly string $tokenName,

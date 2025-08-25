@@ -18,7 +18,7 @@ use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Token\CommentToken;
 use Tuxxedo\View\Lumi\Token\TextToken;
 
-class CommentHandler implements TokenHandlerInterface
+class CommentTokenHandler implements TokenHandlerInterface
 {
     public function getStartingSequence(): string
     {

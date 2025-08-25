@@ -19,7 +19,7 @@ use Tuxxedo\View\Lumi\Token\EchoToken;
 use Tuxxedo\View\Lumi\Token\EndToken;
 use Tuxxedo\View\Lumi\Token\TextToken;
 
-class EchoHandler implements TokenHandlerInterface
+class EchoTokenHandler implements TokenHandlerInterface
 {
     public function getStartingSequence(): string
     {

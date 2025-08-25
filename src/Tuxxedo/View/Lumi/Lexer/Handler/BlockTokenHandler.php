@@ -32,7 +32,7 @@ use Tuxxedo\View\Lumi\Token\TextToken;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
 use Tuxxedo\View\Lumi\Token\WhileToken;
 
-class BlockHandler implements TokenHandlerInterface
+class BlockTokenHandler implements TokenHandlerInterface
 {
     public function getStartingSequence(): string
     {

@@ -23,7 +23,7 @@ use Tuxxedo\View\Lumi\Syntax\AssignmentOperator;
 use Tuxxedo\View\Lumi\Syntax\BinaryOperator;
 use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
 
-class AssignHandler implements ParserHandlerInterface
+class AssignParserHandler implements ParserHandlerInterface
 {
     public private(set) string $tokenName = BuiltinTokenNames::ASSIGN->name;
 

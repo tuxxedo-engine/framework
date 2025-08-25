@@ -18,9 +18,9 @@ use Tuxxedo\View\Lumi\ByteStream;
 use Tuxxedo\View\Lumi\ByteStreamInterface;
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexer;
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
-use Tuxxedo\View\Lumi\Lexer\Handler\BlockHandler;
-use Tuxxedo\View\Lumi\Lexer\Handler\CommentHandler;
-use Tuxxedo\View\Lumi\Lexer\Handler\EchoHandler;
+use Tuxxedo\View\Lumi\Lexer\Handler\BlockTokenHandler;
+use Tuxxedo\View\Lumi\Lexer\Handler\CommentTokenHandler;
+use Tuxxedo\View\Lumi\Lexer\Handler\EchoTokenHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\TokenHandlerInterface;
 use Tuxxedo\View\Lumi\Token\TextToken;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
@@ -68,9 +68,9 @@ class Lexer implements LexerInterface
     public static function getDefaults(): array
     {
         return [
-            new EchoHandler(),
-            new CommentHandler(),
-            new BlockHandler(),
+            new EchoTokenHandler(),
+            new CommentTokenHandler(),
+            new BlockTokenHandler(),
         ];
     }
 

@@ -14,15 +14,15 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Parser\Handler;
 
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
-use Tuxxedo\View\Lumi\Node\CommentNode;
 use Tuxxedo\View\Lumi\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Node\TextNode;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
 
-class CommentHandler implements ParserHandlerInterface
+class TextParserHandler implements ParserHandlerInterface
 {
-    public private(set) string $tokenName = BuiltinTokenNames::COMMENT->name;
+    public private(set) string $tokenName = BuiltinTokenNames::TEXT->name;
 
     /**
      * @return NodeInterface[]
@@ -34,13 +34,13 @@ class CommentHandler implements ParserHandlerInterface
         $nodes = [];
 
         do {
-            $token = $stream->expect(BuiltinTokenNames::COMMENT->name);
+            $token = $stream->expect(BuiltinTokenNames::TEXT->name);
 
             if ($token->op1 === null) {
                 throw ParserException::fromMalformedToken();
             }
 
-            $nodes[] = new CommentNode(
+            $nodes[] = new TextNode(
                 text: $token->op1,
             );
         } while (!$stream->eof() && $stream->currentIs($this->tokenName));
