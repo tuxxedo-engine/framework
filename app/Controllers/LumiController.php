@@ -76,7 +76,15 @@ readonly class LumiController
     private function visualizeValue(
         mixed $op,
     ): string {
-        return \str_replace(["\r\n", "\r", "\n"], '\n', \htmlspecialchars(\var_export($op, true)));
+        return \str_replace(
+            [
+                "\r\n",
+                "\r",
+                "\n",
+            ],
+            '\n',
+            \htmlspecialchars(\var_export($op, true)),
+        );
     }
 
     private function visualizeNode(
