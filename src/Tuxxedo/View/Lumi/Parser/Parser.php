@@ -22,13 +22,15 @@ use Tuxxedo\View\Lumi\Parser\Handler\EchoHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\ConditionHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\ParserHandlerInterface;
 use Tuxxedo\View\Lumi\Parser\Handler\TextHandler;
+use Tuxxedo\View\Lumi\Parser\Handler\VoidHandler;
+use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
 
 class Parser implements ParserInterface
 {
     /**
      * @var ParserHandlerInterface[]
      */
-    private readonly array $handlers;
+    public readonly array $handlers;
 
     /**
      * @param ParserHandlerInterface[] $handlers
@@ -60,6 +62,12 @@ class Parser implements ParserInterface
             new EchoHandler(),
             new AssignHandler(),
             new ConditionHandler(),
+            new VoidHandler(
+                tokenName: BuiltinTokenNames::ELSEIF->name,
+            ),
+            new VoidHandler(
+                tokenName: BuiltinTokenNames::ELSE->name,
+            ),
         ];
     }
 

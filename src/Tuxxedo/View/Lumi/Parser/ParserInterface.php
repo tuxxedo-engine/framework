@@ -15,6 +15,7 @@ namespace Tuxxedo\View\Lumi\Parser;
 
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Parser\Expression\ExpressionParserInterface;
+use Tuxxedo\View\Lumi\Parser\Handler\ParserHandlerInterface;
 
 interface ParserInterface
 {
@@ -23,6 +24,13 @@ interface ParserInterface
     }
 
     public ParserStateInterface $state {
+        get;
+    }
+
+    /**
+     * @var ParserHandlerInterface[]
+     */
+    public array $handlers {
         get;
     }
 

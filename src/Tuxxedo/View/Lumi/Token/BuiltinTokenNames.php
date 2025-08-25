@@ -35,4 +35,12 @@ enum BuiltinTokenNames
     case OPERATOR;
     case TEXT;
     case WHILE;
+
+    public function isExpressionToken(): bool
+    {
+        return match ($this) {
+            self::CHARACTER, self::IDENTIFIER, self::LITERAL, self::OPERATOR => true,
+            default => false,
+        };
+    }
 }
