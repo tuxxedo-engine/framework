@@ -148,7 +148,7 @@ class Lexer implements LexerInterface
 
                 if (isset($this->sequences[$peek])) {
                     return new TextToken(
-                        line: $stream->line,
+                        line: $line,
                         op1: $buffer,
                     );
                 }
