@@ -13,28 +13,36 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Compiler;
 
-use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompilerInterface;
 use Tuxxedo\View\Lumi\Node\NodeInterface;
-use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 
-interface CompilerInterface
+interface CompilerStateInterface
 {
-    public ExpressionCompilerInterface $expressionCompiler {
-        get;
-    }
-
-    public CompilerStateInterface $state {
+    public ?string $expects {
         get;
     }
 
     /**
      * @throws CompilerException
      */
-    public function compile(
-        NodeStreamInterface $stream,
+    public function enter(
+        string $kind,
+    ): void;
+
+    /**
+     * @throws CompilerException
+     */
+    public function leave(
+        string $kind,
+    ): void;
+
+    /**
+     * @throws CompilerException
+     */
+    public function swap(
+        string $kind,
     ): string;
 
-    public function compileNode(
+    public function valid(
         NodeInterface $node,
-    ): string;
+    ): bool;
 }

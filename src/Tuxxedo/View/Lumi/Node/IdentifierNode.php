@@ -15,8 +15,11 @@ namespace Tuxxedo\View\Lumi\Node;
 
 readonly class IdentifierNode implements ExpressionNodeInterface
 {
+    public string $kind;
+
     public function __construct(
         public string $name,
     ) {
+        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
     }
 }

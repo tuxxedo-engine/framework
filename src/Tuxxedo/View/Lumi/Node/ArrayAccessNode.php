@@ -13,11 +13,14 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Node;
 
-readonly class ArrayAccessNode implements NodeInterface
+readonly class ArrayAccessNode implements ExpressionNodeInterface
 {
+    public string $kind;
+
     public function __construct(
         public ExpressionNodeInterface $array,
         public ExpressionNodeInterface $key,
     ) {
+        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
     }
 }

@@ -15,8 +15,11 @@ namespace Tuxxedo\View\Lumi\Node;
 
 readonly class ContinueNode implements NodeInterface
 {
+    public string $kind;
+
     public function __construct(
         public ?int $count = null,
     ) {
+        $this->kind = BuiltinNodeKinds::ROOT->name;
     }
 }

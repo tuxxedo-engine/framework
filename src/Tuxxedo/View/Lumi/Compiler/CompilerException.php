@@ -62,4 +62,39 @@ class CompilerException extends \Exception
             message: 'Calling $this in method calls is not allowed',
         );
     }
+
+    public static function fromUnexpectedStateEnter(
+        string $kind,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unexpected state entrance for "%s", old state must be left first',
+                $kind,
+            ),
+        );
+    }
+
+    public static function fromUnexpectedStateLeave(
+        string $kind,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unexpected state leave for "%s", there is no state entrance for this',
+                $kind,
+            ),
+        );
+    }
+
+    public static function fromUnexpectedState(
+        string $kind,
+        string $expects,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unexpected state for "%s", expecting "%s"',
+                $kind,
+                $expects,
+            ),
+        );
+    }
 }

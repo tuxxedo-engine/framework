@@ -15,12 +15,16 @@ namespace Tuxxedo\View\Lumi\Node;
 
 use Tuxxedo\View\Lumi\Syntax\AssignmentOperator;
 
-readonly class AssignmentNode implements ExpressionNodeInterface
+// @todo Check if we should make this into a ExpressionNodeInterface
+readonly class AssignmentNode implements NodeInterface
 {
+    public string $kind;
+
     public function __construct(
         public IdentifierNode $name,
         public ExpressionNodeInterface $value,
         public ?AssignmentOperator $operator = null,
     ) {
+        $this->kind = BuiltinNodeKinds::ROOT->name;
     }
 }

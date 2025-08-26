@@ -17,9 +17,12 @@ use Tuxxedo\View\Lumi\Syntax\UnaryOperator;
 
 readonly class UnaryOpNode implements ExpressionNodeInterface
 {
+    public string $kind;
+
     public function __construct(
         public ExpressionNodeInterface $operand,
         public UnaryOperator $operator,
     ) {
+        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
     }
 }

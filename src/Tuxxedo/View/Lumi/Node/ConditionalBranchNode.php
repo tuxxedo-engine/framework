@@ -15,6 +15,8 @@ namespace Tuxxedo\View\Lumi\Node;
 
 readonly class ConditionalBranchNode implements NodeInterface
 {
+    public string $kind;
+
     /**
      * @param NodeInterface[] $body
      */
@@ -22,5 +24,6 @@ readonly class ConditionalBranchNode implements NodeInterface
         public ExpressionNodeInterface $operand,
         public array $body = [],
     ) {
+        $this->kind = BuiltinNodeKinds::ROOT->name;
     }
 }

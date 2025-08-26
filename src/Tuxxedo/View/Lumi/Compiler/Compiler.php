@@ -20,22 +20,24 @@ use Tuxxedo\View\Lumi\Compiler\Provider\ConditionalCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\ExpressionCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\NodeCompilerHandler;
 use Tuxxedo\View\Lumi\Compiler\Provider\TextCompilerProvider;
+use Tuxxedo\View\Lumi\Node\BuiltinNodeKinds;
 use Tuxxedo\View\Lumi\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 
-class Compiler implements CompilerInterface
+readonly class Compiler implements CompilerInterface
 {
     /**
      * @var array<class-string<NodeInterface>, NodeCompilerHandler>
      */
-    private readonly array $handlers;
+    private array $handlers;
 
     /**
      * @param CompilerProviderInterface[] $providers
      */
     final private function __construct(
         array $providers,
-        public readonly ExpressionCompilerInterface $expressionCompiler,
+        public ExpressionCompilerInterface $expressionCompiler,
+        public CompilerStateInterface $state,
     ) {
         $compilerHandlers = [];
 
@@ -65,12 +67,18 @@ class Compiler implements CompilerInterface
         return new ExpressionCompiler();
     }
 
+    public static function getDefaultCompilerState(): CompilerStateInterface
+    {
+        return new CompilerState();
+    }
+
     /**
      * @param CompilerProviderInterface[] $providers
      */
     public static function createWithDefaultProviders(
         array $providers = [],
         ?ExpressionCompilerInterface $expressionCompiler = null,
+        ?CompilerStateInterface $state = null,
     ): static {
         return new static(
             providers: \array_merge(
@@ -78,6 +86,7 @@ class Compiler implements CompilerInterface
                 $providers,
             ),
             expressionCompiler: $expressionCompiler ?? self::getDefaultExpressionCompiler(),
+            state: $state ?? self::getDefaultCompilerState(),
         );
     }
 
@@ -87,10 +96,12 @@ class Compiler implements CompilerInterface
     public static function createWithoutDefaultProviders(
         array $providers = [],
         ?ExpressionCompilerInterface $expressionCompiler = null,
+        ?CompilerStateInterface $state = null,
     ): static {
         return new static(
             providers: $providers,
             expressionCompiler: $expressionCompiler ?? self::getDefaultExpressionCompiler(),
+            state: $state ?? self::getDefaultCompilerState(),
         );
     }
 
@@ -99,6 +110,8 @@ class Compiler implements CompilerInterface
     ): string {
         $source = '';
 
+        $this->state->enter(BuiltinNodeKinds::ROOT->name);
+
         while (!$stream->eof()) {
             $node = $stream->current();
 
@@ -106,6 +119,8 @@ class Compiler implements CompilerInterface
 
             $source .= $this->compileNode($node);
         }
+
+        $this->state->leave(BuiltinNodeKinds::ROOT->name);
 
         return $source;
     }
@@ -116,6 +131,11 @@ class Compiler implements CompilerInterface
         if (!\array_key_exists($node::class, $this->handlers)) {
             throw CompilerException::fromUnexpectedNode(
                 nodeClass: $node::class,
+            );
+        } elseif (!$this->state->valid($node)) {
+            throw CompilerException::fromUnexpectedState(
+                kind: $node->kind,
+                expects: $this->state->expects ?? '',
             );
         }
 

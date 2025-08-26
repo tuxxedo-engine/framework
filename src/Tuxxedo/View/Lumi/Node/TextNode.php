@@ -15,8 +15,11 @@ namespace Tuxxedo\View\Lumi\Node;
 
 readonly class TextNode implements NodeInterface
 {
+    public string $kind;
+
     public function __construct(
         public string $text,
     ) {
+        $this->kind = BuiltinNodeKinds::ROOT->name;
     }
 }

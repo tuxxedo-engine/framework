@@ -15,6 +15,8 @@ namespace Tuxxedo\View\Lumi\Node;
 
 readonly class ForNode implements NodeInterface
 {
+    public string $kind;
+
     /**
      * @param NodeInterface[] $body
      */
@@ -24,5 +26,6 @@ readonly class ForNode implements NodeInterface
         public array $body = [],
         public ?string $key = null,
     ) {
+        $this->kind = BuiltinNodeKinds::ROOT->name;
     }
 }

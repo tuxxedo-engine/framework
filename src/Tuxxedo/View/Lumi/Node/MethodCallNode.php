@@ -16,6 +16,8 @@ namespace Tuxxedo\View\Lumi\Node;
 // @todo Check if we should make $name an ExpressionNodeInterface
 readonly class MethodCallNode implements ExpressionNodeInterface
 {
+    public string $kind;
+
     /**
      * @param ExpressionNodeInterface[] $arguments
      */
@@ -24,5 +26,6 @@ readonly class MethodCallNode implements ExpressionNodeInterface
         public string $name,
         public array $arguments,
     ) {
+        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
     }
 }

@@ -15,11 +15,14 @@ namespace Tuxxedo\View\Lumi\Node;
 
 readonly class ArrayNode implements ExpressionNodeInterface
 {
+    public string $kind;
+
     /**
      * @param ArrayItemNode[] $items
      */
     public function __construct(
         public array $items,
     ) {
+        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
     }
 }

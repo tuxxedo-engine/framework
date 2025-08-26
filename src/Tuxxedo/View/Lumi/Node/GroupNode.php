@@ -15,8 +15,11 @@ namespace Tuxxedo\View\Lumi\Node;
 
 readonly class GroupNode implements ExpressionNodeInterface
 {
+    public string $kind;
+
     public function __construct(
         public ExpressionNodeInterface $operand,
     ) {
+        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
     }
 }

@@ -15,9 +15,12 @@ namespace Tuxxedo\View\Lumi\Node;
 
 readonly class LiteralNode implements ExpressionNodeInterface
 {
+    public string $kind;
+
     public function __construct(
         public string $operand,
         public NodeNativeType $type,
     ) {
+        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
     }
 }

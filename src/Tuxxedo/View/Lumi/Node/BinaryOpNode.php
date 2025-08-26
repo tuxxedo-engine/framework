@@ -17,10 +17,13 @@ use Tuxxedo\View\Lumi\Syntax\BinaryOperator;
 
 readonly class BinaryOpNode implements ExpressionNodeInterface
 {
+    public string $kind;
+
     public function __construct(
         public ExpressionNodeInterface $left,
         public ExpressionNodeInterface $right,
         public BinaryOperator $operator,
     ) {
+        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
     }
 }

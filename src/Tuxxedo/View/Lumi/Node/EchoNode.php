@@ -15,8 +15,11 @@ namespace Tuxxedo\View\Lumi\Node;
 
 readonly class EchoNode implements NodeInterface
 {
+    public string $kind;
+
     public function __construct(
         public ExpressionNodeInterface $operand,
     ) {
+        $this->kind = BuiltinNodeKinds::ROOT->name;
     }
 }

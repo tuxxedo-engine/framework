@@ -13,13 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Node;
 
-readonly class BreakNode implements NodeInterface
+enum BuiltinNodeKinds
 {
-    public string $kind;
-
-    public function __construct(
-        public ?int $count = null,
-    ) {
-        $this->kind = BuiltinNodeKinds::ROOT->name;
-    }
+    case ROOT;
+    case EXPRESSION;
 }

@@ -15,4 +15,7 @@ namespace Tuxxedo\View\Lumi\Node;
 
 interface NodeInterface
 {
+    public string $kind {
+        get;
+    }
 }
