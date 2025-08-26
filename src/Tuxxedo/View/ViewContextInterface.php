@@ -16,11 +16,25 @@ namespace Tuxxedo\View;
 interface ViewContextInterface
 {
     /**
+     * @var array<string, string|int|float|bool|null>
+     */
+    public array $directives {
+        get;
+    }
+
+    /**
      * @param callable-string $functionName
      */
     public function functionCall(
         string $functionName,
     ): mixed;
+
+    public function resetDirectives(): void;
+
+    public function directive(
+        string $directive,
+        string|int|float|bool|null $value,
+    ): void;
 
     /**
      * @param array<string, mixed> $scope

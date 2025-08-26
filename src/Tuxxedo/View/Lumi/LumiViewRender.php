@@ -58,6 +58,8 @@ readonly class LumiViewRender implements ViewRenderInterface
             );
         }
 
+        $this->context->resetDirectives();
+
         $renderer = function (string $__lumiViewFileName, array $__lumiVariables): string {
             \extract($__lumiVariables, \EXTR_SKIP);
             \ob_start();

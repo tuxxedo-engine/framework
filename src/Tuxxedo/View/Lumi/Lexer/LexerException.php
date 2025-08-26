@@ -157,4 +157,18 @@ class LexerException extends \Exception
             ),
         );
     }
+
+    public static function fromInvalidDeclare(): self
+    {
+        return new self(
+            message: 'Invalid declare syntax: A declare must have an assignment',
+        );
+    }
+
+    public static function fromInvalidDeclareLiteral(): self
+    {
+        return new self(
+            message: 'Invalid declare syntax: The right operand must be a literal value',
+        );
+    }
 }

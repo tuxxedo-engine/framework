@@ -90,4 +90,12 @@ readonly class ViewController
             name: 'hello_world_while',
         );
     }
+
+    #[Route\Get]
+    public function decl(): ViewInterface
+    {
+        return new View(
+            name: 'hello_world_declare',
+        );
+    }
 }

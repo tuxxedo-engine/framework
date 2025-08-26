@@ -20,6 +20,7 @@ enum BuiltinTokenNames
     case CHARACTER;
     case COMMENT;
     case CONTINUE;
+    case DECLARE;
     case DO;
     case ECHO;
     case ELSEIF;

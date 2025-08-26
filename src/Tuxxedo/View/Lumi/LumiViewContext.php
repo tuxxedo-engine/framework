@@ -19,15 +19,18 @@ use Tuxxedo\View\View;
 use Tuxxedo\View\ViewContextInterface;
 use Tuxxedo\View\ViewRenderInterface;
 
-readonly class LumiViewContext implements ViewContextInterface
+class LumiViewContext implements ViewContextInterface
 {
-    public EscaperInterface $escaper;
+    public readonly EscaperInterface $escaper;
+    public private(set) array $directives;
 
     public function __construct(
-        public ViewRenderInterface $render,
+        public readonly ViewRenderInterface $render,
         ?EscaperInterface $escaper = null,
     ) {
         $this->escaper = $escaper ?? new Escaper();
+
+        $this->resetDirectives();
     }
 
     // @todo Improve this to a better API with whitelisting or local override like include()
@@ -35,6 +38,21 @@ readonly class LumiViewContext implements ViewContextInterface
         string $functionName,
     ): mixed {
         return $functionName();
+    }
+
+    public function resetDirectives(): void
+    {
+        $this->directives = [
+            'lumi.autoescape' => true,
+        ];
+    }
+
+    // @todo Improve this to a better API with handlers
+    public function directive(
+        string $directive,
+        string|int|float|bool|null $value,
+    ): void {
+        $this->directives[$directive] = $value;
     }
 
     public function include(

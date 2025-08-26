@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Compiler\Provider;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
+use Tuxxedo\View\Lumi\Node\BuiltinNodeKinds;
 use Tuxxedo\View\Lumi\Node\CommentNode;
+use Tuxxedo\View\Lumi\Node\DeclareNode;
 use Tuxxedo\View\Lumi\Node\EchoNode;
 use Tuxxedo\View\Lumi\Node\TextNode;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
@@ -64,6 +66,23 @@ class TextCompilerProvider implements CompilerProviderInterface
         );
     }
 
+    private function compileDeclare(
+        DeclareNode $node,
+        CompilerInterface $compiler,
+    ): string {
+        $oldState = $compiler->state->swap(BuiltinNodeKinds::EXPRESSION->name);
+
+        $output = \sprintf(
+            '<?php $this->directive(%s, %s); ?>',
+            $compiler->compileNode($node->directive),
+            $compiler->compileNode($node->value),
+        );
+
+        $compiler->state->swap($oldState);
+
+        return $output;
+    }
+
     public function augment(): \Generator
     {
         yield new NodeCompilerHandler(
@@ -79,6 +98,11 @@ class TextCompilerProvider implements CompilerProviderInterface
         yield new NodeCompilerHandler(
             nodeClassName: EchoNode::class,
             handler: $this->compileEcho(...),
+        );
+
+        yield new NodeCompilerHandler(
+            nodeClassName: DeclareNode::class,
+            handler: $this->compileDeclare(...),
         );
     }
 }

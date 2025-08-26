@@ -18,7 +18,9 @@ use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Token\AssignToken;
 use Tuxxedo\View\Lumi\Token\BreakToken;
+use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Token\ContinueToken;
+use Tuxxedo\View\Lumi\Token\DeclareToken;
 use Tuxxedo\View\Lumi\Token\DoToken;
 use Tuxxedo\View\Lumi\Token\ElseIfToken;
 use Tuxxedo\View\Lumi\Token\ElseToken;
@@ -154,15 +156,24 @@ class BlockTokenHandler implements TokenHandlerInterface
                 'break' => [
                     new BreakToken(
                         line: $startingLine,
-                        op1: $this->parseLoopDepth($expr),
+                        op1: $this->parseLoopDepth(
+                            expression: $expr,
+                        ),
                     ),
                 ],
                 'continue' => [
                     new ContinueToken(
                         line: $startingLine,
-                        op1: $this->parseLoopDepth($expr),
+                        op1: $this->parseLoopDepth(
+                            expression: $expr,
+                        ),
                     ),
                 ],
+                'declare' => $this->parseDeclare(
+                    startingLine: $startingLine,
+                    expression: $expr,
+                    expressionLexer: $expressionLexer,
+                ),
                 default => throw LexerException::fromSequenceNotFound(
                     sequence: $directive,
                 ),
@@ -276,18 +287,63 @@ class BlockTokenHandler implements TokenHandlerInterface
      *
      * @throws LexerException
      */
-    private function parseLoopDepth(string $expr): ?string
-    {
-        $expr = \mb_trim($expr);
+    private function parseLoopDepth(
+        string $expression,
+    ): ?string {
+        $expression = \mb_trim($expression);
 
-        if ($expr === '') {
+        if ($expression === '') {
             return null;
         }
 
-        if (\preg_match('/^[1-9][0-9]*$/u', $expr) !== 1) {
+        if (\preg_match('/^[1-9][0-9]*$/u', $expression) !== 1) {
             throw LexerException::fromInvalidLoopDepth();
         }
 
-        return (string) (int) $expr;
+        return (string) (int) $expression;
+    }
+
+    /**
+     * @return array{0: DeclareToken, 1: TokenInterface, 2: EndToken}
+     *
+     * @throws LexerException
+     */
+    private function parseDeclare(
+        int $startingLine,
+        string $expression,
+        ExpressionLexerInterface $expressionLexer,
+    ): array {
+        $parts = \explode('=', $expression, 2);
+
+        if (\sizeof($parts) !== 2) {
+            throw LexerException::fromInvalidDeclare();
+        }
+
+        $op1 = \mb_trim($parts[0]);
+        $op2Raw = \mb_trim($parts[1]);
+
+        $tokens = $expressionLexer->parse(
+            startingLine: $startingLine,
+            operand: $op2Raw,
+        );
+
+        if (\sizeof($tokens) !== 1) {
+            throw LexerException::fromInvalidDeclareLiteral();
+        }
+
+        if ($tokens[0]->type !== BuiltinTokenNames::LITERAL->name) {
+            throw LexerException::fromInvalidDeclareLiteral();
+        }
+
+        return [
+            new DeclareToken(
+                line: $startingLine,
+                op1: $op1,
+            ),
+            $tokens[0],
+            new EndToken(
+                line: $startingLine,
+            ),
+        ];
     }
 }
