@@ -222,10 +222,10 @@ readonly class LumiController
         foreach ($this->getViewFiles() as $viewFile) {
             $viewFile = $this->getShortViewName($viewFile);
             $selected = $this->getShortViewName($selectedViewFile) === $viewFile
-                ? 'selected '
+                ? ' selected'
                 : '';
 
-            $buffer .= '<option ' . $selected . 'value="' . $viewFile . '">' . $viewFile . '</option>';
+            $buffer .= '<option' . $selected . ' value="' . $viewFile . '">' . $viewFile . '</option>';
         }
 
         $buffer .= '</select>';

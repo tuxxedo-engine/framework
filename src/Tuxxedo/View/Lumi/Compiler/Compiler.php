@@ -15,47 +15,46 @@ namespace Tuxxedo\View\Lumi\Compiler;
 
 use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompiler;
 use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompilerInterface;
-use Tuxxedo\View\Lumi\Compiler\Handler\AssignmentCompilerHandler;
-use Tuxxedo\View\Lumi\Compiler\Handler\CommentCompilerHandler;
-use Tuxxedo\View\Lumi\Compiler\Handler\CompilerHandlerInterface;
-use Tuxxedo\View\Lumi\Compiler\Handler\EchoCompilerHandler;
-use Tuxxedo\View\Lumi\Compiler\Handler\TextCompilerHandler;
+use Tuxxedo\View\Lumi\Compiler\Provider\CompilerProviderInterface;
+use Tuxxedo\View\Lumi\Compiler\Provider\ExpressionCompilerProvider;
+use Tuxxedo\View\Lumi\Compiler\Provider\NodeCompilerHandler;
+use Tuxxedo\View\Lumi\Compiler\Provider\TextCompilerProvider;
 use Tuxxedo\View\Lumi\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 
 class Compiler implements CompilerInterface
 {
     /**
-     * @var array<class-string<NodeInterface>, CompilerHandlerInterface>
+     * @var array<class-string<NodeInterface>, NodeCompilerHandler>
      */
     private readonly array $handlers;
 
     /**
-     * @param CompilerHandlerInterface[] $handlers
+     * @param CompilerProviderInterface[] $providers
      */
     final private function __construct(
-        array $handlers,
+        array $providers,
         public readonly ExpressionCompilerInterface $expressionCompiler,
     ) {
         $compilerHandlers = [];
 
-        foreach ($handlers as $handler) {
-            $compilerHandlers[$handler->getRootNodeClass()] = $handler;
+        foreach ($providers as $provider) {
+            foreach ($provider->augment() as $handler) {
+                $compilerHandlers[$handler->nodeClassName] = $handler;
+            }
         }
 
         $this->handlers = $compilerHandlers;
     }
 
     /**
-     * @return CompilerHandlerInterface[]
+     * @return CompilerProviderInterface[]
      */
     public static function getDefaults(): array
     {
         return [
-            new TextCompilerHandler(),
-            new CommentCompilerHandler(),
-            new EchoCompilerHandler(),
-            new AssignmentCompilerHandler(),
+            new ExpressionCompilerProvider(),
+            new TextCompilerProvider(),
         ];
     }
 
@@ -65,30 +64,30 @@ class Compiler implements CompilerInterface
     }
 
     /**
-     * @param CompilerHandlerInterface[] $handlers
+     * @param CompilerProviderInterface[] $providers
      */
-    public static function createWithDefaultHandlers(
-        array $handlers = [],
+    public static function createWithDefaultProviders(
+        array $providers = [],
         ?ExpressionCompilerInterface $expressionCompiler = null,
     ): static {
         return new static(
-            handlers: \array_merge(
+            providers: \array_merge(
                 self::getDefaults(),
-                $handlers,
+                $providers,
             ),
             expressionCompiler: $expressionCompiler ?? self::getDefaultExpressionCompiler(),
         );
     }
 
     /**
-     * @param CompilerHandlerInterface[] $handlers
+     * @param CompilerProviderInterface[] $providers
      */
-    public static function createWithoutDefaultHandlers(
-        array $handlers = [],
+    public static function createWithoutDefaultProviders(
+        array $providers = [],
         ?ExpressionCompilerInterface $expressionCompiler = null,
     ): static {
         return new static(
-            handlers: $handlers,
+            providers: $providers,
             expressionCompiler: $expressionCompiler ?? self::getDefaultExpressionCompiler(),
         );
     }
@@ -101,17 +100,23 @@ class Compiler implements CompilerInterface
         while (!$stream->eof()) {
             $node = $stream->current();
 
-            if (!\array_key_exists($node::class, $this->handlers)) {
-                throw CompilerException::fromUnexpectedNode(
-                    nodeClass: $node::class,
-                );
-            }
-
             $stream->consume();
 
-            $source .= $this->handlers[$node::class]->compile($node, $this->expressionCompiler);
+            $source .= $this->compileNode($node);
         }
 
         return $source;
+    }
+
+    public function compileNode(
+        NodeInterface $node,
+    ): string {
+        if (!\array_key_exists($node::class, $this->handlers)) {
+            throw CompilerException::fromUnexpectedNode(
+                nodeClass: $node::class,
+            );
+        }
+
+        return ($this->handlers[$node::class]->handler)($node, $this);
     }
 }

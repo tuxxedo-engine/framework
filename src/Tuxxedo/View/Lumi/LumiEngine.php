@@ -47,7 +47,7 @@ class LumiEngine
 
     public static function createDefaultCompiler(): CompilerInterface
     {
-        return Compiler::createWithDefaultHandlers();
+        return Compiler::createWithDefaultProviders();
     }
 
     public static function createDefault(): static

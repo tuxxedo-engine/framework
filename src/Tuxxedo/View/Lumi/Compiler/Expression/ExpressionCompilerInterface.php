@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Compiler\Expression;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
+use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 
 interface ExpressionCompilerInterface
@@ -23,5 +24,6 @@ interface ExpressionCompilerInterface
      */
     public function compile(
         NodeStreamInterface $stream,
+        CompilerInterface $compiler,
     ): string;
 }
