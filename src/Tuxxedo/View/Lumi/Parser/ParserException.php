@@ -177,4 +177,44 @@ class ParserException extends \Exception
             message: 'Expressions cannot be empty',
         );
     }
+
+    public static function fromUnexpectedContinueOutsideLoop(): self
+    {
+        return new self(
+            message: 'Continue cannot be used outside of loops',
+        );
+    }
+
+    public static function fromUnexpectedContinueOutOfBounds(
+        int $level,
+        int $maxLevel,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot continue %d, current loop depth is %d',
+                $level,
+                $maxLevel,
+            ),
+        );
+    }
+
+    public static function fromUnexpectedBreakOutsideLoop(): self
+    {
+        return new self(
+            message: 'Break cannot be used outside of loops',
+        );
+    }
+
+    public static function fromUnexpectedBreakOutOfBounds(
+        int $level,
+        int $maxLevel,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot break %d, current loop depth is %d',
+                $level,
+                $maxLevel,
+            ),
+        );
+    }
 }

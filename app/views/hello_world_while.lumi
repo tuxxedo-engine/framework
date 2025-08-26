@@ -3,3 +3,39 @@
     <p>n is {{ n }}</p>
     {% set n += 1 %}
 {% endwhile %}
+
+{% set i = 0 %}
+{% while i < 5 %}
+    {% set i += 1 %}
+    {% if i == 3 %}
+        {% continue %}
+    {% endif %}
+    <p>i is {{ i }}</p>
+{% endwhile %}
+
+{% set j = 0 %}
+{% while j < 5 %}
+    {% set j += 1 %}
+    {% if j == 2 %}
+        {% continue 1 %}
+    {% endif %}
+    <p>j is {{ j }}</p>
+{% endwhile %}
+
+{% set k = 0 %}
+{% while k < 5 %}
+    <p>k is {{ k }}</p>
+    {% if k == 2 %}
+        {% break %}
+    {% endif %}
+    {% set k += 1 %}
+{% endwhile %}
+
+{% set m = 0 %}
+{% while m < 5 %}
+    <p>m is {{ m }}</p>
+    {% if m == 1 %}
+        {% break 1 %}
+    {% endif %}
+    {% set m += 1 %}
+{% endwhile %}

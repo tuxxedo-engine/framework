@@ -17,7 +17,9 @@ use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Parser\Expression\ExpressionParser;
 use Tuxxedo\View\Lumi\Parser\Expression\ExpressionParserInterface;
 use Tuxxedo\View\Lumi\Parser\Handler\AssignParserHandler;
+use Tuxxedo\View\Lumi\Parser\Handler\BreakParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\CommentParserHandler;
+use Tuxxedo\View\Lumi\Parser\Handler\ContinueParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\EchoParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\ConditionParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\ParserHandlerInterface;
@@ -73,6 +75,8 @@ class Parser implements ParserInterface
             new VoidParserHandler(
                 tokenName: BuiltinTokenNames::ENDWHILE->name,
             ),
+            new ContinueParserHandler(),
+            new BreakParserHandler(),
         ];
     }
 

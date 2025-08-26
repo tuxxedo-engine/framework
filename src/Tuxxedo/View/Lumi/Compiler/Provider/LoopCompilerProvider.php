@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Compiler\Provider;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
+use Tuxxedo\View\Lumi\Node\BreakNode;
+use Tuxxedo\View\Lumi\Node\ContinueNode;
 use Tuxxedo\View\Lumi\Node\WhileNode;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 
@@ -44,11 +46,49 @@ class LoopCompilerProvider implements CompilerProviderInterface
         return $output;
     }
 
+    private function compileContinue(
+        ContinueNode $node,
+        CompilerInterface $compiler,
+    ): string {
+        if ($node->count !== null && $node->count > 1) {
+            return \sprintf(
+                '<?php continue %d; ?>',
+                $node->count,
+            );
+        }
+
+        return '<?php continue; ?>';
+    }
+
+    private function compileBreak(
+        BreakNode $node,
+        CompilerInterface $compiler,
+    ): string {
+        if ($node->count !== null && $node->count > 1) {
+            return \sprintf(
+                '<?php break %d; ?>',
+                $node->count,
+            );
+        }
+
+        return '<?php break; ?>';
+    }
+
     public function augment(): \Generator
     {
         yield new NodeCompilerHandler(
             nodeClassName: WhileNode::class,
             handler: $this->compileWhile(...),
+        );
+
+        yield new NodeCompilerHandler(
+            nodeClassName: ContinueNode::class,
+            handler: $this->compileContinue(...),
+        );
+
+        yield new NodeCompilerHandler(
+            nodeClassName: BreakNode::class,
+            handler: $this->compileBreak(...),
         );
     }
 }

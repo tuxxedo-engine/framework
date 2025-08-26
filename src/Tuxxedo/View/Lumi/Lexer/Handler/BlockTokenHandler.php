@@ -185,6 +185,12 @@ class BlockTokenHandler implements TokenHandlerInterface
                 'endwhile' => new EndWhileToken(
                     line: $startingLine,
                 ),
+                'break' => new BreakToken(
+                    line: $startingLine,
+                ),
+                'continue' => new ContinueToken(
+                    line: $startingLine,
+                ),
                 default => throw LexerException::fromSequenceNotFound(
                     sequence: $directive,
                 ),

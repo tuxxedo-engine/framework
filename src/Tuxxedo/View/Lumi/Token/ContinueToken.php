@@ -23,7 +23,7 @@ readonly class ContinueToken implements TokenInterface
      */
     public function __construct(
         public int $line,
-        public ?string $op1,
+        public ?string $op1 = null,
     ) {
         $this->type = BuiltinTokenNames::CONTINUE->name;
         $this->op2 = null;
