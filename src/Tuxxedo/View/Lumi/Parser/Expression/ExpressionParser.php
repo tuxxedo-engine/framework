@@ -64,7 +64,7 @@ class ExpressionParser implements ExpressionParserInterface
 
         $node = $this->state->popNode();
 
-        if (!$this->state->isCleanState()) {
+        if (!$this->state->isCleanState(checkLoops: false, checkConditions: false, checkCustom: false)) {
             throw ParserException::fromUnexpectedGroupingExit();
         }
 

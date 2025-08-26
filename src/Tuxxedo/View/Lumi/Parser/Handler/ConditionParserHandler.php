@@ -15,6 +15,7 @@ namespace Tuxxedo\View\Lumi\Parser\Handler;
 
 use Tuxxedo\View\Lumi\Lexer\TokenStream;
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
+use Tuxxedo\View\Lumi\Node\ConditionalBranchNode;
 use Tuxxedo\View\Lumi\Node\ConditionalNode;
 use Tuxxedo\View\Lumi\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
@@ -42,29 +43,37 @@ class ConditionParserHandler implements ParserHandlerInterface
 
         do {
             $tokens[] = $stream->current();
+
             $stream->consume();
         } while (!$stream->currentIs(BuiltinTokenNames::END->name));
 
         $stream->expect(BuiltinTokenNames::END->name);
+
         $condition = $parser->expressionParser->parse(
-            stream: new TokenStream(
-                tokens: $tokens,
-            ),
+            stream: new TokenStream(tokens: $tokens),
             state: $parser->state,
         );
 
-        $body = [];
-
         $parser->state->enterCondition();
 
-        while (
-            !$stream->currentIs(BuiltinTokenNames::ENDIF->name) ||
-            $parser->state->conditionDepth > 0 ||
-            !$stream->eof()
-        ) {
+        $bodyTokens = [];
+        $branches = [];
+        $elseTokens = [];
+
+        $currentTarget = &$bodyTokens;
+
+        while (!$stream->eof()) {
             if ($stream->currentIs(BuiltinTokenNames::IF->name)) {
                 $parser->state->enterCondition();
-            } elseif ($stream->currentIs(BuiltinTokenNames::ENDIF->name)) {
+
+                $currentTarget[] = $stream->current();
+
+                $stream->consume();
+
+                continue;
+            }
+
+            if ($stream->currentIs(BuiltinTokenNames::ENDIF->name)) {
                 $parser->state->leaveCondition();
 
                 if ($parser->state->conditionDepth === 0) {
@@ -72,9 +81,64 @@ class ConditionParserHandler implements ParserHandlerInterface
 
                     break;
                 }
+
+                $currentTarget[] = $stream->current();
+
+                $stream->consume();
+
+                continue;
             }
 
-            $body[] = $stream->current();
+            if ($stream->currentIs(BuiltinTokenNames::ELSEIF->name)) {
+                $stream->consume();
+
+                $branchTokens = [];
+
+                while (!$stream->currentIs(BuiltinTokenNames::END->name)) {
+                    $branchTokens[] = $stream->current();
+
+                    $stream->consume();
+                }
+
+                $stream->expect(BuiltinTokenNames::END->name);
+
+                $branchCondition = $parser->expressionParser->parse(
+                    stream: new TokenStream(tokens: $branchTokens),
+                    state: $parser->state,
+                );
+
+                $branchBody = [];
+
+                while (
+                    !$stream->currentIs(BuiltinTokenNames::ELSEIF->name) &&
+                    !$stream->currentIs(BuiltinTokenNames::ELSE->name) &&
+                    !$stream->currentIs(BuiltinTokenNames::ENDIF->name)
+                ) {
+                    $branchBody[] = $stream->current();
+                    $stream->consume();
+                }
+
+                $branches[] = new ConditionalBranchNode(
+                    operand: $branchCondition,
+                    body: $parser->parse(
+                        stream: new TokenStream(
+                            tokens: $branchBody,
+                        ),
+                    )->nodes,
+                );
+
+                continue;
+            }
+
+            if ($stream->currentIs(BuiltinTokenNames::ELSE->name)) {
+                $stream->expect(BuiltinTokenNames::ELSE->name);
+
+                $currentTarget = &$elseTokens;
+
+                continue;
+            }
+
+            $currentTarget[] = $stream->current();
 
             $stream->consume();
         }
@@ -84,7 +148,13 @@ class ConditionParserHandler implements ParserHandlerInterface
                 operand: $condition,
                 body: $parser->parse(
                     stream: new TokenStream(
-                        tokens: $body,
+                        tokens: $bodyTokens,
+                    ),
+                )->nodes,
+                branches: $branches,
+                else: $parser->parse(
+                    stream: new TokenStream(
+                        tokens: $elseTokens,
                     ),
                 )->nodes,
             ),

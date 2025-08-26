@@ -7,3 +7,32 @@
         <p>Never printed</p>
     {% endif %}
 {% endif %}
+
+{% set n = 2 %}
+{% set n += 2 %}
+{% set n = n + 2 %}
+{% set m = n %}
+
+{% if n == 6 %}
+    <p>n is 6</p>
+{% elseif n > 6 %}
+    <p>n is greater than 6</p>
+{% else %}
+    <p>n is less than 6</p>
+{% endif %}
+
+{% if m == n %}
+    <p>m equals n</p>
+{% endif %}
+
+{% set flag = true %}
+{% if flag %}
+    <p>Flag is true</p>
+{% endif %}
+
+{% set flag = false %}
+{% if flag %}
+    <p>Should not print</p>
+{% else %}
+    <p>Flag is now false</p>
+{% endif %}
