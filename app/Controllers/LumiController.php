@@ -31,6 +31,7 @@ use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\SymbolInterface;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
 use Tuxxedo\View\View;
+use Tuxxedo\View\ViewException;
 
 #[Controller(uri: '/lumi/')]
 readonly class LumiController
@@ -326,12 +327,19 @@ readonly class LumiController
             }
 
             $buffer .= '<h3>Output</h3>';
-            $buffer .= $this->lumiViewRender->render(
-                view: new View(
-                    name: $viewName,
-                    scope: $viewScope,
-                ),
-            );
+
+            try {
+                $buffer .= $this->lumiViewRender->render(
+                    view: new View(
+                        name: $viewName,
+                        scope: $viewScope,
+                    ),
+                );
+            } catch (ViewException $exception) {
+                $buffer .= '<pre>';
+                $buffer .= $exception;
+                $buffer .= '</pre>';
+            }
         }
 
         return Response::html($buffer);

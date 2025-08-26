@@ -81,12 +81,12 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
             );
         }
 
-        if ($caller === 'this') {
+        if ($caller === '$this') {
             throw CompilerException::fromCannotCallThis();
         }
 
         return \sprintf(
-            '$%s->%s()',
+            '%s->%s()',
             $caller,
             $node->name,
         );

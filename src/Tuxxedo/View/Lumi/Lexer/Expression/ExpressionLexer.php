@@ -93,7 +93,7 @@ class ExpressionLexer implements ExpressionLexerInterface
                         );
 
                         $buffer = '';
-                        $line += $stream->line;
+                        $line = $startingLine + ($stream->line - 1);
                     }
                 }
 
@@ -104,7 +104,7 @@ class ExpressionLexer implements ExpressionLexerInterface
                 if ($buffer !== '') {
                     $tokens[] = $this->classifyToken($line, $buffer);
                     $buffer = '';
-                    $line += $stream->line;
+                    $line = $startingLine + ($stream->line - 1);
                 }
 
                 $inQuote = true;
@@ -120,7 +120,7 @@ class ExpressionLexer implements ExpressionLexerInterface
                 if ($buffer !== '') {
                     $tokens[] = $this->classifyToken($line, $buffer);
                     $buffer = '';
-                    $line += $stream->line;
+                    $line = $startingLine + ($stream->line - 1);
                 }
 
                 continue;
@@ -158,7 +158,7 @@ class ExpressionLexer implements ExpressionLexerInterface
                 }
 
                 $buffer = '';
-                $line += $stream->line;
+                $line = $startingLine + ($stream->line - 1);
 
                 continue;
             }
@@ -172,12 +172,12 @@ class ExpressionLexer implements ExpressionLexerInterface
             if ($buffer !== '') {
                 $tokens[] = $this->classifyToken($line, $buffer);
                 $buffer = '';
-                $line += $stream->line;
+                $line = $startingLine + ($stream->line - 1);
             }
 
             if (\preg_match('/^[^\p{L}\p{N}\s]$/u', $char) === 1) {
                 $buffer = '';
-                $line += $stream->line;
+                $line = $startingLine + ($stream->line - 1);
                 $lastValid = null;
 
                 while (!$stream->eof()) {
@@ -213,7 +213,7 @@ class ExpressionLexer implements ExpressionLexerInterface
                     }
 
                     $buffer = '';
-                    $line += $stream->line;
+                    $line = $startingLine + ($stream->line - 1);
                 } else {
                     throw LexerException::fromUnknownSymbol(
                         symbol: $buffer,

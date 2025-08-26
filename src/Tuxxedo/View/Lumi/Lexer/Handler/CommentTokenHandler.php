@@ -43,7 +43,7 @@ class CommentTokenHandler implements TokenHandlerInterface
 
                 return [
                     new CommentToken(
-                        line: $stream->line,
+                        line: $line,
                         op1: \mb_trim($buffer),
                     ),
                 ];
