@@ -82,4 +82,12 @@ readonly class ViewController
             name: 'hello_world_cond',
         );
     }
+
+    #[Route\Get]
+    public function while(): ViewInterface
+    {
+        return new View(
+            name: 'hello_world_while',
+        );
+    }
 }

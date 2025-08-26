@@ -1,0 +1,5 @@
+{% set n = 0 %}
+{% while n < 3 %}
+    <p>n is {{ n }}</p>
+    {% set n += 1 %}
+{% endwhile %}
