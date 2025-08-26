@@ -18,6 +18,7 @@ use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompilerInterface;
 use Tuxxedo\View\Lumi\Compiler\Provider\CompilerProviderInterface;
 use Tuxxedo\View\Lumi\Compiler\Provider\ConditionalCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\ExpressionCompilerProvider;
+use Tuxxedo\View\Lumi\Compiler\Provider\LoopCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\NodeCompilerHandler;
 use Tuxxedo\View\Lumi\Compiler\Provider\TextCompilerProvider;
 use Tuxxedo\View\Lumi\Node\BuiltinNodeKinds;
@@ -59,6 +60,7 @@ readonly class Compiler implements CompilerInterface
             new ExpressionCompilerProvider(),
             new TextCompilerProvider(),
             new ConditionalCompilerProvider(),
+            new LoopCompilerProvider(),
         ];
     }
 
