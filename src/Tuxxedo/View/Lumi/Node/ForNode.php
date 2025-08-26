@@ -15,10 +15,13 @@ namespace Tuxxedo\View\Lumi\Node;
 
 readonly class ForNode implements NodeInterface
 {
+    /**
+     * @param NodeInterface[] $body
+     */
     public function __construct(
         public string $value,
         public ExpressionNodeInterface $operand,
-        public BlockNode $body,
+        public array $body = [],
         public ?string $key = null,
     ) {
     }

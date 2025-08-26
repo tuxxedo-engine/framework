@@ -15,9 +15,12 @@ namespace Tuxxedo\View\Lumi\Node;
 
 readonly class ConditionalBranchNode implements NodeInterface
 {
+    /**
+     * @param NodeInterface[] $body
+     */
     public function __construct(
         public ExpressionNodeInterface $operand,
-        public BlockNode $body,
+        public array $body = [],
     ) {
     }
 }

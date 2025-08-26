@@ -16,6 +16,7 @@ namespace Tuxxedo\View\Lumi\Compiler;
 use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompiler;
 use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompilerInterface;
 use Tuxxedo\View\Lumi\Compiler\Provider\CompilerProviderInterface;
+use Tuxxedo\View\Lumi\Compiler\Provider\ConditionalCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\ExpressionCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\NodeCompilerHandler;
 use Tuxxedo\View\Lumi\Compiler\Provider\TextCompilerProvider;
@@ -55,6 +56,7 @@ class Compiler implements CompilerInterface
         return [
             new ExpressionCompilerProvider(),
             new TextCompilerProvider(),
+            new ConditionalCompilerProvider(),
         ];
     }
 

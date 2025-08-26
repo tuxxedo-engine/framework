@@ -18,12 +18,13 @@ readonly class ConditionalNode implements NodeInterface
     /**
      * @param NodeInterface[] $body
      * @param ConditionalBranchNode[] $branches
+     * @param NodeInterface[] $else
      */
     public function __construct(
         public ExpressionNodeInterface $operand,
         public array $body,
         public array $branches = [],
-        public ?BlockNode $else = null,
+        public array $else = [],
     ) {
     }
 }
