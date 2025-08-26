@@ -97,4 +97,17 @@ class CompilerException extends \Exception
             ),
         );
     }
+
+    public static function fromOptimizerDivideByZero(
+        int|float $left,
+        int|float $right,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Optimizer: Cannot divide "%g" by zero ("%g")',
+                $left,
+                $right,
+            ),
+        );
+    }
 }

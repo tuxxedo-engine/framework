@@ -99,6 +99,50 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         BinaryOpNode $node,
         CompilerInterface $compiler,
     ): string {
+        // @todo Move this out to an optimizer class
+        if (
+            $node->left instanceof LiteralNode &&
+            (
+                $node->left->type === NodeNativeType::INT ||
+                $node->left->type === NodeNativeType::FLOAT
+            ) &&
+            $node->right instanceof LiteralNode &&
+            (
+                $node->right->type === NodeNativeType::INT ||
+                $node->right->type === NodeNativeType::FLOAT
+            ) &&
+            (
+                $node->operator === BinaryOperator::ADD ||
+                $node->operator === BinaryOperator::SUBTRACT ||
+                $node->operator === BinaryOperator::MULTIPLY ||
+                $node->operator === BinaryOperator::DIVIDE ||
+                $node->operator === BinaryOperator::MODULUS
+            )
+        ) {
+            $left = $node->left->type === NodeNativeType::FLOAT
+                ? \floatval($node->left->operand)
+                : \intval($node->left->operand);
+
+            $right = $node->right->type === NodeNativeType::INT
+                ? \floatval($node->right->operand)
+                : \intval($node->right->operand);
+
+            try {
+                return match ($node->operator) {
+                    BinaryOperator::ADD => \strval($left + $right),
+                    BinaryOperator::SUBTRACT => \strval($left - $right),
+                    BinaryOperator::MULTIPLY => \strval($left * $right),
+                    BinaryOperator::DIVIDE => \strval($left / $right),
+                    BinaryOperator::MODULUS => \strval($left % $right),
+                };
+            } catch (\DivisionByZeroError) {
+                throw CompilerException::fromOptimizerDivideByZero(
+                    left: $left,
+                    right: $right,
+                );
+            }
+        }
+
         return \sprintf(
             '%s %s %s',
             $compiler->compileNode($node->left),
