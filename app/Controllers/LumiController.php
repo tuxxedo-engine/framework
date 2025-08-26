@@ -90,15 +90,7 @@ readonly class LumiController
             $value[] = \mb_trim($line);
         }
 
-        return \str_replace(
-            [
-                "\r\n",
-                "\r",
-                "\n",
-            ],
-            '\n',
-            \mb_trim(\htmlspecialchars(\join(' ', $value))),
-        );
+        return \mb_trim(\htmlspecialchars(\join('\n', $value)), '\n');
     }
 
     private function visualizeNode(
