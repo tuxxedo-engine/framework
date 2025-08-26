@@ -23,6 +23,7 @@ use Tuxxedo\View\Lumi\Parser\Handler\ConditionParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\ParserHandlerInterface;
 use Tuxxedo\View\Lumi\Parser\Handler\TextParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\VoidParserHandler;
+use Tuxxedo\View\Lumi\Parser\Handler\WhileParserHandler;
 use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
 
 class Parser implements ParserInterface
@@ -67,6 +68,10 @@ class Parser implements ParserInterface
             ),
             new VoidParserHandler(
                 tokenName: BuiltinTokenNames::ELSE->name,
+            ),
+            new WhileParserHandler(),
+            new VoidParserHandler(
+                tokenName: BuiltinTokenNames::ENDWHILE->name,
             ),
         ];
     }

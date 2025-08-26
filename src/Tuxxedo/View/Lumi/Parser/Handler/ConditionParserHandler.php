@@ -39,34 +39,37 @@ class ConditionParserHandler implements ParserHandlerInterface
             throw ParserException::fromEmptyExpression();
         }
 
-        $tokens = [];
+        $expressionTokens = [];
 
-        do {
-            $tokens[] = $stream->current();
+        while (!$stream->currentIs(BuiltinTokenNames::END->name)) {
+            $expressionTokens[] = $stream->current();
 
             $stream->consume();
-        } while (!$stream->currentIs(BuiltinTokenNames::END->name));
+        }
 
         $stream->expect(BuiltinTokenNames::END->name);
 
         $condition = $parser->expressionParser->parse(
-            stream: new TokenStream(tokens: $tokens),
+            stream: new TokenStream(tokens: $expressionTokens),
             state: $parser->state,
         );
 
         $parser->state->enterCondition();
 
         $bodyTokens = [];
-        $branches = [];
         $elseTokens = [];
-
-        $currentTarget = &$bodyTokens;
+        $branches = [];
+        $parsingElse = false;
 
         while (!$stream->eof()) {
             if ($stream->currentIs(BuiltinTokenNames::IF->name)) {
                 $parser->state->enterCondition();
 
-                $currentTarget[] = $stream->current();
+                if ($parsingElse) {
+                    $elseTokens[] = $stream->current();
+                } else {
+                    $bodyTokens[] = $stream->current();
+                }
 
                 $stream->consume();
 
@@ -78,11 +81,14 @@ class ConditionParserHandler implements ParserHandlerInterface
 
                 if ($parser->state->conditionDepth === 0) {
                     $stream->consume();
-
                     break;
                 }
 
-                $currentTarget[] = $stream->current();
+                if ($parsingElse) {
+                    $elseTokens[] = $stream->current();
+                } else {
+                    $bodyTokens[] = $stream->current();
+                }
 
                 $stream->consume();
 
@@ -107,25 +113,27 @@ class ConditionParserHandler implements ParserHandlerInterface
                     state: $parser->state,
                 );
 
-                $branchBody = [];
+                $branchBodyTokens = [];
 
                 while (
                     !$stream->currentIs(BuiltinTokenNames::ELSEIF->name) &&
                     !$stream->currentIs(BuiltinTokenNames::ELSE->name) &&
                     !$stream->currentIs(BuiltinTokenNames::ENDIF->name)
                 ) {
-                    $branchBody[] = $stream->current();
+                    $branchBodyTokens[] = $stream->current();
                     $stream->consume();
                 }
+
+                $parser->state->enterCondition();
 
                 $branches[] = new ConditionalBranchNode(
                     operand: $branchCondition,
                     body: $parser->parse(
-                        stream: new TokenStream(
-                            tokens: $branchBody,
-                        ),
+                        stream: new TokenStream(tokens: $branchBodyTokens),
                     )->nodes,
                 );
+
+                $parser->state->leaveCondition();
 
                 continue;
             }
@@ -133,30 +141,50 @@ class ConditionParserHandler implements ParserHandlerInterface
             if ($stream->currentIs(BuiltinTokenNames::ELSE->name)) {
                 $stream->expect(BuiltinTokenNames::ELSE->name);
 
-                $currentTarget = &$elseTokens;
+                $parsingElse = true;
 
                 continue;
             }
 
-            $currentTarget[] = $stream->current();
+            if ($parsingElse) {
+                $elseTokens[] = $stream->current();
+            } else {
+                $bodyTokens[] = $stream->current();
+            }
 
             $stream->consume();
+        }
+
+        if (\sizeof($bodyTokens) > 0) {
+            $parser->state->enterCondition();
+
+            $body = $parser->parse(
+                stream: new TokenStream(
+                    tokens: $bodyTokens,
+                ),
+            )->nodes;
+
+            $parser->state->leaveCondition();
+        }
+
+        if (\count($elseTokens) > 0) {
+            $parser->state->enterCondition();
+
+            $elseBody = $parser->parse(
+                stream: new TokenStream(
+                    tokens: $elseTokens,
+                ),
+            )->nodes;
+
+            $parser->state->leaveCondition();
         }
 
         return [
             new ConditionalNode(
                 operand: $condition,
-                body: $parser->parse(
-                    stream: new TokenStream(
-                        tokens: $bodyTokens,
-                    ),
-                )->nodes,
+                body: $body ?? [],
                 branches: $branches,
-                else: $parser->parse(
-                    stream: new TokenStream(
-                        tokens: $elseTokens,
-                    ),
-                )->nodes,
+                else: $elseBody ?? [],
             ),
         ];
     }
