@@ -116,11 +116,6 @@ class BlockTokenHandler implements TokenHandlerInterface
                         line: $startingLine,
                     ),
                 ],
-                'do' => [
-                    new DoToken(
-                        line: $startingLine,
-                    ),
-                ],
                 'for' => $this->parseFor(
                     startingLine: $startingLine,
                     expression: $expr,
@@ -186,6 +181,9 @@ class BlockTokenHandler implements TokenHandlerInterface
 
         return [
             match ($directive) {
+                'do' => new DoToken(
+                    line: $startingLine,
+                ),
                 'else' => new ElseToken(
                     line: $startingLine,
                 ),

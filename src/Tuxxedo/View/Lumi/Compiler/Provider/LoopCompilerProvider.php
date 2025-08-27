@@ -16,6 +16,7 @@ namespace Tuxxedo\View\Lumi\Compiler\Provider;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Node\BreakNode;
 use Tuxxedo\View\Lumi\Node\ContinueNode;
+use Tuxxedo\View\Lumi\Node\DoWhileNode;
 use Tuxxedo\View\Lumi\Node\ForNode;
 use Tuxxedo\View\Lumi\Node\WhileNode;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
@@ -43,6 +44,31 @@ class LoopCompilerProvider implements CompilerProviderInterface
         }
 
         $output .= '<?php endwhile; ?>';
+
+        return $output;
+    }
+
+    private function compileDoWhile(
+        DoWhileNode $node,
+        CompilerInterface $compiler,
+    ): string {
+        $output = '<?php do { ?>';
+
+        foreach ($node->body as $child) {
+            $output .= $compiler->compileNode($child);
+        }
+
+        $output .= \sprintf(
+            '<?php } while (%s); ?>',
+            $compiler->expressionCompiler->compile(
+                stream: new NodeStream(
+                    nodes: [
+                        $node->operand,
+                    ],
+                ),
+                compiler: $compiler,
+            ),
+        );
 
         return $output;
     }
@@ -130,6 +156,11 @@ class LoopCompilerProvider implements CompilerProviderInterface
         yield new NodeCompilerHandler(
             nodeClassName: WhileNode::class,
             handler: $this->compileWhile(...),
+        );
+
+        yield new NodeCompilerHandler(
+            nodeClassName: DoWhileNode::class,
+            handler: $this->compileDoWhile(...),
         );
 
         yield new NodeCompilerHandler(
