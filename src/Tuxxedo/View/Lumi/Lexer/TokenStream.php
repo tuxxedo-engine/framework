@@ -95,7 +95,7 @@ class TokenStream implements TokenStreamInterface
         return true;
     }
 
-    public function consume(): void
+    public function consume(): TokenInterface
     {
         $slots = \sizeof($this->tokens) - $this->position;
 
@@ -104,6 +104,8 @@ class TokenStream implements TokenStreamInterface
         }
 
         $this->position++;
+
+        return $this->tokens[$this->position - 1];
     }
 
     public function expect(

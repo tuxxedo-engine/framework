@@ -35,9 +35,14 @@ interface TokenStreamInterface
 
     /**
      * @throws LexerException
+     *
+     * @phpstan-impure
      */
     public function current(): TokenInterface;
 
+    /**
+     * @phpstan-impure
+     */
     public function currentIs(
         string $tokenName,
         ?string $op1 = null,
@@ -56,11 +61,15 @@ interface TokenStreamInterface
 
     /**
      * @throws LexerException
+     *
+     * @phpstan-impure
      */
-    public function consume(): void;
+    public function consume(): TokenInterface;
 
     /**
      * @throws LexerException
+     *
+     * @phpstan-impure
      */
     public function expect(
         string $tokenName,

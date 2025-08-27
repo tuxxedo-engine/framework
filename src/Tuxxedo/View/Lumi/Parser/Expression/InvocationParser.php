@@ -50,18 +50,21 @@ class InvocationParser implements InvocationParserInterface
                 }
 
                 if ($character->op1 === CharacterSymbol::LEFT_PARENTHESIS->symbol()) {
-                    $this->parser->stream->consume();
+                    $tokens[$argumentNo] ??= [];
+                    $tokens[$argumentNo][] = $this->parser->stream->consume();
                     $depth++;
 
                     continue;
                 } elseif ($character->op1 === CharacterSymbol::RIGHT_PARENTHESIS->symbol()) {
-                    $this->parser->stream->consume();
-
                     if ($depth === 0) {
+                        $this->parser->stream->consume();
+
                         break;
                     }
 
                     $depth--;
+                    $tokens[$argumentNo] ??= [];
+                    $tokens[$argumentNo][] = $this->parser->stream->consume();
 
                     continue;
                 } elseif ($character->op1 === CharacterSymbol::COMMA->symbol()) {

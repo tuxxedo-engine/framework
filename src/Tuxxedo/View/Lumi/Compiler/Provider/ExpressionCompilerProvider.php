@@ -18,6 +18,7 @@ use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Node\FunctionCallNode;
+use Tuxxedo\View\Lumi\Node\GroupNode;
 use Tuxxedo\View\Lumi\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Node\MethodCallNode;
@@ -176,6 +177,35 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         );
     }
 
+    private function compileGroup(
+        GroupNode $node,
+        CompilerInterface $compiler,
+    ): string {
+        // @todo Move this out to an optimizer class
+        if ($node->operand instanceof LiteralNode) {
+            return $compiler->expressionCompiler->compile(
+                stream: new NodeStream(
+                    nodes: [
+                        $node->operand,
+                    ],
+                ),
+                compiler: $compiler,
+            );
+        }
+
+        return \sprintf(
+            '(%s)',
+            $compiler->expressionCompiler->compile(
+                stream: new NodeStream(
+                    nodes: [
+                        $node->operand,
+                    ],
+                ),
+                compiler: $compiler,
+            ),
+        );
+    }
+
     public function augment(): \Generator
     {
         yield new NodeCompilerHandler(
@@ -206,6 +236,11 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         yield new NodeCompilerHandler(
             nodeClassName: AssignmentNode::class,
             handler: $this->compileAssignment(...),
+        );
+
+        yield new NodeCompilerHandler(
+            nodeClassName: GroupNode::class,
+            handler: $this->compileGroup(...),
         );
     }
 }
