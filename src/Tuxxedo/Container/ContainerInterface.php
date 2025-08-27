@@ -58,8 +58,12 @@ interface ContainerInterface
         string $className,
     ): object;
 
+    /**
+     * @param array<array-key, mixed> $arguments
+     */
     public function call(
         \Closure $callable,
+        array $arguments = [],
     ): mixed;
 
     /**

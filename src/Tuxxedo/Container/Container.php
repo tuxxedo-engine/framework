@@ -185,14 +185,21 @@ class Container implements ContainerInterface
 
     public function call(
         \Closure $callable,
+        array $arguments = [],
     ): mixed {
-        $arguments = [];
+        $callArguments = [];
 
         foreach ((new \ReflectionFunction($callable))->getParameters() as $parameter) {
-            $arguments[$parameter->getName()] = $this->resolveParameter($parameter);
+            $callArguments[$parameter->getName()] = \array_key_exists($parameter->getName(), $arguments)
+                ? $arguments[$parameter->getName()]
+                : (
+                    \array_key_exists($parameter->getPosition(), $arguments)
+                        ? $arguments[$parameter->getPosition()]
+                        : $this->resolveParameter($parameter)
+                );
         }
 
-        return $callable(...$arguments);
+        return $callable(...$callArguments);
     }
 
     public function isBound(string $className): bool
