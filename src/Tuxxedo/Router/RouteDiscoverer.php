@@ -169,9 +169,12 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
         $middleware = [];
 
         foreach ($reflector->getAttributes(Middleware::class, \ReflectionAttribute::IS_INSTANCEOF) as $attribute) {
-            $middleware[] = fn (): MiddlewareInterface => $this->container->resolve(
-                $attribute->newInstance()->name,
-            );
+            $middleware[] = fn (): MiddlewareInterface =>
+                /** @var MiddlewareInterface */
+                $this->container->resolve(
+                    $attribute->newInstance()->name,
+                )
+            ;
         }
 
         return $middleware;
@@ -212,6 +215,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
         );
 
         if (\sizeof($attributes) > 0) {
+            /** @var Attribute\Controller */
             return $attributes[0]->newInstance();
         }
 
