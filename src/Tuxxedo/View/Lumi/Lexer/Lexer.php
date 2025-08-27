@@ -65,7 +65,7 @@ class Lexer implements LexerInterface
     /**
      * @return TokenHandlerInterface[]
      */
-    public static function getDefaults(): array
+    public static function getDefaultHandlers(): array
     {
         return [
             new EchoTokenHandler(),
@@ -83,7 +83,7 @@ class Lexer implements LexerInterface
     ): static {
         return new static(
             handlers: \array_merge(
-                self::getDefaults(),
+                self::getDefaultHandlers(),
                 $handlers,
             ),
             expressionLexer: $expressionLexer ?? new ExpressionLexer(),

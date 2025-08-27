@@ -54,7 +54,7 @@ readonly class Compiler implements CompilerInterface
     /**
      * @return CompilerProviderInterface[]
      */
-    public static function getDefaults(): array
+    public static function getDefaultProviders(): array
     {
         return [
             new ExpressionCompilerProvider(),
@@ -84,7 +84,7 @@ readonly class Compiler implements CompilerInterface
     ): static {
         return new static(
             providers: \array_merge(
-                self::getDefaults(),
+                self::getDefaultProviders(),
                 $providers,
             ),
             expressionCompiler: $expressionCompiler ?? self::getDefaultExpressionCompiler(),

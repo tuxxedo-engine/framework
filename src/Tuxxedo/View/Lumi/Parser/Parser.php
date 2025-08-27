@@ -58,7 +58,7 @@ class Parser implements ParserInterface
     /**
      * @return ParserHandlerInterface[]
      */
-    public static function getDefaults(): array
+    public static function getDefaultHandlers(): array
     {
         return [
             new TextParserHandler(),
@@ -102,7 +102,7 @@ class Parser implements ParserInterface
     ): static {
         return new static(
             handlers: \array_merge(
-                self::getDefaults(),
+                self::getDefaultHandlers(),
                 $handlers,
             ),
             expressionParser: $expressionParser ?? self::getDefaultExpressionParser(),
