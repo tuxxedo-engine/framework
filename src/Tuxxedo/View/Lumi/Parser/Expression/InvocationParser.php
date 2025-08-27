@@ -203,13 +203,4 @@ class InvocationParser implements InvocationParserInterface
             ),
         );
     }
-
-    public function parseDereferenceChain(
-        TokenInterface $caller,
-        TokenInterface $method,
-    ): void {
-        throw ParserException::fromNotImplemented(
-            feature: 'parsing dereference chain',
-        );
-    }
 }

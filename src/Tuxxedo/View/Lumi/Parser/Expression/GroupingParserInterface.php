@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Parser\Expression;
 
 use Tuxxedo\View\Lumi\Parser\ParserException;
+use Tuxxedo\View\Lumi\Token\TokenInterface;
 
 interface GroupingParserInterface
 {
@@ -21,4 +22,12 @@ interface GroupingParserInterface
      * @throws ParserException
      */
     public function parseGroup(): void;
+
+    /**
+     * @throws ParserException
+     */
+    public function parseDereferenceChain(
+        TokenInterface $caller,
+        TokenInterface $method,
+    ): void;
 }

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Parser\Expression;
 
 use Tuxxedo\View\Lumi\Parser\ParserException;
+use Tuxxedo\View\Lumi\Token\TokenInterface;
 
 class GroupingParser implements GroupingParserInterface
 {
@@ -27,6 +28,15 @@ class GroupingParser implements GroupingParserInterface
     {
         throw ParserException::fromNotImplemented(
             feature: 'parsing group expressions',
+        );
+    }
+
+    public function parseDereferenceChain(
+        TokenInterface $caller,
+        TokenInterface $method,
+    ): void {
+        throw ParserException::fromNotImplemented(
+            feature: 'parsing dereference chain',
         );
     }
 }

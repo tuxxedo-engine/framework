@@ -32,12 +32,4 @@ interface InvocationParserInterface
         TokenInterface $caller,
         TokenInterface $method,
     ): void;
-
-    /**
-     * @throws ParserException
-     */
-    public function parseDereferenceChain(
-        TokenInterface $caller,
-        TokenInterface $method,
-    ): void;
 }

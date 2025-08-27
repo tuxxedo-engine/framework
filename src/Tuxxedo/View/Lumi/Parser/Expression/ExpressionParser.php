@@ -143,7 +143,7 @@ class ExpressionParser implements ExpressionParserInterface
                                 caller: $token,
                                 method: $methodToken,
                             ),
-                            CharacterSymbol::LEFT_SQUARE_BRACKET->symbol(), CharacterSymbol::DOT->symbol() => $this->invocation->parseDereferenceChain(
+                            CharacterSymbol::LEFT_SQUARE_BRACKET->symbol(), CharacterSymbol::DOT->symbol() => $this->grouping->parseDereferenceChain(
                                 caller: $token,
                                 method: $methodToken,
                             ),
