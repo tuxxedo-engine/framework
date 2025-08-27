@@ -24,9 +24,11 @@ interface ViewContextInterface
 
     /**
      * @param callable-string $functionName
+     * @param mixed[] $arguments
      */
     public function functionCall(
         string $functionName,
+        array $arguments = [],
     ): mixed;
 
     public function resetDirectives(): void;

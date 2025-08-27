@@ -36,8 +36,26 @@ class LumiViewContext implements ViewContextInterface
     // @todo Improve this to a better API with whitelisting or local override like include()
     public function functionCall(
         string $functionName,
+        array $arguments = [],
     ): mixed {
-        return $functionName();
+        // @todo Remove hard coding
+        if (\strval($functionName) === 'include') {
+            if (\sizeof($arguments) === 0) {
+                throw new \Exception('Too few arguments');
+            } elseif (\sizeof($arguments) > 1) {
+                throw new \Exception('Too many arguments');
+            }
+
+            $viewName = $arguments[0];
+
+            if (!\is_string($viewName)) {
+                throw new \Exception('Argument must be string');
+            }
+
+            return $this->include($viewName);
+        }
+
+        return $functionName(...$arguments);
     }
 
     public function resetDirectives(): void

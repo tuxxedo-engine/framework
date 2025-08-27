@@ -54,15 +54,18 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         FunctionCallNode $node,
         CompilerInterface $compiler,
     ): string {
+        $arguments = [];
+
         if (\sizeof($node->arguments) > 0) {
-            throw CompilerException::fromNotImplemented(
-                feature: 'Function call arguments',
-            );
+            foreach ($node->arguments as $argument) {
+                $arguments[] = $compiler->compileNode($argument);
+            }
         }
 
         return \sprintf(
-            '$this->functionCall(\'%s\')',
+            '$this->functionCall(\'%s\', [%s])',
             $node->name,
+            \join(', ', $arguments),
         );
     }
 

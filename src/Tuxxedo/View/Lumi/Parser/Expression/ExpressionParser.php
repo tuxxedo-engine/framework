@@ -51,6 +51,10 @@ class ExpressionParser implements ExpressionParserInterface
         TokenStreamInterface $stream,
         ParserStateInterface $state,
     ): ExpressionNodeInterface {
+        if (isset($this->stream) && $this->stream !== $stream) {
+            $oldStream = $this->stream;
+        }
+
         $this->stream = $stream;
         $this->state = $state;
 
@@ -68,7 +72,11 @@ class ExpressionParser implements ExpressionParserInterface
             throw ParserException::fromUnexpectedGroupingExit();
         }
 
-        unset($this->stream, $this->state);
+        if (isset($oldStream)) {
+            $this->stream = $oldStream;
+        } else {
+            unset($this->stream, $this->state);
+        }
 
         return $node;
     }
