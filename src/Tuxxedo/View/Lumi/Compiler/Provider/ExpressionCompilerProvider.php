@@ -78,20 +78,23 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     ): string {
         $caller = $compiler->compileNode($node->caller);
 
-        if (\sizeof($node->arguments) > 0) {
-            throw CompilerException::fromNotImplemented(
-                feature: 'Method call arguments',
-            );
-        }
-
-        if ($caller === '$this') {
+        if (\mb_strtolower($caller) === '$this') {
             throw CompilerException::fromCannotCallThis();
         }
 
+        $arguments = [];
+
+        if (\sizeof($node->arguments) > 0) {
+            foreach ($node->arguments as $argument) {
+                $arguments[] = $compiler->compileNode($argument);
+            }
+        }
+
         return \sprintf(
-            '%s->%s()',
+            '%s->%s(...[%s])',
             $caller,
             $node->name,
+            \join(', ', $arguments),
         );
     }
 

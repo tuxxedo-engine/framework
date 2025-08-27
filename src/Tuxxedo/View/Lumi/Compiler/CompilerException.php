@@ -44,18 +44,6 @@ class CompilerException extends \Exception
         );
     }
 
-    // @todo Remove
-    public static function fromNotImplemented(
-        string $feature,
-    ): self {
-        return new self(
-            message: \sprintf(
-                'The following feature is not implemented: %s',
-                $feature,
-            ),
-        );
-    }
-
     public static function fromCannotCallThis(): self
     {
         return new self(
