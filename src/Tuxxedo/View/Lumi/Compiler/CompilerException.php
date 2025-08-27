@@ -110,4 +110,11 @@ class CompilerException extends \Exception
             ),
         );
     }
+
+    public static function fromCannotEscapePhp(): self
+    {
+        return new self(
+            message: 'Unable to escape PHP style tags from node',
+        );
+    }
 }

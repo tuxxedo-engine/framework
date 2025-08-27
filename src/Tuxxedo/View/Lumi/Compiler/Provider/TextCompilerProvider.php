@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Compiler\Provider;
 
+use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Node\BuiltinNodeKinds;
 use Tuxxedo\View\Lumi\Node\CommentNode;
@@ -27,7 +28,7 @@ class TextCompilerProvider implements CompilerProviderInterface
         TextNode $node,
         CompilerInterface $compiler,
     ): string {
-        return $node->text;
+        return $this->stripPhpOpeningTag($node->text);
     }
 
     private function compileComment(
@@ -41,7 +42,7 @@ class TextCompilerProvider implements CompilerProviderInterface
             foreach ($lines as $line) {
                 $commentary .= \sprintf(
                     "<?php // %s ?>\n",
-                    \mb_trim($line),
+                    $this->stripPhpEndingTag(\mb_trim($line)),
                 );
             }
         }
@@ -104,5 +105,15 @@ class TextCompilerProvider implements CompilerProviderInterface
             nodeClassName: DeclareNode::class,
             handler: $this->compileDeclare(...),
         );
+    }
+
+    private function stripPhpOpeningTag(string $code): string
+    {
+        return \preg_replace('/\s*<\?\s*/ui', '&lt;?', $code) ?? throw CompilerException::fromCannotEscapePhp();
+    }
+
+    private function stripPhpEndingTag(string $code): string
+    {
+        return \preg_replace('/\s*\?>\s*$/u', '', $code) ?? throw CompilerException::fromCannotEscapePhp();
     }
 }

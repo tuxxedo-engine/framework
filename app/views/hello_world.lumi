@@ -16,3 +16,5 @@
     on
     many lines!
 #}
+
+<pre><?php echo $name; ?></pre>
