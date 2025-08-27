@@ -60,13 +60,16 @@ readonly class LumiViewRender implements ViewRenderInterface
 
         $this->context->resetDirectives();
 
+        // @todo This needs to trap notices and warnings to not leak information
         $renderer = function (string $__lumiViewFileName, array $__lumiVariables): string {
             \extract($__lumiVariables, \EXTR_SKIP);
             \ob_start();
 
             unset($__lumiVariables);
 
+            $__lumiErrorReporting = \error_reporting(0);
             require $__lumiViewFileName;
+            \error_reporting($__lumiErrorReporting);
 
             $buffer = \ob_get_clean();
 
