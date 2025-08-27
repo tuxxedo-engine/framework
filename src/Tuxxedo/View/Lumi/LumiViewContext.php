@@ -42,17 +42,27 @@ class LumiViewContext implements ViewContextInterface
         if (\strval($functionName) === 'include') {
             if (\sizeof($arguments) === 0) {
                 throw new \Exception('Too few arguments');
-            } elseif (\sizeof($arguments) > 1) {
+            } elseif (\sizeof($arguments) > 2) {
                 throw new \Exception('Too many arguments');
             }
 
             $viewName = $arguments[0];
+            $scope = [];
+
+            if (\sizeof($arguments) > 1) {
+                if (!\is_array($arguments[1])) {
+                    throw new \Exception('Scope must be an array');
+                }
+
+                /** @var array<string, mixed> $scope */
+                $scope = $arguments[1];
+            }
 
             if (!\is_string($viewName)) {
                 throw new \Exception('Argument must be string');
             }
 
-            return $this->include($viewName);
+            return $this->include($viewName, $scope);
         }
 
         return $functionName(...$arguments);
