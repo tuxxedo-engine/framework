@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
+// @todo Consider an introspection method like inspect()?
 class Container implements ContainerInterface
 {
     private const array PROTECTED_INTERFACES = [
