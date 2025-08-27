@@ -50,7 +50,9 @@ class WhileParserHandler implements ParserHandlerInterface
         $parser->state->enterLoop();
 
         $condition = $parser->expressionParser->parse(
-            stream: new TokenStream(tokens: $tokens),
+            stream: new TokenStream(
+                tokens: $tokens,
+            ),
             state: $parser->state,
         );
 

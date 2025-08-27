@@ -27,9 +27,11 @@ enum BuiltinTokenNames
     case ELSE;
     case END;
     case ENDFOR;
+    case ENDFOREACH;
     case ENDIF;
     case ENDWHILE;
     case FOR;
+    case FOREACH;
     case IDENTIFIER;
     case IF;
     case LITERAL;
@@ -43,5 +45,10 @@ enum BuiltinTokenNames
             self::CHARACTER, self::IDENTIFIER, self::LITERAL, self::OPERATOR => true,
             default => false,
         };
+    }
+
+    public function isVirtualToken(): bool
+    {
+        return $this === self::END;
     }
 }

@@ -189,6 +189,7 @@ readonly class LumiController
             'hello_world_call' => $this->viewController->call(...),
             'hello_world_cond' => $this->viewController->cond(...),
             'hello_world_declare' => $this->viewController->decl(...),
+            'hello_world_for' => $this->viewController->for(...),
             'hello_world_include' => $this->viewController->include(...),
             'hello_world_method' => $this->viewController->method(...),
             'hello_world_set' => $this->viewController->set(...),

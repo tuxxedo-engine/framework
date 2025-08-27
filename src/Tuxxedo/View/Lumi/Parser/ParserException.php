@@ -217,4 +217,11 @@ class ParserException extends \Exception
             ),
         );
     }
+
+    public static function fromExpressionNotIterable(): self
+    {
+        return new self(
+            message: 'For or foreach iterator expression must be iterable',
+        );
+    }
 }

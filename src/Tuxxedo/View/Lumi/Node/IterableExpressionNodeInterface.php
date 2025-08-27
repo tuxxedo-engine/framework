@@ -13,13 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Node;
 
-readonly class IdentifierNode implements IterableExpressionNodeInterface
+interface IterableExpressionNodeInterface extends ExpressionNodeInterface
 {
-    public string $kind;
-
-    public function __construct(
-        public string $name,
-    ) {
-        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
-    }
 }

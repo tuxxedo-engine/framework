@@ -23,6 +23,8 @@ use Tuxxedo\View\Lumi\Parser\Handler\ContinueParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\DeclareParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\EchoParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\ConditionParserHandler;
+use Tuxxedo\View\Lumi\Parser\Handler\ForeachParserHandler;
+use Tuxxedo\View\Lumi\Parser\Handler\ForParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\ParserHandlerInterface;
 use Tuxxedo\View\Lumi\Parser\Handler\TextParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\VoidParserHandler;
@@ -79,6 +81,14 @@ class Parser implements ParserInterface
             new ContinueParserHandler(),
             new BreakParserHandler(),
             new DeclareParserHandler(),
+            new ForeachParserHandler(),
+            new VoidParserHandler(
+                tokenName: BuiltinTokenNames::ENDFOREACH->name,
+            ),
+            new ForParserHandler(),
+            new VoidParserHandler(
+                tokenName: BuiltinTokenNames::ENDFOR->name,
+            ),
         ];
     }
 

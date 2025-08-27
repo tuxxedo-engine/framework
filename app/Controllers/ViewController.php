@@ -98,4 +98,15 @@ readonly class ViewController
             name: 'hello_world_declare',
         );
     }
+
+    #[Route\Get]
+    public function for(): ViewInterface
+    {
+        return new View(
+            name: 'hello_world_for',
+            scope: [
+                'iter' => \range(1, 5),
+            ],
+        );
+    }
 }

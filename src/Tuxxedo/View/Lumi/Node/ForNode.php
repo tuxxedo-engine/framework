@@ -21,10 +21,10 @@ readonly class ForNode implements NodeInterface
      * @param NodeInterface[] $body
      */
     public function __construct(
-        public string $value,
-        public ExpressionNodeInterface $operand,
+        public IterableExpressionNodeInterface $value,
+        public ExpressionNodeInterface $iterator,
         public array $body = [],
-        public ?string $key = null,
+        public ?IdentifierNode $key = null,
     ) {
         $this->kind = BuiltinNodeKinds::ROOT->name;
     }

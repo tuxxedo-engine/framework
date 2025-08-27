@@ -32,7 +32,10 @@ class VoidParserHandler implements ParserHandlerInterface
         $expectedTokenNames = [];
 
         foreach (BuiltinTokenNames::cases() as $builtinTokenName) {
-            if (!$builtinTokenName->isExpressionToken()) {
+            if (
+                !$builtinTokenName->isExpressionToken() &&
+                !$builtinTokenName->isVirtualToken()
+            ) {
                 $expectedTokenNames[] = $builtinTokenName->name;
             }
         }
@@ -45,8 +48,6 @@ class VoidParserHandler implements ParserHandlerInterface
                 $expectedTokenNames[] = $handler->tokenName;
             }
         }
-
-        // @todo Custom Handlers
 
         throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
             tokenName: $this->tokenName,

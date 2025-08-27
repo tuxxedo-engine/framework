@@ -16,6 +16,7 @@ namespace Tuxxedo\View\Lumi\Compiler\Provider;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Node\BreakNode;
 use Tuxxedo\View\Lumi\Node\ContinueNode;
+use Tuxxedo\View\Lumi\Node\ForNode;
 use Tuxxedo\View\Lumi\Node\WhileNode;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 
@@ -74,6 +75,56 @@ class LoopCompilerProvider implements CompilerProviderInterface
         return '<?php break; ?>';
     }
 
+    private function compileFor(
+        ForNode $node,
+        CompilerInterface $compiler,
+    ): string {
+        $key = '';
+
+        if ($node->key !== null) {
+            $key = \sprintf(
+                '%s => ',
+                $compiler->expressionCompiler->compile(
+                    stream: new NodeStream(
+                        nodes: [
+                            $node->key,
+                        ],
+                    ),
+                    compiler: $compiler,
+                ),
+            );
+        }
+
+        $output = \sprintf(
+            '<?php foreach (%s as %s%s): ?>',
+            $compiler->expressionCompiler->compile(
+                stream: new NodeStream(
+                    nodes: [
+                        $node->iterator,
+                    ],
+                ),
+                compiler: $compiler,
+            ),
+            $key,
+            $compiler->expressionCompiler->compile(
+                stream: new NodeStream(
+                    nodes: [
+                        $node->value,
+                    ],
+                ),
+                compiler: $compiler,
+            ),
+        );
+
+        foreach ($node->body as $child) {
+            $output .= $compiler->compileNode($child);
+        }
+
+        $output .= '<?php endforeach; ?>';
+
+        return $output;
+    }
+
     public function augment(): \Generator
     {
         yield new NodeCompilerHandler(
@@ -89,6 +140,11 @@ class LoopCompilerProvider implements CompilerProviderInterface
         yield new NodeCompilerHandler(
             nodeClassName: BreakNode::class,
             handler: $this->compileBreak(...),
+        );
+
+        yield new NodeCompilerHandler(
+            nodeClassName: ForNode::class,
+            handler: $this->compileFor(...),
         );
     }
 }

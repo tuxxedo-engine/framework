@@ -11,15 +11,17 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Node;
+namespace Tuxxedo\View\Lumi\Token;
 
-readonly class IdentifierNode implements IterableExpressionNodeInterface
+readonly class ForeachToken implements TokenInterface
 {
-    public string $kind;
+    public string $type;
 
     public function __construct(
-        public string $name,
+        public int $line,
+        public string $op1,
+        public ?string $op2 = null,
     ) {
-        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
+        $this->type = BuiltinTokenNames::FOREACH->name;
     }
 }
