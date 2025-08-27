@@ -24,7 +24,13 @@ use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
 // @todo Fix so that this will not break do-while
 class WhileParserHandler implements ParserHandlerInterface
 {
-    public private(set) string $tokenName = BuiltinTokenNames::WHILE->name;
+    /**
+     * @param 'DO'|'WHILE' $tokenName
+     */
+    public function __construct(
+        public readonly string $tokenName,
+    ) {
+    }
 
     /**
      * @return NodeInterface[]

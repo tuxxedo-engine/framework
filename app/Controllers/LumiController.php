@@ -278,7 +278,7 @@ readonly class LumiController
 
                     $stream->consume();
                 }
-            } catch (ParserException $exception) {
+            } catch (LexerException|ParserException $exception) {
                 $buffer .= $exception;
                 $showNext = false;
             }

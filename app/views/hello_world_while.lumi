@@ -40,12 +40,21 @@
     {% set m += 1 %}
 {% endwhile %}
 
+{#
 {% set n = 5 %}
 <ul>
 {% do %}
     <li>{{ n }}</li>
     {% set n -= 1 %}
 {% while n %}
+</ul>
+
+{% set n = 5 %}
+<ul>
+    {% do %}
+    <li>{{ n }}</li>
+    {% set n -= 1 %}
+    {% while n %}
 </ul>
 
 {% set n = 3 %}
@@ -62,22 +71,22 @@
 {% while outer %}
     {% set inner = 2 %}
     {% do %}
-        <li>Nested {{ inner }}</li>
-        {% set inner -= 1 %}
+<li>Nested {{ inner }}</li>
+{% set inner -= 1 %}
     {% while inner %}
-    {% set outer -= 1 %}
-{% endwhile %}
+        {% set outer -= 1 %}
+    {% endwhile %}
 
 {% set a = 2 %}
 {% set b = 2 %}
 {% do %}
-    <li>A: {{ a }}</li>
-    {% set a -= 1 %}
+<li>A: {{ a }}</li>
+{% set a -= 1 %}
 {% while a %}
 
 {% do %}
-    <li>B: {{ b }}</li>
-    {% set b -= 1 %}
+<li>B: {{ b }}</li>
+{% set b -= 1 %}
 {% while b %}
 
 {% set x = 5 %}
@@ -86,8 +95,8 @@
         {% set x -= 1 %}
         {% continue %}
     {% endif %}
-    <li>{{ x }}</li>
-    {% set x -= 1 %}
+<li>{{ x }}</li>
+{% set x -= 1 %}
 {% while x %}
 
 {% set y = 5 %}
@@ -99,16 +108,16 @@
     {% set y -= 1 %}
 {% endwhile %}
 
-{% set outer = 2 %}
+{% set x = 3 %}
+{% set y = 5 %}
+{% set z = 8 %}
 {% do %}
-    {% set mid = 2 %}
-{% while mid %}
-{% set inner = 2 %}
-{% do %}
-    <li>{{ outer }}-{{ mid }}-{{ inner }}</li>
-    {% set inner -= 1 %}
-    {% while inner %}
-        {% set mid -= 1 %}
+    {% while y %}
+        {% set y -= 1 %}
+        {% do %}
+            {% set x -= 1 %}
+        {% while x %}
     {% endwhile %}
-    {% set outer -= 1 %}
-{% while outer %}
+    {% set z -= 2 %}
+{% while z %}
+#}
