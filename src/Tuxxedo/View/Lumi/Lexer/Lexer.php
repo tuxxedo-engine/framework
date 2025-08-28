@@ -14,8 +14,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer;
 
-use Tuxxedo\View\Lumi\ByteStream;
-use Tuxxedo\View\Lumi\ByteStreamInterface;
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexer;
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\Handler\BlockTokenHandler;

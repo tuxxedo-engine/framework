@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi;
+namespace Tuxxedo\View\Lumi\Lexer;
 
 interface ByteStreamInterface
 {

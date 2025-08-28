@@ -11,9 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi;
-
-use Tuxxedo\View\Lumi\Lexer\LexerException;
+namespace Tuxxedo\View\Lumi\Lexer;
 
 class ByteStream implements ByteStreamInterface
 {

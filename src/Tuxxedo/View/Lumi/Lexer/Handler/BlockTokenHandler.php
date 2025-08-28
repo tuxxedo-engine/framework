@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
-use Tuxxedo\View\Lumi\ByteStreamInterface;
+use Tuxxedo\View\Lumi\Lexer\ByteStreamInterface;
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Token\AssignToken;
@@ -24,13 +24,13 @@ use Tuxxedo\View\Lumi\Token\DeclareToken;
 use Tuxxedo\View\Lumi\Token\DoToken;
 use Tuxxedo\View\Lumi\Token\ElseIfToken;
 use Tuxxedo\View\Lumi\Token\ElseToken;
-use Tuxxedo\View\Lumi\Token\EndForeachToken;
 use Tuxxedo\View\Lumi\Token\EndForToken;
+use Tuxxedo\View\Lumi\Token\EndForeachToken;
 use Tuxxedo\View\Lumi\Token\EndIfToken;
 use Tuxxedo\View\Lumi\Token\EndToken;
 use Tuxxedo\View\Lumi\Token\EndWhileToken;
-use Tuxxedo\View\Lumi\Token\ForeachToken;
 use Tuxxedo\View\Lumi\Token\ForToken;
+use Tuxxedo\View\Lumi\Token\ForeachToken;
 use Tuxxedo\View\Lumi\Token\IfToken;
 use Tuxxedo\View\Lumi\Token\TextToken;
 use Tuxxedo\View\Lumi\Token\TokenInterface;

@@ -47,6 +47,15 @@ return (new Config())
                 ],
                 'strict' => true,
             ],
+            'ordered_imports' => [
+                'sort_algorithm' => 'alpha',
+                'imports_order' => [
+                    'class',
+                    'function',
+                    'const',
+                ],
+                'case_sensitive' => true,
+            ],
         ],
     )
     ->setFinder($finder);

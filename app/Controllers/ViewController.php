@@ -14,10 +14,10 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Services\Logger\LoggerInterface;
-use Tuxxedo\View\View;
-use Tuxxedo\View\ViewInterface;
 use Tuxxedo\Router\Attribute\Controller;
 use Tuxxedo\Router\Attribute\Route;
+use Tuxxedo\View\View;
+use Tuxxedo\View\ViewInterface;
 
 #[Controller(uri: '/view/')]
 readonly class ViewController

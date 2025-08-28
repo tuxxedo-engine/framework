@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer\Expression;
 
-use Tuxxedo\View\Lumi\ByteStream;
-use Tuxxedo\View\Lumi\ByteStreamInterface;
+use Tuxxedo\View\Lumi\Lexer\ByteStream;
+use Tuxxedo\View\Lumi\Lexer\ByteStreamInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Syntax\AssignmentOperator;
 use Tuxxedo\View\Lumi\Syntax\BinaryOperator;
@@ -22,10 +22,10 @@ use Tuxxedo\View\Lumi\Syntax\CharacterSymbol;
 use Tuxxedo\View\Lumi\Syntax\UnaryOperator;
 use Tuxxedo\View\Lumi\Token\BuiltinTypeNames;
 use Tuxxedo\View\Lumi\Token\CharacterToken;
+use Tuxxedo\View\Lumi\Token\IdentifierToken;
+use Tuxxedo\View\Lumi\Token\LiteralToken;
 use Tuxxedo\View\Lumi\Token\OperatorToken;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
-use Tuxxedo\View\Lumi\Token\LiteralToken;
-use Tuxxedo\View\Lumi\Token\IdentifierToken;
 
 class ExpressionLexer implements ExpressionLexerInterface
 {
