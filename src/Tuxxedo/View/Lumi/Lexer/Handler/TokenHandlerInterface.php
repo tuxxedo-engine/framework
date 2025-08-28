@@ -18,6 +18,7 @@ use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
 
+// @todo Fix {{ '}}' }} and {% if cond('}}') %} etc
 interface TokenHandlerInterface
 {
     public function getStartingSequence(): string;

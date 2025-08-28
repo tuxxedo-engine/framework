@@ -18,3 +18,5 @@
 #}
 
 <pre><?php echo $name; ?></pre>
+
+{{ '{{' }}
