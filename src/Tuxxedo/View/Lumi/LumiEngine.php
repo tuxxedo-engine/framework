@@ -28,7 +28,7 @@ use Tuxxedo\View\ViewException;
 
 class LumiEngine
 {
-    final private function __construct(
+    final public function __construct(
         public readonly LexerInterface $lexer,
         public readonly ParserInterface $parser,
         public readonly CompilerInterface $compiler,
@@ -84,7 +84,7 @@ class LumiEngine
 
         if ($viewName === false) {
             throw ViewException::fromUnableToDetermineViewName(
-                viewName: $file,
+                view: $file,
             );
         }
 

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Runtime;
 
 // @todo Throw exceptions for as* methods once exception tree has been fixed
+// @todo Implement class
 interface LumiDirectivesInterface
 {
     public function has(

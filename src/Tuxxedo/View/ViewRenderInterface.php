@@ -15,16 +15,12 @@ namespace Tuxxedo\View;
 
 interface ViewRenderInterface
 {
-    public ViewContextInterface $context {
-        get;
-    }
-
     public function getViewFileName(
-        string $viewName,
+        string $view,
     ): string;
 
     public function viewExists(
-        string $viewName,
+        string $view,
     ): bool;
 
     /**

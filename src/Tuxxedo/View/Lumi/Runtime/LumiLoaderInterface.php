@@ -13,15 +13,25 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime;
 
-// @todo Exceptions
-// @todo Caching strategy
 interface LumiLoaderInterface
 {
-    public function load(
+    public function getViewFileName(
+        string $view,
+    ): string;
+
+    public function getCachedFileName(
         string $view,
     ): string;
 
     public function exists(
+        string $view,
+    ): bool;
+
+    public function isCached(
+        string $view,
+    ): bool;
+
+    public function invalidate(
         string $view,
     ): bool;
 }

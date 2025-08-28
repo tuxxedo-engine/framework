@@ -13,52 +13,53 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi;
 
-use Tuxxedo\Container\Resolver\ConfigValue;
-use Tuxxedo\View\ViewContextInterface;
+use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Container\LazyInitializableInterface;
+use Tuxxedo\View\Lumi\Runtime\LumiLoaderInterface;
+use Tuxxedo\View\Lumi\Runtime\LumiRuntimeInterface;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewInterface;
 use Tuxxedo\View\ViewRenderInterface;
 
-readonly class LumiViewRender implements ViewRenderInterface
+readonly class LumiViewRender implements LazyInitializableInterface, ViewRenderInterface
 {
-    public ViewContextInterface $context;
-    public LumiEngine $lumi;
-
     public function __construct(
-        #[ConfigValue('view.directory')] public string $directory,
-        #[ConfigValue('view.cacheDirectory')] public string $cacheDirectory,
-        #[ConfigValue('view.alwaysCompile')] public bool $alwaysCompile,
-        ?LumiEngine $lumi = null,
+        public LumiEngine $engine,
+        public LumiLoaderInterface $loader,
+        public LumiRuntimeInterface $runtime,
+        public bool $alwaysCompile,
     ) {
-        $this->context = new LumiViewContext(
-            render: $this,
-        );
+    }
 
-        $this->lumi = $lumi ?? LumiEngine::createDefault();
+    public static function createInstance(
+        ContainerInterface $container,
+    ): self {
+        /** @var LumiViewRender */
+        return LumiConfigurator::fromConfig($container)->build();
     }
 
     public function getViewFileName(
-        string $viewName,
+        string $view,
     ): string {
-        return $this->directory . '/' . \ltrim($viewName, '.') . '.lumi';
+        return $this->loader->getViewFileName($view);
     }
 
     public function viewExists(
-        string $viewName,
+        string $view,
     ): bool {
-        return \is_file($this->getViewFileName($viewName));
+        return $this->loader->exists($view);
     }
 
     public function render(
         ViewInterface $view,
     ): string {
-        if (!$this->viewExists($view->name)) {
+        if (!$this->loader->exists($view->name)) {
             throw ViewException::fromViewNotFound(
-                viewName: $view->name,
+                view: $view->name,
             );
         }
 
-        $this->context->resetDirectives();
+        $this->runtime->resetDirectives();
 
         // @todo This needs to trap notices and warnings to not leak information
         $renderer = function (string $__lumiViewFileName, array $__lumiVariables): string {
@@ -81,7 +82,7 @@ readonly class LumiViewRender implements ViewRenderInterface
         };
 
         try {
-            return $renderer->bindTo($this->context)($this->getCompiledViewFile($view->name), $view->scope);
+            return $renderer->bindTo($this->runtime)($this->getCompiledViewFileName($view->name), $view->scope);
         } catch (\Throwable $exception) {
             throw ViewException::fromViewRenderException(
                 exception: $exception,
@@ -90,23 +91,15 @@ readonly class LumiViewRender implements ViewRenderInterface
     }
 
     private function getCompiledViewFileName(
-        string $viewName,
+        string $view,
     ): string {
-        return $this->cacheDirectory . '/' . \ltrim($viewName, '.') . '.php';
-    }
+        $viewFileName = $this->loader->getViewFileName($view);
+        $compiledFileName = $this->loader->getCachedFileName($view);
 
-    private function getCompiledViewFile(
-        string $viewName,
-    ): string {
-        $compiledViewFile = $this->getCompiledViewFileName($viewName);
-
-        // @todo Implement proper caching
-        if (!$this->alwaysCompile && \is_file($compiledViewFile)) {
-            return $compiledViewFile;
+        if ($this->alwaysCompile || !$this->loader->isCached($view)) {
+            $this->engine->compileFile($viewFileName)->save($compiledFileName);
         }
 
-        $this->lumi->compileFile($this->getViewFileName($viewName))->save($compiledViewFile);
-
-        return $compiledViewFile;
+        return $compiledFileName;
     }
 }

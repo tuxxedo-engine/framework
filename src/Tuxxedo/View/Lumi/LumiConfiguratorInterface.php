@@ -50,6 +50,10 @@ interface LumiConfiguratorInterface
         get;
     }
 
+    public ?LumiLoaderInterface $loader {
+        get;
+    }
+
     /**
      * @var array<string, string|int|float|bool|null>
      */
@@ -131,5 +135,6 @@ interface LumiConfiguratorInterface
     ): self;
 
     public function validate(): bool;
+
     public function build(): ViewRenderInterface;
 }

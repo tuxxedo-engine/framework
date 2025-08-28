@@ -18,6 +18,13 @@ interface LumiRuntimeInterface
     /**
      * @var array<string, string|int|float|bool|null>
      */
+    public array $defaultDirectives {
+        get;
+    }
+
+    /**
+     * @var array<string, string|int|float|bool|null>
+     */
     public array $directives {
         get;
     }

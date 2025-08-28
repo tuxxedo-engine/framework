@@ -19,7 +19,9 @@ use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Runtime\LumiDirectivesInterface;
+use Tuxxedo\View\Lumi\Runtime\LumiLoader;
 use Tuxxedo\View\Lumi\Runtime\LumiLoaderInterface;
+use Tuxxedo\View\Lumi\Runtime\LumiRuntime;
 use Tuxxedo\View\ViewRenderInterface;
 
 class LumiConfigurator implements LumiConfiguratorInterface
@@ -32,6 +34,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public private(set) ?LexerInterface $lexer = null;
     public private(set) ?ParserInterface $parser = null;
     public private(set) ?CompilerInterface $compiler = null;
+    public private(set) ?LumiLoaderInterface $loader = null;
 
     public private(set) array $directives = [];
     public private(set) array $defaultDirectives = [
@@ -243,8 +246,22 @@ class LumiConfigurator implements LumiConfiguratorInterface
         // @todo
 
         return new LumiViewRender(
-            directory: $this->viewDirectory,
-            cacheDirectory: $this->viewCacheDirectory,
+            engine: new LumiEngine(
+                lexer: $this->lexer ?? LumiEngine::createDefaultLexer(),
+                parser: $this->parser ?? LumiEngine::createDefaultParser(),
+                compiler: $this->compiler ?? LumiEngine::createDefaultCompiler(),
+            ),
+            loader: $this->loader ?? new LumiLoader(
+                directory: $this->viewDirectory,
+                cacheDirectory: $this->viewCacheDirectory,
+                extension: $this->viewExtension,
+            ),
+            runtime: new LumiRuntime(
+                directives: \array_merge(
+                    $this->directives,
+                    $this->defaultDirectives,
+                ),
+            ),
             alwaysCompile: $this->viewAlwaysCompile,
         );
     }

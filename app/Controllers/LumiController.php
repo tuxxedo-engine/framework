@@ -25,13 +25,13 @@ use Tuxxedo\Router\Attribute\Route;
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\LumiEngine;
-use Tuxxedo\View\Lumi\LumiViewRender;
 use Tuxxedo\View\Lumi\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\SymbolInterface;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewException;
+use Tuxxedo\View\ViewRenderInterface;
 
 #[Controller(uri: '/lumi/')]
 readonly class LumiController
@@ -39,7 +39,7 @@ readonly class LumiController
     public function __construct(
         #[ConfigValue('view.directory')] private string $viewDirectory,
         #[ConfigValue('view.cacheDirectory')] private string $viewCacheDirectory,
-        private LumiViewRender $lumiViewRender,
+        private ViewRenderInterface $lumiViewRender,
         private ViewController $viewController,
     ) {
     }
