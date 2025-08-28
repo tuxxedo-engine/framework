@@ -15,7 +15,7 @@ return [
     /**
      * view.directory
      *
-     * Directory path for Tuxxedo Engine Lumi templates
+     * Directory path for Tuxxedo Engine Lumi views
      *
      * @type string
      */
@@ -24,16 +24,25 @@ return [
     /**
      * view.cacheDirectory
      *
-     * Cache directory path for compiled Tuxxedo Engine Lumi templates
+     * Cache directory path for compiled Tuxxedo Engine Lumi views
      *
      * @type string
      */
     'cacheDirectory' => __DIR__ . '/../views/cache',
 
     /**
+     * view.extension
+     *
+     * File extension for Tuxxedo Engine Lumi views
+     *
+     * @type string
+     */
+    'extension' => '.lumi',
+
+    /**
      * view.alwaysCompile
      *
-     * Whether to always compile Tuxxedo Engine Lumi templates
+     * Whether to always compile Tuxxedo Engine Lumi views
      *
      * @type bool
      */

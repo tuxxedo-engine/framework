@@ -14,10 +14,18 @@ declare(strict_types=1);
 use App\Services\Logger\Logger;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Session\Session;
-use Tuxxedo\View\Lumi\LumiViewRender;
+use Tuxxedo\View\Lumi\LumiConfigurator;
+use Tuxxedo\View\ViewRenderInterface;
 
 return static function (ContainerInterface $container): void {
     $container->bind(Logger::class);
     $container->bind(Session::class);
-    $container->bind(LumiViewRender::class);
+
+    // @todo Move to a lazy interface on LumiViewRender
+    $container->lazy(
+        ViewRenderInterface::class,
+        static function (ContainerInterface $container): ViewRenderInterface {
+            return LumiConfigurator::fromConfig($container)->build();
+        },
+    );
 };
