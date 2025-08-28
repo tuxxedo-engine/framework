@@ -158,6 +158,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         );
     }
 
+    // @todo Protect against $this
     private function compileAssignment(
         AssignmentNode $node,
         CompilerInterface $compiler,

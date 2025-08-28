@@ -23,6 +23,8 @@ use Tuxxedo\View\Lumi\Syntax\AssignmentOperator;
 use Tuxxedo\View\Lumi\Syntax\BinaryOperator;
 use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
 
+// @todo Unify naming Assignment > Assign
+// @todo This need to support property writes
 class AssignParserHandler implements ParserHandlerInterface
 {
     public private(set) string $tokenName = BuiltinTokenNames::ASSIGN->name;
