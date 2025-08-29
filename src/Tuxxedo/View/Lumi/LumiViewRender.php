@@ -61,6 +61,7 @@ readonly class LumiViewRender implements LazyInitializableInterface, ViewRenderI
             );
         }
 
+        // @todo Change this to be a stack based approach for deep includes
         $this->runtime->resetDirectives();
 
         if ($directives !== null) {
