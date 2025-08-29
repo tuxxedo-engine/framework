@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Application;
 
+// @todo Move this to CLI once ready
 interface ExtensionInterface
 {
     public function augment(ApplicationInterface $app): void;

@@ -15,6 +15,7 @@ namespace Tuxxedo\Http\Kernel;
 
 use Tuxxedo\Application\ApplicationInterface;
 
+// @todo Consider whether to make the Kernel backed by this interface
 interface HttpApplicationInterface extends ApplicationInterface
 {
 }

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Application;
 
+// @todo Remove this
 interface ApplicationInterface
 {
     /**

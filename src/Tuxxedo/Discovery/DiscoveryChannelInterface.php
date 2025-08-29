@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Discovery;
 
+// @todo Move this to CLI once ready
 interface DiscoveryChannelInterface
 {
     /**
