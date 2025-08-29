@@ -33,6 +33,7 @@ class HttpsRequiredMiddleware implements MiddlewareInterface
             return $next->handle($request, $next);
         }
 
+        // @todo This may loose the query string
         return Response::redirect(
             uri: \sprintf(
                 'https://%s%s%s',

@@ -25,6 +25,7 @@ interface ServerContextInterface
         get;
     }
 
+    // @todo Switch implementation to be using PATH_INFO
     public string $uri {
         get;
     }
