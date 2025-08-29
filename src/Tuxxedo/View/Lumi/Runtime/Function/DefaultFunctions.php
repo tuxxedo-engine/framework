@@ -26,7 +26,7 @@ class DefaultFunctions implements FunctionProviderInterface
         array $arguments,
         ViewRenderInterface $render,
         DirectivesInterface $directives,
-    ): mixed {
+    ): string {
         /** @var string $view */
         $view = $arguments[0];
 

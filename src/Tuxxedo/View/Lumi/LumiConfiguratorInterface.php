@@ -17,6 +17,7 @@ use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Runtime\DirectivesInterface;
+use Tuxxedo\View\Lumi\Runtime\Filter\FilterProviderInterface;
 use Tuxxedo\View\Lumi\Runtime\Function\FunctionProviderInterface;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionMode;
@@ -144,8 +145,9 @@ interface LumiConfiguratorInterface
 
     public function withoutDefaultFilters(): self;
 
-    // @todo Argument
-    public function withFilterProvider(): self;
+    public function withFilterProvider(
+        FilterProviderInterface $provider,
+    ): self;
 
     public function withDefaultFunctions(): self;
 

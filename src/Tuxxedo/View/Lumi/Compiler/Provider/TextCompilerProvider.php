@@ -53,6 +53,7 @@ class TextCompilerProvider implements CompilerProviderInterface
         return $commentary;
     }
 
+    // @todo Wrap code for lumi.autoescape
     private function compileEcho(
         EchoNode $node,
         CompilerInterface $compiler,
