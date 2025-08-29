@@ -15,7 +15,7 @@ namespace Tuxxedo\View\Lumi\Runtime;
 
 use Tuxxedo\View\ViewException;
 
-readonly class LumiDirectives implements LumiDirectivesInterface
+readonly class Directives implements DirectivesInterface
 {
     /**
      * @param array<string, string|int|float|bool|null> $directives

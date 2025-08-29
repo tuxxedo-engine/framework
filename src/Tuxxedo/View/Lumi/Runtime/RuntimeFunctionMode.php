@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime;
 
-enum LumiRuntimeFunctionMode
+enum RuntimeFunctionMode
 {
     case ALLOW_ALL;
     case DISALLOW_ALL;

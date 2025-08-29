@@ -18,12 +18,13 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
-use Tuxxedo\View\Lumi\Runtime\LumiDefaultFunctions;
-use Tuxxedo\View\Lumi\Runtime\LumiDirectivesInterface;
-use Tuxxedo\View\Lumi\Runtime\LumiLoader;
-use Tuxxedo\View\Lumi\Runtime\LumiLoaderInterface;
-use Tuxxedo\View\Lumi\Runtime\LumiRuntime;
-use Tuxxedo\View\Lumi\Runtime\LumiRuntimeFunctionMode;
+use Tuxxedo\View\Lumi\Runtime\DirectivesInterface;
+use Tuxxedo\View\Lumi\Runtime\Function\DefaultFunctions;
+use Tuxxedo\View\Lumi\Runtime\Function\FunctionProviderInterface;
+use Tuxxedo\View\Lumi\Runtime\Loader;
+use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
+use Tuxxedo\View\Lumi\Runtime\Runtime;
+use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionMode;
 use Tuxxedo\View\ViewRenderInterface;
 
 class LumiConfigurator implements LumiConfiguratorInterface
@@ -36,7 +37,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public private(set) ?LexerInterface $lexer = null;
     public private(set) ?ParserInterface $parser = null;
     public private(set) ?CompilerInterface $compiler = null;
-    public private(set) ?LumiLoaderInterface $loader = null;
+    public private(set) ?LoaderInterface $loader = null;
 
     public private(set) array $directives = [];
     public private(set) array $defaultDirectives = [
@@ -45,7 +46,9 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
     public private(set) array $functions = [];
     public private(set) array $customFunctions = [];
-    public private(set) LumiRuntimeFunctionMode $functionMode = LumiRuntimeFunctionMode::CUSTOM_ONLY;
+    public private(set) RuntimeFunctionMode $functionMode = RuntimeFunctionMode::CUSTOM_ONLY;
+    public private(set) bool $withDefaultFunctions = true;
+    public private(set) array $functionProviders = [];
 
     final public function __construct()
     {
@@ -144,8 +147,8 @@ class LumiConfigurator implements LumiConfiguratorInterface
     ): self {
         $this->functions[] = $name;
 
-        if ($this->functionMode === LumiRuntimeFunctionMode::DISALLOW_ALL) {
-            $this->functionMode = LumiRuntimeFunctionMode::CUSTOM_ONLY;
+        if ($this->functionMode === RuntimeFunctionMode::DISALLOW_ALL) {
+            $this->functionMode = RuntimeFunctionMode::CUSTOM_ONLY;
         }
 
         return $this;
@@ -153,7 +156,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
     public function allowAllFunctions(): self
     {
-        $this->functionMode = LumiRuntimeFunctionMode::ALLOW_ALL;
+        $this->functionMode = RuntimeFunctionMode::ALLOW_ALL;
 
         return $this;
     }
@@ -162,13 +165,15 @@ class LumiConfigurator implements LumiConfiguratorInterface
     {
         $this->functions = [];
         $this->customFunctions = [];
-        $this->functionMode = LumiRuntimeFunctionMode::DISALLOW_ALL;
+        $this->functionProviders = [];
+        $this->functionMode = RuntimeFunctionMode::DISALLOW_ALL;
+        $this->withDefaultFunctions = false;
 
         return $this;
     }
 
     /**
-     * @param \Closure(array<mixed> $arguments, ViewRenderInterface $render, LumiDirectivesInterface $directives): mixed $handler
+     * @param \Closure(array<mixed> $arguments, ViewRenderInterface $render, DirectivesInterface $directives): mixed $handler
      */
     public function defineFunction(
         string $name,
@@ -176,20 +181,27 @@ class LumiConfigurator implements LumiConfiguratorInterface
     ): self {
         $this->customFunctions[$name] = $handler;
 
-        if ($this->functionMode === LumiRuntimeFunctionMode::DISALLOW_ALL) {
-            $this->functionMode = LumiRuntimeFunctionMode::CUSTOM_ONLY;
+        if ($this->functionMode === RuntimeFunctionMode::DISALLOW_ALL) {
+            $this->functionMode = RuntimeFunctionMode::CUSTOM_ONLY;
         }
 
         return $this;
     }
 
     /**
-     * @param \Closure(mixed $value, LumiDirectivesInterface $directives): mixed $handler
+     * @param \Closure(mixed $value, DirectivesInterface $directives): mixed $handler
      */
     public function defineFilter(
         string $name,
         \Closure $handler,
     ): self {
+        // @todo
+
+        return $this;
+    }
+
+    public function withDefaultFilters(): self
+    {
         // @todo
 
         return $this;
@@ -202,9 +214,35 @@ class LumiConfigurator implements LumiConfiguratorInterface
         return $this;
     }
 
-    public function withoutDefaultFunctions(): self
+    public function withFilterProvider(): LumiConfiguratorInterface
     {
         // @todo
+
+        return $this;
+    }
+
+    public function withDefaultFunctions(): self
+    {
+        $this->withDefaultFunctions = true;
+
+        return $this;
+    }
+
+    public function withoutDefaultFunctions(): self
+    {
+        $this->withDefaultFunctions = false;
+
+        return $this;
+    }
+
+    public function withFunctionProvider(
+        FunctionProviderInterface $provider,
+    ): self {
+        $this->functionProviders[] = $provider;
+
+        if ($this->functionMode === RuntimeFunctionMode::DISALLOW_ALL) {
+            $this->functionMode = RuntimeFunctionMode::CUSTOM_ONLY;
+        }
 
         return $this;
     }
@@ -234,7 +272,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
     }
 
     public function useLoader(
-        LumiLoaderInterface $loader,
+        LoaderInterface $loader,
     ): self {
         $this->loader = $loader;
 
@@ -252,27 +290,53 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
     public function validate(): bool
     {
-        // @todo
+        if (!\is_dir($this->viewDirectory)) {
+            return false;
+        }
+
+        if (!\is_dir($this->viewCacheDirectory)) {
+            return false;
+        }
 
         return false;
     }
 
+    /**
+     * @return array<string, \Closure(array<mixed> $arguments, ViewRenderInterface $render, DirectivesInterface $directives): mixed>
+     */
+    private function loadFunctionProvider(
+        FunctionProviderInterface $provider,
+    ): array {
+        $functions = [];
+
+        /**
+         * @var string $function
+         * @var \Closure(array<mixed> $arguments, ViewRenderInterface $render, DirectivesInterface $directives): mixed $handler
+         */
+        foreach ($provider->export() as [$function, $handler]) {
+            $functions[$function] = $handler;
+        }
+
+        return $functions;
+    }
+
     public function build(): ViewRenderInterface
     {
-        if ($this->functionMode !== LumiRuntimeFunctionMode::DISALLOW_ALL) {
-            $customFunctions = [];
+        $customFunctions = [];
 
-            /**
-             * @var string $function
-             * @var \Closure(array<mixed> $arguments, ViewRenderInterface $render, LumiDirectivesInterface $directives): mixed $handler
-             */
-            foreach ((new LumiDefaultFunctions()->export()) as [$function, $handler]) {
-                $customFunctions[$function] = $handler;
-            }
+        if ($this->withDefaultFunctions) {
+            $customFunctions = $this->loadFunctionProvider(
+                provider: new DefaultFunctions(),
+            );
+        }
 
+        if (\sizeof($this->functionProviders) > 0) {
             $customFunctions = \array_merge(
                 $customFunctions,
-                $this->customFunctions,
+                ...\array_map(
+                    fn (FunctionProviderInterface $provider): array => $this->loadFunctionProvider($provider),
+                    $this->functionProviders,
+                ),
             );
         }
 
@@ -282,18 +346,21 @@ class LumiConfigurator implements LumiConfiguratorInterface
                 parser: $this->parser,
                 compiler: $this->compiler,
             ),
-            loader: $this->loader ?? new LumiLoader(
+            loader: $this->loader ?? new Loader(
                 directory: $this->viewDirectory,
                 cacheDirectory: $this->viewCacheDirectory,
                 extension: $this->viewExtension,
             ),
-            runtime: new LumiRuntime(
+            runtime: new Runtime(
                 directives: \array_merge(
                     $this->directives,
                     $this->defaultDirectives,
                 ),
                 functions: $this->functions,
-                customFunctions: $customFunctions ?? $this->customFunctions,
+                customFunctions: \array_merge(
+                    $customFunctions,
+                    $this->customFunctions,
+                ),
                 functionMode: $this->functionMode,
             ),
             alwaysCompile: $this->viewAlwaysCompile,

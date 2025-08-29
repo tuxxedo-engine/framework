@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime;
 
-readonly class LumiLoader implements LumiLoaderInterface
+readonly class Loader implements LoaderInterface
 {
     public function __construct(
         public string $directory,

@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime;
 
-interface LumiLoaderInterface
+interface LoaderInterface
 {
     public function getViewFileName(
         string $view,

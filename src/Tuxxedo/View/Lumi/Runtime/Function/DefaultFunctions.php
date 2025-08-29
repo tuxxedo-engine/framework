@@ -11,12 +11,13 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Runtime;
+namespace Tuxxedo\View\Lumi\Runtime\Function;
 
+use Tuxxedo\View\Lumi\Runtime\DirectivesInterface;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewRenderInterface;
 
-class LumiDefaultFunctions
+class DefaultFunctions implements FunctionProviderInterface
 {
     /**
      * @param array<mixed> $arguments
@@ -24,7 +25,7 @@ class LumiDefaultFunctions
     private function includeImplementation(
         array $arguments,
         ViewRenderInterface $render,
-        LumiDirectivesInterface $directives,
+        DirectivesInterface $directives,
     ): mixed {
         /** @var string $view */
         $view = $arguments[0];
@@ -41,9 +42,6 @@ class LumiDefaultFunctions
         );
     }
 
-    /**
-     * @return \Generator<array{0: string, 1: \Closure(array<mixed> $arguments, ViewRenderInterface $render, LumiDirectivesInterface $directives): mixed}>
-     */
     public function export(): \Generator
     {
         yield [

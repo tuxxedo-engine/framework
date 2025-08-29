@@ -16,9 +16,10 @@ namespace Tuxxedo\View\Lumi;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
-use Tuxxedo\View\Lumi\Runtime\LumiDirectivesInterface;
-use Tuxxedo\View\Lumi\Runtime\LumiLoaderInterface;
-use Tuxxedo\View\Lumi\Runtime\LumiRuntimeFunctionMode;
+use Tuxxedo\View\Lumi\Runtime\DirectivesInterface;
+use Tuxxedo\View\Lumi\Runtime\Function\FunctionProviderInterface;
+use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
+use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionMode;
 use Tuxxedo\View\ViewRenderInterface;
 
 interface LumiConfiguratorInterface
@@ -51,7 +52,7 @@ interface LumiConfiguratorInterface
         get;
     }
 
-    public ?LumiLoaderInterface $loader {
+    public ?LoaderInterface $loader {
         get;
     }
 
@@ -77,13 +78,24 @@ interface LumiConfiguratorInterface
     }
 
     /**
-     * @var array<string, \Closure(array<mixed> $arguments, ViewRenderInterface $render, LumiDirectivesInterface $directives): mixed>
+     * @var array<string, \Closure(array<mixed> $arguments, ViewRenderInterface $render, DirectivesInterface $directives): mixed>
      */
     public array $customFunctions {
         get;
     }
 
-    public LumiRuntimeFunctionMode $functionMode {
+    public RuntimeFunctionMode $functionMode {
+        get;
+    }
+
+    public bool $withDefaultFunctions {
+        get;
+    }
+
+    /**
+     * @var FunctionProviderInterface[]
+     */
+    public array $functionProviders {
         get;
     }
 
@@ -113,7 +125,7 @@ interface LumiConfiguratorInterface
     public function disallowAllFunctions(): self;
 
     /**
-     * @param \Closure(array<mixed> $arguments, ViewRenderInterface $render, LumiDirectivesInterface $directives): mixed $handler
+     * @param \Closure(array<mixed> $arguments, ViewRenderInterface $render, DirectivesInterface $directives): mixed $handler
      */
     public function defineFunction(
         string $name,
@@ -121,16 +133,27 @@ interface LumiConfiguratorInterface
     ): self;
 
     /**
-     * @param \Closure(mixed $value, LumiDirectivesInterface $directives): mixed $handler
+     * @param \Closure(mixed $value, DirectivesInterface $directives): mixed $handler
      */
     public function defineFilter(
         string $name,
         \Closure $handler,
     ): self;
 
+    public function withDefaultFilters(): self;
+
     public function withoutDefaultFilters(): self;
 
+    // @todo Argument
+    public function withFilterProvider(): self;
+
+    public function withDefaultFunctions(): self;
+
     public function withoutDefaultFunctions(): self;
+
+    public function withFunctionProvider(
+        FunctionProviderInterface $provider,
+    ): self;
 
     public function useLexer(
         LexerInterface $lexer,
@@ -145,7 +168,7 @@ interface LumiConfiguratorInterface
     ): self;
 
     public function useLoader(
-        LumiLoaderInterface $loader,
+        LoaderInterface $loader,
     ): self;
 
     public function declare(

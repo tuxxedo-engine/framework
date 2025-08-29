@@ -15,7 +15,7 @@ namespace Tuxxedo\View\Lumi\Runtime;
 
 use Tuxxedo\View\ViewException;
 
-interface LumiDirectivesInterface
+interface DirectivesInterface
 {
     /**
      * @var array<string, string|int|float|bool|null>

@@ -16,7 +16,7 @@ namespace Tuxxedo\View\Lumi\Runtime;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
 
-class LumiRuntime implements LumiRuntimeInterface
+class Runtime implements RuntimeInterface
 {
     public readonly array $defaultDirectives;
     public private(set) array $directives;
@@ -25,13 +25,13 @@ class LumiRuntime implements LumiRuntimeInterface
     /**
      * @param array<string, string|int|float|bool|null> $directives
      * @param string[] $functions
-     * @param array<string, \Closure(array<mixed> $arguments, ViewRenderInterface $render, LumiDirectivesInterface $directives): mixed> $customFunctions
+     * @param array<string, \Closure(array<mixed> $arguments, ViewRenderInterface $render, DirectivesInterface $directives): mixed> $customFunctions
      */
     public function __construct(
         array $directives = [],
         public private(set) array $functions = [],
         public private(set) array $customFunctions = [],
-        public readonly LumiRuntimeFunctionMode $functionMode = LumiRuntimeFunctionMode::CUSTOM_ONLY,
+        public readonly RuntimeFunctionMode $functionMode = RuntimeFunctionMode::CUSTOM_ONLY,
     ) {
         $this->defaultDirectives = $directives;
         $this->directives = $directives;
@@ -59,10 +59,10 @@ class LumiRuntime implements LumiRuntimeInterface
         string $function,
         array $arguments = [],
     ): mixed {
-        if ($this->functionMode === LumiRuntimeFunctionMode::DISALLOW_ALL) {
+        if ($this->functionMode === RuntimeFunctionMode::DISALLOW_ALL) {
             throw ViewException::fromFunctionCallsDisabled();
         } elseif (
-            $this->functionMode === LumiRuntimeFunctionMode::CUSTOM_ONLY &&
+            $this->functionMode === RuntimeFunctionMode::CUSTOM_ONLY &&
             !\array_key_exists($function, $this->customFunctions)
         ) {
             throw ViewException::fromCannotCallCustomFunction(
@@ -78,7 +78,7 @@ class LumiRuntime implements LumiRuntimeInterface
             return ($this->customFunctions[$function])(
                 $arguments,
                 $this->renderer,
-                new LumiDirectives(
+                new Directives(
                     directives: $this->directives,
                 ),
             );

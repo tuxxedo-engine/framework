@@ -16,7 +16,7 @@ namespace Tuxxedo\View\Lumi\Runtime;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
 
-interface LumiRuntimeInterface
+interface RuntimeInterface
 {
     /**
      * @var array<string, string|int|float|bool|null>
@@ -40,13 +40,13 @@ interface LumiRuntimeInterface
     }
 
     /**
-     * @var array<string, \Closure(array<mixed> $arguments, ViewRenderInterface $render, LumiDirectivesInterface $directives): mixed>
+     * @var array<string, \Closure(array<mixed> $arguments, ViewRenderInterface $render, DirectivesInterface $directives): mixed>
      */
     public array $customFunctions {
         get;
     }
 
-    public LumiRuntimeFunctionMode $functionMode {
+    public RuntimeFunctionMode $functionMode {
         get;
     }
 

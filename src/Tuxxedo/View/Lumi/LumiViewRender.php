@@ -15,8 +15,8 @@ namespace Tuxxedo\View\Lumi;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\LazyInitializableInterface;
-use Tuxxedo\View\Lumi\Runtime\LumiLoaderInterface;
-use Tuxxedo\View\Lumi\Runtime\LumiRuntimeInterface;
+use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
+use Tuxxedo\View\Lumi\Runtime\RuntimeInterface;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewInterface;
 use Tuxxedo\View\ViewRenderInterface;
@@ -25,8 +25,8 @@ readonly class LumiViewRender implements LazyInitializableInterface, ViewRenderI
 {
     public function __construct(
         public LumiEngine $engine,
-        public LumiLoaderInterface $loader,
-        public LumiRuntimeInterface $runtime,
+        public LoaderInterface $loader,
+        public RuntimeInterface $runtime,
         public bool $alwaysCompile,
     ) {
         $this->runtime->renderer($this);
