@@ -14,16 +14,18 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Runtime;
 
 use Tuxxedo\View\ViewException;
+use Tuxxedo\View\ViewRenderInterface;
 
 class LumiRuntime implements LumiRuntimeInterface
 {
     public readonly array $defaultDirectives;
     public private(set) array $directives;
+    public private(set) ViewRenderInterface $renderer;
 
     /**
      * @param array<string, string|int|float|bool|null> $directives
      * @param string[] $functions
-     * @param array<string, \Closure(string $function, array<mixed> $arguments, LumiDirectivesInterface $directives): mixed> $customFunctions
+     * @param array<string, \Closure(array<mixed> $arguments, ViewRenderInterface $render, LumiDirectivesInterface $directives): mixed> $customFunctions
      */
     public function __construct(
         array $directives = [],
@@ -33,6 +35,12 @@ class LumiRuntime implements LumiRuntimeInterface
     ) {
         $this->defaultDirectives = $directives;
         $this->directives = $directives;
+    }
+
+    public function renderer(
+        ViewRenderInterface $render,
+    ): void {
+        $this->renderer = $render;
     }
 
     public function resetDirectives(): void
@@ -63,9 +71,13 @@ class LumiRuntime implements LumiRuntimeInterface
         }
 
         if (\array_key_exists($function, $this->customFunctions)) {
+            if (!isset($this->renderer)) {
+                throw ViewException::fromCannotCallCustomFunctionWithRender();
+            }
+
             return ($this->customFunctions[$function])(
-                $function,
                 $arguments,
+                $this->renderer,
                 new LumiDirectives(
                     directives: $this->directives,
                 ),

@@ -18,6 +18,7 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
+use Tuxxedo\View\Lumi\Runtime\LumiDefaultFunctions;
 use Tuxxedo\View\Lumi\Runtime\LumiDirectivesInterface;
 use Tuxxedo\View\Lumi\Runtime\LumiLoader;
 use Tuxxedo\View\Lumi\Runtime\LumiLoaderInterface;
@@ -167,13 +168,17 @@ class LumiConfigurator implements LumiConfiguratorInterface
     }
 
     /**
-     * @param \Closure(string $function, array<mixed> $arguments, LumiDirectivesInterface $directives): mixed $handler
+     * @param \Closure(array<mixed> $arguments, ViewRenderInterface $render, LumiDirectivesInterface $directives): mixed $handler
      */
     public function defineFunction(
         string $name,
         \Closure $handler,
     ): self {
         $this->customFunctions[$name] = $handler;
+
+        if ($this->functionMode === LumiRuntimeFunctionMode::DISALLOW_ALL) {
+            $this->functionMode = LumiRuntimeFunctionMode::CUSTOM_ONLY;
+        }
 
         return $this;
     }
@@ -254,6 +259,23 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
     public function build(): ViewRenderInterface
     {
+        if ($this->functionMode !== LumiRuntimeFunctionMode::DISALLOW_ALL) {
+            $customFunctions = [];
+
+            /**
+             * @var string $function
+             * @var \Closure(array<mixed> $arguments, ViewRenderInterface $render, LumiDirectivesInterface $directives): mixed $handler
+             */
+            foreach ((new LumiDefaultFunctions()->export()) as [$function, $handler]) {
+                $customFunctions[$function] = $handler;
+            }
+
+            $customFunctions = \array_merge(
+                $customFunctions,
+                $this->customFunctions,
+            );
+        }
+
         return new LumiViewRender(
             engine: LumiEngine::createCustom(
                 lexer: $this->lexer,
@@ -271,7 +293,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
                     $this->defaultDirectives,
                 ),
                 functions: $this->functions,
-                customFunctions: $this->customFunctions,
+                customFunctions: $customFunctions ?? $this->customFunctions,
                 functionMode: $this->functionMode,
             ),
             alwaysCompile: $this->viewAlwaysCompile,

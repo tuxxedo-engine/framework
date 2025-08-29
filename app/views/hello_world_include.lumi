@@ -1,1 +1,1 @@
-{{ this.include() }}
+{{ include('hello_world') }}

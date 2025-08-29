@@ -17,6 +17,13 @@ use Tuxxedo\View\ViewException;
 
 interface LumiDirectivesInterface
 {
+    /**
+     * @var array<string, string|int|float|bool|null>
+     */
+    public array $directives {
+        get;
+    }
+
     public function has(
         string $directive,
     ): bool;

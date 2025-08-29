@@ -77,7 +77,7 @@ interface LumiConfiguratorInterface
     }
 
     /**
-     * @var array<string, \Closure(string $function, array<mixed> $arguments, LumiDirectivesInterface $directives): mixed>
+     * @var array<string, \Closure(array<mixed> $arguments, ViewRenderInterface $render, LumiDirectivesInterface $directives): mixed>
      */
     public array $customFunctions {
         get;
@@ -113,7 +113,7 @@ interface LumiConfiguratorInterface
     public function disallowAllFunctions(): self;
 
     /**
-     * @param \Closure(string $function, array<mixed> $arguments, LumiDirectivesInterface $directives): mixed $handler
+     * @param \Closure(array<mixed> $arguments, ViewRenderInterface $render, LumiDirectivesInterface $directives): mixed $handler
      */
     public function defineFunction(
         string $name,

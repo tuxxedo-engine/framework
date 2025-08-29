@@ -24,9 +24,12 @@ interface ViewRenderInterface
     ): bool;
 
     /**
+     * @param array<string, string|int|float|bool|null>|null $directives
+     *
      * @throws ViewException
      */
     public function render(
         ViewInterface $view,
+        ?array $directives = null,
     ): string;
 }

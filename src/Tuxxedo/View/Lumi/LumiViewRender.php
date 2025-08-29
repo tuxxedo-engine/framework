@@ -29,6 +29,7 @@ readonly class LumiViewRender implements LazyInitializableInterface, ViewRenderI
         public LumiRuntimeInterface $runtime,
         public bool $alwaysCompile,
     ) {
+        $this->runtime->renderer($this);
     }
 
     public static function createInstance(
@@ -52,6 +53,7 @@ readonly class LumiViewRender implements LazyInitializableInterface, ViewRenderI
 
     public function render(
         ViewInterface $view,
+        ?array $directives = null,
     ): string {
         if (!$this->loader->exists($view->name)) {
             throw ViewException::fromViewNotFound(
@@ -61,7 +63,12 @@ readonly class LumiViewRender implements LazyInitializableInterface, ViewRenderI
 
         $this->runtime->resetDirectives();
 
-        // @todo This needs to trap notices and warnings to not leak information
+        if ($directives !== null) {
+            foreach ($directives as $directive => $value) {
+                $this->runtime->directive($directive, $value);
+            }
+        }
+
         $renderer = function (string $__lumiViewFileName, array $__lumiVariables): string {
             \extract($__lumiVariables, \EXTR_SKIP);
             \ob_start();
@@ -82,7 +89,13 @@ readonly class LumiViewRender implements LazyInitializableInterface, ViewRenderI
         };
 
         try {
-            return $renderer->bindTo($this->runtime)($this->getCompiledViewFileName($view->name), $view->scope);
+            $source = $renderer->bindTo($this->runtime)($this->getCompiledViewFileName($view->name), $view->scope);
+
+            if ($directives !== null) {
+                $this->runtime->resetDirectives();
+            }
+
+            return $source;
         } catch (\Throwable $exception) {
             throw ViewException::fromViewRenderException(
                 exception: $exception,

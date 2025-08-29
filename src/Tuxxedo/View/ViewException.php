@@ -99,4 +99,11 @@ class ViewException extends \Exception
             ),
         );
     }
+
+    public static function fromCannotCallCustomFunctionWithRender(): self
+    {
+        return new self(
+            message: 'Cannot call custom function without a render object set',
+        );
+    }
 }
