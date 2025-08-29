@@ -18,6 +18,7 @@ use Tuxxedo\View\Lumi\Lexer\LexerInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Runtime\LumiDirectivesInterface;
 use Tuxxedo\View\Lumi\Runtime\LumiLoaderInterface;
+use Tuxxedo\View\Lumi\Runtime\LumiRuntimeFunctionMode;
 use Tuxxedo\View\ViewRenderInterface;
 
 interface LumiConfiguratorInterface
@@ -65,6 +66,24 @@ interface LumiConfiguratorInterface
      * @var array<string, string|int|float|bool|null>
      */
     public array $defaultDirectives {
+        get;
+    }
+
+    /**
+     * @var string[]
+     */
+    public array $functions {
+        get;
+    }
+
+    /**
+     * @var array<string, \Closure(string $function, array<mixed> $arguments, LumiDirectivesInterface $directives): mixed>
+     */
+    public array $customFunctions {
+        get;
+    }
+
+    public LumiRuntimeFunctionMode $functionMode {
         get;
     }
 

@@ -55,4 +55,48 @@ class ViewException extends \Exception
             ),
         );
     }
+
+    public static function fromFunctionCallsDisabled(): self
+    {
+        return new self(
+            message: 'Cannot call function, as all global function calls are disabled',
+        );
+    }
+
+    public static function fromCannotCallCustomFunction(
+        string $function,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot call custom function "%s" as no handler has been implemented for it',
+                $function,
+            ),
+        );
+    }
+
+    public static function fromInvalidDirective(
+        string $directive,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Directive "%s" is not declared and must be declared or have a default value before usage',
+                $directive,
+            ),
+        );
+    }
+
+    public static function fromInvalidDirectiveType(
+        string $directive,
+        string $type,
+        string $expectedType,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot fetch directive "%s" as "%s" (type is: "%s")',
+                $directive,
+                $expectedType,
+                $type,
+            ),
+        );
+    }
 }

@@ -22,6 +22,7 @@ use Tuxxedo\View\Lumi\Runtime\LumiDirectivesInterface;
 use Tuxxedo\View\Lumi\Runtime\LumiLoader;
 use Tuxxedo\View\Lumi\Runtime\LumiLoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\LumiRuntime;
+use Tuxxedo\View\Lumi\Runtime\LumiRuntimeFunctionMode;
 use Tuxxedo\View\ViewRenderInterface;
 
 class LumiConfigurator implements LumiConfiguratorInterface
@@ -40,6 +41,10 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public private(set) array $defaultDirectives = [
         'lumi.autoescape' => true,
     ];
+
+    public private(set) array $functions = [];
+    public private(set) array $customFunctions = [];
+    public private(set) LumiRuntimeFunctionMode $functionMode = LumiRuntimeFunctionMode::CUSTOM_ONLY;
 
     final public function __construct()
     {
@@ -136,21 +141,27 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public function allowFunction(
         string $name,
     ): self {
-        // @todo
+        $this->functions[] = $name;
+
+        if ($this->functionMode === LumiRuntimeFunctionMode::DISALLOW_ALL) {
+            $this->functionMode = LumiRuntimeFunctionMode::CUSTOM_ONLY;
+        }
 
         return $this;
     }
 
     public function allowAllFunctions(): self
     {
-        // @todo
+        $this->functionMode = LumiRuntimeFunctionMode::ALLOW_ALL;
 
         return $this;
     }
 
     public function disallowAllFunctions(): self
     {
-        // @todo
+        $this->functions = [];
+        $this->customFunctions = [];
+        $this->functionMode = LumiRuntimeFunctionMode::DISALLOW_ALL;
 
         return $this;
     }
@@ -162,7 +173,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
         string $name,
         \Closure $handler,
     ): self {
-        // @todo
+        $this->customFunctions[$name] = $handler;
 
         return $this;
     }
@@ -220,7 +231,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public function useLoader(
         LumiLoaderInterface $loader,
     ): self {
-        // @todo
+        $this->loader = $loader;
 
         return $this;
     }
@@ -229,7 +240,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
         string $name,
         string|int|float|bool|null $value,
     ): self {
-        // @todo
+        $this->directives[$name] = $value;
 
         return $this;
     }
@@ -243,13 +254,11 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
     public function build(): ViewRenderInterface
     {
-        // @todo
-
         return new LumiViewRender(
-            engine: new LumiEngine(
-                lexer: $this->lexer ?? LumiEngine::createDefaultLexer(),
-                parser: $this->parser ?? LumiEngine::createDefaultParser(),
-                compiler: $this->compiler ?? LumiEngine::createDefaultCompiler(),
+            engine: LumiEngine::createCustom(
+                lexer: $this->lexer,
+                parser: $this->parser,
+                compiler: $this->compiler,
             ),
             loader: $this->loader ?? new LumiLoader(
                 directory: $this->viewDirectory,
@@ -261,6 +270,9 @@ class LumiConfigurator implements LumiConfiguratorInterface
                     $this->directives,
                     $this->defaultDirectives,
                 ),
+                functions: $this->functions,
+                customFunctions: $this->customFunctions,
+                functionMode: $this->functionMode,
             ),
             alwaysCompile: $this->viewAlwaysCompile,
         );

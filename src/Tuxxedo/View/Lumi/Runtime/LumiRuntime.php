@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime;
 
+use Tuxxedo\View\ViewException;
+
 class LumiRuntime implements LumiRuntimeInterface
 {
     public readonly array $defaultDirectives;
@@ -20,9 +22,14 @@ class LumiRuntime implements LumiRuntimeInterface
 
     /**
      * @param array<string, string|int|float|bool|null> $directives
+     * @param string[] $functions
+     * @param array<string, \Closure(string $function, array<mixed> $arguments, LumiDirectivesInterface $directives): mixed> $customFunctions
      */
     public function __construct(
         array $directives = [],
+        public private(set) array $functions = [],
+        public private(set) array $customFunctions = [],
+        public readonly LumiRuntimeFunctionMode $functionMode = LumiRuntimeFunctionMode::CUSTOM_ONLY,
     ) {
         $this->defaultDirectives = $directives;
         $this->directives = $directives;
@@ -33,11 +40,38 @@ class LumiRuntime implements LumiRuntimeInterface
         $this->directives = $this->defaultDirectives;
     }
 
+    public function directive(
+        string $directive,
+        float|bool|int|string|null $value,
+    ): void {
+        $this->directives[$directive] = $value;
+    }
+
     public function functionCall(
         string $function,
         array $arguments = [],
     ): mixed {
-        // @todo Properly implement
+        if ($this->functionMode === LumiRuntimeFunctionMode::DISALLOW_ALL) {
+            throw ViewException::fromFunctionCallsDisabled();
+        } elseif (
+            $this->functionMode === LumiRuntimeFunctionMode::CUSTOM_ONLY &&
+            !\array_key_exists($function, $this->customFunctions)
+        ) {
+            throw ViewException::fromCannotCallCustomFunction(
+                function: $function,
+            );
+        }
+
+        if (\array_key_exists($function, $this->customFunctions)) {
+            return ($this->customFunctions[$function])(
+                $function,
+                $arguments,
+                new LumiDirectives(
+                    directives: $this->directives,
+                ),
+            );
+        }
+
         return $function(...$arguments);
     }
 }

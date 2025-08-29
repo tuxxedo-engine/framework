@@ -13,30 +13,45 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime;
 
-// @todo Throw exceptions for as* methods once exception tree has been fixed
-// @todo Implement class
+use Tuxxedo\View\ViewException;
+
 interface LumiDirectivesInterface
 {
     public function has(
         string $directive,
     ): bool;
 
+    /**
+     * @throws ViewException
+     */
     public function asString(
         string $directive,
     ): string;
 
+    /**
+     * @throws ViewException
+     */
     public function asInt(
         string $directive,
     ): int;
 
+    /**
+     * @throws ViewException
+     */
     public function asFloat(
         string $directive,
     ): float;
 
+    /**
+     * @throws ViewException
+     */
     public function asBool(
         string $directive,
     ): bool;
 
+    /**
+     * @throws ViewException
+     */
     public function isNull(
         string $directive,
     ): bool;

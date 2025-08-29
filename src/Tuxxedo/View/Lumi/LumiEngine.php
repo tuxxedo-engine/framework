@@ -28,7 +28,7 @@ use Tuxxedo\View\ViewException;
 
 class LumiEngine
 {
-    final public function __construct(
+    final private function __construct(
         public readonly LexerInterface $lexer,
         public readonly ParserInterface $parser,
         public readonly CompilerInterface $compiler,

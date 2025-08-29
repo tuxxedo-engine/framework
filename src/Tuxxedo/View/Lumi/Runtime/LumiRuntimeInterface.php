@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime;
 
+use Tuxxedo\View\ViewException;
+
 interface LumiRuntimeInterface
 {
     /**
@@ -29,11 +31,36 @@ interface LumiRuntimeInterface
         get;
     }
 
+    /**
+     * @var string[]
+     */
+    public array $functions {
+        get;
+    }
+
+    /**
+     * @var array<string, \Closure(string $function, array<mixed> $arguments, LumiDirectivesInterface $directives): mixed>
+     */
+    public array $customFunctions {
+        get;
+    }
+
+    public LumiRuntimeFunctionMode $functionMode {
+        get;
+    }
+
     public function resetDirectives(): void;
+
+    public function directive(
+        string $directive,
+        string|int|float|bool|null $value,
+    ): void;
 
     /**
      * @param callable-string $function
      * @param mixed[] $arguments
+     *
+     * @throws ViewException
      */
     public function functionCall(
         string $function,
