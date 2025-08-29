@@ -106,4 +106,11 @@ class ViewException extends \Exception
             message: 'Cannot call custom function without a render object set',
         );
     }
+
+    public static function fromUnableToPopDirectivesStack(): self
+    {
+        return new self(
+            message: 'Cannot pop directives stack, likely stack corruption',
+        );
+    }
 }

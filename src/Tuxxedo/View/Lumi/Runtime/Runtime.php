@@ -20,6 +20,12 @@ class Runtime implements RuntimeInterface
 {
     public readonly array $defaultDirectives;
     public private(set) array $directives;
+
+    /**
+     * @var array<array<string, string|int|float|bool|null>>
+     */
+    public private(set) array $directivesStack = [];
+
     public private(set) ViewRenderInterface $renderer;
 
     /**
@@ -46,6 +52,23 @@ class Runtime implements RuntimeInterface
     public function resetDirectives(): void
     {
         $this->directives = $this->defaultDirectives;
+    }
+
+    public function pushDirectives(
+        array $directives,
+    ): void {
+        \array_push($this->directivesStack, $this->directives);
+    }
+
+    public function popDirectives(): void
+    {
+        $directives = \array_pop($this->directivesStack);
+
+        if ($directives === null) {
+            throw ViewException::fromUnableToPopDirectivesStack();
+        }
+
+        $this->directives = $directives;
     }
 
     public function directive(

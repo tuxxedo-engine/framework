@@ -61,13 +61,10 @@ readonly class LumiViewRender implements LazyInitializableInterface, ViewRenderI
             );
         }
 
-        // @todo Change this to be a stack based approach for deep includes
-        $this->runtime->resetDirectives();
-
         if ($directives !== null) {
-            foreach ($directives as $directive => $value) {
-                $this->runtime->directive($directive, $value);
-            }
+            $this->runtime->pushDirectives($directives);
+        } else {
+            $this->runtime->resetDirectives();
         }
 
         $renderer = function (string $__lumiViewFileName, array $__lumiVariables): string {
@@ -93,7 +90,7 @@ readonly class LumiViewRender implements LazyInitializableInterface, ViewRenderI
             $source = $renderer->bindTo($this->runtime)($this->getCompiledViewFileName($view->name), $view->scope);
 
             if ($directives !== null) {
-                $this->runtime->resetDirectives();
+                $this->runtime->popDirectives();
             }
 
             return $source;

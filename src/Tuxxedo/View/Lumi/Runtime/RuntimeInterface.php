@@ -56,6 +56,18 @@ interface RuntimeInterface
 
     public function resetDirectives(): void;
 
+    /**
+     * @param array<string, string|int|float|bool|null> $directives
+     */
+    public function pushDirectives(
+        array $directives,
+    ): void;
+
+    /**
+     * @throws ViewException
+     */
+    public function popDirectives(): void;
+
     public function directive(
         string $directive,
         string|int|float|bool|null $value,
