@@ -58,6 +58,8 @@ class Runtime implements RuntimeInterface
         array $directives,
     ): void {
         \array_push($this->directivesStack, $this->directives);
+
+        $this->directives = $directives;
     }
 
     public function popDirectives(): void
