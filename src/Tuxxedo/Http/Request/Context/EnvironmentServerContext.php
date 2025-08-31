@@ -34,17 +34,22 @@ class EnvironmentServerContext implements ServerContextInterface
 
     public string $uri {
         get {
-            /** @var string $uri*/
-            $uri = $_SERVER['REQUEST_URI'];
+            /** @var string */
+            return $_SERVER['PATH_INFO'];
+        }
+    }
 
-            /** @var string $query */
-            $query = $_SERVER['QUERY_STRING'] ?? '';
+    public string $fullUri {
+        get {
+            /** @var string */
+            return $_SERVER['REQUEST_URI'];
+        }
+    }
 
-            if (\strlen($query) > 0) {
-                return \rtrim($uri, '?' . $query);
-            }
-
-            return $uri;
+    public string $queryString {
+        get {
+            /** @var string */
+            return $_SERVER['QUERY_STRING'];
         }
     }
 

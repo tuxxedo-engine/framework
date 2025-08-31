@@ -33,7 +33,6 @@ class HttpsRequiredMiddleware implements MiddlewareInterface
             return $next->handle($request, $next);
         }
 
-        // @todo This may loose the query string
         return Response::redirect(
             uri: \sprintf(
                 'https://%s%s%s',
@@ -41,7 +40,7 @@ class HttpsRequiredMiddleware implements MiddlewareInterface
                 $request->server->port !== 80 && $request->server->port !== 443
                     ? ':' . \strval($request->server->port)
                     : '',
-                $request->server->uri,
+                $request->server->fullUri,
             ),
             responseCode: $this->responseCode,
         );
