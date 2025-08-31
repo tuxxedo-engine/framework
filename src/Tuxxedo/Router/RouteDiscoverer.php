@@ -37,10 +37,16 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
         $this->patterns = $patterns ?? TypePatternRegistry::createDefault();
     }
 
-    private function handleError(RouterException $e): void
-    {
+    /**
+     * @param \Closure(): RouterException $e
+     *
+     * @throws RouterException
+     */
+    private function handleError(
+        \Closure $e,
+    ): void {
         if ($this->strictMode) {
-            throw $e;
+            throw $e();
         }
     }
 
@@ -66,7 +72,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
                 $reflector->isTrait()
             ) {
                 $this->handleError(
-                    RouterException::fromInvalidClassLikeStructure(
+                    static fn (): RouterException => RouterException::fromInvalidClassLikeStructure(
                         className: $reflector->getName(),
                     ),
                 );
@@ -80,7 +86,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
             foreach ($reflector->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
                 if ($method->isStatic() || $method->isAbstract()) {
                     $this->handleError(
-                        RouterException::fromNonInstantiableMethod(
+                        static fn (): RouterException => RouterException::fromNonInstantiableMethod(
                             className: $reflector->getName(),
                             method: $method->getName(),
                         ),
@@ -101,7 +107,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
 
                     if ($controllerAttribute === null && $uri === null) {
                         $this->handleError(
-                            RouterException::fromEmptyUri(
+                            static fn (): RouterException => RouterException::fromEmptyUri(
                                 className: $reflector->getName(),
                                 method: $method->getName(),
                             ),
@@ -315,7 +321,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
 
         if ((\sizeof($arguments) + 1) < $method->getNumberOfRequiredParameters()) {
             $this->handleError(
-                RouterException::fromTooFewArguments(
+                static fn (): RouterException => RouterException::fromTooFewArguments(
                     className: $className,
                     method: $method->getName(),
                     numberOfArguments: \sizeof($arguments) + 1,
@@ -333,7 +339,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
 
         if (\sizeof($names) !== \sizeof(\array_unique($names))) {
             $this->handleError(
-                RouterException::fromNotAllArgumentNameAreUnique(
+                static fn (): RouterException => RouterException::fromNotAllArgumentNameAreUnique(
                     className: $className,
                     method: $method->getName(),
                     names: $names,
@@ -390,7 +396,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
 
             if (\sizeof($parameterAttributes) === 0) {
                 $this->handleError(
-                    RouterException::fromNoArgumentAttributeFound(
+                    static fn (): RouterException => RouterException::fromNoArgumentAttributeFound(
                         className: $method->getDeclaringClass()->getName(),
                         method: $method->getName(),
                         parameter: $parameter->getName(),
@@ -461,7 +467,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
 
         if ($type === null) {
             $this->handleError(
-                RouterException::fromHasNoType(
+                static fn (): RouterException => RouterException::fromHasNoType(
                     className: $method->getDeclaringClass()->getName(),
                     method: $method->getName(),
                     parameter: $parameter->getName(),
@@ -474,7 +480,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
         if ($type instanceof \ReflectionNamedType && $type->isBuiltin()) {
             if ($type->getName() === 'object' || $type->getName() === 'array') {
                 $this->handleError(
-                    RouterException::fromUnsupportedNativeType(
+                    static fn (): RouterException => RouterException::fromUnsupportedNativeType(
                         className: $method->getDeclaringClass()->getName(),
                         method: $method->getName(),
                         parameter: $parameter->getName(),
@@ -493,7 +499,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
         }
 
         $this->handleError(
-            RouterException::fromUnsupportedType(
+            static fn (): RouterException => RouterException::fromUnsupportedType(
                 className: $method->getDeclaringClass()->getName(),
                 method: $method->getName(),
                 parameter: $parameter->getName(),
@@ -515,7 +521,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
 
         if ($node->optional && !$parameter->isDefaultValueAvailable()) {
             $this->handleError(
-                RouterException::fromOptionalArgumentHasNoDefaultValue(
+                static fn (): RouterException => RouterException::fromOptionalArgumentHasNoDefaultValue(
                     className: $method->getDeclaringClass()->getName(),
                     method: $method->getName(),
                     parameter: $parameter->getName(),
