@@ -36,6 +36,7 @@ use Tuxxedo\View\Lumi\Token\TextToken;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
 use Tuxxedo\View\Lumi\Token\WhileToken;
 
+// @todo Consider a {% include 'xxx' %} construct that compiles into ECHO "include" "(" "xxx" ")" for compatibility
 class BlockTokenHandler implements TokenHandlerInterface
 {
     public function getStartingSequence(): string
