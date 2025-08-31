@@ -18,7 +18,6 @@ use Tuxxedo\View\ViewRenderInterface;
 
 class Runtime implements RuntimeInterface
 {
-    public readonly array $defaultDirectives;
     public private(set) array $directives;
 
     /**
@@ -39,7 +38,6 @@ class Runtime implements RuntimeInterface
         public private(set) array $customFunctions = [],
         public readonly RuntimeFunctionMode $functionMode = RuntimeFunctionMode::CUSTOM_ONLY,
     ) {
-        $this->defaultDirectives = $directives;
         $this->directives = $directives;
     }
 
@@ -49,17 +47,12 @@ class Runtime implements RuntimeInterface
         $this->renderer = $render;
     }
 
-    public function resetDirectives(): void
-    {
-        $this->directives = $this->defaultDirectives;
-    }
-
     public function pushDirectives(
-        array $directives,
+        ?array $directives = null,
     ): void {
         \array_push($this->directivesStack, $this->directives);
 
-        $this->directives = $directives;
+        $this->directives = $directives ?? $this->directives;
     }
 
     public function popDirectives(): void

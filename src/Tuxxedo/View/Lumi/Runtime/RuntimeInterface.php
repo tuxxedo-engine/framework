@@ -21,13 +21,6 @@ interface RuntimeInterface
     /**
      * @var array<string, string|int|float|bool|null>
      */
-    public array $defaultDirectives {
-        get;
-    }
-
-    /**
-     * @var array<string, string|int|float|bool|null>
-     */
     public array $directives {
         get;
     }
@@ -54,13 +47,11 @@ interface RuntimeInterface
         ViewRenderInterface $render,
     ): void;
 
-    public function resetDirectives(): void;
-
     /**
-     * @param array<string, string|int|float|bool|null> $directives
+     * @param array<string, string|int|float|bool|null>|null $directives
      */
     public function pushDirectives(
-        array $directives,
+        ?array $directives = null,
     ): void;
 
     /**

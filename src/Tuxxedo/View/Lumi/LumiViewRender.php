@@ -61,11 +61,9 @@ readonly class LumiViewRender implements LazyInitializableInterface, ViewRenderI
             );
         }
 
-        if ($directives !== null) {
-            $this->runtime->pushDirectives($directives);
-        } else {
-            $this->runtime->resetDirectives();
-        }
+        $this->runtime->pushDirectives(
+            directives: $directives,
+        );
 
         $renderer = function (string $__lumiViewFileName, array $__lumiVariables): string {
             \extract($__lumiVariables, \EXTR_SKIP);
@@ -73,6 +71,7 @@ readonly class LumiViewRender implements LazyInitializableInterface, ViewRenderI
 
             unset($__lumiVariables);
 
+            // @todo Improve this to likely promote notices and warnings
             $__lumiErrorReporting = \error_reporting(0);
             require $__lumiViewFileName;
             \error_reporting($__lumiErrorReporting);
@@ -87,17 +86,16 @@ readonly class LumiViewRender implements LazyInitializableInterface, ViewRenderI
         };
 
         try {
-            $source = $renderer->bindTo($this->runtime)($this->getCompiledViewFileName($view->name), $view->scope);
-
-            if ($directives !== null) {
-                $this->runtime->popDirectives();
-            }
-
-            return $source;
+            return $renderer->bindTo($this->runtime)(
+                $this->getCompiledViewFileName($view->name),
+                $view->scope,
+            );
         } catch (\Throwable $exception) {
             throw ViewException::fromViewRenderException(
                 exception: $exception,
             );
+        } finally {
+            $this->runtime->popDirectives();
         }
     }
 
