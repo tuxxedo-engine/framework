@@ -15,12 +15,15 @@ namespace Tuxxedo\View\Lumi\Runtime\Function;
 
 use Tuxxedo\View\Lumi\Runtime\DirectivesInterface;
 use Tuxxedo\View\View;
+use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
 
 class DefaultFunctions implements FunctionProviderInterface
 {
     /**
      * @param array<mixed> $arguments
+     *
+     * @throws ViewException
      */
     private function includeImplementation(
         array $arguments,
@@ -42,11 +45,57 @@ class DefaultFunctions implements FunctionProviderInterface
         );
     }
 
+    /**
+     * @param array<mixed> $arguments
+     *
+     * @throws ViewException
+     */
+    private function directiveImplementation(
+        array $arguments,
+        ViewRenderInterface $render,
+        DirectivesInterface $directives,
+    ): mixed {
+        /** @var string $directive */
+        $directive = $arguments[0];
+
+        if (!$directives->has($directive)) {
+            throw ViewException::fromInvalidDirective(
+                directive: $directive,
+            );
+        }
+
+        return $directives->directives[$directive];
+    }
+
+    /**
+     * @param array<mixed> $arguments
+     */
+    private function hasDirectiveImplementation(
+        array $arguments,
+        ViewRenderInterface $render,
+        DirectivesInterface $directives,
+    ): bool {
+        /** @var string $directive */
+        $directive = $arguments[0];
+
+        return $directives->has($directive);
+    }
+
     public function export(): \Generator
     {
         yield [
             'include',
             $this->includeImplementation(...),
+        ];
+
+        yield [
+            'directive',
+            $this->directiveImplementation(...),
+        ];
+
+        yield [
+            'hasDirective',
+            $this->hasDirectiveImplementation(...),
         ];
     }
 }
