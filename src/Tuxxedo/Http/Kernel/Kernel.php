@@ -34,7 +34,8 @@ use Tuxxedo\Http\Response\ResponseExceptionInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\RouterInterface;
 
-class Kernel implements HttpApplicationInterface
+// @todo Consider whether to make this backed by an interface
+class Kernel
 {
     public readonly ConfigInterface $config;
     public readonly ContainerInterface $container;

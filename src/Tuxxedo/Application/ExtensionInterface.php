@@ -13,8 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Application;
 
+use Tuxxedo\Http\Kernel\Kernel;
+
 // @todo Move this to CLI once ready
 interface ExtensionInterface
 {
-    public function augment(ApplicationInterface $app): void;
+    public function augment(Kernel $app): void;
 }
