@@ -32,7 +32,7 @@ class ByteStream implements ByteStreamInterface
             $input,
         );
 
-        $this->length = \mb_strlen($this->input, 'UTF-8');
+        $this->length = \mb_strlen($this->input);
     }
 
     public static function createFromString(string $input): static
@@ -66,10 +66,10 @@ class ByteStream implements ByteStreamInterface
         $position = $this->position;
 
         if ($skipWhitespace) {
-            $len = \mb_strlen($input, 'UTF-8');
+            $len = \mb_strlen($input);
 
             while ($position < $len) {
-                $char = \mb_substr($input, $position, 1, 'UTF-8');
+                $char = \mb_substr($input, $position, 1);
 
                 if (\preg_match('/\s/u', $char) !== 1) {
                     break;
@@ -79,7 +79,7 @@ class ByteStream implements ByteStreamInterface
             }
         }
 
-        return \mb_substr($input, $position, $length, 'UTF-8');
+        return \mb_substr($input, $position, $length);
     }
 
     public function findSequenceOutsideQuotes(
@@ -88,10 +88,10 @@ class ByteStream implements ByteStreamInterface
     ): ?int {
         $quoteChar = null;
         $escaped = false;
-        $sequenceLength = \mb_strlen($sequence, 'UTF-8');
+        $sequenceLength = \mb_strlen($sequence);
 
         for ($i = $this->position + $offset; $i < $this->length; $i++) {
-            $char = \mb_substr($this->input, $i, 1, 'UTF-8');
+            $char = \mb_substr($this->input, $i, 1);
 
             if ($escaped) {
                 $escaped = false;
@@ -120,7 +120,7 @@ class ByteStream implements ByteStreamInterface
                     return null;
                 }
 
-                $chunk = \mb_substr($this->input, $i, $sequenceLength, 'UTF-8');
+                $chunk = \mb_substr($this->input, $i, $sequenceLength);
 
                 if ($chunk === $sequence) {
                     return $i - $this->position;
@@ -137,7 +137,7 @@ class ByteStream implements ByteStreamInterface
             throw LexerException::fromEofReached();
         }
 
-        $char = \mb_substr($this->input, $this->position, 1, 'UTF-8');
+        $char = \mb_substr($this->input, $this->position, 1);
         $this->position++;
 
         if ($char === "\n") {
@@ -150,13 +150,13 @@ class ByteStream implements ByteStreamInterface
     public function consumeSequence(
         string $sequence,
     ): void {
-        if ($this->peek(\mb_strlen($sequence, 'UTF-8')) !== $sequence) {
+        if ($this->peek(\mb_strlen($sequence)) !== $sequence) {
             throw LexerException::fromUnexpectedSequenceFound(
                 sequence: $sequence,
             );
         }
 
-        $this->position += \mb_strlen($sequence, 'UTF-8');
+        $this->position += \mb_strlen($sequence);
         $this->line += \substr_count($sequence, "\n");
     }
 
