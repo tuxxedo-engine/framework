@@ -109,4 +109,12 @@ readonly class ViewController
             ],
         );
     }
+
+    #[Route\Get]
+    public function seq(): ViewInterface
+    {
+        return new View(
+            name: 'hello_world_seq',
+        );
+    }
 }
