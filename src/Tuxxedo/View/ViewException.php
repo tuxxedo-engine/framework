@@ -74,6 +74,17 @@ class ViewException extends \Exception
         );
     }
 
+    public static function fromCannotCallInstance(
+        string $class,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot call instance of class "%s", as it has not explicitly been allowed',
+                $class,
+            ),
+        );
+    }
+
     public static function fromInvalidDirective(
         string $directive,
     ): self {

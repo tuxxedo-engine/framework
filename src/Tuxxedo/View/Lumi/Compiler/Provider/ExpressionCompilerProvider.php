@@ -91,9 +91,8 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
             }
         }
 
-        // @todo Should likely be sandboxed
         return \sprintf(
-            '%s->%s(...[%s])',
+            '$this->instanceCall(%s)->%s(...[%s])',
             $caller,
             $node->name,
             \join(', ', $arguments),

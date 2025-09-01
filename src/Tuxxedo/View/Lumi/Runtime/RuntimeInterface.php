@@ -44,6 +44,13 @@ interface RuntimeInterface
     }
 
     /**
+     * @var array<class-string>
+     */
+    public array $instanceCallClasses {
+        get;
+    }
+
+    /**
      * @var array<string, \Closure(mixed $value, DirectivesInterface $directives): mixed>
      */
     public array $filters {
@@ -81,6 +88,18 @@ interface RuntimeInterface
         string $function,
         array $arguments = [],
     ): mixed;
+
+    /**
+     * @template T of object
+     *
+     * @param T $instance
+     * @return T
+     *
+     * @throws ViewException
+     */
+    public function instanceCall(
+        object $instance,
+    ): object;
 
     /**
      * @throws ViewException

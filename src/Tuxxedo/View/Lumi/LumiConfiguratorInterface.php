@@ -101,6 +101,13 @@ interface LumiConfiguratorInterface
     }
 
     /**
+     * @var array<class-string>
+     */
+    public array $instanceCallClasses {
+        get;
+    }
+
+    /**
      * @var array<string, \Closure(mixed $value, DirectivesInterface $directives): mixed>
      */
     public array $customFilters {
@@ -175,17 +182,34 @@ interface LumiConfiguratorInterface
         FunctionProviderInterface $provider,
     ): self;
 
+    public function withAnyInstanceCall(): self;
+
+    /**
+     * @param class-string $className
+     */
+    public function withAllowedInstanceCall(
+        string ...$className,
+    ): self;
+
+    public function withDefaultLexer(): self;
+
     public function useLexer(
         LexerInterface $lexer,
     ): self;
+
+    public function withDefaultParser(): self;
 
     public function useParser(
         ParserInterface $parser,
     ): self;
 
+    public function withDefaultCompiler(): self;
+
     public function useCompiler(
         CompilerInterface $compiler,
     ): self;
+
+    public function withDefaultLoader(): self;
 
     public function useLoader(
         LoaderInterface $loader,

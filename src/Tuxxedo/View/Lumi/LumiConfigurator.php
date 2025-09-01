@@ -52,6 +52,8 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public private(set) bool $withDefaultFunctions = true;
     public private(set) array $functionProviders = [];
 
+    public private(set) array $instanceCallClasses = [];
+
     public private(set) array $customFilters = [];
     public private(set) bool $withDefaultFilters = true;
     public private(set) array $filterProviders = [];
@@ -254,10 +256,45 @@ class LumiConfigurator implements LumiConfiguratorInterface
         return $this;
     }
 
+    public function withAnyInstanceCall(): self
+    {
+        $this->instanceCallClasses = [];
+
+        return $this;
+    }
+
+    /**
+     * @param class-string $className
+     */
+    public function withAllowedInstanceCall(
+        string ...$className,
+    ): self {
+        $this->instanceCallClasses = \array_merge(
+            $this->instanceCallClasses,
+            $className,
+        );
+
+        return $this;
+    }
+
+    public function withDefaultLexer(): self
+    {
+        $this->lexer = null;
+
+        return $this;
+    }
+
     public function useLexer(
         LexerInterface $lexer,
     ): self {
         $this->lexer = $lexer;
+
+        return $this;
+    }
+
+    public function withDefaultParser(): self
+    {
+        $this->parser = null;
 
         return $this;
     }
@@ -270,10 +307,24 @@ class LumiConfigurator implements LumiConfiguratorInterface
         return $this;
     }
 
+    public function withDefaultCompiler(): self
+    {
+        $this->compiler = null;
+
+        return $this;
+    }
+
     public function useCompiler(
         CompilerInterface $compiler,
     ): self {
         $this->compiler = $compiler;
+
+        return $this;
+    }
+
+    public function withDefaultLoader(): self
+    {
+        $this->loader = null;
 
         return $this;
     }
@@ -422,6 +473,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
                     $this->customFunctions,
                 ),
                 functionMode: $this->functionMode,
+                instanceCallClasses: $this->instanceCallClasses,
                 filters: \array_merge(
                     $this->buildCustomFilters(),
                     $this->customFilters,

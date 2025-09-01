@@ -31,6 +31,7 @@ class Runtime implements RuntimeInterface
      * @param array<string, string|int|float|bool|null> $directives
      * @param string[] $functions
      * @param array<string, \Closure(array<mixed> $arguments, ViewRenderInterface $render, DirectivesInterface $directives): mixed> $customFunctions
+     * @param array<class-string> $instanceCallClasses
      * @param array<string, \Closure(mixed $input, DirectivesInterface $directives): mixed> $filters
      */
     public function __construct(
@@ -38,6 +39,7 @@ class Runtime implements RuntimeInterface
         public readonly array $functions = [],
         public readonly array $customFunctions = [],
         public readonly RuntimeFunctionMode $functionMode = RuntimeFunctionMode::CUSTOM_ONLY,
+        public readonly array $instanceCallClasses = [],
         public readonly array $filters = [],
     ) {
         $this->directives = $directives;
@@ -105,6 +107,21 @@ class Runtime implements RuntimeInterface
         }
 
         return $function(...$arguments);
+    }
+
+    public function instanceCall(
+        object $instance,
+    ): object {
+        if (
+            \sizeof($this->instanceCallClasses) > 0 &&
+            !\array_key_exists($instance::class, $this->instanceCallClasses)
+        ) {
+            throw ViewException::fromCannotCallInstance(
+                class: $instance::class,
+            );
+        }
+
+        return $instance;
     }
 
     public function filter(
