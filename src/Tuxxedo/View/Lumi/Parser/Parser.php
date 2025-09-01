@@ -16,7 +16,7 @@ namespace Tuxxedo\View\Lumi\Parser;
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Parser\Expression\ExpressionParser;
 use Tuxxedo\View\Lumi\Parser\Expression\ExpressionParserInterface;
-use Tuxxedo\View\Lumi\Parser\Handler\AssignParserHandler;
+use Tuxxedo\View\Lumi\Parser\Handler\AssignmentParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\BreakParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\CommentParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\ConditionParserHandler;
@@ -66,7 +66,7 @@ class Parser implements ParserInterface
             new TextParserHandler(),
             new CommentParserHandler(),
             new EchoParserHandler(),
-            new AssignParserHandler(),
+            new AssignmentParserHandler(),
             new ConditionParserHandler(),
             new VoidParserHandler(
                 tokenName: BuiltinTokenNames::ELSEIF->name,
