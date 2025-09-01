@@ -15,7 +15,6 @@ namespace Tuxxedo\View\Lumi\Node;
 
 use Tuxxedo\View\Lumi\Syntax\AssignmentOperator;
 
-// @todo Check if we should make this into a ExpressionNodeInterface
 readonly class AssignmentNode implements NodeInterface
 {
     public string $kind;
