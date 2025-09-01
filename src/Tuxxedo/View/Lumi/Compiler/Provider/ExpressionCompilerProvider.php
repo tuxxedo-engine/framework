@@ -159,11 +159,14 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         );
     }
 
-    // @todo Protect against $this
     private function compileAssignment(
         AssignmentNode $node,
         CompilerInterface $compiler,
     ): string {
+        if (\mb_strtolower($node->name->name) === 'this') {
+            throw CompilerException::fromCannotOverrideThis();
+        }
+
         return \sprintf(
             '<?php $%s %s %s; ?>',
             $node->name->name,

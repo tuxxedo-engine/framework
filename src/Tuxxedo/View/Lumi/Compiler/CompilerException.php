@@ -51,6 +51,13 @@ class CompilerException extends \Exception
         );
     }
 
+    public static function fromCannotOverrideThis(): self
+    {
+        return new self(
+            message: 'Overriding $this is not allowed',
+        );
+    }
+
     public static function fromUnexpectedStateEnter(
         string $kind,
     ): self {
