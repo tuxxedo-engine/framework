@@ -82,23 +82,7 @@ class ByteStream implements ByteStreamInterface
         return \mb_substr($input, $position, $length, 'UTF-8');
     }
 
-    public function peekSequence(
-        string $sequence,
-        int $offset,
-    ): bool {
-        return \mb_strpos(
-            \mb_substr($this->input, $this->position + $offset, null, 'UTF-8'),
-            $sequence,
-        ) !== false;
-    }
-
-    public function match(
-        string $sequence,
-    ): bool {
-        return $this->peek(\mb_strlen($sequence, 'UTF-8')) === $sequence;
-    }
-
-    public function matchSequenceOutsideQuotes(
+    public function findSequenceOutsideQuotes(
         string $sequence,
         int $offset = 0,
     ): ?int {
@@ -166,7 +150,7 @@ class ByteStream implements ByteStreamInterface
     public function consumeSequence(
         string $sequence,
     ): void {
-        if (!$this->match($sequence)) {
+        if ($this->peek(\mb_strlen($sequence, 'UTF-8')) !== $sequence) {
             throw LexerException::fromUnexpectedSequenceFound(
                 sequence: $sequence,
             );
