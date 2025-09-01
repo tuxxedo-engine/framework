@@ -118,7 +118,7 @@ class ByteStream implements ByteStreamInterface
         string $sequence,
     ): void {
         if (!$this->match($sequence)) {
-            throw LexerException::fromSequenceNotFound(
+            throw LexerException::fromUnexpectedSequenceFound(
                 sequence: $sequence,
             );
         }

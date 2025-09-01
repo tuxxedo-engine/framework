@@ -22,6 +22,7 @@ use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Token\ContinueToken;
 use Tuxxedo\View\Lumi\Token\DeclareToken;
 use Tuxxedo\View\Lumi\Token\DoToken;
+use Tuxxedo\View\Lumi\Token\EchoToken;
 use Tuxxedo\View\Lumi\Token\ElseIfToken;
 use Tuxxedo\View\Lumi\Token\ElseToken;
 use Tuxxedo\View\Lumi\Token\EndForToken;
@@ -36,7 +37,6 @@ use Tuxxedo\View\Lumi\Token\TextToken;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
 use Tuxxedo\View\Lumi\Token\WhileToken;
 
-// @todo Consider a {% include 'xxx' %} construct that compiles into ECHO "include" "(" "xxx" ")" for compatibility
 class BlockTokenHandler implements TokenHandlerInterface
 {
     public function getStartingSequence(): string
@@ -172,7 +172,12 @@ class BlockTokenHandler implements TokenHandlerInterface
                     expression: $expr,
                     expressionLexer: $expressionLexer,
                 ),
-                default => throw LexerException::fromSequenceNotFound(
+                'include' => $this->parseInclude(
+                    startingLine: $startingLine,
+                    expression: $expr,
+                    expressionLexer: $expressionLexer,
+                ),
+                default => throw LexerException::fromUnexpectedSequenceFound(
                     sequence: $directive,
                 ),
             };
@@ -206,7 +211,7 @@ class BlockTokenHandler implements TokenHandlerInterface
                 'continue' => new ContinueToken(
                     line: $startingLine,
                 ),
-                default => throw LexerException::fromSequenceNotFound(
+                default => throw LexerException::fromUnexpectedSequenceFound(
                     sequence: $directive,
                 ),
             },
@@ -345,6 +350,38 @@ class BlockTokenHandler implements TokenHandlerInterface
                 op1: $op1,
             ),
             $tokens[0],
+            new EndToken(
+                line: $startingLine,
+            ),
+        ];
+    }
+
+    /**
+     * @return TokenInterface[]
+     *
+     * @throws LexerException
+     */
+    private function parseInclude(
+        int $startingLine,
+        string $expression,
+        ExpressionLexerInterface $expressionLexer,
+    ): array {
+        $firstCharacter = \mb_substr($expression, 0, 1);
+
+        if ($firstCharacter !== '(') {
+            $expression = '(' . $expression . ')';
+        }
+
+        $expression = 'include' . $expression;
+
+        return [
+            new EchoToken(
+                line: $startingLine,
+            ),
+            ...$expressionLexer->parse(
+                startingLine: $startingLine,
+                operand: $expression,
+            ),
             new EndToken(
                 line: $startingLine,
             ),

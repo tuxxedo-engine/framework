@@ -44,12 +44,12 @@ class LexerException extends \Exception
         );
     }
 
-    public static function fromSequenceNotFound(
+    public static function fromUnexpectedSequenceFound(
         string $sequence,
     ): self {
         return new self(
             message: \sprintf(
-                'Expected sequence "%s" not found in input stream',
+                'Unexpected sequence "%s" found in input stream',
                 $sequence,
             ),
         );
