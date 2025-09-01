@@ -19,7 +19,6 @@ use Tuxxedo\View\Lumi\Token\TokenInterface;
 
 enum BinaryOperator implements SymbolInterface, OperatorInterface
 {
-    case ASSIGN;
     case CONCAT;
     case ADD;
     case SUBTRACT;
@@ -84,7 +83,6 @@ enum BinaryOperator implements SymbolInterface, OperatorInterface
     public function symbol(): string
     {
         return match ($this) {
-            self::ASSIGN => '=',
             self::CONCAT => '~',
             self::ADD => '+',
             self::SUBTRACT => '-',
@@ -116,7 +114,6 @@ enum BinaryOperator implements SymbolInterface, OperatorInterface
     public function precedence(): int
     {
         return match ($this) {
-            self::ASSIGN => 1,
             self::OR => 2,
             self::AND => 3,
             self::EQUAL, self::NOT_EQUAL, self::STRICT_EQUAL, self::STRICT_NOT_EQUAL, self::NULL_COALESCE => 4,

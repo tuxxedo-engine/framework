@@ -20,7 +20,6 @@ use Tuxxedo\View\Lumi\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\AssignmentOperator;
-use Tuxxedo\View\Lumi\Syntax\BinaryOperator;
 use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
 
 // @todo This need to support property writes
@@ -61,17 +60,12 @@ class AssignmentParserHandler implements ParserHandlerInterface
             }
         }
 
-        if ($assignmentOperator === null && $operatorSymbol !== '=') {
+        if ($assignmentOperator === null) {
             throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
                 tokenName: $operatorSymbol,
-                expectedTokenNames: \array_merge(
-                    [
-                        BinaryOperator::ASSIGN->symbol(),
-                    ],
-                    \array_map(
-                        static fn (AssignmentOperator $operator): string => $operator->symbol(),
-                        $assignmentOperators,
-                    ),
+                expectedTokenNames: \array_map(
+                    static fn (AssignmentOperator $operator): string => $operator->symbol(),
+                    $assignmentOperators,
                 ),
             );
         }

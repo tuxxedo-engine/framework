@@ -167,7 +167,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         return \sprintf(
             '<?php $%s %s %s; ?>',
             $node->name->name,
-            $node->operator?->symbol() ?? BinaryOperator::ASSIGN->symbol(),
+            $node->operator->symbol(),
             $compiler->expressionCompiler->compile(
                 stream: new NodeStream(
                     nodes: [

@@ -22,7 +22,7 @@ readonly class AssignmentNode implements NodeInterface
     public function __construct(
         public IdentifierNode $name,
         public ExpressionNodeInterface $value,
-        public ?AssignmentOperator $operator = null,
+        public AssignmentOperator $operator,
     ) {
         $this->kind = BuiltinNodeKinds::ROOT->name;
     }
