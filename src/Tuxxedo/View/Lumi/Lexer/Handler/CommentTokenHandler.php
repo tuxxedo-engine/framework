@@ -13,10 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
-use Tuxxedo\View\Lumi\Lexer\ByteStreamInterface;
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Token\CommentToken;
-use Tuxxedo\View\Lumi\Token\TextToken;
 
 class CommentTokenHandler implements TokenHandlerInterface
 {
@@ -31,31 +29,14 @@ class CommentTokenHandler implements TokenHandlerInterface
     }
 
     public function tokenize(
-        ByteStreamInterface $stream,
+        int $startingLine,
+        string $buffer,
         ExpressionLexerInterface $expressionLexer,
     ): array {
-        $buffer = '';
-        $line = $stream->line;
-
-        while (!$stream->eof()) {
-            if ($stream->match($this->getEndingSequence())) {
-                $stream->consumeSequence($this->getEndingSequence());
-
-                return [
-                    new CommentToken(
-                        line: $line,
-                        op1: \mb_trim($buffer),
-                    ),
-                ];
-            }
-
-            $buffer .= $stream->consume();
-        }
-
         return [
-            new TextToken(
-                line: $line,
-                op1: $buffer,
+            new CommentToken(
+                line: $startingLine,
+                op1: \mb_trim($buffer),
             ),
         ];
     }

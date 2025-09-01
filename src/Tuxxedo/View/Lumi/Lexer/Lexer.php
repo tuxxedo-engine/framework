@@ -111,24 +111,39 @@ class Lexer implements LexerInterface
             $buffer = $stream->peek($i);
             $line = $stream->line;
 
-            if (isset($this->sequences[$buffer])) {
-                $handler = $this->sequences[$buffer];
+            if (!\array_key_exists($buffer, $this->sequences)) {
+                continue;
+            }
 
-                if (!$stream->peekSequence($handler->getEndingSequence(), $i)) {
-                    $stream->consumeSequence($buffer);
+            $handler = $this->sequences[$buffer];
+            $startSequence = $handler->getStartingSequence();
+            $endSequence = $handler->getEndingSequence();
 
-                    return [
-                        new TextToken(
-                            line: $line,
-                            op1: $buffer,
-                        ),
-                    ];
+            $stream->consumeSequence($startSequence);
+
+            $content = '';
+            $startLine = $line;
+
+            while (!$stream->eof()) {
+                if ($stream->match($endSequence)) {
+                    $stream->consumeSequence($endSequence);
+
+                    return $handler->tokenize(
+                        startingLine: $startLine,
+                        buffer: $content,
+                        expressionLexer: $this->expressionLexer,
+                    );
                 }
 
-                $stream->consumeSequence($buffer);
-
-                return $handler->tokenize($stream, $this->expressionLexer);
+                $content .= $stream->consume();
             }
+
+            return [
+                new TextToken(
+                    line: $startLine,
+                    op1: $startSequence . $content,
+                ),
+            ];
         }
 
         return null;

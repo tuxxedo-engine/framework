@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
-use Tuxxedo\View\Lumi\Lexer\ByteStreamInterface;
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Token\AssignToken;
@@ -33,7 +32,6 @@ use Tuxxedo\View\Lumi\Token\EndWhileToken;
 use Tuxxedo\View\Lumi\Token\ForToken;
 use Tuxxedo\View\Lumi\Token\ForeachToken;
 use Tuxxedo\View\Lumi\Token\IfToken;
-use Tuxxedo\View\Lumi\Token\TextToken;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
 use Tuxxedo\View\Lumi\Token\WhileToken;
 
@@ -50,32 +48,15 @@ class BlockTokenHandler implements TokenHandlerInterface
     }
 
     public function tokenize(
-        ByteStreamInterface $stream,
+        int $startingLine,
+        string $buffer,
         ExpressionLexerInterface $expressionLexer,
     ): array {
-        $buffer = '';
-        $line = $stream->line;
-
-        while (!$stream->eof()) {
-            if ($stream->match($this->getEndingSequence())) {
-                $stream->consumeSequence($this->getEndingSequence());
-
-                return $this->parseBlock(
-                    startingLine: $stream->line,
-                    expression: \mb_trim($buffer),
-                    expressionLexer: $expressionLexer,
-                );
-            }
-
-            $buffer .= $stream->consume();
-        }
-
-        return [
-            new TextToken(
-                line: $line,
-                op1: $this->getStartingSequence() . $buffer,
-            ),
-        ];
+        return $this->parseBlock(
+            startingLine: $startingLine,
+            expression: \mb_trim($buffer),
+            expressionLexer: $expressionLexer,
+        );
     }
 
     /**
