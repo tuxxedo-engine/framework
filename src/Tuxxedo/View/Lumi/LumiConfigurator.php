@@ -19,6 +19,7 @@ use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Runtime\DirectivesInterface;
+use Tuxxedo\View\Lumi\Runtime\Filter\DefaultFilters;
 use Tuxxedo\View\Lumi\Runtime\Filter\FilterProviderInterface;
 use Tuxxedo\View\Lumi\Runtime\Function\DefaultFunctions;
 use Tuxxedo\View\Lumi\Runtime\Function\FunctionProviderInterface;
@@ -50,6 +51,10 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public private(set) RuntimeFunctionMode $functionMode = RuntimeFunctionMode::CUSTOM_ONLY;
     public private(set) bool $withDefaultFunctions = true;
     public private(set) array $functionProviders = [];
+
+    public private(set) array $customFilters = [];
+    public private(set) bool $withDefaultFilters = true;
+    public private(set) array $filterProviders = [];
 
     final public function __construct()
     {
@@ -196,21 +201,21 @@ class LumiConfigurator implements LumiConfiguratorInterface
         string $name,
         \Closure $handler,
     ): self {
-        // @todo
+        $this->customFilters[$name] = $handler;
 
         return $this;
     }
 
     public function withDefaultFilters(): self
     {
-        // @todo
+        $this->withDefaultFilters = true;
 
         return $this;
     }
 
     public function withoutDefaultFilters(): self
     {
-        // @todo
+        $this->withDefaultFilters = false;
 
         return $this;
     }
@@ -218,7 +223,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public function withFilterProvider(
         FilterProviderInterface $provider,
     ): LumiConfiguratorInterface {
-        // @todo
+        $this->filterProviders[] = $provider;
 
         return $this;
     }
@@ -322,7 +327,29 @@ class LumiConfigurator implements LumiConfiguratorInterface
         return $functions;
     }
 
-    public function build(): ViewRenderInterface
+    /**
+     * @return array<string, \Closure(mixed $value, DirectivesInterface $directives): mixed>
+     */
+    private function loadFilterProvider(
+        FilterProviderInterface $provider,
+    ): array {
+        $filters = [];
+
+        /**
+         * @var string $filter
+         * @var \Closure(mixed $value, DirectivesInterface $directives): mixed $handler
+         */
+        foreach ($provider->export() as [$filter, $handler]) {
+            $filters[$filter] = $handler;
+        }
+
+        return $filters;
+    }
+
+    /**
+     * @return array<string, \Closure(array<mixed> $arguments, ViewRenderInterface $render, DirectivesInterface $directives): mixed>
+     */
+    private function buildCustomFunctions(): array
     {
         $customFunctions = [];
 
@@ -342,6 +369,37 @@ class LumiConfigurator implements LumiConfiguratorInterface
             );
         }
 
+        return $customFunctions;
+    }
+
+    /**
+     * @return array<string, \Closure(mixed $value, DirectivesInterface $directives): mixed>
+     */
+    private function buildCustomFilters(): array
+    {
+        $customFilters = [];
+
+        if ($this->withDefaultFilters) {
+            $customFilters = $this->loadFilterProvider(
+                provider: new DefaultFilters(),
+            );
+        }
+
+        if (\sizeof($this->filterProviders) > 0) {
+            $customFilters = \array_merge(
+                $customFilters,
+                ...\array_map(
+                    fn (FilterProviderInterface $provider): array => $this->loadFilterProvider($provider),
+                    $this->filterProviders,
+                ),
+            );
+        }
+
+        return $customFilters;
+    }
+
+    public function build(): ViewRenderInterface
+    {
         return new LumiViewRender(
             engine: LumiEngine::createCustom(
                 lexer: $this->lexer,
@@ -360,10 +418,14 @@ class LumiConfigurator implements LumiConfiguratorInterface
                 ),
                 functions: $this->functions,
                 customFunctions: \array_merge(
-                    $customFunctions,
+                    $this->buildCustomFunctions(),
                     $this->customFunctions,
                 ),
                 functionMode: $this->functionMode,
+                filters: \array_merge(
+                    $this->buildCustomFilters(),
+                    $this->customFilters,
+                ),
             ),
             alwaysCompile: $this->viewAlwaysCompile,
         );

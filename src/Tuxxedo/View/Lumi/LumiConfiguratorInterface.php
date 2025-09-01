@@ -100,6 +100,24 @@ interface LumiConfiguratorInterface
         get;
     }
 
+    /**
+     * @var array<string, \Closure(mixed $value, DirectivesInterface $directives): mixed>
+     */
+    public array $customFilters {
+        get;
+    }
+
+    public bool $withDefaultFilters {
+        get;
+    }
+
+    /**
+     * @var FilterProviderInterface[]
+     */
+    public array $filterProviders {
+        get;
+    }
+
     public function viewDirectory(
         string $directory,
     ): self;

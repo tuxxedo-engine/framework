@@ -43,6 +43,13 @@ interface RuntimeInterface
         get;
     }
 
+    /**
+     * @var array<string, \Closure(mixed $value, DirectivesInterface $directives): mixed>
+     */
+    public array $filters {
+        get;
+    }
+
     public function renderer(
         ViewRenderInterface $render,
     ): void;
@@ -73,5 +80,13 @@ interface RuntimeInterface
     public function functionCall(
         string $function,
         array $arguments = [],
+    ): mixed;
+
+    /**
+     * @throws ViewException
+     */
+    public function filter(
+        mixed $value,
+        string $filter,
     ): mixed;
 }

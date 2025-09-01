@@ -31,12 +31,14 @@ class Runtime implements RuntimeInterface
      * @param array<string, string|int|float|bool|null> $directives
      * @param string[] $functions
      * @param array<string, \Closure(array<mixed> $arguments, ViewRenderInterface $render, DirectivesInterface $directives): mixed> $customFunctions
+     * @param array<string, \Closure(mixed $input, DirectivesInterface $directives): mixed> $filters
      */
     public function __construct(
         array $directives = [],
-        public private(set) array $functions = [],
-        public private(set) array $customFunctions = [],
+        public readonly array $functions = [],
+        public readonly array $customFunctions = [],
         public readonly RuntimeFunctionMode $functionMode = RuntimeFunctionMode::CUSTOM_ONLY,
+        public readonly array $filters = [],
     ) {
         $this->directives = $directives;
     }
@@ -103,5 +105,25 @@ class Runtime implements RuntimeInterface
         }
 
         return $function(...$arguments);
+    }
+
+    public function filter(
+        mixed $value,
+        string $filter,
+    ): mixed {
+        if (!\array_key_exists($filter, $this->filters)) {
+            throw ViewException::fromUnknownFilterCall(
+                filter: $filter,
+            );
+        } elseif (!isset($this->renderer)) {
+            throw ViewException::fromCannotCallCustomFunctionWithRender();
+        }
+
+        return ($this->filters[$filter])(
+            $value,
+            new Directives(
+                directives: $this->directives,
+            ),
+        );
     }
 }

@@ -113,4 +113,15 @@ class ViewException extends \Exception
             message: 'Cannot pop directives stack, likely stack corruption',
         );
     }
+
+    public static function fromUnknownFilterCall(
+        string $filter,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot call unknown filter "%s"',
+                $filter,
+            ),
+        );
+    }
 }
