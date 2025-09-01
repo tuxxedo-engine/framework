@@ -125,7 +125,12 @@ class Lexer implements LexerInterface
             $startLine = $line;
 
             while (!$stream->eof()) {
-                if ($stream->match($endSequence)) {
+                $matchOffset = $stream->matchSequenceOutsideQuotes($endSequence);
+
+                if ($matchOffset !== null) {
+                    $content .= $stream->peek($matchOffset);
+
+                    $stream->consumeSequence($content);
                     $stream->consumeSequence($endSequence);
 
                     return $handler->tokenize(

@@ -98,6 +98,55 @@ class ByteStream implements ByteStreamInterface
         return $this->peek(\mb_strlen($sequence, 'UTF-8')) === $sequence;
     }
 
+    public function matchSequenceOutsideQuotes(
+        string $sequence,
+        int $offset = 0,
+    ): ?int {
+        $quoteChar = null;
+        $escaped = false;
+        $sequenceLength = \mb_strlen($sequence, 'UTF-8');
+
+        for ($i = $this->position + $offset; $i < $this->length; $i++) {
+            $char = \mb_substr($this->input, $i, 1, 'UTF-8');
+
+            if ($escaped) {
+                $escaped = false;
+
+                continue;
+            }
+
+            if ($char === '\\') {
+                $escaped = true;
+
+                continue;
+            }
+
+            if ($char === '"' || $char === "'") {
+                if ($quoteChar === null) {
+                    $quoteChar = $char;
+                } elseif ($quoteChar === $char) {
+                    $quoteChar = null;
+                }
+
+                continue;
+            }
+
+            if ($quoteChar === null) {
+                if ($i + $sequenceLength > $this->length) {
+                    return null;
+                }
+
+                $chunk = \mb_substr($this->input, $i, $sequenceLength, 'UTF-8');
+
+                if ($chunk === $sequence) {
+                    return $i - $this->position;
+                }
+            }
+        }
+
+        return null;
+    }
+
     public function consume(): string
     {
         if ($this->eof()) {

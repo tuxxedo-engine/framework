@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer;
 
+// @todo Cleanup this interface
 interface ByteStreamInterface
 {
     public string $input {
@@ -49,6 +50,11 @@ interface ByteStreamInterface
     public function match(
         string $sequence,
     ): bool;
+
+    public function matchSequenceOutsideQuotes(
+        string $sequence,
+        int $offset = 0,
+    ): ?int;
 
     public function consume(): string;
 
