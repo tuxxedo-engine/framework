@@ -23,6 +23,8 @@ use Tuxxedo\View\Lumi\Lexer\Handler\TokenHandlerInterface;
 use Tuxxedo\View\Lumi\Token\TextToken;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
 
+// @todo Support extends layout mode, with a new stream return type
+// @todo Support block tags that can self render in non-extends mode
 class Lexer implements LexerInterface
 {
     /**
