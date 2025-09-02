@@ -33,11 +33,14 @@ class TextCompilerProvider implements CompilerProviderInterface
         return $this->stripPhpOpeningTag($node->text);
     }
 
-    // @todo Maybe a flag to strip?
     private function compileComment(
         CommentNode $node,
         CompilerInterface $compiler,
     ): string {
+        if ($compiler->state->directives->asBool('lumi.compiler_strip_comments')) {
+            return '';
+        }
+
         $commentary = '';
         $lines = \preg_split('/\n/u', $node->text);
 

@@ -22,6 +22,7 @@ class DefaultDirectives
     {
         return [
             'lumi.autoescape' => true,
+            'lumi.compiler_strip_comments' => true,
         ];
     }
 }

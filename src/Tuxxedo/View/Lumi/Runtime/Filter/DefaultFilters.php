@@ -131,7 +131,7 @@ readonly class DefaultFilters implements FilterProviderInterface
     ): string {
         /** @var string $value */
 
-        return $this->escaper->html($value);
+        return $this->escaper->html(\strval($value));
     }
 
     private function escapeAttrImplementation(
@@ -140,7 +140,7 @@ readonly class DefaultFilters implements FilterProviderInterface
     ): string {
         /** @var string $value */
 
-        return $this->escaper->attribute($value);
+        return $this->escaper->attribute(\strval($value));
     }
 
     private function escapeJsImplementation(
@@ -149,7 +149,7 @@ readonly class DefaultFilters implements FilterProviderInterface
     ): string {
         /** @var string $value */
 
-        return $this->escaper->js($value);
+        return $this->escaper->js(\strval($value));
     }
 
     private function lengthImplementation(

@@ -3,3 +3,7 @@
 
 {% declare lumi.autoescape = true %}
 {{ '<h1>Test</h1>' }}
+
+{# hidden Comment #}
+{% declare lumi.compiler_strip_comments = false %}
+{# visible comment #}
