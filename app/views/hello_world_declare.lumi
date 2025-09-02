@@ -7,3 +7,6 @@
 {# hidden Comment #}
 {% declare lumi.compiler_strip_comments = false %}
 {# visible comment #}
+
+{{ undef1 }}
+{{ undef2 }}

@@ -126,7 +126,13 @@ class ExpressionLexer implements ExpressionLexerInterface
                 continue;
             }
 
-            if ($this->isStartOfNumber($char, $stream)) {
+            if (
+                $this->isStartOfNumber($char, $stream) &&
+                (
+                    $buffer === '' ||
+                    $this->isStartOfNumber($buffer[0], $stream)
+                )
+            ) {
                 $buffer .= $stream->consume();
 
                 while (!$stream->eof()) {
