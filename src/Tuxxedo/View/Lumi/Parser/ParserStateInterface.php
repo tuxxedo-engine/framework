@@ -39,6 +39,20 @@ interface ParserStateInterface
         get;
     }
 
+    /**
+     * @var array<string, string|int|bool>
+     */
+    public array $state {
+        get;
+    }
+
+    /**
+     * @var ParserStatePropertiesInterface[]
+     */
+    public array $stateStack {
+        get;
+    }
+
     public function enterLoop(): void;
 
     /**
@@ -63,6 +77,10 @@ interface ParserStateInterface
     public function leaveGrouping(
         string $name,
     ): void;
+
+    public function pushState(): void;
+
+    public function popState(): void;
 
     public function pushNode(
         ExpressionNodeInterface $node,

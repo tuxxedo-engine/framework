@@ -33,7 +33,12 @@ class ParserState implements ParserStateInterface
     /**
      * @var array<string, string|int|bool>
      */
-    private array $state = [];
+    public private(set) array $state = [];
+
+    /**
+     * @var ParserStatePropertiesInterface[]
+     */
+    public private(set) array $stateStack = [];
 
     public function enterLoop(): void
     {
@@ -85,6 +90,32 @@ class ParserState implements ParserStateInterface
                 expectedName: $last,
             );
         }
+    }
+
+    public function pushState(): void
+    {
+        \array_push($this->stateStack, ParserStateProperties::fromState($this));
+
+        $this->loopDepth = 0;
+        $this->conditionDepth = 0;
+        $this->groupingStack = [];
+        $this->nodeStack = [];
+        $this->state = [];
+    }
+
+    public function popState(): void
+    {
+        $oldState = \array_pop($this->stateStack);
+
+        if ($oldState === null) {
+            throw ParserException::fromUnexpectedStackExit();
+        }
+
+        $this->loopDepth = $oldState->loopDepth;
+        $this->conditionDepth = $oldState->conditionDepth;
+        $this->groupingStack = $oldState->groupingStack;
+        $this->nodeStack = $oldState->nodeStack;
+        $this->state = $oldState->state;
     }
 
     public function pushNode(

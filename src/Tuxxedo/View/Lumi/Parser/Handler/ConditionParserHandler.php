@@ -22,7 +22,6 @@ use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
 
-// @todo Check hello_world_cond for a potential bug
 class ConditionParserHandler implements ParserHandlerInterface
 {
     public private(set) string $tokenName = BuiltinTokenNames::IF->name;
@@ -51,7 +50,9 @@ class ConditionParserHandler implements ParserHandlerInterface
         $stream->expect(BuiltinTokenNames::END->name);
 
         $condition = $parser->expressionParser->parse(
-            stream: new TokenStream(tokens: $expressionTokens),
+            stream: new TokenStream(
+                tokens: $expressionTokens,
+            ),
             state: $parser->state,
         );
 
@@ -82,6 +83,7 @@ class ConditionParserHandler implements ParserHandlerInterface
 
                 if ($parser->state->conditionDepth === 0) {
                     $stream->consume();
+
                     break;
                 }
 
@@ -122,6 +124,7 @@ class ConditionParserHandler implements ParserHandlerInterface
                     !$stream->currentIs(BuiltinTokenNames::ENDIF->name)
                 ) {
                     $branchBodyTokens[] = $stream->current();
+
                     $stream->consume();
                 }
 
@@ -130,7 +133,9 @@ class ConditionParserHandler implements ParserHandlerInterface
                 $branches[] = new ConditionalBranchNode(
                     operand: $branchCondition,
                     body: $parser->parse(
-                        stream: new TokenStream(tokens: $branchBodyTokens),
+                        stream: new TokenStream(
+                            tokens: $branchBodyTokens,
+                        ),
                     )->nodes,
                 );
 

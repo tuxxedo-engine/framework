@@ -154,10 +154,14 @@ class Parser implements ParserInterface
                 );
             }
 
+            $this->state->pushState();
+
             $nodes = \array_merge(
                 $nodes,
                 $this->handlers[$token->type]->parse($this, $stream),
             );
+
+            $this->state->popState();
         }
 
         return new NodeStream(
