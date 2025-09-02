@@ -18,6 +18,7 @@ use Tuxxedo\View\Lumi\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Node\NodeNativeType;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\BinaryOperator;
+use Tuxxedo\View\Lumi\Syntax\CharacterSymbol;
 use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Token\TokenInterface;
 
@@ -103,10 +104,60 @@ class AtomicParser implements AtomicParserInterface
             );
 
             return;
+        } elseif (
+            $this->parser->stream->currentIs(BuiltinTokenNames::OPERATOR->name) &&
+            BinaryOperator::is($this->parser->stream->current())
+        ) {
+            $this->parser->operator->parseBinaryByNode(
+                left: $this->variableTokenToNode($variable),
+                operator: BinaryOperator::from(
+                    token: $this->parser->stream->expect(BuiltinTokenNames::OPERATOR->name),
+                ),
+            );
+
+            return;
+        } elseif ($this->parser->stream->currentIs(BuiltinTokenNames::CHARACTER->name)) {
+            $character = $this->parser->stream->expect(BuiltinTokenNames::CHARACTER->name);
+
+            if ($character->op1 === null) {
+                throw ParserException::fromMalformedToken();
+            }
+
+            if ($character->op1 === CharacterSymbol::DOT->symbol()) {
+                $this->parser->invocation->parseMethodCall(
+                    caller: $variable,
+                    method: $this->parser->stream->expect(BuiltinTokenNames::IDENTIFIER->name),
+                );
+            } elseif ($character->op1 === CharacterSymbol::LEFT_PARENTHESIS->symbol()) {
+                $this->parser->invocation->parseFunction(
+                    caller: $variable,
+                );
+
+                return;
+            } elseif ($character->op1 === CharacterSymbol::LEFT_SQUARE_BRACKET->symbol()) {
+                $this->parser->array->parseAccess(
+                    variable: $variable,
+                );
+
+                return;
+            }
+
+            throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
+                tokenName: $character->op1,
+                expectedTokenNames: [
+                    CharacterSymbol::DOT->symbol(),
+                    CharacterSymbol::LEFT_PARENTHESIS->symbol(),
+                    CharacterSymbol::LEFT_SQUARE_BRACKET->symbol(),
+                ],
+            );
         }
 
-        throw ParserException::fromNotImplemented(
-            feature: 'parsing complex variables',
+        throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
+            tokenName: $variable->type,
+            expectedTokenNames: [
+                BuiltinTokenNames::OPERATOR->name,
+                BuiltinTokenNames::CHARACTER->name,
+            ],
         );
     }
 }
