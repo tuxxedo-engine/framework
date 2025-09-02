@@ -23,6 +23,7 @@ use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionMode;
 use Tuxxedo\View\ViewRenderInterface;
 
+// @todo Support all DefaultDirectives in this builder
 interface LumiConfiguratorInterface
 {
     public string $viewDirectory {
