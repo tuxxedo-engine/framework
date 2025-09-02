@@ -16,7 +16,7 @@ namespace Tuxxedo\View\Lumi;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
-use Tuxxedo\View\Lumi\Runtime\DirectivesInterface;
+use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Runtime\Filter\FilterProviderInterface;
 use Tuxxedo\View\Lumi\Runtime\Function\FunctionProviderInterface;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;

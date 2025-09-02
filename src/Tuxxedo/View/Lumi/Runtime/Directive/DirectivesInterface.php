@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Runtime;
+namespace Tuxxedo\View\Lumi\Runtime\Directive;
 
 use Tuxxedo\View\ViewException;
 

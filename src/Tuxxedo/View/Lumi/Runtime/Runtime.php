@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime;
 
+use Tuxxedo\View\Lumi\Runtime\Directive\Directives;
+use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
 

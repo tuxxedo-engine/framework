@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime\Filter;
 
-use Tuxxedo\View\Lumi\Runtime\DirectivesInterface;
+use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 
 interface FilterProviderInterface
 {

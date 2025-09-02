@@ -18,7 +18,8 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
-use Tuxxedo\View\Lumi\Runtime\DirectivesInterface;
+use Tuxxedo\View\Lumi\Runtime\Directive\DefaultDirectives;
+use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Runtime\Filter\DefaultFilters;
 use Tuxxedo\View\Lumi\Runtime\Filter\FilterProviderInterface;
 use Tuxxedo\View\Lumi\Runtime\Function\DefaultFunctions;
@@ -42,9 +43,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public private(set) ?LoaderInterface $loader = null;
 
     public private(set) array $directives = [];
-    public private(set) array $defaultDirectives = [
-        'lumi.autoescape' => true,
-    ];
+    public private(set) array $defaultDirectives = [];
 
     public private(set) array $functions = [];
     public private(set) array $customFunctions = [];
@@ -60,6 +59,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
     final public function __construct()
     {
+        $this->defaultDirectives = DefaultDirectives::defaults();
     }
 
     public static function fromConfig(

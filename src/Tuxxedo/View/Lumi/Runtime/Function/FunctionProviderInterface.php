@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime\Function;
 
-use Tuxxedo\View\Lumi\Runtime\DirectivesInterface;
+use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 use Tuxxedo\View\ViewRenderInterface;
 
 interface FunctionProviderInterface

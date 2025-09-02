@@ -15,7 +15,7 @@ namespace Tuxxedo\View\Lumi\Runtime\Filter;
 
 use Tuxxedo\Escaper\Escaper;
 use Tuxxedo\Escaper\EscaperInterface;
-use Tuxxedo\View\Lumi\Runtime\DirectivesInterface;
+use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 
 readonly class DefaultFilters implements FilterProviderInterface
 {
@@ -131,10 +131,6 @@ readonly class DefaultFilters implements FilterProviderInterface
     ): string {
         /** @var string $value */
 
-        if ($directives->asBool('lumi.autoescape')) {
-            return $value;
-        }
-
         return $this->escaper->html($value);
     }
 
@@ -144,10 +140,6 @@ readonly class DefaultFilters implements FilterProviderInterface
     ): string {
         /** @var string $value */
 
-        if ($directives->asBool('lumi.autoescape')) {
-            return $value;
-        }
-
         return $this->escaper->attribute($value);
     }
 
@@ -156,10 +148,6 @@ readonly class DefaultFilters implements FilterProviderInterface
         DirectivesInterface $directives,
     ): string {
         /** @var string $value */
-
-        if ($directives->asBool('lumi.autoescape')) {
-            return $value;
-        }
 
         return $this->escaper->js($value);
     }

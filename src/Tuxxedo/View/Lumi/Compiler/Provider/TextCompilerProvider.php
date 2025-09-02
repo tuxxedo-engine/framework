@@ -53,13 +53,15 @@ class TextCompilerProvider implements CompilerProviderInterface
         return $commentary;
     }
 
-    // @todo Wrap code for lumi.autoescape
     private function compileEcho(
         EchoNode $node,
         CompilerInterface $compiler,
     ): string {
         // @todo Move this out to an optimizer class
-        if ($node->operand instanceof LiteralNode) {
+        if (
+            !$compiler->state->directives->asBool('lumi.autoescape') &&
+            $node->operand instanceof LiteralNode
+        ) {
             return (string) match ($node->operand->type) {
                 NodeNativeType::NULL => '',
                 NodeNativeType::BOOL => \boolval($node->operand->operand),
@@ -69,16 +71,25 @@ class TextCompilerProvider implements CompilerProviderInterface
             };
         }
 
+        $value = $compiler->expressionCompiler->compile(
+            stream: new NodeStream(
+                nodes: [
+                    $node->operand,
+                ],
+            ),
+            compiler: $compiler,
+        );
+
+        if ($compiler->state->directives->asBool('lumi.autoescape')) {
+            return \sprintf(
+                '<?= $this->filter(%s, \'escape_html\'); ?>',
+                $value,
+            );
+        }
+
         return \sprintf(
             '<?= %s; ?>',
-            $compiler->expressionCompiler->compile(
-                stream: new NodeStream(
-                    nodes: [
-                        $node->operand,
-                    ],
-                ),
-                compiler: $compiler,
-            ),
+            $value,
         );
     }
 
@@ -87,6 +98,17 @@ class TextCompilerProvider implements CompilerProviderInterface
         CompilerInterface $compiler,
     ): string {
         $oldState = $compiler->state->swap(BuiltinNodeKinds::EXPRESSION->name);
+
+        $compiler->state->directives->set(
+            $node->directive->operand,
+            match ($node->value->type) {
+                NodeNativeType::STRING => $node->value->operand,
+                NodeNativeType::INT => \intval($node->value->operand),
+                NodeNativeType::FLOAT => \floatval($node->value->operand),
+                NodeNativeType::BOOL => $node->value->operand === 'true',
+                NodeNativeType::NULL => null,
+            },
+        );
 
         $output = \sprintf(
             '<?php $this->directive(%s, %s); ?>',

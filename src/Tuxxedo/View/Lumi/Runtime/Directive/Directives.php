@@ -11,17 +11,17 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Runtime;
+namespace Tuxxedo\View\Lumi\Runtime\Directive;
 
 use Tuxxedo\View\ViewException;
 
-readonly class Directives implements DirectivesInterface
+class Directives implements DirectivesInterface
 {
     /**
      * @param array<string, string|int|float|bool|null> $directives
      */
     public function __construct(
-        public array $directives,
+        public protected(set) array $directives,
     ) {
     }
 
