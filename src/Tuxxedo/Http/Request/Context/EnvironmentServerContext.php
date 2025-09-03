@@ -35,7 +35,7 @@ class EnvironmentServerContext implements ServerContextInterface
     public string $uri {
         get {
             /** @var string */
-            return $_SERVER['PATH_INFO'];
+            return $_SERVER['PATH_INFO'] ?? '/';
         }
     }
 
