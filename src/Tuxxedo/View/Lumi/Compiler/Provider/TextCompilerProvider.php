@@ -19,6 +19,7 @@ use Tuxxedo\View\Lumi\Node\BuiltinNodeKinds;
 use Tuxxedo\View\Lumi\Node\CommentNode;
 use Tuxxedo\View\Lumi\Node\DeclareNode;
 use Tuxxedo\View\Lumi\Node\EchoNode;
+use Tuxxedo\View\Lumi\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Node\NodeNativeType;
 use Tuxxedo\View\Lumi\Node\TextNode;
@@ -83,7 +84,14 @@ class TextCompilerProvider implements CompilerProviderInterface
             compiler: $compiler,
         );
 
-        if ($compiler->state->directives->asBool('lumi.autoescape')) {
+        // @todo This should maybe be moved to somewhere else, specifically the call node check
+        if (
+            $compiler->state->directives->asBool('lumi.autoescape') &&
+            !(
+                $node->operand instanceof FunctionCallNode &&
+                \mb_strtolower($node->operand->name) === 'include'
+            )
+        ) {
             return \sprintf(
                 '<?= $this->filter(%s, \'escape_html\'); ?>',
                 $value,
