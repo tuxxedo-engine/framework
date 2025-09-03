@@ -22,7 +22,6 @@ use Tuxxedo\View\Lumi\Node\TextNode;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 
-// @todo Implement
 class SccpCompilerOptimizer extends AbstractOptimizer
 {
     protected function optimizer(
