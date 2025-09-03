@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Compiler\Optimizer;
+namespace Tuxxedo\View\Lumi\Compiler\Optimizer\Dce;
 
 enum DceEvaluateResult
 {

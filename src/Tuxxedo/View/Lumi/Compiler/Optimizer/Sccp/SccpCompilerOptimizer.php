@@ -11,8 +11,9 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Compiler\Optimizer;
+namespace Tuxxedo\View\Lumi\Compiler\Optimizer\Sccp;
 
+use Tuxxedo\View\Lumi\Compiler\Optimizer\AbstractOptimizer;
 use Tuxxedo\View\Lumi\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Node\EchoNode;
 use Tuxxedo\View\Lumi\Node\LiteralNode;

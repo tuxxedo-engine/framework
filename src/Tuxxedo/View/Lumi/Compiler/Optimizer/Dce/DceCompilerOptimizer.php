@@ -11,9 +11,11 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Compiler\Optimizer;
+namespace Tuxxedo\View\Lumi\Compiler\Optimizer\Dce;
 
+use Tuxxedo\View\Lumi\Compiler\Optimizer\AbstractOptimizer;
 use Tuxxedo\View\Lumi\Node\CommentNode;
+use Tuxxedo\View\Lumi\Node\ConditionalBranchNode;
 use Tuxxedo\View\Lumi\Node\ConditionalNode;
 use Tuxxedo\View\Lumi\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Node\ExpressionNodeInterface;
@@ -83,10 +85,71 @@ class DceCompilerOptimizer extends AbstractOptimizer
         ConditionalNode $node,
     ): array {
         if (\sizeof($node->branches) > 0) {
-            // @todo Implement DCE rewrite for conditionals with elseif
+            $ifEvaluation = $this->evaluates($node->operand);
+
+            if ($ifEvaluation === DceEvaluateResult::CANNOT_DETERMINE) {
+                return [
+                    $node,
+                ];
+            }
+
+            if ($ifEvaluation === DceEvaluateResult::ALWAYS_TRUE) {
+                return parent::optimizeNodes($node->body);
+            }
+
+            $conditional = DceConditional::fromNode($node);
+
+            foreach ($node->branches as $index => $branch) {
+                $evaluation = $this->evaluates($branch->operand);
+
+                if ($evaluation === DceEvaluateResult::ALWAYS_FALSE) {
+                    $conditional->eliminateBranch($index);
+                } elseif ($evaluation === DceEvaluateResult::ALWAYS_TRUE) {
+                    $conditional->newElse($index);
+
+                    break;
+                }
+            }
+
+            $newIf = $conditional->newIf();
+
+            if ($newIf === null) {
+                if (\sizeof($node->else) > 0) {
+                    return parent::optimizeNodes($node->else);
+                }
+
+                return [];
+            }
+
+            $newElse = $conditional->newElse;
+            $branches = [];
+
+            foreach ($conditional->eliminateBranches as $index => $branch) {
+                if ($index === $newIf) {
+                    continue;
+                }
+
+                if ($index === $newElse) {
+                    break;
+                }
+
+                if ($branch === false) {
+                    $branches[] = new ConditionalBranchNode(
+                        operand: $node->branches[$index]->operand,
+                        body: parent::optimizeNodes($node->branches[$index]->body),
+                    );
+                }
+            }
 
             return [
-                $node,
+                new ConditionalNode(
+                    operand: $node->branches[$newIf]->operand,
+                    body: parent::optimizeNodes($node->branches[$newIf]->body),
+                    branches: $branches,
+                    else: $newElse !== null
+                        ? parent::optimizeNodes($node->branches[$newElse]->body)
+                        : parent::optimizeNodes($node->else),
+                ),
             ];
         }
 
