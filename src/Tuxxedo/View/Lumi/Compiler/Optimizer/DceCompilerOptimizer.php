@@ -27,10 +27,10 @@ class DceCompilerOptimizer extends AbstractOptimizer
         $nodes = [];
 
         while (!$stream->eof()) {
-            $node = $this->optimizeNode($stream->current());
+            $optimizedNodes = $this->optimizeNode($stream->current());
 
-            if ($node !== null) {
-                $nodes[] = $node;
+            if (\sizeof($optimizedNodes) > 0) {
+                \array_push($nodes, ...$optimizedNodes);
             }
 
             $stream->consume();
@@ -41,23 +41,33 @@ class DceCompilerOptimizer extends AbstractOptimizer
         );
     }
 
+    /**
+     * @return NodeInterface[]
+     */
     private function optimizeNode(
         NodeInterface $node,
-    ): ?NodeInterface {
+    ): array {
         return match (true) {
             $node instanceof DirectiveNodeInterface => parent::optimizeDirective($node),
             $node instanceof CommentNode => $this->optimizeComment($node),
-            default => $node,
+            default => [
+                $node,
+            ],
         };
     }
 
+    /**
+     * @return NodeInterface[]
+     */
     private function optimizeComment(
         CommentNode $node,
-    ): ?CommentNode {
+    ): array {
         if ($this->directives->asBool('lumi.compiler_strip_comments')) {
-            return null;
+            return [];
         }
 
-        return $node;
+        return [
+            $node,
+        ];
     }
 }

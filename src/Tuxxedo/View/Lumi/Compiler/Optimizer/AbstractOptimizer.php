@@ -37,9 +37,12 @@ abstract class AbstractOptimizer implements CompilerOptimizerInterface
         NodeStreamInterface $stream,
     ): NodeStreamInterface;
 
+    /**
+     * @return array{0: NodeInterface}
+     */
     protected function optimizeDirective(
         DirectiveNodeInterface $node,
-    ): NodeInterface {
+    ): array {
         $this->directives->set(
             $node->directive->operand,
             match ($node->value->type) {
@@ -51,7 +54,9 @@ abstract class AbstractOptimizer implements CompilerOptimizerInterface
             },
         );
 
-        return $node;
+        return [
+            $node,
+        ];
     }
 
     public function optimize(

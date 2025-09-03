@@ -30,10 +30,10 @@ class SccpCompilerOptimizer extends AbstractOptimizer
         $nodes = [];
 
         while (!$stream->eof()) {
-            $node = $this->optimizeNode($stream->current());
+            $optimizedNodes = $this->optimizeNode($stream->current());
 
-            if ($node !== null) {
-                $nodes[] = $node;
+            if (\sizeof($optimizedNodes) > 0) {
+                \array_push($nodes, ...$optimizedNodes);
             }
 
             $stream->consume();
@@ -44,30 +44,42 @@ class SccpCompilerOptimizer extends AbstractOptimizer
         );
     }
 
+    /**
+     * @return NodeInterface[]
+     */
     private function optimizeNode(
         NodeInterface $node,
-    ): ?NodeInterface {
+    ): array {
         return match (true) {
             $node instanceof DirectiveNodeInterface => parent::optimizeDirective($node),
             $node instanceof EchoNode => $this->optimizeEcho($node),
-            default => $node,
+            default => [
+                $node,
+            ],
         };
     }
 
+    /**
+     * @return NodeInterface[]
+     */
     private function optimizeEcho(
         EchoNode $node,
-    ): ?NodeInterface {
+    ): array {
         if ($node->operand instanceof LiteralNode) {
             if ($node->operand->type === NodeNativeType::STRING) {
                 if ($node->operand->operand === '') {
-                    return null;
+                    return [];
                 } elseif (!$this->directives->asBool('lumi.autoescape')) {
-                    return new TextNode(
-                        text: $node->operand->operand,
-                    );
+                    return [
+                        new TextNode(
+                            text: $node->operand->operand,
+                        ),
+                    ];
                 }
 
-                return $node;
+                return [
+                    $node,
+                ];
             }
 
             $value = match ($node->operand->type) {
@@ -78,14 +90,18 @@ class SccpCompilerOptimizer extends AbstractOptimizer
             };
 
             if ($value !== null) {
-                $value = new TextNode(
-                    text: (string) $value,
-                );
+                return [
+                    new TextNode(
+                        text: (string) $value,
+                    ),
+                ];
             }
 
-            return $value;
+            return [];
         }
 
-        return $node;
+        return [
+            $node,
+        ];
     }
 }
