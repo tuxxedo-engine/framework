@@ -13,9 +13,13 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Node;
 
-enum BuiltinNodeKinds
+interface DirectiveNodeInterface extends NodeInterface
 {
-    case ROOT;
-    case DEPENDANT;
-    case EXPRESSION;
+    public LiteralNode $directive {
+        get;
+    }
+
+    public LiteralNode $value {
+        get;
+    }
 }

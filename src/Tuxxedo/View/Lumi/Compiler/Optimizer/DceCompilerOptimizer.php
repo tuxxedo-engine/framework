@@ -16,9 +16,9 @@ namespace Tuxxedo\View\Lumi\Compiler\Optimizer;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 
 // @todo Implement
-class DceCompilerOptimizer implements CompilerOptimizerInterface
+class DceCompilerOptimizer extends AbstractOptimizer
 {
-    public function optimize(
+    protected function optimizer(
         NodeStreamInterface $stream,
     ): NodeStreamInterface {
         return $stream;

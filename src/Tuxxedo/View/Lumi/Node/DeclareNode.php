@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Node;
 
-readonly class DeclareNode implements NodeInterface
+readonly class DeclareNode implements DirectiveNodeInterface, NodeInterface
 {
     public string $kind;
 

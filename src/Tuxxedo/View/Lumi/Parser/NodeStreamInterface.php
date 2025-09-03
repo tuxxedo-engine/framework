@@ -35,6 +35,8 @@ interface NodeStreamInterface
 
     /**
      * @throws ParserException
+     *
+     * @phpstan-impure
      */
     public function current(): NodeInterface;
 

@@ -24,6 +24,6 @@ readonly class ConditionalBranchNode implements NodeInterface
         public ExpressionNodeInterface $operand,
         public array $body = [],
     ) {
-        $this->kind = BuiltinNodeKinds::ROOT->name;
+        $this->kind = BuiltinNodeKinds::DEPENDANT->name;
     }
 }

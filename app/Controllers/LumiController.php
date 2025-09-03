@@ -263,8 +263,9 @@ readonly class LumiController
 
         $buffer .= '</pre>';
 
+        // @todo Support visualization for each optimizer pass
         if ($showNext) {
-            $buffer .= '<h3>Nodes</h3>';
+            $buffer .= '<h3>Nodes (pre-optimized)</h3>';
             $buffer .= '<pre>';
 
             try {

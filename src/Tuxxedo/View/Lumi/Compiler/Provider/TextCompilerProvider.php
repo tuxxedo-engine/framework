@@ -20,7 +20,6 @@ use Tuxxedo\View\Lumi\Node\CommentNode;
 use Tuxxedo\View\Lumi\Node\DeclareNode;
 use Tuxxedo\View\Lumi\Node\EchoNode;
 use Tuxxedo\View\Lumi\Node\FunctionCallNode;
-use Tuxxedo\View\Lumi\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Node\NodeNativeType;
 use Tuxxedo\View\Lumi\Node\TextNode;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
@@ -61,20 +60,6 @@ class TextCompilerProvider implements CompilerProviderInterface
         EchoNode $node,
         CompilerInterface $compiler,
     ): string {
-        // @todo Move this out to an optimizer class
-        if (
-            !$compiler->state->directives->asBool('lumi.autoescape') &&
-            $node->operand instanceof LiteralNode
-        ) {
-            return (string) match ($node->operand->type) {
-                NodeNativeType::NULL => '',
-                NodeNativeType::BOOL => \boolval($node->operand->operand),
-                NodeNativeType::INT => \intval($node->operand->operand),
-                NodeNativeType::FLOAT => \floatval($node->operand->operand),
-                default => $node->operand->operand,
-            };
-        }
-
         $value = $compiler->expressionCompiler->compile(
             stream: new NodeStream(
                 nodes: [
