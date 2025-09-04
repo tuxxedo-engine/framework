@@ -138,15 +138,7 @@ class SccpCompilerOptimizer extends AbstractOptimizer
     ): array {
         if (
             $node->left instanceof LiteralNode &&
-            (
-                $node->left->type === NodeNativeType::INT ||
-                $node->left->type === NodeNativeType::FLOAT
-            ) &&
             $node->right instanceof LiteralNode &&
-            (
-                $node->right->type === NodeNativeType::INT ||
-                $node->right->type === NodeNativeType::FLOAT
-            ) &&
             (
                 $node->operator === BinaryOperator::ADD ||
                 $node->operator === BinaryOperator::SUBTRACT ||
@@ -161,38 +153,68 @@ class SccpCompilerOptimizer extends AbstractOptimizer
                 $node->operator === BinaryOperator::OR
             )
         ) {
-            $left = $node->left->type === NodeNativeType::FLOAT
-                ? \floatval($node->left->operand)
-                : \intval($node->left->operand);
+            if (
+                $node->left->type !== $node->right->type &&
+                $node->operator === BinaryOperator::STRICT_EQUAL
+            ) {
+                return [
+                    new LiteralNode(
+                        operand: 'false',
+                        type: NodeNativeType::BOOL,
+                    ),
+                ];
+            }
 
-            $right = $node->right->type === NodeNativeType::INT
-                ? \floatval($node->right->operand)
-                : \intval($node->right->operand);
+            $left = $node->left->cast();
+            $right = $node->right->cast();
 
-            $value = match ($node->operator) {
-                BinaryOperator::ADD => $left + $right,
-                BinaryOperator::SUBTRACT => $left - $right,
-                BinaryOperator::MULTIPLY => $left * $right,
-                BinaryOperator::STRICT_EQUAL => $left === $right,
-                BinaryOperator::STRICT_NOT_EQUAL => $left !== $right,
-                BinaryOperator::GREATER => $left > $right,
-                BinaryOperator::LESS => $left < $right,
-                BinaryOperator::GREATER_EQUAL => $left >= $right,
-                BinaryOperator::LESS_EQUAL => $left <= $right,
-                BinaryOperator::AND => \boolval($left) && \boolval($right),
-                BinaryOperator::OR => \boolval($left) || \boolval($right),
-            };
+            if (
+                (
+                    \is_int($left) ||
+                    \is_float($left)
+                ) &&
+                (
+                    \is_int($right) ||
+                    \is_float($right)
+                )
+            ) {
+                $value = match ($node->operator) {
+                    BinaryOperator::ADD => $left + $right,
+                    BinaryOperator::SUBTRACT => $left - $right,
+                    BinaryOperator::MULTIPLY => $left * $right,
+                    BinaryOperator::STRICT_EQUAL => $left === $right,
+                    BinaryOperator::STRICT_NOT_EQUAL => $left !== $right,
+                    BinaryOperator::GREATER => $left > $right,
+                    BinaryOperator::LESS => $left < $right,
+                    BinaryOperator::GREATER_EQUAL => $left >= $right,
+                    BinaryOperator::LESS_EQUAL => $left <= $right,
+                    BinaryOperator::AND => \boolval($left) && \boolval($right),
+                    BinaryOperator::OR => \boolval($left) || \boolval($right),
+                };
+            } else {
+                $value = match ($node->operator) {
+                    BinaryOperator::STRICT_EQUAL => $left === $right,
+                    BinaryOperator::STRICT_NOT_EQUAL => $left !== $right,
+                    BinaryOperator::GREATER => $left > $right,
+                    BinaryOperator::LESS => $left < $right,
+                    BinaryOperator::GREATER_EQUAL => $left >= $right,
+                    BinaryOperator::LESS_EQUAL => $left <= $right,
+                    BinaryOperator::AND => \boolval($left) && \boolval($right),
+                    BinaryOperator::OR => \boolval($left) || \boolval($right),
+                    default => null,
+                };
+
+                if ($value === null) {
+                    return [
+                        $node,
+                    ];
+                }
+            }
 
             return [
                 new LiteralNode(
                     operand: \strval($value),
-                    type: \is_float($value)
-                        ? NodeNativeType::FLOAT
-                        : (
-                            \is_int($value)
-                                ? NodeNativeType::INT
-                                : NodeNativeType::BOOL
-                        ),
+                    type: NodeNativeType::fromValueNativeType($value),
                 ),
             ];
         }

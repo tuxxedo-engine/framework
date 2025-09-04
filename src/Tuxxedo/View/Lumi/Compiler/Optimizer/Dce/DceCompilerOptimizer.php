@@ -175,11 +175,8 @@ class DceCompilerOptimizer extends AbstractOptimizer
         LiteralNode $node,
     ): DceEvaluateResult {
         return match ($node->type) {
-            NodeNativeType::STRING => DceEvaluateResult::fromBool(\boolval($node->operand)),
-            NodeNativeType::INT => DceEvaluateResult::fromBool(\boolval(\intval($node->operand))),
-            NodeNativeType::FLOAT => DceEvaluateResult::fromBool(\boolval(\floatval($node->operand))),
-            NodeNativeType::BOOL => DceEvaluateResult::fromBool($node->operand === 'true'),
             NodeNativeType::NULL => DceEvaluateResult::ALWAYS_FALSE,
+            default => DceEvaluateResult::fromBool(\boolval($node->cast())),
         };
     }
 }

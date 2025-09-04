@@ -45,4 +45,16 @@ enum NodeNativeType
             ),
         };
     }
+
+    public static function fromValueNativeType(
+        string|int|float|bool|null $value,
+    ): self {
+        return match (true) {
+            \is_string($value) => self::STRING,
+            \is_int($value) => self::INT,
+            \is_float($value) => self::FLOAT,
+            \is_bool($value) => self::BOOL,
+            \is_null($value) => self::NULL,
+        };
+    }
 }

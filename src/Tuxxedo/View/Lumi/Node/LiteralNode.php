@@ -23,4 +23,15 @@ readonly class LiteralNode implements ExpressionNodeInterface
     ) {
         $this->kind = BuiltinNodeKinds::EXPRESSION->name;
     }
+
+    public function cast(): string|int|float|bool|null
+    {
+        return match ($this->type) {
+            NodeNativeType::STRING => $this->operand,
+            NodeNativeType::INT => \intval($this->operand),
+            NodeNativeType::FLOAT => \floatval($this->operand),
+            NodeNativeType::BOOL => $this->operand === 'true',
+            NodeNativeType::NULL => null,
+        };
+    }
 }
