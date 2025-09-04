@@ -14,14 +14,17 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Compiler\Optimizer\Sccp;
 
 use Tuxxedo\View\Lumi\Compiler\Optimizer\AbstractOptimizer;
+use Tuxxedo\View\Lumi\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Node\EchoNode;
+use Tuxxedo\View\Lumi\Node\GroupNode;
 use Tuxxedo\View\Lumi\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Node\NodeNativeType;
 use Tuxxedo\View\Lumi\Node\TextNode;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
+use Tuxxedo\View\Lumi\Syntax\BinaryOperator;
 
 class SccpCompilerOptimizer extends AbstractOptimizer
 {
@@ -53,7 +56,9 @@ class SccpCompilerOptimizer extends AbstractOptimizer
     ): array {
         return match (true) {
             $node instanceof DirectiveNodeInterface => parent::optimizeDirective($node),
+            $node instanceof BinaryOpNode => $this->optimizeBinaryOp($node),
             $node instanceof EchoNode => $this->optimizeEcho($node),
+            $node instanceof GroupNode => $this->optimizeGroup($node),
             default => [
                 $node,
             ],
@@ -93,13 +98,86 @@ class SccpCompilerOptimizer extends AbstractOptimizer
             if ($value !== null) {
                 return [
                     new TextNode(
-                        text: (string) $value,
+                        text: (string)$value,
                     ),
                 ];
             }
 
             return [];
         }
+
+        return [
+            $node,
+        ];
+    }
+
+    /**
+     * @return NodeInterface[]
+     */
+    private function optimizeGroup(
+        GroupNode $node,
+    ): array {
+        if ($node->operand instanceof LiteralNode) {
+            return [
+                $node->operand,
+            ];
+        } elseif ($node->operand instanceof BinaryOpNode) {
+            return $this->optimizeBinaryOp($node->operand);
+        }
+
+        return [
+            $node,
+        ];
+    }
+
+    /**
+     * @return NodeInterface[]
+     */
+    private function optimizeBinaryOp(
+        BinaryOpNode $node,
+    ): array {
+        if (
+            $node->left instanceof LiteralNode &&
+            (
+                $node->left->type === NodeNativeType::INT ||
+                $node->left->type === NodeNativeType::FLOAT
+            ) &&
+            $node->right instanceof LiteralNode &&
+            (
+                $node->right->type === NodeNativeType::INT ||
+                $node->right->type === NodeNativeType::FLOAT
+            ) &&
+            (
+                $node->operator === BinaryOperator::ADD ||
+                $node->operator === BinaryOperator::SUBTRACT ||
+                $node->operator === BinaryOperator::MULTIPLY
+            )
+        ) {
+            $left = $node->left->type === NodeNativeType::FLOAT
+                ? \floatval($node->left->operand)
+                : \intval($node->left->operand);
+
+            $right = $node->right->type === NodeNativeType::INT
+                ? \floatval($node->right->operand)
+                : \intval($node->right->operand);
+
+            $value = match ($node->operator) {
+                BinaryOperator::ADD => $left + $right,
+                BinaryOperator::SUBTRACT => $left - $right,
+                BinaryOperator::MULTIPLY => $left * $right,
+            };
+
+            return [
+                new LiteralNode(
+                    operand: \strval($value),
+                    type: \is_float($value)
+                        ? NodeNativeType::FLOAT
+                        : NodeNativeType::INT,
+                ),
+            ];
+        }
+
+        // @todo Support logical operators
 
         return [
             $node,
