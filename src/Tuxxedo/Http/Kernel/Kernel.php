@@ -43,12 +43,12 @@ class Kernel
     /**
      * @var array<(\Closure(): MiddlewareInterface)>
      */
-    private array $middleware = [];
+    public private(set) array $middleware = [];
 
     /**
      * @var array<class-string<\Throwable>, array<\Closure(): ErrorHandlerInterface>>
      */
-    private array $exceptions = [];
+    public private(set) array $exceptions = [];
 
     public private(set) ResponseEmitterInterface $emitter;
     public private(set) RouterInterface $router;
@@ -56,7 +56,7 @@ class Kernel
     /**
      * @var array<(\Closure(): ErrorHandlerInterface)>
      */
-    private array $defaultExceptionHandlers = [];
+    public private(set) array $defaultExceptionHandlers = [];
 
     final public function __construct(
         public readonly string $appName = '',
