@@ -23,7 +23,6 @@ use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionMode;
 use Tuxxedo\View\ViewRenderInterface;
 
-// @todo Support all DefaultDirectives in this builder
 interface LumiConfiguratorInterface
 {
     public string $viewDirectory {
@@ -136,6 +135,9 @@ interface LumiConfiguratorInterface
 
     public function enableAutoescape(): self;
     public function disableAutoescape(): self;
+
+    public function enableStripComments(): self;
+    public function disableStripComments(): self;
 
     public function enableAlwaysCompile(): self;
     public function disableAlwaysCompile(): self;

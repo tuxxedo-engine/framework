@@ -128,6 +128,20 @@ class LumiConfigurator implements LumiConfiguratorInterface
         return $this;
     }
 
+    public function enableStripComments(): self
+    {
+        $this->defaultDirectives['lumi.compiler_strip_comments'] = true;
+
+        return $this;
+    }
+
+    public function disableStripComments(): self
+    {
+        $this->defaultDirectives['lumi.compiler_strip_comments'] = false;
+
+        return $this;
+    }
+
     public function enableAlwaysCompile(): self
     {
         $this->viewAlwaysCompile = true;
