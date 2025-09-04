@@ -18,7 +18,7 @@ use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseCode;
 use Tuxxedo\Http\Response\ResponseInterface;
 
-class HttpsRequiredMiddleware implements MiddlewareInterface
+class HttpsRequired implements MiddlewareInterface
 {
     public function __construct(
         private readonly ResponseCode $responseCode = ResponseCode::MOVED_PERMANENTLY,

@@ -17,7 +17,7 @@ use Tuxxedo\Http\Header;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
-class StrictTransportSecurityMiddleware implements MiddlewareInterface
+class StrictTransportSecurity implements MiddlewareInterface
 {
     private readonly string $value;
 

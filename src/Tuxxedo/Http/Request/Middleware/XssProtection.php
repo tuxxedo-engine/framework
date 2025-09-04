@@ -18,7 +18,7 @@ use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
 // @todo Allow customization of the headers
-class XssProtectionMiddleware implements MiddlewareInterface
+class XssProtection implements MiddlewareInterface
 {
     public function handle(
         RequestInterface $request,
