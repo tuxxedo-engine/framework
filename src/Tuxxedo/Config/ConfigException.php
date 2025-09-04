@@ -15,11 +15,12 @@ namespace Tuxxedo\Config;
 
 class ConfigException extends \Exception
 {
-    public static function fromInvalidDirective(string $directive): self
-    {
+    public static function fromInvalidDirective(
+        string $directive,
+    ): self {
         return new self(
             message: \sprintf(
-                'Invalid directive "%s"',
+                'Invalid configuration directive "%s"',
                 $directive,
             ),
         );
@@ -32,7 +33,7 @@ class ConfigException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Unexpected type for directive "%s", got type "%s" but expected "%s"',
+                'Unexpected type for configuration directive "%s", got type "%s" but expected "%s"',
                 $directive,
                 $actualType,
                 $expectedType,

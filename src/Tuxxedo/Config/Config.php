@@ -28,13 +28,15 @@ class Config implements ConfigInterface
     /**
      * @return array<mixed>
      */
-    protected static function isolatedInclude(string $configFileName): array
-    {
+    protected static function isolatedInclude(
+        string $configFileName,
+    ): array {
         return (static fn (): array => (array) require $configFileName)();
     }
 
-    public static function createFromDirectory(string $directory): static
-    {
+    public static function createFromDirectory(
+        string $directory,
+    ): static {
         $directives = [];
 
         foreach (FileCollection::fromFileType($directory, '.php') as $configFile) {
@@ -46,8 +48,9 @@ class Config implements ConfigInterface
         );
     }
 
-    public static function createFromFile(string $file): static
-    {
+    public static function createFromFile(
+        string $file,
+    ): static {
         return new static(
             directives: [
                 ...static::isolatedInclude($file),
@@ -55,8 +58,9 @@ class Config implements ConfigInterface
         );
     }
 
-    public function has(string $path): bool
-    {
+    public function has(
+        string $path,
+    ): bool {
         try {
             $this->path($path);
         } catch (ConfigException) {
@@ -66,8 +70,9 @@ class Config implements ConfigInterface
         return true;
     }
 
-    public function path(string $path): mixed
-    {
+    public function path(
+        string $path,
+    ): mixed {
         $index = $this->directives;
 
         foreach (\explode('.', $path) as $part) {
@@ -93,8 +98,9 @@ class Config implements ConfigInterface
         return $index;
     }
 
-    public function getInt(string $path): int
-    {
+    public function getInt(
+        string $path,
+    ): int {
         $value = $this->path($path);
 
         if (!\is_int($value)) {
@@ -108,8 +114,9 @@ class Config implements ConfigInterface
         return $value;
     }
 
-    public function getBool(string $path): bool
-    {
+    public function getBool(
+        string $path,
+    ): bool {
         $value = $this->path($path);
 
         if (!\is_bool($value)) {
@@ -123,8 +130,9 @@ class Config implements ConfigInterface
         return $value;
     }
 
-    public function getFloat(string $path): float
-    {
+    public function getFloat(
+        string $path,
+    ): float {
         $value = $this->path($path);
 
         if (!\is_float($value)) {
@@ -138,8 +146,9 @@ class Config implements ConfigInterface
         return $value;
     }
 
-    public function getString(string $path): string
-    {
+    public function getString(
+        string $path,
+    ): string {
         $value = $this->path($path);
 
         if (!\is_string($value)) {
@@ -159,8 +168,10 @@ class Config implements ConfigInterface
      * @param class-string<TEnum> $enum
      * @return TEnum
      */
-    public function getEnum(string $path, string $enum): object
-    {
+    public function getEnum(
+        string $path,
+        string $enum,
+    ): object {
         $value = $this->path($path);
 
         if (!\is_object($value) || !\enum_exists($enum) || !\is_a($value, $enum)) {

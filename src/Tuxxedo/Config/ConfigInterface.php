@@ -15,32 +15,44 @@ namespace Tuxxedo\Config;
 
 interface ConfigInterface
 {
-    public function has(string $path): bool;
+    public function has(
+        string $path,
+    ): bool;
 
     /**
      * @throws ConfigException
      */
-    public function path(string $path): mixed;
+    public function path(
+        string $path,
+    ): mixed;
 
     /**
      * @throws ConfigException
      */
-    public function getInt(string $path): int;
+    public function getInt(
+        string $path,
+    ): int;
 
     /**
      * @throws ConfigException
      */
-    public function getBool(string $path): bool;
+    public function getBool(
+        string $path,
+    ): bool;
 
     /**
      * @throws ConfigException
      */
-    public function getFloat(string $path): float;
+    public function getFloat(
+        string $path,
+    ): float;
 
     /**
      * @throws ConfigException
      */
-    public function getString(string $path): string;
+    public function getString(
+        string $path,
+    ): string;
 
     /**
      * @template TEnum of \UnitEnum
@@ -50,5 +62,8 @@ interface ConfigInterface
      *
      * @throws ConfigException
      */
-    public function getEnum(string $path, string $enum): object;
+    public function getEnum(
+        string $path,
+        string $enum,
+    ): object;
 }
