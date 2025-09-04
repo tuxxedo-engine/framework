@@ -16,7 +16,7 @@ namespace Tuxxedo\Session;
 use Tuxxedo\Container\AlwaysPersistentInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\LazyInitializableInterface;
-use Tuxxedo\Http\Kernel\Kernel;
+use Tuxxedo\Http\Kernel\KernelInterface;
 
 class Session implements SessionInterface, AlwaysPersistentInterface, LazyInitializableInterface
 {
@@ -31,7 +31,7 @@ class Session implements SessionInterface, AlwaysPersistentInterface, LazyInitia
         return new self(
             adapter: Adapter\PhpSessionAdapter::createFromConfig(
                 startMode: SessionStartMode::LAZY,
-                config: $container->resolve(Kernel::class)->config,
+                config: $container->resolve(KernelInterface::class)->config,
             ),
         );
     }

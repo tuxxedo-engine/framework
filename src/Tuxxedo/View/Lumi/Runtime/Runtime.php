@@ -40,7 +40,7 @@ class Runtime implements RuntimeInterface
         array $directives = [],
         public readonly array $functions = [],
         public readonly array $customFunctions = [],
-        public readonly RuntimeFunctionMode $functionMode = RuntimeFunctionMode::CUSTOM_ONLY,
+        public readonly RuntimeFunctionPolicy $functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY,
         public readonly array $instanceCallClasses = [],
         public readonly array $filters = [],
     ) {
@@ -83,10 +83,10 @@ class Runtime implements RuntimeInterface
         string $function,
         array $arguments = [],
     ): mixed {
-        if ($this->functionMode === RuntimeFunctionMode::DISALLOW_ALL) {
+        if ($this->functionPolicy === RuntimeFunctionPolicy::DISALLOW_ALL) {
             throw ViewException::fromFunctionCallsDisabled();
         } elseif (
-            $this->functionMode === RuntimeFunctionMode::CUSTOM_ONLY &&
+            $this->functionPolicy === RuntimeFunctionPolicy::CUSTOM_ONLY &&
             !\array_key_exists($function, $this->customFunctions)
         ) {
             throw ViewException::fromCannotCallCustomFunction(

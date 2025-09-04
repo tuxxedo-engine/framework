@@ -40,7 +40,7 @@ interface RuntimeInterface
         get;
     }
 
-    public RuntimeFunctionMode $functionMode {
+    public RuntimeFunctionPolicy $functionPolicy {
         get;
     }
 

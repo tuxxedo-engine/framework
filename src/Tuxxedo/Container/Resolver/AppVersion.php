@@ -15,7 +15,7 @@ namespace Tuxxedo\Container\Resolver;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
-use Tuxxedo\Http\Kernel\Kernel;
+use Tuxxedo\Http\Kernel\KernelInterface;
 
 /**
  * @implements DependencyResolverInterface<string>
@@ -25,6 +25,6 @@ class AppVersion implements DependencyResolverInterface
 {
     public function resolve(ContainerInterface $container): mixed
     {
-        return $container->resolve(Kernel::class)->appVersion;
+        return $container->resolve(KernelInterface::class)->appVersion;
     }
 }

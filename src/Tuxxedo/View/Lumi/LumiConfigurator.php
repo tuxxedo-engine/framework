@@ -27,7 +27,7 @@ use Tuxxedo\View\Lumi\Runtime\Function\FunctionProviderInterface;
 use Tuxxedo\View\Lumi\Runtime\Loader;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\Runtime;
-use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionMode;
+use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
 use Tuxxedo\View\ViewRenderInterface;
 
 class LumiConfigurator implements LumiConfiguratorInterface
@@ -47,7 +47,8 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
     public private(set) array $functions = [];
     public private(set) array $customFunctions = [];
-    public private(set) RuntimeFunctionMode $functionMode = RuntimeFunctionMode::CUSTOM_ONLY;
+
+    public private(set) RuntimeFunctionPolicy $functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY;
     public private(set) bool $withDefaultFunctions = true;
     public private(set) array $functionProviders = [];
 
@@ -169,8 +170,8 @@ class LumiConfigurator implements LumiConfiguratorInterface
     ): self {
         $this->functions[] = $name;
 
-        if ($this->functionMode === RuntimeFunctionMode::DISALLOW_ALL) {
-            $this->functionMode = RuntimeFunctionMode::CUSTOM_ONLY;
+        if ($this->functionPolicy === RuntimeFunctionPolicy::DISALLOW_ALL) {
+            $this->functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY;
         }
 
         return $this;
@@ -178,7 +179,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
     public function allowAllFunctions(): self
     {
-        $this->functionMode = RuntimeFunctionMode::ALLOW_ALL;
+        $this->functionPolicy = RuntimeFunctionPolicy::ALLOW_ALL;
 
         return $this;
     }
@@ -188,7 +189,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
         $this->functions = [];
         $this->customFunctions = [];
         $this->functionProviders = [];
-        $this->functionMode = RuntimeFunctionMode::DISALLOW_ALL;
+        $this->functionPolicy = RuntimeFunctionPolicy::DISALLOW_ALL;
         $this->withDefaultFunctions = false;
 
         return $this;
@@ -203,8 +204,8 @@ class LumiConfigurator implements LumiConfiguratorInterface
     ): self {
         $this->customFunctions[$name] = $handler;
 
-        if ($this->functionMode === RuntimeFunctionMode::DISALLOW_ALL) {
-            $this->functionMode = RuntimeFunctionMode::CUSTOM_ONLY;
+        if ($this->functionPolicy === RuntimeFunctionPolicy::DISALLOW_ALL) {
+            $this->functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY;
         }
 
         return $this;
@@ -263,8 +264,8 @@ class LumiConfigurator implements LumiConfiguratorInterface
     ): self {
         $this->functionProviders[] = $provider;
 
-        if ($this->functionMode === RuntimeFunctionMode::DISALLOW_ALL) {
-            $this->functionMode = RuntimeFunctionMode::CUSTOM_ONLY;
+        if ($this->functionPolicy === RuntimeFunctionPolicy::DISALLOW_ALL) {
+            $this->functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY;
         }
 
         return $this;
@@ -486,7 +487,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
                     $this->buildCustomFunctions(),
                     $this->customFunctions,
                 ),
-                functionMode: $this->functionMode,
+                functionPolicy: $this->functionPolicy,
                 instanceCallClasses: $this->instanceCallClasses,
                 filters: \array_merge(
                     $this->buildCustomFilters(),

@@ -20,7 +20,7 @@ use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Runtime\Filter\FilterProviderInterface;
 use Tuxxedo\View\Lumi\Runtime\Function\FunctionProviderInterface;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
-use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionMode;
+use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
 use Tuxxedo\View\ViewRenderInterface;
 
 interface LumiConfiguratorInterface
@@ -85,7 +85,7 @@ interface LumiConfiguratorInterface
         get;
     }
 
-    public RuntimeFunctionMode $functionMode {
+    public RuntimeFunctionPolicy $functionPolicy {
         get;
     }
 

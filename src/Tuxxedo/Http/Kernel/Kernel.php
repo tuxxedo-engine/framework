@@ -35,27 +35,17 @@ use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\RouterInterface;
 
 // @todo Consider whether to make this backed by an interface
-class Kernel
+class Kernel implements KernelInterface
 {
     public readonly ConfigInterface $config;
     public readonly ContainerInterface $container;
 
-    /**
-     * @var array<(\Closure(): MiddlewareInterface)>
-     */
     public private(set) array $middleware = [];
-
-    /**
-     * @var array<class-string<\Throwable>, array<\Closure(): ErrorHandlerInterface>>
-     */
-    public private(set) array $exceptions = [];
 
     public private(set) ResponseEmitterInterface $emitter;
     public private(set) RouterInterface $router;
 
-    /**
-     * @var array<(\Closure(): ErrorHandlerInterface)>
-     */
+    public private(set) array $exceptions = [];
     public private(set) array $defaultExceptionHandlers = [];
 
     final public function __construct(
@@ -75,9 +65,6 @@ class Kernel
         $this->emitter = new ResponseEmitter();
     }
 
-    /**
-     * @param ServiceProviderInterface|(\Closure(): ServiceProviderInterface) $provider
-     */
     public function serviceProvider(
         ServiceProviderInterface|\Closure $provider,
     ): static {
@@ -91,7 +78,7 @@ class Kernel
     }
 
     public function emitter(
-        ResponseEmitter $emitter,
+        ResponseEmitterInterface $emitter,
     ): static {
         $this->emitter = $emitter;
 
@@ -145,9 +132,6 @@ class Kernel
         return $this;
     }
 
-    /**
-     * @param (\Closure(): MiddlewareInterface)|MiddlewareInterface $middleware
-     */
     public function middleware(
         \Closure|MiddlewareInterface $middleware,
     ): static {
@@ -160,10 +144,6 @@ class Kernel
         return $this;
     }
 
-    /**
-     * @param class-string<\Throwable> $exceptionClass
-     * @param (\Closure(): ErrorHandlerInterface)|ErrorHandlerInterface $handler
-     */
     public function whenException(
         string $exceptionClass,
         \Closure|ErrorHandlerInterface $handler,
@@ -178,9 +158,6 @@ class Kernel
         return $this;
     }
 
-    /**
-     * @param (\Closure(): ErrorHandlerInterface)|ErrorHandlerInterface $handler
-     */
     public function defaultExceptionHandler(
         \Closure|ErrorHandlerInterface $handler,
     ): static {
