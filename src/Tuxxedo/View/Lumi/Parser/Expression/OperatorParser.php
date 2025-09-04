@@ -69,6 +69,16 @@ class OperatorParser implements OperatorParserInterface
         ExpressionNodeInterface $left,
         BinaryOperator $operator,
     ): void {
+        if ($operator === BinaryOperator::CONCAT) {
+            $this->parseConcat(
+                operands: [
+                    $left,
+                ],
+            );
+
+            return;
+        }
+
         $this->parser->state->pushNode(
             new BinaryOpNode(
                 left: $left,
@@ -108,6 +118,14 @@ class OperatorParser implements OperatorParserInterface
     ): void {
         throw ParserException::fromNotImplemented(
             feature: 'parsing unary expressions',
+        );
+    }
+
+    public function parseConcat(
+        array $operands,
+    ): void {
+        throw ParserException::fromNotImplemented(
+            feature: 'Concatenation is not implemented',
         );
     }
 }

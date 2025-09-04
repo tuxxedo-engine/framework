@@ -44,4 +44,11 @@ interface OperatorParserInterface
         UnaryOperator $operator,
         TokenInterface $operand,
     ): void;
+
+    /**
+     * @param ExpressionNodeInterface[] $operands
+     */
+    public function parseConcat(
+        array $operands,
+    ): void;
 }
