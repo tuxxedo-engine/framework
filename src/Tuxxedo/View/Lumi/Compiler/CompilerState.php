@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Compiler;
 
 use Tuxxedo\View\Lumi\Node\NodeInterface;
-use Tuxxedo\View\Lumi\Runtime\Directive\DefaultDirectives;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 
 class CompilerState implements CompilerStateInterface
@@ -24,9 +23,7 @@ class CompilerState implements CompilerStateInterface
 
     public function __construct()
     {
-        $this->directives = new CompilerDirectives(
-            directives: DefaultDirectives::defaults(),
-        );
+        $this->directives = CompilerDirectives::createWithDefaults();
     }
 
     public function enter(

@@ -20,7 +20,6 @@ use Tuxxedo\View\Lumi\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Node\NodeNativeType;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
-use Tuxxedo\View\Lumi\Runtime\Directive\DefaultDirectives;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 
 abstract class AbstractOptimizer implements CompilerOptimizerInterface
@@ -29,9 +28,7 @@ abstract class AbstractOptimizer implements CompilerOptimizerInterface
 
     public function __construct()
     {
-        $this->directives = new CompilerDirectives(
-            directives: DefaultDirectives::defaults(),
-        );
+        $this->directives = CompilerDirectives::createWithDefaults();
     }
 
     abstract protected function optimizer(
@@ -67,6 +64,10 @@ abstract class AbstractOptimizer implements CompilerOptimizerInterface
     protected function optimizeNodes(
         array $nodes,
     ): array {
+        if (\sizeof($nodes) === 0) {
+            return $nodes;
+        }
+
         return $this->optimizer(
             stream: new NodeStream(
                 nodes: $nodes,
@@ -79,9 +80,7 @@ abstract class AbstractOptimizer implements CompilerOptimizerInterface
     ): NodeStreamInterface {
         $stream = static::optimizer($stream);
 
-        $this->directives = new CompilerDirectives(
-            directives: DefaultDirectives::defaults(),
-        );
+        $this->directives = CompilerDirectives::createWithDefaults();
 
         return $stream;
     }

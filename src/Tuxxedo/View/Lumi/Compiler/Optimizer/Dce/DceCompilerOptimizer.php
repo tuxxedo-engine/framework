@@ -85,7 +85,7 @@ class DceCompilerOptimizer extends AbstractOptimizer
         ConditionalNode $node,
     ): array {
         if (\sizeof($node->branches) > 0) {
-            $ifEvaluation = $this->evaluates($node->operand);
+            $ifEvaluation = $this->evaluate($node->operand);
 
             if ($ifEvaluation === DceEvaluateResult::CANNOT_DETERMINE) {
                 return [
@@ -100,7 +100,7 @@ class DceCompilerOptimizer extends AbstractOptimizer
             $conditional = DceConditional::fromNode($node);
 
             foreach ($node->branches as $index => $branch) {
-                $evaluation = $this->evaluates($branch->operand);
+                $evaluation = $this->evaluate($branch->operand);
 
                 if ($evaluation === DceEvaluateResult::ALWAYS_FALSE) {
                     $conditional->eliminateBranch($index);
@@ -114,11 +114,7 @@ class DceCompilerOptimizer extends AbstractOptimizer
             $newIf = $conditional->newIf();
 
             if ($newIf === null) {
-                if (\sizeof($node->else) > 0) {
-                    return parent::optimizeNodes($node->else);
-                }
-
-                return [];
+                return parent::optimizeNodes($node->else);
             }
 
             $newElse = $conditional->newElse;
@@ -127,9 +123,7 @@ class DceCompilerOptimizer extends AbstractOptimizer
             foreach ($conditional->eliminateBranches as $index => $branch) {
                 if ($index === $newIf) {
                     continue;
-                }
-
-                if ($index === $newElse) {
+                } elseif ($index === $newElse) {
                     break;
                 }
 
@@ -153,7 +147,7 @@ class DceCompilerOptimizer extends AbstractOptimizer
             ];
         }
 
-        $evaluates = $this->evaluates($node->operand);
+        $evaluates = $this->evaluate($node->operand);
 
         if ($evaluates === DceEvaluateResult::ALWAYS_FALSE) {
             return parent::optimizeNodes($node->else);
@@ -168,19 +162,24 @@ class DceCompilerOptimizer extends AbstractOptimizer
         ];
     }
 
-    private function evaluates(
+    private function evaluate(
         ExpressionNodeInterface $node,
     ): DceEvaluateResult {
-        if (!$node instanceof LiteralNode) {
-            return DceEvaluateResult::CANNOT_DETERMINE;
-        }
+        return match (true) {
+            $node instanceof LiteralNode => $this->evaluateLiteral($node),
+            default => DceEvaluateResult::CANNOT_DETERMINE,
+        };
+    }
 
+    private function evaluateLiteral(
+        LiteralNode $node,
+    ): DceEvaluateResult {
         return match ($node->type) {
-            NodeNativeType::NULL => DceEvaluateResult::ALWAYS_FALSE,
-            NodeNativeType::BOOL => DceEvaluateResult::fromBool($node->operand !== 'false'),
-            NodeNativeType::FLOAT => DceEvaluateResult::fromBool(\boolval(\floatval($node->operand))),
-            NodeNativeType::INT => DceEvaluateResult::fromBool(\boolval(\intval($node->operand))),
             NodeNativeType::STRING => DceEvaluateResult::fromBool(\boolval($node->operand)),
+            NodeNativeType::INT => DceEvaluateResult::fromBool(\boolval(\intval($node->operand))),
+            NodeNativeType::FLOAT => DceEvaluateResult::fromBool(\boolval(\floatval($node->operand))),
+            NodeNativeType::BOOL => DceEvaluateResult::fromBool($node->operand === 'true'),
+            NodeNativeType::NULL => DceEvaluateResult::ALWAYS_FALSE,
         };
     }
 }

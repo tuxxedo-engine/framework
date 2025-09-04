@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Compiler;
 
+use Tuxxedo\View\Lumi\Runtime\Directive\DefaultDirectives;
 use Tuxxedo\View\Lumi\Runtime\Directive\Directives;
 
 class CompilerDirectives extends Directives implements CompilerDirectivesInterface
@@ -22,5 +23,12 @@ class CompilerDirectives extends Directives implements CompilerDirectivesInterfa
         string|int|float|bool|null $value,
     ): void {
         $this->directives[$directive] = $value;
+    }
+
+    public static function createWithDefaults(): self
+    {
+        return new self(
+            directives: DefaultDirectives::defaults(),
+        );
     }
 }
