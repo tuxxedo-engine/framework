@@ -24,7 +24,7 @@ use Tuxxedo\Discovery\DiscoveryChannelInterface;
 use Tuxxedo\Discovery\DiscoveryType;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
-use Tuxxedo\Http\Request\Middleware\MiddlewarePipeline;
+use Tuxxedo\Http\Request\Middleware\MiddlewareNode;
 use Tuxxedo\Http\Request\Request;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponsableInterface;
@@ -248,8 +248,7 @@ class Kernel
             }
 
             $this->emitter->emit(
-                response: (new MiddlewarePipeline(
-                    container: $this->container,
+                response: $this->pipeline(
                     resolver: static function (ContainerInterface $container) use ($dispatchableRoute, $request): ResponseInterface {
                         $callback = [
                             $container->resolve($dispatchableRoute->route->controller),
@@ -291,16 +290,54 @@ class Kernel
 
                         return $response;
                     },
-                    middleware: \array_reverse(
+                    middlewares: \array_reverse(
                         \array_merge(
                             $this->middleware,
                             $dispatchableRoute->route->middleware,
                         ),
                     ),
-                ))->run($request),
+                    request: $request,
+                ),
             );
         } catch (\Throwable $e) {
             $this->handleException($request, $e);
         }
+    }
+
+    /**
+     * @param (\Closure(ContainerInterface): ResponseInterface) $resolver
+     * @param array<(\Closure(): MiddlewareInterface)> $middlewares
+     */
+    private function pipeline(
+        \Closure $resolver,
+        array $middlewares,
+        RequestInterface $request,
+    ): ResponseInterface {
+        $next = new class ($resolver, $this->container) implements MiddlewareInterface {
+            /**
+             * @param (\Closure(ContainerInterface): ResponseInterface) $resolver
+             */
+            public function __construct(
+                private \Closure $resolver,
+                private ContainerInterface $container,
+            ) {
+            }
+
+            public function handle(
+                RequestInterface $request,
+                MiddlewareInterface $next,
+            ): ResponseInterface {
+                return ($this->resolver)($this->container);
+            }
+        };
+
+        foreach ($middlewares as $middleware) {
+            $next = new MiddlewareNode(
+                current: $middleware,
+                next: $next,
+            );
+        }
+
+        return $next->handle($request, $next);
     }
 }

@@ -69,7 +69,6 @@ class TextCompilerProvider implements CompilerProviderInterface
             compiler: $compiler,
         );
 
-        // @todo This should maybe be moved to somewhere else, specifically the call node check
         if (
             $compiler->state->directives->asBool('lumi.autoescape') &&
             !(
