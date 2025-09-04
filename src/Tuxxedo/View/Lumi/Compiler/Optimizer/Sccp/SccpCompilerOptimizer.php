@@ -150,7 +150,15 @@ class SccpCompilerOptimizer extends AbstractOptimizer
             (
                 $node->operator === BinaryOperator::ADD ||
                 $node->operator === BinaryOperator::SUBTRACT ||
-                $node->operator === BinaryOperator::MULTIPLY
+                $node->operator === BinaryOperator::MULTIPLY ||
+                $node->operator === BinaryOperator::STRICT_EQUAL ||
+                $node->operator === BinaryOperator::STRICT_NOT_EQUAL ||
+                $node->operator === BinaryOperator::GREATER ||
+                $node->operator === BinaryOperator::LESS ||
+                $node->operator === BinaryOperator::GREATER_EQUAL ||
+                $node->operator === BinaryOperator::LESS_EQUAL ||
+                $node->operator === BinaryOperator::AND ||
+                $node->operator === BinaryOperator::OR
             )
         ) {
             $left = $node->left->type === NodeNativeType::FLOAT
@@ -165,6 +173,14 @@ class SccpCompilerOptimizer extends AbstractOptimizer
                 BinaryOperator::ADD => $left + $right,
                 BinaryOperator::SUBTRACT => $left - $right,
                 BinaryOperator::MULTIPLY => $left * $right,
+                BinaryOperator::STRICT_EQUAL => $left === $right,
+                BinaryOperator::STRICT_NOT_EQUAL => $left !== $right,
+                BinaryOperator::GREATER => $left > $right,
+                BinaryOperator::LESS => $left < $right,
+                BinaryOperator::GREATER_EQUAL => $left >= $right,
+                BinaryOperator::LESS_EQUAL => $left <= $right,
+                BinaryOperator::AND => \boolval($left) && \boolval($right),
+                BinaryOperator::OR => \boolval($left) || \boolval($right),
             };
 
             return [
@@ -172,12 +188,14 @@ class SccpCompilerOptimizer extends AbstractOptimizer
                     operand: \strval($value),
                     type: \is_float($value)
                         ? NodeNativeType::FLOAT
-                        : NodeNativeType::INT,
+                        : (
+                            \is_int($value)
+                                ? NodeNativeType::INT
+                                : NodeNativeType::BOOL
+                        ),
                 ),
             ];
         }
-
-        // @todo Support logical operators
 
         return [
             $node,
