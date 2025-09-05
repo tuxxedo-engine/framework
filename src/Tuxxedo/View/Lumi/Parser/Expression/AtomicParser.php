@@ -43,7 +43,7 @@ class AtomicParser implements AtomicParserInterface
 
         return new LiteralNode(
             operand: $literal->op1,
-            type: NativeType::fromTokenNativeType($literal->op2),
+            type: NativeType::fromString($literal->op2),
         );
     }
 

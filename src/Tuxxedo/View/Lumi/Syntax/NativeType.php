@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Syntax;
 
 use Tuxxedo\View\Lumi\Parser\ParserException;
-use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTypeNames;
 
 enum NativeType
 {
@@ -27,21 +26,17 @@ enum NativeType
     /**
      * @throws ParserException
      */
-    public static function fromTokenNativeType(
-        string $tokenNativeType,
+    public static function fromString(
+        string $name,
     ): self {
-        return match ($tokenNativeType) {
-            BuiltinTypeNames::STRING->name => self::STRING,
-            BuiltinTypeNames::INT->name => self::INT,
-            BuiltinTypeNames::FLOAT->name => self::FLOAT,
-            BuiltinTypeNames::BOOL->name => self::BOOL,
-            BuiltinTypeNames::NULL->name => self::NULL,
-            default => throw ParserException::fromUnexpectedTokenNativeType(
-                tokenNativeType: $tokenNativeType,
-                expectedTokenNativeTypes: \array_map(
-                    static fn (BuiltinTypeNames $type): string => $type->name,
-                    BuiltinTypeNames::cases(),
-                ),
+        return match ($name) {
+            'STRING' => self::STRING,
+            'INT' => self::INT,
+            'FLOAT' => self::FLOAT,
+            'BOOL' => self::BOOL,
+            'NULL' => self::NULL,
+            default => throw ParserException::fromUnexpectedToken(
+                tokenName: $name,
             ),
         };
     }

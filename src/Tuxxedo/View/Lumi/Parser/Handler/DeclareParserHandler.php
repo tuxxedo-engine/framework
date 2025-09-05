@@ -57,7 +57,7 @@ class DeclareParserHandler implements ParserHandlerInterface
                 ),
                 value: new LiteralNode(
                     operand: $value->op1,
-                    type: NativeType::fromTokenNativeType($value->op2),
+                    type: NativeType::fromString($value->op2),
                 ),
             ),
         ];

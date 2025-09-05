@@ -60,7 +60,7 @@ class OperatorParser implements OperatorParserInterface
 
             return new LiteralNode(
                 operand: $next->op1,
-                type: NativeType::fromTokenNativeType($next->op2),
+                type: NativeType::fromString($next->op2),
             );
         }
     }

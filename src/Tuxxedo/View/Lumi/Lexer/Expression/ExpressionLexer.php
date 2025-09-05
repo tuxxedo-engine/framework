@@ -16,11 +16,11 @@ namespace Tuxxedo\View\Lumi\Lexer\Expression;
 use Tuxxedo\View\Lumi\Lexer\ByteStream;
 use Tuxxedo\View\Lumi\Lexer\ByteStreamInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
+use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentOperator;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinaryOperator;
 use Tuxxedo\View\Lumi\Syntax\Operator\CharacterSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\UnaryOperator;
-use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTypeNames;
 use Tuxxedo\View\Lumi\Syntax\Token\CharacterToken;
 use Tuxxedo\View\Lumi\Syntax\Token\IdentifierToken;
 use Tuxxedo\View\Lumi\Syntax\Token\LiteralToken;
@@ -89,7 +89,7 @@ class ExpressionLexer implements ExpressionLexerInterface
                         $tokens[] = new LiteralToken(
                             line: $line,
                             op1: \mb_substr($buffer, 1, -1),
-                            op2: BuiltinTypeNames::STRING->name,
+                            op2: NativeType::STRING->name,
                         );
 
                         $buffer = '';
@@ -149,13 +149,13 @@ class ExpressionLexer implements ExpressionLexerInterface
                     $tokens[] = new LiteralToken(
                         line: $line,
                         op1: $buffer,
-                        op2: BuiltinTypeNames::INT->name,
+                        op2: NativeType::INT->name,
                     );
                 } elseif ($this->isValidFloat($buffer)) {
                     $tokens[] = new LiteralToken(
                         line: $line,
                         op1: $buffer,
-                        op2: BuiltinTypeNames::FLOAT->name,
+                        op2: NativeType::FLOAT->name,
                     );
                 } else {
                     throw LexerException::fromInvalidNumber(
@@ -253,7 +253,7 @@ class ExpressionLexer implements ExpressionLexerInterface
             return new LiteralToken(
                 line: $line,
                 op1: $value,
-                op2: BuiltinTypeNames::FLOAT->name,
+                op2: NativeType::FLOAT->name,
             );
         }
 
@@ -261,7 +261,7 @@ class ExpressionLexer implements ExpressionLexerInterface
             return new LiteralToken(
                 line: $line,
                 op1: $value,
-                op2: BuiltinTypeNames::INT->name,
+                op2: NativeType::INT->name,
             );
         }
 
@@ -269,7 +269,7 @@ class ExpressionLexer implements ExpressionLexerInterface
             return new LiteralToken(
                 line: $line,
                 op1: $value,
-                op2: BuiltinTypeNames::BOOL->name,
+                op2: NativeType::BOOL->name,
             );
         }
 
@@ -277,7 +277,7 @@ class ExpressionLexer implements ExpressionLexerInterface
             return new LiteralToken(
                 line: $line,
                 op1: $value,
-                op2: BuiltinTypeNames::NULL->name,
+                op2: NativeType::NULL->name,
             );
         }
 
