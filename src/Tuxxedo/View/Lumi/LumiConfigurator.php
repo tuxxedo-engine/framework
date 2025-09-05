@@ -525,6 +525,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
                 lexer: $this->lexer,
                 parser: $this->parser,
                 compiler: $this->compiler,
+                optimizers: $this->optimizers,
             ),
             loader: $this->loader ?? new Loader(
                 directory: $this->viewDirectory,
