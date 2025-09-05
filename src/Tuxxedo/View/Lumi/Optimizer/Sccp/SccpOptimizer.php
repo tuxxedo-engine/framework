@@ -22,12 +22,12 @@ use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
+use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinaryOperator;
 
-// @todo Make use of Variable value inference for SCCP
 class SccpOptimizer extends AbstractOptimizer
 {
     protected function optimizer(
@@ -140,8 +140,14 @@ class SccpOptimizer extends AbstractOptimizer
         BinaryOpNode $node,
     ): array {
         if (
-            $node->left instanceof LiteralNode &&
-            $node->right instanceof LiteralNode &&
+            (
+                $node->left instanceof LiteralNode ||
+                $node->left instanceof IdentifierNode
+            ) &&
+            (
+                $node->right instanceof LiteralNode ||
+                $node->right instanceof IdentifierNode
+            ) &&
             (
                 $node->operator === BinaryOperator::ADD ||
                 $node->operator === BinaryOperator::SUBTRACT ||
@@ -156,8 +162,36 @@ class SccpOptimizer extends AbstractOptimizer
                 $node->operator === BinaryOperator::OR
             )
         ) {
+            if ($node->left instanceof IdentifierNode) {
+                $value = $this->scope->get($node->left->name)->value;
+
+                if (!$value instanceof LiteralNode) {
+                    return [
+                        $node,
+                    ];
+                }
+
+                $leftNode = $value;
+            } else {
+                $leftNode = $node->left;
+            }
+
+            if ($node->right instanceof IdentifierNode) {
+                $value = $this->scope->get($node->right->name)->value;
+
+                if (!$value instanceof LiteralNode) {
+                    return [
+                        $node,
+                    ];
+                }
+
+                $rightNode = $value;
+            } else {
+                $rightNode = $node->right;
+            }
+
             if (
-                $node->left->type !== $node->right->type &&
+                $leftNode->type !== $rightNode->type &&
                 $node->operator === BinaryOperator::STRICT_EQUAL_EXPLICIT
             ) {
                 return [
@@ -168,8 +202,8 @@ class SccpOptimizer extends AbstractOptimizer
                 ];
             }
 
-            $left = $node->left->type->cast($node->left->operand);
-            $right = $node->right->type->cast($node->right->operand);
+            $left = $leftNode->type->cast($leftNode->operand);
+            $right = $rightNode->type->cast($rightNode->operand);
 
             if (
                 (

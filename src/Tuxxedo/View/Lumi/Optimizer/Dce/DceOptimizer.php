@@ -23,6 +23,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ConditionalBranchNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ConditionalNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 
@@ -171,6 +172,7 @@ class DceOptimizer extends AbstractOptimizer
     ): DceEvaluateResult {
         return match (true) {
             $node instanceof LiteralNode => $this->evaluateLiteral($node),
+            $node instanceof IdentifierNode => $this->evaluateIdentifier($node),
             default => DceEvaluateResult::CANNOT_DETERMINE,
         };
     }
@@ -182,5 +184,17 @@ class DceOptimizer extends AbstractOptimizer
             NativeType::NULL => DceEvaluateResult::ALWAYS_FALSE,
             default => DceEvaluateResult::fromBool(\boolval($node->type->cast($node->operand))),
         };
+    }
+
+    private function evaluateIdentifier(
+        IdentifierNode $node,
+    ): DceEvaluateResult {
+        $value = $this->scope->get($node->name)->value;
+
+        if ($value instanceof LiteralNode) {
+            return $this->evaluateLiteral($value);
+        }
+
+        return DceEvaluateResult::CANNOT_DETERMINE;
     }
 }

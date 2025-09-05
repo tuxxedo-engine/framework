@@ -110,7 +110,7 @@ readonly class Compiler implements CompilerInterface
     public function compile(
         NodeStreamInterface $stream,
     ): string {
-        $source = '<?php declare(strict_types=1); ?>';
+        $source = "<?php declare(strict_types=1); ?>\n";
 
         $this->state->enter(BuiltinNodeKinds::ROOT->name);
 

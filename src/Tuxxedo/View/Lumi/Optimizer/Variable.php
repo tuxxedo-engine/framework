@@ -16,6 +16,7 @@ namespace Tuxxedo\View\Lumi\Optimizer;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentOperator;
 
@@ -60,21 +61,36 @@ class Variable implements VariableInterface
         ExpressionNodeInterface $value,
         AssignmentOperator $operator = AssignmentOperator::ASSIGN,
     ): void {
-        $state = VariableState::VARYING;
+        $this->value = $value;
 
-        if (
-            $value instanceof LiteralNode ||
-            (
-                $value instanceof BinaryOpNode &&
-                $value->left instanceof LiteralNode &&
-                $value->right instanceof LiteralNode &&
-                $operator !== AssignmentOperator::NULL_ASSIGN
-            )
-        ) {
-            $state = VariableState::CONST;
+        if ($value instanceof LiteralNode) {
+            $this->state = VariableState::CONST;
+
+            return;
         }
 
-        $this->value = $value;
-        $this->state = $state;
+        if ($value instanceof BinaryOpNode) {
+            if (
+                $value->left instanceof LiteralNode ||
+                (
+                    $value->left instanceof IdentifierNode &&
+                    $scope->get($value->left->name)->state === VariableState::CONST
+                )
+            ) {
+                if (
+                    $value->right instanceof LiteralNode ||
+                    (
+                        $value->right instanceof IdentifierNode &&
+                        $scope->get($value->right->name)->state === VariableState::CONST
+                    )
+                ) {
+                    $this->state = VariableState::CONST;
+
+                    return;
+                }
+            }
+        }
+
+        $this->state = VariableState::VARYING;
     }
 }
