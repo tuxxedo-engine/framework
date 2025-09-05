@@ -22,21 +22,16 @@ use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
-use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentOperator;
 
 abstract class AbstractOptimizer implements OptimizerInterface
 {
     protected private(set) CompilerDirectivesInterface&DirectivesInterface $directives;
-
-    /**
-     * @var array<string, VariableInterface>
-     */
-    // @todo This may need to be passed into each variables mutation scope
-    protected private(set) array $variables = [];
+    protected readonly ScopeInterface $scope;
 
     public function __construct()
     {
         $this->directives = CompilerDirectives::createWithDefaults();
+        $this->scope = new Scope();
     }
 
     abstract protected function optimizer(
@@ -49,24 +44,11 @@ abstract class AbstractOptimizer implements OptimizerInterface
     protected function assignment(
         AssignmentNode $node,
     ): array {
-        if (
-            $node->operator !== AssignmentOperator::ASSIGN &&
-            \array_key_exists($node->name->name, $this->variables)
-        ) {
-            $this->variables[$node->name->name]->mutate($node->value, $node->operator);
-        } else {
-            $this->variables[$node->name->name] = Variable::fromNode($node);
-        }
+        $this->scope->assign($node);
 
         return [
             $node,
         ];
-    }
-
-    protected function variable(
-        string $name,
-    ): VariableInterface {
-        return $this->variables[$name] ?? Variable::fromUndefined($name);
     }
 
     /**

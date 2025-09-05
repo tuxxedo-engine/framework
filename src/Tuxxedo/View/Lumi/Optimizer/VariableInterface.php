@@ -31,6 +31,7 @@ interface VariableInterface
     }
 
     public function mutate(
+        ScopeInterface $scope,
         ExpressionNodeInterface $value,
         AssignmentOperator $operator = AssignmentOperator::ASSIGN,
     ): void;

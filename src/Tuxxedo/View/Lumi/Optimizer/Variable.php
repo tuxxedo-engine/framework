@@ -27,20 +27,23 @@ class Variable implements VariableInterface
     final private function __construct(
         public readonly string $name,
         ?ExpressionNodeInterface $value = null,
+        ?ScopeInterface $scope = null,
     ) {
-        if ($value !== null) {
-            $this->mutate($value);
+        if ($scope !== null && $value !== null) {
+            $this->mutate($scope, $value);
         } else {
             $this->state = VariableState::UNDEF;
         }
     }
 
-    public static function fromNode(
+    public static function fromNewAssign(
+        ScopeInterface $scope,
         AssignmentNode $node,
     ): static {
         return new static(
             name: $node->name->name,
             value: $node->value,
+            scope: $scope,
         );
     }
 
@@ -53,6 +56,7 @@ class Variable implements VariableInterface
     }
 
     public function mutate(
+        ScopeInterface $scope,
         ExpressionNodeInterface $value,
         AssignmentOperator $operator = AssignmentOperator::ASSIGN,
     ): void {
