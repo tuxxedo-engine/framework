@@ -11,12 +11,12 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Syntax\Node;
+namespace Tuxxedo\View\Lumi\Syntax;
 
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTypeNames;
 
-enum NodeNativeType
+enum NativeType
 {
     case STRING;
     case INT;
@@ -55,6 +55,17 @@ enum NodeNativeType
             \is_float($value) => self::FLOAT,
             \is_bool($value) => self::BOOL,
             \is_null($value) => self::NULL,
+        };
+    }
+
+    public function cast(string $value): string|int|float|bool|null
+    {
+        return match ($this) {
+            self::STRING => $value,
+            self::INT => \intval($value),
+            self::FLOAT => \floatval($value),
+            self::BOOL => $value === 'true',
+            self::NULL => null,
         };
     }
 }

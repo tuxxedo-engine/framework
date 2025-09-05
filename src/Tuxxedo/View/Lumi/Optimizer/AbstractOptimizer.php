@@ -18,9 +18,9 @@ use Tuxxedo\View\Lumi\Compiler\CompilerDirectivesInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
+use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
-use Tuxxedo\View\Lumi\Syntax\Node\NodeNativeType;
 
 abstract class AbstractOptimizer implements OptimizerInterface
 {
@@ -44,11 +44,11 @@ abstract class AbstractOptimizer implements OptimizerInterface
         $this->directives->set(
             $node->directive->operand,
             match ($node->value->type) {
-                NodeNativeType::STRING => $node->value->operand,
-                NodeNativeType::INT => \intval($node->value->operand),
-                NodeNativeType::FLOAT => \floatval($node->value->operand),
-                NodeNativeType::BOOL => $node->value->operand === 'true',
-                NodeNativeType::NULL => null,
+                NativeType::STRING => $node->value->operand,
+                NativeType::INT => \intval($node->value->operand),
+                NativeType::FLOAT => \floatval($node->value->operand),
+                NativeType::BOOL => $node->value->operand === 'true',
+                NativeType::NULL => null,
             },
         );
 

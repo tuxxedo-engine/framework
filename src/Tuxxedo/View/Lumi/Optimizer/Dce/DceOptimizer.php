@@ -16,6 +16,7 @@ namespace Tuxxedo\View\Lumi\Optimizer\Dce;
 use Tuxxedo\View\Lumi\Optimizer\AbstractOptimizer;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
+use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ConditionalBranchNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ConditionalNode;
@@ -23,7 +24,6 @@ use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
-use Tuxxedo\View\Lumi\Syntax\Node\NodeNativeType;
 
 class DceOptimizer extends AbstractOptimizer
 {
@@ -175,8 +175,8 @@ class DceOptimizer extends AbstractOptimizer
         LiteralNode $node,
     ): DceEvaluateResult {
         return match ($node->type) {
-            NodeNativeType::NULL => DceEvaluateResult::ALWAYS_FALSE,
-            default => DceEvaluateResult::fromBool(\boolval($node->cast())),
+            NativeType::NULL => DceEvaluateResult::ALWAYS_FALSE,
+            default => DceEvaluateResult::fromBool(\boolval($node->type->cast($node->operand))),
         };
     }
 }

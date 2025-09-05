@@ -13,25 +13,16 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Node;
 
+use Tuxxedo\View\Lumi\Syntax\NativeType;
+
 readonly class LiteralNode implements ExpressionNodeInterface
 {
     public string $kind;
 
     public function __construct(
         public string $operand,
-        public NodeNativeType $type,
+        public NativeType $type,
     ) {
         $this->kind = BuiltinNodeKinds::EXPRESSION->name;
-    }
-
-    public function cast(): string|int|float|bool|null
-    {
-        return match ($this->type) {
-            NodeNativeType::STRING => $this->operand,
-            NodeNativeType::INT => \intval($this->operand),
-            NodeNativeType::FLOAT => \floatval($this->operand),
-            NodeNativeType::BOOL => $this->operand === 'true',
-            NodeNativeType::NULL => null,
-        };
     }
 }

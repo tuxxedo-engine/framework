@@ -16,13 +16,13 @@ namespace Tuxxedo\View\Lumi\Optimizer\Sccp;
 use Tuxxedo\View\Lumi\Optimizer\AbstractOptimizer;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
+use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
-use Tuxxedo\View\Lumi\Syntax\Node\NodeNativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinaryOperator;
 
@@ -72,7 +72,7 @@ class SccpOptimizer extends AbstractOptimizer
         EchoNode $node,
     ): array {
         if ($node->operand instanceof LiteralNode) {
-            if ($node->operand->type === NodeNativeType::STRING) {
+            if ($node->operand->type === NativeType::STRING) {
                 if ($node->operand->operand === '') {
                     return [];
                 } elseif (!$this->directives->asBool('lumi.autoescape')) {
@@ -89,10 +89,10 @@ class SccpOptimizer extends AbstractOptimizer
             }
 
             $value = match ($node->operand->type) {
-                NodeNativeType::NULL => null,
-                NodeNativeType::BOOL => \boolval($node->operand->operand),
-                NodeNativeType::INT => \intval($node->operand->operand),
-                NodeNativeType::FLOAT => \floatval($node->operand->operand),
+                NativeType::NULL => null,
+                NativeType::BOOL => \boolval($node->operand->operand),
+                NativeType::INT => \intval($node->operand->operand),
+                NativeType::FLOAT => \floatval($node->operand->operand),
             };
 
             if ($value !== null) {
@@ -160,13 +160,13 @@ class SccpOptimizer extends AbstractOptimizer
                 return [
                     new LiteralNode(
                         operand: 'false',
-                        type: NodeNativeType::BOOL,
+                        type: NativeType::BOOL,
                     ),
                 ];
             }
 
-            $left = $node->left->cast();
-            $right = $node->right->cast();
+            $left = $node->left->type->cast($node->left->operand);
+            $right = $node->right->type->cast($node->right->operand);
 
             if (
                 (
@@ -214,7 +214,7 @@ class SccpOptimizer extends AbstractOptimizer
             return [
                 new LiteralNode(
                     operand: \strval($value),
-                    type: NodeNativeType::fromValueNativeType($value),
+                    type: NativeType::fromValueNativeType($value),
                 ),
             ];
         }

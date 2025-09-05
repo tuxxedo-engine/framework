@@ -14,11 +14,11 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Parser\Expression;
 
 use Tuxxedo\View\Lumi\Parser\ParserException;
+use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
-use Tuxxedo\View\Lumi\Syntax\Node\NodeNativeType;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinaryOperator;
 use Tuxxedo\View\Lumi\Syntax\Operator\UnaryOperator;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
@@ -60,7 +60,7 @@ class OperatorParser implements OperatorParserInterface
 
             return new LiteralNode(
                 operand: $next->op1,
-                type: NodeNativeType::fromTokenNativeType($next->op2),
+                type: NativeType::fromTokenNativeType($next->op2),
             );
         }
     }
