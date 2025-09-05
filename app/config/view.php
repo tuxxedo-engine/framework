@@ -47,4 +47,13 @@ return [
      * @type bool
      */
     'alwaysCompile' => true,
+
+    /**
+     * view.disableErrorReporting
+     *
+     * Whether to disable PHP's error reporting while rendering Tuxxedo Engine Lumi views
+     *
+     * @type bool
+     */
+    'disableErrorReporting' => true,
 ];

@@ -38,6 +38,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public private(set) string $viewDirectory = '';
     public private(set) string $viewExtension = '';
     public private(set) bool $viewAlwaysCompile = false;
+    public private(set) bool $viewDisableErrorReporting = true;
     public private(set) string $viewCacheDirectory = '';
 
     public private(set) ?LexerInterface $lexer = null;
@@ -107,6 +108,14 @@ class LumiConfigurator implements LumiConfiguratorInterface
             }
         }
 
+        if ($config->has($namespace . '.disableErrorReporting')) {
+            if ($config->getBool($namespace . '.disableErrorReporting')) {
+                $configurator->disableErrorReporting();
+            } else {
+                $configurator->enableErrorReporting();
+            }
+        }
+
         return $configurator;
     }
 
@@ -164,6 +173,20 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public function disableAlwaysCompile(): self
     {
         $this->viewAlwaysCompile = false;
+
+        return $this;
+    }
+
+    public function enableErrorReporting(): self
+    {
+        $this->viewDisableErrorReporting = false;
+
+        return $this;
+    }
+
+    public function disableErrorReporting(): self
+    {
+        $this->viewDisableErrorReporting = true;
 
         return $this;
     }
@@ -550,6 +573,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
                 ),
             ),
             alwaysCompile: $this->viewAlwaysCompile,
+            disableErrorReporting: $this->viewDisableErrorReporting,
         );
     }
 }

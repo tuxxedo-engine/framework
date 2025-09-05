@@ -23,13 +23,56 @@ use Tuxxedo\View\ViewRenderInterface;
 
 readonly class LumiViewRender implements LazyInitializableInterface, ViewRenderInterface
 {
+    /**
+     * @var \Closure(string, mixed[]): string
+     */
+    private \Closure $renderFrame;
+
     public function __construct(
         public LumiEngine $engine,
         public LoaderInterface $loader,
         public RuntimeInterface $runtime,
-        public bool $alwaysCompile,
+        public bool $alwaysCompile = false,
+        bool $disableErrorReporting = true,
     ) {
         $this->runtime->renderer($this);
+
+        if ($disableErrorReporting) {
+            $this->renderFrame = function (string $__lumiViewFileName, array $__lumiVariables): string {
+                \extract($__lumiVariables, \EXTR_SKIP);
+                \ob_start();
+
+                unset($__lumiVariables);
+
+                $__lumiErrorReporting = \error_reporting(0);
+                require $__lumiViewFileName;
+                \error_reporting($__lumiErrorReporting);
+
+                $buffer = \ob_get_clean();
+
+                if ($buffer === false) {
+                    throw ViewException::fromUnableToCaptureBuffer();
+                }
+
+                return $buffer;
+            };
+        } else {
+            $this->renderFrame = function (string $__lumiViewFileName, array $__lumiVariables): string {
+                \extract($__lumiVariables, \EXTR_SKIP);
+                \ob_start();
+
+                unset($__lumiVariables);
+                require $__lumiViewFileName;
+
+                $buffer = \ob_get_clean();
+
+                if ($buffer === false) {
+                    throw ViewException::fromUnableToCaptureBuffer();
+                }
+
+                return $buffer;
+            };
+        }
     }
 
     public static function createInstance(
@@ -65,28 +108,8 @@ readonly class LumiViewRender implements LazyInitializableInterface, ViewRenderI
             directives: $directives,
         );
 
-        $renderer = function (string $__lumiViewFileName, array $__lumiVariables): string {
-            \extract($__lumiVariables, \EXTR_SKIP);
-            \ob_start();
-
-            unset($__lumiVariables);
-
-            // @todo Improve this to likely promote notices and warnings
-            $__lumiErrorReporting = \error_reporting(0);
-            require $__lumiViewFileName;
-            \error_reporting($__lumiErrorReporting);
-
-            $buffer = \ob_get_clean();
-
-            if ($buffer === false) {
-                throw ViewException::fromUnableToCaptureBuffer();
-            }
-
-            return $buffer;
-        };
-
         try {
-            return $renderer->bindTo($this->runtime)(
+            return $this->renderFrame->bindTo($this->runtime)(
                 $this->getCompiledViewFileName($view->name),
                 $view->scope,
             );

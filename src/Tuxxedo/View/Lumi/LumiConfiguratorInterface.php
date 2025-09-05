@@ -38,6 +38,10 @@ interface LumiConfiguratorInterface
         get;
     }
 
+    public bool $viewDisableErrorReporting {
+        get;
+    }
+
     public string $viewCacheDirectory {
         get;
     }
@@ -149,6 +153,9 @@ interface LumiConfiguratorInterface
 
     public function enableAlwaysCompile(): self;
     public function disableAlwaysCompile(): self;
+
+    public function enableErrorReporting(): self;
+    public function disableErrorReporting(): self;
 
     public function cacheDirectory(
         string $directory,
