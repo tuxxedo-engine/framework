@@ -24,9 +24,9 @@ use Tuxxedo\View\Lumi\Compiler\Provider\ExpressionCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\LoopCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\NodeCompilerHandler;
 use Tuxxedo\View\Lumi\Compiler\Provider\TextCompilerProvider;
-use Tuxxedo\View\Lumi\Node\BuiltinNodeKinds;
-use Tuxxedo\View\Lumi\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\BuiltinNodeKinds;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 
 readonly class Compiler implements CompilerInterface
 {

@@ -11,8 +11,8 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Node;
+namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-interface ExpressionNodeInterface extends NodeInterface
+interface IterableExpressionNodeInterface extends ExpressionNodeInterface
 {
 }

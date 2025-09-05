@@ -14,16 +14,16 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Compiler\Optimizer\Dce;
 
 use Tuxxedo\View\Lumi\Compiler\Optimizer\AbstractOptimizer;
-use Tuxxedo\View\Lumi\Node\CommentNode;
-use Tuxxedo\View\Lumi\Node\ConditionalBranchNode;
-use Tuxxedo\View\Lumi\Node\ConditionalNode;
-use Tuxxedo\View\Lumi\Node\DirectiveNodeInterface;
-use Tuxxedo\View\Lumi\Node\ExpressionNodeInterface;
-use Tuxxedo\View\Lumi\Node\LiteralNode;
-use Tuxxedo\View\Lumi\Node\NodeInterface;
-use Tuxxedo\View\Lumi\Node\NodeNativeType;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ConditionalBranchNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ConditionalNode;
+use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeNativeType;
 
 class DceCompilerOptimizer extends AbstractOptimizer
 {

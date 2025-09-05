@@ -11,19 +11,20 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Node;
+namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-readonly class DoWhileNode implements NodeInterface
+// @todo May need to implement IterableExpressionNodeInterface
+
+readonly class ArrayNode implements ExpressionNodeInterface
 {
     public string $kind;
 
     /**
-     * @param NodeInterface[] $body
+     * @param ArrayItemNode[] $items
      */
     public function __construct(
-        public ExpressionNodeInterface $operand,
-        public array $body = [],
+        public array $items,
     ) {
-        $this->kind = BuiltinNodeKinds::ROOT->name;
+        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
     }
 }

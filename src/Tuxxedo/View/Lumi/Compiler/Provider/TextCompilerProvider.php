@@ -15,14 +15,14 @@ namespace Tuxxedo\View\Lumi\Compiler\Provider;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
-use Tuxxedo\View\Lumi\Node\BuiltinNodeKinds;
-use Tuxxedo\View\Lumi\Node\CommentNode;
-use Tuxxedo\View\Lumi\Node\DeclareNode;
-use Tuxxedo\View\Lumi\Node\EchoNode;
-use Tuxxedo\View\Lumi\Node\FunctionCallNode;
-use Tuxxedo\View\Lumi\Node\NodeNativeType;
-use Tuxxedo\View\Lumi\Node\TextNode;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
+use Tuxxedo\View\Lumi\Syntax\Node\BuiltinNodeKinds;
+use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
+use Tuxxedo\View\Lumi\Syntax\Node\DeclareNode;
+use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
+use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeNativeType;
+use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 
 class TextCompilerProvider implements CompilerProviderInterface
 {

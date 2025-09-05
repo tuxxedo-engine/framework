@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Compiler\Provider;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
-use Tuxxedo\View\Lumi\Node\ConditionalNode;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
+use Tuxxedo\View\Lumi\Syntax\Node\ConditionalNode;
 
 class ConditionalCompilerProvider implements CompilerProviderInterface
 {

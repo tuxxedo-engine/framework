@@ -11,17 +11,19 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Node;
+namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-use Tuxxedo\View\Lumi\Syntax\Operator\UnaryOperator;
-
-readonly class UnaryOpNode implements ExpressionNodeInterface
+readonly class MethodCallNode implements IterableExpressionNodeInterface
 {
     public string $kind;
 
+    /**
+     * @param ExpressionNodeInterface[] $arguments
+     */
     public function __construct(
-        public ExpressionNodeInterface $operand,
-        public UnaryOperator $operator,
+        public ExpressionNodeInterface $caller,
+        public string $name,
+        public array $arguments,
     ) {
         $this->kind = BuiltinNodeKinds::EXPRESSION->name;
     }

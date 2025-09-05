@@ -11,8 +11,11 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Node;
+namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-interface IterableExpressionNodeInterface extends ExpressionNodeInterface
+enum BuiltinNodeKinds
 {
+    case ROOT;
+    case DEPENDANT;
+    case EXPRESSION;
 }

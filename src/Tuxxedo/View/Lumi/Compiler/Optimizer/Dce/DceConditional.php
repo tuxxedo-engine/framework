@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Compiler\Optimizer\Dce;
 
-use Tuxxedo\View\Lumi\Node\ConditionalNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ConditionalNode;
 
 class DceConditional
 {

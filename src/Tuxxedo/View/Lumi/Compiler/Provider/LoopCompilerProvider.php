@@ -14,12 +14,12 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Compiler\Provider;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
-use Tuxxedo\View\Lumi\Node\BreakNode;
-use Tuxxedo\View\Lumi\Node\ContinueNode;
-use Tuxxedo\View\Lumi\Node\DoWhileNode;
-use Tuxxedo\View\Lumi\Node\ForNode;
-use Tuxxedo\View\Lumi\Node\WhileNode;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
+use Tuxxedo\View\Lumi\Syntax\Node\BreakNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ContinueNode;
+use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ForNode;
+use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
 
 class LoopCompilerProvider implements CompilerProviderInterface
 {

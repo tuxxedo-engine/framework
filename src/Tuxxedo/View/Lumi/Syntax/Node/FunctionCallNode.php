@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Node;
+namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-readonly class MethodCallNode implements IterableExpressionNodeInterface
+readonly class FunctionCallNode implements IterableExpressionNodeInterface
 {
     public string $kind;
 
@@ -21,7 +21,6 @@ readonly class MethodCallNode implements IterableExpressionNodeInterface
      * @param ExpressionNodeInterface[] $arguments
      */
     public function __construct(
-        public ExpressionNodeInterface $caller,
         public string $name,
         public array $arguments,
     ) {

@@ -15,15 +15,15 @@ namespace Tuxxedo\View\Lumi\Compiler\Provider;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
-use Tuxxedo\View\Lumi\Node\AssignmentNode;
-use Tuxxedo\View\Lumi\Node\BinaryOpNode;
-use Tuxxedo\View\Lumi\Node\FunctionCallNode;
-use Tuxxedo\View\Lumi\Node\GroupNode;
-use Tuxxedo\View\Lumi\Node\IdentifierNode;
-use Tuxxedo\View\Lumi\Node\LiteralNode;
-use Tuxxedo\View\Lumi\Node\MethodCallNode;
-use Tuxxedo\View\Lumi\Node\NodeNativeType;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
+use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
+use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
+use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
+use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
+use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
+use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
+use Tuxxedo\View\Lumi\Syntax\Node\MethodCallNode;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeNativeType;
 
 class ExpressionCompilerProvider implements CompilerProviderInterface
 {

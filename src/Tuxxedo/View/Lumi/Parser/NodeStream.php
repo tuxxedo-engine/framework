@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser;
 
-use Tuxxedo\View\Lumi\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 
 class NodeStream implements NodeStreamInterface
 {

@@ -11,11 +11,11 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Node;
+namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-enum BuiltinNodeKinds
+interface NodeInterface
 {
-    case ROOT;
-    case DEPENDANT;
-    case EXPRESSION;
+    public string $kind {
+        get;
+    }
 }

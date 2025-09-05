@@ -13,10 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Expression;
 
-use Tuxxedo\View\Lumi\Node\IdentifierNode;
-use Tuxxedo\View\Lumi\Node\LiteralNode;
-use Tuxxedo\View\Lumi\Node\NodeNativeType;
 use Tuxxedo\View\Lumi\Parser\ParserException;
+use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
+use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeNativeType;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinaryOperator;
 use Tuxxedo\View\Lumi\Syntax\Operator\CharacterSymbol;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;

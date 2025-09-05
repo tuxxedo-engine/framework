@@ -11,18 +11,15 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Node;
+namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-readonly class ConcatNode implements ExpressionNodeInterface
+readonly class CommentNode implements NodeInterface
 {
     public string $kind;
 
-    /**
-     * @param ExpressionNodeInterface[] $operands
-     */
     public function __construct(
-        public array $operands,
+        public string $text,
     ) {
-        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
+        $this->kind = BuiltinNodeKinds::ROOT->name;
     }
 }

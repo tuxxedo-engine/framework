@@ -11,15 +11,18 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Node;
+namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-readonly class EchoNode implements NodeInterface
+use Tuxxedo\View\Lumi\Syntax\Operator\UnaryOperator;
+
+readonly class UnaryOpNode implements ExpressionNodeInterface
 {
     public string $kind;
 
     public function __construct(
         public ExpressionNodeInterface $operand,
+        public UnaryOperator $operator,
     ) {
-        $this->kind = BuiltinNodeKinds::ROOT->name;
+        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
     }
 }

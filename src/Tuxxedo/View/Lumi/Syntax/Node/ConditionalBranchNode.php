@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Node;
+namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-readonly class WhileNode implements NodeInterface
+readonly class ConditionalBranchNode implements NodeInterface
 {
     public string $kind;
 
@@ -24,6 +24,6 @@ readonly class WhileNode implements NodeInterface
         public ExpressionNodeInterface $operand,
         public array $body = [],
     ) {
-        $this->kind = BuiltinNodeKinds::ROOT->name;
+        $this->kind = BuiltinNodeKinds::DEPENDANT->name;
     }
 }

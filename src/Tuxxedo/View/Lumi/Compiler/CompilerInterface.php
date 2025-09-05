@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Compiler;
 
 use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompilerInterface;
-use Tuxxedo\View\Lumi\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 
 interface CompilerInterface
 {

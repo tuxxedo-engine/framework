@@ -11,15 +11,15 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Node;
+namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-readonly class BreakNode implements NodeInterface
+readonly class GroupNode implements ExpressionNodeInterface
 {
     public string $kind;
 
     public function __construct(
-        public ?int $count = null,
+        public ExpressionNodeInterface $operand,
     ) {
-        $this->kind = BuiltinNodeKinds::ROOT->name;
+        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
     }
 }

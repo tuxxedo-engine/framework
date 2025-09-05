@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Compiler;
 
-use Tuxxedo\View\Lumi\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 
 class CompilerException extends \Exception
 {

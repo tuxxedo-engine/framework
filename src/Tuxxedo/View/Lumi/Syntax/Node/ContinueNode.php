@@ -11,19 +11,15 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Node;
+namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-readonly class FunctionCallNode implements IterableExpressionNodeInterface
+readonly class ContinueNode implements NodeInterface
 {
     public string $kind;
 
-    /**
-     * @param ExpressionNodeInterface[] $arguments
-     */
     public function __construct(
-        public string $name,
-        public array $arguments,
+        public ?int $count = null,
     ) {
-        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
+        $this->kind = BuiltinNodeKinds::ROOT->name;
     }
 }

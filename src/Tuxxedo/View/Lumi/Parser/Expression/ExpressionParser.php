@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Parser\Expression;
 
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
-use Tuxxedo\View\Lumi\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserStateInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinaryOperator;
 use Tuxxedo\View\Lumi\Syntax\Operator\CharacterSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\UnaryOperator;

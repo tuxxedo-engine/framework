@@ -11,14 +11,14 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Node;
+namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-readonly class GroupNode implements ExpressionNodeInterface
+readonly class IdentifierNode implements IterableExpressionNodeInterface
 {
     public string $kind;
 
     public function __construct(
-        public ExpressionNodeInterface $operand,
+        public string $name,
     ) {
         $this->kind = BuiltinNodeKinds::EXPRESSION->name;
     }

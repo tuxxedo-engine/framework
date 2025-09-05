@@ -14,12 +14,12 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Parser\Handler;
 
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
-use Tuxxedo\View\Lumi\Node\DeclareNode;
-use Tuxxedo\View\Lumi\Node\LiteralNode;
-use Tuxxedo\View\Lumi\Node\NodeInterface;
-use Tuxxedo\View\Lumi\Node\NodeNativeType;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\DeclareNode;
+use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeNativeType;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 
 class DeclareParserHandler implements ParserHandlerInterface

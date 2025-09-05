@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser;
 
-use Tuxxedo\View\Lumi\Node\ExpressionNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 
 interface ParserStateInterface
 {

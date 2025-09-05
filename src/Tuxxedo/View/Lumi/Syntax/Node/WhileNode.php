@@ -11,15 +11,18 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Node;
+namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-readonly class DeclareNode implements DirectiveNodeInterface, NodeInterface
+readonly class WhileNode implements NodeInterface
 {
     public string $kind;
 
+    /**
+     * @param NodeInterface[] $body
+     */
     public function __construct(
-        public LiteralNode $directive,
-        public LiteralNode $value,
+        public ExpressionNodeInterface $operand,
+        public array $body = [],
     ) {
         $this->kind = BuiltinNodeKinds::ROOT->name;
     }

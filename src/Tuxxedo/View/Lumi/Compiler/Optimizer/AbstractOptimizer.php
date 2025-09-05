@@ -15,12 +15,12 @@ namespace Tuxxedo\View\Lumi\Compiler\Optimizer;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerDirectives;
 use Tuxxedo\View\Lumi\Compiler\CompilerDirectivesInterface;
-use Tuxxedo\View\Lumi\Node\DirectiveNodeInterface;
-use Tuxxedo\View\Lumi\Node\NodeInterface;
-use Tuxxedo\View\Lumi\Node\NodeNativeType;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeNativeType;
 
 abstract class AbstractOptimizer implements CompilerOptimizerInterface
 {

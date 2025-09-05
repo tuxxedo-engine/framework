@@ -14,16 +14,16 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Compiler\Optimizer\Sccp;
 
 use Tuxxedo\View\Lumi\Compiler\Optimizer\AbstractOptimizer;
-use Tuxxedo\View\Lumi\Node\BinaryOpNode;
-use Tuxxedo\View\Lumi\Node\DirectiveNodeInterface;
-use Tuxxedo\View\Lumi\Node\EchoNode;
-use Tuxxedo\View\Lumi\Node\GroupNode;
-use Tuxxedo\View\Lumi\Node\LiteralNode;
-use Tuxxedo\View\Lumi\Node\NodeInterface;
-use Tuxxedo\View\Lumi\Node\NodeNativeType;
-use Tuxxedo\View\Lumi\Node\TextNode;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
+use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
+use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
+use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeNativeType;
+use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinaryOperator;
 
 class SccpCompilerOptimizer extends AbstractOptimizer

@@ -15,10 +15,10 @@ namespace Tuxxedo\View\Lumi\Parser\Handler;
 
 use Tuxxedo\View\Lumi\Lexer\TokenStream;
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
-use Tuxxedo\View\Lumi\Node\NodeInterface;
-use Tuxxedo\View\Lumi\Node\WhileNode;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 
 // @todo Fix so that this will not break do-while

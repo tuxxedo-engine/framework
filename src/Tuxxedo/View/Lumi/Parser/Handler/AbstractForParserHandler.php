@@ -15,12 +15,12 @@ namespace Tuxxedo\View\Lumi\Parser\Handler;
 
 use Tuxxedo\View\Lumi\Lexer\TokenStream;
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
-use Tuxxedo\View\Lumi\Node\ForNode;
-use Tuxxedo\View\Lumi\Node\IdentifierNode;
-use Tuxxedo\View\Lumi\Node\IterableExpressionNodeInterface;
-use Tuxxedo\View\Lumi\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\ForNode;
+use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
+use Tuxxedo\View\Lumi\Syntax\Node\IterableExpressionNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\IdentifierToken;
 

@@ -11,11 +11,8 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Node;
+namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-interface NodeInterface
+interface ExpressionNodeInterface extends NodeInterface
 {
-    public string $kind {
-        get;
-    }
 }

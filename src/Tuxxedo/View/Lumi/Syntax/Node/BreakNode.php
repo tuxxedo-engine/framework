@@ -11,18 +11,14 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Node;
+namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentOperator;
-
-readonly class AssignmentNode implements NodeInterface
+readonly class BreakNode implements NodeInterface
 {
     public string $kind;
 
     public function __construct(
-        public IdentifierNode $name,
-        public ExpressionNodeInterface $value,
-        public AssignmentOperator $operator,
+        public ?int $count = null,
     ) {
         $this->kind = BuiltinNodeKinds::ROOT->name;
     }
