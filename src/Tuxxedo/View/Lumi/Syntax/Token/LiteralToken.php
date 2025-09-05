@@ -11,19 +11,17 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Token;
+namespace Tuxxedo\View\Lumi\Syntax\Token;
 
-readonly class AssignToken implements TokenInterface
+readonly class LiteralToken implements TokenInterface
 {
     public string $type;
-    public null $op1;
-    public null $op2;
 
     public function __construct(
         public int $line,
+        public string $op1,
+        public string $op2,
     ) {
-        $this->type = BuiltinTokenNames::ASSIGN->name;
-        $this->op1 = null;
-        $this->op2 = null;
+        $this->type = BuiltinTokenNames::LITERAL->name;
     }
 }

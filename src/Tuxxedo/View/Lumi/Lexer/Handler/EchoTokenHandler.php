@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
-use Tuxxedo\View\Lumi\Token\EchoToken;
-use Tuxxedo\View\Lumi\Token\EndToken;
+use Tuxxedo\View\Lumi\Syntax\Token\EchoToken;
+use Tuxxedo\View\Lumi\Syntax\Token\EndToken;
 
 class EchoTokenHandler implements TokenHandlerInterface
 {

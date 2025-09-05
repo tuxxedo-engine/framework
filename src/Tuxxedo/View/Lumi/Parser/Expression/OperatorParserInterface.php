@@ -16,8 +16,8 @@ namespace Tuxxedo\View\Lumi\Parser\Expression;
 use Tuxxedo\View\Lumi\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\BinaryOperator;
+use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 use Tuxxedo\View\Lumi\Syntax\UnaryOperator;
-use Tuxxedo\View\Lumi\Token\TokenInterface;
 
 interface OperatorParserInterface
 {

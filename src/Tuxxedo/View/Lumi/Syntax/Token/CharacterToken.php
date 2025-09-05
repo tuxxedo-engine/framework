@@ -11,21 +11,18 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Token;
+namespace Tuxxedo\View\Lumi\Syntax\Token;
 
-readonly class BreakToken implements TokenInterface
+readonly class CharacterToken implements TokenInterface
 {
     public string $type;
     public null $op2;
 
-    /**
-     * @param numeric-string $op1
-     */
     public function __construct(
         public int $line,
-        public ?string $op1 = null,
+        public string $op1,
     ) {
-        $this->type = BuiltinTokenNames::BREAK->name;
+        $this->type = BuiltinTokenNames::CHARACTER->name;
         $this->op2 = null;
     }
 }

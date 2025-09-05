@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer\Expression;
 
-use Tuxxedo\View\Lumi\Token\TokenInterface;
+use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
 interface ExpressionLexerInterface
 {

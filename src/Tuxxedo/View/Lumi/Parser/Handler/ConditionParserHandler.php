@@ -20,7 +20,7 @@ use Tuxxedo\View\Lumi\Node\ConditionalNode;
 use Tuxxedo\View\Lumi\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
-use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 
 class ConditionParserHandler implements ParserHandlerInterface
 {

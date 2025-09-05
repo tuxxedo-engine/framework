@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
-use Tuxxedo\View\Lumi\Token\CommentToken;
+use Tuxxedo\View\Lumi\Syntax\Token\CommentToken;
 
 class CommentTokenHandler implements TokenHandlerInterface
 {

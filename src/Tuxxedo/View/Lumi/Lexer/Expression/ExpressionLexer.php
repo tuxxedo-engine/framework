@@ -19,13 +19,13 @@ use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Syntax\AssignmentOperator;
 use Tuxxedo\View\Lumi\Syntax\BinaryOperator;
 use Tuxxedo\View\Lumi\Syntax\CharacterSymbol;
+use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTypeNames;
+use Tuxxedo\View\Lumi\Syntax\Token\CharacterToken;
+use Tuxxedo\View\Lumi\Syntax\Token\IdentifierToken;
+use Tuxxedo\View\Lumi\Syntax\Token\LiteralToken;
+use Tuxxedo\View\Lumi\Syntax\Token\OperatorToken;
+use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 use Tuxxedo\View\Lumi\Syntax\UnaryOperator;
-use Tuxxedo\View\Lumi\Token\BuiltinTypeNames;
-use Tuxxedo\View\Lumi\Token\CharacterToken;
-use Tuxxedo\View\Lumi\Token\IdentifierToken;
-use Tuxxedo\View\Lumi\Token\LiteralToken;
-use Tuxxedo\View\Lumi\Token\OperatorToken;
-use Tuxxedo\View\Lumi\Token\TokenInterface;
 
 class ExpressionLexer implements ExpressionLexerInterface
 {

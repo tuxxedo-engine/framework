@@ -20,9 +20,9 @@ use Tuxxedo\View\Lumi\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Node\NodeNativeType;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\BinaryOperator;
+use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 use Tuxxedo\View\Lumi\Syntax\UnaryOperator;
-use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
-use Tuxxedo\View\Lumi\Token\TokenInterface;
 
 class OperatorParser implements OperatorParserInterface
 {

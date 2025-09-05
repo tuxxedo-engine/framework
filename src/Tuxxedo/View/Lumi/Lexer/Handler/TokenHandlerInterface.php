@@ -15,7 +15,7 @@ namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
-use Tuxxedo\View\Lumi\Token\TokenInterface;
+use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
 interface TokenHandlerInterface
 {

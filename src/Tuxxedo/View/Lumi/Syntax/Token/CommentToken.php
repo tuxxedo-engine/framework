@@ -11,17 +11,18 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Token;
+namespace Tuxxedo\View\Lumi\Syntax\Token;
 
-readonly class LiteralToken implements TokenInterface
+readonly class CommentToken implements TokenInterface
 {
     public string $type;
+    public null $op2;
 
     public function __construct(
         public int $line,
         public string $op1,
-        public string $op2,
     ) {
-        $this->type = BuiltinTokenNames::LITERAL->name;
+        $this->type = BuiltinTokenNames::COMMENT->name;
+        $this->op2 = null;
     }
 }

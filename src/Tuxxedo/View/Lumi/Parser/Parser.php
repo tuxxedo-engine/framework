@@ -29,7 +29,7 @@ use Tuxxedo\View\Lumi\Parser\Handler\ParserHandlerInterface;
 use Tuxxedo\View\Lumi\Parser\Handler\TextParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\VoidParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\WhileParserHandler;
-use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 
 class Parser implements ParserInterface
 {

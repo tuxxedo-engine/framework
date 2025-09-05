@@ -17,7 +17,7 @@ use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Node\ContinueNode;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
-use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 
 class ContinueParserHandler implements ParserHandlerInterface
 {

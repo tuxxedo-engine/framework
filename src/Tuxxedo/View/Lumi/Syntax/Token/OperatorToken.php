@@ -11,19 +11,18 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Token;
+namespace Tuxxedo\View\Lumi\Syntax\Token;
 
-readonly class EchoToken implements TokenInterface
+readonly class OperatorToken implements TokenInterface
 {
     public string $type;
-    public null $op1;
     public null $op2;
 
     public function __construct(
         public int $line,
+        public string $op1,
     ) {
-        $this->type = BuiltinTokenNames::ECHO->name;
-        $this->op1 = null;
+        $this->type = BuiltinTokenNames::OPERATOR->name;
         $this->op2 = null;
     }
 }

@@ -19,8 +19,8 @@ use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserStateInterface;
 use Tuxxedo\View\Lumi\Syntax\BinaryOperator;
 use Tuxxedo\View\Lumi\Syntax\CharacterSymbol;
+use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\UnaryOperator;
-use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
 
 class ExpressionParser implements ExpressionParserInterface
 {

@@ -19,6 +19,7 @@ use Tuxxedo\Env\EnvInterface;
 use Tuxxedo\Env\EnvLoaderInterface;
 use Tuxxedo\Http\Kernel\Kernel;
 
+// @todo Application builder like Lumi
 class ApplicationFactory
 {
     final private function __construct()

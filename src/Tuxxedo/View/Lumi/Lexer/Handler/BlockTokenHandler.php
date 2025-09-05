@@ -15,25 +15,25 @@ namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
-use Tuxxedo\View\Lumi\Token\AssignToken;
-use Tuxxedo\View\Lumi\Token\BreakToken;
-use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
-use Tuxxedo\View\Lumi\Token\ContinueToken;
-use Tuxxedo\View\Lumi\Token\DeclareToken;
-use Tuxxedo\View\Lumi\Token\DoToken;
-use Tuxxedo\View\Lumi\Token\EchoToken;
-use Tuxxedo\View\Lumi\Token\ElseIfToken;
-use Tuxxedo\View\Lumi\Token\ElseToken;
-use Tuxxedo\View\Lumi\Token\EndForToken;
-use Tuxxedo\View\Lumi\Token\EndForeachToken;
-use Tuxxedo\View\Lumi\Token\EndIfToken;
-use Tuxxedo\View\Lumi\Token\EndToken;
-use Tuxxedo\View\Lumi\Token\EndWhileToken;
-use Tuxxedo\View\Lumi\Token\ForToken;
-use Tuxxedo\View\Lumi\Token\ForeachToken;
-use Tuxxedo\View\Lumi\Token\IfToken;
-use Tuxxedo\View\Lumi\Token\TokenInterface;
-use Tuxxedo\View\Lumi\Token\WhileToken;
+use Tuxxedo\View\Lumi\Syntax\Token\AssignToken;
+use Tuxxedo\View\Lumi\Syntax\Token\BreakToken;
+use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\ContinueToken;
+use Tuxxedo\View\Lumi\Syntax\Token\DeclareToken;
+use Tuxxedo\View\Lumi\Syntax\Token\DoToken;
+use Tuxxedo\View\Lumi\Syntax\Token\EchoToken;
+use Tuxxedo\View\Lumi\Syntax\Token\ElseIfToken;
+use Tuxxedo\View\Lumi\Syntax\Token\ElseToken;
+use Tuxxedo\View\Lumi\Syntax\Token\EndForToken;
+use Tuxxedo\View\Lumi\Syntax\Token\EndForeachToken;
+use Tuxxedo\View\Lumi\Syntax\Token\EndIfToken;
+use Tuxxedo\View\Lumi\Syntax\Token\EndToken;
+use Tuxxedo\View\Lumi\Syntax\Token\EndWhileToken;
+use Tuxxedo\View\Lumi\Syntax\Token\ForToken;
+use Tuxxedo\View\Lumi\Syntax\Token\ForeachToken;
+use Tuxxedo\View\Lumi\Syntax\Token\IfToken;
+use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
+use Tuxxedo\View\Lumi\Syntax\Token\WhileToken;
 
 class BlockTokenHandler implements TokenHandlerInterface
 {

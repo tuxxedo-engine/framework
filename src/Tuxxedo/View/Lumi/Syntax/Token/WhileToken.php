@@ -11,18 +11,19 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Token;
+namespace Tuxxedo\View\Lumi\Syntax\Token;
 
-readonly class TextToken implements TokenInterface
+readonly class WhileToken implements TokenInterface
 {
     public string $type;
+    public null $op1;
     public null $op2;
 
     public function __construct(
         public int $line,
-        public string $op1,
     ) {
-        $this->type = BuiltinTokenNames::TEXT->name;
+        $this->type = BuiltinTokenNames::WHILE->name;
+        $this->op1 = null;
         $this->op2 = null;
     }
 }

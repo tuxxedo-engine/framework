@@ -20,8 +20,8 @@ use Tuxxedo\View\Lumi\Lexer\Handler\BlockTokenHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\CommentTokenHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\EchoTokenHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\TokenHandlerInterface;
-use Tuxxedo\View\Lumi\Token\TextToken;
-use Tuxxedo\View\Lumi\Token\TokenInterface;
+use Tuxxedo\View\Lumi\Syntax\Token\TextToken;
+use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
 // @todo Support extends layout mode, with a new stream return type
 // @todo Support block tags that can self render in non-extends mode

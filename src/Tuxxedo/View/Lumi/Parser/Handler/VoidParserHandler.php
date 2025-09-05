@@ -16,7 +16,7 @@ namespace Tuxxedo\View\Lumi\Parser\Handler;
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
-use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 
 class VoidParserHandler implements ParserHandlerInterface
 {

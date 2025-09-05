@@ -11,17 +11,18 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Token;
+namespace Tuxxedo\View\Lumi\Syntax\Token;
 
-readonly class ForeachToken implements TokenInterface
+readonly class DeclareToken implements TokenInterface
 {
     public string $type;
+    public null $op2;
 
     public function __construct(
         public int $line,
         public string $op1,
-        public ?string $op2 = null,
     ) {
-        $this->type = BuiltinTokenNames::FOREACH->name;
+        $this->type = BuiltinTokenNames::DECLARE->name;
+        $this->op2 = null;
     }
 }

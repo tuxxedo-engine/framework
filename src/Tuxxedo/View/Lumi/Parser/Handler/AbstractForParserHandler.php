@@ -21,8 +21,8 @@ use Tuxxedo\View\Lumi\Node\IterableExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
-use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
-use Tuxxedo\View\Lumi\Token\IdentifierToken;
+use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\IdentifierToken;
 
 abstract class AbstractForParserHandler implements ParserHandlerInterface
 {

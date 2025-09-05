@@ -28,7 +28,7 @@ use Tuxxedo\View\Lumi\LumiEngine;
 use Tuxxedo\View\Lumi\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\SymbolInterface;
-use Tuxxedo\View\Lumi\Token\TokenInterface;
+use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;

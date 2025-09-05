@@ -11,19 +11,21 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Token;
+namespace Tuxxedo\View\Lumi\Syntax\Token;
 
-readonly class EndForeachToken implements TokenInterface
+readonly class ContinueToken implements TokenInterface
 {
     public string $type;
-    public null $op1;
     public null $op2;
 
+    /**
+     * @param numeric-string $op1
+     */
     public function __construct(
         public int $line,
+        public ?string $op1 = null,
     ) {
-        $this->type = BuiltinTokenNames::ENDFOREACH->name;
-        $this->op1 = null;
+        $this->type = BuiltinTokenNames::CONTINUE->name;
         $this->op2 = null;
     }
 }

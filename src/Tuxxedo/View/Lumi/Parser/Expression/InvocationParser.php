@@ -20,8 +20,8 @@ use Tuxxedo\View\Lumi\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Node\MethodCallNode;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\CharacterSymbol;
-use Tuxxedo\View\Lumi\Token\BuiltinTokenNames;
-use Tuxxedo\View\Lumi\Token\TokenInterface;
+use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
 class InvocationParser implements InvocationParserInterface
 {

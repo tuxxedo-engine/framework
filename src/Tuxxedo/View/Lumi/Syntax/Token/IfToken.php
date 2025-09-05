@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Token;
+namespace Tuxxedo\View\Lumi\Syntax\Token;
 
-readonly class EndForToken implements TokenInterface
+readonly class IfToken implements TokenInterface
 {
     public string $type;
     public null $op1;
@@ -22,7 +22,7 @@ readonly class EndForToken implements TokenInterface
     public function __construct(
         public int $line,
     ) {
-        $this->type = BuiltinTokenNames::ENDFOR->name;
+        $this->type = BuiltinTokenNames::IF->name;
         $this->op1 = null;
         $this->op2 = null;
     }
