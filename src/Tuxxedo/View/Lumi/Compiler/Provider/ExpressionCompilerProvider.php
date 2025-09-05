@@ -134,7 +134,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
             throw CompilerException::fromCannotOverrideThis();
         } elseif ($node->name instanceof PropertyAccessNode) {
             return \sprintf(
-                '<?php $this->propertySet(%s)->%s %s %s; ?>',
+                '<?php $%s->%s %s %s; ?>',
                 $compiler->compileNode($node->name->accessor),
                 $node->name->property,
                 $node->operator->symbol(),
