@@ -42,7 +42,13 @@ class Variable implements VariableInterface
         AssignmentNode $node,
     ): static {
         return new static(
-            name: $node->name->name,
+            name: $node->name instanceof IdentifierNode
+                ? $node->name->name
+                : \sprintf(
+                    '%s::%s',
+                    $node->name->accessor->name,
+                    $node->name->property,
+                ),
             value: $node->value,
             scope: $scope,
         );
@@ -74,14 +80,14 @@ class Variable implements VariableInterface
                 $value->left instanceof LiteralNode ||
                 (
                     $value->left instanceof IdentifierNode &&
-                    $scope->get($value->left->name)->state === VariableState::CONST
+                    $scope->get($value->left)->state === VariableState::CONST
                 )
             ) {
                 if (
                     $value->right instanceof LiteralNode ||
                     (
                         $value->right instanceof IdentifierNode &&
-                        $scope->get($value->right->name)->state === VariableState::CONST
+                        $scope->get($value->right)->state === VariableState::CONST
                     )
                 ) {
                     $this->state = VariableState::CONST;
@@ -92,5 +98,10 @@ class Variable implements VariableInterface
         }
 
         $this->state = VariableState::VARYING;
+    }
+
+    public function isProperty(): bool
+    {
+        return \str_contains($this->name, '::');
     }
 }

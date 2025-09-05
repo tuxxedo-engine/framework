@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Optimizer;
 
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
+use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
+use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentOperator;
 
 class Scope implements ScopeInterface
@@ -23,26 +25,46 @@ class Scope implements ScopeInterface
     public function assign(
         AssignmentNode $node,
     ): void {
+        $name = $this->name($node->name);
+
         if (
             $node->operator !== AssignmentOperator::ASSIGN &&
-            \array_key_exists($node->name->name, $this->variables)
+            \array_key_exists($name, $this->variables)
         ) {
-            $this->variables[$node->name->name]->mutate(
+            $this->variables[$name]->mutate(
                 scope: $this,
                 value: $node->value,
                 operator: $node->operator,
             );
         } else {
-            $this->variables[$node->name->name] = Variable::fromNewAssign(
+            $this->variables[$name] = Variable::fromNewAssign(
                 scope: $this,
                 node: $node,
             );
         }
     }
 
+    public function name(
+        IdentifierNode|PropertyAccessNode $node,
+    ): string {
+        if ($node instanceof IdentifierNode) {
+            return $node->name;
+        }
+
+        return \sprintf(
+            '%s::%s',
+            $node->accessor->name,
+            $node->property,
+        );
+    }
+
     public function get(
-        string $name,
+        IdentifierNode|PropertyAccessNode|string $name,
     ): VariableInterface {
+        if (!\is_string($name)) {
+            $name = $this->name($name);
+        }
+
         return $this->variables[$name] ?? Variable::fromUndefined($name);
     }
 }

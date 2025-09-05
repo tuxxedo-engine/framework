@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Compiler\Provider;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
-use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Syntax\Node\ConditionalNode;
 
 class ConditionalCompilerProvider implements CompilerProviderInterface
@@ -25,14 +24,7 @@ class ConditionalCompilerProvider implements CompilerProviderInterface
     ): string {
         $output = \sprintf(
             '<?php if (%s): ?>',
-            $compiler->expressionCompiler->compile(
-                stream: new NodeStream(
-                    nodes: [
-                        $node->operand,
-                    ],
-                ),
-                compiler: $compiler,
-            ),
+            $compiler->compileExpression($node->operand),
         );
 
         foreach ($node->body as $child) {
@@ -42,14 +34,7 @@ class ConditionalCompilerProvider implements CompilerProviderInterface
         foreach ($node->branches as $branch) {
             $output .= \sprintf(
                 '<?php elseif (%s): ?>',
-                $compiler->expressionCompiler->compile(
-                    stream: new NodeStream(
-                        nodes: [
-                            $branch->operand,
-                        ],
-                    ),
-                    compiler: $compiler,
-                ),
+                $compiler->compileExpression($branch->operand),
             );
 
             foreach ($branch->body as $child) {

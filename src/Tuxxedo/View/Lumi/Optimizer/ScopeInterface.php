@@ -14,11 +14,13 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Optimizer;
 
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
+use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
+use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 
 interface ScopeInterface
 {
     /**
-     * @var VariableInterface[]
+     * @var array<string, VariableInterface>
      */
     public array $variables {
         get;
@@ -28,7 +30,11 @@ interface ScopeInterface
         AssignmentNode $node,
     ): void;
 
+    public function name(
+        IdentifierNode|PropertyAccessNode $node,
+    ): string;
+
     public function get(
-        string $name,
+        IdentifierNode|PropertyAccessNode|string $name,
     ): VariableInterface;
 }

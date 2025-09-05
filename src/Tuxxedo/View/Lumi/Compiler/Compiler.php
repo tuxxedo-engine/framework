@@ -21,8 +21,10 @@ use Tuxxedo\View\Lumi\Compiler\Provider\ExpressionCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\LoopCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\NodeCompilerHandler;
 use Tuxxedo\View\Lumi\Compiler\Provider\TextCompilerProvider;
+use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\BuiltinNodeKinds;
+use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 
 readonly class Compiler implements CompilerInterface
@@ -142,5 +144,18 @@ readonly class Compiler implements CompilerInterface
         }
 
         return ($this->handlers[$node::class]->handler)($node, $this);
+    }
+
+    public function compileExpression(
+        ExpressionNodeInterface $node,
+    ): string {
+        return $this->expressionCompiler->compile(
+            stream: new NodeStream(
+                nodes: [
+                    $node,
+                ],
+            ),
+            compiler: $this,
+        );
     }
 }

@@ -28,6 +28,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\MethodCallNode;
+use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 
 class ExpressionCompilerProvider implements CompilerProviderInterface
 {
@@ -121,22 +122,38 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         AssignmentNode $node,
         CompilerInterface $compiler,
     ): string {
-        if (\mb_strtolower($node->name->name) === 'this') {
+        if (
+            $node->name instanceof IdentifierNode &&
+            \mb_strtolower($node->name->name) === 'this'
+        ) {
             throw CompilerException::fromCannotOverrideThis();
+        } elseif (
+            $node->name instanceof PropertyAccessNode &&
+            \mb_strtolower($node->name->accessor->name) === 'this'
+        ) {
+            throw CompilerException::fromCannotOverrideThis();
+        } elseif ($node->name instanceof PropertyAccessNode) {
+            return \sprintf(
+                '<?php $this->propertySet(%s)->%s %s %s; ?>',
+                $compiler->compileNode($node->name->accessor),
+                $node->name->property,
+                $node->operator->symbol(),
+                $compiler->expressionCompiler->compile(
+                    stream: new NodeStream(
+                        nodes: [
+                            $node->value,
+                        ],
+                    ),
+                    compiler: $compiler,
+                ),
+            );
         }
 
         return \sprintf(
             '<?php $%s %s %s; ?>',
             $node->name->name,
             $node->operator->symbol(),
-            $compiler->expressionCompiler->compile(
-                stream: new NodeStream(
-                    nodes: [
-                        $node->value,
-                    ],
-                ),
-                compiler: $compiler,
-            ),
+            $compiler->compileExpression($node->value),
         );
     }
 
@@ -146,14 +163,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     ): string {
         return \sprintf(
             '(%s)',
-            $compiler->expressionCompiler->compile(
-                stream: new NodeStream(
-                    nodes: [
-                        $node->operand,
-                    ],
-                ),
-                compiler: $compiler,
-            ),
+            $compiler->compileExpression($node),
         );
     }
 
@@ -164,7 +174,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         return \join(
             ' . ',
             \array_map(
-                $compiler->compileNode(...),
+                $compiler->compileExpression(...),
                 $node->operands,
             ),
         );
@@ -193,31 +203,42 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         if ($node->array instanceof ArrayNode) {
             return \sprintf(
                 '%s[%s]',
-                $compiler->compileNode($node->array),
-                $compiler->compileNode($node->key),
+                $compiler->compileExpression($node->array),
+                $compiler->compileExpression($node->key),
             );
         }
 
         return \sprintf(
             '(%s)[%s]',
-            $compiler->compileNode($node->array),
-            $compiler->compileNode($node->key),
+            $compiler->compileExpression($node->array),
+            $compiler->compileExpression($node->key),
         );
     }
 
-    private function compileArrayItemNode(
+    private function compileArrayItem(
         ArrayItemNode $node,
         CompilerInterface $compiler,
     ): string {
         if ($node->key !== null) {
             return \sprintf(
                 '%s => %s',
-                $compiler->compileNode($node->key),
-                $compiler->compileNode($node->value),
+                $compiler->compileExpression($node->key),
+                $compiler->compileExpression($node->value),
             );
         }
 
-        return $compiler->compileNode($node->value);
+        return $compiler->compileExpression($node->value);
+    }
+
+    private function compilePropertyAccess(
+        PropertyAccessNode $node,
+        CompilerInterface $compiler,
+    ): string {
+        return \sprintf(
+            '$%s->%s',
+            $node->accessor->name,
+            $node->property,
+        );
     }
 
     public function augment(): \Generator
@@ -274,7 +295,12 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
 
         yield new NodeCompilerHandler(
             nodeClassName: ArrayItemNode::class,
-            handler: $this->compileArrayItemNode(...),
+            handler: $this->compileArrayItem(...),
+        );
+
+        yield new NodeCompilerHandler(
+            nodeClassName: PropertyAccessNode::class,
+            handler: $this->compilePropertyAccess(...),
         );
     }
 }

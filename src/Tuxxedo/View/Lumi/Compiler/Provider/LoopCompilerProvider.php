@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Compiler\Provider;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
-use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Syntax\Node\BreakNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ContinueNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
@@ -29,14 +28,7 @@ class LoopCompilerProvider implements CompilerProviderInterface
     ): string {
         $output = \sprintf(
             '<?php while (%s): ?>',
-            $compiler->expressionCompiler->compile(
-                stream: new NodeStream(
-                    nodes: [
-                        $node->operand,
-                    ],
-                ),
-                compiler: $compiler,
-            ),
+            $compiler->compileExpression($node->operand),
         );
 
         foreach ($node->body as $child) {
@@ -60,14 +52,7 @@ class LoopCompilerProvider implements CompilerProviderInterface
 
         $output .= \sprintf(
             '<?php } while (%s); ?>',
-            $compiler->expressionCompiler->compile(
-                stream: new NodeStream(
-                    nodes: [
-                        $node->operand,
-                    ],
-                ),
-                compiler: $compiler,
-            ),
+            $compiler->compileExpression($node->operand),
         );
 
         return $output;
@@ -110,36 +95,15 @@ class LoopCompilerProvider implements CompilerProviderInterface
         if ($node->key !== null) {
             $key = \sprintf(
                 '%s => ',
-                $compiler->expressionCompiler->compile(
-                    stream: new NodeStream(
-                        nodes: [
-                            $node->key,
-                        ],
-                    ),
-                    compiler: $compiler,
-                ),
+                $compiler->compileExpression($node->key),
             );
         }
 
         $output = \sprintf(
             '<?php foreach (%s as %s%s): ?>',
-            $compiler->expressionCompiler->compile(
-                stream: new NodeStream(
-                    nodes: [
-                        $node->iterator,
-                    ],
-                ),
-                compiler: $compiler,
-            ),
+            $compiler->compileExpression($node->iterator),
             $key,
-            $compiler->expressionCompiler->compile(
-                stream: new NodeStream(
-                    nodes: [
-                        $node->value,
-                    ],
-                ),
-                compiler: $compiler,
-            ),
+            $compiler->compileExpression($node->value),
         );
 
         foreach ($node->body as $child) {

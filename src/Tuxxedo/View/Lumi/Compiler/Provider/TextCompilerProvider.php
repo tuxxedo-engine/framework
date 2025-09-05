@@ -15,7 +15,6 @@ namespace Tuxxedo\View\Lumi\Compiler\Provider;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
-use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\BuiltinNodeKinds;
 use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
@@ -60,14 +59,7 @@ class TextCompilerProvider implements CompilerProviderInterface
         EchoNode $node,
         CompilerInterface $compiler,
     ): string {
-        $value = $compiler->expressionCompiler->compile(
-            stream: new NodeStream(
-                nodes: [
-                    $node->operand,
-                ],
-            ),
-            compiler: $compiler,
-        );
+        $value = $compiler->compileExpression($node->operand);
 
         if (
             $compiler->state->directives->asBool('lumi.autoescape') &&

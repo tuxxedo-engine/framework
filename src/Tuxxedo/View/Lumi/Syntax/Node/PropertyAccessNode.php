@@ -13,17 +13,14 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentOperator;
-
-readonly class AssignmentNode implements NodeInterface
+readonly class PropertyAccessNode implements IterableExpressionNodeInterface
 {
     public string $kind;
 
     public function __construct(
-        public IdentifierNode|PropertyAccessNode $name,
-        public ExpressionNodeInterface $value,
-        public AssignmentOperator $operator,
+        public IdentifierNode $accessor,
+        public string $property,
     ) {
-        $this->kind = BuiltinNodeKinds::ROOT->name;
+        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
     }
 }

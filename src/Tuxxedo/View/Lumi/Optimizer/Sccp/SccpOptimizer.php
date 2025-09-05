@@ -25,6 +25,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinaryOperator;
 
@@ -142,11 +143,13 @@ class SccpOptimizer extends AbstractOptimizer
         if (
             (
                 $node->left instanceof LiteralNode ||
-                $node->left instanceof IdentifierNode
+                $node->left instanceof IdentifierNode ||
+                $node->left instanceof PropertyAccessNode
             ) &&
             (
                 $node->right instanceof LiteralNode ||
-                $node->right instanceof IdentifierNode
+                $node->right instanceof IdentifierNode ||
+                $node->right instanceof PropertyAccessNode
             ) &&
             (
                 $node->operator === BinaryOperator::ADD ||
@@ -162,8 +165,8 @@ class SccpOptimizer extends AbstractOptimizer
                 $node->operator === BinaryOperator::OR
             )
         ) {
-            if ($node->left instanceof IdentifierNode) {
-                $value = $this->scope->get($node->left->name)->value;
+            if (!$node->left instanceof LiteralNode) {
+                $value = $this->scope->get($node->left)->value;
 
                 if (!$value instanceof LiteralNode) {
                     return [
@@ -176,8 +179,8 @@ class SccpOptimizer extends AbstractOptimizer
                 $leftNode = $node->left;
             }
 
-            if ($node->right instanceof IdentifierNode) {
-                $value = $this->scope->get($node->right->name)->value;
+            if (!$node->right instanceof LiteralNode) {
+                $value = $this->scope->get($node->right)->value;
 
                 if (!$value instanceof LiteralNode) {
                     return [
