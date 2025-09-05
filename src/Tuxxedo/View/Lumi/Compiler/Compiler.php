@@ -21,9 +21,6 @@ use Tuxxedo\View\Lumi\Compiler\Provider\ExpressionCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\LoopCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\NodeCompilerHandler;
 use Tuxxedo\View\Lumi\Compiler\Provider\TextCompilerProvider;
-use Tuxxedo\View\Lumi\Optimizer\CompilerOptimizerInterface;
-use Tuxxedo\View\Lumi\Optimizer\Dce\DceCompilerOptimizer;
-use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpCompilerOptimizer;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\BuiltinNodeKinds;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
@@ -37,11 +34,9 @@ readonly class Compiler implements CompilerInterface
 
     /**
      * @param CompilerProviderInterface[] $providers
-     * @param CompilerOptimizerInterface[] $optimizers
      */
     final private function __construct(
         array $providers,
-        private array $optimizers,
         public ExpressionCompilerInterface $expressionCompiler,
         public CompilerStateInterface $state,
     ) {
@@ -80,23 +75,10 @@ readonly class Compiler implements CompilerInterface
     }
 
     /**
-     * @return CompilerOptimizerInterface[]
-     */
-    public static function getDefaultCompilerOptimizers(): array
-    {
-        return [
-            new SccpCompilerOptimizer(),
-            new DceCompilerOptimizer(),
-        ];
-    }
-
-    /**
      * @param CompilerProviderInterface[] $providers
-     * @param CompilerOptimizerInterface[]|null $optimizers
      */
     public static function createWithDefaultProviders(
         array $providers = [],
-        ?array $optimizers = null,
         ?ExpressionCompilerInterface $expressionCompiler = null,
         ?CompilerStateInterface $state = null,
     ): static {
@@ -105,7 +87,6 @@ readonly class Compiler implements CompilerInterface
                 self::getDefaultProviders(),
                 $providers,
             ),
-            optimizers: $optimizers ?? self::getDefaultCompilerOptimizers(),
             expressionCompiler: $expressionCompiler ?? self::getDefaultExpressionCompiler(),
             state: $state ?? self::getDefaultCompilerState(),
         );
@@ -113,17 +94,14 @@ readonly class Compiler implements CompilerInterface
 
     /**
      * @param CompilerProviderInterface[] $providers
-     * @param CompilerOptimizerInterface[]|null $optimizers
      */
     public static function createWithoutDefaultProviders(
         array $providers = [],
-        ?array $optimizers = null,
         ?ExpressionCompilerInterface $expressionCompiler = null,
         ?CompilerStateInterface $state = null,
     ): static {
         return new static(
             providers: $providers,
-            optimizers: $optimizers ?? self::getDefaultCompilerOptimizers(),
             expressionCompiler: $expressionCompiler ?? self::getDefaultExpressionCompiler(),
             state: $state ?? self::getDefaultCompilerState(),
         );
@@ -132,12 +110,6 @@ readonly class Compiler implements CompilerInterface
     public function compile(
         NodeStreamInterface $stream,
     ): string {
-        if (\sizeof($this->optimizers) > 0) {
-            foreach ($this->optimizers as $optimizer) {
-                $stream = $optimizer->optimize($stream);
-            }
-        }
-
         $source = '<?php declare(strict_types=1); ?>';
 
         $this->state->enter(BuiltinNodeKinds::ROOT->name);

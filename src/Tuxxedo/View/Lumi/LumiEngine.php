@@ -21,6 +21,9 @@ use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Lexer\Lexer;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
+use Tuxxedo\View\Lumi\Optimizer\Dce\DceCompilerOptimizer;
+use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
+use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpCompilerOptimizer;
 use Tuxxedo\View\Lumi\Parser\Parser;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
@@ -28,10 +31,14 @@ use Tuxxedo\View\ViewException;
 
 class LumiEngine
 {
+    /**
+     * @param OptimizerInterface[] $optimizers
+     */
     final private function __construct(
         public readonly LexerInterface $lexer,
         public readonly ParserInterface $parser,
         public readonly CompilerInterface $compiler,
+        public readonly array $optimizers = [],
     ) {
     }
 
@@ -50,24 +57,41 @@ class LumiEngine
         return Compiler::createWithDefaultProviders();
     }
 
+    /**
+     * @return OptimizerInterface[]
+     */
+    public static function createDefaultOptimizers(): array
+    {
+        return [
+            new SccpCompilerOptimizer(),
+            new DceCompilerOptimizer(),
+        ];
+    }
+
     public static function createDefault(): static
     {
         return new static(
             lexer: self::createDefaultLexer(),
             parser: self::createDefaultParser(),
             compiler: self::createDefaultCompiler(),
+            optimizers: self::createDefaultOptimizers(),
         );
     }
 
+    /**
+     * @param OptimizerInterface[]|null $optimizers
+     */
     public static function createCustom(
         ?LexerInterface $lexer = null,
         ?ParserInterface $parser = null,
         ?CompilerInterface $compiler = null,
+        ?array $optimizers = null,
     ): static {
         return new static(
             lexer: $lexer ?? self::createDefaultLexer(),
             parser: $parser ?? self::createDefaultParser(),
             compiler: $compiler ?? self::createDefaultCompiler(),
+            optimizers: $optimizers ?? self::createDefaultOptimizers(),
         );
     }
 
@@ -88,14 +112,22 @@ class LumiEngine
             );
         }
 
+        $nodes = $this->parser->parse(
+            stream: $this->lexer->tokenizeByFile(
+                sourceFile: $file,
+            ),
+        );
+
+        if (\sizeof($this->optimizers) > 0) {
+            foreach ($this->optimizers as $optimizer) {
+                $nodes = $optimizer->optimize($nodes);
+            }
+        }
+
         return new CompiledFile(
             sourceFile: $viewName,
             sourceCode: $this->compiler->compile(
-                stream: $this->parser->parse(
-                    stream: $this->lexer->tokenizeByFile(
-                        sourceFile: $file,
-                    ),
-                ),
+                stream: $nodes,
             ),
         );
     }

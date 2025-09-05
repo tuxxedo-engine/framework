@@ -15,7 +15,7 @@ namespace Tuxxedo\View\Lumi\Optimizer;
 
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 
-interface CompilerOptimizerInterface
+interface OptimizerInterface
 {
     public function optimize(
         NodeStreamInterface $stream,
