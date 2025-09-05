@@ -25,10 +25,10 @@ enum BinaryOperator implements OperatorInterface
     case MULTIPLY;
     case DIVIDE;
     case MODULUS;
-    case EQUAL;
-    case STRICT_EQUAL;
-    case NOT_EQUAL;
-    case STRICT_NOT_EQUAL;
+    case STRICT_EQUAL_IMPLICIT;
+    case STRICT_EQUAL_EXPLICIT;
+    case STRICT_NOT_EQUAL_IMPLICIT;
+    case STRICT_NOT_EQUAL_EXPLICIT;
     case GREATER;
     case LESS;
     case GREATER_EQUAL;
@@ -89,10 +89,8 @@ enum BinaryOperator implements OperatorInterface
             self::MULTIPLY => '*',
             self::DIVIDE => '/',
             self::MODULUS => '%',
-            self::EQUAL => '==',
-            self::STRICT_EQUAL => '===',
-            self::NOT_EQUAL => '!=',
-            self::STRICT_NOT_EQUAL => '!==',
+            self::STRICT_EQUAL_IMPLICIT, self::STRICT_EQUAL_EXPLICIT => '===',
+            self::STRICT_NOT_EQUAL_IMPLICIT, self::STRICT_NOT_EQUAL_EXPLICIT => '!==',
             self::GREATER => '>',
             self::LESS => '<',
             self::GREATER_EQUAL => '>=',

@@ -143,8 +143,8 @@ class SccpCompilerOptimizer extends AbstractOptimizer
                 $node->operator === BinaryOperator::ADD ||
                 $node->operator === BinaryOperator::SUBTRACT ||
                 $node->operator === BinaryOperator::MULTIPLY ||
-                $node->operator === BinaryOperator::STRICT_EQUAL ||
-                $node->operator === BinaryOperator::STRICT_NOT_EQUAL ||
+                $node->operator === BinaryOperator::STRICT_EQUAL_EXPLICIT ||
+                $node->operator === BinaryOperator::STRICT_NOT_EQUAL_EXPLICIT ||
                 $node->operator === BinaryOperator::GREATER ||
                 $node->operator === BinaryOperator::LESS ||
                 $node->operator === BinaryOperator::GREATER_EQUAL ||
@@ -155,7 +155,7 @@ class SccpCompilerOptimizer extends AbstractOptimizer
         ) {
             if (
                 $node->left->type !== $node->right->type &&
-                $node->operator === BinaryOperator::STRICT_EQUAL
+                $node->operator === BinaryOperator::STRICT_EQUAL_EXPLICIT
             ) {
                 return [
                     new LiteralNode(
@@ -182,8 +182,8 @@ class SccpCompilerOptimizer extends AbstractOptimizer
                     BinaryOperator::ADD => $left + $right,
                     BinaryOperator::SUBTRACT => $left - $right,
                     BinaryOperator::MULTIPLY => $left * $right,
-                    BinaryOperator::STRICT_EQUAL => $left === $right,
-                    BinaryOperator::STRICT_NOT_EQUAL => $left !== $right,
+                    BinaryOperator::STRICT_EQUAL_EXPLICIT => $left === $right,
+                    BinaryOperator::STRICT_NOT_EQUAL_EXPLICIT => $left !== $right,
                     BinaryOperator::GREATER => $left > $right,
                     BinaryOperator::LESS => $left < $right,
                     BinaryOperator::GREATER_EQUAL => $left >= $right,
@@ -193,8 +193,8 @@ class SccpCompilerOptimizer extends AbstractOptimizer
                 };
             } else {
                 $value = match ($node->operator) {
-                    BinaryOperator::STRICT_EQUAL => $left === $right,
-                    BinaryOperator::STRICT_NOT_EQUAL => $left !== $right,
+                    BinaryOperator::STRICT_EQUAL_EXPLICIT => $left === $right,
+                    BinaryOperator::STRICT_NOT_EQUAL_EXPLICIT => $left !== $right,
                     BinaryOperator::GREATER => $left > $right,
                     BinaryOperator::LESS => $left < $right,
                     BinaryOperator::GREATER_EQUAL => $left >= $right,
