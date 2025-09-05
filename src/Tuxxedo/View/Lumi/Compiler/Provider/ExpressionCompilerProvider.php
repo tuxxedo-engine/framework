@@ -108,7 +108,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         return \sprintf(
             '%s %s %s',
             $compiler->compileNode($node->left),
-            $node->operator->symbol(),
+            $node->operator->transform(),
             $compiler->compileNode($node->right),
         );
     }

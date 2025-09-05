@@ -89,8 +89,10 @@ enum BinaryOperator implements OperatorInterface
             self::MULTIPLY => '*',
             self::DIVIDE => '/',
             self::MODULUS => '%',
-            self::STRICT_EQUAL_IMPLICIT, self::STRICT_EQUAL_EXPLICIT => '===',
-            self::STRICT_NOT_EQUAL_IMPLICIT, self::STRICT_NOT_EQUAL_EXPLICIT => '!==',
+            self::STRICT_EQUAL_IMPLICIT => '==',
+            self::STRICT_EQUAL_EXPLICIT => '===',
+            self::STRICT_NOT_EQUAL_IMPLICIT => '!=',
+            self::STRICT_NOT_EQUAL_EXPLICIT => '!==',
             self::GREATER => '>',
             self::LESS => '<',
             self::GREATER_EQUAL => '>=',
@@ -106,6 +108,15 @@ enum BinaryOperator implements OperatorInterface
             self::BITWISE_SHIFT_RIGHT => '>>',
             self::NULL_COALESCE => '??',
             self::NULL_SAFE_ACCESS => '?.',
+        };
+    }
+
+    public function transform(): string
+    {
+        return match ($this) {
+            self::STRICT_EQUAL_IMPLICIT => self::STRICT_EQUAL_EXPLICIT->symbol(),
+            self::STRICT_NOT_EQUAL_IMPLICIT => self::STRICT_NOT_EQUAL_EXPLICIT->symbol(),
+            default => $this->symbol(),
         };
     }
 }
