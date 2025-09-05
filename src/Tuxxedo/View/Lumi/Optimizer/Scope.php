@@ -28,12 +28,15 @@ class Scope implements ScopeInterface
             \array_key_exists($node->name->name, $this->variables)
         ) {
             $this->variables[$node->name->name]->mutate(
-                $this,
-                $node->value,
-                $node->operator,
+                scope: $this,
+                value: $node->value,
+                operator: $node->operator,
             );
         } else {
-            $this->variables[$node->name->name] = Variable::fromNewAssign($this, $node);
+            $this->variables[$node->name->name] = Variable::fromNewAssign(
+                scope: $this,
+                node: $node,
+            );
         }
     }
 
