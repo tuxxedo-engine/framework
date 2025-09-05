@@ -19,12 +19,20 @@ use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Syntax\NativeType;
+use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentOperator;
 
 abstract class AbstractOptimizer implements OptimizerInterface
 {
     protected private(set) CompilerDirectivesInterface&DirectivesInterface $directives;
+
+    /**
+     * @var array<string, VariableInterface>
+     */
+    // @todo This may need to be passed into each variables mutation scope
+    protected private(set) array $variables = [];
 
     public function __construct()
     {
@@ -34,6 +42,32 @@ abstract class AbstractOptimizer implements OptimizerInterface
     abstract protected function optimizer(
         NodeStreamInterface $stream,
     ): NodeStreamInterface;
+
+    /**
+     * @return array{0: NodeInterface}
+     */
+    protected function assignment(
+        AssignmentNode $node,
+    ): array {
+        if (
+            $node->operator !== AssignmentOperator::ASSIGN &&
+            \array_key_exists($node->name->name, $this->variables)
+        ) {
+            $this->variables[$node->name->name]->mutate($node->value, $node->operator);
+        } else {
+            $this->variables[$node->name->name] = Variable::fromNode($node);
+        }
+
+        return [
+            $node,
+        ];
+    }
+
+    protected function variable(
+        string $name,
+    ): VariableInterface {
+        return $this->variables[$name] ?? Variable::fromUndefined($name);
+    }
 
     /**
      * @return array{0: NodeInterface}

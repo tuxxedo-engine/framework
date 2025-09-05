@@ -17,6 +17,7 @@ use Tuxxedo\View\Lumi\Optimizer\AbstractOptimizer;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\NativeType;
+use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ConditionalBranchNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ConditionalNode;
@@ -54,6 +55,7 @@ class DceOptimizer extends AbstractOptimizer
         NodeInterface $node,
     ): array {
         return match (true) {
+            $node instanceof AssignmentNode => parent::assignment($node),
             $node instanceof DirectiveNodeInterface => parent::optimizeDirective($node),
             $node instanceof CommentNode => $this->optimizeComment($node),
             $node instanceof ConditionalNode => $this->optimizeConditional($node),

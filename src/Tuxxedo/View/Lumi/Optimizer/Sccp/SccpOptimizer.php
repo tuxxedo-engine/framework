@@ -17,6 +17,7 @@ use Tuxxedo\View\Lumi\Optimizer\AbstractOptimizer;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\NativeType;
+use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
@@ -26,6 +27,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinaryOperator;
 
+// @todo Make use of Variable value inference for SCCP
 class SccpOptimizer extends AbstractOptimizer
 {
     protected function optimizer(
@@ -55,6 +57,7 @@ class SccpOptimizer extends AbstractOptimizer
         NodeInterface $node,
     ): array {
         return match (true) {
+            $node instanceof AssignmentNode => parent::assignment($node),
             $node instanceof DirectiveNodeInterface => parent::optimizeDirective($node),
             $node instanceof BinaryOpNode => $this->optimizeBinaryOp($node),
             $node instanceof EchoNode => $this->optimizeEcho($node),

@@ -20,6 +20,7 @@ use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 enum AssignmentOperator implements OperatorInterface
 {
     case ASSIGN;
+    case NULL_ASSIGN;
     case ADD;
     case SUBTRACT;
     case MULTIPLY;
@@ -71,6 +72,7 @@ enum AssignmentOperator implements OperatorInterface
     {
         return match ($this) {
             self::ASSIGN => '=',
+            self::NULL_ASSIGN => '??=',
             self::ADD => '+=',
             self::SUBTRACT => '-=',
             self::MULTIPLY => '*=',
