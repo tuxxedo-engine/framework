@@ -26,7 +26,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\NodeNativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinaryOperator;
 
-class SccpCompilerOptimizer extends AbstractOptimizer
+class SccpOptimizer extends AbstractOptimizer
 {
     protected function optimizer(
         NodeStreamInterface $stream,

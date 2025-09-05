@@ -17,6 +17,9 @@ use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
+use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
+use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
+use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpOptimizer;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Runtime\Directive\DefaultDirectives;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
@@ -40,6 +43,9 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public private(set) ?LexerInterface $lexer = null;
     public private(set) ?ParserInterface $parser = null;
     public private(set) ?CompilerInterface $compiler = null;
+
+    public private(set) array $optimizers = [];
+
     public private(set) ?LoaderInterface $loader = null;
 
     public private(set) array $directives = [];
@@ -60,6 +66,11 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
     final public function __construct()
     {
+        $this->optimizers = [
+            SccpOptimizer::class => new SccpOptimizer(),
+            DceOptimizer::class => new DceOptimizer(),
+        ];
+
         $this->defaultDirectives = DefaultDirectives::defaults();
     }
 
@@ -333,6 +344,49 @@ class LumiConfigurator implements LumiConfiguratorInterface
         CompilerInterface $compiler,
     ): self {
         $this->compiler = $compiler;
+
+        return $this;
+    }
+
+    public function withoutOptimizers(): self
+    {
+        $this->optimizers = [];
+
+        return $this;
+    }
+
+    public function withSccpOptimizer(): self
+    {
+        $this->optimizers[SccpOptimizer::class] = new SccpOptimizer();
+
+        return $this;
+    }
+
+    public function withoutSccpOptimizer(): self
+    {
+        unset($this->optimizers[SccpOptimizer::class]);
+
+        return $this;
+    }
+
+    public function withDceOptimizer(): self
+    {
+        $this->optimizers[DceOptimizer::class] = new DceOptimizer();
+
+        return $this;
+    }
+
+    public function withoutDceOptimizer(): self
+    {
+        unset($this->optimizers[DceOptimizer::class]);
+
+        return $this;
+    }
+
+    public function withCustomOptimizer(
+        OptimizerInterface $optimizer,
+    ): self {
+        $this->optimizers[$optimizer::class] = $optimizer;
 
         return $this;
     }

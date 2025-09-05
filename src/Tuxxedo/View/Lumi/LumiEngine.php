@@ -21,9 +21,9 @@ use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Lexer\Lexer;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
-use Tuxxedo\View\Lumi\Optimizer\Dce\DceCompilerOptimizer;
+use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
-use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpCompilerOptimizer;
+use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpOptimizer;
 use Tuxxedo\View\Lumi\Parser\Parser;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
@@ -63,8 +63,8 @@ class LumiEngine
     public static function createDefaultOptimizers(): array
     {
         return [
-            new SccpCompilerOptimizer(),
-            new DceCompilerOptimizer(),
+            new SccpOptimizer(),
+            new DceOptimizer(),
         ];
     }
 

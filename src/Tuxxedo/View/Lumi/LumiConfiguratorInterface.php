@@ -15,6 +15,7 @@ namespace Tuxxedo\View\Lumi;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
+use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Runtime\Filter\FilterProviderInterface;
@@ -50,6 +51,13 @@ interface LumiConfiguratorInterface
     }
 
     public ?CompilerInterface $compiler {
+        get;
+    }
+
+    /**
+     * @var array<class-string<OptimizerInterface>, OptimizerInterface>
+     */
+    public array $optimizers {
         get;
     }
 
@@ -210,6 +218,18 @@ interface LumiConfiguratorInterface
 
     public function useCompiler(
         CompilerInterface $compiler,
+    ): self;
+
+    public function withoutOptimizers(): self;
+
+    public function withSccpOptimizer(): self;
+    public function withoutSccpOptimizer(): self;
+
+    public function withDceOptimizer(): self;
+    public function withoutDceOptimizer(): self;
+
+    public function withCustomOptimizer(
+        OptimizerInterface $optimizer,
     ): self;
 
     public function withDefaultLoader(): self;

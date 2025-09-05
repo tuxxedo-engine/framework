@@ -25,7 +25,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeNativeType;
 
-class DceCompilerOptimizer extends AbstractOptimizer
+class DceOptimizer extends AbstractOptimizer
 {
     protected function optimizer(
         NodeStreamInterface $stream,
