@@ -22,9 +22,11 @@ use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\Attribute\Controller;
 use Tuxxedo\Router\Attribute\Route;
-use Tuxxedo\View\Lumi\Compiler\CompilerException;
-use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\LumiEngine;
+use Tuxxedo\View\Lumi\LumiException;
+use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
+use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpOptimizer;
+use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Operator\OperatorInterface;
@@ -205,6 +207,46 @@ readonly class LumiController
         return $view->scope;
     }
 
+    private function visualizeSccpPass(
+        string &$buffer,
+        NodeStreamInterface $nodeStream,
+    ): NodeStreamInterface {
+        $buffer .= '<h3>Nodes (SCCP)</h3>';
+        $buffer .= '<pre>';
+
+        $optimizedStream = (new SccpOptimizer())->optimize(clone $nodeStream);
+
+        while (!$optimizedStream->eof()) {
+            $buffer .= $this->visualizeNode($optimizedStream->current()) . '<br>';
+
+            $optimizedStream->consume();
+        }
+
+        $buffer .= '</pre>';
+
+        return clone $optimizedStream;
+    }
+
+    private function visualizeDcePass(
+        string &$buffer,
+        NodeStreamInterface $nodeStream,
+    ): NodeStreamInterface {
+        $buffer .= '<h3>Nodes (DCE)</h3>';
+        $buffer .= '<pre>';
+
+        $optimizedStream = (new DceOptimizer())->optimize(clone $nodeStream);
+
+        while (!$optimizedStream->eof()) {
+            $buffer .= $this->visualizeNode($optimizedStream->current()) . '<br>';
+
+            $optimizedStream->consume();
+        }
+
+        $buffer .= '</pre>';
+
+        return clone $optimizedStream;
+    }
+
     #[Route\Get]
     public function index(RequestInterface $request): ResponseInterface
     {
@@ -222,7 +264,7 @@ readonly class LumiController
 
         $buffer = '<h3>File</h3>';
         $buffer .= '<form>';
-        $buffer .= '<select onchange="window.location = \'?file=\' + this.options[this.selectedIndex].value;">';
+        $buffer .= '<select id="file" onchange="window.location = \'?file=\' + this.options[this.selectedIndex].value;">';
 
         foreach ($this->getViewFiles() as $viewFile) {
             $viewFile = $this->getShortViewName($viewFile);
@@ -234,6 +276,24 @@ readonly class LumiController
         }
 
         $buffer .= '</select>';
+        $buffer .= '<script>';
+        $buffer .= 'function optimizerCheck(){';
+        $buffer .= 'var sccp = 0;';
+        $buffer .= 'var dce = 0;';
+        $buffer .= 'const $ = (id) => document.getElementById(id);';
+        $buffer .= 'if ($(\'sccp\').checked){ sccp = 1; }';
+        $buffer .= 'if ($(\'dce\').checked){ dce = 1; }';
+        $buffer .= 'window.location = \'?file=\' + $(\'file\').options[$(\'file\').selectedIndex].value + \'&sccp=\' + sccp + \'&dce=\' + dce;';
+        $buffer .= '}';
+        $buffer .= '</script>';
+        $buffer .= '<p>';
+        $buffer .= '<input type="checkbox" id="sccp"' . ($request->get->getBool('sccp') ? ' checked' : '') . ' onclick="optimizerCheck();">';
+        $buffer .= '<label for="sccp">SCCP Optimizer</label>';
+        $buffer .= '</p>';
+        $buffer .= '<p>';
+        $buffer .= '<input type="checkbox" id="dce"' . ($request->get->getBool('dce') ? ' checked' : '') . ' onclick="optimizerCheck();">';
+        $buffer .= '<label for="dce">DCE Optimizer</label>';
+        $buffer .= '</p>';
         $buffer .= '</form>';
 
         $buffer .= '<h3>Source</h3>';
@@ -246,71 +306,68 @@ readonly class LumiController
         $buffer .= '<pre>';
 
         $engine = LumiEngine::createDefault();
-        $showNext = true;
 
         try {
-            $stream = $engine->lexer->tokenizeByString($viewSource);
+            $tokenStream = $engine->lexer->tokenizeByString($viewSource);
 
-            while (!$stream->eof()) {
-                $buffer .= $this->visualizeToken($stream->current()) . '<br>';
+            while (!$tokenStream->eof()) {
+                $buffer .= $this->visualizeToken($tokenStream->current()) . '<br>';
 
-                $stream->consume();
+                $tokenStream->consume();
             }
-        } catch (LexerException $exception) {
+        } catch (LumiException $exception) {
             $buffer .= $exception;
-            $showNext = false;
         }
 
         $buffer .= '</pre>';
 
-        // @todo Support visualization for each optimizer pass
-        if ($showNext) {
+        if (isset($tokenStream) && !isset($exception)) {
             $buffer .= '<h3>Nodes (pre-optimized)</h3>';
             $buffer .= '<pre>';
 
             try {
-                $stream = $engine->parser->parse(
-                    stream: $engine->lexer->tokenizeByString(
-                        sourceCode: $viewSource,
-                    ),
+                $nodeStream = $engine->parser->parse(
+                    stream: clone $tokenStream,
                 );
 
-                while (!$stream->eof()) {
-                    $buffer .= $this->visualizeNode($stream->current()) . '<br>';
+                while (!$nodeStream->eof()) {
+                    $buffer .= $this->visualizeNode($nodeStream->current()) . '<br>';
 
-                    $stream->consume();
+                    $nodeStream->consume();
                 }
-            } catch (LexerException|ParserException $exception) {
+            } catch (ParserException $exception) {
                 $buffer .= $exception;
-                $showNext = false;
             }
 
             $buffer .= '</pre>';
         }
 
-        if ($showNext) {
+        if (isset($nodeStream) && !isset($exception)) {
+            if ($request->get->getBool('sccp')) {
+                $nodeStream = $this->visualizeSccpPass($buffer, $nodeStream);
+            }
+
+            if ($request->get->getBool('dce')) {
+                $nodeStream = $this->visualizeDcePass($buffer, $nodeStream);
+            }
+
             $buffer .= '<h3>Compiled Source</h3>';
             $buffer .= '<pre>';
 
             try {
                 $buffer .= \htmlspecialchars(
                     $engine->compiler->compile(
-                        stream: $engine->parser->parse(
-                            stream: $engine->lexer->tokenizeByString(
-                                sourceCode: $viewSource,
-                            ),
-                        ),
+                        stream: $nodeStream,
                     ),
                 );
-            } catch (CompilerException $exception) {
+            } catch (LumiException $exception) {
                 $buffer .= $exception;
-                $showNext = false;
             }
 
             $buffer .= '</pre>';
         }
 
-        if ($showNext) {
+        if (!isset($exception)) {
             $viewName = $this->getShortViewName(
                 viewFile: $selectedViewFile,
                 extension: false,

@@ -27,6 +27,11 @@ class NodeStream implements NodeStreamInterface
     ) {
     }
 
+    public function __clone()
+    {
+        $this->position = 0;
+    }
+
     public function eof(): bool
     {
         return $this->position === \sizeof($this->nodes);

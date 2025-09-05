@@ -27,6 +27,11 @@ class TokenStream implements TokenStreamInterface
     ) {
     }
 
+    public function __clone()
+    {
+        $this->position = 0;
+    }
+
     public function eof(): bool
     {
         return $this->position === \sizeof($this->tokens);

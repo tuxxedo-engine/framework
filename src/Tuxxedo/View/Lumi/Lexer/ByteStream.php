@@ -35,6 +35,12 @@ class ByteStream implements ByteStreamInterface
         $this->length = \mb_strlen($this->input);
     }
 
+    public function __clone()
+    {
+        $this->position = 0;
+        $this->line = 1;
+    }
+
     public static function createFromString(string $input): static
     {
         return new static($input);
