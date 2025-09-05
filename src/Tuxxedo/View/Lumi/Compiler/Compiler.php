@@ -138,7 +138,7 @@ readonly class Compiler implements CompilerInterface
             }
         }
 
-        $source = '';
+        $source = '<?php declare(strict_types=1); ?>';
 
         $this->state->enter(BuiltinNodeKinds::ROOT->name);
 
