@@ -19,7 +19,7 @@ use Tuxxedo\View\Lumi\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
-use Tuxxedo\View\Lumi\Syntax\AssignmentOperator;
+use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentOperator;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 
 // @todo This need to support property writes

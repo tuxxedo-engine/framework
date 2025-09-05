@@ -17,10 +17,10 @@ use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserStateInterface;
-use Tuxxedo\View\Lumi\Syntax\BinaryOperator;
-use Tuxxedo\View\Lumi\Syntax\CharacterSymbol;
+use Tuxxedo\View\Lumi\Syntax\Operator\BinaryOperator;
+use Tuxxedo\View\Lumi\Syntax\Operator\CharacterSymbol;
+use Tuxxedo\View\Lumi\Syntax\Operator\UnaryOperator;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
-use Tuxxedo\View\Lumi\Syntax\UnaryOperator;
 
 class ExpressionParser implements ExpressionParserInterface
 {

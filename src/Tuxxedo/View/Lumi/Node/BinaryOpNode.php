@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Node;
 
-use Tuxxedo\View\Lumi\Syntax\BinaryOperator;
+use Tuxxedo\View\Lumi\Syntax\Operator\BinaryOperator;
 
 readonly class BinaryOpNode implements ExpressionNodeInterface
 {

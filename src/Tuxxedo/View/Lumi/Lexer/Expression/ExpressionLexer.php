@@ -16,16 +16,16 @@ namespace Tuxxedo\View\Lumi\Lexer\Expression;
 use Tuxxedo\View\Lumi\Lexer\ByteStream;
 use Tuxxedo\View\Lumi\Lexer\ByteStreamInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
-use Tuxxedo\View\Lumi\Syntax\AssignmentOperator;
-use Tuxxedo\View\Lumi\Syntax\BinaryOperator;
-use Tuxxedo\View\Lumi\Syntax\CharacterSymbol;
+use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentOperator;
+use Tuxxedo\View\Lumi\Syntax\Operator\BinaryOperator;
+use Tuxxedo\View\Lumi\Syntax\Operator\CharacterSymbol;
+use Tuxxedo\View\Lumi\Syntax\Operator\UnaryOperator;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTypeNames;
 use Tuxxedo\View\Lumi\Syntax\Token\CharacterToken;
 use Tuxxedo\View\Lumi\Syntax\Token\IdentifierToken;
 use Tuxxedo\View\Lumi\Syntax\Token\LiteralToken;
 use Tuxxedo\View\Lumi\Syntax\Token\OperatorToken;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
-use Tuxxedo\View\Lumi\Syntax\UnaryOperator;
 
 class ExpressionLexer implements ExpressionLexerInterface
 {

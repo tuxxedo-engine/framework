@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Syntax;
+namespace Tuxxedo\View\Lumi\Syntax\Operator;
 
 interface OperatorInterface
 {

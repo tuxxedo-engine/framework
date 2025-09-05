@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Syntax;
+namespace Tuxxedo\View\Lumi\Syntax\Operator;
 
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;

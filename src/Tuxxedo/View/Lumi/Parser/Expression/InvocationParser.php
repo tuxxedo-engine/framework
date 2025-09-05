@@ -19,7 +19,7 @@ use Tuxxedo\View\Lumi\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Node\MethodCallNode;
 use Tuxxedo\View\Lumi\Parser\ParserException;
-use Tuxxedo\View\Lumi\Syntax\CharacterSymbol;
+use Tuxxedo\View\Lumi\Syntax\Operator\CharacterSymbol;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 

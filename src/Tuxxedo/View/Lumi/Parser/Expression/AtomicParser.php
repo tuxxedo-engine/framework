@@ -17,8 +17,8 @@ use Tuxxedo\View\Lumi\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Node\NodeNativeType;
 use Tuxxedo\View\Lumi\Parser\ParserException;
-use Tuxxedo\View\Lumi\Syntax\BinaryOperator;
-use Tuxxedo\View\Lumi\Syntax\CharacterSymbol;
+use Tuxxedo\View\Lumi\Syntax\Operator\BinaryOperator;
+use Tuxxedo\View\Lumi\Syntax\Operator\CharacterSymbol;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 

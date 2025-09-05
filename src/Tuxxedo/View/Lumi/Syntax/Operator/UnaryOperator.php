@@ -11,26 +11,21 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Syntax;
+namespace Tuxxedo\View\Lumi\Syntax\Operator;
 
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
-enum AssignmentOperator implements SymbolInterface, OperatorInterface
+enum UnaryOperator implements SymbolInterface, OperatorInterface
 {
-    case ASSIGN;
-    case ADD;
-    case SUBTRACT;
-    case MULTIPLY;
-    case DIVIDE;
-    case MODULUS;
-    case EXPONENTIATE;
-    case BITWISE_AND;
-    case BITWISE_OR;
-    case BITWISE_XOR;
-    case BITWISE_SHIFT_LEFT;
-    case BITWISE_SHIFT_RIGHT;
+    case NOT;
+    case NEGATE;
+    case BITWISE_NOT;
+    case INCREMENT_PRE;
+    case INCREMENT_POST;
+    case DECREMENT_PRE;
+    case DECREMENT_POST;
 
     public static function all(): array
     {
@@ -70,28 +65,27 @@ enum AssignmentOperator implements SymbolInterface, OperatorInterface
     public function symbol(): string
     {
         return match ($this) {
-            self::ASSIGN => '=',
-            self::ADD => '+=',
-            self::SUBTRACT => '-=',
-            self::MULTIPLY => '*=',
-            self::DIVIDE => '/=',
-            self::MODULUS => '%=',
-            self::EXPONENTIATE => '**=',
-            self::BITWISE_AND => '&=',
-            self::BITWISE_OR => '|=',
-            self::BITWISE_XOR => '^=',
-            self::BITWISE_SHIFT_LEFT => '<<=',
-            self::BITWISE_SHIFT_RIGHT => '>>=',
+            self::NOT => '!',
+            self::NEGATE => '-',
+            self::BITWISE_NOT => '~',
+            self::INCREMENT_PRE, self::INCREMENT_POST => '++',
+            self::DECREMENT_PRE, self::DECREMENT_POST => '--',
         };
     }
 
     public function precedence(): int
     {
-        return 1;
+        return match ($this) {
+            self::INCREMENT_POST, self::DECREMENT_POST => 15,
+            self::INCREMENT_PRE, self::DECREMENT_PRE, self::NOT, self::NEGATE, self::BITWISE_NOT => 14,
+        };
     }
 
     public function associativity(): OperatorAssociativity
     {
-        return OperatorAssociativity::RIGHT;
+        return match ($this) {
+            self::INCREMENT_POST, self::DECREMENT_POST => OperatorAssociativity::LEFT,
+            default => OperatorAssociativity::RIGHT,
+        };
     }
 }

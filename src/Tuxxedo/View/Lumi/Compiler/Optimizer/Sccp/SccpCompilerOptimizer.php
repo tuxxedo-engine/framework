@@ -24,7 +24,7 @@ use Tuxxedo\View\Lumi\Node\NodeNativeType;
 use Tuxxedo\View\Lumi\Node\TextNode;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
-use Tuxxedo\View\Lumi\Syntax\BinaryOperator;
+use Tuxxedo\View\Lumi\Syntax\Operator\BinaryOperator;
 
 class SccpCompilerOptimizer extends AbstractOptimizer
 {

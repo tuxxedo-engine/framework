@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Node;
 
-use Tuxxedo\View\Lumi\Syntax\AssignmentOperator;
+use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentOperator;
 
 readonly class AssignmentNode implements NodeInterface
 {
