@@ -99,30 +99,32 @@ class DceOptimizer extends AbstractOptimizer
                 return parent::optimizeNodes($node->body);
             }
 
-            $conditional = DceConditional::fromNode($node);
+            $newElse = null;
+            $eliminationBranches = [];
 
             foreach ($node->branches as $index => $branch) {
                 $evaluation = $this->evaluate($branch->operand);
 
                 if ($evaluation === DceEvaluateResult::ALWAYS_FALSE) {
-                    $conditional->eliminateBranch($index);
+                    $eliminationBranches[$index] = true;
                 } elseif ($evaluation === DceEvaluateResult::ALWAYS_TRUE) {
-                    $conditional->newElse($index);
+                    $newElse = $index;
 
                     break;
+                } else {
+                    $eliminationBranches[$index] = false;
                 }
             }
 
-            $newIf = $conditional->newIf();
+            $newIf = \array_search(true, $eliminationBranches, true);
 
-            if ($newIf === null) {
+            if ($newIf === false) {
                 return parent::optimizeNodes($node->else);
             }
 
-            $newElse = $conditional->newElse;
             $branches = [];
 
-            foreach ($conditional->eliminateBranches as $index => $branch) {
+            foreach ($eliminationBranches as $index => $branch) {
                 if ($index === $newIf) {
                     continue;
                 } elseif ($index === $newElse) {
