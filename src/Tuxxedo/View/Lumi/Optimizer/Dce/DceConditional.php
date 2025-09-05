@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Compiler\Optimizer\Dce;
+namespace Tuxxedo\View\Lumi\Optimizer\Dce;
 
 use Tuxxedo\View\Lumi\Syntax\Node\ConditionalNode;
 

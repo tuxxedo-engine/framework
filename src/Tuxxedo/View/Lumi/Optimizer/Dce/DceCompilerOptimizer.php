@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Compiler\Optimizer\Dce;
+namespace Tuxxedo\View\Lumi\Optimizer\Dce;
 
-use Tuxxedo\View\Lumi\Compiler\Optimizer\AbstractOptimizer;
+use Tuxxedo\View\Lumi\Optimizer\AbstractOptimizer;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;

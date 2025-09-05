@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Compiler\Optimizer;
+namespace Tuxxedo\View\Lumi\Optimizer;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerDirectives;
 use Tuxxedo\View\Lumi\Compiler\CompilerDirectivesInterface;

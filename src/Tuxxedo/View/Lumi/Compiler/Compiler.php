@@ -15,15 +15,15 @@ namespace Tuxxedo\View\Lumi\Compiler;
 
 use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompiler;
 use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompilerInterface;
-use Tuxxedo\View\Lumi\Compiler\Optimizer\CompilerOptimizerInterface;
-use Tuxxedo\View\Lumi\Compiler\Optimizer\Dce\DceCompilerOptimizer;
-use Tuxxedo\View\Lumi\Compiler\Optimizer\Sccp\SccpCompilerOptimizer;
 use Tuxxedo\View\Lumi\Compiler\Provider\CompilerProviderInterface;
 use Tuxxedo\View\Lumi\Compiler\Provider\ConditionalCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\ExpressionCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\LoopCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\NodeCompilerHandler;
 use Tuxxedo\View\Lumi\Compiler\Provider\TextCompilerProvider;
+use Tuxxedo\View\Lumi\Optimizer\CompilerOptimizerInterface;
+use Tuxxedo\View\Lumi\Optimizer\Dce\DceCompilerOptimizer;
+use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpCompilerOptimizer;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\BuiltinNodeKinds;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
