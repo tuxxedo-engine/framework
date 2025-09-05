@@ -13,8 +13,26 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Operator;
 
+use Tuxxedo\View\Lumi\Parser\ParserException;
+use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
+
 interface OperatorInterface
 {
-    public function precedence(): int;
-    public function associativity(): OperatorAssociativity;
+    /**
+     * @return string[]
+     */
+    public static function all(): array;
+
+    public static function is(
+        TokenInterface $token
+    ): bool;
+
+    /**
+     * @throws ParserException
+     */
+    public static function from(
+        TokenInterface $token,
+    ): static;
+
+    public function symbol(): string;
 }

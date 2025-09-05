@@ -17,7 +17,7 @@ use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
-enum UnaryOperator implements SymbolInterface, OperatorInterface
+enum UnaryOperator implements OperatorInterface
 {
     case NOT;
     case NEGATE;
@@ -70,22 +70,6 @@ enum UnaryOperator implements SymbolInterface, OperatorInterface
             self::BITWISE_NOT => '~',
             self::INCREMENT_PRE, self::INCREMENT_POST => '++',
             self::DECREMENT_PRE, self::DECREMENT_POST => '--',
-        };
-    }
-
-    public function precedence(): int
-    {
-        return match ($this) {
-            self::INCREMENT_POST, self::DECREMENT_POST => 15,
-            self::INCREMENT_PRE, self::DECREMENT_PRE, self::NOT, self::NEGATE, self::BITWISE_NOT => 14,
-        };
-    }
-
-    public function associativity(): OperatorAssociativity
-    {
-        return match ($this) {
-            self::INCREMENT_POST, self::DECREMENT_POST => OperatorAssociativity::LEFT,
-            default => OperatorAssociativity::RIGHT,
         };
     }
 }

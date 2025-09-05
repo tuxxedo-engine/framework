@@ -27,7 +27,7 @@ use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\LumiEngine;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
-use Tuxxedo\View\Lumi\Syntax\Operator\SymbolInterface;
+use Tuxxedo\View\Lumi\Syntax\Operator\OperatorInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewException;
@@ -131,7 +131,7 @@ readonly class LumiController
     private function visualizeEnumValue(
         \UnitEnum $value,
     ): string {
-        if ($value instanceof SymbolInterface) {
+        if ($value instanceof OperatorInterface) {
             return $value->symbol();
         }
 

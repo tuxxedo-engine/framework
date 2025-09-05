@@ -17,7 +17,7 @@ use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
-enum AssignmentOperator implements SymbolInterface, OperatorInterface
+enum AssignmentOperator implements OperatorInterface
 {
     case ASSIGN;
     case ADD;
@@ -83,15 +83,5 @@ enum AssignmentOperator implements SymbolInterface, OperatorInterface
             self::BITWISE_SHIFT_LEFT => '<<=',
             self::BITWISE_SHIFT_RIGHT => '>>=',
         };
-    }
-
-    public function precedence(): int
-    {
-        return 1;
-    }
-
-    public function associativity(): OperatorAssociativity
-    {
-        return OperatorAssociativity::RIGHT;
     }
 }

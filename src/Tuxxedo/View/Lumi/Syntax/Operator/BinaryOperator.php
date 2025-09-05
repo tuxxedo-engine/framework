@@ -17,7 +17,7 @@ use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
-enum BinaryOperator implements SymbolInterface, OperatorInterface
+enum BinaryOperator implements OperatorInterface
 {
     case CONCAT;
     case ADD;
@@ -108,28 +108,6 @@ enum BinaryOperator implements SymbolInterface, OperatorInterface
             self::BITWISE_SHIFT_RIGHT => '>>',
             self::NULL_COALESCE => '??',
             self::NULL_SAFE_ACCESS => '?.',
-        };
-    }
-
-    public function precedence(): int
-    {
-        return match ($this) {
-            self::OR => 2,
-            self::AND => 3,
-            self::EQUAL, self::NOT_EQUAL, self::STRICT_EQUAL, self::STRICT_NOT_EQUAL, self::NULL_COALESCE => 4,
-            self::LESS, self::GREATER, self::LESS_EQUAL, self::GREATER_EQUAL => 5,
-            self::ADD, self::SUBTRACT => 6,
-            self::MULTIPLY, self::DIVIDE, self::MODULUS => 7,
-            self::EXPONENTIATE => 8,
-            default => 9,
-        };
-    }
-
-    public function associativity(): OperatorAssociativity
-    {
-        return match ($this) {
-            self::EXPONENTIATE => OperatorAssociativity::RIGHT,
-            default => OperatorAssociativity::LEFT,
         };
     }
 }
