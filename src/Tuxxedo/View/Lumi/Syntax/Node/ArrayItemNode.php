@@ -13,9 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-// @todo May need to implement IterableExpressionNodeInterface
-
-readonly class ArrayItemNode implements ExpressionNodeInterface
+readonly class ArrayItemNode implements NodeInterface
 {
     public string $kind;
 
@@ -23,6 +21,6 @@ readonly class ArrayItemNode implements ExpressionNodeInterface
         public ExpressionNodeInterface $value,
         public ?ExpressionNodeInterface $key = null,
     ) {
-        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
+        $this->kind = BuiltinNodeKinds::DEPENDANT->name;
     }
 }
