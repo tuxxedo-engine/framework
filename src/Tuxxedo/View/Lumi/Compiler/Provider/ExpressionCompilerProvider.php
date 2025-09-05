@@ -17,8 +17,12 @@ use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Syntax\NativeType;
+use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ArrayItemNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ConcatNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
@@ -153,6 +157,69 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         );
     }
 
+    private function compileConcat(
+        ConcatNode $node,
+        CompilerInterface $compiler,
+    ): string {
+        return \join(
+            ' . ',
+            \array_map(
+                $compiler->compileNode(...),
+                $node->operands,
+            ),
+        );
+    }
+
+    private function compileArray(
+        ArrayNode $node,
+        CompilerInterface $compiler,
+    ): string {
+        return \sprintf(
+            '[%s]',
+            \join(
+                ', ',
+                \array_map(
+                    $compiler->compileNode(...),
+                    $node->items,
+                ),
+            ),
+        );
+    }
+
+    private function compileArrayAccess(
+        ArrayAccessNode $node,
+        CompilerInterface $compiler,
+    ): string {
+        if ($node->array instanceof ArrayNode) {
+            return \sprintf(
+                '%s[%s]',
+                $compiler->compileNode($node->array),
+                $compiler->compileNode($node->key),
+            );
+        }
+
+        return \sprintf(
+            '(%s)[%s]',
+            $compiler->compileNode($node->array),
+            $compiler->compileNode($node->key),
+        );
+    }
+
+    private function compileArrayItemNode(
+        ArrayItemNode $node,
+        CompilerInterface $compiler,
+    ): string {
+        if ($node->key !== null) {
+            return \sprintf(
+                '%s => %s',
+                $compiler->compileNode($node->key),
+                $compiler->compileNode($node->value),
+            );
+        }
+
+        return $compiler->compileNode($node->value);
+    }
+
     public function augment(): \Generator
     {
         yield new NodeCompilerHandler(
@@ -188,6 +255,26 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         yield new NodeCompilerHandler(
             nodeClassName: GroupNode::class,
             handler: $this->compileGroup(...),
+        );
+
+        yield new NodeCompilerHandler(
+            nodeClassName: ConcatNode::class,
+            handler: $this->compileConcat(...),
+        );
+
+        yield new NodeCompilerHandler(
+            nodeClassName: ArrayNode::class,
+            handler: $this->compileArray(...),
+        );
+
+        yield new NodeCompilerHandler(
+            nodeClassName: ArrayAccessNode::class,
+            handler: $this->compileArrayAccess(...),
+        );
+
+        yield new NodeCompilerHandler(
+            nodeClassName: ArrayItemNode::class,
+            handler: $this->compileArrayItemNode(...),
         );
     }
 }
