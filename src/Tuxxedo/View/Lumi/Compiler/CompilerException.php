@@ -13,9 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Compiler;
 
+use Tuxxedo\View\Lumi\LumiException;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 
-class CompilerException extends \Exception
+class CompilerException extends LumiException
 {
     public static function fromCannotSave(
         string $name,
@@ -89,19 +90,6 @@ class CompilerException extends \Exception
                 'Unexpected state for "%s", expecting "%s"',
                 $kind,
                 $expects,
-            ),
-        );
-    }
-
-    public static function fromOptimizerDivideByZero(
-        int|float $left,
-        int|float $right,
-    ): self {
-        return new self(
-            message: \sprintf(
-                'Optimizer: Cannot divide "%g" by zero ("%g")',
-                $left,
-                $right,
             ),
         );
     }

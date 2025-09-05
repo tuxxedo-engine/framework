@@ -117,7 +117,7 @@ class TokenStream implements TokenStreamInterface
 
         if ($current->type !== $tokenName) {
             throw LexerException::fromUnexpectedToken(
-                tokenName: $current->type,
+                token: $current,
                 expectedTokenName: $tokenName,
             );
         } elseif ($op1 !== null && $current->op1 !== $op1) {

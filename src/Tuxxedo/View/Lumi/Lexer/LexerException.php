@@ -13,7 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer;
 
-class LexerException extends \Exception
+use Tuxxedo\View\Lumi\LumiException;
+use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
+
+class LexerException extends LumiException
 {
     public static function fromDuplicateSequence(
         string $sequence,
@@ -124,13 +127,14 @@ class LexerException extends \Exception
     }
 
     public static function fromUnexpectedToken(
-        string $tokenName,
+        TokenInterface $token,
         string $expectedTokenName,
     ): self {
         return new self(
             message: \sprintf(
-                'Unexpected token "%s" encountered in token stream, expected "%s"',
-                $tokenName,
+                'Unexpected token "%s" encountered on line %d in token stream, expected "%s"',
+                $token->type,
+                $token->line,
                 $expectedTokenName,
             ),
         );
