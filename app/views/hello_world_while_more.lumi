@@ -1,0 +1,24 @@
+{% set n = 3 %}
+{% do %}
+    {% set i = n %}
+    {% while i %}
+        <li>Inner {{ i }}</li>
+        {% set i -= 1 %}
+    {% endwhile %}
+    {% set n -= 1 %}
+{% while n %}
+
+{#
+{% set x = 3 %}
+{% set y = 5 %}
+{% set z = 8 %}
+{% do %}
+{% while y %}
+    {% set y -= 1 %}
+    {% do %}
+        {% set x -= 1 %}
+    {% while x %}
+{% endwhile %}
+{% set z -= 2 %}
+{% while z %}
+#}
