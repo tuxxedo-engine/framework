@@ -23,7 +23,6 @@ readonly class ParserStateProperties implements ParserStatePropertiesInterface
      * @param array<string, string|int|bool> $state
      */
     final public function __construct(
-        public int $loopDepth,
         public int $conditionDepth,
         public array $groupingStack,
         public array $nodeStack,
@@ -35,7 +34,6 @@ readonly class ParserStateProperties implements ParserStatePropertiesInterface
         ParserStateInterface $state,
     ): static {
         return new static(
-            loopDepth: $state->loopDepth,
             conditionDepth: $state->conditionDepth,
             groupingStack: $state->groupingStack,
             nodeStack: $state->nodeStack,

@@ -17,10 +17,6 @@ use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 
 interface ParserStatePropertiesInterface
 {
-    public int $loopDepth {
-        get;
-    }
-
     public int $conditionDepth {
         get;
     }

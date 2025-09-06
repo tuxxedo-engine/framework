@@ -96,7 +96,6 @@ class ParserState implements ParserStateInterface
     {
         \array_push($this->stateStack, ParserStateProperties::fromState($this));
 
-        $this->loopDepth = 0;
         $this->conditionDepth = 0;
         $this->groupingStack = [];
         $this->nodeStack = [];
@@ -111,7 +110,6 @@ class ParserState implements ParserStateInterface
             throw ParserException::fromUnexpectedStackExit();
         }
 
-        $this->loopDepth = $oldState->loopDepth;
         $this->conditionDepth = $oldState->conditionDepth;
         $this->groupingStack = $oldState->groupingStack;
         $this->nodeStack = $oldState->nodeStack;

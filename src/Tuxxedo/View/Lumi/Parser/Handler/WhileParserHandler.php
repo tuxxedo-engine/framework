@@ -20,8 +20,8 @@ use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
-// @todo Fix so that this will not break do-while
 class WhileParserHandler implements ParserHandlerInterface
 {
     /**
@@ -41,17 +41,14 @@ class WhileParserHandler implements ParserHandlerInterface
     ): array {
         $stream->consume();
 
-        if ($stream->currentIs(BuiltinTokenNames::END->name)) {
-            throw ParserException::fromEmptyExpression();
+        if ($this->tokenName === BuiltinTokenNames::DO->name) {
+            return $this->parseDoWhile(
+                parser: $parser,
+                stream: $stream,
+            );
         }
 
-        $tokens = [];
-
-        do {
-            $tokens[] = $stream->current();
-
-            $stream->consume();
-        } while (!$stream->currentIs(BuiltinTokenNames::END->name));
+        $tokens = $this->collectCondition($stream);
 
         $stream->expect(BuiltinTokenNames::END->name);
         $parser->state->enterLoop();
@@ -71,6 +68,8 @@ class WhileParserHandler implements ParserHandlerInterface
             $stream->consume();
         }
 
+        $parser->state->enterLoop();
+
         $body = $parser->parse(
             stream: new TokenStream(
                 tokens: $bodyTokens,
@@ -86,5 +85,42 @@ class WhileParserHandler implements ParserHandlerInterface
                 body: $body,
             ),
         ];
+    }
+
+    /**
+     * @return TokenInterface[]
+     *
+     * @throws ParserException
+     */
+    private function collectCondition(
+        TokenStreamInterface $stream,
+    ): array {
+        if ($stream->currentIs(BuiltinTokenNames::END->name)) {
+            throw ParserException::fromEmptyExpression();
+        }
+
+        $tokens = [];
+
+        do {
+            $tokens[] = $stream->current();
+
+            $stream->consume();
+        } while (!$stream->currentIs(BuiltinTokenNames::END->name));
+
+        return $tokens;
+    }
+
+    /**
+     * @return NodeInterface[]
+     *
+     * @throws ParserException
+     */
+    private function parseDoWhile(
+        ParserInterface $parser,
+        TokenStreamInterface $stream,
+    ): array {
+        throw ParserException::fromNotImplemented(
+            feature: 'Do while loops',
+        );
     }
 }
