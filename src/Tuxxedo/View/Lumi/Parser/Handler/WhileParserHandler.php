@@ -17,10 +17,11 @@ use Tuxxedo\View\Lumi\Lexer\TokenStream;
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
-use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
 class WhileParserHandler implements ParserHandlerInterface
 {
@@ -48,16 +49,9 @@ class WhileParserHandler implements ParserHandlerInterface
             );
         }
 
-        $tokens = $this->collectCondition($stream);
-
-        $stream->expect(BuiltinTokenNames::END->name);
-        $parser->state->enterLoop();
-
-        $condition = $parser->expressionParser->parse(
-            stream: new TokenStream(
-                tokens: $tokens,
-            ),
-            state: $parser->state,
+        $condition = $this->collectCondition(
+            parser: $parser,
+            stream: $stream,
         );
 
         $bodyTokens = [];
@@ -88,13 +82,12 @@ class WhileParserHandler implements ParserHandlerInterface
     }
 
     /**
-     * @return TokenInterface[]
-     *
      * @throws ParserException
      */
     private function collectCondition(
+        ParserInterface $parser,
         TokenStreamInterface $stream,
-    ): array {
+    ): ExpressionNodeInterface {
         if ($stream->currentIs(BuiltinTokenNames::END->name)) {
             throw ParserException::fromEmptyExpression();
         }
@@ -107,7 +100,14 @@ class WhileParserHandler implements ParserHandlerInterface
             $stream->consume();
         } while (!$stream->currentIs(BuiltinTokenNames::END->name));
 
-        return $tokens;
+        $stream->expect(BuiltinTokenNames::END->name);
+
+        return $parser->expressionParser->parse(
+            stream: new TokenStream(
+                tokens: $tokens,
+            ),
+            state: $parser->state,
+        );
     }
 
     /**
@@ -119,8 +119,94 @@ class WhileParserHandler implements ParserHandlerInterface
         ParserInterface $parser,
         TokenStreamInterface $stream,
     ): array {
-        throw ParserException::fromNotImplemented(
-            feature: 'Do while loops',
-        );
+        $remainingBody = $this->doBodyReadAhead($stream);
+
+        $body = [];
+
+        while ($remainingBody-- > 0) {
+            $body[] = $stream->current();
+
+            $stream->consume();
+        }
+
+        $stream->expect(BuiltinTokenNames::WHILE->name);
+
+        $parser->state->enterLoop();
+
+        $body = $parser->parse(
+            stream: new TokenStream(
+                tokens: $body,
+            ),
+        )->nodes;
+
+        $parser->state->leaveLoop();
+
+        return [
+            new DoWhileNode(
+                operand: $this->collectCondition(
+                    parser: $parser,
+                    stream: $stream,
+                ),
+                body: $body,
+            ),
+        ];
+    }
+
+    /**
+     * @throws ParserException
+     */
+    private function doBodyReadAhead(
+        TokenStreamInterface $stream,
+    ): int {
+        $position = 0;
+        $sawWhileOrEndWhile = false;
+        $lastToken = null;
+
+        /** @var array<'DO'|'WHILE'> $stack */
+        $stack = [
+            BuiltinTokenNames::DO->name,
+        ];
+
+        while (true) {
+            $token = $stream->peek($position);
+
+            if ($token === null) {
+                if (!$sawWhileOrEndWhile) {
+                    return 0;
+                }
+
+                throw ParserException::fromUnexpectedTokenWithExpects(
+                    tokenName: $lastToken->type ?? BuiltinTokenNames::DO->name,
+                    expectedTokenName: BuiltinTokenNames::WHILE->name,
+                );
+            }
+
+            $type = $token->type;
+
+            if ($type === BuiltinTokenNames::DO->name) {
+                $stack[] = BuiltinTokenNames::DO->name;
+            } elseif ($type === BuiltinTokenNames::ENDWHILE->name) {
+                $sawWhileOrEndWhile = true;
+
+                if (\end($stack) === 'WHILE') {
+                    \array_pop($stack);
+                }
+            } elseif ($type === BuiltinTokenNames::WHILE->name) {
+                $sawWhileOrEndWhile = true;
+
+                if (\end($stack) === BuiltinTokenNames::DO->name) {
+                    \array_pop($stack);
+
+                    if (\sizeof($stack) === 0) {
+                        return $position;
+                    }
+                } else {
+                    $stack[] = BuiltinTokenNames::WHILE->name;
+                }
+            }
+
+            $position++;
+            $lastToken = $token;
+        }
     }
 }

@@ -49,10 +49,16 @@ interface TokenStreamInterface
         ?string $op2 = null,
     ): bool;
 
+    /**
+     * @phpstan-impure
+     */
     public function peek(
         int $position = 1,
     ): ?TokenInterface;
 
+    /**
+     * @phpstan-impure
+     */
     public function peekIs(
         string $tokenName,
         ?string $op1 = null,
