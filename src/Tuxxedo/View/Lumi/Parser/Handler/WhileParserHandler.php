@@ -188,7 +188,7 @@ class WhileParserHandler implements ParserHandlerInterface
             } elseif ($type === BuiltinTokenNames::ENDWHILE->name) {
                 $sawWhileOrEndWhile = true;
 
-                if (\end($stack) === 'WHILE') {
+                if (\end($stack) === BuiltinTokenNames::WHILE->name) {
                     \array_pop($stack);
                 }
             } elseif ($type === BuiltinTokenNames::WHILE->name) {
