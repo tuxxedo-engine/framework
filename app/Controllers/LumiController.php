@@ -264,7 +264,17 @@ readonly class LumiController
 
         $buffer = '<h3>File</h3>';
         $buffer .= '<form>';
-        $buffer .= '<select id="file" onchange="window.location = \'?file=\' + this.options[this.selectedIndex].value;">';
+        $buffer .= '<script>';
+        $buffer .= 'function formCheck() {';
+        $buffer .= 'var sccp = 0;';
+        $buffer .= 'var dce = 0;';
+        $buffer .= 'const $ = (id) => document.getElementById(id);';
+        $buffer .= 'if ($(\'sccp\').checked){ sccp = 1; }';
+        $buffer .= 'if ($(\'dce\').checked){ dce = 1; }';
+        $buffer .= 'window.location = \'?file=\' + $(\'file\').options[$(\'file\').selectedIndex].value + \'&sccp=\' + sccp + \'&dce=\' + dce;';
+        $buffer .= '}';
+        $buffer .= '</script>';
+        $buffer .= '<select id="file" onchange="formCheck();">';
 
         foreach ($this->getViewFiles() as $viewFile) {
             $viewFile = $this->getShortViewName($viewFile);
@@ -276,22 +286,12 @@ readonly class LumiController
         }
 
         $buffer .= '</select>';
-        $buffer .= '<script>';
-        $buffer .= 'function optimizerCheck(){';
-        $buffer .= 'var sccp = 0;';
-        $buffer .= 'var dce = 0;';
-        $buffer .= 'const $ = (id) => document.getElementById(id);';
-        $buffer .= 'if ($(\'sccp\').checked){ sccp = 1; }';
-        $buffer .= 'if ($(\'dce\').checked){ dce = 1; }';
-        $buffer .= 'window.location = \'?file=\' + $(\'file\').options[$(\'file\').selectedIndex].value + \'&sccp=\' + sccp + \'&dce=\' + dce;';
-        $buffer .= '}';
-        $buffer .= '</script>';
         $buffer .= '<p>';
-        $buffer .= '<input type="checkbox" id="sccp"' . ($request->get->getBool('sccp') ? ' checked' : '') . ' onclick="optimizerCheck();">';
+        $buffer .= '<input type="checkbox" id="sccp"' . ($request->get->getBool('sccp') ? ' checked' : '') . ' onclick="formCheck();">';
         $buffer .= '<label for="sccp">SCCP Optimizer</label>';
         $buffer .= '</p>';
         $buffer .= '<p>';
-        $buffer .= '<input type="checkbox" id="dce"' . ($request->get->getBool('dce') ? ' checked' : '') . ' onclick="optimizerCheck();">';
+        $buffer .= '<input type="checkbox" id="dce"' . ($request->get->getBool('dce') ? ' checked' : '') . ' onclick="formCheck();">';
         $buffer .= '<label for="dce">DCE Optimizer</label>';
         $buffer .= '</p>';
         $buffer .= '</form>';
