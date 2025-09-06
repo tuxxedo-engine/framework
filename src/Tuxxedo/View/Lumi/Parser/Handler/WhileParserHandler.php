@@ -158,6 +158,7 @@ class WhileParserHandler implements ParserHandlerInterface
     private function doBodyReadAhead(
         TokenStreamInterface $stream,
     ): int {
+        // @todo This code is not robust enough to work with everything in hello_world_while_more.lumi
         $position = 0;
         $sawWhileOrEndWhile = false;
         $lastToken = null;
