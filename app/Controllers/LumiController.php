@@ -197,6 +197,7 @@ readonly class LumiController
             'hello_world_seq' => $this->viewController->seq(...),
             'hello_world_set' => $this->viewController->set(...),
             'hello_world_while' => $this->viewController->while(...),
+            'hello_world_while_more' => $this->viewController->whileMore(...),
             default => throw HttpException::fromInternalServerError(),
         })();
 

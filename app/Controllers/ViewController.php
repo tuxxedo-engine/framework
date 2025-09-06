@@ -92,6 +92,14 @@ readonly class ViewController
     }
 
     #[Route\Get]
+    public function whileMore(): ViewInterface
+    {
+        return new View(
+            name: 'hello_world_while_more',
+        );
+    }
+
+    #[Route\Get]
     public function decl(): ViewInterface
     {
         return new View(
