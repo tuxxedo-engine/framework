@@ -145,4 +145,22 @@ class Runtime implements RuntimeInterface
             ),
         );
     }
+
+    public function filterOrBitwiseOr(
+        mixed $left,
+        mixed $right,
+    ): mixed {
+        if (\is_string($right) && \array_key_exists($right, $this->filters)) {
+            return $this->filter($left, $right);
+        }
+
+        if (!\is_int($left) || !\is_int($right)) {
+            throw ViewException::fromInvalidBitwiseOr(
+                leftType: \get_debug_type($left),
+                rightType: \get_debug_type($right),
+            );
+        }
+
+        return $left | $right;
+    }
 }

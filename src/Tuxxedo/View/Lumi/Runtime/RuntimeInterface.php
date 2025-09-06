@@ -109,4 +109,9 @@ interface RuntimeInterface
         mixed $value,
         string $filter,
     ): mixed;
+
+    public function filterOrBitwiseOr(
+        mixed $left,
+        mixed $right,
+    ): mixed;
 }
