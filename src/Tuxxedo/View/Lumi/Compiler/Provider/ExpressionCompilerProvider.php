@@ -110,6 +110,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         BinaryOpNode $node,
         CompilerInterface $compiler,
     ): string {
+        // @todo This needs special casing for filters
         return \sprintf(
             '%s %s %s',
             $compiler->compileNode($node->left),
