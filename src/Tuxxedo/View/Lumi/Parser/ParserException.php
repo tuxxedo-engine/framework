@@ -33,19 +33,6 @@ class ParserException extends \Exception
         );
     }
 
-    public static function fromUnexpectedTokenWithExpects(
-        string $tokenName,
-        string $expectedTokenName,
-    ): self {
-        return new self(
-            message: \sprintf(
-                'Syntax error: Unexpected token "%s", expected "%s"',
-                $tokenName,
-                $expectedTokenName,
-            ),
-        );
-    }
-
     /**
      * @param string[] $expectedTokenNames
      */
@@ -146,34 +133,6 @@ class ParserException extends \Exception
                 $expectedType,
                 $key,
                 $type,
-            ),
-        );
-    }
-
-    /**
-     * @param string[] $expectedTokenNativeTypes
-     */
-    public static function fromUnexpectedTokenNativeType(
-        string $tokenNativeType,
-        array $expectedTokenNativeTypes,
-    ): self {
-        return new self(
-            message: \sprintf(
-                'Unexpected token native type "%s", expected one of "%s"',
-                $tokenNativeType,
-                \join('", "', $expectedTokenNativeTypes),
-            ),
-        );
-    }
-
-    // @todo Remove
-    public static function fromNotImplemented(
-        string $feature,
-    ): self {
-        return new self(
-            message: \sprintf(
-                'The following feature is not implemented: %s',
-                $feature,
             ),
         );
     }
