@@ -23,6 +23,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 
+// @todo Split this like AbstractForParse
 class WhileParserHandler implements ParserHandlerInterface
 {
     /**
@@ -106,7 +107,6 @@ class WhileParserHandler implements ParserHandlerInterface
             stream: new TokenStream(
                 tokens: $tokens,
             ),
-            state: $parser->state,
         );
     }
 

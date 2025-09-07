@@ -11,24 +11,17 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Parser\Expression;
+namespace Tuxxedo\View\Lumi\Parser\OldExpression;
 
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
-class ArrayParser implements ArrayParserInterface
+interface ArrayParserInterface
 {
-    // @todo Fix visibility
-    public function __construct(
-        public readonly ExpressionParserInterface $parser,
-    ) {
-    }
-
+    /**
+     * @throws ParserException
+     */
     public function parseAccess(
         TokenInterface $variable,
-    ): void {
-        throw ParserException::fromNotImplemented(
-            feature: 'parsing array access',
-        );
-    }
+    ): void;
 }

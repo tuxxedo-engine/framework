@@ -53,7 +53,6 @@ class ConditionParserHandler implements ParserHandlerInterface
             stream: new TokenStream(
                 tokens: $expressionTokens,
             ),
-            state: $parser->state,
         );
 
         $parser->state->enterCondition();
@@ -112,8 +111,9 @@ class ConditionParserHandler implements ParserHandlerInterface
                 $stream->expect(BuiltinTokenNames::END->name);
 
                 $branchCondition = $parser->expressionParser->parse(
-                    stream: new TokenStream(tokens: $branchTokens),
-                    state: $parser->state,
+                    stream: new TokenStream(
+                        tokens: $branchTokens,
+                    ),
                 );
 
                 $branchBodyTokens = [];

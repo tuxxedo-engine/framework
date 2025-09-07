@@ -51,7 +51,6 @@ abstract class AbstractForParserHandler implements ParserHandlerInterface
                     ),
                 ],
             ),
-            state: $parser->state,
         );
 
         if (!$value instanceof IdentifierNode) {
@@ -73,7 +72,6 @@ abstract class AbstractForParserHandler implements ParserHandlerInterface
                         ),
                     ],
                 ),
-                state: $parser->state,
             );
 
             if (!$key instanceof IdentifierNode) {
@@ -101,8 +99,9 @@ abstract class AbstractForParserHandler implements ParserHandlerInterface
         $parser->state->enterLoop();
 
         $iterator = $parser->expressionParser->parse(
-            stream: new TokenStream($expressionTokens),
-            state: $parser->state,
+            stream: new TokenStream(
+                tokens: $expressionTokens,
+            ),
         );
 
         if (!$iterator instanceof IterableExpressionNodeInterface) {

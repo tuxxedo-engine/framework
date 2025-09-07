@@ -15,6 +15,7 @@ namespace Tuxxedo\View\Lumi\Parser;
 
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 
+// @todo Clean this up after the new expression parser is in place
 interface ParserStateInterface
 {
     public int $loopDepth {
