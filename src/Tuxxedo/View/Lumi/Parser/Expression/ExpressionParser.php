@@ -66,9 +66,7 @@ class ExpressionParser implements ExpressionParserInterface
         unset($this->stream, $this->current);
 
         if (!$stream->eof()) {
-            throw ParserException::fromUnexpectedToken(
-                tokenName: $stream->current()->type,
-            );
+            $this->unexpected($stream->current());
         }
 
         return $node;
@@ -120,9 +118,7 @@ class ExpressionParser implements ExpressionParserInterface
             $token->type === BuiltinTokenNames::IDENTIFIER->name => $this->identifierNode($token),
             $token->type === BuiltinTokenNames::CHARACTER->name && UnarySymbol::is($token) => $this->unaryNode($token),
             $token->type === BuiltinTokenNames::CHARACTER->name && $token->op1 === CharacterSymbol::LEFT_PARENTHESIS->symbol() => $this->parseGroupedExpression(),
-            default => throw ParserException::fromUnexpectedToken(
-                tokenName: $token->type,
-            ),
+            default => $this->unexpected($token),
         };
     }
 
@@ -365,6 +361,27 @@ class ExpressionParser implements ExpressionParserInterface
         return new UnaryOpNode(
             operator: $operator,
             operand: $this->parseExpression($operator->precedence()),
+        );
+    }
+
+    /**
+     * @throws ParserException
+     */
+    private function unexpected(
+        TokenInterface $token,
+    ): never {
+        if (
+            (
+                $token->type === BuiltinTokenNames::OPERATOR->name ||
+                $token->type === BuiltinTokenNames::CHARACTER->name
+            ) &&
+            $token->op1 !== null
+        ) {
+            $tokenName = $token->op1;
+        }
+
+        throw ParserException::fromUnexpectedToken(
+            tokenName: $tokenName ?? $token->type,
         );
     }
 }
