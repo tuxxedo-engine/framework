@@ -22,6 +22,7 @@ use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\Attribute\Controller;
 use Tuxxedo\Router\Attribute\Route;
+use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\LumiEngine;
 use Tuxxedo\View\Lumi\LumiException;
 use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
@@ -30,7 +31,6 @@ use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Operator\OperatorInterface;
-use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
@@ -47,11 +47,14 @@ readonly class LumiController
     }
 
     private function visualizeToken(
-        TokenInterface $token,
+        TokenStreamInterface $stream,
     ): string {
+        $token = $stream->current();
+
         $output = \sprintf(
-            'L%s %s',
-            \str_pad((string) $token->line, 3),
+            'L%s@%s %s',
+            \str_pad((string) $token->line, 5),
+            \str_pad((string) $stream->position, 5),
             $token->type,
         );
 
@@ -197,7 +200,6 @@ readonly class LumiController
             'hello_world_seq' => $this->viewController->seq(...),
             'hello_world_set' => $this->viewController->set(...),
             'hello_world_while' => $this->viewController->while(...),
-            'hello_world_while_more' => $this->viewController->whileMore(...),
             default => throw HttpException::fromInternalServerError(),
         })();
 
@@ -215,7 +217,7 @@ readonly class LumiController
         $buffer .= '<h3>Nodes (SCCP)</h3>';
         $buffer .= '<pre>';
 
-        $optimizedStream = (new SccpOptimizer())->optimize(clone $nodeStream);
+        $optimizedStream = (new SccpOptimizer())->optimize($nodeStream);
 
         while (!$optimizedStream->eof()) {
             $buffer .= $this->visualizeNode($optimizedStream->current()) . '<br>';
@@ -235,7 +237,7 @@ readonly class LumiController
         $buffer .= '<h3>Nodes (DCE)</h3>';
         $buffer .= '<pre>';
 
-        $optimizedStream = (new DceOptimizer())->optimize(clone $nodeStream);
+        $optimizedStream = (new DceOptimizer())->optimize($nodeStream);
 
         while (!$optimizedStream->eof()) {
             $buffer .= $this->visualizeNode($optimizedStream->current()) . '<br>';
@@ -312,7 +314,7 @@ readonly class LumiController
             $tokenStream = $engine->lexer->tokenizeByString($viewSource);
 
             while (!$tokenStream->eof()) {
-                $buffer .= $this->visualizeToken($tokenStream->current()) . '<br>';
+                $buffer .= $this->visualizeToken($tokenStream) . '<br>';
 
                 $tokenStream->consume();
             }
@@ -336,7 +338,9 @@ readonly class LumiController
 
                     $nodeStream->consume();
                 }
-            } catch (ParserException $exception) {
+
+                $nodeStream = clone $nodeStream;
+            } catch (ParserException|LumiException $exception) {
                 $buffer .= $exception;
             }
 

@@ -27,6 +27,7 @@ return static function (ContainerInterface $container): void {
         static function (ContainerInterface $container): ViewRenderInterface {
             return LumiConfigurator::fromConfig($container)
                 ->allowAllFunctions()
+                ->enableErrorReporting()
                 ->build();
         },
     );

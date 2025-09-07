@@ -72,17 +72,6 @@
 {% while b %}
 </ul>
 
-{% set y = 5 %}
-<ul>
-{% while y %}
-    {% if y == 3 %}
-        {% break %}
-    {% endif %}
-    <li>{{ y }}</li>
-    {% set y -= 1 %}
-{% endwhile %}
-</ul>
-
 {% set x = 5 %}
 <ul>
 {% do %}
@@ -95,18 +84,6 @@
 {% while x %}
 </ul>
 
-{% set outer = 2 %}
-<ul>
-{% while outer %}
-    {% set inner = 2 %}
-    {% do %}
-        <li>Nested {{ inner }}</li>
-        {% set inner -= 1 %}
-    {% while inner %}
-    {% set outer -= 1 %}
-{% endwhile %}
-</ul>
-
 {% set n = 3 %}
 <ul>
 {% do %}
@@ -117,4 +94,27 @@
     {% endwhile %}
     {% set n -= 1 %}
 {% while n %}
+</ul>
+
+{% set y = 5 %}
+<ul>
+{% while y %}
+    {% if y == 3 %}
+        {% break %}
+    {% endif %}
+    <li>{{ y }}</li>
+    {% set y -= 1 %}
+{% endwhile %}
+</ul>
+
+{% set outer = 2 %}
+<ul>
+{% while outer %}
+    {% set inner = 2 %}
+    {% do %}
+        <li>Nested {{ inner }}</li>
+        {% set inner -= 1 %}
+    {% while inner %}
+    {% set outer -= 1 %}
+{% endwhile %}
 </ul>

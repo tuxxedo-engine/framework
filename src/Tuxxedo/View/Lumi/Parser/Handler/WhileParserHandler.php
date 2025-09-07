@@ -155,14 +155,13 @@ class WhileParserHandler implements ParserHandlerInterface
     /**
      * @throws ParserException
      */
-    private function doBodyReadAhead(
-        TokenStreamInterface $stream,
-    ): int {
+    private function doBodyReadAhead(TokenStreamInterface $stream): int
+    {
         $controlTokens = [];
-        $position = 0;
+        $total = \sizeof($stream->tokens);
 
-        while (($token = $stream->peek($position)) !== null) {
-            $type = $token->type;
+        for ($position = 0; $position < $total; $position++) {
+            $type = $stream->tokens[$position]->type;
 
             if (
                 $type === BuiltinTokenNames::DO->name ||
@@ -175,48 +174,81 @@ class WhileParserHandler implements ParserHandlerInterface
                     'isHeaderWhile' => false,
                 ];
             }
-
-            $position++;
         }
 
-        $whileHeaderStack = [];
+        $currentDoPosition = $stream->position - 1;
+
+        $startIndex = 0;
         $count = \sizeof($controlTokens);
-        $index = 0;
 
-        while ($index < $count) {
-            $control = $controlTokens[$index];
+        for ($i = 0; $i < $count; $i++) {
+            if (
+                $controlTokens[$i]['type'] === BuiltinTokenNames::DO->name &&
+                $controlTokens[$i]['position'] === $currentDoPosition
+            ) {
+                $startIndex = $i;
 
-            if ($control['type'] === BuiltinTokenNames::WHILE->name) {
-                $whileHeaderStack[] = $index;
-            } elseif ($control['type'] === BuiltinTokenNames::ENDWHILE->name) {
-                if (\sizeof($whileHeaderStack) > 0) {
-                    $headerIndex = \array_pop($whileHeaderStack);
-                    $controlTokens[$headerIndex]['isHeaderWhile'] = true;
-                }
+                break;
+            }
+        }
+
+        $controlTokens = \array_slice($controlTokens, $startIndex);
+        $count = \sizeof($controlTokens);
+
+        $whileStack = [];
+        for ($i = 0; $i < $count; $i++) {
+            $type = $controlTokens[$i]['type'];
+
+            if ($type === BuiltinTokenNames::WHILE->name) {
+                $whileStack[] = $i;
+
+                continue;
             }
 
-            $index++;
+            if ($type === BuiltinTokenNames::ENDWHILE->name) {
+                if (\sizeof($whileStack) === 0) {
+                    continue;
+                }
+
+                $headerIndex = \array_pop($whileStack);
+                $controlTokens[$headerIndex]['isHeaderWhile'] = true;
+            }
         }
 
         $doDepth = 1;
         $index = 0;
+        $skippedFirstDo = false;
 
         while ($index < $count) {
             $control = $controlTokens[$index];
 
             if ($control['type'] === BuiltinTokenNames::DO->name) {
-                $doDepth++;
-            } elseif ($control['type'] === BuiltinTokenNames::WHILE->name) {
+                if (!$skippedFirstDo) {
+                    $skippedFirstDo = true;
+                } else {
+                    $doDepth++;
+                }
+
+                $index++;
+
+                continue;
+            }
+            if ($control['type'] === BuiltinTokenNames::WHILE->name) {
                 if ($control['isHeaderWhile']) {
                     $index++;
+
                     continue;
                 }
 
                 $doDepth--;
 
                 if ($doDepth === 0) {
-                    return $control['position'];
+                    return $control['position'] - $currentDoPosition - 1;
                 }
+
+                $index++;
+
+                continue;
             }
 
             $index++;
