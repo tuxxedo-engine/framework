@@ -163,7 +163,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     ): string {
         return \sprintf(
             '(%s)',
-            $compiler->compileExpression($node),
+            $compiler->compileExpression($node->operand),
         );
     }
 
