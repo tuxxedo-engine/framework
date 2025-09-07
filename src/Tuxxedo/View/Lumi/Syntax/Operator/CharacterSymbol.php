@@ -17,7 +17,7 @@ use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
-enum CharacterSymbol implements OperatorInterface
+enum CharacterSymbol implements SymbolInterface
 {
     case LEFT_PARENTHESIS;
     case RIGHT_PARENTHESIS;

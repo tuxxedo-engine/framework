@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Optimizer;
 
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
-use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentOperator;
+use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 
 interface VariableInterface
 {
@@ -33,7 +33,7 @@ interface VariableInterface
     public function mutate(
         ScopeInterface $scope,
         ExpressionNodeInterface $value,
-        AssignmentOperator $operator = AssignmentOperator::ASSIGN,
+        AssignmentSymbol $operator = AssignmentSymbol::ASSIGN,
     ): void;
 
     public function isProperty(): bool;

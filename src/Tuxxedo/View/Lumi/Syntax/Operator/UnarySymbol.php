@@ -17,7 +17,7 @@ use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
-enum UnaryOperator implements OperatorInterface
+enum UnarySymbol implements SymbolInterface
 {
     case NOT;
     case NEGATE;

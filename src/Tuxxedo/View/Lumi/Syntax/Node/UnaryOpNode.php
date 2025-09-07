@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-use Tuxxedo\View\Lumi\Syntax\Operator\UnaryOperator;
+use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 
 readonly class UnaryOpNode implements ExpressionNodeInterface
 {
@@ -21,7 +21,7 @@ readonly class UnaryOpNode implements ExpressionNodeInterface
 
     public function __construct(
         public ExpressionNodeInterface $operand,
-        public UnaryOperator $operator,
+        public UnarySymbol $operator,
     ) {
         $this->kind = BuiltinNodeKinds::EXPRESSION->name;
     }

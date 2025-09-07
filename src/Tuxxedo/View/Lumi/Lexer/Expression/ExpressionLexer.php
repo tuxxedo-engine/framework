@@ -17,10 +17,10 @@ use Tuxxedo\View\Lumi\Lexer\ByteStream;
 use Tuxxedo\View\Lumi\Lexer\ByteStreamInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Syntax\NativeType;
-use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentOperator;
-use Tuxxedo\View\Lumi\Syntax\Operator\BinaryOperator;
+use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
+use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\CharacterSymbol;
-use Tuxxedo\View\Lumi\Syntax\Operator\UnaryOperator;
+use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Token\CharacterToken;
 use Tuxxedo\View\Lumi\Syntax\Token\IdentifierToken;
 use Tuxxedo\View\Lumi\Syntax\Token\LiteralToken;
@@ -44,7 +44,7 @@ class ExpressionLexer implements ExpressionLexerInterface
         $operators = [];
         $characterSymbols = [];
 
-        foreach ([...AssignmentOperator::cases(), ...BinaryOperator::cases(), ...UnaryOperator::cases()] as $operator) {
+        foreach ([...AssignmentSymbol::cases(), ...BinarySymbol::cases(), ...UnarySymbol::cases()] as $operator) {
             $operators[] = $operator->symbol();
         }
 

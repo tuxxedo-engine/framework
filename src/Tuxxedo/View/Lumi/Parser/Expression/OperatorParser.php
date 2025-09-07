@@ -19,8 +19,8 @@ use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
-use Tuxxedo\View\Lumi\Syntax\Operator\BinaryOperator;
-use Tuxxedo\View\Lumi\Syntax\Operator\UnaryOperator;
+use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
+use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
@@ -67,9 +67,9 @@ class OperatorParser implements OperatorParserInterface
 
     public function parseBinaryByNode(
         ExpressionNodeInterface $left,
-        BinaryOperator $operator,
+        BinarySymbol $operator,
     ): void {
-        if ($operator === BinaryOperator::CONCAT) {
+        if ($operator === BinarySymbol::CONCAT) {
             $this->parseConcat(
                 operands: [
                     $left,
@@ -90,7 +90,7 @@ class OperatorParser implements OperatorParserInterface
 
     public function parseBinaryByToken(
         TokenInterface $left,
-        BinaryOperator $operator,
+        BinarySymbol $operator,
     ): void {
         if ($left->type !== BuiltinTokenNames::IDENTIFIER->name) {
             throw ParserException::fromUnexpectedTokenWithExpects(
@@ -113,7 +113,7 @@ class OperatorParser implements OperatorParserInterface
     }
 
     public function parseUnary(
-        UnaryOperator $operator,
+        UnarySymbol $operator,
         TokenInterface $operand,
     ): void {
         throw ParserException::fromNotImplemented(

@@ -15,8 +15,8 @@ namespace Tuxxedo\View\Lumi\Parser\Expression;
 
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
-use Tuxxedo\View\Lumi\Syntax\Operator\BinaryOperator;
-use Tuxxedo\View\Lumi\Syntax\Operator\UnaryOperator;
+use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
+use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
 interface OperatorParserInterface
@@ -26,7 +26,7 @@ interface OperatorParserInterface
      */
     public function parseBinaryByNode(
         ExpressionNodeInterface $left,
-        BinaryOperator $operator,
+        BinarySymbol $operator,
     ): void;
 
     /**
@@ -34,14 +34,14 @@ interface OperatorParserInterface
      */
     public function parseBinaryByToken(
         TokenInterface $left,
-        BinaryOperator $operator,
+        BinarySymbol $operator,
     ): void;
 
     /**
      * @throws ParserException
      */
     public function parseUnary(
-        UnaryOperator $operator,
+        UnarySymbol $operator,
         TokenInterface $operand,
     ): void;
 

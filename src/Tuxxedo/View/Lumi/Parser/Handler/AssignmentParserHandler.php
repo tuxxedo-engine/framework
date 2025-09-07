@@ -19,7 +19,7 @@ use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
-use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentOperator;
+use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 
 // @todo This need to support property writes
@@ -50,7 +50,7 @@ class AssignmentParserHandler implements ParserHandlerInterface
         $operatorSymbol = $operatorToken->op1;
 
         $assignmentOperator = null;
-        $assignmentOperators = AssignmentOperator::cases();
+        $assignmentOperators = AssignmentSymbol::cases();
 
         foreach ($assignmentOperators as $case) {
             if ($case->symbol() === $operatorSymbol) {
@@ -64,7 +64,7 @@ class AssignmentParserHandler implements ParserHandlerInterface
             throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
                 tokenName: $operatorSymbol,
                 expectedTokenNames: \array_map(
-                    static fn (AssignmentOperator $operator): string => $operator->symbol(),
+                    static fn (AssignmentSymbol $operator): string => $operator->symbol(),
                     $assignmentOperators,
                 ),
             );

@@ -27,7 +27,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
-use Tuxxedo\View\Lumi\Syntax\Operator\BinaryOperator;
+use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 
 class SccpOptimizer extends AbstractOptimizer
 {
@@ -152,17 +152,17 @@ class SccpOptimizer extends AbstractOptimizer
                 $node->right instanceof PropertyAccessNode
             ) &&
             (
-                $node->operator === BinaryOperator::ADD ||
-                $node->operator === BinaryOperator::SUBTRACT ||
-                $node->operator === BinaryOperator::MULTIPLY ||
-                $node->operator === BinaryOperator::STRICT_EQUAL_EXPLICIT ||
-                $node->operator === BinaryOperator::STRICT_NOT_EQUAL_EXPLICIT ||
-                $node->operator === BinaryOperator::GREATER ||
-                $node->operator === BinaryOperator::LESS ||
-                $node->operator === BinaryOperator::GREATER_EQUAL ||
-                $node->operator === BinaryOperator::LESS_EQUAL ||
-                $node->operator === BinaryOperator::AND ||
-                $node->operator === BinaryOperator::OR
+                $node->operator === BinarySymbol::ADD ||
+                $node->operator === BinarySymbol::SUBTRACT ||
+                $node->operator === BinarySymbol::MULTIPLY ||
+                $node->operator === BinarySymbol::STRICT_EQUAL_EXPLICIT ||
+                $node->operator === BinarySymbol::STRICT_NOT_EQUAL_EXPLICIT ||
+                $node->operator === BinarySymbol::GREATER ||
+                $node->operator === BinarySymbol::LESS ||
+                $node->operator === BinarySymbol::GREATER_EQUAL ||
+                $node->operator === BinarySymbol::LESS_EQUAL ||
+                $node->operator === BinarySymbol::AND ||
+                $node->operator === BinarySymbol::OR
             )
         ) {
             if (!$node->left instanceof LiteralNode) {
@@ -195,7 +195,7 @@ class SccpOptimizer extends AbstractOptimizer
 
             if (
                 $leftNode->type !== $rightNode->type &&
-                $node->operator === BinaryOperator::STRICT_EQUAL_EXPLICIT
+                $node->operator === BinarySymbol::STRICT_EQUAL_EXPLICIT
             ) {
                 return [
                     new LiteralNode(
@@ -219,28 +219,28 @@ class SccpOptimizer extends AbstractOptimizer
                 )
             ) {
                 $value = match ($node->operator) {
-                    BinaryOperator::ADD => $left + $right,
-                    BinaryOperator::SUBTRACT => $left - $right,
-                    BinaryOperator::MULTIPLY => $left * $right,
-                    BinaryOperator::STRICT_EQUAL_EXPLICIT => $left === $right,
-                    BinaryOperator::STRICT_NOT_EQUAL_EXPLICIT => $left !== $right,
-                    BinaryOperator::GREATER => $left > $right,
-                    BinaryOperator::LESS => $left < $right,
-                    BinaryOperator::GREATER_EQUAL => $left >= $right,
-                    BinaryOperator::LESS_EQUAL => $left <= $right,
-                    BinaryOperator::AND => \boolval($left) && \boolval($right),
-                    BinaryOperator::OR => \boolval($left) || \boolval($right),
+                    BinarySymbol::ADD => $left + $right,
+                    BinarySymbol::SUBTRACT => $left - $right,
+                    BinarySymbol::MULTIPLY => $left * $right,
+                    BinarySymbol::STRICT_EQUAL_EXPLICIT => $left === $right,
+                    BinarySymbol::STRICT_NOT_EQUAL_EXPLICIT => $left !== $right,
+                    BinarySymbol::GREATER => $left > $right,
+                    BinarySymbol::LESS => $left < $right,
+                    BinarySymbol::GREATER_EQUAL => $left >= $right,
+                    BinarySymbol::LESS_EQUAL => $left <= $right,
+                    BinarySymbol::AND => \boolval($left) && \boolval($right),
+                    BinarySymbol::OR => \boolval($left) || \boolval($right),
                 };
             } else {
                 $value = match ($node->operator) {
-                    BinaryOperator::STRICT_EQUAL_EXPLICIT => $left === $right,
-                    BinaryOperator::STRICT_NOT_EQUAL_EXPLICIT => $left !== $right,
-                    BinaryOperator::GREATER => $left > $right,
-                    BinaryOperator::LESS => $left < $right,
-                    BinaryOperator::GREATER_EQUAL => $left >= $right,
-                    BinaryOperator::LESS_EQUAL => $left <= $right,
-                    BinaryOperator::AND => \boolval($left) && \boolval($right),
-                    BinaryOperator::OR => \boolval($left) || \boolval($right),
+                    BinarySymbol::STRICT_EQUAL_EXPLICIT => $left === $right,
+                    BinarySymbol::STRICT_NOT_EQUAL_EXPLICIT => $left !== $right,
+                    BinarySymbol::GREATER => $left > $right,
+                    BinarySymbol::LESS => $left < $right,
+                    BinarySymbol::GREATER_EQUAL => $left >= $right,
+                    BinarySymbol::LESS_EQUAL => $left <= $right,
+                    BinarySymbol::AND => \boolval($left) && \boolval($right),
+                    BinarySymbol::OR => \boolval($left) || \boolval($right),
                     default => null,
                 };
 

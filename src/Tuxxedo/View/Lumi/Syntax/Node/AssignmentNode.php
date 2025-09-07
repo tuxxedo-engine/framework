@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentOperator;
+use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 
 readonly class AssignmentNode implements NodeInterface
 {
@@ -22,7 +22,7 @@ readonly class AssignmentNode implements NodeInterface
     public function __construct(
         public IdentifierNode|PropertyAccessNode $name,
         public ExpressionNodeInterface $value,
-        public AssignmentOperator $operator,
+        public AssignmentSymbol $operator,
     ) {
         $this->kind = BuiltinNodeKinds::ROOT->name;
     }

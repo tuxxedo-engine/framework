@@ -17,7 +17,7 @@ use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
-use Tuxxedo\View\Lumi\Syntax\Operator\BinaryOperator;
+use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\CharacterSymbol;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
@@ -59,7 +59,7 @@ class AtomicParser implements AtomicParserInterface
         } elseif ($this->parser->stream->currentIs(BuiltinTokenNames::OPERATOR->name)) {
             $token = $this->parser->stream->expect(BuiltinTokenNames::OPERATOR->name);
 
-            if (!BinaryOperator::is($token)) {
+            if (!BinarySymbol::is($token)) {
                 throw ParserException::fromNotImplemented(
                     feature: 'parsing literals from non binary operators ahead',
                 );
@@ -67,7 +67,7 @@ class AtomicParser implements AtomicParserInterface
 
             $this->parser->operator->parseBinaryByNode(
                 left: $this->literalTokenToNode($literal),
-                operator: BinaryOperator::from($token),
+                operator: BinarySymbol::from($token),
             );
 
             return;
@@ -106,11 +106,11 @@ class AtomicParser implements AtomicParserInterface
             return;
         } elseif (
             $this->parser->stream->currentIs(BuiltinTokenNames::OPERATOR->name) &&
-            BinaryOperator::is($this->parser->stream->current())
+            BinarySymbol::is($this->parser->stream->current())
         ) {
             $this->parser->operator->parseBinaryByNode(
                 left: $this->variableTokenToNode($variable),
-                operator: BinaryOperator::from(
+                operator: BinarySymbol::from(
                     token: $this->parser->stream->expect(BuiltinTokenNames::OPERATOR->name),
                 ),
             );

@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-use Tuxxedo\View\Lumi\Syntax\Operator\BinaryOperator;
+use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 
 readonly class BinaryOpNode implements ExpressionNodeInterface
 {
@@ -22,7 +22,7 @@ readonly class BinaryOpNode implements ExpressionNodeInterface
     public function __construct(
         public ExpressionNodeInterface $left,
         public ExpressionNodeInterface $right,
-        public BinaryOperator $operator,
+        public BinarySymbol $operator,
     ) {
         $this->kind = BuiltinNodeKinds::EXPRESSION->name;
     }

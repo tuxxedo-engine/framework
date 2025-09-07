@@ -17,9 +17,9 @@ use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserStateInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
-use Tuxxedo\View\Lumi\Syntax\Operator\BinaryOperator;
+use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\CharacterSymbol;
-use Tuxxedo\View\Lumi\Syntax\Operator\UnaryOperator;
+use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 
 class ExpressionParser implements ExpressionParserInterface
@@ -192,9 +192,9 @@ class ExpressionParser implements ExpressionParserInterface
 
                     $this->stream->consume();
 
-                    if (UnaryOperator::is($next)) {
+                    if (UnarySymbol::is($next)) {
                         $this->operator->parseUnary(
-                            operator: UnaryOperator::from($next),
+                            operator: UnarySymbol::from($next),
                             operand: $token,
                         );
 
@@ -203,7 +203,7 @@ class ExpressionParser implements ExpressionParserInterface
 
                     $this->operator->parseBinaryByToken(
                         left: $token,
-                        operator: BinaryOperator::from($next),
+                        operator: BinarySymbol::from($next),
                     );
 
                     continue;
@@ -234,17 +234,17 @@ class ExpressionParser implements ExpressionParserInterface
                     throw ParserException::fromMalformedToken();
                 }
 
-                if (!UnaryOperator::is($token)) {
-                    if (BinaryOperator::is($token)) {
+                if (!UnarySymbol::is($token)) {
+                    if (BinarySymbol::is($token)) {
                         $this->operator->parseBinaryByNode(
                             left: $this->state->popNode(),
-                            operator: BinaryOperator::from($token),
+                            operator: BinarySymbol::from($token),
                         );
                     }
 
                     throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
                         tokenName: $token->op1,
-                        expectedTokenNames: UnaryOperator::all(),
+                        expectedTokenNames: UnarySymbol::all(),
                     );
                 }
 
@@ -267,7 +267,7 @@ class ExpressionParser implements ExpressionParserInterface
 
                 $this->stream->consume();
                 $this->operator->parseUnary(
-                    operator: UnaryOperator::from($token),
+                    operator: UnarySymbol::from($token),
                     operand: $operand,
                 );
 

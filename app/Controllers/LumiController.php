@@ -30,7 +30,7 @@ use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpOptimizer;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
-use Tuxxedo\View\Lumi\Syntax\Operator\OperatorInterface;
+use Tuxxedo\View\Lumi\Syntax\Operator\SymbolInterface;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
@@ -136,7 +136,7 @@ readonly class LumiController
     private function visualizeEnumValue(
         \UnitEnum $value,
     ): string {
-        if ($value instanceof OperatorInterface) {
+        if ($value instanceof SymbolInterface) {
             return $value->symbol();
         }
 

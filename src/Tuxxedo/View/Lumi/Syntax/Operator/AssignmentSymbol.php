@@ -17,33 +17,21 @@ use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
-enum BinaryOperator implements OperatorInterface
+enum AssignmentSymbol implements SymbolInterface
 {
-    case CONCAT;
+    case ASSIGN;
+    case NULL_ASSIGN;
     case ADD;
     case SUBTRACT;
     case MULTIPLY;
     case DIVIDE;
     case MODULUS;
-    case STRICT_EQUAL_IMPLICIT;
-    case STRICT_EQUAL_EXPLICIT;
-    case STRICT_NOT_EQUAL_IMPLICIT;
-    case STRICT_NOT_EQUAL_EXPLICIT;
-    case GREATER;
-    case LESS;
-    case GREATER_EQUAL;
-    case LESS_EQUAL;
-    case AND;
-    case OR;
-    case XOR;
     case EXPONENTIATE;
     case BITWISE_AND;
     case BITWISE_OR;
     case BITWISE_XOR;
     case BITWISE_SHIFT_LEFT;
     case BITWISE_SHIFT_RIGHT;
-    case NULL_COALESCE;
-    case NULL_SAFE_ACCESS;
 
     public static function all(): array
     {
@@ -83,40 +71,19 @@ enum BinaryOperator implements OperatorInterface
     public function symbol(): string
     {
         return match ($this) {
-            self::CONCAT => '~',
-            self::ADD => '+',
-            self::SUBTRACT => '-',
-            self::MULTIPLY => '*',
-            self::DIVIDE => '/',
-            self::MODULUS => '%',
-            self::STRICT_EQUAL_IMPLICIT => '==',
-            self::STRICT_EQUAL_EXPLICIT => '===',
-            self::STRICT_NOT_EQUAL_IMPLICIT => '!=',
-            self::STRICT_NOT_EQUAL_EXPLICIT => '!==',
-            self::GREATER => '>',
-            self::LESS => '<',
-            self::GREATER_EQUAL => '>=',
-            self::LESS_EQUAL => '<=',
-            self::AND => '&&',
-            self::OR => '||',
-            self::XOR => '^^',
-            self::EXPONENTIATE => '**',
-            self::BITWISE_AND => '&',
-            self::BITWISE_OR => '|',
-            self::BITWISE_XOR => '^',
-            self::BITWISE_SHIFT_LEFT => '<<',
-            self::BITWISE_SHIFT_RIGHT => '>>',
-            self::NULL_COALESCE => '??',
-            self::NULL_SAFE_ACCESS => '?.',
-        };
-    }
-
-    public function transform(): string
-    {
-        return match ($this) {
-            self::STRICT_EQUAL_IMPLICIT => self::STRICT_EQUAL_EXPLICIT->symbol(),
-            self::STRICT_NOT_EQUAL_IMPLICIT => self::STRICT_NOT_EQUAL_EXPLICIT->symbol(),
-            default => $this->symbol(),
+            self::ASSIGN => '=',
+            self::NULL_ASSIGN => '??=',
+            self::ADD => '+=',
+            self::SUBTRACT => '-=',
+            self::MULTIPLY => '*=',
+            self::DIVIDE => '/=',
+            self::MODULUS => '%=',
+            self::EXPONENTIATE => '**=',
+            self::BITWISE_AND => '&=',
+            self::BITWISE_OR => '|=',
+            self::BITWISE_XOR => '^=',
+            self::BITWISE_SHIFT_LEFT => '<<=',
+            self::BITWISE_SHIFT_RIGHT => '>>=',
         };
     }
 }

@@ -18,7 +18,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
-use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentOperator;
+use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 
 class Variable implements VariableInterface
 {
@@ -65,7 +65,7 @@ class Variable implements VariableInterface
     public function mutate(
         ScopeInterface $scope,
         ExpressionNodeInterface $value,
-        AssignmentOperator $operator = AssignmentOperator::ASSIGN,
+        AssignmentSymbol $operator = AssignmentSymbol::ASSIGN,
     ): void {
         $this->value = $value;
 

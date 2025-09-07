@@ -16,7 +16,7 @@ namespace Tuxxedo\View\Lumi\Syntax\Operator;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
-interface OperatorInterface
+interface SymbolInterface
 {
     /**
      * @return string[]
