@@ -69,7 +69,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
 
         return \sprintf(
             '$this->functionCall(\'%s\', [%s])',
-            $node->name,
+            $compiler->compileExpression($node->name),
             \join(', ', $arguments),
         );
     }
@@ -122,14 +122,10 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         AssignmentNode $node,
         CompilerInterface $compiler,
     ): string {
+        // @todo This needs to guard against $this for PropertyNodes
         if (
             $node->name instanceof IdentifierNode &&
             \mb_strtolower($node->name->name) === 'this'
-        ) {
-            throw CompilerException::fromCannotOverrideThis();
-        } elseif (
-            $node->name instanceof PropertyAccessNode &&
-            \mb_strtolower($node->name->accessor->name) === 'this'
         ) {
             throw CompilerException::fromCannotOverrideThis();
         } elseif ($node->name instanceof PropertyAccessNode) {
@@ -234,9 +230,10 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         PropertyAccessNode $node,
         CompilerInterface $compiler,
     ): string {
+        // @todo This needs to guard against $this
         return \sprintf(
             '$%s->%s',
-            $node->accessor->name,
+            $compiler->compileExpression($node->accessor),
             $node->property,
         );
     }

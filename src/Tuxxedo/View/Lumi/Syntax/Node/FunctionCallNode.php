@@ -21,7 +21,7 @@ readonly class FunctionCallNode implements IterableExpressionNodeInterface
      * @param ExpressionNodeInterface[] $arguments
      */
     public function __construct(
-        public string $name,
+        public ExpressionNodeInterface $name,
         public array $arguments,
     ) {
         $this->kind = BuiltinNodeKinds::EXPRESSION->name;

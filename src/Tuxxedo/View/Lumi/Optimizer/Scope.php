@@ -25,44 +25,33 @@ class Scope implements ScopeInterface
     public function assign(
         AssignmentNode $node,
     ): void {
-        $name = $this->name($node->name);
+        if ($node->name instanceof PropertyAccessNode) {
+            return;
+        }
 
         if (
             $node->operator !== AssignmentSymbol::ASSIGN &&
-            \array_key_exists($name, $this->variables)
+            \array_key_exists($node->name->name, $this->variables)
         ) {
-            $this->variables[$name]->mutate(
+            $this->variables[$node->name->name]->mutate(
                 scope: $this,
                 value: $node->value,
                 operator: $node->operator,
             );
         } else {
-            $this->variables[$name] = Variable::fromNewAssign(
+            $this->variables[$node->name->name] = Variable::fromNewAssign(
                 scope: $this,
                 node: $node,
+                name: $node->name,
             );
         }
     }
 
-    public function name(
-        IdentifierNode|PropertyAccessNode $node,
-    ): string {
-        if ($node instanceof IdentifierNode) {
-            return $node->name;
-        }
-
-        return \sprintf(
-            '%s::%s',
-            $node->accessor->name,
-            $node->property,
-        );
-    }
-
     public function get(
-        IdentifierNode|PropertyAccessNode|string $name,
+        IdentifierNode|string $name,
     ): VariableInterface {
         if (!\is_string($name)) {
-            $name = $this->name($name);
+            $name = $name->name;
         }
 
         return $this->variables[$name] ?? Variable::fromUndefined($name);

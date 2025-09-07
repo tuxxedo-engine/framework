@@ -61,12 +61,13 @@ class TextCompilerProvider implements CompilerProviderInterface
     ): string {
         $value = $compiler->compileExpression($node->operand);
 
+        // @todo Fix the include call check
         if (
-            $compiler->state->directives->asBool('lumi.autoescape') &&
-            !(
-                $node->operand instanceof FunctionCallNode &&
-                \mb_strtolower($node->operand->name) === 'include'
-            )
+            $compiler->state->directives->asBool('lumi.autoescape')
+            //            !(
+            //                $node->operand instanceof FunctionCallNode &&
+            //                \mb_strtolower($node->operand->name) === 'include'
+            //            )
         ) {
             return \sprintf(
                 '<?= $this->filter(%s, \'escape_html\'); ?>',

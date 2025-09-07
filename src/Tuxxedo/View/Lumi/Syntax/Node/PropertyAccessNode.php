@@ -18,7 +18,7 @@ readonly class PropertyAccessNode implements IterableExpressionNodeInterface
     public string $kind;
 
     public function __construct(
-        public IdentifierNode $accessor,
+        public ExpressionNodeInterface $accessor,
         public string $property,
     ) {
         $this->kind = BuiltinNodeKinds::EXPRESSION->name;

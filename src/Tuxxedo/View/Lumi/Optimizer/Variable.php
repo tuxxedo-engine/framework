@@ -40,15 +40,10 @@ class Variable implements VariableInterface
     public static function fromNewAssign(
         ScopeInterface $scope,
         AssignmentNode $node,
+        IdentifierNode $name,
     ): static {
         return new static(
-            name: $node->name instanceof IdentifierNode
-                ? $node->name->name
-                : \sprintf(
-                    '%s::%s',
-                    $node->name->accessor->name,
-                    $node->name->property,
-                ),
+            name: $name->name,
             value: $node->value,
             scope: $scope,
         );

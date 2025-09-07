@@ -15,5 +15,5 @@ namespace Tuxxedo\View\Lumi\Syntax\Operator;
 
 interface ExpressionSymbolInterface
 {
-    public function bindingPower(): int;
+    public function precedence(): Precedence;
 }

@@ -25,7 +25,6 @@ use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
-use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 
@@ -143,13 +142,11 @@ class SccpOptimizer extends AbstractOptimizer
         if (
             (
                 $node->left instanceof LiteralNode ||
-                $node->left instanceof IdentifierNode ||
-                $node->left instanceof PropertyAccessNode
+                $node->left instanceof IdentifierNode
             ) &&
             (
                 $node->right instanceof LiteralNode ||
-                $node->right instanceof IdentifierNode ||
-                $node->right instanceof PropertyAccessNode
+                $node->right instanceof IdentifierNode
             ) &&
             (
                 $node->operator === BinarySymbol::ADD ||

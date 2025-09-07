@@ -111,23 +111,23 @@ enum BinarySymbol implements SymbolInterface, ExpressionSymbolInterface
         };
     }
 
-    public function bindingPower(): int
+    public function precedence(): Precedence
     {
         return match ($this) {
-            self::NULL_SAFE_ACCESS => 80,
-            self::EXPONENTIATE => 70,
-            self::MULTIPLY, self::DIVIDE, self::MODULUS => 60,
-            self::ADD, self::SUBTRACT, self::CONCAT => 50,
-            self::BITWISE_SHIFT_LEFT, self::BITWISE_SHIFT_RIGHT => 45,
-            self::BITWISE_AND => 40,
-            self::BITWISE_XOR => 35,
-            self::BITWISE_OR => 30,
-            self::GREATER, self::LESS, self::GREATER_EQUAL, self::LESS_EQUAL => 25,
-            self::STRICT_EQUAL_IMPLICIT, self::STRICT_EQUAL_EXPLICIT, self::STRICT_NOT_EQUAL_IMPLICIT, self::STRICT_NOT_EQUAL_EXPLICIT => 20,
-            self::AND => 15,
-            self::XOR => 14,
-            self::OR => 13,
-            self::NULL_COALESCE => 12,
+            self::NULL_SAFE_ACCESS => Precedence::ACCESS,
+            self::EXPONENTIATE => Precedence::EXPONENTIATION,
+            self::MULTIPLY, self::DIVIDE, self::MODULUS => Precedence::TIGHT,
+            self::ADD, self::SUBTRACT, self::CONCAT => Precedence::ADDITIVE,
+            self::BITWISE_SHIFT_LEFT, self::BITWISE_SHIFT_RIGHT => Precedence::SHIFT,
+            self::BITWISE_AND => Precedence::BITWISE_AND,
+            self::BITWISE_XOR => Precedence::BITWISE_XOR,
+            self::BITWISE_OR => Precedence::BITWISE_OR,
+            self::GREATER, self::LESS, self::GREATER_EQUAL, self::LESS_EQUAL => Precedence::COMPARISON,
+            self::STRICT_EQUAL_IMPLICIT, self::STRICT_EQUAL_EXPLICIT, self::STRICT_NOT_EQUAL_IMPLICIT, self::STRICT_NOT_EQUAL_EXPLICIT => Precedence::EQUALITY,
+            self::AND => Precedence::LOGICAL_AND,
+            self::XOR => Precedence::LOGICAL_XOR,
+            self::OR => Precedence::LOGICAL_OR,
+            self::NULL_COALESCE => Precedence::NULL_COALESCE,
         };
     }
 

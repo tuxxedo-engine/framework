@@ -73,11 +73,11 @@ enum UnarySymbol implements SymbolInterface, ExpressionSymbolInterface
         };
     }
 
-    public function bindingPower(): int
+    public function precedence(): Precedence
     {
         return match ($this) {
-            self::INCREMENT_POST, self::DECREMENT_POST => 70,
-            self::NOT, self::NEGATE, self::BITWISE_NOT, self::INCREMENT_PRE, self::DECREMENT_PRE => 60,
+            self::INCREMENT_POST, self::DECREMENT_POST => Precedence::EXPONENTIATION,
+            self::NOT, self::NEGATE, self::BITWISE_NOT, self::INCREMENT_PRE, self::DECREMENT_PRE => Precedence::TIGHT,
         };
     }
 }

@@ -75,11 +75,11 @@ enum CharacterSymbol implements SymbolInterface, ExpressionSymbolInterface
         };
     }
 
-    public function bindingPower(): int
+    public function precedence(): Precedence
     {
         return match ($this) {
-            self::LEFT_PARENTHESIS, self::LEFT_SQUARE_BRACKET, self::DOT => 80,
-            default => 0,
+            self::LEFT_PARENTHESIS, self::LEFT_SQUARE_BRACKET, self::DOT => Precedence::ACCESS,
+            default => Precedence::LOWEST,
         };
     }
 }

@@ -15,7 +15,6 @@ namespace Tuxxedo\View\Lumi\Optimizer;
 
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
-use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 
 interface ScopeInterface
 {
@@ -30,11 +29,7 @@ interface ScopeInterface
         AssignmentNode $node,
     ): void;
 
-    public function name(
-        IdentifierNode|PropertyAccessNode $node,
-    ): string;
-
     public function get(
-        IdentifierNode|PropertyAccessNode|string $name,
+        IdentifierNode|string $name,
     ): VariableInterface;
 }
