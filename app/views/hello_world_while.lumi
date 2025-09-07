@@ -106,3 +106,15 @@
     {% set outer -= 1 %}
 {% endwhile %}
 </ul>
+
+{% set n = 3 %}
+<ul>
+{% do %}
+    {% set i = n %}
+    {% while i %}
+        <li>Inner {{ i }}</li>
+        {% set i -= 1 %}
+    {% endwhile %}
+    {% set n -= 1 %}
+{% while n %}
+</ul>

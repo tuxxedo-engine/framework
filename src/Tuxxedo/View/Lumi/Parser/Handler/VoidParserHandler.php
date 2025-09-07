@@ -34,7 +34,8 @@ class VoidParserHandler implements ParserHandlerInterface
         foreach (BuiltinTokenNames::cases() as $builtinTokenName) {
             if (
                 !$builtinTokenName->isExpressionToken() &&
-                !$builtinTokenName->isVirtualToken()
+                !$builtinTokenName->isVirtualToken() &&
+                $builtinTokenName->name !== $this->tokenName
             ) {
                 $expectedTokenNames[] = $builtinTokenName->name;
             }
