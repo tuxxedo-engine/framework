@@ -108,11 +108,11 @@ class ExpressionParser implements ExpressionParserInterface
         $left = $this->nud($token);
 
         while ($rbp->value < $this->lbp($this->current)->value) {
-            $t = $this->current;
+            $token = $this->current;
 
             $this->advance();
 
-            $left = $this->led($t, $left);
+            $left = $this->led($token, $left);
         }
 
         return $left;
