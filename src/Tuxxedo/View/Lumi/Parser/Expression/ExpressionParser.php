@@ -61,9 +61,6 @@ class ExpressionParser implements ExpressionParserInterface
         }
 
         $this->stream = $stream;
-
-        $this->advance();
-
         $node = $this->parseExpression(Precedence::LOWEST);
 
         unset($this->stream, $this->current);
@@ -97,11 +94,9 @@ class ExpressionParser implements ExpressionParserInterface
     private function parseExpression(
         Precedence $rbp,
     ): ExpressionNodeInterface {
-        $token = $this->current;
-
         $this->advance();
 
-        $left = $this->nud($token);
+        $left = $this->nud($this->current);
 
         while ($rbp->value < $this->lbp($this->current)->value) {
             $t = $this->current;
