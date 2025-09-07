@@ -17,7 +17,7 @@ use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
-enum UnarySymbol implements SymbolInterface
+enum UnarySymbol implements SymbolInterface, ExpressionSymbolInterface
 {
     case NOT;
     case NEGATE;
@@ -70,6 +70,14 @@ enum UnarySymbol implements SymbolInterface
             self::BITWISE_NOT => '~',
             self::INCREMENT_PRE, self::INCREMENT_POST => '++',
             self::DECREMENT_PRE, self::DECREMENT_POST => '--',
+        };
+    }
+
+    public function bindingPower(): int
+    {
+        return match ($this) {
+            self::INCREMENT_POST, self::DECREMENT_POST => 70,
+            self::NOT, self::NEGATE, self::BITWISE_NOT, self::INCREMENT_PRE, self::DECREMENT_PRE => 60,
         };
     }
 }

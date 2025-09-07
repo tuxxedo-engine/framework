@@ -17,7 +17,7 @@ use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
-enum BinarySymbol implements SymbolInterface
+enum BinarySymbol implements SymbolInterface, ExpressionSymbolInterface
 {
     case CONCAT;
     case ADD;
@@ -108,6 +108,26 @@ enum BinarySymbol implements SymbolInterface
             self::BITWISE_SHIFT_RIGHT => '>>',
             self::NULL_COALESCE => '??',
             self::NULL_SAFE_ACCESS => '?.',
+        };
+    }
+
+    public function bindingPower(): int
+    {
+        return match ($this) {
+            self::NULL_SAFE_ACCESS => 80,
+            self::EXPONENTIATE => 70,
+            self::MULTIPLY, self::DIVIDE, self::MODULUS => 60,
+            self::ADD, self::SUBTRACT, self::CONCAT => 50,
+            self::BITWISE_SHIFT_LEFT, self::BITWISE_SHIFT_RIGHT => 45,
+            self::BITWISE_AND => 40,
+            self::BITWISE_XOR => 35,
+            self::BITWISE_OR => 30,
+            self::GREATER, self::LESS, self::GREATER_EQUAL, self::LESS_EQUAL => 25,
+            self::STRICT_EQUAL_IMPLICIT, self::STRICT_EQUAL_EXPLICIT, self::STRICT_NOT_EQUAL_IMPLICIT, self::STRICT_NOT_EQUAL_EXPLICIT => 20,
+            self::AND => 15,
+            self::XOR => 14,
+            self::OR => 13,
+            self::NULL_COALESCE => 12,
         };
     }
 

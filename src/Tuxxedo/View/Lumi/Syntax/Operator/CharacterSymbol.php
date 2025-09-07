@@ -17,7 +17,7 @@ use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
-enum CharacterSymbol implements SymbolInterface
+enum CharacterSymbol implements SymbolInterface, ExpressionSymbolInterface
 {
     case LEFT_PARENTHESIS;
     case RIGHT_PARENTHESIS;
@@ -72,6 +72,14 @@ enum CharacterSymbol implements SymbolInterface
             self::COMMA => ',',
             self::DOT => '.',
             self::COLON => ':',
+        };
+    }
+
+    public function bindingPower(): int
+    {
+        return match ($this) {
+            self::LEFT_PARENTHESIS, self::LEFT_SQUARE_BRACKET, self::DOT => 80,
+            default => 0,
         };
     }
 }
