@@ -53,6 +53,7 @@ class VoidParserHandler implements ParserHandlerInterface
         throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
             tokenName: $this->tokenName,
             expectedTokenNames: $expectedTokenNames,
+            line: $stream->current()->line,
         );
     }
 }

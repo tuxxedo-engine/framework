@@ -31,7 +31,9 @@ class BreakParserHandler implements ParserHandlerInterface
         $stream->consume();
 
         if ($parser->state->loopDepth === 0) {
-            throw ParserException::fromUnexpectedBreakOutsideLoop();
+            throw ParserException::fromUnexpectedBreakOutsideLoop(
+                line: $token->line,
+            );
         } elseif (
             $token->op1 !== null &&
             \intval($token->op1) > $parser->state->loopDepth
@@ -39,6 +41,7 @@ class BreakParserHandler implements ParserHandlerInterface
             throw ParserException::fromUnexpectedBreakOutOfBounds(
                 level: \intval($token->op1),
                 maxLevel: $parser->state->loopDepth,
+                line: $token->line,
             );
         }
 

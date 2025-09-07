@@ -55,9 +55,12 @@ class ExpressionParser implements ExpressionParserInterface
 
     public function parse(
         TokenStreamInterface $stream,
+        int $startingLine,
     ): ExpressionNodeInterface {
         if ($stream->eof()) {
-            throw ParserException::fromEmptyExpression();
+            throw ParserException::fromEmptyExpression(
+                line: $startingLine,
+            );
         }
 
         $this->stream = $stream;
@@ -191,9 +194,7 @@ class ExpressionParser implements ExpressionParserInterface
                     $this->current->op1 === CharacterSymbol::RIGHT_PARENTHESIS->symbol()
                 )
             ) {
-                throw ParserException::fromUnexpectedToken(
-                    tokenName: $this->current->type,
-                );
+                $this->unexpected($this->current);
             }
 
             $this->advance();
@@ -212,9 +213,7 @@ class ExpressionParser implements ExpressionParserInterface
                 $this->current->type !== BuiltinTokenNames::IDENTIFIER->name ||
                 $this->current->op1 === null
             ) {
-                throw ParserException::fromUnexpectedToken(
-                    tokenName: $this->current->type,
-                );
+                $this->unexpected($this->current);
             }
 
             $name = $this->current->op1;
@@ -254,9 +253,7 @@ class ExpressionParser implements ExpressionParserInterface
                         $this->current->op1 === CharacterSymbol::RIGHT_PARENTHESIS->symbol()
                     )
                 ) {
-                    throw ParserException::fromUnexpectedToken(
-                        tokenName: $this->current->type,
-                    );
+                    $this->unexpected($this->current);
                 }
 
                 $this->advance();
@@ -283,9 +280,7 @@ class ExpressionParser implements ExpressionParserInterface
                     $this->current->op1 === CharacterSymbol::RIGHT_SQUARE_BRACKET->symbol()
                 )
             ) {
-                throw ParserException::fromUnexpectedToken(
-                    tokenName: $this->current->type,
-                );
+                $this->unexpected($this->current);
             }
 
             $this->advance();
@@ -296,9 +291,7 @@ class ExpressionParser implements ExpressionParserInterface
             );
         }
 
-        throw ParserException::fromUnexpectedToken(
-            tokenName: $token->type,
-        );
+        $this->unexpected($token);
     }
 
     private function parseGroupedExpression(): ExpressionNodeInterface
@@ -309,9 +302,7 @@ class ExpressionParser implements ExpressionParserInterface
             $this->current->type !== BuiltinTokenNames::CHARACTER->name ||
             $this->current->op1 !== CharacterSymbol::RIGHT_PARENTHESIS->symbol()
         ) {
-            throw ParserException::fromUnexpectedToken(
-                tokenName: $this->current->type,
-            );
+            $this->unexpected($this->current);
         }
 
         $this->advance();
@@ -331,7 +322,10 @@ class ExpressionParser implements ExpressionParserInterface
 
         return new LiteralNode(
             operand: $token->op1,
-            type: NativeType::fromString($token->op2),
+            type: NativeType::fromString(
+                name: $token->op2,
+                line: $token->line,
+            ),
         );
     }
 
@@ -382,6 +376,7 @@ class ExpressionParser implements ExpressionParserInterface
 
         throw ParserException::fromUnexpectedToken(
             tokenName: $tokenName ?? $token->type,
+            line: $token->line,
         );
     }
 }

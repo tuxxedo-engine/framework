@@ -51,6 +51,7 @@ abstract class AbstractForParserHandler implements ParserHandlerInterface
                     ),
                 ],
             ),
+            startingLine: $startToken->line,
         );
 
         if (!$value instanceof IdentifierNode) {
@@ -59,6 +60,7 @@ abstract class AbstractForParserHandler implements ParserHandlerInterface
                 expectedTokenNames: [
                     BuiltinTokenNames::IDENTIFIER->name,
                 ],
+                line: $startToken->line,
             );
         }
 
@@ -72,6 +74,7 @@ abstract class AbstractForParserHandler implements ParserHandlerInterface
                         ),
                     ],
                 ),
+                startingLine: $startToken->line,
             );
 
             if (!$key instanceof IdentifierNode) {
@@ -80,6 +83,7 @@ abstract class AbstractForParserHandler implements ParserHandlerInterface
                     expectedTokenNames: [
                         BuiltinTokenNames::IDENTIFIER->name,
                     ],
+                    line: $startToken->line,
                 );
             }
         }
@@ -102,10 +106,13 @@ abstract class AbstractForParserHandler implements ParserHandlerInterface
             stream: new TokenStream(
                 tokens: $expressionTokens,
             ),
+            startingLine: $stream->tokens[$stream->position - 1]->line,
         );
 
         if (!$iterator instanceof IterableExpressionNodeInterface) {
-            throw ParserException::fromExpressionNotIterable();
+            throw ParserException::fromExpressionNotIterable(
+                line: $expressionTokens[\array_key_first($expressionTokens)]->line,
+            );
         }
 
         $bodyTokens = [];

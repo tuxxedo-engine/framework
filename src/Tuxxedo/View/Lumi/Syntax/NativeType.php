@@ -28,6 +28,7 @@ enum NativeType
      */
     public static function fromString(
         string $name,
+        int $line,
     ): self {
         return match ($name) {
             'STRING' => self::STRING,
@@ -37,6 +38,7 @@ enum NativeType
             'NULL' => self::NULL,
             default => throw ParserException::fromUnexpectedToken(
                 tokenName: $name,
+                line: $line,
             ),
         };
     }

@@ -31,7 +31,9 @@ class ContinueParserHandler implements ParserHandlerInterface
         $stream->consume();
 
         if ($parser->state->loopDepth === 0) {
-            throw ParserException::fromUnexpectedContinueOutsideLoop();
+            throw ParserException::fromUnexpectedContinueOutsideLoop(
+                line: $token->line,
+            );
         } elseif (
             $token->op1 !== null &&
             \intval($token->op1) > $parser->state->loopDepth
@@ -39,6 +41,7 @@ class ContinueParserHandler implements ParserHandlerInterface
             throw ParserException::fromUnexpectedContinueOutOfBounds(
                 level: \intval($token->op1),
                 maxLevel: $parser->state->loopDepth,
+                line: $token->line,
             );
         }
 

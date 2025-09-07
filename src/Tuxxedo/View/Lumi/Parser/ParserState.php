@@ -15,6 +15,7 @@ namespace Tuxxedo\View\Lumi\Parser;
 
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 
+// @todo Clean up this class
 class ParserState implements ParserStateInterface
 {
     public private(set) int $loopDepth = 0;

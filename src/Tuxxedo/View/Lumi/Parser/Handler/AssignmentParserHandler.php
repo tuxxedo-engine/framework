@@ -67,6 +67,7 @@ class AssignmentParserHandler implements ParserHandlerInterface
                     static fn (AssignmentSymbol $operator): string => $operator->symbol(),
                     $assignmentOperators,
                 ),
+                line: $operatorToken->line,
             );
         }
 
@@ -89,6 +90,7 @@ class AssignmentParserHandler implements ParserHandlerInterface
                     stream: new TokenStream(
                         tokens: $expressionTokens,
                     ),
+                    startingLine: $stream->tokens[$stream->position - 1]->line,
                 ),
                 operator: $assignmentOperator,
             ),

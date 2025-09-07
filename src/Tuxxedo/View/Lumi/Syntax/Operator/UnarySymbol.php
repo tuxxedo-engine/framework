@@ -59,6 +59,7 @@ enum UnarySymbol implements SymbolInterface, ExpressionSymbolInterface
         throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
             tokenName: $token->type,
             expectedTokenNames: self::all(),
+            line: $token->line,
         );
     }
 

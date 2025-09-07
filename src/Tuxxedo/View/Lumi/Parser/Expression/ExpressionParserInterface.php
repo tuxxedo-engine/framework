@@ -28,5 +28,6 @@ interface ExpressionParserInterface
      */
     public function parse(
         TokenStreamInterface $stream,
+        int $startingLine,
     ): ExpressionNodeInterface;
 }

@@ -65,6 +65,7 @@ enum AssignmentSymbol implements SymbolInterface
         throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
             tokenName: $token->type,
             expectedTokenNames: self::all(),
+            line: $token->line,
         );
     }
 

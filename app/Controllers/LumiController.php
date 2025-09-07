@@ -28,7 +28,6 @@ use Tuxxedo\View\Lumi\LumiException;
 use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
 use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpOptimizer;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
-use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Operator\SymbolInterface;
 use Tuxxedo\View\View;
@@ -340,7 +339,7 @@ readonly class LumiController
                 }
 
                 $nodeStream = clone $nodeStream;
-            } catch (ParserException|LumiException $exception) {
+            } catch (LumiException $exception) {
                 $buffer .= $exception;
             }
 

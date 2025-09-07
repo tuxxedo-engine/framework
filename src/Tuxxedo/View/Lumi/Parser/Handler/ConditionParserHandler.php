@@ -36,7 +36,9 @@ class ConditionParserHandler implements ParserHandlerInterface
         $stream->consume();
 
         if ($stream->currentIs(BuiltinTokenNames::END->name)) {
-            throw ParserException::fromEmptyExpression();
+            throw ParserException::fromEmptyExpression(
+                line: $stream->current()->line,
+            );
         }
 
         $expressionTokens = [];
@@ -53,6 +55,7 @@ class ConditionParserHandler implements ParserHandlerInterface
             stream: new TokenStream(
                 tokens: $expressionTokens,
             ),
+            startingLine: $stream->tokens[$stream->position - 1]->line,
         );
 
         $parser->state->enterCondition();
@@ -114,6 +117,7 @@ class ConditionParserHandler implements ParserHandlerInterface
                     stream: new TokenStream(
                         tokens: $branchTokens,
                     ),
+                    startingLine: $stream->tokens[$stream->position - 1]->line,
                 );
 
                 $branchBodyTokens = [];

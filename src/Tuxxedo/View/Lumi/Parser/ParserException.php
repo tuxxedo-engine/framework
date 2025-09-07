@@ -13,15 +13,19 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser;
 
-class ParserException extends \Exception
+use Tuxxedo\View\Lumi\LumiException;
+
+class ParserException extends LumiException
 {
     public static function fromUnexpectedToken(
         string $tokenName,
+        int $line,
     ): self {
         return new self(
             message: \sprintf(
-                'Syntax error: Unexpected token "%s"',
+                'Syntax error: Unexpected token "%s" on line %d',
                 $tokenName,
+                $line,
             ),
         );
     }
@@ -39,12 +43,14 @@ class ParserException extends \Exception
     public static function fromUnexpectedTokenWithExpectsOneOf(
         string $tokenName,
         array $expectedTokenNames,
+        int $line,
     ): self {
         return new self(
             message: \sprintf(
-                'Syntax error: Unexpected token "%s", expected one of "%s"',
+                'Syntax error: Unexpected token "%s", expected one of "%s" on line %d',
                 $tokenName,
                 \join('", "', $expectedTokenNames),
+                $line,
             ),
         );
     }
@@ -137,57 +143,77 @@ class ParserException extends \Exception
         );
     }
 
-    public static function fromEmptyExpression(): self
-    {
+    public static function fromEmptyExpression(
+        int $line,
+    ): self {
         return new self(
-            message: 'Expressions cannot be empty',
+            message: \sprintf(
+                'Expressions cannot be empty on line %d',
+                $line,
+            ),
         );
     }
 
-    public static function fromUnexpectedContinueOutsideLoop(): self
-    {
+    public static function fromUnexpectedContinueOutsideLoop(
+        int $line,
+    ): self {
         return new self(
-            message: 'Continue cannot be used outside of loops',
+            message: \sprintf(
+                'Continue cannot be used outside of loops on line %d',
+                $line,
+            ),
         );
     }
 
     public static function fromUnexpectedContinueOutOfBounds(
         int $level,
         int $maxLevel,
+        int $line,
     ): self {
         return new self(
             message: \sprintf(
-                'Cannot continue %d, current loop depth is %d',
+                'Cannot continue %d, current loop depth is %d on line %d',
                 $level,
                 $maxLevel,
+                $line,
             ),
         );
     }
 
-    public static function fromUnexpectedBreakOutsideLoop(): self
-    {
+    public static function fromUnexpectedBreakOutsideLoop(
+        int $line,
+    ): self {
         return new self(
-            message: 'Break cannot be used outside of loops',
+            message: \sprintf(
+                'Break cannot be used outside of loops on line %d',
+                $line,
+            ),
         );
     }
 
     public static function fromUnexpectedBreakOutOfBounds(
         int $level,
         int $maxLevel,
+        int $line,
     ): self {
         return new self(
             message: \sprintf(
-                'Cannot break %d, current loop depth is %d',
+                'Cannot break %d, current loop depth is %d on line %d',
                 $level,
                 $maxLevel,
+                $line,
             ),
         );
     }
 
-    public static function fromExpressionNotIterable(): self
-    {
+    public static function fromExpressionNotIterable(
+        int $line,
+    ): self {
         return new self(
-            message: 'For or foreach iterator expression must be iterable',
+            message: \sprintf(
+                'For or foreach iterator expression must be iterable on line %d',
+                $line,
+            ),
         );
     }
 }

@@ -55,6 +55,7 @@ class EchoParserHandler implements ParserHandlerInterface
                     stream: new TokenStream(
                         tokens: $tokens,
                     ),
+                    startingLine: $stream->tokens[$stream->position - 1]->line,
                 ),
             ),
         ];

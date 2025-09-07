@@ -151,6 +151,7 @@ class Parser implements ParserInterface
             if (!\array_key_exists($token->type, $this->handlers)) {
                 throw ParserException::fromUnexpectedToken(
                     tokenName: $token->type,
+                    line: $token->line,
                 );
             }
 

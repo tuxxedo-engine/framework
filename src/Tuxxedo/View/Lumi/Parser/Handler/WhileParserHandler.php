@@ -90,7 +90,9 @@ class WhileParserHandler implements ParserHandlerInterface
         TokenStreamInterface $stream,
     ): ExpressionNodeInterface {
         if ($stream->currentIs(BuiltinTokenNames::END->name)) {
-            throw ParserException::fromEmptyExpression();
+            throw ParserException::fromEmptyExpression(
+                line: $stream->current()->line,
+            );
         }
 
         $tokens = [];
@@ -107,6 +109,7 @@ class WhileParserHandler implements ParserHandlerInterface
             stream: new TokenStream(
                 tokens: $tokens,
             ),
+            startingLine: $stream->tokens[$stream->position - 1]->line,
         );
     }
 
