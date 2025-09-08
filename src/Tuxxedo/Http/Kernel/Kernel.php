@@ -44,7 +44,7 @@ class Kernel implements KernelInterface
     public private(set) ResponseEmitterInterface $emitter;
     public private(set) RouterInterface $router;
 
-    public private(set) array $exceptions = [];
+    public private(set) array $exceptionHandlers = [];
     public private(set) array $defaultExceptionHandlers = [];
 
     final public function __construct(
@@ -52,7 +52,7 @@ class Kernel implements KernelInterface
         public readonly string $appVersion = '',
         public readonly Profile $appProfile = Profile::RELEASE,
         ?ContainerInterface $container = null,
-        ?Config $config = null,
+        ?ConfigInterface $config = null,
     ) {
         $this->config = $config ?? new Config();
         $this->container = $container ?? new Container();
@@ -151,8 +151,8 @@ class Kernel implements KernelInterface
             $handler = static fn (): ErrorHandlerInterface => $handler;
         }
 
-        $this->exceptions[$exceptionClass] ??= [];
-        $this->exceptions[$exceptionClass][] = $handler;
+        $this->exceptionHandlers[$exceptionClass] ??= [];
+        $this->exceptionHandlers[$exceptionClass][] = $handler;
 
         return $this;
     }
@@ -178,8 +178,8 @@ class Kernel implements KernelInterface
     ): void {
         $handlers = [];
 
-        if (\array_key_exists($e::class, $this->exceptions)) {
-            $handlers = $this->exceptions[$e::class];
+        if (\array_key_exists($e::class, $this->exceptionHandlers)) {
+            $handlers = $this->exceptionHandlers[$e::class];
         }
 
         $handlers = \array_merge($handlers, $this->defaultExceptionHandlers);

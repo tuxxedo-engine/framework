@@ -44,7 +44,7 @@ interface KernelInterface
     /**
      * @var array<class-string<\Throwable>, array<\Closure(): ErrorHandlerInterface>>
      */
-    public array $exceptions {
+    public array $exceptionHandlers {
         get;
     }
 
