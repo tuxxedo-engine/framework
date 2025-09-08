@@ -23,6 +23,7 @@ use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 
 // @todo This need to support property writes
+// @todo This needs to support array access write
 class AssignmentParserHandler implements ParserHandlerInterface
 {
     public private(set) string $tokenName = BuiltinTokenNames::ASSIGN->name;
