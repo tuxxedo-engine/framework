@@ -24,6 +24,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 
 // @todo Split this like AbstractForParse
+// @todo Optimize the do-while initial loop prior to reduction
 class WhileParserHandler implements ParserHandlerInterface
 {
     /**
