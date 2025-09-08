@@ -121,6 +121,8 @@ class Runtime implements RuntimeInterface
             throw ViewException::fromCannotCallInstance(
                 class: $instance::class,
             );
+        } elseif ($instance === $this) {
+            throw ViewException::fromCannotAccessThis();
         }
 
         return $instance;
@@ -162,5 +164,15 @@ class Runtime implements RuntimeInterface
         }
 
         return $left | $right;
+    }
+
+    public function propertyAccess(
+        object $instance,
+    ): object {
+        if ($instance === $this) {
+            throw ViewException::fromCannotAccessThis();
+        }
+
+        return $instance;
     }
 }

@@ -231,9 +231,8 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         PropertyAccessNode $node,
         CompilerInterface $compiler,
     ): string {
-        // @todo This needs to guard against $this
         return \sprintf(
-            '$%s->%s',
+            '$this->propertyAccess(%s)->%s',
             $compiler->compileExpression($node->accessor),
             $node->property,
         );

@@ -148,4 +148,11 @@ class ViewException extends \Exception
             ),
         );
     }
+
+    public static function fromCannotAccessThis(): self
+    {
+        return new self(
+            message: 'Accessing $this in views is not allowed',
+        );
+    }
 }
