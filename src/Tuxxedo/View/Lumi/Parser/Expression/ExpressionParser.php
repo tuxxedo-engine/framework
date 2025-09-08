@@ -103,16 +103,20 @@ class ExpressionParser implements ExpressionParserInterface
     ): ExpressionNodeInterface {
         $token = $this->current;
 
-        $this->advance();
-
-        $left = $this->nud($token);
-
-        while ($rbp->value < $this->lbp($this->current)->value) {
-            $token = $this->current;
-
+        if (!$this->stream->eof()) {
             $this->advance();
 
-            $left = $this->led($token, $left);
+            $left = $this->nud($token);
+
+            while ($rbp->value < $this->lbp($this->current)->value) {
+                $token = $this->current;
+
+                $this->advance();
+
+                $left = $this->led($token, $left);
+            }
+        } else {
+            $left = $this->nud($token);
         }
 
         return $left;
