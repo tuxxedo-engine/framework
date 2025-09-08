@@ -13,25 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser;
 
-use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
-
 interface ParserStatePropertiesInterface
 {
     public int $conditionDepth {
-        get;
-    }
-
-    /**
-     * @var string[]
-     */
-    public array $groupingStack {
-        get;
-    }
-
-    /**
-     * @var ExpressionNodeInterface[]
-     */
-    public array $nodeStack {
         get;
     }
 

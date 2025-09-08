@@ -13,19 +13,13 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser;
 
-use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
-
 readonly class ParserStateProperties implements ParserStatePropertiesInterface
 {
     /**
-     * @param string[] $groupingStack
-     * @param ExpressionNodeInterface[] $nodeStack
      * @param array<string, string|int|bool> $state
      */
     final public function __construct(
         public int $conditionDepth,
-        public array $groupingStack,
-        public array $nodeStack,
         public array $state,
     ) {
     }
@@ -35,8 +29,6 @@ readonly class ParserStateProperties implements ParserStatePropertiesInterface
     ): static {
         return new static(
             conditionDepth: $state->conditionDepth,
-            groupingStack: $state->groupingStack,
-            nodeStack: $state->nodeStack,
             state: $state->state,
         );
     }

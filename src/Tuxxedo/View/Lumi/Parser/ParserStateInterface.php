@@ -13,9 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser;
 
-use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
-
-// @todo Clean this up after the new expression parser is in place
 interface ParserStateInterface
 {
     public int $loopDepth {
@@ -23,20 +20,6 @@ interface ParserStateInterface
     }
 
     public int $conditionDepth {
-        get;
-    }
-
-    /**
-     * @var string[]
-     */
-    public array $groupingStack {
-        get;
-    }
-
-    /**
-     * @var ExpressionNodeInterface[]
-     */
-    public array $nodeStack {
         get;
     }
 
@@ -68,35 +51,13 @@ interface ParserStateInterface
      */
     public function leaveCondition(): void;
 
-    public function enterGrouping(
-        string $name,
-    ): void;
-
-    /**
-     * @throws ParserException
-     */
-    public function leaveGrouping(
-        string $name,
-    ): void;
-
     public function pushState(): void;
 
     public function popState(): void;
 
-    public function pushNode(
-        ExpressionNodeInterface $node,
-    ): void;
-
-    /**
-     * @throws ParserException
-     */
-    public function popNode(): ExpressionNodeInterface;
-
     public function isCleanState(
         bool $checkLoops = true,
         bool $checkConditions = true,
-        bool $checkGroupings = true,
-        bool $checkNodes = true,
         bool $checkCustom = true,
     ): bool;
 
