@@ -22,6 +22,7 @@ use Tuxxedo\View\Lumi\Parser\Handler\CommentParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\ConditionParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\ContinueParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\DeclareParserHandler;
+use Tuxxedo\View\Lumi\Parser\Handler\DoWhileParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\EchoParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\ForParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\ForeachParserHandler;
@@ -74,9 +75,8 @@ class Parser implements ParserInterface
             new VoidParserHandler(
                 tokenName: BuiltinTokenNames::ELSE->name,
             ),
-            new WhileParserHandler(
-                tokenName: BuiltinTokenNames::WHILE->name,
-            ),
+            new WhileParserHandler(),
+            new DoWhileParserHandler(),
             new VoidParserHandler(
                 tokenName: BuiltinTokenNames::ENDWHILE->name,
             ),
@@ -90,9 +90,6 @@ class Parser implements ParserInterface
             new ForParserHandler(),
             new VoidParserHandler(
                 tokenName: BuiltinTokenNames::ENDFOR->name,
-            ),
-            new WhileParserHandler(
-                tokenName: BuiltinTokenNames::DO->name,
             ),
         ];
     }
