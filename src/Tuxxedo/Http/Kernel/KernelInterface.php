@@ -17,8 +17,6 @@ use Tuxxedo\Application\Profile;
 use Tuxxedo\Application\ServiceProviderInterface;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Discovery\DiscoveryChannelInterface;
-use Tuxxedo\Discovery\DiscoveryType;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
@@ -88,11 +86,6 @@ interface KernelInterface
 
     public function router(
         RouterInterface $router,
-    ): static;
-
-    public function discover(
-        DiscoveryChannelInterface $channel,
-        ?DiscoveryType $discoveryType = null,
     ): static;
 
     /**

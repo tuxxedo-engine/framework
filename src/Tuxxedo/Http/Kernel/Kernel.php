@@ -13,15 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Kernel;
 
-use Tuxxedo\Application\ExtensionInterface;
 use Tuxxedo\Application\Profile;
 use Tuxxedo\Application\ServiceProviderInterface;
 use Tuxxedo\Config\Config;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Discovery\DiscoveryChannelInterface;
-use Tuxxedo\Discovery\DiscoveryType;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewareNode;
@@ -88,45 +85,6 @@ class Kernel implements KernelInterface
         RouterInterface $router,
     ): static {
         $this->router = $router;
-
-        return $this;
-    }
-
-    public function discover(
-        DiscoveryChannelInterface $channel,
-        ?DiscoveryType $discoveryType = null,
-    ): static {
-        if ($discoveryType !== null) {
-            $types = \array_filter(
-                $channel->provides(),
-                static fn (DiscoveryType $channelDiscoveryType): bool => $channelDiscoveryType === $discoveryType,
-            );
-        } else {
-            $types = $channel->provides();
-        }
-
-        foreach ($types as $type) {
-            foreach ($channel->discover($type) as $discovery) {
-                switch ($type) {
-                    case DiscoveryType::EXTENSIONS:
-                        /** @var class-string<ExtensionInterface> $discovery */
-                        $this->container->resolve($discovery)->augment($this);
-                        break;
-                    case DiscoveryType::MIDDLEWARE:
-                        /** @var class-string<MiddlewareInterface> $discovery */
-                        $this->middleware(
-                            fn (): MiddlewareInterface => $this->container->resolve($discovery),
-                        );
-                        break;
-                    case DiscoveryType::SERVICES:
-                        /** @var class-string<ServiceProviderInterface> $discovery */
-                        $this->serviceProvider(
-                            fn (): ServiceProviderInterface => $this->container->resolve($discovery),
-                        );
-                        break;
-                }
-            }
-        }
 
         return $this;
     }
