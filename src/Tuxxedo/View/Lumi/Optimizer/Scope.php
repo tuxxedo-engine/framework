@@ -15,7 +15,6 @@ namespace Tuxxedo\View\Lumi\Optimizer;
 
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
-use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 
 class Scope implements ScopeInterface
@@ -25,7 +24,7 @@ class Scope implements ScopeInterface
     public function assign(
         AssignmentNode $node,
     ): void {
-        if ($node->name instanceof PropertyAccessNode) {
+        if (!$node->name instanceof IdentifierNode) {
             return;
         }
 

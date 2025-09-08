@@ -15,7 +15,6 @@ namespace Tuxxedo\View\Lumi\Compiler\Provider;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
-use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayItemNode;
@@ -135,14 +134,17 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
                 $compiler->compileNode($node->name->accessor),
                 $node->name->property,
                 $node->operator->symbol(),
-                $compiler->expressionCompiler->compile(
-                    stream: new NodeStream(
-                        nodes: [
-                            $node->value,
-                        ],
-                    ),
-                    compiler: $compiler,
-                ),
+                $compiler->compileExpression($node->value),
+            );
+        } elseif ($node->name instanceof ArrayAccessNode) {
+            return \sprintf(
+                '<?php $%s[%s] %s %s; ?>',
+                $compiler->compileExpression($node->name->array),
+                $node->name->key !== null
+                    ? $compiler->compileExpression($node->name->key)
+                    : '',
+                $node->operator->symbol(),
+                $compiler->compileExpression($node->value),
             );
         }
 
@@ -197,6 +199,10 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         ArrayAccessNode $node,
         CompilerInterface $compiler,
     ): string {
+        if ($node->key === null) {
+            throw CompilerException::fromArrayAccessWithoutKey();
+        }
+
         if ($node->array instanceof ArrayNode) {
             return \sprintf(
                 '%s[%s]',

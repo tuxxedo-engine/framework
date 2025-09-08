@@ -20,7 +20,7 @@ readonly class AssignmentNode implements NodeInterface
     public string $kind;
 
     public function __construct(
-        public IdentifierNode|PropertyAccessNode $name,
+        public IdentifierNode|PropertyAccessNode|ArrayAccessNode $name,
         public ExpressionNodeInterface $value,
         public AssignmentSymbol $operator,
     ) {

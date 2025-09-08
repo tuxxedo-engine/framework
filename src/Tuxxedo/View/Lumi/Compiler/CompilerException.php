@@ -100,4 +100,11 @@ class CompilerException extends LumiException
             message: 'Unable to escape PHP style tags from node',
         );
     }
+
+    public static function fromArrayAccessWithoutKey(): self
+    {
+        return new self(
+            message: 'Array access must have a key in read context',
+        );
+    }
 }

@@ -19,7 +19,7 @@ readonly class ArrayAccessNode implements IterableExpressionNodeInterface
 
     public function __construct(
         public ExpressionNodeInterface $array,
-        public ExpressionNodeInterface $key,
+        public ?ExpressionNodeInterface $key = null,
     ) {
         $this->kind = BuiltinNodeKinds::EXPRESSION->name;
     }
