@@ -22,7 +22,7 @@ return [
      * @type string
      * @required
      */
-    'name' => 'Tuxxedo Engine Web Demo',
+    'name' => 'Tuxxedo Engine Demo',
 
     /**
      * app.version
