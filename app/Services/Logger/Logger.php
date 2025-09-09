@@ -15,10 +15,7 @@ namespace App\Services\Logger;
 
 class Logger implements LoggerInterface
 {
-    /**
-     * @var LogEntry[]
-     */
-    private array $entries = [];
+    public private(set) array $entries = [];
 
     public function log(
         LogEntry|string $entry,

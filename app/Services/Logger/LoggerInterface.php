@@ -15,6 +15,13 @@ namespace App\Services\Logger;
 
 interface LoggerInterface extends \Countable
 {
+    /**
+     * @var LogEntry[]
+     */
+    public array $entries {
+        get;
+    }
+
     public function log(
         LogEntry|string $entry,
     ): static;
