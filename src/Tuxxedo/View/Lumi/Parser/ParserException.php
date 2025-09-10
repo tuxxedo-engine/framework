@@ -87,33 +87,6 @@ class ParserException extends LumiException
         );
     }
 
-    public static function fromUnexpectedGroupingExit(): self
-    {
-        return new self(
-            message: 'Cannot exit grouping: no active grouping context found',
-        );
-    }
-
-    public static function fromUnexpectedNamedGroupingExit(
-        string $name,
-        string $expectedName,
-    ): self {
-        return new self(
-            message: \sprintf(
-                'Cannot exit grouping for "%s": Invalid sequence, expected to exit "%s"',
-                $name,
-                $expectedName,
-            ),
-        );
-    }
-
-    public static function fromUnexpectedNodeStackExit(): self
-    {
-        return new self(
-            message: 'Cannot pop node stack, as the stack is empty',
-        );
-    }
-
     public static function fromUnexpectedStackExit(): self
     {
         return new self(
