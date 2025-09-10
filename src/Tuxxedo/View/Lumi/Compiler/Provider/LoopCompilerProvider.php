@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Compiler\Provider;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
+use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\BreakNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ContinueNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
@@ -25,6 +26,7 @@ class LoopCompilerProvider implements CompilerProviderInterface
     private function compileWhile(
         WhileNode $node,
         CompilerInterface $compiler,
+        NodeStreamInterface $stream,
     ): string {
         $output = \sprintf(
             '<?php while (%s): ?>',
@@ -32,7 +34,7 @@ class LoopCompilerProvider implements CompilerProviderInterface
         );
 
         foreach ($node->body as $child) {
-            $output .= $compiler->compileNode($child);
+            $output .= $compiler->compileNode($child, $stream);
         }
 
         $output .= '<?php endwhile; ?>';
@@ -43,11 +45,12 @@ class LoopCompilerProvider implements CompilerProviderInterface
     private function compileDoWhile(
         DoWhileNode $node,
         CompilerInterface $compiler,
+        NodeStreamInterface $stream,
     ): string {
         $output = '<?php do { ?>';
 
         foreach ($node->body as $child) {
-            $output .= $compiler->compileNode($child);
+            $output .= $compiler->compileNode($child, $stream);
         }
 
         $output .= \sprintf(
@@ -61,6 +64,7 @@ class LoopCompilerProvider implements CompilerProviderInterface
     private function compileContinue(
         ContinueNode $node,
         CompilerInterface $compiler,
+        NodeStreamInterface $stream,
     ): string {
         if ($node->count !== null && $node->count > 1) {
             return \sprintf(
@@ -75,6 +79,7 @@ class LoopCompilerProvider implements CompilerProviderInterface
     private function compileBreak(
         BreakNode $node,
         CompilerInterface $compiler,
+        NodeStreamInterface $stream,
     ): string {
         if ($node->count !== null && $node->count > 1) {
             return \sprintf(
@@ -89,6 +94,7 @@ class LoopCompilerProvider implements CompilerProviderInterface
     private function compileFor(
         ForNode $node,
         CompilerInterface $compiler,
+        NodeStreamInterface $stream,
     ): string {
         $key = '';
 
@@ -107,7 +113,7 @@ class LoopCompilerProvider implements CompilerProviderInterface
         );
 
         foreach ($node->body as $child) {
-            $output .= $compiler->compileNode($child);
+            $output .= $compiler->compileNode($child, $stream);
         }
 
         $output .= '<?php endforeach; ?>';

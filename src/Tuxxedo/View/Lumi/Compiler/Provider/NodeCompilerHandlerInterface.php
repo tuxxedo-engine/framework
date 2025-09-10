@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Compiler\Provider;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
+use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 
 interface NodeCompilerHandlerInterface
@@ -26,7 +27,7 @@ interface NodeCompilerHandlerInterface
     }
 
     /**
-     * @var \Closure(NodeInterface $node, CompilerInterface $compiler): string
+     * @var \Closure(NodeInterface $node, CompilerInterface $compiler, NodeStreamInterface $stream): string
      */
     public \Closure $handler {
         get;

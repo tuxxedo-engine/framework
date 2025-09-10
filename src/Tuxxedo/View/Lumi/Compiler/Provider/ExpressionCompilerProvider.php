@@ -15,6 +15,7 @@ namespace Tuxxedo\View\Lumi\Compiler\Provider;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
+use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayItemNode;
@@ -34,6 +35,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     private function compileIdentifier(
         IdentifierNode $node,
         CompilerInterface $compiler,
+        NodeStreamInterface $stream,
     ): string {
         return \sprintf(
             '$%s',
@@ -44,6 +46,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     private function compileLiteral(
         LiteralNode $node,
         CompilerInterface $compiler,
+        NodeStreamInterface $stream,
     ): string {
         return match ($node->type) {
             NativeType::STRING => '\'' . \str_replace('\'', '\\\'', $node->operand) . '\'',
@@ -57,12 +60,13 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     private function compileFunctionCall(
         FunctionCallNode $node,
         CompilerInterface $compiler,
+        NodeStreamInterface $stream,
     ): string {
         $arguments = [];
 
         if (\sizeof($node->arguments) > 0) {
             foreach ($node->arguments as $argument) {
-                $arguments[] = $compiler->compileNode($argument);
+                $arguments[] = $compiler->compileNode($argument, $stream);
             }
         }
 
@@ -79,8 +83,9 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     private function compileMethodCall(
         MethodCallNode $node,
         CompilerInterface $compiler,
+        NodeStreamInterface $stream,
     ): string {
-        $caller = $compiler->compileNode($node->caller);
+        $caller = $compiler->compileNode($node->caller, $stream);
 
         if (\mb_strtolower($caller) === '$this') {
             throw CompilerException::fromCannotCallThis();
@@ -90,7 +95,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
 
         if (\sizeof($node->arguments) > 0) {
             foreach ($node->arguments as $argument) {
-                $arguments[] = $compiler->compileNode($argument);
+                $arguments[] = $compiler->compileNode($argument, $stream);
             }
         }
 
@@ -108,19 +113,21 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     private function compileBinaryOp(
         BinaryOpNode $node,
         CompilerInterface $compiler,
+        NodeStreamInterface $stream,
     ): string {
         // @todo This needs special casing for filters
         return \sprintf(
             '%s %s %s',
-            $compiler->compileNode($node->left),
+            $compiler->compileNode($node->left, $stream),
             $node->operator->transform(),
-            $compiler->compileNode($node->right),
+            $compiler->compileNode($node->right, $stream),
         );
     }
 
     private function compileAssignment(
         AssignmentNode $node,
         CompilerInterface $compiler,
+        NodeStreamInterface $stream,
     ): string {
         // @todo This needs to guard against $this for PropertyNodes
         if (
@@ -131,7 +138,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         } elseif ($node->name instanceof PropertyAccessNode) {
             return \sprintf(
                 '<?php $%s->%s %s %s; ?>',
-                $compiler->compileNode($node->name->accessor),
+                $compiler->compileNode($node->name->accessor, $stream),
                 $node->name->property,
                 $node->operator->symbol(),
                 $compiler->compileExpression($node->value),
@@ -159,6 +166,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     private function compileGroup(
         GroupNode $node,
         CompilerInterface $compiler,
+        NodeStreamInterface $stream,
     ): string {
         return \sprintf(
             '(%s)',
@@ -169,6 +177,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     private function compileConcat(
         ConcatNode $node,
         CompilerInterface $compiler,
+        NodeStreamInterface $stream,
     ): string {
         return \join(
             ' . ',
@@ -182,13 +191,14 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     private function compileArray(
         ArrayNode $node,
         CompilerInterface $compiler,
+        NodeStreamInterface $stream,
     ): string {
         return \sprintf(
             '[%s]',
             \join(
                 ', ',
                 \array_map(
-                    $compiler->compileNode(...),
+                    static fn (ArrayItemNode $node): string => $compiler->compileNode($node, $stream),
                     $node->items,
                 ),
             ),
@@ -198,6 +208,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     private function compileArrayAccess(
         ArrayAccessNode $node,
         CompilerInterface $compiler,
+        NodeStreamInterface $stream,
     ): string {
         if ($node->key === null) {
             throw CompilerException::fromArrayAccessWithoutKey();
@@ -221,6 +232,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     private function compileArrayItem(
         ArrayItemNode $node,
         CompilerInterface $compiler,
+        NodeStreamInterface $stream,
     ): string {
         if ($node->key !== null) {
             return \sprintf(
@@ -236,6 +248,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     private function compilePropertyAccess(
         PropertyAccessNode $node,
         CompilerInterface $compiler,
+        NodeStreamInterface $stream,
     ): string {
         return \sprintf(
             '$this->propertyAccess(%s)->%s',

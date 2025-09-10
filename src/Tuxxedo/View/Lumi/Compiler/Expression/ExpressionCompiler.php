@@ -37,7 +37,7 @@ class ExpressionCompiler implements ExpressionCompilerInterface
                 );
             }
 
-            $compiledNode = $compiler->compileNode($node);
+            $compiledNode = $compiler->compileNode($node, $stream);
 
             $compiler->state->swap($oldState);
 

@@ -112,7 +112,7 @@ readonly class Compiler implements CompilerInterface
     public function compile(
         NodeStreamInterface $stream,
     ): string {
-        $source = "<?php declare(strict_types=1); ?>\n";
+        $source = '';
 
         $this->state->enter(BuiltinNodeKinds::ROOT->name);
 
@@ -121,16 +121,21 @@ readonly class Compiler implements CompilerInterface
 
             $stream->consume();
 
-            $source .= $this->compileNode($node);
+            $source .= $this->compileNode($node, $stream);
         }
 
         $this->state->leave(BuiltinNodeKinds::ROOT->name);
+
+        if ($source !== '') {
+            $source = "<?php declare(strict_types=1); ?>\n" . $source;
+        }
 
         return $source;
     }
 
     public function compileNode(
         NodeInterface $node,
+        NodeStreamInterface $stream,
     ): string {
         if (!\array_key_exists($node::class, $this->handlers)) {
             throw CompilerException::fromUnexpectedNode(
@@ -143,7 +148,7 @@ readonly class Compiler implements CompilerInterface
             );
         }
 
-        return ($this->handlers[$node::class]->handler)($node, $this);
+        return ($this->handlers[$node::class]->handler)($node, $this, $stream);
     }
 
     public function compileExpression(

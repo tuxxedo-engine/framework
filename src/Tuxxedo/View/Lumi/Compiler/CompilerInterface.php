@@ -37,6 +37,7 @@ interface CompilerInterface
 
     public function compileNode(
         NodeInterface $node,
+        NodeStreamInterface $stream,
     ): string;
 
     public function compileExpression(

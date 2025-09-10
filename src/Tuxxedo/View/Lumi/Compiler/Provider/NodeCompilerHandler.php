@@ -14,12 +14,13 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Compiler\Provider;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
+use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 
 readonly class NodeCompilerHandler implements NodeCompilerHandlerInterface
 {
     /**
-     * @var \Closure(NodeInterface $node, CompilerInterface $compiler): string
+     * @var \Closure(NodeInterface $node, CompilerInterface $compiler, NodeStreamInterface $stream): string
      */
     public \Closure $handler;
 
@@ -27,13 +28,13 @@ readonly class NodeCompilerHandler implements NodeCompilerHandlerInterface
      * @template T of NodeInterface
      *
      * @param class-string<T> $nodeClassName
-     * @param \Closure(T $node, CompilerInterface $compiler): string $handler
+     * @param \Closure(T $node, CompilerInterface $compiler, NodeStreamInterface $stream): string $handler
      */
     public function __construct(
         public string $nodeClassName,
         \Closure $handler,
     ) {
-        /** @var \Closure(NodeInterface $node, CompilerInterface $compiler): string $handler */
+        /** @var \Closure(NodeInterface $node, CompilerInterface $compiler, NodeStreamInterface $stream): string $handler */
         $this->handler = $handler;
     }
 }

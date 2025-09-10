@@ -15,12 +15,12 @@ namespace Tuxxedo\View\Lumi\Compiler\Provider;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
+use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\BuiltinNodeKinds;
 use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DeclareNode;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
-use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 
 class TextCompilerProvider implements CompilerProviderInterface
@@ -28,6 +28,7 @@ class TextCompilerProvider implements CompilerProviderInterface
     private function compileText(
         TextNode $node,
         CompilerInterface $compiler,
+        NodeStreamInterface $stream,
     ): string {
         return $this->stripPhpOpeningTag($node->text);
     }
@@ -35,6 +36,7 @@ class TextCompilerProvider implements CompilerProviderInterface
     private function compileComment(
         CommentNode $node,
         CompilerInterface $compiler,
+        NodeStreamInterface $stream,
     ): string {
         if ($compiler->state->directives->asBool('lumi.compiler_strip_comments')) {
             return '';
@@ -58,6 +60,7 @@ class TextCompilerProvider implements CompilerProviderInterface
     private function compileEcho(
         EchoNode $node,
         CompilerInterface $compiler,
+        NodeStreamInterface $stream,
     ): string {
         $value = $compiler->compileExpression($node->operand);
 
@@ -84,6 +87,7 @@ class TextCompilerProvider implements CompilerProviderInterface
     private function compileDeclare(
         DeclareNode $node,
         CompilerInterface $compiler,
+        NodeStreamInterface $stream,
     ): string {
         $oldState = $compiler->state->swap(BuiltinNodeKinds::EXPRESSION->name);
 
@@ -100,8 +104,8 @@ class TextCompilerProvider implements CompilerProviderInterface
 
         $output = \sprintf(
             '<?php $this->directive(%s, %s); ?>',
-            $compiler->compileNode($node->directive),
-            $compiler->compileNode($node->value),
+            $compiler->compileNode($node->directive, $stream),
+            $compiler->compileNode($node->value, $stream),
         );
 
         $compiler->state->swap($oldState);
