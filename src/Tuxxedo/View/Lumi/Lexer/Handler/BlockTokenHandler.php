@@ -52,25 +52,10 @@ class BlockTokenHandler implements TokenHandlerInterface
         string $buffer,
         ExpressionLexerInterface $expressionLexer,
     ): array {
-        return $this->parseBlock(
-            startingLine: $startingLine,
-            expression: \mb_trim($buffer),
-            expressionLexer: $expressionLexer,
-        );
-    }
+        $buffer = \mb_trim($buffer);
 
-    /**
-     * @return TokenInterface[]
-     *
-     * @throws LexerException
-     */
-    private function parseBlock(
-        int $startingLine,
-        string $expression,
-        ExpressionLexerInterface $expressionLexer,
-    ): array {
-        if (\mb_strpos($expression, ' ') !== false) {
-            [$directive, $expr] = \explode(' ', $expression, 2);
+        if (\mb_strpos($buffer, ' ') !== false) {
+            [$directive, $expr] = \explode(' ', $buffer, 2);
             $directive = \mb_strtolower($directive);
 
             return match ($directive) {
@@ -164,7 +149,7 @@ class BlockTokenHandler implements TokenHandlerInterface
             };
         }
 
-        $directive = \mb_strtolower($expression);
+        $directive = \mb_strtolower($buffer);
 
         return [
             match ($directive) {
@@ -290,7 +275,13 @@ class BlockTokenHandler implements TokenHandlerInterface
             throw LexerException::fromInvalidLoopDepth();
         }
 
-        return (string) (int) $expression;
+        $depth = (string) (int) $expression;
+
+        if ($depth === 1) {
+            return null;
+        }
+
+        return $depth;
     }
 
     /**
