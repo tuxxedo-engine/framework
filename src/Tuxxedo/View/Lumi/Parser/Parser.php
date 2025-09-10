@@ -33,7 +33,6 @@ use Tuxxedo\View\Lumi\Parser\Handler\VoidParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\WhileParserHandler;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 
-// @todo Support LayoutToken
 // @todo Support BlockToken
 class Parser implements ParserInterface
 {
