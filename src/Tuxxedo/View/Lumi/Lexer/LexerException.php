@@ -16,6 +16,7 @@ namespace Tuxxedo\View\Lumi\Lexer;
 use Tuxxedo\View\Lumi\LumiException;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
+// @todo Show line numbers here where possible
 class LexerException extends LumiException
 {
     public static function fromDuplicateSequence(
@@ -173,6 +174,20 @@ class LexerException extends LumiException
     {
         return new self(
             message: 'Invalid declare syntax: The right operand must be a literal value',
+        );
+    }
+
+    public static function fromInvalidBlockName(): self
+    {
+        return new self(
+            message: 'Invalid block name, must be a string',
+        );
+    }
+
+    public static function fromInvalidLayoutName(): self
+    {
+        return new self(
+            message: 'Invalid layout file, must be a literal string',
         );
     }
 }

@@ -15,7 +15,9 @@ namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
+use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Token\AssignToken;
+use Tuxxedo\View\Lumi\Syntax\Token\BlockToken;
 use Tuxxedo\View\Lumi\Syntax\Token\BreakToken;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\ContinueToken;
@@ -33,6 +35,7 @@ use Tuxxedo\View\Lumi\Syntax\Token\EndWhileToken;
 use Tuxxedo\View\Lumi\Syntax\Token\ForToken;
 use Tuxxedo\View\Lumi\Syntax\Token\ForeachToken;
 use Tuxxedo\View\Lumi\Syntax\Token\IfToken;
+use Tuxxedo\View\Lumi\Syntax\Token\LayoutToken;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\WhileToken;
 
@@ -140,6 +143,16 @@ class BlockTokenHandler implements TokenHandlerInterface
                     expressionLexer: $expressionLexer,
                 ),
                 'include' => $this->parseInclude(
+                    startingLine: $startingLine,
+                    expression: $expr,
+                    expressionLexer: $expressionLexer,
+                ),
+                'block' => $this->parseBlock(
+                    startingLine: $startingLine,
+                    expression: $expr,
+                    expressionLexer: $expressionLexer,
+                ),
+                'layout' => $this->parseLayout(
                     startingLine: $startingLine,
                     expression: $expr,
                     expressionLexer: $expressionLexer,
@@ -360,6 +373,65 @@ class BlockTokenHandler implements TokenHandlerInterface
             ),
             new EndToken(
                 line: $startingLine,
+            ),
+        ];
+    }
+
+    /**
+     * @return array{0: BlockToken}
+     */
+    private function parseBlock(
+        int $startingLine,
+        string $expression,
+        ExpressionLexerInterface $expressionLexer,
+    ): array {
+        $expression = $expressionLexer->parse(
+            startingLine: $startingLine,
+            operand: $expression,
+        );
+
+        if (
+            \sizeof($expression) !== 1 ||
+            $expression[0]->type !== BuiltinTokenNames::IDENTIFIER->name ||
+            $expression[0]->op1 === null
+        ) {
+            throw LexerException::fromInvalidBlockName();
+        }
+
+        return [
+            new BlockToken(
+                line: $startingLine,
+                op1: $expression[0]->op1,
+            ),
+        ];
+    }
+
+    /**
+     * @return array{0: LayoutToken}
+     */
+    private function parseLayout(
+        int $startingLine,
+        string $expression,
+        ExpressionLexerInterface $expressionLexer,
+    ): array {
+        $expression = $expressionLexer->parse(
+            startingLine: $startingLine,
+            operand: $expression,
+        );
+
+        if (
+            \sizeof($expression) !== 1 ||
+            $expression[0]->type !== BuiltinTokenNames::LITERAL->name ||
+            $expression[0]->op1 === null ||
+            $expression[0]->op2 !== NativeType::STRING->name
+        ) {
+            throw LexerException::fromInvalidLayoutName();
+        }
+
+        return [
+            new LayoutToken(
+                line: $startingLine,
+                op1: $expression[0]->op1,
             ),
         ];
     }

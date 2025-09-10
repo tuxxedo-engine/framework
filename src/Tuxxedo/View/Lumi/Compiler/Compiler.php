@@ -27,6 +27,8 @@ use Tuxxedo\View\Lumi\Syntax\Node\BuiltinNodeKinds;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 
+// @todo Support LayoutNode
+// @todo Support BlockNode
 readonly class Compiler implements CompilerInterface
 {
     /**

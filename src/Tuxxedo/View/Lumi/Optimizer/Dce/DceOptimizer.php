@@ -27,6 +27,8 @@ use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 
+// @todo Support LayoutNode
+// @todo Support BlockNode
 class DceOptimizer extends AbstractOptimizer
 {
     protected function optimizer(

@@ -117,4 +117,20 @@ readonly class ViewController
             name: 'hello_world_seq',
         );
     }
+
+    #[Route\Get]
+    public function block(): ViewInterface
+    {
+        return new View(
+            name: 'hello_world_block',
+        );
+    }
+
+    #[Route\Get]
+    public function layout(): ViewInterface
+    {
+        return new View(
+            name: 'hello_world_layout',
+        );
+    }
 }

@@ -28,6 +28,8 @@ use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 
+// @todo Support LayoutNode
+// @todo Support BlockNode
 class SccpOptimizer extends AbstractOptimizer
 {
     protected function optimizer(

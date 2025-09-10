@@ -1,0 +1,5 @@
+{% layout 'hello_world_layout' %}
+
+{% block content %}
+    <h1>Page contents</h1>
+{% endblock %}
