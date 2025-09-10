@@ -39,6 +39,51 @@ class LayoutParserHandler implements ParserHandlerInterface
             );
         }
 
+        $total = \sizeof($stream->tokens);
+        $inBlock = false;
+
+        for ($position = 0; $position < $total; $position++) {
+            $token = $stream->tokens[$position];
+
+            if ($token->type === BuiltinTokenNames::LAYOUT->name) {
+                if ($token !== $layout) {
+                    throw ParserException::fromLayoutModeMustOnlyHaveOneLayout(
+                        line: $token->line,
+                    );
+                }
+
+                continue;
+            }
+
+            if ($inBlock) {
+                continue;
+            }
+
+            if ($token->type === BuiltinTokenNames::BLOCK->name) {
+                $inBlock = true;
+
+                continue;
+            }
+
+            if ($token->type === BuiltinTokenNames::ENDBLOCK->name) {
+                $inBlock = false;
+
+                continue;
+            }
+
+            if (
+                $token->type !== BuiltinTokenNames::TEXT->name ||
+                (
+                    $token->op1 !== null &&
+                    \preg_match('/(?s)(?=.*\s)/u', $token->op1) !== 1
+                )
+            ) {
+                throw ParserException::fromLayoutModeMustNotHaveRootElements(
+                    line: $token->line,
+                );
+            }
+        }
+
         return [
             new LayoutNode(
                 file: $layout->op1,

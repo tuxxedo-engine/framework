@@ -193,4 +193,26 @@ class ParserException extends LumiException
             ),
         );
     }
+
+    public static function fromLayoutModeMustOnlyHaveOneLayout(
+        int $line,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'There must only be one layout rule per file on line %d',
+                $line,
+            ),
+        );
+    }
+
+    public static function fromLayoutModeMustNotHaveRootElements(
+        int $line,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'A file with a layout rule must only contain block and whitespace at root level on line %d',
+                $line,
+            ),
+        );
+    }
 }
