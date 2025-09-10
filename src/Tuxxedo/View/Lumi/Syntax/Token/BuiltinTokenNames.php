@@ -16,6 +16,7 @@ namespace Tuxxedo\View\Lumi\Syntax\Token;
 enum BuiltinTokenNames
 {
     case ASSIGN;
+    case BLOCK;
     case BREAK;
     case CHARACTER;
     case COMMENT;
@@ -26,6 +27,7 @@ enum BuiltinTokenNames
     case ELSEIF;
     case ELSE;
     case END;
+    case ENDBLOCK;
     case ENDFOR;
     case ENDFOREACH;
     case ENDIF;
@@ -34,6 +36,7 @@ enum BuiltinTokenNames
     case FOREACH;
     case IDENTIFIER;
     case IF;
+    case LAYOUT;
     case LITERAL;
     case OPERATOR;
     case TEXT;
