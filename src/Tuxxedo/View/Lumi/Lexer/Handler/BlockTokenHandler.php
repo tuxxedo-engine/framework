@@ -24,6 +24,7 @@ use Tuxxedo\View\Lumi\Syntax\Token\DoToken;
 use Tuxxedo\View\Lumi\Syntax\Token\EchoToken;
 use Tuxxedo\View\Lumi\Syntax\Token\ElseIfToken;
 use Tuxxedo\View\Lumi\Syntax\Token\ElseToken;
+use Tuxxedo\View\Lumi\Syntax\Token\EndBlockToken;
 use Tuxxedo\View\Lumi\Syntax\Token\EndForToken;
 use Tuxxedo\View\Lumi\Syntax\Token\EndForeachToken;
 use Tuxxedo\View\Lumi\Syntax\Token\EndIfToken;
@@ -157,6 +158,9 @@ class BlockTokenHandler implements TokenHandlerInterface
                     line: $startingLine,
                 ),
                 'else' => new ElseToken(
+                    line: $startingLine,
+                ),
+                'endblock' => new EndBlockToken(
                     line: $startingLine,
                 ),
                 'endif' => new EndIfToken(
