@@ -73,7 +73,6 @@ class ParserException extends LumiException
         );
     }
 
-    // @todo Support line numbers?
     public static function fromUnexpectedLoopExit(): self
     {
         return new self(
@@ -81,7 +80,6 @@ class ParserException extends LumiException
         );
     }
 
-    // @todo Support line numbers?
     public static function fromUnexpectedConditionExit(): self
     {
         return new self(
@@ -89,7 +87,6 @@ class ParserException extends LumiException
         );
     }
 
-    // @todo Support line numbers?
     public static function fromUnexpectedStackExit(): self
     {
         return new self(
