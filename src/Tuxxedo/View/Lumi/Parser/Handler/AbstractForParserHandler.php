@@ -104,6 +104,12 @@ abstract class AbstractForParserHandler implements ParserHandlerInterface
         $stream->expect(BuiltinTokenNames::END->name);
         $parser->state->enterLoop();
 
+        if (\sizeof($expressionTokens) === 0) {
+            throw ParserException::fromEmptyExpression(
+                line: $stream->tokens[$stream->position - 1]->line,
+            );
+        }
+
         $iterator = $parser->expressionParser->parse(
             stream: new TokenStream(
                 tokens: $expressionTokens,
