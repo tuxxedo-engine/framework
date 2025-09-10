@@ -18,6 +18,7 @@ use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
+use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
 use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ConditionalBranchNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ConditionalNode;
@@ -27,8 +28,6 @@ use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 
-// @todo Support LayoutNode
-// @todo Support BlockNode
 class DceOptimizer extends AbstractOptimizer
 {
     protected function optimizer(
@@ -60,6 +59,7 @@ class DceOptimizer extends AbstractOptimizer
         return match (true) {
             $node instanceof AssignmentNode => parent::assignment($node),
             $node instanceof DirectiveNodeInterface => parent::optimizeDirective($node),
+            $node instanceof BlockNode => parent::optimizeBlock($node),
             $node instanceof CommentNode => $this->optimizeComment($node),
             $node instanceof ConditionalNode => $this->optimizeConditional($node),
             default => [

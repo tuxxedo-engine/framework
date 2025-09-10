@@ -15,18 +15,25 @@ namespace Tuxxedo\View\Lumi\Optimizer;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerDirectives;
 use Tuxxedo\View\Lumi\Compiler\CompilerDirectivesInterface;
+use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
+use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 
 abstract class AbstractOptimizer implements OptimizerInterface
 {
     protected private(set) CompilerDirectivesInterface&DirectivesInterface $directives;
-    protected readonly ScopeInterface $scope;
+    protected private(set) ScopeInterface $scope;
+
+    /**
+     * @var ScopeInterface[]
+     */
+    protected private(set) array $scopeStack = [];
 
     public function __construct()
     {
@@ -37,6 +44,27 @@ abstract class AbstractOptimizer implements OptimizerInterface
     abstract protected function optimizer(
         NodeStreamInterface $stream,
     ): NodeStreamInterface;
+
+    protected function pushScope(): void
+    {
+        \array_push($this->scopeStack, $this->scope);
+
+        $this->scope = new Scope();
+    }
+
+    /**
+     * @throws CompilerException
+     */
+    protected function popScope(): void
+    {
+        $scope = \array_pop($this->scopeStack);
+
+        if ($scope === null) {
+            throw CompilerException::fromCannotPopOptimizerScope();
+        }
+
+        $this->scope = $scope;
+    }
 
     /**
      * @return array{0: NodeInterface}
@@ -70,6 +98,28 @@ abstract class AbstractOptimizer implements OptimizerInterface
 
         return [
             $node,
+        ];
+    }
+
+    /**
+     * @return array{0: BlockNode}
+     *
+     * @throws CompilerException
+     */
+    protected function optimizeBlock(
+        BlockNode $node,
+    ): array {
+        $this->pushScope();
+
+        $nodes = $this->optimizeNodes($node->body);
+
+        $this->popScope();
+
+        return [
+            new BlockNode(
+                name: $node->name,
+                body: $nodes,
+            ),
         ];
     }
 

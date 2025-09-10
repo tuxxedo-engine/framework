@@ -107,4 +107,11 @@ class CompilerException extends LumiException
             message: 'Array access must have a key in read context',
         );
     }
+
+    public static function fromCannotPopOptimizerScope(): self
+    {
+        return new self(
+            message: 'Cannot pop optimizer scope, possible optimizer corruption',
+        );
+    }
 }

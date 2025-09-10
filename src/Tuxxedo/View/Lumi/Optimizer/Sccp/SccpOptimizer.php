@@ -19,6 +19,7 @@ use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
+use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
@@ -28,8 +29,6 @@ use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 
-// @todo Support LayoutNode
-// @todo Support BlockNode
 class SccpOptimizer extends AbstractOptimizer
 {
     protected function optimizer(
@@ -61,6 +60,7 @@ class SccpOptimizer extends AbstractOptimizer
         return match (true) {
             $node instanceof AssignmentNode => parent::assignment($node),
             $node instanceof DirectiveNodeInterface => parent::optimizeDirective($node),
+            $node instanceof BlockNode => parent::optimizeBlock($node),
             $node instanceof BinaryOpNode => $this->optimizeBinaryOp($node),
             $node instanceof EchoNode => $this->optimizeEcho($node),
             $node instanceof GroupNode => $this->optimizeGroup($node),
