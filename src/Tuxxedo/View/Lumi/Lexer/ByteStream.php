@@ -140,7 +140,7 @@ class ByteStream implements ByteStreamInterface
     public function consume(): string
     {
         if ($this->eof()) {
-            throw LexerException::fromEofReached();
+            throw LexerException::fromTokenStreamEof();
         }
 
         $char = \mb_substr($this->input, $this->position, 1);
@@ -159,6 +159,7 @@ class ByteStream implements ByteStreamInterface
         if ($this->peek(\mb_strlen($sequence)) !== $sequence) {
             throw LexerException::fromUnexpectedSequenceFound(
                 sequence: $sequence,
+                line: $this->line,
             );
         }
 

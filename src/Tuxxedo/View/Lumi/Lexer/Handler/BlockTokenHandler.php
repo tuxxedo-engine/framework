@@ -125,6 +125,7 @@ class BlockTokenHandler implements TokenHandlerInterface
                     new BreakToken(
                         line: $startingLine,
                         op1: $this->parseLoopDepth(
+                            startingLine: $startingLine,
                             expression: $expr,
                         ),
                     ),
@@ -133,6 +134,7 @@ class BlockTokenHandler implements TokenHandlerInterface
                     new ContinueToken(
                         line: $startingLine,
                         op1: $this->parseLoopDepth(
+                            startingLine: $startingLine,
                             expression: $expr,
                         ),
                     ),
@@ -159,6 +161,7 @@ class BlockTokenHandler implements TokenHandlerInterface
                 ),
                 default => throw LexerException::fromUnexpectedSequenceFound(
                     sequence: $directive,
+                    line: $startingLine,
                 ),
             };
         }
@@ -196,6 +199,7 @@ class BlockTokenHandler implements TokenHandlerInterface
                 ),
                 default => throw LexerException::fromUnexpectedSequenceFound(
                     sequence: $directive,
+                    line: $startingLine,
                 ),
             },
         ];
@@ -212,7 +216,9 @@ class BlockTokenHandler implements TokenHandlerInterface
         ExpressionLexerInterface $expressionLexer,
     ): array {
         if (\preg_match('/^\s*(\w+)(?:\s*,\s*(\w+))?\s+in\s+(.+)$/ui', $expression, $matches) !== 1) {
-            throw LexerException::fromInvalidForSyntax();
+            throw LexerException::fromInvalidForSyntax(
+                line: $startingLine,
+            );
         }
 
         $value = $matches[1];
@@ -246,7 +252,9 @@ class BlockTokenHandler implements TokenHandlerInterface
         ExpressionLexerInterface $expressionLexer,
     ): array {
         if (\preg_match('/^(.+?)\s+as\s+(\w+)(?:\s*=>\s*(\w+))?$/ui', $expression, $matches) !== 1) {
-            throw LexerException::fromInvalidForeachSyntax();
+            throw LexerException::fromInvalidForeachSyntax(
+                line: $startingLine,
+            );
         }
 
         $expr = $matches[1];
@@ -280,6 +288,7 @@ class BlockTokenHandler implements TokenHandlerInterface
      * @throws LexerException
      */
     private function parseLoopDepth(
+        int $startingLine,
         string $expression,
     ): ?string {
         $expression = \mb_trim($expression);
@@ -289,7 +298,9 @@ class BlockTokenHandler implements TokenHandlerInterface
         }
 
         if (\preg_match('/^[1-9][0-9]*$/u', $expression) !== 1) {
-            throw LexerException::fromInvalidLoopDepth();
+            throw LexerException::fromInvalidLoopDepth(
+                line: $startingLine,
+            );
         }
 
         $depth = (string) (int) $expression;
@@ -314,7 +325,9 @@ class BlockTokenHandler implements TokenHandlerInterface
         $parts = \explode('=', $expression, 2);
 
         if (\sizeof($parts) !== 2) {
-            throw LexerException::fromInvalidDeclare();
+            throw LexerException::fromInvalidDeclare(
+                line: $startingLine,
+            );
         }
 
         $op1 = \mb_trim($parts[0]);
@@ -326,11 +339,15 @@ class BlockTokenHandler implements TokenHandlerInterface
         );
 
         if (\sizeof($tokens) !== 1) {
-            throw LexerException::fromInvalidDeclareLiteral();
+            throw LexerException::fromInvalidDeclareLiteral(
+                line: $startingLine,
+            );
         }
 
         if ($tokens[0]->type !== BuiltinTokenNames::LITERAL->name) {
-            throw LexerException::fromInvalidDeclareLiteral();
+            throw LexerException::fromInvalidDeclareLiteral(
+                line: $startingLine,
+            );
         }
 
         return [
@@ -395,7 +412,9 @@ class BlockTokenHandler implements TokenHandlerInterface
             $expression[0]->type !== BuiltinTokenNames::IDENTIFIER->name ||
             $expression[0]->op1 === null
         ) {
-            throw LexerException::fromInvalidBlockName();
+            throw LexerException::fromInvalidBlockName(
+                line: $startingLine,
+            );
         }
 
         return [
@@ -425,7 +444,9 @@ class BlockTokenHandler implements TokenHandlerInterface
             $expression[0]->op1 === null ||
             $expression[0]->op2 !== NativeType::STRING->name
         ) {
-            throw LexerException::fromInvalidLayoutName();
+            throw LexerException::fromInvalidLayoutName(
+                line: $startingLine,
+            );
         }
 
         return [

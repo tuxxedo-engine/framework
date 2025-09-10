@@ -14,9 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Lexer;
 
 use Tuxxedo\View\Lumi\LumiException;
-use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
-// @todo Show line numbers here where possible
 class LexerException extends LumiException
 {
     public static function fromDuplicateSequence(
@@ -41,81 +39,98 @@ class LexerException extends LumiException
         );
     }
 
-    public static function fromEofReached(): self
-    {
-        return new self(
-            message: 'Unexpected end of input reached while parsing',
-        );
-    }
-
     public static function fromUnexpectedSequenceFound(
         string $sequence,
+        int $line,
     ): self {
         return new self(
             message: \sprintf(
-                'Unexpected sequence "%s" found in input stream',
+                'Unexpected sequence "%s" found in input stream on line %d',
                 $sequence,
+                $line,
             ),
         );
     }
 
-    public static function fromInvalidForSyntax(): self
-    {
+    public static function fromInvalidForSyntax(
+        int $line,
+    ): self {
         return new self(
-            message: 'Expected syntax: For loops must be constructed like {% for value[,key] in iterator %%}',
+            message: \sprintf(
+                'Expected syntax: For loops must be constructed like {%% for value[,key] in iterator %%} on line %d',
+                $line,
+            ),
         );
     }
 
-    public static function fromInvalidForeachSyntax(): self
-    {
+    public static function fromInvalidForeachSyntax(
+        int $line,
+    ): self {
         return new self(
-            message: 'Expected syntax: Foreach loops must be constructed like {% foreach iterator as [key =>]value %%}',
+            message: \sprintf(
+                'Expected syntax: Foreach loops must be constructed like {%% foreach iterator as [key =>]value %%} on line %d',
+                $line,
+            ),
         );
     }
 
-    public static function fromInvalidLoopDepth(): self
-    {
+    public static function fromInvalidLoopDepth(
+        int $line,
+    ): self {
         return new self(
-            message: 'Invalid loop depth, must be a positive integer',
+            message: \sprintf(
+                'Invalid loop depth, must be a positive integer on line %d',
+                $line,
+            ),
         );
     }
 
-    public static function fromEmptyExpression(): self
-    {
+    public static function fromEmptyExpression(
+        int $line,
+    ): self {
         return new self(
-            message: 'Expressions cannot be empty',
+            message: \sprintf(
+                'Expressions cannot be empty on line %d',
+                $line,
+            ),
         );
     }
 
     public static function fromInvalidQuotedString(
         string $quoteChar,
+        int $line,
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid quoted string, no ending %s character found',
+                'Invalid quoted string, no ending %s character found on line %d',
                 $quoteChar,
+                $line,
             ),
         );
     }
 
     public static function fromInvalidNumber(
         string $value,
+        int $line,
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid numeric value: %s cannot be represented as a number',
+                'Invalid numeric value: %s cannot be represented as a number %d',
                 $value,
+                $line,
             ),
         );
     }
 
     public static function fromUnknownSymbol(
         string $symbol,
+        int $line,
     ): self {
         return new self(
             message: \sprintf(
-                'Unknown symbol "%s" encountered',
+                'Unknown symbol "%s" encountered on line %d',
                 $symbol,
+                $line,
             ),
         );
     }
@@ -128,23 +143,28 @@ class LexerException extends LumiException
     }
 
     public static function fromUnexpectedToken(
-        TokenInterface $token,
+        string $tokenName,
         string $expectedTokenName,
+        int $line,
     ): self {
         return new self(
             message: \sprintf(
-                'Unexpected token "%s" encountered on line %d in token stream, expected "%s"',
-                $token->type,
-                $token->line,
+                'Unexpected token "%s" encountered in token stream, expected "%s" on line %d',
+                $tokenName,
                 $expectedTokenName,
+                $line,
             ),
         );
     }
 
-    public static function fromMalformedToken(): self
-    {
+    public static function fromMalformedToken(
+        int $line,
+    ): self {
         return new self(
-            message: 'Internal token is malformed',
+            message: \sprintf(
+                'Internal token is malformed on line %d',
+                $line,
+            ),
         );
     }
 
@@ -152,42 +172,60 @@ class LexerException extends LumiException
         string $operand,
         string $actualOperand,
         string $expectedOperand,
+        int $line,
     ): self {
         return new self(
             message: \sprintf(
-                'Unexpected token operand for %s, expected "%s" but got "%s"',
+                'Unexpected token operand for %s, expected "%s" but got "%s" on line %d',
                 $operand,
                 $expectedOperand,
                 $actualOperand,
+                $line,
             ),
         );
     }
 
-    public static function fromInvalidDeclare(): self
-    {
+    public static function fromInvalidDeclare(
+        int $line,
+    ): self {
         return new self(
-            message: 'Invalid declare syntax: A declare must have an assignment',
+            message: \sprintf(
+                'Invalid declare syntax: A declare must have an assignment on line %d',
+                $line,
+            ),
         );
     }
 
-    public static function fromInvalidDeclareLiteral(): self
-    {
+    public static function fromInvalidDeclareLiteral(
+        int $line,
+    ): self {
         return new self(
-            message: 'Invalid declare syntax: The right operand must be a literal value',
+            message: \sprintf(
+                'Invalid declare syntax: The right operand must be a literal value on line %d',
+                $line,
+            ),
         );
     }
 
-    public static function fromInvalidBlockName(): self
-    {
+    public static function fromInvalidBlockName(
+        int $line,
+    ): self {
         return new self(
-            message: 'Invalid block name, must be a string',
+            message: \sprintf(
+                'Invalid block name, must be a string on line %d',
+                $line,
+            ),
         );
     }
 
-    public static function fromInvalidLayoutName(): self
-    {
+    public static function fromInvalidLayoutName(
+        int $line,
+    ): self {
         return new self(
-            message: 'Invalid layout file, must be a literal string',
+            message: \sprintf(
+                'Invalid layout file, must be a literal string value on line %d',
+                $line,
+            ),
         );
     }
 }

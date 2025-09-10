@@ -160,6 +160,7 @@ class ExpressionLexer implements ExpressionLexerInterface
                 } else {
                     throw LexerException::fromInvalidNumber(
                         value: $buffer,
+                        line: $line,
                     );
                 }
 
@@ -223,6 +224,7 @@ class ExpressionLexer implements ExpressionLexerInterface
                 } else {
                     throw LexerException::fromUnknownSymbol(
                         symbol: $buffer,
+                        line: $line,
                     );
                 }
             }
@@ -235,11 +237,14 @@ class ExpressionLexer implements ExpressionLexerInterface
         if ($inQuote) {
             throw LexerException::fromInvalidQuotedString(
                 quoteChar: $quoteChar,
+                line: $line,
             );
         }
 
         if (\sizeof($tokens) === 0) {
-            throw LexerException::fromEmptyExpression();
+            throw LexerException::fromEmptyExpression(
+                line: $line,
+            );
         }
 
         return $tokens;
@@ -307,6 +312,7 @@ class ExpressionLexer implements ExpressionLexerInterface
 
         throw LexerException::fromUnknownSymbol(
             symbol: $symbol,
+            line: $line,
         );
     }
 
