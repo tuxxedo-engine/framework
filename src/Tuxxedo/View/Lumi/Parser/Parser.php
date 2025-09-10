@@ -93,6 +93,9 @@ class Parser implements ParserInterface
             new VoidParserHandler(
                 tokenName: BuiltinTokenNames::ENDFOR->name,
             ),
+            new VoidParserHandler(
+                tokenName: BuiltinTokenNames::ENDBLOCK->name,
+            ),
         ];
     }
 
