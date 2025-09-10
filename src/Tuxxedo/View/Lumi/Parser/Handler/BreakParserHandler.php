@@ -28,6 +28,7 @@ class BreakParserHandler implements ParserHandlerInterface
         TokenStreamInterface $stream,
     ): array {
         $token = $stream->current();
+
         $stream->consume();
 
         if ($parser->state->loopDepth === 0) {

@@ -37,7 +37,9 @@ class TextParserHandler implements ParserHandlerInterface
             $token = $stream->expect(BuiltinTokenNames::TEXT->name);
 
             if ($token->op1 === null) {
-                throw ParserException::fromMalformedToken();
+                throw ParserException::fromMalformedToken(
+                    line: $token->line,
+                );
             }
 
             $nodes[] = new TextNode(

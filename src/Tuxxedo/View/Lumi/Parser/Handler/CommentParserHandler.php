@@ -37,7 +37,9 @@ class CommentParserHandler implements ParserHandlerInterface
             $token = $stream->expect(BuiltinTokenNames::COMMENT->name);
 
             if ($token->op1 === null) {
-                throw ParserException::fromMalformedToken();
+                throw ParserException::fromMalformedToken(
+                    line: $token->line,
+                );
             }
 
             $nodes[] = new CommentNode(

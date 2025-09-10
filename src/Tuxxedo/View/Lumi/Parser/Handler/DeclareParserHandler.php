@@ -35,6 +35,12 @@ class DeclareParserHandler implements ParserHandlerInterface
     ): array {
         $directive = $stream->current();
 
+        if ($directive->op1 === null) {
+            throw ParserException::fromMalformedToken(
+                line: $directive->line,
+            );
+        }
+
         $stream->consume();
 
         $value = $stream->expect(BuiltinTokenNames::LITERAL->name);
@@ -42,11 +48,12 @@ class DeclareParserHandler implements ParserHandlerInterface
         $stream->expect(BuiltinTokenNames::END->name);
 
         if (
-            $directive->op1 === null ||
             $value->op1 === null ||
             $value->op2 === null
         ) {
-            throw ParserException::fromMalformedToken();
+            throw ParserException::fromMalformedToken(
+                line: $directive->line,
+            );
         }
 
         return [

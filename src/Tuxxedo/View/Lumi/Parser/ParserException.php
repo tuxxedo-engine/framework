@@ -30,10 +30,14 @@ class ParserException extends LumiException
         );
     }
 
-    public static function fromMalformedToken(): self
-    {
+    public static function fromMalformedToken(
+        int $line,
+    ): self {
         return new self(
-            message: 'Internal token is malformed',
+            message: \sprintf(
+                'Internal token is malformed on line %d',
+                $line,
+            ),
         );
     }
 

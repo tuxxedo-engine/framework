@@ -37,7 +37,9 @@ class AssignmentParserHandler implements ParserHandlerInterface
         $variableToken = $stream->expect(BuiltinTokenNames::IDENTIFIER->name);
 
         if ($variableToken->op1 === null) {
-            throw ParserException::fromMalformedToken();
+            throw ParserException::fromMalformedToken(
+                line: $variableToken->line,
+            );
         }
 
         $variableName = $variableToken->op1;
@@ -45,7 +47,9 @@ class AssignmentParserHandler implements ParserHandlerInterface
         $operatorToken = $stream->expect(BuiltinTokenNames::OPERATOR->name);
 
         if ($operatorToken->op1 === null) {
-            throw ParserException::fromMalformedToken();
+            throw ParserException::fromMalformedToken(
+                line: $operatorToken->line,
+            );
         }
 
         $operatorSymbol = $operatorToken->op1;

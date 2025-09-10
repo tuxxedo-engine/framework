@@ -144,7 +144,9 @@ class ExpressionParser implements ExpressionParserInterface
         TokenInterface $token,
     ): Precedence {
         if ($token->op1 === null) {
-            throw ParserException::fromMalformedToken();
+            throw ParserException::fromMalformedToken(
+                line: $token->line,
+            );
         }
 
         if (
@@ -162,7 +164,9 @@ class ExpressionParser implements ExpressionParserInterface
         ExpressionNodeInterface $left,
     ): ExpressionNodeInterface {
         if ($token->op1 === null) {
-            throw ParserException::fromMalformedToken();
+            throw ParserException::fromMalformedToken(
+                line: $token->line,
+            );
         }
 
         if (
@@ -329,7 +333,9 @@ class ExpressionParser implements ExpressionParserInterface
         TokenInterface $token,
     ): LiteralNode {
         if ($token->op1 === null || $token->op2 === null) {
-            throw ParserException::fromMalformedToken();
+            throw ParserException::fromMalformedToken(
+                line: $token->line,
+            );
         }
 
         return new LiteralNode(
@@ -348,7 +354,9 @@ class ExpressionParser implements ExpressionParserInterface
         TokenInterface $token,
     ): IdentifierNode {
         if ($token->op1 === null) {
-            throw ParserException::fromMalformedToken();
+            throw ParserException::fromMalformedToken(
+                line: $token->line,
+            );
         }
 
         return new IdentifierNode(

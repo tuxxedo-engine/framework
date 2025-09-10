@@ -396,6 +396,8 @@ class BlockTokenHandler implements TokenHandlerInterface
 
     /**
      * @return array{0: BlockToken}
+     *
+     * @throws LexerException
      */
     private function parseBlock(
         int $startingLine,
@@ -427,6 +429,8 @@ class BlockTokenHandler implements TokenHandlerInterface
 
     /**
      * @return array{0: LayoutToken}
+     *
+     * @throws LexerException
      */
     private function parseLayout(
         int $startingLine,

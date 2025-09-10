@@ -34,7 +34,9 @@ class LayoutParserHandler implements ParserHandlerInterface
         $layout = $stream->expect(BuiltinTokenNames::LAYOUT->name);
 
         if ($layout->op1 === null) {
-            throw ParserException::fromMalformedToken();
+            throw ParserException::fromMalformedToken(
+                line: $layout->line,
+            );
         }
 
         return [
