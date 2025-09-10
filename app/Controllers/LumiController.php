@@ -45,37 +45,53 @@ readonly class LumiController
     ) {
     }
 
+    private function visualizeTokenHeader(): string
+    {
+        return \sprintf(
+            "%s %s %s %s %s\n",
+            \str_pad('Line', 6),
+            \str_pad('Position', 9),
+            \str_pad('Token', 20),
+            \str_pad('op1', 25),
+            \str_pad('op2', 25),
+        );
+    }
+
     private function visualizeToken(
         TokenStreamInterface $stream,
     ): string {
         $token = $stream->current();
 
-        $output = \sprintf(
-            'L%s@%s %s',
+        return \sprintf(
+            'L%s @%s %s %s %s',
             \str_pad((string) $token->line, 5),
-            \str_pad((string) $stream->position, 5),
-            $token->type,
+            \str_pad((string) $stream->position, 8),
+            \str_pad($token->type, 20),
+            $token->op1 !== null
+                ? $this->visualizeTokenValue($token->op1)
+                : \str_repeat(' ', 25),
+            $token->op2 !== null
+                ? $this->visualizeTokenValue($token->op2)
+                : \str_repeat(' ', 25),
         );
+    }
 
-        if ($token->op1 !== null || $token->op2 !== null) {
-            $output .= ' (';
-
-            if ($token->op1 !== null) {
-                $output .= 'op1=' . $this->visualizeValue($token->op1);
-            }
-
-            if ($token->op2 !== null) {
-                if ($token->op1 !== null) {
-                    $output .= ', ';
-                }
-
-                $output .= 'op2=' . $this->visualizeValue($token->op2);
-            }
-
-            $output .= ')';
+    private function visualizeTokenValue(
+        string $value,
+    ): string {
+        if (\mb_strlen($value) > 20) {
+            $value = \mb_substr($value, 0, 20) . '...';
         }
 
-        return $output;
+        /** @var list<string> $lines */
+        $lines = \preg_split('/\n/', $value);
+        $value = [];
+
+        foreach ($lines as $line) {
+            $value[] = \mb_trim($line);
+        }
+
+        return \mb_str_pad('"' . \htmlspecialchars(\join('\n', $value)) . '"', 25);
     }
 
     private function visualizeValue(
@@ -306,6 +322,7 @@ readonly class LumiController
 
         $buffer .= '<h3>Tokens</h3>';
         $buffer .= '<pre>';
+        $buffer .= $this->visualizeTokenHeader();
 
         $engine = LumiEngine::createDefault();
 

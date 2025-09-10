@@ -277,7 +277,7 @@ class BlockTokenHandler implements TokenHandlerInterface
 
         $depth = (string) (int) $expression;
 
-        if ($depth === 1) {
+        if ($depth === '1') {
             return null;
         }
 
