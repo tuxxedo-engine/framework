@@ -94,9 +94,4 @@ class Variable implements VariableInterface
 
         $this->state = VariableState::VARYING;
     }
-
-    public function isProperty(): bool
-    {
-        return \str_contains($this->name, '::');
-    }
 }

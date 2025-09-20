@@ -21,7 +21,6 @@ use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 
-// @todo Optimize the do-while initial loop prior to reduction
 class DoWhileParserHandler extends AbstractWhileParserHandler
 {
     public private(set) string $tokenName = BuiltinTokenNames::DO->name;

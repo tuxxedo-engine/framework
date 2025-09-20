@@ -17,6 +17,8 @@ use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 
+// @todo Support array variables
+// @todo Support properties
 class Scope implements ScopeInterface
 {
     public private(set) array $variables = [];

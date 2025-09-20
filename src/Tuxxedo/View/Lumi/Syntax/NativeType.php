@@ -55,8 +55,9 @@ enum NativeType
         };
     }
 
-    public function cast(string $value): string|int|float|bool|null
-    {
+    public function cast(
+        string $value,
+    ): string|int|float|bool|null {
         return match ($this) {
             self::STRING => $value,
             self::INT => \intval($value),

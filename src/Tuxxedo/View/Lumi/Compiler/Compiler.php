@@ -29,7 +29,6 @@ use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 
 // @todo Support LayoutNode
 // @todo Support BlockNode
-// @todo Declares in conditions may corrupt the stack
 readonly class Compiler implements CompilerInterface
 {
     /**

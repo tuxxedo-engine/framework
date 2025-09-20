@@ -35,6 +35,4 @@ interface VariableInterface
         ExpressionNodeInterface $value,
         AssignmentSymbol $operator = AssignmentSymbol::ASSIGN,
     ): void;
-
-    public function isProperty(): bool;
 }
