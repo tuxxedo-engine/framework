@@ -18,8 +18,12 @@ use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompilerInterface;
 use Tuxxedo\View\Lumi\Compiler\Provider\CompilerProviderInterface;
 use Tuxxedo\View\Lumi\Compiler\Provider\ConditionalCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\ExpressionCompilerProvider;
+use Tuxxedo\View\Lumi\Compiler\Provider\LayoutCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\LoopCompilerProvider;
-use Tuxxedo\View\Lumi\Compiler\Provider\NodeCompilerHandler;
+use Tuxxedo\View\Lumi\Compiler\Provider\NodeCompilerHandlerInterface;
+use Tuxxedo\View\Lumi\Compiler\Provider\PostNodeCompilerHandlerInterface;
+use Tuxxedo\View\Lumi\Compiler\Provider\StagedNodeCompilerHandler;
+use Tuxxedo\View\Lumi\Compiler\Provider\StagedNodeCompilerHandlerInterface;
 use Tuxxedo\View\Lumi\Compiler\Provider\TextCompilerProvider;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
@@ -29,30 +33,46 @@ use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 
 // @todo Support LayoutNode
 // @todo Support BlockNode
-readonly class Compiler implements CompilerInterface
+class Compiler implements CompilerInterface
 {
     /**
-     * @var array<class-string<NodeInterface>, NodeCompilerHandler>
+     * @var array<class-string<NodeInterface>, NodeCompilerHandlerInterface>
      */
-    private array $handlers;
+    private readonly array $handlers;
+
+    /**
+     * @var array<class-string<NodeInterface>, PostNodeCompilerHandlerInterface>
+     */
+    private readonly array $postHandlers;
+
+    /**
+     * @var StagedNodeCompilerHandlerInterface[]
+     */
+    private array $stagedPostHandlers = [];
 
     /**
      * @param CompilerProviderInterface[] $providers
      */
     final private function __construct(
         array $providers,
-        public ExpressionCompilerInterface $expressionCompiler,
-        public CompilerStateInterface $state,
+        public readonly ExpressionCompilerInterface $expressionCompiler,
+        public readonly CompilerStateInterface $state,
     ) {
         $compilerHandlers = [];
+        $postCompilerHandlers = [];
 
         foreach ($providers as $provider) {
             foreach ($provider->augment() as $handler) {
-                $compilerHandlers[$handler->nodeClassName] = $handler;
+                if ($handler instanceof PostNodeCompilerHandlerInterface) {
+                    $postCompilerHandlers[$handler->nodeClassName] = $handler;
+                } else {
+                    $compilerHandlers[$handler->nodeClassName] = $handler;
+                }
             }
         }
 
         $this->handlers = $compilerHandlers;
+        $this->postHandlers = $postCompilerHandlers;
     }
 
     /**
@@ -65,6 +85,7 @@ readonly class Compiler implements CompilerInterface
             new TextCompilerProvider(),
             new ConditionalCompilerProvider(),
             new LoopCompilerProvider(),
+            new LayoutCompilerProvider(),
         ];
     }
 
@@ -130,7 +151,13 @@ readonly class Compiler implements CompilerInterface
 
         if ($source !== '') {
             $source = "<?php declare(strict_types=1); ?>\n" . $source;
+
+            foreach ($this->stagedPostHandlers as $handler) {
+                $source .= ($handler->handler)($handler->node, $this, $stream);
+            }
         }
+
+        $this->stagedPostHandlers = [];
 
         return $source;
     }
@@ -140,13 +167,22 @@ readonly class Compiler implements CompilerInterface
         NodeStreamInterface $stream,
     ): string {
         if (!\array_key_exists($node::class, $this->handlers)) {
+            if (\array_key_exists($node::class, $this->postHandlers)) {
+                $this->stagedPostHandlers[] = new StagedNodeCompilerHandler(
+                    node: $node,
+                    handler: ($this->postHandlers[$node::class]->handler)(...),
+                );
+
+                return '';
+            }
+
             throw CompilerException::fromUnexpectedNode(
                 nodeClass: $node::class,
             );
         } elseif (!$this->state->valid($node)) {
             throw CompilerException::fromUnexpectedState(
                 kind: $node->kind,
-                expects: $this->state->expects ?? '',
+                expects: $this->state->expects ?? 'Unknown',
             );
         }
 
