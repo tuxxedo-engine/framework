@@ -82,20 +82,6 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
             ->withConfig($config);
     }
 
-    public static function createDefaultFromDirectory(
-        string $directory,
-    ): KernelInterface {
-        $builder = static::createFromConfigDirectory($directory . '/config')
-            ->withDefaultRouter($directory . '/Controllers')
-            ->withServiceFile($directory . '/services.php');
-
-        if ($builder->appProfile === Profile::DEBUG) {
-            $builder->withDebugHandler();
-        }
-
-        return $builder->build();
-    }
-
     public function withoutConfig(): self
     {
         $this->config = null;

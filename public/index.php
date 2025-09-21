@@ -12,7 +12,18 @@
 declare(strict_types=1);
 
 use Tuxxedo\Application\ApplicationConfigurator;
+use Tuxxedo\Application\Profile;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-ApplicationConfigurator::createDefaultFromDirectory(__DIR__ . '/../app')->run();
+$appDirectory = __DIR__ . '/../app';
+
+$builder = ApplicationConfigurator::createFromConfigDirectory($appDirectory . '/config')
+    ->withDefaultRouter($appDirectory . '/Controllers')
+    ->withServiceFile($appDirectory . '/services.php');
+
+if ($builder->appProfile === Profile::DEBUG) {
+    $builder->withDebugHandler();
+}
+
+$builder->build()->run();
