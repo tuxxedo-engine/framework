@@ -17,6 +17,7 @@ use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Parser\Expression\ExpressionParser;
 use Tuxxedo\View\Lumi\Parser\Expression\ExpressionParserInterface;
 use Tuxxedo\View\Lumi\Parser\Handler\AssignmentParserHandler;
+use Tuxxedo\View\Lumi\Parser\Handler\BlockParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\BreakParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\CommentParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\ConditionParserHandler;
@@ -33,7 +34,6 @@ use Tuxxedo\View\Lumi\Parser\Handler\VoidParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\WhileParserHandler;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 
-// @todo Support BlockToken
 class Parser implements ParserInterface
 {
     /**
@@ -94,6 +94,7 @@ class Parser implements ParserInterface
                 tokenName: BuiltinTokenNames::ENDFOR->name,
             ),
             new LayoutParserHandler(),
+            new BlockParserHandler(),
             new VoidParserHandler(
                 tokenName: BuiltinTokenNames::ENDBLOCK->name,
             ),

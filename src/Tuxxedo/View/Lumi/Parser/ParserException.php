@@ -215,4 +215,15 @@ class ParserException extends LumiException
             ),
         );
     }
+
+    public static function fromBlockTokensCannotBeNested(
+        int $line,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Blocks must not contain inner blocks on line %d',
+                $line,
+            ),
+        );
+    }
 }

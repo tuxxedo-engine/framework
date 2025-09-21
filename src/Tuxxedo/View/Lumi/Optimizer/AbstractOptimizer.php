@@ -25,7 +25,6 @@ use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 
-// @todo Declares in conditions may corrupt the stack
 abstract class AbstractOptimizer implements OptimizerInterface
 {
     protected private(set) CompilerDirectivesInterface&DirectivesInterface $directives;
