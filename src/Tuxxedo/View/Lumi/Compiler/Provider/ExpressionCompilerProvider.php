@@ -129,24 +129,49 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         CompilerInterface $compiler,
         NodeStreamInterface $stream,
     ): string {
-        // @todo This needs to guard against $this for PropertyNodes
         if (
             $node->name instanceof IdentifierNode &&
             \mb_strtolower($node->name->name) === 'this'
         ) {
             throw CompilerException::fromCannotOverrideThis();
         } elseif ($node->name instanceof PropertyAccessNode) {
+            $assert = '';
+            $accessor = $compiler->compileNode($node->name->accessor, $stream);
+
+            if (!$node->name->accessor instanceof IdentifierNode) {
+                $assert = \sprintf(
+                    '$this->assertThis($%s); ',
+                    $accessor,
+                );
+            } elseif (\mb_strtolower($node->name->accessor->name) === 'this') {
+                throw CompilerException::fromCannotWriteThis();
+            }
+
             return \sprintf(
-                '<?php $%s->%s %s %s; ?>',
-                $compiler->compileNode($node->name->accessor, $stream),
+                '<?php %s$%s->%s %s %s; ?>',
+                $assert,
+                $accessor,
                 $node->name->property,
                 $node->operator->symbol(),
                 $compiler->compileExpression($node->value),
             );
         } elseif ($node->name instanceof ArrayAccessNode) {
+            $assert = '';
+            $array = $compiler->compileExpression($node->name->array);
+
+            if (!$node->name->array instanceof IdentifierNode) {
+                $assert = \sprintf(
+                    '$this->assertThis($%s); ',
+                    $array,
+                );
+            } elseif (\mb_strtolower($node->name->array->name) === 'this') {
+                throw CompilerException::fromCannotWriteThis();
+            }
+
             return \sprintf(
-                '<?php $%s[%s] %s %s; ?>',
-                $compiler->compileExpression($node->name->array),
+                '<?php %s$%s[%s] %s %s; ?>',
+                $assert,
+                $array,
                 $node->name->key !== null
                     ? $compiler->compileExpression($node->name->key)
                     : '',

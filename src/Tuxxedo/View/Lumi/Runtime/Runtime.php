@@ -189,6 +189,14 @@ class Runtime implements RuntimeInterface
         return $instance;
     }
 
+    public function assertThis(
+        mixed $value,
+    ): void {
+        if ($value === $this) {
+            throw ViewException::fromCannotAccessThis();
+        }
+    }
+
     public function hasBlock(
         string $name,
     ): bool {

@@ -136,6 +136,13 @@ interface RuntimeInterface
         object $instance,
     ): object;
 
+    /**
+     * @throws ViewException
+     */
+    public function assertThis(
+        mixed $value,
+    ): void;
+
     public function hasBlock(
         string $name,
     ): bool;

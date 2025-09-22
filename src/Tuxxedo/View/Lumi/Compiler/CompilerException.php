@@ -59,6 +59,13 @@ class CompilerException extends LumiException
         );
     }
 
+    public static function fromCannotWriteThis(): self
+    {
+        return new self(
+            message: 'Writing to $this is not allowed',
+        );
+    }
+
     public static function fromUnexpectedStateEnter(
         string $kind,
     ): self {
