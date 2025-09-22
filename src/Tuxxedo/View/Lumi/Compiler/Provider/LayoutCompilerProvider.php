@@ -41,7 +41,7 @@ class LayoutCompilerProvider implements CompilerProviderInterface
         }
 
         return \sprintf(
-            '<?php if ($this->hasBlock(\'%1$s\')) { eval($this->executeBlock(\'%1$s\') } else { %2$s }',
+            '<?php if ($this->hasBlock(\'%1$s\')) { eval($this->executeBlock(\'%1$s\')); } else { ?>%2$s<?php } ?>',
             $node->name,
             $body,
         );
