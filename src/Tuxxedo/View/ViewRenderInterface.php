@@ -25,11 +25,13 @@ interface ViewRenderInterface
 
     /**
      * @param array<string, string|int|float|bool|null>|null $directives
+     * @param array<string, string>|null $blocks
      *
      * @throws ViewException
      */
     public function render(
         ViewInterface $view,
         ?array $directives = null,
+        ?array $blocks = null,
     ): string;
 }

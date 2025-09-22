@@ -97,6 +97,7 @@ readonly class LumiViewRender implements LazyInitializableInterface, ViewRenderI
     public function render(
         ViewInterface $view,
         ?array $directives = null,
+        ?array $blocks = null,
     ): string {
         if (!$this->loader->exists($view->name)) {
             throw ViewException::fromViewNotFound(
@@ -104,8 +105,9 @@ readonly class LumiViewRender implements LazyInitializableInterface, ViewRenderI
             );
         }
 
-        $this->runtime->pushDirectives(
+        $this->runtime->pushState(
             directives: $directives,
+            blocks: $blocks,
         );
 
         try {
@@ -118,7 +120,7 @@ readonly class LumiViewRender implements LazyInitializableInterface, ViewRenderI
                 exception: $exception,
             );
         } finally {
-            $this->runtime->popDirectives();
+            $this->runtime->popState();
         }
     }
 

@@ -17,7 +17,6 @@ use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
 
-// @todo Support layouts via layout()
 interface RuntimeInterface
 {
     /**
@@ -72,15 +71,17 @@ interface RuntimeInterface
 
     /**
      * @param array<string, string|int|float|bool|null>|null $directives
+     * @param array<string, string>|null $blocks
      */
-    public function pushDirectives(
+    public function pushState(
         ?array $directives = null,
+        ?array $blocks = null,
     ): void;
 
     /**
      * @throws ViewException
      */
-    public function popDirectives(): void;
+    public function popState(): void;
 
     public function directive(
         string $directive,
@@ -149,5 +150,9 @@ interface RuntimeInterface
     public function block(
         string $name,
         string $code,
+    ): void;
+
+    public function layout(
+        string $file,
     ): void;
 }

@@ -118,10 +118,10 @@ class ViewException extends \Exception
         );
     }
 
-    public static function fromUnableToPopDirectivesStack(): self
+    public static function fromUnableToPopStateStack(): self
     {
         return new self(
-            message: 'Cannot pop directives stack, likely stack corruption',
+            message: 'Cannot pop runtime state stack, likely stack corruption',
         );
     }
 

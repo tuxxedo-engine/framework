@@ -15,6 +15,7 @@ namespace Tuxxedo\View\Lumi\Runtime;
 
 use Tuxxedo\View\Lumi\Runtime\Directive\Directives;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
+use Tuxxedo\View\View;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
 
@@ -26,6 +27,11 @@ class Runtime implements RuntimeInterface
      * @var array<array<string, string|int|float|bool|null>>
      */
     public private(set) array $directivesStack = [];
+
+    /**
+     * @var array<array<string, string>>
+     */
+    public private(set) array $blocksStack = [];
 
     public private(set) ViewRenderInterface $renderer;
 
@@ -55,23 +61,28 @@ class Runtime implements RuntimeInterface
         $this->renderer = $render;
     }
 
-    public function pushDirectives(
+    public function pushState(
         ?array $directives = null,
+        ?array $blocks = null,
     ): void {
         \array_push($this->directivesStack, $this->directives);
+        \array_push($this->blocksStack, $this->blocks);
 
         $this->directives = $directives ?? $this->directives;
+        $this->blocks = $blocks ?? [];
     }
 
-    public function popDirectives(): void
+    public function popState(): void
     {
         $directives = \array_pop($this->directivesStack);
+        $blocks = \array_pop($this->blocksStack);
 
-        if ($directives === null) {
-            throw ViewException::fromUnableToPopDirectivesStack();
+        if ($directives === null || $blocks === null) {
+            throw ViewException::fromUnableToPopStateStack();
         }
 
         $this->directives = $directives;
+        $this->blocks = $blocks;
     }
 
     public function directive(
@@ -201,5 +212,21 @@ class Runtime implements RuntimeInterface
         string $code,
     ): void {
         $this->blocks[$name] = $code;
+    }
+
+    public function layout(
+        string $file,
+    ): void {
+        if (!isset($this->renderer)) {
+            throw ViewException::fromCannotCallCustomFunctionWithRender();
+        }
+
+        echo ($this->renderer)->render(
+            view: new View(
+                name: $file,
+            ),
+            directives: $this->directives,
+            blocks: $this->blocks,
+        );
     }
 }
