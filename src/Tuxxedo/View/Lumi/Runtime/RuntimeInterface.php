@@ -17,6 +17,7 @@ use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
 
+// @todo Support layouts via layout(), hasBlock(), block() and executeBlock()
 interface RuntimeInterface
 {
     /**

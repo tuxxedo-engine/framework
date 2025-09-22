@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Compiler\Provider;
 
+use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
@@ -25,9 +26,25 @@ class LayoutCompilerProvider implements CompilerProviderInterface
         CompilerInterface $compiler,
         NodeStreamInterface $stream,
     ): string {
-        // @todo Implement
+        $body = '';
 
-        return '';
+        foreach ($node->body as $blockNode) {
+            $body .= $compiler->compileNode($blockNode, $stream);
+        }
+
+        if ($this->isLayoutStream($stream)) {
+            return \sprintf(
+                '<?php $this->block(\'%s\', \'%s\'); ?>',
+                $node->name,
+                $this->escapeBlockQuote($body),
+            );
+        }
+
+        return \sprintf(
+            '<?php if ($this->hasBlock(\'%1$s\')) { eval($this->executeBlock(\'%1$s\') } else { %2$s }',
+            $node->name,
+            $body,
+        );
     }
 
     private function compileLayout(
@@ -35,9 +52,10 @@ class LayoutCompilerProvider implements CompilerProviderInterface
         CompilerInterface $compiler,
         NodeStreamInterface $stream,
     ): string {
-        // @todo Implement
-
-        return '';
+        return \sprintf(
+            '<?php $this->layout(\'%s\'); ?>',
+            $node->file,
+        );
     }
 
     public function augment(): \Generator
@@ -51,5 +69,26 @@ class LayoutCompilerProvider implements CompilerProviderInterface
             nodeClassName: LayoutNode::class,
             handler: $this->compileLayout(...),
         );
+    }
+
+    private function isLayoutStream(
+        NodeStreamInterface $stream,
+    ): bool {
+        foreach ($stream->nodes as $node) {
+            if ($node instanceof LayoutNode) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @throws CompilerException
+     */
+    private function escapeBlockQuote(
+        string $input,
+    ): string {
+        return \preg_replace('/\'/u', '\\\'', $input) ?? throw CompilerException::fromCannotEscapeQuote();
     }
 }
