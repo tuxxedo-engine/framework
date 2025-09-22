@@ -207,6 +207,7 @@ readonly class LumiController
         $view = (match ($name) {
             'hello_world' => $this->viewController->hello(...),
             'hello_world_block' => $this->viewController->block(...),
+            'hello_world_block_two' => $this->viewController->blockTwo(...),
             'hello_world_call' => $this->viewController->call(...),
             'hello_world_cond' => $this->viewController->cond(...),
             'hello_world_declare' => $this->viewController->decl(...),

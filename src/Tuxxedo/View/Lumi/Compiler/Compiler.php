@@ -18,7 +18,6 @@ use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompilerInterface;
 use Tuxxedo\View\Lumi\Compiler\Provider\CompilerProviderInterface;
 use Tuxxedo\View\Lumi\Compiler\Provider\ConditionalCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\ExpressionCompilerProvider;
-use Tuxxedo\View\Lumi\Compiler\Provider\LayoutCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\LoopCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\NodeCompilerHandlerInterface;
 use Tuxxedo\View\Lumi\Compiler\Provider\PostNodeCompilerHandlerInterface;
@@ -83,7 +82,6 @@ class Compiler implements CompilerInterface
             new TextCompilerProvider(),
             new ConditionalCompilerProvider(),
             new LoopCompilerProvider(),
-            new LayoutCompilerProvider(),
         ];
     }
 
@@ -148,7 +146,7 @@ class Compiler implements CompilerInterface
         $this->state->leave(BuiltinNodeKinds::ROOT->name);
 
         if ($source !== '') {
-            $source = "<?php declare(strict_types=1); ?>\n" . $source;
+            $source = '<?php declare(strict_types=1); ?>' . $source;
 
             foreach ($this->stagedPostHandlers as $handler) {
                 $source .= ($handler->handler)($handler->node, $this, $stream);

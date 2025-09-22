@@ -17,10 +17,12 @@ use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\NativeType;
+use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BuiltinNodeKinds;
 use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DeclareNode;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
+use Tuxxedo\View\Lumi\Syntax\Node\LayoutNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 
 class TextCompilerProvider implements CompilerProviderInterface
@@ -30,6 +32,8 @@ class TextCompilerProvider implements CompilerProviderInterface
         CompilerInterface $compiler,
         NodeStreamInterface $stream,
     ): string {
+        // @todo Consider making this NOOP if layout mode outside of BlockNode
+
         return $this->stripPhpOpeningTag($node->text);
     }
 
@@ -113,6 +117,43 @@ class TextCompilerProvider implements CompilerProviderInterface
         return $output;
     }
 
+    private function compileBlock(
+        BlockNode $node,
+        CompilerInterface $compiler,
+        NodeStreamInterface $stream,
+    ): string {
+        $body = '';
+
+        foreach ($node->body as $blockNode) {
+            $body .= $compiler->compileNode($blockNode, $stream);
+        }
+
+        if ($this->isLayoutStream($stream)) {
+            return \sprintf(
+                "\n<?php \$this->block('%s', '%s'); ?>",
+                $node->name,
+                $this->escapeBlockQuote($body),
+            );
+        }
+
+        return \sprintf(
+            '<?php if ($this->hasBlock(\'%1$s\')) { eval($this->blockCode(\'%1$s\')); } else { ?>%2$s<?php } ?>',
+            $node->name,
+            $body,
+        );
+    }
+
+    private function compileLayout(
+        LayoutNode $node,
+        CompilerInterface $compiler,
+        NodeStreamInterface $stream,
+    ): string {
+        return \sprintf(
+            "\n<?php \$this->layout('%s'); ?>",
+            $node->file,
+        );
+    }
+
     public function augment(): \Generator
     {
         yield new NodeCompilerHandler(
@@ -134,15 +175,52 @@ class TextCompilerProvider implements CompilerProviderInterface
             nodeClassName: DeclareNode::class,
             handler: $this->compileDeclare(...),
         );
+
+        yield new NodeCompilerHandler(
+            nodeClassName: BlockNode::class,
+            handler: $this->compileBlock(...),
+        );
+
+        yield new PostNodeCompilerHandler(
+            nodeClassName: LayoutNode::class,
+            handler: $this->compileLayout(...),
+        );
     }
 
+    /**
+     * @throws CompilerException
+     */
     private function stripPhpOpeningTag(string $code): string
     {
         return \preg_replace('/\s*<\?\s*/ui', '&lt;?', $code) ?? throw CompilerException::fromCannotEscapePhp();
     }
 
+    /**
+     * @throws CompilerException
+     */
     private function stripPhpEndingTag(string $code): string
     {
         return \preg_replace('/\s*\?>\s*$/u', '', $code) ?? throw CompilerException::fromCannotEscapePhp();
+    }
+
+    private function isLayoutStream(
+        NodeStreamInterface $stream,
+    ): bool {
+        foreach ($stream->nodes as $node) {
+            if ($node instanceof LayoutNode) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @throws CompilerException
+     */
+    private function escapeBlockQuote(
+        string $input,
+    ): string {
+        return \preg_replace('/\'/u', '\\\'', $input) ?? throw CompilerException::fromCannotEscapeQuote();
     }
 }

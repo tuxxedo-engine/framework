@@ -127,6 +127,14 @@ readonly class ViewController
     }
 
     #[Route\Get]
+    public function blockTwo(): ViewInterface
+    {
+        return new View(
+            name: 'hello_world_block_two',
+        );
+    }
+
+    #[Route\Get]
     public function layout(): ViewInterface
     {
         return new View(

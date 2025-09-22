@@ -40,5 +40,5 @@ interface NodeStreamInterface
      */
     public function current(): NodeInterface;
 
-    public function consume(): void;
+    public function consume(): NodeInterface;
 }

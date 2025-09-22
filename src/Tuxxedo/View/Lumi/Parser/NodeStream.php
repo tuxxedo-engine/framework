@@ -46,12 +46,12 @@ class NodeStream implements NodeStreamInterface
         return $this->nodes[$this->position];
     }
 
-    public function consume(): void
+    public function consume(): NodeInterface
     {
         if ($this->eof()) {
             throw ParserException::fromNodeStreamEof();
         }
 
-        $this->position++;
+        return $this->nodes[$this->position++];
     }
 }
