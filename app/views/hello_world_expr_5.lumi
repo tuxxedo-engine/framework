@@ -1,0 +1,7 @@
+{{ [1, 2, 3] }}
+{{ ['a', 'b', 'c'] }}
+{{ ['key': 'value', 'other': 'thing'] }}
+{{ [1, 'key': 'value', 2] }}
+{{ [1, 2, 3,] }}
+{{ ['key': 'value', 'other': 'thing',] }}
+{{ [1, 'key': 'value', 2,] }}

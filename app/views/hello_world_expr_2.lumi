@@ -1,0 +1,11 @@
+{{ 'Hello World' }}
+{{ null }}
+{{ true }}
+{{ false }}
+{{ 42 }}
+{{ -42 }}
+{{ 3.14159 }}
+{{ -3.14159 }}
+{{ userName }}
+{{ _internalVar }}
+{{ user123 }}

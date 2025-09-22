@@ -141,4 +141,55 @@ readonly class ViewController
             name: 'hello_world_layout',
         );
     }
+
+    #[Route\Get]
+    public function exprOne(): ViewInterface
+    {
+        return new View(
+            name: 'hello_world_expr_1',
+        );
+    }
+
+    #[Route\Get]
+    public function exprTwo(): ViewInterface
+    {
+        return new View(
+            name: 'hello_world_expr_2',
+        );
+    }
+
+    #[Route\Get]
+    public function exprThree(): ViewInterface
+    {
+        return new View(
+            name: 'hello_world_expr_3',
+        );
+    }
+
+    #[Route\Get]
+    public function exprFour(): ViewInterface
+    {
+        return new View(
+            name: 'hello_world_expr_4',
+            scope: [
+                'logger' => $this->logger,
+            ],
+        );
+    }
+
+    #[Route\Get]
+    public function exprFive(): ViewInterface
+    {
+        return new View(
+            name: 'hello_world_expr_5',
+        );
+    }
+
+    #[Route\Get]
+    public function exprSix(): ViewInterface
+    {
+        return new View(
+            name: 'hello_world_expr_6',
+        );
+    }
 }

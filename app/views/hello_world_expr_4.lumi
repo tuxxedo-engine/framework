@@ -1,0 +1,8 @@
+{{ php_sapi_name() }}
+{{ php_uname('v') }}
+{{ printf('%d %d %s', 1, 2, 3) }}
+{{ printf('%s %s %d', 'a', 'b', 'c',) }}
+{{ logger.log('Tuxxedo Engine Lumi') }}
+{{ logger.formatEntries() }}
+{{ printf('%d %d' (1 + 2), 3 ) }}
+{{ printf('%s %s', logger.entries[0].date, logger.entries[0].message) }}

@@ -1,0 +1,18 @@
+{{ ' hello ' | trim }}
+{{ userName | upper }}
+{{ php_sapi_name() | lower }}
+{{ logger.formatEntries() | escape }}
+{{ user.profile | json }}
+{{ users[0] | upper }}
+{{ ( 'a' ~ 'B' ~ 'c' ) | upper }}
+{{ 'a' ~ 'b' | upper }}
+{{ '   Hello World!   ' | trim | upper }}
+{{ title | trim | lower | slug }}
+{{ php_uname('v') | trim | escape }}
+{{ logger.getLastEntry() | trim | json }}
+{{ config.siteName | trim | upper }}
+{{ tags[1] | trim | lower }}
+{{ (firstName ~ ' ' ~ lastName) | trim | upper }}
+{{ '  xXx  ' | trim | lower | upper | lower | upper }}
+{{ users[0].name | trim | upper }}
+{{ users?.first?.nickname | trim | upper }}
