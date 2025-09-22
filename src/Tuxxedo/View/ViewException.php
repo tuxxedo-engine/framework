@@ -155,4 +155,15 @@ class ViewException extends \Exception
             message: 'Accessing $this in views is not allowed',
         );
     }
+
+    public static function fromInvalidBlock(
+        string $name,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unable to invoke unknown block "%s"',
+                $name,
+            ),
+        );
+    }
 }

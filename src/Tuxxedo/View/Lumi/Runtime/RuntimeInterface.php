@@ -17,7 +17,7 @@ use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
 
-// @todo Support layouts via layout(), hasBlock(), block() and executeBlock()
+// @todo Support layouts via layout()
 interface RuntimeInterface
 {
     /**
@@ -56,6 +56,13 @@ interface RuntimeInterface
      * @var array<string, \Closure(mixed $value, DirectivesInterface $directives): mixed>
      */
     public array $filters {
+        get;
+    }
+
+    /**
+     * @var array<string, string>
+     */
+    public array $blocks {
         get;
     }
 
@@ -127,4 +134,20 @@ interface RuntimeInterface
     public function propertyAccess(
         object $instance,
     ): object;
+
+    public function hasBlock(
+        string $name,
+    ): bool;
+
+    /**
+     * @throws ViewException
+     */
+    public function blockCode(
+        string $name,
+    ): string;
+
+    public function block(
+        string $name,
+        string $code,
+    ): void;
 }

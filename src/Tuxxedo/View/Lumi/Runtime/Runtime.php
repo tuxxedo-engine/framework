@@ -29,6 +29,8 @@ class Runtime implements RuntimeInterface
 
     public private(set) ViewRenderInterface $renderer;
 
+    public array $blocks = [];
+
     /**
      * @param array<string, string|int|float|bool|null> $directives
      * @param string[] $functions
@@ -174,5 +176,30 @@ class Runtime implements RuntimeInterface
         }
 
         return $instance;
+    }
+
+    public function hasBlock(
+        string $name,
+    ): bool {
+        return \array_key_exists($name, $this->blocks);
+    }
+
+    public function blockCode(
+        string $name,
+    ): string {
+        if (!\array_key_exists($name, $this->blocks)) {
+            throw ViewException::fromInvalidBlock(
+                name: $name,
+            );
+        }
+
+        return '?>' . $this->blocks[$name];
+    }
+
+    public function block(
+        string $name,
+        string $code,
+    ): void {
+        $this->blocks[$name] = $code;
     }
 }
