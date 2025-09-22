@@ -226,4 +226,15 @@ class ParserException extends LumiException
             ),
         );
     }
+
+    public static function fromDeclareTokensCannotBeNested(
+        int $line,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Declare must be at the top level on line %d',
+                $line,
+            ),
+        );
+    }
 }

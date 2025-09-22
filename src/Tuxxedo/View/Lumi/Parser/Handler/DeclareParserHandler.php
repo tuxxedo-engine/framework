@@ -22,7 +22,6 @@ use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 
-// @todo Declares must only be at root level, never conditional or nested
 class DeclareParserHandler implements ParserHandlerInterface
 {
     public private(set) string $tokenName = BuiltinTokenNames::DECLARE->name;
@@ -38,6 +37,10 @@ class DeclareParserHandler implements ParserHandlerInterface
 
         if ($directive->op1 === null) {
             throw ParserException::fromMalformedToken(
+                line: $directive->line,
+            );
+        } elseif (\sizeof($parser->state->stateStack) !== 1) {
+            throw ParserException::fromDeclareTokensCannotBeNested(
                 line: $directive->line,
             );
         }
