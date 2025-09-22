@@ -15,7 +15,7 @@ namespace Tuxxedo\View\Lumi\Syntax\Node;
 
 readonly class BlockNode implements NodeInterface
 {
-    public string $kind;
+    public array $scopes;
 
     /**
      * @param NodeInterface[] $body
@@ -24,6 +24,8 @@ readonly class BlockNode implements NodeInterface
         public string $name,
         public array $body,
     ) {
-        $this->kind = BuiltinNodeKinds::ROOT->name;
+        $this->scopes = [
+            BuiltinNodeScopes::ROOT->name,
+        ];
     }
 }

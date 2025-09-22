@@ -18,7 +18,7 @@ use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
-use Tuxxedo\View\Lumi\Syntax\Node\BuiltinNodeKinds;
+use Tuxxedo\View\Lumi\Syntax\Node\BuiltinNodeScopes;
 use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DeclareNode;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
@@ -32,7 +32,12 @@ class TextCompilerProvider implements CompilerProviderInterface
         CompilerInterface $compiler,
         NodeStreamInterface $stream,
     ): string {
-        // @todo Consider making this NOOP if layout mode outside of BlockNode
+        if (
+            $this->isLayoutStream($stream) &&
+            !$compiler->state->is(BuiltinNodeScopes::BLOCK->name)
+        ) {
+            return '';
+        }
 
         return $this->stripPhpOpeningTag($node->text);
     }
@@ -93,7 +98,7 @@ class TextCompilerProvider implements CompilerProviderInterface
         CompilerInterface $compiler,
         NodeStreamInterface $stream,
     ): string {
-        $oldState = $compiler->state->swap(BuiltinNodeKinds::EXPRESSION->name);
+        $oldState = $compiler->state->swap(BuiltinNodeScopes::EXPRESSION->name);
 
         $compiler->state->directives->set(
             $node->directive->operand,
@@ -124,9 +129,13 @@ class TextCompilerProvider implements CompilerProviderInterface
     ): string {
         $body = '';
 
+        $oldState = $compiler->state->swap(BuiltinNodeScopes::BLOCK->name);
+
         foreach ($node->body as $blockNode) {
             $body .= $compiler->compileNode($blockNode, $stream);
         }
+
+        $compiler->state->swap($oldState);
 
         if ($this->isLayoutStream($stream)) {
             return \sprintf(

@@ -15,7 +15,7 @@ namespace Tuxxedo\View\Lumi\Syntax\Node;
 
 readonly class MethodCallNode implements IterableExpressionNodeInterface
 {
-    public string $kind;
+    public array $scopes;
 
     /**
      * @param ExpressionNodeInterface[] $arguments
@@ -25,6 +25,8 @@ readonly class MethodCallNode implements IterableExpressionNodeInterface
         public string $name,
         public array $arguments,
     ) {
-        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
+        $this->scopes = [
+            BuiltinNodeScopes::EXPRESSION->name,
+        ];
     }
 }

@@ -13,9 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-enum BuiltinNodeKinds
+enum BuiltinNodeScopes
 {
     case ROOT;
+    case BLOCK;
     case DEPENDANT;
     case EXPRESSION;
 }

@@ -17,12 +17,14 @@ use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 
 readonly class UnaryOpNode implements ExpressionNodeInterface
 {
-    public string $kind;
+    public array $scopes;
 
     public function __construct(
         public ExpressionNodeInterface $operand,
         public UnarySymbol $operator,
     ) {
-        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
+        $this->scopes = [
+            BuiltinNodeScopes::EXPRESSION->name,
+        ];
     }
 }

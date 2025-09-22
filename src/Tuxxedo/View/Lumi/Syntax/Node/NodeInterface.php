@@ -15,7 +15,10 @@ namespace Tuxxedo\View\Lumi\Syntax\Node;
 
 interface NodeInterface
 {
-    public string $kind {
+    /**
+     * @var string[]
+     */
+    public array $scopes {
         get;
     }
 }

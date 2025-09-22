@@ -115,7 +115,6 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         CompilerInterface $compiler,
         NodeStreamInterface $stream,
     ): string {
-        // @todo This needs special casing for filters
         return \sprintf(
             '%s %s %s',
             $compiler->compileNode($node->left, $stream),

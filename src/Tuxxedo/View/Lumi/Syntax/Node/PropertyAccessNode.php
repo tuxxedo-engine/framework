@@ -15,12 +15,14 @@ namespace Tuxxedo\View\Lumi\Syntax\Node;
 
 readonly class PropertyAccessNode implements IterableExpressionNodeInterface
 {
-    public string $kind;
+    public array $scopes;
 
     public function __construct(
         public ExpressionNodeInterface $accessor,
         public string $property,
     ) {
-        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
+        $this->scopes = [
+            BuiltinNodeScopes::EXPRESSION->name,
+        ];
     }
 }

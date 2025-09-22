@@ -26,25 +26,29 @@ interface CompilerStateInterface
         get;
     }
 
+    public function is(
+        string $scope,
+    ): bool;
+
     /**
      * @throws CompilerException
      */
     public function enter(
-        string $kind,
+        string $scope,
     ): void;
 
     /**
      * @throws CompilerException
      */
     public function leave(
-        string $kind,
+        string $scope,
     ): void;
 
     /**
      * @throws CompilerException
      */
     public function swap(
-        string $kind,
+        string $scope,
     ): string;
 
     public function valid(

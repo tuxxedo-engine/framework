@@ -17,13 +17,16 @@ use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 
 readonly class AssignmentNode implements NodeInterface
 {
-    public string $kind;
+    public array $scopes;
 
     public function __construct(
         public IdentifierNode|PropertyAccessNode|ArrayAccessNode $name,
         public ExpressionNodeInterface $value,
         public AssignmentSymbol $operator,
     ) {
-        $this->kind = BuiltinNodeKinds::ROOT->name;
+        $this->scopes = [
+            BuiltinNodeScopes::ROOT->name,
+            BuiltinNodeScopes::BLOCK->name,
+        ];
     }
 }

@@ -26,24 +26,30 @@ class CompilerState implements CompilerStateInterface
         $this->directives = CompilerDirectives::createWithDefaults();
     }
 
+    public function is(
+        string $scope,
+    ): bool {
+        return $scope === $this->expects;
+    }
+
     public function enter(
-        string $kind,
+        string $scope,
     ): void {
         if ($this->expects !== null) {
             throw CompilerException::fromUnexpectedStateEnter(
-                kind: $kind,
+                scope: $scope,
             );
         }
 
-        $this->expects = $kind;
+        $this->expects = $scope;
     }
 
     public function leave(
-        string $kind,
+        string $scope,
     ): void {
         if ($this->expects === null) {
             throw CompilerException::fromUnexpectedStateLeave(
-                kind: $kind,
+                scope: $scope,
             );
         }
 
@@ -51,16 +57,16 @@ class CompilerState implements CompilerStateInterface
     }
 
     public function swap(
-        string $kind,
+        string $scope,
     ): string {
         if ($this->expects === null) {
             throw CompilerException::fromUnexpectedStateLeave(
-                kind: $kind,
+                scope: $scope,
             );
         }
 
         $oldState = $this->expects;
-        $this->expects = $kind;
+        $this->expects = $scope;
 
         return $oldState;
     }
@@ -68,6 +74,6 @@ class CompilerState implements CompilerStateInterface
     public function valid(
         NodeInterface $node,
     ): bool {
-        return $node->kind === $this->expects;
+        return \in_array($this->expects, $node->scopes, true);
     }
 }

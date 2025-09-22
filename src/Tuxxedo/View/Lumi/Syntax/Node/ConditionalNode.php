@@ -15,7 +15,7 @@ namespace Tuxxedo\View\Lumi\Syntax\Node;
 
 readonly class ConditionalNode implements NodeInterface
 {
-    public string $kind;
+    public array $scopes;
 
     /**
      * @param NodeInterface[] $body
@@ -28,6 +28,9 @@ readonly class ConditionalNode implements NodeInterface
         public array $branches = [],
         public array $else = [],
     ) {
-        $this->kind = BuiltinNodeKinds::ROOT->name;
+        $this->scopes = [
+            BuiltinNodeScopes::ROOT->name,
+            BuiltinNodeScopes::BLOCK->name,
+        ];
     }
 }

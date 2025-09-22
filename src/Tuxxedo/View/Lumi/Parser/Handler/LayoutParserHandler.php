@@ -45,6 +45,10 @@ class LayoutParserHandler implements ParserHandlerInterface
         for ($position = 0; $position < $total; $position++) {
             $token = $stream->tokens[$position];
 
+            if ($token->type === BuiltinTokenNames::COMMENT->name) {
+                continue;
+            }
+
             if ($token->type === BuiltinTokenNames::LAYOUT->name) {
                 if ($token !== $layout) {
                     throw ParserException::fromLayoutModeMustOnlyHaveOneLayout(

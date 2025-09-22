@@ -15,12 +15,15 @@ namespace Tuxxedo\View\Lumi\Syntax\Node;
 
 readonly class DeclareNode implements DirectiveNodeInterface, NodeInterface
 {
-    public string $kind;
+    public array $scopes;
 
     public function __construct(
         public LiteralNode $directive,
         public LiteralNode $value,
     ) {
-        $this->kind = BuiltinNodeKinds::ROOT->name;
+        $this->scopes = [
+            BuiltinNodeScopes::ROOT->name,
+            BuiltinNodeScopes::BLOCK->name,
+        ];
     }
 }

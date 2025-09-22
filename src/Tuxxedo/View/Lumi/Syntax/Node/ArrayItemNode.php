@@ -15,12 +15,14 @@ namespace Tuxxedo\View\Lumi\Syntax\Node;
 
 readonly class ArrayItemNode implements NodeInterface
 {
-    public string $kind;
+    public array $scopes;
 
     public function __construct(
         public ExpressionNodeInterface $value,
         public ?ExpressionNodeInterface $key = null,
     ) {
-        $this->kind = BuiltinNodeKinds::DEPENDANT->name;
+        $this->scopes = [
+            BuiltinNodeScopes::DEPENDANT->name,
+        ];
     }
 }

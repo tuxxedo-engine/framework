@@ -15,7 +15,7 @@ namespace Tuxxedo\View\Lumi\Syntax\Node;
 
 readonly class ArrayNode implements IterableExpressionNodeInterface
 {
-    public string $kind;
+    public array $scopes;
 
     /**
      * @param ArrayItemNode[] $items
@@ -23,6 +23,8 @@ readonly class ArrayNode implements IterableExpressionNodeInterface
     public function __construct(
         public array $items,
     ) {
-        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
+        $this->scopes = [
+            BuiltinNodeScopes::EXPRESSION->name,
+        ];
     }
 }

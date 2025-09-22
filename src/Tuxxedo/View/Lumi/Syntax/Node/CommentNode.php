@@ -15,11 +15,14 @@ namespace Tuxxedo\View\Lumi\Syntax\Node;
 
 readonly class CommentNode implements NodeInterface
 {
-    public string $kind;
+    public array $scopes;
 
     public function __construct(
         public string $text,
     ) {
-        $this->kind = BuiltinNodeKinds::ROOT->name;
+        $this->scopes = [
+            BuiltinNodeScopes::ROOT->name,
+            BuiltinNodeScopes::BLOCK->name,
+        ];
     }
 }

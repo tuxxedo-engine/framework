@@ -15,7 +15,7 @@ namespace Tuxxedo\View\Lumi\Syntax\Node;
 
 readonly class WhileNode implements NodeInterface
 {
-    public string $kind;
+    public array $scopes;
 
     /**
      * @param NodeInterface[] $body
@@ -24,6 +24,9 @@ readonly class WhileNode implements NodeInterface
         public ExpressionNodeInterface $operand,
         public array $body = [],
     ) {
-        $this->kind = BuiltinNodeKinds::ROOT->name;
+        $this->scopes = [
+            BuiltinNodeScopes::ROOT->name,
+            BuiltinNodeScopes::BLOCK->name,
+        ];
     }
 }

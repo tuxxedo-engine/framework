@@ -15,11 +15,13 @@ namespace Tuxxedo\View\Lumi\Syntax\Node;
 
 readonly class IdentifierNode implements IterableExpressionNodeInterface
 {
-    public string $kind;
+    public array $scopes;
 
     public function __construct(
         public string $name,
     ) {
-        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
+        $this->scopes = [
+            BuiltinNodeScopes::EXPRESSION->name,
+        ];
     }
 }

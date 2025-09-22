@@ -15,11 +15,13 @@ namespace Tuxxedo\View\Lumi\Syntax\Node;
 
 readonly class LayoutNode implements NodeInterface
 {
-    public string $kind;
+    public array $scopes;
 
     public function __construct(
         public string $file,
     ) {
-        $this->kind = BuiltinNodeKinds::ROOT->name;
+        $this->scopes = [
+            BuiltinNodeScopes::ROOT->name,
+        ];
     }
 }

@@ -17,13 +17,15 @@ use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 
 readonly class BinaryOpNode implements ExpressionNodeInterface
 {
-    public string $kind;
+    public array $scopes;
 
     public function __construct(
         public ExpressionNodeInterface $left,
         public ExpressionNodeInterface $right,
         public BinarySymbol $operator,
     ) {
-        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
+        $this->scopes = [
+            BuiltinNodeScopes::EXPRESSION->name,
+        ];
     }
 }

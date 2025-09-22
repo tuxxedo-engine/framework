@@ -67,35 +67,38 @@ class CompilerException extends LumiException
     }
 
     public static function fromUnexpectedStateEnter(
-        string $kind,
+        string $scope,
     ): self {
         return new self(
             message: \sprintf(
-                'Unexpected state entrance for "%s", old state must be left first',
-                $kind,
+                'Unexpected scope state entrance for "%s", old scope state must be left first',
+                $scope,
             ),
         );
     }
 
     public static function fromUnexpectedStateLeave(
-        string $kind,
+        string $scope,
     ): self {
         return new self(
             message: \sprintf(
-                'Unexpected state leave for "%s", there is no state entrance for this',
-                $kind,
+                'Unexpected scope state leave for "%s", there is no scope state entrance for this',
+                $scope,
             ),
         );
     }
 
+    /**
+     * @param string[] $scopes
+     */
     public static function fromUnexpectedState(
-        string $kind,
+        array $scopes,
         string $expects,
     ): self {
         return new self(
             message: \sprintf(
-                'Unexpected state for "%s", expecting "%s"',
-                $kind,
+                'Unexpected scope state for node (can be: "%s"), expecting "%s"',
+                \join('", "', $scopes),
                 $expects,
             ),
         );

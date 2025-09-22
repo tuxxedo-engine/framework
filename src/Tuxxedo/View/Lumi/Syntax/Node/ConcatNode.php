@@ -15,7 +15,7 @@ namespace Tuxxedo\View\Lumi\Syntax\Node;
 
 readonly class ConcatNode implements ExpressionNodeInterface
 {
-    public string $kind;
+    public array $scopes;
 
     /**
      * @param ExpressionNodeInterface[] $operands
@@ -23,6 +23,8 @@ readonly class ConcatNode implements ExpressionNodeInterface
     public function __construct(
         public array $operands,
     ) {
-        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
+        $this->scopes = [
+            BuiltinNodeScopes::EXPRESSION->name,
+        ];
     }
 }

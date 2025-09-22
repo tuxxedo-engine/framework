@@ -32,9 +32,7 @@ use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
-// @todo Check that it generates all nodes correctly
-// @todo Generate ConcatNode
-// @todo Does not generate new arrays correctly [key: value, ...]
+// @todo Check that it generates all nodes correctly according to spec
 class ExpressionParser implements ExpressionParserInterface
 {
     public private(set) TokenStreamInterface $stream;

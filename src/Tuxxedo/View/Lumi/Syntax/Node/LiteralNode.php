@@ -17,12 +17,14 @@ use Tuxxedo\View\Lumi\Syntax\NativeType;
 
 readonly class LiteralNode implements ExpressionNodeInterface
 {
-    public string $kind;
+    public array $scopes;
 
     public function __construct(
         public string $operand,
         public NativeType $type,
     ) {
-        $this->kind = BuiltinNodeKinds::EXPRESSION->name;
+        $this->scopes = [
+            BuiltinNodeScopes::EXPRESSION->name,
+        ];
     }
 }
