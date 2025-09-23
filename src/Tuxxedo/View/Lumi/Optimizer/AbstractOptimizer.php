@@ -23,12 +23,14 @@ use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\LayoutNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 
 abstract class AbstractOptimizer implements OptimizerInterface
 {
     protected private(set) CompilerDirectivesInterface&DirectivesInterface $directives;
     protected private(set) ScopeInterface $scope;
+    protected private(set) bool $layoutMode = false;
 
     /**
      * @var ScopeInterface[]
@@ -141,12 +143,27 @@ abstract class AbstractOptimizer implements OptimizerInterface
         )->nodes;
     }
 
+    protected function isLayoutStream(
+        NodeStreamInterface $stream,
+    ): bool {
+        foreach ($stream->nodes as $node) {
+            if ($node instanceof LayoutNode) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function optimize(
         NodeStreamInterface $stream,
     ): NodeStreamInterface {
+        $this->layoutMode = $this->isLayoutStream($stream);
+
         $stream = static::optimizer($stream);
 
         $this->directives = CompilerDirectives::createWithDefaults();
+        $this->layoutMode = false;
 
         return $stream;
     }

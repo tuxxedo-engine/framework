@@ -37,13 +37,11 @@ class SccpOptimizer extends AbstractOptimizer
         $nodes = [];
 
         while (!$stream->eof()) {
-            $optimizedNodes = $this->optimizeNode($stream->current());
+            $optimizedNodes = $this->optimizeNode($stream->consume());
 
             if (\sizeof($optimizedNodes) > 0) {
                 \array_push($nodes, ...$optimizedNodes);
             }
-
-            $stream->consume();
         }
 
         return new NodeStream(

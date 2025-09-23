@@ -27,6 +27,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 
 class DceOptimizer extends AbstractOptimizer
 {
@@ -36,13 +37,11 @@ class DceOptimizer extends AbstractOptimizer
         $nodes = [];
 
         while (!$stream->eof()) {
-            $optimizedNodes = $this->optimizeNode($stream->current());
+            $optimizedNodes = $this->optimizeNode($stream->consume());
 
             if (\sizeof($optimizedNodes) > 0) {
                 \array_push($nodes, ...$optimizedNodes);
             }
-
-            $stream->consume();
         }
 
         return new NodeStream(
@@ -62,6 +61,7 @@ class DceOptimizer extends AbstractOptimizer
             $node instanceof BlockNode => parent::optimizeBlock($node),
             $node instanceof CommentNode => $this->optimizeComment($node),
             $node instanceof ConditionalNode => $this->optimizeConditional($node),
+            $node instanceof TextNode => $this->optimizeText($node),
             default => [
                 $node,
             ],
@@ -162,6 +162,24 @@ class DceOptimizer extends AbstractOptimizer
 
         if ($evaluates === DceEvaluateResult::ALWAYS_TRUE) {
             return parent::optimizeNodes($node->body);
+        }
+
+        return [
+            $node,
+        ];
+    }
+
+    /**
+     * @return NodeInterface[]
+     */
+    private function optimizeText(
+        TextNode $node,
+    ): array {
+        if (
+            $this->layoutMode &&
+            \sizeof($this->scopeStack) === 0
+        ) {
+            return [];
         }
 
         return [
