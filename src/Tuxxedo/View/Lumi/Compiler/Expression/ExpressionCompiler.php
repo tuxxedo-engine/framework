@@ -26,7 +26,10 @@ class ExpressionCompiler implements ExpressionCompilerInterface
         CompilerInterface $compiler,
     ): string {
         $node = $stream->current();
-        $oldState = $compiler->state->swap(BuiltinNodeScopes::EXPRESSION->name);
+
+        if (!$compiler->state->is(BuiltinNodeScopes::EXPRESSION_ASSIGN->name)) {
+            $oldState = $compiler->state->swap(BuiltinNodeScopes::EXPRESSION->name);
+        }
 
         if ($node instanceof ExpressionNodeInterface) {
             $stream->consume();
@@ -39,7 +42,9 @@ class ExpressionCompiler implements ExpressionCompilerInterface
 
             $compiledNode = $compiler->compileNode($node, $stream);
 
-            $compiler->state->swap($oldState);
+            if (isset($oldState)) {
+                $compiler->state->swap($oldState);
+            }
 
             return $compiledNode;
         }

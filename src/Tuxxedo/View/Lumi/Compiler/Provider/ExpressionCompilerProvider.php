@@ -22,6 +22,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ArrayItemNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
+use Tuxxedo\View\Lumi\Syntax\Node\BuiltinNodeScopes;
 use Tuxxedo\View\Lumi\Syntax\Node\ConcatNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
@@ -135,19 +136,26 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
             throw CompilerException::fromCannotOverrideThis();
         } elseif ($node->name instanceof PropertyAccessNode) {
             $assert = '';
-            $accessor = $compiler->compileNode($node->name->accessor, $stream);
 
-            if (!$node->name->accessor instanceof IdentifierNode) {
-                $assert = \sprintf(
-                    '$this->assertThis($%s); ',
-                    $accessor,
-                );
-            } elseif (\mb_strtolower($node->name->accessor->name) === 'this') {
+            if (
+                $node->name->accessor instanceof IdentifierNode &&
+                \mb_strtolower($node->name->accessor->name) === 'this'
+            ) {
                 throw CompilerException::fromCannotWriteThis();
+            } elseif (!$node->name->accessor instanceof IdentifierNode) {
+                $assert = \sprintf(
+                    '$this->assertThis(%s); ',
+                    $compiler->compileExpression($node->name->accessor),
+                );
             }
 
+            $oldState = $compiler->state->swap(BuiltinNodeScopes::EXPRESSION_ASSIGN->name);
+            $accessor = $compiler->compileExpression($node->name->accessor);
+
+            $compiler->state->swap($oldState);
+
             return \sprintf(
-                '<?php %s$%s->%s %s %s; ?>',
+                '<?php %s%s->%s %s %s; ?>',
                 $assert,
                 $accessor,
                 $node->name->property,
@@ -160,7 +168,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
 
             if (!$node->name->array instanceof IdentifierNode) {
                 $assert = \sprintf(
-                    '$this->assertThis($%s); ',
+                    '$this->assertThis(%s); ',
                     $array,
                 );
             } elseif (\mb_strtolower($node->name->array->name) === 'this') {
@@ -168,7 +176,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
             }
 
             return \sprintf(
-                '<?php %s$%s[%s] %s %s; ?>',
+                '<?php %s%s[%s] %s %s; ?>',
                 $assert,
                 $array,
                 $node->name->key !== null
@@ -238,16 +246,8 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
             throw CompilerException::fromArrayAccessWithoutKey();
         }
 
-        if ($node->array instanceof ArrayNode) {
-            return \sprintf(
-                '%s[%s]',
-                $compiler->compileExpression($node->array),
-                $compiler->compileExpression($node->key),
-            );
-        }
-
         return \sprintf(
-            '(%s)[%s]',
+            '%s[%s]',
             $compiler->compileExpression($node->array),
             $compiler->compileExpression($node->key),
         );
@@ -274,6 +274,14 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         CompilerInterface $compiler,
         NodeStreamInterface $stream,
     ): string {
+        if ($compiler->state->is(BuiltinNodeScopes::EXPRESSION_ASSIGN->name)) {
+            return \sprintf(
+                '%s->%s',
+                $compiler->compileExpression($node->accessor),
+                $node->property,
+            );
+        }
+
         return \sprintf(
             '$this->propertyAccess(%s)->%s',
             $compiler->compileExpression($node->accessor),

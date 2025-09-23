@@ -19,4 +19,5 @@ enum BuiltinNodeScopes
     case BLOCK;
     case DEPENDANT;
     case EXPRESSION;
+    case EXPRESSION_ASSIGN;
 }

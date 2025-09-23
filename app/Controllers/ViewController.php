@@ -41,8 +41,35 @@ readonly class ViewController
     #[Route\Get]
     public function set(): ViewInterface
     {
+        $a = new \stdClass();
+        $a->b = null;
+        $a->c = new \stdClass();
+        $a->c->d = null;
+        $a->e = new \stdClass();
+        $a->e->f = new \stdClass();
+        $a->e->f->g = null;
+
+        $b = [
+            null,
+            [
+                null,
+            ],
+            [
+                3 => null,
+            ],
+            'x' => [
+                new \stdClass(),
+            ],
+        ];
+
+        $b['x'][0]->y = null;
+
         return new View(
             name: 'hello_world_set',
+            scope: [
+                'a' => $a,
+                'b' => $b,
+            ],
         );
     }
 
