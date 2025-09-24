@@ -13,19 +13,17 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-// @todo Support $nullSafe in Compiler
-readonly class ArrayAccessNode implements IterableExpressionNodeInterface
+// @todo Support in Compiler
+readonly class FilterOrBitwiseOrNode implements ExpressionNodeInterface
 {
     public array $scopes;
 
     public function __construct(
-        public ExpressionNodeInterface $array,
-        public ?ExpressionNodeInterface $key = null,
-        public bool $nullSafe = false,
+        public ExpressionNodeInterface $left,
+        public ExpressionNodeInterface $right,
     ) {
         $this->scopes = [
             BuiltinNodeScopes::EXPRESSION->name,
-            BuiltinNodeScopes::EXPRESSION_ASSIGN->name,
         ];
     }
 }

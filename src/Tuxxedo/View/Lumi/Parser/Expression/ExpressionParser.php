@@ -17,14 +17,18 @@ use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ArrayItemNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\FilterOrBitwiseOrNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\MethodCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
+use Tuxxedo\View\Lumi\Syntax\Operator\Associativity;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\CharacterSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\Precedence;
@@ -32,28 +36,10 @@ use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
-// @todo Check that it generates all nodes correctly according to spec
+// todo Unaries for POST/PRE will have wrong precedence
+// @todo No methodCall without null?
 class ExpressionParser implements ExpressionParserInterface
 {
-    public private(set) TokenStreamInterface $stream;
-    public private(set) TokenInterface $current;
-
-    /**
-     * @var array<string, Precedence>
-     */
-    public readonly array $precedences;
-
-    public function __construct()
-    {
-        $precedences = [];
-
-        foreach ([...BinarySymbol::cases(), ...CharacterSymbol::cases(), ...UnarySymbol::cases()] as $operator) {
-            $precedences[$operator->symbol()] = $operator->precedence();
-        }
-
-        $this->precedences = $precedences;
-    }
-
     public function parse(
         TokenStreamInterface $stream,
         int $startingLine,
@@ -64,57 +50,38 @@ class ExpressionParser implements ExpressionParserInterface
             );
         }
 
-        $this->stream = $stream;
-
-        $this->advance();
-
-        $node = $this->parseExpression(Precedence::LOWEST);
-
-        unset($this->stream, $this->current);
+        $node = $this->parseExpression($stream, Precedence::LOWEST);
 
         if (!$stream->eof()) {
-            $this->unexpected($stream->current());
+            $token = $stream->current();
+
+            throw ParserException::fromUnexpectedToken(
+                tokenName: $token->type,
+                line: $token->line,
+            );
         }
 
         return $node;
     }
 
-    /**
-     * @throws ParserException
-     */
-    private function advance(): void
-    {
-        if ($this->stream->eof()) {
-            throw ParserException::fromTokenStreamEof();
+    private function parseExpression(
+        TokenStreamInterface $stream,
+        Precedence|int $rightBindingPower,
+    ): ExpressionNodeInterface {
+        $left = $this->nud($stream, $stream->current());
+
+        if ($rightBindingPower instanceof Precedence) {
+            $rightBindingPower = $rightBindingPower->value;
         }
 
-        $this->current = $this->stream->current();
+        while (!$stream->eof()) {
+            $token = $stream->current();
 
-        $this->stream->consume();
-    }
-
-    /**
-     * @throws ParserException
-     */
-    private function parseExpression(
-        Precedence $rbp,
-    ): ExpressionNodeInterface {
-        $token = $this->current;
-
-        if (!$this->stream->eof()) {
-            $this->advance();
-
-            $left = $this->nud($token);
-
-            while ($rbp->value < $this->lbp($this->current)->value) {
-                $token = $this->current;
-
-                $this->advance();
-
-                $left = $this->led($token, $left);
+            if ($rightBindingPower >= $this->lbp($token)->value) {
+                break;
             }
-        } else {
-            $left = $this->nud($token);
+
+            $left = $this->led($stream, $token, $left);
         }
 
         return $left;
@@ -124,277 +91,509 @@ class ExpressionParser implements ExpressionParserInterface
      * @throws ParserException
      */
     private function nud(
+        TokenStreamInterface $stream,
         TokenInterface $token,
     ): ExpressionNodeInterface {
-        return match (true) {
-            $token->type === BuiltinTokenNames::LITERAL->name => $this->literalNode($token),
-            $token->type === BuiltinTokenNames::IDENTIFIER->name => $this->identifierNode($token),
-            $token->type === BuiltinTokenNames::CHARACTER->name && UnarySymbol::is($token) => $this->unaryNode($token),
-            $token->type === BuiltinTokenNames::CHARACTER->name && $token->op1 === CharacterSymbol::LEFT_PARENTHESIS->symbol() => $this->parseGroupedExpression(),
-            default => $this->unexpected($token),
-        };
+        switch ($token->type) {
+            case BuiltinTokenNames::LITERAL->name:
+                if ($token->op1 === null || $token->op2 === null) {
+                    throw ParserException::fromMalformedToken(
+                        line: $token->line,
+                    );
+                }
+
+                $stream->consume();
+
+                return new LiteralNode(
+                    operand: $token->op1,
+                    type: NativeType::fromString(
+                        name: $token->op2,
+                        line: $token->line,
+                    ),
+                );
+
+            case BuiltinTokenNames::IDENTIFIER->name:
+                if ($token->op1 === null) {
+                    throw ParserException::fromMalformedToken(
+                        line: $token->line,
+                    );
+                }
+
+                $stream->consume();
+
+                return new IdentifierNode(
+                    name: $token->op1,
+                );
+
+            case BuiltinTokenNames::CHARACTER->name:
+                if ($token->op1 === null) {
+                    throw ParserException::fromMalformedToken(
+                        line: $token->line,
+                    );
+                }
+
+                if ($token->op1 === CharacterSymbol::LEFT_PARENTHESIS->symbol()) {
+                    $stream->consume();
+
+                    $expr = $this->parseExpression($stream, Precedence::LOWEST);
+
+                    $this->expectCharacter(
+                        stream: $stream,
+                        character: CharacterSymbol::RIGHT_PARENTHESIS,
+                    );
+
+                    return $expr;
+                }
+
+                if ($token->op1 === CharacterSymbol::LEFT_SQUARE_BRACKET->symbol()) {
+                    $stream->consume();
+
+                    $items = $this->parseArrayItems($stream);
+
+                    $this->expectCharacter(
+                        stream: $stream,
+                        character: CharacterSymbol::RIGHT_SQUARE_BRACKET,
+                    );
+
+                    return new ArrayNode(
+                        items: $items,
+                    );
+                }
+
+                throw ParserException::fromUnexpectedToken(
+                    tokenName: $token->op1,
+                    line: $token->line,
+                );
+
+            case BuiltinTokenNames::OPERATOR->name:
+                if ($token->op1 === null) {
+                    throw ParserException::fromMalformedToken(
+                        line: $token->line,
+                    );
+                }
+
+                if ($token->op1 === BinarySymbol::NULL_SAFE_ACCESS->symbol()) {
+                    throw ParserException::fromUnexpectedToken(
+                        tokenName: $token->op1,
+                        line: $token->line,
+                    );
+                }
+
+                if (
+                    $token->op1 === UnarySymbol::NEGATE->symbol() ||
+                    $token->op1 === UnarySymbol::NOT->symbol() ||
+                    $token->op1 === UnarySymbol::BITWISE_NOT->symbol() ||
+                    $token->op1 === UnarySymbol::INCREMENT_PRE->symbol() ||
+                    $token->op1 === UnarySymbol::DECREMENT_PRE->symbol()
+                ) {
+                    $stream->consume();
+
+                    $operator = UnarySymbol::from($token);
+
+                    return new UnaryOpNode(
+                        operand: $this->parseExpression($stream, $operator->precedence()),
+                        operator: $operator,
+                    );
+                }
+        }
+
+        throw ParserException::fromUnexpectedToken(
+            tokenName: $token->type,
+            line: $token->line,
+        );
     }
 
-    /**
-     * @throws ParserException
-     */
+    private function led(
+        TokenStreamInterface $stream,
+        TokenInterface $token,
+        ExpressionNodeInterface $left,
+    ): ExpressionNodeInterface {
+        if ($token->type === BuiltinTokenNames::CHARACTER->name) {
+            if ($token->op1 === null) {
+                throw ParserException::fromMalformedToken(
+                    line: $token->line,
+                );
+            }
+
+            if ($token->op1 === CharacterSymbol::LEFT_PARENTHESIS->symbol()) {
+                $stream->consume();
+
+                $arguments = $this->parseArgumentList($stream);
+
+                $this->expectCharacter(
+                    stream: $stream,
+                    character: CharacterSymbol::RIGHT_PARENTHESIS,
+                );
+
+                return new FunctionCallNode(
+                    name: $left,
+                    arguments: $arguments,
+                );
+            }
+
+            if ($token->op1 === CharacterSymbol::LEFT_SQUARE_BRACKET->symbol()) {
+                $stream->consume();
+
+                $key = $this->parseExpression($stream, Precedence::LOWEST);
+
+                $this->expectCharacter(
+                    stream: $stream,
+                    character: CharacterSymbol::RIGHT_SQUARE_BRACKET,
+                );
+
+                return new ArrayAccessNode(
+                    array: $left,
+                    key: $key,
+                );
+            }
+
+            if ($token->op1 === CharacterSymbol::DOT->symbol()) {
+                $stream->consume();
+
+                $name = $stream->current();
+
+                if (
+                    $name->type !== BuiltinTokenNames::IDENTIFIER->name ||
+                    $name->op1 === null
+                ) {
+                    throw ParserException::fromUnexpectedToken(
+                        tokenName: $name->op1 ?? $name->type,
+                        line: $name->line,
+                    );
+                }
+
+                $stream->consume();
+
+                return new PropertyAccessNode(
+                    accessor: $left,
+                    property: $name->op1,
+                );
+            }
+        }
+
+        if ($token->type === BuiltinTokenNames::OPERATOR->name) {
+            if ($token->op1 === null) {
+                throw ParserException::fromMalformedToken(
+                    line: $token->line,
+                );
+            }
+
+            if ($token->op1 === BinarySymbol::NULL_SAFE_ACCESS->symbol()) {
+                $stream->consume();
+
+                $after = $stream->current();
+
+                if (
+                    $after->type === BuiltinTokenNames::CHARACTER->name &&
+                    $after->op1 === CharacterSymbol::LEFT_SQUARE_BRACKET->symbol()
+                ) {
+                    $stream->consume();
+
+                    $key = $this->parseExpression($stream, Precedence::LOWEST);
+
+                    $this->expectCharacter(
+                        stream: $stream,
+                        character: CharacterSymbol::RIGHT_SQUARE_BRACKET,
+                    );
+
+                    return new ArrayAccessNode(
+                        array: $left,
+                        key: $key,
+                        nullSafe: true,
+                    );
+                }
+
+                if ($after->type === BuiltinTokenNames::IDENTIFIER->name) {
+                    if ($after->op1 === null) {
+                        throw ParserException::fromMalformedToken(
+                            line: $after->line,
+                        );
+                    }
+
+                    $stream->consume();
+
+                    $maybeCall = $stream->current();
+
+                    if (
+                        $maybeCall->type === BuiltinTokenNames::CHARACTER->name &&
+                        $maybeCall->op1 === CharacterSymbol::LEFT_PARENTHESIS->symbol()
+                    ) {
+                        $stream->consume();
+
+                        $arguments = $this->parseArgumentList($stream);
+
+                        $this->expectCharacter(
+                            stream: $stream,
+                            character: CharacterSymbol::RIGHT_PARENTHESIS,
+                        );
+
+                        return new MethodCallNode(
+                            caller: $left,
+                            name: $after->op1,
+                            arguments: $arguments,
+                            nullSafe: true,
+                        );
+                    }
+
+                    return new PropertyAccessNode(
+                        accessor: $left,
+                        property: $after->op1,
+                        nullSafe: true,
+                    );
+                }
+
+                throw ParserException::fromUnexpectedToken(
+                    tokenName: $after->op1 ?? $after->type,
+                    line: $after->line,
+                );
+            }
+
+            if (UnarySymbol::is($token)) {
+                $operator = UnarySymbol::from($token);
+
+                if (
+                    $operator === UnarySymbol::INCREMENT_POST ||
+                    $operator === UnarySymbol::DECREMENT_POST
+                ) {
+                    $stream->consume();
+
+                    return new UnaryOpNode(
+                        operand: $left,
+                        operator: $operator,
+                    );
+                }
+            }
+
+            if (BinarySymbol::is($token)) {
+                $operator = BinarySymbol::from($token);
+
+                $stream->consume();
+
+                $next = $operator->associativity() === Associativity::RIGHT
+                    ? $operator->precedence()->value - 1
+                    : $operator->precedence();
+
+                $right = $this->parseExpression(
+                    stream: $stream,
+                    rightBindingPower: $next,
+                );
+
+                if ($operator === BinarySymbol::BITWISE_OR) {
+                    if ($right instanceof LiteralNode) {
+                        return new BinaryOpNode(
+                            left: $left,
+                            right: $right,
+                            operator: $operator,
+                        );
+                    }
+
+                    return new FilterOrBitwiseOrNode(
+                        left: $left,
+                        right: $right,
+                    );
+                }
+
+                return new BinaryOpNode(
+                    left: $left,
+                    right: $right,
+                    operator: $operator,
+                );
+            }
+        }
+
+        throw ParserException::fromUnexpectedToken(
+            tokenName: $token->op1 ?? $token->type,
+            line: $token->line,
+        );
+    }
+
     private function lbp(
         TokenInterface $token,
     ): Precedence {
-        if ($token->op1 === null) {
-            throw ParserException::fromMalformedToken(
-                line: $token->line,
-            );
+        if ($token->type === BuiltinTokenNames::CHARACTER->name) {
+            if ($token->op1 === null) {
+                throw ParserException::fromMalformedToken(
+                    line: $token->line,
+                );
+            }
+
+            return CharacterSymbol::from($token)->precedence();
         }
 
-        if (
-            $token->type === BuiltinTokenNames::OPERATOR->name &&
-            \array_key_exists($token->op1, $this->precedences)
-        ) {
-            return $this->precedences[$token->op1];
+        if ($token->type === BuiltinTokenNames::OPERATOR->name) {
+            if ($token->op1 === null) {
+                throw ParserException::fromMalformedToken(
+                    line: $token->line,
+                );
+            }
+
+            if (
+                $token->op1 === UnarySymbol::INCREMENT_POST->symbol() ||
+                $token->op1 === UnarySymbol::DECREMENT_POST->symbol()
+            ) {
+                return UnarySymbol::from($token)->precedence();
+            }
+
+            if (BinarySymbol::is($token)) {
+                return BinarySymbol::from($token)->precedence();
+            }
         }
 
         return Precedence::LOWEST;
     }
 
-    private function led(
-        TokenInterface $token,
-        ExpressionNodeInterface $left,
-    ): ExpressionNodeInterface {
-        if ($token->op1 === null) {
-            throw ParserException::fromMalformedToken(
-                line: $token->line,
-            );
+    /**
+     * @return ExpressionNodeInterface[]
+     */
+    private function parseArgumentList(
+        TokenStreamInterface $stream,
+    ): array {
+        if ($stream->eof()) {
+            return [];
         }
 
-        if (
-            $token->type === BuiltinTokenNames::OPERATOR->name &&
-            BinarySymbol::is($token)
-        ) {
-            $operator = BinarySymbol::from($token);
-
-            return new BinaryOpNode(
-                operator: $operator,
-                left: $left,
-                right: $this->parseExpression($operator->precedence()),
-            );
-        }
+        $token = $stream->current();
 
         if (
             $token->type === BuiltinTokenNames::CHARACTER->name &&
             $token->op1 === CharacterSymbol::LEFT_PARENTHESIS->symbol()
         ) {
-            $args = [];
-
-            if (
-                !(
-                    $this->current->type === BuiltinTokenNames::CHARACTER->name &&
-                    $this->current->op1 === CharacterSymbol::RIGHT_PARENTHESIS->symbol()
-                )
-            ) {
-                while (
-                    $this->current->type === BuiltinTokenNames::CHARACTER->name &&
-                    $this->current->op1 === CharacterSymbol::COMMA->symbol()
-                ) {
-                    $this->advance();
-
-                    $args[] = $this->parseExpression(Precedence::LOWEST);
-                }
-            }
-
-            if (
-                !(
-                    $this->current->type === BuiltinTokenNames::CHARACTER->name &&
-                    $this->current->op1 === CharacterSymbol::RIGHT_PARENTHESIS->symbol()
-                )
-            ) {
-                $this->unexpected($this->current);
-            }
-
-            $this->advance();
-
-            return new FunctionCallNode(
-                name: $left,
-                arguments: $args,
-            );
+            return [];
         }
 
-        if (
-            $token->type === BuiltinTokenNames::CHARACTER->name &&
-            $token->op1 === CharacterSymbol::DOT->symbol()
-        ) {
-            if (
-                $this->current->type !== BuiltinTokenNames::IDENTIFIER->name ||
-                $this->current->op1 === null
-            ) {
-                $this->unexpected($this->current);
-            }
+        $arguments = [
+            $this->parseExpression($stream, Precedence::LOWEST),
+        ];
 
-            $name = $this->current->op1;
-            $this->advance();
-
-            $node = new PropertyAccessNode(
-                accessor: $left,
-                property: $name,
-            );
+        while (!$stream->eof()) {
+            $token = $stream->current();
 
             if (
-                $this->current->type === BuiltinTokenNames::CHARACTER->name &&
-                $this->current->op1 === CharacterSymbol::LEFT_PARENTHESIS->symbol()
+                $token->type === BuiltinTokenNames::CHARACTER->name &&
+                $token->op1 === CharacterSymbol::COMMA->symbol()
             ) {
-                $this->advance();
-                $args = [];
+                $stream->consume();
+
+                $token = $stream->current();
 
                 if (
-                    !(
-                        $this->current->type === BuiltinTokenNames::CHARACTER->name &&
-                        $this->current->op1 === CharacterSymbol::RIGHT_PARENTHESIS->symbol()
-                    )
+                    $token->type === BuiltinTokenNames::CHARACTER->name &&
+                    $token->op1 === CharacterSymbol::RIGHT_PARENTHESIS->symbol()
                 ) {
-                    while (
-                        $this->current->type === BuiltinTokenNames::CHARACTER->name &&
-                        $this->current->op1 === CharacterSymbol::COMMA->symbol()
-                    ) {
-                        $this->advance();
-
-                        $args[] = $this->parseExpression(Precedence::LOWEST);
-                    }
+                    break;
                 }
 
-                if (
-                    !(
-                        $this->current->type === BuiltinTokenNames::CHARACTER->name &&
-                        $this->current->op1 === CharacterSymbol::RIGHT_PARENTHESIS->symbol()
-                    )
-                ) {
-                    $this->unexpected($this->current);
-                }
+                $arguments[] = $this->parseExpression($stream, Precedence::LOWEST);
 
-                $this->advance();
-
-                return new MethodCallNode(
-                    caller: $left,
-                    name: $name,
-                    arguments: $args,
-                );
+                continue;
             }
 
-            return $node;
+            break;
         }
 
-        if (
-            $token->type === BuiltinTokenNames::CHARACTER->name &&
-            $token->op1 === CharacterSymbol::LEFT_SQUARE_BRACKET->symbol()
-        ) {
-            $index = $this->parseExpression(Precedence::LOWEST);
-
-            if (
-                !(
-                    $this->current->type === BuiltinTokenNames::CHARACTER->name &&
-                    $this->current->op1 === CharacterSymbol::RIGHT_SQUARE_BRACKET->symbol()
-                )
-            ) {
-                $this->unexpected($this->current);
-            }
-
-            $this->advance();
-
-            return new ArrayAccessNode(
-                array: $left,
-                key: $index,
-            );
-        }
-
-        $this->unexpected($token);
-    }
-
-    private function parseGroupedExpression(): ExpressionNodeInterface
-    {
-        $expr = $this->parseExpression(Precedence::LOWEST);
-
-        if (
-            $this->current->type !== BuiltinTokenNames::CHARACTER->name ||
-            $this->current->op1 !== CharacterSymbol::RIGHT_PARENTHESIS->symbol()
-        ) {
-            $this->unexpected($this->current);
-        }
-
-        $this->advance();
-
-        return $expr;
+        return $arguments;
     }
 
     /**
-     * @throws ParserException
+     * @return ArrayItemNode[]
      */
-    private function literalNode(
-        TokenInterface $token,
-    ): LiteralNode {
-        if ($token->op1 === null || $token->op2 === null) {
-            throw ParserException::fromMalformedToken(
-                line: $token->line,
+    private function parseArrayItems(
+        TokenStreamInterface $stream,
+    ): array {
+        $token = $stream->current();
+
+        if (
+            $token->type === BuiltinTokenNames::CHARACTER->name &&
+            $token->op1 === CharacterSymbol::RIGHT_SQUARE_BRACKET->symbol()
+        ) {
+            return [];
+        }
+
+        $items = [
+            $this->parseArrayItem($stream),
+        ];
+
+        while (!$stream->eof()) {
+            $token = $stream->current();
+
+            if (
+                $token->type === BuiltinTokenNames::CHARACTER->name &&
+                $token->op1 === CharacterSymbol::COMMA->symbol()
+            ) {
+                $stream->consume();
+
+                $token = $stream->current();
+
+                if (
+                    $token->type === BuiltinTokenNames::CHARACTER->name &&
+                    $token->op1 === CharacterSymbol::RIGHT_SQUARE_BRACKET->symbol()
+                ) {
+                    break;
+                }
+
+                $items[] = $this->parseArrayItem($stream);
+
+                continue;
+            }
+
+            break;
+        }
+
+        return $items;
+    }
+
+    private function parseArrayItem(
+        TokenStreamInterface $stream,
+    ): ArrayItemNode {
+        $expr = $this->parseExpression($stream, Precedence::LOWEST);
+        $token = $stream->current();
+
+        if (
+            $token->type === BuiltinTokenNames::CHARACTER->name &&
+            $token->op1 === CharacterSymbol::COLON->symbol()
+        ) {
+            $stream->consume();
+
+            return new ArrayItemNode(
+                value: $this->parseExpression($stream, Precedence::LOWEST),
+                key: $expr,
             );
         }
 
-        return new LiteralNode(
-            operand: $token->op1,
-            type: NativeType::fromString(
-                name: $token->op2,
-                line: $token->line,
-            ),
+        return new ArrayItemNode(
+            value: $expr,
         );
     }
 
     /**
      * @throws ParserException
      */
-    private function identifierNode(
-        TokenInterface $token,
-    ): IdentifierNode {
+    private function expectCharacter(
+        TokenStreamInterface $stream,
+        CharacterSymbol $character,
+    ): void {
+        $token = $stream->current();
+
+        if ($token->type !== BuiltinTokenNames::CHARACTER->name) {
+            throw ParserException::fromUnexpectedToken(
+                tokenName: $token->type,
+                line: $token->line,
+            );
+        }
+
         if ($token->op1 === null) {
             throw ParserException::fromMalformedToken(
                 line: $token->line,
             );
         }
 
-        return new IdentifierNode(
-            name: $token->op1,
-        );
-    }
-
-    /**
-     * @throws ParserException
-     */
-    private function unaryNode(
-        TokenInterface $token,
-    ): UnaryOpNode {
-        $operator = UnarySymbol::from($token);
-
-        return new UnaryOpNode(
-            operator: $operator,
-            operand: $this->parseExpression($operator->precedence()),
-        );
-    }
-
-    /**
-     * @throws ParserException
-     */
-    private function unexpected(
-        TokenInterface $token,
-    ): never {
-        if (
-            (
-                $token->type === BuiltinTokenNames::OPERATOR->name ||
-                $token->type === BuiltinTokenNames::CHARACTER->name
-            ) &&
-            $token->op1 !== null
-        ) {
-            $tokenName = $token->op1;
+        if ($token->op1 !== $character->symbol()) {
+            throw ParserException::fromUnexpectedToken(
+                tokenName: $token->op1,
+                line: $token->line,
+            );
         }
 
-        throw ParserException::fromUnexpectedToken(
-            tokenName: $tokenName ?? $token->type,
-            line: $token->line,
-        );
+        $stream->consume();
     }
 }

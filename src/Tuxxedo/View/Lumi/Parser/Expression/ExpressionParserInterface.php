@@ -19,10 +19,6 @@ use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 
 interface ExpressionParserInterface
 {
-    public TokenStreamInterface $stream {
-        get;
-    }
-
     /**
      * @throws ParserException
      */

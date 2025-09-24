@@ -15,6 +15,7 @@ namespace Tuxxedo\View\Lumi\Syntax\Node;
 
 use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 
+// @todo Support in Compiler
 readonly class UnaryOpNode implements ExpressionNodeInterface
 {
     public array $scopes;

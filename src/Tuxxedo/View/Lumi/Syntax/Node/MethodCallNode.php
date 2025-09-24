@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Node;
 
+// @todo Support $nullSafe in Compiler
 readonly class MethodCallNode implements IterableExpressionNodeInterface
 {
     public array $scopes;
@@ -24,6 +25,7 @@ readonly class MethodCallNode implements IterableExpressionNodeInterface
         public ExpressionNodeInterface $caller,
         public string $name,
         public array $arguments,
+        public bool $nullSafe = false,
     ) {
         $this->scopes = [
             BuiltinNodeScopes::EXPRESSION->name,

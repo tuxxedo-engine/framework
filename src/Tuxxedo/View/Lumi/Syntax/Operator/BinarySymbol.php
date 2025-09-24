@@ -132,6 +132,14 @@ enum BinarySymbol implements SymbolInterface, ExpressionSymbolInterface
         };
     }
 
+    public function associativity(): Associativity
+    {
+        return match ($this) {
+            self::EXPONENTIATE, self::NULL_COALESCE => Associativity::RIGHT,
+            default => Associativity::LEFT,
+        };
+    }
+
     public function transform(): string
     {
         return match ($this) {
