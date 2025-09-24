@@ -37,7 +37,6 @@ use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
 // @todo Unaries for POST/PRE will have wrong precedence
-// @todo Support ConcatNode?
 class ExpressionParser implements ExpressionParserInterface
 {
     public function parse(

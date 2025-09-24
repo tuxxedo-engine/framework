@@ -29,6 +29,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 
+// @todo Make BinaryOps for concat into an optimized ConcatNode
 class SccpOptimizer extends AbstractOptimizer
 {
     protected function optimizer(

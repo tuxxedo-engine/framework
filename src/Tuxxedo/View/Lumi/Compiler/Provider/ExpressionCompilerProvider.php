@@ -317,6 +317,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         );
     }
 
+    // @todo This needs to compile different code, otherwise ->right is gonna be a variable
     private function compileFilterOrBitwiseOr(
         FilterOrBitwiseOrNode $node,
         CompilerInterface $compiler,
