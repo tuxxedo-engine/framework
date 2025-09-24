@@ -36,7 +36,7 @@ use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
-// todo Unaries for POST/PRE will have wrong precedence
+// @todo Unaries for POST/PRE will have wrong precedence
 // @todo No methodCall without null?
 // @todo Support ConcatNode?
 class ExpressionParser implements ExpressionParserInterface
@@ -437,7 +437,7 @@ class ExpressionParser implements ExpressionParserInterface
 
         if (
             $token->type === BuiltinTokenNames::CHARACTER->name &&
-            $token->op1 === CharacterSymbol::LEFT_PARENTHESIS->symbol()
+            $token->op1 === CharacterSymbol::RIGHT_PARENTHESIS->symbol()
         ) {
             return [];
         }

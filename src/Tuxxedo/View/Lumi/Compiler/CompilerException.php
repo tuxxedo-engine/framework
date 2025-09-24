@@ -138,4 +138,11 @@ class CompilerException extends LumiException
             message: 'Cannot use null-safe access in property assignments',
         );
     }
+
+    public static function fromFunctionCallNotIdentifier(): self
+    {
+        return new self(
+            message: 'Function calls must only be using identifiers',
+        );
+    }
 }

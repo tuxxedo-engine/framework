@@ -65,6 +65,10 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         CompilerInterface $compiler,
         NodeStreamInterface $stream,
     ): string {
+        if (!$node->name instanceof IdentifierNode) {
+            throw CompilerException::fromFunctionCallNotIdentifier();
+        }
+
         $arguments = [];
 
         if (\sizeof($node->arguments) > 0) {
@@ -75,7 +79,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
 
         return \sprintf(
             '$this->functionCall(\'%s\', [%s])',
-            $compiler->compileExpression($node->name),
+            $node->name->name,
             \join(', ', $arguments),
         );
     }
