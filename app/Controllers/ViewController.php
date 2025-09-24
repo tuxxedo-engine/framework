@@ -196,6 +196,8 @@ readonly class ViewController
     #[Route\Get]
     public function exprFour(): ViewInterface
     {
+        $this->logger->log('Test');
+
         return new View(
             name: 'hello_world_expr_4',
             scope: [

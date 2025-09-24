@@ -31,9 +31,11 @@ class ViewException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Unable to render view: %s: %s',
+                'Unable to render view: %s: %s (%s:%d)',
                 $exception::class,
                 $exception->getMessage(),
+                $exception->getFile(),
+                $exception->getLine(),
             ),
         );
     }
