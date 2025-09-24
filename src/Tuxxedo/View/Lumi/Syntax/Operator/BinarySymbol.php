@@ -145,6 +145,9 @@ enum BinarySymbol implements SymbolInterface, ExpressionSymbolInterface
         return match ($this) {
             self::STRICT_EQUAL_IMPLICIT => self::STRICT_EQUAL_EXPLICIT->symbol(),
             self::STRICT_NOT_EQUAL_IMPLICIT => self::STRICT_NOT_EQUAL_EXPLICIT->symbol(),
+            self::CONCAT => '.',
+            self::XOR => 'xor',
+            self::BITWISE_XOR => '^',
             default => $this->symbol(),
         };
     }

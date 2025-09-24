@@ -131,4 +131,11 @@ class CompilerException extends LumiException
             message: 'Cannot pop optimizer scope, possible optimizer corruption',
         );
     }
+
+    public static function fromNullPropertyAssignment(): self
+    {
+        return new self(
+            message: 'Cannot use null-safe access in property assignments',
+        );
+    }
 }

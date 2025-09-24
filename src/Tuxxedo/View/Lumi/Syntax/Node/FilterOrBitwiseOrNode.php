@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-// @todo Support in Compiler
 readonly class FilterOrBitwiseOrNode implements ExpressionNodeInterface
 {
     public array $scopes;

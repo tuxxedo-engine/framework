@@ -38,6 +38,7 @@ use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
 // todo Unaries for POST/PRE will have wrong precedence
 // @todo No methodCall without null?
+// @todo Support ConcatNode?
 class ExpressionParser implements ExpressionParserInterface
 {
     public function parse(
@@ -282,26 +283,6 @@ class ExpressionParser implements ExpressionParserInterface
                 $stream->consume();
 
                 $after = $stream->current();
-
-                if (
-                    $after->type === BuiltinTokenNames::CHARACTER->name &&
-                    $after->op1 === CharacterSymbol::LEFT_SQUARE_BRACKET->symbol()
-                ) {
-                    $stream->consume();
-
-                    $key = $this->parseExpression($stream, Precedence::LOWEST);
-
-                    $this->expectCharacter(
-                        stream: $stream,
-                        character: CharacterSymbol::RIGHT_SQUARE_BRACKET,
-                    );
-
-                    return new ArrayAccessNode(
-                        array: $left,
-                        key: $key,
-                        nullSafe: true,
-                    );
-                }
 
                 if ($after->type === BuiltinTokenNames::IDENTIFIER->name) {
                     if ($after->op1 === null) {

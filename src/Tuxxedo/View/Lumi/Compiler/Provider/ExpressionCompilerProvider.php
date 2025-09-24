@@ -24,12 +24,14 @@ use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BuiltinNodeScopes;
 use Tuxxedo\View\Lumi\Syntax\Node\ConcatNode;
+use Tuxxedo\View\Lumi\Syntax\Node\FilterOrBitwiseOrNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\MethodCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
+use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 
 class ExpressionCompilerProvider implements CompilerProviderInterface
 {
@@ -101,8 +103,11 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         }
 
         return \sprintf(
-            '$this->instanceCall(%s)->%s(...[%s])',
+            '$this%s->instanceCall(%s)->%s(...[%s])',
             $caller,
+            $node->nullSafe
+                ? '?'
+                : '',
             $node->name,
             \join(', ', $arguments),
         );
@@ -275,6 +280,10 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         NodeStreamInterface $stream,
     ): string {
         if ($compiler->state->is(BuiltinNodeScopes::EXPRESSION_ASSIGN->name)) {
+            if ($node->nullSafe) {
+                throw CompilerException::fromNullPropertyAssignment();
+            }
+
             return \sprintf(
                 '%s->%s',
                 $compiler->compileExpression($node->accessor),
@@ -283,9 +292,36 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         }
 
         return \sprintf(
-            '$this->propertyAccess(%s)->%s',
+            '$this->propertyAccess(%s)%s->%s',
             $compiler->compileExpression($node->accessor),
+            $node->nullSafe
+                ? '?'
+                : '',
             $node->property,
+        );
+    }
+
+    private function compileUnaryOp(
+        UnaryOpNode $node,
+        CompilerInterface $compiler,
+        NodeStreamInterface $stream,
+    ): string {
+        return \sprintf(
+            '%s%s',
+            $node->operator->symbol(),
+            $compiler->compileExpression($node->operand),
+        );
+    }
+
+    private function compileFilterOrBitwiseOr(
+        FilterOrBitwiseOrNode $node,
+        CompilerInterface $compiler,
+        NodeStreamInterface $stream,
+    ): string {
+        return \sprintf(
+            '$this->filterOrBitwiseOr(%s, %s)',
+            $compiler->compileExpression($node->left),
+            $compiler->compileExpression($node->right),
         );
     }
 
@@ -349,6 +385,16 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         yield new NodeCompilerHandler(
             nodeClassName: PropertyAccessNode::class,
             handler: $this->compilePropertyAccess(...),
+        );
+
+        yield new NodeCompilerHandler(
+            nodeClassName: UnaryOpNode::class,
+            handler: $this->compileUnaryOp(...),
+        );
+
+        yield new NodeCompilerHandler(
+            nodeClassName: FilterOrBitwiseOrNode::class,
+            handler: $this->compileFilterOrBitwiseOr(...),
         );
     }
 }
