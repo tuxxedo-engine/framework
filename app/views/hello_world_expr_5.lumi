@@ -1,7 +1,11 @@
-{{ [1, 2, 3] }}
-{{ ['a', 'b', 'c'] }}
-{{ ['key': 'value', 'other': 'thing'] }}
-{{ [1, 'key': 'value', 2] }}
-{{ [1, 2, 3,] }}
-{{ ['key': 'value', 'other': 'thing',] }}
-{{ [1, 'key': 'value', 2,] }}
+{% declare lumi.autoescape = false %}
+
+<pre>
+{{ var_dump([1, 2, 3]) }}
+{{ var_dump(['a', 'b', 'c']) }}
+{{ var_dump(['key': 'value', 'other': 'thing']) }}
+{{ var_dump([1, 'key': 'value', 2]) }}
+{{ var_dump([1, 2, 3,]) }}
+{{ var_dump(['key': 'value', 'other': 'thing',]) }}
+{{ var_dump([1, 'key': 'value', 2,]) }}
+</pre>
