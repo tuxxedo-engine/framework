@@ -264,7 +264,10 @@ class ExpressionParser implements ExpressionParserInterface
 
                 $stream->consume();
 
-                if ($stream->currentIs(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::LEFT_PARENTHESIS->symbol())) {
+                if (
+                    !$stream->eof() &&
+                    $stream->currentIs(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::LEFT_PARENTHESIS->symbol())
+                ) {
                     $stream->consume();
 
                     $arguments = $this->parseArgumentList($stream);
@@ -309,9 +312,10 @@ class ExpressionParser implements ExpressionParserInterface
 
                     $stream->consume();
 
-                    $maybeCall = $stream->current();
+                    $maybeCall = $stream->peek();
 
                     if (
+                        $maybeCall !== null &&
                         $maybeCall->type === BuiltinTokenNames::CHARACTER->name &&
                         $maybeCall->op1 === CharacterSymbol::LEFT_PARENTHESIS->symbol()
                     ) {
