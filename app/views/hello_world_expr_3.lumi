@@ -4,6 +4,4 @@
 {{ config.settings[2] }}
 {{ data.items[ index ] }}
 {{ users[0].profile }}
-{{ users?.[0]?.profile }}
 {{ matrix[1][2] }}
-{{ matrix?.[1]?.[2] }}

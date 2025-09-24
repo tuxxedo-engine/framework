@@ -166,4 +166,11 @@ class ViewException extends \Exception
             ),
         );
     }
+
+    public static function fromCannotAccessNonObject(): self
+    {
+        return new self(
+            message: 'Cannot access property on non-object',
+        );
+    }
 }

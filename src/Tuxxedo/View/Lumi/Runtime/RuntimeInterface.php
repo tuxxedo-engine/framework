@@ -125,15 +125,10 @@ interface RuntimeInterface
     ): mixed;
 
     /**
-     * @template T of object
-     *
-     * @param T $instance
-     * @return T
-     *
      * @throws ViewException
      */
     public function propertyAccess(
-        object $instance,
+        mixed $instance,
     ): object;
 
     /**

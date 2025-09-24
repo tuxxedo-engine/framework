@@ -180,8 +180,12 @@ class Runtime implements RuntimeInterface
     }
 
     public function propertyAccess(
-        object $instance,
+        mixed $instance,
     ): object {
+        if (!\is_object($instance)) {
+            throw ViewException::fromCannotAccessNonObject();
+        }
+
         if ($instance === $this) {
             throw ViewException::fromCannotAccessThis();
         }
