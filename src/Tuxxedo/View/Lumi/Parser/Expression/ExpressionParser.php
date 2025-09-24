@@ -36,7 +36,6 @@ use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
-// @todo Unaries for POST/PRE will have wrong precedence
 class ExpressionParser implements ExpressionParserInterface
 {
     public function parse(
@@ -348,8 +347,8 @@ class ExpressionParser implements ExpressionParserInterface
                 );
             }
 
-            if (UnarySymbol::is($token)) {
-                $operator = UnarySymbol::from($token);
+            if (UnarySymbol::is($token, post: true)) {
+                $operator = UnarySymbol::from($token, post: true);
 
                 if (
                     $operator === UnarySymbol::INCREMENT_POST ||

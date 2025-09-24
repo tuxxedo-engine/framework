@@ -37,9 +37,14 @@ enum UnarySymbol implements SymbolInterface, ExpressionSymbolInterface
 
     public static function is(
         TokenInterface $token,
+        bool $post = false,
     ): bool {
         if ($token->type !== BuiltinTokenNames::OPERATOR->name) {
             return false;
+        }
+
+        if ($post) {
+            return $token->op1 === self::INCREMENT_POST->symbol() || $token->op1 === self::DECREMENT_POST->symbol();
         }
 
         return \in_array($token->op1, self::all(), true);
@@ -47,9 +52,14 @@ enum UnarySymbol implements SymbolInterface, ExpressionSymbolInterface
 
     public static function from(
         TokenInterface $token,
+        bool $post = false,
     ): static {
         if ($token->type === BuiltinTokenNames::OPERATOR->name) {
             foreach (self::cases() as $operator) {
+                if ($post && !$operator->isPost()) {
+                    continue;
+                }
+
                 if ($token->op1 === $operator->symbol()) {
                     return $operator;
                 }
@@ -79,6 +89,14 @@ enum UnarySymbol implements SymbolInterface, ExpressionSymbolInterface
         return match ($this) {
             self::INCREMENT_POST, self::DECREMENT_POST => Precedence::EXPONENTIATION,
             self::NOT, self::NEGATE, self::BITWISE_NOT, self::INCREMENT_PRE, self::DECREMENT_PRE => Precedence::TIGHT,
+        };
+    }
+
+    public function isPost(): bool
+    {
+        return match ($this) {
+            self::INCREMENT_POST, self::DECREMENT_POST => true,
+            default => false,
         };
     }
 }
