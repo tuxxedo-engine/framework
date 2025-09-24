@@ -107,11 +107,11 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         }
 
         return \sprintf(
-            '$this%s->instanceCall(%s)->%s(...[%s])',
-            $caller,
+            '$this%s->instanceCall(%s)->%s(%s)',
             $node->nullSafe
                 ? '?'
                 : '',
+            $caller,
             $node->name,
             \join(', ', $arguments),
         );

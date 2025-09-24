@@ -37,7 +37,6 @@ use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
 // @todo Unaries for POST/PRE will have wrong precedence
-// @todo No methodCall without null?
 // @todo Support ConcatNode?
 class ExpressionParser implements ExpressionParserInterface
 {
@@ -264,6 +263,23 @@ class ExpressionParser implements ExpressionParserInterface
                 }
 
                 $stream->consume();
+
+                if ($stream->currentIs(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::LEFT_PARENTHESIS->symbol())) {
+                    $stream->consume();
+
+                    $arguments = $this->parseArgumentList($stream);
+
+                    $this->expectCharacter(
+                        stream: $stream,
+                        character: CharacterSymbol::RIGHT_PARENTHESIS,
+                    );
+
+                    return new MethodCallNode(
+                        caller: $left,
+                        name: $name->op1,
+                        arguments: $arguments,
+                    );
+                }
 
                 return new PropertyAccessNode(
                     accessor: $left,
