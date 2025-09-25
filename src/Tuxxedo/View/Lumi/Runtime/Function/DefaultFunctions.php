@@ -36,13 +36,15 @@ class DefaultFunctions implements FunctionProviderInterface
         /** @var array<string, mixed> $scope */
         $scope = $arguments[1] ?? [];
 
-        return $render->render(
+        echo $render->render(
             view: new View(
                 name: $view,
                 scope: $scope,
             ),
             directives: $directives->directives,
         );
+
+        return '';
     }
 
     /**
