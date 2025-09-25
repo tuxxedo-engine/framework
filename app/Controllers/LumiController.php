@@ -223,6 +223,7 @@ readonly class LumiController
             'hello_world_method' => $this->viewController->method(...),
             'hello_world_seq' => $this->viewController->seq(...),
             'hello_world_set' => $this->viewController->set(...),
+            'hello_world_test' => $this->viewController->test(...),
             'hello_world_while' => $this->viewController->while(...),
             default => throw HttpException::fromInternalServerError(),
         })();

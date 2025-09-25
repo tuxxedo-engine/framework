@@ -227,4 +227,12 @@ readonly class ViewController
             name: 'hello_world_expr_6',
         );
     }
+
+    #[Route\Get]
+    public function test(): ViewInterface
+    {
+        return new View(
+            name: 'hello_world_test',
+        );
+    }
 }

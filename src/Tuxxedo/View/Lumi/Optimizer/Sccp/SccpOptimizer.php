@@ -267,6 +267,15 @@ class SccpOptimizer extends AbstractOptimizer
                     return [
                         $node,
                     ];
+                } elseif (\is_bool($value)) {
+                    return [
+                        new LiteralNode(
+                            operand: $value
+                                ? 'true'
+                                : 'false',
+                            type: NativeType::BOOL,
+                        ),
+                    ];
                 }
             }
 
