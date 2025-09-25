@@ -100,16 +100,16 @@ interface RuntimeInterface
     ): mixed;
 
     /**
-     * @template T of object
-     *
-     * @param T $instance
-     * @return T
-     *
      * @throws ViewException
      */
     public function instanceCall(
-        object $instance,
-    ): object;
+        mixed $instance,
+        bool $nullSafe = false,
+    ): ?object;
+
+    public function hasFilter(
+        string $filter,
+    ): bool;
 
     /**
      * @throws ViewException
@@ -119,17 +119,13 @@ interface RuntimeInterface
         string $filter,
     ): mixed;
 
-    public function filterOrBitwiseOr(
-        mixed $left,
-        mixed $right,
-    ): mixed;
-
     /**
      * @throws ViewException
      */
     public function propertyAccess(
         mixed $instance,
-    ): object;
+        bool $nullSafe = false,
+    ): ?object;
 
     /**
      * @throws ViewException

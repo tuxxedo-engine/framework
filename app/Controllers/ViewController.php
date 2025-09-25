@@ -172,8 +172,14 @@ readonly class ViewController
     #[Route\Get]
     public function exprOne(): ViewInterface
     {
+        $this->logger->log('Inside expr_1');
+
         return new View(
             name: 'hello_world_expr_1',
+            scope: [
+                'logger' => $this->logger,
+                'a' => new \stdClass(),
+            ],
         );
     }
 

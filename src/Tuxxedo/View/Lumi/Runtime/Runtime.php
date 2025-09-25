@@ -125,9 +125,16 @@ class Runtime implements RuntimeInterface
     }
 
     public function instanceCall(
-        object $instance,
-    ): object {
-        if (
+        mixed $instance,
+        bool $nullSafe = false,
+    ): ?object {
+        if (!\is_object($instance)) {
+            if ($nullSafe) {
+                return null;
+            }
+
+            throw ViewException::fromCannotAccessNonObject();
+        } elseif (
             \sizeof($this->instanceCallClasses) > 0 &&
             !\array_key_exists($instance::class, $this->instanceCallClasses)
         ) {
@@ -139,6 +146,12 @@ class Runtime implements RuntimeInterface
         }
 
         return $instance;
+    }
+
+    public function hasFilter(
+        string $filter,
+    ): bool {
+        return \array_key_exists($filter, $this->filters);
     }
 
     public function filter(
@@ -161,28 +174,15 @@ class Runtime implements RuntimeInterface
         );
     }
 
-    public function filterOrBitwiseOr(
-        mixed $left,
-        mixed $right,
-    ): mixed {
-        if (\is_string($right) && \array_key_exists($right, $this->filters)) {
-            return $this->filter($left, $right);
-        }
-
-        if (!\is_int($left) || !\is_int($right)) {
-            throw ViewException::fromInvalidBitwiseOr(
-                leftType: \get_debug_type($left),
-                rightType: \get_debug_type($right),
-            );
-        }
-
-        return $left | $right;
-    }
-
     public function propertyAccess(
         mixed $instance,
-    ): object {
+        bool $nullSafe = false,
+    ): ?object {
         if (!\is_object($instance)) {
+            if ($nullSafe) {
+                return null;
+            }
+
             throw ViewException::fromCannotAccessNonObject();
         }
 

@@ -1,18 +1,24 @@
+{% set userName = 'php' %}
+{% set users = ['phpfi'] %}
+
+{% set title = '    HELLO' %}
+{% set a.b = '<strong>WORLD</strong> ' %}
+
+{% set firstName = ' Tuxxedo ' %}
+{% set lastName = ' Engine ' %}
+
 {{ ' hello ' | trim }}
 {{ userName | upper }}
 {{ php_sapi_name() | lower }}
 {{ logger.formatEntries() | escape }}
-{{ user.profile | json }}
 {{ users[0] | upper }}
 {{ ( 'a' ~ 'B' ~ 'c' ) | upper }}
 {{ 'a' ~ 'b' | upper }}
 {{ '   Hello World!   ' | trim | upper }}
-{{ title | trim | lower | slug }}
+{{ title | trim | lower }}
 {{ php_uname('v') | trim | escape }}
-{{ logger.getLastEntry() | trim | json }}
-{{ config.siteName | trim | upper }}
-{{ tags[1] | trim | lower }}
+{{ a.b | trim | upper }}
 {{ (firstName ~ ' ' ~ lastName) | trim | upper }}
 {{ '  xXx  ' | trim | lower | upper | lower | upper }}
-{{ users[0].name | trim | upper }}
-{{ users?.first?.nickname | trim | upper }}
+{{ logger.entries[0].message | trim | upper }}
+{{ (users?.first?.nickname ?? ' php') | trim | upper }}

@@ -107,11 +107,14 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         }
 
         return \sprintf(
-            '$this%s->instanceCall(%s)->%s(%s)',
+            '$this->instanceCall(%s%s)%s->%s(%s)',
+            $caller,
+            $node->nullSafe
+                ? ', true'
+                : '',
             $node->nullSafe
                 ? '?'
                 : '',
-            $caller,
             $node->name,
             \join(', ', $arguments),
         );
@@ -296,8 +299,11 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         }
 
         return \sprintf(
-            '$this->propertyAccess(%s)%s->%s',
+            '$this->propertyAccess(%s%s)%s->%s',
             $compiler->compileExpression($node->accessor),
+            $node->nullSafe
+                ? ', true'
+                : '',
             $node->nullSafe
                 ? '?'
                 : '',
@@ -317,14 +323,22 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         );
     }
 
-    // @todo This needs to compile different code, otherwise ->right is gonna be a variable
     private function compileFilterOrBitwiseOr(
         FilterOrBitwiseOrNode $node,
         CompilerInterface $compiler,
         NodeStreamInterface $stream,
     ): string {
+        if ($node->right instanceof IdentifierNode) {
+            return \sprintf(
+                '$this->hasFilter(\'%1$s\') ? $this->filter(%2$s, \'%1$s\') : ((%2$s) | (%3$s))',
+                $node->right->name,
+                $compiler->compileExpression($node->left),
+                $compiler->compileExpression($node->right),
+            );
+        }
+
         return \sprintf(
-            '$this->filterOrBitwiseOr(%s, %s)',
+            '((%s) | (%s))',
             $compiler->compileExpression($node->left),
             $compiler->compileExpression($node->right),
         );

@@ -138,19 +138,6 @@ class ViewException extends \Exception
         );
     }
 
-    public static function fromInvalidBitwiseOr(
-        string $leftType,
-        string $rightType,
-    ): self {
-        return new self(
-            message: \sprintf(
-                'Both operands must be integers for bitwise OR, left was "%s" and right was "%s"',
-                $leftType,
-                $rightType,
-            ),
-        );
-    }
-
     public static function fromCannotAccessThis(): self
     {
         return new self(
