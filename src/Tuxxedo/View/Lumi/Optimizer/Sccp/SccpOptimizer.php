@@ -20,8 +20,10 @@ use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ConcatNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
@@ -29,7 +31,6 @@ use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 
-// @todo Make BinaryOps for concat into an optimized ConcatNode
 class SccpOptimizer extends AbstractOptimizer
 {
     protected function optimizer(
@@ -38,7 +39,7 @@ class SccpOptimizer extends AbstractOptimizer
         $nodes = [];
 
         while (!$stream->eof()) {
-            $optimizedNodes = $this->optimizeNode($stream->consume());
+            $optimizedNodes = $this->optimizeNode($stream, $stream->consume());
 
             if (\sizeof($optimizedNodes) > 0) {
                 \array_push($nodes, ...$optimizedNodes);
@@ -54,15 +55,18 @@ class SccpOptimizer extends AbstractOptimizer
      * @return NodeInterface[]
      */
     private function optimizeNode(
+        NodeStreamInterface $stream,
         NodeInterface $node,
     ): array {
         return match (true) {
             $node instanceof AssignmentNode => parent::assignment($node),
             $node instanceof DirectiveNodeInterface => parent::optimizeDirective($node),
             $node instanceof BlockNode => parent::optimizeBlock($node),
-            $node instanceof BinaryOpNode => $this->optimizeBinaryOp($node),
-            $node instanceof EchoNode => $this->optimizeEcho($node),
-            $node instanceof GroupNode => $this->optimizeGroup($node),
+            $node instanceof BinaryOpNode => $this->optimizeBinaryOp($stream, $node),
+            $node instanceof EchoNode => $this->optimizeEcho($stream, $node),
+            $node instanceof GroupNode => $this->optimizeGroup($stream, $node),
+            $node instanceof TextNode => $this->optimizeText($stream, $node),
+            $node instanceof ConcatNode => $this->optimizeConcat($node),
             default => [
                 $node,
             ],
@@ -73,6 +77,7 @@ class SccpOptimizer extends AbstractOptimizer
      * @return NodeInterface[]
      */
     private function optimizeEcho(
+        NodeStreamInterface $stream,
         EchoNode $node,
     ): array {
         if ($node->operand instanceof LiteralNode) {
@@ -102,12 +107,26 @@ class SccpOptimizer extends AbstractOptimizer
             if ($value !== null) {
                 return [
                     new TextNode(
-                        text: (string)$value,
+                        text: (string) $value,
                     ),
                 ];
             }
 
             return [];
+        }
+
+        $operand = $this->optimizeNode($stream, $node->operand);
+
+        if (
+            \sizeof($operand) === 1 &&
+            $operand[0] !== $node->operand &&
+            $operand[0] instanceof ExpressionNodeInterface
+        ) {
+            return [
+                new EchoNode(
+                    operand: $operand[0],
+                ),
+            ];
         }
 
         return [
@@ -119,6 +138,7 @@ class SccpOptimizer extends AbstractOptimizer
      * @return NodeInterface[]
      */
     private function optimizeGroup(
+        NodeStreamInterface $stream,
         GroupNode $node,
     ): array {
         if ($node->operand instanceof LiteralNode) {
@@ -126,7 +146,7 @@ class SccpOptimizer extends AbstractOptimizer
                 $node->operand,
             ];
         } elseif ($node->operand instanceof BinaryOpNode) {
-            return $this->optimizeBinaryOp($node->operand);
+            return $this->optimizeBinaryOp($stream, $node->operand);
         }
 
         return [
@@ -138,6 +158,7 @@ class SccpOptimizer extends AbstractOptimizer
      * @return NodeInterface[]
      */
     private function optimizeBinaryOp(
+        NodeStreamInterface $stream,
         BinaryOpNode $node,
     ): array {
         if (
@@ -253,6 +274,109 @@ class SccpOptimizer extends AbstractOptimizer
                 new LiteralNode(
                     operand: \strval($value),
                     type: NativeType::fromValueNativeType($value),
+                ),
+            ];
+        } elseif ($node->operator === BinarySymbol::CONCAT) {
+            $operands = [];
+
+            $this->collectConcatOperands($node, $operands);
+
+            return [
+                ...$this->optimizeNode(
+                    stream: $stream,
+                    node: new ConcatNode(
+                        operands: $operands,
+                    ),
+                ),
+            ];
+        }
+
+        return [
+            $node,
+        ];
+    }
+
+    /**
+     * @param ExpressionNodeInterface[] $operands
+     */
+    private function collectConcatOperands(
+        ExpressionNodeInterface $node,
+        array &$operands,
+    ): void {
+        if (
+            $node instanceof BinaryOpNode &&
+            $node->operator === BinarySymbol::CONCAT
+        ) {
+            $this->collectConcatOperands($node->left, $operands);
+            $this->collectConcatOperands($node->right, $operands);
+
+            return;
+        }
+
+        $operands[] = $node;
+    }
+
+    /**
+     * @return ExpressionNodeInterface[]
+     */
+    private function optimizeConcat(
+        ConcatNode $node,
+    ): array {
+        $literal = '';
+
+        foreach ($node->operands as $operand) {
+            if (!$operand instanceof LiteralNode) {
+                return [
+                    $node,
+                ];
+            }
+
+            if (
+                $operand->type === NativeType::NULL ||
+                (
+                    $operand->type === NativeType::BOOL &&
+                    $operand->operand === 'false'
+                )
+            ) {
+                continue;
+            }
+
+            $literal .= $operand->type->cast($operand->operand);
+        }
+
+        return [
+            new LiteralNode(
+                operand: $literal,
+                type: NativeType::STRING,
+            ),
+        ];
+    }
+
+    /**
+     * @return array{0: TextNode}
+     */
+    private function optimizeText(
+        NodeStreamInterface $stream,
+        TextNode $node,
+    ): array {
+        $text = $node->text;
+
+        while (!$stream->eof()) {
+            $nextNode = $stream->current();
+
+            if (!$nextNode instanceof TextNode) {
+                break;
+            }
+
+            $text .= $nextNode->text;
+
+            $stream->consume();
+        }
+
+        if ($text !== $node->text) {
+            return [
+                new TextNode(
+                    text: $text,
                 ),
             ];
         }
