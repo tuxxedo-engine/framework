@@ -48,6 +48,8 @@ use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\CharacterSymbol;
 
 // @todo Escape text
+// @todo Fix ForNode k <> v order
+// @todo Colorize array keys?
 class Highlighter implements HighlighterInterface
 {
     private ThemeInterface $theme;
