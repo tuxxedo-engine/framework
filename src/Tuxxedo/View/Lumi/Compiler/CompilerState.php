@@ -20,10 +20,29 @@ class CompilerState implements CompilerStateInterface
 {
     public private(set) ?string $expects = null;
     public readonly DirectivesInterface&CompilerDirectivesInterface $directives;
+    public private(set) int $flags = 0;
 
     public function __construct()
     {
         $this->directives = CompilerDirectives::createWithDefaults();
+    }
+
+    public function hasFlag(
+        CompilerStateFlag $flag,
+    ): bool {
+        return ($this->flags & $flag->value) !== 0;
+    }
+
+    public function flag(
+        CompilerStateFlag $flag,
+    ): void {
+        $this->flags |= $flag->value;
+    }
+
+    public function removeFlag(
+        CompilerStateFlag $flag,
+    ): void {
+        $this->flags = $this->flags | ~$flag->value;
     }
 
     public function is(

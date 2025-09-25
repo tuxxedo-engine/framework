@@ -26,6 +26,22 @@ interface CompilerStateInterface
         get;
     }
 
+    public int $flags {
+        get;
+    }
+
+    public function hasFlag(
+        CompilerStateFlag $flag,
+    ): bool;
+
+    public function flag(
+        CompilerStateFlag $flag,
+    ): void;
+
+    public function removeFlag(
+        CompilerStateFlag $flag,
+    ): void;
+
     public function is(
         string $scope,
     ): bool;

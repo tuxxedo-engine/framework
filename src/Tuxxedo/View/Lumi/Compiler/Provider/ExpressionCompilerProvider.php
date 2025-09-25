@@ -15,6 +15,7 @@ namespace Tuxxedo\View\Lumi\Compiler\Provider;
 
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
+use Tuxxedo\View\Lumi\Compiler\CompilerStateFlag;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
@@ -32,6 +33,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\MethodCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
+use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 
 class ExpressionCompilerProvider implements CompilerProviderInterface
 {
@@ -106,13 +108,16 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
             }
         }
 
+        $nullSafe = $compiler->state->hasFlag(CompilerStateFlag::NULL_SAFE_ACCESS) ||
+            $node->nullSafe;
+
         return \sprintf(
             '$this->instanceCall(%s%s)%s->%s(%s)',
             $caller,
-            $node->nullSafe
+            $nullSafe
                 ? ', true'
                 : '',
-            $node->nullSafe
+            $nullSafe
                 ? '?'
                 : '',
             $node->name,
@@ -128,12 +133,25 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         CompilerInterface $compiler,
         NodeStreamInterface $stream,
     ): string {
-        return \sprintf(
+        $nullSafe = $node->operator === BinarySymbol::NULL_SAFE_ACCESS ||
+            $node->operator === BinarySymbol::NULL_COALESCE;
+
+        if ($nullSafe) {
+            $compiler->state->flag(CompilerStateFlag::NULL_SAFE_ACCESS);
+        }
+
+        $output = \sprintf(
             '%s %s %s',
             $compiler->compileNode($node->left, $stream),
             $node->operator->transform(),
             $compiler->compileNode($node->right, $stream),
         );
+
+        if ($nullSafe) {
+            $compiler->state->removeFlag(CompilerStateFlag::NULL_SAFE_ACCESS);
+        }
+
+        return $output;
     }
 
     private function compileAssignment(
@@ -298,13 +316,16 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
             );
         }
 
+        $nullSafe = $compiler->state->hasFlag(CompilerStateFlag::NULL_SAFE_ACCESS) ||
+            $node->nullSafe;
+
         return \sprintf(
             '$this->propertyAccess(%s%s)%s->%s',
             $compiler->compileExpression($node->accessor),
-            $node->nullSafe
+            $nullSafe
                 ? ', true'
                 : '',
-            $node->nullSafe
+            $nullSafe
                 ? '?'
                 : '',
             $node->property,
