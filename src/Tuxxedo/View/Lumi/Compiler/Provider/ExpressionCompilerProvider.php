@@ -337,6 +337,14 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         CompilerInterface $compiler,
         NodeStreamInterface $stream,
     ): string {
+        if ($node->operator->isPost()) {
+            return \sprintf(
+                '%s%s',
+                $compiler->compileExpression($node->operand),
+                $node->operator->symbol(),
+            );
+        }
+
         return \sprintf(
             '%s%s',
             $node->operator->symbol(),

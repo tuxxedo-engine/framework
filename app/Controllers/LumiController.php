@@ -28,6 +28,9 @@ use Tuxxedo\View\Lumi\LumiException;
 use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
 use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpOptimizer;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
+use Tuxxedo\View\Lumi\Syntax\Highlight\Theme\LumiDark;
+use Tuxxedo\View\Lumi\Syntax\Highlight\Theme\LumiLight;
+use Tuxxedo\View\Lumi\Syntax\Highlight\Theme\ThemeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Operator\SymbolInterface;
 use Tuxxedo\View\View;
@@ -275,6 +278,16 @@ readonly class LumiController
         return clone $optimizedStream;
     }
 
+    private function getHighlightThemeClass(
+        string $theme,
+    ): ?ThemeInterface {
+        return match (true) {
+            $theme === 'dark' => new LumiDark(),
+            $theme === 'light' => new LumiLight(),
+            default => null,
+        };
+    }
+
     #[Route\Get]
     public function index(RequestInterface $request): ResponseInterface
     {
@@ -285,21 +298,23 @@ readonly class LumiController
         }
 
         $viewSource = @\file_get_contents($selectedViewFile);
+        $selectedHighlightTheme = $request->get->getString('highlight');
 
         if ($viewSource === false) {
             throw HttpException::fromInternalServerError();
         }
 
-        $buffer = '<h3>File</h3>';
-        $buffer .= '<form>';
+        $buffer = '<form>';
         $buffer .= '<script>';
         $buffer .= 'function formCheck() {';
         $buffer .= 'var sccp = 0;';
         $buffer .= 'var dce = 0;';
+        $buffer .= 'var highlight = \'0\';';
         $buffer .= 'const $ = (id) => document.getElementById(id);';
         $buffer .= 'if ($(\'sccp\').checked){ sccp = 1; }';
         $buffer .= 'if ($(\'dce\').checked){ dce = 1; }';
-        $buffer .= 'window.location = \'?file=\' + $(\'file\').options[$(\'file\').selectedIndex].value + \'&sccp=\' + sccp + \'&dce=\' + dce;';
+        $buffer .= 'if ($(\'highlightTheme\').selectedIndex) { highlight = $(\'highlightTheme\').options[$(\'highlightTheme\').selectedIndex].value; }';
+        $buffer .= 'window.location = \'?file=\' + $(\'file\').options[$(\'file\').selectedIndex].value + \'&sccp=\' + sccp + \'&dce=\' + dce + \'&highlight=\' + highlight;';
         $buffer .= '}';
         $buffer .= '</script>';
         $buffer .= '<select id="file" onchange="formCheck();">';
@@ -313,6 +328,11 @@ readonly class LumiController
             $buffer .= '<option' . $selected . ' value="' . $viewFile . '">' . $viewFile . '</option>';
         }
 
+        $buffer .= '</select>';
+        $buffer .= '<select id="highlightTheme" onchange="formCheck();">';
+        $buffer .= '<option></option>';
+        $buffer .= '<option value="dark"' . ($selectedHighlightTheme === 'dark' ? ' selected' : '') . '>Dark</option>';
+        $buffer .= '<option value="light"' . ($selectedHighlightTheme === 'light' ? ' selected' : '') . '>Light</option>';
         $buffer .= '</select>';
         $buffer .= '<p>';
         $buffer .= '<input type="checkbox" id="sccp"' . ($request->get->getBool('sccp') ? ' checked' : '') . ' onclick="formCheck();">';
@@ -398,7 +418,26 @@ readonly class LumiController
             $buffer .= '</pre>';
         }
 
-        if (!isset($exception)) {
+        $theme = $this->getHighlightThemeClass($selectedHighlightTheme);
+
+        if ($theme !== null && !isset($exception)) {
+            $buffer .= '<h3>Highlighted source code</h3>';
+            $buffer .= '<pre>';
+
+            try {
+                $buffer .= $engine->highlightFile(
+                    file: $selectedViewFile,
+                    theme: $theme,
+                    optimized: $request->get->getBool('sccp') || $request->get->getBool('dce'),
+                );
+            } catch (LumiException $exception) {
+                $buffer .= $exception;
+            }
+
+            $buffer .= '</pre>';
+        }
+
+        if (!isset($exception) && $theme === null) {
             $viewName = $this->getShortViewName(
                 viewFile: $selectedViewFile,
                 extension: false,

@@ -21,8 +21,8 @@ readonly class ForNode implements NodeInterface
      * @param NodeInterface[] $body
      */
     public function __construct(
-        public IterableExpressionNodeInterface $value,
-        public ExpressionNodeInterface $iterator,
+        public ExpressionNodeInterface $value,
+        public IterableExpressionNodeInterface $iterator,
         public array $body = [],
         public ?IdentifierNode $key = null,
     ) {

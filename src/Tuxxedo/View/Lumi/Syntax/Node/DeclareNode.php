@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-readonly class DeclareNode implements DirectiveNodeInterface, NodeInterface
+readonly class DeclareNode implements DirectiveNodeInterface
 {
     public array $scopes;
 

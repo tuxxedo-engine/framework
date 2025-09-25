@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Parser;
 
 use Tuxxedo\View\Lumi\LumiException;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 
 class ParserException extends LumiException
 {
@@ -234,6 +235,17 @@ class ParserException extends LumiException
             message: \sprintf(
                 'Declare must be at the top level on line %d',
                 $line,
+            ),
+        );
+    }
+
+    public static function fromUnknownHighlightNode(
+        NodeInterface $node,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot highlight source, unknown node encountered: %s',
+                $node::class,
             ),
         );
     }
