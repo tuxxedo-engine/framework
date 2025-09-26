@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Optimizer;
+namespace Tuxxedo\View\Lumi\Optimizer\Scope;
 
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;

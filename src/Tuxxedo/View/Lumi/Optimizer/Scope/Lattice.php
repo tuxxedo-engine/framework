@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Optimizer;
+namespace Tuxxedo\View\Lumi\Optimizer\Scope;
 
-enum VariableLattice
+enum Lattice
 {
     case UNDEF;
     case CONST;

@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Optimizer;
+namespace Tuxxedo\View\Lumi\Optimizer\Scope;
 
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
@@ -23,7 +23,7 @@ use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 class Variable implements VariableInterface
 {
     public private(set) ExpressionNodeInterface $value;
-    public private(set) VariableLattice $state;
+    public private(set) Lattice $lattice;
 
     final private function __construct(
         public readonly string $name,
@@ -33,7 +33,7 @@ class Variable implements VariableInterface
         if ($scope !== null && $value !== null) {
             $this->mutate($scope, $value);
         } else {
-            $this->state = VariableLattice::UNDEF;
+            $this->lattice = Lattice::UNDEF;
         }
     }
 
@@ -65,7 +65,7 @@ class Variable implements VariableInterface
         $this->value = $value;
 
         if ($value instanceof LiteralNode) {
-            $this->state = VariableLattice::CONST;
+            $this->lattice = Lattice::CONST;
 
             return;
         }
@@ -75,23 +75,23 @@ class Variable implements VariableInterface
                 $value->left instanceof LiteralNode ||
                 (
                     $value->left instanceof IdentifierNode &&
-                    $scope->get($value->left)->state === VariableLattice::CONST
+                    $scope->get($value->left)->lattice === Lattice::CONST
                 )
             ) {
                 if (
                     $value->right instanceof LiteralNode ||
                     (
                         $value->right instanceof IdentifierNode &&
-                        $scope->get($value->right)->state === VariableLattice::CONST
+                        $scope->get($value->right)->lattice === Lattice::CONST
                     )
                 ) {
-                    $this->state = VariableLattice::CONST;
+                    $this->lattice = Lattice::CONST;
 
                     return;
                 }
             }
         }
 
-        $this->state = VariableLattice::VARYING;
+        $this->lattice = Lattice::VARYING;
     }
 }

@@ -16,6 +16,8 @@ namespace Tuxxedo\View\Lumi\Optimizer;
 use Tuxxedo\View\Lumi\Compiler\CompilerDirectives;
 use Tuxxedo\View\Lumi\Compiler\CompilerDirectivesInterface;
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
+use Tuxxedo\View\Lumi\Optimizer\Scope\Scope;
+use Tuxxedo\View\Lumi\Optimizer\Scope\ScopeInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
