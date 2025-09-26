@@ -25,7 +25,7 @@ readonly class ConditionalBranchNode implements NodeInterface
         public array $body = [],
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::DEPENDANT->name,
+            BuiltinNodeScopes::DEPENDENT->name,
         ];
     }
 }

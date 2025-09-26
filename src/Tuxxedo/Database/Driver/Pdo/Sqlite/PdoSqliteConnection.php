@@ -11,13 +11,11 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Syntax\Node;
+namespace Tuxxedo\Database\Driver\Pdo\Sqlite;
 
-enum BuiltinNodeScopes
+use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
+
+// @todo Implement
+class PdoSqliteConnection extends AbstractPdoConnection
 {
-    case ROOT;
-    case BLOCK;
-    case DEPENDENT;
-    case EXPRESSION;
-    case EXPRESSION_ASSIGN;
 }

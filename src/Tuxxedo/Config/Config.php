@@ -39,8 +39,27 @@ class Config implements ConfigInterface
     ): static {
         $directives = [];
 
-        foreach (FileCollection::fromFileType($directory, '.php') as $configFile) {
-            $directives[\basename($configFile, '.php')] = static::isolatedInclude($configFile);
+        foreach (FileCollection::fromRecursiveFileType($directory, '.php') as $configFile) {
+            $index = \str_replace($directory . '/', '', \substr($configFile, 0, -4));
+
+            if (\str_contains($index, '/')) {
+                $parts = \explode('/', $index);
+                $leaf = \array_pop($parts);
+                $ref = &$directives;
+
+                foreach ($parts as $part) {
+                    /** @var array<mixed> $ref */
+                    $ref[$part] ??= [];
+                    $ref = &$ref[$part];
+                }
+
+                /** @var array<mixed> $ref */
+                $ref[$leaf] = static::isolatedInclude($configFile);
+
+                unset($ref);
+            } else {
+                $directives[$index] = static::isolatedInclude($configFile);
+            }
         }
 
         return new static(
@@ -96,6 +115,22 @@ class Config implements ConfigInterface
         }
 
         return $index;
+    }
+
+    public function section(
+        string $path,
+    ): self {
+        $section = $this->path($path);
+
+        if (!\is_array($section)) {
+            throw ConfigException::fromInvalidSection(
+                directive: $path,
+            );
+        }
+
+        return new static(
+            directives: $section,
+        );
     }
 
     public function getInt(

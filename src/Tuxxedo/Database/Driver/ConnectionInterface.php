@@ -11,13 +11,17 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Syntax\Node;
+namespace Tuxxedo\Database\Driver;
 
-enum BuiltinNodeScopes
+use Tuxxedo\Database\ConnectionRole;
+
+interface ConnectionInterface
 {
-    case ROOT;
-    case BLOCK;
-    case DEPENDENT;
-    case EXPRESSION;
-    case EXPRESSION_ASSIGN;
+    public string $name {
+        get;
+    }
+
+    public ConnectionRole $role {
+        get;
+    }
 }

@@ -18,6 +18,7 @@ class Container implements ContainerInterface
     private const array PROTECTED_INTERFACES = [
         AlwaysPersistentInterface::class,
         DependencyResolverInterface::class,
+        LazyInitializableInterface::class,
     ];
 
     /**
@@ -54,17 +55,21 @@ class Container implements ContainerInterface
             $this->persistentDependencies[$className] = \is_object($class) ? $class : null;
         }
 
-        $aliases = [];
-
         if ($bindInterfaces) {
-            $aliases = $this->filterInterfaces(
-                interfaces: ($aliases = \class_implements($class)) !== false ? $aliases : [],
-            );
+            $aliases = ($aliases = \class_implements($class)) !== false
+                ? $aliases
+                : [];
 
             if (\is_string($class) && \in_array(LazyInitializableInterface::class, $aliases, true)) {
                 /** @var class-string<LazyInitializableInterface> $class */
                 $this->initializers[$className] = static fn (self $container): object => $class::createInstance($container);
             }
+
+            $aliases = $this->filterInterfaces(
+                interfaces: $aliases,
+            );
+        } else {
+            $aliases = [];
         }
 
         if ($bindParent && ($parentClassName = \get_parent_class($class)) !== false) {
@@ -287,10 +292,12 @@ class Container implements ContainerInterface
                 $className = $type->getName();
 
                 return $this->resolve($className);
-            } catch (\Exception) {
+            } catch (\Exception $exception) {
                 if ($type->allowsNull()) {
                     return null;
                 }
+
+                throw $exception;
             }
         }
 

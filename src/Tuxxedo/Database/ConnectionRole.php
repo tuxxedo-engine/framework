@@ -11,13 +11,12 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Syntax\Node;
+namespace Tuxxedo\Database;
 
-enum BuiltinNodeScopes
+enum ConnectionRole
 {
-    case ROOT;
-    case BLOCK;
-    case DEPENDENT;
-    case EXPRESSION;
-    case EXPRESSION_ASSIGN;
+    case NONE;
+    case DEFAULT;
+    case DEFAULT_READ;
+    case DEFAULT_WRITE;
 }

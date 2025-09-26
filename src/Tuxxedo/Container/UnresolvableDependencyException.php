@@ -15,15 +15,17 @@ namespace Tuxxedo\Container;
 
 class UnresolvableDependencyException extends \Exception
 {
-    protected static function formatNamedType(\ReflectionNamedType $type): string
-    {
+    protected static function formatNamedType(
+        \ReflectionNamedType $type,
+    ): string {
         return $type->allowsNull()
             ? '?' . $type->getName()
             : $type->getName();
     }
 
-    protected static function formatUnionType(\ReflectionUnionType $unionType): string
-    {
+    protected static function formatUnionType(
+        \ReflectionUnionType $unionType,
+    ): string {
         return \implode(
             '|',
             \array_map(
@@ -36,8 +38,9 @@ class UnresolvableDependencyException extends \Exception
         );
     }
 
-    protected static function formatIntersectionType(\ReflectionIntersectionType $intersectionType): string
-    {
+    protected static function formatIntersectionType(
+        \ReflectionIntersectionType $intersectionType,
+    ): string {
         return '(' . \implode('&', \array_map(\strval(...), $intersectionType->getTypes())) . ')';
     }
 
@@ -64,8 +67,9 @@ class UnresolvableDependencyException extends \Exception
         );
     }
 
-    public static function fromNamedType(\ReflectionNamedType $type): self
-    {
+    public static function fromNamedType(
+        \ReflectionNamedType $type,
+    ): self {
         return new self(
             message: \sprintf(
                 'Unable to resolve the type: "%s"',
@@ -74,8 +78,9 @@ class UnresolvableDependencyException extends \Exception
         );
     }
 
-    public static function fromUnionType(\ReflectionUnionType $unionType): self
-    {
+    public static function fromUnionType(
+        \ReflectionUnionType $unionType,
+    ): self {
         return new self(
             message: \sprintf(
                 'Unable to resolve any of the union types: "%s"',

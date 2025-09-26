@@ -26,6 +26,17 @@ class ConfigException extends \Exception
         );
     }
 
+    public static function fromInvalidSection(
+        string $directive,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid section for directive "%s", the value must be an array',
+                $directive,
+            ),
+        );
+    }
+
     public static function fromUnexpectedDirectiveType(
         string $directive,
         string $actualType,

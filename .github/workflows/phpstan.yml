@@ -11,10 +11,10 @@ jobs:
       - uses: php-actions/composer@v6
         with:
           php_version: "8.4"
-          php_extensions: mbstring pdo_mysql
+          php_extensions: filter mbstring mysqli pdo pdo_mysql pdo_pgsql pdo_sqlite pgsql session sqlite3
           version: 2.x
       - uses: php-actions/phpstan@v3
         with:
           php_version: "8.4"
-          php_extensions: mbstring pdo_mysql
+          php_extensions: filter mbstring mysqli pdo pdo_mysql pdo_pgsql pdo_sqlite pgsql session sqlite3
           version: 2.x

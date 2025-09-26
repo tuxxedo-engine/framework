@@ -29,6 +29,13 @@ interface ConfigInterface
     /**
      * @throws ConfigException
      */
+    public function section(
+        string $path,
+    ): self;
+
+    /**
+     * @throws ConfigException
+     */
     public function getInt(
         string $path,
     ): int;
