@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Optimizer;
 
-enum VariableState
+enum VariableLattice
 {
     case UNDEF;
     case CONST;

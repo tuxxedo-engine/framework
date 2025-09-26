@@ -23,7 +23,7 @@ use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 class Variable implements VariableInterface
 {
     public private(set) ExpressionNodeInterface $value;
-    public private(set) VariableState $state;
+    public private(set) VariableLattice $state;
 
     final private function __construct(
         public readonly string $name,
@@ -33,7 +33,7 @@ class Variable implements VariableInterface
         if ($scope !== null && $value !== null) {
             $this->mutate($scope, $value);
         } else {
-            $this->state = VariableState::UNDEF;
+            $this->state = VariableLattice::UNDEF;
         }
     }
 
@@ -65,7 +65,7 @@ class Variable implements VariableInterface
         $this->value = $value;
 
         if ($value instanceof LiteralNode) {
-            $this->state = VariableState::CONST;
+            $this->state = VariableLattice::CONST;
 
             return;
         }
@@ -75,23 +75,23 @@ class Variable implements VariableInterface
                 $value->left instanceof LiteralNode ||
                 (
                     $value->left instanceof IdentifierNode &&
-                    $scope->get($value->left)->state === VariableState::CONST
+                    $scope->get($value->left)->state === VariableLattice::CONST
                 )
             ) {
                 if (
                     $value->right instanceof LiteralNode ||
                     (
                         $value->right instanceof IdentifierNode &&
-                        $scope->get($value->right)->state === VariableState::CONST
+                        $scope->get($value->right)->state === VariableLattice::CONST
                     )
                 ) {
-                    $this->state = VariableState::CONST;
+                    $this->state = VariableLattice::CONST;
 
                     return;
                 }
             }
         }
 
-        $this->state = VariableState::VARYING;
+        $this->state = VariableLattice::VARYING;
     }
 }

@@ -26,7 +26,7 @@ interface VariableInterface
         get;
     }
 
-    public VariableState $state {
+    public VariableLattice $state {
         get;
     }
 
