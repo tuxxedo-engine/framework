@@ -206,23 +206,28 @@ class Container implements ContainerInterface
         return $callable(...$callArguments);
     }
 
-    public function isBound(string $className): bool
-    {
+    public function isBound(
+        string $className,
+    ): bool {
         return isset($this->persistentDependencies[$className]);
     }
 
-    public function isInitialized(string $className): bool
-    {
+    public function isInitialized(
+        string $className,
+    ): bool {
         return $this->isBound($className) && !isset($this->initializers[$className]);
     }
 
-    public function isAlias(string $className): bool
-    {
+    public function isAlias(
+        string $className,
+    ): bool {
         return \array_key_exists($className, $this->aliases);
     }
 
-    public function isAliasOf(string $alias, string $className): bool
-    {
+    public function isAliasOf(
+        string $alias,
+        string $className,
+    ): bool {
         return $this->isAlias($alias) && $this->aliases[$alias] === $className;
     }
 
@@ -235,19 +240,16 @@ class Container implements ContainerInterface
     ): array {
         return \array_filter(
             $interfaces,
-            static fn (string $interface): bool => !\in_array(
-                $interface,
-                self::PROTECTED_INTERFACES,
-                true,
-            ),
+            static fn (string $interface): bool => !\in_array($interface, self::PROTECTED_INTERFACES, true),
         );
     }
 
     /**
      * @throws UnresolvableDependencyException
      */
-    private function resolveParameter(\ReflectionParameter $parameter): mixed
-    {
+    private function resolveParameter(
+        \ReflectionParameter $parameter,
+    ): mixed {
         $attrs = $parameter->getAttributes(
             name: DependencyResolverInterface::class,
             flags: \ReflectionAttribute::IS_INSTANCEOF,
@@ -284,8 +286,9 @@ class Container implements ContainerInterface
     /**
      * @throws UnresolvableDependencyException
      */
-    private function resolveNamedType(\ReflectionNamedType $type): mixed
-    {
+    private function resolveNamedType(
+        \ReflectionNamedType $type,
+    ): mixed {
         if (!$type->isBuiltin()) {
             try {
                 /** @var class-string $className */
@@ -307,8 +310,9 @@ class Container implements ContainerInterface
     /**
      * @throws UnresolvableDependencyException
      */
-    private function resolveUnionType(\ReflectionUnionType $unionType): mixed
-    {
+    private function resolveUnionType(
+        \ReflectionUnionType $unionType,
+    ): mixed {
         foreach ($unionType->getTypes() as $type) {
             if ($type instanceof \ReflectionNamedType) {
                 try {

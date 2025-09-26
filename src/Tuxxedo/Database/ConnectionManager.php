@@ -28,8 +28,8 @@ class ConnectionManager implements ConnectionManagerInterface, AlwaysPersistentI
     public private(set) array $connections = [];
 
     private ConnectionInterface $defaultConnection;
-    private ConnectionInterface $defaultReadConnection;
-    private ConnectionInterface $defaultWriteConnection;
+    private ConnectionInterface $readConnection;
+    private ConnectionInterface $writeConnection;
 
     final public function __construct(
         private readonly ContainerInterface $container,
@@ -72,9 +72,9 @@ class ConnectionManager implements ConnectionManagerInterface, AlwaysPersistentI
         if ($connection->role === ConnectionRole::DEFAULT) {
             $this->defaultConnection = $connection;
         } elseif ($connection->role === ConnectionRole::DEFAULT_READ) {
-            $this->defaultReadConnection = $connection;
+            $this->readConnection = $connection;
         } elseif ($connection->role === ConnectionRole::DEFAULT_WRITE) {
-            $this->defaultWriteConnection = $connection;
+            $this->writeConnection = $connection;
         }
     }
 
@@ -120,14 +120,14 @@ class ConnectionManager implements ConnectionManagerInterface, AlwaysPersistentI
         return $this->defaultConnection ?? throw DatabaseException::fromNoDefaultConnectionAvailable();
     }
 
-    public function getDefaultReadConnection(): ConnectionInterface
+    public function getReadConnection(): ConnectionInterface
     {
-        return $this->defaultReadConnection ?? throw DatabaseException::fromNoDefaultReadConnectionAvailable();
+        return $this->readConnection ?? throw DatabaseException::fromNoDefaultReadConnectionAvailable();
     }
 
-    public function getDefaultWriteConnection(): ConnectionInterface
+    public function getWriteConnection(): ConnectionInterface
     {
-        return $this->defaultWriteConnection ?? throw DatabaseException::fromNoDefaultWriteConnectionAvailable();
+        return $this->writeConnection ?? throw DatabaseException::fromNoDefaultWriteConnectionAvailable();
     }
 
     public function getNamedConnection(

@@ -26,6 +26,6 @@ class DefaultReadConnection implements DependencyResolverInterface
 {
     public function resolve(ContainerInterface $container): ConnectionInterface
     {
-        return $container->resolve(ConnectionManagerInterface::class)->getDefaultReadConnection();
+        return $container->resolve(ConnectionManagerInterface::class)->getReadConnection();
     }
 }

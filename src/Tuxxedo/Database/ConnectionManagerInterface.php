@@ -44,12 +44,12 @@ interface ConnectionManagerInterface
     /**
      * @throws DatabaseException
      */
-    public function getDefaultReadConnection(): ConnectionInterface;
+    public function getReadConnection(): ConnectionInterface;
 
     /**
      * @throws DatabaseException
      */
-    public function getDefaultWriteConnection(): ConnectionInterface;
+    public function getWriteConnection(): ConnectionInterface;
 
     /**
      * @throws DatabaseException

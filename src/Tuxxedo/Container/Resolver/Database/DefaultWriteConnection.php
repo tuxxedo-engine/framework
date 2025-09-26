@@ -26,6 +26,6 @@ class DefaultWriteConnection implements DependencyResolverInterface
 {
     public function resolve(ContainerInterface $container): ConnectionInterface
     {
-        return $container->resolve(ConnectionManagerInterface::class)->getDefaultWriteConnection();
+        return $container->resolve(ConnectionManagerInterface::class)->getWriteConnection();
     }
 }
