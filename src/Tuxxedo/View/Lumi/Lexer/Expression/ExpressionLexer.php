@@ -84,7 +84,6 @@ class ExpressionLexer implements ExpressionLexerInterface
                         }
                     }
 
-                    // @todo Look into potential interpolation if "
                     if ($slashes % 2 === 0) {
                         $inQuote = false;
                         $tokens[] = new LiteralToken(
