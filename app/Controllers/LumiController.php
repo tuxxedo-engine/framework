@@ -422,7 +422,8 @@ readonly class LumiController
 
         if ($theme !== null && !isset($exception)) {
             $buffer .= '<h3>Highlighted source code</h3>';
-            $buffer .= '<pre>';
+            $buffer .= '<div style="' . ($selectedHighlightTheme === 'dark' ? 'background: #0D1117; ' : '') . 'padding: 12px;">';
+            $buffer .= '<pre style="margin: 0px;">';
 
             try {
                 $buffer .= $engine->highlightFile(
@@ -435,9 +436,8 @@ readonly class LumiController
             }
 
             $buffer .= '</pre>';
-        }
-
-        if (!isset($exception) && $theme === null) {
+            $buffer .= '</div>';
+        } elseif (!isset($exception)) {
             $viewName = $this->getShortViewName(
                 viewFile: $selectedViewFile,
                 extension: false,

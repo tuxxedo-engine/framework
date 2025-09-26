@@ -31,5 +31,4 @@ enum ColorSlot
     case PIPE;
     case CONCAT;
     case NULL_COALESCE;
-    case KEY;
 }

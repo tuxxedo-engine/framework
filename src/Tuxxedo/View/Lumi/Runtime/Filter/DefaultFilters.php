@@ -19,7 +19,7 @@ use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 
 readonly class DefaultFilters implements FilterProviderInterface
 {
-    private readonly EscaperInterface $escaper;
+    private EscaperInterface $escaper;
 
     public function __construct(
         ?EscaperInterface $escaper = null

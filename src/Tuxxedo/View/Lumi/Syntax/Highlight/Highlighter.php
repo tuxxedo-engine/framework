@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Highlight;
 
+use Tuxxedo\Escaper\Escaper;
+use Tuxxedo\Escaper\EscaperInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\Highlight\Theme\ThemeInterface;
@@ -31,6 +33,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ContinueNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DeclareNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
+use Tuxxedo\View\Lumi\Syntax\Node\FilterOrBitwiseOrNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ForNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
@@ -47,12 +50,16 @@ use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\CharacterSymbol;
 
-// @todo Escape text
-// @todo Fix ForNode k <> v order
-// @todo Colorize array keys?
 class Highlighter implements HighlighterInterface
 {
     private ThemeInterface $theme;
+    private EscaperInterface $escaper;
+
+    public function __construct(
+        ?EscaperInterface $escaper = null
+    ) {
+        $this->escaper = $escaper ?? new Escaper();
+    }
 
     public function highlight(
         ThemeInterface $theme,
@@ -85,12 +92,13 @@ class Highlighter implements HighlighterInterface
             $node instanceof BlockNode => $this->highlightBlockNode($node),
             $node instanceof BreakNode => $this->highlightBreakNode($node),
             $node instanceof CommentNode => $this->highlightCommentNode($node),
-            $node instanceof ConditionalNode => $this->highlightConditionalNode($node),
             $node instanceof ConcatNode => $this->highlightConcatNode($node),
+            $node instanceof ConditionalNode => $this->highlightConditionalNode($node),
             $node instanceof ContinueNode => $this->highlightContinueNode($node),
             $node instanceof DeclareNode => $this->highlightDeclareNode($node),
             $node instanceof DoWhileNode => $this->highlightDoWhileNode($node),
             $node instanceof EchoNode => $this->highlightEchoNode($node),
+            $node instanceof FilterOrBitwiseOrNode => $this->highlightFilterOrBitwiseOrNode($node),
             $node instanceof ForNode => $this->highlightForNode($node),
             $node instanceof FunctionCallNode => $this->highlightFunctionCallNode($node),
             $node instanceof GroupNode => $this->highlightGroupNode($node),
@@ -117,6 +125,16 @@ class Highlighter implements HighlighterInterface
         );
     }
 
+    private function literalString(
+        string $operand,
+    ): string {
+        $quote = \str_contains($operand, '\"')
+            ? '"'
+            : '\'';
+
+        return $quote . $operand . $quote;
+    }
+
     private function highlightArrayAccessNode(
         ArrayAccessNode $node,
     ): string {
@@ -134,7 +152,7 @@ class Highlighter implements HighlighterInterface
         ArrayItemNode $node,
     ): string {
         $key = $node->key !== null
-            ? $this->highlightNode($node->key) . ' ' . $this->dye(ColorSlot::DELIMITER, CharacterSymbol::COLON->symbol()) . ' '
+            ? $this->highlightNode($node->key)
             : '';
 
         return $key .
@@ -166,7 +184,7 @@ class Highlighter implements HighlighterInterface
         return $this->dye(ColorSlot::DELIMITER, '{% ') .
             $this->dye(ColorSlot::KEYWORD, 'set') . ' ' .
             $this->highlightNode($node->name) . ' ' .
-            $this->dye(ColorSlot::OPERATOR, $node->operator->symbol()) . ' ' .
+            $this->dye(ColorSlot::OPERATOR, $this->escaper->html($node->operator->symbol())) . ' ' .
             $this->highlightNode($node->value) .
             $this->dye(ColorSlot::DELIMITER, ' %}');
     }
@@ -181,7 +199,7 @@ class Highlighter implements HighlighterInterface
                     BinarySymbol::NULL_COALESCE => ColorSlot::NULL_COALESCE,
                     default => ColorSlot::OPERATOR,
                 },
-                $node->operator->symbol(),
+                $this->escaper->html($node->operator->symbol()),
             ) . ' ' .
             $this->highlightNode($node->right);
     }
@@ -225,7 +243,7 @@ class Highlighter implements HighlighterInterface
             ColorSlot::COMMENT,
             \sprintf(
                 '{# %s #}',
-                $node->text,
+                $this->escaper->html($node->text),
             ),
         );
     }
@@ -357,12 +375,26 @@ class Highlighter implements HighlighterInterface
             $this->dye(ColorSlot::DELIMITER, ' }}');
     }
 
+    private function highlightFilterOrBitwiseOrNode(
+        FilterOrBitwiseOrNode $node,
+    ): string {
+        if ($node->right instanceof IdentifierNode) {
+            return $this->highlightNode($node->left) . ' ' .
+                $this->dye(ColorSlot::PIPE, BinarySymbol::BITWISE_OR->symbol()) . ' ' .
+                $this->dye(ColorSlot::FILTER_NAME, $node->right->name);
+        }
+
+        return $this->highlightNode($node->left) . ' ' .
+            $this->dye(ColorSlot::OPERATOR, BinarySymbol::BITWISE_OR->symbol()) . ' ' .
+            $this->highlightNode($node->right);
+    }
+
     private function highlightForNode(
         ForNode $node,
     ): string {
         $body = '';
         $key = $node->key !== null
-            ? $this->highlightNode($node->key) . $this->dye(ColorSlot::DELIMITER, CharacterSymbol::COMMA->symbol() . ' ')
+            ? $this->dye(ColorSlot::DELIMITER, CharacterSymbol::COMMA->symbol()) . $this->highlightNode($node->key) . ' '
             : '';
 
         foreach ($node->body as $bodyNode) {
@@ -371,8 +403,8 @@ class Highlighter implements HighlighterInterface
 
         return $this->dye(ColorSlot::DELIMITER, '{% ') .
             $this->dye(ColorSlot::KEYWORD, 'for') . ' ' .
-            $key .
             $this->highlightNode($node->value) . ' ' .
+            $key .
             $this->dye(ColorSlot::KEYWORD, 'in') . ' ' .
             $this->highlightNode($node->iterator) .
             $this->dye(ColorSlot::DELIMITER, ' %}') .
@@ -386,6 +418,9 @@ class Highlighter implements HighlighterInterface
         FunctionCallNode $node,
     ): string {
         $arguments = [];
+        $name = $node->name instanceof IdentifierNode
+            ? $this->dye(ColorSlot::FUNCTION_NAME, $node->name->name)
+            : $this->highlightNode($node->name);
 
         foreach ($node->arguments as $argument) {
             $arguments[] = $this->highlightNode($argument);
@@ -396,7 +431,7 @@ class Highlighter implements HighlighterInterface
             $arguments,
         );
 
-        return $this->highlightNode($node->name) .
+        return $name .
             $this->dye(ColorSlot::DELIMITER, CharacterSymbol::LEFT_PARENTHESIS->symbol()) .
             $arguments .
             $this->dye(ColorSlot::DELIMITER, CharacterSymbol::RIGHT_PARENTHESIS->symbol());
@@ -440,16 +475,7 @@ class Highlighter implements HighlighterInterface
         } elseif ($node->type === NativeType::NULL) {
             return $this->dye(ColorSlot::NULL, $node->operand);
         } else {
-            $operand = $node->operand;
-            $quote = "'";
-
-            if (\str_contains($operand, '\\"')) {
-                $quote = '"';
-            } elseif (\str_contains($operand, "\\'")) {
-                $quote = "'";
-            }
-
-            return $this->dye(ColorSlot::STRING, $quote . $operand . $quote);
+            return $this->dye(ColorSlot::STRING, $this->escaper->html($this->literalString($node->operand)));
         }
     }
 
@@ -491,14 +517,14 @@ class Highlighter implements HighlighterInterface
     private function highlightTextNode(
         TextNode $node,
     ): string {
-        return $this->dye(ColorSlot::TEXT, $node->text);
+        return $this->dye(ColorSlot::TEXT, $this->escaper->html($node->text));
     }
 
     private function highlightUnaryOpNode(
         UnaryOpNode $node,
     ): string {
         $expression = $this->highlightNode($node->operand);
-        $operator = $this->dye(ColorSlot::OPERATOR, $node->operator->symbol());
+        $operator = $this->dye(ColorSlot::OPERATOR, $this->escaper->html($node->operator->symbol()));
 
         return $node->operator->isPost()
             ? $expression . $operator

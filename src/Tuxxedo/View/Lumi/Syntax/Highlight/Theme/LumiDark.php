@@ -37,7 +37,6 @@ class LumiDark implements ThemeInterface
             ColorSlot::PIPE => '#6E7681',
             ColorSlot::CONCAT => '#F2CC60',
             ColorSlot::NULL_COALESCE => '#79C0FF',
-            ColorSlot::KEY => '#FFA657',
         };
     }
 }

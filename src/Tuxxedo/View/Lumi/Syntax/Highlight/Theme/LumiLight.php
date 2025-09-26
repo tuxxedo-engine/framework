@@ -37,7 +37,6 @@ class LumiLight implements ThemeInterface
             ColorSlot::PIPE => '#57606A',
             ColorSlot::CONCAT => '#BF8700',
             ColorSlot::NULL_COALESCE => '#0550AE',
-            ColorSlot::KEY => '#A15C0F',
         };
     }
 }
