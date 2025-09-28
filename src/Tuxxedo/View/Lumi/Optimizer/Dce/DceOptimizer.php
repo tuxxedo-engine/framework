@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Optimizer\Dce;
 
 use Tuxxedo\View\Lumi\Optimizer\AbstractOptimizer;
+use Tuxxedo\View\Lumi\Optimizer\Scope\Lattice;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\NativeType;
@@ -209,10 +210,13 @@ class DceOptimizer extends AbstractOptimizer
     private function evaluateIdentifier(
         IdentifierNode $node,
     ): DceEvaluateResult {
-        $value = $this->scope->get($node->name)->value;
+        $variable = $this->scope->get($node->name);
 
-        if ($value instanceof LiteralNode) {
-            return $this->evaluateLiteral($value);
+        if (
+            $variable->lattice !== Lattice::UNDEF &&
+            $variable->value instanceof LiteralNode
+        ) {
+            return $this->evaluateLiteral($variable->value);
         }
 
         return DceEvaluateResult::CANNOT_DETERMINE;
