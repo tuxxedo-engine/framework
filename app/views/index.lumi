@@ -12,7 +12,6 @@
 
 <main class="mx-auto max-w-7xl px-6">
     <section class="mx-auto grid max-w-3xl place-items-center gap-6 py-16 text-center md:py-24">
-        <span class="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-600 dark:border-slate-800 dark:text-slate-300">Tuxxedo Engine {{ engineVersion }} • PHP {{ phpVersion }}</span>
         <h1 class="text-pretty text-4xl font-extrabold tracking-tight md:text-6xl">Tuxxedo Engine is running</h1>
         <div class="flex flex-col items-center gap-3 sm:flex-row">
             <a href="https://www.tuxxedo.dev/docs/"
@@ -48,14 +47,17 @@
                 <h3 class="text-base font-semibold">View (Lumi):</h3>
                 <pre class="mt-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800 p-4 text-sm leading-6 bg-[#0b0f14] text-[#e6edf3]"><code
                             class="language-lumi"><span style="color:#C9D1D9">Hello</span> <span
-                                style="color:#6E7681">{{ '{{' }} </span> <span style="color:#C9D1D9">name</span> <span style="color:#6E7681"> }}</span></code></pre>
+                                style="color:#6E7681">{{ '{{' }}</span> <span style="color:#C9D1D9">name</span> <span style="color:#6E7681">}}</span></code></pre>
+                <h3 class="text-base font-semibold pt-6">Output:</h3>
+                <pre class="mt-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800 p-4 text-sm leading-6 bg-[#0b0f14] text-[#e6edf3]"><code
+                            class="language-lumi"><span style="color:#C9D1D9">Hello World</span></code></pre>
             </div>
         </div>
     </section>
 </main>
 
 <footer class="border-t border-slate-200/60 py-10 text-center text-sm text-slate-500 dark:border-slate-800/60 dark:text-slate-400">
-    <div class="mx-auto max-w-7xl px-6">&copy; 2025 {% if appName %}{{ appName }} {% if appVersion %}{{ appVersion }}{% endif%}{% endif%} • Powered by Tuxxedo Engine</div>
+    <div class="mx-auto max-w-7xl px-6">&copy; 2025 {% if appName %}{{ appName }} {% if appVersion %}{{ appVersion }}{% endif%}{% endif%} • Powered by Tuxxedo Engine {{ engineVersion }} • PHP {{ phpVersion }}</div>
 </footer>
 </body>
 </html>

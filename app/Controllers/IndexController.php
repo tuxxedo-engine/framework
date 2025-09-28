@@ -23,6 +23,7 @@ readonly class IndexController
     #[Route\Get(uri: '/')]
     public function hello(): ViewInterface
     {
+        // @todo Cleanup index view
         return new View(
             name: 'index',
             scope: [
