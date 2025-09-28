@@ -22,10 +22,10 @@ use Tuxxedo\Database\Driver\ConnectionInterface;
  * @implements DependencyResolverInterface<ConnectionInterface>
  */
 #[\Attribute(\Attribute::TARGET_PARAMETER)]
-class DefaultReadConnection implements DependencyResolverInterface
+class WriteConnection implements DependencyResolverInterface
 {
     public function resolve(ContainerInterface $container): ConnectionInterface
     {
-        return $container->resolve(ConnectionManagerInterface::class)->getReadConnection();
+        return $container->resolve(ConnectionManagerInterface::class)->getWriteConnection();
     }
 }

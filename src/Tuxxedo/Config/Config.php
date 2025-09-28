@@ -21,7 +21,7 @@ class Config implements ConfigInterface
      * @param array<mixed> $directives
      */
     final public function __construct(
-        protected array $directives = [],
+        #[\SensitiveParameter] protected array $directives = [],
     ) {
     }
 

@@ -13,9 +13,18 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Driver\Pdo\Sqlite;
 
+use Tuxxedo\Database\Driver\DefaultDriver;
 use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
 
-// @todo Implement
 class PdoSqliteConnection extends AbstractPdoConnection
 {
+    protected function getDriverName(): DefaultDriver
+    {
+        return DefaultDriver::PDO_SQLITE;
+    }
+
+    protected function getDsn(): string
+    {
+        // @todo Implement getDsn() method.
+    }
 }

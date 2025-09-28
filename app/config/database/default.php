@@ -160,6 +160,9 @@ return [
      * DefaultDriver::PDO_SQLITE                - This value must be a path to the sqlite database file
      * DefaultDriver::SQLITE                    - This value must be a path to the sqlite database file
      *
+     * Note, this can be empty if the connection will not operate on a specific
+     * database
+     *
      * @type string
      */
     'database' => '',
@@ -253,6 +256,8 @@ return [
          * The SSL mode for this database connection. This value depends on the database
          * server system
          *
+         * DefaultDriver::MYSQL                 - This value has no effect
+         *
          * @type string
          */
         'mode' => '',
@@ -297,6 +302,8 @@ return [
          * database.default.ssl.verifyHost
          *
          * Whether to verify the host certificate matches the targeted host
+         *
+         * DefaultDriver::MYSQL                 - This value has no effect
          *
          * @type bool
          */

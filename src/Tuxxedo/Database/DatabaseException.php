@@ -15,6 +15,15 @@ namespace Tuxxedo\Database;
 
 class DatabaseException extends \Exception
 {
+    public function __construct(
+        #[\SensitiveParameter] string $message,
+        #[\SensitiveParameter] public readonly string $sqlState = '00000',
+    ) {
+        parent::__construct(
+            message: $message,
+        );
+    }
+
     public static function fromUnknownNamedConnection(
         string $name,
     ): self {
@@ -33,17 +42,64 @@ class DatabaseException extends \Exception
         );
     }
 
-    public static function fromNoDefaultReadConnectionAvailable(): self
+    public static function fromNoReadConnectionAvailable(): self
     {
         return new self(
-            message: 'Unable to find connection: No default read connection is available',
+            message: 'Unable to find connection: No read connection is available',
         );
     }
 
-    public static function fromNoDefaultWriteConnectionAvailable(): self
+    public static function fromNoWriteConnectionAvailable(): self
     {
         return new self(
-            message: 'Unable to find connection: No default write connection is available',
+            message: 'Unable to find connection: No write connection is available',
+        );
+    }
+
+    public static function fromCannotInitializeNativeDriver(): self
+    {
+        return new self(
+            message: 'Unable to initialize native driver from PHP',
+        );
+    }
+
+    public static function fromCannotConnect(
+        string|int $code,
+        string $error,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot connect to database: %s (code: %s)',
+                $error,
+                $code,
+            ),
+        );
+    }
+
+    public static function fromError(
+        string $sqlState,
+        string|int $code,
+        string $error,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Database error: %s (code: %s, sql state: %s)',
+                $error,
+                $code,
+                $sqlState,
+            ),
+            sqlState: $sqlState,
+        );
+    }
+
+    public static function fromValueOverflow(
+        string $value,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot represent "%s" as an integer',
+                $value,
+            ),
         );
     }
 }

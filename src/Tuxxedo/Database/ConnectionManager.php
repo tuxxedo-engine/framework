@@ -122,12 +122,12 @@ class ConnectionManager implements ConnectionManagerInterface, AlwaysPersistentI
 
     public function getReadConnection(): ConnectionInterface
     {
-        return $this->readConnection ?? throw DatabaseException::fromNoDefaultReadConnectionAvailable();
+        return $this->readConnection ?? throw DatabaseException::fromNoReadConnectionAvailable();
     }
 
     public function getWriteConnection(): ConnectionInterface
     {
-        return $this->writeConnection ?? throw DatabaseException::fromNoDefaultWriteConnectionAvailable();
+        return $this->writeConnection ?? throw DatabaseException::fromNoWriteConnectionAvailable();
     }
 
     public function getNamedConnection(

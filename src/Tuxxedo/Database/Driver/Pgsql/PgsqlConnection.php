@@ -16,17 +16,113 @@ namespace Tuxxedo\Database\Driver\Pgsql;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\Driver\ConnectionInterface;
+use Tuxxedo\Database\Driver\DefaultDriver;
 
-// @todo Implement
 class PgsqlConnection implements ConnectionInterface
 {
     public readonly string $name;
     public readonly ConnectionRole $role;
+    public readonly DefaultDriver $driver;
 
     public function __construct(
         ConfigInterface $config,
     ) {
         $this->name = $config->getString('name');
         $this->role = $config->getEnum('role', ConnectionRole::class);
+        $this->driver = DefaultDriver::PGSQL;
+    }
+
+    public function getDriverInstance(): object
+    {
+        // @todo Implement getDriverInstance() method.
+    }
+
+    public function connect(
+        bool $reconnect = false,
+    ): void {
+        // @todo Implement connect() method.
+    }
+
+    public function close(): void
+    {
+        // @todo Implement close() method.
+    }
+
+    public function isConnected(): bool
+    {
+        // @todo Implement isConnected() method.
+    }
+
+    public function ping(): bool
+    {
+        // @todo Implement ping() method.
+    }
+
+    public function serverVersion(): string
+    {
+        // @todo Implement serverVersion() method.
+    }
+
+    public function escape(
+        string $value,
+    ): string {
+        // @todo Implement escape() method.
+    }
+
+    public function lastInsertIdAsString(
+        ?string $sequence = null,
+    ): ?string {
+        // @todo Implement lastInsertIdAsString() method.
+    }
+
+    public function lastInsertIdAsInt(
+        ?string $sequence = null,
+    ): ?int {
+        // @todo Implement lastInsertIdAsInt() method.
+    }
+
+    public function begin(): void
+    {
+        // @todo Implement begin() method.
+    }
+
+    public function commit(): void
+    {
+        // @todo Implement commit() method.
+    }
+
+    public function rollback(): void
+    {
+        // @todo Implement rollback() method.
+    }
+
+    public function inTransaction(): bool
+    {
+        // @todo Implement inTransaction() method.
+    }
+
+    public function transaction(
+        \Closure $transaction,
+    ): void {
+        // @todo Implement transaction() method.
+    }
+
+    public function prepare(
+        string $sql,
+    ): PgsqlStatement {
+        // @todo Implement prepare() method.
+    }
+
+    public function execute(
+        string $sql,
+        array $parameters = [],
+    ): PgsqlResultSet {
+        // @todo Implement execute() method.
+    }
+
+    public function query(
+        string $sql,
+    ): PgsqlResultSet {
+        // @todo Implement query() method.
     }
 }
