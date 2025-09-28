@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Driver\Pdo\Mysql;
 
+use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Database\Driver\DefaultDriver;
 use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
 
@@ -23,8 +24,9 @@ class PdoMysqlConnection extends AbstractPdoConnection
         return DefaultDriver::PDO_MYSQL;
     }
 
-    protected function getDsn(): string
-    {
+    protected function getDsn(
+        ConfigInterface $config,
+    ): string {
         // @todo Implement getDsn() method.
     }
 }

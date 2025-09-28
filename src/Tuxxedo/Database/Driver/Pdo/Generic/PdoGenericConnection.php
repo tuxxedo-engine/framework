@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Driver\Pdo\Generic;
 
+use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Database\Driver\DefaultDriver;
 use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
 
@@ -23,8 +24,9 @@ class PdoGenericConnection extends AbstractPdoConnection
         return DefaultDriver::PDO;
     }
 
-    protected function getDsn(): string
-    {
-        // @todo Implement getDsn() method.
+    protected function getDsn(
+        ConfigInterface $config,
+    ): string {
+        return $config->getString('dsn');
     }
 }

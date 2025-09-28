@@ -33,7 +33,10 @@ abstract class AbstractPdoConnection implements ConnectionInterface
     }
 
     abstract protected function getDriverName(): DefaultDriver|string;
-    abstract protected function getDsn(): string;
+
+    abstract protected function getDsn(
+        ConfigInterface $config,
+    ): string;
 
     public function getDriverInstance(): object
     {

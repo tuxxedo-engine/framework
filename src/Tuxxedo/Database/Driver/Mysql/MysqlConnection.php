@@ -291,6 +291,8 @@ class MysqlConnection implements ConnectionInterface
     public function prepare(
         string $sql,
     ): MysqlStatement {
+        $this->connectCheck();
+
         return new MysqlStatement(
             connection: $this,
             sql: $sql,
