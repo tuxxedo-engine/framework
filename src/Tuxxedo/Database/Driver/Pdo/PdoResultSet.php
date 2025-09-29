@@ -164,8 +164,7 @@ class PdoResultSet implements ResultSetInterface
                 throw DatabaseException::fromCannotFetch();
             }
 
-            /** @var array<int, mixed> */
-            return $this->buffer[$this->pointer++];
+            return \array_values($this->buffer[$this->pointer++]);
         }
 
         $this->endedBuffering = true;
