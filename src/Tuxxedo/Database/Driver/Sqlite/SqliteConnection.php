@@ -104,7 +104,15 @@ class SqliteConnection implements ConnectionInterface
     public function transaction(
         \Closure $transaction,
     ): void {
-        // @todo Implement transaction() method.
+        try {
+            $this->begin();
+            $transaction($this);
+            $this->commit();
+        } catch (\Exception $exception) {
+            $this->rollback();
+
+            throw $exception;
+        }
     }
 
     public function prepare(
@@ -117,7 +125,7 @@ class SqliteConnection implements ConnectionInterface
         string $sql,
         array $parameters = [],
     ): SqliteResultSet {
-        // @todo Implement execute() method.
+        return $this->prepare($sql)->execute($parameters);
     }
 
     public function query(

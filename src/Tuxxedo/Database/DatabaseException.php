@@ -92,14 +92,26 @@ class DatabaseException extends \Exception
         );
     }
 
-    public static function fromValueOverflow(
-        string $value,
-    ): self {
+    // @todo Handle this better
+    public static function fromResultTooBig(): self
+    {
         return new self(
-            message: \sprintf(
-                'Cannot represent "%s" as an integer',
-                $value,
-            ),
+            message: 'The returned result is too big to handle',
+        );
+    }
+
+    public static function fromEmptyResultSet(): self
+    {
+        return new self(
+            message: 'Cannot fetch from this result set as it is empty',
+        );
+    }
+
+    // @todo Handle this better with a better error message
+    public static function fromCannotFetch(): self
+    {
+        return new self(
+            message: 'Cannot fetch row from result set',
         );
     }
 }

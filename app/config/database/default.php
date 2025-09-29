@@ -59,7 +59,7 @@ return [
      *
      * @type DefaultDriver
      */
-    'driver' => DefaultDriver::MYSQL,
+    'driver' => DefaultDriver::PDO_SQLITE,
 
     /**
      * database.default.class
@@ -83,6 +83,8 @@ return [
      * DefaultDriver::PDO_SQLITE
      * DefaultDriver::PGSQL
      *
+     * For DefaultDriver::PDO, this value is always required
+     *
      * @type string
      */
     'dsn' => '',
@@ -98,7 +100,7 @@ return [
      *
      * @type string
      */
-    'host' => '',
+    'host' => 'localhost',
 
     /**
      * database.default.port
@@ -121,8 +123,8 @@ return [
      * Unix socket of where the database server is located, this will override the
      * database.default.host and database.default.port if used
      *
-     * This value is only supported by DefaultDriver::MYSQL, if no socket is used then
-     * this should be commented out
+     * This value is only supported by DefaultDriver::MYSQL and is only active if
+     * it has a value
      *
      * @type string
      */
@@ -138,7 +140,7 @@ return [
      *
      * @type string
      */
-    'username' => '',
+    'username' => 'root',
 
     /**
      * database.default.password

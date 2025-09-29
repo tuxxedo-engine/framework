@@ -25,25 +25,28 @@ class MysqlConnection implements ConnectionInterface
     public readonly ConnectionRole $role;
     public readonly DefaultDriver $driver;
 
-    private readonly \mysqli $mysqli;
-    private bool $connected = false;
-    private \Closure $connector;
+    private \mysqli $mysqli;
+    private readonly \Closure $connector;
+
+    private bool $inTransaction = false;
 
     public function __construct(
         ConfigInterface $config,
     ) {
-        $mysqli = \mysqli_init();
-
-        if ($mysqli === false) {
-            throw DatabaseException::fromCannotInitializeNativeDriver();
-        }
-
         $this->name = $config->getString('name');
         $this->role = $config->getEnum('role', ConnectionRole::class);
         $this->driver = DefaultDriver::MYSQL;
-        $this->mysqli = $mysqli;
 
         $this->connector = function () use ($config): void {
+            if (!isset($this->mysqli)) {
+                $mysqli = \mysqli_init();
+
+                if ($mysqli === false) {
+                    throw DatabaseException::fromCannotInitializeNativeDriver();
+                }
+                $this->mysqli = $mysqli;
+            }
+
             if ($config->has('options.timeout')) {
                 $timeout = $config->getInt('options.timeout');
 
@@ -51,7 +54,7 @@ class MysqlConnection implements ConnectionInterface
                 $this->mysqli->options(\MYSQLI_OPT_READ_TIMEOUT, $timeout);
             }
 
-            if ($config->has('unixSocket')) {
+            if ($config->isString('unixSocket')) {
                 $this->mysqli->real_connect(
                     socket: $config->getString('unixSocket'),
                 );
@@ -78,35 +81,35 @@ class MysqlConnection implements ConnectionInterface
                     }
                 }
 
-                $this->mysqli->real_connect(
-                    hostname: $config->getBool('options.persistent')
-                        ? 'p:' . $config->getString('host')
-                        : $config->getString('host'),
-                    username: $config->getString('user'),
-                    password: $config->getString('password'),
-                    database: $config->has('database')
-                        ? $config->getString('database')
-                        : null,
-                    port: $config->has('port')
-                        ? $config->getInt('port')
-                        : null,
-                    flags: $flags,
-                );
-            }
-
-            if ($this->mysqli->connect_errno !== 0) {
-                throw DatabaseException::fromCannotConnect(
-                    code: $this->mysqli->connect_errno,
-                    error: $this->mysqli->connect_error ?? '',
-                );
+                try {
+                    $this->mysqli->real_connect(
+                        hostname: $config->getBool('options.persistent')
+                            ? 'p:' . $config->getString('host')
+                            : $config->getString('host'),
+                        username: $config->getString('username'),
+                        password: $config->getString('password'),
+                        database: $config->has('database')
+                            ? $config->getString('database')
+                            : null,
+                        port: $config->has('port')
+                            ? $config->getInt('port')
+                            : null,
+                        flags: $flags,
+                    );
+                } finally {
+                    if ($this->mysqli->connect_errno !== 0) {
+                        throw DatabaseException::fromCannotConnect(
+                            code: $this->mysqli->connect_errno,
+                            error: $this->mysqli->connect_error ?? 'Connection error',
+                        );
+                    }
+                }
             }
 
             $this->mysqli->set_charset($config->getString('options.charset'));
-
-            $this->connected = true;
         };
 
-        if ($config->getBool('options.lazy')) {
+        if (!$config->getBool('options.lazy')) {
             $this->connect();
         }
     }
@@ -116,9 +119,27 @@ class MysqlConnection implements ConnectionInterface
      */
     private function connectCheck(): void
     {
-        if (!$this->connected) {
+        if (!isset($this->mysqli)) {
             $this->connect();
         }
+    }
+
+    /**
+     * @throws DatabaseException
+     */
+    private function throwFromMysqliException(
+        \mysqli_sql_exception $exception,
+    ): never {
+        throw DatabaseException::fromError(
+            sqlState: $exception->getSqlState(),
+            code: $exception->getCode(),
+            error: $exception->getMessage(),
+        );
+    }
+
+    public function isMariaDb(): bool
+    {
+        return \str_contains(\strtolower($this->serverVersion()), 'mariadb');
     }
 
     public function getDriverInstance(): \mysqli
@@ -129,23 +150,23 @@ class MysqlConnection implements ConnectionInterface
     public function connect(
         bool $reconnect = false,
     ): void {
-        if ($reconnect || !$this->connected) {
+        if ($reconnect || !isset($this->mysqli)) {
             ($this->connector)();
         }
     }
 
     public function close(): void
     {
-        if ($this->connected) {
+        if (isset($this->mysqli)) {
             $this->mysqli->close();
 
-            $this->connected = false;
+            unset($this->mysqli);
         }
     }
 
     public function isConnected(): bool
     {
-        return $this->connected;
+        return isset($this->mysqli);
     }
 
     public function ping(): bool
@@ -184,14 +205,6 @@ class MysqlConnection implements ConnectionInterface
         return $this->mysqli->server_info;
     }
 
-    public function escape(
-        string $value,
-    ): string {
-        $this->connectCheck();
-
-        return $this->mysqli->real_escape_string($value);
-    }
-
     public function lastInsertIdAsString(
         ?string $sequence = null,
     ): ?string {
@@ -224,13 +237,15 @@ class MysqlConnection implements ConnectionInterface
     {
         $this->connectCheck();
 
-        if (!$this->mysqli->begin_transaction()) {
+        if (!$this->mysqli->begin_transaction(\MYSQLI_TRANS_START_READ_WRITE)) {
             throw DatabaseException::fromError(
                 sqlState: $this->mysqli->sqlstate,
                 code: $this->mysqli->errno,
                 error: $this->mysqli->error,
             );
         }
+
+        $this->inTransaction = true;
     }
 
     public function commit(): void
@@ -244,6 +259,8 @@ class MysqlConnection implements ConnectionInterface
                 error: $this->mysqli->error,
             );
         }
+
+        $this->inTransaction = false;
     }
 
     public function rollback(): void
@@ -257,21 +274,13 @@ class MysqlConnection implements ConnectionInterface
                 error: $this->mysqli->error,
             );
         }
+
+        $this->inTransaction = false;
     }
 
     public function inTransaction(): bool
     {
-        $this->connectCheck();
-
-        $result = $this->mysqli->query('SELECT @@session.in_transaction');
-
-        if (!$result instanceof \mysqli_result) {
-            return false;
-        }
-
-        $row = $result->fetch_row();
-
-        return isset($row[0]) && $row[0] === '1';
+        return $this->inTransaction;
     }
 
     public function transaction(
@@ -311,7 +320,11 @@ class MysqlConnection implements ConnectionInterface
     ): MysqlResultSet {
         $this->connectCheck();
 
-        $result = $this->mysqli->query($sql);
+        try {
+            $result = $this->mysqli->query($sql);
+        } catch (\mysqli_sql_exception $exception) {
+            $this->throwFromMysqliException($exception);
+        }
 
         if (\is_bool($result)) {
             if ($result === false) {
@@ -325,21 +338,9 @@ class MysqlConnection implements ConnectionInterface
             $result = null;
         }
 
-        $affectedRows = $this->mysqli->affected_rows;
-
-        if (\is_string($affectedRows)) {
-            throw DatabaseException::fromValueOverflow(
-                value: $affectedRows,
-            );
-        }
-
-        if ($affectedRows < 0) {
-            $affectedRows = 0;
-        }
-
         return new MysqlResultSet(
             result: $result,
-            affectedRows: $affectedRows,
+            affectedRows: $this->mysqli->affected_rows,
         );
     }
 }

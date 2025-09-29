@@ -89,6 +89,16 @@ class Config implements ConfigInterface
         return true;
     }
 
+    public function isNull(
+        string $path,
+    ): bool {
+        try {
+            return $this->path($path) === null;
+        } catch (ConfigException) {
+            return false;
+        }
+    }
+
     public function path(
         string $path,
     ): mixed {
@@ -149,6 +159,16 @@ class Config implements ConfigInterface
         return $value;
     }
 
+    public function isInt(
+        string $path,
+    ): bool {
+        try {
+            return \is_int($this->path($path));
+        } catch (ConfigException) {
+            return false;
+        }
+    }
+
     public function getBool(
         string $path,
     ): bool {
@@ -163,6 +183,16 @@ class Config implements ConfigInterface
         }
 
         return $value;
+    }
+
+    public function isBool(
+        string $path,
+    ): bool {
+        try {
+            return \is_bool($this->path($path));
+        } catch (ConfigException) {
+            return false;
+        }
     }
 
     public function getFloat(
@@ -181,6 +211,16 @@ class Config implements ConfigInterface
         return $value;
     }
 
+    public function isFloat(
+        string $path,
+    ): bool {
+        try {
+            return \is_float($this->path($path));
+        } catch (ConfigException) {
+            return false;
+        }
+    }
+
     public function getString(
         string $path,
     ): string {
@@ -195,6 +235,16 @@ class Config implements ConfigInterface
         }
 
         return $value;
+    }
+
+    public function isString(
+        string $path,
+    ): bool {
+        try {
+            return \is_int($this->path($path));
+        } catch (ConfigException) {
+            return false;
+        }
     }
 
     /**

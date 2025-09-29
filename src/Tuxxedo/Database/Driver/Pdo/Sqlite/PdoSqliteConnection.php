@@ -27,6 +27,10 @@ class PdoSqliteConnection extends AbstractPdoConnection
     protected function getDsn(
         ConfigInterface $config,
     ): string {
+        if ($config->getString('dsn') !== '') {
+            return $config->getString('dsn');
+        }
+
         return \sprintf(
             'sqlite:%s',
             $config->getString('database'),

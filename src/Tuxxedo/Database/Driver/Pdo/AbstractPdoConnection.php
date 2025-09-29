@@ -15,6 +15,7 @@ namespace Tuxxedo\Database\Driver\Pdo;
 
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Database\ConnectionRole;
+use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Driver\DefaultDriver;
 
@@ -23,6 +24,8 @@ abstract class AbstractPdoConnection implements ConnectionInterface
     public readonly string $name;
     public readonly ConnectionRole $role;
     public readonly DefaultDriver|string $driver;
+    private \PDO $pdo;
+    private readonly \Closure $connector;
 
     public function __construct(
         ConfigInterface $config,
@@ -30,6 +33,27 @@ abstract class AbstractPdoConnection implements ConnectionInterface
         $this->name = $config->getString('name');
         $this->role = $config->getEnum('role', ConnectionRole::class);
         $this->driver = static::getDriverName();
+        $this->connector = function () use ($config): void {
+            try {
+                // @todo Check that all config options are supported
+                $this->pdo = new \PDO(
+                    dsn: static::getDsn($config),
+                    username: $config->getString('username'),
+                    password: $config->getString('password'),
+                    options: [
+                        \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                        \PDO::ATTR_EMULATE_PREPARES => true,
+                        \PDO::ATTR_PERSISTENT => $config->getBool('options.persistent'),
+                    ],
+                );
+            } catch (\PDOException $exception) {
+                $this->throwFromPdoException($exception);
+            }
+        };
+
+        if (!$config->getBool('options.lazy')) {
+            $this->connect();
+        }
     }
 
     abstract protected function getDriverName(): DefaultDriver|string;
@@ -38,97 +62,212 @@ abstract class AbstractPdoConnection implements ConnectionInterface
         ConfigInterface $config,
     ): string;
 
-    public function getDriverInstance(): object
+    /**
+     * @throws DatabaseException
+     */
+    private function connectCheck(): void
     {
-        // @todo Implement getDriverInstance() method.
+        if (!isset($this->pdo)) {
+            $this->connect();
+        }
+    }
+
+    /**
+     * @throws DatabaseException
+     */
+    private function throwFromPdoException(
+        \PDOException $exception,
+    ): never {
+        /** @var array{0: string, 1: string|int, 2: string} $errorInfo */
+        $errorInfo = $exception->errorInfo ?? [
+            'HY000',
+            $exception->getCode(),
+            $exception->getMessage(),
+        ];
+
+        throw DatabaseException::fromError(
+            sqlState: $errorInfo[0],
+            code: $errorInfo[1],
+            error: $errorInfo[2],
+        );
+    }
+
+    private function throwFromErrorInfo(): never
+    {
+        /** @var array{0: string, 1: string|int, 2: string} $errorInfo */
+        $errorInfo = $this->pdo->errorInfo();
+
+        throw DatabaseException::fromError(
+            sqlState: $errorInfo[0],
+            code: $errorInfo[1],
+            error: $errorInfo[2],
+        );
+    }
+
+    public function getDriverInstance(): \PDO
+    {
+        return $this->pdo;
     }
 
     public function connect(
         bool $reconnect = false,
     ): void {
-        // @todo Implement connect() method.
+        if ($reconnect || !isset($this->pdo)) {
+            ($this->connector)();
+        }
     }
 
     public function close(): void
     {
-        // @todo Implement close() method.
+        unset($this->pdo);
     }
 
     public function isConnected(): bool
     {
-        // @todo Implement isConnected() method.
+        return isset($this->pdo);
     }
 
     public function ping(): bool
     {
-        // @todo Implement ping() method.
+        try {
+            $this->connectCheck();
+
+            $this->pdo->query('SELECT 1');
+
+            return true;
+        } catch (\Exception) {
+            return false;
+        }
     }
 
     public function serverVersion(): string
     {
-        // @todo Implement serverVersion() method.
-    }
+        $this->connectCheck();
 
-    public function escape(
-        string $value,
-    ): string {
-        // @todo Implement escape() method.
+        /** @var string */
+        return $this->pdo->getAttribute(\PDO::ATTR_SERVER_VERSION);
     }
 
     public function lastInsertIdAsString(
         ?string $sequence = null,
     ): ?string {
-        // @todo Implement lastInsertIdAsString() method.
+        $this->connectCheck();
+
+        try {
+            $id = $this->pdo->lastInsertId($sequence);
+
+            if ($id === false) {
+                $this->throwFromErrorInfo();
+            }
+        } catch (\PDOException $exception) {
+            $this->throwFromPdoException($exception);
+        }
+
+        return $id;
     }
 
     public function lastInsertIdAsInt(
         ?string $sequence = null,
     ): ?int {
-        // @todo Implement lastInsertIdAsInt() method.
+        $this->connectCheck();
+
+        try {
+            $id = $this->pdo->lastInsertId($sequence);
+
+            if ($id === false) {
+                $this->throwFromErrorInfo();
+            }
+        } catch (\PDOException $exception) {
+            $this->throwFromPdoException($exception);
+        }
+
+        return (int) $id;
     }
 
     public function begin(): void
     {
-        // @todo Implement begin() method.
+        $this->connectCheck();
+
+        if (!$this->pdo->beginTransaction()) {
+            $this->throwFromErrorInfo();
+        }
     }
 
     public function commit(): void
     {
-        // @todo Implement commit() method.
+        $this->connectCheck();
+
+        if (!$this->pdo->commit()) {
+            $this->throwFromErrorInfo();
+        }
     }
 
     public function rollback(): void
     {
-        // @todo Implement rollback() method.
+        $this->connectCheck();
+
+        if (!$this->pdo->rollBack()) {
+            $this->throwFromErrorInfo();
+        }
     }
 
     public function inTransaction(): bool
     {
-        // @todo Implement inTransaction() method.
+        $this->connectCheck();
+
+        return $this->pdo->inTransaction();
     }
 
     public function transaction(
         \Closure $transaction,
     ): void {
-        // @todo Implement transaction() method.
+        try {
+            $this->begin();
+            $transaction($this);
+            $this->commit();
+        } catch (\Exception $exception) {
+            $this->rollback();
+
+            throw $exception;
+        }
     }
 
     public function prepare(
         string $sql,
     ): PdoStatement {
-        // @todo Implement prepare() method.
+        $this->connectCheck();
+
+        return new PdoStatement(
+            connection: $this,
+            sql: $sql,
+        );
     }
 
     public function execute(
         string $sql,
         array $parameters = [],
     ): PdoResultSet {
-        // @todo Implement execute() method.
+        return $this->prepare($sql)->execute($parameters);
     }
 
     public function query(
         string $sql,
     ): PdoResultSet {
-        // @todo Implement query() method.
+        $this->connectCheck();
+
+        try {
+            $result = $this->pdo->query($sql);
+
+            if ($result === false) {
+                $this->throwFromErrorInfo();
+            }
+
+            return new PdoResultSet(
+                result: $result,
+                affectedRows: $result->rowCount(),
+            );
+        } catch (\PDOException $exception) {
+            $this->throwFromPdoException($exception);
+        }
     }
 }

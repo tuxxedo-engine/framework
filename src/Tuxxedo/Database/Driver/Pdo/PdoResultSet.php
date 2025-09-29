@@ -13,53 +13,213 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Driver\Pdo;
 
+use Tuxxedo\Database\DatabaseException;
+use Tuxxedo\Database\Driver\ResultRow;
+use Tuxxedo\Database\Driver\ResultRowInterface;
 use Tuxxedo\Database\Driver\ResultSetInterface;
 
 class PdoResultSet implements ResultSetInterface
 {
+    private int $pointer = 0;
+    private bool $endedBuffering = false;
+
+    /**
+     * @var array<int, mixed[]>
+     */
+    private array $buffer = [];
+
     public function __construct(
         private readonly ?\PDOStatement $result,
         public readonly int $affectedRows = 0,
     ) {
     }
 
-    public function fetchAll(): array
+    private function increaseBuffer(): bool
     {
-        // @todo Implement fetchAll() method.
+        if ($this->endedBuffering) {
+            return false;
+        }
+
+        $next = $this->fetchNext();
+
+        if ($next === null) {
+            $this->endedBuffering = true;
+
+            return false;
+        }
+
+        $this->buffer[] = $next;
+
+        return true;
     }
 
-    public function fetch(): \Generator
+    /**
+     * @return mixed[]|null
+     */
+    private function fetchNext(): ?array
     {
-        // @todo Implement fetch() method.
+        if ($this->result === null) {
+            return null;
+        }
+
+        $row = $this->result->fetch(\PDO::FETCH_ASSOC);
+
+        if (!\is_array($row)) {
+            return null;
+        }
+
+        return $row;
+    }
+
+    public function fetchAllAsArray(): array
+    {
+        $rows = [];
+
+        foreach ($this as $row) {
+            $rows[] = $row;
+        }
+
+        return $rows;
+    }
+
+    public function fetchAllAsGenerator(): \Generator
+    {
+        foreach ($this as $row) {
+            yield $row;
+        }
+    }
+
+    public function fetch(): ResultRowInterface
+    {
+        return $this->fetchObject();
+    }
+
+    public function fetchObject(): ResultRowInterface
+    {
+        if ($this->result === null) {
+            throw DatabaseException::fromEmptyResultSet();
+        }
+
+        if ($this->endedBuffering || $this->increaseBuffer()) {
+            if (!\array_key_exists($this->pointer, $this->buffer)) {
+                throw DatabaseException::fromCannotFetch();
+            }
+
+            return new ResultRow(
+                properties: $this->buffer[$this->pointer++],
+            );
+        }
+
+        $this->endedBuffering = true;
+
+        throw DatabaseException::fromCannotFetch();
+    }
+
+    public function fetchArray(): array
+    {
+        if ($this->result === null) {
+            throw DatabaseException::fromEmptyResultSet();
+        }
+
+        if ($this->endedBuffering || $this->increaseBuffer()) {
+            if (!\array_key_exists($this->pointer, $this->buffer)) {
+                throw DatabaseException::fromCannotFetch();
+            }
+
+            return $this->buffer[$this->pointer++];
+        }
+
+        $this->endedBuffering = true;
+
+        throw DatabaseException::fromCannotFetch();
+    }
+
+    public function fetchAssoc(): array
+    {
+        if ($this->result === null) {
+            throw DatabaseException::fromEmptyResultSet();
+        }
+
+        if ($this->endedBuffering || $this->increaseBuffer()) {
+            if (!\array_key_exists($this->pointer, $this->buffer)) {
+                throw DatabaseException::fromCannotFetch();
+            }
+
+            return $this->buffer[$this->pointer++];
+        }
+
+        $this->endedBuffering = true;
+
+        throw DatabaseException::fromCannotFetch();
+    }
+
+    public function fetchRow(): array
+    {
+        if ($this->result === null) {
+            throw DatabaseException::fromEmptyResultSet();
+        }
+
+        if ($this->endedBuffering || $this->increaseBuffer()) {
+            if (!\array_key_exists($this->pointer, $this->buffer)) {
+                throw DatabaseException::fromCannotFetch();
+            }
+
+            /** @var array<int, mixed> */
+            return $this->buffer[$this->pointer++];
+        }
+
+        $this->endedBuffering = true;
+
+        throw DatabaseException::fromCannotFetch();
+    }
+
+    public function free(): void
+    {
+        $this->pointer = 0;
+        $this->buffer = [];
+        $this->endedBuffering = false;
     }
 
     public function count(): int
     {
-        // @todo Implement count() method.
+        if ($this->endedBuffering) {
+            return \sizeof($this->buffer);
+        }
+
+        while ($this->increaseBuffer()) {
+        }
+
+        return \sizeof($this->buffer);
     }
 
-    public function current(): mixed
+    public function current(): ResultRowInterface
     {
-        // @todo Implement current() method.
+        return new ResultRow(
+            properties: $this->buffer[$this->pointer],
+        );
     }
 
-    public function key(): mixed
+    public function key(): int
     {
-        // @todo Implement key() method.
+        return $this->pointer;
     }
 
     public function next(): void
     {
-        // @todo Implement next() method.
+        $this->pointer++;
     }
 
     public function rewind(): void
     {
-        // @todo Implement rewind() method.
+        $this->pointer = 0;
     }
 
     public function valid(): bool
     {
-        // @todo Implement valid() method.
+        if ($this->increaseBuffer()) {
+            return true;
+        }
+
+        return $this->pointer < \sizeof($this->buffer);
     }
 }

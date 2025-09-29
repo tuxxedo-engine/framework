@@ -63,12 +63,6 @@ class PgsqlConnection implements ConnectionInterface
         // @todo Implement serverVersion() method.
     }
 
-    public function escape(
-        string $value,
-    ): string {
-        // @todo Implement escape() method.
-    }
-
     public function lastInsertIdAsString(
         ?string $sequence = null,
     ): ?string {
@@ -104,7 +98,15 @@ class PgsqlConnection implements ConnectionInterface
     public function transaction(
         \Closure $transaction,
     ): void {
-        // @todo Implement transaction() method.
+        try {
+            $this->begin();
+            $transaction($this);
+            $this->commit();
+        } catch (\Exception $exception) {
+            $this->rollback();
+
+            throw $exception;
+        }
     }
 
     public function prepare(
@@ -117,7 +119,7 @@ class PgsqlConnection implements ConnectionInterface
         string $sql,
         array $parameters = [],
     ): PgsqlResultSet {
-        // @todo Implement execute() method.
+        return $this->prepare($sql)->execute($parameters);
     }
 
     public function query(

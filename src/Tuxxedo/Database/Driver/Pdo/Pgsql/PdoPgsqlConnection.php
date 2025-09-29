@@ -24,9 +24,31 @@ class PdoPgsqlConnection extends AbstractPdoConnection
         return DefaultDriver::PDO_PGSQL;
     }
 
+    // @todo SSL options?
+    // @todo Charset?
     protected function getDsn(
         ConfigInterface $config,
     ): string {
-        // @todo Implement getDsn() method.
+        if ($config->getString('dsn') !== '') {
+            return $config->getString('dsn');
+        }
+
+        $database = '';
+        $port = '';
+
+        if ($config->getString('database') !== '') {
+            $database = ';dbname=' . $config->getString('database');
+        }
+
+        if ($config->isInt('port')) {
+            $port = ';port=' . $config->getInt('port');
+        }
+
+        return \sprintf(
+            'pgsql:host=%s%s%s',
+            $config->getString('host'),
+            $port,
+            $database,
+        );
     }
 }

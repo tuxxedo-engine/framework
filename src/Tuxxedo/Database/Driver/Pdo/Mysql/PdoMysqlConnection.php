@@ -24,9 +24,46 @@ class PdoMysqlConnection extends AbstractPdoConnection
         return DefaultDriver::PDO_MYSQL;
     }
 
+    // @todo SSL options?
     protected function getDsn(
         ConfigInterface $config,
     ): string {
-        // @todo Implement getDsn() method.
+        if ($config->getString('dsn') !== '') {
+            return $config->getString('dsn');
+        }
+
+        $database = '';
+        $charset = '';
+
+        if ($config->getString('database') !== '') {
+            $database = ';dbname=' . $config->getString('database');
+        }
+
+        if ($config->getString('options.charset') !== '') {
+            $charset = ';charset=' . $config->getString('options.charset');
+        }
+
+        if ($config->isString('unixSocket')) {
+            return \sprintf(
+                'mysql:unix_socket=%s%s%s',
+                $config->getString('unixSocket'),
+                $database,
+                $charset,
+            );
+        }
+
+        $port = '';
+
+        if ($config->isInt('port')) {
+            $port = ';port=' . $config->getInt('port');
+        }
+
+        return \sprintf(
+            'mysql:host=%s%s%s%s',
+            $config->getString('host'),
+            $port,
+            $database,
+            $charset,
+        );
     }
 }

@@ -15,4 +15,16 @@ namespace Tuxxedo\Database\Driver;
 
 class ResultRow implements ResultRowInterface
 {
+    /**
+     * @param mixed[] $properties
+     */
+    public function __construct(
+        public readonly array $properties,
+    ) {
+    }
+
+    public function __get(string $property): mixed
+    {
+        return $this->properties[$property] ?? null;
+    }
 }

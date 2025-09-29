@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver\Pgsql;
 
 use PgSql\Result;
+use Tuxxedo\Database\Driver\ResultRowInterface;
 use Tuxxedo\Database\Driver\ResultSetInterface;
 
 class PgsqlResultSet implements ResultSetInterface
@@ -24,14 +25,51 @@ class PgsqlResultSet implements ResultSetInterface
     ) {
     }
 
-    public function fetchAll(): array
+    public function fetchAllAsArray(): array
     {
-        // @todo Implement fetchAll() method.
+        $rows = [];
+
+        foreach ($this as $row) {
+            $rows[] = $row;
+        }
+
+        return $rows;
     }
 
-    public function fetch(): \Generator
+    public function fetchAllAsGenerator(): \Generator
     {
-        // @todo Implement fetch() method.
+        foreach ($this as $row) {
+            yield $row;
+        }
+    }
+
+    public function fetch(): ResultRowInterface
+    {
+        return $this->fetchObject();
+    }
+
+    public function fetchObject(): ResultRowInterface
+    {
+        // TODO: Implement fetchObject() method.
+    }
+
+    public function fetchArray(): array
+    {
+        // TODO: Implement fetchArray() method.
+    }
+
+    public function fetchAssoc(): array
+    {
+        // TODO: Implement fetchAssoc() method.
+    }
+
+    public function fetchRow(): array
+    {
+        // TODO: Implement fetchRow() method.
+    }
+
+    public function free(): void
+    {
     }
 
     public function count(): int

@@ -16,20 +16,41 @@ namespace Tuxxedo\Database\Driver;
 /**
  * @extends \Iterator<array-key, ResultRowInterface>
  */
-// @todo May need more methods for various fetching mechanisms
+// @todo This needs mapping support
+// @todo This needs type normalization if non prepared statements is used, e.g. mysqli
 interface ResultSetInterface extends \Countable, \Iterator
 {
-    public int $affectedRows {
+    public int|string $affectedRows {
         get;
     }
 
     /**
      * @return array<ResultRowInterface>
      */
-    public function fetchAll(): array;
+    public function fetchAllAsArray(): array;
 
     /**
      * @return \Generator<ResultRowInterface>
      */
-    public function fetch(): \Generator;
+    public function fetchAllAsGenerator(): \Generator;
+
+    public function fetch(): ResultRowInterface;
+    public function fetchObject(): ResultRowInterface;
+
+    /**
+     * @return mixed[]
+     */
+    public function fetchArray(): array;
+
+    /**
+     * @return mixed[]
+     */
+    public function fetchAssoc(): array;
+
+    /**
+     * @return array<int, mixed>
+     */
+    public function fetchRow(): array;
+
+    public function free(): void;
 }

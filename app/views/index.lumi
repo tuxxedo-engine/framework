@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>Tuxxedo Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <meta name="color-scheme" content="light dark">
 </head>
 <body class="h-full bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
 <div class="absolute inset-0 -z-10 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950"></div>
 
 <main class="mx-auto max-w-7xl px-6">
-    <section class="mx-auto grid max-w-3xl place-items-center gap-6 py-16 text-center md:py-24">
-        <h1 class="text-pretty text-4xl font-extrabold tracking-tight md:text-6xl">Tuxxedo Engine is running</h1>
+    <section class="mx-auto grid max-w-4xl place-items-center gap-6 py-16 text-center md:py-24">
+        <h1 class="text-pretty text-4xl font-extrabold tracking-tight md:text-6xl">Tuxxedo Engine is running...</h1>
         <div class="flex flex-col items-center gap-3 sm:flex-row">
             <a href="https://www.tuxxedo.dev/docs/"
                class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200">Read
@@ -20,6 +19,11 @@
             <a href="https://www.tuxxedo.dev/"
                class="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900">tuxxedo.dev</a>
         </div>
+    </section>
+
+    <section class="py-14 -mt-12 md:-mt-20 place-items-center ">
+        <!-- @todo Add some paragraphs here -->
+        <h3 class="text-pretty text-4xl font-extrabold tracking-tight md:text-3xl">Your first route</h3>
     </section>
 
     <section class="py-14 -mt-12 md:-mt-20">
@@ -32,7 +36,7 @@
     <span style="color:#6E7681">#[</span><span style="color:#D2A8FF">Get</span><span style="color:#6E7681">(</span><span
                                 style="color:#7EE787">'/hello-world'</span><span style="color:#6E7681">)]</span>
     <span style="color:#FF7B72">public</span> <span style="color:#FF7B72">function</span> <span style="color:#D2A8FF">index</span><span
-                                style="color:#6E7681">():</span> <span style="color:#C9D1D9">ResponseInterface</span>
+                                style="color:#6E7681">()</span>
     <span style="color:#6E7681">{</span>
         <span style="color:#FF7B72">return</span> <span style="color:#FF7B72">new</span> <span style="color:#C9D1D9">View</span><span
                                 style="color:#6E7681">(</span><span style="color:#7EE787">'hello'</span><span
@@ -47,7 +51,8 @@
                 <h3 class="text-base font-semibold">View (Lumi):</h3>
                 <pre class="mt-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800 p-4 text-sm leading-6 bg-[#0b0f14] text-[#e6edf3]"><code
                             class="language-lumi"><span style="color:#C9D1D9">Hello</span> <span
-                                style="color:#6E7681">{{ '{{' }}</span> <span style="color:#C9D1D9">name</span> <span style="color:#6E7681">}}</span></code></pre>
+                                style="color:#6E7681">{{ '{{' }}</span> <span style="color:#C9D1D9">name</span> <span
+                                style="color:#6E7681">}}</span></code></pre>
                 <h3 class="text-base font-semibold pt-6">Output:</h3>
                 <pre class="mt-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800 p-4 text-sm leading-6 bg-[#0b0f14] text-[#e6edf3]"><code
                             class="language-lumi"><span style="color:#C9D1D9">Hello World</span></code></pre>
@@ -57,7 +62,9 @@
 </main>
 
 <footer class="border-t border-slate-200/60 py-10 text-center text-sm text-slate-500 dark:border-slate-800/60 dark:text-slate-400">
-    <div class="mx-auto max-w-7xl px-6">&copy; 2025 {% if appName %}{{ appName }} {% if appVersion %}{{ appVersion }}{% endif%}{% endif%} • Powered by Tuxxedo Engine {{ engineVersion }} • PHP {{ phpVersion }}</div>
+    <div class="mx-auto max-w-7xl px-6">&copy;
+        2025 {% if appName %}{{ appName }} {% if appVersion %}{{ appVersion }}{% endif %}{% endif %} • Powered by
+        Tuxxedo Engine {{ engineVersion }} • PHP {{ phpVersion }}</div>
 </footer>
 </body>
 </html>

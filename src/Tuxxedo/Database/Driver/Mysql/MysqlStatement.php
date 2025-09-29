@@ -77,21 +77,9 @@ class MysqlStatement extends AbstractStatement
             );
         }
 
-        $affectedRows = $mysqli->affected_rows;
-
-        if (\is_string($affectedRows)) {
-            throw DatabaseException::fromValueOverflow(
-                value: $affectedRows,
-            );
-        }
-
-        if ($affectedRows < 0) {
-            $affectedRows = 0;
-        }
-
         return new MysqlResultSet(
             result: $result,
-            affectedRows: $affectedRows,
+            affectedRows: $mysqli->affected_rows,
         );
     }
 }

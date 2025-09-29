@@ -13,7 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Driver;
 
-// @todo May need more methods for various fetching mechanisms like overloading
 interface ResultRowInterface
 {
+    /**
+     * @var mixed[]
+     */
+    public array $properties {
+        get;
+    }
 }

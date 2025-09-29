@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace App\Middleware;
 
-use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
@@ -21,11 +20,6 @@ use Tuxxedo\Http\Response\ResponseInterface;
 #[\Attribute(\Attribute::TARGET_METHOD)]
 class OutputCaptureMiddleware implements MiddlewareInterface
 {
-    public function __construct(
-        protected readonly ContainerInterface $container,
-    ) {
-    }
-
     public function handle(
         RequestInterface $request,
         MiddlewareInterface $next,

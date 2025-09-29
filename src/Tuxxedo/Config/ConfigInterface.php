@@ -19,6 +19,10 @@ interface ConfigInterface
         string $path,
     ): bool;
 
+    public function isNull(
+        string $path,
+    ): bool;
+
     /**
      * @throws ConfigException
      */
@@ -40,10 +44,18 @@ interface ConfigInterface
         string $path,
     ): int;
 
+    public function isInt(
+        string $path,
+    ): bool;
+
     /**
      * @throws ConfigException
      */
     public function getBool(
+        string $path,
+    ): bool;
+
+    public function isBool(
         string $path,
     ): bool;
 
@@ -54,12 +66,20 @@ interface ConfigInterface
         string $path,
     ): float;
 
+    public function isFloat(
+        string $path,
+    ): bool;
+
     /**
      * @throws ConfigException
      */
     public function getString(
         string $path,
     ): string;
+
+    public function isString(
+        string $path,
+    ): bool;
 
     /**
      * @template TEnum of \UnitEnum

@@ -16,6 +16,7 @@ namespace Tuxxedo\Database\Driver;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 
+// @todo Needs a more robust generalized escape mechanism
 interface ConnectionInterface
 {
     public string $name {
@@ -52,13 +53,6 @@ interface ConnectionInterface
      * @throws DatabaseException
      */
     public function serverVersion(): string;
-
-    /**
-     * @throws DatabaseException
-     */
-    public function escape(
-        string $value,
-    ): string;
 
     /**
      * @throws DatabaseException
