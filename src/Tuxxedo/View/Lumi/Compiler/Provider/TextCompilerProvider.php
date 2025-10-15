@@ -73,6 +73,8 @@ class TextCompilerProvider implements CompilerProviderInterface
     ): string {
         $value = $compiler->compileExpression($node->operand);
 
+        // @todo This can be optimized for some UnaryOp nodes where we always will get an int/float
+        //       that the optimizer cannot flag as safe
         if ($compiler->state->directives->asBool('lumi.autoescape')) {
             return \sprintf(
                 '<?= $this->filter(%s, \'escape_html\'); ?>',

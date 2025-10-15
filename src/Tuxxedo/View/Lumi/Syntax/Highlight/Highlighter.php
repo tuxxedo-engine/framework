@@ -152,7 +152,7 @@ class Highlighter implements HighlighterInterface
         ArrayItemNode $node,
     ): string {
         $key = $node->key !== null
-            ? $this->highlightNode($node->key)
+            ? $this->highlightNode($node->key) . $this->dye(ColorSlot::DELIMITER, CharacterSymbol::COLON->symbol()) . ' '
             : '';
 
         return $key .

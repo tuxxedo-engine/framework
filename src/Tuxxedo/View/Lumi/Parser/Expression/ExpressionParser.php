@@ -499,6 +499,7 @@ class ExpressionParser implements ExpressionParserInterface
     private function parseArrayItems(
         TokenStreamInterface $stream,
     ): array {
+        // @todo Consider whether LHS=Identifier should be a shorthand for string in write context?
         $token = $stream->current();
 
         if (

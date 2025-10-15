@@ -33,6 +33,7 @@ use Tuxxedo\View\Lumi\Runtime\Runtime;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
 use Tuxxedo\View\ViewRenderInterface;
 
+// @todo This does not support highlighters
 class LumiConfigurator implements LumiConfiguratorInterface
 {
     public private(set) string $viewDirectory = '';

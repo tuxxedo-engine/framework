@@ -172,6 +172,7 @@ class SccpOptimizer extends AbstractOptimizer
         NodeStreamInterface $stream,
         BinaryOpNode $node,
     ): array {
+        // @todo This can support Exponentiate too but there is a deprecation from 8.4 with l=0 and r=<0
         if (
             $node->operator === BinarySymbol::NULL_COALESCE &&
             $node->left instanceof LiteralNode &&
