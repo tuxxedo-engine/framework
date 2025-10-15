@@ -29,7 +29,9 @@ use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
+use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
+use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 
 class SccpOptimizer extends AbstractOptimizer
 {
@@ -67,6 +69,7 @@ class SccpOptimizer extends AbstractOptimizer
             $node instanceof GroupNode => $this->optimizeGroup($stream, $node),
             $node instanceof TextNode => $this->optimizeText($stream, $node),
             $node instanceof ConcatNode => $this->optimizeConcat($node),
+            $node instanceof UnaryOpNode => $this->optimizeUnaryOp($stream, $node),
             default => [
                 $node,
             ],
@@ -122,6 +125,14 @@ class SccpOptimizer extends AbstractOptimizer
             $operand[0] !== $node->operand &&
             $operand[0] instanceof ExpressionNodeInterface
         ) {
+            if ($operand[0] instanceof LiteralNode) {
+                return [
+                    new TextNode(
+                        text: (string)$operand[0]->type->cast($operand[0]->operand),
+                    )
+                ];
+            }
+
             return [
                 new EchoNode(
                     operand: $operand[0],
@@ -162,6 +173,16 @@ class SccpOptimizer extends AbstractOptimizer
         BinaryOpNode $node,
     ): array {
         if (
+            $node->operator === BinarySymbol::NULL_COALESCE &&
+            $node->left instanceof LiteralNode &&
+            $node->left->type === NativeType::NULL
+        ) {
+            return [
+                $node->right,
+            ];
+        }
+
+        if (
             (
                 $node->left instanceof LiteralNode ||
                 $node->left instanceof IdentifierNode
@@ -174,6 +195,10 @@ class SccpOptimizer extends AbstractOptimizer
                 $node->operator === BinarySymbol::ADD ||
                 $node->operator === BinarySymbol::SUBTRACT ||
                 $node->operator === BinarySymbol::MULTIPLY ||
+                $node->operator === BinarySymbol::DIVIDE ||
+                $node->operator === BinarySymbol::MODULUS ||
+                $node->operator === BinarySymbol::STRICT_EQUAL_IMPLICIT ||
+                $node->operator === BinarySymbol::STRICT_NOT_EQUAL_IMPLICIT ||
                 $node->operator === BinarySymbol::STRICT_EQUAL_EXPLICIT ||
                 $node->operator === BinarySymbol::STRICT_NOT_EQUAL_EXPLICIT ||
                 $node->operator === BinarySymbol::GREATER ||
@@ -181,7 +206,14 @@ class SccpOptimizer extends AbstractOptimizer
                 $node->operator === BinarySymbol::GREATER_EQUAL ||
                 $node->operator === BinarySymbol::LESS_EQUAL ||
                 $node->operator === BinarySymbol::AND ||
-                $node->operator === BinarySymbol::OR
+                $node->operator === BinarySymbol::OR ||
+                $node->operator === BinarySymbol::BITWISE_AND ||
+                $node->operator === BinarySymbol::BITWISE_OR ||
+                $node->operator === BinarySymbol::BITWISE_XOR ||
+                $node->operator === BinarySymbol::BITWISE_SHIFT_LEFT ||
+                $node->operator === BinarySymbol::BITWISE_SHIFT_RIGHT ||
+                $node->operator === BinarySymbol::XOR ||
+                $node->operator === BinarySymbol::EXPONENTIATE
             )
         ) {
             if (!$node->left instanceof LiteralNode) {
@@ -214,7 +246,11 @@ class SccpOptimizer extends AbstractOptimizer
 
             if (
                 $leftNode->type !== $rightNode->type &&
-                $node->operator === BinarySymbol::STRICT_EQUAL_EXPLICIT
+                (
+
+                    $node->operator === BinarySymbol::STRICT_EQUAL_IMPLICIT ||
+                    $node->operator === BinarySymbol::STRICT_EQUAL_EXPLICIT
+                )
             ) {
                 return [
                     new LiteralNode(
@@ -237,29 +273,60 @@ class SccpOptimizer extends AbstractOptimizer
                     \is_float($right)
                 )
             ) {
+                if (
+                    (
+                        \floatval($right) === 0.0 &&
+                        (
+                            $node->operator === BinarySymbol::DIVIDE ||
+                            $node->operator === BinarySymbol::MODULUS
+                        )
+                    ) || (
+                        (
+                            $left === 0.0 ||
+                            $left === 0
+                        ) &&
+                        $right < 0 &&
+                        $node->operator === BinarySymbol::EXPONENTIATE
+                    )
+                ) {
+                    return [
+                        $node,
+                    ];
+                }
+
                 $value = match ($node->operator) {
                     BinarySymbol::ADD => $left + $right,
                     BinarySymbol::SUBTRACT => $left - $right,
                     BinarySymbol::MULTIPLY => $left * $right,
-                    BinarySymbol::STRICT_EQUAL_EXPLICIT => $left === $right,
-                    BinarySymbol::STRICT_NOT_EQUAL_EXPLICIT => $left !== $right,
+                    BinarySymbol::DIVIDE => $left / $right,
+                    BinarySymbol::MODULUS => $left % $right,
+                    BinarySymbol::STRICT_EQUAL_IMPLICIT, BinarySymbol::STRICT_EQUAL_EXPLICIT => $left === $right,
+                    BinarySymbol::STRICT_NOT_EQUAL_IMPLICIT, BinarySymbol::STRICT_NOT_EQUAL_EXPLICIT => $left !== $right,
                     BinarySymbol::GREATER => $left > $right,
                     BinarySymbol::LESS => $left < $right,
                     BinarySymbol::GREATER_EQUAL => $left >= $right,
                     BinarySymbol::LESS_EQUAL => $left <= $right,
                     BinarySymbol::AND => \boolval($left) && \boolval($right),
                     BinarySymbol::OR => \boolval($left) || \boolval($right),
+                    BinarySymbol::BITWISE_AND => $left & $right,
+                    BinarySymbol::BITWISE_OR => $left | $right,
+                    BinarySymbol::BITWISE_XOR => $left ^ $right,
+                    BinarySymbol::BITWISE_SHIFT_LEFT => $left << $right,
+                    BinarySymbol::BITWISE_SHIFT_RIGHT => $left >> $right,
+                    BinarySymbol::XOR => $left xor $right,
+                    BinarySymbol::EXPONENTIATE => $left ** $right,
                 };
             } else {
                 $value = match ($node->operator) {
-                    BinarySymbol::STRICT_EQUAL_EXPLICIT => $left === $right,
-                    BinarySymbol::STRICT_NOT_EQUAL_EXPLICIT => $left !== $right,
+                    BinarySymbol::STRICT_EQUAL_IMPLICIT, BinarySymbol::STRICT_EQUAL_EXPLICIT => $left === $right,
+                    BinarySymbol::STRICT_NOT_EQUAL_IMPLICIT, BinarySymbol::STRICT_NOT_EQUAL_EXPLICIT => $left !== $right,
                     BinarySymbol::GREATER => $left > $right,
                     BinarySymbol::LESS => $left < $right,
                     BinarySymbol::GREATER_EQUAL => $left >= $right,
                     BinarySymbol::LESS_EQUAL => $left <= $right,
                     BinarySymbol::AND => \boolval($left) && \boolval($right),
                     BinarySymbol::OR => \boolval($left) || \boolval($right),
+                    BinarySymbol::XOR => $left xor $right,
                     default => null,
                 };
 
@@ -386,6 +453,62 @@ class SccpOptimizer extends AbstractOptimizer
             return [
                 new TextNode(
                     text: $text,
+                ),
+            ];
+        }
+
+        return [
+            $node,
+        ];
+    }
+
+    /**
+     * @return array{0: ExpressionNodeInterface}
+     */
+    private function optimizeUnaryOp(
+        NodeStreamInterface $stream,
+        UnaryOpNode $node,
+    ): array {
+        $operand = $this->optimizeNode($stream, $node->operand);
+
+        if (
+            \sizeof($operand) !== 1 ||
+            !$operand[0] instanceof ExpressionNodeInterface
+        ) {
+            return [
+                $node,
+            ];
+        }
+
+        if (!$operand[0] instanceof LiteralNode) {
+            if ($node->operand !== $operand[0]) {
+                return [
+                    new UnaryOpNode(
+                        operand: $operand[0],
+                        operator: $node->operator,
+                    ),
+                ];
+            }
+
+            return [
+                $node,
+            ];
+        }
+
+        if ($node->operator === UnarySymbol::NOT) {
+            return [
+                new LiteralNode(
+                    operand: !\boolval($operand[0]->type->cast($operand[0]->operand))
+                        ? 'true'
+                        : 'false',
+                    type: NativeType::BOOL,
+                ),
+            ];
+        } elseif ($node->operator === UnarySymbol::BITWISE_NOT) {
+            return [
+                new LiteralNode(
+                    operand: \strval(~((int) $operand[0]->type->cast($operand[0]->operand))),
+                    type: NativeType::INT,
                 ),
             ];
         }

@@ -354,7 +354,19 @@ readonly class LumiController
         $buffer .= '<pre>';
         $buffer .= $this->visualizeTokenHeader();
 
-        $engine = LumiEngine::createDefault();
+        $optimizers = [];
+
+        if ($request->get->getBool('sccp')) {
+            $optimizers[] = new SccpOptimizer();
+        }
+
+        if ($request->get->getBool('dce')) {
+            $optimizers[] = new DceOptimizer();
+        }
+
+        $engine = LumiEngine::createCustom(
+            optimizers: $optimizers,
+        );
 
         try {
             $tokenStream = $engine->lexer->tokenizeByString($viewSource);
@@ -429,7 +441,6 @@ readonly class LumiController
                 $buffer .= $engine->highlightFile(
                     file: $selectedViewFile,
                     theme: $theme,
-                    optimized: $request->get->getBool('sccp') || $request->get->getBool('dce'),
                 );
             } catch (LumiException $exception) {
                 $buffer .= $exception;
