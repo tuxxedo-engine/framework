@@ -128,8 +128,8 @@ class SccpOptimizer extends AbstractOptimizer
             if ($operand[0] instanceof LiteralNode) {
                 return [
                     new TextNode(
-                        text: (string)$operand[0]->type->cast($operand[0]->operand),
-                    )
+                        text: (string) $operand[0]->type->cast($operand[0]->operand),
+                    ),
                 ];
             }
 
@@ -212,8 +212,7 @@ class SccpOptimizer extends AbstractOptimizer
                 $node->operator === BinarySymbol::BITWISE_XOR ||
                 $node->operator === BinarySymbol::BITWISE_SHIFT_LEFT ||
                 $node->operator === BinarySymbol::BITWISE_SHIFT_RIGHT ||
-                $node->operator === BinarySymbol::XOR ||
-                $node->operator === BinarySymbol::EXPONENTIATE
+                $node->operator === BinarySymbol::XOR
             )
         ) {
             if (!$node->left instanceof LiteralNode) {
@@ -247,7 +246,6 @@ class SccpOptimizer extends AbstractOptimizer
             if (
                 $leftNode->type !== $rightNode->type &&
                 (
-
                     $node->operator === BinarySymbol::STRICT_EQUAL_IMPLICIT ||
                     $node->operator === BinarySymbol::STRICT_EQUAL_EXPLICIT
                 )
@@ -280,13 +278,6 @@ class SccpOptimizer extends AbstractOptimizer
                             $node->operator === BinarySymbol::DIVIDE ||
                             $node->operator === BinarySymbol::MODULUS
                         )
-                    ) || (
-                        (
-                            $left === 0.0 ||
-                            $left === 0
-                        ) &&
-                        $right < 0 &&
-                        $node->operator === BinarySymbol::EXPONENTIATE
                     )
                 ) {
                     return [
@@ -314,7 +305,6 @@ class SccpOptimizer extends AbstractOptimizer
                     BinarySymbol::BITWISE_SHIFT_LEFT => $left << $right,
                     BinarySymbol::BITWISE_SHIFT_RIGHT => $left >> $right,
                     BinarySymbol::XOR => $left xor $right,
-                    BinarySymbol::EXPONENTIATE => $left ** $right,
                 };
             } else {
                 $value = match ($node->operator) {
