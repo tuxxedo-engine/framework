@@ -23,6 +23,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\FilterOrBitwiseOrNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
+use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\MethodCallNode;
@@ -133,14 +134,16 @@ class ExpressionParser implements ExpressionParserInterface
                 if ($token->op1 === CharacterSymbol::LEFT_PARENTHESIS->symbol()) {
                     $stream->consume();
 
-                    $expr = $this->parseExpression($stream, Precedence::LOWEST);
+                    $operand = $this->parseExpression($stream, Precedence::LOWEST);
 
                     $this->expectCharacter(
                         stream: $stream,
                         character: CharacterSymbol::RIGHT_PARENTHESIS,
                     );
 
-                    return $expr;
+                    return new GroupNode(
+                        operand: $operand,
+                    );
                 }
 
                 if ($token->op1 === CharacterSymbol::LEFT_SQUARE_BRACKET->symbol()) {
