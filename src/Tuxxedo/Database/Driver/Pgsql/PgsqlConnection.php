@@ -112,7 +112,12 @@ class PgsqlConnection implements ConnectionInterface
     public function prepare(
         string $sql,
     ): PgsqlStatement {
-        // @todo Implement prepare() method.
+        $this->connectCheck();
+
+        return new PgsqlStatement(
+            connection: $this,
+            sql: $sql,
+        );
     }
 
     public function execute(

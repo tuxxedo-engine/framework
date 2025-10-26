@@ -107,6 +107,8 @@ abstract class AbstractPdoConnection implements ConnectionInterface
 
     public function getDriverInstance(): \PDO
     {
+        $this->connectCheck();
+
         return $this->pdo;
     }
 

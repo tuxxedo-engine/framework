@@ -148,7 +148,7 @@ return [
      * The password used to authenticate with the database server
      *
      * DefaultDriver::PDO_SQLITE                - This value has no effect
-     * DefaultDriver::SQLITE                    - This value has no effect
+     * DefaultDriver::SQLITE                    - This value is used for the encryption key when opening a database file
      *
      * @type string
      */
@@ -189,6 +189,8 @@ return [
          *
          * Mysql typically uses 'utf8mb4' and postgres uses 'UTF8'
          *
+         * DefaultDriver::SQLITE                    - This value has no effect
+         *
          * @type string
          */
         'charset' => 'utf8mb4',
@@ -227,9 +229,24 @@ return [
          * The timeout in seconds for connections and queries. The exact meaning may
          * depend on the driver in question
          *
+         * DefaultDriver::SQLITE                    - This value has no effect
+         *
          * @type int
          */
         'timeout' => 3,
+
+        /**
+         * database.default.options.flags
+         *
+         * The open flags for a database, this may vary depending on the driver
+         *
+         * DefaultDriver::SQLITE                    - Bitfield of \SQLITE3_OPEN_* constants used when opening the database file
+         *
+         * If this value is NULL, then the driver defaults is used
+         *
+         * @type int|null
+         */
+        'flags' => null,
     ],
 
     /**

@@ -114,4 +114,18 @@ class DatabaseException extends \Exception
             message: 'Cannot fetch row from result set',
         );
     }
+
+    public static function fromAlreadyInTransaction(): self
+    {
+        return new self(
+            message: 'A transaction is already active',
+        );
+    }
+
+    public static function fromNotInTransaction(): self
+    {
+        return new self(
+            message: 'No transaction is currently active',
+        );
+    }
 }

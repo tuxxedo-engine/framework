@@ -15,6 +15,7 @@ namespace Tuxxedo\Database\Driver\Sqlite;
 
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Database\ConnectionRole;
+use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Driver\DefaultDriver;
 
@@ -24,81 +25,189 @@ class SqliteConnection implements ConnectionInterface
     public readonly ConnectionRole $role;
     public readonly DefaultDriver $driver;
 
+    private \SQLite3 $sqlite;
+    private readonly \Closure $connector;
+
+    private bool $inTransaction = false;
+
     public function __construct(
         ConfigInterface $config,
     ) {
         $this->name = $config->getString('name');
         $this->role = $config->getEnum('role', ConnectionRole::class);
         $this->driver = DefaultDriver::SQLITE;
+
+        $this->connector = function () use ($config): void {
+            try {
+                $this->sqlite = new \SQLite3(
+                    filename: $config->getString('database'),
+                    flags: !$config->isInt('options.flags')
+                        ? $config->getInt('options.flags')
+                        : \SQLITE3_OPEN_READWRITE | \SQLITE3_OPEN_CREATE,
+                    encryptionKey: $config->getString('password'),
+                );
+
+                $this->sqlite->enableExceptions(true);
+                $this->sqlite->enableExtendedResultCodes(true);
+            } catch (\Exception $exception) {
+                throw DatabaseException::fromCannotConnect(
+                    code: $exception->getCode(),
+                    error: $exception->getMessage(),
+                );
+            }
+        };
+
+        if (!$config->getBool('options.lazy')) {
+            $this->connect();
+        }
     }
 
-    public function getDriverInstance(): object
+    private function connectCheck(): void
     {
-        // @todo Implement getDriverInstance() method.
+        if (!isset($this->sqlite)) {
+            $this->connect();
+        }
+    }
+
+    private function throwFromSqliteException(
+        \SQLite3Exception $exception,
+    ): never {
+        throw DatabaseException::fromError(
+            sqlState: 'HY000',
+            code: $exception->getCode(),
+            error: $exception->getMessage(),
+        );
+    }
+
+    public function throwFromLastError(): never
+    {
+        throw DatabaseException::fromError(
+            sqlState: 'HY000',
+            code: $this->sqlite->lastErrorCode(),
+            error: $this->sqlite->lastErrorMsg(),
+        );
+    }
+
+    public function getDriverInstance(): \SQLite3
+    {
+        $this->connectCheck();
+
+        return $this->sqlite;
     }
 
     public function connect(
         bool $reconnect = false,
     ): void {
-        // @todo Implement connect() method.
+        if ($reconnect || !isset($this->sqlite)) {
+            ($this->connector)();
+        }
     }
 
     public function close(): void
     {
-        // @todo Implement close() method.
+        if (isset($this->sqlite)) {
+            $this->sqlite->close();
+
+            unset($this->sqlite);
+        }
     }
 
     public function isConnected(): bool
     {
-        // @todo Implement isConnected() method.
+        return isset($this->sqlite);
     }
 
     public function ping(): bool
     {
-        // @todo Implement ping() method.
+        try {
+            $this->connectCheck();
+
+            $this->sqlite->query('SELECT 1');
+
+            return true;
+        } catch (\SQLite3Exception) {
+            return false;
+        }
     }
 
     public function serverVersion(): string
     {
-        // @todo Implement serverVersion() method.
-    }
-
-    public function escape(
-        string $value,
-    ): string {
-        // @todo Implement escape() method.
+        /** @var string */
+        return \SQLite3::version()['versionString'];
     }
 
     public function lastInsertIdAsString(
         ?string $sequence = null,
     ): ?string {
-        // @todo Implement lastInsertIdAsString() method.
+        $this->connectCheck();
+
+        return (string) $this->sqlite->lastInsertRowID();
     }
 
     public function lastInsertIdAsInt(
         ?string $sequence = null,
     ): ?int {
-        // @todo Implement lastInsertIdAsInt() method.
+        $this->connectCheck();
+
+        return $this->sqlite->lastInsertRowID();
     }
 
     public function begin(): void
     {
-        // @todo Implement begin() method.
+        $this->connectCheck();
+
+        if ($this->inTransaction) {
+            throw DatabaseException::fromAlreadyInTransaction();
+        }
+
+        try {
+            if ($this->sqlite->exec('BEGIN IMMEDIATE') === false) {
+                $this->throwFromLastError();
+            }
+
+            $this->inTransaction = true;
+        } catch (\SQLite3Exception $exception) {
+            $this->throwFromSqliteException($exception);
+        }
     }
 
     public function commit(): void
     {
-        // @todo Implement commit() method.
+        $this->connectCheck();
+
+        if (!$this->inTransaction) {
+            throw DatabaseException::fromNotInTransaction();
+        }
+
+        try {
+            if ($this->sqlite->exec('COMMIT') === false) {
+                $this->throwFromLastError();
+            }
+        } catch (\SQLite3Exception $exception) {
+            $this->throwFromSqliteException($exception);
+        }
     }
 
     public function rollback(): void
     {
-        // @todo Implement rollback() method.
+        $this->connectCheck();
+
+        if (!$this->inTransaction) {
+            throw DatabaseException::fromNotInTransaction();
+        }
+
+        try {
+            if ($this->sqlite->exec('ROLLBACK') === false) {
+                $this->throwFromLastError();
+            }
+        } catch (\SQLite3Exception $exception) {
+            $this->throwFromSqliteException($exception);
+        }
     }
 
     public function inTransaction(): bool
     {
-        // @todo Implement inTransaction() method.
+        return $this->inTransaction;
     }
 
     public function transaction(
@@ -118,7 +227,12 @@ class SqliteConnection implements ConnectionInterface
     public function prepare(
         string $sql,
     ): SqliteStatement {
-        // @todo Implement prepare() method.
+        $this->connectCheck();
+
+        return new SqliteStatement(
+            connection: $this,
+            sql: $sql,
+        );
     }
 
     public function execute(

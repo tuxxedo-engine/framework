@@ -44,6 +44,7 @@ class MysqlConnection implements ConnectionInterface
                 if ($mysqli === false) {
                     throw DatabaseException::fromCannotInitializeNativeDriver();
                 }
+
                 $this->mysqli = $mysqli;
             }
 
@@ -127,7 +128,7 @@ class MysqlConnection implements ConnectionInterface
     /**
      * @throws DatabaseException
      */
-    private function throwFromMysqliException(
+    public function throwFromMysqlException(
         \mysqli_sql_exception $exception,
     ): never {
         throw DatabaseException::fromError(
@@ -144,6 +145,8 @@ class MysqlConnection implements ConnectionInterface
 
     public function getDriverInstance(): \mysqli
     {
+        $this->connectCheck();
+
         return $this->mysqli;
     }
 
@@ -323,7 +326,7 @@ class MysqlConnection implements ConnectionInterface
         try {
             $result = $this->mysqli->query($sql);
         } catch (\mysqli_sql_exception $exception) {
-            $this->throwFromMysqliException($exception);
+            $this->throwFromMysqlException($exception);
         }
 
         if (\is_bool($result)) {
