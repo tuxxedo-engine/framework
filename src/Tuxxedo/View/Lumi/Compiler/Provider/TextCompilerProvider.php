@@ -17,13 +17,16 @@ use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\NativeType;
+use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BuiltinNodeScopes;
 use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DeclareNode;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LayoutNode;
+use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
+use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 
 class TextCompilerProvider implements CompilerProviderInterface
 {
@@ -73,9 +76,30 @@ class TextCompilerProvider implements CompilerProviderInterface
     ): string {
         $value = $compiler->compileExpression($node->operand);
 
-        // @todo This can be optimized for some UnaryOp nodes where we always will get an int/float
-        //       that the optimizer cannot flag as safe
-        if ($compiler->state->directives->asBool('lumi.autoescape')) {
+        $autoEscape = $compiler->state->directives->asBool('lumi.autoescape');
+
+        if (
+            (
+                $node->operand instanceof LiteralNode &&
+                $node->operand->type !== NativeType::STRING
+            ) ||
+            (
+                $node->operand instanceof BinaryOpNode &&
+                $node->operand->left instanceof LiteralNode &&
+                $node->operand->left->type !== NativeType::STRING &&
+                $node->operand->right instanceof LiteralNode &&
+                $node->operand->right->type !== NativeType::STRING
+            ) ||
+            (
+                $node->operand instanceof UnaryOpNode &&
+                $node->operand->operand instanceof LiteralNode &&
+                $node->operand->operand->type !== NativeType::STRING
+            )
+        ) {
+            $autoEscape = false;
+        }
+
+        if ($autoEscape) {
             return \sprintf(
                 '<?= $this->filter(%s, \'escape_html\'); ?>',
                 $value,
