@@ -159,7 +159,9 @@ abstract class AbstractOptimizer implements OptimizerInterface
 
     public function optimize(
         NodeStreamInterface $stream,
-    ): NodeStreamInterface {
+    ): OptimizerResultInterface {
+        $oldStream = clone $stream;
+
         $this->layoutMode = $this->isLayoutStream($stream);
 
         $stream = static::optimizer($stream);
@@ -167,6 +169,9 @@ abstract class AbstractOptimizer implements OptimizerInterface
         $this->directives = CompilerDirectives::createWithDefaults();
         $this->layoutMode = false;
 
-        return $stream;
+        return OptimizerResult::create(
+            oldStream: $oldStream,
+            newStream: $stream,
+        );
     }
 }

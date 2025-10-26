@@ -129,7 +129,10 @@ class LumiEngine
 
         if (\sizeof($this->optimizers) > 0) {
             foreach ($this->optimizers as $optimizer) {
-                $nodes = $optimizer->optimize($nodes);
+                do {
+                    $result = $optimizer->optimize($nodes);
+                    $nodes = $result->stream;
+                } while ($result->changed);
             }
         }
 
@@ -154,7 +157,10 @@ class LumiEngine
 
         if (\sizeof($this->optimizers) > 0) {
             foreach ($this->optimizers as $optimizer) {
-                $nodes = $optimizer->optimize($nodes);
+                do {
+                    $result = $optimizer->optimize($nodes);
+                    $nodes = $result->stream;
+                } while ($result->changed);
             }
         }
 
@@ -196,7 +202,10 @@ class LumiEngine
 
         if ($optimized && \sizeof($this->optimizers) > 0) {
             foreach ($this->optimizers as $optimizer) {
-                $nodes = $optimizer->optimize($nodes);
+                do {
+                    $result = $optimizer->optimize($nodes);
+                    $nodes = $result->stream;
+                } while ($result->changed);
             }
         }
 
@@ -219,7 +228,10 @@ class LumiEngine
 
         if ($optimized && \sizeof($this->optimizers) > 0) {
             foreach ($this->optimizers as $optimizer) {
-                $nodes = $optimizer->optimize($nodes);
+                do {
+                    $result = $optimizer->optimize($nodes);
+                    $nodes = $result->stream;
+                } while ($result->changed);
             }
         }
 

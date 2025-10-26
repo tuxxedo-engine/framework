@@ -238,44 +238,69 @@ readonly class LumiController
         return $view->scope;
     }
 
+    // @todo SCCP may duplicate last pass, investigate this behavior
     private function visualizeSccpPass(
         string &$buffer,
         NodeStreamInterface $nodeStream,
     ): NodeStreamInterface {
-        $buffer .= '<h3>Nodes (SCCP)</h3>';
-        $buffer .= '<pre>';
+        $pass = 1;
+        $optimizer = new SccpOptimizer();
+        $stream = $nodeStream;
 
-        $optimizedStream = (new SccpOptimizer())->optimize($nodeStream);
+        do {
+            $buffer .= \sprintf(
+                '<h3>Nodes (SCCP pass %d)</h3>',
+                $pass++,
+            );
 
-        while (!$optimizedStream->eof()) {
-            $buffer .= $this->visualizeNode($optimizedStream->current()) . '<br>';
+            $buffer .= '<pre>';
 
-            $optimizedStream->consume();
-        }
+            $result = $optimizer->optimize($stream);
+            $stream = $result->stream;
+            $copy = clone $stream;
 
-        $buffer .= '</pre>';
+            while (!$copy->eof()) {
+                $buffer .= $this->visualizeNode($copy->current()) . '<br>';
 
-        return clone $optimizedStream;
+                $copy->consume();
+            }
+
+            $buffer .= '</pre>';
+        } while ($result->changed);
+
+        return $result->stream;
     }
 
     private function visualizeDcePass(
         string &$buffer,
         NodeStreamInterface $nodeStream,
     ): NodeStreamInterface {
-        $buffer .= '<h3>Nodes (DCE)</h3>';
-        $buffer .= '<pre>';
+        $pass = 1;
+        $optimizer = new DceOptimizer();
+        $stream = $nodeStream;
 
-        $optimizedStream = (new DceOptimizer())->optimize($nodeStream);
+        do {
+            $buffer .= \sprintf(
+                '<h3>Nodes (DCE pass %d)</h3>',
+                $pass++,
+            );
 
-        while (!$optimizedStream->eof()) {
-            $buffer .= $this->visualizeNode($optimizedStream->current()) . '<br>';
+            $buffer .= '<pre>';
 
-            $optimizedStream->consume();
-        }
+            $result = $optimizer->optimize($stream);
+            $stream = $result->stream;
+            $copy = clone $stream;
 
-        $buffer .= '</pre>';
+            while (!$copy->eof()) {
+                $buffer .= $this->visualizeNode($copy->current()) . '<br>';
 
-        return clone $optimizedStream;
+                $copy->consume();
+            }
+
+            $buffer .= '</pre>';
+        } while ($result->changed);
+
+        return $result->stream;
     }
 
     private function getHighlightThemeClass(
