@@ -20,6 +20,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\LayoutNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 
+// @todo Check scope depth
 class LayoutParserHandler implements ParserHandlerInterface
 {
     public private(set) string $tokenName = BuiltinTokenNames::LAYOUT->name;
