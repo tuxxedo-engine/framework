@@ -196,7 +196,7 @@ class EnvironmentInputContext implements InputContextInterface
             return [];
         }
 
-        return $value;
+        return \array_filter($value, \is_int(...));
     }
 
     public function getArrayOfBool(string $name): array
@@ -245,7 +245,7 @@ class EnvironmentInputContext implements InputContextInterface
             return [];
         }
 
-        return $value;
+        return \array_filter($value, \is_float(...));
     }
 
     public function getArrayOfString(string $name): array
@@ -265,7 +265,7 @@ class EnvironmentInputContext implements InputContextInterface
             return [];
         }
 
-        return $value;
+        return \array_filter($value, \is_string(...));
     }
 
     /**
@@ -304,7 +304,7 @@ class EnvironmentInputContext implements InputContextInterface
 
         $enums = [];
 
-        foreach ($values as $value) {
+        foreach (\array_filter($values, \is_string(...)) as $value) {
             $value = \mb_strtolower($value);
 
             if (!\array_key_exists($value, $cases)) {

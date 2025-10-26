@@ -126,7 +126,11 @@ class DoWhileParserHandler extends AbstractWhileParserHandler
                 }
 
                 $headerIndex = \array_pop($whileStack);
-                $controlTokens[$headerIndex]['isHeaderWhile'] = true;
+                $controlTokens[$headerIndex] = [
+                    'type' => $controlTokens[$headerIndex]['type'],
+                    'position' => $controlTokens[$headerIndex]['position'],
+                    'isHeaderWhile' => true,
+                ];
             }
         }
 
