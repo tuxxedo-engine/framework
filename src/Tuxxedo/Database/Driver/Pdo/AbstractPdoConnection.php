@@ -75,7 +75,7 @@ abstract class AbstractPdoConnection implements ConnectionInterface
     /**
      * @throws DatabaseException
      */
-    private function throwFromPdoException(
+    public function throwFromPdoException(
         \PDOException $exception,
     ): never {
         /** @var array{0: string, 1: string|int, 2: string} $errorInfo */
@@ -92,10 +92,11 @@ abstract class AbstractPdoConnection implements ConnectionInterface
         );
     }
 
-    private function throwFromErrorInfo(): never
-    {
+    public function throwFromErrorInfo(
+        ?\PDOStatement $statement = null,
+    ): never {
         /** @var array{0: string, 1: string|int, 2: string} $errorInfo */
-        $errorInfo = $this->pdo->errorInfo();
+        $errorInfo = $statement?->errorInfo() ?? $this->pdo->errorInfo();
 
         throw DatabaseException::fromError(
             sqlState: $errorInfo[0],

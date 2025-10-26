@@ -49,6 +49,8 @@ class MysqlStatement extends AbstractStatement
         $bindingTypes = '';
         $bindingValues = [];
 
+        $this->bindAll($parameters);
+
         /** @var BindingInterface $binding */
         foreach ($this->bindings as $binding) {
             $bindingTypes = $this->determineBindingType($binding);
