@@ -172,7 +172,6 @@ class SccpOptimizer extends AbstractOptimizer
         NodeStreamInterface $stream,
         BinaryOpNode $node,
     ): array {
-        // @todo This can support Exponentiate too but there is a deprecation from 8.4 with l=0 and r=<0
         if (
             $node->operator === BinarySymbol::NULL_COALESCE &&
             $node->left instanceof LiteralNode &&
@@ -213,7 +212,8 @@ class SccpOptimizer extends AbstractOptimizer
                 $node->operator === BinarySymbol::BITWISE_XOR ||
                 $node->operator === BinarySymbol::BITWISE_SHIFT_LEFT ||
                 $node->operator === BinarySymbol::BITWISE_SHIFT_RIGHT ||
-                $node->operator === BinarySymbol::XOR
+                $node->operator === BinarySymbol::XOR ||
+                $node->operator === BinarySymbol::EXPONENTIATE
             )
         ) {
             if (!$node->left instanceof LiteralNode) {
@@ -283,6 +283,24 @@ class SccpOptimizer extends AbstractOptimizer
                 ) {
                     return [
                         $node,
+                    ];
+                }
+
+                if ($node->operator === BinarySymbol::EXPONENTIATE) {
+                    $left = (int) $left;
+                    $right = (int) $right;
+
+                    if ($left === 0 && $right < 0) {
+                        return [
+                            $node,
+                        ];
+                    }
+
+                    return [
+                        new LiteralNode(
+                            operand: \strval($left ** $right),
+                            type: NativeType::INT,
+                        ),
                     ];
                 }
 
