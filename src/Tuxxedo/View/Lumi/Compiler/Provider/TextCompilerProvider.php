@@ -23,6 +23,8 @@ use Tuxxedo\View\Lumi\Syntax\Node\BuiltinNodeScopes;
 use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DeclareNode;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LayoutNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
@@ -76,30 +78,10 @@ class TextCompilerProvider implements CompilerProviderInterface
     ): string {
         $value = $compiler->compileExpression($node->operand);
 
-        $autoEscape = $compiler->state->directives->asBool('lumi.autoescape');
-
         if (
-            (
-                $node->operand instanceof LiteralNode &&
-                $node->operand->type !== NativeType::STRING
-            ) ||
-            (
-                $node->operand instanceof BinaryOpNode &&
-                $node->operand->left instanceof LiteralNode &&
-                $node->operand->left->type !== NativeType::STRING &&
-                $node->operand->right instanceof LiteralNode &&
-                $node->operand->right->type !== NativeType::STRING
-            ) ||
-            (
-                $node->operand instanceof UnaryOpNode &&
-                $node->operand->operand instanceof LiteralNode &&
-                $node->operand->operand->type !== NativeType::STRING
-            )
+            $compiler->state->directives->asBool('lumi.autoescape') &&
+            !$this->canDisableAutoEscapeFor($node->operand)
         ) {
-            $autoEscape = false;
-        }
-
-        if ($autoEscape) {
             return \sprintf(
                 '<?= $this->filter(%s, \'escape_html\'); ?>',
                 $value,
@@ -250,5 +232,33 @@ class TextCompilerProvider implements CompilerProviderInterface
         string $input,
     ): string {
         return \preg_replace('/\'/u', '\\\'', $input) ?? throw CompilerException::fromCannotEscapeQuote();
+    }
+
+    private function canDisableAutoEscapeFor(
+        ExpressionNodeInterface $node,
+    ): bool {
+        if ($node instanceof UnaryOpNode) {
+            return true;
+        }
+
+        if (
+            $node instanceof LiteralNode &&
+            $node->type !== NativeType::STRING
+        ) {
+            return true;
+        }
+
+        if (
+            $node instanceof BinaryOpNode
+        ) {
+            return $this->canDisableAutoEscapeFor($node->left) &&
+                $this->canDisableAutoEscapeFor($node->right);
+        }
+
+        if ($node instanceof GroupNode) {
+            return $this->canDisableAutoEscapeFor($node->operand);
+        }
+
+        return false;
     }
 }
