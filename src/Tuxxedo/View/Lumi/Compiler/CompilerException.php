@@ -102,7 +102,7 @@ class CompilerException extends LumiException
                 \join(
                     '", "',
                     \array_map(
-                        static fn(NodeScope $scope): string => $scope->name,
+                        static fn (NodeScope $scope): string => $scope->name,
                         $scopes,
                     ),
                 ),

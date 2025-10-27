@@ -22,6 +22,7 @@ use Tuxxedo\View\Lumi\Runtime\Filter\FilterProviderInterface;
 use Tuxxedo\View\Lumi\Runtime\Function\FunctionProviderInterface;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
+use Tuxxedo\View\Lumi\Syntax\Highlight\HighlighterInterface;
 use Tuxxedo\View\ViewRenderInterface;
 
 interface LumiConfiguratorInterface
@@ -55,6 +56,10 @@ interface LumiConfiguratorInterface
     }
 
     public ?CompilerInterface $compiler {
+        get;
+    }
+
+    public ?HighlighterInterface $highlighter {
         get;
     }
 
@@ -237,6 +242,13 @@ interface LumiConfiguratorInterface
 
     public function withCustomOptimizer(
         OptimizerInterface $optimizer,
+    ): self;
+
+    public function withDefaultHighlighter(): self;
+    public function withoutHighlighter(): self;
+
+    public function useHighlighter(
+        HighlighterInterface $highlighter,
     ): self;
 
     public function withDefaultLoader(): self;

@@ -16,8 +16,8 @@ namespace Tuxxedo\View\Lumi\Compiler\Expression;
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
-use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
 
 class ExpressionCompiler implements ExpressionCompilerInterface
 {

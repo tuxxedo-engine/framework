@@ -78,8 +78,7 @@ class CompilerState implements CompilerStateInterface
 
     public function swap(
         NodeScope $scope,
-    ): NodeScope
-    {
+    ): NodeScope {
         if ($this->expects === null) {
             throw CompilerException::fromUnexpectedStateLeave(
                 scope: $scope,

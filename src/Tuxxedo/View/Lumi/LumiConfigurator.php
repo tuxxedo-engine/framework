@@ -31,9 +31,10 @@ use Tuxxedo\View\Lumi\Runtime\Loader;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\Runtime;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
+use Tuxxedo\View\Lumi\Syntax\Highlight\Highlighter;
+use Tuxxedo\View\Lumi\Syntax\Highlight\HighlighterInterface;
 use Tuxxedo\View\ViewRenderInterface;
 
-// @todo This does not support highlighters
 class LumiConfigurator implements LumiConfiguratorInterface
 {
     public private(set) string $viewDirectory = '';
@@ -45,6 +46,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public private(set) ?LexerInterface $lexer = null;
     public private(set) ?ParserInterface $parser = null;
     public private(set) ?CompilerInterface $compiler = null;
+    public private(set) ?HighlighterInterface $highlighter = null;
 
     public private(set) array $optimizers = [];
 
@@ -415,6 +417,28 @@ class LumiConfigurator implements LumiConfiguratorInterface
         return $this;
     }
 
+    public function withDefaultHighlighter(): self
+    {
+        $this->highlighter = new Highlighter();
+
+        return $this;
+    }
+
+    public function withoutHighlighter(): self
+    {
+        $this->highlighter = null;
+
+        return $this;
+    }
+
+    public function useHighlighter(
+        HighlighterInterface $highlighter,
+    ): self {
+        $this->highlighter = $highlighter;
+
+        return $this;
+    }
+
     public function withDefaultLoader(): self
     {
         $this->loader = null;
@@ -549,6 +573,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
                 lexer: $this->lexer,
                 parser: $this->parser,
                 compiler: $this->compiler,
+                highlighter: $this->highlighter,
                 optimizers: $this->optimizers,
             ),
             loader: $this->loader ?? new Loader(
