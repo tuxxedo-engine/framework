@@ -21,7 +21,7 @@ readonly class LayoutNode implements NodeInterface
         public string $file,
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::ROOT->name,
+            BuiltinNodeScopes::STATEMENT->name,
         ];
     }
 }

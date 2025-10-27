@@ -25,7 +25,7 @@ readonly class BlockNode implements NodeInterface
         public array $body,
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::ROOT->name,
+            BuiltinNodeScopes::STATEMENT->name,
         ];
     }
 }

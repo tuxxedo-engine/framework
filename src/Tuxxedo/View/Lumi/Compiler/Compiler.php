@@ -133,13 +133,13 @@ class Compiler implements CompilerInterface
     ): string {
         $source = '';
 
-        $this->state->enter(BuiltinNodeScopes::ROOT->name);
+        $this->state->enter(BuiltinNodeScopes::STATEMENT->name);
 
         while (!$stream->eof()) {
             $source .= $this->compileNode($stream->consume(), $stream);
         }
 
-        $this->state->leave(BuiltinNodeScopes::ROOT->name);
+        $this->state->leave(BuiltinNodeScopes::STATEMENT->name);
 
         if ($source !== '') {
             $source = '<?php declare(strict_types=1); ?>' . $source;

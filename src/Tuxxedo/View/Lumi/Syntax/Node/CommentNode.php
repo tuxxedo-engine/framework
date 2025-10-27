@@ -21,7 +21,7 @@ readonly class CommentNode implements NodeInterface
         public string $text,
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::ROOT->name,
+            BuiltinNodeScopes::STATEMENT->name,
             BuiltinNodeScopes::BLOCK->name,
         ];
     }

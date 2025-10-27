@@ -25,7 +25,7 @@ readonly class AssignmentNode implements NodeInterface
         public AssignmentSymbol $operator,
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::ROOT->name,
+            BuiltinNodeScopes::STATEMENT->name,
             BuiltinNodeScopes::BLOCK->name,
         ];
     }

@@ -15,7 +15,7 @@ namespace Tuxxedo\View\Lumi\Syntax\Node;
 
 enum BuiltinNodeScopes
 {
-    case ROOT;
+    case STATEMENT;
     case BLOCK;
     case DEPENDENT;
     case EXPRESSION;
