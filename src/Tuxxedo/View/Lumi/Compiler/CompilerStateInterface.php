@@ -15,10 +15,11 @@ namespace Tuxxedo\View\Lumi\Compiler;
 
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
 
 interface CompilerStateInterface
 {
-    public ?string $expects {
+    public ?NodeScope $expects {
         get;
     }
 
@@ -43,29 +44,29 @@ interface CompilerStateInterface
     ): void;
 
     public function is(
-        string $scope,
+        NodeScope $scope,
     ): bool;
 
     /**
      * @throws CompilerException
      */
     public function enter(
-        string $scope,
+        NodeScope $scope,
     ): void;
 
     /**
      * @throws CompilerException
      */
     public function leave(
-        string $scope,
+        NodeScope $scope,
     ): void;
 
     /**
      * @throws CompilerException
      */
     public function swap(
-        string $scope,
-    ): string;
+        NodeScope $scope,
+    ): NodeScope;
 
     public function valid(
         NodeInterface $node,

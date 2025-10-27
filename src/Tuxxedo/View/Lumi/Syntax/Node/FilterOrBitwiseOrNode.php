@@ -22,7 +22,7 @@ readonly class FilterOrBitwiseOrNode implements ExpressionNodeInterface
         public ExpressionNodeInterface $right,
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::EXPRESSION->name,
+            NodeScope::EXPRESSION,
         ];
     }
 }

@@ -23,7 +23,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ArrayItemNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
-use Tuxxedo\View\Lumi\Syntax\Node\BuiltinNodeScopes;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
 use Tuxxedo\View\Lumi\Syntax\Node\ConcatNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FilterOrBitwiseOrNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
@@ -179,7 +179,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
                 );
             }
 
-            $oldState = $compiler->state->swap(BuiltinNodeScopes::EXPRESSION_ASSIGN->name);
+            $oldState = $compiler->state->swap(NodeScope::EXPRESSION_ASSIGN);
             $accessor = $compiler->compileExpression($node->name->accessor);
 
             $compiler->state->swap($oldState);
@@ -304,7 +304,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         CompilerInterface $compiler,
         NodeStreamInterface $stream,
     ): string {
-        if ($compiler->state->is(BuiltinNodeScopes::EXPRESSION_ASSIGN->name)) {
+        if ($compiler->state->is(NodeScope::EXPRESSION_ASSIGN)) {
             if ($node->nullSafe) {
                 throw CompilerException::fromNullPropertyAssignment();
             }

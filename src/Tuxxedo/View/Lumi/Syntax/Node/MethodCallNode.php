@@ -27,7 +27,7 @@ readonly class MethodCallNode implements IterableExpressionNodeInterface
         public bool $nullSafe = false,
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::EXPRESSION->name,
+            NodeScope::EXPRESSION,
         ];
     }
 }

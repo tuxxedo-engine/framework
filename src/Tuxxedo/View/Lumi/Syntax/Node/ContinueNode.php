@@ -21,8 +21,8 @@ readonly class ContinueNode implements NodeInterface
         public ?int $count = null,
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::STATEMENT->name,
-            BuiltinNodeScopes::BLOCK->name,
+            NodeScope::STATEMENT,
+            NodeScope::BLOCK,
         ];
     }
 }

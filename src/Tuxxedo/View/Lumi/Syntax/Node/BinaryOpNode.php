@@ -25,7 +25,7 @@ readonly class BinaryOpNode implements ExpressionNodeInterface
         public BinarySymbol $operator,
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::EXPRESSION->name,
+            NodeScope::EXPRESSION,
         ];
     }
 }

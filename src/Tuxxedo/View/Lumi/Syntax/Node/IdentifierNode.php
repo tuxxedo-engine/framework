@@ -21,8 +21,8 @@ readonly class IdentifierNode implements IterableExpressionNodeInterface
         public string $name,
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::EXPRESSION->name,
-            BuiltinNodeScopes::EXPRESSION_ASSIGN->name,
+            NodeScope::EXPRESSION,
+            NodeScope::EXPRESSION_ASSIGN,
         ];
     }
 }

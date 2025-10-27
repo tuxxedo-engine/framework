@@ -16,7 +16,7 @@ namespace Tuxxedo\View\Lumi\Syntax\Node;
 interface NodeInterface
 {
     /**
-     * @var string[]
+     * @var NodeScope[]
      */
     public array $scopes {
         get;

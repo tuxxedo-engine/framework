@@ -22,8 +22,8 @@ readonly class ArrayAccessNode implements IterableExpressionNodeInterface
         public ?ExpressionNodeInterface $key = null,
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::EXPRESSION->name,
-            BuiltinNodeScopes::EXPRESSION_ASSIGN->name,
+            NodeScope::EXPRESSION,
+            NodeScope::EXPRESSION_ASSIGN,
         ];
     }
 }

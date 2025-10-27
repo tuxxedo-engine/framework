@@ -23,8 +23,8 @@ readonly class PropertyAccessNode implements IterableExpressionNodeInterface
         public bool $nullSafe = false,
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::EXPRESSION->name,
-            BuiltinNodeScopes::EXPRESSION_ASSIGN->name,
+            NodeScope::EXPRESSION,
+            NodeScope::EXPRESSION_ASSIGN,
         ];
     }
 }

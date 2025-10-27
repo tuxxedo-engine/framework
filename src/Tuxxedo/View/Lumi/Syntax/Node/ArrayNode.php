@@ -24,7 +24,7 @@ readonly class ArrayNode implements IterableExpressionNodeInterface
         public array $items,
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::EXPRESSION->name,
+            NodeScope::EXPRESSION,
         ];
     }
 }

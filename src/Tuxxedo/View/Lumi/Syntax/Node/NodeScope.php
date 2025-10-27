@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-enum BuiltinNodeScopes
+enum NodeScope
 {
     case STATEMENT;
     case BLOCK;

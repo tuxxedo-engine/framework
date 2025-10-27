@@ -24,7 +24,7 @@ readonly class ConcatNode implements ExpressionNodeInterface
         public array $operands,
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::EXPRESSION->name,
+            NodeScope::EXPRESSION,
         ];
     }
 }

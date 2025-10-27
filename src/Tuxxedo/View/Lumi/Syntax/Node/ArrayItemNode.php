@@ -22,8 +22,8 @@ readonly class ArrayItemNode implements NodeInterface
         public ?ExpressionNodeInterface $key = null,
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::DEPENDENT->name,
-            BuiltinNodeScopes::EXPRESSION->name,
+            NodeScope::DEPENDENT,
+            NodeScope::EXPRESSION,
         ];
     }
 }

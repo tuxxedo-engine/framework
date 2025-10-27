@@ -21,7 +21,7 @@ readonly class GroupNode implements ExpressionNodeInterface
         public ExpressionNodeInterface $operand,
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::EXPRESSION->name,
+            NodeScope::EXPRESSION,
         ];
     }
 }

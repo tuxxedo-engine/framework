@@ -26,7 +26,7 @@ use Tuxxedo\View\Lumi\Compiler\Provider\StagedNodeCompilerHandlerInterface;
 use Tuxxedo\View\Lumi\Compiler\Provider\TextCompilerProvider;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
-use Tuxxedo\View\Lumi\Syntax\Node\BuiltinNodeScopes;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 
@@ -133,13 +133,13 @@ class Compiler implements CompilerInterface
     ): string {
         $source = '';
 
-        $this->state->enter(BuiltinNodeScopes::STATEMENT->name);
+        $this->state->enter(NodeScope::STATEMENT);
 
         while (!$stream->eof()) {
             $source .= $this->compileNode($stream->consume(), $stream);
         }
 
-        $this->state->leave(BuiltinNodeScopes::STATEMENT->name);
+        $this->state->leave(NodeScope::STATEMENT);
 
         if ($source !== '') {
             $source = '<?php declare(strict_types=1); ?>' . $source;
@@ -174,7 +174,7 @@ class Compiler implements CompilerInterface
         } elseif (!$this->state->valid($node)) {
             throw CompilerException::fromUnexpectedState(
                 scopes: $node->scopes,
-                expects: $this->state->expects ?? 'Unknown',
+                expects: $this->state->expects,
             );
         }
 

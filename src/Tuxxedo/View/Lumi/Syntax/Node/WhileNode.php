@@ -25,8 +25,8 @@ readonly class WhileNode implements NodeInterface
         public array $body = [],
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::STATEMENT->name,
-            BuiltinNodeScopes::BLOCK->name,
+            NodeScope::STATEMENT,
+            NodeScope::BLOCK,
         ];
     }
 }

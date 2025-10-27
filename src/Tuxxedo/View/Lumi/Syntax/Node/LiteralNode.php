@@ -24,8 +24,8 @@ readonly class LiteralNode implements ExpressionNodeInterface
         public NativeType $type,
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::EXPRESSION->name,
-            BuiltinNodeScopes::EXPRESSION_ASSIGN->name,
+            NodeScope::EXPRESSION,
+            NodeScope::EXPRESSION_ASSIGN,
         ];
     }
 }

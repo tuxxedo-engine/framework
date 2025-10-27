@@ -15,6 +15,7 @@ namespace Tuxxedo\View\Lumi\Compiler;
 
 use Tuxxedo\View\Lumi\LumiException;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
 
 class CompilerException extends LumiException
 {
@@ -67,39 +68,45 @@ class CompilerException extends LumiException
     }
 
     public static function fromUnexpectedStateEnter(
-        string $scope,
+        NodeScope $scope,
     ): self {
         return new self(
             message: \sprintf(
                 'Unexpected scope state entrance for "%s", old scope state must be left first',
-                $scope,
+                $scope->name,
             ),
         );
     }
 
     public static function fromUnexpectedStateLeave(
-        string $scope,
+        NodeScope $scope,
     ): self {
         return new self(
             message: \sprintf(
                 'Unexpected scope state leave for "%s", there is no scope state entrance for this',
-                $scope,
+                $scope->name,
             ),
         );
     }
 
     /**
-     * @param string[] $scopes
+     * @param NodeScope[] $scopes
      */
     public static function fromUnexpectedState(
         array $scopes,
-        string $expects,
+        ?NodeScope $expects,
     ): self {
         return new self(
             message: \sprintf(
                 'Unexpected scope state for node (can be: "%s"), expecting "%s"',
-                \join('", "', $scopes),
-                $expects,
+                \join(
+                    '", "',
+                    \array_map(
+                        static fn(NodeScope $scope): string => $scope->name,
+                        $scopes,
+                    ),
+                ),
+                $expects->name ?? 'unknown',
             ),
         );
     }

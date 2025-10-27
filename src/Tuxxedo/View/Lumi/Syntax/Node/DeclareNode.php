@@ -22,8 +22,8 @@ readonly class DeclareNode implements DirectiveNodeInterface
         public LiteralNode $value,
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::STATEMENT->name,
-            BuiltinNodeScopes::BLOCK->name,
+            NodeScope::STATEMENT,
+            NodeScope::BLOCK,
         ];
     }
 }

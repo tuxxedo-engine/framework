@@ -29,8 +29,8 @@ readonly class ConditionalNode implements NodeInterface
         public array $else = [],
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::STATEMENT->name,
-            BuiltinNodeScopes::BLOCK->name,
+            NodeScope::STATEMENT,
+            NodeScope::BLOCK,
         ];
     }
 }

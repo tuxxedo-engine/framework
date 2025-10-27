@@ -15,10 +15,11 @@ namespace Tuxxedo\View\Lumi\Compiler;
 
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
 
 class CompilerState implements CompilerStateInterface
 {
-    public private(set) ?string $expects = null;
+    public private(set) ?NodeScope $expects = null;
     public readonly DirectivesInterface&CompilerDirectivesInterface $directives;
     public private(set) int $flags = 0;
 
@@ -46,13 +47,13 @@ class CompilerState implements CompilerStateInterface
     }
 
     public function is(
-        string $scope,
+        NodeScope $scope,
     ): bool {
         return $scope === $this->expects;
     }
 
     public function enter(
-        string $scope,
+        NodeScope $scope,
     ): void {
         if ($this->expects !== null) {
             throw CompilerException::fromUnexpectedStateEnter(
@@ -64,7 +65,7 @@ class CompilerState implements CompilerStateInterface
     }
 
     public function leave(
-        string $scope,
+        NodeScope $scope,
     ): void {
         if ($this->expects === null) {
             throw CompilerException::fromUnexpectedStateLeave(
@@ -76,8 +77,9 @@ class CompilerState implements CompilerStateInterface
     }
 
     public function swap(
-        string $scope,
-    ): string {
+        NodeScope $scope,
+    ): NodeScope
+    {
         if ($this->expects === null) {
             throw CompilerException::fromUnexpectedStateLeave(
                 scope: $scope,

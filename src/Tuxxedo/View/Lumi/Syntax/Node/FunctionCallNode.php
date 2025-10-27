@@ -25,7 +25,7 @@ readonly class FunctionCallNode implements IterableExpressionNodeInterface
         public array $arguments,
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::EXPRESSION->name,
+            NodeScope::EXPRESSION,
         ];
     }
 }

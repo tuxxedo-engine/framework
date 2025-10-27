@@ -21,8 +21,8 @@ readonly class EchoNode implements NodeInterface
         public ExpressionNodeInterface $operand,
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::STATEMENT->name,
-            BuiltinNodeScopes::BLOCK->name,
+            NodeScope::STATEMENT,
+            NodeScope::BLOCK,
         ];
     }
 }

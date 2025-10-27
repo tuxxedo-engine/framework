@@ -24,7 +24,7 @@ readonly class UnaryOpNode implements ExpressionNodeInterface
         public UnarySymbol $operator,
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::EXPRESSION->name,
+            NodeScope::EXPRESSION,
         ];
     }
 }

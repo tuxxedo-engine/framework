@@ -19,7 +19,7 @@ use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
-use Tuxxedo\View\Lumi\Syntax\Node\BuiltinNodeScopes;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
 use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DeclareNode;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
@@ -39,7 +39,7 @@ class TextCompilerProvider implements CompilerProviderInterface
     ): string {
         if (
             $this->isLayoutStream($stream) &&
-            !$compiler->state->is(BuiltinNodeScopes::BLOCK->name)
+            !$compiler->state->is(NodeScope::BLOCK)
         ) {
             return '';
         }
@@ -99,7 +99,7 @@ class TextCompilerProvider implements CompilerProviderInterface
         CompilerInterface $compiler,
         NodeStreamInterface $stream,
     ): string {
-        $oldState = $compiler->state->swap(BuiltinNodeScopes::EXPRESSION->name);
+        $oldState = $compiler->state->swap(NodeScope::EXPRESSION);
 
         $compiler->state->directives->set(
             $node->directive->operand,
@@ -130,7 +130,7 @@ class TextCompilerProvider implements CompilerProviderInterface
     ): string {
         $body = '';
 
-        $oldState = $compiler->state->swap(BuiltinNodeScopes::BLOCK->name);
+        $oldState = $compiler->state->swap(NodeScope::BLOCK);
 
         foreach ($node->body as $blockNode) {
             $body .= $compiler->compileNode($blockNode, $stream);

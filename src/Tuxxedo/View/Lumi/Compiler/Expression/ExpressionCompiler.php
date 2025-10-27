@@ -16,7 +16,7 @@ namespace Tuxxedo\View\Lumi\Compiler\Expression;
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
-use Tuxxedo\View\Lumi\Syntax\Node\BuiltinNodeScopes;
+use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 
 class ExpressionCompiler implements ExpressionCompilerInterface
@@ -27,8 +27,8 @@ class ExpressionCompiler implements ExpressionCompilerInterface
     ): string {
         $node = $stream->current();
 
-        if (!$compiler->state->is(BuiltinNodeScopes::EXPRESSION_ASSIGN->name)) {
-            $oldState = $compiler->state->swap(BuiltinNodeScopes::EXPRESSION->name);
+        if (!$compiler->state->is(NodeScope::EXPRESSION_ASSIGN)) {
+            $oldState = $compiler->state->swap(NodeScope::EXPRESSION);
         }
 
         if ($node instanceof ExpressionNodeInterface) {

@@ -27,8 +27,8 @@ readonly class ForNode implements NodeInterface
         public ?IdentifierNode $key = null,
     ) {
         $this->scopes = [
-            BuiltinNodeScopes::STATEMENT->name,
-            BuiltinNodeScopes::BLOCK->name,
+            NodeScope::STATEMENT,
+            NodeScope::BLOCK,
         ];
     }
 }
