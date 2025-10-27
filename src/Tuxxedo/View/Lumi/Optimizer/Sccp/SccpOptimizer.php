@@ -62,13 +62,15 @@ class SccpOptimizer extends AbstractOptimizer
     ): array {
         return match (true) {
             $node instanceof AssignmentNode => parent::assignment($node),
-            $node instanceof DirectiveNodeInterface => parent::optimizeDirective($node),
-            $node instanceof BlockNode => parent::optimizeBlock($node),
+            $node instanceof BlockNode => [
+                parent::optimizeBlockBody($node),
+            ],
             $node instanceof BinaryOpNode => $this->optimizeBinaryOp($stream, $node),
+            $node instanceof ConcatNode => $this->optimizeConcat($node),
+            $node instanceof DirectiveNodeInterface => parent::optimizeDirective($node),
             $node instanceof EchoNode => $this->optimizeEcho($stream, $node),
             $node instanceof GroupNode => $this->optimizeGroup($stream, $node),
-            $node instanceof TextNode => $this->optimizeText($stream, $node),
-            $node instanceof ConcatNode => $this->optimizeConcat($node),
+            $node instanceof TextNode => parent::optimizeText($stream, $node),
             $node instanceof UnaryOpNode => $this->optimizeUnaryOp($stream, $node),
             default => [
                 $node,
@@ -434,40 +436,6 @@ class SccpOptimizer extends AbstractOptimizer
                 operand: $literal,
                 type: NativeType::STRING,
             ),
-        ];
-    }
-
-    /**
-     * @return array{0: TextNode}
-     */
-    private function optimizeText(
-        NodeStreamInterface $stream,
-        TextNode $node,
-    ): array {
-        $text = $node->text;
-
-        while (!$stream->eof()) {
-            $nextNode = $stream->current();
-
-            if (!$nextNode instanceof TextNode) {
-                break;
-            }
-
-            $text .= $nextNode->text;
-
-            $stream->consume();
-        }
-
-        if ($text !== $node->text) {
-            return [
-                new TextNode(
-                    text: $text,
-                ),
-            ];
-        }
-
-        return [
-            $node,
         ];
     }
 

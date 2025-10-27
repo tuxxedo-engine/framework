@@ -25,8 +25,12 @@ use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ForNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LayoutNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
+use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
 
 abstract class AbstractOptimizer implements OptimizerInterface
 {
@@ -106,24 +110,110 @@ abstract class AbstractOptimizer implements OptimizerInterface
     }
 
     /**
-     * @return array{0: BlockNode}
-     *
      * @throws CompilerException
      */
-    protected function optimizeBlock(
+    protected function optimizeBlockBody(
         BlockNode $node,
-    ): array {
+    ): BlockNode {
         $this->pushScope();
 
         $nodes = $this->optimizeNodes($node->body);
 
         $this->popScope();
 
+        return new BlockNode(
+            name: $node->name,
+            body: $nodes,
+        );
+    }
+
+    /**
+     * @throws CompilerException
+     */
+    protected function optimizeForBody(
+        ForNode $node,
+    ): ForNode {
+        $this->pushScope();
+
+        $nodes = $this->optimizeNodes($node->body);
+
+        $this->popScope();
+
+        return new ForNode(
+            value: $node->value,
+            iterator: $node->iterator,
+            body: $nodes,
+            key: $node->key,
+        );
+    }
+
+    /**
+     * @throws CompilerException
+     */
+    protected function optimizeDoWhileBody(
+        DoWhileNode $node,
+    ): DoWhileNode {
+        $this->pushScope();
+
+        $nodes = $this->optimizeNodes($node->body);
+
+        $this->popScope();
+
+        return new DoWhileNode(
+            operand: $node->operand,
+            body: $nodes,
+        );
+    }
+
+    /**
+     * @throws CompilerException
+     */
+    protected function optimizeWhileBody(
+        WhileNode $node,
+    ): WhileNode {
+        $this->pushScope();
+
+        $nodes = $this->optimizeNodes($node->body);
+
+        $this->popScope();
+
+        return new WhileNode(
+            operand: $node->operand,
+            body: $nodes,
+        );
+    }
+
+    /**
+     * @return TextNode[]
+     */
+    protected function optimizeText(
+        NodeStreamInterface $stream,
+        TextNode $node,
+    ): array {
+        $text = $node->text;
+
+        while (!$stream->eof()) {
+            $nextNode = $stream->current();
+
+            if (!$nextNode instanceof TextNode) {
+                break;
+            }
+
+            $text .= $nextNode->text;
+
+            $stream->consume();
+        }
+
+        if ($text !== $node->text) {
+            return [
+                new TextNode(
+                    text: $text,
+                ),
+            ];
+        }
+
         return [
-            new BlockNode(
-                name: $node->name,
-                body: $nodes,
-            ),
+            $node,
         ];
     }
 

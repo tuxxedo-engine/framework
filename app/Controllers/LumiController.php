@@ -185,7 +185,7 @@ readonly class LumiController
         return FileCollection::fromDirectory($this->viewDirectory)
             ->filter(\is_file(...))
             ->filter(
-                static fn(string $name): bool => \str_contains($name, 'hello_world_'),
+                static fn (string $name): bool => \str_contains($name, 'hello_world_'),
             );
     }
 
@@ -216,6 +216,7 @@ readonly class LumiController
             'hello_world_block_two' => $this->viewController->blockTwo(...),
             'hello_world_call' => $this->viewController->call(...),
             'hello_world_cond' => $this->viewController->cond(...),
+            'hello_world_dce' => $this->viewController->dce(...),
             'hello_world_declare' => $this->viewController->decl(...),
             'hello_world_expr_1' => $this->viewController->exprOne(...),
             'hello_world_expr_2' => $this->viewController->exprTwo(...),
@@ -241,7 +242,6 @@ readonly class LumiController
         return $view->scope;
     }
 
-    // @todo SCCP may duplicate last pass, investigate this behavior
     private function visualizeSccpPass(
         string &$buffer,
         NodeStreamInterface $nodeStream,

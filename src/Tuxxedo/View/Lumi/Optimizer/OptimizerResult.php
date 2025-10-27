@@ -31,7 +31,11 @@ class OptimizerResult implements OptimizerResultInterface
         $changed = false;
 
         for ($position = 0; $position < $oldNodeCount; $position++) {
-            if ($oldStream->nodes[$position] !== $newStream->nodes[$position]) {
+            if (
+                !\array_key_exists($position, $newStream->nodes) ||
+                $oldStream->nodes[$position]::class !== $newStream->nodes[$position]::class ||
+                \serialize($oldStream->nodes[$position]) !== \serialize($newStream->nodes[$position])
+            ) {
                 $changed = true;
 
                 break;

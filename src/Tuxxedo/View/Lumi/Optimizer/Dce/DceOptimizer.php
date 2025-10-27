@@ -20,15 +20,20 @@ use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
+use Tuxxedo\View\Lumi\Syntax\Node\BreakNode;
 use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ConditionalBranchNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ConditionalNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ContinueNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\ForNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
+use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
 
 class DceOptimizer extends AbstractOptimizer
 {
@@ -38,7 +43,7 @@ class DceOptimizer extends AbstractOptimizer
         $nodes = [];
 
         while (!$stream->eof()) {
-            $optimizedNodes = $this->optimizeNode($stream->consume());
+            $optimizedNodes = $this->optimizeNode($stream, $stream->consume());
 
             if (\sizeof($optimizedNodes) > 0) {
                 \array_push($nodes, ...$optimizedNodes);
@@ -54,15 +59,25 @@ class DceOptimizer extends AbstractOptimizer
      * @return NodeInterface[]
      */
     private function optimizeNode(
+        NodeStreamInterface $stream,
         NodeInterface $node,
     ): array {
         return match (true) {
             $node instanceof AssignmentNode => parent::assignment($node),
-            $node instanceof DirectiveNodeInterface => parent::optimizeDirective($node),
-            $node instanceof BlockNode => parent::optimizeBlock($node),
+            $node instanceof BreakNode => $this->optimizeLoopStatement($stream),
+            $node instanceof BlockNode => [
+                parent::optimizeBlockBody($node),
+            ],
             $node instanceof CommentNode => $this->optimizeComment($node),
             $node instanceof ConditionalNode => $this->optimizeConditional($node),
-            $node instanceof TextNode => $this->optimizeText($node),
+            $node instanceof ContinueNode => $this->optimizeLoopStatement($stream),
+            $node instanceof DirectiveNodeInterface => parent::optimizeDirective($node),
+            $node instanceof DoWhileNode => $this->optimizeDoWhile($node),
+            $node instanceof ForNode => [
+                parent::optimizeForBody($node),
+            ],
+            $node instanceof TextNode => $this->optimizeText($stream, $node),
+            $node instanceof WhileNode => $this->optimizeWhile($node),
             default => [
                 $node,
             ],
@@ -171,9 +186,10 @@ class DceOptimizer extends AbstractOptimizer
     }
 
     /**
-     * @return NodeInterface[]
+     * @return TextNode[]
      */
-    private function optimizeText(
+    protected function optimizeText(
+        NodeStreamInterface $stream,
         TextNode $node,
     ): array {
         if (
@@ -183,9 +199,7 @@ class DceOptimizer extends AbstractOptimizer
             return [];
         }
 
-        return [
-            $node,
-        ];
+        return parent::optimizeText($stream, $node);
     }
 
     private function evaluate(
@@ -220,5 +234,52 @@ class DceOptimizer extends AbstractOptimizer
         }
 
         return DceEvaluateResult::CANNOT_DETERMINE;
+    }
+
+    /**
+     * @return NodeInterface[]
+     */
+    protected function optimizeDoWhile(
+        DoWhileNode $node,
+    ): array {
+        $node = parent::optimizeDoWhileBody($node);
+
+        if ($this->evaluate($node->operand) === DceEvaluateResult::ALWAYS_FALSE) {
+            return $node->body;
+        }
+
+        return [
+            $node,
+        ];
+    }
+
+    /**
+     * @return NodeInterface[]
+     */
+    protected function optimizeWhile(
+        WhileNode $node,
+    ): array {
+        $node = parent::optimizeWhileBody($node);
+
+        if ($this->evaluate($node->operand) === DceEvaluateResult::ALWAYS_FALSE) {
+            return $node->body;
+        }
+
+        return [
+            $node,
+        ];
+    }
+
+    /**
+     * @return NodeInterface[]
+     */
+    protected function optimizeLoopStatement(
+        NodeStreamInterface $stream,
+    ): array {
+        while (!$stream->eof()) {
+            $stream->consume();
+        }
+
+        return [];
     }
 }

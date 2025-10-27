@@ -235,4 +235,12 @@ readonly class ViewController
             name: 'hello_world_test',
         );
     }
+
+    #[Route\Get]
+    public function dce(): ViewInterface
+    {
+        return new View(
+            name: 'hello_world_dce',
+        );
+    }
 }
