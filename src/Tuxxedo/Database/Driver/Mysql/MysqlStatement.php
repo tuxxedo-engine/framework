@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Driver\Mysql;
 
-use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\AbstractStatement;
 use Tuxxedo\Database\Driver\BindingInterface;
 use Tuxxedo\Database\Driver\ParameterType;
@@ -62,21 +61,13 @@ class MysqlStatement extends AbstractStatement
         $statement = $mysqli->prepare($this->sql);
 
         if ($statement === false) {
-            throw DatabaseException::fromError(
-                sqlState: $mysqli->sqlstate,
-                code: $mysqli->errno,
-                error: $mysqli->error,
-            );
+            $this->connection->throwFromLastError($mysqli);
         }
 
         $statement->bind_param($bindingTypes, ...$bindingValues);
 
         if (!$statement->execute() || ($result = $statement->get_result()) === false) {
-            throw DatabaseException::fromError(
-                sqlState: $mysqli->sqlstate,
-                code: $mysqli->errno,
-                error: $mysqli->error,
-            );
+            $this->connection->throwFromLastError($mysqli);
         }
 
         return new MysqlResultSet(

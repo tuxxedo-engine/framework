@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Driver\Pgsql;
 
+use PgSql\Connection;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\Driver\ConnectionInterface;
@@ -24,6 +25,9 @@ class PgsqlConnection implements ConnectionInterface
     public readonly ConnectionRole $role;
     public readonly DefaultDriver $driver;
 
+    private Connection $pgsql;
+    private readonly \Closure $connector;
+
     public function __construct(
         ConfigInterface $config,
     ) {
@@ -32,25 +36,40 @@ class PgsqlConnection implements ConnectionInterface
         $this->driver = DefaultDriver::PGSQL;
     }
 
-    public function getDriverInstance(): object
+    private function connectCheck(): void
     {
-        // @todo Implement getDriverInstance() method.
+        if (!isset($this->pgsql)) {
+            $this->connect();
+        }
+    }
+
+    public function getDriverInstance(): Connection
+    {
+        $this->connectCheck();
+
+        return $this->pgsql;
     }
 
     public function connect(
         bool $reconnect = false,
     ): void {
-        // @todo Implement connect() method.
+        if ($reconnect || !isset($this->pgsql)) {
+            ($this->connector)();
+        }
     }
 
     public function close(): void
     {
-        // @todo Implement close() method.
+        if (isset($this->pgsql)) {
+            @\pg_close($this->pgsql);
+
+            unset($this->pgsql);
+        }
     }
 
     public function isConnected(): bool
     {
-        // @todo Implement isConnected() method.
+        return isset($this->pgsql);
     }
 
     public function ping(): bool

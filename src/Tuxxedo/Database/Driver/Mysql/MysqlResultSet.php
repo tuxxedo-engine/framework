@@ -28,7 +28,7 @@ class MysqlResultSet implements ResultSetInterface
     private int $numRows;
 
     public function __construct(
-        private readonly ?\mysqli_result $result,
+        private ?\mysqli_result $result,
         public readonly int|string $affectedRows = 0,
     ) {
         if ($this->result !== null) {
@@ -134,6 +134,12 @@ class MysqlResultSet implements ResultSetInterface
 
     public function free(): void
     {
+        if ($this->result !== null) {
+            $this->result->free();
+
+            $this->result = null;
+            $this->pointer = 0;
+        }
     }
 
     public function count(): int

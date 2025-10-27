@@ -69,7 +69,7 @@ class SqliteConnection implements ConnectionInterface
         }
     }
 
-    private function throwFromSqliteException(
+    public function throwFromSqliteException(
         \SQLite3Exception $exception,
     ): never {
         throw DatabaseException::fromError(
@@ -125,7 +125,7 @@ class SqliteConnection implements ConnectionInterface
             $this->sqlite->query('SELECT 1');
 
             return true;
-        } catch (\SQLite3Exception) {
+        } catch (\Exception) {
             return false;
         }
     }
@@ -245,6 +245,21 @@ class SqliteConnection implements ConnectionInterface
     public function query(
         string $sql,
     ): SqliteResultSet {
-        // @todo Implement query() method.
+        $this->connectCheck();
+
+        try {
+            $result = $this->sqlite->query($sql);
+        } catch (\SQLite3Exception $exception) {
+            $this->throwFromSqliteException($exception);
+        }
+
+        if ($result === false) {
+            $this->throwFromLastError();
+        }
+
+        return new SqliteResultSet(
+            result: $result,
+            affectedRows: $this->sqlite->changes(),
+        );
     }
 }

@@ -138,6 +138,16 @@ class MysqlConnection implements ConnectionInterface
         );
     }
 
+    public function throwFromLastError(
+        \mysqli $mysqli,
+    ): never {
+        throw DatabaseException::fromError(
+            sqlState: $mysqli->sqlstate,
+            code: $mysqli->errno,
+            error: $mysqli->error,
+        );
+    }
+
     public function isMariaDb(): bool
     {
         return \str_contains(\strtolower($this->serverVersion()), 'mariadb');
@@ -241,11 +251,7 @@ class MysqlConnection implements ConnectionInterface
         $this->connectCheck();
 
         if (!$this->mysqli->begin_transaction(\MYSQLI_TRANS_START_READ_WRITE)) {
-            throw DatabaseException::fromError(
-                sqlState: $this->mysqli->sqlstate,
-                code: $this->mysqli->errno,
-                error: $this->mysqli->error,
-            );
+            $this->throwFromLastError($this->mysqli);
         }
 
         $this->inTransaction = true;
@@ -256,11 +262,7 @@ class MysqlConnection implements ConnectionInterface
         $this->connectCheck();
 
         if (!$this->mysqli->commit()) {
-            throw DatabaseException::fromError(
-                sqlState: $this->mysqli->sqlstate,
-                code: $this->mysqli->errno,
-                error: $this->mysqli->error,
-            );
+            $this->throwFromLastError($this->mysqli);
         }
 
         $this->inTransaction = false;
@@ -271,11 +273,7 @@ class MysqlConnection implements ConnectionInterface
         $this->connectCheck();
 
         if (!$this->mysqli->rollback()) {
-            throw DatabaseException::fromError(
-                sqlState: $this->mysqli->sqlstate,
-                code: $this->mysqli->errno,
-                error: $this->mysqli->error,
-            );
+            $this->throwFromLastError($this->mysqli);
         }
 
         $this->inTransaction = false;
@@ -331,11 +329,7 @@ class MysqlConnection implements ConnectionInterface
 
         if (\is_bool($result)) {
             if ($result === false) {
-                throw DatabaseException::fromError(
-                    sqlState: $this->mysqli->sqlstate,
-                    code: $this->mysqli->errno,
-                    error: $this->mysqli->error,
-                );
+                $this->throwFromLastError($this->mysqli);
             }
 
             $result = null;

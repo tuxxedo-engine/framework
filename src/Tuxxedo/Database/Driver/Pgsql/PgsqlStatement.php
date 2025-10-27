@@ -26,6 +26,8 @@ class PgsqlStatement extends AbstractStatement
     public function execute(
         array $parameters = [],
     ): PgsqlResultSet {
-        // @todo Implement execute() method.
+        $this->bindAll($parameters);
+
+        // @todo Implement
     }
 }
