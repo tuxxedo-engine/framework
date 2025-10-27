@@ -289,7 +289,9 @@ class MysqlConnection implements ConnectionInterface
     ): void {
         try {
             $this->begin();
+
             $transaction($this);
+
             $this->commit();
         } catch (\Exception $exception) {
             $this->rollback();

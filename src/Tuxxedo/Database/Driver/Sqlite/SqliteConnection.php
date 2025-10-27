@@ -79,12 +79,13 @@ class SqliteConnection implements ConnectionInterface
         );
     }
 
-    public function throwFromLastError(): never
-    {
+    public function throwFromLastError(
+        \SQLite3 $sqlite,
+    ): never {
         throw DatabaseException::fromError(
             sqlState: 'HY000',
-            code: $this->sqlite->lastErrorCode(),
-            error: $this->sqlite->lastErrorMsg(),
+            code: $sqlite->lastErrorCode(),
+            error: $sqlite->lastErrorMsg(),
         );
     }
 
@@ -162,7 +163,7 @@ class SqliteConnection implements ConnectionInterface
 
         try {
             if ($this->sqlite->exec('BEGIN IMMEDIATE') === false) {
-                $this->throwFromLastError();
+                $this->throwFromLastError($this->sqlite);
             }
 
             $this->inTransaction = true;
@@ -181,7 +182,7 @@ class SqliteConnection implements ConnectionInterface
 
         try {
             if ($this->sqlite->exec('COMMIT') === false) {
-                $this->throwFromLastError();
+                $this->throwFromLastError($this->sqlite);
             }
         } catch (\SQLite3Exception $exception) {
             $this->throwFromSqliteException($exception);
@@ -198,7 +199,7 @@ class SqliteConnection implements ConnectionInterface
 
         try {
             if ($this->sqlite->exec('ROLLBACK') === false) {
-                $this->throwFromLastError();
+                $this->throwFromLastError($this->sqlite);
             }
         } catch (\SQLite3Exception $exception) {
             $this->throwFromSqliteException($exception);
@@ -215,7 +216,9 @@ class SqliteConnection implements ConnectionInterface
     ): void {
         try {
             $this->begin();
+
             $transaction($this);
+
             $this->commit();
         } catch (\Exception $exception) {
             $this->rollback();
@@ -254,7 +257,7 @@ class SqliteConnection implements ConnectionInterface
         }
 
         if ($result === false) {
-            $this->throwFromLastError();
+            $this->throwFromLastError($this->sqlite);
         }
 
         return new SqliteResultSet(

@@ -51,7 +51,7 @@ class SqliteStatement extends AbstractStatement
         $statement = $sqlite->prepare($this->sql);
 
         if ($statement === false) {
-            $this->connection->throwFromLastError();
+            $this->connection->throwFromLastError($sqlite);
         }
 
         /** @var BindingInterface $binding */
@@ -63,7 +63,7 @@ class SqliteStatement extends AbstractStatement
             );
 
             if (!$bound) {
-                $this->connection->throwFromLastError();
+                $this->connection->throwFromLastError($sqlite);
             }
         }
 
@@ -74,7 +74,7 @@ class SqliteStatement extends AbstractStatement
         }
 
         if ($result === false) {
-            $this->connection->throwFromLastError();
+            $this->connection->throwFromLastError($sqlite);
         }
 
         return new SqliteResultSet(

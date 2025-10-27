@@ -226,7 +226,9 @@ abstract class AbstractPdoConnection implements ConnectionInterface
     ): void {
         try {
             $this->begin();
+
             $transaction($this);
+
             $this->commit();
         } catch (\Exception $exception) {
             $this->rollback();

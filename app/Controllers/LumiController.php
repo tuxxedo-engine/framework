@@ -183,7 +183,10 @@ readonly class LumiController
     private function getViewFiles(): CollectionInterface
     {
         return FileCollection::fromDirectory($this->viewDirectory)
-            ->filter(\is_file(...));
+            ->filter(\is_file(...))
+            ->filter(
+                static fn(string $name): bool => \str_contains($name, 'hello_world_'),
+            );
     }
 
     private function getShortViewName(
@@ -344,6 +347,7 @@ readonly class LumiController
         $buffer .= '</script>';
         $buffer .= '<select id="file" onchange="formCheck();">';
 
+        // @todo Set a default $selectedViewFile if not contained in collection
         foreach ($this->getViewFiles() as $viewFile) {
             $viewFile = $this->getShortViewName($viewFile);
             $selected = $this->getShortViewName($selectedViewFile) === $viewFile

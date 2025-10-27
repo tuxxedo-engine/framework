@@ -14,8 +14,10 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver\Pgsql;
 
 use PgSql\Connection;
+use PgSql\Result;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Database\ConnectionRole;
+use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Driver\DefaultDriver;
 
@@ -41,6 +43,18 @@ class PgsqlConnection implements ConnectionInterface
         if (!isset($this->pgsql)) {
             $this->connect();
         }
+    }
+
+    public function throwFromLastError(
+        Connection $pgsql,
+    ): never {
+        // @todo Implement
+    }
+
+    public function throwFromResult(
+        Result $result,
+    ): never {
+        // @todo Implement
     }
 
     public function getDriverInstance(): Connection
@@ -74,7 +88,13 @@ class PgsqlConnection implements ConnectionInterface
 
     public function ping(): bool
     {
-        // @todo Implement ping() method.
+        try {
+            $this->connectCheck();
+
+            return \pg_query($this->pgsql, 'SELECT 1') !== false;
+        } catch (\Exception) {
+            return false;
+        }
     }
 
     public function serverVersion(): string
@@ -119,7 +139,9 @@ class PgsqlConnection implements ConnectionInterface
     ): void {
         try {
             $this->begin();
+
             $transaction($this);
+
             $this->commit();
         } catch (\Exception $exception) {
             $this->rollback();
@@ -149,6 +171,17 @@ class PgsqlConnection implements ConnectionInterface
     public function query(
         string $sql,
     ): PgsqlResultSet {
-        // @todo Implement query() method.
+        $this->connectCheck();
+
+        $result = \pg_query($this->pgsql, $sql);
+
+        if ($result === false) {
+            $this->throwFromLastError($this->pgsql);
+        }
+
+        return new PgsqlResultSet(
+            result: $result,
+            affectedRows: \pg_affected_rows($result),
+        );
     }
 }
