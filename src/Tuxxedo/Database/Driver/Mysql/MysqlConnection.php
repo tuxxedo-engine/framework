@@ -251,6 +251,8 @@ class MysqlConnection implements ConnectionInterface
         $this->connectCheck();
 
         if (!$this->mysqli->begin_transaction(\MYSQLI_TRANS_START_READ_WRITE)) {
+            $this->inTransaction = false;
+
             $this->throwFromLastError($this->mysqli);
         }
 
@@ -262,6 +264,8 @@ class MysqlConnection implements ConnectionInterface
         $this->connectCheck();
 
         if (!$this->mysqli->commit()) {
+            $this->inTransaction = false;
+
             $this->throwFromLastError($this->mysqli);
         }
 
@@ -273,6 +277,8 @@ class MysqlConnection implements ConnectionInterface
         $this->connectCheck();
 
         if (!$this->mysqli->rollback()) {
+            $this->inTransaction = false;
+
             $this->throwFromLastError($this->mysqli);
         }
 

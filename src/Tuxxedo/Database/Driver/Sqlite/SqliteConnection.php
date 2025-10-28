@@ -186,6 +186,8 @@ class SqliteConnection implements ConnectionInterface
             }
         } catch (\SQLite3Exception $exception) {
             $this->throwFromSqliteException($exception);
+        } finally {
+            $this->inTransaction = false;
         }
     }
 
@@ -203,6 +205,8 @@ class SqliteConnection implements ConnectionInterface
             }
         } catch (\SQLite3Exception $exception) {
             $this->throwFromSqliteException($exception);
+        } finally {
+            $this->inTransaction = false;
         }
     }
 
