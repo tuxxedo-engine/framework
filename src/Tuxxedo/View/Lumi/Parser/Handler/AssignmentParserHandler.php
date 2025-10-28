@@ -26,7 +26,11 @@ use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\CharacterSymbol;
 use Tuxxedo\View\Lumi\Syntax\Token\AssignToken;
-use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\CharacterToken;
+use Tuxxedo\View\Lumi\Syntax\Token\EndToken;
+use Tuxxedo\View\Lumi\Syntax\Token\IdentifierToken;
+use Tuxxedo\View\Lumi\Syntax\Token\LiteralToken;
+use Tuxxedo\View\Lumi\Syntax\Token\OperatorToken;
 
 class AssignmentParserHandler implements ParserHandlerInterface
 {
@@ -38,20 +42,14 @@ class AssignmentParserHandler implements ParserHandlerInterface
     ): array {
         $stream->consume();
 
-        $variableToken = $stream->expect(BuiltinTokenNames::IDENTIFIER->name);
+        $variableToken = $stream->expect(IdentifierToken::class);
 
-        if ($variableToken->op1 === null) {
-            throw ParserException::fromMalformedToken(
-                line: $variableToken->line,
-            );
-        }
-
-        if ($stream->currentIs(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::DOT->symbol())) {
+        if ($stream->currentIs(CharacterToken::class, CharacterSymbol::DOT->symbol())) {
             $accessor = $this->parsePropertyAccess(
                 stream: $stream,
                 accessor: $variableToken->op1,
             );
-        } elseif ($stream->currentIs(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::LEFT_SQUARE_BRACKET->symbol())) {
+        } elseif ($stream->currentIs(CharacterToken::class, CharacterSymbol::LEFT_SQUARE_BRACKET->symbol())) {
             $accessor = $this->parseArrayAccess(
                 stream: $stream,
                 accessor: $variableToken->op1,
@@ -62,21 +60,12 @@ class AssignmentParserHandler implements ParserHandlerInterface
             );
         }
 
-        $operatorToken = $stream->expect(BuiltinTokenNames::OPERATOR->name);
-
-        if ($operatorToken->op1 === null) {
-            throw ParserException::fromMalformedToken(
-                line: $operatorToken->line,
-            );
-        }
-
-        $operatorSymbol = $operatorToken->op1;
-
         $assignmentOperator = null;
         $assignmentOperators = AssignmentSymbol::cases();
+        $operatorToken = $stream->expect(OperatorToken::class);
 
         foreach ($assignmentOperators as $case) {
-            if ($case->symbol() === $operatorSymbol) {
+            if ($case->symbol() === $operatorToken->op1) {
                 $assignmentOperator = $case;
 
                 break;
@@ -85,7 +74,7 @@ class AssignmentParserHandler implements ParserHandlerInterface
 
         if ($assignmentOperator === null) {
             throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
-                tokenName: $operatorSymbol,
+                tokenName: $operatorToken->op1,
                 expectedTokenNames: \array_map(
                     static fn (AssignmentSymbol $operator): string => $operator->symbol(),
                     $assignmentOperators,
@@ -96,13 +85,16 @@ class AssignmentParserHandler implements ParserHandlerInterface
 
         $expressionTokens = [];
 
-        while (!$stream->eof() && $stream->current()->type !== BuiltinTokenNames::END->name) {
+        while (
+            !$stream->eof() &&
+            !$stream->current() instanceof EndToken
+        ) {
             $expressionTokens[] = $stream->current();
 
             $stream->consume();
         }
 
-        $stream->expect(BuiltinTokenNames::END->name);
+        $stream->expect(EndToken::class);
 
         return [
             new AssignmentNode(
@@ -122,30 +114,22 @@ class AssignmentParserHandler implements ParserHandlerInterface
         TokenStreamInterface $stream,
         PropertyAccessNode|ArrayAccessNode|string $accessor,
     ): ArrayAccessNode|PropertyAccessNode {
-        $stream->expect(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::DOT->symbol());
-
-        $property = $stream->expect(BuiltinTokenNames::IDENTIFIER->name);
-
-        if ($property->op1 === null) {
-            throw ParserException::fromMalformedToken(
-                line: $property->line,
-            );
-        }
+        $stream->expect(CharacterToken::class, CharacterSymbol::DOT->symbol());
 
         $node = new PropertyAccessNode(
             accessor: \is_string($accessor)
                 ? new IdentifierNode(
                     name: $accessor,
                 ) : $accessor,
-            property: $property->op1,
+            property: $stream->expect(IdentifierToken::class)->op1,
         );
 
-        if ($stream->currentIs(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::DOT->symbol())) {
+        if ($stream->currentIs(CharacterToken::class, CharacterSymbol::DOT->symbol())) {
             return $this->parsePropertyAccess(
                 stream: $stream,
                 accessor: $node,
             );
-        } elseif ($stream->currentIs(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::LEFT_SQUARE_BRACKET->symbol())) {
+        } elseif ($stream->currentIs(CharacterToken::class, CharacterSymbol::LEFT_SQUARE_BRACKET->symbol())) {
             return $this->parseArrayAccess(
                 stream: $stream,
                 accessor: $node,
@@ -159,11 +143,11 @@ class AssignmentParserHandler implements ParserHandlerInterface
         TokenStreamInterface $stream,
         PropertyAccessNode|ArrayAccessNode|string $accessor,
     ): ArrayAccessNode|PropertyAccessNode {
-        $stream->expect(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::LEFT_SQUARE_BRACKET->symbol());
+        $stream->expect(CharacterToken::class, CharacterSymbol::LEFT_SQUARE_BRACKET->symbol());
 
         $key = $this->parseConstrainedIndex($stream);
 
-        $stream->expect(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::RIGHT_SQUARE_BRACKET->symbol());
+        $stream->expect(CharacterToken::class, CharacterSymbol::RIGHT_SQUARE_BRACKET->symbol());
 
         $node = new ArrayAccessNode(
             array: \is_string($accessor)
@@ -173,9 +157,9 @@ class AssignmentParserHandler implements ParserHandlerInterface
             key: $key,
         );
 
-        if ($stream->currentIs(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::DOT->symbol())) {
+        if ($stream->currentIs(CharacterToken::class, CharacterSymbol::DOT->symbol())) {
             return $this->parsePropertyAccess($stream, $node);
-        } elseif ($stream->currentIs(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::LEFT_SQUARE_BRACKET->symbol())) {
+        } elseif ($stream->currentIs(CharacterToken::class, CharacterSymbol::LEFT_SQUARE_BRACKET->symbol())) {
             return $this->parseArrayAccess($stream, $node);
         }
 
@@ -188,27 +172,19 @@ class AssignmentParserHandler implements ParserHandlerInterface
         $node = $this->parseIndexPrimary($stream);
 
         while (!$stream->eof()) {
-            if ($stream->currentIs(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::DOT->symbol())) {
+            if ($stream->currentIs(CharacterToken::class, CharacterSymbol::DOT->symbol())) {
                 $stream->consume();
-
-                $property = $stream->expect(BuiltinTokenNames::IDENTIFIER->name);
-
-                if ($property->op1 === null) {
-                    throw ParserException::fromMalformedToken(
-                        line: $property->line,
-                    );
-                }
 
                 $node = new PropertyAccessNode(
                     accessor: $node,
-                    property: $property->op1,
+                    property: $stream->expect(IdentifierToken::class)->op1,
                 );
-            } elseif ($stream->currentIs(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::LEFT_SQUARE_BRACKET->symbol())) {
+            } elseif ($stream->currentIs(CharacterToken::class, CharacterSymbol::LEFT_SQUARE_BRACKET->symbol())) {
                 $stream->consume();
 
                 $key = $this->parseConstrainedIndex($stream);
 
-                $stream->expect(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::RIGHT_SQUARE_BRACKET->symbol());
+                $stream->expect(CharacterToken::class, CharacterSymbol::RIGHT_SQUARE_BRACKET->symbol());
 
                 $node = new ArrayAccessNode(
                     array: $node,
@@ -228,28 +204,16 @@ class AssignmentParserHandler implements ParserHandlerInterface
     private function parseIndexPrimary(
         TokenStreamInterface $stream,
     ): IdentifierNode|LiteralNode {
-        if ($stream->currentIs(BuiltinTokenNames::IDENTIFIER->name)) {
-            $identifier = $stream->expect(BuiltinTokenNames::IDENTIFIER->name);
-
-            if ($identifier->op1 === null) {
-                throw ParserException::fromMalformedToken(
-                    line: $identifier->line,
-                );
-            }
+        if ($stream->currentIs(IdentifierToken::class)) {
+            $identifier = $stream->expect(IdentifierToken::class);
 
             return new IdentifierNode(
                 name: $identifier->op1,
             );
         }
 
-        if ($stream->currentIs(BuiltinTokenNames::LITERAL->name)) {
-            $literal = $stream->expect(BuiltinTokenNames::LITERAL->name);
-
-            if ($literal->op1 === null || $literal->op2 === null) {
-                throw ParserException::fromMalformedToken(
-                    line: $literal->line,
-                );
-            }
+        if ($stream->currentIs(LiteralToken::class)) {
+            $literal = $stream->expect(LiteralToken::class);
 
             return new LiteralNode(
                 operand: $literal->op1,
@@ -261,10 +225,10 @@ class AssignmentParserHandler implements ParserHandlerInterface
         }
 
         throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
-            tokenName: $stream->current()->type,
+            tokenName: $stream->current()::name(),
             expectedTokenNames: [
-                BuiltinTokenNames::IDENTIFIER->name,
-                BuiltinTokenNames::LITERAL->name,
+                IdentifierToken::name(),
+                LiteralToken::name(),
             ],
             line: $stream->current()->line,
         );

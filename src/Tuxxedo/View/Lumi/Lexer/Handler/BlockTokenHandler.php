@@ -19,7 +19,6 @@ use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Token\AssignToken;
 use Tuxxedo\View\Lumi\Syntax\Token\BlockToken;
 use Tuxxedo\View\Lumi\Syntax\Token\BreakToken;
-use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\ContinueToken;
 use Tuxxedo\View\Lumi\Syntax\Token\DeclareToken;
 use Tuxxedo\View\Lumi\Syntax\Token\DoToken;
@@ -34,8 +33,10 @@ use Tuxxedo\View\Lumi\Syntax\Token\EndToken;
 use Tuxxedo\View\Lumi\Syntax\Token\EndWhileToken;
 use Tuxxedo\View\Lumi\Syntax\Token\ForToken;
 use Tuxxedo\View\Lumi\Syntax\Token\ForeachToken;
+use Tuxxedo\View\Lumi\Syntax\Token\IdentifierToken;
 use Tuxxedo\View\Lumi\Syntax\Token\IfToken;
 use Tuxxedo\View\Lumi\Syntax\Token\LayoutToken;
+use Tuxxedo\View\Lumi\Syntax\Token\LiteralToken;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\WhileToken;
 
@@ -344,7 +345,7 @@ class BlockTokenHandler implements TokenHandlerInterface
             );
         }
 
-        if ($tokens[0]->type !== BuiltinTokenNames::LITERAL->name) {
+        if (!$tokens[0] instanceof LiteralToken) {
             throw LexerException::fromInvalidDeclareLiteral(
                 line: $startingLine,
             );
@@ -411,8 +412,7 @@ class BlockTokenHandler implements TokenHandlerInterface
 
         if (
             \sizeof($expression) !== 1 ||
-            $expression[0]->type !== BuiltinTokenNames::IDENTIFIER->name ||
-            $expression[0]->op1 === null
+            !$expression[0] instanceof IdentifierToken
         ) {
             throw LexerException::fromInvalidBlockName(
                 line: $startingLine,
@@ -444,8 +444,7 @@ class BlockTokenHandler implements TokenHandlerInterface
 
         if (
             \sizeof($expression) !== 1 ||
-            $expression[0]->type !== BuiltinTokenNames::LITERAL->name ||
-            $expression[0]->op1 === null ||
+            !$expression[0] instanceof LiteralToken ||
             $expression[0]->op2 !== NativeType::STRING->name
         ) {
             throw LexerException::fromInvalidLayoutName(

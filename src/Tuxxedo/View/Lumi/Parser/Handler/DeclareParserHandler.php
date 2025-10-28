@@ -20,8 +20,9 @@ use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\DeclareNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
-use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\DeclareToken;
+use Tuxxedo\View\Lumi\Syntax\Token\EndToken;
+use Tuxxedo\View\Lumi\Syntax\Token\LiteralToken;
 
 class DeclareParserHandler implements ParserHandlerInterface
 {
@@ -34,13 +35,10 @@ class DeclareParserHandler implements ParserHandlerInterface
         ParserInterface $parser,
         TokenStreamInterface $stream,
     ): array {
+        /** @var DeclareToken $directive */
         $directive = $stream->current();
 
-        if ($directive->op1 === null) {
-            throw ParserException::fromMalformedToken(
-                line: $directive->line,
-            );
-        } elseif (\sizeof($parser->state->stateStack) !== 1) {
+        if (\sizeof($parser->state->stateStack) !== 1) {
             throw ParserException::fromDeclareTokensCannotBeNested(
                 line: $directive->line,
             );
@@ -48,18 +46,9 @@ class DeclareParserHandler implements ParserHandlerInterface
 
         $stream->consume();
 
-        $value = $stream->expect(BuiltinTokenNames::LITERAL->name);
+        $value = $stream->expect(LiteralToken::class);
 
-        $stream->expect(BuiltinTokenNames::END->name);
-
-        if (
-            $value->op1 === null ||
-            $value->op2 === null
-        ) {
-            throw ParserException::fromMalformedToken(
-                line: $directive->line,
-            );
-        }
+        $stream->expect(EndToken::class);
 
         return [
             new DeclareNode(

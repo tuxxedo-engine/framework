@@ -13,16 +13,14 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Token;
 
-readonly class EndForeachToken implements TokenInterface
+readonly class EndForeachToken extends AbstractToken
 {
-    public string $type;
     public null $op1;
     public null $op2;
 
     public function __construct(
         public int $line,
     ) {
-        $this->type = BuiltinTokenNames::ENDFOREACH->name;
         $this->op1 = null;
         $this->op2 = null;
     }

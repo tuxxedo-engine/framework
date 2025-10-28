@@ -13,15 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Token;
 
-readonly class LiteralToken implements TokenInterface, ExpressionTokenInterface
+readonly class LiteralToken extends AbstractToken implements ExpressionTokenInterface
 {
-    public string $type;
-
     public function __construct(
         public int $line,
         public string $op1,
         public string $op2,
     ) {
-        $this->type = BuiltinTokenNames::LITERAL->name;
     }
 }

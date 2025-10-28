@@ -16,7 +16,7 @@ namespace Tuxxedo\View\Lumi\Parser\Handler;
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
-use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\EndForeachToken;
 use Tuxxedo\View\Lumi\Syntax\Token\ForeachToken;
 
 class ForeachParserHandler extends AbstractForParserHandler
@@ -33,7 +33,7 @@ class ForeachParserHandler extends AbstractForParserHandler
         return parent::parseLoop(
             parser: $parser,
             stream: $stream,
-            endTokenName: BuiltinTokenNames::ENDFOREACH->name,
+            endTokenClassName: EndForeachToken::class,
         );
     }
 }

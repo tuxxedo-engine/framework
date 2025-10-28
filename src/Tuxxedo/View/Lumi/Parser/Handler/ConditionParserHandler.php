@@ -20,7 +20,10 @@ use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\ConditionalBranchNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ConditionalNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
-use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\ElseIfToken;
+use Tuxxedo\View\Lumi\Syntax\Token\ElseToken;
+use Tuxxedo\View\Lumi\Syntax\Token\EndIfToken;
+use Tuxxedo\View\Lumi\Syntax\Token\EndToken;
 use Tuxxedo\View\Lumi\Syntax\Token\IfToken;
 
 class ConditionParserHandler implements ParserHandlerInterface
@@ -36,7 +39,7 @@ class ConditionParserHandler implements ParserHandlerInterface
     ): array {
         $stream->consume();
 
-        if ($stream->currentIs(BuiltinTokenNames::END->name)) {
+        if ($stream->currentIs(EndToken::class)) {
             throw ParserException::fromEmptyExpression(
                 line: $stream->current()->line,
             );
@@ -44,13 +47,13 @@ class ConditionParserHandler implements ParserHandlerInterface
 
         $expressionTokens = [];
 
-        while (!$stream->currentIs(BuiltinTokenNames::END->name)) {
+        while (!$stream->currentIs(EndToken::class)) {
             $expressionTokens[] = $stream->current();
 
             $stream->consume();
         }
 
-        $stream->expect(BuiltinTokenNames::END->name);
+        $stream->expect(EndToken::class);
 
         $condition = $parser->expressionParser->parse(
             stream: new TokenStream(
@@ -67,7 +70,7 @@ class ConditionParserHandler implements ParserHandlerInterface
         $parsingElse = false;
 
         while (!$stream->eof()) {
-            if ($stream->currentIs(BuiltinTokenNames::IF->name)) {
+            if ($stream->currentIs(IfToken::class)) {
                 $parser->state->enterCondition();
 
                 if ($parsingElse) {
@@ -81,7 +84,7 @@ class ConditionParserHandler implements ParserHandlerInterface
                 continue;
             }
 
-            if ($stream->currentIs(BuiltinTokenNames::ENDIF->name)) {
+            if ($stream->currentIs(EndIfToken::class)) {
                 $parser->state->leaveCondition();
 
                 if ($parser->state->conditionDepth === 0) {
@@ -101,18 +104,18 @@ class ConditionParserHandler implements ParserHandlerInterface
                 continue;
             }
 
-            if ($stream->currentIs(BuiltinTokenNames::ELSEIF->name)) {
+            if ($stream->currentIs(ElseIfToken::class)) {
                 $stream->consume();
 
                 $branchTokens = [];
 
-                while (!$stream->currentIs(BuiltinTokenNames::END->name)) {
+                while (!$stream->currentIs(EndToken::class)) {
                     $branchTokens[] = $stream->current();
 
                     $stream->consume();
                 }
 
-                $stream->expect(BuiltinTokenNames::END->name);
+                $stream->expect(EndToken::class);
 
                 $branchCondition = $parser->expressionParser->parse(
                     stream: new TokenStream(
@@ -124,9 +127,9 @@ class ConditionParserHandler implements ParserHandlerInterface
                 $branchBodyTokens = [];
 
                 while (
-                    !$stream->currentIs(BuiltinTokenNames::ELSEIF->name) &&
-                    !$stream->currentIs(BuiltinTokenNames::ELSE->name) &&
-                    !$stream->currentIs(BuiltinTokenNames::ENDIF->name)
+                    !$stream->currentIs(ElseIfToken::class) &&
+                    !$stream->currentIs(ElseToken::class) &&
+                    !$stream->currentIs(EndIfToken::class)
                 ) {
                     $branchBodyTokens[] = $stream->current();
 
@@ -149,8 +152,8 @@ class ConditionParserHandler implements ParserHandlerInterface
                 continue;
             }
 
-            if ($stream->currentIs(BuiltinTokenNames::ELSE->name)) {
-                $stream->expect(BuiltinTokenNames::ELSE->name);
+            if ($stream->currentIs(ElseToken::class)) {
+                $stream->expect(ElseToken::class);
 
                 $parsingElse = true;
 

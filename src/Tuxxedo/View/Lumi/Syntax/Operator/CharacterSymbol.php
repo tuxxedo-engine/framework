@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Syntax\Operator;
 
 use Tuxxedo\View\Lumi\Parser\ParserException;
-use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\CharacterToken;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
 enum CharacterSymbol implements SymbolInterface, ExpressionSymbolInterface
@@ -38,7 +38,7 @@ enum CharacterSymbol implements SymbolInterface, ExpressionSymbolInterface
     public static function is(
         TokenInterface $token,
     ): bool {
-        if ($token->type !== BuiltinTokenNames::CHARACTER->name) {
+        if ($token instanceof CharacterToken) {
             return false;
         }
 
@@ -48,7 +48,7 @@ enum CharacterSymbol implements SymbolInterface, ExpressionSymbolInterface
     public static function from(
         TokenInterface $token,
     ): static {
-        if ($token->type === BuiltinTokenNames::CHARACTER->name) {
+        if ($token instanceof CharacterToken) {
             foreach (self::cases() as $character) {
                 if ($token->op1 === $character->symbol()) {
                     return $character;
@@ -57,7 +57,7 @@ enum CharacterSymbol implements SymbolInterface, ExpressionSymbolInterface
         }
 
         throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
-            tokenName: $token->type,
+            tokenName: $token::name(),
             expectedTokenNames: self::all(),
             line: $token->line,
         );

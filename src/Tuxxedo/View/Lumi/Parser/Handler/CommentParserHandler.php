@@ -14,11 +14,9 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Parser\Handler;
 
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
-use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
-use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\CommentToken;
 
 class CommentParserHandler implements ParserHandlerInterface
@@ -35,16 +33,8 @@ class CommentParserHandler implements ParserHandlerInterface
         $nodes = [];
 
         do {
-            $token = $stream->expect(BuiltinTokenNames::COMMENT->name);
-
-            if ($token->op1 === null) {
-                throw ParserException::fromMalformedToken(
-                    line: $token->line,
-                );
-            }
-
             $nodes[] = new CommentNode(
-                text: $token->op1,
+                text: $stream->expect(CommentToken::class)->op1,
             );
         } while (!$stream->eof() && $stream->currentIs($this->tokenClassName));
 

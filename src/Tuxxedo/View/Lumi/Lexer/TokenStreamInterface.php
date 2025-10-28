@@ -44,7 +44,7 @@ interface TokenStreamInterface
      * @phpstan-impure
      */
     public function currentIs(
-        string $tokenName,
+        string $tokenClassName,
         ?string $op1 = null,
         ?string $op2 = null,
     ): bool;
@@ -60,7 +60,7 @@ interface TokenStreamInterface
      * @phpstan-impure
      */
     public function peekIs(
-        string $tokenName,
+        string $tokenClassName,
         ?string $op1 = null,
         ?string $op2 = null,
     ): bool;
@@ -73,12 +73,17 @@ interface TokenStreamInterface
     public function consume(): TokenInterface;
 
     /**
+     * @template T of TokenInterface
+     *
+     * @param class-string<T> $tokenClassName
+     * @return T
+     *
      * @throws LexerException
      *
      * @phpstan-impure
      */
     public function expect(
-        string $tokenName,
+        string $tokenClassName,
         ?string $op1 = null,
         ?string $op2 = null,
     ): TokenInterface;

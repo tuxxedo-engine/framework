@@ -14,11 +14,9 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Parser\Handler;
 
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
-use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
-use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\TextToken;
 
 class TextParserHandler implements ParserHandlerInterface
@@ -35,16 +33,8 @@ class TextParserHandler implements ParserHandlerInterface
         $nodes = [];
 
         do {
-            $token = $stream->expect(BuiltinTokenNames::TEXT->name);
-
-            if ($token->op1 === null) {
-                throw ParserException::fromMalformedToken(
-                    line: $token->line,
-                );
-            }
-
             $nodes[] = new TextNode(
-                text: $token->op1,
+                text: $stream->expect(TextToken::class)->op1,
             );
         } while (!$stream->eof() && $stream->currentIs($this->tokenClassName));
 

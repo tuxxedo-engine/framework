@@ -69,7 +69,7 @@ readonly class LumiController
             'L%s @%s %s %s %s',
             \str_pad((string) $token->line, 5),
             \str_pad((string) $stream->position, 8),
-            \str_pad($token->type, 20),
+            \str_pad($token::name(), 20),
             $token->op1 !== null
                 ? $this->visualizeTokenValue($token->op1)
                 : \str_repeat(' ', 25),

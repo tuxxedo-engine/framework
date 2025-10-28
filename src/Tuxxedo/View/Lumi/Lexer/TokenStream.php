@@ -47,13 +47,13 @@ class TokenStream implements TokenStreamInterface
     }
 
     public function currentIs(
-        string $tokenName,
+        string $tokenClassName,
         ?string $op1 = null,
         ?string $op2 = null,
     ): bool {
         $token = $this->current();
 
-        if ($token->type !== $tokenName) {
+        if (!\is_a($token, $tokenClassName, true)) {
             return false;
         }
 
@@ -79,13 +79,16 @@ class TokenStream implements TokenStreamInterface
     }
 
     public function peekIs(
-        string $tokenName,
+        string $tokenClassName,
         ?string $op1 = null,
         ?string $op2 = null,
     ): bool {
         $token = $this->peek();
 
-        if ($token?->type !== $tokenName) {
+        if (
+            $token === null ||
+            !\is_a($token, $tokenClassName, true)
+        ) {
             return false;
         }
 
@@ -114,16 +117,16 @@ class TokenStream implements TokenStreamInterface
     }
 
     public function expect(
-        string $tokenName,
+        string $tokenClassName,
         ?string $op1 = null,
         ?string $op2 = null,
     ): TokenInterface {
         $current = $this->current();
 
-        if ($current->type !== $tokenName) {
+        if (!\is_a($current, $tokenClassName, true)) {
             throw LexerException::fromUnexpectedToken(
-                tokenName: $current->type,
-                expectedTokenName: $tokenName,
+                tokenName: $current::name(),
+                expectedTokenName: $tokenClassName,
                 line: $current->line,
             );
         } elseif ($op1 !== null && $current->op1 !== $op1) {

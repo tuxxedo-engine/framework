@@ -20,7 +20,7 @@ use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\BlockToken;
-use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\EndBlockToken;
 
 class BlockParserHandler implements ParserHandlerInterface
 {
@@ -33,24 +33,17 @@ class BlockParserHandler implements ParserHandlerInterface
         ParserInterface $parser,
         TokenStreamInterface $stream,
     ): array {
-        $block = $stream->expect(BuiltinTokenNames::BLOCK->name);
-
-        if ($block->op1 === null) {
-            throw ParserException::fromMalformedToken(
-                line: $block->line,
-            );
-        }
-
         $body = [];
+        $block = $stream->expect(BlockToken::class);
 
         while (!$stream->eof()) {
             $token = $stream->consume();
 
-            if ($token->type === BuiltinTokenNames::BLOCK->name) {
+            if ($token instanceof BlockToken) {
                 throw ParserException::fromBlockTokensCannotBeNested(
                     line: $token->line,
                 );
-            } elseif ($token->type === BuiltinTokenNames::ENDBLOCK->name) {
+            } elseif ($token instanceof EndBlockToken) {
                 break;
             }
 

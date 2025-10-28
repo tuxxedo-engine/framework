@@ -13,14 +13,15 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Token;
 
-readonly class CommentToken extends AbstractToken
+abstract readonly class AbstractToken implements TokenInterface
 {
-    public null $op2;
+    public static function name(): string
+    {
+        /** @var string $name */
+        $name = \strrchr(static::class, '\\');
 
-    public function __construct(
-        public int $line,
-        public string $op1,
-    ) {
-        $this->op2 = null;
+        return \strtoupper(
+            \substr($name, 1, -5),
+        );
     }
 }

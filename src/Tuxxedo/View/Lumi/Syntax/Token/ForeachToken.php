@@ -13,16 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Token;
 
-// @todo This may need a separate node
-readonly class ForeachToken implements TokenInterface
+readonly class ForeachToken extends AbstractToken
 {
-    public string $type;
-
     public function __construct(
         public int $line,
         public string $op1,
         public ?string $op2 = null,
     ) {
-        $this->type = BuiltinTokenNames::FOREACH->name;
     }
 }

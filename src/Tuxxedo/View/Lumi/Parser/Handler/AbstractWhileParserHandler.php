@@ -18,7 +18,7 @@ use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
-use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\EndToken;
 
 abstract class AbstractWhileParserHandler implements ParserHandlerInterface
 {
@@ -29,7 +29,7 @@ abstract class AbstractWhileParserHandler implements ParserHandlerInterface
         ParserInterface $parser,
         TokenStreamInterface $stream,
     ): ExpressionNodeInterface {
-        if ($stream->currentIs(BuiltinTokenNames::END->name)) {
+        if ($stream->currentIs(EndToken::class)) {
             throw ParserException::fromEmptyExpression(
                 line: $stream->current()->line,
             );
@@ -41,9 +41,9 @@ abstract class AbstractWhileParserHandler implements ParserHandlerInterface
             $tokens[] = $stream->current();
 
             $stream->consume();
-        } while (!$stream->currentIs(BuiltinTokenNames::END->name));
+        } while (!$stream->currentIs(EndToken::class));
 
-        $stream->expect(BuiltinTokenNames::END->name);
+        $stream->expect(EndToken::class);
 
         return $parser->expressionParser->parse(
             stream: new TokenStream(

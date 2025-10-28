@@ -13,16 +13,14 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Token;
 
-readonly class OperatorToken implements TokenInterface, ExpressionTokenInterface
+readonly class OperatorToken extends AbstractToken implements ExpressionTokenInterface
 {
-    public string $type;
     public null $op2;
 
     public function __construct(
         public int $line,
         public string $op1,
     ) {
-        $this->type = BuiltinTokenNames::OPERATOR->name;
         $this->op2 = null;
     }
 }

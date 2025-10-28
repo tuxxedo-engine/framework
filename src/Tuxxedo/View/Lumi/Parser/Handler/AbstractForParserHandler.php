@@ -21,12 +21,17 @@ use Tuxxedo\View\Lumi\Syntax\Node\ForNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IterableExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
-use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\EndForToken;
+use Tuxxedo\View\Lumi\Syntax\Token\EndForeachToken;
+use Tuxxedo\View\Lumi\Syntax\Token\EndToken;
+use Tuxxedo\View\Lumi\Syntax\Token\ForToken;
+use Tuxxedo\View\Lumi\Syntax\Token\ForeachToken;
 use Tuxxedo\View\Lumi\Syntax\Token\IdentifierToken;
 
 abstract class AbstractForParserHandler implements ParserHandlerInterface
 {
     /**
+     * @param class-string<EndForToken|EndForeachToken> $endTokenClassName
      * @return NodeInterface[]
      *
      * @throws ParserException
@@ -34,15 +39,10 @@ abstract class AbstractForParserHandler implements ParserHandlerInterface
     protected function parseLoop(
         ParserInterface $parser,
         TokenStreamInterface $stream,
-        string $endTokenName,
+        string $endTokenClassName,
     ): array {
+        /** @var ForToken|ForeachToken $startToken */
         $startToken = $stream->expect($this->tokenClassName);
-
-        if ($startToken->op1 === null) {
-            throw ParserException::fromMalformedToken(
-                line: $startToken->line,
-            );
-        }
 
         $value = $parser->expressionParser->parse(
             stream: new TokenStream(
@@ -60,7 +60,7 @@ abstract class AbstractForParserHandler implements ParserHandlerInterface
             throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
                 tokenName: $startToken->op1,
                 expectedTokenNames: [
-                    BuiltinTokenNames::IDENTIFIER->name,
+                    IdentifierToken::name(),
                 ],
                 line: $startToken->line,
             );
@@ -83,7 +83,7 @@ abstract class AbstractForParserHandler implements ParserHandlerInterface
                 throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
                     tokenName: $startToken->op2,
                     expectedTokenNames: [
-                        BuiltinTokenNames::IDENTIFIER->name,
+                        IdentifierToken::name(),
                     ],
                     line: $startToken->line,
                 );
@@ -94,14 +94,14 @@ abstract class AbstractForParserHandler implements ParserHandlerInterface
 
         while (
             !$stream->eof() &&
-            $stream->current()->type !== BuiltinTokenNames::END->name
+            !$stream->current() instanceof EndToken
         ) {
             $expressionTokens[] = $stream->current();
 
             $stream->consume();
         }
 
-        $stream->expect(BuiltinTokenNames::END->name);
+        $stream->expect(EndToken::class);
         $parser->state->enterLoop();
 
         if (\sizeof($expressionTokens) === 0) {
@@ -125,7 +125,7 @@ abstract class AbstractForParserHandler implements ParserHandlerInterface
 
         $bodyTokens = [];
 
-        while (!$stream->currentIs($endTokenName)) {
+        while (!$stream->currentIs($endTokenClassName)) {
             $bodyTokens[] = $stream->current();
 
             $stream->consume();
@@ -137,7 +137,7 @@ abstract class AbstractForParserHandler implements ParserHandlerInterface
             ),
         )->nodes;
 
-        $stream->expect($endTokenName);
+        $stream->expect($endTokenClassName);
         $parser->state->leaveLoop();
 
         return [

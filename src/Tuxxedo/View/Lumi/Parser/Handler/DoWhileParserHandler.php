@@ -19,8 +19,9 @@ use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
-use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 use Tuxxedo\View\Lumi\Syntax\Token\DoToken;
+use Tuxxedo\View\Lumi\Syntax\Token\EndWhileToken;
+use Tuxxedo\View\Lumi\Syntax\Token\WhileToken;
 
 class DoWhileParserHandler extends AbstractWhileParserHandler
 {
@@ -45,7 +46,7 @@ class DoWhileParserHandler extends AbstractWhileParserHandler
             $stream->consume();
         }
 
-        $stream->expect(BuiltinTokenNames::WHILE->name);
+        $stream->expect(WhileToken::class);
 
         $parser->state->enterLoop();
 
@@ -77,15 +78,15 @@ class DoWhileParserHandler extends AbstractWhileParserHandler
         $total = \sizeof($stream->tokens);
 
         for ($position = 0; $position < $total; $position++) {
-            $type = $stream->tokens[$position]->type;
+            $token = $stream->tokens[$position];
 
             if (
-                $type === BuiltinTokenNames::DO->name ||
-                $type === BuiltinTokenNames::WHILE->name ||
-                $type === BuiltinTokenNames::ENDWHILE->name
+                $token instanceof DoToken ||
+                $token instanceof WhileToken ||
+                $token instanceof EndWhileToken
             ) {
                 $controlTokens[] = [
-                    'type' => $type,
+                    'token' => $token::class,
                     'position' => $position,
                     'isHeaderWhile' => false,
                 ];
@@ -99,7 +100,7 @@ class DoWhileParserHandler extends AbstractWhileParserHandler
 
         for ($i = 0; $i < $count; $i++) {
             if (
-                $controlTokens[$i]['type'] === BuiltinTokenNames::DO->name &&
+                $controlTokens[$i]['token'] === DoToken::class &&
                 $controlTokens[$i]['position'] === $currentDoPosition
             ) {
                 $startIndex = $i;
@@ -113,22 +114,22 @@ class DoWhileParserHandler extends AbstractWhileParserHandler
 
         $whileStack = [];
         for ($i = 0; $i < $count; $i++) {
-            $type = $controlTokens[$i]['type'];
+            $token = $controlTokens[$i]['token'];
 
-            if ($type === BuiltinTokenNames::WHILE->name) {
+            if ($token === WhileToken::class) {
                 $whileStack[] = $i;
 
                 continue;
             }
 
-            if ($type === BuiltinTokenNames::ENDWHILE->name) {
+            if ($token === EndWhileToken::class) {
                 if (\sizeof($whileStack) === 0) {
                     continue;
                 }
 
                 $headerIndex = \array_pop($whileStack);
                 $controlTokens[$headerIndex] = [
-                    'type' => $controlTokens[$headerIndex]['type'],
+                    'token' => $controlTokens[$headerIndex]['token'],
                     'position' => $controlTokens[$headerIndex]['position'],
                     'isHeaderWhile' => true,
                 ];
@@ -142,7 +143,7 @@ class DoWhileParserHandler extends AbstractWhileParserHandler
         while ($index < $count) {
             $control = $controlTokens[$index];
 
-            if ($control['type'] === BuiltinTokenNames::DO->name) {
+            if ($control['token'] === DoToken::class) {
                 if (!$skippedFirstDo) {
                     $skippedFirstDo = true;
                 } else {
@@ -153,7 +154,7 @@ class DoWhileParserHandler extends AbstractWhileParserHandler
 
                 continue;
             }
-            if ($control['type'] === BuiltinTokenNames::WHILE->name) {
+            if ($control['token'] === WhileToken::class) {
                 if ($control['isHeaderWhile']) {
                     $index++;
 

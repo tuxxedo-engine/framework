@@ -13,16 +13,14 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Token;
 
-readonly class DeclareToken implements TokenInterface
+readonly class DeclareToken extends AbstractToken
 {
-    public string $type;
     public null $op2;
 
     public function __construct(
         public int $line,
         public string $op1,
     ) {
-        $this->type = BuiltinTokenNames::DECLARE->name;
         $this->op2 = null;
     }
 }

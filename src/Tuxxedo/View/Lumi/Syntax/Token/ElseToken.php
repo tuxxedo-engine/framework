@@ -13,16 +13,14 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Token;
 
-readonly class ElseToken implements TokenInterface
+readonly class ElseToken extends AbstractToken
 {
-    public string $type;
     public null $op1;
     public null $op2;
 
     public function __construct(
         public int $line,
     ) {
-        $this->type = BuiltinTokenNames::ELSE->name;
         $this->op1 = null;
         $this->op2 = null;
     }

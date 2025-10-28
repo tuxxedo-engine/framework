@@ -15,10 +15,6 @@ namespace Tuxxedo\View\Lumi\Syntax\Token;
 
 interface TokenInterface
 {
-    public string $type {
-        get;
-    }
-
     public int $line {
         get;
     }
@@ -30,4 +26,6 @@ interface TokenInterface
     public ?string $op2 {
         get;
     }
+
+    public static function name(): string;
 }

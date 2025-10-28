@@ -13,9 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Token;
 
-readonly class ContinueToken implements TokenInterface
+readonly class ContinueToken extends AbstractToken
 {
-    public string $type;
     public null $op2;
 
     /**
@@ -25,7 +24,6 @@ readonly class ContinueToken implements TokenInterface
         public int $line,
         public ?string $op1 = null,
     ) {
-        $this->type = BuiltinTokenNames::CONTINUE->name;
         $this->op2 = null;
     }
 }

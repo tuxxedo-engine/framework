@@ -34,7 +34,10 @@ use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\CharacterSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\Precedence;
 use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
-use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\CharacterToken;
+use Tuxxedo\View\Lumi\Syntax\Token\IdentifierToken;
+use Tuxxedo\View\Lumi\Syntax\Token\LiteralToken;
+use Tuxxedo\View\Lumi\Syntax\Token\OperatorToken;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
 class ExpressionParser implements ExpressionParserInterface
@@ -55,7 +58,7 @@ class ExpressionParser implements ExpressionParserInterface
             $token = $stream->current();
 
             throw ParserException::fromUnexpectedToken(
-                tokenName: $token->type,
+                tokenName: $token::name(),
                 line: $token->line,
             );
         }
@@ -93,14 +96,8 @@ class ExpressionParser implements ExpressionParserInterface
         TokenStreamInterface $stream,
         TokenInterface $token,
     ): ExpressionNodeInterface {
-        switch ($token->type) {
-            case BuiltinTokenNames::LITERAL->name:
-                if ($token->op1 === null || $token->op2 === null) {
-                    throw ParserException::fromMalformedToken(
-                        line: $token->line,
-                    );
-                }
-
+        switch (true) {
+            case $token instanceof LiteralToken:
                 $stream->consume();
 
                 return new LiteralNode(
@@ -111,26 +108,14 @@ class ExpressionParser implements ExpressionParserInterface
                     ),
                 );
 
-            case BuiltinTokenNames::IDENTIFIER->name:
-                if ($token->op1 === null) {
-                    throw ParserException::fromMalformedToken(
-                        line: $token->line,
-                    );
-                }
-
+            case $token instanceof IdentifierToken:
                 $stream->consume();
 
                 return new IdentifierNode(
                     name: $token->op1,
                 );
 
-            case BuiltinTokenNames::CHARACTER->name:
-                if ($token->op1 === null) {
-                    throw ParserException::fromMalformedToken(
-                        line: $token->line,
-                    );
-                }
-
+            case $token instanceof CharacterToken:
                 if ($token->op1 === CharacterSymbol::LEFT_PARENTHESIS->symbol()) {
                     $stream->consume();
 
@@ -166,13 +151,7 @@ class ExpressionParser implements ExpressionParserInterface
                     line: $token->line,
                 );
 
-            case BuiltinTokenNames::OPERATOR->name:
-                if ($token->op1 === null) {
-                    throw ParserException::fromMalformedToken(
-                        line: $token->line,
-                    );
-                }
-
+            case $token instanceof OperatorToken:
                 if ($token->op1 === BinarySymbol::NULL_SAFE_ACCESS->symbol()) {
                     throw ParserException::fromUnexpectedToken(
                         tokenName: $token->op1,
@@ -199,7 +178,7 @@ class ExpressionParser implements ExpressionParserInterface
         }
 
         throw ParserException::fromUnexpectedToken(
-            tokenName: $token->type,
+            tokenName: $token::name(),
             line: $token->line,
         );
     }
@@ -209,13 +188,7 @@ class ExpressionParser implements ExpressionParserInterface
         TokenInterface $token,
         ExpressionNodeInterface $left,
     ): ExpressionNodeInterface {
-        if ($token->type === BuiltinTokenNames::CHARACTER->name) {
-            if ($token->op1 === null) {
-                throw ParserException::fromMalformedToken(
-                    line: $token->line,
-                );
-            }
-
+        if ($token instanceof CharacterToken) {
             if ($token->op1 === CharacterSymbol::LEFT_PARENTHESIS->symbol()) {
                 $stream->consume();
 
@@ -254,11 +227,10 @@ class ExpressionParser implements ExpressionParserInterface
                 $name = $stream->current();
 
                 if (
-                    $name->type !== BuiltinTokenNames::IDENTIFIER->name ||
-                    $name->op1 === null
+                    !$name instanceof IdentifierToken
                 ) {
                     throw ParserException::fromUnexpectedToken(
-                        tokenName: $name->op1 ?? $name->type,
+                        tokenName: $name::name(),
                         line: $name->line,
                     );
                 }
@@ -267,7 +239,7 @@ class ExpressionParser implements ExpressionParserInterface
 
                 if (
                     !$stream->eof() &&
-                    $stream->currentIs(BuiltinTokenNames::CHARACTER->name, CharacterSymbol::LEFT_PARENTHESIS->symbol())
+                    $stream->currentIs(CharacterToken::class, CharacterSymbol::LEFT_PARENTHESIS->symbol())
                 ) {
                     $stream->consume();
 
@@ -292,32 +264,20 @@ class ExpressionParser implements ExpressionParserInterface
             }
         }
 
-        if ($token->type === BuiltinTokenNames::OPERATOR->name) {
-            if ($token->op1 === null) {
-                throw ParserException::fromMalformedToken(
-                    line: $token->line,
-                );
-            }
-
+        if ($token instanceof OperatorToken) {
             if ($token->op1 === BinarySymbol::NULL_SAFE_ACCESS->symbol()) {
                 $stream->consume();
 
                 $after = $stream->current();
 
-                if ($after->type === BuiltinTokenNames::IDENTIFIER->name) {
-                    if ($after->op1 === null) {
-                        throw ParserException::fromMalformedToken(
-                            line: $after->line,
-                        );
-                    }
-
+                if ($after instanceof IdentifierToken) {
                     $stream->consume();
 
                     $maybeCall = $stream->peek();
 
                     if (
                         $maybeCall !== null &&
-                        $maybeCall->type === BuiltinTokenNames::CHARACTER->name &&
+                        $maybeCall instanceof CharacterToken &&
                         $maybeCall->op1 === CharacterSymbol::LEFT_PARENTHESIS->symbol()
                     ) {
                         $stream->consume();
@@ -345,7 +305,7 @@ class ExpressionParser implements ExpressionParserInterface
                 }
 
                 throw ParserException::fromUnexpectedToken(
-                    tokenName: $after->op1 ?? $after->type,
+                    tokenName: $after->op1 ?? $after::name(),
                     line: $after->line,
                 );
             }
@@ -404,7 +364,7 @@ class ExpressionParser implements ExpressionParserInterface
         }
 
         throw ParserException::fromUnexpectedToken(
-            tokenName: $token->op1 ?? $token->type,
+            tokenName: $token->op1 ?? $token::name(),
             line: $token->line,
         );
     }
@@ -412,23 +372,11 @@ class ExpressionParser implements ExpressionParserInterface
     private function lbp(
         TokenInterface $token,
     ): Precedence {
-        if ($token->type === BuiltinTokenNames::CHARACTER->name) {
-            if ($token->op1 === null) {
-                throw ParserException::fromMalformedToken(
-                    line: $token->line,
-                );
-            }
-
+        if ($token instanceof CharacterToken) {
             return CharacterSymbol::from($token)->precedence();
         }
 
-        if ($token->type === BuiltinTokenNames::OPERATOR->name) {
-            if ($token->op1 === null) {
-                throw ParserException::fromMalformedToken(
-                    line: $token->line,
-                );
-            }
-
+        if ($token instanceof OperatorToken) {
             if (
                 $token->op1 === UnarySymbol::INCREMENT_POST->symbol() ||
                 $token->op1 === UnarySymbol::DECREMENT_POST->symbol()
@@ -457,7 +405,7 @@ class ExpressionParser implements ExpressionParserInterface
         $token = $stream->current();
 
         if (
-            $token->type === BuiltinTokenNames::CHARACTER->name &&
+            $token instanceof CharacterToken &&
             $token->op1 === CharacterSymbol::RIGHT_PARENTHESIS->symbol()
         ) {
             return [];
@@ -471,7 +419,7 @@ class ExpressionParser implements ExpressionParserInterface
             $token = $stream->current();
 
             if (
-                $token->type === BuiltinTokenNames::CHARACTER->name &&
+                $token instanceof CharacterToken &&
                 $token->op1 === CharacterSymbol::COMMA->symbol()
             ) {
                 $stream->consume();
@@ -479,7 +427,7 @@ class ExpressionParser implements ExpressionParserInterface
                 $token = $stream->current();
 
                 if (
-                    $token->type === BuiltinTokenNames::CHARACTER->name &&
+                    $token instanceof CharacterToken &&
                     $token->op1 === CharacterSymbol::RIGHT_PARENTHESIS->symbol()
                 ) {
                     break;
@@ -505,7 +453,7 @@ class ExpressionParser implements ExpressionParserInterface
         $token = $stream->current();
 
         if (
-            $token->type === BuiltinTokenNames::CHARACTER->name &&
+            $token instanceof CharacterToken &&
             $token->op1 === CharacterSymbol::RIGHT_SQUARE_BRACKET->symbol()
         ) {
             return [];
@@ -519,7 +467,7 @@ class ExpressionParser implements ExpressionParserInterface
             $token = $stream->current();
 
             if (
-                $token->type === BuiltinTokenNames::CHARACTER->name &&
+                $token instanceof CharacterToken &&
                 $token->op1 === CharacterSymbol::COMMA->symbol()
             ) {
                 $stream->consume();
@@ -527,7 +475,7 @@ class ExpressionParser implements ExpressionParserInterface
                 $token = $stream->current();
 
                 if (
-                    $token->type === BuiltinTokenNames::CHARACTER->name &&
+                    $token instanceof CharacterToken &&
                     $token->op1 === CharacterSymbol::RIGHT_SQUARE_BRACKET->symbol()
                 ) {
                     break;
@@ -551,7 +499,7 @@ class ExpressionParser implements ExpressionParserInterface
         $token = $stream->current();
 
         if (
-            $token->type === BuiltinTokenNames::CHARACTER->name &&
+            $token instanceof CharacterToken &&
             $token->op1 === CharacterSymbol::COLON->symbol()
         ) {
             $stream->consume();
@@ -576,15 +524,9 @@ class ExpressionParser implements ExpressionParserInterface
     ): void {
         $token = $stream->current();
 
-        if ($token->type !== BuiltinTokenNames::CHARACTER->name) {
+        if (!$token instanceof CharacterToken) {
             throw ParserException::fromUnexpectedToken(
-                tokenName: $token->type,
-                line: $token->line,
-            );
-        }
-
-        if ($token->op1 === null) {
-            throw ParserException::fromMalformedToken(
+                tokenName: $token::name(),
                 line: $token->line,
             );
         }

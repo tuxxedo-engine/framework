@@ -18,8 +18,11 @@ use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\LayoutNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
-use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\BlockToken;
+use Tuxxedo\View\Lumi\Syntax\Token\CommentToken;
+use Tuxxedo\View\Lumi\Syntax\Token\EndBlockToken;
 use Tuxxedo\View\Lumi\Syntax\Token\LayoutToken;
+use Tuxxedo\View\Lumi\Syntax\Token\TextToken;
 
 // @todo Check scope depth
 class LayoutParserHandler implements ParserHandlerInterface
@@ -33,13 +36,7 @@ class LayoutParserHandler implements ParserHandlerInterface
         ParserInterface $parser,
         TokenStreamInterface $stream,
     ): array {
-        $layout = $stream->expect(BuiltinTokenNames::LAYOUT->name);
-
-        if ($layout->op1 === null) {
-            throw ParserException::fromMalformedToken(
-                line: $layout->line,
-            );
-        }
+        $layout = $stream->expect(LayoutToken::class);
 
         $total = \sizeof($stream->tokens);
         $inBlock = false;
@@ -47,11 +44,11 @@ class LayoutParserHandler implements ParserHandlerInterface
         for ($position = 0; $position < $total; $position++) {
             $token = $stream->tokens[$position];
 
-            if ($token->type === BuiltinTokenNames::COMMENT->name) {
+            if ($token instanceof CommentToken) {
                 continue;
             }
 
-            if ($token->type === BuiltinTokenNames::LAYOUT->name) {
+            if ($token instanceof LayoutToken) {
                 if ($token !== $layout) {
                     throw ParserException::fromLayoutModeMustOnlyHaveOneLayout(
                         line: $token->line,
@@ -65,24 +62,21 @@ class LayoutParserHandler implements ParserHandlerInterface
                 continue;
             }
 
-            if ($token->type === BuiltinTokenNames::BLOCK->name) {
+            if ($token instanceof BlockToken) {
                 $inBlock = true;
 
                 continue;
             }
 
-            if ($token->type === BuiltinTokenNames::ENDBLOCK->name) {
+            if ($token instanceof EndBlockToken) {
                 $inBlock = false;
 
                 continue;
             }
 
             if (
-                $token->type !== BuiltinTokenNames::TEXT->name ||
-                (
-                    $token->op1 !== null &&
-                    \preg_match('/(?s)(?=.*\s)/u', $token->op1) !== 1
-                )
+                !$token instanceof TextToken ||
+                \preg_match('/(?s)(?=.*\s)/u', $token->op1) !== 1
             ) {
                 throw ParserException::fromLayoutModeMustNotHaveRootElements(
                     line: $token->line,

@@ -13,9 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Token;
 
-readonly class BreakToken implements TokenInterface
+readonly class BreakToken extends AbstractToken
 {
-    public string $type;
     public null $op2;
 
     /**
@@ -25,7 +24,6 @@ readonly class BreakToken implements TokenInterface
         public int $line,
         public ?string $op1 = null,
     ) {
-        $this->type = BuiltinTokenNames::BREAK->name;
         $this->op2 = null;
     }
 }

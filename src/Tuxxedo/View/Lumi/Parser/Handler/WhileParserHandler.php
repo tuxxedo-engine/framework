@@ -18,7 +18,7 @@ use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
-use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\EndWhileToken;
 use Tuxxedo\View\Lumi\Syntax\Token\WhileToken;
 
 class WhileParserHandler extends AbstractWhileParserHandler
@@ -41,7 +41,7 @@ class WhileParserHandler extends AbstractWhileParserHandler
 
         $bodyTokens = [];
 
-        while (!$stream->currentIs(BuiltinTokenNames::ENDWHILE->name)) {
+        while (!$stream->currentIs(EndWhileToken::class)) {
             $bodyTokens[] = $stream->current();
 
             $stream->consume();
@@ -55,7 +55,7 @@ class WhileParserHandler extends AbstractWhileParserHandler
             ),
         )->nodes;
 
-        $stream->expect(BuiltinTokenNames::ENDWHILE->name);
+        $stream->expect(EndWhileToken::class);
         $parser->state->leaveLoop();
 
         return [
