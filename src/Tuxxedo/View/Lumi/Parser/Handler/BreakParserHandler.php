@@ -17,11 +17,11 @@ use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\BreakNode;
-use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\BreakToken;
 
 class BreakParserHandler implements ParserHandlerInterface
 {
-    public private(set) string $tokenName = BuiltinTokenNames::BREAK->name;
+    public private(set) string $tokenClassName = BreakToken::class;
 
     public function parse(
         ParserInterface $parser,

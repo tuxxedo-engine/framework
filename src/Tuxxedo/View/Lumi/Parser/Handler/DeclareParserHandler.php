@@ -21,10 +21,11 @@ use Tuxxedo\View\Lumi\Syntax\Node\DeclareNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\DeclareToken;
 
 class DeclareParserHandler implements ParserHandlerInterface
 {
-    public private(set) string $tokenName = BuiltinTokenNames::DECLARE->name;
+    public private(set) string $tokenClassName = DeclareToken::class;
 
     /**
      * @return NodeInterface[]

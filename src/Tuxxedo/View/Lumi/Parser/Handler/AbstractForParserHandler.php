@@ -36,7 +36,7 @@ abstract class AbstractForParserHandler implements ParserHandlerInterface
         TokenStreamInterface $stream,
         string $endTokenName,
     ): array {
-        $startToken = $stream->expect($this->tokenName);
+        $startToken = $stream->expect($this->tokenClassName);
 
         if ($startToken->op1 === null) {
             throw ParserException::fromMalformedToken(

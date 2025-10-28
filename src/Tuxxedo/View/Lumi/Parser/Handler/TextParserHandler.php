@@ -19,10 +19,11 @@ use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\TextToken;
 
 class TextParserHandler implements ParserHandlerInterface
 {
-    public private(set) string $tokenName = BuiltinTokenNames::TEXT->name;
+    public private(set) string $tokenClassName = TextToken::class;
 
     /**
      * @return NodeInterface[]
@@ -45,7 +46,7 @@ class TextParserHandler implements ParserHandlerInterface
             $nodes[] = new TextNode(
                 text: $token->op1,
             );
-        } while (!$stream->eof() && $stream->currentIs($this->tokenName));
+        } while (!$stream->eof() && $stream->currentIs($this->tokenClassName));
 
         return $nodes;
     }

@@ -32,12 +32,18 @@ use Tuxxedo\View\Lumi\Parser\Handler\ParserHandlerInterface;
 use Tuxxedo\View\Lumi\Parser\Handler\TextParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\VoidParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\WhileParserHandler;
-use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\ElseIfToken;
+use Tuxxedo\View\Lumi\Syntax\Token\ElseToken;
+use Tuxxedo\View\Lumi\Syntax\Token\EndBlockToken;
+use Tuxxedo\View\Lumi\Syntax\Token\EndForToken;
+use Tuxxedo\View\Lumi\Syntax\Token\EndForeachToken;
+use Tuxxedo\View\Lumi\Syntax\Token\EndWhileToken;
+use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
 class Parser implements ParserInterface
 {
     /**
-     * @var ParserHandlerInterface[]
+     * @var array<class-string<TokenInterface>, ParserHandlerInterface>
      */
     public readonly array $handlers;
 
@@ -54,7 +60,7 @@ class Parser implements ParserInterface
         $parserHandlers = [];
 
         foreach ($handlers as $handler) {
-            $parserHandlers[$handler->tokenName] = $handler;
+            $parserHandlers[$handler->tokenClassName] = $handler;
         }
 
         $this->handlers = $parserHandlers;
@@ -72,31 +78,31 @@ class Parser implements ParserInterface
             new AssignmentParserHandler(),
             new ConditionParserHandler(),
             new VoidParserHandler(
-                tokenName: BuiltinTokenNames::ELSEIF->name,
+                tokenClassName: ElseIfToken::class,
             ),
             new VoidParserHandler(
-                tokenName: BuiltinTokenNames::ELSE->name,
+                tokenClassName: ElseToken::class,
             ),
             new WhileParserHandler(),
             new DoWhileParserHandler(),
             new VoidParserHandler(
-                tokenName: BuiltinTokenNames::ENDWHILE->name,
+                tokenClassName: EndWhileToken::class,
             ),
             new ContinueParserHandler(),
             new BreakParserHandler(),
             new DeclareParserHandler(),
             new ForeachParserHandler(),
             new VoidParserHandler(
-                tokenName: BuiltinTokenNames::ENDFOREACH->name,
+                tokenClassName: EndForeachToken::class,
             ),
             new ForParserHandler(),
             new VoidParserHandler(
-                tokenName: BuiltinTokenNames::ENDFOR->name,
+                tokenClassName: EndForToken::class,
             ),
             new LayoutParserHandler(),
             new BlockParserHandler(),
             new VoidParserHandler(
-                tokenName: BuiltinTokenNames::ENDBLOCK->name,
+                tokenClassName: EndBlockToken::class,
             ),
         ];
     }
@@ -152,7 +158,7 @@ class Parser implements ParserInterface
         while (!$stream->eof()) {
             $token = $stream->current();
 
-            if (!\array_key_exists($token->type, $this->handlers)) {
+            if (!\array_key_exists($token::class, $this->handlers)) {
                 throw ParserException::fromUnexpectedToken(
                     tokenName: $token->type,
                     line: $token->line,
@@ -163,7 +169,7 @@ class Parser implements ParserInterface
 
             $nodes = \array_merge(
                 $nodes,
-                $this->handlers[$token->type]->parse($this, $stream),
+                $this->handlers[$token::class]->parse($this, $stream),
             );
 
             $this->state->popState();

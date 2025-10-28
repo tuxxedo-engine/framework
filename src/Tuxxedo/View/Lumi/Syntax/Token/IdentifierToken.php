@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Token;
 
-readonly class IdentifierToken implements TokenInterface
+readonly class IdentifierToken implements TokenInterface, ExpressionTokenInterface
 {
     public string $type;
     public null $op2;

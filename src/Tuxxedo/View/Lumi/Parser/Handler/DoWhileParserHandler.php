@@ -20,10 +20,11 @@ use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\DoToken;
 
 class DoWhileParserHandler extends AbstractWhileParserHandler
 {
-    public private(set) string $tokenName = BuiltinTokenNames::DO->name;
+    public private(set) string $tokenClassName = DoToken::class;
 
     /**
      * @return NodeInterface[]

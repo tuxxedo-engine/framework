@@ -19,10 +19,11 @@ use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\WhileToken;
 
 class WhileParserHandler extends AbstractWhileParserHandler
 {
-    public private(set) string $tokenName = BuiltinTokenNames::WHILE->name;
+    public private(set) string $tokenClassName = WhileToken::class;
 
     /**
      * @return NodeInterface[]

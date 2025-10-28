@@ -25,11 +25,12 @@ use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\CharacterSymbol;
+use Tuxxedo\View\Lumi\Syntax\Token\AssignToken;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 
 class AssignmentParserHandler implements ParserHandlerInterface
 {
-    public private(set) string $tokenName = BuiltinTokenNames::ASSIGN->name;
+    public private(set) string $tokenClassName = AssignToken::class;
 
     public function parse(
         ParserInterface $parser,

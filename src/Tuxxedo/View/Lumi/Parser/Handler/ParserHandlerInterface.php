@@ -17,10 +17,14 @@ use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
 interface ParserHandlerInterface
 {
-    public string $tokenName {
+    /**
+     * @var class-string<TokenInterface>
+     */
+    public string $tokenClassName {
         get;
     }
 

@@ -19,11 +19,12 @@ use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Token\BlockToken;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
 
 class BlockParserHandler implements ParserHandlerInterface
 {
-    public private(set) string $tokenName = BuiltinTokenNames::BLOCK->name;
+    public private(set) string $tokenClassName = BlockToken::class;
 
     /**
      * @return NodeInterface[]

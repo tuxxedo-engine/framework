@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Token;
 
+// @todo This may need a separate node
 readonly class ForeachToken implements TokenInterface
 {
     public string $type;

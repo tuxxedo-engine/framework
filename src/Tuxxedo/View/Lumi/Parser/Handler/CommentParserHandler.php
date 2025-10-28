@@ -19,10 +19,11 @@ use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\CommentToken;
 
 class CommentParserHandler implements ParserHandlerInterface
 {
-    public private(set) string $tokenName = BuiltinTokenNames::COMMENT->name;
+    public private(set) string $tokenClassName = CommentToken::class;
 
     /**
      * @return NodeInterface[]
@@ -45,7 +46,7 @@ class CommentParserHandler implements ParserHandlerInterface
             $nodes[] = new CommentNode(
                 text: $token->op1,
             );
-        } while (!$stream->eof() && $stream->currentIs($this->tokenName));
+        } while (!$stream->eof() && $stream->currentIs($this->tokenClassName));
 
         return $nodes;
     }

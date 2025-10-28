@@ -17,10 +17,11 @@ use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\BuiltinTokenNames;
+use Tuxxedo\View\Lumi\Syntax\Token\ForeachToken;
 
 class ForeachParserHandler extends AbstractForParserHandler
 {
-    public private(set) string $tokenName = BuiltinTokenNames::FOREACH->name;
+    public private(set) string $tokenClassName = ForeachToken::class;
 
     /**
      * @return NodeInterface[]
