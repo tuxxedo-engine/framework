@@ -29,7 +29,7 @@ class PdoResultSet implements ResultSetInterface
     private array $buffer = [];
 
     public function __construct(
-        private readonly ?\PDOStatement $result,
+        private ?\PDOStatement $result,
         public readonly int $affectedRows = 0,
     ) {
     }
@@ -174,9 +174,12 @@ class PdoResultSet implements ResultSetInterface
 
     public function free(): void
     {
-        $this->pointer = 0;
-        $this->buffer = [];
-        $this->endedBuffering = false;
+        if ($this->result !== null) {
+            $this->result = null;
+            $this->pointer = 0;
+            $this->buffer = [];
+            $this->endedBuffering = false;
+        }
     }
 
     public function count(): int

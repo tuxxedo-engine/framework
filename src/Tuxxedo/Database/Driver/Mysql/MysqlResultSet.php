@@ -139,6 +139,7 @@ class MysqlResultSet implements ResultSetInterface
 
             $this->result = null;
             $this->pointer = 0;
+            $this->numRows = 0;
         }
     }
 

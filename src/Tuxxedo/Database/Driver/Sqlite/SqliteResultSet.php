@@ -13,15 +13,62 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Driver\Sqlite;
 
+use Tuxxedo\Database\DatabaseException;
+use Tuxxedo\Database\Driver\ResultRow;
 use Tuxxedo\Database\Driver\ResultRowInterface;
 use Tuxxedo\Database\Driver\ResultSetInterface;
 
 class SqliteResultSet implements ResultSetInterface
 {
+    private int $pointer = 0;
+    private bool $endedBuffering = false;
+
+    /**
+     * @var array<int, mixed[]>
+     */
+    private array $buffer = [];
+
     public function __construct(
-        private readonly ?\SQLite3Result $result,
+        private ?\SQLite3Result $result,
         public readonly int $affectedRows = 0,
     ) {
+    }
+
+    private function increaseBuffer(): bool
+    {
+        if ($this->endedBuffering) {
+            return false;
+        }
+
+        $next = $this->fetchNext();
+
+        if ($next === null) {
+            $this->endedBuffering = true;
+
+            return false;
+        }
+
+        $this->buffer[] = $next;
+
+        return true;
+    }
+
+    /**
+     * @return mixed[]|null
+     */
+    private function fetchNext(): ?array
+    {
+        if ($this->result === null) {
+            return null;
+        }
+
+        $row = $this->result->fetchArray(\SQLITE3_ASSOC);
+
+        if (!\is_array($row)) {
+            return null;
+        }
+
+        return $row;
     }
 
     public function fetchAllAsArray(): array
@@ -49,55 +96,119 @@ class SqliteResultSet implements ResultSetInterface
 
     public function fetchObject(): ResultRowInterface
     {
-        // TODO: Implement fetchObject() method.
+        if ($this->result === null) {
+            throw DatabaseException::fromEmptyResultSet();
+        }
+
+        $row = $this->result->fetchArray(\SQLITE3_ASSOC);
+
+        if (!\is_array($row)) {
+            throw DatabaseException::fromCannotFetch();
+        }
+
+        return new ResultRow(
+            properties: $row,
+        );
     }
 
     public function fetchArray(): array
     {
-        // TODO: Implement fetchArray() method.
+        if ($this->result === null) {
+            throw DatabaseException::fromEmptyResultSet();
+        }
+
+        $row = $this->result->fetchArray();
+
+        if (!\is_array($row)) {
+            throw DatabaseException::fromCannotFetch();
+        }
+
+        return $row;
     }
 
     public function fetchAssoc(): array
     {
-        // TODO: Implement fetchAssoc() method.
+        if ($this->result === null) {
+            throw DatabaseException::fromEmptyResultSet();
+        }
+
+        $row = $this->result->fetchArray(\SQLITE3_ASSOC);
+
+        if (!\is_array($row)) {
+            throw DatabaseException::fromCannotFetch();
+        }
+
+        return $row;
     }
 
     public function fetchRow(): array
     {
-        // TODO: Implement fetchRow() method.
+        if ($this->result === null) {
+            throw DatabaseException::fromEmptyResultSet();
+        }
+
+        $row = $this->result->fetchArray(\SQLITE3_NUM);
+
+        if (!\is_array($row)) {
+            throw DatabaseException::fromCannotFetch();
+        }
+
+        /** @var array<int, mixed> */
+        return $row;
     }
 
     public function free(): void
     {
+        if ($this->result !== null) {
+            $this->result->finalize();
+
+            $this->result = null;
+            $this->pointer = 0;
+            $this->buffer = [];
+            $this->endedBuffering = false;
+        }
     }
 
     public function count(): int
     {
-        // @todo Implement count() method.
+        if ($this->endedBuffering) {
+            return \sizeof($this->buffer);
+        }
+
+        while ($this->increaseBuffer()) {
+        }
+
+        return \sizeof($this->buffer);
     }
 
-    public function current(): mixed
+    public function current(): ResultRowInterface
     {
-        // @todo Implement current() method.
+        return new ResultRow(
+            properties: $this->buffer[$this->pointer],
+        );
     }
 
-    public function key(): mixed
+    public function key(): int
     {
-        // @todo Implement key() method.
+        return $this->pointer;
     }
 
     public function next(): void
     {
-        // @todo Implement next() method.
+        $this->pointer++;
     }
 
     public function rewind(): void
     {
-        // @todo Implement rewind() method.
+        $this->pointer = 0;
     }
 
     public function valid(): bool
     {
-        // @todo Implement valid() method.
+        if ($this->increaseBuffer()) {
+            return true;
+        }
+
+        return $this->pointer < \sizeof($this->buffer);
     }
 }

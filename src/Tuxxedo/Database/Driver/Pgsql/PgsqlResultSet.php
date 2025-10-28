@@ -14,15 +14,25 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver\Pgsql;
 
 use PgSql\Result;
+use Tuxxedo\Database\DatabaseException;
+use Tuxxedo\Database\Driver\ResultRow;
 use Tuxxedo\Database\Driver\ResultRowInterface;
 use Tuxxedo\Database\Driver\ResultSetInterface;
 
 class PgsqlResultSet implements ResultSetInterface
 {
+    private int $pointer = 0;
+    private int $numRows;
+
     public function __construct(
-        private readonly ?Result $result,
+        private ?Result $result,
         public readonly int $affectedRows = 0,
     ) {
+        if ($this->result !== null) {
+            $this->numRows = \pg_num_rows($this->result);
+        } else {
+            $this->numRows = 0;
+        }
     }
 
     public function fetchAllAsArray(): array
@@ -50,55 +60,109 @@ class PgsqlResultSet implements ResultSetInterface
 
     public function fetchObject(): ResultRowInterface
     {
-        // TODO: Implement fetchObject() method.
+        if ($this->result === null) {
+            throw DatabaseException::fromEmptyResultSet();
+        }
+
+        $row = \pg_fetch_assoc($this->result);
+
+        if (!\is_array($row)) {
+            throw DatabaseException::fromCannotFetch();
+        }
+
+        return new ResultRow(
+            properties: $row,
+        );
     }
 
     public function fetchArray(): array
     {
-        // TODO: Implement fetchArray() method.
+        if ($this->result === null) {
+            throw DatabaseException::fromEmptyResultSet();
+        }
+
+        $row = \pg_fetch_array($this->result);
+
+        if (!\is_array($row)) {
+            throw DatabaseException::fromCannotFetch();
+        }
+
+        return $row;
     }
 
     public function fetchAssoc(): array
     {
-        // TODO: Implement fetchAssoc() method.
+        if ($this->result === null) {
+            throw DatabaseException::fromEmptyResultSet();
+        }
+
+        $row = \pg_fetch_assoc($this->result);
+
+        if (!\is_array($row)) {
+            throw DatabaseException::fromCannotFetch();
+        }
+
+        return $row;
     }
 
     public function fetchRow(): array
     {
-        // TODO: Implement fetchRow() method.
+        if ($this->result === null) {
+            throw DatabaseException::fromEmptyResultSet();
+        }
+
+        $row = \pg_fetch_row($this->result);
+
+        if (!\is_array($row)) {
+            throw DatabaseException::fromCannotFetch();
+        }
+
+        return \array_values($row);
     }
 
     public function free(): void
     {
+        if ($this->result !== null) {
+            \pg_free_result($this->result);
+
+            $this->result = null;
+            $this->pointer = 0;
+            $this->numRows = 0;
+        }
     }
 
     public function count(): int
     {
-        // @todo Implement count() method.
+        /** @var int<0, max> */
+        return $this->numRows;
     }
 
-    public function current(): mixed
+    public function current(): ResultRowInterface
     {
-        // @todo Implement current() method.
+        if ($this->result !== null) {
+            \pg_result_seek($this->result, $this->pointer);
+        }
+
+        return $this->fetchObject();
     }
 
-    public function key(): mixed
+    public function key(): int
     {
-        // @todo Implement key() method.
+        return $this->pointer;
     }
 
     public function next(): void
     {
-        // @todo Implement next() method.
+        $this->pointer++;
     }
 
     public function rewind(): void
     {
-        // @todo Implement rewind() method.
+        $this->pointer = 0;
     }
 
     public function valid(): bool
     {
-        // @todo Implement valid() method.
+        return $this->result !== null && $this->pointer < $this->numRows;
     }
 }
