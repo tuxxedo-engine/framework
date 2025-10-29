@@ -33,17 +33,17 @@ use Tuxxedo\View\Lumi\Syntax\Highlight\HighlighterInterface;
 use Tuxxedo\View\Lumi\Syntax\Highlight\Theme\ThemeInterface;
 use Tuxxedo\View\ViewException;
 
-class LumiEngine
+readonly class LumiEngine
 {
     /**
      * @param OptimizerInterface[] $optimizers
      */
     final private function __construct(
-        public readonly LexerInterface $lexer,
-        public readonly ParserInterface $parser,
-        public readonly CompilerInterface $compiler,
-        public readonly HighlighterInterface $highlighter,
-        public readonly array $optimizers = [],
+        public LexerInterface $lexer,
+        public ParserInterface $parser,
+        public CompilerInterface $compiler,
+        public HighlighterInterface $highlighter,
+        public array $optimizers = [],
     ) {
     }
 
