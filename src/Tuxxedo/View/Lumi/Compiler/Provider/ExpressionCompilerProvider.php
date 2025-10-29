@@ -189,7 +189,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
                 $assert,
                 $accessor,
                 $node->name->property,
-                $node->operator->symbol(),
+                $node->operator->transform(),
                 $compiler->compileExpression($node->value),
             );
         } elseif ($node->name instanceof ArrayAccessNode) {
@@ -212,7 +212,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
                 $node->name->key !== null
                     ? $compiler->compileExpression($node->name->key)
                     : '',
-                $node->operator->symbol(),
+                $node->operator->transform(),
                 $compiler->compileExpression($node->value),
             );
         }
@@ -220,7 +220,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         return \sprintf(
             '<?php $%s %s %s; ?>',
             $node->name->name,
-            $node->operator->symbol(),
+            $node->operator->transform(),
             $compiler->compileExpression($node->value),
         );
     }

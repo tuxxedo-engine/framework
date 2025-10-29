@@ -20,6 +20,7 @@ use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 enum AssignmentSymbol implements SymbolInterface
 {
     case ASSIGN;
+    case CONCAT;
     case NULL_ASSIGN;
     case ADD;
     case SUBTRACT;
@@ -73,6 +74,7 @@ enum AssignmentSymbol implements SymbolInterface
     {
         return match ($this) {
             self::ASSIGN => '=',
+            self::CONCAT => '~=',
             self::NULL_ASSIGN => '??=',
             self::ADD => '+=',
             self::SUBTRACT => '-=',
@@ -85,6 +87,14 @@ enum AssignmentSymbol implements SymbolInterface
             self::BITWISE_XOR => '^=',
             self::BITWISE_SHIFT_LEFT => '<<=',
             self::BITWISE_SHIFT_RIGHT => '>>=',
+        };
+    }
+
+    public function transform(): string
+    {
+        return match ($this) {
+            self::CONCAT => '.=',
+            default => $this->symbol(),
         };
     }
 }
