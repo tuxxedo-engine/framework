@@ -15,6 +15,7 @@ namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
+use Tuxxedo\View\Lumi\Lexer\LexerStateInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
 interface TokenHandlerInterface
@@ -31,5 +32,6 @@ interface TokenHandlerInterface
         int $startingLine,
         string $buffer,
         ExpressionLexerInterface $expressionLexer,
+        LexerStateInterface $state,
     ): array;
 }

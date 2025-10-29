@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
+use Tuxxedo\View\Lumi\Lexer\LexerStateInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\EchoToken;
 use Tuxxedo\View\Lumi\Syntax\Token\EndToken;
 
@@ -33,6 +34,7 @@ class EchoTokenHandler implements TokenHandlerInterface
         int $startingLine,
         string $buffer,
         ExpressionLexerInterface $expressionLexer,
+        LexerStateInterface $state,
     ): array {
         return [
             new EchoToken(

@@ -62,6 +62,7 @@ class Variable implements VariableInterface
         ExpressionNodeInterface $value,
         AssignmentSymbol $operator = AssignmentSymbol::ASSIGN,
     ): void {
+        // @todo This will not report the right value if $operator is not ASSIGN
         $this->value = $value;
 
         if ($value instanceof LiteralNode) {

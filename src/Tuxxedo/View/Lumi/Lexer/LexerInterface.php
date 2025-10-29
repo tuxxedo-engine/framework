@@ -13,8 +13,18 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer;
 
+use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
+
 interface LexerInterface
 {
+    public ExpressionLexerInterface $expressionLexer {
+        get;
+    }
+
+    public LexerStateInterface $state {
+        get;
+    }
+
     /**
      * @return TokenStreamInterface
      *

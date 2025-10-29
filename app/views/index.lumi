@@ -51,7 +51,7 @@
                 <h3 class="text-base font-semibold">View (Lumi):</h3>
                 <pre class="mt-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800 p-4 text-sm leading-6 bg-[#0b0f14] text-[#e6edf3]"><code
                             class="language-lumi"><span style="color:#C9D1D9">Hello</span> <span
-                                style="color:#6E7681">{{ '{{' }}</span> <span style="color:#C9D1D9">name</span> <span
+                                style="color:#6E7681">\{{</span> <span style="color:#C9D1D9">name</span> <span
                                 style="color:#6E7681">}}</span></code></pre>
                 <h3 class="text-base font-semibold pt-6">Output:</h3>
                 <pre class="mt-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800 p-4 text-sm leading-6 bg-[#0b0f14] text-[#e6edf3]"><code
@@ -63,8 +63,8 @@
 
 <footer class="border-t border-slate-200/60 py-10 text-center text-sm text-slate-500 dark:border-slate-800/60 dark:text-slate-400">
     <div class="mx-auto max-w-7xl px-6">&copy;
-        2025 {% if appName %}{{ appName }} {% if appVersion %}{{ appVersion }}{% endif %}{% endif %} • Powered by
-        Tuxxedo Engine {{ engineVersion }} • PHP {{ phpVersion }}</div>
+        2025 {% if appName %}{{ appName }} {% if appVersion %}{{ appVersion }}{% endif %}{% endif %} &bullet; Powered by
+        Tuxxedo Engine {{ engineVersion }} &bullet; PHP {{ phpVersion }}</div>
 </footer>
 </body>
 </html>

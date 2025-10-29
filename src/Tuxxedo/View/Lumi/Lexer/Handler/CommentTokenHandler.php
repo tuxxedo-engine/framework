@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
+use Tuxxedo\View\Lumi\Lexer\LexerStateInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\CommentToken;
 
 class CommentTokenHandler implements TokenHandlerInterface
@@ -32,6 +33,7 @@ class CommentTokenHandler implements TokenHandlerInterface
         int $startingLine,
         string $buffer,
         ExpressionLexerInterface $expressionLexer,
+        LexerStateInterface $state,
     ): array {
         return [
             new CommentToken(

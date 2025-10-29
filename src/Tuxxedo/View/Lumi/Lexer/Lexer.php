@@ -23,6 +23,7 @@ use Tuxxedo\View\Lumi\Lexer\Handler\TokenHandlerInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\TextToken;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
+// @todo Implement raw and endraw
 class Lexer implements LexerInterface
 {
     /**
@@ -39,6 +40,7 @@ class Lexer implements LexerInterface
     final private function __construct(
         array $handlers,
         public readonly ExpressionLexerInterface $expressionLexer,
+        public readonly LexerStateInterface $state,
     ) {
         $maxTokenLength = 0;
         $sequences = [];
@@ -72,19 +74,31 @@ class Lexer implements LexerInterface
         ];
     }
 
+    public static function getDefaultExpressionLexer(): ExpressionLexerInterface
+    {
+        return new ExpressionLexer();
+    }
+
+    public static function getDefaultLexerState(): LexerStateInterface
+    {
+        return new LexerState();
+    }
+
     /**
      * @param TokenHandlerInterface[] $handlers
      */
     public static function createWithDefaultHandlers(
         array $handlers = [],
         ?ExpressionLexerInterface $expressionLexer = null,
+        ?LexerStateInterface $state = null,
     ): static {
         return new static(
             handlers: \array_merge(
                 self::getDefaultHandlers(),
                 $handlers,
             ),
-            expressionLexer: $expressionLexer ?? new ExpressionLexer(),
+            expressionLexer: $expressionLexer ?? self::getDefaultExpressionLexer(),
+            state: $state ?? self::getDefaultLexerState(),
         );
     }
 
@@ -94,10 +108,12 @@ class Lexer implements LexerInterface
     public static function createWithoutDefaultHandlers(
         array $handlers = [],
         ?ExpressionLexerInterface $expressionLexer = null,
+        ?LexerStateInterface $state = null,
     ): static {
         return new static(
             handlers: $handlers,
-            expressionLexer: $expressionLexer ?? new ExpressionLexer(),
+            expressionLexer: $expressionLexer ?? self::getDefaultExpressionLexer(),
+            state: $state ?? self::getDefaultLexerState(),
         );
     }
 
@@ -113,6 +129,18 @@ class Lexer implements LexerInterface
 
             if (!\array_key_exists($buffer, $this->sequences)) {
                 continue;
+            } elseif (
+                $stream->position > 0 &&
+                $stream->input[$stream->position - 1] === '\\'
+            ) {
+                $stream->consumeSequence($buffer);
+
+                return [
+                    new TextToken(
+                        line: $line,
+                        op1: $buffer,
+                    ),
+                ];
             }
 
             $handler = $this->sequences[$buffer];
@@ -137,6 +165,7 @@ class Lexer implements LexerInterface
                         startingLine: $startLine,
                         buffer: $content,
                         expressionLexer: $this->expressionLexer,
+                        state: $this->state,
                     );
                 }
 
@@ -221,9 +250,19 @@ class Lexer implements LexerInterface
                 if ($buffer === null) {
                     $buffer = $token;
                 } else {
+                    $buffered = $buffer->op1;
+
+                    if (\array_key_exists($token->op1, $this->sequences)) {
+                        $length = \mb_strlen($buffered);
+
+                        if ($buffer->op1[$length - 1] === '\\') {
+                            $buffered = \mb_substr($buffered, 0, -1);
+                        }
+                    }
+
                     $buffer = new TextToken(
                         line: $buffer->line,
-                        op1: $buffer->op1 . $token->op1,
+                        op1: $buffered . $token->op1,
                     );
                 }
             } else {

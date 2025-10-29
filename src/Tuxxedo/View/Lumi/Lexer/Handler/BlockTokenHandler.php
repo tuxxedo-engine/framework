@@ -15,6 +15,7 @@ namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
+use Tuxxedo\View\Lumi\Lexer\LexerStateInterface;
 use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Token\AssignToken;
 use Tuxxedo\View\Lumi\Syntax\Token\BlockToken;
@@ -40,6 +41,7 @@ use Tuxxedo\View\Lumi\Syntax\Token\LiteralToken;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\WhileToken;
 
+// @todo Split directives into sub classes
 class BlockTokenHandler implements TokenHandlerInterface
 {
     public function getStartingSequence(): string
@@ -56,6 +58,7 @@ class BlockTokenHandler implements TokenHandlerInterface
         int $startingLine,
         string $buffer,
         ExpressionLexerInterface $expressionLexer,
+        LexerStateInterface $state,
     ): array {
         $buffer = \mb_trim($buffer);
 
