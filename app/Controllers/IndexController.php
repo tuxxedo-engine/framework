@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use Tuxxedo\Http\Kernel\KernelInterface;
 use Tuxxedo\Router\Attribute\Route;
 use Tuxxedo\Version;
 use Tuxxedo\View\View;
@@ -20,17 +21,21 @@ use Tuxxedo\View\ViewInterface;
 
 readonly class IndexController
 {
+    public function __construct(
+        private KernelInterface $kernel,
+    ) {
+    }
+
     #[Route\Get(uri: '/')]
     public function hello(): ViewInterface
     {
-        // @todo Cleanup index view
         return new View(
             name: 'index',
             scope: [
                 'engineVersion' => Version::SIMPLE,
                 'phpVersion' => \PHP_VERSION,
-                'appName' => '',
-                'appVersion' => '',
+                'appName' => $this->kernel->appName,
+                'appVersion' => $this->kernel->appVersion,
             ],
         );
     }
