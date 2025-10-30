@@ -24,14 +24,14 @@ jobs:
 
       - name: Run PHPUnit with coverage (Linux)
         if: runner.os != 'Windows'
-        run: vendor/bin/phpunit --coverage-clover=coverage.xml
+        run: vendor/bin/phpunit --coverage-clover=coverage-${{ runner.os }}.xml
 
       - name: Run PHPUnit with coverage (Windows)
         if: runner.os == 'Windows'
-        run: vendor\bin\phpunit --coverage-clover=coverage.xml
+        run: vendor\bin\phpunit --coverage-clover=coverage-${{ runner.os }}.xml
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
-          path: coverage.xml
+          name: coverage-report-${{ runner.os }}
+          path: coverage-${{ runner.os }}.xml
