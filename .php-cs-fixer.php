@@ -12,6 +12,7 @@ $finder = (new Finder())
             'app/',
             'public/',
             'src/',
+            'tests/',
         ],
     )
     ->exclude(

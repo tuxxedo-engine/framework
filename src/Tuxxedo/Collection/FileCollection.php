@@ -15,6 +15,9 @@ namespace Tuxxedo\Collection;
 
 class FileCollection
 {
+    /**
+     * @codeCoverageIgnore
+     */
     private function __construct()
     {
     }

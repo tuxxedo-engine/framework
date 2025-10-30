@@ -143,7 +143,7 @@ class ImmutableCollection implements CollectionInterface
         }
 
         foreach ($values as $value) {
-            if ($value instanceof ImmutableCollection) {
+            if ($value instanceof CollectionInterface) {
                 if (!$this->contains(...$value->toArray())) {
                     return false;
                 }
@@ -157,33 +157,41 @@ class ImmutableCollection implements CollectionInterface
 
     public function sort(): static
     {
-        \asort($this->collection);
+        $collection = clone $this;
 
-        return $this;
+        \sort($collection->collection);
+
+        return $collection;
     }
 
     public function sortKeys(): static
     {
-        \ksort($this->collection);
+        $collection = clone $this;
 
-        return $this;
+        \ksort($collection->collection);
+
+        return $collection;
     }
 
     public function reverse(): static
     {
-        $this->collection = \array_reverse(
-            array: $this->collection,
+        $collection = clone $this;
+
+        $collection->collection = \array_reverse(
+            array: $collection->collection,
             preserve_keys: true,
         );
 
-        return $this;
+        return $collection;
     }
 
     public function reverseKeys(): static
     {
-        \krsort($this->collection);
+        $collection = clone $this;
 
-        return $this;
+        \krsort($collection->collection);
+
+        return $collection;
     }
 
     /**

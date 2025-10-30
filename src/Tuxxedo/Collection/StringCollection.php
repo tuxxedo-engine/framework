@@ -15,6 +15,9 @@ namespace Tuxxedo\Collection;
 
 class StringCollection
 {
+    /**
+     * @codeCoverageIgnore
+     */
     private function __construct()
     {
     }

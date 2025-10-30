@@ -208,7 +208,7 @@ class Collection implements CollectionInterface
         }
 
         foreach ($values as $value) {
-            if ($value instanceof Collection) {
+            if ($value instanceof CollectionInterface) {
                 if (!$this->contains(...$value->toArray())) {
                     return false;
                 }

@@ -15,6 +15,9 @@ namespace Tuxxedo\Collection;
 
 class IntCollection
 {
+    /**
+     * @codeCoverageIgnore
+     */
     private function __construct()
     {
     }
