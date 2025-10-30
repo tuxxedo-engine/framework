@@ -38,7 +38,11 @@
   "autoload": {
     "psr-4": {
       "App\\": "app/",
-      "Tuxxedo\\": "src/Tuxxedo/",
+      "Tuxxedo\\": "src/Tuxxedo/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
       "Fixtures\\": "tests/Fixtures",
       "Unit\\": "tests/Unit/"
     }
