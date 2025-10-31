@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Optimizer\Scope;
 
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 
 interface VariableInterface
@@ -22,7 +23,7 @@ interface VariableInterface
         get;
     }
 
-    public ExpressionNodeInterface $value {
+    public ?LiteralNode $value {
         get;
     }
 

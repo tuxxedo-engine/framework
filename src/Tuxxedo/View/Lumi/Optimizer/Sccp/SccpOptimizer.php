@@ -170,6 +170,7 @@ class SccpOptimizer extends AbstractOptimizer
     /**
      * @return NodeInterface[]
      */
+    // @todo This method needs better support to mimic php literals for non int|float operands
     private function optimizeBinaryOp(
         NodeStreamInterface $stream,
         BinaryOpNode $node,
