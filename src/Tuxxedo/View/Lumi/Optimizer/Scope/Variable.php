@@ -13,13 +13,13 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Optimizer\Scope;
 
-use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
+use Tuxxedo\View\Lumi\Syntax\Type;
 
 class Variable implements VariableInterface
 {
@@ -27,11 +27,11 @@ class Variable implements VariableInterface
     public private(set) Lattice $lattice;
 
     final private function __construct(
+        public readonly ScopeInterface $scope,
         public readonly string $name,
         ?ExpressionNodeInterface $value = null,
-        ?ScopeInterface $scope = null,
     ) {
-        if ($scope !== null && $value !== null) {
+        if ($value !== null) {
             $this->mutate($scope, $value);
         } else {
             $this->lattice = Lattice::UNDEF;
@@ -44,29 +44,31 @@ class Variable implements VariableInterface
         IdentifierNode $name,
     ): static {
         return new static(
+            scope: $scope,
             name: $name->name,
             value: $node->value,
-            scope: $scope,
         );
     }
 
     public static function fromUndefined(
+        ScopeInterface $scope,
         string $name,
     ): static {
         return new static(
+            scope: $scope,
             name: $name,
         );
     }
 
     private function castTo(
         LiteralNode $value,
-        NativeType $type,
+        Type $type,
     ): LiteralNode {
         if ($value->type === $type) {
             return $value;
         }
 
-        $newValue = $type->cast($value->operand);
+        $newValue = $this->scope->evaluator->castValue($type, $value->operand);
 
         return new LiteralNode(
             operand: match (true) {
@@ -78,12 +80,14 @@ class Variable implements VariableInterface
         );
     }
 
+    // @todo Migrate to Evaluator
     private function castToString(
         LiteralNode $value,
     ): LiteralNode {
-        return $this->castTo($value, NativeType::STRING);
+        return $this->castTo($value, Type::STRING);
     }
 
+    // @todo Migrate to Evaluator
     private function getOperatorMutatedLiteral(
         LiteralNode $value,
         AssignmentSymbol $operator,
@@ -102,12 +106,12 @@ class Variable implements VariableInterface
 
             return new LiteralNode(
                 operand: $this->castToString($this->value)->operand . $this->castToString($value)->operand,
-                type: NativeType::STRING,
+                type: Type::STRING,
             );
         }
 
         if ($operator === AssignmentSymbol::NULL_ASSIGN) {
-            return $this->value->type === NativeType::NULL
+            return $this->value->type === Type::NULL
                 ? $value
                 : $this->value;
         }
@@ -128,6 +132,7 @@ class Variable implements VariableInterface
         };
     }
 
+    // @todo Migrate to Evaluator
     public function mutate(
         ScopeInterface $scope,
         ExpressionNodeInterface $value,

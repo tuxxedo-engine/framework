@@ -17,7 +17,6 @@ use Tuxxedo\View\Lumi\Lexer\TokenStream;
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
-use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
@@ -31,6 +30,7 @@ use Tuxxedo\View\Lumi\Syntax\Token\EndToken;
 use Tuxxedo\View\Lumi\Syntax\Token\IdentifierToken;
 use Tuxxedo\View\Lumi\Syntax\Token\LiteralToken;
 use Tuxxedo\View\Lumi\Syntax\Token\OperatorToken;
+use Tuxxedo\View\Lumi\Syntax\Type;
 
 class AssignmentParserHandler implements ParserHandlerInterface
 {
@@ -217,7 +217,7 @@ class AssignmentParserHandler implements ParserHandlerInterface
 
             return new LiteralNode(
                 operand: $literal->op1,
-                type: NativeType::fromString(
+                type: Type::fromString(
                     name: $literal->op2,
                     line: $literal->line,
                 ),

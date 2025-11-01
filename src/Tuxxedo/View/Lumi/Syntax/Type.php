@@ -15,7 +15,7 @@ namespace Tuxxedo\View\Lumi\Syntax;
 
 use Tuxxedo\View\Lumi\Parser\ParserException;
 
-enum NativeType
+enum Type
 {
     case STRING;
     case INT;
@@ -26,16 +26,17 @@ enum NativeType
     /**
      * @throws ParserException
      */
+    // @todo Move to Parser
     public static function fromString(
         string $name,
         int $line,
     ): self {
         return match ($name) {
-            'STRING' => self::STRING,
-            'INT' => self::INT,
-            'FLOAT' => self::FLOAT,
-            'BOOL' => self::BOOL,
-            'NULL' => self::NULL,
+            self::STRING->name => self::STRING,
+            self::INT->name => self::INT,
+            self::FLOAT->name => self::FLOAT,
+            self::BOOL->name => self::BOOL,
+            self::NULL->name => self::NULL,
             default => throw ParserException::fromUnexpectedToken(
                 tokenName: $name,
                 line: $line,
@@ -51,19 +52,7 @@ enum NativeType
             \is_int($value) => self::INT,
             \is_float($value) => self::FLOAT,
             \is_bool($value) => self::BOOL,
-            \is_null($value) => self::NULL,
-        };
-    }
-
-    public function cast(
-        string $value,
-    ): string|int|float|bool|null {
-        return match ($this) {
-            self::STRING => $value,
-            self::INT => \intval($value),
-            self::FLOAT => \floatval($value),
-            self::BOOL => $value === 'true',
-            self::NULL => null,
+            default => self::NULL,
         };
     }
 }

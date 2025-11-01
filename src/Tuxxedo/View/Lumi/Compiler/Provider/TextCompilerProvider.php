@@ -16,7 +16,6 @@ namespace Tuxxedo\View\Lumi\Compiler\Provider;
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
-use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
 use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
@@ -29,6 +28,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
+use Tuxxedo\View\Lumi\Syntax\Type;
 
 class TextCompilerProvider implements CompilerProviderInterface
 {
@@ -104,11 +104,11 @@ class TextCompilerProvider implements CompilerProviderInterface
         $compiler->state->directives->set(
             $node->directive->operand,
             match ($node->value->type) {
-                NativeType::STRING => $node->value->operand,
-                NativeType::INT => \intval($node->value->operand),
-                NativeType::FLOAT => \floatval($node->value->operand),
-                NativeType::BOOL => $node->value->operand === 'true',
-                NativeType::NULL => null,
+                Type::STRING => $node->value->operand,
+                Type::INT => \intval($node->value->operand),
+                Type::FLOAT => \floatval($node->value->operand),
+                Type::BOOL => $node->value->operand === 'true',
+                Type::NULL => null,
             },
         );
 
@@ -243,7 +243,7 @@ class TextCompilerProvider implements CompilerProviderInterface
 
         if (
             $node instanceof LiteralNode &&
-            $node->type !== NativeType::STRING
+            $node->type !== Type::STRING
         ) {
             return true;
         }

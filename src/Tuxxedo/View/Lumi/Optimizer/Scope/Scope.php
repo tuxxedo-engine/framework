@@ -13,13 +13,23 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Optimizer\Scope;
 
+use Tuxxedo\View\Lumi\Optimizer\Evaluator\Evaluator;
+use Tuxxedo\View\Lumi\Optimizer\Evaluator\EvaluatorInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 
 class Scope implements ScopeInterface
 {
+    public readonly EvaluatorInterface $evaluator;
+
     public private(set) array $variables = [];
+
+    public function __construct(
+        ?EvaluatorInterface $evaluator = null,
+    ) {
+        $this->evaluator = $evaluator ?? new Evaluator();
+    }
 
     public function assign(
         AssignmentNode $node,
@@ -53,6 +63,6 @@ class Scope implements ScopeInterface
             $name = $name->name;
         }
 
-        return $this->variables[$name] ?? Variable::fromUndefined($name);
+        return $this->variables[$name] ?? Variable::fromUndefined($this, $name);
     }
 }

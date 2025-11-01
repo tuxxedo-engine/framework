@@ -18,7 +18,6 @@ use Tuxxedo\Escaper\EscaperInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\Highlight\Theme\ThemeInterface;
-use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayItemNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
@@ -49,6 +48,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\CharacterSymbol;
+use Tuxxedo\View\Lumi\Syntax\Type;
 
 class Highlighter implements HighlighterInterface
 {
@@ -457,10 +457,7 @@ class Highlighter implements HighlighterInterface
         return $this->dye(ColorSlot::DELIMITER, '{% ') .
             $this->dye(ColorSlot::KEYWORD, 'layout') . ' ' .
             $this->highlightNode(
-                node: new LiteralNode(
-                    operand: $node->file,
-                    type: NativeType::STRING,
-                ),
+                node: LiteralNode::createString($node->file),
             ) .
             $this->dye(ColorSlot::DELIMITER, ' %}');
     }
@@ -468,11 +465,11 @@ class Highlighter implements HighlighterInterface
     private function highlightLiteralNode(
         LiteralNode $node,
     ): string {
-        if ($node->type === NativeType::INT || $node->type === NativeType::FLOAT) {
+        if ($node->type === Type::INT || $node->type === Type::FLOAT) {
             return $this->dye(ColorSlot::NUMBER, $node->operand);
-        } elseif ($node->type === NativeType::BOOL) {
+        } elseif ($node->type === Type::BOOL) {
             return $this->dye(ColorSlot::BOOL, $node->operand);
-        } elseif ($node->type === NativeType::NULL) {
+        } elseif ($node->type === Type::NULL) {
             return $this->dye(ColorSlot::NULL, $node->operand);
         } else {
             return $this->dye(ColorSlot::STRING, $this->escaper->html($this->literalString($node->operand)));

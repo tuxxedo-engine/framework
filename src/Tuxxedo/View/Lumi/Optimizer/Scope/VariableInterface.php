@@ -19,6 +19,10 @@ use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 
 interface VariableInterface
 {
+    public ScopeInterface $scope {
+        get;
+    }
+
     public string $name {
         get;
     }

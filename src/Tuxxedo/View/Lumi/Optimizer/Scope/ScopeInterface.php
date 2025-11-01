@@ -13,11 +13,16 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Optimizer\Scope;
 
+use Tuxxedo\View\Lumi\Optimizer\Evaluator\EvaluatorInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 
 interface ScopeInterface
 {
+    public EvaluatorInterface $evaluator {
+        get;
+    }
+
     /**
      * @var array<string, VariableInterface>
      */
@@ -29,6 +34,7 @@ interface ScopeInterface
         AssignmentNode $node,
     ): void;
 
+    // @todo Support recursive variable mutations
     public function get(
         IdentifierNode|string $name,
     ): VariableInterface;

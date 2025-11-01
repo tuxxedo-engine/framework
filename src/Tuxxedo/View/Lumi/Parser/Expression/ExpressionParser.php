@@ -15,7 +15,6 @@ namespace Tuxxedo\View\Lumi\Parser\Expression;
 
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
-use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayItemNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
@@ -39,6 +38,7 @@ use Tuxxedo\View\Lumi\Syntax\Token\IdentifierToken;
 use Tuxxedo\View\Lumi\Syntax\Token\LiteralToken;
 use Tuxxedo\View\Lumi\Syntax\Token\OperatorToken;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
+use Tuxxedo\View\Lumi\Syntax\Type;
 
 class ExpressionParser implements ExpressionParserInterface
 {
@@ -102,7 +102,7 @@ class ExpressionParser implements ExpressionParserInterface
 
                 return new LiteralNode(
                     operand: $token->op1,
-                    type: NativeType::fromString(
+                    type: Type::fromString(
                         name: $token->op2,
                         line: $token->line,
                     ),

@@ -16,7 +16,6 @@ namespace Tuxxedo\View\Lumi\Optimizer\Sccp;
 use Tuxxedo\View\Lumi\Optimizer\AbstractOptimizer;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
-use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
@@ -32,6 +31,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
+use Tuxxedo\View\Lumi\Syntax\Type;
 
 class SccpOptimizer extends AbstractOptimizer
 {
@@ -86,7 +86,7 @@ class SccpOptimizer extends AbstractOptimizer
         EchoNode $node,
     ): array {
         if ($node->operand instanceof LiteralNode) {
-            if ($node->operand->type === NativeType::STRING) {
+            if ($node->operand->type === Type::STRING) {
                 if ($node->operand->operand === '') {
                     return [];
                 } elseif (!$this->directives->asBool('lumi.autoescape')) {
@@ -103,10 +103,10 @@ class SccpOptimizer extends AbstractOptimizer
             }
 
             $value = match ($node->operand->type) {
-                NativeType::NULL => null,
-                NativeType::BOOL => \boolval($node->operand->operand),
-                NativeType::INT => \intval($node->operand->operand),
-                NativeType::FLOAT => \floatval($node->operand->operand),
+                Type::NULL => null,
+                Type::BOOL => \boolval($node->operand->operand),
+                Type::INT => \intval($node->operand->operand),
+                Type::FLOAT => \floatval($node->operand->operand),
             };
 
             if ($value !== null) {
@@ -130,7 +130,7 @@ class SccpOptimizer extends AbstractOptimizer
             if ($operand[0] instanceof LiteralNode) {
                 return [
                     new TextNode(
-                        text: (string) $operand[0]->type->cast($operand[0]->operand),
+                        text: (string) $this->evaluator->castNodeToValue($operand[0]),
                     ),
                 ];
             }
@@ -170,15 +170,16 @@ class SccpOptimizer extends AbstractOptimizer
     /**
      * @return NodeInterface[]
      */
-    // @todo This method needs better support to mimic php literals for non int|float operands
+    // @todo Migrate to evaluator
     private function optimizeBinaryOp(
         NodeStreamInterface $stream,
         BinaryOpNode $node,
     ): array {
+        // @todo This can support variables too using evaluator
         if (
             $node->operator === BinarySymbol::NULL_COALESCE &&
             $node->left instanceof LiteralNode &&
-            $node->left->type === NativeType::NULL
+            $node->left->type === Type::NULL
         ) {
             return [
                 $node->right,
@@ -255,15 +256,12 @@ class SccpOptimizer extends AbstractOptimizer
                 )
             ) {
                 return [
-                    new LiteralNode(
-                        operand: 'false',
-                        type: NativeType::BOOL,
-                    ),
+                    LiteralNode::createBool(false),
                 ];
             }
 
-            $left = $leftNode->type->cast($leftNode->operand);
-            $right = $rightNode->type->cast($rightNode->operand);
+            $left = $this->evaluator->castNodeToValue($leftNode);
+            $right = $this->evaluator->castNodeToValue($rightNode);
 
             if (
                 (
@@ -300,10 +298,7 @@ class SccpOptimizer extends AbstractOptimizer
                     }
 
                     return [
-                        new LiteralNode(
-                            operand: \strval($left ** $right),
-                            type: NativeType::INT,
-                        ),
+                        LiteralNode::createInt($left ** $right),
                     ];
                 }
 
@@ -348,12 +343,7 @@ class SccpOptimizer extends AbstractOptimizer
                     ];
                 } elseif (\is_bool($value)) {
                     return [
-                        new LiteralNode(
-                            operand: $value
-                                ? 'true'
-                                : 'false',
-                            type: NativeType::BOOL,
-                        ),
+                        LiteralNode::createBool($value),
                     ];
                 }
             }
@@ -361,7 +351,7 @@ class SccpOptimizer extends AbstractOptimizer
             return [
                 new LiteralNode(
                     operand: \strval($value),
-                    type: NativeType::fromValueNativeType($value),
+                    type: Type::fromValueNativeType($value),
                 ),
             ];
         } elseif ($node->operator === BinarySymbol::CONCAT) {
@@ -420,23 +410,20 @@ class SccpOptimizer extends AbstractOptimizer
             }
 
             if (
-                $operand->type === NativeType::NULL ||
+                $operand->type === Type::NULL ||
                 (
-                    $operand->type === NativeType::BOOL &&
+                    $operand->type === Type::BOOL &&
                     $operand->operand === 'false'
                 )
             ) {
                 continue;
             }
 
-            $literal .= $operand->type->cast($operand->operand);
+            $literal .= $this->evaluator->castNodeToValue($operand);
         }
 
         return [
-            new LiteralNode(
-                operand: $literal,
-                type: NativeType::STRING,
-            ),
+            LiteralNode::createString($literal),
         ];
     }
 
@@ -475,19 +462,11 @@ class SccpOptimizer extends AbstractOptimizer
 
         if ($node->operator === UnarySymbol::NOT) {
             return [
-                new LiteralNode(
-                    operand: !\boolval($operand[0]->type->cast($operand[0]->operand))
-                        ? 'true'
-                        : 'false',
-                    type: NativeType::BOOL,
-                ),
+                LiteralNode::createBool(!\boolval($this->evaluator->castNodeToValue($operand[0]))),
             ];
         } elseif ($node->operator === UnarySymbol::BITWISE_NOT) {
             return [
-                new LiteralNode(
-                    operand: \strval(~((int) $operand[0]->type->cast($operand[0]->operand))),
-                    type: NativeType::INT,
-                ),
+                LiteralNode::createInt(~((int) $this->evaluator->castNodeToValue($operand[0]))),
             ];
         }
 

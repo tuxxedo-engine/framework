@@ -16,7 +16,6 @@ namespace Tuxxedo\View\Lumi\Lexer\Handler;
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Lexer\LexerStateInterface;
-use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Token\AssignToken;
 use Tuxxedo\View\Lumi\Syntax\Token\BlockToken;
 use Tuxxedo\View\Lumi\Syntax\Token\BreakToken;
@@ -40,6 +39,7 @@ use Tuxxedo\View\Lumi\Syntax\Token\LayoutToken;
 use Tuxxedo\View\Lumi\Syntax\Token\LiteralToken;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\WhileToken;
+use Tuxxedo\View\Lumi\Syntax\Type;
 
 // @todo Split directives into sub classes
 class BlockTokenHandler implements TokenHandlerInterface
@@ -448,7 +448,7 @@ class BlockTokenHandler implements TokenHandlerInterface
         if (
             \sizeof($expression) !== 1 ||
             !$expression[0] instanceof LiteralToken ||
-            $expression[0]->op2 !== NativeType::STRING->name
+            $expression[0]->op2 !== Type::STRING->name
         ) {
             throw LexerException::fromInvalidLayoutName(
                 line: $startingLine,

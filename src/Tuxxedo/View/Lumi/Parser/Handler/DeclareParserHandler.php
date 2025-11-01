@@ -16,13 +16,13 @@ namespace Tuxxedo\View\Lumi\Parser\Handler;
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
-use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\DeclareNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\DeclareToken;
 use Tuxxedo\View\Lumi\Syntax\Token\EndToken;
 use Tuxxedo\View\Lumi\Syntax\Token\LiteralToken;
+use Tuxxedo\View\Lumi\Syntax\Type;
 
 class DeclareParserHandler implements ParserHandlerInterface
 {
@@ -52,13 +52,10 @@ class DeclareParserHandler implements ParserHandlerInterface
 
         return [
             new DeclareNode(
-                directive: new LiteralNode(
-                    operand: $directive->op1,
-                    type: NativeType::STRING,
-                ),
+                directive: LiteralNode::createString($directive->op1),
                 value: new LiteralNode(
                     operand: $value->op1,
-                    type: NativeType::fromString(
+                    type: Type::fromString(
                         name: $value->op2,
                         line: $value->line,
                     ),

@@ -16,12 +16,13 @@ namespace Tuxxedo\View\Lumi\Optimizer;
 use Tuxxedo\View\Lumi\Compiler\CompilerDirectives;
 use Tuxxedo\View\Lumi\Compiler\CompilerDirectivesInterface;
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
+use Tuxxedo\View\Lumi\Optimizer\Evaluator\Evaluator;
+use Tuxxedo\View\Lumi\Optimizer\Evaluator\EvaluatorInterface;
 use Tuxxedo\View\Lumi\Optimizer\Scope\Scope;
 use Tuxxedo\View\Lumi\Optimizer\Scope\ScopeInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
-use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
@@ -31,10 +32,11 @@ use Tuxxedo\View\Lumi\Syntax\Node\LayoutNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
+use Tuxxedo\View\Lumi\Syntax\Type;
 
-// @todo Introduce an EvaluatorInterface to replace the manual evaluation of literals
 abstract class AbstractOptimizer implements OptimizerInterface
 {
+    protected readonly EvaluatorInterface $evaluator;
     protected private(set) CompilerDirectivesInterface&DirectivesInterface $directives;
     protected private(set) ScopeInterface $scope;
     protected private(set) bool $layoutMode = false;
@@ -47,6 +49,7 @@ abstract class AbstractOptimizer implements OptimizerInterface
     public function __construct()
     {
         $this->directives = CompilerDirectives::createWithDefaults();
+        $this->evaluator = new Evaluator();
         $this->scope = new Scope();
     }
 
@@ -97,11 +100,11 @@ abstract class AbstractOptimizer implements OptimizerInterface
         $this->directives->set(
             $node->directive->operand,
             match ($node->value->type) {
-                NativeType::STRING => $node->value->operand,
-                NativeType::INT => \intval($node->value->operand),
-                NativeType::FLOAT => \floatval($node->value->operand),
-                NativeType::BOOL => $node->value->operand === 'true',
-                NativeType::NULL => null,
+                Type::STRING => $node->value->operand,
+                Type::INT => \intval($node->value->operand),
+                Type::FLOAT => \floatval($node->value->operand),
+                Type::BOOL => $node->value->operand === 'true',
+                Type::NULL => null,
             },
         );
 

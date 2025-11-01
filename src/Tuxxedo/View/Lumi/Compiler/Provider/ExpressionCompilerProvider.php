@@ -17,7 +17,6 @@ use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Compiler\CompilerStateFlag;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
-use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayItemNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
@@ -34,6 +33,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
 use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
+use Tuxxedo\View\Lumi\Syntax\Type;
 
 class ExpressionCompilerProvider implements CompilerProviderInterface
 {
@@ -54,7 +54,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         NodeStreamInterface $stream,
     ): string {
         return match ($node->type) {
-            NativeType::STRING => '\'' . \str_replace('\'', '\\\'', $node->operand) . '\'',
+            Type::STRING => '\'' . \str_replace('\'', '\\\'', $node->operand) . '\'',
             default => $node->operand,
         };
     }

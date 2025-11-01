@@ -14,10 +14,9 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Optimizer\Dce;
 
 use Tuxxedo\View\Lumi\Optimizer\AbstractOptimizer;
-use Tuxxedo\View\Lumi\Optimizer\Scope\Lattice;
+use Tuxxedo\View\Lumi\Optimizer\Evaluator\EvaluatorResult;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
-use Tuxxedo\View\Lumi\Syntax\NativeType;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BreakNode;
@@ -27,10 +26,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ConditionalNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ContinueNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
-use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\ForNode;
-use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
-use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
@@ -106,15 +102,15 @@ class DceOptimizer extends AbstractOptimizer
         ConditionalNode $node,
     ): array {
         if (\sizeof($node->branches) > 0) {
-            $ifEvaluation = $this->evaluate($node->operand);
+            $ifEvaluation = $this->evaluator->evaluateExpression($this->scope, $node->operand);
 
-            if ($ifEvaluation === DceEvaluateResult::CANNOT_DETERMINE) {
+            if ($ifEvaluation === EvaluatorResult::UNKNOWN) {
                 return [
                     $node,
                 ];
             }
 
-            if ($ifEvaluation === DceEvaluateResult::ALWAYS_TRUE) {
+            if ($ifEvaluation === EvaluatorResult::IS_TRUE) {
                 return parent::optimizeNodes($node->body);
             }
 
@@ -122,11 +118,11 @@ class DceOptimizer extends AbstractOptimizer
             $eliminationBranches = [];
 
             foreach ($node->branches as $index => $branch) {
-                $evaluation = $this->evaluate($branch->operand);
+                $evaluation = $this->evaluator->evaluateExpression($this->scope, $branch->operand);
 
-                if ($evaluation === DceEvaluateResult::ALWAYS_FALSE) {
+                if ($evaluation === EvaluatorResult::IS_FALSE) {
                     $eliminationBranches[$index] = true;
-                } elseif ($evaluation === DceEvaluateResult::ALWAYS_TRUE) {
+                } elseif ($evaluation === EvaluatorResult::IS_TRUE) {
                     $newElse = $index;
 
                     break;
@@ -170,13 +166,13 @@ class DceOptimizer extends AbstractOptimizer
             ];
         }
 
-        $evaluates = $this->evaluate($node->operand);
+        $evaluation = $this->evaluator->evaluateExpression($this->scope, $node->operand);
 
-        if ($evaluates === DceEvaluateResult::ALWAYS_FALSE) {
+        if ($evaluation === EvaluatorResult::IS_FALSE) {
             return parent::optimizeNodes($node->else);
         }
 
-        if ($evaluates === DceEvaluateResult::ALWAYS_TRUE) {
+        if ($evaluation === EvaluatorResult::IS_TRUE) {
             return parent::optimizeNodes($node->body);
         }
 
@@ -202,40 +198,6 @@ class DceOptimizer extends AbstractOptimizer
         return parent::optimizeText($stream, $node);
     }
 
-    private function evaluate(
-        ExpressionNodeInterface $node,
-    ): DceEvaluateResult {
-        return match (true) {
-            $node instanceof LiteralNode => $this->evaluateLiteral($node),
-            $node instanceof IdentifierNode => $this->evaluateIdentifier($node),
-            default => DceEvaluateResult::CANNOT_DETERMINE,
-        };
-    }
-
-    private function evaluateLiteral(
-        LiteralNode $node,
-    ): DceEvaluateResult {
-        return match ($node->type) {
-            NativeType::NULL => DceEvaluateResult::ALWAYS_FALSE,
-            default => DceEvaluateResult::fromBool(\boolval($node->type->cast($node->operand))),
-        };
-    }
-
-    private function evaluateIdentifier(
-        IdentifierNode $node,
-    ): DceEvaluateResult {
-        $variable = $this->scope->get($node->name);
-
-        if (
-            $variable->lattice !== Lattice::UNDEF &&
-            $variable->value instanceof LiteralNode
-        ) {
-            return $this->evaluateLiteral($variable->value);
-        }
-
-        return DceEvaluateResult::CANNOT_DETERMINE;
-    }
-
     /**
      * @return NodeInterface[]
      */
@@ -244,7 +206,7 @@ class DceOptimizer extends AbstractOptimizer
     ): array {
         $node = parent::optimizeDoWhileBody($node);
 
-        if ($this->evaluate($node->operand) === DceEvaluateResult::ALWAYS_FALSE) {
+        if ($this->evaluator->evaluateExpression($this->scope, $node->operand) === EvaluatorResult::IS_FALSE) {
             return $node->body;
         }
 
@@ -261,7 +223,7 @@ class DceOptimizer extends AbstractOptimizer
     ): array {
         $node = parent::optimizeWhileBody($node);
 
-        if ($this->evaluate($node->operand) === DceEvaluateResult::ALWAYS_FALSE) {
+        if ($this->evaluator->evaluateExpression($this->scope, $node->operand) === EvaluatorResult::IS_FALSE) {
             return $node->body;
         }
 
