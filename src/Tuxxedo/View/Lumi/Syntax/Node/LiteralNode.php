@@ -32,10 +32,10 @@ readonly class LiteralNode implements ExpressionNodeInterface
     public static function createString(
         string $value,
     ): self {
-      return new self(
-          operand: $value,
-          type: Type::STRING,
-      );
+        return new self(
+            operand: $value,
+            type: Type::STRING,
+        );
     }
 
     public static function createInt(

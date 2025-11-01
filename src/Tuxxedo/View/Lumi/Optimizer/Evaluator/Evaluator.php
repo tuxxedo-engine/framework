@@ -171,6 +171,7 @@ class Evaluator implements EvaluatorInterface
         ScopeInterface $scope,
         ExpressionNodeInterface $node,
     ): EvaluatorResult {
+        // @todo Dereference nested GroupNodes with do-while
         if (
             $node instanceof GroupNode &&
             (
