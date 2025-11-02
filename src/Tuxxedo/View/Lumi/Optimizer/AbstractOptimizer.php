@@ -50,29 +50,48 @@ abstract class AbstractOptimizer implements OptimizerInterface
     {
         $this->directives = CompilerDirectives::createWithDefaults();
         $this->evaluator = new Evaluator();
-        $this->scope = new Scope();
+        $this->scope = new Scope(
+            evaluator: $this->evaluator,
+        );
     }
 
     abstract protected function optimizer(
         NodeStreamInterface $stream,
     ): NodeStreamInterface;
 
-    protected function pushScope(): void
-    {
-        \array_push($this->scopeStack, $this->scope);
+    protected function pushScope(
+        bool $inherit = false,
+    ): void {
 
-        $this->scope = new Scope();
+        if ($inherit) {
+            $newScope = clone $this->scope;
+
+            \array_push($this->scopeStack, $this->scope);
+
+            $this->scope = $newScope;
+        } else {
+            \array_push($this->scopeStack, $this->scope);
+
+            $this->scope = new Scope(
+                evaluator: $this->evaluator,
+            );
+        }
     }
 
     /**
      * @throws CompilerException
      */
-    protected function popScope(): void
-    {
+    protected function popScope(
+        bool $merge = false,
+    ): void {
         $scope = \array_pop($this->scopeStack);
 
         if ($scope === null) {
             throw CompilerException::fromCannotPopOptimizerScope();
+        }
+
+        if ($merge) {
+            $scope = $scope->merge($this->scope);
         }
 
         $this->scope = $scope;
@@ -137,11 +156,11 @@ abstract class AbstractOptimizer implements OptimizerInterface
     protected function optimizeForBody(
         ForNode $node,
     ): ForNode {
-        $this->pushScope();
+        $this->pushScope(inherit: true);
 
         $nodes = $this->optimizeNodes($node->body);
 
-        $this->popScope();
+        $this->popScope(merge: true);
 
         return new ForNode(
             value: $node->value,
@@ -157,11 +176,11 @@ abstract class AbstractOptimizer implements OptimizerInterface
     protected function optimizeDoWhileBody(
         DoWhileNode $node,
     ): DoWhileNode {
-        $this->pushScope();
+        $this->pushScope(inherit: true);
 
         $nodes = $this->optimizeNodes($node->body);
 
-        $this->popScope();
+        $this->popScope(merge: true);
 
         return new DoWhileNode(
             operand: $node->operand,
@@ -175,11 +194,11 @@ abstract class AbstractOptimizer implements OptimizerInterface
     protected function optimizeWhileBody(
         WhileNode $node,
     ): WhileNode {
-        $this->pushScope();
+        $this->pushScope(inherit: true);
 
         $nodes = $this->optimizeNodes($node->body);
 
-        $this->popScope();
+        $this->popScope(merge: true);
 
         return new WhileNode(
             operand: $node->operand,

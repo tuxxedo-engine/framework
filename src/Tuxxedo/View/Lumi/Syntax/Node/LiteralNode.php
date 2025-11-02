@@ -78,4 +78,16 @@ readonly class LiteralNode implements ExpressionNodeInterface
             type: Type::NULL,
         );
     }
+
+    public static function createFromNativeType(
+        string|int|float|bool|null $value,
+    ): self {
+        return match (true) {
+            \is_string($value) => self::createString($value),
+            \is_int($value) => self::createInt($value),
+            \is_float($value) => self::createFloat($value),
+            \is_bool($value) => self::createBool($value),
+            \is_null($value) => self::createNull(),
+        };
+    }
 }

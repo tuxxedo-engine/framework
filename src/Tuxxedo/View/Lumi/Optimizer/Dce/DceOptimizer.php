@@ -59,6 +59,7 @@ class DceOptimizer extends AbstractOptimizer
         NodeInterface $node,
     ): array {
         return match (true) {
+            // @todo Optimize out useless assignments
             $node instanceof AssignmentNode => parent::assignment($node),
             $node instanceof BreakNode => $this->optimizeLoopStatement($stream),
             $node instanceof BlockNode => [
@@ -102,7 +103,7 @@ class DceOptimizer extends AbstractOptimizer
         ConditionalNode $node,
     ): array {
         if (\sizeof($node->branches) > 0) {
-            $ifEvaluation = $this->evaluator->evaluateExpression($this->scope, $node->operand);
+            $ifEvaluation = $this->evaluator->checkExpression($this->scope, $node->operand);
 
             if ($ifEvaluation === EvaluatorResult::UNKNOWN) {
                 return [
@@ -118,7 +119,7 @@ class DceOptimizer extends AbstractOptimizer
             $eliminationBranches = [];
 
             foreach ($node->branches as $index => $branch) {
-                $evaluation = $this->evaluator->evaluateExpression($this->scope, $branch->operand);
+                $evaluation = $this->evaluator->checkExpression($this->scope, $branch->operand);
 
                 if ($evaluation === EvaluatorResult::IS_FALSE) {
                     $eliminationBranches[$index] = true;
@@ -166,7 +167,7 @@ class DceOptimizer extends AbstractOptimizer
             ];
         }
 
-        $evaluation = $this->evaluator->evaluateExpression($this->scope, $node->operand);
+        $evaluation = $this->evaluator->checkExpression($this->scope, $node->operand);
 
         if ($evaluation === EvaluatorResult::IS_FALSE) {
             return parent::optimizeNodes($node->else);
@@ -206,7 +207,7 @@ class DceOptimizer extends AbstractOptimizer
     ): array {
         $node = parent::optimizeDoWhileBody($node);
 
-        if ($this->evaluator->evaluateExpression($this->scope, $node->operand) === EvaluatorResult::IS_FALSE) {
+        if ($this->evaluator->checkExpression($this->scope, $node->operand) === EvaluatorResult::IS_FALSE) {
             return $node->body;
         }
 
@@ -223,7 +224,7 @@ class DceOptimizer extends AbstractOptimizer
     ): array {
         $node = parent::optimizeWhileBody($node);
 
-        if ($this->evaluator->evaluateExpression($this->scope, $node->operand) === EvaluatorResult::IS_FALSE) {
+        if ($this->evaluator->checkExpression($this->scope, $node->operand) === EvaluatorResult::IS_FALSE) {
             return $node->body;
         }
 

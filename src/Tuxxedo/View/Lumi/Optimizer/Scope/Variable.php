@@ -60,6 +60,21 @@ class Variable implements VariableInterface
         );
     }
 
+    public static function fromExisting(
+        ScopeInterface $scope,
+        VariableInterface $variable,
+    ): static {
+        $newVariable = new static(
+            scope: $scope,
+            name: $variable->name,
+            value: null,
+        );
+
+        $newVariable->lattice = Lattice::VARYING;
+
+        return $newVariable;
+    }
+
     private function castTo(
         LiteralNode $value,
         Type $type,

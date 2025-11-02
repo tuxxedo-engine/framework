@@ -14,12 +14,16 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Optimizer\Evaluator;
 
 use Tuxxedo\View\Lumi\Optimizer\Scope\ScopeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
+use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
-// @todo Support BinaryOp
+// @todo Support AssignmentNode
+// @todo Support UnaryOpNode
 interface EvaluatorInterface
 {
     public function castValue(
@@ -52,6 +56,16 @@ interface EvaluatorInterface
         LiteralNode $node,
     ): bool;
 
+    public function isTrue(
+        ScopeInterface $scope,
+        LiteralNode|IdentifierNode $node,
+    ): EvaluatorResult;
+
+    public function isFalse(
+        ScopeInterface $scope,
+        LiteralNode|IdentifierNode $node,
+    ): EvaluatorResult;
+
     public function isTruthy(
         ScopeInterface $scope,
         LiteralNode|IdentifierNode $node,
@@ -67,17 +81,41 @@ interface EvaluatorInterface
         LiteralNode|IdentifierNode $node,
     ): bool;
 
-    public function evaluateExpression(
+    public function checkExpression(
         ScopeInterface $scope,
         ExpressionNodeInterface $node,
     ): EvaluatorResult;
 
-    public function evaluateLiteral(
+    public function checkLiteral(
         LiteralNode $node,
     ): EvaluatorResult;
 
-    public function evaluateIdentifier(
+    public function checkIdentifier(
         ScopeInterface $scope,
         IdentifierNode $node,
     ): EvaluatorResult;
+
+    public function expression(
+        ScopeInterface $scope,
+        BinaryOpNode $node,
+    ): ?ExpressionNodeInterface;
+
+    public function assignment(
+        ScopeInterface $scope,
+        AssignmentNode $node,
+    ): ?ExpressionNodeInterface;
+
+    public function dereference(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $node,
+    ): ?ExpressionNodeInterface;
+
+    public function dereferenceGroup(
+        GroupNode $node,
+    ): ExpressionNodeInterface;
+
+    public function dereferenceIdentifier(
+        ScopeInterface $scope,
+        IdentifierNode $node,
+    ): ?ExpressionNodeInterface;
 }

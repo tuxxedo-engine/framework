@@ -38,4 +38,8 @@ interface ScopeInterface
     public function get(
         IdentifierNode|string $name,
     ): VariableInterface;
+
+    public function merge(
+        ScopeInterface $scope,
+    ): self;
 }

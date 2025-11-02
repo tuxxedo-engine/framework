@@ -65,4 +65,16 @@ class Scope implements ScopeInterface
 
         return $this->variables[$name] ?? Variable::fromUndefined($this, $name);
     }
+
+    public function merge(
+        ScopeInterface $scope,
+    ): self {
+        foreach ($scope->variables as $variable) {
+            if (\array_key_exists($variable->name, $this->variables)) {
+                $this->variables[$variable->name] = Variable::fromExisting($this, $variable);
+            }
+        }
+
+        return $this;
+    }
 }

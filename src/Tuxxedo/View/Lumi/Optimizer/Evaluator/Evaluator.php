@@ -15,6 +15,8 @@ namespace Tuxxedo\View\Lumi\Optimizer\Evaluator;
 
 use Tuxxedo\View\Lumi\Optimizer\Scope\Lattice;
 use Tuxxedo\View\Lumi\Optimizer\Scope\ScopeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
+use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
@@ -23,6 +25,14 @@ use Tuxxedo\View\Lumi\Syntax\Type;
 
 class Evaluator implements EvaluatorInterface
 {
+    private readonly ExpressionReducerInterface $expressionReducer;
+
+    public function __construct(
+        ?ExpressionReducerInterface $expressionReducer = null,
+    ) {
+        $this->expressionReducer = $expressionReducer ?? new ExpressionReducer($this);
+    }
+
     public function castValue(
         Type $type,
         string $value,
@@ -104,6 +114,50 @@ class Evaluator implements EvaluatorInterface
         return $this->castValue(Type::BOOL, $node->operand);
     }
 
+    public function isTrue(
+        ScopeInterface $scope,
+        LiteralNode|IdentifierNode $node,
+    ): EvaluatorResult {
+        if ($node instanceof IdentifierNode) {
+            $node = $this->dereferenceIdentifier($scope, $node);
+
+            if (!$node instanceof LiteralNode) {
+                return EvaluatorResult::UNKNOWN;
+            }
+        }
+
+        if (
+            $node->type === Type::BOOL &&
+            $node->operand === 'true'
+        ) {
+            return EvaluatorResult::IS_TRUE;
+        }
+
+        return EvaluatorResult::IS_FALSE;
+    }
+
+    public function isFalse(
+        ScopeInterface $scope,
+        LiteralNode|IdentifierNode $node,
+    ): EvaluatorResult {
+        if ($node instanceof IdentifierNode) {
+            $node = $this->dereferenceIdentifier($scope, $node);
+
+            if (!$node instanceof LiteralNode) {
+                return EvaluatorResult::UNKNOWN;
+            }
+        }
+
+        if (
+            $node->type === Type::BOOL &&
+            $node->operand === 'false'
+        ) {
+            return EvaluatorResult::IS_TRUE;
+        }
+
+        return EvaluatorResult::IS_FALSE;
+    }
+
     public function isTruthy(
         ScopeInterface $scope,
         LiteralNode|IdentifierNode $node,
@@ -167,29 +221,29 @@ class Evaluator implements EvaluatorInterface
         return false;
     }
 
-    public function evaluateExpression(
+    public function checkExpression(
         ScopeInterface $scope,
         ExpressionNodeInterface $node,
     ): EvaluatorResult {
-        // @todo Dereference nested GroupNodes with do-while
-        if (
-            $node instanceof GroupNode &&
-            (
-                $node->operand instanceof LiteralNode ||
-                $node->operand instanceof IdentifierNode
-            )
-        ) {
-            $node = $node->operand;
+        if ($node instanceof GroupNode) {
+            $dereference = $this->dereferenceGroup($node);
+
+            if (
+                $dereference instanceof LiteralNode ||
+                $dereference instanceof IdentifierNode
+            ) {
+                $node = $dereference;
+            }
         }
 
         return match (true) {
-            $node instanceof LiteralNode => $this->evaluateLiteral($node),
-            $node instanceof IdentifierNode => $this->evaluateIdentifier($scope, $node),
+            $node instanceof LiteralNode => $this->checkLiteral($node),
+            $node instanceof IdentifierNode => $this->checkIdentifier($scope, $node),
             default => EvaluatorResult::UNKNOWN,
         };
     }
 
-    public function evaluateLiteral(
+    public function checkLiteral(
         LiteralNode $node,
     ): EvaluatorResult {
         return match ($node->type) {
@@ -200,7 +254,7 @@ class Evaluator implements EvaluatorInterface
         };
     }
 
-    public function evaluateIdentifier(
+    public function checkIdentifier(
         ScopeInterface $scope,
         IdentifierNode $node,
     ): EvaluatorResult {
@@ -212,9 +266,59 @@ class Evaluator implements EvaluatorInterface
             $node->lattice !== Lattice::UNDEF &&
             $node->value instanceof LiteralNode
         ) {
-            return $this->evaluateLiteral($node->value);
+            return $this->checkLiteral($node->value);
         }
 
         return EvaluatorResult::UNKNOWN;
+    }
+
+    public function expression(
+        ScopeInterface $scope,
+        BinaryOpNode $node,
+    ): ?ExpressionNodeInterface {
+        return $this->expressionReducer->reduceBinaryOp($scope, $node);
+    }
+
+    public function assignment(
+        ScopeInterface $scope,
+        AssignmentNode $node,
+    ): ?ExpressionNodeInterface {
+        return $this->expressionReducer->reduceAssignment($scope, $node);
+    }
+
+    public function dereference(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $node,
+    ): ?ExpressionNodeInterface {
+        if ($node instanceof GroupNode) {
+            $node = $this->dereferenceGroup($node);
+        }
+
+        if ($node instanceof IdentifierNode) {
+            $node = $this->dereferenceIdentifier($scope, $node);
+        }
+
+        return $node;
+    }
+
+    public function dereferenceGroup(
+        GroupNode $node,
+    ): ExpressionNodeInterface {
+        do {
+            $node = $node->operand;
+        } while ($node instanceof GroupNode);
+
+        return $node;
+    }
+
+    public function dereferenceIdentifier(
+        ScopeInterface $scope,
+        IdentifierNode $node,
+    ): ?ExpressionNodeInterface {
+        while ($node instanceof IdentifierNode) {
+            $node = $scope->get($node)->value;
+        }
+
+        return $node;
     }
 }
