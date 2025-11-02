@@ -184,7 +184,7 @@ class SccpOptimizer extends AbstractOptimizer
         }
 
         return [
-            $this->evaluator->expression($this->scope, $node) ?? $node,
+            $this->evaluator->binaryOp($this->scope, $node) ?? $node,
         ];
     }
 

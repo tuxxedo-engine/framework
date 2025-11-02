@@ -13,18 +13,21 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Optimizer\Scope;
 
+use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
+use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
-use Tuxxedo\View\Lumi\Syntax\Type;
 
 class Variable implements VariableInterface
 {
-    public private(set) ?LiteralNode $value = null;
+    public private(set) ?ExpressionNodeInterface $value = null;
     public private(set) Lattice $lattice;
+
+    public private(set) string|int|float|bool|null $computedValue;
 
     final private function __construct(
         public readonly ScopeInterface $scope,
@@ -70,122 +73,80 @@ class Variable implements VariableInterface
             value: null,
         );
 
-        $newVariable->lattice = Lattice::VARYING;
+        $newVariable->lattice = $variable->lattice === Lattice::CONST
+            ? Lattice::CONST
+            : Lattice::VARYING;
 
         return $newVariable;
     }
 
-    private function castTo(
-        LiteralNode $value,
-        Type $type,
-    ): LiteralNode {
-        if ($value->type === $type) {
-            return $value;
-        }
-
-        $newValue = $this->scope->evaluator->castValue($type, $value->operand);
-
-        return new LiteralNode(
-            operand: match (true) {
-                \is_bool($newValue) => $newValue ? 'true' : 'false',
-                \is_null($newValue) => 'null',
-                default => \strval($newValue),
-            },
-            type: $type,
-        );
-    }
-
-    // @todo Migrate to Evaluator
-    private function castToString(
-        LiteralNode $value,
-    ): LiteralNode {
-        return $this->castTo($value, Type::STRING);
-    }
-
-    // @todo Migrate to Evaluator
-    private function getOperatorMutatedLiteral(
-        LiteralNode $value,
-        AssignmentSymbol $operator,
-    ): LiteralNode {
-        if (
-            $this->value === null ||
-            $operator === AssignmentSymbol::ASSIGN
-        ) {
-            return $value;
-        }
-
-        if ($operator === AssignmentSymbol::CONCAT) {
-            if ($this->value->operand === '') {
-                return $this->castToString($value);
-            }
-
-            return new LiteralNode(
-                operand: $this->castToString($this->value)->operand . $this->castToString($value)->operand,
-                type: Type::STRING,
-            );
-        }
-
-        if ($operator === AssignmentSymbol::NULL_ASSIGN) {
-            return $this->value->type === Type::NULL
-                ? $value
-                : $this->value;
-        }
-
-        return match ($operator) {
-            // @todo Support ADD
-            // @todo Support SUBTRACT
-            // @todo Support MULTIPLY
-            // @todo Support DIVIDE
-            // @todo Support MODULUS
-            // @todo Support EXPONENTIATE
-            // @todo Support BITWISE_AND
-            // @todo Support BITWISE_OR
-            // @todo Support BITWISE_XOR
-            // @todo Support SHIFT_LEFT
-            // @todo Support SHIFT_RIGHT
-            default => $value,
-        };
-    }
-
-    // @todo Migrate to Evaluator
     public function mutate(
         ScopeInterface $scope,
         ExpressionNodeInterface $value,
         AssignmentSymbol $operator = AssignmentSymbol::ASSIGN,
     ): void {
-        $this->value = $value instanceof LiteralNode
-            ? $this->getOperatorMutatedLiteral($value, $operator)
-            : null;
+        unset($this->computedValue);
 
-        if ($value instanceof LiteralNode) {
-            $this->lattice = Lattice::CONST;
+        $oldValue = $this->value;
+        $this->value = $value;
+
+        $dereferenced = $scope->evaluator->dereference($scope, $value);
+
+        if ($dereferenced instanceof LiteralNode) {
+            if (
+                $oldValue !== null &&
+                $operator !== AssignmentSymbol::ASSIGN &&
+                (
+                    $oldValue instanceof IdentifierNode ||
+                    $oldValue instanceof PropertyAccessNode ||
+                    $oldValue instanceof ArrayAccessNode
+                )
+            ) {
+                $computedValue = $scope->evaluator->assignment(
+                    scope: $scope,
+                    node: new AssignmentNode(
+                        name: $oldValue,
+                        value: $dereferenced,
+                        operator: $operator,
+                    ),
+                );
+
+                if (
+                    $computedValue !== null &&
+                    $computedValue instanceof LiteralNode
+                ) {
+                    $this->lattice = Lattice::CONST;
+                    $this->computedValue = $scope->evaluator->castNodeToValue($computedValue);
+                } else {
+                    $this->lattice = Lattice::VARYING;
+                }
+            } else {
+                $this->lattice = Lattice::CONST;
+                $this->computedValue = $scope->evaluator->castNodeToValue($dereferenced);
+            }
 
             return;
         }
 
-        // @todo This does not work anymore
-        if ($value instanceof BinaryOpNode) {
-            if (
-                $value->left instanceof LiteralNode ||
-                (
-                    $value->left instanceof IdentifierNode &&
-                    $scope->get($value->left)->lattice === Lattice::CONST
-                )
-            ) {
-                if (
-                    $value->right instanceof LiteralNode ||
-                    (
-                        $value->right instanceof IdentifierNode &&
-                        $scope->get($value->right)->lattice === Lattice::CONST
-                    )
-                ) {
-                    $this->lattice = Lattice::CONST;
+        if (
+            $dereferenced instanceof IdentifierNode ||
+            $dereferenced instanceof BinaryOpNode
+        ) {
+            $computedValue = $this->scope->evaluator->dereference($scope, $value);
 
-                    return;
-                }
+            if ($computedValue instanceof LiteralNode) {
+                $this->lattice = Lattice::CONST;
+                $this->computedValue = $scope->evaluator->castNodeToValue($computedValue);
+
+                return;
             }
         }
 
         $this->lattice = Lattice::VARYING;
+    }
+
+    public function hasComputedValue(): bool
+    {
+        return isset($this->computedValue);
     }
 }

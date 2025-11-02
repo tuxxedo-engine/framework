@@ -26,8 +26,11 @@ interface VariableInterface
         get;
     }
 
-    // @todo This needs to be wider for dereferenceIdentifier
     public ?ExpressionNodeInterface $value {
+        get;
+    }
+
+    public string|int|float|bool|null $computedValue {
         get;
     }
 
@@ -40,4 +43,6 @@ interface VariableInterface
         ExpressionNodeInterface $value,
         AssignmentSymbol $operator = AssignmentSymbol::ASSIGN,
     ): void;
+
+    public function hasComputedValue(): bool;
 }

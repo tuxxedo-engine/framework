@@ -274,6 +274,23 @@ class Evaluator implements EvaluatorInterface
 
     public function expression(
         ScopeInterface $scope,
+        ExpressionNodeInterface $node,
+    ): ?ExpressionNodeInterface {
+        $node = $this->dereference($scope, $node);
+
+        if ($node instanceof BinaryOpNode) {
+            return $this->binaryOp($scope, $node);
+        }
+
+        if ($node instanceof AssignmentNode) {
+            return $this->assignment($scope, $node);
+        }
+
+        return null;
+    }
+
+    public function binaryOp(
+        ScopeInterface $scope,
         BinaryOpNode $node,
     ): ?ExpressionNodeInterface {
         return $this->expressionReducer->reduceBinaryOp($scope, $node);

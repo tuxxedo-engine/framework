@@ -97,6 +97,11 @@ interface EvaluatorInterface
 
     public function expression(
         ScopeInterface $scope,
+        ExpressionNodeInterface $node,
+    ): ?ExpressionNodeInterface;
+
+    public function binaryOp(
+        ScopeInterface $scope,
         BinaryOpNode $node,
     ): ?ExpressionNodeInterface;
 
