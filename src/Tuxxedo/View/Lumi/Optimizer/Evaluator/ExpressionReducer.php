@@ -17,6 +17,7 @@ use Tuxxedo\View\Lumi\Optimizer\Scope\ScopeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
@@ -33,6 +34,14 @@ class ExpressionReducer implements ExpressionReducerInterface
         ScopeInterface $scope,
         ExpressionNodeInterface $node,
     ): ?ExpressionNodeInterface {
+        if ($node instanceof IdentifierNode) {
+            $variable = $scope->get($node);
+
+            if ($variable->hasComputedValue()) {
+                return LiteralNode::createFromNativeType($variable->computedValue);
+            }
+        }
+
         return $this->evaluator->dereference($scope, $node);
     }
 

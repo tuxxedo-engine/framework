@@ -34,10 +34,17 @@ interface ScopeInterface
         AssignmentNode $node,
     ): void;
 
-    // @todo Support recursive variable mutations
     public function get(
         IdentifierNode|string $name,
     ): VariableInterface;
+
+    public function exists(
+        IdentifierNode|string $name,
+    ): bool;
+
+    public function markVirtual(
+        VariableInterface $variable,
+    ): void;
 
     public function merge(
         ScopeInterface $scope,

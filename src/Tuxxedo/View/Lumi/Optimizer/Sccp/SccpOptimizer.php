@@ -25,10 +25,12 @@ use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
+use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
+use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Type;
@@ -61,7 +63,7 @@ class SccpOptimizer extends AbstractOptimizer
         NodeInterface $node,
     ): array {
         return match (true) {
-            $node instanceof AssignmentNode => parent::assignment($node),
+            $node instanceof AssignmentNode => $this->optimizeAssignment($node),
             $node instanceof BlockNode => [
                 parent::optimizeBlockBody($node),
             ],
@@ -77,6 +79,33 @@ class SccpOptimizer extends AbstractOptimizer
                 $node,
             ],
         };
+    }
+
+    /**
+     * @return AssignmentNode[]
+     */
+    private function optimizeAssignment(
+        AssignmentNode $node,
+    ): array {
+        $this->scope->assign($node);
+
+        if ($node->name instanceof IdentifierNode) {
+            $variable = $this->scope->get($node->name);
+
+            if ($variable->hasComputedValue()) {
+                return [
+                    new AssignmentNode(
+                        name: $node->name,
+                        value: LiteralNode::createFromNativeType($variable->computedValue),
+                        operator: AssignmentSymbol::ASSIGN,
+                    ),
+                ];
+            }
+        }
+
+        return [
+            $node,
+        ];
     }
 
     /**

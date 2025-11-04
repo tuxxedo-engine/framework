@@ -18,4 +18,5 @@ enum Lattice
     case UNDEF;
     case CONST;
     case VARYING;
+    case VIRTUAL;
 }

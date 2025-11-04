@@ -267,6 +267,10 @@ class Evaluator implements EvaluatorInterface
             $node->value instanceof LiteralNode
         ) {
             return $this->checkLiteral($node->value);
+        } elseif ($node->hasComputedValue()) {
+            return \boolval($node->computedValue)
+                ? EvaluatorResult::IS_TRUE
+                : EvaluatorResult::IS_FALSE;
         }
 
         return EvaluatorResult::UNKNOWN;

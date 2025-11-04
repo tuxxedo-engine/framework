@@ -63,7 +63,23 @@ class Scope implements ScopeInterface
             $name = $name->name;
         }
 
-        return $this->variables[$name] ?? Variable::fromUndefined($this, $name);
+        return $this->variables[$name] ??= Variable::fromUndefined($this, $name);
+    }
+
+    public function exists(
+        IdentifierNode|string $name,
+    ): bool {
+        if (!\is_string($name)) {
+            $name = $name->name;
+        }
+
+        return \array_key_exists($name, $this->variables);
+    }
+
+    public function markVirtual(
+        VariableInterface $variable,
+    ): void {
+        $this->variables[$variable->name] = Variable::fromVirtual($variable);
     }
 
     public function merge(

@@ -23,7 +23,6 @@ use Tuxxedo\View\Lumi\Optimizer\Scope\ScopeInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
-use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
@@ -34,6 +33,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
+// @todo Bodies of statements and loops needs more advanced computation for value mutation checks if part of a condition
 abstract class AbstractOptimizer implements OptimizerInterface
 {
     protected readonly EvaluatorInterface $evaluator;
@@ -95,19 +95,6 @@ abstract class AbstractOptimizer implements OptimizerInterface
         }
 
         $this->scope = $scope;
-    }
-
-    /**
-     * @return array{0: NodeInterface}
-     */
-    protected function assignment(
-        AssignmentNode $node,
-    ): array {
-        $this->scope->assign($node);
-
-        return [
-            $node,
-        ];
     }
 
     /**

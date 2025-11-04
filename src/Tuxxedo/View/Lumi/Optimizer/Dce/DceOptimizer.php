@@ -27,6 +27,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ContinueNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ForNode;
+use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
@@ -59,8 +60,7 @@ class DceOptimizer extends AbstractOptimizer
         NodeInterface $node,
     ): array {
         return match (true) {
-            // @todo Optimize out useless assignments
-            $node instanceof AssignmentNode => parent::assignment($node),
+            $node instanceof AssignmentNode => $this->optimizeAssignment($node),
             $node instanceof BreakNode => $this->optimizeLoopStatement($stream),
             $node instanceof BlockNode => [
                 parent::optimizeBlockBody($node),
@@ -79,6 +79,29 @@ class DceOptimizer extends AbstractOptimizer
                 $node,
             ],
         };
+    }
+
+    /**
+     * @return AssignmentNode[]
+     */
+    private function optimizeAssignment(
+        AssignmentNode $node,
+    ): array {
+        $this->scope->assign($node);
+
+        if ($node->name instanceof IdentifierNode) {
+            $variable = $this->scope->get($node->name);
+
+            if ($variable->hasComputedValue()) {
+                $this->scope->markVirtual($variable);
+
+                return [];
+            }
+        }
+
+        return [
+            $node,
+        ];
     }
 
     /**

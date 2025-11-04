@@ -13,13 +13,11 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Optimizer\Scope;
 
-use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
-use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 
 class Variable implements VariableInterface
@@ -80,11 +78,34 @@ class Variable implements VariableInterface
         return $newVariable;
     }
 
+    public static function fromVirtual(
+        VariableInterface $variable,
+    ): static {
+        $newVariable = new static(
+            scope: $variable->scope,
+            name: $variable->name,
+            value: $variable->value,
+        );
+
+        $newVariable->computedValue = $variable->computedValue;
+        $newVariable->lattice = Lattice::VIRTUAL;
+
+        return $newVariable;
+    }
+
     public function mutate(
         ScopeInterface $scope,
         ExpressionNodeInterface $value,
         AssignmentSymbol $operator = AssignmentSymbol::ASSIGN,
     ): void {
+        if (
+            $this->value instanceof IdentifierNode &&
+            $value instanceof IdentifierNode &&
+            $this->value->name === $value->name
+        ) {
+            return;
+        }
+
         unset($this->computedValue);
 
         $oldValue = $this->value;
@@ -95,17 +116,14 @@ class Variable implements VariableInterface
         if ($dereferenced instanceof LiteralNode) {
             if (
                 $oldValue !== null &&
-                $operator !== AssignmentSymbol::ASSIGN &&
-                (
-                    $oldValue instanceof IdentifierNode ||
-                    $oldValue instanceof PropertyAccessNode ||
-                    $oldValue instanceof ArrayAccessNode
-                )
+                $operator !== AssignmentSymbol::ASSIGN
             ) {
                 $computedValue = $scope->evaluator->assignment(
                     scope: $scope,
                     node: new AssignmentNode(
-                        name: $oldValue,
+                        name: new IdentifierNode(
+                            name: $this->name,
+                        ),
                         value: $dereferenced,
                         operator: $operator,
                     ),
@@ -132,7 +150,11 @@ class Variable implements VariableInterface
             $dereferenced instanceof IdentifierNode ||
             $dereferenced instanceof BinaryOpNode
         ) {
-            $computedValue = $this->scope->evaluator->dereference($scope, $value);
+            if ($dereferenced instanceof BinaryOpNode) {
+                $computedValue = $scope->evaluator->binaryOp($scope, $dereferenced);
+            } else {
+                $computedValue = $scope->evaluator->dereference($scope, $value);
+            }
 
             if ($computedValue instanceof LiteralNode) {
                 $this->lattice = Lattice::CONST;
