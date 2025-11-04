@@ -50,15 +50,23 @@ class DeclareParserHandler implements ParserHandlerInterface
 
         $stream->expect(EndToken::class);
 
+        $type = Type::fromString(
+            name: $value->op2,
+        );
+
+        if ($type === null) {
+            throw ParserException::fromUnexpectedToken(
+                tokenName: $value->op2,
+                line: $value->line,
+            );
+        }
+
         return [
             new DeclareNode(
                 directive: LiteralNode::createString($directive->op1),
                 value: new LiteralNode(
                     operand: $value->op1,
-                    type: Type::fromString(
-                        name: $value->op2,
-                        line: $value->line,
-                    ),
+                    type: $type,
                 ),
             ),
         ];

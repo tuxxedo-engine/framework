@@ -23,24 +23,16 @@ enum Type
     case BOOL;
     case NULL;
 
-    /**
-     * @throws ParserException
-     */
-    // @todo Move to Parser
     public static function fromString(
         string $name,
-        int $line,
-    ): self {
+    ): ?self {
         return match ($name) {
             self::STRING->name => self::STRING,
             self::INT->name => self::INT,
             self::FLOAT->name => self::FLOAT,
             self::BOOL->name => self::BOOL,
             self::NULL->name => self::NULL,
-            default => throw ParserException::fromUnexpectedToken(
-                tokenName: $name,
-                line: $line,
-            ),
+            default => null,
         };
     }
 }

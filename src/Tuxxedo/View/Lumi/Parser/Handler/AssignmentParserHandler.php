@@ -214,13 +214,20 @@ class AssignmentParserHandler implements ParserHandlerInterface
 
         if ($stream->currentIs(LiteralToken::class)) {
             $literal = $stream->expect(LiteralToken::class);
+            $type = Type::fromString(
+                name: $literal->op2,
+            );
+
+            if ($type === null) {
+                throw ParserException::fromUnexpectedToken(
+                    tokenName: $literal->op2,
+                    line: $literal->line,
+                );
+            }
 
             return new LiteralNode(
                 operand: $literal->op1,
-                type: Type::fromString(
-                    name: $literal->op2,
-                    line: $literal->line,
-                ),
+                type: $type,
             );
         }
 

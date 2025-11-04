@@ -100,12 +100,18 @@ class ExpressionParser implements ExpressionParserInterface
             case $token instanceof LiteralToken:
                 $stream->consume();
 
+                $type = Type::fromString($token->op2);
+
+                if ($type === null) {
+                    throw ParserException::fromUnexpectedToken(
+                        tokenName: $token->op2,
+                        line: $token->line,
+                    );
+                }
+
                 return new LiteralNode(
                     operand: $token->op1,
-                    type: Type::fromString(
-                        name: $token->op2,
-                        line: $token->line,
-                    ),
+                    type: $type,
                 );
 
             case $token instanceof IdentifierToken:
