@@ -13,21 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Session;
 
-use Tuxxedo\Http\Response\ResponseCode;
-use Tuxxedo\Http\Response\ResponseCodeInterface;
-
-class SessionException extends \Exception implements ResponseCodeInterface
+class SessionException extends \Exception
 {
-    public readonly ResponseCode $responseCode;
-
-    public function __construct(
-        string $message,
-    ) {
-        parent::__construct($message);
-
-        $this->responseCode = ResponseCode::INTERNAL_SERVER_ERROR;
-    }
-
     public static function fromNotStarted(): self
     {
         return new self(
