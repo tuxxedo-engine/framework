@@ -92,7 +92,6 @@ class DatabaseException extends \Exception
         );
     }
 
-    // @todo Handle this better
     public static function fromResultTooBig(): self
     {
         return new self(
@@ -107,7 +106,6 @@ class DatabaseException extends \Exception
         );
     }
 
-    // @todo Handle this better with a better error message
     public static function fromCannotFetch(): self
     {
         return new self(
