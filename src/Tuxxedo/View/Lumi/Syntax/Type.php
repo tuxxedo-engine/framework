@@ -13,8 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax;
 
-use Tuxxedo\View\Lumi\Parser\ParserException;
-
 enum Type
 {
     case STRING;
