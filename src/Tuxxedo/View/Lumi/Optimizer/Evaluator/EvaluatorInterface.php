@@ -22,7 +22,6 @@ use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
-// @todo Support AssignmentNode
 // @todo Support UnaryOpNode
 interface EvaluatorInterface
 {
