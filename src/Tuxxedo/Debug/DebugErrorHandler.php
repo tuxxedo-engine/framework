@@ -19,11 +19,20 @@ use Tuxxedo\Http\Response\ResponseInterface;
 
 class DebugErrorHandler implements ErrorHandlerInterface
 {
+    private static bool $registeredPhpErrorHandler = false;
+
     public function __construct(
         bool $registerPhpErrorHandler = true,
     ) {
         if ($registerPhpErrorHandler) {
             self::registerPhpErrorHandler();
+        }
+    }
+
+    public function __destruct()
+    {
+        if (self::$registeredPhpErrorHandler) {
+            self::restorePhpErrorHandler();
         }
     }
 
@@ -37,6 +46,15 @@ class DebugErrorHandler implements ErrorHandlerInterface
                 line: $errline ?? 0,
             ),
         );
+
+        self::$registeredPhpErrorHandler = true;
+    }
+
+    public static function restorePhpErrorHandler(): void
+    {
+        \restore_error_handler();
+
+        self::$registeredPhpErrorHandler = false;
     }
 
     public function handle(
