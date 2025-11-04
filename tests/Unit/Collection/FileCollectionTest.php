@@ -25,42 +25,42 @@ class FileCollectionTest extends TestCase
     {
         $collection = FileCollection::fromGlob(self::GOOD_DIRECTORY . '/*.txt');
 
-        $this->assertSame($collection->count(), 3);
+        self::assertSame($collection->count(), 3);
     }
 
     public function testFromGlobError(): void
     {
         $collection = FileCollection::fromGlob(self::BAD_DIRECTORY . '/*.txt');
 
-        $this->assertSame($collection->count(), 0);
+        self::assertSame($collection->count(), 0);
     }
 
     public function testFromDirectory(): void
     {
         $collection = FileCollection::fromDirectory(self::GOOD_DIRECTORY);
 
-        $this->assertSame($collection->count(), 4);
+        self::assertSame($collection->count(), 4);
     }
 
     public function testFromDirectoryError(): void
     {
         $collection = FileCollection::fromDirectory(self::BAD_DIRECTORY);
 
-        $this->assertSame($collection->count(), 0);
+        self::assertSame($collection->count(), 0);
     }
 
     public function testFromRecursiveDirectory(): void
     {
         $collection = FileCollection::fromRecursiveDirectory(self::GOOD_DIRECTORY);
 
-        $this->assertSame($collection->count(), 1);
+        self::assertSame($collection->count(), 1);
     }
 
     public function testFromRecursiveDirectoryError(): void
     {
         $collection = FileCollection::fromRecursiveDirectory(self::BAD_DIRECTORY);
 
-        $this->assertSame($collection->count(), 0);
+        self::assertSame($collection->count(), 0);
     }
 
     public function testFromFileType(): void
@@ -70,7 +70,7 @@ class FileCollectionTest extends TestCase
             extension: '.txt',
         );
 
-        $this->assertSame($collection->count(), 3);
+        self::assertSame($collection->count(), 3);
     }
 
     public function testFromFileTypeEmpty(): void
@@ -80,7 +80,7 @@ class FileCollectionTest extends TestCase
             extension: '.php',
         );
 
-        $this->assertSame($collection->count(), 0);
+        self::assertSame($collection->count(), 0);
     }
 
     public function testFromFileTypeError(): void
@@ -90,7 +90,7 @@ class FileCollectionTest extends TestCase
             extension: '.txt',
         );
 
-        $this->assertSame($collection->count(), 0);
+        self::assertSame($collection->count(), 0);
     }
 
     public function testFromRecursiveFileType(): void
@@ -100,7 +100,7 @@ class FileCollectionTest extends TestCase
             extension: '.txt',
         );
 
-        $this->assertSame($collection->count(), 4);
+        self::assertSame($collection->count(), 4);
     }
 
     public function testFromRecursiveFileTypeEmpty(): void
@@ -110,7 +110,7 @@ class FileCollectionTest extends TestCase
             extension: '.php',
         );
 
-        $this->assertSame($collection->count(), 0);
+        self::assertSame($collection->count(), 0);
     }
 
     public function testFromRecursiveFileTypeError(): void
@@ -120,6 +120,6 @@ class FileCollectionTest extends TestCase
             extension: '.txt',
         );
 
-        $this->assertSame($collection->count(), 0);
+        self::assertSame($collection->count(), 0);
     }
 }

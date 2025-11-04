@@ -6,6 +6,7 @@ parameters:
         - app/
         - public/
         - src/
+        - tests/
     excludePaths:
         analyse:
             - app/views/cache

@@ -46,6 +46,13 @@ interface CollectionInterface extends \Countable, \Iterator, \ArrayAccess
         mixed ...$values,
     ): bool;
 
+    /**
+     * @param TKey ...$keys
+     */
+    public function containsKey(
+        mixed ...$keys,
+    ): bool;
+
     public function sort(): static;
 
     public function sortKeys(): static;

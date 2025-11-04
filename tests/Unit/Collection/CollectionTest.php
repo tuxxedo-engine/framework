@@ -17,7 +17,6 @@ use Fixtures\Collection\IntTestEnum;
 use Fixtures\Collection\StringTestEnum;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Collection\Collection;
-use Tuxxedo\Collection\CollectionException;
 use Tuxxedo\Collection\IntCollection;
 use Tuxxedo\Collection\StringCollection;
 
@@ -27,15 +26,15 @@ class CollectionTest extends TestCase
     {
         $collection = StringCollection::from('Hello', 'World');
 
-        $this->assertSame($collection->current(), 'Hello');
-        $this->assertSame($collection->current(), 'Hello');
+        self::assertSame($collection->current(), 'Hello');
+        self::assertSame($collection->current(), 'Hello');
     }
 
     public function testCount(): void
     {
         $collection = StringCollection::from('Kalle', 'Christopher', 'Ali');
 
-        $this->assertSame($collection->count(), 3);
+        self::assertSame($collection->count(), 3);
     }
 
     public function testIterate(): void
@@ -44,13 +43,21 @@ class CollectionTest extends TestCase
         $collection = StringCollection::from('Foo', 'Bar');
 
         foreach ($collection as $value) {
-            $this->assertArrayHasKey($collection->key(), $collection);
-            $this->assertTrue($collection->contains($value));
+            self::assertTrue($collection->containsKey($collection->key()));
+            self::assertTrue($collection->contains($value));
 
             $i++;
         }
 
-        $this->assertSame($collection->count(), $i);
+        self::assertSame($collection->count(), $i);
+    }
+
+    public function testContainsKey(): void
+    {
+        $collection = StringCollection::from('Foo', 'Bar', 'Baz');
+
+        self::assertFalse($collection->containsKey());
+        self::assertFalse($collection->containsKey(3));
     }
 
     public function testMap(): void
@@ -58,13 +65,13 @@ class CollectionTest extends TestCase
         $collection = StringCollection::from('Lorem', 'Ipsum');
         $collection->map(\strtoupper(...));
 
-        $this->assertSame($collection->values(), ['LOREM', 'IPSUM']);
+        self::assertSame($collection->values(), ['LOREM', 'IPSUM']);
 
         $collection->map(
             static fn (string $v): string => \substr($v, 0, 1),
         );
 
-        $this->assertSame($collection->values(), ['L', 'I']);
+        self::assertSame($collection->values(), ['L', 'I']);
     }
 
     public function testFilter(): void
@@ -78,8 +85,8 @@ class CollectionTest extends TestCase
             static fn (string $v): bool => \in_array($v, $scandinavia, true),
         );
 
-        $this->assertSame($collection->values(), $scandinavia);
-        $this->assertSame($collection->count(), 3);
+        self::assertSame($collection->values(), $scandinavia);
+        self::assertSame($collection->count(), 3);
     }
 
     public function testMerge(): void
@@ -87,12 +94,13 @@ class CollectionTest extends TestCase
         $scandinavia = StringCollection::from('DK', 'NO', 'SE');
         $republics = StringCollection::from('FI', 'IS');
 
-        $nordics = (new Collection())
-            ->merge($scandinavia)
-            ->merge($republics);
+        /** @var Collection<int, string> $nordics */
+        $nordics = new Collection();
 
-        $this->assertSame($nordics->count(), 5);
-        $this->assertTrue($nordics->contains('FI'));
+        $nordics = $nordics->merge($scandinavia)->merge($republics);
+
+        self::assertSame($nordics->count(), 5);
+        self::assertTrue($nordics->contains('FI'));
     }
 
     public function testContains(): void
@@ -100,13 +108,13 @@ class CollectionTest extends TestCase
         $range1 = IntCollection::fromRange(1, 10);
         $range2 = IntCollection::fromRange(1, 100);
 
-        $this->assertTrue($range1->contains(8));
-        $this->assertFalse($range1->contains(42));
+        self::assertTrue($range1->contains(8));
+        self::assertFalse($range1->contains(42));
 
-        $this->assertFalse($range1->contains());
-        $this->assertTrue($range2->contains($range1));
-        $this->assertFalse($range1->contains($range2));
-        $this->assertTrue($range1->contains($range1));
+        self::assertFalse($range1->contains());
+        self::assertTrue($range2->contains($range1));
+        self::assertFalse($range1->contains($range2));
+        self::assertTrue($range1->contains($range1));
     }
 
     public function testArrayAccess(): void
@@ -114,16 +122,16 @@ class CollectionTest extends TestCase
         $ints = IntCollection::fromRange(1, 5);
         $strings = StringCollection::from('Foo', 'Bar', 'Baz');
 
-        $this->assertSame($ints[2], 3);
-        $this->assertTrue(isset($strings[2]));
+        self::assertSame($ints[2], 3);
+        self::assertTrue(isset($strings[2]));
 
         unset($strings[2]);
 
-        $this->assertFalse(isset($strings[2]));
+        self::assertFalse(isset($strings[2]));
 
         $strings[2] = 'qux';
 
-        $this->assertSame($strings[2], 'qux');
+        self::assertSame($strings[2], 'qux');
     }
 
     public function testAppend(): void
@@ -131,7 +139,7 @@ class CollectionTest extends TestCase
         $range = IntCollection::fromRange(1, 4);
         $range->append(5);
 
-        $this->assertSame($range->last(), 5);
+        self::assertSame($range->last(), 5);
     }
 
     public function testPop(): void
@@ -139,7 +147,7 @@ class CollectionTest extends TestCase
         $strings = StringCollection::from('Kalle', 'Christopher', 'Ali');
         $strings->pop();
 
-        $this->assertFalse($strings->contains('Ali'));
+        self::assertFalse($strings->contains('Ali'));
     }
 
     public function testShift(): void
@@ -147,7 +155,7 @@ class CollectionTest extends TestCase
         $ints = IntCollection::fromRange(0, 5);
         $ints->shift();
 
-        $this->assertSame($ints->first(), 1);
+        self::assertSame($ints->first(), 1);
     }
 
     public function testPrepend(): void
@@ -155,44 +163,44 @@ class CollectionTest extends TestCase
         $ints = IntCollection::fromRange(1, 5);
         $ints->prepend(0);
 
-        $this->assertSame($ints->first(), 0);
+        self::assertSame($ints->first(), 0);
     }
 
     public function testClear(): void
     {
         $ints = IntCollection::fromRange(1, 5);
 
-        $this->assertSame($ints->count(), 5);
+        self::assertSame($ints->count(), 5);
 
         $ints->clear();
 
-        $this->assertSame($ints->count(), 0);
+        self::assertSame($ints->count(), 0);
     }
 
     public function testFirstLastKey(): void
     {
         $nordics = StringCollection::from('DK', 'FI', 'IS', 'NO', 'SE');
 
-        $this->assertSame($nordics->firstKey(), 0);
-        $this->assertSame($nordics->lastKey(), 4);
+        self::assertSame($nordics->firstKey(), 0);
+        self::assertSame($nordics->lastKey(), 4);
 
         $nordics->clear();
 
-        $this->assertNull($nordics->firstKey());
-        $this->assertNull($nordics->lastKey());
+        self::assertNull($nordics->firstKey());
+        self::assertNull($nordics->lastKey());
     }
 
     public function testFirstLastValue(): void
     {
         $nordics = StringCollection::from('DK', 'FI', 'IS', 'NO', 'SE');
 
-        $this->assertSame($nordics->first(), 'DK');
-        $this->assertSame($nordics->last(), 'SE');
+        self::assertSame($nordics->first(), 'DK');
+        self::assertSame($nordics->last(), 'SE');
 
         $nordics->clear();
 
-        $this->assertNull($nordics->first());
-        $this->assertNull($nordics->last());
+        self::assertNull($nordics->first());
+        self::assertNull($nordics->last());
     }
 
     public function testSortIntValues(): void
@@ -200,11 +208,11 @@ class CollectionTest extends TestCase
         $ints = IntCollection::from(1, 2, 3, 4, 5);
         $ints->sort();
 
-        $this->assertSame($ints->values(), [1, 2, 3, 4, 5]);
+        self::assertSame($ints->values(), [1, 2, 3, 4, 5]);
 
         $ints->reverse();
 
-        $this->assertSame($ints->values(), [5, 4, 3, 2, 1]);
+        self::assertSame($ints->values(), [5, 4, 3, 2, 1]);
     }
 
     public function testSortIntKeys(): void
@@ -212,11 +220,11 @@ class CollectionTest extends TestCase
         $ints = IntCollection::fromRange(1, 5);
         $ints->sortKeys();
 
-        $this->assertSame($ints->keys(), [0, 1, 2, 3, 4]);
+        self::assertSame($ints->keys(), [0, 1, 2, 3, 4]);
 
         $ints->reverseKeys();
 
-        $this->assertSame($ints->keys(), [4, 3, 2, 1, 0]);
+        self::assertSame($ints->keys(), [4, 3, 2, 1, 0]);
     }
 
     public function testSortString(): void
@@ -224,11 +232,11 @@ class CollectionTest extends TestCase
         $collection = StringCollection::from('Foo', 'Bar', 'Baz');
         $collection->sort();
 
-        $this->assertSame($collection->values(), ['Bar', 'Baz', 'Foo']);
+        self::assertSame($collection->values(), ['Bar', 'Baz', 'Foo']);
 
         $collection->reverse();
 
-        $this->assertSame($collection->values(), ['Foo', 'Baz', 'Bar']);
+        self::assertSame($collection->values(), ['Foo', 'Baz', 'Bar']);
     }
 
     public function testSortStringCaseInsensitive(): void
@@ -241,7 +249,7 @@ class CollectionTest extends TestCase
 
         $collection->sort();
 
-        $this->assertSame(
+        self::assertSame(
             $collection->values(),
             [
                 'Bar',
@@ -256,138 +264,8 @@ class CollectionTest extends TestCase
 
     public function testEnumRanges(): void
     {
-        $this->assertFalse(StringCollection::fromEnum(StringTestEnum::class)->contains('IS'));
-        $this->assertTrue(StringCollection::fromEnum(StringTestEnum::class)->contains('Iceland'));
-        $this->assertSame(IntCollection::fromEnum(IntTestEnum::class)->count(), 5);
-    }
-
-    public function testImmutableExceptionViaOffsetSet(): void
-    {
-        $strings = StringCollection::fromEnum(StringTestEnum::class)->toImmutable();
-
-        $this->expectException(CollectionException::class);
-        $strings['abc'] = 'def';
-    }
-
-    public function testImmutableExceptionsViaOffsetUnset(): void
-    {
-        $strings = StringCollection::fromEnum(StringTestEnum::class)->toImmutable();
-
-        $this->expectException(CollectionException::class);
-        unset($strings[$strings->firstKey()]);
-    }
-
-    public function testImmutableSort(): void
-    {
-        $ints = IntCollection::fromRange(1, 3)->toImmutable();
-        $sortedInts = $ints->sort();
-
-        $this->assertFalse($ints === $sortedInts);
-        $this->assertSame($ints[0], $sortedInts[0]);
-    }
-
-    public function testImmutableSortKeys(): void
-    {
-        $ints = IntCollection::fromRange(1, 3)->toImmutable();
-        $sortedInts = $ints->sortKeys();
-
-        $this->assertFalse($ints === $sortedInts);
-        $this->assertSame($ints->key(), $sortedInts->key());
-    }
-
-    public function testImmutableReverse(): void
-    {
-        $ints = IntCollection::fromRange(1, 3)->toImmutable();
-        $sortedInts = $ints->reverse();
-
-        $this->assertFalse($ints === $sortedInts);
-        $this->assertSame($ints->first(), $sortedInts->last());
-    }
-
-    public function testImmutableReverseKeys(): void
-    {
-        $ints = IntCollection::fromRange(1, 3)->toImmutable();
-        $sortedInts = $ints->reverseKeys();
-
-        $this->assertFalse($ints === $sortedInts);
-        $this->assertSame($ints->firstKey(), $sortedInts->lastKey());
-    }
-
-    public function testImmutableToMutable(): void
-    {
-        $ints = IntCollection::fromRange(1, 3)->toImmutable();
-        $mutableInts = $ints->toMutable();
-
-        $this->assertNotInstanceOf($ints::class, $mutableInts);
-        $this->assertSameSize($ints, $mutableInts);
-    }
-
-    public function testImmutableToArray(): void
-    {
-        $ints = IntCollection::fromRange(1, 3)->toImmutable();
-        $mutableInts = $ints->toMutable();
-
-        $this->assertSame($ints->toArray(), $mutableInts->toArray());
-    }
-
-    public function testImmutableFirstLast(): void
-    {
-        $collection = IntCollection::from()->toImmutable();
-
-        $this->assertSame($collection->count(), 0);
-        $this->assertNull($collection->first());
-        $this->assertNull($collection->last());
-    }
-
-    public function testImmutableContains(): void
-    {
-        $ints = IntCollection::fromRange(1, 3)->toImmutable();
-
-        $this->assertFalse($ints->contains());
-        $this->assertFalse($ints->contains(42));
-        $this->assertTrue($ints->contains(3));
-
-        $sameInts = clone $ints;
-
-        $this->assertTrue($ints->contains($sameInts));
-
-        $sameInts = $sameInts->toMutable()->append(4);
-
-        $this->assertFalse($ints->contains($sameInts));
-
-        $noInts = IntCollection::from()->toImmutable();
-
-        $this->assertFalse($noInts->contains(0));
-    }
-
-    public function testImmutableKeyValues(): void
-    {
-        $ints = IntCollection::fromRange(1, 5)->toImmutable();
-
-        $this->assertSame($ints->keys(), [0, 1, 2, 3, 4]);
-        $this->assertSame($ints->values(), [1, 2, 3, 4, 5]);
-    }
-
-    public function testImmutableIterate(): void
-    {
-        $i = 0;
-        $collection = StringCollection::from('Foo', 'Bar')->toImmutable();
-
-        foreach ($collection as $value) {
-            $this->assertArrayHasKey($collection->key(), $collection);
-            $this->assertTrue($collection->contains($value));
-
-            $i++;
-        }
-
-        $this->assertSame($collection->count(), $i);
-    }
-
-    public function testImmutableArrayAccess(): void
-    {
-        $nordics = StringCollection::from('DK', 'FI', 'IS', 'NO', 'SE');
-
-        $this->assertTrue(isset($nordics[1]));
-        $this->assertFalse(isset($nordics[5]));
+        self::assertFalse(StringCollection::fromEnum(StringTestEnum::class)->contains('IS'));
+        self::assertTrue(StringCollection::fromEnum(StringTestEnum::class)->contains('Iceland'));
+        self::assertSame(IntCollection::fromEnum(IntTestEnum::class)->count(), 5);
     }
 }

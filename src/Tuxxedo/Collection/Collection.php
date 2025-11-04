@@ -220,6 +220,22 @@ class Collection implements CollectionInterface
         return true;
     }
 
+    public function containsKey(
+        mixed ...$keys,
+    ): bool {
+        if (\sizeof($keys) === 0) {
+            return false;
+        }
+
+        foreach ($keys as $key) {
+            if (!\array_key_exists($key, $this->collection)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public function sort(): static
     {
         \asort($this->collection);

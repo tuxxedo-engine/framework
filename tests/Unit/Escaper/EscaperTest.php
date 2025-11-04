@@ -31,7 +31,7 @@ class EscaperTest extends TestCase
     #[DataProvider('htmlDataProvider')]
     public function testHtml(string $value, string $expected): void
     {
-        $this->assertSame((new Escaper())->html($value), $expected);
+        self::assertSame((new Escaper())->html($value), $expected);
     }
 
     public static function attributeDataProvider(): \Generator
@@ -46,7 +46,7 @@ class EscaperTest extends TestCase
     #[DataProvider('attributeDataProvider')]
     public function testAttribute(string $value, string $expected): void
     {
-        $this->assertSame((new Escaper())->attribute($value), $expected);
+        self::assertSame((new Escaper())->attribute($value), $expected);
     }
 
     public static function jsDataProvider(): \Generator
@@ -61,7 +61,7 @@ class EscaperTest extends TestCase
     #[DataProvider('jsDataProvider')]
     public function testJs(string $value, string $expected): void
     {
-        $this->assertSame((new Escaper())->js($value), $expected);
+        self::assertSame((new Escaper())->js($value), $expected);
     }
 
     public static function urlDataProvider(): \Generator
@@ -76,6 +76,6 @@ class EscaperTest extends TestCase
     #[DataProvider('urlDataProvider')]
     public function testUrl(string $value, string $expected): void
     {
-        $this->assertSame((new Escaper())->url($value), $expected);
+        self::assertSame((new Escaper())->url($value), $expected);
     }
 }
