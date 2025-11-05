@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Collection;
+namespace Unit\Collection;
 
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Collection\FileCollection;
