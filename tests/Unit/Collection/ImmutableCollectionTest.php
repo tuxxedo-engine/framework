@@ -19,6 +19,7 @@ use Tuxxedo\Collection\CollectionException;
 use Tuxxedo\Collection\IntCollection;
 use Tuxxedo\Collection\StringCollection;
 
+// @todo Collection<>ImmutableCollection test parity
 class ImmutableCollectionTest extends TestCase
 {
     public function testImmutableExceptionViaOffsetSet(): void
