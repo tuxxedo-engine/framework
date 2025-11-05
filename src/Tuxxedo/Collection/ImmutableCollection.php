@@ -175,7 +175,7 @@ class ImmutableCollection implements CollectionInterface
     {
         $collection = clone $this;
 
-        \sort($collection->collection);
+        \asort($collection->collection);
 
         return $collection;
     }

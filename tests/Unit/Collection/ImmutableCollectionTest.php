@@ -19,7 +19,6 @@ use Tuxxedo\Collection\CollectionException;
 use Tuxxedo\Collection\IntCollection;
 use Tuxxedo\Collection\StringCollection;
 
-// @todo Collection<>ImmutableCollection test parity
 class ImmutableCollectionTest extends TestCase
 {
     public function testImmutableExceptionViaOffsetSet(): void
@@ -158,11 +157,87 @@ class ImmutableCollectionTest extends TestCase
         self::assertFalse(isset($nordics[5]));
     }
 
-    public function testContainsKey(): void
+    public function testImmutableContainsKey(): void
     {
         $collection = StringCollection::from('Foo', 'Bar', 'Baz')->toImmutable();
 
         self::assertFalse($collection->containsKey());
         self::assertFalse($collection->containsKey(3));
+        self::assertTrue($collection->containsKey(0, 2));
+    }
+
+    public function testImmutableCollectionParity(): void
+    {
+        $mutable = StringCollection::from('Foo', 'Bar', 'Baz');
+        $immutable = $mutable->toImmutable();
+
+        self::assertSame($mutable->count(), $immutable->count());
+        self::assertSame($mutable->toArray(), $immutable->toArray());
+        self::assertSame($mutable->keys(), $immutable->keys());
+        self::assertSame($mutable->values(), $immutable->values());
+        self::assertSame($mutable->first(), $immutable->first());
+        self::assertSame($mutable->firstKey(), $immutable->firstKey());
+        self::assertSame($mutable->last(), $immutable->last());
+        self::assertSame($mutable->lastKey(), $immutable->lastKey());
+        self::assertSame(isset($mutable[0]), isset($immutable[0]));
+        self::assertSame($mutable[2], $immutable[2]);
+
+        self::assertSame(
+            (clone $mutable)->sort()->toArray(),
+            $immutable->sort()->toArray(),
+        );
+
+        self::assertSame(
+            (clone $mutable)->sortKeys()->toArray(),
+            $immutable->sortKeys()->toArray(),
+        );
+
+        self::assertSame(
+            (clone $mutable)->reverse()->toArray(),
+            $immutable->reverse()->toArray(),
+        );
+
+        self::assertSame(
+            (clone $mutable)->reverseKeys()->toArray(),
+            $immutable->reverseKeys()->toArray(),
+        );
+
+        self::assertSame($mutable->current(), $immutable->current());
+        self::assertSame($mutable->key(), $immutable->key());
+
+        self::assertTrue($mutable->valid());
+        self::assertTrue($immutable->valid());
+
+        for ($i = 0; $i < $mutable->count(); $i++) {
+            $mutable->next();
+            $immutable->next();
+        }
+
+        self::assertFalse($mutable->valid());
+        self::assertFalse($immutable->valid());
+
+        $mutable->rewind();
+        $immutable->rewind();
+
+        self::assertTrue($mutable->valid());
+        self::assertTrue($immutable->valid());
+
+        self::assertFalse($mutable->contains());
+        self::assertFalse($immutable->contains());
+        self::assertFalse($mutable->contains(1337));
+        self::assertFalse($immutable->contains(1337));
+        self::assertTrue($mutable->contains('Foo'));
+        self::assertTrue($immutable->contains('Foo'));
+        self::assertTrue($mutable->contains('Foo', 'Bar'));
+        self::assertTrue($immutable->contains('Foo', 'Bar'));
+
+        self::assertFalse($mutable->containsKey());
+        self::assertFalse($immutable->containsKey());
+        self::assertFalse($mutable->containsKey(3));
+        self::assertFalse($immutable->containsKey(3));
+        self::assertTrue($mutable->containsKey(0));
+        self::assertTrue($immutable->containsKey(0));
+        self::assertTrue($mutable->containsKey(1, 2));
+        self::assertTrue($immutable->containsKey(1, 2));
     }
 }
