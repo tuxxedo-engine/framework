@@ -316,7 +316,22 @@ class SccpOptimizer extends AbstractOptimizer
         NodeStreamInterface $stream,
         ConditionalNode $node,
     ): array {
+        $branches = [];
         $condition = $this->optimizeNode($stream, $node->operand);
+
+        foreach ($node->branches as $branch) {
+            $optimizedBranch = $this->optimizeNode($stream, $node->operand);
+
+            if (
+                \sizeof($optimizedBranch) === 1 &&
+                $optimizedBranch[0] !== $branch->operand &&
+                $optimizedBranch[0] instanceof ExpressionNodeInterface
+            ) {
+                $branches[] = $optimizedBranch[0];
+            } else {
+                $branches[] = $branch->operand;
+            }
+        }
 
         if (
             \sizeof($condition) === 1 &&
@@ -326,15 +341,20 @@ class SccpOptimizer extends AbstractOptimizer
             return [
                 new ConditionalNode(
                     operand: $condition[0],
-                    body: $node->body,
-                    else: $node->else,
-                    branches: $node->branches,
+                    body: parent::optimizeNodes($node->body),
+                    else: parent::optimizeNodes($node->else),
+                    branches: $branches,
                 ),
             ];
         }
 
         return [
-            $node,
+            new ConditionalNode(
+                operand: $node->operand,
+                body: parent::optimizeNodes($node->body),
+                else: parent::optimizeNodes($node->else),
+                branches: $branches,
+            ),
         ];
     }
 }
