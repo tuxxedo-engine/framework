@@ -25,7 +25,6 @@ class EnvTest extends TestCase
         $env = Env::createFromEnvironment();
 
         self::assertTrue($env->has('PATH'));
-        self::assertIsString($env->getString('PATH'));
         self::assertFalse($env->has('|æøå'));
 
         $this->expectException(EnvException::class);
@@ -35,8 +34,10 @@ class EnvTest extends TestCase
     public function testGetters(): void
     {
         $env = new Env(
-            loader: new class implements EnvLoaderInterface
-            {
+            loader: new class () implements EnvLoaderInterface {
+                /**
+                 * @var array<string, string>
+                 */
                 private array $variables = [
                     'boolOn' => 'on',
                     'boolOff' => 'off',
@@ -77,7 +78,8 @@ class EnvTest extends TestCase
         self::assertFalse($env->getBool('boolFalse'));
         self::assertTrue($env->getBool('boolIntTrue'));
         self::assertFalse($env->getBool('boolIntFalse'));
+        self::assertSame($env->getString('string'), 'foo');
         self::assertSame($env->getInt('int'), 42);
-        self::assertIsFloat($env->getFloat('float'));
+        self::assertSame($env->getFloat('float'), 13.37);
     }
 }
