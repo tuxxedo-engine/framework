@@ -27,6 +27,8 @@ class EnvTest extends TestCase
         self::assertTrue($env->has('PATH'));
         self::assertFalse($env->has('|æøå'));
 
+        $env->getString('PATH');
+
         $this->expectException(EnvException::class);
         $env->getString('|æøå');
     }
