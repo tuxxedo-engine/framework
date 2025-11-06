@@ -95,4 +95,11 @@ class UnresolvableDependencyException extends \Exception
             message: 'Unable to resolve dependency; intersection types is not supported',
         );
     }
+
+    public static function fromAmbiguousInitializer(): self
+    {
+        return new self(
+            message: 'Unable to lazy bind service, the service already specifies its own initializer. Use bind() instead',
+        );
+    }
 }

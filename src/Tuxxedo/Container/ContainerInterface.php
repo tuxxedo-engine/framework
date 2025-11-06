@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
+// @todo Consider sealing support
 interface ContainerInterface
 {
     /**

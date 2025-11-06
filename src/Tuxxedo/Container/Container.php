@@ -86,6 +86,8 @@ class Container implements ContainerInterface
      *
      * @param class-string<TClassName> $class
      * @param (\Closure(self): TClassName) $initializer
+     *
+     * @throws UnresolvableDependencyException
      */
     public function lazy(
         string $class,
@@ -93,6 +95,15 @@ class Container implements ContainerInterface
         bool $bindInterfaces = true,
         bool $bindParent = true,
     ): static {
+        // @todo Use is_subclass_of()
+        $interfaces = ($interfaces = \class_implements($class)) !== false
+            ? $interfaces
+            : [];
+
+        if (\in_array(LazyInitializableInterface::class, $interfaces, true)) {
+            throw UnresolvableDependencyException::fromAmbiguousInitializer();
+        }
+
         $this->bind(
             class: $class,
             bindInterfaces: $bindInterfaces,
