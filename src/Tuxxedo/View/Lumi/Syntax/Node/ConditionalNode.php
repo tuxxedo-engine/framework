@@ -19,7 +19,7 @@ readonly class ConditionalNode implements NodeInterface
 
     /**
      * @param NodeInterface[] $body
-     * @param array<int, ConditionalBranchNode> $branches
+     * @param array<ConditionalBranchNode> $branches
      * @param NodeInterface[] $else
      */
     public function __construct(

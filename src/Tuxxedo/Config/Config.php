@@ -104,18 +104,22 @@ class Config implements ConfigInterface
     ): mixed {
         $index = $this->directives;
 
-        foreach (\explode('.', $path) as $part) {
-            if (!\array_key_exists($part, $index)) {
-                throw ConfigException::fromInvalidDirective(
-                    directive: $path,
-                );
-            }
+        if (\str_contains($path, '.')) {
+            foreach (\explode('.', $path) as $part) {
+                if (!\array_key_exists($part, $index)) {
+                    throw ConfigException::fromInvalidDirective(
+                        directive: $path,
+                    );
+                }
 
-            if (!\is_array($index[$part])) {
-                return $index[$part];
-            }
+                if (!\is_array($index[$part])) {
+                    return $index[$part];
+                }
 
-            $index = $index[$part];
+                $index = $index[$part];
+            }
+        } elseif (\array_key_exists($path, $index)) {
+            return $index[$path];
         }
 
         if ($index === $this->directives) {
@@ -241,7 +245,7 @@ class Config implements ConfigInterface
         string $path,
     ): bool {
         try {
-            return \is_int($this->path($path));
+            return \is_string($this->path($path));
         } catch (ConfigException) {
             return false;
         }

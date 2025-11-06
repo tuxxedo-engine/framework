@@ -20,6 +20,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ConcatNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ConditionalBranchNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ConditionalNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
@@ -327,9 +328,15 @@ class SccpOptimizer extends AbstractOptimizer
                 $optimizedBranch[0] !== $branch->operand &&
                 $optimizedBranch[0] instanceof ExpressionNodeInterface
             ) {
-                $branches[] = $optimizedBranch[0];
+                $branches[] = new ConditionalBranchNode(
+                    operand: $optimizedBranch[0],
+                    body: parent::optimizeNodes($branch->body),
+                );
             } else {
-                $branches[] = $branch->operand;
+                $branches[] = new ConditionalBranchNode(
+                    operand: $branch->operand,
+                    body: parent::optimizeNodes($branch->body),
+                );
             }
         }
 
