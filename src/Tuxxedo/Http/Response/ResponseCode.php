@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Response;
 
+// @todo Make every argument that uses ResponseCode a union with int, so it can be hydrated into this
 enum ResponseCode: int
 {
     case CONTINUE = 100;
