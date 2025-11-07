@@ -56,9 +56,7 @@ class Container implements ContainerInterface
         }
 
         if ($bindInterfaces) {
-            $aliases = ($aliases = \class_implements($class)) !== false
-                ? $aliases
-                : [];
+            $aliases = ($aliases = \class_implements($class)) !== false ? $aliases : [];
 
             if (\is_string($class) && \in_array(LazyInitializableInterface::class, $aliases, true)) {
                 /** @var class-string<LazyInitializableInterface> $class */
@@ -95,12 +93,7 @@ class Container implements ContainerInterface
         bool $bindInterfaces = true,
         bool $bindParent = true,
     ): static {
-        // @todo Use is_subclass_of()
-        $interfaces = ($interfaces = \class_implements($class)) !== false
-            ? $interfaces
-            : [];
-
-        if (\in_array(LazyInitializableInterface::class, $interfaces, true)) {
+        if (\is_subclass_of($class, LazyInitializableInterface::class)) {
             throw UnresolvableDependencyException::fromAmbiguousInitializer();
         }
 

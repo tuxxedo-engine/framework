@@ -15,6 +15,7 @@ namespace Unit\Container;
 
 use Fixtures\Container\AbstractService;
 use Fixtures\Container\ComplexService;
+use Fixtures\Container\LazyService;
 use Fixtures\Container\PersistentService;
 use Fixtures\Container\RebindA;
 use Fixtures\Container\RebindB;
@@ -22,10 +23,12 @@ use Fixtures\Container\RebindC;
 use Fixtures\Container\ServiceInterface;
 use Fixtures\Container\ServiceOne;
 use Fixtures\Container\ServiceOneInterface;
+use Fixtures\Container\ServiceTwo;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Container\AlwaysPersistentInterface;
 use Tuxxedo\Container\Container;
+use Tuxxedo\Container\LazyInitializableInterface;
 
 class ContainerTest extends TestCase
 {
@@ -103,6 +106,7 @@ class ContainerTest extends TestCase
             true,
             true,
         ];
+
         yield [
             ComplexService::class,
             ServiceInterface::class,
@@ -137,6 +141,42 @@ class ContainerTest extends TestCase
         self::assertSame($container->isAlias($serviceParentName), $bindParent);
     }
 
+    public function testBindNoInterface(): void
+    {
+        $container = new Container();
+
+        $container->bind(ServiceTwo::class);
+
+        self::assertInstanceOf(ServiceTwo::class, $container->resolve(ServiceTwo::class));
+    }
+
+    public function testBindLazyService(): void
+    {
+        $container = new Container();
+
+        $container->bind(LazyService::class);
+
+        self::assertFalse($container->isInitialized(LazyService::class));
+        self::assertSame($container->resolve(LazyService::class)->name, 'baz');
+
+        // $container->resolve(LazyService::class);
+
+        // @todo Investigate this, as it uses ->isBound() underneath
+        // self::assertTrue($container->isInitialized(LazyService::class));
+    }
+
+    public function testResolveWithLazyAndPersistent(): void
+    {
+        $container = new Container();
+
+        $container->lazy(
+            class: PersistentService::class,
+            initializer: static fn (): PersistentService => new PersistentService(),
+        );
+
+        self::assertInstanceOf(PersistentService::class, $container->resolve(PersistentService::class));
+    }
+
     // @todo This case needs work on the Container for rebuilding the cache
     /*
     public function testRebindAffectsSubsequentResolution(): void
@@ -163,9 +203,6 @@ class ContainerTest extends TestCase
     }
     */
 
-    // @todo Bind class with $bindInterfaces=true but without interfaces
-    // @todo Bind class with LazyInitializableInterface via bind()
-    // @todo Resolve() with something that has an initializer
     // @todo Resolve() with something that has a constructor with arguments
     // @todo Resolve() with something that has a constructor without arguments
     // @todo Resolve() with DependencyResolverInterface
@@ -183,5 +220,5 @@ class ContainerTest extends TestCase
     // @todo call() with indexed arguments
     // @todo call() with mixed arguments
     // @todo isInitialized()
-    // @todo Test with non-classes
+    // @todo Test with anonymous-classes
 }
