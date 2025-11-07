@@ -21,6 +21,8 @@ class Container implements ContainerInterface
         LazyInitializableInterface::class,
     ];
 
+    public private(set) bool $sealed = false;
+
     /**
      * @var array<class-string, object|null>
      */
@@ -41,6 +43,11 @@ class Container implements ContainerInterface
      */
     private array $initializers = [];
 
+    public function seal(): void
+    {
+        $this->sealed = true;
+    }
+
     /**
      * @param class-string|object $class
      */
@@ -49,6 +56,10 @@ class Container implements ContainerInterface
         bool $bindInterfaces = true,
         bool $bindParent = true,
     ): static {
+        if ($this->sealed) {
+            throw ContainerException::fromContainerIsSealed();
+        }
+
         $className = \is_object($class) ? $class::class : $class;
 
         if (!isset($this->persistentDependencies[$className])) {

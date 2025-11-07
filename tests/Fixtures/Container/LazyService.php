@@ -18,7 +18,7 @@ use Tuxxedo\Container\LazyInitializableInterface;
 
 class LazyService implements LazyInitializableInterface
 {
-    final private function __construct(
+    final public function __construct(
         public readonly string $name,
     ) {
     }

@@ -13,15 +13,13 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi;
 
-use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Container\LazyInitializableInterface;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\RuntimeInterface;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewInterface;
 use Tuxxedo\View\ViewRenderInterface;
 
-readonly class LumiViewRender implements LazyInitializableInterface, ViewRenderInterface
+readonly class LumiViewRender implements ViewRenderInterface
 {
     /**
      * @var \Closure(string, mixed[]): string
@@ -73,13 +71,6 @@ readonly class LumiViewRender implements LazyInitializableInterface, ViewRenderI
                 return $buffer;
             };
         }
-    }
-
-    public static function createInstance(
-        ContainerInterface $container,
-    ): self {
-        /** @var LumiViewRender */
-        return LumiConfigurator::fromConfig($container)->build();
     }
 
     public function getViewFileName(

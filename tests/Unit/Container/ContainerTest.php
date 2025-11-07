@@ -28,7 +28,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Container\AlwaysPersistentInterface;
 use Tuxxedo\Container\Container;
-use Tuxxedo\Container\LazyInitializableInterface;
+use Tuxxedo\Container\ContainerException;
 
 class ContainerTest extends TestCase
 {
@@ -177,6 +177,45 @@ class ContainerTest extends TestCase
         self::assertInstanceOf(PersistentService::class, $container->resolve(PersistentService::class));
     }
 
+    public function testSealingBind(): void
+    {
+        $container = new Container();
+
+        $container->bind(ServiceOne::class);
+        self::assertFalse($container->sealed);
+
+        $container->seal();
+        self::assertTrue($container->sealed);
+
+        $this->expectException(ContainerException::class);
+        $container->bind(ServiceTwo::class);
+    }
+
+    public function testSealingLazy(): void
+    {
+        $container = new Container();
+
+        $container->seal();
+        $this->expectException(ContainerException::class);
+        $container->lazy(
+            class: PersistentService::class,
+            initializer: static fn (): PersistentService => new PersistentService(),
+        );
+    }
+
+    public function testAmbiguousInitializer(): void
+    {
+        $container = new Container();
+
+        $this->expectException(ContainerException::class);
+        $container->lazy(
+            class: LazyService::class,
+            initializer: static fn (): LazyService => new LazyService(
+                name: 'Bug',
+            ),
+        );
+    }
+
     // @todo This case needs work on the Container for rebuilding the cache
     /*
     public function testRebindAffectsSubsequentResolution(): void
@@ -214,11 +253,9 @@ class ContainerTest extends TestCase
     // @todo Resolve() without DependencyResolverInterface but with scalar type
     // @todo Resolve() with DependencyResolverInterface without type
     // @todo lazy() matrix
-    // @todo lazy() with LazyInitializableInterface
     // @todo call() without arguments
     // @todo call() with named arguments
     // @todo call() with indexed arguments
     // @todo call() with mixed arguments
-    // @todo isInitialized()
     // @todo Test with anonymous-classes
 }

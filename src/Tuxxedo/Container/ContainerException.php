@@ -102,4 +102,11 @@ class ContainerException extends \Exception
             message: 'Unable to lazy bind service, the service already specifies its own initializer. Use bind() instead',
         );
     }
+
+    public static function fromContainerIsSealed(): self
+    {
+        return new self(
+            message: 'Unable to bind service, as the container has been sealed',
+        );
+    }
 }

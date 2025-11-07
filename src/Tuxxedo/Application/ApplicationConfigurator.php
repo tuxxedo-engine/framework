@@ -32,6 +32,7 @@ use Tuxxedo\Router\RouterInterface;
 class ApplicationConfigurator implements ApplicationConfiguratorInterface
 {
     public private(set) ?ConfigInterface $config = null;
+    public private(set) bool $sealContainer = true;
     public private(set) ?ContainerInterface $container = null;
     public private(set) ?string $defaultRouterDirectory = null;
     public private(set) ?string $defaultRouterBaseNamespace = null;
@@ -93,6 +94,20 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         ConfigInterface $config,
     ): self {
         $this->config = $config;
+
+        return $this;
+    }
+
+    public function withoutContainerSeal(): self
+    {
+        $this->sealContainer = false;
+
+        return $this;
+    }
+
+    public function withContainerSeal(): self
+    {
+        $this->sealContainer = true;
 
         return $this;
     }
@@ -338,6 +353,10 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
                     provider: new FileServiceProvider($serviceFile),
                 );
             }
+        }
+
+        if ($this->sealContainer) {
+            $kernel->container->seal();
         }
 
         return $kernel;
