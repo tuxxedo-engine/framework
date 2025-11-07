@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
-class UnresolvableDependencyException extends \Exception
+class ContainerException extends \Exception
 {
     protected static function formatNamedType(
         \ReflectionNamedType $type,

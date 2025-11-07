@@ -53,7 +53,7 @@ interface ContainerInterface
      * @param class-string<TClassName> $className
      * @return TClassName
      *
-     * @throws UnresolvableDependencyException
+     * @throws ContainerException
      */
     public function resolve(
         string $className,

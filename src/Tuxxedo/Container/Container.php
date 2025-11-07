@@ -85,7 +85,7 @@ class Container implements ContainerInterface
      * @param class-string<TClassName> $class
      * @param (\Closure(self): TClassName) $initializer
      *
-     * @throws UnresolvableDependencyException
+     * @throws ContainerException
      */
     public function lazy(
         string $class,
@@ -94,7 +94,7 @@ class Container implements ContainerInterface
         bool $bindParent = true,
     ): static {
         if (\is_subclass_of($class, LazyInitializableInterface::class)) {
-            throw UnresolvableDependencyException::fromAmbiguousInitializer();
+            throw ContainerException::fromAmbiguousInitializer();
         }
 
         $this->bind(
@@ -135,7 +135,7 @@ class Container implements ContainerInterface
      * @param class-string<TClassName> $className
      * @return TClassName
      *
-     * @throws UnresolvableDependencyException
+     * @throws ContainerException
      */
     public function resolve(
         string $className,
@@ -249,7 +249,7 @@ class Container implements ContainerInterface
     }
 
     /**
-     * @throws UnresolvableDependencyException
+     * @throws ContainerException
      */
     private function resolveParameter(
         \ReflectionParameter $parameter,
@@ -263,7 +263,7 @@ class Container implements ContainerInterface
             try {
                 return $attrs[0]->newInstance()->resolve($this);
             } catch (\Exception $e) {
-                throw UnresolvableDependencyException::fromAttributeException(
+                throw ContainerException::fromAttributeException(
                     attributeClass: $attrs[0]->getName(),
                     exception: $e,
                 );
@@ -280,15 +280,15 @@ class Container implements ContainerInterface
             return match (true) {
                 $type instanceof \ReflectionNamedType => $this->resolveNamedType($type),
                 $type instanceof \ReflectionUnionType => $this->resolveUnionType($type),
-                default => throw UnresolvableDependencyException::fromIntersectionType(),
+                default => throw ContainerException::fromIntersectionType(),
             };
         }
 
-        throw UnresolvableDependencyException::fromUnresolvableType();
+        throw ContainerException::fromUnresolvableType();
     }
 
     /**
-     * @throws UnresolvableDependencyException
+     * @throws ContainerException
      */
     private function resolveNamedType(
         \ReflectionNamedType $type,
@@ -308,11 +308,11 @@ class Container implements ContainerInterface
             }
         }
 
-        throw UnresolvableDependencyException::fromNamedType($type);
+        throw ContainerException::fromNamedType($type);
     }
 
     /**
-     * @throws UnresolvableDependencyException
+     * @throws ContainerException
      */
     private function resolveUnionType(
         \ReflectionUnionType $unionType,
@@ -326,6 +326,6 @@ class Container implements ContainerInterface
             }
         }
 
-        throw UnresolvableDependencyException::fromUnionType($unionType);
+        throw ContainerException::fromUnionType($unionType);
     }
 }

@@ -21,7 +21,7 @@ interface DependencyResolverInterface
     /**
      * @return TType
      *
-     * @throws UnresolvableDependencyException
+     * @throws ContainerException
      */
     public function resolve(ContainerInterface $container): mixed;
 }
