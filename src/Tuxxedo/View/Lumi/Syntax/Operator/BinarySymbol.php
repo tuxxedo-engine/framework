@@ -43,6 +43,7 @@ enum BinarySymbol implements SymbolInterface, ExpressionSymbolInterface
     case BITWISE_SHIFT_LEFT;
     case BITWISE_SHIFT_RIGHT;
     case NULL_COALESCE;
+    // @todo Confirm whether this belongs in this enum
     case NULL_SAFE_ACCESS;
 
     public static function all(): array
