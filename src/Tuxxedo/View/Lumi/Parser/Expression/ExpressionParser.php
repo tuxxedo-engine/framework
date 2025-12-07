@@ -232,9 +232,7 @@ class ExpressionParser implements ExpressionParserInterface
 
                 $name = $stream->current();
 
-                if (
-                    !$name instanceof IdentifierToken
-                ) {
+                if (!$name instanceof IdentifierToken) {
                     throw ParserException::fromUnexpectedToken(
                         tokenName: $name::name(),
                         line: $name->line,
