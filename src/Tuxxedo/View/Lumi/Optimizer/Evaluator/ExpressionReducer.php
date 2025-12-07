@@ -125,17 +125,15 @@ class ExpressionReducer implements ExpressionReducerInterface
         ScopeInterface $scope,
         UnaryOpNode $node,
     ): ?ExpressionNodeInterface {
-        $reducer = match ($node->operator) {
+        return (match ($node->operator) {
             UnarySymbol::NOT => $this->reduceNot(...),
+            UnarySymbol::NEGATE => $this->reduceNegate(...),
             UnarySymbol::BITWISE_NOT => $this->reduceBitwiseNot(...),
-            default => null,
-        };
-
-        if ($reducer !== null) {
-            return $reducer($scope, $node->operand);
-        }
-
-        return null;
+            UnarySymbol::INCREMENT_PRE => $this->reduceIncrementPre(...),
+            UnarySymbol::INCREMENT_POST => $this->reduceIncrementPost(...),
+            UnarySymbol::DECREMENT_PRE => $this->reduceDecrementPre(...),
+            UnarySymbol::DECREMENT_POST => $this->reduceDecrementPost(...),
+        })($scope, $node->operand);
     }
 
     public function reduceAssignment(
@@ -596,6 +594,15 @@ class ExpressionReducer implements ExpressionReducerInterface
         return null;
     }
 
+    public function reduceNegate(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $expression,
+    ): ?ExpressionNodeInterface {
+        // @todo Implement
+
+        return null;
+    }
+
     public function reduceBitwiseNot(
         ScopeInterface $scope,
         ExpressionNodeInterface $expression,
@@ -605,6 +612,42 @@ class ExpressionReducer implements ExpressionReducerInterface
         if ($expression instanceof LiteralNode) {
             return LiteralNode::createInt(~((int) $this->evaluator->castNodeToValue($expression)));
         }
+
+        return null;
+    }
+
+    public function reduceIncrementPre(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $expression,
+    ): ?ExpressionNodeInterface {
+        // @todo Implement
+
+        return null;
+    }
+
+    public function reduceIncrementPost(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $expression,
+    ): ?ExpressionNodeInterface {
+        // @todo Implement
+
+        return null;
+    }
+
+    public function reduceDecrementPre(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $expression,
+    ): ?ExpressionNodeInterface {
+        // @todo Implement
+
+        return null;
+    }
+
+    public function reduceDecrementPost(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $expression,
+    ): ?ExpressionNodeInterface {
+        // @todo Implement
 
         return null;
     }

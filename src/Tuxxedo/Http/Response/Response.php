@@ -189,7 +189,7 @@ class Response implements ResponseInterface
         HeaderInterface $header,
         bool $replace = false,
     ): static {
-        return clone(
+        return clone (
             $this,
             [
                 'headers' => $replace
@@ -208,7 +208,7 @@ class Response implements ResponseInterface
         array $headers,
         bool $replace = false,
     ): static {
-        return clone(
+        return clone (
             $this,
             [
                 'headers' => $replace
@@ -231,7 +231,7 @@ class Response implements ResponseInterface
             unset($headers[$index]);
         }
 
-        return clone(
+        return clone (
             $this,
             [
                 'headers' => $headers,
@@ -242,7 +242,7 @@ class Response implements ResponseInterface
     public function withResponseCode(
         ResponseCode|int $responseCode,
     ): static {
-        return clone(
+        return clone (
             $this,
             [
                 'responseCode' => $responseCode instanceof ResponseCode
@@ -255,7 +255,7 @@ class Response implements ResponseInterface
     public function withBody(
         string $body,
     ): static {
-        return clone(
+        return clone (
             $this,
             [
                 'body' => $body,

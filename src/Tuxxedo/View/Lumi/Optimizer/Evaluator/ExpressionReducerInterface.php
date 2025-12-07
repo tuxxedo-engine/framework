@@ -173,7 +173,32 @@ interface ExpressionReducerInterface
         ExpressionNodeInterface $expression,
     ): ?ExpressionNodeInterface;
 
+    public function reduceNegate(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $expression,
+    ): ?ExpressionNodeInterface;
+
     public function reduceBitwiseNot(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $expression,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceIncrementPre(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $expression,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceIncrementPost(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $expression,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceDecrementPre(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $expression,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceDecrementPost(
         ScopeInterface $scope,
         ExpressionNodeInterface $expression,
     ): ?ExpressionNodeInterface;

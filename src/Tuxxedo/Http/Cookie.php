@@ -29,7 +29,7 @@ readonly class Cookie implements CookieInterface
     public function withValue(
         string $value,
     ): static {
-        return clone(
+        return clone (
             $this,
             [
                 'value' => $value,
@@ -40,7 +40,7 @@ readonly class Cookie implements CookieInterface
     public function withExpires(
         int $expires,
     ): static {
-        return clone(
+        return clone (
             $this,
             [
                 'expires' => $expires,
@@ -51,7 +51,7 @@ readonly class Cookie implements CookieInterface
     public function withPath(
         string $path,
     ): static {
-        return clone(
+        return clone (
             $this,
             [
                 'path' => $path,
@@ -62,7 +62,7 @@ readonly class Cookie implements CookieInterface
     public function withDomain(
         string $domain,
     ): static {
-        return clone(
+        return clone (
             $this,
             [
                 'domain' => $domain,
@@ -73,7 +73,7 @@ readonly class Cookie implements CookieInterface
     public function withSecure(
         bool $secure,
     ): static {
-        return clone(
+        return clone (
             $this,
             [
                 'secure' => $secure,
@@ -84,7 +84,7 @@ readonly class Cookie implements CookieInterface
     public function withHttpOnly(
         bool $httpOnly,
     ): static {
-        return clone(
+        return clone (
             $this,
             [
                 'httpOnly' => $httpOnly,

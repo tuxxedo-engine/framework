@@ -176,6 +176,8 @@ class ExpressionParser implements ExpressionParserInterface
 
                     $operator = UnarySymbol::from($token);
 
+                    // @todo Fix if INCREMENT_PRE or DECREMENT_PRE then operand must be GroupNode or IdentifierNode
+
                     return new UnaryOpNode(
                         operand: $this->parseExpression($stream, $operator->precedence()),
                         operator: $operator,
@@ -322,6 +324,8 @@ class ExpressionParser implements ExpressionParserInterface
                     $operator === UnarySymbol::DECREMENT_POST
                 ) {
                     $stream->consume();
+
+                    // @todo Fix if INCREMENT_POST or DECREMENT_POST then operand must be GroupNode or IdentifierNode
 
                     return new UnaryOpNode(
                         operand: $left,
