@@ -237,11 +237,13 @@ class Response implements ResponseInterface
     }
 
     public function withResponseCode(
-        ResponseCode $responseCode,
+        ResponseCode|int $responseCode,
     ): static {
         return new static(
             headers: $this->headers,
-            responseCode: $responseCode,
+            responseCode: $responseCode instanceof ResponseCode
+                ? $responseCode
+                : ResponseCode::from($responseCode),
             body: $this->body,
         );
     }

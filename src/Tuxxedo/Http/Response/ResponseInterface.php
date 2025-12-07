@@ -46,7 +46,7 @@ interface ResponseInterface extends ResponseCodeInterface
     ): static;
 
     public function withResponseCode(
-        ResponseCode $responseCode,
+        ResponseCode|int $responseCode,
     ): static;
 
     public function withBody(

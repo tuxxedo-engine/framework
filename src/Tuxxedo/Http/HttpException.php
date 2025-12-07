@@ -24,12 +24,14 @@ class HttpException extends \Exception implements ResponseCodeInterface, Respons
     public readonly ResponseCode $responseCode;
 
     public function __construct(
-        ResponseCode $responseCode,
+        ResponseCode|int $responseCode,
     ) {
-        $this->responseCode = $responseCode;
+        $this->responseCode = $responseCode instanceof ResponseCode
+            ? $responseCode
+            : ResponseCode::from($responseCode);
 
         parent::__construct(
-            message: $responseCode->getStatusText(),
+            message: $this->responseCode->getStatusText(),
         );
     }
 
