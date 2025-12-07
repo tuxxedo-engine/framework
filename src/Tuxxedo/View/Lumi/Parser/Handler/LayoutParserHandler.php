@@ -24,7 +24,6 @@ use Tuxxedo\View\Lumi\Syntax\Token\EndBlockToken;
 use Tuxxedo\View\Lumi\Syntax\Token\LayoutToken;
 use Tuxxedo\View\Lumi\Syntax\Token\TextToken;
 
-// @todo Check scope depth
 class LayoutParserHandler implements ParserHandlerInterface
 {
     public private(set) string $tokenClassName = LayoutToken::class;
@@ -37,6 +36,12 @@ class LayoutParserHandler implements ParserHandlerInterface
         TokenStreamInterface $stream,
     ): array {
         $layout = $stream->expect(LayoutToken::class);
+
+        if (\sizeof($parser->state->stateStack) !== 1) {
+            throw ParserException::fromLayoutModeMustBeRoot(
+                line: $layout->line,
+            );
+        }
 
         $total = \sizeof($stream->tokens);
         $inBlock = false;

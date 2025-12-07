@@ -206,6 +206,17 @@ class ParserException extends LumiException
         );
     }
 
+    public static function fromLayoutModeMustBeRoot(
+        int $line,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'The layout rule must be in the root scope on line %d',
+                $line,
+            ),
+        );
+    }
+
     public static function fromBlockTokensCannotBeNested(
         int $line,
     ): self {

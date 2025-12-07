@@ -73,7 +73,7 @@ class DceOptimizer extends AbstractOptimizer
             $node instanceof ForNode => [
                 parent::optimizeForBody($node),
             ],
-            $node instanceof TextNode => $this->optimizeText($stream, $node),
+            $node instanceof TextNode => parent::optimizeText($stream, $node),
             $node instanceof WhileNode => $this->optimizeWhile($node),
             default => [
                 $node,
@@ -203,23 +203,6 @@ class DceOptimizer extends AbstractOptimizer
         return [
             $node,
         ];
-    }
-
-    /**
-     * @return TextNode[]
-     */
-    protected function optimizeText(
-        NodeStreamInterface $stream,
-        TextNode $node,
-    ): array {
-        if (
-            $this->layoutMode &&
-            \sizeof($this->scopeStack) === 0
-        ) {
-            return [];
-        }
-
-        return parent::optimizeText($stream, $node);
     }
 
     /**
