@@ -17,10 +17,11 @@ use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
+use Tuxxedo\Router\Attribute\Controller;
 use Tuxxedo\Router\Attribute\Route;
 use Tuxxedo\Session\SessionInterface;
 
-#[\Tuxxedo\Router\Attribute\Controller(uri: '/session/')]
+#[Controller(uri: '/session/')]
 readonly class SessionController
 {
     public function __construct(
@@ -71,7 +72,7 @@ readonly class SessionController
     }
 
     #[Route\Post]
-    public function reset(RequestInterface $request): ResponseInterface
+    public function reset(): ResponseInterface
     {
         $this->session->adapter->unset();
 

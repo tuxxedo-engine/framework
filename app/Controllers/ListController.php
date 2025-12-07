@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use Tuxxedo\Container\Resolver\App;
-use Tuxxedo\Http\Kernel\Kernel;
+use Tuxxedo\Http\Kernel\KernelInterface;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\Attribute\Controller;
@@ -28,7 +28,7 @@ readonly class ListController
     private RouterInterface $router;
 
     public function __construct(
-        #[App] Kernel $app,
+        #[App] KernelInterface $app,
     ) {
         $this->router = $app->router;
     }

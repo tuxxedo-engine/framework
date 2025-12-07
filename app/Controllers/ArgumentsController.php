@@ -23,48 +23,54 @@ use Tuxxedo\Router\Attribute\Route;
 readonly class ArgumentsController
 {
     #[Route\Get(uri: 'optional/{?name}')]
-    public function show1(#[Argument(label: 'name')] bool $value = false): ResponseInterface
-    {
+    public function show1(
+        #[Argument(label: 'name')] bool $value = false,
+    ): ResponseInterface {
         return Response::capture(
             callback: static fn () => \var_dump($value),
         );
     }
 
     #[Route\Get(uri: 'name/{name}')]
-    public function show2(#[Argument(label: 'name')] string $value): ResponseInterface
-    {
+    public function show2(
+        #[Argument(label: 'name')] string $value,
+    ): ResponseInterface {
         return Response::capture(
             callback: static fn () => \var_dump($value),
         );
     }
 
     #[Route\Get(uri: 'regex/{name:\d+}')]
-    public function show3(#[Argument(label: 'name')] int $value): ResponseInterface
-    {
+    public function show3(
+        #[Argument(label: 'name')] int $value,
+    ): ResponseInterface {
         return Response::capture(
             callback: static fn () => \var_dump($value),
         );
     }
 
     #[Route\Get(uri: 'regex-optional/{?name:\d+}')]
-    public function show4(#[Argument(label: 'name')] ?int $value = null): ResponseInterface
-    {
+    public function show4(
+        #[Argument(label: 'name')] ?int $value = null,
+    ): ResponseInterface {
         return Response::capture(
             callback: static fn () => \var_dump($value),
         );
     }
 
     #[Route\Get(uri: 'explicit/{name<uuid>}')]
-    public function show5(#[Argument(label: 'name')] string $uuid): ResponseInterface
-    {
+    public function show5(
+        #[Argument(label: 'name')] string $uuid,
+    ): ResponseInterface {
         return Response::capture(
             callback: static fn () => \var_dump($uuid),
         );
     }
 
     #[Route\Get(uri: 'explicit-optional/{?name<uuid>}')]
-    public function show6(#[Argument(label: 'name')] ?string $uuid = null): ResponseInterface
-    {
+    public function show6(
+        #[Argument(label: 'name')] ?string $uuid = null,
+    ): ResponseInterface {
         return Response::capture(
             callback: static fn () => \var_dump($uuid),
         );

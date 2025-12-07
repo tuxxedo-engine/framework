@@ -254,7 +254,7 @@ readonly class TestController
 
     #[Route\Get(uri: '/phpinfo.php')]
     #[Middleware(OutputCaptureMiddleware::class)]
-    public function phpInfo(RequestInterface $request): ResponseInterface
+    public function phpInfo(): ResponseInterface
     {
         \phpinfo();
 
@@ -262,29 +262,22 @@ readonly class TestController
     }
 
     #[Route\Get(uri: '/redirect')]
-    public function redirect(RequestInterface $request): ResponseInterface
+    public function redirect(): ResponseInterface
     {
         return Response::redirect('/');
     }
 
     #[Route\Get(uri: '/version')]
-    public function version(RequestInterface $request): ResponseInterface
+    public function version(): ResponseInterface
     {
         $versionInfo = [];
         $reflector = new \ReflectionClass(Version::class);
-        $displayName = static fn (string $name): string => \str_replace(
-            ' ',
-            '',
-            \lcfirst(
-                \ucwords(
-                    \str_replace(
-                        '_',
-                        ' ',
-                        \strtolower($name),
-                    ),
-                ),
-            ),
-        );
+        $displayName = static fn (string $name): string => $name
+                |> \strtolower(...)
+                |> (static fn (string $name): string => \str_replace('_', ' ', $name))
+                |> \ucwords(...)
+                |> \lcfirst(...)
+                |> (static fn (string $name): string => \str_replace(' ', '', $name));
 
         foreach ($reflector->getConstants() as $name => $value) {
             $versionInfo[$displayName($name)] = $value;
