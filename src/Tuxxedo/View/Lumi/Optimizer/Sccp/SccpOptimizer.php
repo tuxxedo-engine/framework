@@ -33,7 +33,6 @@ use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
-use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
 class SccpOptimizer extends AbstractOptimizer
@@ -75,7 +74,7 @@ class SccpOptimizer extends AbstractOptimizer
             $node instanceof EchoNode => $this->optimizeEcho($stream, $node),
             $node instanceof GroupNode => $this->optimizeGroup($stream, $node),
             $node instanceof TextNode => parent::optimizeText($stream, $node),
-            $node instanceof UnaryOpNode => $this->optimizeUnaryOp($stream, $node),
+            $node instanceof UnaryOpNode => $this->optimizeUnaryOp($node),
             default => [
                 $node,
             ],
@@ -265,48 +264,10 @@ class SccpOptimizer extends AbstractOptimizer
      * @return array{0: ExpressionNodeInterface}
      */
     private function optimizeUnaryOp(
-        NodeStreamInterface $stream,
         UnaryOpNode $node,
     ): array {
-        $operand = $this->optimizeNode($stream, $node->operand);
-
-        if (
-            \sizeof($operand) !== 1 ||
-            !$operand[0] instanceof ExpressionNodeInterface
-        ) {
-            return [
-                $node,
-            ];
-        }
-
-        if (!$operand[0] instanceof LiteralNode) {
-            if ($node->operand !== $operand[0]) {
-                return [
-                    new UnaryOpNode(
-                        operand: $operand[0],
-                        operator: $node->operator,
-                    ),
-                ];
-            }
-
-            return [
-                $node,
-            ];
-        }
-
-        // @todo Move to evaluator
-        if ($node->operator === UnarySymbol::NOT) {
-            return [
-                LiteralNode::createBool(!\boolval($this->evaluator->castNodeToValue($operand[0]))),
-            ];
-        } elseif ($node->operator === UnarySymbol::BITWISE_NOT) {
-            return [
-                LiteralNode::createInt(~((int) $this->evaluator->castNodeToValue($operand[0]))),
-            ];
-        }
-
         return [
-            $node,
+            $this->evaluator->unaryOp($this->scope, $node) ?? $node,
         ];
     }
 

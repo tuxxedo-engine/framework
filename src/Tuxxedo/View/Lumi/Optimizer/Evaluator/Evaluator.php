@@ -21,6 +21,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
+use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
 class Evaluator implements EvaluatorInterface
@@ -311,6 +312,10 @@ class Evaluator implements EvaluatorInterface
             return $this->binaryOp($scope, $node);
         }
 
+        if ($node instanceof UnaryOpNode) {
+            return $this->unaryOp($scope, $node);
+        }
+
         if ($node instanceof AssignmentNode) {
             return $this->assignment($scope, $node);
         }
@@ -323,6 +328,13 @@ class Evaluator implements EvaluatorInterface
         BinaryOpNode $node,
     ): ?ExpressionNodeInterface {
         return $this->expressionReducer->reduceBinaryOp($scope, $node);
+    }
+
+    public function unaryOp(
+        ScopeInterface $scope,
+        UnaryOpNode $node,
+    ): ?ExpressionNodeInterface {
+        return $this->expressionReducer->reduceUnaryOp($scope, $node);
     }
 
     public function assignment(

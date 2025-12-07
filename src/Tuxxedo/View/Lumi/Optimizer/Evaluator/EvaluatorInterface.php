@@ -20,9 +20,9 @@ use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
+use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
-// @todo Support UnaryOpNode
 interface EvaluatorInterface
 {
     public function castValue(
@@ -106,6 +106,11 @@ interface EvaluatorInterface
     public function binaryOp(
         ScopeInterface $scope,
         BinaryOpNode $node,
+    ): ?ExpressionNodeInterface;
+
+    public function unaryOp(
+        ScopeInterface $scope,
+        UnaryOpNode $node,
     ): ?ExpressionNodeInterface;
 
     public function assignment(

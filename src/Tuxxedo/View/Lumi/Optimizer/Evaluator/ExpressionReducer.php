@@ -19,8 +19,10 @@ use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
+use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
+use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
 class ExpressionReducer implements ExpressionReducerInterface
@@ -114,6 +116,23 @@ class ExpressionReducer implements ExpressionReducerInterface
 
         if ($reducer !== null) {
             return $reducer($scope, $node->left, $node->right);
+        }
+
+        return null;
+    }
+
+    public function reduceUnaryOp(
+        ScopeInterface $scope,
+        UnaryOpNode $node,
+    ): ?ExpressionNodeInterface {
+        $reducer = match ($node->operator) {
+            UnarySymbol::NOT => $this->reduceNot(...),
+            UnarySymbol::BITWISE_NOT => $this->reduceBitwiseNot(...),
+            default => null,
+        };
+
+        if ($reducer !== null) {
+            return $reducer($scope, $node->operand);
         }
 
         return null;
@@ -559,6 +578,32 @@ class ExpressionReducer implements ExpressionReducerInterface
             $left->type === Type::NULL
         ) {
             return $right;
+        }
+
+        return null;
+    }
+
+    public function reduceNot(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $expression,
+    ): ?ExpressionNodeInterface {
+        $expression = $this->resolve($scope, $expression);
+
+        if ($expression instanceof LiteralNode) {
+            return LiteralNode::createBool(!\boolval($this->evaluator->castNodeToValue($expression)));
+        }
+
+        return null;
+    }
+
+    public function reduceBitwiseNot(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $expression,
+    ): ?ExpressionNodeInterface {
+        $expression = $this->resolve($scope, $expression);
+
+        if ($expression instanceof LiteralNode) {
+            return LiteralNode::createInt(~((int) $this->evaluator->castNodeToValue($expression)));
         }
 
         return null;

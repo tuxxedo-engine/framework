@@ -17,13 +17,18 @@ use Tuxxedo\View\Lumi\Optimizer\Scope\ScopeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 
-// @todo Support UnaryOpNode
 interface ExpressionReducerInterface
 {
     public function reduceBinaryOp(
         ScopeInterface $scope,
         BinaryOpNode $node,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceUnaryOp(
+        ScopeInterface $scope,
+        UnaryOpNode $node,
     ): ?ExpressionNodeInterface;
 
     public function reduceAssignment(
@@ -161,5 +166,15 @@ interface ExpressionReducerInterface
         ScopeInterface $scope,
         ExpressionNodeInterface $left,
         ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceNot(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $expression,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceBitwiseNot(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $expression,
     ): ?ExpressionNodeInterface;
 }
