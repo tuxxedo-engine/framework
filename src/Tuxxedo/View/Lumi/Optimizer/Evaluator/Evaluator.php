@@ -74,6 +74,31 @@ class Evaluator implements EvaluatorInterface
         return $this->castValue($node->type, $node->operand);
     }
 
+    public function castNodeToNumeric(
+        LiteralNode $node,
+    ): int|float|null {
+        $local = $this->castNodeToValue($node);
+
+        if (\is_string($local)) {
+            if (!\is_numeric($local)) {
+                return null;
+            }
+
+            if (\str_contains($local, '.')) {
+                return \floatval($local);
+            }
+
+            return \intval($local);
+        } elseif (
+            !\is_int($local) &&
+            !\is_float($local)
+        ) {
+            return \intval($local);
+        }
+
+        return $local;
+    }
+
     public function toString(
         LiteralNode $node,
     ): string {

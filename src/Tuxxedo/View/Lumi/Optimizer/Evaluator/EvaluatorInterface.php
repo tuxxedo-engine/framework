@@ -39,6 +39,10 @@ interface EvaluatorInterface
         LiteralNode $node,
     ): string|int|float|bool|null;
 
+    public function castNodeToNumeric(
+        LiteralNode $node,
+    ): int|float|null;
+
     public function toString(
         LiteralNode $node,
     ): string;

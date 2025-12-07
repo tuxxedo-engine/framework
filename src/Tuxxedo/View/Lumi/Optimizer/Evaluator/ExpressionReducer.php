@@ -58,24 +58,10 @@ class ExpressionReducer implements ExpressionReducerInterface
             }
         }
 
-        // @todo Migrate this to Evaluator
-        $local = $this->evaluator->castNodeToValue($node);
+        $local = $this->evaluator->castNodeToNumeric($node);
 
-        if (\is_string($local)) {
-            if (!\is_numeric($local)) {
-                return false;
-            }
-
-            if (\str_contains($local, '.')) {
-                $local = \floatval($local);
-            } else {
-                $local = \intval($local);
-            }
-        } elseif (
-            !\is_int($local) &&
-            !\is_float($local)
-        ) {
-            $local = \intval($local);
+        if ($local === null) {
+            return false;
         }
 
         $value = $local;
