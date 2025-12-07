@@ -1,4 +1,4 @@
 @ECHO OFF
 CD ../
-CALL composer84 update
+CALL composer85 update
 CD .dev/

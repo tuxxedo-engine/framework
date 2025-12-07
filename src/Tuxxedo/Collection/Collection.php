@@ -82,7 +82,9 @@ class Collection implements CollectionInterface
 
     public function offsetSet(mixed $offset, mixed $value): void
     {
-        $this->collection[$offset] = $value;
+        if ($offset !== null) {
+            $this->collection[$offset] = $value;
+        }
     }
 
     public function offsetUnset(mixed $offset): void

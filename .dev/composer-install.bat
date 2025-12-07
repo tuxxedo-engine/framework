@@ -1,4 +1,4 @@
 @ECHO OFF
 CD ../
-CALL composer84 install
+CALL composer85 install
 CD .dev/
