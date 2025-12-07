@@ -29,84 +29,66 @@ readonly class Cookie implements CookieInterface
     public function withValue(
         string $value,
     ): static {
-        return new static(
-            name: $this->name,
-            value: $value,
-            expires: $this->expires,
-            path: $this->path,
-            domain: $this->domain,
-            secure: $this->secure,
-            httpOnly: $this->httpOnly,
+        return clone(
+            $this,
+            [
+                'value' => $value,
+            ],
         );
     }
 
     public function withExpires(
         int $expires,
     ): static {
-        return new static(
-            name: $this->name,
-            value: $this->value,
-            expires: $expires,
-            path: $this->path,
-            domain: $this->domain,
-            secure: $this->secure,
-            httpOnly: $this->httpOnly,
+        return clone(
+            $this,
+            [
+                'expires' => $expires,
+            ],
         );
     }
 
     public function withPath(
         string $path,
     ): static {
-        return new static(
-            name: $this->name,
-            value: $this->value,
-            expires: $this->expires,
-            path: $path,
-            domain: $this->domain,
-            secure: $this->secure,
-            httpOnly: $this->httpOnly,
+        return clone(
+            $this,
+            [
+                'path' => $path,
+            ],
         );
     }
 
     public function withDomain(
         string $domain,
     ): static {
-        return new static(
-            name: $this->name,
-            value: $this->value,
-            expires: $this->expires,
-            path: $this->path,
-            domain: $domain,
-            secure: $this->secure,
-            httpOnly: $this->httpOnly,
+        return clone(
+            $this,
+            [
+                'domain' => $domain,
+            ],
         );
     }
 
     public function withSecure(
         bool $secure,
     ): static {
-        return new static(
-            name: $this->name,
-            value: $this->value,
-            expires: $this->expires,
-            path: $this->path,
-            domain: $this->domain,
-            secure: $secure,
-            httpOnly: $this->httpOnly,
+        return clone(
+            $this,
+            [
+                'secure' => $secure,
+            ],
         );
     }
 
     public function withHttpOnly(
         bool $httpOnly,
     ): static {
-        return new static(
-            name: $this->name,
-            value: $this->value,
-            expires: $this->expires,
-            path: $this->path,
-            domain: $this->domain,
-            secure: $this->secure,
-            httpOnly: $httpOnly,
+        return clone(
+            $this,
+            [
+                'httpOnly' => $httpOnly,
+            ],
         );
     }
 }

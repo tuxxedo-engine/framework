@@ -189,17 +189,18 @@ class Response implements ResponseInterface
         HeaderInterface $header,
         bool $replace = false,
     ): static {
-        return new static(
-            headers: $replace
-                ? $this->getReplacementHeaders($header)
-                : \array_merge(
-                    $this->headers,
-                    [
-                        $header,
-                    ],
-                ),
-            responseCode: $this->responseCode,
-            body: $this->body,
+        return clone(
+            $this,
+            [
+                'headers' => $replace
+                    ? $this->getReplacementHeaders($header)
+                    : \array_merge(
+                        $this->headers,
+                        [
+                            $header,
+                        ],
+                    ),
+            ],
         );
     }
 
@@ -207,15 +208,16 @@ class Response implements ResponseInterface
         array $headers,
         bool $replace = false,
     ): static {
-        return new static(
-            headers: $replace
-                ? $this->getReplacementHeaders(...$headers)
-                : \array_merge(
-                    $this->headers,
-                    $headers,
-                ),
-            responseCode: $this->responseCode,
-            body: $this->body,
+        return clone(
+            $this,
+            [
+                'headers' => $replace
+                    ? $this->getReplacementHeaders(...$headers)
+                    : \array_merge(
+                        $this->headers,
+                        $headers,
+                    ),
+            ],
         );
     }
 
@@ -229,32 +231,35 @@ class Response implements ResponseInterface
             unset($headers[$index]);
         }
 
-        return new static(
-            headers: $headers,
-            responseCode: $this->responseCode,
-            body: $this->body,
+        return clone(
+            $this,
+            [
+                'headers' => $headers,
+            ],
         );
     }
 
     public function withResponseCode(
         ResponseCode|int $responseCode,
     ): static {
-        return new static(
-            headers: $this->headers,
-            responseCode: $responseCode instanceof ResponseCode
-                ? $responseCode
-                : ResponseCode::from($responseCode),
-            body: $this->body,
+        return clone(
+            $this,
+            [
+                'responseCode' => $responseCode instanceof ResponseCode
+                    ? $responseCode
+                    : ResponseCode::from($responseCode),
+            ],
         );
     }
 
     public function withBody(
         string $body,
     ): static {
-        return new static(
-            headers: $this->headers,
-            responseCode: $this->responseCode,
-            body: $body,
+        return clone(
+            $this,
+            [
+                'body' => $body,
+            ],
         );
     }
 }

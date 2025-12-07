@@ -24,9 +24,11 @@ readonly class Header implements HeaderInterface
     public function withValue(
         string $value,
     ): static {
-        return new static(
-            name: $this->name,
-            value: $value,
+        return clone(
+            $this,
+            [
+                'value' => $value,
+            ],
         );
     }
 }
