@@ -46,10 +46,11 @@ abstract class AbstractOptimizer implements OptimizerInterface
      */
     protected private(set) array $scopeStack = [];
 
-    public function __construct()
-    {
+    public function __construct(
+        ?EvaluatorInterface $evaluator = null,
+    ) {
         $this->directives = CompilerDirectives::createWithDefaults();
-        $this->evaluator = new Evaluator();
+        $this->evaluator = $evaluator ?? new Evaluator();
         $this->scope = new Scope(
             evaluator: $this->evaluator,
         );
