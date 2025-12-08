@@ -18,10 +18,7 @@ use Tuxxedo\Escaper\EscaperInterface;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 
 // @todo Explicit raw filter?
-// @todo Support mb_strlen() for length?
-// @todo Json and JsonPretty
-// @todo Css?
-// @todo HtmlComment?
+// @todo Ideally it would be nice to support arguments for filters, effectively making it a pipe operator
 readonly class DefaultFilters implements FilterProviderInterface
 {
     private EscaperInterface $escaper;
@@ -110,7 +107,7 @@ readonly class DefaultFilters implements FilterProviderInterface
     ): string {
         /** @var string $value */
 
-        return \nl2br($value);
+        return \nl2br($value, false);
     }
 
     private function slugifyImplementation(
@@ -161,9 +158,49 @@ readonly class DefaultFilters implements FilterProviderInterface
         mixed $value,
         DirectivesInterface $directives,
     ): int {
-        /** @var array<mixed> $value */
+        if (\is_array($value)) {
+            return \sizeof($value);
+        }
 
-        return \sizeof($value);
+        /** @var string $value */
+
+        return \mb_strlen(\strval($value));
+    }
+
+    private function jsonImplementation(
+        mixed $value,
+        DirectivesInterface $directives,
+    ): string {
+        /** @var string $value */
+
+        return \json_encode($value, \JSON_THROW_ON_ERROR);
+    }
+
+    private function jsonPrettyImplementation(
+        mixed $value,
+        DirectivesInterface $directives,
+    ): string {
+        /** @var string $value */
+
+        return \json_encode($value, \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT);
+    }
+
+    private function escapeCssImplementation(
+        mixed $value,
+        DirectivesInterface $directives,
+    ): string {
+        /** @var string $value */
+
+        return $this->escaper->css(\strval($value));
+    }
+
+    private function escapeHtmlCommentImplementation(
+        mixed $value,
+        DirectivesInterface $directives,
+    ): string {
+        /** @var string $value */
+
+        return $this->escaper->htmlComment(\strval($value));
     }
 
     public function export(): \Generator
@@ -246,6 +283,26 @@ readonly class DefaultFilters implements FilterProviderInterface
         yield [
             'length',
             $this->lengthImplementation(...),
+        ];
+
+        yield [
+            'json',
+            $this->jsonImplementation(...),
+        ];
+
+        yield [
+            'json_pretty',
+            $this->jsonPrettyImplementation(...),
+        ];
+
+        yield [
+            'escape_css',
+            $this->escapeCssImplementation(...),
+        ];
+
+        yield [
+            'escape_html_comment',
+            $this->escapeHtmlCommentImplementation(...),
         ];
     }
 }

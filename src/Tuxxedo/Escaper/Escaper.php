@@ -21,6 +21,22 @@ class Escaper implements EscaperInterface
         return \htmlentities($input);
     }
 
+    public function htmlComment(
+        string $input,
+    ): string {
+        $input = $input
+                |> (static fn (string $input): string => \str_replace(["\r\n", "\r"], "\n", $input))
+                |> (static fn (string $input): string => \str_replace('--', '- -', $input));
+
+        $length = \strlen($input);
+
+        if ($length > 0 && $input[$length - 1] === '-') {
+            $input .= ' ';
+        }
+
+        return $input;
+    }
+
     public function attribute(
         string $input,
     ): string {
@@ -37,5 +53,29 @@ class Escaper implements EscaperInterface
         string $input,
     ): string {
         return \rawurlencode($input);
+    }
+
+    public function css(
+        string $input,
+    ): string {
+        $length = \strlen($input);
+        $result = '';
+
+        for ($i = 0; $i < $length; $i++) {
+            $char = $input[$i];
+            $ord = \ord($char);
+
+            $isDigit = $ord >= 48 && $ord <= 57;
+            $isUpper = $ord >= 65 && $ord <= 90;
+            $isLower = $ord >= 97 && $ord <= 122;
+
+            if ($isDigit || $isUpper || $isLower) {
+                $result .= $char;
+            } else {
+                $result .= '\\' . \strtoupper(\dechex($ord)) . ' ';
+            }
+        }
+
+        return $result;
     }
 }

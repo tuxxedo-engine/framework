@@ -19,6 +19,10 @@ interface EscaperInterface
         string $input,
     ): string;
 
+    public function htmlComment(
+        string $input,
+    ): string;
+
     public function attribute(
         string $input,
     ): string;
@@ -28,6 +32,10 @@ interface EscaperInterface
     ): string;
 
     public function url(
+        string $input,
+    ): string;
+
+    public function css(
         string $input,
     ): string;
 }
