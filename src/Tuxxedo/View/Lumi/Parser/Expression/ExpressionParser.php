@@ -175,11 +175,21 @@ class ExpressionParser implements ExpressionParserInterface
                     $stream->consume();
 
                     $operator = UnarySymbol::from($token);
+                    $expr = $this->parseExpression($stream, $operator->precedence());
 
-                    // @todo Fix if INCREMENT_PRE or DECREMENT_PRE then operand must be GroupNode or IdentifierNode
+                    if (
+                        $operator === UnarySymbol::INCREMENT_PRE ||
+                        $operator === UnarySymbol::DECREMENT_PRE
+                    ) {
+                        $this->expectMutableUnaryOperand(
+                            operand: $expr,
+                            operator: $operator,
+                            line: $token->line,
+                        );
+                    }
 
                     return new UnaryOpNode(
-                        operand: $this->parseExpression($stream, $operator->precedence()),
+                        operand: $expr,
                         operator: $operator,
                     );
                 }
@@ -325,7 +335,11 @@ class ExpressionParser implements ExpressionParserInterface
                 ) {
                     $stream->consume();
 
-                    // @todo Fix if INCREMENT_POST or DECREMENT_POST then operand must be GroupNode or IdentifierNode
+                    $this->expectMutableUnaryOperand(
+                        operand: $left,
+                        operator: $operator,
+                        line: $token->line,
+                    );
 
                     return new UnaryOpNode(
                         operand: $left,
@@ -547,5 +561,29 @@ class ExpressionParser implements ExpressionParserInterface
         }
 
         $stream->consume();
+    }
+
+    /**
+     * @throws ParserException
+     */
+    private function expectMutableUnaryOperand(
+        ExpressionNodeInterface $operand,
+        UnarySymbol $operator,
+        int $line,
+    ): void {
+        while ($operand instanceof GroupNode) {
+            $operand = $operand->operand;
+        }
+
+        if (
+            !$operand instanceof IdentifierNode &&
+            !$operand instanceof PropertyAccessNode &&
+            !$operand instanceof ArrayAccessNode
+        ) {
+            throw ParserException::fromInvalidUnaryMutation(
+                operator: $operator,
+                line: $line,
+            );
+        }
     }
 }

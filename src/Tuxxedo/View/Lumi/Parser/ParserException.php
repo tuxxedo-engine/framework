@@ -15,6 +15,7 @@ namespace Tuxxedo\View\Lumi\Parser;
 
 use Tuxxedo\View\Lumi\LumiException;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 
 class ParserException extends LumiException
 {
@@ -46,13 +47,6 @@ class ParserException extends LumiException
                 \join('", "', $expectedTokenNames),
                 $line,
             ),
-        );
-    }
-
-    public static function fromTokenStreamEof(): self
-    {
-        return new self(
-            message: 'Token stream has reached the end of stream unexpectedly',
         );
     }
 
@@ -246,6 +240,19 @@ class ParserException extends LumiException
             message: \sprintf(
                 'Cannot highlight source, unknown node encountered: %s',
                 $node::class,
+            ),
+        );
+    }
+
+    public static function fromInvalidUnaryMutation(
+        UnarySymbol $operator,
+        int $line,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid unary expression for "%s" encountered on line %d',
+                $operator->symbol(),
+                $line,
             ),
         );
     }
