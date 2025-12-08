@@ -29,6 +29,7 @@ use Tuxxedo\Http\Response\ResponseEmitter;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Response\ResponseExceptionInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
+use Tuxxedo\Router\DispatchableRouteInterface;
 use Tuxxedo\Router\RouterInterface;
 
 class Kernel implements KernelInterface
@@ -39,6 +40,7 @@ class Kernel implements KernelInterface
     public private(set) array $middleware = [];
 
     public private(set) ResponseEmitterInterface $emitter;
+    public private(set) DispatcherInterface $dispatcher;
     public private(set) RouterInterface $router;
 
     public private(set) array $exceptionHandlers = [];
@@ -59,6 +61,7 @@ class Kernel implements KernelInterface
         $this->container->bind($this->container);
 
         $this->emitter = new ResponseEmitter();
+        $this->dispatcher = new Dispatcher();
     }
 
     public function serviceProvider(
@@ -77,6 +80,14 @@ class Kernel implements KernelInterface
         ResponseEmitterInterface $emitter,
     ): static {
         $this->emitter = $emitter;
+
+        return $this;
+    }
+
+    public function dispatcher(
+        DispatcherInterface $dispatcher,
+    ): static {
+        $this->dispatcher = $dispatcher;
 
         return $this;
     }
@@ -183,53 +194,13 @@ class Kernel implements KernelInterface
 
             $this->emitter->emit(
                 response: $this->pipeline(
-                    resolver: static function (ContainerInterface $container) use ($dispatchableRoute, $request): ResponseInterface {
-                        $callback = [
-                            $container->resolve($dispatchableRoute->route->controller),
-                            $dispatchableRoute->route->action,
-                        ];
-
-                        if (!\is_callable($callback)) {
-                            throw HttpException::fromInternalServerError();
-                        }
-
-                        $arguments = [];
-
-                        if (\sizeof($dispatchableRoute->arguments) > 0) {
-                            if ($dispatchableRoute->route->requestArgumentName !== null) {
-                                $arguments[$dispatchableRoute->route->requestArgumentName] = $request;
-                            }
-
-                            foreach ($dispatchableRoute->route->arguments as $argument) {
-                                $arguments[$argument->mappedName ?? $argument->node->name] = $argument->getValue(
-                                    matches: $dispatchableRoute->arguments,
-                                );
-                            }
-                        } else {
-                            $arguments[] = $request;
-                        }
-
-                        $response = \call_user_func(
-                            $callback,
-                            ...$arguments,
-                        );
-
-                        if ($response instanceof ResponsableInterface) {
-                            $response = $response->toResponse($container);
-                        }
-
-                        if (!$response instanceof ResponseInterface) {
-                            throw HttpException::fromInternalServerError();
-                        }
-
-                        return $response;
-                    },
                     middlewares: \array_reverse(
                         \array_merge(
                             $this->middleware,
                             $dispatchableRoute->route->middleware,
                         ),
                     ),
+                    dispatchableRoute: $dispatchableRoute,
                     request: $request,
                 ),
             );
@@ -239,20 +210,17 @@ class Kernel implements KernelInterface
     }
 
     /**
-     * @param (\Closure(ContainerInterface): ResponseInterface) $resolver
      * @param array<(\Closure(): MiddlewareInterface)> $middlewares
      */
     private function pipeline(
-        \Closure $resolver,
         array $middlewares,
+        DispatchableRouteInterface $dispatchableRoute,
         RequestInterface $request,
     ): ResponseInterface {
-        $next = new class ($resolver, $this->container) implements MiddlewareInterface {
-            /**
-             * @param (\Closure(ContainerInterface): ResponseInterface) $resolver
-             */
+        $next = new readonly class ($dispatchableRoute, $this->dispatcher, $this->container) implements MiddlewareInterface {
             public function __construct(
-                private \Closure $resolver,
+                private DispatchableRouteInterface $dispatchableRoute,
+                private DispatcherInterface $dispatcher,
                 private ContainerInterface $container,
             ) {
             }
@@ -261,7 +229,11 @@ class Kernel implements KernelInterface
                 RequestInterface $request,
                 MiddlewareInterface $next,
             ): ResponseInterface {
-                return ($this->resolver)($this->container);
+                return $this->dispatcher->dispatch(
+                    container: $this->container,
+                    dispatchableRoute: $this->dispatchableRoute,
+                    request: $request,
+                );
             }
         };
 

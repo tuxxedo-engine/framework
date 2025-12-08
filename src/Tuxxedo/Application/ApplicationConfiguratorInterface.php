@@ -16,6 +16,7 @@ namespace Tuxxedo\Application;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Env\EnvLoaderInterface;
+use Tuxxedo\Http\Kernel\DispatcherInterface;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
 use Tuxxedo\Http\Kernel\KernelInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
@@ -73,6 +74,10 @@ interface ApplicationConfiguratorInterface
     }
 
     public ?ResponseEmitterInterface $emitter {
+        get;
+    }
+
+    public ?DispatcherInterface $dispatcher {
         get;
     }
 
@@ -138,6 +143,12 @@ interface ApplicationConfiguratorInterface
 
     public function withEmitter(
         ResponseEmitterInterface $emitter,
+    ): self;
+
+    public function withDefaultDispatcher(): self;
+
+    public function withDispatcher(
+        DispatcherInterface $dispatcher,
     ): self;
 
     public function withoutMiddleware(): self;

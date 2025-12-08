@@ -21,6 +21,7 @@ use Tuxxedo\Env\Env;
 use Tuxxedo\Env\EnvInterface;
 use Tuxxedo\Env\EnvLoaderInterface;
 use Tuxxedo\Env\GetEnvLoader;
+use Tuxxedo\Http\Kernel\DispatcherInterface;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
 use Tuxxedo\Http\Kernel\Kernel;
 use Tuxxedo\Http\Kernel\KernelInterface;
@@ -41,6 +42,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
     public private(set) bool $registerPhpErrorHandler = true;
     public private(set) ?RouterInterface $router = null;
     public private(set) ?ResponseEmitterInterface $emitter = null;
+    public private(set) ?DispatcherInterface $dispatcher = null;
     public private(set) ?EnvLoaderInterface $envLoader = null;
 
     public private(set) array $middleware = [];
@@ -161,6 +163,21 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         ResponseEmitterInterface $emitter,
     ): self {
         $this->emitter = $emitter;
+
+        return $this;
+    }
+
+    public function withDefaultDispatcher(): self
+    {
+        $this->dispatcher = null;
+
+        return $this;
+    }
+
+    public function withDispatcher(
+        DispatcherInterface $dispatcher,
+    ): self {
+        $this->dispatcher = $dispatcher;
 
         return $this;
     }
@@ -310,6 +327,13 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
             $this->emitter !== $kernel->emitter
         ) {
             $kernel->emitter($this->emitter);
+        }
+
+        if (
+            $this->dispatcher !== null &&
+            $this->dispatcher !== $kernel->dispatcher
+        ) {
+            $kernel->dispatcher($this->dispatcher);
         }
 
         if (\sizeof($this->middleware) > 0) {

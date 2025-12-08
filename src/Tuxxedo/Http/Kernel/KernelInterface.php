@@ -50,6 +50,10 @@ interface KernelInterface
         get;
     }
 
+    public DispatcherInterface $dispatcher {
+        get;
+    }
+
     public RouterInterface $router {
         get;
     }
@@ -82,6 +86,10 @@ interface KernelInterface
 
     public function emitter(
         ResponseEmitterInterface $emitter,
+    ): static;
+
+    public function dispatcher(
+        DispatcherInterface $dispatcher,
     ): static;
 
     public function router(
