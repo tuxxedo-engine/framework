@@ -39,10 +39,6 @@ enum UnarySymbol implements SymbolInterface, ExpressionSymbolInterface
         TokenInterface $token,
         bool $post = false,
     ): bool {
-        if ($token instanceof OperatorToken) {
-            return false;
-        }
-
         if ($post) {
             return $token->op1 === self::INCREMENT_POST->symbol() || $token->op1 === self::DECREMENT_POST->symbol();
         }

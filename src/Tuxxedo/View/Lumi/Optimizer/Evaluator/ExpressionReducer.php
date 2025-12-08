@@ -620,35 +620,121 @@ class ExpressionReducer implements ExpressionReducerInterface
         ScopeInterface $scope,
         ExpressionNodeInterface $expression,
     ): ?ExpressionNodeInterface {
-        // @todo Implement
+        if (!$expression instanceof IdentifierNode) {
+            return null;
+        }
 
-        return null;
+        $variable = $scope->get($expression);
+
+        if (!$variable->hasComputedValue()) {
+            return null;
+        }
+
+        $numericValue = $this->evaluator->castNodeToNumeric(
+            node: LiteralNode::createFromNativeType($variable->computedValue),
+        );
+
+        if ($numericValue === null) {
+            return null;
+        }
+
+        $value = LiteralNode::createFromNativeType(
+            value: 1 + $numericValue,
+        );
+
+        $variable->mutate($scope, $value);
+
+        return $value;
     }
 
     public function reduceIncrementPost(
         ScopeInterface $scope,
         ExpressionNodeInterface $expression,
     ): ?ExpressionNodeInterface {
-        // @todo Implement
+        if (!$expression instanceof IdentifierNode) {
+            return null;
+        }
 
-        return null;
+        $variable = $scope->get($expression);
+
+        if (!$variable->hasComputedValue()) {
+            return null;
+        }
+
+        $computedValue = LiteralNode::createFromNativeType($variable->computedValue);
+        $numericValue = $this->evaluator->castNodeToNumeric($computedValue);
+
+        if ($numericValue === null) {
+            return null;
+        }
+
+        $value = LiteralNode::createFromNativeType(
+            value: 1 + $numericValue,
+        );
+
+        $variable->mutate($scope, $value);
+
+        return $computedValue;
     }
 
     public function reduceDecrementPre(
         ScopeInterface $scope,
         ExpressionNodeInterface $expression,
     ): ?ExpressionNodeInterface {
-        // @todo Implement
+        if (!$expression instanceof IdentifierNode) {
+            return null;
+        }
 
-        return null;
+        $variable = $scope->get($expression);
+
+        if (!$variable->hasComputedValue()) {
+            return null;
+        }
+
+        $numericValue = $this->evaluator->castNodeToNumeric(
+            node: LiteralNode::createFromNativeType($variable->computedValue),
+        );
+
+        if ($numericValue === null) {
+            return null;
+        }
+
+        $value = LiteralNode::createFromNativeType(
+            value: 1 - $numericValue,
+        );
+
+        $variable->mutate($scope, $value);
+
+        return $value;
     }
 
     public function reduceDecrementPost(
         ScopeInterface $scope,
         ExpressionNodeInterface $expression,
     ): ?ExpressionNodeInterface {
-        // @todo Implement
+        if (!$expression instanceof IdentifierNode) {
+            return null;
+        }
 
-        return null;
+        $variable = $scope->get($expression);
+
+        if (!$variable->hasComputedValue()) {
+            return null;
+        }
+
+        $computedValue = LiteralNode::createFromNativeType($variable->computedValue);
+        $numericValue = $this->evaluator->castNodeToNumeric($computedValue);
+
+        if ($numericValue === null) {
+            return null;
+        }
+
+        $value = LiteralNode::createFromNativeType(
+            value: 1 - $numericValue,
+        );
+
+        $variable->mutate($scope, $value);
+
+        return $computedValue;
     }
 }

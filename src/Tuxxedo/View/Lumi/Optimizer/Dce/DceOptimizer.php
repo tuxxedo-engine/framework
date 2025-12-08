@@ -93,9 +93,8 @@ class DceOptimizer extends AbstractOptimizer
             $variable = $this->scope->get($node->name);
 
             if ($variable->hasComputedValue()) {
+                // @todo This needs to scan the entire stream for uses of the variable for this to be deleted
                 $this->scope->markVirtual($variable);
-
-                return [];
             }
         }
 
