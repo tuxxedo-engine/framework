@@ -319,10 +319,12 @@ readonly class LumiController
     #[Route\Get]
     public function index(RequestInterface $request): ResponseInterface
     {
+        $defaultSelectedViewFile = $this->viewDirectory . '/hello_world_include.lumi';
+
         if ($request->get->has('file')) {
             $selectedViewFile = $this->viewDirectory . '/' . $request->get->getString('file');
         } else {
-            $selectedViewFile = $this->viewDirectory . '/hello_world_include.lumi';
+            $selectedViewFile = $defaultSelectedViewFile;
         }
 
         $viewSource = @\file_get_contents($selectedViewFile);
@@ -347,8 +349,22 @@ readonly class LumiController
         $buffer .= '</script>';
         $buffer .= '<select id="file" onchange="formCheck();">';
 
-        // @todo Set a default $selectedViewFile if not contained in collection
+        $hasValidViewFile = false;
+        $viewFiles = [];
+
         foreach ($this->getViewFiles() as $viewFile) {
+            $viewFiles[] = $viewFile;
+
+            if ($this->getShortViewName($viewFile) === $this->getShortViewName($selectedViewFile)) {
+                $hasValidViewFile = true;
+            }
+        }
+
+        if (!$hasValidViewFile) {
+            $selectedViewFile = $defaultSelectedViewFile;
+        }
+
+        foreach ($viewFiles as $viewFile) {
             $viewFile = $this->getShortViewName($viewFile);
             $selected = $this->getShortViewName($selectedViewFile) === $viewFile
                 ? ' selected'
