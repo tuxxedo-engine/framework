@@ -154,14 +154,14 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
     public function enableStripComments(): self
     {
-        $this->defaultDirectives['lumi.compiler_strip_comments'] = true;
+        $this->defaultDirectives['lumi.strip_comments'] = true;
 
         return $this;
     }
 
     public function disableStripComments(): self
     {
-        $this->defaultDirectives['lumi.compiler_strip_comments'] = false;
+        $this->defaultDirectives['lumi.strip_comments'] = false;
 
         return $this;
     }

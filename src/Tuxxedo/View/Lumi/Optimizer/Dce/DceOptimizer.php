@@ -109,7 +109,7 @@ class DceOptimizer extends AbstractOptimizer
     private function optimizeComment(
         CommentNode $node,
     ): array {
-        if ($this->directives->asBool('lumi.compiler_strip_comments')) {
+        if ($this->directives->asBool('lumi.strip_comments')) {
             return [];
         }
 

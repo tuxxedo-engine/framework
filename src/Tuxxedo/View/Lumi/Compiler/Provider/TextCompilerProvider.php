@@ -52,7 +52,7 @@ class TextCompilerProvider implements CompilerProviderInterface
         CompilerInterface $compiler,
         NodeStreamInterface $stream,
     ): string {
-        if ($compiler->state->directives->asBool('lumi.compiler_strip_comments')) {
+        if ($compiler->state->directives->asBool('lumi.strip_comments')) {
             return '';
         }
 
