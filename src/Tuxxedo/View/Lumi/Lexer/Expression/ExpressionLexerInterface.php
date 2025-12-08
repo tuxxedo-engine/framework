@@ -20,7 +20,7 @@ interface ExpressionLexerInterface
     /**
      * @return TokenInterface[]
      */
-    public function parse(
+    public function lex(
         int $startingLine,
         string $operand,
     ): array;

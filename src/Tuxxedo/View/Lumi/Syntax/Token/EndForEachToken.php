@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Token;
 
-readonly class EndForeachToken extends AbstractToken
+readonly class EndForEachToken extends AbstractToken
 {
     public null $op1;
     public null $op2;

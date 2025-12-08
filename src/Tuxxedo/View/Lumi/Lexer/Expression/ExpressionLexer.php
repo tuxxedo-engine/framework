@@ -56,7 +56,7 @@ class ExpressionLexer implements ExpressionLexerInterface
         $this->characterSymbols = $characterSymbols;
     }
 
-    public function parse(
+    public function lex(
         int $startingLine,
         string $operand,
     ): array {

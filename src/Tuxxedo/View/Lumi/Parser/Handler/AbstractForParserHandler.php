@@ -21,17 +21,17 @@ use Tuxxedo\View\Lumi\Syntax\Node\ForNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IterableExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Token\EndForEachToken;
 use Tuxxedo\View\Lumi\Syntax\Token\EndForToken;
-use Tuxxedo\View\Lumi\Syntax\Token\EndForeachToken;
 use Tuxxedo\View\Lumi\Syntax\Token\EndToken;
+use Tuxxedo\View\Lumi\Syntax\Token\ForEachToken;
 use Tuxxedo\View\Lumi\Syntax\Token\ForToken;
-use Tuxxedo\View\Lumi\Syntax\Token\ForeachToken;
 use Tuxxedo\View\Lumi\Syntax\Token\IdentifierToken;
 
 abstract class AbstractForParserHandler implements ParserHandlerInterface
 {
     /**
-     * @param class-string<EndForToken|EndForeachToken> $endTokenClassName
+     * @param class-string<EndForToken|EndForEachToken> $endTokenClassName
      * @return NodeInterface[]
      *
      * @throws ParserException
@@ -41,7 +41,7 @@ abstract class AbstractForParserHandler implements ParserHandlerInterface
         TokenStreamInterface $stream,
         string $endTokenClassName,
     ): array {
-        /** @var ForToken|ForeachToken $startToken */
+        /** @var ForToken|ForEachToken $startToken */
         $startToken = $stream->expect($this->tokenClassName);
 
         $value = $parser->expressionParser->parse(

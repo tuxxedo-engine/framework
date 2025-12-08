@@ -70,7 +70,7 @@ class Lexer implements LexerInterface
         return [
             new EchoTokenHandler(),
             new CommentTokenHandler(),
-            new BlockTokenHandler(),
+            BlockTokenHandler::createWithDefaultHandlers(),
         ];
     }
 

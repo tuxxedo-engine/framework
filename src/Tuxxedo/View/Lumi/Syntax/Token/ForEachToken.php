@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Token;
 
-readonly class ForeachToken extends AbstractToken
+readonly class ForEachToken extends AbstractToken
 {
     public function __construct(
         public int $line,

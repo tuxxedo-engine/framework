@@ -11,38 +11,31 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Lexer\Handler;
+namespace Tuxxedo\View\Lumi\Lexer\Handler\Block;
 
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerStateInterface;
-use Tuxxedo\View\Lumi\Syntax\Token\EchoToken;
 use Tuxxedo\View\Lumi\Syntax\Token\EndToken;
+use Tuxxedo\View\Lumi\Syntax\Token\IfToken;
 
-class EchoTokenHandler implements TokenHandlerInterface
+class IfBlockHandler implements BlockHandlerInterface, AlwaysExpressiveInterface
 {
-    public function getStartingSequence(): string
-    {
-        return '{{';
-    }
+    public private(set) string $directive = 'if';
 
-    public function getEndingSequence(): string
-    {
-        return '}}';
-    }
-
-    public function tokenize(
+    public function lex(
         int $startingLine,
-        string $buffer,
+        string $expression,
         ExpressionLexerInterface $expressionLexer,
         LexerStateInterface $state,
+        BlockHandlerState $blockState,
     ): array {
         return [
-            new EchoToken(
+            new IfToken(
                 line: $startingLine,
             ),
             ...$expressionLexer->lex(
                 startingLine: $startingLine,
-                operand: \mb_trim($buffer),
+                operand: $expression,
             ),
             new EndToken(
                 line: $startingLine,
