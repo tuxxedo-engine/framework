@@ -20,10 +20,14 @@ use Tuxxedo\Http\Request\RequestInterface;
 abstract class AbstractRouter implements RouterInterface
 {
     public function findByUri(
-        Method $method,
+        Method|string $method,
         string $uri,
     ): ?DispatchableRouteInterface {
         $isMethodNotAllowed = false;
+
+        if (\is_string($method)) {
+            $method = Method::from($method);
+        }
 
         foreach ($this->getRoutes() as $route) {
             $arguments = [];

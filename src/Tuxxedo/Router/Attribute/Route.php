@@ -20,12 +20,23 @@ use Tuxxedo\Router\RoutePriority;
 readonly class Route
 {
     /**
-     * @param Method[] $methods
+     * @var Method[]
+     */
+    public array $methods;
+
+    /**
+     * @param Method[]|string[] $methods
      */
     public function __construct(
         public ?string $uri,
-        public array $methods = [],
+        array $methods = [],
         public RoutePriority $priority = RoutePriority::NORMAL,
     ) {
+        $this->methods = \array_map(
+            static fn (Method|string $method): Method => \is_string($method)
+                ? Method::from($method)
+                : $method,
+            $methods,
+        );
     }
 }

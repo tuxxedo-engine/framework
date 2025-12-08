@@ -18,13 +18,15 @@ use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 
 readonly class Route implements RouteInterface
 {
+    public ?Method $method;
+
     /**
      * @param class-string $controller
      * @param array<(\Closure(): MiddlewareInterface)> $middleware
      * @param RouteArgumentInterface[] $arguments
      */
     public function __construct(
-        public ?Method $method,
+        Method|string|null $method,
         public string $uri,
         public string $controller,
         public string $action,
@@ -34,5 +36,10 @@ readonly class Route implements RouteInterface
         public ?string $requestArgumentName = null,
         public array $arguments = [],
     ) {
+        if (\is_string($method)) {
+            $method = Method::from($method);
+        }
+
+        $this->method = $method;
     }
 }
