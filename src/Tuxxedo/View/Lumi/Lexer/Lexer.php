@@ -161,15 +161,35 @@ class Lexer implements LexerInterface
                     $stream->consumeSequence($content);
                     $stream->consumeSequence($endSequence);
 
-                    return $handler->tokenize(
+                    $populateBuffer = $this->state->hasFlag(LexerStateFlag::TEXT_AS_RAW);
+
+                    $tokens =  $handler->tokenize(
                         startingLine: $startLine,
                         buffer: $content,
                         expressionLexer: $this->expressionLexer,
                         state: $this->state,
                     );
+
+                    if (
+                        \sizeof($tokens) === 0 &&
+                        $populateBuffer === $this->state->hasFlag(LexerStateFlag::TEXT_AS_RAW) &&
+                        $this->state->textAsRawEndSequence !== $endSequence
+                    ) {
+                        $this->state->appendTextAsRawBuffer($startSequence . $content . $endSequence);
+
+                        return null;
+                    }
+
+                    return $tokens;
                 }
 
                 $content .= $stream->consume();
+            }
+
+            if ($this->state->hasFlag(LexerStateFlag::TEXT_AS_RAW)) {
+                $this->state->appendTextAsRawBuffer($startSequence . $content);
+
+                return null;
             }
 
             return [
@@ -185,7 +205,7 @@ class Lexer implements LexerInterface
 
     private function consumeTextUntilNextToken(
         ByteStreamInterface $stream,
-    ): TokenInterface {
+    ): ?TokenInterface {
         $buffer = '';
         $line = $stream->line;
 
@@ -194,6 +214,16 @@ class Lexer implements LexerInterface
                 $peek = $stream->peek($i);
 
                 if (isset($this->sequences[$peek])) {
+                    if ($this->state->hasFlag(LexerStateFlag::TEXT_AS_RAW)) {
+                        if ($this->state->textAsRawEndSequence === $peek) {
+                            $this->state->appendTextAsRawBuffer($buffer);
+
+                            return null;
+                        }
+
+                        continue;
+                    }
+
                     return new TextToken(
                         line: $line,
                         op1: $buffer,
@@ -227,8 +257,16 @@ class Lexer implements LexerInterface
                     $matchedTokens,
                 );
             } else {
-                $tokens[] = $this->consumeTextUntilNextToken($stream);
+                $token = $this->consumeTextUntilNextToken($stream);
+
+                if ($token !== null) {
+                    $tokens[] = $token;
+                }
             }
+        }
+
+        if (!$this->state->isClean()) {
+            throw LexerException::fromUncleanLexerState();
         }
 
         return new TokenStream(

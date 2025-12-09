@@ -15,5 +15,16 @@ namespace Tuxxedo\View\Lumi\Lexer;
 
 enum LexerStateFlag: int
 {
+    case NONE = 0;
     case TEXT_AS_RAW = 1;
+
+    public function onRemove(
+        LexerStateInterface $state,
+    ): void {
+        if ($this === self::TEXT_AS_RAW) {
+            $state->setTextAsRawBuffer('');
+            $state->setTextAsRawEndSequence(null);
+            $state->setTextAsRawEndDirective(null);
+        }
+    }
 }

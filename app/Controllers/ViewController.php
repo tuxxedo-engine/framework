@@ -243,4 +243,12 @@ readonly class ViewController
             name: 'hello_world_dce',
         );
     }
+
+    #[Route\Get]
+    public function raw(): ViewInterface
+    {
+        return new View(
+            name: 'hello_world_raw',
+        );
+    }
 }

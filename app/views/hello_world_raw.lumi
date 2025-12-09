@@ -1,0 +1,4 @@
+<h1>Testing Raw sequence</h1>
+
+<pre>{% raw %}Test{% endraw %}</pre>
+<pre>{% raw %}{% set text = 'Hello World' %}{{ text }}{% endraw %}</pre>

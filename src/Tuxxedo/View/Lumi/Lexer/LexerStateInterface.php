@@ -19,6 +19,18 @@ interface LexerStateInterface
         get;
     }
 
+    public ?string $textAsRawEndSequence {
+        get;
+    }
+
+    public ?string $textAsRawEndDirective {
+        get;
+    }
+
+    public string $textAsRawBuffer {
+        get;
+    }
+
     public function hasFlag(
         LexerStateFlag $flag,
     ): bool;
@@ -29,5 +41,23 @@ interface LexerStateInterface
 
     public function removeFlag(
         LexerStateFlag $flag,
+    ): void;
+
+    public function isClean(): bool;
+
+    public function setTextAsRawBuffer(
+        string $buffer,
+    ): void;
+
+    public function appendTextAsRawBuffer(
+        string $buffer,
+    ): void;
+
+    public function setTextAsRawEndSequence(
+        ?string $sequence,
+    ): void;
+
+    public function setTextAsRawEndDirective(
+        ?string $directive,
     ): void;
 }

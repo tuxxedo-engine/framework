@@ -43,7 +43,7 @@ class CompilerState implements CompilerStateInterface
     public function removeFlag(
         CompilerStateFlag $flag,
     ): void {
-        $this->flags = $this->flags | ~$flag->value;
+        $this->flags = $this->flags & ~$flag->value;
     }
 
     public function is(

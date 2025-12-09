@@ -16,6 +16,9 @@ namespace Tuxxedo\View\Lumi\Lexer;
 class LexerState implements LexerStateInterface
 {
     public private(set) int $flags = 0;
+    public private(set) ?string $textAsRawEndSequence = null;
+    public private(set) ?string $textAsRawEndDirective = null;
+    public private(set) string $textAsRawBuffer = '';
 
     public function hasFlag(
         LexerStateFlag $flag,
@@ -32,6 +35,40 @@ class LexerState implements LexerStateInterface
     public function removeFlag(
         LexerStateFlag $flag,
     ): void {
-        $this->flags = $this->flags | ~$flag->value;
+        $this->flags = $this->flags & ~$flag->value;
+
+        $flag->onRemove($this);
+    }
+
+    public function isClean(): bool
+    {
+        return $this->flags === LexerStateFlag::NONE->value &&
+            $this->textAsRawEndSequence === null &&
+            $this->textAsRawEndDirective === null &&
+            $this->textAsRawBuffer === '';
+    }
+
+    public function setTextAsRawBuffer(
+        string $buffer,
+    ): void {
+        $this->textAsRawBuffer = $buffer;
+    }
+
+    public function appendTextAsRawBuffer(
+        string $buffer,
+    ): void {
+        $this->textAsRawBuffer .= $buffer;
+    }
+
+    public function setTextAsRawEndSequence(
+        ?string $sequence,
+    ): void {
+        $this->textAsRawEndSequence = $sequence;
+    }
+
+    public function setTextAsRawEndDirective(
+        ?string $directive,
+    ): void {
+        $this->textAsRawEndDirective = $directive;
     }
 }

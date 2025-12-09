@@ -228,4 +228,24 @@ class LexerException extends LumiException
             ),
         );
     }
+
+    public static function fromInvalidTextAsRawEnd(
+        int $line,
+        string $tokenName,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid "%s" token encountered on line %d',
+                $tokenName,
+                $line,
+            ),
+        );
+    }
+
+    public static function fromUncleanLexerState(): self
+    {
+        return new self(
+            message: 'Lexer state was left in an unclean state, possible end of sequence tag missing',
+        );
+    }
 }
