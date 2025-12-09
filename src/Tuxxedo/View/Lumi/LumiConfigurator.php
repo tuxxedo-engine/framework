@@ -31,7 +31,6 @@ use Tuxxedo\View\Lumi\Runtime\Loader;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\Runtime;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
-use Tuxxedo\View\Lumi\Syntax\Highlight\Highlighter;
 use Tuxxedo\View\Lumi\Syntax\Highlight\HighlighterInterface;
 use Tuxxedo\View\ViewRenderInterface;
 
