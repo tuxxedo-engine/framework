@@ -70,11 +70,13 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
     final public function __construct()
     {
-        $this->optimizers = [
-            SccpOptimizer::class => new SccpOptimizer(),
-            DceOptimizer::class => new DceOptimizer(),
-        ];
+        $optimizers = [];
 
+        foreach (LumiEngine::createDefaultOptimizers() as $optimizer) {
+            $optimizers[$optimizer::class] = $optimizer;
+        }
+
+        $this->optimizers = $optimizers;
         $this->defaultDirectives = DefaultDirectives::defaults();
     }
 
@@ -419,13 +421,6 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
     public function withDefaultHighlighter(): self
     {
-        $this->highlighter = new Highlighter();
-
-        return $this;
-    }
-
-    public function withoutHighlighter(): self
-    {
         $this->highlighter = null;
 
         return $this;
@@ -582,6 +577,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
                 extension: $this->viewExtension,
             ),
             runtime: new Runtime(
+                highlighter: $this->highlighter ?? LumiEngine::createDefaultHighlighter(),
                 directives: \array_merge(
                     $this->directives,
                     $this->defaultDirectives,

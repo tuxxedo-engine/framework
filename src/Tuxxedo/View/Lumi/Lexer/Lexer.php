@@ -283,6 +283,7 @@ class Lexer implements LexerInterface
         $merged = [];
         $buffer = null;
 
+        // @todo Do not merge TextToken when v1.op2 !== v2.op2
         foreach ($tokens as $token) {
             if ($token instanceof TextToken) {
                 if ($buffer === null) {

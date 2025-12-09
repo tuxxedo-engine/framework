@@ -24,6 +24,9 @@ use Tuxxedo\View\Lumi\Syntax\Token\EndBlockToken;
 
 class BlockParserHandler implements ParserHandlerInterface
 {
+    /**
+     * @var class-string<BlockToken>
+     */
     public private(set) string $tokenClassName = BlockToken::class;
 
     /**
@@ -34,7 +37,7 @@ class BlockParserHandler implements ParserHandlerInterface
         TokenStreamInterface $stream,
     ): array {
         $body = [];
-        $block = $stream->expect(BlockToken::class);
+        $block = $stream->expect($this->tokenClassName);
 
         while (!$stream->eof()) {
             $token = $stream->consume();

@@ -245,7 +245,6 @@ interface LumiConfiguratorInterface
     ): self;
 
     public function withDefaultHighlighter(): self;
-    public function withoutHighlighter(): self;
 
     public function useHighlighter(
         HighlighterInterface $highlighter,

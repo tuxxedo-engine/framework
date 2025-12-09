@@ -16,6 +16,7 @@ namespace Tuxxedo\View\Lumi\Lexer;
 class LexerState implements LexerStateInterface
 {
     public private(set) int $flags = 0;
+    public private(set) string $internalBuffer = '';
     public private(set) ?string $textAsRawEndSequence = null;
     public private(set) ?string $textAsRawEndDirective = null;
     public private(set) string $textAsRawBuffer = '';
@@ -43,9 +44,16 @@ class LexerState implements LexerStateInterface
     public function isClean(): bool
     {
         return $this->flags === LexerStateFlag::NONE->value &&
+            $this->internalBuffer === '' &&
             $this->textAsRawEndSequence === null &&
             $this->textAsRawEndDirective === null &&
             $this->textAsRawBuffer === '';
+    }
+
+    public function setInternalBuffer(
+        string $buffer,
+    ): void {
+        $this->internalBuffer = $buffer;
     }
 
     public function setTextAsRawBuffer(

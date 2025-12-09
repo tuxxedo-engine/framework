@@ -248,4 +248,30 @@ class LexerException extends LumiException
             message: 'Lexer state was left in an unclean state, possible end of sequence tag missing',
         );
     }
+
+    public static function fromInvalidLumiTheme(
+        int $line,
+        string $theme,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid highlight theme "%s" encountered on line %d',
+                $theme,
+                $line,
+            ),
+        );
+    }
+
+    public static function fromEnteringInvalidState(
+        int $line,
+        LexerStateFlag $stateFlag,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Attempting to enter an invalid state for "%s", possible double start sequence encountered on line %d',
+                $stateFlag->name,
+                $line,
+            ),
+        );
+    }
 }

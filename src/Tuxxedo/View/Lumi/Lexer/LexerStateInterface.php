@@ -19,6 +19,10 @@ interface LexerStateInterface
         get;
     }
 
+    public string $internalBuffer {
+        get;
+    }
+
     public ?string $textAsRawEndSequence {
         get;
     }
@@ -44,6 +48,10 @@ interface LexerStateInterface
     ): void;
 
     public function isClean(): bool;
+
+    public function setInternalBuffer(
+        string $buffer,
+    ): void;
 
     public function setTextAsRawBuffer(
         string $buffer,

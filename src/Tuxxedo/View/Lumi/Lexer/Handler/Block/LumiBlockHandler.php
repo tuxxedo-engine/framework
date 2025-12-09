@@ -18,9 +18,9 @@ use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Lexer\LexerStateFlag;
 use Tuxxedo\View\Lumi\Lexer\LexerStateInterface;
 
-class RawBlockHandler implements BlockHandlerInterface, AlwaysStandaloneInterface
+class LumiBlockHandler implements BlockHandlerInterface, AlwaysExpressiveInterface
 {
-    public private(set) string $directive = 'raw';
+    public private(set) string $directive = 'lumi';
 
     public function lex(
         int $startingLine,
@@ -38,7 +38,10 @@ class RawBlockHandler implements BlockHandlerInterface, AlwaysStandaloneInterfac
 
         $state->flag(LexerStateFlag::TEXT_AS_RAW);
         $state->setTextAsRawEndSequence('{%');
-        $state->setTextAsRawEndDirective('endraw');
+        $state->setTextAsRawEndDirective('endlumi');
+        $state->setInternalBuffer($expression);
+
+        // @todo ???
 
         return [];
     }

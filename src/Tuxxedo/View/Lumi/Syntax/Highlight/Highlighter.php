@@ -50,6 +50,8 @@ use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\CharacterSymbol;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
+// @todo Does not support raw/endraw because it is returned as Text
+// @todo Support LumiNode
 class Highlighter implements HighlighterInterface
 {
     private ThemeInterface $theme;

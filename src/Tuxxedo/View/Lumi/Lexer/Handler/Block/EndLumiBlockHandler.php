@@ -17,11 +17,11 @@ use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Lexer\LexerStateFlag;
 use Tuxxedo\View\Lumi\Lexer\LexerStateInterface;
-use Tuxxedo\View\Lumi\Syntax\Token\TextToken;
+use Tuxxedo\View\Lumi\Syntax\Token\LumiToken;
 
-class EndRawBlockHandler implements BlockHandlerInterface, AlwaysStandaloneInterface
+class EndLumiBlockHandler implements BlockHandlerInterface, AlwaysStandaloneInterface
 {
-    public private(set) string $directive = 'endraw';
+    public private(set) string $directive = 'endlumi';
 
     public function lex(
         int $startingLine,
@@ -37,15 +37,24 @@ class EndRawBlockHandler implements BlockHandlerInterface, AlwaysStandaloneInter
             );
         }
 
-        $textBuffer = $state->textAsRawBuffer;
+        $theme = $state->internalBuffer;
+        $sourceCode = $state->textAsRawBuffer;
 
         $state->removeFlag(LexerStateFlag::TEXT_AS_RAW);
+        $state->setInternalBuffer('');
+
+        if (\preg_match('/^[A-Za-z]+/u', $theme) !== 1) {
+            throw LexerException::fromInvalidLumiTheme(
+                line: $startingLine,
+                theme: $theme,
+            );
+        }
 
         return [
-            new TextToken(
+            new LumiToken(
                 line: $startingLine,
-                op1: $textBuffer,
-                op2: 'raw',
+                op1: $theme,
+                op2: $sourceCode,
             ),
         ];
     }

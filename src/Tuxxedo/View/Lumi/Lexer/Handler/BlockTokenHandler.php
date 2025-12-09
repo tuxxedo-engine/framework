@@ -29,6 +29,7 @@ use Tuxxedo\View\Lumi\Lexer\Handler\Block\EndBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\EndForBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\EndForEachBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\EndIfBlockHandler;
+use Tuxxedo\View\Lumi\Lexer\Handler\Block\EndLumiBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\EndRawBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\EndWhileBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\ForBlockHandler;
@@ -36,6 +37,7 @@ use Tuxxedo\View\Lumi\Lexer\Handler\Block\ForEachBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\IfBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\IncludeBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\LayoutBlockHandler;
+use Tuxxedo\View\Lumi\Lexer\Handler\Block\LumiBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\RawBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\SetBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\WhileBlockHandler;
@@ -82,6 +84,7 @@ class BlockTokenHandler implements TokenHandlerInterface
             new EndForBlockHandler(),
             new EndForEachBlockHandler(),
             new EndIfBlockHandler(),
+            new EndLumiBlockHandler(),
             new EndRawBlockHandler(),
             new EndWhileBlockHandler(),
             new ForBlockHandler(),
@@ -89,6 +92,7 @@ class BlockTokenHandler implements TokenHandlerInterface
             new IfBlockHandler(),
             new IncludeBlockHandler(),
             new LayoutBlockHandler(),
+            new LumiBlockHandler(),
             new RawBlockHandler(),
             new SetBlockHandler(),
             new WhileBlockHandler(),
@@ -162,10 +166,8 @@ class BlockTokenHandler implements TokenHandlerInterface
             );
         }
 
-        $populateSequence = !$state->hasFlag(LexerStateFlag::TEXT_AS_RAW);
-
         if (
-            !$populateSequence &&
+            $state->hasFlag(LexerStateFlag::TEXT_AS_RAW) &&
             $directive !== $state->textAsRawEndDirective
         ) {
             return [];
@@ -180,13 +182,6 @@ class BlockTokenHandler implements TokenHandlerInterface
                 ? BlockHandlerState::EXPRESSIVE
                 : BlockHandlerState::STANDALONE,
         );
-
-        if (
-            $populateSequence !== $state->hasFlag(LexerStateFlag::TEXT_AS_RAW) &&
-            $state->textAsRawEndSequence === null
-        ) {
-            $state->setTextAsRawEndSequence($this->getStartingSequence());
-        }
 
         return $tokens;
     }

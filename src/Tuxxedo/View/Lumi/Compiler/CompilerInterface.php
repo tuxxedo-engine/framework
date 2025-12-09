@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Compiler;
 
+use Tuxxedo\Escaper\EscaperInterface;
 use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompilerInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
@@ -25,6 +26,10 @@ interface CompilerInterface
     }
 
     public CompilerStateInterface $state {
+        get;
+    }
+
+    public EscaperInterface $escaper {
         get;
     }
 

@@ -251,4 +251,12 @@ readonly class ViewController
             name: 'hello_world_raw',
         );
     }
+
+    #[Route\Get]
+    public function highlight(): ViewInterface
+    {
+        return new View(
+            name: 'hello_world_highlight',
+        );
+    }
 }

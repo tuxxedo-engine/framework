@@ -225,6 +225,7 @@ readonly class LumiController
             'hello_world_expr_5' => $this->viewController->exprFive(...),
             'hello_world_expr_6' => $this->viewController->exprSix(...),
             'hello_world_for' => $this->viewController->for(...),
+            'hello_world_highlight' => $this->viewController->highlight(...),
             'hello_world_include' => $this->viewController->include(...),
             'hello_world_layout' => $this->viewController->layout(...),
             'hello_world_method' => $this->viewController->method(...),

@@ -25,6 +25,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LayoutNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
+use Tuxxedo\View\Lumi\Syntax\Node\LumiNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
@@ -160,7 +161,19 @@ class TextCompilerProvider implements CompilerProviderInterface
     ): string {
         return \sprintf(
             "\n<?php \$this->layout('%s'); ?>",
-            $node->file,
+            $compiler->escaper->js($node->file),
+        );
+    }
+
+    private function compileLumi(
+        LumiNode $node,
+        CompilerInterface $compiler,
+        NodeStreamInterface $stream,
+    ): string {
+        return \sprintf(
+            "\n<?php \$this->highlight('%s', '%s'); ?>",
+            $compiler->escaper->js($node->theme),
+            $compiler->escaper->js($node->sourceCode),
         );
     }
 
@@ -189,6 +202,11 @@ class TextCompilerProvider implements CompilerProviderInterface
         yield new NodeCompilerHandler(
             nodeClassName: BlockNode::class,
             handler: $this->compileBlock(...),
+        );
+
+        yield new NodeCompilerHandler(
+            nodeClassName: LumiNode::class,
+            handler: $this->compileLumi(...),
         );
 
         yield new PostNodeCompilerHandler(

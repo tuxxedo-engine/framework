@@ -26,6 +26,9 @@ use Tuxxedo\View\Lumi\Syntax\Type;
 
 class DeclareParserHandler implements ParserHandlerInterface
 {
+    /**
+     * @var class-string<DeclareToken>
+     */
     public private(set) string $tokenClassName = DeclareToken::class;
 
     /**
@@ -35,8 +38,7 @@ class DeclareParserHandler implements ParserHandlerInterface
         ParserInterface $parser,
         TokenStreamInterface $stream,
     ): array {
-        /** @var DeclareToken $directive */
-        $directive = $stream->current();
+        $directive = $stream->expect($this->tokenClassName);
 
         if (\sizeof($parser->state->stateStack) !== 1) {
             throw ParserException::fromDeclareTokensCannotBeNested(

@@ -1,0 +1,11 @@
+<h1>Light</h1>
+<div style="padding: 12px;">
+    <pre>{% lumi light %}{% set name = 'Lumi' %}
+Hello {{ name }}!{% endlumi %}</pre>
+</div>
+
+<h1>Dark</h1>
+<div style="background: #0D1117; padding: 12px;">
+    <pre>{% lumi dark %}{% set name = 'Lumi' %}
+Hello {{ name }}!{% endlumi %}</pre>
+</div>

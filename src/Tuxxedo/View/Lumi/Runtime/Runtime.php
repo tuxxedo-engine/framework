@@ -15,6 +15,7 @@ namespace Tuxxedo\View\Lumi\Runtime;
 
 use Tuxxedo\View\Lumi\Runtime\Directive\Directives;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
+use Tuxxedo\View\Lumi\Syntax\Highlight\HighlighterInterface;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
@@ -45,6 +46,7 @@ class Runtime implements RuntimeInterface
      * @param array<string, \Closure(mixed $input, DirectivesInterface $directives): mixed> $filters
      */
     public function __construct(
+        public readonly HighlighterInterface $highlighter,
         array $directives = [],
         public readonly array $functions = [],
         public readonly array $customFunctions = [],
@@ -240,5 +242,12 @@ class Runtime implements RuntimeInterface
             directives: $this->directives,
             blocks: $this->blocks,
         );
+    }
+
+    public function highlight(
+        string $theme,
+        string $sourceCode,
+    ): void {
+        // @todo Implement
     }
 }

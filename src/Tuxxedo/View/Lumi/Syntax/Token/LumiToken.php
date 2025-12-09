@@ -13,12 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Token;
 
-readonly class TextToken extends AbstractToken
+readonly class LumiToken extends AbstractToken
 {
     public function __construct(
         public int $line,
         public string $op1,
-        public ?string $op2 = null,
+        public string $op2,
     ) {
     }
 }

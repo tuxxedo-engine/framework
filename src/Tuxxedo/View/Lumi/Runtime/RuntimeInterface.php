@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Runtime;
 
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
+use Tuxxedo\View\Lumi\Syntax\Highlight\HighlighterInterface;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
 
@@ -41,6 +42,10 @@ interface RuntimeInterface
     }
 
     public RuntimeFunctionPolicy $functionPolicy {
+        get;
+    }
+
+    public HighlighterInterface $highlighter {
         get;
     }
 
@@ -152,5 +157,10 @@ interface RuntimeInterface
 
     public function layout(
         string $file,
+    ): void;
+
+    public function highlight(
+        string $theme,
+        string $sourceCode,
     ): void;
 }

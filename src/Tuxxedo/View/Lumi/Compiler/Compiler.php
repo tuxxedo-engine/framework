@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Compiler;
 
+use Tuxxedo\Escaper\Escaper;
+use Tuxxedo\Escaper\EscaperInterface;
 use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompiler;
 use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompilerInterface;
 use Tuxxedo\View\Lumi\Compiler\Provider\CompilerProviderInterface;
@@ -30,6 +32,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
 
+// @todo Check CompilerProviders for proper sequence escaping like compileLayout()
 class Compiler implements CompilerInterface
 {
     /**
@@ -54,6 +57,7 @@ class Compiler implements CompilerInterface
         array $providers,
         public readonly ExpressionCompilerInterface $expressionCompiler,
         public readonly CompilerStateInterface $state,
+        public readonly EscaperInterface $escaper,
     ) {
         $compilerHandlers = [];
         $postCompilerHandlers = [];
@@ -95,6 +99,11 @@ class Compiler implements CompilerInterface
         return new CompilerState();
     }
 
+    public static function getDefaultEscaper(): EscaperInterface
+    {
+        return new Escaper();
+    }
+
     /**
      * @param CompilerProviderInterface[] $providers
      */
@@ -102,6 +111,7 @@ class Compiler implements CompilerInterface
         array $providers = [],
         ?ExpressionCompilerInterface $expressionCompiler = null,
         ?CompilerStateInterface $state = null,
+        ?EscaperInterface $escaper = null,
     ): static {
         return new static(
             providers: \array_merge(
@@ -110,6 +120,7 @@ class Compiler implements CompilerInterface
             ),
             expressionCompiler: $expressionCompiler ?? self::getDefaultExpressionCompiler(),
             state: $state ?? self::getDefaultCompilerState(),
+            escaper: $escaper ?? self::getDefaultEscaper(),
         );
     }
 
@@ -120,11 +131,13 @@ class Compiler implements CompilerInterface
         array $providers = [],
         ?ExpressionCompilerInterface $expressionCompiler = null,
         ?CompilerStateInterface $state = null,
+        ?EscaperInterface $escaper = null,
     ): static {
         return new static(
             providers: $providers,
             expressionCompiler: $expressionCompiler ?? self::getDefaultExpressionCompiler(),
             state: $state ?? self::getDefaultCompilerState(),
+            escaper: $escaper ?? self::getDefaultEscaper(),
         );
     }
 

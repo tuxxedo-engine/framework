@@ -26,6 +26,9 @@ use Tuxxedo\View\Lumi\Syntax\Token\TextToken;
 
 class LayoutParserHandler implements ParserHandlerInterface
 {
+    /**
+     * @var class-string<LayoutToken>
+     */
     public private(set) string $tokenClassName = LayoutToken::class;
 
     /**
@@ -35,7 +38,7 @@ class LayoutParserHandler implements ParserHandlerInterface
         ParserInterface $parser,
         TokenStreamInterface $stream,
     ): array {
-        $layout = $stream->expect(LayoutToken::class);
+        $layout = $stream->expect($this->tokenClassName);
 
         if (\sizeof($parser->state->stateStack) !== 1) {
             throw ParserException::fromLayoutModeMustBeRoot(

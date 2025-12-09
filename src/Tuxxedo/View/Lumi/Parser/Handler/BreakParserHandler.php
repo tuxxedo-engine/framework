@@ -27,9 +27,7 @@ class BreakParserHandler implements ParserHandlerInterface
         ParserInterface $parser,
         TokenStreamInterface $stream,
     ): array {
-        $token = $stream->current();
-
-        $stream->consume();
+        $token = $stream->expect($this->tokenClassName);
 
         if ($parser->state->loopDepth === 0) {
             throw ParserException::fromUnexpectedBreakOutsideLoop(
