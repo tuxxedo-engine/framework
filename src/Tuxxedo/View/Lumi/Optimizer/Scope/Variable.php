@@ -71,9 +71,7 @@ class Variable implements VariableInterface
             value: null,
         );
 
-        $newVariable->lattice = $variable->lattice === Lattice::CONST
-            ? Lattice::CONST
-            : Lattice::VARYING;
+        $newVariable->lattice = Lattice::VARYING;
 
         return $newVariable;
     }
