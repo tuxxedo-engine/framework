@@ -39,6 +39,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LayoutNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
+use Tuxxedo\View\Lumi\Syntax\Node\LumiNode;
 use Tuxxedo\View\Lumi\Syntax\Node\MethodCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
@@ -50,7 +51,6 @@ use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\CharacterSymbol;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
-// @todo Does not support raw/endraw because it is returned as Text
 // @todo Support LumiNode
 class Highlighter implements HighlighterInterface
 {
@@ -107,6 +107,7 @@ class Highlighter implements HighlighterInterface
             $node instanceof IdentifierNode => $this->highlightIdentifierNode($node),
             $node instanceof LayoutNode => $this->highlightLayoutNode($node),
             $node instanceof LiteralNode => $this->highlightLiteralNode($node),
+            $node instanceof LumiNode => $this->highlightLumiNode($node),
             $node instanceof MethodCallNode => $this->highlightMethodCallNode($node),
             $node instanceof PropertyAccessNode => $this->highlightPropertyAccessNode($node),
             $node instanceof TextNode => $this->highlightTextNode($node),
@@ -464,6 +465,26 @@ class Highlighter implements HighlighterInterface
             $this->dye(ColorSlot::DELIMITER, ' %}');
     }
 
+    private function highlightLumiNode(
+        LumiNode $node,
+    ): string {
+        $theme = '';
+
+        if ($node->theme !== '') {
+            $theme = ' ' .
+                $this->dye(ColorSlot::IDENTIFIER, $node->theme);
+        }
+
+        return $this->dye(ColorSlot::DELIMITER, '{% ') .
+            $this->dye(ColorSlot::KEYWORD, 'lumi') .
+            $theme .
+            $this->dye(ColorSlot::DELIMITER, ' %}') .
+            $this->dye(ColorSlot::TEXT, $this->escaper->html($node->sourceCode)) .
+            $this->dye(ColorSlot::DELIMITER, '{% ') .
+            $this->dye(ColorSlot::KEYWORD, 'endlumi') .
+            $this->dye(ColorSlot::DELIMITER, ' %}');
+    }
+
     private function highlightLiteralNode(
         LiteralNode $node,
     ): string {
@@ -516,6 +537,16 @@ class Highlighter implements HighlighterInterface
     private function highlightTextNode(
         TextNode $node,
     ): string {
+        if ($node->origin === 'raw') {
+            return $this->dye(ColorSlot::DELIMITER, '{% ') .
+                $this->dye(ColorSlot::KEYWORD, 'raw') .
+                $this->dye(ColorSlot::DELIMITER, ' %}') .
+                $this->dye(ColorSlot::TEXT, $this->escaper->html($node->text)) .
+                $this->dye(ColorSlot::DELIMITER, '{% ') .
+                $this->dye(ColorSlot::KEYWORD, 'endraw') .
+                $this->dye(ColorSlot::DELIMITER, ' %}');
+        }
+
         return $this->dye(ColorSlot::TEXT, $this->escaper->html($node->text));
     }
 

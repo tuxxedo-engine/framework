@@ -23,7 +23,6 @@ use Tuxxedo\View\Lumi\Lexer\Handler\TokenHandlerInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\TextToken;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
-// @todo Implement raw and endraw
 class Lexer implements LexerInterface
 {
     /**
@@ -283,35 +282,46 @@ class Lexer implements LexerInterface
         $merged = [];
         $buffer = null;
 
-        // @todo Do not merge TextToken when v1.op2 !== v2.op2
         foreach ($tokens as $token) {
             if ($token instanceof TextToken) {
                 if ($buffer === null) {
                     $buffer = $token;
-                } else {
-                    $buffered = $buffer->op1;
 
-                    if (\array_key_exists($token->op1, $this->sequences)) {
-                        $length = \mb_strlen($buffered);
-
-                        if ($buffer->op1[$length - 1] === '\\') {
-                            $buffered = \mb_substr($buffered, 0, -1);
-                        }
-                    }
-
-                    $buffer = new TextToken(
-                        line: $buffer->line,
-                        op1: $buffered . $token->op1,
-                    );
+                    continue;
                 }
-            } else {
-                if ($buffer !== null) {
+
+                if ($buffer->op2 !== $token->op2) {
                     $merged[] = $buffer;
-                    $buffer = null;
+                    $buffer = $token;
+
+                    continue;
                 }
 
-                $merged[] = $token;
+                $buffered = $buffer->op1;
+
+                if (\array_key_exists($token->op1, $this->sequences)) {
+                    $length = \mb_strlen($buffered);
+
+                    if ($buffer->op1[$length - 1] === '\\') {
+                        $buffered = \mb_substr($buffered, 0, -1);
+                    }
+                }
+
+                $buffer = new TextToken(
+                    line: $buffer->line,
+                    op1: $buffered . $token->op1,
+                    op2: $buffer->op2,
+                );
+
+                continue;
             }
+
+            if ($buffer !== null) {
+                $merged[] = $buffer;
+                $buffer = null;
+            }
+
+            $merged[] = $token;
         }
 
         if ($buffer !== null) {

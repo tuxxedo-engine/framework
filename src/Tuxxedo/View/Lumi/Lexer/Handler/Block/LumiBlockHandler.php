@@ -20,6 +20,8 @@ use Tuxxedo\View\Lumi\Lexer\LexerStateInterface;
 
 class LumiBlockHandler implements BlockHandlerInterface, AlwaysExpressiveInterface
 {
+    private const string END_DIRECTIVE_NAME = 'endlumi';
+
     public private(set) string $directive = 'lumi';
 
     public function lex(
@@ -29,7 +31,13 @@ class LumiBlockHandler implements BlockHandlerInterface, AlwaysExpressiveInterfa
         LexerStateInterface $state,
         BlockHandlerState $blockState,
     ): array {
-        if ($state->hasFlag(LexerStateFlag::TEXT_AS_RAW)) {
+        if (
+            $state->hasFlag(LexerStateFlag::TEXT_AS_RAW) ||
+            (
+                $state->textAsRawEndDirective !== null &&
+                $state->textAsRawEndDirective !== self::END_DIRECTIVE_NAME
+            )
+        ) {
             throw LexerException::fromEnteringInvalidState(
                 line: $startingLine,
                 stateFlag: LexerStateFlag::TEXT_AS_RAW,
@@ -38,10 +46,8 @@ class LumiBlockHandler implements BlockHandlerInterface, AlwaysExpressiveInterfa
 
         $state->flag(LexerStateFlag::TEXT_AS_RAW);
         $state->setTextAsRawEndSequence('{%');
-        $state->setTextAsRawEndDirective('endlumi');
+        $state->setTextAsRawEndDirective(self::END_DIRECTIVE_NAME);
         $state->setInternalBuffer($expression);
-
-        // @todo ???
 
         return [];
     }

@@ -201,12 +201,21 @@ abstract class AbstractOptimizer implements OptimizerInterface
         NodeStreamInterface $stream,
         TextNode $node,
     ): array {
+        if ($node->origin !== null) {
+            return [
+                $node,
+            ];
+        }
+
         $text = $node->text;
 
         while (!$stream->eof()) {
             $nextNode = $stream->current();
 
-            if (!$nextNode instanceof TextNode) {
+            if (
+                !$nextNode instanceof TextNode ||
+                $nextNode->origin !== null
+            ) {
                 break;
             }
 
@@ -219,6 +228,7 @@ abstract class AbstractOptimizer implements OptimizerInterface
             return [
                 new TextNode(
                     text: $text,
+                    origin: null,
                 ),
             ];
         }
@@ -227,6 +237,7 @@ abstract class AbstractOptimizer implements OptimizerInterface
             $node,
         ];
     }
+
 
     /**
      * @param NodeInterface[] $nodes

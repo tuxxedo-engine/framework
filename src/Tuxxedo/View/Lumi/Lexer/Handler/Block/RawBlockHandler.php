@@ -20,6 +20,8 @@ use Tuxxedo\View\Lumi\Lexer\LexerStateInterface;
 
 class RawBlockHandler implements BlockHandlerInterface, AlwaysStandaloneInterface
 {
+    private const string END_DIRECTIVE_NAME = 'endraw';
+
     public private(set) string $directive = 'raw';
 
     public function lex(
@@ -29,7 +31,13 @@ class RawBlockHandler implements BlockHandlerInterface, AlwaysStandaloneInterfac
         LexerStateInterface $state,
         BlockHandlerState $blockState,
     ): array {
-        if ($state->hasFlag(LexerStateFlag::TEXT_AS_RAW)) {
+        if (
+            $state->hasFlag(LexerStateFlag::TEXT_AS_RAW) ||
+            (
+                $state->textAsRawEndDirective !== null &&
+                $state->textAsRawEndDirective !== self::END_DIRECTIVE_NAME
+            )
+        ) {
             throw LexerException::fromEnteringInvalidState(
                 line: $startingLine,
                 stateFlag: LexerStateFlag::TEXT_AS_RAW,
@@ -38,7 +46,7 @@ class RawBlockHandler implements BlockHandlerInterface, AlwaysStandaloneInterfac
 
         $state->flag(LexerStateFlag::TEXT_AS_RAW);
         $state->setTextAsRawEndSequence('{%');
-        $state->setTextAsRawEndDirective('endraw');
+        $state->setTextAsRawEndDirective(self::END_DIRECTIVE_NAME);
 
         return [];
     }

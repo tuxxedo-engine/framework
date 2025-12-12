@@ -33,8 +33,11 @@ class TextParserHandler implements ParserHandlerInterface
         $nodes = [];
 
         do {
+            $token = $stream->expect(TextToken::class);
+
             $nodes[] = new TextNode(
-                text: $stream->expect(TextToken::class)->op1,
+                text: $token->op1,
+                origin: $token->op2,
             );
         } while (!$stream->eof() && $stream->currentIs($this->tokenClassName));
 

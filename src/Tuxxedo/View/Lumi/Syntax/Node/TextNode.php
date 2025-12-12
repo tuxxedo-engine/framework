@@ -17,8 +17,10 @@ readonly class TextNode implements NodeInterface
 {
     public array $scopes;
 
+    // @todo Should $origin be an enum?
     public function __construct(
         public string $text,
+        public ?string $origin = null,
     ) {
         $this->scopes = [
             NodeScope::STATEMENT,
