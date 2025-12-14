@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Parser;
 
 use Tuxxedo\View\Lumi\LumiException;
-use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 
 class ParserException extends LumiException

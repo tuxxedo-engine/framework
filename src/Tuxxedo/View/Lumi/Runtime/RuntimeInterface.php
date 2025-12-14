@@ -12,7 +12,7 @@
 declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime;
-use Tuxxedo\View\Lumi\Highlight\HighlighterInterface;
+
 use Tuxxedo\View\Lumi\LumiEngine;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 use Tuxxedo\View\ViewException;
