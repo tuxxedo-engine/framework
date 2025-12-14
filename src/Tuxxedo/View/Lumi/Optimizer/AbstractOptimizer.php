@@ -31,6 +31,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\LayoutNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
+use Tuxxedo\View\Lumi\Syntax\TextContext;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
 // @todo Bodies of statements and loops needs more advanced computation for value mutation checks if part of a condition
@@ -201,7 +202,7 @@ abstract class AbstractOptimizer implements OptimizerInterface
         NodeStreamInterface $stream,
         TextNode $node,
     ): array {
-        if ($node->origin !== null) {
+        if ($node->context !== TextContext::NONE) {
             return [
                 $node,
             ];
@@ -214,7 +215,7 @@ abstract class AbstractOptimizer implements OptimizerInterface
 
             if (
                 !$nextNode instanceof TextNode ||
-                $nextNode->origin !== null
+                $nextNode->context !== TextContext::NONE
             ) {
                 break;
             }
@@ -228,7 +229,7 @@ abstract class AbstractOptimizer implements OptimizerInterface
             return [
                 new TextNode(
                     text: $text,
-                    origin: null,
+                    context: TextContext::NONE,
                 ),
             ];
         }

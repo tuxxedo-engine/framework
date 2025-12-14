@@ -50,6 +50,7 @@ use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\CharacterSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\SymbolInterface;
+use Tuxxedo\View\Lumi\Syntax\TextContext;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
 // @todo Support LumiNode
@@ -540,7 +541,7 @@ class Highlighter implements HighlighterInterface
     private function highlightTextNode(
         TextNode $node,
     ): string {
-        if ($node->origin === 'raw') {
+        if ($node->context === TextContext::RAW) {
             return $this->dye(ColorSlot::DELIMITER, '{% ') .
                 $this->dye(ColorSlot::KEYWORD, 'raw') .
                 $this->dye(ColorSlot::DELIMITER, ' %}') .

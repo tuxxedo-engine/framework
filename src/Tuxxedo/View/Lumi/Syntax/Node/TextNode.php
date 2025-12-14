@@ -13,14 +13,15 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Node;
 
+use Tuxxedo\View\Lumi\Syntax\TextContext;
+
 readonly class TextNode implements NodeInterface
 {
     public array $scopes;
 
-    // @todo Should $origin be an enum?
     public function __construct(
         public string $text,
-        public ?string $origin = null,
+        public TextContext $context = TextContext::NONE,
     ) {
         $this->scopes = [
             NodeScope::STATEMENT,

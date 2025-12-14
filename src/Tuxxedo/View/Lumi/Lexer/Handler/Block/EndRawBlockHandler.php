@@ -17,6 +17,7 @@ use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Lexer\LexerStateFlag;
 use Tuxxedo\View\Lumi\Lexer\LexerStateInterface;
+use Tuxxedo\View\Lumi\Syntax\TextContext;
 use Tuxxedo\View\Lumi\Syntax\Token\TextToken;
 
 class EndRawBlockHandler implements BlockHandlerInterface, AlwaysStandaloneInterface
@@ -45,7 +46,7 @@ class EndRawBlockHandler implements BlockHandlerInterface, AlwaysStandaloneInter
             new TextToken(
                 line: $startingLine,
                 op1: $textBuffer,
-                op2: 'raw',
+                op2: TextContext::RAW->name,
             ),
         ];
     }

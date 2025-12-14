@@ -17,6 +17,7 @@ use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
+use Tuxxedo\View\Lumi\Syntax\TextContext;
 use Tuxxedo\View\Lumi\Syntax\Token\TextToken;
 
 class TextParserHandler implements ParserHandlerInterface
@@ -37,7 +38,9 @@ class TextParserHandler implements ParserHandlerInterface
 
             $nodes[] = new TextNode(
                 text: $token->op1,
-                origin: $token->op2,
+                context: $token->op2 !== null
+                    ? TextContext::fromString($token->op2)
+                    : TextContext::NONE,
             );
         } while (!$stream->eof() && $stream->currentIs($this->tokenClassName));
 
