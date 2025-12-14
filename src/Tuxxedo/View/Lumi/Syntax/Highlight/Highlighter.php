@@ -49,6 +49,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\CharacterSymbol;
+use Tuxxedo\View\Lumi\Syntax\Operator\SymbolInterface;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
 // @todo Support LumiNode
@@ -119,12 +120,14 @@ class Highlighter implements HighlighterInterface
 
     private function dye(
         ColorSlot $slot,
-        string $text,
+        SymbolInterface|string $text,
     ): string {
         return \sprintf(
             '<span style="color: %s;">%s</span>',
             $this->theme->color($slot),
-            $text,
+            $text instanceof SymbolInterface
+                ? $text->symbol()
+                : $text,
         );
     }
 
@@ -146,16 +149,16 @@ class Highlighter implements HighlighterInterface
             : '';
 
         return $this->highlightNode($node->array) .
-            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::LEFT_SQUARE_BRACKET->symbol()) .
+            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::LEFT_SQUARE_BRACKET) .
             $key .
-            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::RIGHT_SQUARE_BRACKET->symbol());
+            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::RIGHT_SQUARE_BRACKET);
     }
 
     private function highlightArrayItemNode(
         ArrayItemNode $node,
     ): string {
         $key = $node->key !== null
-            ? $this->highlightNode($node->key) . $this->dye(ColorSlot::DELIMITER, CharacterSymbol::COLON->symbol()) . ' '
+            ? $this->highlightNode($node->key) . $this->dye(ColorSlot::DELIMITER, CharacterSymbol::COLON) . ' '
             : '';
 
         return $key .
@@ -176,9 +179,9 @@ class Highlighter implements HighlighterInterface
             $items,
         );
 
-        return $this->dye(ColorSlot::DELIMITER, CharacterSymbol::LEFT_SQUARE_BRACKET->symbol()) .
+        return $this->dye(ColorSlot::DELIMITER, CharacterSymbol::LEFT_SQUARE_BRACKET) .
             $items .
-            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::RIGHT_SQUARE_BRACKET->symbol());
+            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::RIGHT_SQUARE_BRACKET);
     }
 
     private function highlightAssignmentNode(
@@ -304,7 +307,7 @@ class Highlighter implements HighlighterInterface
         ConcatNode $node,
     ): string {
         $output = '';
-        $separator = ' ' . $this->dye(ColorSlot::CONCAT, BinarySymbol::CONCAT->symbol()) . ' ';
+        $separator = ' ' . $this->dye(ColorSlot::CONCAT, BinarySymbol::CONCAT) . ' ';
 
         foreach ($node->operands as $index => $operand) {
             if ($index > 0) {
@@ -346,7 +349,7 @@ class Highlighter implements HighlighterInterface
         return $this->dye(ColorSlot::DELIMITER, '{% ') .
             $this->dye(ColorSlot::KEYWORD, 'declare') . ' ' .
             $directive . ' ' .
-            $this->dye(ColorSlot::OPERATOR, AssignmentSymbol::ASSIGN->symbol()) . ' ' .
+            $this->dye(ColorSlot::OPERATOR, AssignmentSymbol::ASSIGN) . ' ' .
             $this->highlightNode($node->value) .
             $this->dye(ColorSlot::DELIMITER, ' %}');
     }
@@ -383,12 +386,12 @@ class Highlighter implements HighlighterInterface
     ): string {
         if ($node->right instanceof IdentifierNode) {
             return $this->highlightNode($node->left) . ' ' .
-                $this->dye(ColorSlot::PIPE, BinarySymbol::BITWISE_OR->symbol()) . ' ' .
+                $this->dye(ColorSlot::PIPE, BinarySymbol::BITWISE_OR) . ' ' .
                 $this->dye(ColorSlot::FILTER_NAME, $node->right->name);
         }
 
         return $this->highlightNode($node->left) . ' ' .
-            $this->dye(ColorSlot::OPERATOR, BinarySymbol::BITWISE_OR->symbol()) . ' ' .
+            $this->dye(ColorSlot::OPERATOR, BinarySymbol::BITWISE_OR) . ' ' .
             $this->highlightNode($node->right);
     }
 
@@ -397,7 +400,7 @@ class Highlighter implements HighlighterInterface
     ): string {
         $body = '';
         $key = $node->key !== null
-            ? $this->dye(ColorSlot::DELIMITER, CharacterSymbol::COMMA->symbol()) . $this->highlightNode($node->key) . ' '
+            ? $this->dye(ColorSlot::DELIMITER, CharacterSymbol::COMMA) . $this->highlightNode($node->key) . ' '
             : '';
 
         foreach ($node->body as $bodyNode) {
@@ -430,22 +433,22 @@ class Highlighter implements HighlighterInterface
         }
 
         $arguments = \join(
-            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::COMMA->symbol() . ' '),
+            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::COMMA) . ' ',
             $arguments,
         );
 
         return $name .
-            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::LEFT_PARENTHESIS->symbol()) .
+            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::LEFT_PARENTHESIS) .
             $arguments .
-            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::RIGHT_PARENTHESIS->symbol());
+            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::RIGHT_PARENTHESIS);
     }
 
     private function highlightGroupNode(
         GroupNode $node,
     ): string {
-        return $this->dye(ColorSlot::DELIMITER, CharacterSymbol::LEFT_PARENTHESIS->symbol()) .
+        return $this->dye(ColorSlot::DELIMITER, CharacterSymbol::LEFT_PARENTHESIS) .
             $this->highlightNode($node->operand) .
-            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::RIGHT_PARENTHESIS->symbol());
+            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::RIGHT_PARENTHESIS);
     }
 
     private function highlightIdentifierNode(
@@ -472,7 +475,7 @@ class Highlighter implements HighlighterInterface
 
         if ($node->theme !== '') {
             $theme = ' ' .
-                $this->dye(ColorSlot::IDENTIFIER, $node->theme);
+                $this->dye(ColorSlot::IDENTIFIER, $this->escaper->html($node->theme));
         }
 
         return $this->dye(ColorSlot::DELIMITER, '{% ') .
@@ -514,12 +517,12 @@ class Highlighter implements HighlighterInterface
         return $this->highlightNode($node->caller) .
             $this->dye(ColorSlot::DELIMITER, $operator) .
             $this->dye(ColorSlot::MEMBER_NAME, $node->name) .
-            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::LEFT_PARENTHESIS->symbol()) .
+            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::LEFT_PARENTHESIS) .
             \join(
-                $this->dye(ColorSlot::DELIMITER, CharacterSymbol::COMMA->symbol() . ' '),
+                $this->dye(ColorSlot::DELIMITER, CharacterSymbol::COMMA) . ' ',
                 $arguments,
             ) .
-            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::RIGHT_PARENTHESIS->symbol());
+            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::RIGHT_PARENTHESIS);
     }
 
     private function highlightPropertyAccessNode(
