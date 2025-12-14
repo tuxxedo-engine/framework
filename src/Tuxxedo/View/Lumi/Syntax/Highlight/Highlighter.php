@@ -53,7 +53,6 @@ use Tuxxedo\View\Lumi\Syntax\Operator\SymbolInterface;
 use Tuxxedo\View\Lumi\Syntax\TextContext;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
-// @todo Support LumiNode
 class Highlighter implements HighlighterInterface
 {
     private ThemeInterface $theme;
