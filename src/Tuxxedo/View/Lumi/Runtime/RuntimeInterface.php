@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime;
 
-use Tuxxedo\View\Lumi\LumiEngine;
+use Tuxxedo\View\Lumi\LumiEngineInterface;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
@@ -45,7 +45,7 @@ interface RuntimeInterface
         get;
     }
 
-    public LumiEngine $lumi {
+    public LumiEngineInterface $lumi {
         get;
     }
 
@@ -71,7 +71,7 @@ interface RuntimeInterface
     }
 
     public function engine(
-        LumiEngine $lumi,
+        LumiEngineInterface $lumi,
     ): void;
 
     public function renderer(

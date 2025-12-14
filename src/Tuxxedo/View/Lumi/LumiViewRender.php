@@ -27,7 +27,7 @@ readonly class LumiViewRender implements ViewRenderInterface
     private \Closure $renderFrame;
 
     public function __construct(
-        public LumiEngine $engine,
+        public LumiEngineInterface $engine,
         public LoaderInterface $loader,
         public RuntimeInterface $runtime,
         public bool $alwaysCompile = false,

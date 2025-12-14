@@ -33,8 +33,7 @@ use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\ViewException;
 
-// @todo Consider backing this by an interface
-readonly class LumiEngine
+readonly class LumiEngine implements LumiEngineInterface
 {
     /**
      * @param OptimizerInterface[] $optimizers
@@ -109,12 +108,6 @@ readonly class LumiEngine
         );
     }
 
-    /**
-     * @throws LexerException
-     * @throws ParserException
-     * @throws CompilerException
-     * @throws ViewException
-     */
     public function compileFile(
         string $file,
     ): CompiledFileInterface {
@@ -145,12 +138,6 @@ readonly class LumiEngine
         );
     }
 
-    /**
-     * @throws LexerException
-     * @throws ParserException
-     * @throws CompilerException
-     * @throws ViewException
-     */
     public function compileString(
         string $source,
     ): string {
@@ -170,7 +157,7 @@ readonly class LumiEngine
         );
     }
 
-    private function parseByFile(
+    public function parseByFile(
         string $file,
     ): NodeStreamInterface {
         return $this->parser->parse(
@@ -180,7 +167,7 @@ readonly class LumiEngine
         );
     }
 
-    private function parseByString(
+    public function parseByString(
         string $source,
     ): NodeStreamInterface {
         return $this->parser->parse(
@@ -190,10 +177,6 @@ readonly class LumiEngine
         );
     }
 
-    /**
-     * @throws LexerException
-     * @throws ParserException
-     */
     public function highlightFile(
         string $file,
         ThemeInterface|string $theme,
@@ -216,10 +199,6 @@ readonly class LumiEngine
         );
     }
 
-    /**
-     * @throws LexerException
-     * @throws ParserException
-     */
     public function highlightString(
         string $source,
         ThemeInterface|string $theme,

@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime;
 
-use Tuxxedo\View\Lumi\LumiEngine;
+use Tuxxedo\View\Lumi\LumiEngineInterface;
 use Tuxxedo\View\Lumi\Runtime\Directive\Directives;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 use Tuxxedo\View\View;
@@ -34,7 +34,7 @@ class Runtime implements RuntimeInterface
      */
     public private(set) array $blocksStack = [];
 
-    public private(set) LumiEngine $lumi;
+    public private(set) LumiEngineInterface $lumi;
     public private(set) ViewRenderInterface $renderer;
 
     public array $blocks = [];
@@ -58,7 +58,7 @@ class Runtime implements RuntimeInterface
     }
 
     public function engine(
-        LumiEngine $lumi,
+        LumiEngineInterface $lumi,
     ): void {
         $this->lumi = $lumi;
     }
