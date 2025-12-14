@@ -36,6 +36,10 @@ class ExpressionReducer implements ExpressionReducerInterface
         ScopeInterface $scope,
         ExpressionNodeInterface $node,
     ): ?ExpressionNodeInterface {
+        if ($node instanceof LiteralNode) {
+            return $node;
+        }
+
         if ($node instanceof IdentifierNode) {
             $variable = $scope->get($node);
 
@@ -44,7 +48,7 @@ class ExpressionReducer implements ExpressionReducerInterface
             }
         }
 
-        return $this->evaluator->dereference($scope, $node);
+        return $this->evaluator->expression($scope, $node);
     }
 
     private function resolveNumber(
@@ -598,7 +602,21 @@ class ExpressionReducer implements ExpressionReducerInterface
         ScopeInterface $scope,
         ExpressionNodeInterface $expression,
     ): ?ExpressionNodeInterface {
-        // @todo Implement
+        $expression = $this->resolve($scope, $expression);
+
+        if (
+            $expression instanceof LiteralNode &&
+            (
+                $expression->type === Type::INT ||
+                $expression->type === Type::FLOAT
+            )
+        ) {
+            $value = $this->evaluator->castNodeToNumeric($expression);
+
+            if ($value !== null) {
+                return LiteralNode::createFromNativeType(-$value);
+            }
+        }
 
         return null;
     }

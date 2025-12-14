@@ -320,6 +320,10 @@ class Evaluator implements EvaluatorInterface
             return $this->assignment($scope, $node);
         }
 
+        if ($node instanceof LiteralNode) {
+            return $node;
+        }
+
         return null;
     }
 
