@@ -18,7 +18,6 @@ use Tuxxedo\Escaper\EscaperInterface;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 
 // @todo Explicit raw filter?
-// @todo Ideally it would be nice to support arguments for filters, effectively making it a pipe operator
 readonly class DefaultFilters implements FilterProviderInterface
 {
     private EscaperInterface $escaper;
