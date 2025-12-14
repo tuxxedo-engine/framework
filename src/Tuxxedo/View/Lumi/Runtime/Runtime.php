@@ -13,9 +13,11 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime;
 
+use Tuxxedo\View\Lumi\Highlight\HighlighterInterface;
+use Tuxxedo\View\Lumi\LumiEngine;
+use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Runtime\Directive\Directives;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
-use Tuxxedo\View\Lumi\Syntax\Highlight\HighlighterInterface;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
@@ -34,6 +36,7 @@ class Runtime implements RuntimeInterface
      */
     public private(set) array $blocksStack = [];
 
+    public private(set) LumiEngine $lumi;
     public private(set) ViewRenderInterface $renderer;
 
     public array $blocks = [];
@@ -46,7 +49,6 @@ class Runtime implements RuntimeInterface
      * @param array<string, \Closure(mixed $input, DirectivesInterface $directives): mixed> $filters
      */
     public function __construct(
-        public readonly HighlighterInterface $highlighter,
         array $directives = [],
         public readonly array $functions = [],
         public readonly array $customFunctions = [],
@@ -55,6 +57,12 @@ class Runtime implements RuntimeInterface
         public readonly array $filters = [],
     ) {
         $this->directives = $directives;
+    }
+
+    public function engine(
+        LumiEngine $lumi,
+    ): void {
+        $this->lumi = $lumi;
     }
 
     public function renderer(
@@ -248,6 +256,10 @@ class Runtime implements RuntimeInterface
         string $theme,
         string $sourceCode,
     ): void {
-        // @todo Implement
+        echo $this->lumi->highlightString(
+            source: $sourceCode,
+            theme: $theme,
+            optimized: false,
+        );
     }
 }

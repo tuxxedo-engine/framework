@@ -11,12 +11,16 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Syntax\Highlight\Theme;
+namespace Tuxxedo\View\Lumi\Highlight\Theme;
 
-use Tuxxedo\View\Lumi\Syntax\Highlight\ColorSlot;
+use Tuxxedo\View\Lumi\Highlight\ColorSlot;
 
 interface ThemeInterface
 {
+    public string $identifier {
+        get;
+    }
+
     public function color(
         ColorSlot $slot,
     ): string;

@@ -11,13 +11,15 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Syntax\Highlight;
+namespace Tuxxedo\View\Lumi\Highlight;
 
 use Tuxxedo\Escaper\Escaper;
 use Tuxxedo\Escaper\EscaperInterface;
+use Tuxxedo\View\Lumi\Highlight\Theme\ThemeFactory;
+use Tuxxedo\View\Lumi\Highlight\Theme\ThemeFactoryInterface;
+use Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
-use Tuxxedo\View\Lumi\Syntax\Highlight\Theme\ThemeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayItemNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
@@ -56,26 +58,33 @@ use Tuxxedo\View\Lumi\Syntax\Type;
 class Highlighter implements HighlighterInterface
 {
     private ThemeInterface $theme;
-    private EscaperInterface $escaper;
+    private readonly EscaperInterface $escaper;
+    private readonly ThemeFactoryInterface $themeFactory;
 
     public function __construct(
-        ?EscaperInterface $escaper = null
+        ?EscaperInterface $escaper = null,
+        ?ThemeFactoryInterface $themeFactory = null,
     ) {
         $this->escaper = $escaper ?? new Escaper();
+        $this->themeFactory = $themeFactory ?? ThemeFactory::createDefault();
     }
 
     public function highlight(
-        ThemeInterface $theme,
+        ThemeInterface|string $theme,
         NodeStreamInterface $stream,
     ): string {
         $source = '';
-        $this->theme = $theme;
+        $this->theme = \is_string($theme)
+            ? $this->themeFactory->find($theme)
+            : $theme;
 
-        while (!$stream->eof()) {
-            $source .= $this->highlightNode($stream->consume());
+        try {
+            while (!$stream->eof()) {
+                $source .= $this->highlightNode($stream->consume());
+            }
+        } finally {
+            unset($this->theme);
         }
-
-        unset($this->theme);
 
         return $source;
     }
@@ -114,7 +123,7 @@ class Highlighter implements HighlighterInterface
             $node instanceof TextNode => $this->highlightTextNode($node),
             $node instanceof UnaryOpNode => $this->highlightUnaryOpNode($node),
             $node instanceof WhileNode => $this->highlightWhileNode($node),
-            default => throw ParserException::fromUnknownHighlightNode($node),
+            default => throw HighlightException::fromUnknownHighlightNode($node),
         };
     }
 

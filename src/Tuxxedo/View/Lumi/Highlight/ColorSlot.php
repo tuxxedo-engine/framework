@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Syntax\Highlight;
+namespace Tuxxedo\View\Lumi\Highlight;
 
 enum ColorSlot
 {

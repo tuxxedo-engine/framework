@@ -233,17 +233,6 @@ class ParserException extends LumiException
         );
     }
 
-    public static function fromUnknownHighlightNode(
-        NodeInterface $node,
-    ): self {
-        return new self(
-            message: \sprintf(
-                'Cannot highlight source, unknown node encountered: %s',
-                $node::class,
-            ),
-        );
-    }
-
     public static function fromInvalidUnaryMutation(
         UnarySymbol $operator,
         int $line,

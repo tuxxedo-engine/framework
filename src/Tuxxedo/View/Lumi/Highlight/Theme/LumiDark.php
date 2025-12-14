@@ -11,12 +11,14 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Syntax\Highlight\Theme;
+namespace Tuxxedo\View\Lumi\Highlight\Theme;
 
-use Tuxxedo\View\Lumi\Syntax\Highlight\ColorSlot;
+use Tuxxedo\View\Lumi\Highlight\ColorSlot;
 
 class LumiDark implements ThemeInterface
 {
+    public private(set) string $identifier = 'dark';
+
     public function color(
         ColorSlot $slot,
     ): string {

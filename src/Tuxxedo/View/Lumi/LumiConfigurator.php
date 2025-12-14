@@ -16,6 +16,7 @@ namespace Tuxxedo\View\Lumi;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
+use Tuxxedo\View\Lumi\Highlight\HighlighterInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
 use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
@@ -31,7 +32,6 @@ use Tuxxedo\View\Lumi\Runtime\Loader;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\Runtime;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
-use Tuxxedo\View\Lumi\Syntax\Highlight\HighlighterInterface;
 use Tuxxedo\View\ViewRenderInterface;
 
 class LumiConfigurator implements LumiConfiguratorInterface
@@ -562,37 +562,42 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
     public function build(): ViewRenderInterface
     {
-        return new LumiViewRender(
-            engine: LumiEngine::createCustom(
-                lexer: $this->lexer,
-                parser: $this->parser,
-                compiler: $this->compiler,
-                highlighter: $this->highlighter,
-                optimizers: $this->optimizers,
+        $lumi = LumiEngine::createCustom(
+            lexer: $this->lexer,
+            parser: $this->parser,
+            compiler: $this->compiler,
+            highlighter: $this->highlighter,
+            optimizers: $this->optimizers,
+        );
+
+        $runtime = new Runtime(
+            directives: \array_merge(
+                $this->directives,
+                $this->defaultDirectives,
             ),
+            functions: $this->functions,
+            customFunctions: \array_merge(
+                $this->buildCustomFunctions(),
+                $this->customFunctions,
+            ),
+            functionPolicy: $this->functionPolicy,
+            instanceCallClasses: $this->instanceCallClasses,
+            filters: \array_merge(
+                $this->buildCustomFilters(),
+                $this->customFilters,
+            ),
+        );
+
+        $runtime->engine($lumi);
+
+        return new LumiViewRender(
+            engine: $lumi,
             loader: $this->loader ?? new Loader(
                 directory: $this->viewDirectory,
                 cacheDirectory: $this->viewCacheDirectory,
                 extension: $this->viewExtension,
             ),
-            runtime: new Runtime(
-                highlighter: $this->highlighter ?? LumiEngine::createDefaultHighlighter(),
-                directives: \array_merge(
-                    $this->directives,
-                    $this->defaultDirectives,
-                ),
-                functions: $this->functions,
-                customFunctions: \array_merge(
-                    $this->buildCustomFunctions(),
-                    $this->customFunctions,
-                ),
-                functionPolicy: $this->functionPolicy,
-                instanceCallClasses: $this->instanceCallClasses,
-                filters: \array_merge(
-                    $this->buildCustomFilters(),
-                    $this->customFilters,
-                ),
-            ),
+            runtime: $runtime,
             alwaysCompile: $this->viewAlwaysCompile,
             disableErrorReporting: $this->viewDisableErrorReporting,
         );

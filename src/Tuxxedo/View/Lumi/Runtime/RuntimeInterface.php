@@ -12,9 +12,9 @@
 declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime;
-
+use Tuxxedo\View\Lumi\Highlight\HighlighterInterface;
+use Tuxxedo\View\Lumi\LumiEngine;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
-use Tuxxedo\View\Lumi\Syntax\Highlight\HighlighterInterface;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
 
@@ -45,7 +45,7 @@ interface RuntimeInterface
         get;
     }
 
-    public HighlighterInterface $highlighter {
+    public LumiEngine $lumi {
         get;
     }
 
@@ -69,6 +69,10 @@ interface RuntimeInterface
     public array $blocks {
         get;
     }
+
+    public function engine(
+        LumiEngine $lumi,
+    ): void;
 
     public function renderer(
         ViewRenderInterface $render,
