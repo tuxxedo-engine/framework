@@ -13,23 +13,16 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi;
 
-use Tuxxedo\View\Lumi\Compiler\CompiledFile;
 use Tuxxedo\View\Lumi\Compiler\CompiledFileInterface;
-use Tuxxedo\View\Lumi\Compiler\Compiler;
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
-use Tuxxedo\View\Lumi\Highlight\Highlighter;
-use Tuxxedo\View\Lumi\Highlight\HighlighterInterface;
 use Tuxxedo\View\Lumi\Highlight\HighlightException;
+use Tuxxedo\View\Lumi\Highlight\HighlighterInterface;
 use Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface;
-use Tuxxedo\View\Lumi\Lexer\Lexer;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
-use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
-use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpOptimizer;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
-use Tuxxedo\View\Lumi\Parser\Parser;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\ViewException;
