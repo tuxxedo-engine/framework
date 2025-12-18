@@ -15,6 +15,7 @@ namespace Tuxxedo\Http\Response;
 
 use Tuxxedo\Http\HeaderInterface;
 
+// @todo Streaming support
 interface ResponseInterface extends ResponseCodeInterface
 {
     /**

@@ -15,6 +15,10 @@ namespace Tuxxedo\Http\Request\Context;
 
 use Tuxxedo\Http\Method;
 
+// @todo add bool $ajax
+// @todo expects? e.g. does the client expects json?
+// @todo IP address functionality
+// @todo Prefers language functionality
 interface ServerContextInterface
 {
     public bool $https {
