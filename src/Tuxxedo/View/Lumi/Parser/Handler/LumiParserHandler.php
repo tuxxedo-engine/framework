@@ -19,6 +19,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\LumiNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\LumiToken;
 
+// @todo Maybe the highlight node stream can be parsed here for better performance
 class LumiParserHandler implements ParserHandlerInterface
 {
     /**
