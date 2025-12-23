@@ -36,6 +36,9 @@ class DefaultFunctions implements FunctionProviderInterface
         /** @var array<string, mixed> $scope */
         $scope = $arguments[1] ?? [];
 
+        // @todo This is not a return statement due to autoescape mode, would be nice if $directives could read the
+        //       the current state, but that can be mutated with {% declare ... %}, maybe function arguments needs a
+        //       an execution frame to keep state?
         echo $render->render(
             view: new View(
                 name: $view,
