@@ -34,6 +34,8 @@ use Tuxxedo\View\Lumi\Runtime\Runtime;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
 use Tuxxedo\View\ViewRenderInterface;
 
+// @todo Default directives needs to be passed to the Compiler for them to realistically make sense, otherwise
+//       we can end up in a state mismatch between Compiler <> Runtime code
 class LumiConfigurator implements LumiConfiguratorInterface
 {
     public private(set) string $viewDirectory = '';

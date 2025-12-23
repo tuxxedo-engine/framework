@@ -31,6 +31,7 @@ return static function (ContainerInterface $container): void {
             return LumiConfigurator::fromConfig($container)
                 ->allowAllFunctions()
                 ->enableErrorReporting()
+                ->disableAutoescape()
                 ->build();
         },
     );
