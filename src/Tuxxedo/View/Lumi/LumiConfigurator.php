@@ -15,7 +15,10 @@ namespace Tuxxedo\View\Lumi;
 
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\View\Lumi\Compiler\Compiler;
+use Tuxxedo\View\Lumi\Compiler\CompilerDirectives;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
+use Tuxxedo\View\Lumi\Compiler\CompilerState;
 use Tuxxedo\View\Lumi\Highlight\HighlighterInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
 use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
@@ -34,8 +37,6 @@ use Tuxxedo\View\Lumi\Runtime\Runtime;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
 use Tuxxedo\View\ViewRenderInterface;
 
-// @todo Default directives needs to be passed to the Compiler for them to realistically make sense, otherwise
-//       we can end up in a state mismatch between Compiler <> Runtime code
 class LumiConfigurator implements LumiConfiguratorInterface
 {
     public private(set) string $viewDirectory = '';
@@ -564,10 +565,26 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
     public function build(): ViewRenderInterface
     {
+        if ($this->compiler === null) {
+            if ($this->defaultDirectives !== DefaultDirectives::defaults()) {
+                $compiler = Compiler::createWithDefaultProviders(
+                    state: new CompilerState(
+                        directives: new CompilerDirectives(
+                            directives: $this->defaultDirectives,
+                        ),
+                    ),
+                );
+            } else {
+                $compiler = null;
+            }
+        } else {
+            $compiler = $this->compiler;
+        }
+
         $lumi = LumiEngine::createCustom(
             lexer: $this->lexer,
             parser: $this->parser,
-            compiler: $this->compiler,
+            compiler: $compiler,
             highlighter: $this->highlighter,
             optimizers: $this->optimizers,
         );

@@ -23,9 +23,10 @@ class CompilerState implements CompilerStateInterface
     public readonly DirectivesInterface&CompilerDirectivesInterface $directives;
     public private(set) int $flags = 0;
 
-    public function __construct()
-    {
-        $this->directives = CompilerDirectives::createWithDefaults();
+    public function __construct(
+        (DirectivesInterface&CompilerDirectivesInterface)|null $directives = null,
+    ) {
+        $this->directives = $directives ?? CompilerDirectives::createWithDefaults();
     }
 
     public function hasFlag(
