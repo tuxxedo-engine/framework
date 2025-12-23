@@ -350,11 +350,13 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
             }
         }
 
-        $kernel->defaultExceptionHandler(
-            handler: fn (): ErrorHandlerInterface => new DebugErrorHandler(
-                registerPhpErrorHandler: $this->registerPhpErrorHandler,
-            ),
-        );
+        if ($this->useDebugHandler) {
+            $kernel->defaultExceptionHandler(
+                handler: fn (): ErrorHandlerInterface => new DebugErrorHandler(
+                    registerPhpErrorHandler: $this->registerPhpErrorHandler,
+                ),
+            );
+        }
 
         if (\sizeof($this->defaultExceptionHandlers) > 0) {
             foreach ($this->defaultExceptionHandlers as $handler) {
