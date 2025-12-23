@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
+// @todo Consider renaming methods like bind() to be more descriptive
+// @todo Consider whether sealing should be emitting a readonly copy? Or maybe there needs to be some strategies here
 interface ContainerInterface
 {
     public bool $sealed {
