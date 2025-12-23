@@ -34,7 +34,7 @@ class Runtime implements RuntimeInterface
      */
     public private(set) array $blocksStack = [];
 
-    public private(set) LumiEngineInterface $lumi;
+    public private(set) LumiEngineInterface $engine;
     public private(set) ViewRenderInterface $renderer;
 
     public array $blocks = [];
@@ -58,9 +58,9 @@ class Runtime implements RuntimeInterface
     }
 
     public function engine(
-        LumiEngineInterface $lumi,
+        LumiEngineInterface $engine,
     ): void {
-        $this->lumi = $lumi;
+        $this->engine = $engine;
     }
 
     public function renderer(
@@ -254,7 +254,7 @@ class Runtime implements RuntimeInterface
         string $theme,
         string $sourceCode,
     ): void {
-        echo $this->lumi->highlightString(
+        echo $this->engine->highlightString(
             source: $sourceCode,
             theme: $theme,
             optimized: false,

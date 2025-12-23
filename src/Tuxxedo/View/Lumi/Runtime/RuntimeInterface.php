@@ -45,7 +45,7 @@ interface RuntimeInterface
         get;
     }
 
-    public LumiEngineInterface $lumi {
+    public LumiEngineInterface $engine {
         get;
     }
 
@@ -71,7 +71,7 @@ interface RuntimeInterface
     }
 
     public function engine(
-        LumiEngineInterface $lumi,
+        LumiEngineInterface $engine,
     ): void;
 
     public function renderer(

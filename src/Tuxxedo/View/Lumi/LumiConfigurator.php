@@ -610,7 +610,6 @@ class LumiConfigurator implements LumiConfiguratorInterface
         $runtime->engine($lumi);
 
         return new LumiViewRender(
-            engine: $lumi,
             loader: $this->loader ?? new Loader(
                 directory: $this->viewDirectory,
                 cacheDirectory: $this->viewCacheDirectory,
