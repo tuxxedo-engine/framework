@@ -104,6 +104,8 @@ class Container implements ContainerInterface
         bool $bindInterfaces = true,
         bool $bindParent = true,
     ): static {
+        // @todo Consider removing this to ease friction between services that explicitly wants to override their
+        //       default service initializer
         if (\is_subclass_of($class, LazyInitializableInterface::class)) {
             throw ContainerException::fromAmbiguousInitializer();
         }
