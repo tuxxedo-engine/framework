@@ -26,7 +26,7 @@ readonly class Options extends Route
     ) {
         parent::__construct(
             uri: $uri,
-            methods: [
+            method: [
                 Method::OPTIONS,
             ],
             priority: $priority,

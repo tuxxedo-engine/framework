@@ -26,7 +26,7 @@ readonly class Delete extends Route
     ) {
         parent::__construct(
             uri: $uri,
-            methods: [
+            method: [
                 Method::DELETE,
             ],
             priority: $priority,

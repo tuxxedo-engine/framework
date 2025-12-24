@@ -26,7 +26,7 @@ readonly class Connect extends Route
     ) {
         parent::__construct(
             uri: $uri,
-            methods: [
+            method: [
                 Method::CONNECT,
             ],
             priority: $priority,

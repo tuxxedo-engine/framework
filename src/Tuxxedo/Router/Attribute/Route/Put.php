@@ -26,7 +26,7 @@ readonly class Put extends Route
     ) {
         parent::__construct(
             uri: $uri,
-            methods: [
+            method: [
                 Method::PUT,
             ],
             priority: $priority,

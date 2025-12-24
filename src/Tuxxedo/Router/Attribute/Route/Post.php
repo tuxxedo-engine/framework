@@ -26,7 +26,7 @@ readonly class Post extends Route
     ) {
         parent::__construct(
             uri: $uri,
-            methods: [
+            method: [
                 Method::POST,
             ],
             priority: $priority,

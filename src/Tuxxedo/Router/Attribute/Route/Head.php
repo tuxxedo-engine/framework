@@ -26,7 +26,7 @@ readonly class Head extends Route
     ) {
         parent::__construct(
             uri: $uri,
-            methods: [
+            method: [
                 Method::HEAD,
             ],
             priority: $priority,

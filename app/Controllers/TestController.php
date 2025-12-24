@@ -192,7 +192,7 @@ readonly class TestController
         );
     }
 
-    #[Route(uri: '/inputMap', methods: [Method::GET, Method::POST])]
+    #[Route(uri: '/inputMap', method: [Method::GET, Method::POST])]
     public function inputMap(RequestInterface $request): ResponseInterface
     {
         if ($request->server->method === Method::GET) {
@@ -217,7 +217,7 @@ readonly class TestController
         );
     }
 
-    #[Route(uri: '/fileUpload', methods: [Method::GET, Method::POST])]
+    #[Route(uri: '/fileUpload', method: [Method::GET, Method::POST])]
     public function fileUpload(RequestInterface $request): ResponseInterface
     {
         if ($request->server->method === Method::GET) {

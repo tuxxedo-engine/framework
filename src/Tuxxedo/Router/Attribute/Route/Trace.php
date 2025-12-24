@@ -26,7 +26,7 @@ readonly class Trace extends Route
     ) {
         parent::__construct(
             uri: $uri,
-            methods: [
+            method: [
                 Method::TRACE,
             ],
             priority: $priority,

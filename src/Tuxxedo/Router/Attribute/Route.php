@@ -25,18 +25,18 @@ readonly class Route
     public array $methods;
 
     /**
-     * @param Method[]|string[] $methods
+     * @param Method[]|string[] $method
      */
     public function __construct(
         public ?string $uri,
-        array $methods = [],
+        array $method = [],
         public RoutePriority $priority = RoutePriority::NORMAL,
     ) {
         $this->methods = \array_map(
             static fn (Method|string $method): Method => \is_string($method)
                 ? Method::from($method)
                 : $method,
-            $methods,
+            $method,
         );
     }
 }

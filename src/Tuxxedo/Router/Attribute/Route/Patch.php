@@ -26,7 +26,7 @@ readonly class Patch extends Route
     ) {
         parent::__construct(
             uri: $uri,
-            methods: [
+            method: [
                 Method::PATCH,
             ],
             priority: $priority,

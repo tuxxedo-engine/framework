@@ -26,7 +26,7 @@ readonly class Get extends Route
     ) {
         parent::__construct(
             uri: $uri,
-            methods: [
+            method: [
                 Method::GET,
             ],
             priority: $priority,
