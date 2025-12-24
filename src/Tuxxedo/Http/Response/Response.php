@@ -133,11 +133,12 @@ class Response implements ResponseInterface
         string $uri,
         array $headers = [],
         ResponseCode $responseCode = ResponseCode::OK,
+        string $body = '',
     ): static {
         return new static(
             headers: $headers,
             responseCode: $responseCode,
-            body: '',
+            body: $body,
         )->withHeader(
             header: new Header('Location', $uri),
             replace: true,
