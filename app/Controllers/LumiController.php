@@ -15,7 +15,7 @@ namespace App\Controllers;
 
 use Tuxxedo\Collection\CollectionInterface;
 use Tuxxedo\Collection\FileCollection;
-use Tuxxedo\Container\Resolver\ConfigValue;
+use Tuxxedo\Config\Resolver\ConfigValue;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;

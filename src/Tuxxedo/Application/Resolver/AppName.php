@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Container\Resolver;
+namespace Tuxxedo\Application\Resolver;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
@@ -21,10 +21,10 @@ use Tuxxedo\Http\Kernel\KernelInterface;
  * @implements DependencyResolverInterface<string>
  */
 #[\Attribute(\Attribute::TARGET_PARAMETER)]
-class AppVersion implements DependencyResolverInterface
+class AppName implements DependencyResolverInterface
 {
     public function resolve(ContainerInterface $container): mixed
     {
-        return $container->resolve(KernelInterface::class)->appVersion;
+        return $container->resolve(KernelInterface::class)->appName;
     }
 }

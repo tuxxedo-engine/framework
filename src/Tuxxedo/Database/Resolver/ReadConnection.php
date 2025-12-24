@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Container\Resolver\Database;
+namespace Tuxxedo\Database\Resolver;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
@@ -22,10 +22,10 @@ use Tuxxedo\Database\Driver\ConnectionInterface;
  * @implements DependencyResolverInterface<ConnectionInterface>
  */
 #[\Attribute(\Attribute::TARGET_PARAMETER)]
-class DefaultConnection implements DependencyResolverInterface
+class ReadConnection implements DependencyResolverInterface
 {
     public function resolve(ContainerInterface $container): ConnectionInterface
     {
-        return $container->resolve(ConnectionManagerInterface::class)->getDefaultConnection();
+        return $container->resolve(ConnectionManagerInterface::class)->getReadConnection();
     }
 }
