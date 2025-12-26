@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use Tuxxedo\Application\Resolver\ConfigValue;
 use Tuxxedo\Collection\CollectionInterface;
 use Tuxxedo\Collection\FileCollection;
-use Tuxxedo\Config\Resolver\ConfigValue;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
