@@ -290,5 +290,4 @@ class ContainerTest extends TestCase
     // @todo call() with named arguments
     // @todo call() with indexed arguments
     // @todo call() with mixed arguments
-    // @todo Test with anonymous-classes
 }
