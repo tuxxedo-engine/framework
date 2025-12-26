@@ -20,6 +20,8 @@ use Tuxxedo\Http\Response\ResponsableInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\DispatchableRouteInterface;
 
+// @todo Consider whether we want this as the default or have a DI like default dispatcher
+//       as this will also fix the oddity of the requestArgumentName
 class Dispatcher implements DispatcherInterface
 {
     /**

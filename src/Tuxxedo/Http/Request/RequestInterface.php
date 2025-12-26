@@ -19,6 +19,9 @@ use Tuxxedo\Http\Request\Context\InputContextInterface;
 use Tuxxedo\Http\Request\Context\ServerContextInterface;
 use Tuxxedo\Http\Request\Context\UploadedFilesContextInterface;
 
+// @todo This should also contain a dispatchable route entry, this may mean we need a wither or some other way
+//       to properly construct the request object inside the kernel to associated the correct route with this
+//       request. Might be problematic since $request can also come as an argument to run()
 interface RequestInterface
 {
     public ServerContextInterface $server {
