@@ -154,4 +154,72 @@ class EscaperTest extends TestCase
     {
         self::assertSame((new Escaper())->url($value), $expected);
     }
+
+    public static function htmlCommentDataProvider(): \Generator
+    {
+        yield [
+            'Hello',
+            'Hello',
+        ];
+
+        yield [
+            'a--b',
+            'a- -b',
+        ];
+
+        yield [
+            "a\r\nb",
+            "a\nb",
+        ];
+
+        yield [
+            "a\rb",
+            "a\nb",
+        ];
+
+        yield [
+            'ends-',
+            'ends- ',
+        ];
+    }
+
+    #[DataProvider('htmlCommentDataProvider')]
+    public function testHtmlComment(string $value, string $expected): void
+    {
+        self::assertSame((new Escaper())->htmlComment($value), $expected);
+    }
+
+    public static function cssDataProvider(): \Generator
+    {
+        yield [
+            'abcXYZ012',
+            'abcXYZ012',
+        ];
+
+        yield [
+            ' ',
+            '\\20 ',
+        ];
+
+        yield [
+            '-',
+            '\\2D ',
+        ];
+
+        yield [
+            '<>',
+            '\\3C \\3E ',
+        ];
+
+        yield [
+            "\n",
+            '\\A ',
+        ];
+    }
+
+    #[DataProvider('cssDataProvider')]
+    public function testCss(string $value, string $expected): void
+    {
+        self::assertSame((new Escaper())->css($value), $expected);
+    }
 }
