@@ -15,6 +15,8 @@ namespace Unit\Container;
 
 use Fixtures\Container\AbstractService;
 use Fixtures\Container\ComplexService;
+use Fixtures\Container\CtorArgsService;
+use Fixtures\Container\CtorNoArgsService;
 use Fixtures\Container\LazyService;
 use Fixtures\Container\PersistentService;
 use Fixtures\Container\RebindA;
@@ -242,8 +244,39 @@ class ContainerTest extends TestCase
     }
     */
 
-    // @todo Resolve() with something that has a constructor with arguments
-    // @todo Resolve() with something that has a constructor without arguments
+    public function testResolveWithConstructorNoArgs(): void
+    {
+        $container = new Container();
+        $service = $container->resolve(CtorNoArgsService::class);
+
+        self::assertTrue($service->ready);
+    }
+
+    public function testResolveWithConstructorArgs(): void
+    {
+        $container = new Container();
+        $service = $container->resolve(CtorArgsService::class);
+
+        self::assertSame($service->dependency->foo(), 'bar');
+    }
+
+    public function testLazyAnonymousClass(): void
+    {
+        $container = new Container();
+
+        $container->lazy(
+            ServiceOneInterface::class,
+            static fn (): ServiceOneInterface => new class implements ServiceOneInterface {
+                public function foo(): string
+                {
+                    return 'baz';
+                }
+            },
+        );
+
+        self::assertSame($container->resolve(ServiceOneInterface::class)->foo(), 'baz');
+    }
+
     // @todo Resolve() with DependencyResolverInterface
     // @todo Resolve() with DependencyResolverInterface with unresolvable type
     // @todo Resolve() with DependencyResolverInterface with type with nullable

@@ -283,6 +283,8 @@ class Container implements ContainerInterface
             }
         }
 
+        // @todo Consider whether we want to have this check here or later, as this is faster
+        //       but the general expectancy might be the type is resolved first
         if ($parameter->isOptional() && $parameter->isDefaultValueAvailable()) {
             return $parameter->getDefaultValue();
         }
