@@ -15,6 +15,7 @@ namespace Tuxxedo\Router\Attribute;
 
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 
+// @todo Consider supporting closures for $name?
 #[\Attribute(flags: \Attribute::IS_REPEATABLE | \Attribute::TARGET_CLASS | \Attribute::TARGET_METHOD)]
 readonly class Middleware
 {
