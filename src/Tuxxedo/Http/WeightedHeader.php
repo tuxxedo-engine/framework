@@ -19,7 +19,7 @@ readonly class WeightedHeader extends Header implements WeightedHeaderInterface
     {
         $parsed = [];
 
-        foreach (\explode(',', $this->value) as $part) {
+        foreach (\explode(',', $this->value) as $position => $part) {
             $segments = \explode(';', $part);
             $value = \trim(\array_shift($segments), " \t\n\r\0\x0B\"");
             $weight = 1.0;
@@ -41,12 +41,15 @@ readonly class WeightedHeader extends Header implements WeightedHeaderInterface
             $parsed[] = [
                 $value,
                 $weight,
+                $position,
             ];
         }
 
         \usort(
             $parsed,
-            static fn (array $a, array $b): int => $b[1] <=> $a[1],
+            static fn (array $a, array $b): int => ($b[1] <=> $a[1]) === 1
+                ? 1
+                : $a[2] <=> $b[2],
         );
 
         return \array_filter(
@@ -59,7 +62,7 @@ readonly class WeightedHeader extends Header implements WeightedHeaderInterface
     {
         $parsed = [];
 
-        foreach (\explode(',', $this->value) as $part) {
+        foreach (\explode(',', $this->value) as $position => $part) {
             $segments = \explode(';', $part);
             $value = \trim(\array_shift($segments), " \t\n\r\0\x0B\"");
             $weight = 1.0;
@@ -78,17 +81,22 @@ readonly class WeightedHeader extends Header implements WeightedHeaderInterface
                 }
             }
 
-            $parsed[] = new WeightedHeaderPair(
-                value: $value,
-                weight: $weight,
-            );
+            $parsed[] = [
+                new WeightedHeaderPair(
+                    value: $value,
+                    weight: $weight,
+                ),
+                $position,
+            ];
         }
 
         \usort(
             $parsed,
-            static fn (WeightedHeaderPairInterface $a, WeightedHeaderPairInterface $b): int => $b->weight <=> $a->weight,
+            static fn (array $a, array $b): int => ($b[0]->weight <=> $a[0]->weight) === 1
+                ? 1
+                : $a[1] <=> $b[1],
         );
 
-        return $parsed;
+        return \array_column($parsed, 0);
     }
 }
