@@ -266,7 +266,7 @@ class ContainerTest extends TestCase
 
         $container->lazy(
             ServiceOneInterface::class,
-            static fn (): ServiceOneInterface => new class implements ServiceOneInterface {
+            static fn (): ServiceOneInterface => new class () implements ServiceOneInterface {
                 public function foo(): string
                 {
                     return 'baz';
