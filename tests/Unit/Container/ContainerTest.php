@@ -277,6 +277,63 @@ class ContainerTest extends TestCase
         self::assertSame($container->resolve(ServiceOneInterface::class)->foo(), 'baz');
     }
 
+    public static function callDataProvider(): \Generator
+    {
+        yield [
+            static fn (): true => true,
+            [],
+        ];
+
+        yield [
+            static fn (int $a, int $b): bool => $a + $b === 3,
+            [
+                1,
+                2,
+            ],
+        ];
+
+        yield [
+            static fn (string $a, string $b): bool => $a . $b === 'foobar',
+            [
+                'a' => 'foo',
+                'b' => 'bar',
+            ],
+        ];
+
+        yield [
+            static fn (ServiceOne $service): bool => $service->foo() === 'bar',
+            [],
+        ];
+
+        yield [
+            static fn (ServiceOneInterface $service): bool => $service->foo() === 'bar',
+            [
+                'service' => new ServiceOne(),
+            ],
+        ];
+
+        yield [
+            static fn (ServiceOne $service, string $a, string $b): bool => $a . $service->foo() . $b === 'foobarbaz',
+            [
+                2 => 'baz',
+                'a' => 'foo',
+            ],
+        ];
+    }
+
+    /**
+     * @param mixed[] $arguments
+     */
+    #[DataProvider('callDataProvider')]
+    public function testCall(
+        \Closure $callable,
+        array $arguments,
+    ): void {
+        $container = new Container();
+
+        self::assertTrue($container->call($callable, $arguments));
+    }
+
     // @todo Resolve() with DependencyResolverInterface
     // @todo Resolve() with DependencyResolverInterface with unresolvable type
     // @todo Resolve() with DependencyResolverInterface with type with nullable
@@ -285,9 +342,4 @@ class ContainerTest extends TestCase
     // @todo Resolve() with DependencyResolverInterface with intersection type
     // @todo Resolve() without DependencyResolverInterface but with scalar type
     // @todo Resolve() with DependencyResolverInterface without type
-    // @todo lazy() matrix
-    // @todo call() without arguments
-    // @todo call() with named arguments
-    // @todo call() with indexed arguments
-    // @todo call() with mixed arguments
 }
