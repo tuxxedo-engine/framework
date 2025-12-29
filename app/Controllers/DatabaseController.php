@@ -74,12 +74,16 @@ readonly class DatabaseController
         \var_dump(\count($result));
         \var_dump($result->fetchObject()->properties['one'] ?? null);
 
-        // @todo Test prepare()
-        // @todo Test lastInsertIdAsString()
-        // @todo Test lastInsertIdAsInt()
+        $connection->query('CREATE TABLE `test` ( `a` VARCHAR(32) NOT NULL, `b` VARCHAR(32) NOT NULL )');
+        $connection->query('INSERT INTO `test` VALUES ("foo", "bar")');
+        $connection->query('DROP TABLE `test`');
 
-        // @todo Test statements
-        // @todo Test ResultSets
+        \var_dump(
+            $connection->lastInsertIdAsInt(),
+            $connection->lastInsertIdAsString(),
+        );
+
+        $connection->query('DROP TABLE `test`');
 
         return new Response();
     }

@@ -37,6 +37,9 @@ return [
      * ConnectionRole::DEFAULT_READ     - For connections that acts as the default read connection if using multiples
      * ConnectionRole::DEFAULT_WRITE    - For connections that acts as the default write connection if using multiples
      *
+     * Note, if multiple are defined of the same role, then functionality that fetches a connection by role is
+     * undefined. To avoid this, set extra connections as ConnectionRole::NONE or use named connections instead.
+     *
      * @type ConnectionRole
      */
     'role' => ConnectionRole::DEFAULT,
