@@ -32,7 +32,6 @@ use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
 
-// @todo Check CompilerProviders for proper sequence escaping like compileLayout()
 class Compiler implements CompilerInterface
 {
     /**

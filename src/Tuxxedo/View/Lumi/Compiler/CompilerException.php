@@ -118,13 +118,6 @@ class CompilerException extends LumiException
         );
     }
 
-    public static function fromCannotEscapeQuote(): self
-    {
-        return new self(
-            message: 'Unable to escape single quotes from node',
-        );
-    }
-
     public static function fromArrayAccessWithoutKey(): self
     {
         return new self(

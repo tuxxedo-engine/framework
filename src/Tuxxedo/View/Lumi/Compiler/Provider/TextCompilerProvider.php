@@ -142,14 +142,14 @@ class TextCompilerProvider implements CompilerProviderInterface
         if ($this->isLayoutStream($stream)) {
             return \sprintf(
                 "\n<?php \$this->block('%s', '%s'); ?>",
-                $node->name,
-                $this->escapeBlockQuote($body),
+                $compiler->escaper->js($node->name),
+                $compiler->escaper->js($body),
             );
         }
 
         return \sprintf(
             '<?php if ($this->hasBlock(\'%1$s\')) { eval($this->blockCode(\'%1$s\')); } else { ?>%2$s<?php } ?>',
-            $node->name,
+            $compiler->escaper->js($node->name),
             $body,
         );
     }
@@ -241,15 +241,6 @@ class TextCompilerProvider implements CompilerProviderInterface
         }
 
         return false;
-    }
-
-    /**
-     * @throws CompilerException
-     */
-    private function escapeBlockQuote(
-        string $input,
-    ): string {
-        return \preg_replace('/\'/u', '\\\'', $input) ?? throw CompilerException::fromCannotEscapeQuote();
     }
 
     private function canDisableAutoEscapeFor(
