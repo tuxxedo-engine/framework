@@ -25,7 +25,7 @@ class Version
 
     final public const int ID = 100;
 
-    final public const bool PREVIEW	= true;
+    final public const bool PREVIEW = true;
 
     final public const string PREVIEW_TYPE = 'Alpha';
 
