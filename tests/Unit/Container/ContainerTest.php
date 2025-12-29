@@ -17,7 +17,12 @@ use Fixtures\Container\AbstractService;
 use Fixtures\Container\ComplexService;
 use Fixtures\Container\CtorArgsService;
 use Fixtures\Container\CtorNoArgsService;
+use Fixtures\Container\IntService;
+use Fixtures\Container\IntersectionService;
 use Fixtures\Container\LazyService;
+use Fixtures\Container\NoTypeService;
+use Fixtures\Container\OptionalService;
+use Fixtures\Container\OptionalWithNullService;
 use Fixtures\Container\PersistentService;
 use Fixtures\Container\RebindA;
 use Fixtures\Container\RebindB;
@@ -26,6 +31,12 @@ use Fixtures\Container\ServiceInterface;
 use Fixtures\Container\ServiceOne;
 use Fixtures\Container\ServiceOneInterface;
 use Fixtures\Container\ServiceTwo;
+use Fixtures\Container\StringService;
+use Fixtures\Container\UnionService;
+use Fixtures\Container\UnresolvableService;
+use Fixtures\Container\UnresolvableUnionService;
+use Fixtures\Container\UnresolvableWithNullService;
+use Fixtures\Container\UnresolvableWithResolverService;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Container\AlwaysPersistentInterface;
@@ -334,12 +345,95 @@ class ContainerTest extends TestCase
         self::assertTrue($container->call($callable, $arguments));
     }
 
-    // @todo Resolve() with DependencyResolverInterface
-    // @todo Resolve() with DependencyResolverInterface with unresolvable type
-    // @todo Resolve() with DependencyResolverInterface with type with nullable
-    // @todo Resolve() with DependencyResolverInterface with type with default value
-    // @todo Resolve() with DependencyResolverInterface with union type
-    // @todo Resolve() with DependencyResolverInterface with intersection type
-    // @todo Resolve() without DependencyResolverInterface but with scalar type
-    // @todo Resolve() with DependencyResolverInterface without type
+    public static function invalidResolutionDataProvider(): \Generator
+    {
+        yield [
+            IntService::class,
+        ];
+
+        yield [
+            NoTypeService::class,
+        ];
+
+        yield [
+            UnresolvableService::class,
+        ];
+
+        yield [
+            UnresolvableWithResolverService::class,
+        ];
+
+        yield [
+            IntersectionService::class,
+        ];
+
+        yield [
+            UnresolvableUnionService::class,
+        ];
+    }
+
+    /**
+     * @param class-string $className
+     */
+    #[DataProvider('invalidResolutionDataProvider')]
+    public function testResolveScalar(
+        string $className,
+    ): void {
+        $container = new Container();
+
+        self::expectException(ContainerException::class);
+
+        $container->resolve($className);
+    }
+
+    public function testResolverString(): void
+    {
+        $container = new Container();
+        $service = $container->resolve(StringService::class);
+
+        self::assertSame($service->value, 'foo');
+    }
+
+    public function testResolveUnion(): void
+    {
+        $container = new Container();
+        $unionService = $container->resolve(UnionService::class);
+
+        self::assertInstanceOf(ServiceOne::class, $unionService->service);
+        self::assertSame($unionService->service->foo(), 'bar');
+    }
+
+    public static function optionalDataProvider(): \Generator
+    {
+        yield [
+            OptionalService::class,
+            'phpfi',
+        ];
+
+        yield [
+            OptionalWithNullService::class,
+            null,
+        ];
+
+        yield [
+            UnresolvableWithNullService::class,
+            null,
+        ];
+    }
+
+    /**
+     * @param class-string $className
+     */
+    #[DataProvider('optionalDataProvider')]
+    public function testResolveWithOptionals(
+        string $className,
+        mixed $value,
+    ): void {
+        $container = new Container();
+
+        /** @var object{secret: mixed} $service */
+        $service = $container->resolve($className);
+
+        self::assertSame($service->secret, $value);
+    }
 }

@@ -275,7 +275,7 @@ class Container implements ContainerInterface
         if (\sizeof($attrs) > 0) {
             try {
                 return $attrs[0]->newInstance()->resolve($this);
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 throw ContainerException::fromAttributeException(
                     attributeClass: $attrs[0]->getName(),
                     exception: $e,
@@ -295,7 +295,8 @@ class Container implements ContainerInterface
             return match (true) {
                 $type instanceof \ReflectionNamedType => $this->resolveNamedType($type),
                 $type instanceof \ReflectionUnionType => $this->resolveUnionType($type),
-                default => throw ContainerException::fromIntersectionType(),
+                $type instanceof \ReflectionIntersectionType => throw ContainerException::fromIntersectionType($type),
+                default => ContainerException::fromUnresolvableType(),
             };
         }
 
@@ -314,12 +315,14 @@ class Container implements ContainerInterface
                 $className = $type->getName();
 
                 return $this->resolve($className);
-            } catch (\Exception $exception) {
+            } catch (\Throwable $exception) {
                 if ($type->allowsNull()) {
                     return null;
                 }
 
-                throw $exception;
+                throw ContainerException::fromException(
+                    exception: $exception,
+                );
             }
         }
 

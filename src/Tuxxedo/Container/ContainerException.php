@@ -44,12 +44,23 @@ class ContainerException extends \Exception
         return '(' . \implode('&', \array_map(\strval(...), $intersectionType->getTypes())) . ')';
     }
 
+    public static function fromException(
+        \Throwable $exception,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unable to resolve dependency, exception thrown with message: "%s"',
+                $exception->getMessage(),
+            ),
+        );
+    }
+
     /**
      * @param class-string<DependencyResolverInterface<mixed>> $attributeClass
      */
     public static function fromAttributeException(
         string $attributeClass,
-        \Exception $exception,
+        \Throwable $exception,
     ): self {
         return new self(
             message: \sprintf(
@@ -89,10 +100,14 @@ class ContainerException extends \Exception
         );
     }
 
-    public static function fromIntersectionType(): self
-    {
+    public static function fromIntersectionType(
+        \ReflectionIntersectionType $intersectionType,
+    ): self {
         return new self(
-            message: 'Unable to resolve dependency; intersection types is not supported',
+            message: \sprintf(
+                'Unable to resolve dependency: "%s"; intersection types is not supported',
+                self::formatIntersectionType($intersectionType),
+            ),
         );
     }
 
