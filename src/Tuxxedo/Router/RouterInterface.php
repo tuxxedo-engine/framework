@@ -18,6 +18,8 @@ use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\RequestInterface;
 
 // @todo Consider an option to automatically add the final slash as an alias
+// @todo Support named routes, e.g. findByName()
+// @todo Ability to generate URI + Lumi integration
 interface RouterInterface
 {
     /**
