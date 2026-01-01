@@ -176,6 +176,7 @@ class Kernel implements KernelInterface
         if ($request !== null) {
             $this->container->bind($request);
         } else {
+            // @todo Check if this has an AlwaysPersistentInterface otherwise this may not be compatible with $request !== null
             $request = $this->container->resolve(Request::class);
         }
 

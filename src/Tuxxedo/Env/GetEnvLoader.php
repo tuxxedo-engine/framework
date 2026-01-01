@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Env;
 
+// @todo Replace this with a DotEnv implementation
 class GetEnvLoader implements EnvLoaderInterface
 {
     public function has(
