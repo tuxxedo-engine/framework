@@ -455,7 +455,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
                     : '/' . $segment;
             },
             $uri,
-        ) . '/?$#';
+        ) . '$#';
     }
 
     private function getNativeType(
