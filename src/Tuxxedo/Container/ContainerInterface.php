@@ -17,6 +17,8 @@ namespace Tuxxedo\Container;
 // @todo Consider whether sealing should be emitting a readonly copy? Or maybe there needs to be some strategies here
 // @todo Consider an $overrides argument for call() and resolve()
 // @todo Should resolvers hold the requested type and pass it to the attribute?
+// @todo Attribute to suggest a default implementation in case of an explicit/implicit abstract type hint
+//       like #[DefaultImplementation(ClassName::class)] public InterfaceName $service
 interface ContainerInterface
 {
     public bool $sealed {
