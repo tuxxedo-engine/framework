@@ -41,6 +41,8 @@ interface ContainerInterface
      *
      * @param class-string<TClassName> $class
      * @param (\Closure(self): TClassName) $initializer
+     *
+     * @throws ContainerException
      */
     public function lazy(
         string $class,
@@ -52,6 +54,8 @@ interface ContainerInterface
     /**
      * @param class-string|class-string[] $aliasClassName
      * @param class-string $resolvedClassName
+     *
+     * @throws ContainerException
      */
     public function alias(
         string|array $aliasClassName,

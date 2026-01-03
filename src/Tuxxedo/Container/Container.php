@@ -129,6 +129,10 @@ class Container implements ContainerInterface
         string|array $aliasClassName,
         string $resolvedClassName,
     ): static {
+        if ($this->sealed) {
+            throw ContainerException::fromContainerIsSealed();
+        }
+
         if (\is_string($aliasClassName)) {
             $aliasClassName = [
                 $aliasClassName,
