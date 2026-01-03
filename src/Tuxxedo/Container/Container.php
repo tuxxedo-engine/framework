@@ -301,7 +301,9 @@ class Container implements ContainerInterface
                 return match (true) {
                     $type instanceof \ReflectionNamedType => $this->resolveNamedType($type),
                     $type instanceof \ReflectionUnionType => $this->resolveUnionType($type),
-                    $type instanceof \ReflectionIntersectionType => throw ContainerException::fromIntersectionType($type),
+                    $type instanceof \ReflectionIntersectionType => throw ContainerException::fromIntersectionType(
+                        intersectionType: $type,
+                    ),
                     default => ContainerException::fromUnresolvableType(),
                 };
             }
@@ -339,7 +341,9 @@ class Container implements ContainerInterface
             }
         }
 
-        throw ContainerException::fromNamedType($type);
+        throw ContainerException::fromNamedType(
+            type: $type,
+        );
     }
 
     /**
@@ -357,6 +361,8 @@ class Container implements ContainerInterface
             }
         }
 
-        throw ContainerException::fromUnionType($unionType);
+        throw ContainerException::fromUnionType(
+            unionType: $unionType,
+        );
     }
 }
