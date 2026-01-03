@@ -62,12 +62,14 @@ interface ContainerInterface
      * @template TClassName of object
      *
      * @param class-string<TClassName> $className
+     * @param array<array-key, mixed> $arguments
      * @return TClassName
      *
      * @throws ContainerException
      */
     public function resolve(
         string $className,
+        array $arguments = [],
     ): object;
 
     /**

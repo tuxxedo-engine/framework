@@ -152,6 +152,7 @@ class Container implements ContainerInterface
      */
     public function resolve(
         string $className,
+        array $arguments = [],
     ): object {
         if (\array_key_exists($className, $this->aliases)) {
             $className = $this->aliases[$className];
@@ -176,7 +177,7 @@ class Container implements ContainerInterface
         }
 
         if (!\array_key_exists($className, $this->resolvedArguments)) {
-            $arguments = [];
+            $callArguments = [];
             $class = new \ReflectionClass($className);
 
             if ($class->implementsInterface(AlwaysPersistentInterface::class)) {
@@ -185,11 +186,17 @@ class Container implements ContainerInterface
 
             if (($ctor = $class->getConstructor()) !== null) {
                 foreach ($ctor->getParameters() as $parameter) {
-                    $arguments[$parameter->getName()] = $this->resolveParameter($parameter);
+                    $callArguments[$parameter->getName()] = \array_key_exists($parameter->getName(), $arguments)
+                        ? $arguments[$parameter->getName()]
+                        : (
+                            \array_key_exists($parameter->getPosition(), $arguments)
+                            ? $arguments[$parameter->getPosition()]
+                            : $this->resolveParameter($parameter)
+                        );
                 }
             }
 
-            $this->resolvedArguments[$className] = $arguments;
+            $this->resolvedArguments[$className] = $callArguments;
         }
 
         $instance = new $className(
