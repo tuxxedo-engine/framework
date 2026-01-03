@@ -282,7 +282,7 @@ class SccpOptimizer extends AbstractOptimizer
         $condition = $this->optimizeNode($stream, $node->operand);
 
         foreach ($node->branches as $branch) {
-            $optimizedBranch = $this->optimizeNode($stream, $node->operand);
+            $optimizedBranch = $this->optimizeNode($stream, $branch->operand);
 
             if (
                 \sizeof($optimizedBranch) === 1 &&
