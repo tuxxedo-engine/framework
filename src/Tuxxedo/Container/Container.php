@@ -283,24 +283,26 @@ class Container implements ContainerInterface
             }
         }
 
-        // @todo Consider whether we want to have this check here or later, as this is faster
-        //       but the general expectancy might be the type is resolved first
-        if ($parameter->isOptional() && $parameter->isDefaultValueAvailable()) {
-            return $parameter->getDefaultValue();
+        try {
+            if ($parameter->hasType()) {
+                $type = $parameter->getType();
+
+                return match (true) {
+                    $type instanceof \ReflectionNamedType => $this->resolveNamedType($type),
+                    $type instanceof \ReflectionUnionType => $this->resolveUnionType($type),
+                    $type instanceof \ReflectionIntersectionType => throw ContainerException::fromIntersectionType($type),
+                    default => ContainerException::fromUnresolvableType(),
+                };
+            }
+
+            throw ContainerException::fromUnresolvableType();
+        } catch (ContainerException $exception) {
+            if ($parameter->isOptional() && $parameter->isDefaultValueAvailable()) {
+                return $parameter->getDefaultValue();
+            }
+
+            throw $exception;
         }
-
-        if ($parameter->hasType()) {
-            $type = $parameter->getType();
-
-            return match (true) {
-                $type instanceof \ReflectionNamedType => $this->resolveNamedType($type),
-                $type instanceof \ReflectionUnionType => $this->resolveUnionType($type),
-                $type instanceof \ReflectionIntersectionType => throw ContainerException::fromIntersectionType($type),
-                default => ContainerException::fromUnresolvableType(),
-            };
-        }
-
-        throw ContainerException::fromUnresolvableType();
     }
 
     /**
