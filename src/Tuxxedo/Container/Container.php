@@ -34,11 +34,6 @@ class Container implements ContainerInterface
     private array $aliases = [];
 
     /**
-     * @var array<class-string, mixed[]>
-     */
-    private array $resolvedArguments = [];
-
-    /**
      * @var array<class-string, (\Closure(self): object)>
      */
     private array $initializers = [];
@@ -180,31 +175,27 @@ class Container implements ContainerInterface
             return $instance;
         }
 
-        if (!\array_key_exists($className, $this->resolvedArguments)) {
-            $callArguments = [];
-            $class = new \ReflectionClass($className);
+        $callArguments = [];
+        $class = new \ReflectionClass($className);
 
-            if ($class->implementsInterface(AlwaysPersistentInterface::class)) {
-                $this->bind($className);
+        if ($class->implementsInterface(AlwaysPersistentInterface::class)) {
+            $this->bind($className);
+        }
+
+        if (($ctor = $class->getConstructor()) !== null) {
+            foreach ($ctor->getParameters() as $parameter) {
+                $callArguments[$parameter->getName()] = \array_key_exists($parameter->getName(), $arguments)
+                    ? $arguments[$parameter->getName()]
+                    : (
+                        \array_key_exists($parameter->getPosition(), $arguments)
+                        ? $arguments[$parameter->getPosition()]
+                        : $this->resolveParameter($parameter)
+                    );
             }
-
-            if (($ctor = $class->getConstructor()) !== null) {
-                foreach ($ctor->getParameters() as $parameter) {
-                    $callArguments[$parameter->getName()] = \array_key_exists($parameter->getName(), $arguments)
-                        ? $arguments[$parameter->getName()]
-                        : (
-                            \array_key_exists($parameter->getPosition(), $arguments)
-                            ? $arguments[$parameter->getPosition()]
-                            : $this->resolveParameter($parameter)
-                        );
-                }
-            }
-
-            $this->resolvedArguments[$className] = $callArguments;
         }
 
         $instance = new $className(
-            ...$this->resolvedArguments[$className],
+            ...$callArguments,
         );
 
         if (\array_key_exists($className, $this->persistentDependencies)) {
