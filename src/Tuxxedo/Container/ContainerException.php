@@ -41,7 +41,6 @@ class ContainerException extends \Exception
     protected static function formatIntersectionType(
         \ReflectionIntersectionType $intersectionType,
     ): string {
-        // @todo This may need to call formatUnionType()/formatNamedType() instead of \strval()
         return '(' . \implode('&', \array_map(\strval(...), $intersectionType->getTypes())) . ')';
     }
 
