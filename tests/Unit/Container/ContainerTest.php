@@ -169,13 +169,7 @@ class ContainerTest extends TestCase
 
         $container->bind(LazyService::class);
 
-        self::assertFalse($container->isInitialized(LazyService::class));
         self::assertSame($container->resolve(LazyService::class)->name, 'baz');
-
-        // $container->resolve(LazyService::class);
-
-        // @todo Investigate this, as it uses ->isBound() underneath
-        // self::assertTrue($container->isInitialized(LazyService::class));
     }
 
     public function testResolveWithLazyAndPersistent(): void
@@ -216,31 +210,25 @@ class ContainerTest extends TestCase
         );
     }
 
-    // @todo This case needs work on the Container for rebuilding the cache
-    /*
     public function testRebindAffectsSubsequentResolution(): void
     {
         $container = new Container();
 
         $container->bind(RebindA::class);
         self::assertTrue($container->isBound(RebindA::class));
-        self::assertFalse($container->isInitialized(RebindA::class));
 
         $first = $container->resolve(RebindC::class);
 
         self::assertInstanceOf(RebindA::class, $first->subService);
-        self::assertFalse($container->isInitialized(RebindA::class));
 
         $container->bind(RebindB::class);
         self::assertTrue($container->isBound(RebindB::class));
-        self::assertFalse($container->isInitialized(RebindB::class));
 
         $second = $container->resolve(RebindC::class);
 
         self::assertInstanceOf(RebindB::class, $second->subService);
         self::assertNotSame($first->subService::class, $second->subService::class);
     }
-    */
 
     public function testResolveWithConstructorNoArgs(): void
     {

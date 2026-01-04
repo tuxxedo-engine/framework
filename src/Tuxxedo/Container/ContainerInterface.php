@@ -94,13 +94,6 @@ interface ContainerInterface
     /**
      * @param class-string $className
      */
-    public function isInitialized(
-        string $className,
-    ): bool;
-
-    /**
-     * @param class-string $className
-     */
     public function isAlias(
         string $className,
     ): bool;

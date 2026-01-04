@@ -252,13 +252,7 @@ class Container implements ContainerInterface
     public function isBound(
         string $className,
     ): bool {
-        return isset($this->persistentDependencies[$className]);
-    }
-
-    public function isInitialized(
-        string $className,
-    ): bool {
-        return $this->isBound($className) && !isset($this->initializers[$className]);
+        return \array_key_exists($className, $this->persistentDependencies);
     }
 
     public function isAlias(
