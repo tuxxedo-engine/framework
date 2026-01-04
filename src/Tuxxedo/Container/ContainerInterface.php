@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
-// @todo Consider renaming methods like bind() to be more descriptive
 // @todo Consider whether sealing should be emitting a readonly copy? Or maybe there needs to be some strategies here
 // @todo Should resolvers hold the requested type and pass it to the attribute?
 // @todo Attribute to suggest a default implementation in case of an explicit/implicit abstract type hint
@@ -28,6 +27,8 @@ interface ContainerInterface
 
     /**
      * @param class-string|object $class
+     *
+     * @throws ContainerException
      */
     public function bind(
         string|object $class,

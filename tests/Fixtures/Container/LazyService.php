@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace Fixtures\Container;
 
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Container\LazyInitializableInterface;
+use Tuxxedo\Container\DefaultInitializableInterface;
 
-class LazyService implements LazyInitializableInterface
+class LazyService implements DefaultInitializableInterface
 {
     final public function __construct(
         public readonly string $name,
@@ -25,7 +25,7 @@ class LazyService implements LazyInitializableInterface
 
     public static function createInstance(
         ContainerInterface $container,
-    ): LazyInitializableInterface {
+    ): DefaultInitializableInterface {
         return new self(
             name: 'baz',
         );

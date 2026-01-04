@@ -18,7 +18,7 @@ class Container implements ContainerInterface
     private const array PROTECTED_INTERFACES = [
         AlwaysPersistentInterface::class,
         DependencyResolverInterface::class,
-        LazyInitializableInterface::class,
+        DefaultInitializableInterface::class,
     ];
 
     public private(set) bool $sealed = false;
@@ -44,10 +44,16 @@ class Container implements ContainerInterface
     }
 
     /**
-     * @param class-string|object $class
+     * @template TClassName of object
+     *
+     * @param class-string<TClassName> $class
+     * @param (\Closure(self): TClassName)|null $initializer
+     *
+     * @throws ContainerException
      */
-    public function bind(
+    private function register(
         string|object $class,
+        ?\Closure $initializer = null,
         bool $bindInterfaces = true,
         bool $bindParent = true,
     ): static {
@@ -64,15 +70,25 @@ class Container implements ContainerInterface
         if ($bindInterfaces) {
             $aliases = ($aliases = \class_implements($class)) !== false ? $aliases : [];
 
-            if (\is_string($class) && \in_array(LazyInitializableInterface::class, $aliases, true)) {
-                /** @var class-string<LazyInitializableInterface> $class */
+            if (
+                $initializer === null &&
+                \is_string($class) &&
+                \in_array(DefaultInitializableInterface::class, $aliases, true)
+            ) {
+                /** @var class-string<TClassName&DefaultInitializableInterface> $class */
                 $this->initializers[$className] = static fn (self $container): object => $class::createInstance($container);
+            } elseif ($initializer !== null) {
+                $this->initializers[$className] = $initializer;
             }
 
             $aliases = $this->filterInterfaces(
                 interfaces: $aliases,
             );
         } else {
+            if ($initializer !== null) {
+                $this->initializers[$className] = $initializer;
+            }
+
             $aliases = [];
         }
 
@@ -83,6 +99,23 @@ class Container implements ContainerInterface
         $this->alias($aliases, $className);
 
         return $this;
+    }
+
+    /**
+     * @param class-string|object $class
+     *
+     * @throws ContainerException
+     */
+    public function bind(
+        string|object $class,
+        bool $bindInterfaces = true,
+        bool $bindParent = true,
+    ): static {
+        return $this->register(
+            class: $class,
+            bindInterfaces: $bindInterfaces,
+            bindParent: $bindParent,
+        );
     }
 
     /**
@@ -99,21 +132,12 @@ class Container implements ContainerInterface
         bool $bindInterfaces = true,
         bool $bindParent = true,
     ): static {
-        // @todo Consider removing this to ease friction between services that explicitly wants to override their
-        //       default service initializer
-        if (\is_subclass_of($class, LazyInitializableInterface::class)) {
-            throw ContainerException::fromAmbiguousInitializer();
-        }
-
-        $this->bind(
+        return $this->register(
             class: $class,
+            initializer: $initializer,
             bindInterfaces: $bindInterfaces,
             bindParent: $bindParent,
         );
-
-        $this->initializers[$class] = $initializer;
-
-        return $this;
     }
 
     /**

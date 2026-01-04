@@ -216,19 +216,6 @@ class ContainerTest extends TestCase
         );
     }
 
-    public function testAmbiguousInitializer(): void
-    {
-        $container = new Container();
-
-        $this->expectException(ContainerException::class);
-        $container->lazy(
-            class: LazyService::class,
-            initializer: static fn (): LazyService => new LazyService(
-                name: 'Bug',
-            ),
-        );
-    }
-
     // @todo This case needs work on the Container for rebuilding the cache
     /*
     public function testRebindAffectsSubsequentResolution(): void

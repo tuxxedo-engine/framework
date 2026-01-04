@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
-interface LazyInitializableInterface
+interface DefaultInitializableInterface
 {
     public static function createInstance(
         ContainerInterface $container,

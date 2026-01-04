@@ -16,11 +16,11 @@ namespace Tuxxedo\Database;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\AlwaysPersistentInterface;
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Container\LazyInitializableInterface;
+use Tuxxedo\Container\DefaultInitializableInterface;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Driver\DefaultDriver;
 
-class ConnectionManager implements ConnectionManagerInterface, AlwaysPersistentInterface, LazyInitializableInterface
+class ConnectionManager implements ConnectionManagerInterface, AlwaysPersistentInterface, DefaultInitializableInterface
 {
     /**
      * @var ConnectionInterface[]

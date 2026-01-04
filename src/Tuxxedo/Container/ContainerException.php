@@ -112,13 +112,6 @@ class ContainerException extends \Exception
         );
     }
 
-    public static function fromAmbiguousInitializer(): self
-    {
-        return new self(
-            message: 'Unable to lazy bind service, the service already specifies its own initializer. Use bind() instead',
-        );
-    }
-
     public static function fromContainerIsSealed(): self
     {
         return new self(
