@@ -184,6 +184,20 @@ class ContainerTest extends TestCase
         self::assertInstanceOf(PersistentService::class, $container->resolve(PersistentService::class));
     }
 
+    public function testResolveWithLazyWithNoAliasing(): void
+    {
+        $container = new Container();
+
+        $container->lazy(
+            class: PersistentService::class,
+            initializer: static fn (): PersistentService => new PersistentService(),
+            bindInterfaces: false,
+            bindParent: false,
+        );
+
+        self::assertInstanceOf(PersistentService::class, $container->resolve(PersistentService::class));
+    }
+
     public function testSealingBind(): void
     {
         $container = new Container();
@@ -208,6 +222,15 @@ class ContainerTest extends TestCase
             class: PersistentService::class,
             initializer: static fn (): PersistentService => new PersistentService(),
         );
+    }
+
+    public function testSealingAlias(): void
+    {
+        $container = new Container();
+
+        $container->seal();
+        $this->expectException(ContainerException::class);
+        $container->alias(RebindB::class, RebindA::class);
     }
 
     public function testRebindAffectsSubsequentResolution(): void
@@ -318,6 +341,51 @@ class ContainerTest extends TestCase
         $container = new Container();
 
         self::assertTrue($container->call($callable, $arguments));
+    }
+
+    public static function resolveWithArgumentsDataProvider(): \Generator
+    {
+        yield [
+            OptionalWithNullService::class,
+            [],
+            static fn (OptionalWithNullService $service): bool => $service->secret === null,
+        ];
+
+        yield [
+            IntService::class,
+            [
+                1,
+            ],
+            static fn (IntService $service): bool => $service->value === 1,
+        ];
+
+        yield [
+            LazyService::class,
+            [
+                'name' => 'foobar',
+            ],
+            static fn (LazyService $service): bool => $service->name === 'foobar',
+        ];
+    }
+
+    /**
+     * @template TClassName of object
+     *
+     * @param class-string<TClassName> $className
+     * @param mixed[] $arguments
+     * @param \Closure(TClassName): bool $callable
+     */
+    #[DataProvider('resolveWithArgumentsDataProvider')]
+    public function testResolveWithArguments(
+        string $className,
+        array $arguments,
+        \Closure $callable,
+    ): void {
+        $container = new Container();
+
+        $service = $container->resolve($className, $arguments);
+
+        self::assertTrue($callable($service));
     }
 
     public static function invalidResolutionDataProvider(): \Generator
