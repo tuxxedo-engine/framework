@@ -80,6 +80,7 @@ interface KernelInterface
     /**
      * @param ServiceProviderInterface|(\Closure(): ServiceProviderInterface) $provider
      */
+    // @todo Remove this method in favor of having it in the ApplicationConfigurator
     public function serviceProvider(
         ServiceProviderInterface|\Closure $provider,
     ): static;

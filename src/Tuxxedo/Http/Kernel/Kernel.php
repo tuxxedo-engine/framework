@@ -46,6 +46,7 @@ class Kernel implements KernelInterface
     public private(set) array $exceptionHandlers = [];
     public private(set) array $defaultExceptionHandlers = [];
 
+    // @todo Redesign this so all dependencies are mandatory and not registered in the Container here
     final public function __construct(
         public readonly string $appName = '',
         public readonly string $appVersion = '',
