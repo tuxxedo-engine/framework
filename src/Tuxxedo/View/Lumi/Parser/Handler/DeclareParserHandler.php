@@ -46,8 +46,6 @@ class DeclareParserHandler implements ParserHandlerInterface
             );
         }
 
-        $stream->consume();
-
         $value = $stream->expect(LiteralToken::class);
 
         $stream->expect(EndToken::class);
