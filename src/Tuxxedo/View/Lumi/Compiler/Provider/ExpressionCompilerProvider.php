@@ -95,8 +95,12 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         NodeStreamInterface $stream,
     ): string {
         $caller = $compiler->compileNode($node->caller, $stream);
+        $lowerCaller = \mb_strtolower($caller);
 
-        if (\mb_strtolower($caller) === '$this') {
+        if (
+            $lowerCaller === '$this' ||
+            $lowerCaller === '($this)'
+        ) {
             throw CompilerException::fromCannotCallThis();
         }
 
