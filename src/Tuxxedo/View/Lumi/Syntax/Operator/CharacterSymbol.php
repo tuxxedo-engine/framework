@@ -38,7 +38,7 @@ enum CharacterSymbol implements SymbolInterface, ExpressionSymbolInterface
     public static function is(
         TokenInterface $token,
     ): bool {
-        if ($token instanceof CharacterToken) {
+        if (!$token instanceof CharacterToken) {
             return false;
         }
 
