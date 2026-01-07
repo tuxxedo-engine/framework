@@ -230,7 +230,7 @@ class DceOptimizer extends AbstractOptimizer
         $node = parent::optimizeWhileBody($node);
 
         if ($this->evaluator->checkExpression($this->scope, $node->operand) === EvaluatorResult::IS_FALSE) {
-            return $node->body;
+            return [];
         }
 
         return [
