@@ -470,7 +470,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
             return false;
         }
 
-        return false;
+        return true;
     }
 
     /**
