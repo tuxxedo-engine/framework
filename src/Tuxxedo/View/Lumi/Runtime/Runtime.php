@@ -144,7 +144,7 @@ class Runtime implements RuntimeInterface
             throw ViewException::fromCannotAccessNonObject();
         } elseif (
             \sizeof($this->instanceCallClasses) > 0 &&
-            !\in_array($instance::class, $this->instanceCallClasses)
+            !\in_array($instance::class, $this->instanceCallClasses, true)
         ) {
             throw ViewException::fromCannotCallInstance(
                 class: $instance::class,
