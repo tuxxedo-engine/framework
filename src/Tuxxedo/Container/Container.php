@@ -211,8 +211,8 @@ class Container implements ContainerInterface
                         ? $arguments[$parameter->getName()]
                         : (
                             \array_key_exists($parameter->getPosition(), $arguments)
-                            ? $arguments[$parameter->getPosition()]
-                            : $this->resolveParameter($parameter)
+                                ? $arguments[$parameter->getPosition()]
+                                : $this->resolveParameter($parameter)
                         );
                 }
             }

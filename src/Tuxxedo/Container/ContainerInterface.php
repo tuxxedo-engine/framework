@@ -14,10 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Container;
 
 // @todo Support customized lifecycles
-// @todo Consider whether sealing should be emitting a readonly copy? Or maybe there needs to be some strategies here
 // @todo Should resolvers hold the requested type and pass it to the attribute?
-// @todo Attribute to suggest a default implementation in case of an explicit/implicit abstract type hint
-//       like #[DefaultImplementation(ClassName::class)] public InterfaceName $service
 interface ContainerInterface
 {
     /**
