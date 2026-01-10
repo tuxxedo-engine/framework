@@ -43,7 +43,7 @@ class PdoMysqlConnection extends AbstractPdoConnection
             $charset = ';charset=' . $config->getString('options.charset');
         }
 
-        if ($config->isString('unixSocket')) {
+        if ($config->isString('unixSocket') && $config->getString('unixSocket') !== '') {
             return \sprintf(
                 'mysql:unix_socket=%s%s%s',
                 $config->getString('unixSocket'),
