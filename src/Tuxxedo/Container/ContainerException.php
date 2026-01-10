@@ -110,11 +110,4 @@ class ContainerException extends \Exception
             ),
         );
     }
-
-    public static function fromContainerIsSealed(): self
-    {
-        return new self(
-            message: 'Unable to bind service, as the container has been sealed',
-        );
-    }
 }

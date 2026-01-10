@@ -14,8 +14,10 @@ declare(strict_types=1);
 namespace Tuxxedo\Database;
 
 use Tuxxedo\Config\ConfigInterface;
+use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 
+#[DefaultImplementation(class: ConnectionManager::class)]
 interface ConnectionManagerInterface
 {
     /**

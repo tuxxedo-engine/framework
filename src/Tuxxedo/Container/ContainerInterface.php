@@ -20,12 +20,6 @@ namespace Tuxxedo\Container;
 //       like #[DefaultImplementation(ClassName::class)] public InterfaceName $service
 interface ContainerInterface
 {
-    public bool $sealed {
-        get;
-    }
-
-    public function seal(): void;
-
     /**
      * @param class-string|object $class
      *

@@ -41,10 +41,6 @@ interface ApplicationConfiguratorInterface
         get;
     }
 
-    public bool $sealContainer {
-        get;
-    }
-
     public ?ContainerInterface $container {
         get;
     }
@@ -118,10 +114,6 @@ interface ApplicationConfiguratorInterface
     public function withConfig(
         ConfigInterface $config,
     ): self;
-
-    public function withoutContainerSeal(): self;
-
-    public function withContainerSeal(): self;
 
     public function withoutContainer(): self;
 

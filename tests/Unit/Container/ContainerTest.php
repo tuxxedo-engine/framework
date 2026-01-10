@@ -17,6 +17,10 @@ use Fixtures\Container\AbstractService;
 use Fixtures\Container\ComplexService;
 use Fixtures\Container\CtorArgsService;
 use Fixtures\Container\CtorNoArgsService;
+use Fixtures\Container\DefaultServiceOne;
+use Fixtures\Container\DefaultServiceOneInterface;
+use Fixtures\Container\DefaultServiceTwo;
+use Fixtures\Container\DefaultServiceTwoInterface;
 use Fixtures\Container\IntService;
 use Fixtures\Container\IntersectionService;
 use Fixtures\Container\LazyService;
@@ -198,41 +202,6 @@ class ContainerTest extends TestCase
         self::assertInstanceOf(PersistentService::class, $container->resolve(PersistentService::class));
     }
 
-    public function testSealingBind(): void
-    {
-        $container = new Container();
-
-        $container->bind(ServiceOne::class);
-        self::assertFalse($container->sealed);
-
-        $container->seal();
-        self::assertTrue($container->sealed);
-
-        $this->expectException(ContainerException::class);
-        $container->bind(ServiceTwo::class);
-    }
-
-    public function testSealingLazy(): void
-    {
-        $container = new Container();
-
-        $container->seal();
-        $this->expectException(ContainerException::class);
-        $container->lazy(
-            class: PersistentService::class,
-            initializer: static fn (): PersistentService => new PersistentService(),
-        );
-    }
-
-    public function testSealingAlias(): void
-    {
-        $container = new Container();
-
-        $container->seal();
-        $this->expectException(ContainerException::class);
-        $container->alias(RebindB::class, RebindA::class);
-    }
-
     public function testRebindAffectsSubsequentResolution(): void
     {
         $container = new Container();
@@ -366,6 +335,12 @@ class ContainerTest extends TestCase
             ],
             static fn (LazyService $service): bool => $service->name === 'foobar',
         ];
+
+        yield [
+            DefaultServiceOneInterface::class,
+            [],
+            static fn (DefaultServiceOne $service): bool => \str_repeat((string) $service->a, $service->b) === '11',
+        ];
     }
 
     /**
@@ -478,5 +453,70 @@ class ContainerTest extends TestCase
         $service = $container->resolve($className);
 
         self::assertSame($service->secret, $value);
+    }
+
+    public static function defaultImplementationDataProvider(): \Generator
+    {
+        yield [
+            DefaultServiceOneInterface::class,
+            DefaultServiceOne::class,
+        ];
+
+        yield [
+            DefaultServiceTwoInterface::class,
+            DefaultServiceTwo::class,
+        ];
+    }
+
+    /**
+     * @param class-string $class
+     * @param class-string $expectedClass
+     */
+    #[DataProvider('defaultImplementationDataProvider')]
+    public function testDefaultImplementation(
+        string $class,
+        string $expectedClass,
+    ): void {
+        $container = new Container();
+
+        $service = $container->resolve($class);
+
+        self::assertInstanceOf($expectedClass, $service);
+    }
+
+    public function testDefaultImplementationWithArguments(): void
+    {
+        $container = new Container();
+
+        $service = $container->resolve(
+            DefaultServiceOneInterface::class,
+            [
+                'a' => 8,
+                'b' => 9,
+            ],
+        );
+
+        self::assertSame($service->a * $service->b, 72);
+    }
+
+    public function testDefaultImplementationWithDefaultInitializerAndArguments(): void
+    {
+        $container = new Container();
+
+        $this->expectException(\Error::class);
+        $container->resolve(
+            DefaultServiceTwoInterface::class,
+            [
+                'void',
+            ],
+        );
+    }
+
+    public function testDefaultImplementationNoAttribute(): void
+    {
+        $container = new Container();
+
+        $this->expectException(\Error::class);
+        $container->resolve(ServiceInterface::class);
     }
 }

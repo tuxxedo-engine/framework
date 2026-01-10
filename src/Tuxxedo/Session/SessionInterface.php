@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Session;
 
+use Tuxxedo\Container\DefaultImplementation;
+
+#[DefaultImplementation(class: Session::class)]
 interface SessionInterface
 {
     public SessionAdapterInterface $adapter {

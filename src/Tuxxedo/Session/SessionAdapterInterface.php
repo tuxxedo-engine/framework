@@ -13,6 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Session;
 
+use Tuxxedo\Container\DefaultImplementation;
+use Tuxxedo\Session\Adapter\PhpSessionAdapter;
+
+#[DefaultImplementation(class: PhpSessionAdapter::class)]
 interface SessionAdapterInterface
 {
     public SessionStartMode $startMode {

@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Mapper;
 
+use Tuxxedo\Container\DefaultImplementation;
+
+#[DefaultImplementation(class: Mapper::class)]
 interface MapperInterface
 {
     /**

@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace App\Services\Logger;
 
+use Tuxxedo\Container\DefaultImplementation;
+
+#[DefaultImplementation(class: Logger::class)]
 interface LoggerInterface extends \Countable
 {
     /**

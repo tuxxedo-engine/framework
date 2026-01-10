@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Env;
 
+use Tuxxedo\Container\DefaultImplementation;
+
+#[DefaultImplementation(class: Env::class)]
 interface EnvInterface
 {
     public function has(

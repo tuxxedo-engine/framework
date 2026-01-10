@@ -21,8 +21,6 @@ class Container implements ContainerInterface
         DefaultInitializableInterface::class,
     ];
 
-    public private(set) bool $sealed = false;
-
     /**
      * @var array<class-string, object|null>
      */
@@ -38,11 +36,6 @@ class Container implements ContainerInterface
      */
     private array $initializers = [];
 
-    public function seal(): void
-    {
-        $this->sealed = true;
-    }
-
     /**
      * @template TClassName of object
      *
@@ -57,10 +50,6 @@ class Container implements ContainerInterface
         bool $bindInterfaces = true,
         bool $bindParent = true,
     ): static {
-        if ($this->sealed) {
-            throw ContainerException::fromContainerIsSealed();
-        }
-
         $className = \is_object($class) ? $class::class : $class;
 
         if (!isset($this->persistentDependencies[$className])) {
@@ -148,10 +137,6 @@ class Container implements ContainerInterface
         string|array $aliasClassName,
         string $resolvedClassName,
     ): static {
-        if ($this->sealed) {
-            throw ContainerException::fromContainerIsSealed();
-        }
-
         if (\is_string($aliasClassName)) {
             $aliasClassName = [
                 $aliasClassName,
@@ -199,28 +184,43 @@ class Container implements ContainerInterface
             return $instance;
         }
 
-        $callArguments = [];
         $class = new \ReflectionClass($className);
+        $maskedClassName = $className;
+
+        if ($class->isInterface()) {
+            $class = $this->resolveDefaultImplementation($class);
+            $maskedClassName = $class->name;
+        }
 
         if ($class->implementsInterface(AlwaysPersistentInterface::class)) {
             $this->bind($className);
         }
 
-        if (($ctor = $class->getConstructor()) !== null) {
-            foreach ($ctor->getParameters() as $parameter) {
-                $callArguments[$parameter->getName()] = \array_key_exists($parameter->getName(), $arguments)
-                    ? $arguments[$parameter->getName()]
-                    : (
-                        \array_key_exists($parameter->getPosition(), $arguments)
-                        ? $arguments[$parameter->getPosition()]
-                        : $this->resolveParameter($parameter)
-                    );
-            }
-        }
+        if (
+            \sizeof($arguments) === 0 &&
+            $class->implementsInterface(DefaultInitializableInterface::class)
+        ) {
+            /** @var TClassName $instance */
+            $instance = $maskedClassName::createInstance($this);
+        } else {
+            $callArguments = [];
 
-        $instance = new $className(
-            ...$callArguments,
-        );
+            if (($ctor = $class->getConstructor()) !== null) {
+                foreach ($ctor->getParameters() as $parameter) {
+                    $callArguments[$parameter->getName()] = \array_key_exists($parameter->getName(), $arguments)
+                        ? $arguments[$parameter->getName()]
+                        : (
+                            \array_key_exists($parameter->getPosition(), $arguments)
+                            ? $arguments[$parameter->getPosition()]
+                            : $this->resolveParameter($parameter)
+                        );
+                }
+            }
+
+            $instance = new $maskedClassName(
+                ...$callArguments,
+            );
+        }
 
         if (\array_key_exists($className, $this->persistentDependencies)) {
             $this->persistentDependencies[$className] = $instance;
@@ -373,5 +373,24 @@ class Container implements ContainerInterface
         throw ContainerException::fromUnionType(
             unionType: $unionType,
         );
+    }
+
+    /**
+     * @param \ReflectionClass<object> $interface
+     * @return \ReflectionClass<object>
+     */
+    private function resolveDefaultImplementation(
+        \ReflectionClass $interface,
+    ): \ReflectionClass {
+        $attributes = $interface->getAttributes(
+            name: DefaultImplementation::class,
+            flags: \ReflectionAttribute::IS_INSTANCEOF,
+        );
+
+        if (\sizeof($attributes) > 0) {
+            return new \ReflectionClass($attributes[0]->newInstance()->class);
+        }
+
+        return $interface;
     }
 }

@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Config;
 
+use Tuxxedo\Container\DefaultImplementation;
+
+#[DefaultImplementation(class: Config::class)]
 interface ConfigInterface
 {
     public function has(

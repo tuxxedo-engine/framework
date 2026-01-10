@@ -14,11 +14,13 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Kernel;
 
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\DispatchableRouteInterface;
 
+#[DefaultImplementation(class: Dispatcher::class)]
 interface DispatcherInterface
 {
     /**
