@@ -45,7 +45,6 @@ class MysqlResultSet implements ResultSetInterface
         }
     }
 
-    // @todo Use $this->result->fetch_all()?
     public function fetchAllAsArray(): array
     {
         $rows = [];
