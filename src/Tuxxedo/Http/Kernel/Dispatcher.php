@@ -49,8 +49,6 @@ class Dispatcher implements DispatcherInterface
                     matches: $dispatchableRoute->arguments,
                 );
             }
-        } else {
-            $arguments[] = $request;
         }
 
         $response = $container->call($callback(...), $arguments);
