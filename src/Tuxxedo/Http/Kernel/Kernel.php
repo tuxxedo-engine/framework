@@ -22,7 +22,6 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewareNode;
-use Tuxxedo\Http\Request\Request;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponsableInterface;
 use Tuxxedo\Http\Response\ResponseEmitter;
@@ -174,7 +173,7 @@ class Kernel implements KernelInterface
     public function run(
         ?RequestInterface $request = null,
     ): void {
-        $request ??= $this->container->resolve(Request::class);
+        $request ??= $this->container->resolve(RequestInterface::class);
 
         try {
             if (!isset($this->router)) {

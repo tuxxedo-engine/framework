@@ -13,9 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Response;
 
+use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Http\HeaderInterface;
 
-// @todo Streaming support
+#[DefaultImplementation(class: Response::class)]
 interface ResponseInterface extends ResponseCodeInterface
 {
     /**
