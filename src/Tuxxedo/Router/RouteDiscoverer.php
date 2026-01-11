@@ -317,19 +317,6 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
             $arguments[] = $argument;
         }
 
-        if ((\sizeof($arguments) + 1) < $method->getNumberOfRequiredParameters()) {
-            $this->handleError(
-                static fn (): RouterException => RouterException::fromTooFewArguments(
-                    className: $className,
-                    method: $method->getName(),
-                    numberOfArguments: \sizeof($arguments) + 1,
-                    requiredNumberOfArguments: $method->getNumberOfRequiredParameters(),
-                ),
-            );
-
-            return;
-        }
-
         $names = \array_map(
             static fn (ArgumentNode $node): string => $node->name,
             $nodes,

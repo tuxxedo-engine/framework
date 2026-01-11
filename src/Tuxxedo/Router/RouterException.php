@@ -52,23 +52,6 @@ class RouterException extends \Exception
         );
     }
 
-    public static function fromTooFewArguments(
-        string $className,
-        string $method,
-        int $numberOfArguments,
-        int $requiredNumberOfArguments
-    ): self {
-        return new self(
-            message: \sprintf(
-                '%s::%s() has too few arguments: %d supplied, %d required',
-                $className,
-                $method,
-                $numberOfArguments,
-                $requiredNumberOfArguments,
-            ),
-        );
-    }
-
     /**
      * @param string[] $names
      */
