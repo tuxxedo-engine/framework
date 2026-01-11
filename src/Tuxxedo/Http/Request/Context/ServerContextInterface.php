@@ -18,6 +18,7 @@ use Tuxxedo\Http\Method;
 // @todo expects? e.g. does the client expects json?
 // @todo IP address functionality
 // @todo Prefers language functionality
+// @todo User-Agent
 interface ServerContextInterface
 {
     public bool $https {
