@@ -16,7 +16,6 @@ namespace Tuxxedo\Router;
 use Tuxxedo\Collection\FileCollection;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
-use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Router\Attribute\Argument;
 use Tuxxedo\Router\Attribute\Middleware;
 use Tuxxedo\Router\Attribute\Route as RouteAttr;
