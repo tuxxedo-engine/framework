@@ -44,8 +44,9 @@ readonly class TestController
     }
 
     #[Route\Get(uri: '/log')]
-    public function index(): ResponseInterface
+    public function index(LoggerInterface $logger): ResponseInterface
     {
+        $logger->log('DI via action parameter');
         $this->container->resolve(LoggerInterface::class)->log('Inside action');
 
         return new Response(

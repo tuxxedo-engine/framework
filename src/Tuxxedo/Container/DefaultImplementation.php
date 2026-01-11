@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
+// @todo Interfaces that implement this may need to have lifecycles otherwise they become transient
 #[\Attribute(\Attribute::TARGET_CLASS)]
 class DefaultImplementation
 {
