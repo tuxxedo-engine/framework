@@ -137,8 +137,6 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
                             route: $route,
                         );
                     } elseif (\sizeof($route->methods) > 0) {
-                        $requestArgumentName = $this->getRequestArgumentName($method);
-
                         foreach ($route->methods as $requestMethod) {
                             yield new Route(
                                 method: $requestMethod,
@@ -148,7 +146,6 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
                                 name: $route->name,
                                 middleware: $middleware,
                                 priority: $route->priority,
-                                requestArgumentName: $requestArgumentName,
                             );
                         }
                     } else {
@@ -160,7 +157,6 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
                             name: $route->name,
                             middleware: $middleware,
                             priority: $route->priority,
-                            requestArgumentName: $this->getRequestArgumentName($method),
                         );
                     }
                 }
@@ -353,8 +349,6 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
         }
 
         if (\sizeof($route->methods) > 0) {
-            $requestArgumentName = $this->getRequestArgumentName($method);
-
             foreach ($route->methods as $requestMethod) {
                 yield new Route(
                     method: $requestMethod,
@@ -365,7 +359,6 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
                     middleware: $middleware,
                     priority: $route->priority,
                     regexUri: $this->getRegexUri($uri),
-                    requestArgumentName: $requestArgumentName,
                     arguments: $arguments,
                 );
             }
@@ -379,7 +372,6 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
                 middleware: $middleware,
                 priority: $route->priority,
                 regexUri: $this->getRegexUri($uri),
-                requestArgumentName: $this->getRequestArgumentName($method),
                 arguments: $arguments,
             );
         }
@@ -416,24 +408,6 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
 
             if ($instance->label === $name) {
                 return $parameter;
-            }
-        }
-
-        return null;
-    }
-
-    private function getRequestArgumentName(
-        \ReflectionMethod $method,
-    ): ?string {
-        foreach ($method->getParameters() as $parameter) {
-            $type = $parameter->getType();
-
-            if (
-                $type !== null &&
-                $type instanceof \ReflectionNamedType &&
-                $type->getName() === RequestInterface::class
-            ) {
-                return $parameter->getName();
             }
         }
 

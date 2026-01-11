@@ -56,10 +56,6 @@ interface RouteInterface
         get;
     }
 
-    public ?string $requestArgumentName {
-        get;
-    }
-
     /**
      * @var RouteArgumentInterface[]
      */

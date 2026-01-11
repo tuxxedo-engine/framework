@@ -34,7 +34,6 @@ readonly class Route implements RouteInterface
         public array $middleware = [],
         public RoutePriority $priority = RoutePriority::NORMAL,
         public ?string $regexUri = null,
-        public ?string $requestArgumentName = null,
         public array $arguments = [],
     ) {
         if (\is_string($method)) {

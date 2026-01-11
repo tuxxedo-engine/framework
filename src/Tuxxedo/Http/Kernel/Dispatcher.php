@@ -44,10 +44,6 @@ class Dispatcher implements DispatcherInterface
         $arguments = [];
 
         if (\sizeof($dispatchableRoute->arguments) > 0) {
-            if ($dispatchableRoute->route->requestArgumentName !== null) {
-                $arguments[$dispatchableRoute->route->requestArgumentName] = $request;
-            }
-
             foreach ($dispatchableRoute->route->arguments as $argument) {
                 $arguments[$argument->mappedName ?? $argument->node->name] = $argument->getValue(
                     matches: $dispatchableRoute->arguments,
@@ -57,7 +53,7 @@ class Dispatcher implements DispatcherInterface
             $arguments[] = $request;
         }
 
-        $response = $callback(...$arguments);
+        $response = $container->call($callback(...), $arguments);
 
         if ($response instanceof ResponsableInterface) {
             $response = $response->toResponse($container);
