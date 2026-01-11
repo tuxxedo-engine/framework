@@ -256,7 +256,6 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
     private function getUriArgumentNodes(string $uri): array
     {
         $nodes = [];
-
         $regex = \preg_match_all(
             '/\{(\??)([a-zA-Z_][a-zA-Z0-9_]*)(?::([^}]+)|<([^>]+)>)?}/',
             $uri,
