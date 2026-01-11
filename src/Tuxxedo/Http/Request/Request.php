@@ -25,18 +25,21 @@ use Tuxxedo\Http\Request\Context\ServerContextInterface;
 use Tuxxedo\Http\Request\Context\UploadedFilesContextInterface;
 use Tuxxedo\Mapper\Mapper;
 use Tuxxedo\Mapper\MapperInterface;
+use Tuxxedo\Router\DispatchableRouteInterface;
 
-readonly class Request implements RequestInterface
+class Request implements RequestInterface
 {
-    public ServerContextInterface $server;
-    public HeaderContextInterface $headers;
-    public InputContextInterface $cookies;
-    public InputContextInterface $get;
-    public InputContextInterface $post;
-    public UploadedFilesContextInterface $files;
-    public BodyContextInterface $body;
+    public readonly ServerContextInterface $server;
+    public readonly HeaderContextInterface $headers;
+    public readonly InputContextInterface $cookies;
+    public readonly InputContextInterface $get;
+    public readonly InputContextInterface $post;
+    public readonly UploadedFilesContextInterface $files;
+    public readonly BodyContextInterface $body;
+    public private(set) DispatchableRouteInterface $route;
 
     public function __construct(
+        ?DispatchableRouteInterface $route = null,
         ?MapperInterface $mapper = null,
     ) {
         $mapper ??= new Mapper();
@@ -63,6 +66,21 @@ readonly class Request implements RequestInterface
 
         $this->body = new EnvironmentBodyContext(
             mapper: $mapper,
+        );
+
+        if ($route !== null) {
+            $this->route = $route;
+        }
+    }
+
+    public function withRoute(
+        DispatchableRouteInterface $route,
+    ): static {
+        return clone (
+            $this,
+            [
+                'route' => $route,
+            ],
         );
     }
 }

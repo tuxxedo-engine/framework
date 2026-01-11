@@ -30,6 +30,7 @@ readonly class Route
     public function __construct(
         public ?string $uri,
         array $method = [],
+        public ?string $name = null,
         public RoutePriority $priority = RoutePriority::NORMAL,
     ) {
         $this->methods = \array_map(

@@ -22,6 +22,7 @@ readonly class Get extends Route
 {
     public function __construct(
         ?string $uri = null,
+        ?string $name = null,
         RoutePriority $priority = RoutePriority::NORMAL,
     ) {
         parent::__construct(
@@ -29,6 +30,7 @@ readonly class Get extends Route
             method: [
                 Method::GET,
             ],
+            name: $name,
             priority: $priority,
         );
     }

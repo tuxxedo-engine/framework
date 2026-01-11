@@ -132,7 +132,7 @@ class Response implements ResponseInterface
     public static function redirect(
         string $uri,
         array $headers = [],
-        ResponseCode $responseCode = ResponseCode::OK,
+        ResponseCode $responseCode = ResponseCode::FOUND,
         string $body = '',
     ): static {
         return new static(

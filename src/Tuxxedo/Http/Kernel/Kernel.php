@@ -174,12 +174,7 @@ class Kernel implements KernelInterface
     public function run(
         ?RequestInterface $request = null,
     ): void {
-        if ($request !== null) {
-            $this->container->bind($request);
-        } else {
-            // @todo Check if this has an AlwaysPersistentInterface otherwise this may not be compatible with $request !== null
-            $request = $this->container->resolve(Request::class);
-        }
+        $request ??= $this->container->resolve(Request::class);
 
         try {
             if (!isset($this->router)) {
@@ -193,6 +188,10 @@ class Kernel implements KernelInterface
             if ($dispatchableRoute === null) {
                 throw HttpException::fromNotFound();
             }
+
+            $request = $request->withRoute($dispatchableRoute);
+
+            $this->container->bind($request);
 
             $this->emitter->emit(
                 response: $this->pipeline(

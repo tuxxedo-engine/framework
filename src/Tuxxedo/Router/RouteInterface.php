@@ -37,6 +37,10 @@ interface RouteInterface
         get;
     }
 
+    public ?string $name {
+        get;
+    }
+
     /**
      * @var array<(\Closure(): MiddlewareInterface)>
      */

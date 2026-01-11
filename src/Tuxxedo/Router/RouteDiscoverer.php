@@ -23,6 +23,7 @@ use Tuxxedo\Router\Attribute\Route as RouteAttr;
 use Tuxxedo\Router\Pattern\TypePatternRegistry;
 use Tuxxedo\Router\Pattern\TypePatternRegistryInterface;
 
+// @todo This needs some handling for duplicated route names with special case for METHOD name mangling
 readonly class RouteDiscoverer implements RouteDiscovererInterface
 {
     public TypePatternRegistryInterface $patterns;
@@ -144,6 +145,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
                                 uri: $uri,
                                 controller: $reflector->getName(),
                                 action: $method->getName(),
+                                name: $route->name,
                                 middleware: $middleware,
                                 priority: $route->priority,
                                 requestArgumentName: $requestArgumentName,
@@ -155,6 +157,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
                             uri: $uri,
                             controller: $reflector->getName(),
                             action: $method->getName(),
+                            name: $route->name,
                             middleware: $middleware,
                             priority: $route->priority,
                             requestArgumentName: $this->getRequestArgumentName($method),
@@ -358,6 +361,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
                     uri: $uri,
                     controller: $className,
                     action: $method->getName(),
+                    name: $route->name,
                     middleware: $middleware,
                     priority: $route->priority,
                     regexUri: $this->getRegexUri($uri),
@@ -371,6 +375,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
                 uri: $uri,
                 controller: $className,
                 action: $method->getName(),
+                name: $route->name,
                 middleware: $middleware,
                 priority: $route->priority,
                 regexUri: $this->getRegexUri($uri),

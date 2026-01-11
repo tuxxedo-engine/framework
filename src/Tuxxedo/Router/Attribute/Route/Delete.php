@@ -22,6 +22,7 @@ readonly class Delete extends Route
 {
     public function __construct(
         ?string $uri = null,
+        ?string $name = null,
         RoutePriority $priority = RoutePriority::NORMAL,
     ) {
         parent::__construct(
@@ -29,6 +30,7 @@ readonly class Delete extends Route
             method: [
                 Method::DELETE,
             ],
+            name: $name,
             priority: $priority,
         );
     }

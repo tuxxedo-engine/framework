@@ -70,8 +70,9 @@ class Container implements ContainerInterface
                 $this->initializers[$className] = $initializer;
             }
 
-            $aliases = $this->filterInterfaces(
-                interfaces: $aliases,
+            $aliases = \array_filter(
+                $aliases,
+                static fn (string $alias): bool => !\in_array($alias, self::PROTECTED_INTERFACES, true),
             );
         } else {
             if ($initializer !== null) {
@@ -266,19 +267,6 @@ class Container implements ContainerInterface
         string $className,
     ): bool {
         return $this->isAlias($alias) && $this->aliases[$alias] === $className;
-    }
-
-    /**
-     * @param class-string[] $interfaces
-     * @return class-string[]
-     */
-    private function filterInterfaces(
-        array $interfaces,
-    ): array {
-        return \array_filter(
-            $interfaces,
-            static fn (string $interface): bool => !\in_array($interface, self::PROTECTED_INTERFACES, true),
-        );
     }
 
     /**

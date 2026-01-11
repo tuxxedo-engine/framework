@@ -30,6 +30,7 @@ readonly class Route implements RouteInterface
         public string $uri,
         public string $controller,
         public string $action,
+        public ?string $name = null,
         public array $middleware = [],
         public RoutePriority $priority = RoutePriority::NORMAL,
         public ?string $regexUri = null,
