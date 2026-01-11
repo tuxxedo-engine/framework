@@ -22,7 +22,6 @@
     </section>
 
     <section class="py-14 -mt-12 md:-mt-20 place-items-center ">
-        <!-- @todo Add some paragraphs here -->
         <h3 class="text-pretty text-4xl font-extrabold tracking-tight md:text-3xl">Your first route</h3>
     </section>
 
@@ -50,9 +49,7 @@
             <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950">
                 <h3 class="text-base font-semibold">View (Lumi):</h3>
                 <pre class="mt-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800 p-4 text-sm leading-6 bg-[#0b0f14] text-[#e6edf3]"><code
-                            class="language-lumi"><span style="color:#C9D1D9">Hello</span> <span
-                                style="color:#6E7681">\{{</span> <span style="color:#C9D1D9">name</span> <span
-                                style="color:#6E7681">}}</span></code></pre>
+                            class="language-lumi">{% lumi dark %}Hello {{ name }}{% endlumi %}</code></pre>
                 <h3 class="text-base font-semibold pt-6">Output:</h3>
                 <pre class="mt-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800 p-4 text-sm leading-6 bg-[#0b0f14] text-[#e6edf3]"><code
                             class="language-lumi"><span style="color:#C9D1D9">Hello World</span></code></pre>
