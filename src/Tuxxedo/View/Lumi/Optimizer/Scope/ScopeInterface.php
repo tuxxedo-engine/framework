@@ -42,10 +42,6 @@ interface ScopeInterface
         IdentifierNode|string $name,
     ): bool;
 
-    public function markVirtual(
-        VariableInterface $variable,
-    ): void;
-
     public function merge(
         ScopeInterface $scope,
     ): self;
