@@ -13,11 +13,11 @@ declare(strict_types=1);
 
 namespace App\Services\Logger;
 
-use Tuxxedo\Container\AlwaysPersistentInterface;
 use Tuxxedo\Container\DefaultImplementation;
+use Tuxxedo\Container\Lifecycle;
 
-#[DefaultImplementation(class: Logger::class)]
-interface LoggerInterface extends \Countable, AlwaysPersistentInterface
+#[DefaultImplementation(class: Logger::class, lifecycle: Lifecycle::PERSISTENT)]
+interface LoggerInterface extends \Countable
 {
     /**
      * @var LogEntry[]

@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
-// @todo Support customized lifecycles
 // @todo Should resolvers hold the requested type and pass it to the attribute?
 interface ContainerInterface
 {
@@ -22,7 +21,7 @@ interface ContainerInterface
      *
      * @throws ContainerException
      */
-    public function bind(
+    public function transient(
         string|object $class,
         bool $bindInterfaces = true,
         bool $bindParent = true,
@@ -36,7 +35,33 @@ interface ContainerInterface
      *
      * @throws ContainerException
      */
-    public function lazy(
+    public function transientLazy(
+        string $class,
+        \Closure $initializer,
+        bool $bindInterfaces = true,
+        bool $bindParent = true,
+    ): static;
+
+    /**
+     * @param class-string|object $class
+     *
+     * @throws ContainerException
+     */
+    public function persistent(
+        string|object $class,
+        bool $bindInterfaces = true,
+        bool $bindParent = true,
+    ): static;
+
+    /**
+     * @template TClassName of object
+     *
+     * @param class-string<TClassName> $class
+     * @param (\Closure(self): TClassName) $initializer
+     *
+     * @throws ContainerException
+     */
+    public function persistentLazy(
         string $class,
         \Closure $initializer,
         bool $bindInterfaces = true,
@@ -80,6 +105,20 @@ interface ContainerInterface
      * @param class-string $className
      */
     public function isBound(
+        string $className,
+    ): bool;
+
+    /**
+     * @param class-string $className
+     */
+    public function isTransient(
+        string $className,
+    ): bool;
+
+    /**
+     * @param class-string $className
+     */
+    public function isPersistent(
         string $className,
     ): bool;
 

@@ -13,10 +13,19 @@ declare(strict_types=1);
 
 namespace Fixtures\Container;
 
+use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\DefaultLifecycle;
 use Tuxxedo\Container\Lifecycle;
 
-#[DefaultLifecycle(lifecycle: Lifecycle::PERSISTENT)]
-class PersistentService
+#[DefaultImplementation(class: DefaultServiceTwo::class, lifecycle: Lifecycle::PERSISTENT)]
+#[DefaultLifecycle(Lifecycle::TRANSIENT)]
+interface DefaultServiceFourInterface
 {
+    public int $a {
+        get;
+    }
+
+    public int $b {
+        get;
+    }
 }

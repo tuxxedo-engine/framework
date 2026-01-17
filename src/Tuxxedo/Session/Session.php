@@ -13,12 +13,11 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Session;
 
-use Tuxxedo\Container\AlwaysPersistentInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DefaultInitializableInterface;
 use Tuxxedo\Http\Kernel\KernelInterface;
 
-class Session implements SessionInterface, AlwaysPersistentInterface, DefaultInitializableInterface
+class Session implements SessionInterface, DefaultInitializableInterface
 {
     public function __construct(
         public readonly SessionAdapterInterface $adapter,

@@ -18,9 +18,9 @@ use Tuxxedo\View\Lumi\LumiViewRender;
 use Tuxxedo\View\ViewRenderInterface;
 
 return static function (ContainerInterface $container): void {
-    $container->bind(ConnectionManager::class);
+    $container->persistent(ConnectionManager::class);
 
-    $container->lazy(
+    $container->persistentLazy(
         LumiViewRender::class,
         static function (ContainerInterface $container): ViewRenderInterface {
             return LumiConfigurator::fromConfig($container)

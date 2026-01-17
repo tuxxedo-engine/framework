@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
-interface AlwaysPersistentInterface
+enum Lifecycle
 {
+    case TRANSIENT;
+    case PERSISTENT;
 }

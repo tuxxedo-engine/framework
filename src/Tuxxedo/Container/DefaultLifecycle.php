@@ -11,12 +11,13 @@
 
 declare(strict_types=1);
 
-namespace Fixtures\Container;
+namespace Tuxxedo\Container;
 
-use Tuxxedo\Container\DefaultLifecycle;
-use Tuxxedo\Container\Lifecycle;
-
-#[DefaultLifecycle(lifecycle: Lifecycle::PERSISTENT)]
-class PersistentService
+#[\Attribute(\Attribute::TARGET_CLASS)]
+readonly class DefaultLifecycle
 {
+    public function __construct(
+        public Lifecycle $lifecycle,
+    ) {
+    }
 }

@@ -15,9 +15,10 @@ namespace Tuxxedo\Database;
 
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\DefaultImplementation;
+use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 
-#[DefaultImplementation(class: ConnectionManager::class)]
+#[DefaultImplementation(class: ConnectionManager::class, lifecycle: Lifecycle::PERSISTENT)]
 interface ConnectionManagerInterface
 {
     /**

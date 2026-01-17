@@ -15,11 +15,16 @@ namespace Tuxxedo\Container;
 
 class Container implements ContainerInterface
 {
+    // @todo See if we can get rid of this
     private const array PROTECTED_INTERFACES = [
-        AlwaysPersistentInterface::class,
         DependencyResolverInterface::class,
         DefaultInitializableInterface::class,
     ];
+
+    /**
+     * @var array<class-string, Lifecycle>
+     */
+    private array $registry = [];
 
     /**
      * @var array<class-string, object|null>
@@ -46,13 +51,19 @@ class Container implements ContainerInterface
      */
     private function register(
         string|object $class,
+        Lifecycle $lifecycle,
         ?\Closure $initializer = null,
         bool $bindInterfaces = true,
         bool $bindParent = true,
     ): static {
         $className = \is_object($class) ? $class::class : $class;
 
-        if (!isset($this->persistentDependencies[$className])) {
+        $this->registry[$className] = $lifecycle;
+
+        if (
+            $lifecycle === Lifecycle::PERSISTENT &&
+            !isset($this->persistentDependencies[$className])
+        ) {
             $this->persistentDependencies[$className] = \is_object($class) ? $class : null;
         }
 
@@ -96,13 +107,14 @@ class Container implements ContainerInterface
      *
      * @throws ContainerException
      */
-    public function bind(
+    public function transient(
         string|object $class,
         bool $bindInterfaces = true,
         bool $bindParent = true,
     ): static {
         return $this->register(
             class: $class,
+            lifecycle: Lifecycle::TRANSIENT,
             bindInterfaces: $bindInterfaces,
             bindParent: $bindParent,
         );
@@ -116,7 +128,7 @@ class Container implements ContainerInterface
      *
      * @throws ContainerException
      */
-    public function lazy(
+    public function transientLazy(
         string $class,
         \Closure $initializer,
         bool $bindInterfaces = true,
@@ -125,6 +137,48 @@ class Container implements ContainerInterface
         return $this->register(
             class: $class,
             initializer: $initializer,
+            lifecycle: Lifecycle::TRANSIENT,
+            bindInterfaces: $bindInterfaces,
+            bindParent: $bindParent,
+        );
+    }
+
+    /**
+     * @param class-string|object $class
+     *
+     * @throws ContainerException
+     */
+    public function persistent(
+        string|object $class,
+        bool $bindInterfaces = true,
+        bool $bindParent = true,
+    ): static {
+        return $this->register(
+            class: $class,
+            lifecycle: Lifecycle::PERSISTENT,
+            bindInterfaces: $bindInterfaces,
+            bindParent: $bindParent,
+        );
+    }
+
+    /**
+     * @template TClassName of object
+     *
+     * @param class-string<TClassName> $class
+     * @param (\Closure(self): TClassName) $initializer
+     *
+     * @throws ContainerException
+     */
+    public function persistentLazy(
+        string $class,
+        \Closure $initializer,
+        bool $bindInterfaces = true,
+        bool $bindParent = true,
+    ): static {
+        return $this->register(
+            class: $class,
+            initializer: $initializer,
+            lifecycle: Lifecycle::PERSISTENT,
             bindInterfaces: $bindInterfaces,
             bindParent: $bindParent,
         );
@@ -163,11 +217,13 @@ class Container implements ContainerInterface
         string $className,
         array $arguments = [],
     ): object {
-        if (\array_key_exists($className, $this->aliases)) {
-            $className = $this->aliases[$className];
-        }
+        $className = $this->resolveAlias($className);
+        $lifecycle = $this->registry[$className] ?? Lifecycle::TRANSIENT;
 
-        if (isset($this->persistentDependencies[$className])) {
+        if (
+            $lifecycle === Lifecycle::PERSISTENT &&
+            isset($this->persistentDependencies[$className])
+        ) {
             /** @var TClassName */
             return $this->persistentDependencies[$className];
         }
@@ -176,7 +232,7 @@ class Container implements ContainerInterface
             /** @var TClassName $instance */
             $instance = ($this->initializers[$className])($this);
 
-            if ($instance instanceof AlwaysPersistentInterface) {
+            if ($lifecycle === Lifecycle::PERSISTENT) {
                 unset($this->initializers[$className]);
 
                 $this->persistentDependencies[$className] = $instance;
@@ -189,14 +245,23 @@ class Container implements ContainerInterface
         $maskedClassName = $className;
 
         if ($class->isInterface()) {
-            $class = $this->resolveDefaultImplementation($class);
+            $maskedLifecycle = null;
+            $class = $this->resolveDefaultImplementation($class, $maskedLifecycle);
             $maskedClassName = $class->name;
+
+            if ($maskedLifecycle !== null) {
+                $this->register(
+                    class: $className,
+                    lifecycle: $maskedLifecycle,
+                    bindInterfaces: false,
+                    bindParent: false,
+                );
+
+                $lifecycle = $maskedLifecycle;
+            }
         }
 
-        if ($class->implementsInterface(AlwaysPersistentInterface::class)) {
-            $this->bind($className);
-        }
-
+        // @todo Consider lifting this limitation in regards to $arguments here and in other places
         if (
             \sizeof($arguments) === 0 &&
             $class->implementsInterface(DefaultInitializableInterface::class)
@@ -223,7 +288,10 @@ class Container implements ContainerInterface
             );
         }
 
-        if (\array_key_exists($className, $this->persistentDependencies)) {
+        if (
+            $lifecycle === Lifecycle::PERSISTENT &&
+            \array_key_exists($className, $this->persistentDependencies)
+        ) {
             $this->persistentDependencies[$className] = $instance;
         }
 
@@ -253,7 +321,27 @@ class Container implements ContainerInterface
     public function isBound(
         string $className,
     ): bool {
-        return \array_key_exists($className, $this->persistentDependencies);
+        $className = $this->resolveAlias($className);
+
+        return \array_key_exists($className, $this->registry);
+    }
+
+    public function isTransient(
+        string $className,
+    ): bool {
+        $className = $this->resolveAlias($className);
+
+        return \array_key_exists($className, $this->registry) &&
+            $this->registry[$className] === Lifecycle::TRANSIENT;
+    }
+
+    public function isPersistent(
+        string $className,
+    ): bool {
+        $className = $this->resolveAlias($className);
+
+        return \array_key_exists($className, $this->registry) &&
+            $this->registry[$className] === Lifecycle::PERSISTENT;
     }
 
     public function isAlias(
@@ -266,7 +354,8 @@ class Container implements ContainerInterface
         string $alias,
         string $className,
     ): bool {
-        return $this->isAlias($alias) && $this->aliases[$alias] === $className;
+        return $this->isAlias($alias) &&
+            $this->aliases[$alias] === $className;
     }
 
     /**
@@ -369,6 +458,7 @@ class Container implements ContainerInterface
      */
     private function resolveDefaultImplementation(
         \ReflectionClass $interface,
+        ?Lifecycle &$lifecycle = null,
     ): \ReflectionClass {
         $attributes = $interface->getAttributes(
             name: DefaultImplementation::class,
@@ -376,9 +466,45 @@ class Container implements ContainerInterface
         );
 
         if (\sizeof($attributes) > 0) {
-            return new \ReflectionClass($attributes[0]->newInstance()->class);
+            /** @var DefaultImplementation $implementation */
+            $implementation = $attributes[0]->newInstance();
+            $lifecycle = $implementation->lifecycle ?? $this->resolveDefaultLifecycle($interface);
+
+            return new \ReflectionClass($implementation->class);
         }
 
         return $interface;
+    }
+
+    /**
+     * @param \ReflectionClass<object> $interface
+     */
+    private function resolveDefaultLifecycle(
+        \ReflectionClass $interface,
+    ): ?Lifecycle {
+        $attributes = $interface->getAttributes(
+            name: DefaultLifecycle::class,
+            flags: \ReflectionAttribute::IS_INSTANCEOF,
+        );
+
+        if (\sizeof($attributes) > 0) {
+            return $attributes[0]->newInstance()->lifecycle;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param class-string $className
+     * @return class-string
+     */
+    private function resolveAlias(
+        string $className,
+    ): string {
+        while (\array_key_exists($className, $this->aliases)) {
+            $className = $this->aliases[$className];
+        }
+
+        return $className;
     }
 }

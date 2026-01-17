@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
+// @todo Move this to an attribute like default implementation?
 interface DefaultInitializableInterface
 {
     public static function createInstance(

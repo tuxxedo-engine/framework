@@ -56,9 +56,9 @@ class Kernel implements KernelInterface
         $this->config = $config ?? new Config();
         $this->container = $container ?? new Container();
 
-        $this->container->bind($this);
-        $this->container->bind($this->config);
-        $this->container->bind($this->container);
+        $this->container->persistent($this);
+        $this->container->persistent($this->config);
+        $this->container->persistent($this->container);
 
         $this->emitter = new ResponseEmitter();
         $this->dispatcher = new Dispatcher();
@@ -190,7 +190,7 @@ class Kernel implements KernelInterface
 
             $request = $request->withRoute($dispatchableRoute);
 
-            $this->container->bind($request);
+            $this->container->persistent($request);
 
             $this->emitter->emit(
                 response: $this->pipeline(

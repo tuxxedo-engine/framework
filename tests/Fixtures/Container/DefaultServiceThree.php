@@ -13,10 +13,11 @@ declare(strict_types=1);
 
 namespace Fixtures\Container;
 
-use Tuxxedo\Container\DefaultLifecycle;
-use Tuxxedo\Container\Lifecycle;
-
-#[DefaultLifecycle(lifecycle: Lifecycle::PERSISTENT)]
-class PersistentService
+class DefaultServiceThree implements DefaultServiceTwoInterface
 {
+    public function __construct(
+        public readonly int $a = 1,
+        public readonly int $b = 2,
+    ) {
+    }
 }

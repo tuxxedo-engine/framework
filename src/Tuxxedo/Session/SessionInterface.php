@@ -14,8 +14,9 @@ declare(strict_types=1);
 namespace Tuxxedo\Session;
 
 use Tuxxedo\Container\DefaultImplementation;
+use Tuxxedo\Container\Lifecycle;
 
-#[DefaultImplementation(class: Session::class)]
+#[DefaultImplementation(class: Session::class, lifecycle: Lifecycle::PERSISTENT)]
 interface SessionInterface
 {
     public SessionAdapterInterface $adapter {

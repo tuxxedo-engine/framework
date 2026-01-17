@@ -17,8 +17,10 @@ use Fixtures\Container\AbstractService;
 use Fixtures\Container\ComplexService;
 use Fixtures\Container\CtorArgsService;
 use Fixtures\Container\CtorNoArgsService;
+use Fixtures\Container\DefaultServiceFourInterface;
 use Fixtures\Container\DefaultServiceOne;
 use Fixtures\Container\DefaultServiceOneInterface;
+use Fixtures\Container\DefaultServiceThreeInterface;
 use Fixtures\Container\DefaultServiceTwo;
 use Fixtures\Container\DefaultServiceTwoInterface;
 use Fixtures\Container\IntService;
@@ -43,7 +45,6 @@ use Fixtures\Container\UnresolvableWithNullService;
 use Fixtures\Container\UnresolvableWithResolverService;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Container\AlwaysPersistentInterface;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Container\ContainerException;
 
@@ -75,14 +76,13 @@ class ContainerTest extends TestCase
     public function testPersistentServiceByResolve(): void
     {
         $container = new Container();
-
-        self::assertFalse($container->isBound(PersistentService::class));
+        $container->persistent(PersistentService::class);
 
         $service1 = $container->resolve(PersistentService::class);
 
         self::assertInstanceOf(PersistentService::class, $service1);
-        self::assertInstanceOf(AlwaysPersistentInterface::class, $service1);
         self::assertTrue($container->isBound(PersistentService::class));
+        self::assertTrue($container->isPersistent(PersistentService::class));
 
         $service2 = $container->resolve(PersistentService::class);
 
@@ -148,7 +148,7 @@ class ContainerTest extends TestCase
     ): void {
         $container = new Container();
 
-        $container->bind(
+        $container->transient(
             class: $serviceName,
             bindInterfaces: $bindInterfaces,
             bindParent: $bindParent,
@@ -162,16 +162,17 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
-        $container->bind(ServiceTwo::class);
+        $container->transient(ServiceTwo::class);
 
         self::assertInstanceOf(ServiceTwo::class, $container->resolve(ServiceTwo::class));
+        self::assertTrue($container->isTransient(ServiceTwo::class));
     }
 
     public function testBindLazyService(): void
     {
         $container = new Container();
 
-        $container->bind(LazyService::class);
+        $container->transient(LazyService::class);
 
         self::assertSame($container->resolve(LazyService::class)->name, 'baz');
     }
@@ -180,7 +181,7 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
-        $container->lazy(
+        $container->persistentLazy(
             class: PersistentService::class,
             initializer: static fn (): PersistentService => new PersistentService(),
         );
@@ -192,7 +193,7 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
-        $container->lazy(
+        $container->transientLazy(
             class: PersistentService::class,
             initializer: static fn (): PersistentService => new PersistentService(),
             bindInterfaces: false,
@@ -206,14 +207,14 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
-        $container->bind(RebindA::class);
+        $container->persistent(RebindA::class);
         self::assertTrue($container->isBound(RebindA::class));
 
         $first = $container->resolve(RebindC::class);
 
         self::assertInstanceOf(RebindA::class, $first->subService);
 
-        $container->bind(RebindB::class);
+        $container->persistent(RebindB::class);
         self::assertTrue($container->isBound(RebindB::class));
 
         $second = $container->resolve(RebindC::class);
@@ -242,7 +243,7 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
-        $container->lazy(
+        $container->transientLazy(
             ServiceOneInterface::class,
             static fn (): ServiceOneInterface => new class () implements ServiceOneInterface {
                 public function foo(): string
@@ -518,5 +519,33 @@ class ContainerTest extends TestCase
 
         $this->expectException(\Error::class);
         $container->resolve(ServiceInterface::class);
+    }
+
+    public static function lifecycleAttributeDataProvider(): \Generator
+    {
+        yield [
+            DefaultServiceThreeInterface::class,
+        ];
+
+        yield [
+            DefaultServiceFourInterface::class,
+        ];
+    }
+
+    /**
+     * @param class-string $interfaceName
+     */
+    #[DataProvider('lifecycleAttributeDataProvider')]
+    public function testDefaultLifecycle(
+        string $interfaceName,
+    ): void {
+        $container = new Container();
+
+        $service1 = $container->resolve($interfaceName);
+        $service2 = $container->resolve($interfaceName);
+
+        self::assertSame($service1, $service2);
+        self::assertTrue($container->isPersistent($interfaceName));
+        self::assertFalse($container->isTransient($interfaceName));
     }
 }

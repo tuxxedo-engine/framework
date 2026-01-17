@@ -350,7 +350,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         }
 
         if ($this->envLoader !== null) {
-            $kernel->container->lazy(
+            $kernel->container->persistentLazy(
                 EnvInterface::class,
                 fn (): EnvInterface => new Env(
                     loader: $this->envLoader,
