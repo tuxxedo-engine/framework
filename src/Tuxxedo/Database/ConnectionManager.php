@@ -15,11 +15,19 @@ namespace Tuxxedo\Database;
 
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Container\DefaultInitializableInterface;
+use Tuxxedo\Container\DefaultInitializer;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Driver\DefaultDriver;
 
-class ConnectionManager implements ConnectionManagerInterface, DefaultInitializableInterface
+#[DefaultInitializer(
+    static function (ContainerInterface $container): ConnectionManagerInterface {
+        return ConnectionManager::createFromConfig(
+            container: $container,
+            path: 'database.manager',
+        );
+    },
+)]
+class ConnectionManager implements ConnectionManagerInterface
 {
     /**
      * @var ConnectionInterface[]
@@ -33,15 +41,6 @@ class ConnectionManager implements ConnectionManagerInterface, DefaultInitializa
     final public function __construct(
         private readonly ContainerInterface $container,
     ) {
-    }
-
-    public static function createInstance(
-        ContainerInterface $container,
-    ): self {
-        return static::createFromConfig(
-            container: $container,
-            path: 'database.manager',
-        );
     }
 
     public static function createFromConfig(

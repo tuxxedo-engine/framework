@@ -15,12 +15,6 @@ namespace Tuxxedo\Container;
 
 class Container implements ContainerInterface
 {
-    // @todo See if we can get rid of this
-    private const array PROTECTED_INTERFACES = [
-        DependencyResolverInterface::class,
-        DefaultInitializableInterface::class,
-    ];
-
     /**
      * @var array<class-string, Lifecycle>
      */
@@ -73,18 +67,12 @@ class Container implements ContainerInterface
             if (
                 $initializer === null &&
                 \is_string($class) &&
-                \in_array(DefaultInitializableInterface::class, $aliases, true)
+                ($initializer = $this->resolveDefaultInitializer($className)) !== null
             ) {
-                /** @var class-string<TClassName&DefaultInitializableInterface> $class */
-                $this->initializers[$className] = static fn (self $container): object => $class::createInstance($container);
+                $this->initializers[$className] = $initializer;
             } elseif ($initializer !== null) {
                 $this->initializers[$className] = $initializer;
             }
-
-            $aliases = \array_filter(
-                $aliases,
-                static fn (string $alias): bool => !\in_array($alias, self::PROTECTED_INTERFACES, true),
-            );
         } else {
             if ($initializer !== null) {
                 $this->initializers[$className] = $initializer;
@@ -264,10 +252,10 @@ class Container implements ContainerInterface
         // @todo Consider lifting this limitation in regards to $arguments here and in other places
         if (
             \sizeof($arguments) === 0 &&
-            $class->implementsInterface(DefaultInitializableInterface::class)
+            ($initializer = $this->resolveDefaultInitializer($class)) !== null
         ) {
             /** @var TClassName $instance */
-            $instance = $maskedClassName::createInstance($this);
+            $instance = $initializer($this);
         } else {
             $callArguments = [];
 
@@ -489,6 +477,29 @@ class Container implements ContainerInterface
 
         if (\sizeof($attributes) > 0) {
             return $attributes[0]->newInstance()->lifecycle;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param \ReflectionClass<object>|class-string $class
+     * @return \Closure(ContainerInterface $container): object
+     */
+    private function resolveDefaultInitializer(
+        \ReflectionClass|string $class
+    ): ?\Closure {
+        if (!$class instanceof \ReflectionClass) {
+            $class = new \ReflectionClass($class);
+        }
+
+        $attributes = $class->getAttributes(
+            name: DefaultInitializer::class,
+            flags: \ReflectionAttribute::IS_INSTANCEOF,
+        );
+
+        if (\sizeof($attributes) > 0) {
+            return $attributes[0]->newInstance()->initializer;
         }
 
         return null;

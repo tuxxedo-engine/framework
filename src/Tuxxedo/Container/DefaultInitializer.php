@@ -13,10 +13,14 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
-// @todo Move this to an attribute like default implementation?
-interface DefaultInitializableInterface
+#[\Attribute(\Attribute::TARGET_CLASS)]
+readonly class DefaultInitializer
 {
-    public static function createInstance(
-        ContainerInterface $container,
-    ): self;
+    /**
+     * @param \Closure(ContainerInterface $container): object $initializer
+     */
+    public function __construct(
+        public \Closure $initializer,
+    ) {
+    }
 }

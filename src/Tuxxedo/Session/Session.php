@@ -14,25 +14,24 @@ declare(strict_types=1);
 namespace Tuxxedo\Session;
 
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Container\DefaultInitializableInterface;
+use Tuxxedo\Container\DefaultInitializer;
 use Tuxxedo\Http\Kernel\KernelInterface;
 
-class Session implements SessionInterface, DefaultInitializableInterface
-{
-    public function __construct(
-        public readonly SessionAdapterInterface $adapter,
-    ) {
-    }
-
-    public static function createInstance(
-        ContainerInterface $container,
-    ): self {
-        return new self(
+#[DefaultInitializer(
+    static function (ContainerInterface $container): SessionInterface {
+        return new Session(
             adapter: Adapter\PhpSessionAdapter::createFromConfig(
                 startMode: SessionStartMode::LAZY,
                 config: $container->resolve(KernelInterface::class)->config,
             ),
         );
+    },
+)]
+class Session implements SessionInterface
+{
+    public function __construct(
+        public readonly SessionAdapterInterface $adapter,
+    ) {
     }
 
     public function getIdentifier(): string

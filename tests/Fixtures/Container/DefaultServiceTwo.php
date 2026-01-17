@@ -13,18 +13,16 @@ declare(strict_types=1);
 
 namespace Fixtures\Container;
 
-use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Container\DefaultInitializableInterface;
+use Tuxxedo\Container\DefaultInitializer;
 
-class DefaultServiceTwo implements DefaultServiceTwoInterface, DefaultInitializableInterface
+#[DefaultInitializer(
+    static function (): DefaultServiceTwoInterface {
+        return new self();
+    },
+)]
+class DefaultServiceTwo implements DefaultServiceTwoInterface
 {
     private function __construct()
     {
-    }
-
-    public static function createInstance(
-        ContainerInterface $container,
-    ): DefaultInitializableInterface {
-        return new DefaultServiceTwo();
     }
 }
