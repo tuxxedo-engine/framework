@@ -76,21 +76,6 @@ class Variable implements VariableInterface
         return $newVariable;
     }
 
-    public static function fromVirtual(
-        VariableInterface $variable,
-    ): static {
-        $newVariable = new static(
-            scope: $variable->scope,
-            name: $variable->name,
-            value: $variable->value,
-        );
-
-        $newVariable->computedValue = $variable->computedValue;
-        $newVariable->lattice = Lattice::VIRTUAL;
-
-        return $newVariable;
-    }
-
     public function mutate(
         ScopeInterface $scope,
         ExpressionNodeInterface $value,

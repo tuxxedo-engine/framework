@@ -76,12 +76,6 @@ class Scope implements ScopeInterface
         return \array_key_exists($name, $this->variables);
     }
 
-    public function markVirtual(
-        VariableInterface $variable,
-    ): void {
-        $this->variables[$variable->name] = Variable::fromVirtual($variable);
-    }
-
     public function merge(
         ScopeInterface $scope,
     ): self {

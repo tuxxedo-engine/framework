@@ -27,7 +27,6 @@ use Tuxxedo\View\Lumi\Syntax\Node\ContinueNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ForNode;
-use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
@@ -88,15 +87,6 @@ class DceOptimizer extends AbstractOptimizer
         AssignmentNode $node,
     ): array {
         $this->scope->assign($node);
-
-        if ($node->name instanceof IdentifierNode) {
-            $variable = $this->scope->get($node->name);
-
-            if ($variable->hasComputedValue()) {
-                // @todo This needs to scan the entire stream for uses of the variable for this to be deleted
-                $this->scope->markVirtual($variable);
-            }
-        }
 
         return [
             $node,

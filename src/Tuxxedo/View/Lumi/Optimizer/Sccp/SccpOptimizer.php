@@ -183,6 +183,8 @@ class SccpOptimizer extends AbstractOptimizer
 
         if ($node instanceof BinaryOpNode) {
             return $this->optimizeBinaryOp($stream, $node);
+        } elseif ($node instanceof UnaryOpNode) {
+            return $this->optimizeUnaryOp($node);
         }
 
         return [
