@@ -17,10 +17,6 @@ use Tuxxedo\Config\Config;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Debug\DebugErrorHandler;
-use Tuxxedo\Env\Env;
-use Tuxxedo\Env\EnvInterface;
-use Tuxxedo\Env\EnvLoaderInterface;
-use Tuxxedo\Env\GetEnvLoader;
 use Tuxxedo\Http\Kernel\DispatcherInterface;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
 use Tuxxedo\Http\Kernel\Kernel;
@@ -30,6 +26,7 @@ use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Router\DynamicRouter;
 use Tuxxedo\Router\RouterInterface;
 
+// @todo Implement a dotenv loader here
 class ApplicationConfigurator implements ApplicationConfiguratorInterface
 {
     public private(set) ?ConfigInterface $config = null;
@@ -42,7 +39,6 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
     public private(set) ?RouterInterface $router = null;
     public private(set) ?ResponseEmitterInterface $emitter = null;
     public private(set) ?DispatcherInterface $dispatcher = null;
-    public private(set) ?EnvLoaderInterface $envLoader = null;
 
     public private(set) array $middleware = [];
     public private(set) array $exceptionHandlers = [];
@@ -242,28 +238,6 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         return $this;
     }
 
-    public function withoutEnvLoader(): self
-    {
-        $this->envLoader = null;
-
-        return $this;
-    }
-
-    public function withEnvLoader(
-        EnvLoaderInterface $loader,
-    ): self {
-        $this->envLoader = $loader;
-
-        return $this;
-    }
-
-    public function withDefaultEnvLoader(): self
-    {
-        $this->envLoader = new GetEnvLoader();
-
-        return $this;
-    }
-
     public function withoutServiceFiles(): self
     {
         $this->serviceFiles = [];
@@ -347,15 +321,6 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
             foreach ($this->defaultExceptionHandlers as $handler) {
                 $kernel->defaultExceptionHandler($handler);
             }
-        }
-
-        if ($this->envLoader !== null) {
-            $kernel->container->persistentLazy(
-                EnvInterface::class,
-                fn (): EnvInterface => new Env(
-                    loader: $this->envLoader,
-                ),
-            );
         }
 
         if (\sizeof($this->serviceFiles) > 0) {

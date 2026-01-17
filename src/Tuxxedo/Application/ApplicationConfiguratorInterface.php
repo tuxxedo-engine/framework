@@ -77,10 +77,6 @@ interface ApplicationConfiguratorInterface
         get;
     }
 
-    public ?EnvLoaderInterface $envLoader {
-        get;
-    }
-
     /**
      * @var array<(\Closure(): MiddlewareInterface)>
      */
@@ -177,14 +173,6 @@ interface ApplicationConfiguratorInterface
     public function withDebugHandler(
         bool $registerPhpErrorHandler = true,
     ): self;
-
-    public function withoutEnvLoader(): self;
-
-    public function withEnvLoader(
-        EnvLoaderInterface $loader,
-    ): self;
-
-    public function withDefaultEnvLoader(): self;
 
     public function withoutServiceFiles(): self;
 
