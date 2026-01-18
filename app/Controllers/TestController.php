@@ -108,9 +108,13 @@ readonly class TestController
             json: [
                 'method' => $request->server->method->name,
                 'uri' => $request->server->uri,
+                'fullUri' => $request->server->fullUri,
+                'queryString' => $request->server->queryString,
                 'https' => $request->server->https,
                 'host' => $request->server->host,
                 'port' => $request->server->port,
+                'ajax' => $request->server->ajax,
+                'userAgent' => $request->server->userAgent,
             ],
             prettyPrint: true,
         );

@@ -55,7 +55,14 @@ class EnvironmentServerContext implements ServerContextInterface
     public string $queryString {
         get {
             /** @var string */
-            return $_SERVER['QUERY_STRING'];
+            return $_SERVER['QUERY_STRING'] ?? '';
+        }
+    }
+
+    public string $userAgent {
+        get {
+            /** @var string */
+            return  $_SERVER['HTTP_USER_AGENT'];
         }
     }
 
