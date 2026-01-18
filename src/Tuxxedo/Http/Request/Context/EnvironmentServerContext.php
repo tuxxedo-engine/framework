@@ -62,7 +62,7 @@ class EnvironmentServerContext implements ServerContextInterface
     public string $userAgent {
         get {
             /** @var string */
-            return  $_SERVER['HTTP_USER_AGENT'];
+            return $_SERVER['HTTP_USER_AGENT'];
         }
     }
 
