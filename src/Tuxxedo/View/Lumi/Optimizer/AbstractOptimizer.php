@@ -40,7 +40,6 @@ abstract class AbstractOptimizer implements OptimizerInterface
     protected readonly EvaluatorInterface $evaluator;
     protected private(set) CompilerDirectivesInterface&DirectivesInterface $directives;
     protected private(set) ScopeInterface $scope;
-    protected private(set) bool $layoutMode = false;
 
     /**
      * @var ScopeInterface[]
@@ -258,29 +257,13 @@ abstract class AbstractOptimizer implements OptimizerInterface
         )->nodes;
     }
 
-    protected function isLayoutStream(
-        NodeStreamInterface $stream,
-    ): bool {
-        foreach ($stream->nodes as $node) {
-            if ($node instanceof LayoutNode) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     public function optimize(
         NodeStreamInterface $stream,
     ): OptimizerResultInterface {
         $oldStream = clone $stream;
-
-        $this->layoutMode = $this->isLayoutStream($stream);
-
         $stream = static::optimizer($stream);
 
         $this->directives = CompilerDirectives::createWithDefaults();
-        $this->layoutMode = false;
 
         return OptimizerResult::create(
             oldStream: $oldStream,
