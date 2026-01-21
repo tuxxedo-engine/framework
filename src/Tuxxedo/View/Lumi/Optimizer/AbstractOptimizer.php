@@ -160,7 +160,7 @@ abstract class AbstractOptimizer implements OptimizerInterface
     /**
      * @throws CompilerException
      */
-    protected function optimizeDoWhileBody(
+    protected function optimizeDoWhile(
         DoWhileNode $node,
     ): DoWhileNode {
         $this->pushScope(inherit: true);

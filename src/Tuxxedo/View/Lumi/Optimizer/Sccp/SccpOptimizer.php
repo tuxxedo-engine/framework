@@ -23,6 +23,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ConcatNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ConditionalBranchNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ConditionalNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
@@ -71,6 +72,9 @@ class SccpOptimizer extends AbstractOptimizer
             $node instanceof ConcatNode => $this->optimizeConcat($node),
             $node instanceof ConditionalNode => $this->optimizeConditional($stream, $node),
             $node instanceof DirectiveNodeInterface => parent::optimizeDirective($node),
+            $node instanceof DoWhileNode => [
+                parent::optimizeDoWhile($node),
+            ],
             $node instanceof EchoNode => $this->optimizeEcho($stream, $node),
             $node instanceof GroupNode => $this->optimizeGroup($stream, $node),
             $node instanceof TextNode => parent::optimizeText($stream, $node),

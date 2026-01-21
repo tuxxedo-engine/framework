@@ -68,7 +68,9 @@ class DceOptimizer extends AbstractOptimizer
             $node instanceof ConditionalNode => $this->optimizeConditional($node),
             $node instanceof ContinueNode => $this->optimizeLoopStatement($stream),
             $node instanceof DirectiveNodeInterface => parent::optimizeDirective($node),
-            $node instanceof DoWhileNode => $this->optimizeDoWhile($node),
+            $node instanceof DoWhileNode => [
+                parent::optimizeDoWhile($node),
+            ],
             $node instanceof ForNode => [
                 parent::optimizeForBody($node),
             ],
@@ -187,23 +189,6 @@ class DceOptimizer extends AbstractOptimizer
 
         if ($evaluation === EvaluatorResult::IS_TRUE) {
             return parent::optimizeNodes($node->body);
-        }
-
-        return [
-            $node,
-        ];
-    }
-
-    /**
-     * @return NodeInterface[]
-     */
-    protected function optimizeDoWhile(
-        DoWhileNode $node,
-    ): array {
-        $node = parent::optimizeDoWhileBody($node);
-
-        if ($this->evaluator->checkExpression($this->scope, $node->operand) === EvaluatorResult::IS_FALSE) {
-            return $node->body;
         }
 
         return [
