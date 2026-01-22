@@ -359,7 +359,7 @@ class Container implements ContainerInterface
 
         if (\sizeof($attrs) > 0) {
             try {
-                return $attrs[0]->newInstance()->resolve($this);
+                return $attrs[0]->newInstance()->resolve($this, $parameter);
             } catch (\Throwable $e) {
                 throw ContainerException::fromAttributeException(
                     attributeClass: $attrs[0]->getName(),

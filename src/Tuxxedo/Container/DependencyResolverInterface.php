@@ -23,5 +23,8 @@ interface DependencyResolverInterface
      *
      * @throws ContainerException
      */
-    public function resolve(ContainerInterface $container): mixed;
+    public function resolve(
+        ContainerInterface $container,
+        \ReflectionParameter $parameter,
+    ): mixed;
 }

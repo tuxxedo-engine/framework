@@ -24,8 +24,10 @@ use Tuxxedo\Http\Kernel\KernelInterface;
 #[\Attribute(\Attribute::TARGET_PARAMETER)]
 class AppProfile implements DependencyResolverInterface
 {
-    public function resolve(ContainerInterface $container): mixed
-    {
+    public function resolve(
+        ContainerInterface $container,
+        \ReflectionParameter $parameter,
+    ): mixed {
         return $container->resolve(KernelInterface::class)->appProfile;
     }
 }

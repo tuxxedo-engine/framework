@@ -23,8 +23,10 @@ use Tuxxedo\Container\DependencyResolverInterface;
 #[\Attribute(\Attribute::TARGET_PARAMETER)]
 class UnresolvableTypeResolver implements DependencyResolverInterface
 {
-    public function resolve(ContainerInterface $container): UnresolvableDependencyOne
-    {
+    public function resolve(
+        ContainerInterface $container,
+        \ReflectionParameter $parameter,
+    ): UnresolvableDependencyOne {
         return $container->resolve(UnresolvableDependencyOne::class);
     }
 }

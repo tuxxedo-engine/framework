@@ -24,8 +24,10 @@ use Tuxxedo\Database\Driver\ConnectionInterface;
 #[\Attribute(\Attribute::TARGET_PARAMETER)]
 class WriteConnection implements DependencyResolverInterface
 {
-    public function resolve(ContainerInterface $container): ConnectionInterface
-    {
+    public function resolve(
+        ContainerInterface $container,
+        \ReflectionParameter $parameter,
+    ): ConnectionInterface {
         return $container->resolve(ConnectionManagerInterface::class)->getWriteConnection();
     }
 }

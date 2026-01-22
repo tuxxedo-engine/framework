@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
-// @todo Should resolvers hold the requested type and pass it to the attribute?
 interface ContainerInterface
 {
     /**

@@ -29,8 +29,10 @@ class NamedConnection implements DependencyResolverInterface
     ) {
     }
 
-    public function resolve(ContainerInterface $container): ConnectionInterface
-    {
+    public function resolve(
+        ContainerInterface $container,
+        \ReflectionParameter $parameter,
+    ): ConnectionInterface {
         return $container->resolve(ConnectionManagerInterface::class)->getNamedConnection($this->name);
     }
 }

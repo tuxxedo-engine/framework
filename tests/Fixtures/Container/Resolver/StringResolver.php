@@ -22,8 +22,10 @@ use Tuxxedo\Container\DependencyResolverInterface;
 #[\Attribute(\Attribute::TARGET_PARAMETER)]
 class StringResolver implements DependencyResolverInterface
 {
-    public function resolve(ContainerInterface $container): mixed
-    {
+    public function resolve(
+        ContainerInterface $container,
+        \ReflectionParameter $parameter,
+    ): mixed {
         return 'foo';
     }
 }
