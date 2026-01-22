@@ -259,43 +259,43 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
 
     public function build(): KernelInterface
     {
-        $this->container ??= new Container();
-        $this->container->persistent($this->container);
+        $container = $this->container ?? new Container();
+        $container->persistent($container);
 
         if ($this->config !== null) {
-            $this->container->persistent($this->config);
+            $container->persistent($this->config);
         } else {
-            $this->container->persistentLazy(
+            $container->persistentLazy(
                 ConfigInterface::class,
-                static fn (ContainerInterface $container): ConfigInterface => new Config(),
+                static fn (): ConfigInterface => new Config(),
             );
         }
 
         if ($this->emitter !== null) {
-            $this->container->persistent($this->emitter);
+            $container->persistent($this->emitter);
         } else {
-            $this->container->persistentLazy(
+            $container->persistentLazy(
                 ResponseEmitterInterface::class,
-                fn (ContainerInterface $container): ResponseEmitterInterface => new ResponseEmitter(),
+                static fn (): ResponseEmitterInterface => new ResponseEmitter(),
             );
         }
 
         if ($this->dispatcher !== null) {
-            $this->container->persistent($this->dispatcher);
+            $container->persistent($this->dispatcher);
         } else {
-            $this->container->persistentLazy(
+            $container->persistentLazy(
                 DispatcherInterface::class,
-                static fn (ContainerInterface $container): DispatcherInterface => new Dispatcher(),
+                static fn (): DispatcherInterface => new Dispatcher(),
             );
         }
 
         if ($this->router !== null) {
-            $this->container->persistent($this->router);
+            $container->persistent($this->router);
         } elseif (
             $this->defaultRouterDirectory !== null &&
             $this->defaultRouterBaseNamespace !== null
         ) {
-            $this->container->persistentLazy(
+            $container->persistentLazy(
                 RouterInterface::class,
                 fn (ContainerInterface $container): RouterInterface => DynamicRouter::createFromDirectory(
                     container: $container,
@@ -305,15 +305,15 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
                 ),
             );
         } else {
-            $this->container->persistentLazy(
+            $container->persistentLazy(
                 RouterInterface::class,
-                static fn (ContainerInterface $container): RouterInterface => new StaticRouter(
+                static fn (): RouterInterface => new StaticRouter(
                     routes: [],
                 ),
             );
         }
 
-        $this->container->persistentLazy(
+        $container->persistentLazy(
             KernelInterface::class,
             fn (ContainerInterface $container): KernelInterface => $container->resolve(
                 Kernel::class,
@@ -325,7 +325,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
             ),
         );
 
-        $kernel = $this->container->resolve(KernelInterface::class);
+        $kernel = $container->resolve(KernelInterface::class);
 
         if (\sizeof($this->middleware) > 0) {
             foreach ($this->middleware as $middleware) {
@@ -357,7 +357,11 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
 
         if (\sizeof($this->serviceFiles) > 0) {
             foreach ($this->serviceFiles as $serviceFile) {
-                (new FileServiceProvider($serviceFile))->load($this->container);
+                $provider = (static fn (string $file): mixed => require $file)($serviceFile);
+
+                if ($provider instanceof \Closure) {
+                    $container->call($provider);
+                }
             }
         }
 
