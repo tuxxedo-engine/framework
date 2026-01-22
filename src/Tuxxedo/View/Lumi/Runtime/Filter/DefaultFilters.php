@@ -17,7 +17,6 @@ use Tuxxedo\Escaper\Escaper;
 use Tuxxedo\Escaper\EscaperInterface;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 
-// @todo Explicit raw filter?
 readonly class DefaultFilters implements FilterProviderInterface
 {
     private EscaperInterface $escaper;
