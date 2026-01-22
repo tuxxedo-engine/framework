@@ -9,7 +9,6 @@
  * Copyright (C) 2025 Kalle Sommer Nielsen <kalle@php.net>
  */
 
-
 declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Lexer;
