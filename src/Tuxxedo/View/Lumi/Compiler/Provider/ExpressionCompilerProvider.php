@@ -163,6 +163,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         CompilerInterface $compiler,
         NodeStreamInterface $stream,
     ): string {
+        // @todo This method could use some recursive resolution of the accessor code to generate less assertions
         if (
             $node->name instanceof IdentifierNode &&
             \mb_strtolower($node->name->name) === 'this'
