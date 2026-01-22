@@ -30,7 +30,7 @@ interface ContainerInterface
      * @template TClassName of object
      *
      * @param class-string<TClassName> $class
-     * @param (\Closure(self): TClassName) $initializer
+     * @param (\Closure(ContainerInterface $container, array<mixed> $arguments): TClassName) $initializer
      *
      * @throws ContainerException
      */
@@ -56,7 +56,7 @@ interface ContainerInterface
      * @template TClassName of object
      *
      * @param class-string<TClassName> $class
-     * @param (\Closure(self): TClassName) $initializer
+     * @param (\Closure(ContainerInterface $container, array<mixed> $arguments): TClassName) $initializer
      *
      * @throws ContainerException
      */

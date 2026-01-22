@@ -31,7 +31,7 @@ class Container implements ContainerInterface
     private array $aliases = [];
 
     /**
-     * @var array<class-string, (\Closure(self): object)>
+     * @var array<class-string, (\Closure(ContainerInterface $container, array<mixed> $arguments): object)>
      */
     private array $initializers = [];
 
@@ -39,7 +39,7 @@ class Container implements ContainerInterface
      * @template TClassName of object
      *
      * @param class-string<TClassName> $class
-     * @param (\Closure(self): TClassName)|null $initializer
+     * @param (\Closure(ContainerInterface $container, array<mixed> $arguments): TClassName) $initializer
      *
      * @throws ContainerException
      */
@@ -112,7 +112,7 @@ class Container implements ContainerInterface
      * @template TClassName of object
      *
      * @param class-string<TClassName> $class
-     * @param (\Closure(self): TClassName) $initializer
+     * @param (\Closure(ContainerInterface $container, array<mixed> $arguments): TClassName) $initializer
      *
      * @throws ContainerException
      */
@@ -153,7 +153,7 @@ class Container implements ContainerInterface
      * @template TClassName of object
      *
      * @param class-string<TClassName> $class
-     * @param (\Closure(self): TClassName) $initializer
+     * @param (\Closure(ContainerInterface $container, array<mixed> $arguments): TClassName) $initializer
      *
      * @throws ContainerException
      */
@@ -218,7 +218,7 @@ class Container implements ContainerInterface
 
         if (isset($this->initializers[$className])) {
             /** @var TClassName $instance */
-            $instance = ($this->initializers[$className])($this);
+            $instance = ($this->initializers[$className])($this, $arguments);
 
             if ($lifecycle === Lifecycle::PERSISTENT) {
                 unset($this->initializers[$className]);
@@ -249,13 +249,9 @@ class Container implements ContainerInterface
             }
         }
 
-        // @todo Consider lifting this limitation in regards to $arguments here and in other places
-        if (
-            \sizeof($arguments) === 0 &&
-            ($initializer = $this->resolveDefaultInitializer($class)) !== null
-        ) {
+        if (($initializer = $this->resolveDefaultInitializer($class)) !== null) {
             /** @var TClassName $instance */
-            $instance = $initializer($this);
+            $instance = $initializer($this, $arguments);
         } else {
             $callArguments = [];
 
@@ -484,7 +480,7 @@ class Container implements ContainerInterface
 
     /**
      * @param \ReflectionClass<object>|class-string $class
-     * @return \Closure(ContainerInterface $container): object
+     * @return (\Closure(ContainerInterface $container, array<mixed> $arguments): object)|null
      */
     private function resolveDefaultInitializer(
         \ReflectionClass|string $class

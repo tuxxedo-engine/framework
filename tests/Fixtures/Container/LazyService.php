@@ -13,12 +13,18 @@ declare(strict_types=1);
 
 namespace Fixtures\Container;
 
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DefaultInitializer;
 
 #[DefaultInitializer(
-    static function (): LazyService {
+    static function (
+        ContainerInterface $container,
+        array $arguments,
+    ): LazyService {
         return new LazyService(
-            name: 'baz',
+            name: \array_key_exists('name', $arguments) && \is_string($arguments['name'])
+                ? $arguments['name']
+                : 'baz',
         );
     },
 )]

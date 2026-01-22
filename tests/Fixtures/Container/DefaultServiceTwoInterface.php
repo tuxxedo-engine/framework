@@ -18,4 +18,10 @@ use Tuxxedo\Container\DefaultImplementation;
 #[DefaultImplementation(class: DefaultServiceTwo::class)]
 interface DefaultServiceTwoInterface
 {
+    /**
+     * @var array<mixed>
+     */
+    public array $arguments {
+        get;
+    }
 }

@@ -504,13 +504,17 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
-        $this->expectException(\Error::class);
-        $container->resolve(
+        $service = $container->resolve(
             DefaultServiceTwoInterface::class,
             [
                 'void',
+                'foo' => 'bar',
             ],
         );
+
+        self::assertArrayHasKey('foo', $service->arguments);
+        self::assertSame($service->arguments['foo'], 'bar');
+        self::assertSame($service->arguments[0], 'void');
     }
 
     public function testDefaultImplementationNoAttribute(): void

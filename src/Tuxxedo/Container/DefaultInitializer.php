@@ -17,7 +17,7 @@ namespace Tuxxedo\Container;
 readonly class DefaultInitializer
 {
     /**
-     * @param \Closure(ContainerInterface $container): object $initializer
+     * @param \Closure(ContainerInterface $container, array<mixed> $arguments): object $initializer
      */
     public function __construct(
         public \Closure $initializer,
