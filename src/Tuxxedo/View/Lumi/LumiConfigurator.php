@@ -581,41 +581,36 @@ class LumiConfigurator implements LumiConfiguratorInterface
             $compiler = $this->compiler;
         }
 
-        $lumi = LumiEngine::createCustom(
-            lexer: $this->lexer,
-            parser: $this->parser,
-            compiler: $compiler,
-            highlighter: $this->highlighter,
-            optimizers: $this->optimizers,
-        );
-
-        $runtime = new Runtime(
-            directives: \array_merge(
-                $this->directives,
-                $this->defaultDirectives,
-            ),
-            functions: $this->functions,
-            customFunctions: \array_merge(
-                $this->buildCustomFunctions(),
-                $this->customFunctions,
-            ),
-            functionPolicy: $this->functionPolicy,
-            instanceCallClasses: $this->instanceCallClasses,
-            filters: \array_merge(
-                $this->buildCustomFilters(),
-                $this->customFilters,
-            ),
-        );
-
-        $runtime->engine($lumi);
-
         return new LumiViewRender(
             loader: $this->loader ?? new Loader(
                 directory: $this->viewDirectory,
                 cacheDirectory: $this->viewCacheDirectory,
                 extension: $this->viewExtension,
             ),
-            runtime: $runtime,
+            runtime: new Runtime(
+                engine: LumiEngine::createCustom(
+                    lexer: $this->lexer,
+                    parser: $this->parser,
+                    compiler: $compiler,
+                    highlighter: $this->highlighter,
+                    optimizers: $this->optimizers,
+                ),
+                directives: \array_merge(
+                    $this->directives,
+                    $this->defaultDirectives,
+                ),
+                functions: $this->functions,
+                customFunctions: \array_merge(
+                    $this->buildCustomFunctions(),
+                    $this->customFunctions,
+                ),
+                functionPolicy: $this->functionPolicy,
+                instanceCallClasses: $this->instanceCallClasses,
+                filters: \array_merge(
+                    $this->buildCustomFilters(),
+                    $this->customFilters,
+                ),
+            ),
             alwaysCompile: $this->viewAlwaysCompile,
             disableErrorReporting: $this->viewDisableErrorReporting,
         );

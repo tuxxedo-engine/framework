@@ -70,10 +70,6 @@ interface RuntimeInterface
         get;
     }
 
-    public function engine(
-        LumiEngineInterface $engine,
-    ): void;
-
     public function renderer(
         ViewRenderInterface $render,
     ): void;

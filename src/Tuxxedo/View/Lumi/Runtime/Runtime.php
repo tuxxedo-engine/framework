@@ -34,7 +34,6 @@ class Runtime implements RuntimeInterface
      */
     public private(set) array $blocksStack = [];
 
-    public private(set) LumiEngineInterface $engine;
     public private(set) ViewRenderInterface $renderer;
 
     public array $blocks = [];
@@ -47,6 +46,7 @@ class Runtime implements RuntimeInterface
      * @param array<string, \Closure(mixed $input, DirectivesInterface $directives): mixed> $filters
      */
     public function __construct(
+        public readonly LumiEngineInterface $engine,
         array $directives = [],
         public readonly array $functions = [],
         public readonly array $customFunctions = [],
@@ -55,12 +55,6 @@ class Runtime implements RuntimeInterface
         public readonly array $filters = [],
     ) {
         $this->directives = $directives;
-    }
-
-    public function engine(
-        LumiEngineInterface $engine,
-    ): void {
-        $this->engine = $engine;
     }
 
     public function renderer(
