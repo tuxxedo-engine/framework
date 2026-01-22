@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Kernel;
 
 use Tuxxedo\Application\Profile;
-use Tuxxedo\Application\ServiceProviderInterface;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DefaultImplementation;
@@ -78,26 +77,6 @@ interface KernelInterface
     public Profile $appProfile {
         get;
     }
-
-    /**
-     * @param ServiceProviderInterface|(\Closure(): ServiceProviderInterface) $provider
-     */
-    // @todo Remove this method in favor of having it in the ApplicationConfigurator
-    public function serviceProvider(
-        ServiceProviderInterface|\Closure $provider,
-    ): static;
-
-    public function emitter(
-        ResponseEmitterInterface $emitter,
-    ): static;
-
-    public function dispatcher(
-        DispatcherInterface $dispatcher,
-    ): static;
-
-    public function router(
-        RouterInterface $router,
-    ): static;
 
     /**
      * @param (\Closure(): MiddlewareInterface)|MiddlewareInterface $middleware

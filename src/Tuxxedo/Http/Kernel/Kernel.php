@@ -14,17 +14,13 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Kernel;
 
 use Tuxxedo\Application\Profile;
-use Tuxxedo\Application\ServiceProviderInterface;
-use Tuxxedo\Config\Config;
 use Tuxxedo\Config\ConfigInterface;
-use Tuxxedo\Container\Container;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewareNode;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponsableInterface;
-use Tuxxedo\Http\Response\ResponseEmitter;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Response\ResponseExceptionInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
@@ -33,71 +29,20 @@ use Tuxxedo\Router\RouterInterface;
 
 class Kernel implements KernelInterface
 {
-    public readonly ConfigInterface $config;
-    public readonly ContainerInterface $container;
-
     public private(set) array $middleware = [];
-
-    public private(set) ResponseEmitterInterface $emitter;
-    public private(set) DispatcherInterface $dispatcher;
-    public private(set) RouterInterface $router;
-
     public private(set) array $exceptionHandlers = [];
     public private(set) array $defaultExceptionHandlers = [];
 
-    // @todo Redesign this so all dependencies are mandatory and not registered in the Container here
     final public function __construct(
+        public readonly ContainerInterface $container,
+        public readonly ConfigInterface $config,
+        public readonly ResponseEmitterInterface $emitter,
+        public readonly DispatcherInterface $dispatcher,
+        public readonly RouterInterface $router,
         public readonly string $appName = '',
         public readonly string $appVersion = '',
         public readonly Profile $appProfile = Profile::RELEASE,
-        ?ContainerInterface $container = null,
-        ?ConfigInterface $config = null,
     ) {
-        $this->config = $config ?? new Config();
-        $this->container = $container ?? new Container();
-
-        $this->container->persistent($this);
-        $this->container->persistent($this->config);
-        $this->container->persistent($this->container);
-
-        $this->emitter = new ResponseEmitter();
-        $this->dispatcher = new Dispatcher();
-    }
-
-    public function serviceProvider(
-        ServiceProviderInterface|\Closure $provider,
-    ): static {
-        if ($provider instanceof \Closure) {
-            $provider = $provider();
-        }
-
-        $provider->load($this->container);
-
-        return $this;
-    }
-
-    public function emitter(
-        ResponseEmitterInterface $emitter,
-    ): static {
-        $this->emitter = $emitter;
-
-        return $this;
-    }
-
-    public function dispatcher(
-        DispatcherInterface $dispatcher,
-    ): static {
-        $this->dispatcher = $dispatcher;
-
-        return $this;
-    }
-
-    public function router(
-        RouterInterface $router,
-    ): static {
-        $this->router = $router;
-
-        return $this;
     }
 
     public function middleware(
@@ -176,10 +121,6 @@ class Kernel implements KernelInterface
         $request ??= $this->container->resolve(RequestInterface::class);
 
         try {
-            if (!isset($this->router)) {
-                throw HttpException::fromInternalServerError();
-            }
-
             $dispatchableRoute = $this->router->findByRequest(
                 request: $request,
             );

@@ -15,16 +15,20 @@ namespace Tuxxedo\Application;
 
 use Tuxxedo\Config\Config;
 use Tuxxedo\Config\ConfigInterface;
+use Tuxxedo\Container\Container;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Debug\DebugErrorHandler;
+use Tuxxedo\Http\Kernel\Dispatcher;
 use Tuxxedo\Http\Kernel\DispatcherInterface;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
 use Tuxxedo\Http\Kernel\Kernel;
 use Tuxxedo\Http\Kernel\KernelInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
+use Tuxxedo\Http\Response\ResponseEmitter;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Router\DynamicRouter;
 use Tuxxedo\Router\RouterInterface;
+use Tuxxedo\Router\StaticRouter;
 
 // @todo Implement a dotenv loader here
 class ApplicationConfigurator implements ApplicationConfiguratorInterface
@@ -255,45 +259,73 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
 
     public function build(): KernelInterface
     {
-        $kernel = new Kernel(
-            appName: $this->appName,
-            appVersion: $this->appVersion,
-            appProfile: $this->appProfile,
-            container: $this->container,
-            config: $this->config,
-        );
+        $this->container ??= new Container();
+        $this->container->persistent($this->container);
+
+        if ($this->config !== null) {
+            $this->container->persistent($this->config);
+        } else {
+            $this->container->persistentLazy(
+                ConfigInterface::class,
+                static fn (ContainerInterface $container): ConfigInterface => new Config(),
+            );
+        }
+
+        if ($this->emitter !== null) {
+            $this->container->persistent($this->emitter);
+        } else {
+            $this->container->persistentLazy(
+                ResponseEmitterInterface::class,
+                fn (ContainerInterface $container): ResponseEmitterInterface => new ResponseEmitter(),
+            );
+        }
+
+        if ($this->dispatcher !== null) {
+            $this->container->persistent($this->dispatcher);
+        } else {
+            $this->container->persistentLazy(
+                DispatcherInterface::class,
+                static fn (ContainerInterface $container): DispatcherInterface => new Dispatcher(),
+            );
+        }
 
         if ($this->router !== null) {
-            $kernel->router(
-                router: $this->router,
-            );
+            $this->container->persistent($this->router);
         } elseif (
             $this->defaultRouterDirectory !== null &&
             $this->defaultRouterBaseNamespace !== null
         ) {
-            $kernel->router(
-                router: DynamicRouter::createFromDirectory(
-                    container: $kernel->container,
+            $this->container->persistentLazy(
+                RouterInterface::class,
+                fn (ContainerInterface $container): RouterInterface => DynamicRouter::createFromDirectory(
+                    container: $container,
                     directory: $this->defaultRouterDirectory,
                     baseNamespace: $this->defaultRouterBaseNamespace,
                     strictMode: $this->defaultRouterStrictMode,
                 ),
             );
+        } else {
+            $this->container->persistentLazy(
+                RouterInterface::class,
+                static fn (ContainerInterface $container): RouterInterface => new StaticRouter(
+                    routes: [],
+                ),
+            );
         }
 
-        if (
-            $this->emitter !== null &&
-            $this->emitter !== $kernel->emitter
-        ) {
-            $kernel->emitter($this->emitter);
-        }
+        $this->container->persistentLazy(
+            KernelInterface::class,
+            fn (ContainerInterface $container): KernelInterface => $container->resolve(
+                Kernel::class,
+                [
+                    'appName' => $this->appName,
+                    'appVersion' => $this->appVersion,
+                    'appProfile' => $this->appProfile,
+                ],
+            ),
+        );
 
-        if (
-            $this->dispatcher !== null &&
-            $this->dispatcher !== $kernel->dispatcher
-        ) {
-            $kernel->dispatcher($this->dispatcher);
-        }
+        $kernel = $this->container->resolve(KernelInterface::class);
 
         if (\sizeof($this->middleware) > 0) {
             foreach ($this->middleware as $middleware) {
@@ -325,9 +357,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
 
         if (\sizeof($this->serviceFiles) > 0) {
             foreach ($this->serviceFiles as $serviceFile) {
-                $kernel->serviceProvider(
-                    provider: new FileServiceProvider($serviceFile),
-                );
+                (new FileServiceProvider($serviceFile))->load($this->container);
             }
         }
 
