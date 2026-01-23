@@ -13,17 +13,17 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Router\Attribute;
 
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 
-// @todo Consider supporting closures for $name?
 #[\Attribute(flags: \Attribute::IS_REPEATABLE | \Attribute::TARGET_CLASS | \Attribute::TARGET_METHOD)]
 readonly class Middleware
 {
     /**
-     * @param class-string<MiddlewareInterface> $name
+     * @param class-string<MiddlewareInterface>|(\Closure(ContainerInterface $container): MiddlewareInterface) $middleware
      */
     public function __construct(
-        public string $name,
+        public string|\Closure $middleware,
     ) {
     }
 }

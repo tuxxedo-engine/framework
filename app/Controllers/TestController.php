@@ -21,6 +21,7 @@ use Tuxxedo\Http\Cookie;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\Method;
+use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
@@ -32,6 +33,11 @@ use Tuxxedo\Router\Attribute\Route;
 use Tuxxedo\Version;
 
 #[Middleware(LoggerMiddleware::class)]
+#[Middleware(
+    static function (ContainerInterface $container): MiddlewareInterface {
+        return new LoggerMiddleware($container);
+    },
+)]
 readonly class TestController
 {
     private MapperInterface $mapper;

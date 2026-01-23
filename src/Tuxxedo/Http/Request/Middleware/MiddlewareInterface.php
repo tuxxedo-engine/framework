@@ -16,8 +16,6 @@ namespace Tuxxedo\Http\Request\Middleware;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
-// @todo Consider a secondary interface so we don't need to wrap middleware in a proxy attribute
-// @todo Consider resolving middleware so you can do #[LoggerMiddleware] instead of wrapping it
 interface MiddlewareInterface
 {
     public function handle(
