@@ -60,6 +60,7 @@ class MysqlConnection implements ConnectionInterface
                     socket: $config->getString('unixSocket'),
                 );
             } else {
+                // @todo Support options.flags
                 $flags = 0;
 
                 if ($config->getBool('ssl.enabled')) {
