@@ -69,7 +69,7 @@ class PdoPgsqlConnection extends AbstractPdoConnection
         $this->pdo->exec(
             \sprintf(
                 'SET client_encoding TO \'%s\'',
-                \str_replace("'", "''", $charset),
+                \addcslashes($charset, "\\'"),
             ),
         );
     }
