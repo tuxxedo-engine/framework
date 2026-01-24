@@ -24,7 +24,7 @@ abstract class AbstractPdoConnection implements ConnectionInterface
     public readonly string $name;
     public readonly ConnectionRole $role;
     public readonly DefaultDriver|string $driver;
-    private \PDO $pdo;
+    protected private(set) \PDO $pdo;
     private readonly \Closure $connector;
 
     public function __construct(
@@ -46,6 +46,8 @@ abstract class AbstractPdoConnection implements ConnectionInterface
                         \PDO::ATTR_PERSISTENT => $config->getBool('options.persistent'),
                     ],
                 );
+
+                $this->postConnectHook($config);
             } catch (\PDOException $exception) {
                 $this->throwFromPdoException($exception);
             }
@@ -54,6 +56,11 @@ abstract class AbstractPdoConnection implements ConnectionInterface
         if (!$config->getBool('options.lazy')) {
             $this->connect();
         }
+    }
+
+    protected function postConnectHook(
+        ConfigInterface $config,
+    ): void {
     }
 
     abstract protected function getDriverName(): DefaultDriver|string;

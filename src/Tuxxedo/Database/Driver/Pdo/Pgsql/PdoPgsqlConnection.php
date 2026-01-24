@@ -25,7 +25,6 @@ class PdoPgsqlConnection extends AbstractPdoConnection
     }
 
     // @todo SSL options?
-    // @todo Charset?
     protected function getDsn(
         ConfigInterface $config,
     ): string {
@@ -49,6 +48,23 @@ class PdoPgsqlConnection extends AbstractPdoConnection
             $config->getString('host'),
             $port,
             $database,
+        );
+    }
+
+    protected function postConnectHook(
+        ConfigInterface $config,
+    ): void {
+        $charset = $config->getString('options.charset');
+
+        if ($charset === '') {
+            return;
+        }
+
+        $this->pdo->exec(
+            \sprintf(
+                'SET client_encoding TO \'%s\'',
+                \str_replace("'", "''", $charset),
+            ),
         );
     }
 }
