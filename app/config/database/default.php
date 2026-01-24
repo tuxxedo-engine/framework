@@ -232,6 +232,7 @@ return [
          * The timeout in seconds for connections and queries. The exact meaning may
          * depend on the driver in question
          *
+         * DefaultDriver::PDO_SQLITE                - This value means busy timeout, not a connection timeout
          * DefaultDriver::SQLITE                    - This value has no effect
          *
          * @type int

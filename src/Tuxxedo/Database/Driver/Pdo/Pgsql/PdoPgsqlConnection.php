@@ -34,6 +34,7 @@ class PdoPgsqlConnection extends AbstractPdoConnection
 
         $database = '';
         $port = '';
+        $timeout = '';
 
         if ($config->getString('database') !== '') {
             $database = ';dbname=' . $config->getString('database');
@@ -43,11 +44,16 @@ class PdoPgsqlConnection extends AbstractPdoConnection
             $port = ';port=' . $config->getInt('port');
         }
 
+        if ($config->isInt('options.timeout')) {
+            $timeout = ';connect_timeout=' . $config->getInt('options.timeout');
+        }
+
         return \sprintf(
-            'pgsql:host=%s%s%s',
+            'pgsql:host=%s%s%s%s',
             $config->getString('host'),
             $port,
             $database,
+            $timeout,
         );
     }
 

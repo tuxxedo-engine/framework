@@ -36,4 +36,12 @@ class PdoSqliteConnection extends AbstractPdoConnection
             $config->getString('database'),
         );
     }
+
+    protected function getPdoOptions(
+        ConfigInterface $config,
+    ): array {
+        return [
+            \PDO::ATTR_TIMEOUT => $config->getInt('options.timeout'),
+        ];
+    }
 }

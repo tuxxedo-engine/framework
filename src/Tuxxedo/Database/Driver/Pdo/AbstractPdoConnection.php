@@ -35,7 +35,6 @@ abstract class AbstractPdoConnection implements ConnectionInterface
         $this->driver = static::getDriverName();
         $this->connector = function () use ($config): void {
             try {
-                // @todo Check that all config options are supported
                 $this->pdo = new \PDO(
                     dsn: static::getDsn($config),
                     username: $config->getString('username'),
@@ -44,6 +43,7 @@ abstract class AbstractPdoConnection implements ConnectionInterface
                         \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
                         \PDO::ATTR_EMULATE_PREPARES => true,
                         \PDO::ATTR_PERSISTENT => $config->getBool('options.persistent'),
+                        ...static::getPdoOptions($config),
                     ],
                 );
 
@@ -61,6 +61,15 @@ abstract class AbstractPdoConnection implements ConnectionInterface
     protected function postConnectHook(
         ConfigInterface $config,
     ): void {
+    }
+
+    /**
+     * @return array<\PDO::ATTR_*, mixed>
+     */
+    protected function getPdoOptions(
+        ConfigInterface $config,
+    ): array {
+        return [];
     }
 
     abstract protected function getDriverName(): DefaultDriver|string;
