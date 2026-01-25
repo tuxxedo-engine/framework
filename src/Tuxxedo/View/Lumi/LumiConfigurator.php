@@ -240,7 +240,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public function defineFunction(
         FunctionInterface $handler,
     ): self {
-        $this->customFunctions[$handler->name] = $handler;
+        $this->customFunctions[\strtolower($handler->name)] = $handler;
 
         if ($this->functionPolicy === RuntimeFunctionPolicy::DISALLOW_ALL) {
             $this->functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY;
@@ -479,7 +479,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
         $functions = [];
 
         foreach ($provider->export() as $handler) {
-            $functions[$handler->name] = $handler;
+            $functions[\strtolower($handler->name)] = $handler;
         }
 
         return $functions;

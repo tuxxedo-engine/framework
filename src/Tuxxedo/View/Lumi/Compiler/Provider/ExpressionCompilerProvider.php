@@ -81,7 +81,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
 
         return \sprintf(
             '$this->functionCall(\'%s\', [%s])',
-            $compiler->escaper->js($node->name->name),
+            $compiler->escaper->js(\mb_strtolower($node->name->name)),
             \join(', ', $arguments),
         );
     }
