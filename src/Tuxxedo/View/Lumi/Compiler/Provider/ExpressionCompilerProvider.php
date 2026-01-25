@@ -43,8 +43,8 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         NodeStreamInterface $stream,
     ): string {
         return \sprintf(
-            '$%s',
-            $node->name,
+            '$__lumiVariables[\'%s\']',
+            $compiler->escaper->js($node->name),
         );
     }
 
@@ -94,17 +94,8 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         CompilerInterface $compiler,
         NodeStreamInterface $stream,
     ): string {
-        $caller = $compiler->compileNode($node->caller, $stream);
-        $lowerCaller = \mb_strtolower($caller);
-
-        if (
-            $lowerCaller === '$this' ||
-            $lowerCaller === '($this)'
-        ) {
-            throw CompilerException::fromCannotCallThis();
-        }
-
         $arguments = [];
+        $caller = $compiler->compileNode($node->caller, $stream);
 
         if (\sizeof($node->arguments) > 0) {
             foreach ($node->arguments as $argument) {
@@ -112,8 +103,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
             }
         }
 
-        $nullSafe = $compiler->state->hasFlag(CompilerStateFlag::NULL_SAFE_ACCESS) ||
-            $node->nullSafe;
+        $nullSafe = $compiler->state->hasFlag(CompilerStateFlag::NULL_SAFE_ACCESS) || $node->nullSafe;
 
         return \sprintf(
             '$this->instanceCall(%s%s)%s->%s(%s)',
@@ -163,57 +153,23 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         CompilerInterface $compiler,
         NodeStreamInterface $stream,
     ): string {
-        // @todo This method could use some recursive resolution of the accessor code to generate less assertions
-        if (
-            $node->name instanceof IdentifierNode &&
-            \mb_strtolower($node->name->name) === 'this'
-        ) {
-            throw CompilerException::fromCannotOverrideThis();
-        } elseif ($node->name instanceof PropertyAccessNode) {
-            $assert = '';
-
-            if (
-                $node->name->accessor instanceof IdentifierNode &&
-                \mb_strtolower($node->name->accessor->name) === 'this'
-            ) {
-                throw CompilerException::fromCannotWriteThis();
-            } elseif (!$node->name->accessor instanceof IdentifierNode) {
-                $assert = \sprintf(
-                    '$this->assertThis(%s); ',
-                    $compiler->compileExpression($node->name->accessor),
-                );
-            }
-
+        if ($node->name instanceof PropertyAccessNode) {
             $oldState = $compiler->state->swap(NodeScope::EXPRESSION_ASSIGN);
             $accessor = $compiler->compileExpression($node->name->accessor);
 
             $compiler->state->swap($oldState);
 
             return \sprintf(
-                '<?php %s%s->%s %s %s; ?>',
-                $assert,
+                '<?php %s->%s %s %s; ?>',
                 $accessor,
                 $node->name->property,
                 $node->operator->transform(),
                 $compiler->compileExpression($node->value),
             );
         } elseif ($node->name instanceof ArrayAccessNode) {
-            $assert = '';
-            $array = $compiler->compileExpression($node->name->array);
-
-            if (!$node->name->array instanceof IdentifierNode) {
-                $assert = \sprintf(
-                    '$this->assertThis(%s); ',
-                    $array,
-                );
-            } elseif (\mb_strtolower($node->name->array->name) === 'this') {
-                throw CompilerException::fromCannotWriteThis();
-            }
-
             return \sprintf(
-                '<?php %s%s[%s] %s %s; ?>',
-                $assert,
-                $array,
+                '<?php %s[%s] %s %s; ?>',
+                $compiler->compileExpression($node->name->array),
                 $node->name->key !== null
                     ? $compiler->compileExpression($node->name->key)
                     : '',
@@ -223,8 +179,8 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         }
 
         return \sprintf(
-            '<?php $%s %s %s; ?>',
-            $node->name->name,
+            '<?php $__lumiVariables[\'%s\'] %s %s; ?>',
+            $compiler->escaper->js($node->name->name),
             $node->operator->transform(),
             $compiler->compileExpression($node->value),
         );

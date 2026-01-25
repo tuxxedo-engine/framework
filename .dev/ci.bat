@@ -1,4 +1,4 @@
 @ECHO OFF
 CALL phpcsfix
 CALL phpstan
-CALL phpunit
+CALL phpunit-coverage

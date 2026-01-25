@@ -25,7 +25,7 @@ interface ViewRenderInterface
 
     /**
      * @param array<string, string|int|float|bool|null>|null $directives
-     * @param array<string, string>|null $blocks
+     * @param array<string, \Closure(array<string, mixed>): void>|null $blocks
      *
      * @throws ViewException
      */

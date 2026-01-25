@@ -141,14 +141,14 @@ class TextCompilerProvider implements CompilerProviderInterface
 
         if ($this->isLayoutStream($stream)) {
             return \sprintf(
-                "\n<?php \$this->block('%s', '%s'); ?>",
+                "\n<?php \$this->block('%s', function (array &\$__lumiVariables): void { ?>%s<?php }); ?>",
                 $compiler->escaper->js($node->name),
-                $compiler->escaper->js($body),
+                $body,
             );
         }
 
         return \sprintf(
-            '<?php if ($this->hasBlock(\'%1$s\')) { eval($this->blockCode(\'%1$s\')); } else { ?>%2$s<?php } ?>',
+            '<?php if ($this->hasBlock(\'%1$s\')) { $this->blockExecute(\'%1$s\', $__lumiVariables); } else { ?>%2$s<?php } ?>',
             $compiler->escaper->js($node->name),
             $body,
         );

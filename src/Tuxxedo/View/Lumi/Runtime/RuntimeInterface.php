@@ -64,7 +64,7 @@ interface RuntimeInterface
     }
 
     /**
-     * @var array<string, string>
+     * @var array<string, \Closure(array<string, mixed>): void>
      */
     public array $blocks {
         get;
@@ -76,7 +76,7 @@ interface RuntimeInterface
 
     /**
      * @param array<string, string|int|float|bool|null>|null $directives
-     * @param array<string, string>|null $blocks
+     * @param array<string, \Closure(array<string, mixed>): void>|null $blocks
      */
     public function pushState(
         ?array $directives = null,
@@ -144,15 +144,21 @@ interface RuntimeInterface
     ): bool;
 
     /**
+     * @param array<string, mixed> $scope
+     *
      * @throws ViewException
      */
-    public function blockCode(
+    public function blockExecute(
         string $name,
-    ): string;
+        array &$scope,
+    ): void;
 
+    /**
+     * @param \Closure(array<string, mixed>): void $block
+     */
     public function block(
         string $name,
-        string $code,
+        \Closure $block,
     ): void;
 
     public function layout(

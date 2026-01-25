@@ -34,13 +34,9 @@ readonly class LumiViewRender implements ViewRenderInterface
     ) {
         $this->runtime->renderer($this);
 
-        // @todo these $__lumi* variables should be protected similar to $this
         if ($disableErrorReporting) {
             $this->renderFrame = function (string $__lumiViewFileName, array $__lumiVariables): string {
-                \extract($__lumiVariables, \EXTR_SKIP);
                 \ob_start();
-
-                unset($__lumiVariables);
 
                 $__lumiErrorReporting = \error_reporting(0);
                 require $__lumiViewFileName;
@@ -56,10 +52,8 @@ readonly class LumiViewRender implements ViewRenderInterface
             };
         } else {
             $this->renderFrame = function (string $__lumiViewFileName, array $__lumiVariables): string {
-                \extract($__lumiVariables, \EXTR_SKIP);
                 \ob_start();
 
-                unset($__lumiVariables);
                 require $__lumiViewFileName;
 
                 $buffer = \ob_get_clean();

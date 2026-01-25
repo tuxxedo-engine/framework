@@ -46,27 +46,6 @@ class CompilerException extends LumiException
         );
     }
 
-    public static function fromCannotCallThis(): self
-    {
-        return new self(
-            message: 'Calling $this in method calls is not allowed',
-        );
-    }
-
-    public static function fromCannotOverrideThis(): self
-    {
-        return new self(
-            message: 'Overriding $this is not allowed',
-        );
-    }
-
-    public static function fromCannotWriteThis(): self
-    {
-        return new self(
-            message: 'Writing to $this is not allowed',
-        );
-    }
-
     public static function fromUnexpectedStateEnter(
         NodeScope $scope,
     ): self {

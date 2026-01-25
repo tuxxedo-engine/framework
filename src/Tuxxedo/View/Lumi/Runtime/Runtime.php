@@ -30,7 +30,7 @@ class Runtime implements RuntimeInterface
     public private(set) array $directivesStack = [];
 
     /**
-     * @var array<array<string, string>>
+     * @var array<array<string, \Closure(array<string, mixed>): void>>
      */
     public private(set) array $blocksStack = [];
 
@@ -209,23 +209,24 @@ class Runtime implements RuntimeInterface
         return \array_key_exists($name, $this->blocks);
     }
 
-    public function blockCode(
+    public function blockExecute(
         string $name,
-    ): string {
+        array &$scope,
+    ): void {
         if (!\array_key_exists($name, $this->blocks)) {
             throw ViewException::fromInvalidBlock(
                 name: $name,
             );
         }
 
-        return '?>' . $this->blocks[$name];
+        ($this->blocks[$name])($scope);
     }
 
     public function block(
         string $name,
-        string $code,
+        \Closure $block,
     ): void {
-        $this->blocks[$name] = $code;
+        $this->blocks[$name] = $block;
     }
 
     public function layout(

@@ -34,6 +34,7 @@ use Tuxxedo\View\Lumi\Syntax\TextContext;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
 // @todo Bodies of statements and loops needs more advanced computation for value mutation checks if part of a condition
+// @todo {% set counter = 100 %}before={{ counter }}{% set counter += 1 %}after={{ counter }} seems to cause some incorrect optimization
 abstract class AbstractOptimizer implements OptimizerInterface
 {
     protected readonly EvaluatorInterface $evaluator;
