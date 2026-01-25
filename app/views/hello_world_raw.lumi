@@ -2,3 +2,17 @@
 
 <pre>{% raw %}Test{% endraw %}</pre>
 <pre>{% raw %}{% set text = 'Hello World' %}{{ text }}{% endraw %}</pre>
+
+{% set html = '<h3>Hello</h3>' %}
+<h2>Using echo with autoescape</h2>
+{{ html }}
+
+<h2>Using raw echo with autoescape</h2>
+{! html !}
+
+{% declare lumi.autoescape = false %}
+<h2>Using echo without autoescape</h2>
+{{ html }}
+
+<h2>Using raw echo without autoescape</h2>
+{! html !}

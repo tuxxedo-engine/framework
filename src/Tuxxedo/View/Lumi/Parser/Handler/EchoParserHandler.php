@@ -18,6 +18,7 @@ use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Syntax\TextContext;
 use Tuxxedo\View\Lumi\Syntax\Token\EchoToken;
 use Tuxxedo\View\Lumi\Syntax\Token\EndToken;
 
@@ -32,8 +33,7 @@ class EchoParserHandler implements ParserHandlerInterface
         ParserInterface $parser,
         TokenStreamInterface $stream,
     ): array {
-        $stream->consume();
-
+        $echoToken = $stream->consume();
         $tokens = [];
 
         while (!$stream->eof()) {
@@ -58,6 +58,9 @@ class EchoParserHandler implements ParserHandlerInterface
                     ),
                     startingLine: $stream->tokens[$stream->position - 1]->line,
                 ),
+                context: $echoToken->op1 !== null
+                    ? TextContext::fromString($echoToken->op1)
+                    : TextContext::NONE,
             ),
         ];
     }

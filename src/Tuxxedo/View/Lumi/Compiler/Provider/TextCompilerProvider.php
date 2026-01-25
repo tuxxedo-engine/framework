@@ -29,6 +29,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\LumiNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
+use Tuxxedo\View\Lumi\Syntax\TextContext;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
 class TextCompilerProvider implements CompilerProviderInterface
@@ -80,6 +81,7 @@ class TextCompilerProvider implements CompilerProviderInterface
         $value = $compiler->compileExpression($node->operand);
 
         if (
+            $node->context !== TextContext::RAW &&
             $compiler->state->directives->asBool('lumi.autoescape') &&
             !$this->canDisableAutoEscapeFor($node->operand)
         ) {

@@ -167,6 +167,7 @@ class SccpOptimizer extends AbstractOptimizer
             return [
                 new EchoNode(
                     operand: $operand[0],
+                    context: $node->context,
                 ),
             ];
         }

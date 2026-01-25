@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Lexer\Handler\Block;
+namespace Tuxxedo\View\Lumi\Lexer\Handler;
 
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerStateInterface;
@@ -19,25 +19,24 @@ use Tuxxedo\View\Lumi\Syntax\TextContext;
 use Tuxxedo\View\Lumi\Syntax\Token\EchoToken;
 use Tuxxedo\View\Lumi\Syntax\Token\EndToken;
 
-class IncludeBlockHandler implements BlockHandlerInterface, AlwaysExpressiveInterface
+class RawEchoTokenHandler implements TokenHandlerInterface
 {
-    public private(set) string $directive = 'include';
+    public function getStartingSequence(): string
+    {
+        return '{!';
+    }
 
-    public function lex(
+    public function getEndingSequence(): string
+    {
+        return '!}';
+    }
+
+    public function tokenize(
         int $startingLine,
-        string $expression,
+        string $buffer,
         ExpressionLexerInterface $expressionLexer,
         LexerStateInterface $state,
-        BlockHandlerState $blockState,
     ): array {
-        $firstCharacter = \mb_substr($expression, 0, 1);
-
-        if ($firstCharacter !== '(') {
-            $expression = '(' . $expression . ')';
-        }
-
-        $expression = 'include' . $expression;
-
         return [
             new EchoToken(
                 line: $startingLine,
@@ -45,7 +44,7 @@ class IncludeBlockHandler implements BlockHandlerInterface, AlwaysExpressiveInte
             ),
             ...$expressionLexer->lex(
                 startingLine: $startingLine,
-                operand: $expression,
+                operand: \mb_trim($buffer),
             ),
             new EndToken(
                 line: $startingLine,

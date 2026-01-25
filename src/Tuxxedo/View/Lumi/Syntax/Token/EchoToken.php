@@ -15,13 +15,12 @@ namespace Tuxxedo\View\Lumi\Syntax\Token;
 
 readonly class EchoToken extends AbstractToken
 {
-    public null $op1;
     public null $op2;
 
     public function __construct(
         public int $line,
+        public ?string $op1 = null,
     ) {
-        $this->op1 = null;
         $this->op2 = null;
     }
 }

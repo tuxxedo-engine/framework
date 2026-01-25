@@ -18,6 +18,7 @@ use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\Handler\BlockTokenHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\CommentTokenHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\EchoTokenHandler;
+use Tuxxedo\View\Lumi\Lexer\Handler\RawEchoTokenHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\TokenHandlerInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\TextToken;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
@@ -67,6 +68,7 @@ class Lexer implements LexerInterface
     {
         return [
             new EchoTokenHandler(),
+            new RawEchoTokenHandler(),
             new CommentTokenHandler(),
             BlockTokenHandler::createWithDefaultHandlers(),
         ];
