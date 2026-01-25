@@ -13,13 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime\Function;
 
-use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
-use Tuxxedo\View\ViewRenderInterface;
-
 interface FunctionProviderInterface
 {
     /**
-     * @return \Generator<array{0: string, 1: \Closure(array<mixed> $arguments, ViewRenderInterface $render, DirectivesInterface $directives): mixed}>
+     * @return \Generator<FunctionInterface>
      */
     public function export(): \Generator;
 }

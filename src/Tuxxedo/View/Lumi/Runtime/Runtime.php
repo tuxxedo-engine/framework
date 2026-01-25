@@ -16,6 +16,7 @@ namespace Tuxxedo\View\Lumi\Runtime;
 use Tuxxedo\View\Lumi\LumiEngineInterface;
 use Tuxxedo\View\Lumi\Runtime\Directive\Directives;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
+use Tuxxedo\View\Lumi\Runtime\Function\FunctionInterface;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
@@ -41,7 +42,7 @@ class Runtime implements RuntimeInterface
     /**
      * @param array<string, string|int|float|bool|null> $directives
      * @param string[] $functions
-     * @param array<string, \Closure(array<mixed> $arguments, ViewRenderInterface $render, DirectivesInterface $directives): mixed> $customFunctions
+     * @param array<string, FunctionInterface> $customFunctions
      * @param array<class-string> $instanceCallClasses
      * @param array<string, \Closure(mixed $input, DirectivesInterface $directives): mixed> $filters
      */
@@ -114,10 +115,10 @@ class Runtime implements RuntimeInterface
                 throw ViewException::fromCannotCallCustomFunctionWithRender();
             }
 
-            return ($this->customFunctions[$function])(
-                $arguments,
-                $this->renderer,
-                new Directives(
+            return ($this->customFunctions[$function])->call(
+                arguments: $arguments,
+                render: $this->renderer,
+                directives: new Directives(
                     directives: $this->directives,
                 ),
             );

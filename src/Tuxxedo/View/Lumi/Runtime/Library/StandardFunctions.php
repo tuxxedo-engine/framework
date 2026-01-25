@@ -1,0 +1,29 @@
+<?php
+
+/**
+ * Tuxxedo Engine
+ *
+ * This file is part of the Tuxxedo Engine framework and is licensed under
+ * the MIT license.
+ *
+ * Copyright (C) 2025 Kalle Sommer Nielsen <kalle@php.net>
+ */
+
+declare(strict_types=1);
+
+namespace Tuxxedo\View\Lumi\Runtime\Library;
+
+use Tuxxedo\View\Lumi\Runtime\Function\FunctionProviderInterface;
+use Tuxxedo\View\Lumi\Runtime\Library\Function\DirectiveFunction;
+use Tuxxedo\View\Lumi\Runtime\Library\Function\HasDirectiveFunction;
+use Tuxxedo\View\Lumi\Runtime\Library\Function\IncludeFunction;
+
+class StandardFunctions implements FunctionProviderInterface
+{
+    public function export(): \Generator
+    {
+        yield new IncludeFunction();
+        yield new HasDirectiveFunction();
+        yield new DirectiveFunction();
+    }
+}

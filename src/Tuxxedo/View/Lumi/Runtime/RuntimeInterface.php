@@ -15,6 +15,7 @@ namespace Tuxxedo\View\Lumi\Runtime;
 
 use Tuxxedo\View\Lumi\LumiEngineInterface;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
+use Tuxxedo\View\Lumi\Runtime\Function\FunctionInterface;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
 
@@ -35,7 +36,7 @@ interface RuntimeInterface
     }
 
     /**
-     * @var array<string, \Closure(array<mixed> $arguments, ViewRenderInterface $render, DirectivesInterface $directives): mixed>
+     * @var array<string, FunctionInterface>
      */
     public array $customFunctions {
         get;

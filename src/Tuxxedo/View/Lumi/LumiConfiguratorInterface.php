@@ -20,6 +20,7 @@ use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Runtime\Filter\FilterProviderInterface;
+use Tuxxedo\View\Lumi\Runtime\Function\FunctionInterface;
 use Tuxxedo\View\Lumi\Runtime\Function\FunctionProviderInterface;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
@@ -96,7 +97,7 @@ interface LumiConfiguratorInterface
     }
 
     /**
-     * @var array<string, \Closure(array<mixed> $arguments, ViewRenderInterface $render, DirectivesInterface $directives): mixed>
+     * @var array<string, FunctionInterface>
      */
     public array $customFunctions {
         get;
@@ -173,12 +174,8 @@ interface LumiConfiguratorInterface
     public function allowAllFunctions(): self;
     public function disallowAllFunctions(): self;
 
-    /**
-     * @param \Closure(array<mixed> $arguments, ViewRenderInterface $render, DirectivesInterface $directives): mixed $handler
-     */
     public function defineFunction(
-        string $name,
-        \Closure $handler,
+        FunctionInterface $handler,
     ): self;
 
     /**

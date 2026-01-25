@@ -29,8 +29,9 @@ use Tuxxedo\View\Lumi\Runtime\Directive\DefaultDirectives;
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Runtime\Filter\DefaultFilters;
 use Tuxxedo\View\Lumi\Runtime\Filter\FilterProviderInterface;
-use Tuxxedo\View\Lumi\Runtime\Function\DefaultFunctions;
+use Tuxxedo\View\Lumi\Runtime\Function\FunctionInterface;
 use Tuxxedo\View\Lumi\Runtime\Function\FunctionProviderInterface;
+use Tuxxedo\View\Lumi\Runtime\Library\StandardFunctions;
 use Tuxxedo\View\Lumi\Runtime\Loader;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\Runtime;
@@ -236,14 +237,10 @@ class LumiConfigurator implements LumiConfiguratorInterface
         return $this;
     }
 
-    /**
-     * @param \Closure(array<mixed> $arguments, ViewRenderInterface $render, DirectivesInterface $directives): mixed $handler
-     */
     public function defineFunction(
-        string $name,
-        \Closure $handler,
+        FunctionInterface $handler,
     ): self {
-        $this->customFunctions[$name] = $handler;
+        $this->customFunctions[$handler->name] = $handler;
 
         if ($this->functionPolicy === RuntimeFunctionPolicy::DISALLOW_ALL) {
             $this->functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY;
@@ -474,19 +471,15 @@ class LumiConfigurator implements LumiConfiguratorInterface
     }
 
     /**
-     * @return array<string, \Closure(array<mixed> $arguments, ViewRenderInterface $render, DirectivesInterface $directives): mixed>
+     * @return array<string, FunctionInterface>
      */
     private function loadFunctionProvider(
         FunctionProviderInterface $provider,
     ): array {
         $functions = [];
 
-        /**
-         * @var string $function
-         * @var \Closure(array<mixed> $arguments, ViewRenderInterface $render, DirectivesInterface $directives): mixed $handler
-         */
-        foreach ($provider->export() as [$function, $handler]) {
-            $functions[$function] = $handler;
+        foreach ($provider->export() as $handler) {
+            $functions[$handler->name] = $handler;
         }
 
         return $functions;
@@ -512,7 +505,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
     }
 
     /**
-     * @return array<string, \Closure(array<mixed> $arguments, ViewRenderInterface $render, DirectivesInterface $directives): mixed>
+     * @return array<string, FunctionInterface>
      */
     private function buildCustomFunctions(): array
     {
@@ -520,7 +513,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
         if ($this->withDefaultFunctions) {
             $customFunctions = $this->loadFunctionProvider(
-                provider: new DefaultFunctions(),
+                provider: new StandardFunctions(),
             );
         }
 
