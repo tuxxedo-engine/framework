@@ -13,10 +13,14 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime\Function;
 
+use Tuxxedo\Container\ContainerInterface;
+
 interface FunctionProviderInterface
 {
     /**
      * @return \Generator<FunctionInterface>
      */
-    public function export(): \Generator;
+    public function export(
+        ContainerInterface $container,
+    ): \Generator;
 }

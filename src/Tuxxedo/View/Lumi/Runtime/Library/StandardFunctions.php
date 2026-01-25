@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime\Library;
 
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\View\Lumi\Runtime\Function\FunctionProviderInterface;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\DirectiveFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\HasDirectiveFunction;
@@ -20,8 +21,9 @@ use Tuxxedo\View\Lumi\Runtime\Library\Function\IncludeFunction;
 
 class StandardFunctions implements FunctionProviderInterface
 {
-    public function export(): \Generator
-    {
+    public function export(
+        ContainerInterface $container,
+    ): \Generator {
         yield new IncludeFunction();
         yield new HasDirectiveFunction();
         yield new DirectiveFunction();

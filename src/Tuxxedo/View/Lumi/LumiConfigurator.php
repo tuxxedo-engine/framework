@@ -26,11 +26,11 @@ use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
 use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpOptimizer;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Runtime\Directive\DefaultDirectives;
-use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
-use Tuxxedo\View\Lumi\Runtime\Filter\DefaultFilters;
+use Tuxxedo\View\Lumi\Runtime\Filter\FilterInterface;
 use Tuxxedo\View\Lumi\Runtime\Filter\FilterProviderInterface;
 use Tuxxedo\View\Lumi\Runtime\Function\FunctionInterface;
 use Tuxxedo\View\Lumi\Runtime\Function\FunctionProviderInterface;
+use Tuxxedo\View\Lumi\Runtime\Library\StandardFilters;
 use Tuxxedo\View\Lumi\Runtime\Library\StandardFunctions;
 use Tuxxedo\View\Lumi\Runtime\Loader;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
@@ -71,8 +71,9 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public private(set) bool $withDefaultFilters = true;
     public private(set) array $filterProviders = [];
 
-    final public function __construct()
-    {
+    final public function __construct(
+        private readonly ContainerInterface $container,
+    ) {
         $optimizers = [];
 
         foreach (LumiEngine::createDefaultOptimizers() as $optimizer) {
@@ -87,7 +88,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
         ContainerInterface $container,
         string $namespace = 'view',
     ): static {
-        $configurator = new static();
+        $configurator = new static($container);
         $config = $container->resolve(ConfigInterface::class);
 
         if ($config->has($namespace . '.directory')) {
@@ -249,14 +250,14 @@ class LumiConfigurator implements LumiConfiguratorInterface
         return $this;
     }
 
-    /**
-     * @param \Closure(mixed $value, DirectivesInterface $directives): mixed $handler
-     */
     public function defineFilter(
-        string $name,
-        \Closure $handler,
+        FilterInterface $handler,
     ): self {
-        $this->customFilters[$name] = $handler;
+        $this->customFilters[$handler->name] = $handler;
+
+        foreach ($handler->aliases as $alias) {
+            $this->customFilters[$alias] = $handler;
+        }
 
         return $this;
     }
@@ -478,7 +479,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
     ): array {
         $functions = [];
 
-        foreach ($provider->export() as $handler) {
+        foreach ($provider->export($this->container) as $handler) {
             $functions[\strtolower($handler->name)] = $handler;
         }
 
@@ -486,19 +487,19 @@ class LumiConfigurator implements LumiConfiguratorInterface
     }
 
     /**
-     * @return array<string, \Closure(mixed $value, DirectivesInterface $directives): mixed>
+     * @return array<string, FilterInterface>
      */
     private function loadFilterProvider(
         FilterProviderInterface $provider,
     ): array {
         $filters = [];
 
-        /**
-         * @var string $filter
-         * @var \Closure(mixed $value, DirectivesInterface $directives): mixed $handler
-         */
-        foreach ($provider->export() as [$filter, $handler]) {
-            $filters[$filter] = $handler;
+        foreach ($provider->export($this->container) as $handler) {
+            $filters[$handler->name] = $handler;
+
+            foreach ($handler->aliases as $alias) {
+                $filters[$alias] = $handler;
+            }
         }
 
         return $filters;
@@ -531,7 +532,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
     }
 
     /**
-     * @return array<string, \Closure(mixed $value, DirectivesInterface $directives): mixed>
+     * @return array<string, FilterInterface>
      */
     private function buildCustomFilters(): array
     {
@@ -539,7 +540,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
         if ($this->withDefaultFilters) {
             $customFilters = $this->loadFilterProvider(
-                provider: new DefaultFilters(),
+                provider: new StandardFilters(),
             );
         }
 

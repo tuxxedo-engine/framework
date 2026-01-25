@@ -13,12 +13,14 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime\Filter;
 
-use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
+use Tuxxedo\Container\ContainerInterface;
 
 interface FilterProviderInterface
 {
     /**
-     * @return \Generator<array{0: string, 1: \Closure(mixed $value, DirectivesInterface $directives): mixed}>
+     * @return \Generator<FilterInterface>
      */
-    public function export(): \Generator;
+    public function export(
+        ContainerInterface $container,
+    ): \Generator;
 }

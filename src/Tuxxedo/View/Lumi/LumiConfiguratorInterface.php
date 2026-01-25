@@ -18,7 +18,7 @@ use Tuxxedo\View\Lumi\Highlight\HighlighterInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
-use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
+use Tuxxedo\View\Lumi\Runtime\Filter\FilterInterface;
 use Tuxxedo\View\Lumi\Runtime\Filter\FilterProviderInterface;
 use Tuxxedo\View\Lumi\Runtime\Function\FunctionInterface;
 use Tuxxedo\View\Lumi\Runtime\Function\FunctionProviderInterface;
@@ -126,7 +126,7 @@ interface LumiConfiguratorInterface
     }
 
     /**
-     * @var array<string, \Closure(mixed $value, DirectivesInterface $directives): mixed>
+     * @var array<string, FilterInterface>
      */
     public array $customFilters {
         get;
@@ -178,12 +178,8 @@ interface LumiConfiguratorInterface
         FunctionInterface $handler,
     ): self;
 
-    /**
-     * @param \Closure(mixed $value, DirectivesInterface $directives): mixed $handler
-     */
     public function defineFilter(
-        string $name,
-        \Closure $handler,
+        FilterInterface $handler,
     ): self;
 
     public function withDefaultFilters(): self;

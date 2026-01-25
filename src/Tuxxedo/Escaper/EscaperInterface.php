@@ -14,8 +14,9 @@ declare(strict_types=1);
 namespace Tuxxedo\Escaper;
 
 use Tuxxedo\Container\DefaultImplementation;
+use Tuxxedo\Container\Lifecycle;
 
-#[DefaultImplementation(class: Escaper::class)]
+#[DefaultImplementation(class: Escaper::class, lifecycle: Lifecycle::PERSISTENT)]
 interface EscaperInterface
 {
     public function html(

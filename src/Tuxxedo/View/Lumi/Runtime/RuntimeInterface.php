@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Runtime;
 
 use Tuxxedo\View\Lumi\LumiEngineInterface;
-use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
+use Tuxxedo\View\Lumi\Runtime\Filter\FilterInterface;
 use Tuxxedo\View\Lumi\Runtime\Function\FunctionInterface;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
@@ -58,7 +58,7 @@ interface RuntimeInterface
     }
 
     /**
-     * @var array<string, \Closure(mixed $value, DirectivesInterface $directives): mixed>
+     * @var array<string, FilterInterface>
      */
     public array $filters {
         get;

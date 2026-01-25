@@ -15,12 +15,13 @@ namespace Tuxxedo\View\Lumi\Runtime;
 
 use Tuxxedo\View\Lumi\LumiEngineInterface;
 use Tuxxedo\View\Lumi\Runtime\Directive\Directives;
-use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
+use Tuxxedo\View\Lumi\Runtime\Filter\FilterInterface;
 use Tuxxedo\View\Lumi\Runtime\Function\FunctionInterface;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
 
+// @todo Filters must be lowered
 class Runtime implements RuntimeInterface
 {
     public private(set) array $directives;
@@ -44,7 +45,7 @@ class Runtime implements RuntimeInterface
      * @param string[] $functions
      * @param array<string, FunctionInterface> $customFunctions
      * @param array<class-string> $instanceCallClasses
-     * @param array<string, \Closure(mixed $input, DirectivesInterface $directives): mixed> $filters
+     * @param array<string, FilterInterface> $filters
      */
     public function __construct(
         public readonly LumiEngineInterface $engine,
@@ -169,9 +170,9 @@ class Runtime implements RuntimeInterface
             throw ViewException::fromCannotCallCustomFunctionWithRender();
         }
 
-        return ($this->filters[$filter])(
-            $value,
-            new Directives(
+        return ($this->filters[$filter])->call(
+            value: $value,
+            directives: new Directives(
                 directives: $this->directives,
             ),
         );
