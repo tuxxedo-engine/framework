@@ -9,3 +9,9 @@
     {% break %}
     <p>World 2</p>
 {% while false %}
+
+{% set counter = 100 %}
+before={{ counter }}
+
+{% set counter += 1 %}
+after={{ counter }}

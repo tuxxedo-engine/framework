@@ -91,14 +91,11 @@ class Variable implements VariableInterface
 
         unset($this->computedValue);
 
-        $oldValue = $this->value;
-        $this->value = $value;
-
         $dereferenced = $scope->evaluator->dereference($scope, $value);
 
         if ($dereferenced instanceof LiteralNode) {
             if (
-                $oldValue !== null &&
+                $this->value !== null &&
                 $operator !== AssignmentSymbol::ASSIGN
             ) {
                 $computedValue = $scope->evaluator->assignment(
@@ -126,8 +123,12 @@ class Variable implements VariableInterface
                 $this->computedValue = $scope->evaluator->castNodeToValue($dereferenced);
             }
 
+            $this->value = $value;
+
             return;
         }
+
+        $this->value = $value;
 
         if (
             $dereferenced instanceof IdentifierNode ||

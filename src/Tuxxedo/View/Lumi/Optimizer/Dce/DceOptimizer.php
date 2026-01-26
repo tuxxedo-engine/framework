@@ -27,6 +27,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ContinueNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ForNode;
+use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
@@ -68,9 +69,7 @@ class DceOptimizer extends AbstractOptimizer
             $node instanceof ConditionalNode => $this->optimizeConditional($node),
             $node instanceof ContinueNode => $this->optimizeLoopStatement($stream),
             $node instanceof DirectiveNodeInterface => parent::optimizeDirective($node),
-            $node instanceof DoWhileNode => [
-                parent::optimizeDoWhile($node),
-            ],
+            $node instanceof DoWhileNode => $this->optimizeDoWhile($node),
             $node instanceof ForNode => [
                 parent::optimizeForBody($node),
             ],
@@ -206,6 +205,26 @@ class DceOptimizer extends AbstractOptimizer
 
         if ($this->evaluator->checkExpression($this->scope, $node->operand) === EvaluatorResult::IS_FALSE) {
             return [];
+        }
+
+        return [
+            $node,
+        ];
+    }
+
+    /**
+     * @return NodeInterface[]
+     */
+    protected function optimizeDoWhile(
+        DoWhileNode $node,
+    ): array {
+        $node = parent::optimizeDoWhileBody($node);
+
+        if (
+            $node->operand instanceof LiteralNode &&
+            $this->evaluator->checkExpression($this->scope, $node->operand) === EvaluatorResult::IS_FALSE
+        ) {
+            return $node->body;
         }
 
         return [

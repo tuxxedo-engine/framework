@@ -73,7 +73,7 @@ class SccpOptimizer extends AbstractOptimizer
             $node instanceof ConditionalNode => $this->optimizeConditional($stream, $node),
             $node instanceof DirectiveNodeInterface => parent::optimizeDirective($node),
             $node instanceof DoWhileNode => [
-                parent::optimizeDoWhile($node),
+                parent::optimizeDoWhileBody($node),
             ],
             $node instanceof EchoNode => $this->optimizeEcho($stream, $node),
             $node instanceof GroupNode => $this->optimizeGroup($stream, $node),
