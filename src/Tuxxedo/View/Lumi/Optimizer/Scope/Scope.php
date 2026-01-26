@@ -56,6 +56,16 @@ class Scope implements ScopeInterface
         }
     }
 
+    public function create(
+        IdentifierNode|string $name,
+    ): void {
+        if (!\is_string($name)) {
+            $name = $name->name;
+        }
+
+        $this->variables[$name] = Variable::fromVarying($this, $name);
+    }
+
     public function get(
         IdentifierNode|string $name,
     ): VariableInterface {

@@ -31,11 +31,12 @@ class Variable implements VariableInterface
         public readonly ScopeInterface $scope,
         public readonly string $name,
         ?ExpressionNodeInterface $value = null,
+        Lattice $lattice = Lattice::UNDEF,
     ) {
         if ($value !== null) {
             $this->mutate($scope, $value);
         } else {
-            $this->lattice = Lattice::UNDEF;
+            $this->lattice = $lattice;
         }
     }
 
@@ -58,6 +59,18 @@ class Variable implements VariableInterface
         return new static(
             scope: $scope,
             name: $name,
+            lattice: Lattice::UNDEF,
+        );
+    }
+
+    public static function fromVarying(
+        Scope $scope,
+        string $name,
+    ): static {
+        return new static(
+            scope: $scope,
+            name: $name,
+            lattice: Lattice::VARYING,
         );
     }
 
@@ -69,9 +82,8 @@ class Variable implements VariableInterface
             scope: $scope,
             name: $variable->name,
             value: null,
+            lattice: Lattice::VARYING,
         );
-
-        $newVariable->lattice = Lattice::VARYING;
 
         return $newVariable;
     }

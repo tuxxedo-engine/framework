@@ -34,6 +34,10 @@ interface ScopeInterface
         AssignmentNode $node,
     ): void;
 
+    public function create(
+        IdentifierNode|string $name,
+    ): void;
+
     public function get(
         IdentifierNode|string $name,
     ): VariableInterface;

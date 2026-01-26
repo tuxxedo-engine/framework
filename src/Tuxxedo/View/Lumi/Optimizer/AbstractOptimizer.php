@@ -33,7 +33,6 @@ use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
 use Tuxxedo\View\Lumi\Syntax\TextContext;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
-// @todo Bodies of statements and loops needs more advanced computation for value mutation checks if part of a condition
 abstract class AbstractOptimizer implements OptimizerInterface
 {
     protected readonly EvaluatorInterface $evaluator;
@@ -143,6 +142,12 @@ abstract class AbstractOptimizer implements OptimizerInterface
     protected function optimizeForBody(
         ForNode $node,
     ): ForNode {
+        $this->scope->create($node->value);
+
+        if ($node->key !== null) {
+            $this->scope->create($node->key);
+        }
+
         $this->pushScope(inherit: true);
 
         $nodes = $this->optimizeNodes($node->body);
