@@ -64,7 +64,7 @@ class Lexer implements LexerInterface
     /**
      * @return TokenHandlerInterface[]
      */
-    public static function getDefaultHandlers(): array
+    public static function createDefaultHandlers(): array
     {
         return [
             new EchoTokenHandler(),
@@ -74,12 +74,12 @@ class Lexer implements LexerInterface
         ];
     }
 
-    public static function getDefaultExpressionLexer(): ExpressionLexerInterface
+    public static function createDefaultExpressionLexer(): ExpressionLexerInterface
     {
         return new ExpressionLexer();
     }
 
-    public static function getDefaultLexerState(): LexerStateInterface
+    public static function createDefaultLexerState(): LexerStateInterface
     {
         return new LexerState();
     }
@@ -94,11 +94,11 @@ class Lexer implements LexerInterface
     ): static {
         return new static(
             handlers: \array_merge(
-                self::getDefaultHandlers(),
+                self::createDefaultHandlers(),
                 $handlers,
             ),
-            expressionLexer: $expressionLexer ?? self::getDefaultExpressionLexer(),
-            state: $state ?? self::getDefaultLexerState(),
+            expressionLexer: $expressionLexer ?? self::createDefaultExpressionLexer(),
+            state: $state ?? self::createDefaultLexerState(),
         );
     }
 
@@ -112,8 +112,8 @@ class Lexer implements LexerInterface
     ): static {
         return new static(
             handlers: $handlers,
-            expressionLexer: $expressionLexer ?? self::getDefaultExpressionLexer(),
-            state: $state ?? self::getDefaultLexerState(),
+            expressionLexer: $expressionLexer ?? self::createDefaultExpressionLexer(),
+            state: $state ?? self::createDefaultLexerState(),
         );
     }
 

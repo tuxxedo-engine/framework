@@ -70,7 +70,7 @@ class BlockTokenHandler implements TokenHandlerInterface
     /**
      * @return BlockHandlerInterface[]
      */
-    public static function getDefaultHandlers(): array
+    public static function createDefaultHandlers(): array
     {
         return [
             new BlockBlockHandler(),
@@ -107,7 +107,7 @@ class BlockTokenHandler implements TokenHandlerInterface
     ): static {
         return new static(
             handlers: \array_merge(
-                self::getDefaultHandlers(),
+                self::createDefaultHandlers(),
                 $handlers,
             ),
         );

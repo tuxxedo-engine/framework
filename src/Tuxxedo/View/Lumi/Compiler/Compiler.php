@@ -78,7 +78,7 @@ class Compiler implements CompilerInterface
     /**
      * @return CompilerProviderInterface[]
      */
-    public static function getDefaultProviders(): array
+    public static function createDefaultProviders(): array
     {
         return [
             new ExpressionCompilerProvider(),
@@ -88,17 +88,17 @@ class Compiler implements CompilerInterface
         ];
     }
 
-    public static function getDefaultExpressionCompiler(): ExpressionCompilerInterface
+    public static function createDefaultExpressionCompiler(): ExpressionCompilerInterface
     {
         return new ExpressionCompiler();
     }
 
-    public static function getDefaultCompilerState(): CompilerStateInterface
+    public static function createDefaultCompilerState(): CompilerStateInterface
     {
         return new CompilerState();
     }
 
-    public static function getDefaultEscaper(): EscaperInterface
+    public static function createDefaultEscaper(): EscaperInterface
     {
         return new Escaper();
     }
@@ -114,12 +114,12 @@ class Compiler implements CompilerInterface
     ): static {
         return new static(
             providers: \array_merge(
-                self::getDefaultProviders(),
+                self::createDefaultProviders(),
                 $providers,
             ),
-            expressionCompiler: $expressionCompiler ?? self::getDefaultExpressionCompiler(),
-            state: $state ?? self::getDefaultCompilerState(),
-            escaper: $escaper ?? self::getDefaultEscaper(),
+            expressionCompiler: $expressionCompiler ?? self::createDefaultExpressionCompiler(),
+            state: $state ?? self::createDefaultCompilerState(),
+            escaper: $escaper ?? self::createDefaultEscaper(),
         );
     }
 
@@ -134,9 +134,9 @@ class Compiler implements CompilerInterface
     ): static {
         return new static(
             providers: $providers,
-            expressionCompiler: $expressionCompiler ?? self::getDefaultExpressionCompiler(),
-            state: $state ?? self::getDefaultCompilerState(),
-            escaper: $escaper ?? self::getDefaultEscaper(),
+            expressionCompiler: $expressionCompiler ?? self::createDefaultExpressionCompiler(),
+            state: $state ?? self::createDefaultCompilerState(),
+            escaper: $escaper ?? self::createDefaultEscaper(),
         );
     }
 

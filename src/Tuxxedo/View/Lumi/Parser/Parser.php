@@ -71,7 +71,7 @@ class Parser implements ParserInterface
     /**
      * @return ParserHandlerInterface[]
      */
-    public static function getDefaultHandlers(): array
+    public static function createDefaultHandlers(): array
     {
         return [
             new TextParserHandler(),
@@ -111,12 +111,12 @@ class Parser implements ParserInterface
         ];
     }
 
-    public static function getDefaultExpressionParser(): ExpressionParserInterface
+    public static function createDefaultExpressionParser(): ExpressionParserInterface
     {
         return new ExpressionParser();
     }
 
-    public static function getDefaultParserState(): ParserStateInterface
+    public static function createDefaultParserState(): ParserStateInterface
     {
         return new ParserState();
     }
@@ -131,11 +131,11 @@ class Parser implements ParserInterface
     ): static {
         return new static(
             handlers: \array_merge(
-                self::getDefaultHandlers(),
+                self::createDefaultHandlers(),
                 $handlers,
             ),
-            expressionParser: $expressionParser ?? self::getDefaultExpressionParser(),
-            state: $state ?? self::getDefaultParserState(),
+            expressionParser: $expressionParser ?? self::createDefaultExpressionParser(),
+            state: $state ?? self::createDefaultParserState(),
         );
     }
 
@@ -149,8 +149,8 @@ class Parser implements ParserInterface
     ): static {
         return new static(
             handlers: $handlers,
-            expressionParser: $expressionParser ?? self::getDefaultExpressionParser(),
-            state: $state ?? self::getDefaultParserState(),
+            expressionParser: $expressionParser ?? self::createDefaultExpressionParser(),
+            state: $state ?? self::createDefaultParserState(),
         );
     }
 
