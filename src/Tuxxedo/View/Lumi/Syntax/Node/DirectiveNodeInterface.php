@@ -13,8 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Syntax\Node;
 
-// @todo Optimizers operate on this interface, if another node were to exists that also implemented this, then
-//       we would need to have some sort of hash/prefix, or perhaps $node::class? Consider a name slot here
 interface DirectiveNodeInterface extends NodeInterface
 {
     public LiteralNode $directive {
