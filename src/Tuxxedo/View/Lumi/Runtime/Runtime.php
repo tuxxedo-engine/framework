@@ -21,7 +21,6 @@ use Tuxxedo\View\View;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
 
-// @todo Filters must be lowered
 class Runtime implements RuntimeInterface
 {
     public private(set) array $directives;

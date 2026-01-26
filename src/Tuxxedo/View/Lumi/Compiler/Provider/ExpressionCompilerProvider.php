@@ -321,7 +321,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         if ($node->right instanceof IdentifierNode) {
             return \sprintf(
                 '$this->hasFilter(\'%1$s\') ? $this->filter(%2$s, \'%1$s\') : ((%2$s) | (%3$s))',
-                $compiler->escaper->js($node->right->name),
+                $compiler->escaper->js(\mb_strtolower($node->right->name)),
                 $compiler->compileExpression($node->left),
                 $compiler->compileExpression($node->right),
             );

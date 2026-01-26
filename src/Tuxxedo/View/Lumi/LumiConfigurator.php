@@ -253,10 +253,10 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public function defineFilter(
         FilterInterface $handler,
     ): self {
-        $this->customFilters[$handler->name] = $handler;
+        $this->customFilters[\strtolower($handler->name)] = $handler;
 
         foreach ($handler->aliases as $alias) {
-            $this->customFilters[$alias] = $handler;
+            $this->customFilters[\strtolower($alias)] = $handler;
         }
 
         return $this;
@@ -495,10 +495,10 @@ class LumiConfigurator implements LumiConfiguratorInterface
         $filters = [];
 
         foreach ($provider->export($this->container) as $handler) {
-            $filters[$handler->name] = $handler;
+            $filters[\strtolower($handler->name)] = $handler;
 
             foreach ($handler->aliases as $alias) {
-                $filters[$alias] = $handler;
+                $filters[\strtolower($alias)] = $handler;
             }
         }
 
