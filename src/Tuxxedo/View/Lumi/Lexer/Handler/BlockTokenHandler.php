@@ -142,11 +142,18 @@ class BlockTokenHandler implements TokenHandlerInterface
     ): array {
         $buffer = \mb_trim($buffer);
 
-        if (\mb_strpos($buffer, ' ') !== false) {
-            [$directive, $expr] = \explode(' ', $buffer, 2);
-            $directive = \mb_strtolower($directive);
-        } else {
-            $directive = \mb_strtolower($buffer);
+        if (\preg_match('/^([a-z_][a-z0-9_]*)(.*)$/i', $buffer, $matches) !== 1) {
+            throw LexerException::fromUnexpectedSequenceFound(
+                sequence: $buffer,
+                line: $startingLine,
+            );
+        }
+
+        $directive = \mb_strtolower($matches[1]);
+        $rest = \mb_ltrim($matches[2]);
+
+        if ($rest !== '') {
+            $expr = $rest;
         }
 
         if (
@@ -173,7 +180,7 @@ class BlockTokenHandler implements TokenHandlerInterface
             return [];
         }
 
-        $tokens = $this->handlers[$directive]->lex(
+        return $this->handlers[$directive]->lex(
             startingLine: $startingLine,
             expression: $expr ?? '',
             expressionLexer: $expressionLexer,
@@ -182,7 +189,5 @@ class BlockTokenHandler implements TokenHandlerInterface
                 ? BlockHandlerState::EXPRESSIVE
                 : BlockHandlerState::STANDALONE,
         );
-
-        return $tokens;
     }
 }

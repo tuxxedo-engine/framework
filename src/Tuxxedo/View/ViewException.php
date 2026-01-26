@@ -162,4 +162,11 @@ class ViewException extends \Exception
             message: 'Cannot access property on non-object',
         );
     }
+
+    public static function fromInvalidIncludeFile(): self
+    {
+        return new self(
+            message: 'Invalid view file name',
+        );
+    }
 }

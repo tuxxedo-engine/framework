@@ -170,4 +170,14 @@ interface RuntimeInterface
         string $theme,
         string $sourceCode,
     ): void;
+
+    /**
+     * @param array<string, mixed> $scope
+     *
+     * @throws ViewException
+     */
+    public function include(
+        mixed $file,
+        array $scope = [],
+    ): void;
 }

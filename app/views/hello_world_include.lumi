@@ -1,4 +1,5 @@
-{{ include('hello_world', ['name': 'PHP']) }}
-
-{% declare lumi.autoescape = false %}
-{% include 'hello_world', ['name': 'PHP'] %}
+{% include 'hello_world' %}
+{% include('hello_world') %}
+{% include ( 'hello_world' ) %}
+{% include('hello_world', ['name': 'PHP']) %}
+{% include('hello_world', ['name': 'PHP',],) %}

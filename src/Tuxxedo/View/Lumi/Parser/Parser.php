@@ -27,6 +27,7 @@ use Tuxxedo\View\Lumi\Parser\Handler\DoWhileParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\EchoParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\ForParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\ForeachParserHandler;
+use Tuxxedo\View\Lumi\Parser\Handler\IncludeParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\LayoutParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\LumiParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\ParserHandlerInterface;
@@ -106,6 +107,7 @@ class Parser implements ParserInterface
                 tokenClassName: EndBlockToken::class,
             ),
             new LumiParserHandler(),
+            new IncludeParserHandler(),
         ];
     }
 

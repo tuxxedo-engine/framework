@@ -256,4 +256,21 @@ class Runtime implements RuntimeInterface
             optimized: false,
         );
     }
+
+    public function include(
+        mixed $file,
+        array $scope = [],
+    ): void {
+        if (!\is_string($file)) {
+            throw ViewException::fromInvalidIncludeFile();
+        }
+
+        echo $this->renderer->render(
+            view: new View(
+                name: $file,
+                scope: $scope,
+            ),
+            directives: $this->directives,
+        );
+    }
 }

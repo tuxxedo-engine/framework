@@ -23,6 +23,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\DeclareNode;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
+use Tuxxedo\View\Lumi\Syntax\Node\IncludeNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LayoutNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LumiNode;
@@ -179,6 +180,25 @@ class TextCompilerProvider implements CompilerProviderInterface
         );
     }
 
+    private function compileInclude(
+        IncludeNode $node,
+        CompilerInterface $compiler,
+        NodeStreamInterface $stream,
+    ): string {
+        if ($node->scope !== null) {
+            return \sprintf(
+                '<?php $this->include(%s, %s); ?>',
+                $compiler->compileExpression($node->file),
+                $compiler->compileExpression($node->scope),
+            );
+        }
+
+        return \sprintf(
+            '<?php $this->include(%s); ?>',
+            $compiler->compileExpression($node->file),
+        );
+    }
+
     public function augment(): \Generator
     {
         yield new NodeCompilerHandler(
@@ -209,6 +229,11 @@ class TextCompilerProvider implements CompilerProviderInterface
         yield new NodeCompilerHandler(
             nodeClassName: LumiNode::class,
             handler: $this->compileLumi(...),
+        );
+
+        yield new NodeCompilerHandler(
+            nodeClassName: IncludeNode::class,
+            handler: $this->compileInclude(...),
         );
 
         yield new PostNodeCompilerHandler(

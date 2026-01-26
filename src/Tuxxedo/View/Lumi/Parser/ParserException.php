@@ -244,4 +244,50 @@ class ParserException extends LumiException
             ),
         );
     }
+
+    public static function fromInvalidIncludeSyntax(
+        int $line,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid syntax for include statement on line %d',
+                $line,
+            ),
+        );
+    }
+
+    public static function fromIncludeArgumentCount(
+        int $argc,
+        int $line,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Include statements must have at least 1 argument and at most 2 arguments, %d arguments given on line %d',
+                $argc,
+                $line,
+            ),
+        );
+    }
+
+    public static function fromIncludeBracesRequired(
+        int $line,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Include statements with multiple arguments must be wrapped in parentheses on line %d',
+                $line,
+            ),
+        );
+    }
+
+    public static function fromIncludeScopeMustBeAnArray(
+        int $line,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Include scopes must be an array on line %d',
+                $line,
+            ),
+        );
+    }
 }

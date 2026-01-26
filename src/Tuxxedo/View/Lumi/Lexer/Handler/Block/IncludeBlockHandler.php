@@ -15,9 +15,8 @@ namespace Tuxxedo\View\Lumi\Lexer\Handler\Block;
 
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerStateInterface;
-use Tuxxedo\View\Lumi\Syntax\TextContext;
-use Tuxxedo\View\Lumi\Syntax\Token\EchoToken;
 use Tuxxedo\View\Lumi\Syntax\Token\EndToken;
+use Tuxxedo\View\Lumi\Syntax\Token\IncludeToken;
 
 class IncludeBlockHandler implements BlockHandlerInterface, AlwaysExpressiveInterface
 {
@@ -31,17 +30,24 @@ class IncludeBlockHandler implements BlockHandlerInterface, AlwaysExpressiveInte
         BlockHandlerState $blockState,
     ): array {
         $firstCharacter = \mb_substr($expression, 0, 1);
+        $lastCharacter = \mb_substr($expression, -1);
 
         if ($firstCharacter !== '(') {
-            $expression = '(' . $expression . ')';
+            $expression = '(' . $expression;
+        }
+
+        if ($lastCharacter !== ')') {
+            $expression .= ')';
         }
 
         $expression = 'include' . $expression;
 
         return [
-            new EchoToken(
+            new IncludeToken(
                 line: $startingLine,
-                op1: TextContext::RAW->name,
+                op1: $firstCharacter !== '('
+                    ? 'braceless'
+                    : null,
             ),
             ...$expressionLexer->lex(
                 startingLine: $startingLine,
