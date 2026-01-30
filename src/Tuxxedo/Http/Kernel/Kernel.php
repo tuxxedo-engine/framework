@@ -105,7 +105,7 @@ class Kernel implements KernelInterface
         }
 
         foreach ($handlers as $handler) {
-            $response = ($handler())->handle($request, $response, $e);
+            $response = $this->container->call($handler)->handle($request, $response, $e);
 
             if ($response instanceof ResponsableInterface) {
                 $response = $response->toResponse($this->container);

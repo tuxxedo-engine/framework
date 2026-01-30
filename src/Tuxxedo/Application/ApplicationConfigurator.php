@@ -360,6 +360,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
                 $provider = (static fn (string $file): mixed => require $file)($serviceFile);
 
                 if ($provider instanceof \Closure) {
+                    /** @var \Closure(): void $provider */
                     $container->call($provider);
                 }
             }

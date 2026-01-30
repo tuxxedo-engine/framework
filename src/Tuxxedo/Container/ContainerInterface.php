@@ -93,7 +93,11 @@ interface ContainerInterface
     ): object;
 
     /**
+     * @template TReturnType
+     *
+     * @param \Closure(): TReturnType $callable
      * @param array<array-key, mixed> $arguments
+     * @return TReturnType
      */
     public function call(
         \Closure $callable,
