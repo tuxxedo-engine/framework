@@ -24,7 +24,7 @@ class ResponseEmitter implements ResponseEmitterInterface
         bool $sendHeaders = true,
     ): void {
         if ($response instanceof ResponseExceptionInterface) {
-            $response = $response->send();
+            $response = $response->toResponse();
         }
 
         $maxLength = null;

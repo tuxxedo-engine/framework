@@ -15,5 +15,5 @@ namespace Tuxxedo\Http\Response;
 
 interface ResponseExceptionInterface
 {
-    public function send(): ResponseInterface;
+    public function toResponse(): ResponseInterface;
 }

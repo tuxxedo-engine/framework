@@ -99,9 +99,9 @@ class Kernel implements KernelInterface
         $handlers = \array_merge($handlers, $this->defaultExceptionHandlers);
 
         if ($e instanceof ResponseExceptionInterface) {
-            $response = $e->send();
+            $response = $e->toResponse();
         } else {
-            $response = HttpException::fromInternalServerError()->send();
+            $response = HttpException::fromInternalServerError()->toResponse();
         }
 
         foreach ($handlers as $handler) {

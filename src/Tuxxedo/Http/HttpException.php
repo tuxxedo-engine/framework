@@ -35,7 +35,7 @@ class HttpException extends \Exception implements ResponseCodeInterface, Respons
         );
     }
 
-    public function send(): ResponseInterface
+    public function toResponse(): ResponseInterface
     {
         return new Response(
             responseCode: $this->responseCode,
