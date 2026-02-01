@@ -23,6 +23,7 @@ readonly class IncludeNode implements NodeInterface
     ) {
         $this->scopes = [
             NodeScope::STATEMENT,
+            NodeScope::BLOCK,
         ];
     }
 }
