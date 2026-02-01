@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request\Middleware;
 
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
@@ -22,6 +23,7 @@ class MiddlewareNode implements MiddlewareInterface
      * @param \Closure(): MiddlewareInterface $current
      */
     public function __construct(
+        private readonly ContainerInterface $container,
         private readonly \Closure $current,
         private readonly MiddlewareInterface $next,
     ) {
@@ -31,7 +33,7 @@ class MiddlewareNode implements MiddlewareInterface
         RequestInterface $request,
         MiddlewareInterface $next,
     ): ResponseInterface {
-        return ($this->current)()->handle(
+        return $this->container->call($this->current)->handle(
             request: $request,
             next: $this->next,
         );

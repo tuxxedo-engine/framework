@@ -180,6 +180,7 @@ class Kernel implements KernelInterface
 
         foreach ($middlewares as $middleware) {
             $next = new MiddlewareNode(
+                container: $this->container,
                 current: $middleware,
                 next: $next,
             );
