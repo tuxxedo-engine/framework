@@ -232,6 +232,7 @@ class Runtime implements RuntimeInterface
 
     public function layout(
         string $file,
+        array $scope = [],
     ): void {
         if (!isset($this->renderer)) {
             throw ViewException::fromCannotCallCustomFunctionWithRender();
@@ -240,6 +241,7 @@ class Runtime implements RuntimeInterface
         echo ($this->renderer)->render(
             view: new View(
                 name: $file,
+                scope: $scope,
             ),
             directives: $this->directives,
             blocks: $this->blocks,

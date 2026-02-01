@@ -162,8 +162,14 @@ interface RuntimeInterface
         \Closure $block,
     ): void;
 
+    /**
+     * @param array<string, mixed> $scope
+     *
+     * @throws ViewException
+     */
     public function layout(
         string $file,
+        array $scope = [],
     ): void;
 
     public function highlight(

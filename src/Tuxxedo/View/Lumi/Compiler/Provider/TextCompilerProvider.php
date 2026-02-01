@@ -163,7 +163,7 @@ class TextCompilerProvider implements CompilerProviderInterface
         NodeStreamInterface $stream,
     ): string {
         return \sprintf(
-            "\n<?php \$this->layout('%s'); ?>",
+            "\n<?php \$this->layout('%s', \$__lumiVariables); ?>",
             $compiler->escaper->js($node->file),
         );
     }
