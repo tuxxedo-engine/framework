@@ -18,7 +18,6 @@ use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\WeightedHeader;
 use Tuxxedo\Http\WeightedHeaderInterface;
-use UnitEnum as T;
 
 class EnvironmentHeaderContext implements HeaderContextInterface
 {
@@ -187,7 +186,7 @@ class EnvironmentHeaderContext implements HeaderContextInterface
      * @template TEnum of \UnitEnum
      *
      * @param class-string<TEnum> $enum
-     * @return TEnum&T
+     * @return TEnum&\UnitEnum
      *
      * @throws HttpException
      */
