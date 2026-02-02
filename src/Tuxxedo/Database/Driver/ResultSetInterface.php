@@ -16,7 +16,6 @@ namespace Tuxxedo\Database\Driver;
 /**
  * @extends \Iterator<array-key, ResultRowInterface>
  */
-// @todo This needs mapping support
 // @todo This needs type normalization if non prepared statements is used, e.g. mysqli
 interface ResultSetInterface extends \Countable, \Iterator
 {
