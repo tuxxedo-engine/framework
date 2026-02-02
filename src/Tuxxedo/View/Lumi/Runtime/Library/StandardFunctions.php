@@ -18,6 +18,7 @@ use Tuxxedo\View\Lumi\Library\Function\FunctionProviderInterface;
 use Tuxxedo\View\Lumi\Library\Function\PhpFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\DirectiveFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\HasDirectiveFunction;
+use Tuxxedo\View\Lumi\Runtime\Library\Function\RequestFunction;
 
 class StandardFunctions implements FunctionProviderInterface
 {
@@ -33,5 +34,7 @@ class StandardFunctions implements FunctionProviderInterface
                 'sizeof',
             ],
         );
+
+        yield new RequestFunction($container);
     }
 }

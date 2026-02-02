@@ -13,30 +13,27 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime\Library\Function;
 
+use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
-use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
 
-class DirectiveFunction implements FunctionInterface
+class RequestFunction implements FunctionInterface
 {
-    public private(set) string $name = 'directive';
+    public private(set) string $name = 'request';
     public private(set) array $aliases = [];
+
+    public function __construct(
+        private readonly ContainerInterface $container,
+    ) {
+    }
 
     public function call(
         array $arguments,
         ViewRenderInterface $render,
         DirectivesInterface $directives,
-    ): string|int|float|bool|null {
-        /** @var string $directive */
-        $directive = $arguments[0];
-
-        if (!$directives->has($directive)) {
-            throw ViewException::fromInvalidDirective(
-                directive: $directive,
-            );
-        }
-
-        return $directives->directives[$directive];
+    ): RequestInterface {
+        return $this->container->resolve(RequestInterface::class);
     }
 }

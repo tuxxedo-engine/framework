@@ -26,7 +26,7 @@ class HasDirectiveFunction implements FunctionInterface
         array $arguments,
         ViewRenderInterface $render,
         DirectivesInterface $directives,
-    ): mixed {
+    ): bool {
         /** @var string $directive */
         $directive = $arguments[0];
 
