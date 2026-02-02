@@ -26,11 +26,11 @@ class EnvironmentHeaderContext implements HeaderContextInterface
      */
     private array $headers = [];
 
-    protected bool $lazyLoaded = false;
+    protected bool $lazilyLoaded = false;
 
     protected function lazyLoad(): void
     {
-        if ($this->lazyLoaded) {
+        if ($this->lazilyLoaded) {
             return;
         }
 
@@ -46,7 +46,7 @@ class EnvironmentHeaderContext implements HeaderContextInterface
             $this->headers[\str_replace(' ', '-', \ucwords(\str_replace('_', ' ', \strtolower(\substr($name, 5)))))] = (string) $value;
         }
 
-        $this->lazyLoaded = true;
+        $this->lazilyLoaded = true;
     }
 
     public function all(): array
