@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Compiler;
 
-use Tuxxedo\View\Lumi\Runtime\Directive\DefaultDirectives;
-use Tuxxedo\View\Lumi\Runtime\Directive\Directives;
+use Tuxxedo\View\Lumi\Library\Directive\DefaultDirectives;
+use Tuxxedo\View\Lumi\Library\Directive\Directives;
 
 class CompilerDirectives extends Directives implements CompilerDirectivesInterface
 {

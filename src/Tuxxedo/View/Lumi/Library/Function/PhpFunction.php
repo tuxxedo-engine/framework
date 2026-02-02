@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Runtime\Function;
+namespace Tuxxedo\View\Lumi\Library\Function;
 
-use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
+use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
 use Tuxxedo\View\ViewRenderInterface;
 
 class PhpFunction implements FunctionInterface

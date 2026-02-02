@@ -11,13 +11,12 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Runtime\Function;
+namespace Tuxxedo\View\Lumi\Library\Filter;
 
-use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
+use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
 use Tuxxedo\View\ViewException;
-use Tuxxedo\View\ViewRenderInterface;
 
-interface FunctionInterface
+interface FilterInterface
 {
     public string $name {
         get;
@@ -31,13 +30,10 @@ interface FunctionInterface
     }
 
     /**
-     * @param mixed[] $arguments
-     *
      * @throws ViewException
      */
     public function call(
-        array $arguments,
-        ViewRenderInterface $render,
+        mixed $value,
         DirectivesInterface $directives,
     ): mixed;
 }

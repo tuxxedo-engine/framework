@@ -11,14 +11,14 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Runtime\Filter;
+namespace Tuxxedo\View\Lumi\Library\Function;
 
 use Tuxxedo\Container\ContainerInterface;
 
-interface FilterProviderInterface
+interface FunctionProviderInterface
 {
     /**
-     * @return \Generator<FilterInterface>
+     * @return \Generator<FunctionInterface>
      */
     public function export(
         ContainerInterface $container,

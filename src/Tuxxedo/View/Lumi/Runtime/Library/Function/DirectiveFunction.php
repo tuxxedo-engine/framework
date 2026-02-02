@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime\Library\Function;
 
-use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
-use Tuxxedo\View\Lumi\Runtime\Function\FunctionInterface;
+use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
+use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
 

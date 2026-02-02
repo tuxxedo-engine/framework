@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Runtime\Directive;
+namespace Tuxxedo\View\Lumi\Library\Directive;
 
 class DefaultDirectives
 {

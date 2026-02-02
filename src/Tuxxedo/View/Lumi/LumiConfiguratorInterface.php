@@ -16,12 +16,13 @@ namespace Tuxxedo\View\Lumi;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Highlight\HighlighterInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
+use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
+use Tuxxedo\View\Lumi\Library\Filter\FilterProviderInterface;
+use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
+use Tuxxedo\View\Lumi\Library\Function\FunctionProviderInterface;
+use Tuxxedo\View\Lumi\Library\LibraryInterface;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
-use Tuxxedo\View\Lumi\Runtime\Filter\FilterInterface;
-use Tuxxedo\View\Lumi\Runtime\Filter\FilterProviderInterface;
-use Tuxxedo\View\Lumi\Runtime\Function\FunctionInterface;
-use Tuxxedo\View\Lumi\Runtime\Function\FunctionProviderInterface;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
 use Tuxxedo\View\ViewRenderInterface;
@@ -107,10 +108,6 @@ interface LumiConfiguratorInterface
         get;
     }
 
-    public bool $withDefaultFunctions {
-        get;
-    }
-
     /**
      * @var FunctionProviderInterface[]
      */
@@ -132,14 +129,14 @@ interface LumiConfiguratorInterface
         get;
     }
 
-    public bool $withDefaultFilters {
-        get;
-    }
-
     /**
      * @var FilterProviderInterface[]
      */
     public array $filterProviders {
+        get;
+    }
+
+    public bool $withStandardLibrary {
         get;
     }
 
@@ -182,21 +179,21 @@ interface LumiConfiguratorInterface
         FilterInterface $handler,
     ): self;
 
-    public function withDefaultFilters(): self;
-
-    public function withoutDefaultFilters(): self;
-
     public function withFilterProvider(
         FilterProviderInterface $provider,
     ): self;
 
-    public function withDefaultFunctions(): self;
-
-    public function withoutDefaultFunctions(): self;
-
     public function withFunctionProvider(
         FunctionProviderInterface $provider,
     ): self;
+
+    public function withLibrary(
+        LibraryInterface $library,
+    ): self;
+
+    public function withStandardLibrary(): self;
+
+    public function withoutStandardLibrary(): self;
 
     public function withAnyInstanceCall(): self;
 

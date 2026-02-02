@@ -15,8 +15,8 @@ namespace Tuxxedo\View\Lumi\Runtime\Library\Filter;
 
 use Tuxxedo\Escaper\Escaper;
 use Tuxxedo\Escaper\EscaperInterface;
-use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
-use Tuxxedo\View\Lumi\Runtime\Filter\FilterInterface;
+use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
+use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
 
 class EscapeCssFilter implements FilterInterface
 {

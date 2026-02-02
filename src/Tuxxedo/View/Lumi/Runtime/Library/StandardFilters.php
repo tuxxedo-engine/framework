@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Runtime\Library;
 
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\View\Lumi\Runtime\Filter\FilterProviderInterface;
+use Tuxxedo\View\Lumi\Library\Filter\FilterProviderInterface;
 use Tuxxedo\View\Lumi\Runtime\Library\Filter\CapitalizeFilter;
 use Tuxxedo\View\Lumi\Runtime\Library\Filter\CountFilter;
 use Tuxxedo\View\Lumi\Runtime\Library\Filter\EscapeAttrFilter;

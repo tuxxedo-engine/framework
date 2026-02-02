@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime;
 
+use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
+use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
 use Tuxxedo\View\Lumi\LumiEngineInterface;
-use Tuxxedo\View\Lumi\Runtime\Filter\FilterInterface;
-use Tuxxedo\View\Lumi\Runtime\Function\FunctionInterface;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
 

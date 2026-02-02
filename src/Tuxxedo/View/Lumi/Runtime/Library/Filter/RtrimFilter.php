@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime\Library\Filter;
 
-use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
-use Tuxxedo\View\Lumi\Runtime\Filter\FilterInterface;
+use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
+use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
 
 class RtrimFilter implements FilterInterface
 {

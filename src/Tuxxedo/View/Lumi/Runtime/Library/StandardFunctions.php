@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Runtime\Library;
 
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\View\Lumi\Runtime\Function\FunctionProviderInterface;
-use Tuxxedo\View\Lumi\Runtime\Function\PhpFunction;
+use Tuxxedo\View\Lumi\Library\Function\FunctionProviderInterface;
+use Tuxxedo\View\Lumi\Library\Function\PhpFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\DirectiveFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\HasDirectiveFunction;
 

@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Compiler;
 
-use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
+use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
 

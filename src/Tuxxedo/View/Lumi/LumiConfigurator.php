@@ -21,17 +21,17 @@ use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Compiler\CompilerState;
 use Tuxxedo\View\Lumi\Highlight\HighlighterInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
+use Tuxxedo\View\Lumi\Library\Directive\DefaultDirectives;
+use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
+use Tuxxedo\View\Lumi\Library\Filter\FilterProviderInterface;
+use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
+use Tuxxedo\View\Lumi\Library\Function\FunctionProviderInterface;
+use Tuxxedo\View\Lumi\Library\LibraryInterface;
 use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
 use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpOptimizer;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
-use Tuxxedo\View\Lumi\Runtime\Directive\DefaultDirectives;
-use Tuxxedo\View\Lumi\Runtime\Filter\FilterInterface;
-use Tuxxedo\View\Lumi\Runtime\Filter\FilterProviderInterface;
-use Tuxxedo\View\Lumi\Runtime\Function\FunctionInterface;
-use Tuxxedo\View\Lumi\Runtime\Function\FunctionProviderInterface;
-use Tuxxedo\View\Lumi\Runtime\Library\StandardFilters;
-use Tuxxedo\View\Lumi\Runtime\Library\StandardFunctions;
+use Tuxxedo\View\Lumi\Runtime\Library\StandardLibrary;
 use Tuxxedo\View\Lumi\Runtime\Loader;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\Runtime;
@@ -62,14 +62,14 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public private(set) array $customFunctions = [];
 
     public private(set) RuntimeFunctionPolicy $functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY;
-    public private(set) bool $withDefaultFunctions = true;
     public private(set) array $functionProviders = [];
 
     public private(set) array $instanceCallClasses = [];
 
     public private(set) array $customFilters = [];
-    public private(set) bool $withDefaultFilters = true;
     public private(set) array $filterProviders = [];
+
+    public private(set) bool $withStandardLibrary = true;
 
     final public function __construct(
         private readonly ContainerInterface $container,
@@ -233,7 +233,6 @@ class LumiConfigurator implements LumiConfiguratorInterface
         $this->customFunctions = [];
         $this->functionProviders = [];
         $this->functionPolicy = RuntimeFunctionPolicy::DISALLOW_ALL;
-        $this->withDefaultFunctions = false;
 
         return $this;
     }
@@ -266,38 +265,10 @@ class LumiConfigurator implements LumiConfiguratorInterface
         return $this;
     }
 
-    public function withDefaultFilters(): self
-    {
-        $this->withDefaultFilters = true;
-
-        return $this;
-    }
-
-    public function withoutDefaultFilters(): self
-    {
-        $this->withDefaultFilters = false;
-
-        return $this;
-    }
-
     public function withFilterProvider(
         FilterProviderInterface $provider,
     ): LumiConfiguratorInterface {
         $this->filterProviders[] = $provider;
-
-        return $this;
-    }
-
-    public function withDefaultFunctions(): self
-    {
-        $this->withDefaultFunctions = true;
-
-        return $this;
-    }
-
-    public function withoutDefaultFunctions(): self
-    {
-        $this->withDefaultFunctions = false;
 
         return $this;
     }
@@ -310,6 +281,34 @@ class LumiConfigurator implements LumiConfiguratorInterface
         if ($this->functionPolicy === RuntimeFunctionPolicy::DISALLOW_ALL) {
             $this->functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY;
         }
+
+        return $this;
+    }
+
+    public function withLibrary(
+        LibraryInterface $library,
+    ): LumiConfiguratorInterface {
+        if (($filterProvider = $library->filters()) !== null) {
+            $this->withFilterProvider($filterProvider);
+        }
+
+        if (($functionProvider = $library->functions()) !== null) {
+            $this->withFunctionProvider($functionProvider);
+        }
+
+        return $this;
+    }
+
+    public function withStandardLibrary(): self
+    {
+        $this->withStandardLibrary = true;
+
+        return $this;
+    }
+
+    public function withoutStandardLibrary(): self
+    {
+        $this->withStandardLibrary = false;
 
         return $this;
     }
@@ -516,12 +515,6 @@ class LumiConfigurator implements LumiConfiguratorInterface
     {
         $customFunctions = [];
 
-        if ($this->withDefaultFunctions) {
-            $customFunctions = $this->loadFunctionProvider(
-                provider: new StandardFunctions(),
-            );
-        }
-
         if (\sizeof($this->functionProviders) > 0) {
             $customFunctions = \array_merge(
                 $customFunctions,
@@ -541,12 +534,6 @@ class LumiConfigurator implements LumiConfiguratorInterface
     private function buildCustomFilters(): array
     {
         $customFilters = [];
-
-        if ($this->withDefaultFilters) {
-            $customFilters = $this->loadFilterProvider(
-                provider: new StandardFilters(),
-            );
-        }
 
         if (\sizeof($this->filterProviders) > 0) {
             $customFilters = \array_merge(
@@ -577,6 +564,12 @@ class LumiConfigurator implements LumiConfiguratorInterface
             }
         } else {
             $compiler = $this->compiler;
+        }
+
+        if ($this->withStandardLibrary) {
+            $this->withLibrary(
+                library: new StandardLibrary(),
+            );
         }
 
         return new LumiViewRender(
