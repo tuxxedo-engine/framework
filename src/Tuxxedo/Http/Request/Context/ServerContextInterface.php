@@ -15,8 +15,6 @@ namespace Tuxxedo\Http\Request\Context;
 
 use Tuxxedo\Http\Method;
 
-// @todo expects? e.g. does the client expects json?
-// @todo IP address functionality
 // @todo Prefers language functionality
 interface ServerContextInterface
 {
@@ -53,6 +51,10 @@ interface ServerContextInterface
     }
 
     public int $port {
+        get;
+    }
+
+    public string $ipAddress {
         get;
     }
 }

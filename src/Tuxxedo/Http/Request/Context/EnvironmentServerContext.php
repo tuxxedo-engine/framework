@@ -81,4 +81,11 @@ class EnvironmentServerContext implements ServerContextInterface
             return (int) $port;
         }
     }
+
+    public string $ipAddress {
+        get {
+            /** @var string */
+            return $_SERVER['REMOTE_ADDR'];
+        }
+    }
 }
