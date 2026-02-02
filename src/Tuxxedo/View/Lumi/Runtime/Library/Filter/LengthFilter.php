@@ -25,6 +25,13 @@ class LengthFilter implements FilterInterface
         mixed $value,
         DirectivesInterface $directives,
     ): int {
+
+        if ($value instanceof \Countable) {
+            return $value->count();
+        } elseif (\is_array($value)) {
+            return \sizeof($value);
+        }
+
         /** @var string $value */
 
         return \mb_strlen($value);
