@@ -15,6 +15,7 @@ namespace Tuxxedo\View\Lumi\Runtime\Library;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\View\Lumi\Runtime\Function\FunctionProviderInterface;
+use Tuxxedo\View\Lumi\Runtime\Function\PhpFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\DirectiveFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\HasDirectiveFunction;
 
@@ -25,5 +26,12 @@ class StandardFunctions implements FunctionProviderInterface
     ): \Generator {
         yield new HasDirectiveFunction();
         yield new DirectiveFunction();
+
+        yield new PhpFunction(
+            name: 'count',
+            aliases: [
+                'sizeof',
+            ],
+        );
     }
 }

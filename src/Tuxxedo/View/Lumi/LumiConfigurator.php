@@ -243,6 +243,10 @@ class LumiConfigurator implements LumiConfiguratorInterface
     ): self {
         $this->customFunctions[\strtolower($handler->name)] = $handler;
 
+        foreach ($handler->aliases as $alias) {
+            $this->customFunctions[\strtolower($alias)] = $handler;
+        }
+
         if ($this->functionPolicy === RuntimeFunctionPolicy::DISALLOW_ALL) {
             $this->functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY;
         }

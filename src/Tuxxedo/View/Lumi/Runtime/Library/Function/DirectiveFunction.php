@@ -21,6 +21,7 @@ use Tuxxedo\View\ViewRenderInterface;
 class DirectiveFunction implements FunctionInterface
 {
     public private(set) string $name = 'directive';
+    public private(set) array $aliases = [];
 
     public function call(
         array $arguments,

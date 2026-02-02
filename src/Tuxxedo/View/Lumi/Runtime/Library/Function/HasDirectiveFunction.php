@@ -20,6 +20,7 @@ use Tuxxedo\View\ViewRenderInterface;
 class HasDirectiveFunction implements FunctionInterface
 {
     public private(set) string $name = 'hasDirective';
+    public private(set) array $aliases = [];
 
     public function call(
         array $arguments,

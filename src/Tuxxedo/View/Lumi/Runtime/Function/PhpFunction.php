@@ -14,30 +14,25 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Runtime\Function;
 
 use Tuxxedo\View\Lumi\Runtime\Directive\DirectivesInterface;
-use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
 
-interface FunctionInterface
+class PhpFunction implements FunctionInterface
 {
-    public string $name {
-        get;
+    /**
+     * @param callable-string $name
+     * @param string[] $aliases
+     */
+    public function __construct(
+        public readonly string $name,
+        public array $aliases = [],
+    ) {
     }
 
-    /**
-     * @var string[]
-     */
-    public array $aliases {
-        get;
-    }
-
-    /**
-     * @param mixed[] $arguments
-     *
-     * @throws ViewException
-     */
     public function call(
         array $arguments,
         ViewRenderInterface $render,
         DirectivesInterface $directives,
-    ): mixed;
+    ): mixed {
+        return \call_user_func_array($this->name, $arguments);
+    }
 }
