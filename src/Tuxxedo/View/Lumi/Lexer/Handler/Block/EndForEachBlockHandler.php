@@ -17,7 +17,7 @@ use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerStateInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\EndForEachToken;
 
-class EndForEachBlockHandler implements BlockHandlerInterface
+class EndForEachBlockHandler implements BlockHandlerInterface, AlwaysStandaloneInterface
 {
     public private(set) string $directive = 'endforeach';
 
