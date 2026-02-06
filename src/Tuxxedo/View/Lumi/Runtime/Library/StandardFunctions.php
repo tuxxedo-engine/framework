@@ -16,6 +16,7 @@ namespace Tuxxedo\View\Lumi\Runtime\Library;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionProviderInterface;
 use Tuxxedo\View\Lumi\Library\Function\PhpFunction;
+use Tuxxedo\View\Lumi\Runtime\Library\Function\ConfigFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\DirectiveFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\HasDirectiveFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\RequestFunction;
@@ -35,6 +36,7 @@ class StandardFunctions implements FunctionProviderInterface
             ],
         );
 
+        yield new ConfigFunction($container);
         yield new RequestFunction($container);
     }
 }
