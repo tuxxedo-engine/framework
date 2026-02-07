@@ -158,25 +158,11 @@ class Kernel implements KernelInterface
         DispatchableRouteInterface $dispatchableRoute,
         RequestInterface $request,
     ): ResponseInterface {
-        $next = new readonly class ($dispatchableRoute, $this->dispatcher, $this->container) implements MiddlewareInterface {
-            public function __construct(
-                private DispatchableRouteInterface $dispatchableRoute,
-                private DispatcherInterface $dispatcher,
-                private ContainerInterface $container,
-            ) {
-            }
-
-            public function handle(
-                RequestInterface $request,
-                MiddlewareInterface $next,
-            ): ResponseInterface {
-                return $this->dispatcher->dispatch(
-                    container: $this->container,
-                    dispatchableRoute: $this->dispatchableRoute,
-                    request: $request,
-                );
-            }
-        };
+        $next = new DispatchNode(
+            dispatchableRoute: $dispatchableRoute,
+            dispatcher: $this->dispatcher,
+            container: $this->container,
+        );
 
         foreach ($middlewares as $middleware) {
             $next = new MiddlewareNode(
