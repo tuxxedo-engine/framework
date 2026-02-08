@@ -36,6 +36,13 @@ class StandardFunctions implements FunctionProviderInterface
             ],
         );
 
+        yield new PhpFunction(
+            name: 'constant',
+            aliases: [
+                'const',
+            ],
+        );
+
         yield new ConfigFunction($container);
         yield new RequestFunction($container);
     }
