@@ -84,6 +84,30 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
             ->withConfig($config);
     }
 
+    public function withAppName(
+        string $name,
+    ): self {
+        $this->appName = $name;
+
+        return $this;
+    }
+
+    public function withAppVersion(
+        string $version,
+    ): self {
+        $this->appVersion = $version;
+
+        return $this;
+    }
+
+    public function withAppProfile(
+        Profile $profile,
+    ): self {
+        $this->appProfile = $profile;
+
+        return $this;
+    }
+
     public function withoutConfig(): self
     {
         $this->config = null;

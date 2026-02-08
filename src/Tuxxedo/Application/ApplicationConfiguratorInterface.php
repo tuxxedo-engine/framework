@@ -104,6 +104,18 @@ interface ApplicationConfiguratorInterface
         get;
     }
 
+    public function withAppName(
+        string $name,
+    ): self;
+
+    public function withAppVersion(
+        string $version,
+    ): self;
+
+    public function withAppProfile(
+        Profile $profile,
+    ): self;
+
     public function withoutConfig(): self;
 
     public function withConfig(
