@@ -17,12 +17,13 @@ use Tuxxedo\Application\Profile;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DefaultImplementation;
+use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Router\RouterInterface;
 
-#[DefaultImplementation(class: Kernel::class)]
+#[DefaultImplementation(class: Kernel::class, lifecycle: Lifecycle::PERSISTENT)]
 interface KernelInterface
 {
     public ConfigInterface $config {

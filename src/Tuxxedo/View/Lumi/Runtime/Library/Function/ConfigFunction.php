@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime\Library\Function;
 
-use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Http\Kernel\KernelInterface;
 use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
 use Tuxxedo\View\ViewRenderInterface;
@@ -36,6 +36,6 @@ class ConfigFunction implements FunctionInterface
     ): mixed {
         /** @var array{0: string} $arguments */
 
-        return $this->container->resolve(ConfigInterface::class)->path($arguments[0]);
+        return $this->container->resolve(KernelInterface::class)->config->path($arguments[0]);
     }
 }
