@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Runtime\Library\Function;
 
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Http\Request\Context\ServerContextInterface;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
@@ -33,7 +34,7 @@ class RequestFunction implements FunctionInterface
         array $arguments,
         ViewRenderInterface $render,
         DirectivesInterface $directives,
-    ): RequestInterface {
-        return $this->container->resolve(RequestInterface::class);
+    ): ServerContextInterface {
+        return $this->container->resolve(RequestInterface::class)->server;
     }
 }
