@@ -21,6 +21,9 @@ use Tuxxedo\Mapper\MapperException;
 
 class MapperTest extends TestCase
 {
+    /**
+     * @return \Generator<array<class-string|object|\Closure(): object>>
+     */
     public static function mapperDtoDataProvider(): \Generator
     {
         yield [

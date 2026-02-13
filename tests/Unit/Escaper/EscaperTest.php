@@ -19,6 +19,9 @@ use Tuxxedo\Escaper\Escaper;
 
 class EscaperTest extends TestCase
 {
+    /**
+     * @return \Generator<string[]>
+     */
     public static function htmlDataProvider(): \Generator
     {
         yield [
@@ -53,6 +56,9 @@ class EscaperTest extends TestCase
         self::assertSame((new Escaper())->html($value), $expected);
     }
 
+    /**
+     * @return \Generator<string[]>
+     */
     public static function attributeDataProvider(): \Generator
     {
         yield [
@@ -87,6 +93,9 @@ class EscaperTest extends TestCase
         self::assertSame((new Escaper())->attribute($value), $expected);
     }
 
+    /**
+     * @return \Generator<string[]>
+     */
     public static function jsDataProvider(): \Generator
     {
         yield [
@@ -121,6 +130,9 @@ class EscaperTest extends TestCase
         self::assertSame((new Escaper())->js($value), $expected);
     }
 
+    /**
+     * @return \Generator<string[]>
+     */
     public static function urlDataProvider(): \Generator
     {
         yield [
@@ -155,6 +167,9 @@ class EscaperTest extends TestCase
         self::assertSame((new Escaper())->url($value), $expected);
     }
 
+    /**
+     * @return \Generator<string[]>
+     */
     public static function htmlCommentDataProvider(): \Generator
     {
         yield [
@@ -189,6 +204,9 @@ class EscaperTest extends TestCase
         self::assertSame((new Escaper())->htmlComment($value), $expected);
     }
 
+    /**
+     * @return \Generator<string[]>
+     */
     public static function cssDataProvider(): \Generator
     {
         yield [

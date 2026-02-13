@@ -90,6 +90,9 @@ class ContainerTest extends TestCase
         self::assertSame(\spl_object_id($service1), \spl_object_id($service2));
     }
 
+    /**
+     * @return \Generator<array{0: class-string, 1: class-string, 2: class-string, 3: bool, 4: bool}>
+     */
     public static function bindDataProvider(): \Generator
     {
         yield [
@@ -256,6 +259,9 @@ class ContainerTest extends TestCase
         self::assertSame($container->resolve(ServiceOneInterface::class)->foo(), 'baz');
     }
 
+    /**
+     * @return \Generator<array{0: \Closure, 1: mixed[]}>
+     */
     public static function callDataProvider(): \Generator
     {
         yield [
@@ -313,6 +319,9 @@ class ContainerTest extends TestCase
         self::assertTrue($container->call($callable, $arguments));
     }
 
+    /**
+     * @return \Generator<array{0: class-string, 1: mixed[], 2: \Closure}>
+     */
     public static function resolveWithArgumentsDataProvider(): \Generator
     {
         yield [
@@ -364,6 +373,9 @@ class ContainerTest extends TestCase
         self::assertTrue($callable($service));
     }
 
+    /**
+     * @return \Generator<class-string[]>
+     */
     public static function invalidResolutionDataProvider(): \Generator
     {
         yield [
@@ -422,6 +434,9 @@ class ContainerTest extends TestCase
         self::assertSame($unionService->service->foo(), 'bar');
     }
 
+    /**
+     * @return \Generator<array{0: class-string, 1: string|null}>
+     */
     public static function optionalDataProvider(): \Generator
     {
         yield [
@@ -456,6 +471,9 @@ class ContainerTest extends TestCase
         self::assertSame($service->secret, $value);
     }
 
+    /**
+     * @return \Generator<class-string[]>
+     */
     public static function defaultImplementationDataProvider(): \Generator
     {
         yield [
@@ -525,6 +543,9 @@ class ContainerTest extends TestCase
         $container->resolve(ServiceInterface::class);
     }
 
+    /**
+     * @return \Generator<class-string[]>
+     */
     public static function lifecycleAttributeDataProvider(): \Generator
     {
         yield [
