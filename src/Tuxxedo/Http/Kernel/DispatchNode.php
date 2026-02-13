@@ -19,7 +19,7 @@ use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\DispatchableRouteInterface;
 
-class DispatchNode implements MiddlewareInterface
+readonly class DispatchNode implements MiddlewareInterface
 {
     public function __construct(
         private DispatchableRouteInterface $dispatchableRoute,
