@@ -1,0 +1,6 @@
+<h2>Link directory</h2>
+
+<ul>
+    <li><a href="{{ url('view/link') | escape_attr }}">here!</a></li>
+    <li><a href="{{ url('') | escape_attr }}">Home</a></li>
+</ul>

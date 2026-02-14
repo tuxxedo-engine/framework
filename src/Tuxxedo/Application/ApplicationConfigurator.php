@@ -26,6 +26,8 @@ use Tuxxedo\Http\Kernel\KernelInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Response\ResponseEmitter;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
+use Tuxxedo\Http\Url\Url;
+use Tuxxedo\Http\Url\UrlInterface;
 use Tuxxedo\Router\DynamicRouter;
 use Tuxxedo\Router\RouterInterface;
 use Tuxxedo\Router\StaticRouter;
@@ -43,6 +45,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
     public private(set) ?RouterInterface $router = null;
     public private(set) ?ResponseEmitterInterface $emitter = null;
     public private(set) ?DispatcherInterface $dispatcher = null;
+    public private(set) ?UrlInterface $url = null;
 
     public private(set) array $middleware = [];
     public private(set) array $exceptionHandlers = [];
@@ -202,6 +205,21 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         return $this;
     }
 
+    public function withDefaultUrl(): self
+    {
+        $this->url = null;
+
+        return $this;
+    }
+
+    public function withUrl(
+        UrlInterface $url,
+    ): self {
+        $this->url = $url;
+
+        return $this;
+    }
+
     public function withoutMiddleware(): self
     {
         $this->middleware = [];
@@ -324,6 +342,17 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
             );
         }
 
+        if ($this->url !== null) {
+            $container->persistent($this->url);
+        } else {
+            $container->persistentLazy(
+                UrlInterface::class,
+                fn (): UrlInterface => new Url(
+                    base: $this->appUrl,
+                ),
+            );
+        }
+
         if ($this->router !== null) {
             $container->persistent($this->router);
         } elseif (
@@ -356,6 +385,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
                     'appName' => $this->appName,
                     'appVersion' => $this->appVersion,
                     'appProfile' => $this->appProfile,
+                    'appUrl' => $this->appUrl,
                 ],
             ),
         );

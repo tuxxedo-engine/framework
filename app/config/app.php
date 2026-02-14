@@ -49,6 +49,8 @@ return [
      *
      * This can be used to set a base url for where an application is
      * deployed
+     *
+     * This should always contain a trailing slash
      */
     'url' => 'http://localhost:13099/',
 ];

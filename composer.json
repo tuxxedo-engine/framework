@@ -16,7 +16,8 @@
     "ext-filter": "*",
     "ext-json": "*",
     "ext-mbstring": "*",
-    "ext-session": "*"
+    "ext-session": "*",
+    "ext-uri": "*"
   },
   "require-dev": {
     "phpstan/phpstan": "2.1.*",

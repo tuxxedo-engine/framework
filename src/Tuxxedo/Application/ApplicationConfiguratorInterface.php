@@ -20,6 +20,7 @@ use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
 use Tuxxedo\Http\Kernel\KernelInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
+use Tuxxedo\Http\Url\UrlInterface;
 use Tuxxedo\Router\RouterInterface;
 
 interface ApplicationConfiguratorInterface
@@ -77,6 +78,10 @@ interface ApplicationConfiguratorInterface
     }
 
     public ?DispatcherInterface $dispatcher {
+        get;
+    }
+
+    public ?UrlInterface $url {
         get;
     }
 
@@ -156,6 +161,12 @@ interface ApplicationConfiguratorInterface
 
     public function withDispatcher(
         DispatcherInterface $dispatcher,
+    ): self;
+
+    public function withDefaultUrl(): self;
+
+    public function withUrl(
+        UrlInterface $url,
     ): self;
 
     public function withoutMiddleware(): self;
