@@ -43,4 +43,12 @@ return [
      * @required
      */
     'profile' => Profile::DEBUG,
+
+    /**
+     * app.url
+     *
+     * This can be used to set a base url for where an application is
+     * deployed
+     */
+    'url' => 'http://localhost:13099/',
 ];

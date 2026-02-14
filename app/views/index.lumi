@@ -60,7 +60,7 @@
 
 <footer class="border-t border-slate-200/60 py-10 text-center text-sm text-slate-500 dark:border-slate-800/60 dark:text-slate-400">
     <div class="mx-auto max-w-7xl px-6">&copy;
-        2025 {% if appName %}{{ appName }} {% if appVersion %}{{ appVersion }}{% endif %}{% endif %} &bullet; Powered by
+        2026 {% if appName %}{{ appName }} {% if appVersion %}{{ appVersion }}{% endif %}{% endif %} &bullet; Powered by
         Tuxxedo Engine {{ engineVersion }} &bullet; PHP {{ phpVersion }}</div>
 </footer>
 </body>

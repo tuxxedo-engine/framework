@@ -42,6 +42,7 @@ class Kernel implements KernelInterface
         public readonly string $appName = '',
         public readonly string $appVersion = '',
         public readonly Profile $appProfile = Profile::RELEASE,
+        public readonly string $appUrl = '',
     ) {
     }
 

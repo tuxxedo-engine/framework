@@ -36,6 +36,10 @@ interface ApplicationConfiguratorInterface
         get;
     }
 
+    public string $appUrl {
+        get;
+    }
+
     public ?ConfigInterface $config {
         get;
     }
@@ -114,6 +118,10 @@ interface ApplicationConfiguratorInterface
 
     public function withAppProfile(
         Profile $profile,
+    ): self;
+
+    public function withAppUrl(
+        string $url,
     ): self;
 
     public function withoutConfig(): self;

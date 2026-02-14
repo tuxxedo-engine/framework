@@ -79,6 +79,10 @@ interface KernelInterface
         get;
     }
 
+    public string $appUrl {
+        get;
+    }
+
     /**
      * @param (\Closure(): MiddlewareInterface)|MiddlewareInterface $middleware
      */

@@ -53,6 +53,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         public private(set) string $appName = '',
         public private(set) string $appVersion = '',
         public private(set) Profile $appProfile = Profile::RELEASE,
+        public private(set) string $appUrl = '',
     ) {
     }
 
@@ -66,6 +67,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
             appName: $config->getString('app.name'),
             appVersion: $config->getString('app.version'),
             appProfile: $config->getEnum('app.profile', Profile::class),
+            appUrl: $config->getString('app.url'),
         ))
             ->withConfig($config);
     }
@@ -80,6 +82,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
             appName: $config->getString('app.name'),
             appVersion: $config->getString('app.version'),
             appProfile: $config->getEnum('app.profile', Profile::class),
+            appUrl: $config->getString('app.url'),
         ))
             ->withConfig($config);
     }
@@ -104,6 +107,14 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         Profile $profile,
     ): self {
         $this->appProfile = $profile;
+
+        return $this;
+    }
+
+    public function withAppUrl(
+        string $url,
+    ): self {
+        $this->appUrl = $url;
 
         return $this;
     }
