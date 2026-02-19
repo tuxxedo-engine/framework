@@ -20,6 +20,7 @@ use Tuxxedo\View\Lumi\Runtime\Library\Function\ConfigFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\DirectiveFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\HasDirectiveFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\RequestFunction;
+use Tuxxedo\View\Lumi\Runtime\Library\Function\RouteFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\UrlFunction;
 
 class StandardFunctions implements FunctionProviderInterface
@@ -47,5 +48,6 @@ class StandardFunctions implements FunctionProviderInterface
         yield new ConfigFunction($container);
         yield new RequestFunction($container);
         yield new UrlFunction($container);
+        yield new RouteFunction($container);
     }
 }

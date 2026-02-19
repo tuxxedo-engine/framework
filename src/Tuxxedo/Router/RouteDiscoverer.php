@@ -22,16 +22,21 @@ use Tuxxedo\Router\Attribute\Route as RouteAttr;
 use Tuxxedo\Router\Pattern\TypePatternRegistry;
 use Tuxxedo\Router\Pattern\TypePatternRegistryInterface;
 
-// @todo This needs some handling for duplicated route names with special case for METHOD name mangling
-readonly class RouteDiscoverer implements RouteDiscovererInterface
+// @todo This needs some handling for duplicated route names
+class RouteDiscoverer implements RouteDiscovererInterface
 {
-    public TypePatternRegistryInterface $patterns;
+    public readonly TypePatternRegistryInterface $patterns;
+
+    /**
+     * @var string[]
+     */
+    private array $namedRoutes = [];
 
     public function __construct(
-        public ContainerInterface $container,
-        public string $baseNamespace,
-        public string $directory,
-        public bool $strictMode = false,
+        private readonly ContainerInterface $container,
+        public readonly string $baseNamespace,
+        public readonly string $directory,
+        public readonly bool $strictMode = false,
         ?TypePatternRegistryInterface $patterns = null,
     ) {
         $this->patterns = $patterns ?? TypePatternRegistry::createDefault();
@@ -55,6 +60,8 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
      */
     public function discover(): \Generator
     {
+        // @todo Remove this hack once the discoverer supports better caching
+        $this->namedRoutes = [];
         $controllers = FileCollection::fromRecursiveFileType(
             directory: $this->directory,
             extension: '.php',
@@ -104,6 +111,23 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
                     /** @var RouteAttr $route */
                     $route = $attribute->newInstance();
                     $uri = $route->uri;
+
+                    if ($route->name !== null) {
+                        if ($this->isRouteNameInUse($route)) {
+                            $this->handleError(
+                                static fn (): RouterException => RouterException::fromDuplicateRouteName(
+                                    className: $reflector->getName(),
+                                    method: $method->getName(),
+                                    name: $route->name,
+                                ),
+                            );
+
+                            continue;
+                        }
+
+                        $this->namedRoutes[] = $route->name;
+                    }
+
 
                     if ($controllerAttribute === null && $uri === null) {
                         $this->handleError(
@@ -326,7 +350,7 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
 
         if (\sizeof($names) !== \sizeof(\array_unique($names))) {
             $this->handleError(
-                static fn (): RouterException => RouterException::fromNotAllArgumentNameAreUnique(
+                static fn (): RouterException => RouterException::fromNotAllArgumentNamesAreUnique(
                     className: $className,
                     method: $method->getName(),
                     names: $names,
@@ -522,5 +546,11 @@ readonly class RouteDiscoverer implements RouteDiscovererInterface
                 ? $parameter->getDefaultValue()
                 : null,
         );
+    }
+
+    private function isRouteNameInUse(
+        RouteAttr $route,
+    ): bool {
+        return \in_array($route->name, $this->namedRoutes, true);
     }
 }

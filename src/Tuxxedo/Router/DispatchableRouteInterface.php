@@ -25,4 +25,6 @@ interface DispatchableRouteInterface
     public array $arguments {
         get;
     }
+
+    public function asUrl(): string;
 }

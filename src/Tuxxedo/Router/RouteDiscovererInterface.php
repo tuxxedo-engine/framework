@@ -21,6 +21,18 @@ interface RouteDiscovererInterface
         get;
     }
 
+    public string $baseNamespace {
+        get;
+    }
+
+    public string $directory {
+        get;
+    }
+
+    public bool $strictMode {
+        get;
+    }
+
     /**
      * @return \Generator<RouteInterface>
      */

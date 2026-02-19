@@ -71,4 +71,40 @@ abstract class AbstractRouter implements RouterInterface
             uri: $request->server->uri,
         );
     }
+
+    public function findByName(
+        string $name,
+        array $arguments = [],
+        Method|string|null $method = null,
+    ): ?DispatchableRouteInterface {
+        $isMethodNotAllowed = false;
+
+        if (\is_string($method)) {
+            $method = Method::from($method);
+        }
+
+        foreach ($this->getRoutes() as $route) {
+            if ($route->name !== $name) {
+                continue;
+            }
+
+            if ($method !== null && $route->method !== $method) {
+                $isMethodNotAllowed = true;
+
+                continue;
+            }
+
+            // @todo This needs to ensure the ordering of arguments is OK as they currently are not keyed by names
+            return new DispatchableRoute(
+                route: $route,
+                arguments: $arguments,
+            );
+        }
+
+        if ($isMethodNotAllowed) {
+            throw HttpException::fromMethodNotAllowed();
+        }
+
+        return null;
+    }
 }

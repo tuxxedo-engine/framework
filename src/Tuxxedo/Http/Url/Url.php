@@ -26,7 +26,7 @@ class Url implements UrlInterface
     public function get(
         string $path,
     ): string {
-        return $this->base . $path;
+        return $this->base . \ltrim($path, '/');
     }
 
     public function toRfc3986(

@@ -23,4 +23,10 @@ readonly class DispatchableRoute implements DispatchableRouteInterface
         public array $arguments = [],
     ) {
     }
+
+    public function asUrl(): string
+    {
+        // @todo Implement URL generation
+        return $this->route->uri;
+    }
 }

@@ -55,7 +55,7 @@ class RouterException extends \Exception
     /**
      * @param string[] $names
      */
-    public static function fromNotAllArgumentNameAreUnique(
+    public static function fromNotAllArgumentNamesAreUnique(
         string $className,
         string $method,
         array $names,
@@ -143,6 +143,32 @@ class RouterException extends \Exception
                 $className,
                 $method,
                 $parameter,
+            ),
+        );
+    }
+
+    public static function fromInvalidNamedRoute(
+        string $name,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Named route "%s" not found',
+                $name,
+            ),
+        );
+    }
+
+    public static function fromDuplicateRouteName(
+        string $className,
+        string $method,
+        string $name,
+    ): self {
+        return new self(
+            message: \sprintf(
+                '%s::%s() has a route with a non-unique name "%s"',
+                $className,
+                $method,
+                $name,
             ),
         );
     }

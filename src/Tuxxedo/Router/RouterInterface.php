@@ -18,8 +18,6 @@ use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\RequestInterface;
 
 // @todo Consider an option to automatically add the final slash as an alias
-// @todo Support named routes, e.g. findByName()
-// @todo Ability to generate URI + Lumi integration
 interface RouterInterface
 {
     /**
@@ -40,5 +38,16 @@ interface RouterInterface
      */
     public function findByRequest(
         RequestInterface $request,
+    ): ?DispatchableRouteInterface;
+
+    /**
+     * @param string[]|array<string, string> $arguments
+     *
+     * @throws HttpException
+     */
+    public function findByName(
+        string $name,
+        array $arguments = [],
+        Method|string|null $method = null,
     ): ?DispatchableRouteInterface;
 }

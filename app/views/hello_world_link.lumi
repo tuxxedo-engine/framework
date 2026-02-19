@@ -4,3 +4,10 @@
     <li><a href="{{ url('view/link') | escape_attr }}">here!</a></li>
     <li><a href="{{ url('') | escape_attr }}">Home</a></li>
 </ul>
+
+<h2>Localized named routes</h2>
+
+<ul>
+    <li><a href="{{ route('index') | escape_attr }}">Index</a></li>
+    <li><a href="{{ url(route('index')) | escape_attr }}">Index (full)</a></li>
+</ul>
