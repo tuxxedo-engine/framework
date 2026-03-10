@@ -18,6 +18,8 @@ use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\RequestInterface;
 
 // @todo Consider an option to automatically add the final slash as an alias
+// @todo Consider an option to route for specific subdomains
+// @todo Consider an option for global prefixes like languages, api versions and such
 interface RouterInterface
 {
     /**
