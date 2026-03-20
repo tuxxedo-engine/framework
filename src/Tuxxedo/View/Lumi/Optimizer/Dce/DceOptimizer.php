@@ -235,7 +235,8 @@ class DceOptimizer extends AbstractOptimizer
     /**
      * @return NodeInterface[]
      */
-    // @todo This will not work if inside conditionals
+    // @todo This will not work if inside conditionals, see hello_world_dce.lumi example 3. This probably
+    //       needs a stack based/state approach which optimizers currently do not have properly
     protected function optimizeLoopStatement(
         NodeStreamInterface $stream,
     ): array {

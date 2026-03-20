@@ -519,6 +519,7 @@ readonly class LumiController
             $buffer .= '<h3>Output</h3>';
 
             try {
+                // @todo This does not honor the inputs and may cause a discrepancy in output
                 $buffer .= $this->lumiViewRender->render(
                     view: new View(
                         name: $viewName,
