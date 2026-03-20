@@ -334,13 +334,6 @@ class LumiConfigurator implements LumiConfiguratorInterface
         return $this;
     }
 
-    public function withDefaultLexer(): self
-    {
-        $this->lexer = null;
-
-        return $this;
-    }
-
     public function useLexer(
         LexerInterface $lexer,
     ): self {
@@ -349,24 +342,10 @@ class LumiConfigurator implements LumiConfiguratorInterface
         return $this;
     }
 
-    public function withDefaultParser(): self
-    {
-        $this->parser = null;
-
-        return $this;
-    }
-
     public function useParser(
         ParserInterface $parser,
     ): self {
         $this->parser = $parser;
-
-        return $this;
-    }
-
-    public function withDefaultCompiler(): self
-    {
-        $this->compiler = null;
 
         return $this;
     }
@@ -422,24 +401,10 @@ class LumiConfigurator implements LumiConfiguratorInterface
         return $this;
     }
 
-    public function withDefaultHighlighter(): self
-    {
-        $this->highlighter = null;
-
-        return $this;
-    }
-
     public function useHighlighter(
         HighlighterInterface $highlighter,
     ): self {
         $this->highlighter = $highlighter;
-
-        return $this;
-    }
-
-    public function withDefaultLoader(): self
-    {
-        $this->loader = null;
 
         return $this;
     }

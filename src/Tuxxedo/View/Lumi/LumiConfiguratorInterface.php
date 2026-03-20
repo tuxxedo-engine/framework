@@ -204,19 +204,13 @@ interface LumiConfiguratorInterface
         string ...$className,
     ): self;
 
-    public function withDefaultLexer(): self;
-
     public function useLexer(
         LexerInterface $lexer,
     ): self;
 
-    public function withDefaultParser(): self;
-
     public function useParser(
         ParserInterface $parser,
     ): self;
-
-    public function withDefaultCompiler(): self;
 
     public function useCompiler(
         CompilerInterface $compiler,
@@ -234,13 +228,9 @@ interface LumiConfiguratorInterface
         OptimizerInterface $optimizer,
     ): self;
 
-    public function withDefaultHighlighter(): self;
-
     public function useHighlighter(
         HighlighterInterface $highlighter,
     ): self;
-
-    public function withDefaultLoader(): self;
 
     public function useLoader(
         LoaderInterface $loader,

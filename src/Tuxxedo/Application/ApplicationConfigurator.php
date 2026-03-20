@@ -175,13 +175,6 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         return $this;
     }
 
-    public function withDefaultEmitter(): self
-    {
-        $this->emitter = null;
-
-        return $this;
-    }
-
     public function withEmitter(
         ResponseEmitterInterface $emitter,
     ): self {
@@ -190,24 +183,10 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         return $this;
     }
 
-    public function withDefaultDispatcher(): self
-    {
-        $this->dispatcher = null;
-
-        return $this;
-    }
-
     public function withDispatcher(
         DispatcherInterface $dispatcher,
     ): self {
         $this->dispatcher = $dispatcher;
-
-        return $this;
-    }
-
-    public function withDefaultUrl(): self
-    {
-        $this->url = null;
 
         return $this;
     }

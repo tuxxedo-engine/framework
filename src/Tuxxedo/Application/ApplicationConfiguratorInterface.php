@@ -151,19 +151,13 @@ interface ApplicationConfiguratorInterface
         RouterInterface $router,
     ): self;
 
-    public function withDefaultEmitter(): self;
-
     public function withEmitter(
         ResponseEmitterInterface $emitter,
     ): self;
 
-    public function withDefaultDispatcher(): self;
-
     public function withDispatcher(
         DispatcherInterface $dispatcher,
     ): self;
-
-    public function withDefaultUrl(): self;
 
     public function withUrl(
         UrlInterface $url,
