@@ -22,15 +22,10 @@ use Tuxxedo\Router\Attribute\Route as RouteAttr;
 use Tuxxedo\Router\Pattern\TypePatternRegistry;
 use Tuxxedo\Router\Pattern\TypePatternRegistryInterface;
 
-// @todo This needs some handling for duplicated route names
 class RouteDiscoverer implements RouteDiscovererInterface
 {
     public readonly TypePatternRegistryInterface $patterns;
-
-    /**
-     * @var string[]
-     */
-    private array $namedRoutes = [];
+    private bool $hasDiscoveryRun = false;
 
     public function __construct(
         private readonly ContainerInterface $container,
@@ -58,10 +53,14 @@ class RouteDiscoverer implements RouteDiscovererInterface
     /**
      * @return \Generator<RouteInterface>
      */
-    public function discover(): \Generator
-    {
-        // @todo Remove this hack once the discoverer supports better caching
-        $this->namedRoutes = [];
+    public function discover(
+        bool $rediscover = false,
+    ): \Generator {
+        if (!$rediscover && $this->hasDiscoveryRun) {
+            return;
+        }
+
+        $namedRoutes = [];
         $controllers = FileCollection::fromRecursiveFileType(
             directory: $this->directory,
             extension: '.php',
@@ -113,7 +112,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
                     $uri = $route->uri;
 
                     if ($route->name !== null) {
-                        if ($this->isRouteNameInUse($route)) {
+                        if (\in_array($route->name, $namedRoutes, true)) {
                             $this->handleError(
                                 static fn (): RouterException => RouterException::fromDuplicateRouteName(
                                     className: $reflector->getName(),
@@ -125,7 +124,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
                             continue;
                         }
 
-                        $this->namedRoutes[] = $route->name;
+                        $namedRoutes[] = $route->name;
                     }
 
 
@@ -185,6 +184,8 @@ class RouteDiscoverer implements RouteDiscovererInterface
                 }
             }
         }
+
+        $this->hasDiscoveryRun = true;
     }
 
     /**
@@ -546,11 +547,5 @@ class RouteDiscoverer implements RouteDiscovererInterface
                 ? $parameter->getDefaultValue()
                 : null,
         );
-    }
-
-    private function isRouteNameInUse(
-        RouteAttr $route,
-    ): bool {
-        return \in_array($route->name, $this->namedRoutes, true);
     }
 }

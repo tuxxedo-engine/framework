@@ -36,5 +36,7 @@ interface RouteDiscovererInterface
     /**
      * @return \Generator<RouteInterface>
      */
-    public function discover(): \Generator;
+    public function discover(
+        bool $rediscover = false,
+    ): \Generator;
 }
