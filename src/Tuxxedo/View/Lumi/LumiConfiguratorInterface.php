@@ -225,7 +225,7 @@ interface LumiConfiguratorInterface
     public function withoutDceOptimizer(): self;
 
     public function withCustomOptimizer(
-        OptimizerInterface $optimizer,
+        OptimizerInterface ...$optimizers,
     ): self;
 
     public function useHighlighter(

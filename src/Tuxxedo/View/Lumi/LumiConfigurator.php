@@ -394,9 +394,11 @@ class LumiConfigurator implements LumiConfiguratorInterface
     }
 
     public function withCustomOptimizer(
-        OptimizerInterface $optimizer,
+        OptimizerInterface ...$optimizers,
     ): self {
-        $this->optimizers[$optimizer::class] = $optimizer;
+        foreach ($optimizers as $optimizer) {
+            $this->optimizers[$optimizer::class] = $optimizer;
+        }
 
         return $this;
     }

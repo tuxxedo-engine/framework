@@ -16,6 +16,7 @@ namespace App\Controllers;
 use Tuxxedo\Application\Resolver\ConfigValue;
 use Tuxxedo\Collection\CollectionInterface;
 use Tuxxedo\Collection\FileCollection;
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
@@ -26,6 +27,7 @@ use Tuxxedo\View\Lumi\Highlight\Theme\LumiDark;
 use Tuxxedo\View\Lumi\Highlight\Theme\LumiLight;
 use Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface;
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
+use Tuxxedo\View\Lumi\LumiConfigurator;
 use Tuxxedo\View\Lumi\LumiEngine;
 use Tuxxedo\View\Lumi\LumiException;
 use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
@@ -35,7 +37,6 @@ use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Operator\SymbolInterface;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewException;
-use Tuxxedo\View\ViewRenderInterface;
 
 #[Controller(uri: '/lumi/')]
 readonly class LumiController
@@ -43,7 +44,7 @@ readonly class LumiController
     public function __construct(
         #[ConfigValue('view.directory')] private string $viewDirectory,
         #[ConfigValue('view.cacheDirectory')] private string $viewCacheDirectory,
-        private ViewRenderInterface $lumiViewRender,
+        private ContainerInterface $container,
         private ViewController $viewController,
     ) {
     }
@@ -520,13 +521,16 @@ readonly class LumiController
             $buffer .= '<h3>Output</h3>';
 
             try {
-                // @todo This does not honor the inputs and may cause a discrepancy in output
-                $buffer .= $this->lumiViewRender->render(
-                    view: new View(
-                        name: $viewName,
-                        scope: $viewScope,
-                    ),
-                );
+                $buffer .= LumiConfigurator::fromConfig($this->container)
+                    ->withoutOptimizers()
+                    ->withCustomOptimizer(...$optimizers)
+                    ->build()
+                    ->render(
+                        view: new View(
+                            name: $viewName,
+                            scope: $viewScope,
+                        ),
+                    );
             } catch (ViewException $exception) {
                 $buffer .= '<pre>';
                 $buffer .= $exception;
