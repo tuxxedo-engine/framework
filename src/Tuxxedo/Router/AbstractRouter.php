@@ -94,7 +94,6 @@ abstract class AbstractRouter implements RouterInterface
                 continue;
             }
 
-            // @todo This needs to ensure the ordering of arguments is OK
             return new DispatchableRoute(
                 route: $route,
                 arguments: $arguments,
