@@ -38,7 +38,7 @@ class RouteFunction implements FunctionInterface
         /** @var string $name */
         $name = \array_shift($arguments);
 
-        /** @var string[]|array<string, string> $args */
+        /** @var array<string, string> $args */
         $args = $arguments;
 
         return $this->container->resolve(RouterInterface::class)->findByName($name, $args)?->asUrl() ?? throw RouterException::fromInvalidNamedRoute(

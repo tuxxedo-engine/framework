@@ -43,7 +43,7 @@ interface RouterInterface
     ): ?DispatchableRouteInterface;
 
     /**
-     * @param string[]|array<string, string> $arguments
+     * @param array<string, string> $arguments
      *
      * @throws HttpException
      */

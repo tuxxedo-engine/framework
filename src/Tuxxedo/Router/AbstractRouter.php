@@ -39,7 +39,7 @@ abstract class AbstractRouter implements RouterInterface
                     continue;
                 }
 
-                $arguments = $arguments[0];
+                $arguments = \array_filter($arguments[0], \is_string(...), \ARRAY_FILTER_USE_KEY);
             } elseif ($route->uri !== $uri) {
                 continue;
             }
@@ -94,7 +94,7 @@ abstract class AbstractRouter implements RouterInterface
                 continue;
             }
 
-            // @todo This needs to ensure the ordering of arguments is OK as they currently are not keyed by names
+            // @todo This needs to ensure the ordering of arguments is OK
             return new DispatchableRoute(
                 route: $route,
                 arguments: $arguments,

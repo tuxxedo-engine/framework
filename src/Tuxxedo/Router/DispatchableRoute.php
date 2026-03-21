@@ -16,7 +16,7 @@ namespace Tuxxedo\Router;
 readonly class DispatchableRoute implements DispatchableRouteInterface
 {
     /**
-     * @param string[] $arguments
+     * @param array<string, string> $arguments
      */
     public function __construct(
         public RouteInterface $route,
