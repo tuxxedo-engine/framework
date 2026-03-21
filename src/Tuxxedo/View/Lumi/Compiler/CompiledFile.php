@@ -35,6 +35,15 @@ readonly class CompiledFile implements CompiledFileInterface
     public function saveTo(
         string $file,
     ): bool {
+        $directory = \dirname($file);
+
+        if (
+            !\is_dir($directory) &&
+            !\mkdir($directory, recursive: true, permissions: 0755)
+        ) {
+            return false;
+        }
+
         return @\file_put_contents(
             filename: $file,
             data: $this->sourceCode,

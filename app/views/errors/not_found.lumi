@@ -1,0 +1,4 @@
+<h1>404</h1>
+<p>
+    The <code>{{ request().fullUri }}</code> was not found on this server
+</p>

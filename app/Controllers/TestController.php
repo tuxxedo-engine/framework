@@ -20,6 +20,7 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Cookie;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HeaderInterface;
+use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\RequestInterface;
@@ -298,5 +299,11 @@ readonly class TestController
             json: $versionInfo,
             prettyPrint: true,
         );
+    }
+
+    #[Route\Get(uri: '/test-http-500')]
+    public function error(): never
+    {
+        throw HttpException::fromInternalServerError();
     }
 }

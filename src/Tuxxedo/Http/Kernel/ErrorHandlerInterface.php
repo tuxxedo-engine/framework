@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Kernel;
 
 use Tuxxedo\Http\Request\RequestInterface;
+use Tuxxedo\Http\Response\ResponsableInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
-use Tuxxedo\View\ViewInterface;
 
 interface ErrorHandlerInterface
 {
@@ -23,5 +23,5 @@ interface ErrorHandlerInterface
         RequestInterface $request,
         ResponseInterface $response,
         \Throwable $exception,
-    ): ViewInterface|ResponseInterface;
+    ): ResponsableInterface|ResponseInterface;
 }
