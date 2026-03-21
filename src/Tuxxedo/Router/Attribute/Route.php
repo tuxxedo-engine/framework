@@ -31,6 +31,7 @@ readonly class Route
         public ?string $uri,
         array $method = [],
         public ?string $name = null,
+        public bool $trailingSlash = false,
         public RoutePriority $priority = RoutePriority::NORMAL,
     ) {
         $this->methods = \array_map(
@@ -38,6 +39,18 @@ readonly class Route
                 ? Method::from($method)
                 : $method,
             $method,
+        );
+    }
+
+    public function withUri(
+        ?string $uri,
+    ): static {
+        return clone (
+            $this,
+            [
+                'uri' => $uri,
+                'name' => null,
+            ],
         );
     }
 }

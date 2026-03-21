@@ -301,7 +301,7 @@ readonly class TestController
         );
     }
 
-    #[Route\Get(uri: '/test-http-500')]
+    #[Route\Get(uri: '/test-http-500', trailingSlash: true)]
     public function error(): never
     {
         throw HttpException::fromInternalServerError();

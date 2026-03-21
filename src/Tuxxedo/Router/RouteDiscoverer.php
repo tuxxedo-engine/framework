@@ -111,74 +111,29 @@ class RouteDiscoverer implements RouteDiscovererInterface
                     $route = $attribute->newInstance();
                     $uri = $route->uri;
 
-                    if ($route->name !== null) {
-                        if (\in_array($route->name, $namedRoutes, true)) {
-                            $this->handleError(
-                                static fn (): RouterException => RouterException::fromDuplicateRouteName(
-                                    className: $reflector->getName(),
-                                    method: $method->getName(),
-                                    name: $route->name,
-                                ),
-                            );
+                    yield from $this->emitRoutes(
+                        route: $route,
+                        uri: $uri,
+                        middleware: $middleware,
+                        reflector: $reflector,
+                        method: $method,
+                        controllerAttribute: $controllerAttribute,
+                        namedRoutes: $namedRoutes,
+                    );
 
-                            continue;
-                        }
-
-                        $namedRoutes[] = $route->name;
-                    }
-
-
-                    if ($controllerAttribute === null && $uri === null) {
-                        $this->handleError(
-                            static fn (): RouterException => RouterException::fromEmptyUri(
-                                className: $reflector->getName(),
-                                method: $method->getName(),
-                            ),
-                        );
-
-                        continue;
-                    } elseif ($uri === null) {
-                        if ($this->isIndexMethod($controllerAttribute, $method)) {
-                            $uri = $controllerAttribute->uri;
-                        } else {
-                            $uri = $controllerAttribute->uri . $method->getName();
-                        }
-                    } elseif ($controllerAttribute !== null) {
-                        $uri = $controllerAttribute->uri . $uri;
-                    }
-
-                    $argumentNodes = $this->getUriArgumentNodes($uri);
-
-                    if (\sizeof($argumentNodes) > 0) {
-                        yield from $this->discoverRoutesWithArguments(
-                            uri: $uri,
+                    if (
+                        $route->trailingSlash &&
+                        $uri !== null &&
+                        !\str_ends_with($uri, '/')
+                    ) {
+                        yield from $this->emitRoutes(
+                            route: $route->withUri($route->uri . '/'),
+                            uri: $route->uri . '/',
                             middleware: $middleware,
-                            nodes: $argumentNodes,
-                            className: $reflector->getName(),
+                            reflector: $reflector,
                             method: $method,
-                            route: $route,
-                        );
-                    } elseif (\sizeof($route->methods) > 0) {
-                        foreach ($route->methods as $requestMethod) {
-                            yield new Route(
-                                method: $requestMethod,
-                                uri: $uri,
-                                controller: $reflector->getName(),
-                                action: $method->getName(),
-                                name: $route->name,
-                                middleware: $middleware,
-                                priority: $route->priority,
-                            );
-                        }
-                    } else {
-                        yield new Route(
-                            method: null,
-                            uri: $uri,
-                            controller: $reflector->getName(),
-                            action: $method->getName(),
-                            name: $route->name,
-                            middleware: $middleware,
-                            priority: $route->priority,
+                            controllerAttribute: $controllerAttribute,
+                            namedRoutes: $namedRoutes,
                         );
                     }
                 }
@@ -186,6 +141,92 @@ class RouteDiscoverer implements RouteDiscovererInterface
         }
 
         $this->hasDiscoveryRun = true;
+    }
+
+    /**
+     * @param array<\Closure(): MiddlewareInterface> $middleware
+     * @param \ReflectionClass<object> $reflector
+     * @param string[] $namedRoutes
+     * @return \Generator<RouteInterface>
+     */
+    private function emitRoutes(
+        RouteAttr $route,
+        ?string $uri,
+        array $middleware,
+        \ReflectionClass $reflector,
+        \ReflectionMethod $method,
+        ?Attribute\Controller $controllerAttribute,
+        array &$namedRoutes,
+    ): \Generator {
+        if ($route->name !== null) {
+            if (\in_array($route->name, $namedRoutes, true)) {
+                $this->handleError(
+                    static fn (): RouterException => RouterException::fromDuplicateRouteName(
+                        className: $reflector->getName(),
+                        method: $method->getName(),
+                        name: $route->name,
+                    ),
+                );
+
+                return;
+            }
+
+            $namedRoutes[] = $route->name;
+        }
+
+        if ($controllerAttribute === null && $uri === null) {
+            $this->handleError(
+                static fn (): RouterException => RouterException::fromEmptyUri(
+                    className: $reflector->getName(),
+                    method: $method->getName(),
+                ),
+            );
+
+            return;
+        } elseif ($uri === null) {
+            if ($this->isIndexMethod($controllerAttribute, $method)) {
+                $uri = $controllerAttribute->uri;
+            } else {
+                $uri = $controllerAttribute->uri . $method->getName();
+            }
+        } elseif ($controllerAttribute !== null) {
+            $uri = $controllerAttribute->uri . $uri;
+        }
+
+        $argumentNodes = $this->getUriArgumentNodes($uri);
+
+        if (\sizeof($argumentNodes) > 0) {
+            yield from $this->discoverRoutesWithArguments(
+                uri: $uri,
+                middleware: $middleware,
+                nodes: $argumentNodes,
+                className: $reflector->getName(),
+                method: $method,
+                route: $route,
+            );
+        } elseif (\sizeof($route->methods) > 0) {
+            foreach ($route->methods as $requestMethod) {
+                yield new Route(
+                    method: $requestMethod,
+                    uri: $uri,
+                    controller: $reflector->getName(),
+                    action: $method->getName(),
+                    name: $route->name,
+                    middleware: $middleware,
+                    priority: $route->priority,
+                );
+            }
+        } else {
+            yield new Route(
+                method: null,
+                uri: $uri,
+                controller: $reflector->getName(),
+                action: $method->getName(),
+                name: $route->name,
+                middleware: $middleware,
+                priority: $route->priority,
+            );
+        }
     }
 
     /**

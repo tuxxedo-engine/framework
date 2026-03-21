@@ -62,6 +62,10 @@ class DebugErrorHandler implements ErrorHandlerInterface
         ResponseInterface $response,
         \Throwable $exception,
     ): ResponseInterface {
+        if ($response->body !== '') {
+            return $response;
+        }
+
         \ob_clean();
 
         if ($exception->getFile() === '') {

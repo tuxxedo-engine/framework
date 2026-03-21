@@ -23,6 +23,7 @@ readonly class Head extends Route
     public function __construct(
         ?string $uri = null,
         ?string $name = null,
+        bool $trailingSlash = false,
         RoutePriority $priority = RoutePriority::NORMAL,
     ) {
         parent::__construct(
@@ -31,6 +32,7 @@ readonly class Head extends Route
                 Method::HEAD,
             ],
             name: $name,
+            trailingSlash: $trailingSlash,
             priority: $priority,
         );
     }

@@ -23,6 +23,7 @@ readonly class Put extends Route
     public function __construct(
         ?string $uri = null,
         ?string $name = null,
+        bool $trailingSlash = false,
         RoutePriority $priority = RoutePriority::NORMAL,
     ) {
         parent::__construct(
@@ -31,6 +32,7 @@ readonly class Put extends Route
                 Method::PUT,
             ],
             name: $name,
+            trailingSlash: $trailingSlash,
             priority: $priority,
         );
     }
