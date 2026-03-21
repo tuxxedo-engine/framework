@@ -62,7 +62,7 @@ return [
      *
      * @type DefaultDriver
      */
-    'driver' => DefaultDriver::PDO_SQLITE,
+    'driver' => DefaultDriver::MYSQL,
 
     /**
      * database.default.class
@@ -127,11 +127,11 @@ return [
      * database.default.host and database.default.port if used
      *
      * This value is only supported by DefaultDriver::MYSQL and is only active if
-     * it has a value
+     * it has a string value
      *
-     * @type string
+     * @type string|null
      */
-    'unixSocket' => '',
+    'unixSocket' => null,
 
     /**
      * database.default.username
@@ -170,7 +170,7 @@ return [
      *
      * @type string
      */
-    'database' => '',
+    'database' => 'tuxxedo',
 
     /**
      * database.default.options

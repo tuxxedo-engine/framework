@@ -101,10 +101,14 @@ class MysqlConnection implements ConnectionInterface
                     );
                 } finally {
                     if ($this->mysqli->connect_errno !== 0) {
-                        throw DatabaseException::fromCannotConnect(
+                        $exception = DatabaseException::fromCannotConnect(
                             code: $this->mysqli->connect_errno,
                             error: $this->mysqli->connect_error ?? 'Connection error',
                         );
+
+                        unset($this->mysqli);
+
+                        throw $exception;
                     }
                 }
             }
@@ -141,7 +145,7 @@ class MysqlConnection implements ConnectionInterface
     }
 
     public function throwFromLastError(
-        \mysqli $mysqli,
+        \mysqli|\mysqli_stmt $mysqli,
     ): never {
         throw DatabaseException::fromError(
             sqlState: $mysqli->sqlstate,
@@ -329,25 +333,6 @@ class MysqlConnection implements ConnectionInterface
     public function query(
         string $sql,
     ): MysqlResultSet {
-        $this->connectCheck();
-
-        try {
-            $result = $this->mysqli->query($sql);
-        } catch (\mysqli_sql_exception $exception) {
-            $this->throwFromMysqlException($exception);
-        }
-
-        if (\is_bool($result)) {
-            if ($result === false) {
-                $this->throwFromLastError($this->mysqli);
-            }
-
-            $result = null;
-        }
-
-        return new MysqlResultSet(
-            result: $result,
-            affectedRows: $this->mysqli->affected_rows,
-        );
+        return $this->prepare($sql)->execute();
     }
 }

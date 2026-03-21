@@ -52,7 +52,7 @@ class MysqlStatement extends AbstractStatement
 
         /** @var BindingInterface $binding */
         foreach ($this->bindings as $binding) {
-            $bindingTypes = $this->determineBindingType($binding);
+            $bindingTypes .= $this->determineBindingType($binding);
             $bindingValues[] = $binding->value;
         }
 
@@ -64,15 +64,21 @@ class MysqlStatement extends AbstractStatement
             $this->connection->throwFromLastError($mysqli);
         }
 
-        $statement->bind_param($bindingTypes, ...$bindingValues);
+        if ($bindingTypes !== '') {
+            $statement->bind_param($bindingTypes, ...$bindingValues);
+        }
 
         if (!$statement->execute() || ($result = $statement->get_result()) === false) {
-            $this->connection->throwFromLastError($mysqli);
+            if ($statement->errno !== 0) {
+                $this->connection->throwFromLastError($statement);
+            }
+
+            $result = null;
         }
 
         return new MysqlResultSet(
             result: $result,
-            affectedRows: $mysqli->affected_rows,
+            affectedRows: $statement->affected_rows,
         );
     }
 }
