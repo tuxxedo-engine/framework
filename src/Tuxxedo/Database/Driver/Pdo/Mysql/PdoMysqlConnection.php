@@ -24,7 +24,6 @@ class PdoMysqlConnection extends AbstractPdoConnection
         return DefaultDriver::PDO_MYSQL;
     }
 
-    // @todo SSL options?
     protected function getDsn(
         ConfigInterface $config,
     ): string {
@@ -70,8 +69,26 @@ class PdoMysqlConnection extends AbstractPdoConnection
     protected function getPdoOptions(
         ConfigInterface $config,
     ): array {
-        return [
+        $options = [
             \PDO::ATTR_TIMEOUT => $config->getInt('options.timeout'),
         ];
+
+        if ($config->getBool('ssl.enabled')) {
+            if ($config->has('ssl.ca') && $config->getString('ssl.ca') !== '') {
+                $options[\PDO::MYSQL_ATTR_SSL_CA] = $config->getString('ssl.ca');
+            }
+
+            if ($config->has('ssl.cert') && $config->getString('ssl.cert') !== '') {
+                $options[\PDO::MYSQL_ATTR_SSL_CERT] = $config->getString('ssl.cert');
+            }
+
+            if ($config->has('ssl.key') && $config->getString('ssl.key') !== '') {
+                $options[\PDO::MYSQL_ATTR_SSL_KEY] = $config->getString('ssl.key');
+            }
+
+            $options[\PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = $config->getBool('ssl.verifyPeer');
+        }
+
+        return $options;
     }
 }
