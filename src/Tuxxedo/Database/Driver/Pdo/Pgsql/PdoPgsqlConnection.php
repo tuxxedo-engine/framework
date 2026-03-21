@@ -24,7 +24,6 @@ class PdoPgsqlConnection extends AbstractPdoConnection
         return DefaultDriver::PDO_PGSQL;
     }
 
-    // @todo SSL options?
     protected function getDsn(
         ConfigInterface $config,
     ): string {
@@ -35,6 +34,8 @@ class PdoPgsqlConnection extends AbstractPdoConnection
         $database = '';
         $port = '';
         $timeout = '';
+        $sslMode = '';
+        $sslParams = '';
 
         if ($config->getString('database') !== '') {
             $database = ';dbname=' . $config->getString('database');
@@ -48,12 +49,34 @@ class PdoPgsqlConnection extends AbstractPdoConnection
             $timeout = ';connect_timeout=' . $config->getInt('options.timeout');
         }
 
+        if ($config->getBool('ssl.enabled')) {
+            $mode = $config->getString('ssl.mode');
+
+            $sslMode = ';sslmode=' . ($mode !== '' ? $mode : 'require');
+
+            if ($config->getString('ssl.ca') !== '') {
+                $sslParams .= ';sslrootcert=' . $config->getString('ssl.ca');
+            }
+
+            if ($config->getString('ssl.cert') !== '') {
+                $sslParams .= ';sslcert=' . $config->getString('ssl.cert');
+            }
+
+            if ($config->getString('ssl.key') !== '') {
+                $sslParams .= ';sslkey=' . $config->getString('ssl.key');
+            }
+        } elseif ($config->getString('ssl.mode') !== '') {
+            $sslMode = ';sslmode=' . $config->getString('ssl.mode');
+        }
+
         return \sprintf(
-            'pgsql:host=%s%s%s%s',
+            'pgsql:host=%s%s%s%s%s%s',
             $config->getString('host'),
             $port,
             $database,
             $timeout,
+            $sslMode,
+            $sslParams,
         );
     }
 
