@@ -64,7 +64,7 @@ abstract class AbstractPdoConnection implements ConnectionInterface
     }
 
     /**
-     * @return array<\PDO::ATTR_*, mixed>
+     * @return array<\PDO::ATTR_*|\PDO::*_ATTR_*, mixed>
      */
     protected function getPdoOptions(
         ConfigInterface $config,
