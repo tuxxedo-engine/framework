@@ -125,7 +125,7 @@ class DceOptimizer extends AbstractOptimizer
             }
 
             if ($ifEvaluation === EvaluatorResult::IS_TRUE) {
-                return parent::optimizeNodes($node->body);
+                return $node->body;
             }
 
             $newElse = null;
@@ -148,7 +148,7 @@ class DceOptimizer extends AbstractOptimizer
             $newIf = \array_search(true, $eliminationBranches, true);
 
             if ($newIf === false) {
-                return parent::optimizeNodes($node->else);
+                return $node->else;
             }
 
             $branches = [];
@@ -163,7 +163,7 @@ class DceOptimizer extends AbstractOptimizer
                 if ($branch === false) {
                     $branches[] = new ConditionalBranchNode(
                         operand: $node->branches[$index]->operand,
-                        body: parent::optimizeNodes($node->branches[$index]->body),
+                        body: $node->branches[$index]->body,
                     );
                 }
             }
@@ -171,11 +171,11 @@ class DceOptimizer extends AbstractOptimizer
             return [
                 new ConditionalNode(
                     operand: $node->branches[$newIf]->operand,
-                    body: parent::optimizeNodes($node->branches[$newIf]->body),
+                    body: $node->branches[$newIf]->body,
                     branches: $branches,
                     else: $newElse !== null
-                        ? parent::optimizeNodes($node->branches[$newElse]->body)
-                        : parent::optimizeNodes($node->else),
+                        ? $node->branches[$newElse]->body
+                        : $node->else,
                 ),
             ];
         }
@@ -183,11 +183,11 @@ class DceOptimizer extends AbstractOptimizer
         $evaluation = $this->evaluator->checkExpression($this->scope, $node->operand);
 
         if ($evaluation === EvaluatorResult::IS_FALSE) {
-            return parent::optimizeNodes($node->else);
+            return $node->else;
         }
 
         if ($evaluation === EvaluatorResult::IS_TRUE) {
-            return parent::optimizeNodes($node->body);
+            return $node->body;
         }
 
         return [
@@ -235,8 +235,6 @@ class DceOptimizer extends AbstractOptimizer
     /**
      * @return NodeInterface[]
      */
-    // @todo This will not work if inside conditionals, see hello_world_dce.lumi example 3. This probably
-    //       needs a stack based/state approach which optimizers currently do not have properly
     protected function optimizeLoopStatement(
         NodeStreamInterface $stream,
     ): array {
