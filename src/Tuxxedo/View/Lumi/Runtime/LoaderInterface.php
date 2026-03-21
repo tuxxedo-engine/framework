@@ -15,6 +15,18 @@ namespace Tuxxedo\View\Lumi\Runtime;
 
 interface LoaderInterface
 {
+    public string $directory {
+        get;
+    }
+
+    public string $cacheDirectory {
+        get;
+    }
+
+    public string $extension {
+        get;
+    }
+
     public function getViewFileName(
         string $view,
     ): string;

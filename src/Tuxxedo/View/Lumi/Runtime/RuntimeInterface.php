@@ -16,8 +16,8 @@ namespace Tuxxedo\View\Lumi\Runtime;
 use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
 use Tuxxedo\View\Lumi\LumiEngineInterface;
+use Tuxxedo\View\Lumi\LumiViewRenderInterface;
 use Tuxxedo\View\ViewException;
-use Tuxxedo\View\ViewRenderInterface;
 
 interface RuntimeInterface
 {
@@ -72,7 +72,7 @@ interface RuntimeInterface
     }
 
     public function renderer(
-        ViewRenderInterface $render,
+        LumiViewRenderInterface $render,
     ): void;
 
     /**

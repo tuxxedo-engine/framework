@@ -17,9 +17,8 @@ use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\RuntimeInterface;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewInterface;
-use Tuxxedo\View\ViewRenderInterface;
 
-readonly class LumiViewRender implements ViewRenderInterface
+class LumiViewRender implements LumiViewRenderInterface
 {
     /**
      * @var \Closure(string, mixed[]): string
@@ -27,9 +26,9 @@ readonly class LumiViewRender implements ViewRenderInterface
     private \Closure $renderFrame;
 
     public function __construct(
-        public LoaderInterface $loader,
-        public RuntimeInterface $runtime,
-        public bool $alwaysCompile = false,
+        public readonly LoaderInterface $loader,
+        public readonly RuntimeInterface $runtime,
+        public readonly bool $alwaysCompile = false,
         bool $disableErrorReporting = true,
     ) {
         $this->runtime->renderer($this);

@@ -17,9 +17,9 @@ use Tuxxedo\View\Lumi\Library\Directive\Directives;
 use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
 use Tuxxedo\View\Lumi\LumiEngineInterface;
+use Tuxxedo\View\Lumi\LumiViewRenderInterface;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewException;
-use Tuxxedo\View\ViewRenderInterface;
 
 class Runtime implements RuntimeInterface
 {
@@ -35,7 +35,7 @@ class Runtime implements RuntimeInterface
      */
     public private(set) array $blocksStack = [];
 
-    public private(set) ViewRenderInterface $renderer;
+    public private(set) LumiViewRenderInterface $renderer;
 
     public array $blocks = [];
 
@@ -59,7 +59,7 @@ class Runtime implements RuntimeInterface
     }
 
     public function renderer(
-        ViewRenderInterface $render,
+        LumiViewRenderInterface $render,
     ): void {
         $this->renderer = $render;
     }
@@ -264,6 +264,13 @@ class Runtime implements RuntimeInterface
         array $scope = [],
     ): void {
         if (!\is_string($file)) {
+            throw ViewException::fromInvalidIncludeFile();
+        }
+
+        $resolved = \realpath($this->renderer->getViewFileName($file));
+        $base = \realpath($this->renderer->loader->directory);
+
+        if ($resolved === false || $base === false || !\str_starts_with($resolved, $base)) {
             throw ViewException::fromInvalidIncludeFile();
         }
 

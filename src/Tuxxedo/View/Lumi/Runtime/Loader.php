@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime;
 
-// @todo This needs to protect against path injections like ../, ..\, \0 etc
 readonly class Loader implements LoaderInterface
 {
     public function __construct(
