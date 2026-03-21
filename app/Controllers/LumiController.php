@@ -38,7 +38,7 @@ use Tuxxedo\View\Lumi\Syntax\Operator\SymbolInterface;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewException;
 
-#[Controller(uri: '/lumi/')]
+#[Controller(uri: '/lumi', autoTrailingSlash: true)]
 readonly class LumiController
 {
     public function __construct(

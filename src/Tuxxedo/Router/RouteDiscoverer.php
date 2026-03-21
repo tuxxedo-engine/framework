@@ -111,19 +111,42 @@ class RouteDiscoverer implements RouteDiscovererInterface
                     $route = $attribute->newInstance();
                     $uri = $route->uri;
 
+                    if ($controllerAttribute === null && $uri === null) {
+                        $this->handleError(
+                            static fn (): RouterException => RouterException::fromEmptyUri(
+                                className: $reflector->getName(),
+                                method: $method->getName(),
+                            ),
+                        );
+
+                        return;
+                    } elseif ($uri === null) {
+                        if ($this->isIndexMethod($controllerAttribute, $method)) {
+                            $uri = $controllerAttribute->uri;
+                        } else {
+                            $uri = $controllerAttribute->uri . $method->getName();
+                        }
+                    } elseif ($controllerAttribute !== null) {
+                        $uri = $controllerAttribute->uri . $uri;
+                    }
+
                     yield from $this->emitRoutes(
                         route: $route,
                         uri: $uri,
                         middleware: $middleware,
                         reflector: $reflector,
                         method: $method,
-                        controllerAttribute: $controllerAttribute,
                         namedRoutes: $namedRoutes,
                     );
 
                     if (
-                        $route->trailingSlash &&
-                        $uri !== null &&
+                        (
+                            $route->trailingSlash ||
+                            (
+                                $controllerAttribute !== null &&
+                                $controllerAttribute->autoTrailingSlash
+                            )
+                        ) &&
                         !\str_ends_with($uri, '/')
                     ) {
                         yield from $this->emitRoutes(
@@ -132,7 +155,6 @@ class RouteDiscoverer implements RouteDiscovererInterface
                             middleware: $middleware,
                             reflector: $reflector,
                             method: $method,
-                            controllerAttribute: $controllerAttribute,
                             namedRoutes: $namedRoutes,
                         );
                     }
@@ -151,11 +173,10 @@ class RouteDiscoverer implements RouteDiscovererInterface
      */
     private function emitRoutes(
         RouteAttr $route,
-        ?string $uri,
+        string $uri,
         array $middleware,
         \ReflectionClass $reflector,
         \ReflectionMethod $method,
-        ?Attribute\Controller $controllerAttribute,
         array &$namedRoutes,
     ): \Generator {
         if ($route->name !== null) {
@@ -172,25 +193,6 @@ class RouteDiscoverer implements RouteDiscovererInterface
             }
 
             $namedRoutes[] = $route->name;
-        }
-
-        if ($controllerAttribute === null && $uri === null) {
-            $this->handleError(
-                static fn (): RouterException => RouterException::fromEmptyUri(
-                    className: $reflector->getName(),
-                    method: $method->getName(),
-                ),
-            );
-
-            return;
-        } elseif ($uri === null) {
-            if ($this->isIndexMethod($controllerAttribute, $method)) {
-                $uri = $controllerAttribute->uri;
-            } else {
-                $uri = $controllerAttribute->uri . $method->getName();
-            }
-        } elseif ($controllerAttribute !== null) {
-            $uri = $controllerAttribute->uri . $uri;
         }
 
         $argumentNodes = $this->getUriArgumentNodes($uri);

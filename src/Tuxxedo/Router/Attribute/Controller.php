@@ -20,6 +20,7 @@ readonly class Controller
         public string $uri,
         public bool $autoIndex = true,
         public string $autoIndexMethodName = 'index',
+        public bool $autoTrailingSlash = false,
     ) {
     }
 }
