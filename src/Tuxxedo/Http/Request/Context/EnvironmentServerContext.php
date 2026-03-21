@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Request\Context;
 
 use Tuxxedo\Http\Method;
+use Tuxxedo\Http\WeightedHeader;
 
 class EnvironmentServerContext implements ServerContextInterface
 {
@@ -86,6 +87,32 @@ class EnvironmentServerContext implements ServerContextInterface
         get {
             /** @var string */
             return $_SERVER['REMOTE_ADDR'];
+        }
+    }
+
+    public ?string $preferredLanguage {
+        get {
+            return $this->preferredLanguages[0] ?? null;
+        }
+    }
+
+    public array $preferredLanguages {
+        get {
+            static $value = null;
+
+            if ($value === null) {
+                /** @var string $header */
+                $header = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
+
+                if ($header === '') {
+                    return [];
+                }
+
+                $value = (new WeightedHeader('Accept-Language', $header))->getWeightedOrder();
+            }
+
+            /** @var string[] */
+            return $value;
         }
     }
 }

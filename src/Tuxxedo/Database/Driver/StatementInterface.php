@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Driver;
 
-// @todo This needs to support placeholder normalization
 interface StatementInterface
 {
     public ConnectionInterface $connection {

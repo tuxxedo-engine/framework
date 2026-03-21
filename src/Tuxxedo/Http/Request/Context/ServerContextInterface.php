@@ -15,7 +15,6 @@ namespace Tuxxedo\Http\Request\Context;
 
 use Tuxxedo\Http\Method;
 
-// @todo Prefers language functionality
 interface ServerContextInterface
 {
     public bool $https {
@@ -55,6 +54,17 @@ interface ServerContextInterface
     }
 
     public string $ipAddress {
+        get;
+    }
+
+    public ?string $preferredLanguage {
+        get;
+    }
+
+    /**
+     * @var string[]
+     */
+    public array $preferredLanguages {
         get;
     }
 }
