@@ -26,5 +26,5 @@ interface DispatchableRouteInterface
         get;
     }
 
-    public function asUrl(): string;
+    public function asUrl(): ?string;
 }

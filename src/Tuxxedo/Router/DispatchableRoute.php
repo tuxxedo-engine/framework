@@ -24,9 +24,52 @@ readonly class DispatchableRoute implements DispatchableRouteInterface
     ) {
     }
 
-    public function asUrl(): string
+    public function asUrl(): ?string
     {
-        // @todo Implement URL generation
-        return $this->route->uri;
+        if ($this->route->arguments === []) {
+            return $this->route->uri;
+        }
+
+        foreach ($this->route->arguments as $routeArgument) {
+            if (
+                !$routeArgument->node->optional &&
+                !\array_key_exists($routeArgument->node->name, $this->arguments) &&
+                (
+                    $routeArgument->mappedName === null ||
+                    !\array_key_exists($routeArgument->mappedName, $this->arguments)
+                )
+            ) {
+                return null;
+            }
+        }
+
+        return \preg_replace_callback(
+            '/\\/\\{(\\??)([a-zA-Z_][a-zA-Z0-9_]*)(?::([^}]+)|<([^>]+)>)?}/',
+            function (array $matches): string {
+                $name = $matches[2];
+
+                $value = $this->arguments[$name] ?? null;
+
+                if ($value === null) {
+                    foreach ($this->route->arguments as $routeArgument) {
+                        if (
+                            $routeArgument->node->name === $name &&
+                            $routeArgument->mappedName !== null &&
+                            \array_key_exists($routeArgument->mappedName, $this->arguments)
+                        ) {
+                            $value = $this->arguments[$routeArgument->mappedName];
+                            break;
+                        }
+                    }
+                }
+
+                if ($value === null) {
+                    return '';
+                }
+
+                return '/' . $value;
+            },
+            $this->route->uri,
+        );
     }
 }
