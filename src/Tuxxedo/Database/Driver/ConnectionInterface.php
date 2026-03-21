@@ -87,8 +87,6 @@ interface ConnectionInterface
      *
      * @throws DatabaseException
      */
-    // @todo Support multiple transactions
-    // @todo Support retries
     public function transaction(
         \Closure $transaction,
     ): void;
