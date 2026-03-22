@@ -1,0 +1,9 @@
+<p>
+    This page is using route prefixes, the selected language is <strong>{{ language }}</strong>
+</p>
+
+{% if optional %}
+<p>
+    <em>This page was generated using the optional prefix</em>
+</p>
+{% endif %}

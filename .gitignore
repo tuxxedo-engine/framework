@@ -1,4 +1,5 @@
 /.idea
+/app/views/cache/*/
 /app/views/cache/*.php
 /test-coverage
 /vendor

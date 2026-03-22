@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Router\Attribute;
 
 use Tuxxedo\Http\Method;
+use Tuxxedo\Router\PrefixInterface;
 use Tuxxedo\Router\RoutePriority;
 
 #[\Attribute(flags: \Attribute::IS_REPEATABLE | \Attribute::TARGET_CLASS | \Attribute::TARGET_METHOD)]
@@ -26,12 +27,14 @@ readonly class Route
 
     /**
      * @param Method[]|string[] $method
+     * @param class-string<PrefixInterface>|null $prefix
      */
     public function __construct(
         public ?string $uri,
         array $method = [],
         public ?string $name = null,
         public bool $trailingSlash = false,
+        public ?string $prefix = null,
         public RoutePriority $priority = RoutePriority::NORMAL,
     ) {
         $this->methods = \array_map(

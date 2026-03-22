@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace App\ErrorHandlers;
+namespace App\Support;
 
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
@@ -32,8 +32,8 @@ class HttpErrorHandler implements ErrorHandlerInterface
 
         return new View(
             match ($exception->responseCode) {
-                ResponseCode::NOT_FOUND => 'errors/not_found',
-                default => 'errors/generic',
+                ResponseCode::NOT_FOUND => 'support/not_found',
+                default => 'support/generic',
             },
             [
                 'exception' => $exception,

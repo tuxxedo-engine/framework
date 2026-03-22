@@ -1,21 +1,25 @@
 <h2>Link directory</h2>
-
 <ul>
     <li><a href="{{ url('view/link') | escape_attr }}">here!</a></li>
     <li><a href="{{ url('') | escape_attr }}">Home</a></li>
 </ul>
 
 <h2>Localized named routes</h2>
-
 <ul>
     <li><a href="{{ route('index') | escape_attr }}">Index</a></li>
     <li><a href="{{ url(route('index')) | escape_attr }}">Index (full)</a></li>
 </ul>
 
 <h2>With arguments</h2>
-
 <ul>
-    <li><a href="{{ url(route('args.named', ['name': 'tuxxedo'])) }}">Named</a></li>
-    <li><a href="{{ url(route('args.named', ['value': 'tuxxedo'])) }}">Named with mapped alias</a></li>
-    <li><a href="{{ url(route('args.optional', [])) }}">Named with optional</a></li>
+    <li><a href="{{ url(route('args.named', ['name': 'tuxxedo'])) | escape_attr }}">Named</a></li>
+    <li><a href="{{ url(route('args.named', ['value': 'tuxxedo'])) | escape_attr }}">Named with mapped alias</a></li>
+    <li><a href="{{ url(route('args.optional', [])) | escape_attr }}">Named with optional</a></li>
+</ul>
+
+<h2>With prefixes</h2>
+<ul>
+    <li><a href="{{ url(route('lang.mandatory', ['language': 'da'])) | escape_attr }}">With mandatory prefix argument</a></li>
+    <li><a href="{{ url(route('lang.optional', [])) | escape_attr }}">With optional prefix argument</a></li>
+    <li><a href="{{ url(route('lang.optional', ['language': 'fi'])) | escape_attr }}">With optional prefix argument and override</a></li>
 </ul>

@@ -15,15 +15,20 @@ namespace Tuxxedo\Router\Attribute\Route;
 
 use Tuxxedo\Http\Method;
 use Tuxxedo\Router\Attribute\Route;
+use Tuxxedo\Router\PrefixInterface;
 use Tuxxedo\Router\RoutePriority;
 
 #[\Attribute(flags: \Attribute::IS_REPEATABLE | \Attribute::TARGET_CLASS | \Attribute::TARGET_METHOD)]
 readonly class Patch extends Route
 {
+    /**
+     * @param class-string<PrefixInterface>|null $prefix
+     */
     public function __construct(
         ?string $uri = null,
         ?string $name = null,
         bool $trailingSlash = false,
+        ?string $prefix = null,
         RoutePriority $priority = RoutePriority::NORMAL,
     ) {
         parent::__construct(
@@ -33,6 +38,7 @@ readonly class Patch extends Route
             ],
             name: $name,
             trailingSlash: $trailingSlash,
+            prefix: $prefix,
             priority: $priority,
         );
     }

@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-use App\ErrorHandlers\HttpErrorHandler;
+use App\Support\HttpErrorHandler;
 use Tuxxedo\Application\ApplicationConfigurator;
 use Tuxxedo\Application\Profile;
 use Tuxxedo\Http\HttpException;

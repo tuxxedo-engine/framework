@@ -109,6 +109,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
                 foreach ($method->getAttributes(RouteAttr::class, \ReflectionAttribute::IS_INSTANCEOF) as $attribute) {
                     /** @var RouteAttr $route */
                     $route = $attribute->newInstance();
+                    $prefix = null;
                     $uri = $route->uri;
 
                     if ($controllerAttribute === null && $uri === null) {
@@ -126,12 +127,26 @@ class RouteDiscoverer implements RouteDiscovererInterface
                         } else {
                             $uri = $controllerAttribute->uri . $method->getName();
                         }
+
+                        $prefix = $controllerAttribute->prefix;
                     } elseif ($controllerAttribute !== null) {
                         $uri = $controllerAttribute->uri . $uri;
+                        $prefix = $controllerAttribute->prefix;
+                    }
+
+                    if ($route->prefix !== null) {
+                        $prefix = $route->prefix;
+                    }
+
+                    if ($prefix !== null) {
+                        /** @var PrefixInterface */
+                        $prefix = $this->container->resolve($prefix);
+                        $uri = $prefix->uri . $uri;
                     }
 
                     yield from $this->emitRoutes(
                         route: $route,
+                        prefix: $prefix,
                         uri: $uri,
                         middleware: $middleware,
                         reflector: $reflector,
@@ -150,8 +165,9 @@ class RouteDiscoverer implements RouteDiscovererInterface
                         !\str_ends_with($uri, '/')
                     ) {
                         yield from $this->emitRoutes(
-                            route: $route->withUri($route->uri . '/'),
-                            uri: $route->uri . '/',
+                            route: $route->withUri($uri . '/'),
+                            prefix: $prefix,
+                            uri: $uri . '/',
                             middleware: $middleware,
                             reflector: $reflector,
                             method: $method,
@@ -173,6 +189,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
      */
     private function emitRoutes(
         RouteAttr $route,
+        ?PrefixInterface $prefix,
         string $uri,
         array $middleware,
         \ReflectionClass $reflector,
@@ -195,7 +212,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
             $namedRoutes[] = $route->name;
         }
 
-        $argumentNodes = $this->getUriArgumentNodes($uri);
+        $argumentNodes = $this->getUriArgumentNodes($uri, $prefix);
 
         if (\sizeof($argumentNodes) > 0) {
             yield from $this->discoverRoutesWithArguments(
@@ -323,8 +340,10 @@ class RouteDiscoverer implements RouteDiscovererInterface
     /**
      * @return ArgumentNode[]
      */
-    private function getUriArgumentNodes(string $uri): array
-    {
+    private function getUriArgumentNodes(
+        string $uri,
+        ?PrefixInterface $prefix,
+    ): array {
         $nodes = [];
         $regex = \preg_match_all(
             '/\{(\??)([a-zA-Z_][a-zA-Z0-9_]*)(?::([^}]+)|<([^>]+)>)?}/',
@@ -351,6 +370,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
                     kind: $kind,
                     constraint: $constraint,
                     optional: $match[1] === '?',
+                    prefixed: $prefix !== null && \in_array($match[2], $prefix->arguments, true),
                 );
             }
         }

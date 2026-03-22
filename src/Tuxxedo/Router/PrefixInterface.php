@@ -13,14 +13,16 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Router;
 
-readonly class ArgumentNode
+interface PrefixInterface
 {
-    public function __construct(
-        public string $name,
-        public ArgumentKind $kind,
-        public ?string $constraint = null,
-        public bool $optional = false,
-        public bool $prefixed = false,
-    ) {
+    public string $uri {
+        get;
+    }
+
+    /**
+     * @var string[]
+     */
+    public array $arguments {
+        get;
     }
 }
