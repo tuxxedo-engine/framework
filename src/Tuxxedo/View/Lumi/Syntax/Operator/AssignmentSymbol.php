@@ -90,7 +90,7 @@ enum AssignmentSymbol implements SymbolInterface
         };
     }
 
-    public function transform(): string
+    public function compile(): string
     {
         return match ($this) {
             self::CONCAT => '.=',

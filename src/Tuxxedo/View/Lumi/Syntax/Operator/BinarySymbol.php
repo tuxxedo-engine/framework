@@ -140,7 +140,7 @@ enum BinarySymbol implements SymbolInterface, ExpressionSymbolInterface
         };
     }
 
-    public function transform(): string
+    public function compile(): string
     {
         return match ($this) {
             self::STRICT_EQUAL_IMPLICIT => self::STRICT_EQUAL_EXPLICIT->symbol(),

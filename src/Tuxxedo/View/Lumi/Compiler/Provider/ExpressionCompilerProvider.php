@@ -137,7 +137,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         $output = \sprintf(
             '%s %s %s',
             $compiler->compileNode($node->left, $stream),
-            $node->operator->transform(),
+            $node->operator->compile(),
             $compiler->compileNode($node->right, $stream),
         );
 
@@ -163,7 +163,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
                 '<?php %s->%s %s %s; ?>',
                 $accessor,
                 $node->name->property,
-                $node->operator->transform(),
+                $node->operator->compile(),
                 $compiler->compileExpression($node->value),
             );
         } elseif ($node->name instanceof ArrayAccessNode) {
@@ -173,7 +173,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
                 $node->name->key !== null
                     ? $compiler->compileExpression($node->name->key)
                     : '',
-                $node->operator->transform(),
+                $node->operator->compile(),
                 $compiler->compileExpression($node->value),
             );
         }
@@ -181,7 +181,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         return \sprintf(
             '<?php $__lumiVariables[\'%s\'] %s %s; ?>',
             $compiler->escaper->js($node->name->name),
-            $node->operator->transform(),
+            $node->operator->compile(),
             $compiler->compileExpression($node->value),
         );
     }
