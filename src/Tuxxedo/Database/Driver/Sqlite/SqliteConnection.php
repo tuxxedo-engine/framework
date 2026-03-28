@@ -252,21 +252,6 @@ class SqliteConnection implements ConnectionInterface
     public function query(
         string $sql,
     ): SqliteResultSet {
-        $this->connectCheck();
-
-        try {
-            $result = $this->sqlite->query($sql);
-        } catch (\SQLite3Exception $exception) {
-            $this->throwFromSqliteException($exception);
-        }
-
-        if ($result === false) {
-            $this->throwFromLastError($this->sqlite);
-        }
-
-        return new SqliteResultSet(
-            result: $result,
-            affectedRows: $this->sqlite->changes(),
-        );
+        return $this->prepare($sql)->execute();
     }
 }

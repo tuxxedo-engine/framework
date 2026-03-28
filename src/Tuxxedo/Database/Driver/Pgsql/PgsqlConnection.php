@@ -360,17 +360,6 @@ class PgsqlConnection implements ConnectionInterface
     public function query(
         string $sql,
     ): PgsqlResultSet {
-        $this->connectCheck();
-
-        $result = \pg_query($this->pgsql, $sql);
-
-        if ($result === false) {
-            $this->throwFromLastError($this->pgsql);
-        }
-
-        return new PgsqlResultSet(
-            result: $result,
-            affectedRows: \pg_affected_rows($result),
-        );
+        return $this->prepare($sql)->execute();
     }
 }

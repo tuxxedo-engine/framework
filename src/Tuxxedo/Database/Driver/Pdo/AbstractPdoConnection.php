@@ -274,21 +274,6 @@ abstract class AbstractPdoConnection implements ConnectionInterface
     public function query(
         string $sql,
     ): PdoResultSet {
-        $this->connectCheck();
-
-        try {
-            $result = $this->pdo->query($sql);
-
-            if ($result === false) {
-                $this->throwFromErrorInfo();
-            }
-
-            return new PdoResultSet(
-                result: $result,
-                affectedRows: $result->rowCount(),
-            );
-        } catch (\PDOException $exception) {
-            $this->throwFromPdoException($exception);
-        }
+        return $this->prepare($sql)->execute();
     }
 }
