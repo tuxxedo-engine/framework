@@ -47,6 +47,22 @@ class StandardFunctions implements FunctionProviderInterface
             ],
         );
 
+        yield new PhpFunction(
+            name: 'abs',
+        );
+
+        yield new PhpFunction(
+            name: 'round',
+        );
+
+        yield new PhpFunction(
+            name: 'ceil',
+        );
+
+        yield new PhpFunction(
+            name: 'floor',
+        );
+
         yield new ConfigFunction($container);
         yield new RequestFunction($container);
         yield new UrlFunction($container);
