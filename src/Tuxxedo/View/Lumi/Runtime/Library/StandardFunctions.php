@@ -17,8 +17,10 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionProviderInterface;
 use Tuxxedo\View\Lumi\Library\Function\PhpFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\ConfigFunction;
+use Tuxxedo\View\Lumi\Runtime\Library\Function\DateFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\DirectiveFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\HasDirectiveFunction;
+use Tuxxedo\View\Lumi\Runtime\Library\Function\NowFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\RequestFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\RouteFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\UrlFunction;
@@ -49,5 +51,8 @@ class StandardFunctions implements FunctionProviderInterface
         yield new RequestFunction($container);
         yield new UrlFunction($container);
         yield new RouteFunction($container);
+
+        yield new DateFunction();
+        yield new NowFunction();
     }
 }

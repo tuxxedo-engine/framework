@@ -1,3 +1,9 @@
 <h1>Hello, {{ php_sapi_name() }}!</h1>
 
-{{ directivve(('lumi.autoescape')) }}
+{{ directive(('lumi.autoescape')) }}
+
+<h1>Date and Time</h1>
+<p>Unix timestamp: <strong>{{ now() }}</strong></p>
+<p>Current date: <strong>{{ date('j/n - Y') }}</strong></p>
+<p>Current time: <strong>{{ time('H:i:s') }}</strong></p>
+<p>Time one hour ago: <strong>{{ time('H:i:s', now() - 3600) }}</strong></p>

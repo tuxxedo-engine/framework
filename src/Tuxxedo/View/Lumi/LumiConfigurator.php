@@ -451,6 +451,10 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
         foreach ($provider->export($this->container) as $handler) {
             $functions[\strtolower($handler->name)] = $handler;
+
+            foreach ($handler->aliases as $alias) {
+                $functions[\strtolower($alias)] = $handler;
+            }
         }
 
         return $functions;
