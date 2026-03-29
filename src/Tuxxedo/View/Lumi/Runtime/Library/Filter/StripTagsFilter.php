@@ -18,7 +18,7 @@ use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
 
 class StripTagsFilter implements FilterInterface
 {
-    public private(set) string $name = 'upper';
+    public private(set) string $name = 'strip_tags';
     public private(set) array $aliases = [];
 
     public function call(
