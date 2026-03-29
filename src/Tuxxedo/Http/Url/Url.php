@@ -13,9 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Url;
 
-use Uri\Rfc3986;
-use Uri\WhatWg;
-
 class Url implements UrlInterface
 {
     public function __construct(
@@ -27,21 +24,5 @@ class Url implements UrlInterface
         string $path,
     ): string {
         return $this->base . \ltrim($path, '/');
-    }
-
-    public function toRfc3986(
-        string $path = '',
-    ): Rfc3986\Uri {
-        return new Rfc3986\Uri(
-            uri: $this->get($path),
-        );
-    }
-
-    public function toWhatWg(
-        string $path = '',
-    ): WhatWg\Url {
-        return new WhatWg\Url(
-            uri: $this->get($path),
-        );
     }
 }
