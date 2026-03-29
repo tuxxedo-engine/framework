@@ -31,7 +31,7 @@ interface RuntimeInterface
     /**
      * @var array<string, FunctionInterface>
      */
-    public array $customFunctions {
+    public array $functions {
         get;
     }
 

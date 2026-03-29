@@ -59,7 +59,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public private(set) array $directives = [];
     public private(set) array $defaultDirectives = [];
 
-    public private(set) array $customFunctions = [];
+    public private(set) array $functions = [];
 
     public private(set) RuntimeFunctionPolicy $functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY;
     public private(set) array $functionProviders = [];
@@ -211,15 +211,11 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public function allowFunction(
         string $name,
     ): self {
-        $this->customFunctions[$name] = new PhpFunction(
-            name: $name,
+        return $this->defineFunction(
+            handler: new PhpFunction(
+                name: $name,
+            ),
         );
-
-        if ($this->functionPolicy === RuntimeFunctionPolicy::DISALLOW_ALL) {
-            $this->functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY;
-        }
-
-        return $this;
     }
 
     public function allowAllFunctions(): self
@@ -231,7 +227,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
     public function disallowAllFunctions(): self
     {
-        $this->customFunctions = [];
+        $this->functions = [];
         $this->functionProviders = [];
         $this->functionPolicy = RuntimeFunctionPolicy::DISALLOW_ALL;
 
@@ -241,10 +237,10 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public function defineFunction(
         FunctionInterface $handler,
     ): self {
-        $this->customFunctions[\strtolower($handler->name)] = $handler;
+        $this->functions[$handler->name] = $handler;
 
         foreach ($handler->aliases as $alias) {
-            $this->customFunctions[\strtolower($alias)] = $handler;
+            $this->functions[$alias] = $handler;
         }
 
         if ($this->functionPolicy === RuntimeFunctionPolicy::DISALLOW_ALL) {
@@ -257,10 +253,10 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public function defineFilter(
         FilterInterface $handler,
     ): self {
-        $this->customFilters[\strtolower($handler->name)] = $handler;
+        $this->customFilters[$handler->name] = $handler;
 
         foreach ($handler->aliases as $alias) {
-            $this->customFilters[\strtolower($alias)] = $handler;
+            $this->customFilters[$alias] = $handler;
         }
 
         return $this;
@@ -562,9 +558,9 @@ class LumiConfigurator implements LumiConfiguratorInterface
                     $this->directives,
                     $this->defaultDirectives,
                 ),
-                customFunctions: \array_merge(
+                functions: \array_merge(
                     $this->buildCustomFunctions(),
-                    $this->customFunctions,
+                    $this->functions,
                 ),
                 functionPolicy: $this->functionPolicy,
                 instanceCallClasses: $this->instanceCallClasses,

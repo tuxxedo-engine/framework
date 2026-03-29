@@ -23,7 +23,15 @@ use Tuxxedo\View\ViewException;
 
 class Runtime implements RuntimeInterface
 {
-    public private(set) array $directives;
+    /**
+     * @var array<string, FunctionInterface>
+     */
+    public readonly array $functions;
+
+    /**
+     * @var array<string, FilterInterface>
+     */
+    public readonly array $filters;
 
     /**
      * @var array<array<string, string|int|float|bool|null>>
@@ -41,19 +49,20 @@ class Runtime implements RuntimeInterface
 
     /**
      * @param array<string, string|int|float|bool|null> $directives
-     * @param array<string, FunctionInterface> $customFunctions
-     * @param array<class-string> $instanceCallClasses
+     * @param array<string, FunctionInterface> $functions
      * @param array<string, FilterInterface> $filters
+     * @param array<class-string> $instanceCallClasses
      */
     public function __construct(
         public readonly LumiEngineInterface $engine,
-        array $directives = [],
-        public readonly array $customFunctions = [],
+        public private(set) array $directives = [],
+        array $functions = [],
+        array $filters = [],
         public readonly RuntimeFunctionPolicy $functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY,
         public readonly array $instanceCallClasses = [],
-        public readonly array $filters = [],
     ) {
-        $this->directives = $directives;
+        $this->functions = \array_change_key_case($functions);
+        $this->filters = \array_change_key_case($filters);
     }
 
     public function renderer(
@@ -101,19 +110,19 @@ class Runtime implements RuntimeInterface
             throw ViewException::fromFunctionCallsDisabled();
         } elseif (
             $this->functionPolicy === RuntimeFunctionPolicy::CUSTOM_ONLY &&
-            !\array_key_exists($function, $this->customFunctions)
+            !\array_key_exists($function, $this->functions)
         ) {
             throw ViewException::fromCannotCallCustomFunction(
                 function: $function,
             );
         }
 
-        if (\array_key_exists($function, $this->customFunctions)) {
+        if (\array_key_exists($function, $this->functions)) {
             if (!isset($this->renderer)) {
                 throw ViewException::fromCannotCallCustomFunctionWithRender();
             }
 
-            return ($this->customFunctions[$function])->call(
+            return ($this->functions[$function])->call(
                 arguments: $arguments,
                 render: $this->renderer,
                 directives: new Directives(
