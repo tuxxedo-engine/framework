@@ -21,10 +21,12 @@ class PhpFunction implements FunctionInterface
     /**
      * @param callable-string $name
      * @param string[] $aliases
+     * @param callable-string|null $mappedName
      */
     public function __construct(
         public readonly string $name,
         public array $aliases = [],
+        private readonly ?string $mappedName = null,
     ) {
     }
 
@@ -33,6 +35,6 @@ class PhpFunction implements FunctionInterface
         ViewRenderInterface $render,
         DirectivesInterface $directives,
     ): mixed {
-        return \call_user_func_array($this->name, $arguments);
+        return \call_user_func_array($this->mappedName ?? $this->name, $arguments);
     }
 }
