@@ -2,8 +2,43 @@
 
 {{ directive(('lumi.autoescape')) }}
 
+{% declare lumi.autoescape = false %}
+
 <h1>Date and Time</h1>
 <p>Unix timestamp: <strong>{{ now() }}</strong></p>
 <p>Current date: <strong>{{ date('j/n - Y') }}</strong></p>
 <p>Current time: <strong>{{ time('H:i:s') }}</strong></p>
 <p>Time one hour ago: <strong>{{ time('H:i:s', now() - 3600) }}</strong></p>
+
+<h1>Math</h1>
+<p><code>abs(-5)</code> = <code>{{ dump(abs(-5)) }}</code></p>
+<p><code>floor(5.5)</code> = <code>{{ dump(floor(5.5)) }}</code></p>
+<p><code>ceil(5.5)</code> = <code>{{ dump(ceil(5.5)) }}</code></p>
+<p><code>round(5.5)</code> = <code>{{ dump(round(5.5)) }}</code></p>
+<p><code>min(1, 3)</code> = <code>{{ dump(min(1, 3)) }}</code></p>
+<p><code>max(1, 3)</code> = <code>{{ dump(max(1, 3)) }}</code></p>
+
+<h1>Random</h1>
+<p>A random number between 1-100: <strong>{{ random(1, 100) }}</strong></p>
+
+<h1>Arrays</h1>
+<pre>{{ dump(first(['Tuxxedo', 'Engine'])) }}</pre>
+<pre>{{ dump(last(['Tuxxedo', 'Engine'])) }}</pre>
+<pre>{{ dump(unique(['PHP', 'Tuxxedo', 'Tuxxedo'])) }}</pre>
+
+{% set array = ['project': 'Tuxxedo Engine', 'language': 'Lumi'] %}
+
+<pre>{{ dump(keys(array)) }}</pre>
+<pre>{{ dump(values(array)) }}</pre>
+<pre>{{ dump(sort(array), array) }}</pre>
+<pre>{{ dump(ksort(array), array) }}</pre>
+<pre>{{ dump(reverse(array), array) }}</pre>
+
+<h1>Strings</h1>
+<pre><code>join(['Tuxxedo', 'Engine'], ' ')</code> = <code>{{ join(['Tuxxedo', 'Engine'], ' ') | json }}</code></pre>
+<pre><code>split(['Tuxxedo', 'Engine'], ' ')</code> = <code>{{ split('Tuxxedo Engine', ' ') | dump }}</code></pre>
+<pre><code>replace('Tuxxedo Moottori', 'Moottori', 'Engine')</code> = <code>{{ replace('Tuxxedo Moottori', 'Moottori', 'Engine') | json }}</code></pre>
+<pre><code>{{ repeat(strval(acos(2)), 10) }} Batman!</code></pre>
+<pre><code>number(12345.6789, 1, ',', '.')</code> = <code>{{ number(12345.6789, 1, ',', '.') | json }}</code></pre>
+<pre><code>cut('Tuxxedo Engine', 7)</code> = <code>truncate('Tuxxedo Engine', 7)</code> = <code>{{ cut('Tuxxedo Engine', 7) | dump }}</code></pre>
+<pre><code>reverse('enignE odexxuT')</code> = <code>{{ reverse('enignE odexxuT') | dump }}</code></pre>

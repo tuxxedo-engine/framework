@@ -17,6 +17,7 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\View\Lumi\Library\Filter\FilterProviderInterface;
 use Tuxxedo\View\Lumi\Runtime\Library\Filter\CapitalizeFilter;
 use Tuxxedo\View\Lumi\Runtime\Library\Filter\CountFilter;
+use Tuxxedo\View\Lumi\Runtime\Library\Filter\DumpFilter;
 use Tuxxedo\View\Lumi\Runtime\Library\Filter\EscapeAttrFilter;
 use Tuxxedo\View\Lumi\Runtime\Library\Filter\EscapeCssFilter;
 use Tuxxedo\View\Lumi\Runtime\Library\Filter\EscapeHtmlCommentFilter;
@@ -64,5 +65,6 @@ readonly class StandardFilters implements FilterProviderInterface
 
         yield new Nl2brFilter();
         yield new StripTagsFilter();
+        yield new DumpFilter();
     }
 }

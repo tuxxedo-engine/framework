@@ -26,6 +26,7 @@ use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
 use Tuxxedo\View\Lumi\Library\Filter\FilterProviderInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionProviderInterface;
+use Tuxxedo\View\Lumi\Library\Function\PhpFunction;
 use Tuxxedo\View\Lumi\Library\LibraryInterface;
 use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
@@ -58,7 +59,6 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public private(set) array $directives = [];
     public private(set) array $defaultDirectives = [];
 
-    public private(set) array $functions = [];
     public private(set) array $customFunctions = [];
 
     public private(set) RuntimeFunctionPolicy $functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY;
@@ -211,7 +211,9 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public function allowFunction(
         string $name,
     ): self {
-        $this->functions[] = $name;
+        $this->customFunctions[$name] = new PhpFunction(
+            name: $name,
+        );
 
         if ($this->functionPolicy === RuntimeFunctionPolicy::DISALLOW_ALL) {
             $this->functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY;
@@ -229,7 +231,6 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
     public function disallowAllFunctions(): self
     {
-        $this->functions = [];
         $this->customFunctions = [];
         $this->functionProviders = [];
         $this->functionPolicy = RuntimeFunctionPolicy::DISALLOW_ALL;
@@ -561,7 +562,6 @@ class LumiConfigurator implements LumiConfiguratorInterface
                     $this->directives,
                     $this->defaultDirectives,
                 ),
-                functions: $this->functions,
                 customFunctions: \array_merge(
                     $this->buildCustomFunctions(),
                     $this->customFunctions,

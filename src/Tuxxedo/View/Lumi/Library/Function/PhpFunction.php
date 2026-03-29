@@ -19,7 +19,6 @@ use Tuxxedo\View\ViewRenderInterface;
 class PhpFunction implements FunctionInterface
 {
     /**
-     * @param callable-string $name
      * @param string[] $aliases
      * @param callable-string|null $mappedName
      */
@@ -35,6 +34,9 @@ class PhpFunction implements FunctionInterface
         ViewRenderInterface $render,
         DirectivesInterface $directives,
     ): mixed {
-        return \call_user_func_array($this->mappedName ?? $this->name, $arguments);
+        /** @var callable-string $function */
+        $function = $this->mappedName ?? $this->name;
+
+        return \call_user_func_array($function, $arguments);
     }
 }

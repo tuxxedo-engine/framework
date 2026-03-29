@@ -91,13 +91,6 @@ interface LumiConfiguratorInterface
     }
 
     /**
-     * @var string[]
-     */
-    public array $functions {
-        get;
-    }
-
-    /**
      * @var array<string, FunctionInterface>
      */
     public array $customFunctions {

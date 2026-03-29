@@ -41,7 +41,6 @@ class Runtime implements RuntimeInterface
 
     /**
      * @param array<string, string|int|float|bool|null> $directives
-     * @param string[] $functions
      * @param array<string, FunctionInterface> $customFunctions
      * @param array<class-string> $instanceCallClasses
      * @param array<string, FilterInterface> $filters
@@ -49,7 +48,6 @@ class Runtime implements RuntimeInterface
     public function __construct(
         public readonly LumiEngineInterface $engine,
         array $directives = [],
-        public readonly array $functions = [],
         public readonly array $customFunctions = [],
         public readonly RuntimeFunctionPolicy $functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY,
         public readonly array $instanceCallClasses = [],

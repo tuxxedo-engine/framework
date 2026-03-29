@@ -24,8 +24,11 @@ return static function (ContainerInterface $container): void {
         LumiViewRender::class,
         static function (ContainerInterface $container): ViewRenderInterface {
             return LumiConfigurator::fromConfig($container)
-                ->allowAllFunctions()
-                ->enableErrorReporting()
+                ->allowFunction('php_sapi_name')
+                ->allowFunction('printf')
+                ->allowFunction('acos')
+                ->allowFunction('strval')
+                ->disableErrorReporting()
                 ->build();
         },
     );
