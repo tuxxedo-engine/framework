@@ -19,7 +19,11 @@
 <p><code>max(1, 3)</code> = <code>{{ dump(max(1, 3)) }}</code></p>
 
 <h1>Random</h1>
-<p>A random number between 1-100: <strong>{{ random(1, 100) }}</strong></p>
+{% set random = random(1, 100) %}
+
+<p>A random number between 1-100: <strong>{{ random }}</strong></p>
+<p>Is that odd? <code>{{ isOdd(random) | json }}</code></p>
+<p>Is that even? <code>{{ isEven(random) | json }}</code></p>
 
 <h1>Arrays</h1>
 <pre>{{ dump(first(['Tuxxedo', 'Engine'])) }}</pre>

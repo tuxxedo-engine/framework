@@ -21,6 +21,8 @@ use Tuxxedo\View\Lumi\Runtime\Library\Function\DateFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\DirectiveFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\DumpFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\HasDirectiveFunction;
+use Tuxxedo\View\Lumi\Runtime\Library\Function\IsEvenFunction;
+use Tuxxedo\View\Lumi\Runtime\Library\Function\IsOddFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\JoinFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\JsonFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\JsonPrettyFunction;
@@ -79,6 +81,8 @@ class StandardFunctions implements FunctionProviderInterface
 
         yield new RoundFunction();
         yield new NumberFunction();
+        yield new IsOddFunction();
+        yield new IsEvenFunction();
 
         yield new PhpFunction(
             name: 'abs',
