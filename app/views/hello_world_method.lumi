@@ -1,1 +1,1 @@
-<pre>{{ logger.formatEntries() }}</pre>
+<pre>{{ logger.all() }}</pre>

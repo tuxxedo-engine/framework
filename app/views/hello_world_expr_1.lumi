@@ -10,7 +10,7 @@
 {{ ' hello ' | trim }}
 {{ userName | upper }}
 {{ php_sapi_name() | lower }}
-{{ logger.formatEntries() | escape }}
+{{ logger.all() | escape }}
 {{ users[0] | upper }}
 {{ ( 'a' ~ 'B' ~ 'c' ) | upper }}
 {{ 'a' ~ 'b' | upper }}

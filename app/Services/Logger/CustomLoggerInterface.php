@@ -15,9 +15,10 @@ namespace App\Services\Logger;
 
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
+use Tuxxedo\Logger\LoggerInterface;
 
-#[DefaultImplementation(class: Logger::class, lifecycle: Lifecycle::PERSISTENT)]
-interface LoggerInterface extends \Countable
+#[DefaultImplementation(class: CustomLogger::class, lifecycle: Lifecycle::PERSISTENT)]
+interface CustomLoggerInterface extends LoggerInterface, \Countable
 {
     /**
      * @var LogEntry[]
@@ -26,9 +27,5 @@ interface LoggerInterface extends \Countable
         get;
     }
 
-    public function log(
-        LogEntry|string $entry,
-    ): static;
-
-    public function formatEntries(): string;
+    public function all(): string;
 }

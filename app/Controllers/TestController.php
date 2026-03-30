@@ -15,7 +15,7 @@ namespace App\Controllers;
 
 use App\Middleware\LoggerMiddleware;
 use App\Middleware\OutputCaptureMiddleware;
-use App\Services\Logger\LoggerInterface;
+use App\Services\Logger\CustomLoggerInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Cookie;
 use Tuxxedo\Http\Header;
@@ -45,22 +45,22 @@ readonly class TestController
 
     public function __construct(
         private ContainerInterface $container,
-        private LoggerInterface $logger,
+        private CustomLoggerInterface $logger,
     ) {
         $this->mapper = new Mapper();
     }
 
     #[Route\Get(uri: '/log')]
-    public function index(LoggerInterface $logger): ResponseInterface
+    public function index(CustomLoggerInterface $logger): ResponseInterface
     {
         $logger->log('DI via action parameter');
-        $this->container->resolve(LoggerInterface::class)->log('Inside action');
+        $this->container->resolve(CustomLoggerInterface::class)->log('Inside action');
 
         return new Response(
             headers: [
                 new Header('Content-Type', 'text/plain'),
             ],
-            body: $this->logger->formatEntries(),
+            body: $this->logger->all(),
         );
     }
 

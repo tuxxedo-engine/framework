@@ -25,6 +25,7 @@ return static function (ContainerInterface $container): void {
         static function (ContainerInterface $container): ViewRenderInterface {
             return LumiConfigurator::fromConfig($container)
                 ->allowFunction('php_sapi_name')
+                ->allowFunction('php_uname')
                 ->allowFunction('printf')
                 ->allowFunction('acos')
                 ->allowFunction('strval')

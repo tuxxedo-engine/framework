@@ -13,9 +13,10 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Services\Logger\LoggerInterface;
+use App\Services\Logger\CustomLoggerInterface;
 use Tuxxedo\Router\Attribute\Controller;
 use Tuxxedo\Router\Attribute\Route;
+use Tuxxedo\Version;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewInterface;
 
@@ -23,7 +24,7 @@ use Tuxxedo\View\ViewInterface;
 readonly class ViewController
 {
     public function __construct(
-        private LoggerInterface $logger,
+        private CustomLoggerInterface $logger,
     ) {
     }
 
@@ -85,6 +86,12 @@ readonly class ViewController
     public function method(): ViewInterface
     {
         $this->logger->log('Testing method calls');
+        $this->logger->log(
+            'Tuxxedo Engine v{version}',
+            [
+                'version' => Version::SIMPLE,
+            ],
+        );
 
         return new View(
             name: 'hello_world_method',

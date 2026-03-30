@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace App\Middleware;
 
-use App\Services\Logger\LoggerInterface;
+use App\Services\Logger\CustomLoggerInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\RequestInterface;
@@ -31,8 +31,8 @@ class LoggerMiddleware implements MiddlewareInterface
         RequestInterface $request,
         MiddlewareInterface $next,
     ): ResponseInterface {
-        $this->container->resolve(LoggerInterface::class)->log(
-            entry: \sprintf(
+        $this->container->resolve(CustomLoggerInterface::class)->log(
+            message: \sprintf(
                 'Middleware: %s',
                 static::class,
             ),

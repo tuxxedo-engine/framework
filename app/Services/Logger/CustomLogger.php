@@ -13,26 +13,35 @@ declare(strict_types=1);
 
 namespace App\Services\Logger;
 
-class Logger implements LoggerInterface
+use Tuxxedo\Container\DefaultLifecycle;
+use Tuxxedo\Container\Lifecycle;
+use Tuxxedo\Logger\AbstractLogger;
+use Tuxxedo\Logger\LogLevel;
+
+#[DefaultLifecycle(lifecycle: Lifecycle::PERSISTENT)]
+class CustomLogger extends AbstractLogger implements CustomLoggerInterface
 {
+    /**
+     * @var LogEntry[]
+     */
     public private(set) array $entries = [];
 
     public function log(
-        LogEntry|string $entry,
+        string $message,
+        array $placeholders = [],
+        LogLevel $level = LogLevel::ERROR,
     ): static {
-        if (!$entry instanceof LogEntry) {
-            $entry = new LogEntry(
-                date: \date('H:i:s j/n - Y'),
-                message: $entry,
-            );
-        }
+        $this->entries[] = new LogEntry(
+            date: \date('H:i:s j/n/Y'),
+            message: parent::interpolate($message, $placeholders),
+        );
 
-        $this->entries[] = $entry;
+        parent::incrementByLogLevel($level);
 
         return $this;
     }
 
-    public function formatEntries(): string
+    public function all(): string
     {
         $list = '';
 
