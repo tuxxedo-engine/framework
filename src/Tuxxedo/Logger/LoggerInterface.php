@@ -14,44 +14,42 @@ declare(strict_types=1);
 namespace Tuxxedo\Logger;
 
 // @todo Consider a SyslogLogger
-// @todo Consider a StreamLogger
 // @todo Maybe LoggerManager like DB?
-// @todo May benefit from having timestamps builtin and prefixed via options
 interface LoggerInterface
 {
     public int $total {
         get;
     }
 
-    public int $totalAlerts {
+    public int $totalAlert {
         get;
     }
 
-    public int $totalCriticals {
+    public int $totalCritical {
         get;
     }
 
-    public int $totalDebugs {
+    public int $totalDebug {
         get;
     }
 
-    public int $totalEmergencies {
+    public int $totalEmergency {
         get;
     }
 
-    public int $totalErrors {
+    public int $totalError {
         get;
     }
 
-    public int $totalInfos {
+    public int $totalInfo {
         get;
     }
 
-    public int $totalNotices {
+    public int $totalNotice {
         get;
     }
 
-    public int $totalWarnings {
+    public int $totalWarning {
         get;
     }
 

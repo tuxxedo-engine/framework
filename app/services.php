@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionManager;
-use Tuxxedo\Logger\FileLogger;
 use Tuxxedo\Logger\LoggerInterface;
+use Tuxxedo\Logger\StreamLogger;
 use Tuxxedo\View\Lumi\LumiConfigurator;
 use Tuxxedo\View\Lumi\LumiViewRender;
 use Tuxxedo\View\ViewRenderInterface;
@@ -37,8 +37,8 @@ return static function (ContainerInterface $container): void {
     );
 
     $container->persistentLazy(
-        FileLogger::class,
-        static fn (): LoggerInterface => new FileLogger(
+        StreamLogger::class,
+        static fn (): LoggerInterface => StreamLogger::createFromFile(
             file: __DIR__ . '/file.log',
         ),
     );

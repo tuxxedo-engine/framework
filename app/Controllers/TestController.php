@@ -100,7 +100,7 @@ readonly class TestController
             html: \sprintf(
                 '<p>OK! Total log entries: %d, info log entries: %d',
                 $logger->total,
-                $logger->totalInfos,
+                $logger->totalInfo,
             ),
         );
     }

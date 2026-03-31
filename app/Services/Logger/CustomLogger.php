@@ -31,9 +31,11 @@ class CustomLogger extends AbstractLogger implements CustomLoggerInterface
         array $placeholders = [],
         LogLevel $level = LogLevel::ERROR,
     ): static {
+        $timestamp = new \DateTimeImmutable();
+
         $this->entries[] = new LogEntry(
-            date: \date('H:i:s j/n/Y'),
-            message: parent::interpolate($message, $placeholders),
+            date: $timestamp->format('H:i:s j/n/Y'),
+            message: $this->formatter->format($message, $placeholders, $level, $timestamp),
         );
 
         parent::incrementByLogLevel($level);

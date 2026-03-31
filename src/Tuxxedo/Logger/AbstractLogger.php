@@ -17,14 +17,22 @@ abstract class AbstractLogger implements LoggerInterface
 {
     public protected(set) int $total = 0;
 
-    public protected(set) int $totalAlerts = 0;
-    public protected(set) int $totalCriticals = 0;
-    public protected(set) int $totalDebugs = 0;
-    public protected(set) int $totalEmergencies = 0;
-    public protected(set) int $totalErrors = 0;
-    public protected(set) int $totalInfos = 0;
-    public protected(set) int $totalNotices = 0;
-    public protected(set) int $totalWarnings = 0;
+    public protected(set) int $totalAlert = 0;
+    public protected(set) int $totalCritical = 0;
+    public protected(set) int $totalDebug = 0;
+    public protected(set) int $totalEmergency = 0;
+    public protected(set) int $totalError = 0;
+    public protected(set) int $totalInfo = 0;
+    public protected(set) int $totalNotice = 0;
+    public protected(set) int $totalWarning = 0;
+
+    protected readonly LogMessageFormatterInterface $formatter;
+
+    public function __construct(
+        ?LogMessageFormatterInterface $formatter = null,
+    ) {
+        $this->formatter = $formatter ?? new LogMessageFormatter();
+    }
 
     protected function incrementByLogLevel(
         LogLevel $level,
@@ -32,33 +40,15 @@ abstract class AbstractLogger implements LoggerInterface
         $this->total++;
 
         match ($level) {
-            LogLevel::ALERT => $this->totalAlerts++,
-            LogLevel::CRITICAL => $this->totalCriticals++,
-            LogLevel::DEBUG => $this->totalDebugs++,
-            LogLevel::EMERGENCY => $this->totalEmergencies++,
-            LogLevel::ERROR => $this->totalErrors++,
-            LogLevel::INFO => $this->totalInfos++,
-            LogLevel::NOTICE => $this->totalNotices++,
-            LogLevel::WARNING => $this->totalWarnings++,
+            LogLevel::ALERT => $this->totalAlert++,
+            LogLevel::CRITICAL => $this->totalCritical++,
+            LogLevel::DEBUG => $this->totalDebug++,
+            LogLevel::EMERGENCY => $this->totalEmergency++,
+            LogLevel::ERROR => $this->totalError++,
+            LogLevel::INFO => $this->totalInfo++,
+            LogLevel::NOTICE => $this->totalNotice++,
+            LogLevel::WARNING => $this->totalWarning++,
         };
-    }
-
-    /**
-     * @param array<string, scalar> $placeholders
-     */
-    protected function interpolate(
-        string $message,
-        array $placeholders = [],
-    ): string {
-        $replacements = [];
-        $values = [];
-
-        foreach ($placeholders as $placeholder => $value) {
-            $replacements[] = '{' . $placeholder . '}';
-            $values[] = \strval($value);
-        }
-
-        return \str_replace($replacements, $values, $message);
     }
 
     public function alert(
@@ -152,14 +142,14 @@ abstract class AbstractLogger implements LoggerInterface
         LogLevel $level,
     ): int {
         return match ($level) {
-            LogLevel::ALERT => $this->totalAlerts,
-            LogLevel::CRITICAL => $this->totalCriticals,
-            LogLevel::DEBUG => $this->totalDebugs,
-            LogLevel::EMERGENCY => $this->totalEmergencies,
-            LogLevel::ERROR => $this->totalErrors,
-            LogLevel::INFO => $this->totalInfos,
-            LogLevel::NOTICE => $this->totalNotices,
-            LogLevel::WARNING => $this->totalWarnings,
+            LogLevel::ALERT => $this->totalAlert,
+            LogLevel::CRITICAL => $this->totalCritical,
+            LogLevel::DEBUG => $this->totalDebug,
+            LogLevel::EMERGENCY => $this->totalEmergency,
+            LogLevel::ERROR => $this->totalError,
+            LogLevel::INFO => $this->totalInfo,
+            LogLevel::NOTICE => $this->totalNotice,
+            LogLevel::WARNING => $this->totalWarning,
         };
     }
 }
