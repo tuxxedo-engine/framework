@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace Tuxxedo\Logger;
 
 // @todo Consider a SyslogLogger
-// @todo Consider a FileLogger
 // @todo Consider a StreamLogger
 // @todo Maybe LoggerManager like DB?
+// @todo May benefit from having timestamps builtin and prefixed via options
 interface LoggerInterface
 {
     public int $total {

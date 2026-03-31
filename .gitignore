@@ -1,6 +1,7 @@
 /.idea
 /app/views/cache/*/
 /app/views/cache/*.php
+/app/*.log
 /test-coverage
 /vendor
 /.phpunit.result.cache

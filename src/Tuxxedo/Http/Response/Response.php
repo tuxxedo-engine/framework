@@ -148,6 +148,20 @@ class Response implements ResponseInterface
     /**
      * @param HeaderInterface[] $headers
      */
+    public static function empty(
+        array $headers = [],
+        ResponseCode $responseCode = ResponseCode::FOUND,
+    ): static {
+        return new static(
+            headers: $headers,
+            responseCode: $responseCode,
+            body: '',
+        );
+    }
+
+    /**
+     * @param HeaderInterface[] $headers
+     */
     protected function getHeaderIndex(
         array $headers,
         HeaderInterface|string $lookupHeader,

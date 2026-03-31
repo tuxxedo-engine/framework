@@ -27,6 +27,8 @@ use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Http\WeightedHeaderInterface;
+use Tuxxedo\Logger\LogLevel;
+use Tuxxedo\Logger\LoggerInterface;
 use Tuxxedo\Mapper\Mapper;
 use Tuxxedo\Mapper\MapperInterface;
 use Tuxxedo\Router\Attribute\Middleware;
@@ -61,6 +63,39 @@ readonly class TestController
                 new Header('Content-Type', 'text/plain'),
             ],
             body: $this->logger->all(),
+        );
+    }
+
+    #[Route\Get(uri: '/moreLogging')]
+    public function moreLogging(
+        RequestInterface $request,
+        LoggerInterface $logger,
+    ): ResponseInterface {
+        if ($request->get->has('level')) {
+            $requestedLevel = $request->get->getString('level');
+
+            foreach (LogLevel::cases() as $level) {
+                if (\strcasecmp($level->name, $requestedLevel) === 0) {
+                    $logLevel = $level;
+
+                    break;
+                }
+            }
+        }
+
+        $logger->log(
+            message: 'Customized (potentially) log level message from input',
+            level: $logLevel ?? LogLevel::INFO,
+        );
+
+        $logger->info('Informational message for testing logging');
+
+        return Response::html(
+            html: \sprintf(
+                '<p>OK! Total log entries: %d, info log entries: %d',
+                $logger->total,
+                $logger->totalInfos,
+            ),
         );
     }
 
