@@ -89,6 +89,12 @@ readonly class TestController
         );
 
         $logger->info('Informational message for testing logging');
+        $logger->debug(
+            'Powered by Tuxxedo Engine {version}',
+            [
+                'version' => Version::FULL,
+            ],
+        );
 
         return Response::html(
             html: \sprintf(

@@ -54,7 +54,7 @@ class FileLogger extends AbstractLogger implements FileLoggerInterface
             \sprintf(
                 '[%s] %s%s',
                 $level->name,
-                parent::interpolate($message),
+                parent::interpolate($message, $placeholders),
                 \PHP_EOL,
             ),
         );
