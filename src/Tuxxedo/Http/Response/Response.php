@@ -150,7 +150,7 @@ class Response implements ResponseInterface
      */
     public static function empty(
         array $headers = [],
-        ResponseCode $responseCode = ResponseCode::FOUND,
+        ResponseCode $responseCode = ResponseCode::OK,
     ): static {
         return new static(
             headers: $headers,
