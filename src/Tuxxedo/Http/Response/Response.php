@@ -171,7 +171,7 @@ class Response implements ResponseInterface
         }
 
         foreach ($headers as $index => $header) {
-            if ($header->name === $lookupHeader) {
+            if (\strcasecmp($header->name, $lookupHeader) === 0) {
                 return $index;
             }
         }
