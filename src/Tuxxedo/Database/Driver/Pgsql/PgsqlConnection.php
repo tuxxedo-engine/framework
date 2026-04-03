@@ -21,6 +21,8 @@ use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Driver\DefaultDriver;
 
+// @todo Switch to the new StatementParser code
+// @todo Remove last id sequencing
 class PgsqlConnection implements ConnectionInterface
 {
     public readonly string $name;
@@ -350,6 +352,9 @@ class PgsqlConnection implements ConnectionInterface
         );
     }
 
+    /**
+     * @param array<bool|float|int|string|null> $parameters
+     */
     public function execute(
         string $sql,
         array $parameters = [],
@@ -359,6 +364,7 @@ class PgsqlConnection implements ConnectionInterface
 
     public function query(
         string $sql,
+        array $parameters = [],
     ): PgsqlResultSet {
         return $this->prepare($sql)->execute();
     }

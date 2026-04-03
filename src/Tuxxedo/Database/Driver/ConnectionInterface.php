@@ -15,6 +15,7 @@ namespace Tuxxedo\Database\Driver;
 
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
+use Tuxxedo\Database\SqlException;
 
 interface ConnectionInterface
 {
@@ -90,24 +91,14 @@ interface ConnectionInterface
         \Closure $transaction,
     ): void;
 
-    public function prepare(
-        string $sql,
-    ): StatementInterface;
-
     /**
-     * @param array<string|int|float|bool|null> $parameters
+     * @param mixed[] $parameters
      *
      * @throws DatabaseException
-     */
-    public function execute(
-        string $sql,
-        array $parameters = [],
-    ): ResultSetInterface;
-
-    /**
-     * @throws DatabaseException
+     * @throws SqlException
      */
     public function query(
         string $sql,
+        array $parameters = [],
     ): ResultSetInterface;
 }

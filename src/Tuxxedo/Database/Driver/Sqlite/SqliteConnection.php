@@ -19,6 +19,7 @@ use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Driver\DefaultDriver;
 
+// @todo Switch to the new StatementParser code
 class SqliteConnection implements ConnectionInterface
 {
     public readonly string $name;
@@ -242,6 +243,9 @@ class SqliteConnection implements ConnectionInterface
         );
     }
 
+    /**
+     * @param array<bool|float|int|string|null> $parameters
+     */
     public function execute(
         string $sql,
         array $parameters = [],
@@ -251,6 +255,7 @@ class SqliteConnection implements ConnectionInterface
 
     public function query(
         string $sql,
+        array $parameters = [],
     ): SqliteResultSet {
         return $this->prepare($sql)->execute();
     }

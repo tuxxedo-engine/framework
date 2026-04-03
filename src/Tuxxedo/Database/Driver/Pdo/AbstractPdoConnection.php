@@ -19,6 +19,7 @@ use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Driver\DefaultDriver;
 
+// @todo Switch to the new StatementParser code
 abstract class AbstractPdoConnection implements ConnectionInterface
 {
     public readonly string $name;
@@ -264,6 +265,9 @@ abstract class AbstractPdoConnection implements ConnectionInterface
         );
     }
 
+    /**
+     * @param array<bool|float|int|string|null> $parameters
+     */
     public function execute(
         string $sql,
         array $parameters = [],
@@ -273,6 +277,7 @@ abstract class AbstractPdoConnection implements ConnectionInterface
 
     public function query(
         string $sql,
+        array $parameters = [],
     ): PdoResultSet {
         return $this->prepare($sql)->execute();
     }

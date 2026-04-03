@@ -18,6 +18,7 @@ use Tuxxedo\Database\Driver\ResultRow;
 use Tuxxedo\Database\Driver\ResultRowInterface;
 use Tuxxedo\Database\Driver\ResultSetInterface;
 
+// @todo Fix fetchObject and $pointer miscounting
 class SqliteResultSet implements ResultSetInterface
 {
     private int $pointer = 0;

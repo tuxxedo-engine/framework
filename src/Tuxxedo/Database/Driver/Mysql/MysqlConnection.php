@@ -16,8 +16,11 @@ namespace Tuxxedo\Database\Driver\Mysql;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
+use Tuxxedo\Database\Dialect\MysqlDialect;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Driver\DefaultDriver;
+use Tuxxedo\Database\Driver\StatementParser;
+use Tuxxedo\Database\Driver\StatementParserInterface;
 
 class MysqlConnection implements ConnectionInterface
 {
@@ -27,6 +30,7 @@ class MysqlConnection implements ConnectionInterface
 
     private \mysqli $mysqli;
     private readonly \Closure $connector;
+    private StatementParserInterface $statementParser;
 
     private bool $inTransaction = false;
 
@@ -114,6 +118,12 @@ class MysqlConnection implements ConnectionInterface
             }
 
             $this->mysqli->set_charset($config->getString('options.charset'));
+
+            if (!isset($this->statementParser)) {
+                $this->statementParser = new StatementParser(
+                    dialect: new MysqlDialect(),
+                );
+            }
         };
 
         if (!$config->getBool('options.lazy')) {
@@ -131,19 +141,6 @@ class MysqlConnection implements ConnectionInterface
         }
     }
 
-    /**
-     * @throws DatabaseException
-     */
-    public function throwFromMysqlException(
-        \mysqli_sql_exception $exception,
-    ): never {
-        throw DatabaseException::fromError(
-            sqlState: $exception->getSqlState(),
-            code: $exception->getCode(),
-            error: $exception->getMessage(),
-        );
-    }
-
     public function throwFromLastError(
         \mysqli|\mysqli_stmt $mysqli,
     ): never {
@@ -152,11 +149,6 @@ class MysqlConnection implements ConnectionInterface
             code: $mysqli->errno,
             error: $mysqli->error,
         );
-    }
-
-    public function isMariaDb(): bool
-    {
-        return \str_contains(\strtolower($this->serverVersion()), 'mariadb');
     }
 
     public function getDriverInstance(): \mysqli
@@ -312,27 +304,49 @@ class MysqlConnection implements ConnectionInterface
         }
     }
 
-    public function prepare(
-        string $sql,
-    ): MysqlStatement {
-        $this->connectCheck();
-
-        return new MysqlStatement(
-            connection: $this,
-            sql: $sql,
-        );
-    }
-
-    public function execute(
+    public function query(
         string $sql,
         array $parameters = [],
     ): MysqlResultSet {
-        return $this->prepare($sql)->execute($parameters);
-    }
+        $this->connectCheck();
 
-    public function query(
-        string $sql,
-    ): MysqlResultSet {
-        return $this->prepare($sql)->execute();
+        $bindingTypes = '';
+        $bindingValues = [];
+
+        $statement = $this->statementParser->parse($sql);
+
+        foreach ($statement->bindings as $value) {
+            $bindingTypes .= match (true) {
+                \is_int($value) => 'i',
+                \is_float($value) => 'f',
+                \is_bool($value) => 'b',
+                default => 's',
+            };
+
+            $bindingValues[] = $value;
+        }
+
+        $statement = $this->mysqli->prepare($sql);
+
+        if ($statement === false) {
+            $this->throwFromLastError($this->mysqli);
+        }
+
+        if ($bindingTypes !== '') {
+            $statement->bind_param($bindingTypes, ...$bindingValues);
+        }
+
+        if (!$statement->execute() || ($result = $statement->get_result()) === false) {
+            if ($statement->errno !== 0) {
+                $this->throwFromLastError($statement);
+            }
+
+            $result = null;
+        }
+
+        return new MysqlResultSet(
+            result: $result,
+            affectedRows: $statement->affected_rows,
+        );
     }
 }
