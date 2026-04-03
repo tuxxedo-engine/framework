@@ -30,16 +30,18 @@ class StatementParser implements StatementParserInterface
         $buffer = '';
         $slot = 1;
         $position = 0;
-
         $bindings = [];
 
         $length = \strlen($sql);
-        $isAscii = ($length === \mb_strlen($sql, 'UTF-8'));
+        $isAscii = $length === \mb_strlen($sql, 'UTF-8');
 
         while ($position < $length) {
             $byte = $sql[$position];
 
-            if (!$isAscii && \ord($byte) >= 0x80) {
+            if (
+                !$isAscii &&
+                \ord($byte) >= 0x80
+            ) {
                 $buffer .= $byte;
                 $position++;
 
@@ -55,7 +57,10 @@ class StatementParser implements StatementParserInterface
                 while ($position < $length) {
                     $queryByte = $sql[$position];
 
-                    if (!$isAscii && \ord($queryByte) >= 0x80) {
+                    if (
+                        !$isAscii &&
+                        \ord($queryByte) >= 0x80
+                    ) {
                         $buffer .= $queryByte;
 
                         $position++;
@@ -67,7 +72,11 @@ class StatementParser implements StatementParserInterface
                     $position++;
 
                     if ($queryByte === $quoteClose) {
-                        if ($quoteClose === "'" && $position < $length && $sql[$position] === "'") {
+                        if (
+                            $quoteClose === "'" &&
+                            $position < $length &&
+                            $sql[$position] === "'"
+                        ) {
                             $buffer .= "'";
 
                             $position++;
@@ -82,36 +91,44 @@ class StatementParser implements StatementParserInterface
                 continue;
             }
 
-            if ($byte === ':' && $position + 1 < $length) {
+            if (
+                $byte === ':' &&
+                $position + 1 < $length
+            ) {
                 $next = $sql[$position + 1];
 
                 if (\preg_match('/^[a-zA-Z0-9_]$/', $next) === 1) {
                     $nameStart = $position + 1;
-                    $nameEnd   = $nameStart;
+                    $nameEnd = $nameStart;
 
-                    while ($nameEnd < $length && \preg_match('/^[a-zA-Z0-9_]$/', $sql[$nameEnd]) === 1) {
+                    while (
+                        $nameEnd < $length &&
+                        \preg_match('/^[a-zA-Z0-9_]$/', $sql[$nameEnd]) === 1
+                    ) {
                         $nameEnd++;
                     }
 
                     $name = \substr($sql, $nameStart, $nameEnd - $nameStart);
                     $isArraySyntax = false;
 
-                    if ($nameEnd + 1 < $length && $sql[$nameEnd] === '[' && $sql[$nameEnd + 1] === ']') {
+                    if (
+                        $nameEnd + 1 < $length &&
+                        $sql[$nameEnd] === '[' &&
+                        $sql[$nameEnd + 1] === ']'
+                    ) {
                         $isArraySyntax = true;
                         $nameEnd += 2;
                     }
 
                     $position = $nameEnd;
 
-                    $key = \preg_match('/^[0-9]+$/', $name) === 1 ? (int) $name : $name;
-
-                    if (!\array_key_exists($key, $parameters)) {
+                    if (!\array_key_exists($name, $parameters)) {
                         throw SqlException::fromUnboundPlaceholder(
                             name: $name,
                         );
                     }
 
-                    $value = $parameters[$key];
+                    $value = $parameters[$name];
 
                     if ($isArraySyntax) {
                         if (!\is_array($value) || \sizeof($value) === 0) {
@@ -150,6 +167,7 @@ class StatementParser implements StatementParserInterface
             }
 
             $buffer .= $byte;
+
             $position++;
         }
 
