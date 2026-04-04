@@ -16,10 +16,12 @@ namespace Tuxxedo\Database\Driver\Sqlite;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
+use Tuxxedo\Database\Dialect\SqliteDialect;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Driver\DefaultDriver;
+use Tuxxedo\Database\Driver\StatementParser;
+use Tuxxedo\Database\Driver\StatementParserInterface;
 
-// @todo Switch to the new StatementParser code
 class SqliteConnection implements ConnectionInterface
 {
     public readonly string $name;
@@ -28,6 +30,7 @@ class SqliteConnection implements ConnectionInterface
 
     private \SQLite3 $sqlite;
     private readonly \Closure $connector;
+    private StatementParserInterface $statementParser;
 
     private bool $inTransaction = false;
 
@@ -54,6 +57,12 @@ class SqliteConnection implements ConnectionInterface
                 throw DatabaseException::fromCannotConnect(
                     code: $exception->getCode(),
                     error: $exception->getMessage(),
+                );
+            }
+
+            if (!isset($this->statementParser)) {
+                $this->statementParser = new StatementParser(
+                    dialect: new SqliteDialect(),
                 );
             }
         };
@@ -230,31 +239,49 @@ class SqliteConnection implements ConnectionInterface
         }
     }
 
-    public function prepare(
-        string $sql,
-    ): SqliteStatement {
-        $this->connectCheck();
-
-        return new SqliteStatement(
-            connection: $this,
-            sql: $sql,
-        );
-    }
-
-    /**
-     * @param array<bool|float|int|string|null> $parameters
-     */
-    public function execute(
-        string $sql,
-        array $parameters = [],
-    ): SqliteResultSet {
-        return $this->prepare($sql)->execute($parameters);
-    }
-
     public function query(
         string $sql,
         array $parameters = [],
     ): SqliteResultSet {
-        return $this->prepare($sql)->execute();
+        $this->connectCheck();
+
+        $parsedStatement = $this->statementParser->parse($sql, $parameters);
+        $statement = $this->sqlite->prepare($parsedStatement->sql);
+
+        if ($statement === false) {
+            $this->throwFromLastError($this->sqlite);
+        }
+
+        foreach ($parsedStatement->bindings as $index => $value) {
+            $bound = $statement->bindValue(
+                param: $index,
+                value: $value,
+                type: match (true) {
+                    \is_int($value) || \is_bool($value) => \SQLITE3_INTEGER,
+                    \is_float($value) => \SQLITE3_FLOAT,
+                    \is_null($value) => \SQLITE3_NULL,
+                    default => \SQLITE3_TEXT,
+                },
+            );
+
+            if (!$bound) {
+                $this->throwFromLastError($this->sqlite);
+            }
+        }
+
+        try {
+            $result = $statement->execute();
+        } catch (\SQLite3Exception $exception) {
+            $this->throwFromSqliteException($exception);
+        }
+
+        if ($result === false) {
+            $this->throwFromLastError($this->sqlite);
+        }
+
+        return new SqliteResultSet(
+            result: $result,
+            affectedRows: $this->sqlite->changes(),
+        );
     }
 }

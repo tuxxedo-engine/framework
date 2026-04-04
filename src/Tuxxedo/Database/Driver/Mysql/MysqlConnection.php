@@ -311,9 +311,9 @@ class MysqlConnection implements ConnectionInterface
         $bindingTypes = '';
         $bindingValues = [];
 
-        $statement = $this->statementParser->parse($sql, $parameters);
+        $parsedStatement = $this->statementParser->parse($sql, $parameters);
 
-        foreach ($statement->bindings as $value) {
+        foreach ($parsedStatement->bindings as $value) {
             $bindingTypes .= match (true) {
                 \is_int($value) => 'i',
                 \is_float($value) => 'f',
@@ -324,7 +324,7 @@ class MysqlConnection implements ConnectionInterface
             $bindingValues[] = $value;
         }
 
-        $statement = $this->mysqli->prepare($statement->sql);
+        $statement = $this->mysqli->prepare($parsedStatement->sql);
 
         if ($statement === false) {
             $this->throwFromLastError($this->mysqli);
