@@ -16,17 +16,21 @@ namespace Tuxxedo\Database\Driver\Pdo;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
+use Tuxxedo\Database\Dialect\DialectInterface;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Driver\DefaultDriver;
+use Tuxxedo\Database\Driver\StatementParser;
+use Tuxxedo\Database\Driver\StatementParserInterface;
 
-// @todo Switch to the new StatementParser code
 abstract class AbstractPdoConnection implements ConnectionInterface
 {
     public readonly string $name;
     public readonly ConnectionRole $role;
     public readonly DefaultDriver|string $driver;
+
     protected private(set) \PDO $pdo;
     private readonly \Closure $connector;
+    private StatementParserInterface $statementParser;
 
     public function __construct(
         ConfigInterface $config,
@@ -47,6 +51,12 @@ abstract class AbstractPdoConnection implements ConnectionInterface
                         ...static::getPdoOptions($config),
                     ],
                 );
+
+                if (!isset($this->statementParser)) {
+                    $this->statementParser = new StatementParser(
+                        dialect: static::getDriverDialect(),
+                    );
+                }
 
                 $this->postConnectHook($config);
             } catch (\PDOException $exception) {
@@ -74,6 +84,8 @@ abstract class AbstractPdoConnection implements ConnectionInterface
     }
 
     abstract protected function getDriverName(): DefaultDriver|string;
+
+    abstract protected function getDriverDialect(): DialectInterface;
 
     abstract protected function getDsn(
         ConfigInterface $config,
@@ -252,31 +264,54 @@ abstract class AbstractPdoConnection implements ConnectionInterface
         }
     }
 
-    public function prepare(
-        string $sql,
-    ): PdoStatement {
-        $this->connectCheck();
-
-        return new PdoStatement(
-            connection: $this,
-            sql: $sql,
-        );
-    }
-
-    /**
-     * @param array<bool|float|int|string|null> $parameters
-     */
-    public function execute(
-        string $sql,
-        array $parameters = [],
-    ): PdoResultSet {
-        return $this->prepare($sql)->execute($parameters);
-    }
-
     public function query(
         string $sql,
         array $parameters = [],
     ): PdoResultSet {
-        return $this->prepare($sql)->execute();
+        $this->connectCheck();
+
+        $parsedStatement = $this->statementParser->parse($sql, $parameters);
+        $statement = $this->pdo->prepare($parsedStatement->sql);
+
+        if ($statement === false) {
+            $this->throwFromErrorInfo();
+        }
+
+        foreach ($parsedStatement->bindings as $index => $value) {
+            $bound = $statement->bindValue(
+                param: $index + 1,
+                value: $value,
+                type: match (true) {
+                    \is_int($value) => \PDO::PARAM_INT,
+                    \is_bool($value) => \PDO::PARAM_BOOL,
+                    \is_null($value) => \PDO::PARAM_NULL,
+                    default => \PDO::PARAM_STR,
+                },
+            );
+
+            if (!$bound) {
+                $this->throwFromErrorInfo(
+                    statement: $statement,
+                );
+            }
+        }
+
+        if (!$statement->execute()) {
+            $this->throwFromErrorInfo(
+                statement: $statement,
+            );
+        }
+
+        if ($statement->columnCount() > 0) {
+            return new PdoResultSet(
+                result: $statement,
+                affectedRows: 0,
+            );
+        }
+
+        return new PdoResultSet(
+            result: null,
+            affectedRows: $statement->rowCount(),
+        );
     }
 }
