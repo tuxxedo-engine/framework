@@ -92,13 +92,6 @@ class DatabaseException extends \Exception
         );
     }
 
-    public static function fromResultTooBig(): self
-    {
-        return new self(
-            message: 'The returned result is too big to handle',
-        );
-    }
-
     public static function fromEmptyResultSet(): self
     {
         return new self(

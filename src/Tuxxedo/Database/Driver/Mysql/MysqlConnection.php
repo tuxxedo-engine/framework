@@ -344,7 +344,7 @@ class MysqlConnection implements ConnectionInterface
 
         return new MysqlResultSet(
             result: $result,
-            affectedRows: $statement->affected_rows,
+            affectedRows: (int) $statement->affected_rows,
         );
     }
 }

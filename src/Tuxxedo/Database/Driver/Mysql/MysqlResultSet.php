@@ -29,15 +29,11 @@ class MysqlResultSet implements ResultSetInterface
 
     public function __construct(
         private ?\mysqli_result $result,
-        public readonly int|string $affectedRows = 0,
+        public readonly int $affectedRows = 0,
     ) {
         if ($this->result !== null) {
-            /** @var int<0, max>|numeric-string $numRows */
+            /** @var int<0, max> $numRows */
             $numRows = $this->result->num_rows;
-
-            if (\is_string($numRows)) {
-                throw DatabaseException::fromResultTooBig();
-            }
 
             $this->numRows = $numRows;
         } else {
