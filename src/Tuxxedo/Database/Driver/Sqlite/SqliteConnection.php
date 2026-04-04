@@ -45,7 +45,7 @@ class SqliteConnection implements ConnectionInterface
             try {
                 $this->sqlite = new \SQLite3(
                     filename: $config->getString('database'),
-                    flags: !$config->isInt('options.flags')
+                    flags: $config->isInt('options.flags')
                         ? $config->getInt('options.flags')
                         : \SQLITE3_OPEN_READWRITE | \SQLITE3_OPEN_CREATE,
                     encryptionKey: $config->getString('password'),
@@ -265,6 +265,7 @@ class SqliteConnection implements ConnectionInterface
             );
 
             if (!$bound) {
+                // @todo Investigate why this fails for /db/
                 $this->throwFromLastError($this->sqlite);
             }
         }

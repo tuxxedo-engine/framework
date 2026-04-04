@@ -62,7 +62,7 @@ return [
      *
      * @type DefaultDriver
      */
-    'driver' => DefaultDriver::MYSQL,
+    'driver' => DefaultDriver::SQLITE,
 
     /**
      * database.default.class
