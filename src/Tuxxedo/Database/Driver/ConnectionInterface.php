@@ -57,13 +57,12 @@ interface ConnectionInterface
     /**
      * @throws DatabaseException
      */
-    public function lastInsertIdAsString(
-        ?string $sequence = null,
-    ): ?string;
+    public function lastInsertIdAsString(): ?string;
 
-    public function lastInsertIdAsInt(
-        ?string $sequence = null,
-    ): ?int;
+    /**
+     * @throws DatabaseException
+     */
+    public function lastInsertIdAsInt(): ?int;
 
     /**
      * @throws DatabaseException

@@ -22,7 +22,6 @@ use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Driver\DefaultDriver;
 
 // @todo Switch to the new StatementParser code
-// @todo Remove last id sequencing
 class PgsqlConnection implements ConnectionInterface
 {
     public readonly string $name;
@@ -231,25 +230,14 @@ class PgsqlConnection implements ConnectionInterface
         return (string) ($info['server'] ?? '');
     }
 
-    public function lastInsertIdAsString(
-        ?string $sequence = null,
-    ): ?string {
+    public function lastInsertIdAsString(): ?string
+    {
         $this->connectCheck();
 
-        if ($sequence !== null && $sequence !== '') {
-            $result = \pg_query_params(
-                $this->pgsql,
-                'SELECT currval($1)',
-                [
-                    $sequence,
-                ],
-            );
-        } else {
-            $result = \pg_query(
-                $this->pgsql,
-                'SELECT lastval()',
-            );
-        }
+        $result = \pg_query(
+            $this->pgsql,
+            'SELECT lastval()',
+        );
 
         if ($result === false) {
             $this->throwFromLastError($this->pgsql);
@@ -264,10 +252,9 @@ class PgsqlConnection implements ConnectionInterface
         return (string) $id;
     }
 
-    public function lastInsertIdAsInt(
-        ?string $sequence = null,
-    ): ?int {
-        return (int) $this->lastInsertIdAsString($sequence);
+    public function lastInsertIdAsInt(): ?int
+    {
+        return (int) $this->lastInsertIdAsString();
     }
 
     public function begin(): void

@@ -216,9 +216,8 @@ class MysqlConnection implements ConnectionInterface
         return $this->mysqli->server_info;
     }
 
-    public function lastInsertIdAsString(
-        ?string $sequence = null,
-    ): ?string {
+    public function lastInsertIdAsString(): ?string
+    {
         $this->connectCheck();
 
         $id = $this->mysqli->insert_id;
@@ -230,9 +229,8 @@ class MysqlConnection implements ConnectionInterface
         return null;
     }
 
-    public function lastInsertIdAsInt(
-        ?string $sequence = null,
-    ): ?int {
+    public function lastInsertIdAsInt(): ?int
+    {
         $this->connectCheck();
 
         $id = $this->mysqli->insert_id;

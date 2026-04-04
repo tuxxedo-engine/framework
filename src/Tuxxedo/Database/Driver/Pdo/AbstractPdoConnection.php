@@ -168,13 +168,12 @@ abstract class AbstractPdoConnection implements ConnectionInterface
         return $this->pdo->getAttribute(\PDO::ATTR_SERVER_VERSION);
     }
 
-    public function lastInsertIdAsString(
-        ?string $sequence = null,
-    ): ?string {
+    public function lastInsertIdAsString(): ?string
+    {
         $this->connectCheck();
 
         try {
-            $id = $this->pdo->lastInsertId($sequence);
+            $id = $this->pdo->lastInsertId();
 
             if ($id === false) {
                 $this->throwFromErrorInfo();
@@ -186,13 +185,12 @@ abstract class AbstractPdoConnection implements ConnectionInterface
         return $id;
     }
 
-    public function lastInsertIdAsInt(
-        ?string $sequence = null,
-    ): ?int {
+    public function lastInsertIdAsInt(): ?int
+    {
         $this->connectCheck();
 
         try {
-            $id = $this->pdo->lastInsertId($sequence);
+            $id = $this->pdo->lastInsertId();
 
             if ($id === false) {
                 $this->throwFromErrorInfo();

@@ -138,17 +138,15 @@ class SqliteConnection implements ConnectionInterface
         return \SQLite3::version()['versionString'];
     }
 
-    public function lastInsertIdAsString(
-        ?string $sequence = null,
-    ): ?string {
+    public function lastInsertIdAsString(): ?string
+    {
         $this->connectCheck();
 
         return (string) $this->sqlite->lastInsertRowID();
     }
 
-    public function lastInsertIdAsInt(
-        ?string $sequence = null,
-    ): ?int {
+    public function lastInsertIdAsInt(): ?int
+    {
         $this->connectCheck();
 
         return $this->sqlite->lastInsertRowID();
