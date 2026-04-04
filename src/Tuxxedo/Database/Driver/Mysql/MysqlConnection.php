@@ -313,7 +313,7 @@ class MysqlConnection implements ConnectionInterface
         $bindingTypes = '';
         $bindingValues = [];
 
-        $statement = $this->statementParser->parse($sql);
+        $statement = $this->statementParser->parse($sql, $parameters);
 
         foreach ($statement->bindings as $value) {
             $bindingTypes .= match (true) {
@@ -326,7 +326,7 @@ class MysqlConnection implements ConnectionInterface
             $bindingValues[] = $value;
         }
 
-        $statement = $this->mysqli->prepare($sql);
+        $statement = $this->mysqli->prepare($statement->sql);
 
         if ($statement === false) {
             $this->throwFromLastError($this->mysqli);

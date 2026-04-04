@@ -74,8 +74,16 @@ readonly class DatabaseController
         \var_dump(\count($result));
         \var_dump($result->fetchObject()->properties['one'] ?? null);
 
-        $connection->query('CREATE TABLE `test` ( `a` VARCHAR(32) NOT NULL, `b` INT(8) NOT NULL )');
+        $connection->query('DROP TABLE IF EXISTS `test`');
+        $connection->query('CREATE TABLE `test` (`a` VARCHAR(32) NOT NULL, `b` INT(8) NOT NULL)');
         $connection->query('INSERT INTO `test` VALUES ("foo", "123")');
+        $connection->query(
+            'INSERT INTO `test` VALUES (:a, :b)',
+            [
+                'a' => 'bar',
+                'b' => 456,
+            ],
+        );
 
         \var_dump(
             $connection->lastInsertIdAsInt(),
@@ -88,6 +96,6 @@ readonly class DatabaseController
 
         $connection->query('DROP TABLE `test`');
 
-        return new Response();
+        return Response::text('');
     }
 }
