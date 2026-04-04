@@ -254,7 +254,7 @@ class SqliteConnection implements ConnectionInterface
 
         foreach ($parsedStatement->bindings as $index => $value) {
             $bound = $statement->bindValue(
-                param: $index,
+                param: $index + 1,
                 value: $value,
                 type: match (true) {
                     \is_int($value) || \is_bool($value) => \SQLITE3_INTEGER,
@@ -265,7 +265,6 @@ class SqliteConnection implements ConnectionInterface
             );
 
             if (!$bound) {
-                // @todo Investigate why this fails for /db/
                 $this->throwFromLastError($this->sqlite);
             }
         }
