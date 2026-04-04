@@ -20,7 +20,7 @@ interface StatementParserResultInterface
     }
 
     /**
-     * @var mixed[]
+     * @var array<string|int|float|bool|null>
      */
     public array $bindings {
         get;

@@ -23,7 +23,7 @@ interface StatementParserInterface
     }
 
     /**
-     * @param mixed[] $parameters
+     * @param array<string|int|float|bool|null|array<string|int|float|bool|null>> $parameters
      *
      * @throws SqlException
      */

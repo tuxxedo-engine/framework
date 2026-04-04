@@ -91,7 +91,7 @@ interface ConnectionInterface
     ): void;
 
     /**
-     * @param mixed[] $parameters
+     * @param array<string|int|float|bool|null> $parameters
      *
      * @throws DatabaseException
      * @throws SqlException

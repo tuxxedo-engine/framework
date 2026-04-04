@@ -18,10 +18,12 @@ use PgSql\Result;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
+use Tuxxedo\Database\Dialect\PgsqlDialect;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Driver\DefaultDriver;
+use Tuxxedo\Database\Driver\StatementParser;
+use Tuxxedo\Database\Driver\StatementParserInterface;
 
-// @todo Switch to the new StatementParser code
 class PgsqlConnection implements ConnectionInterface
 {
     public readonly string $name;
@@ -30,6 +32,7 @@ class PgsqlConnection implements ConnectionInterface
 
     private Connection $pgsql;
     private readonly \Closure $connector;
+    private StatementParserInterface $statementParser;
 
     private bool $inTransaction = false;
 
@@ -132,6 +135,12 @@ class PgsqlConnection implements ConnectionInterface
                             $this->throwFromLastError($this->pgsql);
                         }
                     }
+                }
+
+                if (!isset($this->statementParser)) {
+                    $this->statementParser = new StatementParser(
+                        dialect: new PgsqlDialect(),
+                    );
                 }
             }
         };
@@ -328,31 +337,40 @@ class PgsqlConnection implements ConnectionInterface
         }
     }
 
-    public function prepare(
-        string $sql,
-    ): PgsqlStatement {
-        $this->connectCheck();
-
-        return new PgsqlStatement(
-            connection: $this,
-            sql: $sql,
-        );
-    }
-
-    /**
-     * @param array<bool|float|int|string|null> $parameters
-     */
-    public function execute(
-        string $sql,
-        array $parameters = [],
-    ): PgsqlResultSet {
-        return $this->prepare($sql)->execute($parameters);
-    }
-
     public function query(
         string $sql,
         array $parameters = [],
     ): PgsqlResultSet {
-        return $this->prepare($sql)->execute();
+        $this->connectCheck();
+
+        $params = [];
+        $parsedStatement = $this->statementParser->parse($sql, $parameters);
+
+        foreach ($parsedStatement->bindings as $value) {
+            $params[] = match (true) {
+                \is_int($value) => (string) $value,
+                \is_float($value) => (string) $value,
+                \is_bool($value) => $value
+                    ? 't'
+                    : 'f',
+                \is_null($value) => null,
+                default => \strval($value)
+            } ;
+        }
+
+        $result = \pg_query_params(
+            $this->pgsql,
+            $parsedStatement->sql,
+            $params,
+        );
+
+        if ($result === false) {
+            $this->throwFromLastError($this->pgsql);
+        }
+
+        return new PgsqlResultSet(
+            result: $result,
+            affectedRows: \pg_affected_rows($result),
+        );
     }
 }
