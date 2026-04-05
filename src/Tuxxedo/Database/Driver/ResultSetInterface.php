@@ -18,7 +18,7 @@ namespace Tuxxedo\Database\Driver;
  */
 interface ResultSetInterface extends \Countable, \Iterator
 {
-    public int|string $affectedRows {
+    public int $affectedRows {
         get;
     }
 
@@ -33,6 +33,8 @@ interface ResultSetInterface extends \Countable, \Iterator
     public function fetchAllAsGenerator(): \Generator;
 
     public function fetch(): ResultRowInterface;
+
+    // @todo Consider a $class argument for DTO mapping (MapperInterface?)
     public function fetchObject(): ResultRowInterface;
 
     /**
