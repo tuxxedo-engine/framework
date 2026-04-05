@@ -142,6 +142,8 @@ class EnvironmentHeaderContext implements HeaderContextInterface
 
     public function getInt(string $name): int
     {
+        $this->lazyLoad();
+
         if (!\array_key_exists($name, $this->headers)) {
             throw HttpException::fromInternalServerError();
         }
