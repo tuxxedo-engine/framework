@@ -91,7 +91,15 @@ readonly class DatabaseController
         );
 
         \var_dump(
-            $connection->query('SELECT * FROM `test`')->fetchAllAsArray(),
+            $connection->query(
+                'SELECT * FROM `test` WHERE `a` IN (:ids[])',
+                [
+                    'ids' => [
+                        'foo',
+                        'bar',
+                    ],
+                ],
+            )->fetchAllAsArray(),
         );
 
         $connection->query('DROP TABLE `test`');
