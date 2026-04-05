@@ -258,12 +258,18 @@ class PgsqlConnection implements ConnectionInterface
             $this->throwFromResult($result);
         }
 
-        return (string) $id;
+        if ($id !== '' && $id !== '0') {
+            return (string) $id;
+        }
+
+        return null;
     }
 
     public function lastInsertIdAsInt(): ?int
     {
-        return (int) $this->lastInsertIdAsString();
+        return ($id = $this->lastInsertIdAsString()) !== null
+            ? (int) $id
+            : null;
     }
 
     public function begin(): void

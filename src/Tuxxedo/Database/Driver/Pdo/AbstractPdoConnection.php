@@ -194,7 +194,11 @@ abstract class AbstractPdoConnection implements ConnectionInterface
             $this->throwFromPdoException($exception);
         }
 
-        return $id;
+        if ($id !== '' && $id !== '0') {
+            return $id;
+        }
+
+        return null;
     }
 
     public function lastInsertIdAsInt(): ?int
@@ -211,7 +215,12 @@ abstract class AbstractPdoConnection implements ConnectionInterface
             $this->throwFromPdoException($exception);
         }
 
-        return (int) $id;
+
+        if ($id !== '' && $id !== '0') {
+            return (int) $id;
+        }
+
+        return null;
     }
 
     public function begin(): void

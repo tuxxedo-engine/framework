@@ -62,7 +62,7 @@ return [
      *
      * @type DefaultDriver
      */
-    'driver' => DefaultDriver::MYSQL,
+    'driver' => DefaultDriver::PDO_MYSQL,
 
     /**
      * database.default.class

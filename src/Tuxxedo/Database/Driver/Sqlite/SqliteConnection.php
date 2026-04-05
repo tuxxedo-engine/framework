@@ -151,14 +151,22 @@ class SqliteConnection implements ConnectionInterface
     {
         $this->connectCheck();
 
-        return (string) $this->sqlite->lastInsertRowID();
+        return ($id = $this->lastInsertIdAsInt()) !== null
+            ? (string) $id
+            : null;
     }
 
     public function lastInsertIdAsInt(): ?int
     {
         $this->connectCheck();
 
-        return $this->sqlite->lastInsertRowID();
+        $id = $this->sqlite->lastInsertRowID();
+
+        if ($id !== 0) {
+            return $id;
+        }
+
+        return null;
     }
 
     public function begin(): void
