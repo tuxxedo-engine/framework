@@ -17,6 +17,7 @@ use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\SqlException;
 
+// @todo Support savepoints
 interface ConnectionInterface
 {
     public string $name {
