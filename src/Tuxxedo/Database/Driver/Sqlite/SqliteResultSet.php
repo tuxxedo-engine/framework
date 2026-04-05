@@ -18,7 +18,6 @@ use Tuxxedo\Database\Driver\ResultRow;
 use Tuxxedo\Database\Driver\ResultRowInterface;
 use Tuxxedo\Database\Driver\ResultSetInterface;
 
-// @todo Fix fetchObject and $pointer miscounting
 class SqliteResultSet implements ResultSetInterface
 {
     private int $pointer = 0;
@@ -101,15 +100,19 @@ class SqliteResultSet implements ResultSetInterface
             throw DatabaseException::fromEmptyResultSet();
         }
 
-        $row = $this->result->fetchArray(\SQLITE3_ASSOC);
+        if ($this->endedBuffering || $this->increaseBuffer()) {
+            if (!\array_key_exists($this->pointer, $this->buffer)) {
+                throw DatabaseException::fromCannotFetch();
+            }
 
-        if (!\is_array($row)) {
-            throw DatabaseException::fromCannotFetch();
+            return new ResultRow(
+                properties: $this->buffer[$this->pointer++],
+            );
         }
 
-        return new ResultRow(
-            properties: $row,
-        );
+        $this->endedBuffering = true;
+
+        throw DatabaseException::fromCannotFetch();
     }
 
     public function fetchArray(): array
@@ -118,13 +121,17 @@ class SqliteResultSet implements ResultSetInterface
             throw DatabaseException::fromEmptyResultSet();
         }
 
-        $row = $this->result->fetchArray();
+        if ($this->endedBuffering || $this->increaseBuffer()) {
+            if (!\array_key_exists($this->pointer, $this->buffer)) {
+                throw DatabaseException::fromCannotFetch();
+            }
 
-        if (!\is_array($row)) {
-            throw DatabaseException::fromCannotFetch();
+            return $this->buffer[$this->pointer++];
         }
 
-        return $row;
+        $this->endedBuffering = true;
+
+        throw DatabaseException::fromCannotFetch();
     }
 
     public function fetchAssoc(): array
@@ -133,13 +140,17 @@ class SqliteResultSet implements ResultSetInterface
             throw DatabaseException::fromEmptyResultSet();
         }
 
-        $row = $this->result->fetchArray(\SQLITE3_ASSOC);
+        if ($this->endedBuffering || $this->increaseBuffer()) {
+            if (!\array_key_exists($this->pointer, $this->buffer)) {
+                throw DatabaseException::fromCannotFetch();
+            }
 
-        if (!\is_array($row)) {
-            throw DatabaseException::fromCannotFetch();
+            return $this->buffer[$this->pointer++];
         }
 
-        return $row;
+        $this->endedBuffering = true;
+
+        throw DatabaseException::fromCannotFetch();
     }
 
     public function fetchRow(): array
@@ -148,14 +159,17 @@ class SqliteResultSet implements ResultSetInterface
             throw DatabaseException::fromEmptyResultSet();
         }
 
-        $row = $this->result->fetchArray(\SQLITE3_NUM);
+        if ($this->endedBuffering || $this->increaseBuffer()) {
+            if (!\array_key_exists($this->pointer, $this->buffer)) {
+                throw DatabaseException::fromCannotFetch();
+            }
 
-        if (!\is_array($row)) {
-            throw DatabaseException::fromCannotFetch();
+            return \array_values($this->buffer[$this->pointer++]);
         }
 
-        /** @var array<int, mixed> */
-        return $row;
+        $this->endedBuffering = true;
+
+        throw DatabaseException::fromCannotFetch();
     }
 
     public function free(): void

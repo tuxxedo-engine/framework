@@ -91,7 +91,7 @@ interface ConnectionInterface
     ): void;
 
     /**
-     * @param array<string|int|float|bool|null> $parameters
+     * @param array<string|int|float|bool|null|array<string|int|float|bool|null>> $parameters
      *
      * @throws DatabaseException
      * @throws SqlException
