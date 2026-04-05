@@ -57,11 +57,13 @@ interface ConnectionInterface
     /**
      * @throws DatabaseException
      */
+    // @todo This return value seems to differ between drivers, e.g. MYSQL vs PDO_MYSQL
     public function lastInsertIdAsString(): ?string;
 
     /**
      * @throws DatabaseException
      */
+    // @todo This return value seems to differ between drivers, e.g. MYSQL vs PDO_MYSQL
     public function lastInsertIdAsInt(): ?int;
 
     /**
