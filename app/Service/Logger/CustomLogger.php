@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace App\Services\Logger;
+namespace App\Service\Logger;
 
 use Tuxxedo\Container\DefaultLifecycle;
 use Tuxxedo\Container\Lifecycle;

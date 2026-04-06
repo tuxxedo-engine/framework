@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace App\Middleware;
 
-use App\Services\Logger\CustomLoggerInterface;
+use App\Service\Logger\CustomLoggerInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\RequestInterface;

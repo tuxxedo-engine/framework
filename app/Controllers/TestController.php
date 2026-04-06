@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Middleware\LoggerMiddleware;
-use App\Services\Logger\CustomLoggerInterface;
+use App\Service\Logger\CustomLoggerInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Cookie;
 use Tuxxedo\Http\Header;

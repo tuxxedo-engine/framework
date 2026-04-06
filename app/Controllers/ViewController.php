@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Services\Logger\CustomLoggerInterface;
+use App\Service\Logger\CustomLoggerInterface;
 use Tuxxedo\Router\Attribute\Controller;
 use Tuxxedo\Router\Attribute\Route;
 use Tuxxedo\Version;
