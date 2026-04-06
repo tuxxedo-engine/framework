@@ -11,14 +11,13 @@
 
 declare(strict_types=1);
 
-namespace App\Middleware;
+namespace Tuxxedo\Http\Request\Middleware;
 
-use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
 #[\Attribute(flags: \Attribute::TARGET_METHOD)]
-class OutputCaptureMiddleware implements MiddlewareInterface
+class OutputCapture implements MiddlewareInterface
 {
     public function handle(
         RequestInterface $request,

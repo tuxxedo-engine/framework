@@ -13,10 +13,10 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Middleware\OutputCaptureMiddleware;
 use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
+use Tuxxedo\Http\Request\Middleware\OutputCapture;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\Attribute\Controller;
@@ -31,7 +31,7 @@ readonly class DatabaseController
     }
 
     #[Route\Get]
-    #[OutputCaptureMiddleware]
+    #[OutputCapture]
     public function index(): ResponseInterface
     {
         $connection = $this->manager->getDefaultConnection();

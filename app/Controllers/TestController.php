@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Middleware\LoggerMiddleware;
-use App\Middleware\OutputCaptureMiddleware;
 use App\Services\Logger\CustomLoggerInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Cookie;
@@ -25,6 +24,7 @@ use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Attribute\MapTo;
 use Tuxxedo\Http\Request\Attribute\MapToArrayOf;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
+use Tuxxedo\Http\Request\Middleware\OutputCapture;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
@@ -383,7 +383,7 @@ readonly class TestController
     }
 
     #[Route\Get(uri: '/phpinfo.php')]
-    #[Middleware(OutputCaptureMiddleware::class)]
+    #[Middleware(OutputCapture::class)]
     public function phpInfo(): ResponseInterface
     {
         \phpinfo();
