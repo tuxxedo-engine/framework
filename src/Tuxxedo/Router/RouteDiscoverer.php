@@ -533,7 +533,6 @@ class RouteDiscoverer implements RouteDiscovererInterface
         }
 
         if ($type instanceof \ReflectionNamedType && $type->isBuiltin()) {
-            // @todo This might not be relevant anymore with the container integration
             if ($type->getName() === 'object' || $type->getName() === 'array') {
                 $this->handleError(
                     static fn (): RouterException => RouterException::fromUnsupportedNativeType(

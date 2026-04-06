@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Request;
 
 use Tuxxedo\Container\DefaultImplementation;
+use Tuxxedo\Http\InputContext;
 use Tuxxedo\Http\Request\Context\BodyContextInterface;
 use Tuxxedo\Http\Request\Context\HeaderContextInterface;
 use Tuxxedo\Http\Request\Context\InputContextInterface;
@@ -59,4 +60,8 @@ interface RequestInterface
     public function withRoute(
         DispatchableRouteInterface $route,
     ): static;
+
+    public function input(
+        InputContext $context,
+    ): InputContextInterface;
 }

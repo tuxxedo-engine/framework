@@ -14,8 +14,9 @@ declare(strict_types=1);
 namespace Tuxxedo\Mapper;
 
 use Tuxxedo\Container\DefaultImplementation;
+use Tuxxedo\Container\Lifecycle;
 
-#[DefaultImplementation(class: Mapper::class)]
+#[DefaultImplementation(class: Mapper::class, lifecycle: Lifecycle::PERSISTENT)]
 interface MapperInterface
 {
     /**

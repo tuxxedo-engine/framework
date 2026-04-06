@@ -19,7 +19,7 @@ use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
-#[\Attribute(\Attribute::TARGET_METHOD)]
+#[\Attribute(flags: \Attribute::TARGET_METHOD)]
 class LoggerMiddleware implements MiddlewareInterface
 {
     public function __construct(

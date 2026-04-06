@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request;
 
+use Tuxxedo\Http\InputContext;
 use Tuxxedo\Http\Request\Context\BodyContextInterface;
 use Tuxxedo\Http\Request\Context\EnvironmentBodyContext;
 use Tuxxedo\Http\Request\Context\EnvironmentHeaderContext;
@@ -82,5 +83,15 @@ class Request implements RequestInterface
                 'route' => $route,
             ],
         );
+    }
+
+    public function input(
+        InputContext $context,
+    ): InputContextInterface {
+        return match ($context) {
+            InputContext::GET => $this->get,
+            InputContext::POST => $this->post,
+            InputContext::COOKIE => $this->cookies,
+        };
     }
 }

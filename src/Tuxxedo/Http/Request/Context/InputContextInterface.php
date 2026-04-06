@@ -125,7 +125,7 @@ interface InputContextInterface
     /**
      * @template TClassName of object
      *
-     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $class
+     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
      * @return TClassName
      *
      * @throws HttpException
@@ -133,13 +133,13 @@ interface InputContextInterface
      */
     public function mapTo(
         string $name,
-        string|object $class,
+        string|object $className,
     ): object;
 
     /**
      * @template TClassName of object
      *
-     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $class
+     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
      * @return TClassName[]
      *
      * @throws HttpException
@@ -147,6 +147,6 @@ interface InputContextInterface
      */
     public function mapToArrayOf(
         string $name,
-        string|object $class,
+        string|object $className,
     ): array;
 }

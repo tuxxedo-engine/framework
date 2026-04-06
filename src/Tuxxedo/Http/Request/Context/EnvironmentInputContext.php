@@ -319,7 +319,7 @@ class EnvironmentInputContext implements InputContextInterface
 
     public function mapTo(
         string $name,
-        string|object $class,
+        string|object $className,
     ): object {
         if ($this->superglobal === \INPUT_COOKIE) {
             throw HttpException::fromInternalServerError();
@@ -331,12 +331,12 @@ class EnvironmentInputContext implements InputContextInterface
             throw HttpException::fromInternalServerError();
         }
 
-        return $this->mapper->mapArrayTo($value, $class);
+        return $this->mapper->mapArrayTo($value, $className);
     }
 
     public function mapToArrayOf(
         string $name,
-        string|object $class,
+        string|object $className,
     ): array {
         if ($this->superglobal === \INPUT_COOKIE) {
             throw HttpException::fromInternalServerError();
@@ -348,6 +348,6 @@ class EnvironmentInputContext implements InputContextInterface
             throw HttpException::fromInternalServerError();
         }
 
-        return $this->mapper->mapToArrayOf($value, $class);
+        return $this->mapper->mapToArrayOf($value, $className);
     }
 }
