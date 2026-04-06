@@ -17,6 +17,7 @@ use Tuxxedo\Http\InputContext;
 use Tuxxedo\Http\Request\Attribute\AbstractMapTo;
 
 #[\Attribute(flags: \Attribute::TARGET_PARAMETER)]
+// @todo Consider changing the namespace
 class Get extends AbstractMapTo
 {
     protected InputContext $context = InputContext::GET;

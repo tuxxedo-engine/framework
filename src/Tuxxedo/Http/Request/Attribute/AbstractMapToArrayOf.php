@@ -15,8 +15,10 @@ namespace Tuxxedo\Http\Request\Attribute;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
+use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\InputContext;
 use Tuxxedo\Http\Request\RequestInterface;
+use Tuxxedo\Mapper\MapperException;
 
 /**
  * @implements DependencyResolverInterface<array<object>>
@@ -38,6 +40,8 @@ abstract class AbstractMapToArrayOf implements DependencyResolverInterface
 
     /**
      * @return object[]
+     *
+     * @throws HttpException
      */
     public function resolve(
         ContainerInterface $container,
@@ -45,9 +49,13 @@ abstract class AbstractMapToArrayOf implements DependencyResolverInterface
     ): array {
         $context = $container->resolve(RequestInterface::class)->input($this->context);
 
-        return $context->mapToArrayOf(
-            name: $this->name,
-            className: $this->className,
-        );
+        try {
+            return $context->mapToArrayOf(
+                name: $this->name,
+                className: $this->className,
+            );
+        } catch (MapperException) {
+            throw HttpException::fromBadRequest();
+        }
     }
 }

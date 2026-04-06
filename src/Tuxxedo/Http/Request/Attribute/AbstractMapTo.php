@@ -15,8 +15,10 @@ namespace Tuxxedo\Http\Request\Attribute;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
+use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\InputContext;
 use Tuxxedo\Http\Request\RequestInterface;
+use Tuxxedo\Mapper\MapperException;
 
 /**
  * @implements DependencyResolverInterface<object>
@@ -36,15 +38,22 @@ abstract class AbstractMapTo implements DependencyResolverInterface
     ) {
     }
 
+    /**
+     * @throws HttpException
+     */
     public function resolve(
         ContainerInterface $container,
         \ReflectionParameter $parameter,
     ): object {
         $context = $container->resolve(RequestInterface::class)->input($this->context);
 
-        return $context->mapTo(
-            name: $this->name,
-            className: $this->className,
-        );
+        try {
+            return $context->mapTo(
+                name: $this->name,
+                className: $this->className,
+            );
+        } catch (MapperException) {
+            throw HttpException::fromBadRequest();
+        }
     }
 }

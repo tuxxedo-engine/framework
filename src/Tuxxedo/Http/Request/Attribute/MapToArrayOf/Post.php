@@ -17,6 +17,7 @@ use Tuxxedo\Http\InputContext;
 use Tuxxedo\Http\Request\Attribute\AbstractMapToArrayOf;
 
 #[\Attribute(flags: \Attribute::TARGET_PARAMETER)]
+// @todo Consider changing the namespace
 class Post extends AbstractMapToArrayOf
 {
     protected InputContext $context = InputContext::POST;
