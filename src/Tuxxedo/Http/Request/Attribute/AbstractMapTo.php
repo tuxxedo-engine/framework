@@ -30,12 +30,31 @@ abstract class AbstractMapTo implements DependencyResolverInterface
     }
 
     /**
-     * @param class-string<object>|(\Closure(): object)|object $className
+     * @param class-string<object>|(\Closure(): object)|object|null $className
      */
     public function __construct(
         protected string $name,
-        protected string|object $className,
+        protected string|object|null $className = null,
     ) {
+    }
+
+    /**
+     * @return class-string
+     */
+    private function getDefaultType(
+        \ReflectionParameter $parameter,
+    ): string {
+        $type = $parameter->getType();
+
+        if (
+            $type instanceof \ReflectionNamedType &&
+            !$type->isBuiltin()
+        ) {
+            /** @var class-string */
+            return $type->getName();
+        }
+
+        throw HttpException::fromBadRequest();
     }
 
     /**
@@ -50,7 +69,7 @@ abstract class AbstractMapTo implements DependencyResolverInterface
         try {
             return $context->mapTo(
                 name: $this->name,
-                className: $this->className,
+                className: $this->className ?? $this->getDefaultType($parameter),
             );
         } catch (MapperException) {
             throw HttpException::fromBadRequest();

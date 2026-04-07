@@ -190,4 +190,29 @@ readonly class MappingController
             '</form>',
         );
     }
+
+    #[Route\Post(uri: '/mapFive')]
+    public function mapFive(
+        #[MapTo\Post(name: 'struct')] PersonOne $one,
+    ): ResponseInterface {
+        return Response::capture(
+            callback: fn () => \var_dump(
+                $one,
+            ),
+            headers: [
+                new Header('Content-Type', 'text/plain'),
+            ],
+        );
+    }
+
+    #[Route\Get(uri: '/inputMapFive')]
+    public function inputMapFive(): ResponseInterface
+    {
+        return Response::html(
+            html: '<form action="/mapFive" method="post">' .
+            '<input type="text" name="struct[name]">' .
+            '<br><input type="submit">' .
+            '</form>',
+        );
+    }
 }
