@@ -102,7 +102,21 @@ class Kernel implements KernelInterface
         if ($e instanceof ResponseExceptionInterface) {
             $response = $e->toResponse();
         } else {
-            $response = HttpException::fromInternalServerError()->toResponse();
+            $exception = $e;
+
+            while ($exception->getPrevious() !== null) {
+                $exception = $exception->getPrevious();
+
+                if ($exception instanceof ResponseExceptionInterface) {
+                    break;
+                }
+            }
+
+            if ($exception instanceof ResponseExceptionInterface) {
+                $response = $exception->toResponse();
+            } else {
+                $response = HttpException::fromInternalServerError()->toResponse();
+            }
         }
 
         foreach ($handlers as $handler) {

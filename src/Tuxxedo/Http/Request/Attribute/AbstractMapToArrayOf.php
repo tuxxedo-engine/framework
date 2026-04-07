@@ -18,7 +18,6 @@ use Tuxxedo\Container\DependencyResolverInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\InputContext;
 use Tuxxedo\Http\Request\RequestInterface;
-use Tuxxedo\Mapper\MapperException;
 
 /**
  * @implements DependencyResolverInterface<array<object>>
@@ -73,8 +72,10 @@ abstract class AbstractMapToArrayOf implements DependencyResolverInterface
                 name: $this->name,
                 className: $this->className ?? $this->getDefaultType($parameter),
             );
-        } catch (MapperException) {
-            throw HttpException::fromBadRequest();
+        } catch (\Throwable $exception) {
+            throw HttpException::fromBadRequest(
+                exception: $exception,
+            );
         }
     }
 }
