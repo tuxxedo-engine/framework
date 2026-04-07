@@ -59,20 +59,40 @@ class EnvironmentInputContext implements InputContextInterface
     public function getRaw(
         string $name,
         mixed $default = null,
-        bool $expectsArray = false,
     ): mixed {
         if (!\filter_has_var($this->superglobal, $name)) {
             return $default;
         }
 
-        return \filter_input(
+        $input = \filter_input(
             $this->superglobal,
             $name,
             \FILTER_UNSAFE_RAW,
-            $expectsArray
-                ? \FILTER_REQUIRE_ARRAY
-                : 0,
         );
+
+        return $input !== false && $default !== false
+            ? $input
+            : $default;
+    }
+
+    public function getRawArray(
+        string $name,
+        mixed $default = null,
+    ): mixed {
+        if (!\filter_has_var($this->superglobal, $name)) {
+            return $default;
+        }
+
+        $input = \filter_input(
+            $this->superglobal,
+            $name,
+            \FILTER_UNSAFE_RAW,
+            \FILTER_REQUIRE_ARRAY,
+        );
+
+        return $input !== false && $default !== false
+            ? $input
+            : $default;
     }
 
     public function getInt(
@@ -348,10 +368,7 @@ class EnvironmentInputContext implements InputContextInterface
             throw HttpException::fromInternalServerError();
         }
 
-        $value = $this->getRaw(
-            name: $name,
-            expectsArray: true,
-        );
+        $value = $this->getRawArray($name);
 
         if (!\is_array($value)) {
             throw HttpException::fromInternalServerError();
@@ -368,10 +385,7 @@ class EnvironmentInputContext implements InputContextInterface
             throw HttpException::fromInternalServerError();
         }
 
-        $value = $this->getRaw(
-            name: $name,
-            expectsArray: true,
-        );
+        $value = $this->getRawArray($name);
 
         if (!\is_array($value)) {
             throw HttpException::fromInternalServerError();

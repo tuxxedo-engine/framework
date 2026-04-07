@@ -36,7 +36,11 @@ interface InputContextInterface
     public function getRaw(
         string $name,
         mixed $default = null,
-        bool $expectsArray = false,
+    ): mixed;
+
+    public function getRawArray(
+        string $name,
+        mixed $default = null,
     ): mixed;
 
     public function getInt(
