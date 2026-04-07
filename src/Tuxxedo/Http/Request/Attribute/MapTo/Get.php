@@ -14,11 +14,18 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Request\Attribute\MapTo;
 
 use Tuxxedo\Http\InputContext;
-use Tuxxedo\Http\Request\Attribute\AbstractMapTo;
+use Tuxxedo\Http\Request\Attribute\MapTo;
 
 #[\Attribute(flags: \Attribute::TARGET_PARAMETER)]
-// @todo Consider changing the namespace
-class Get extends AbstractMapTo
+class Get extends MapTo
 {
-    protected InputContext $context = InputContext::GET;
+    /**
+     * @param class-string<object>|(\Closure(): object)|object|null $className
+     */
+    public function __construct(
+        string $name,
+        object|string|null $className = null,
+    ) {
+        parent::__construct($name, $className, InputContext::GET);
+    }
 }

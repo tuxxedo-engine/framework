@@ -22,24 +22,23 @@ use Tuxxedo\Http\Request\RequestInterface;
 /**
  * @implements DependencyResolverInterface<object>
  */
-abstract class AbstractMapTo implements DependencyResolverInterface
+#[\Attribute(flags: \Attribute::TARGET_PARAMETER)]
+class MapTo implements DependencyResolverInterface
 {
-    abstract protected InputContext $context {
-        get;
-    }
-
     /**
      * @param class-string<object>|(\Closure(): object)|object|null $className
      */
     public function __construct(
-        protected string $name,
-        protected string|object|null $className = null,
+        protected readonly string $name,
+        protected readonly string|object|null $className = null,
+        protected readonly ?InputContext $context = null,
     ) {
     }
 
     /**
      * @return class-string
      */
+    // @todo Consider generalizing this, might be useful for other abstractions
     private function getDefaultType(
         \ReflectionParameter $parameter,
     ): string {
@@ -63,7 +62,8 @@ abstract class AbstractMapTo implements DependencyResolverInterface
         ContainerInterface $container,
         \ReflectionParameter $parameter,
     ): object {
-        $context = $container->resolve(RequestInterface::class)->input($this->context);
+        $request = $container->resolve(RequestInterface::class);
+        $context = $request->input($this->context ?? InputContext::fromMethod($request->server->method));
 
         try {
             return $context->mapTo(

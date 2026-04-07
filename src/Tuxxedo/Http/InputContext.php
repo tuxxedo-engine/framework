@@ -18,4 +18,17 @@ enum InputContext
     case GET;
     case POST;
     case COOKIE;
+
+    /**
+     * @throws HttpException
+     */
+    public static function fromMethod(
+        Method $method
+    ): self {
+        return match ($method) {
+            Method::GET => self::GET,
+            Method::POST => self::POST,
+            default => throw HttpException::fromInternalServerError(),
+        };
+    }
 }
