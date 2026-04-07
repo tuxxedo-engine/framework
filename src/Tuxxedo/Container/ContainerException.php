@@ -52,6 +52,7 @@ class ContainerException extends \Exception
                 'Unable to resolve dependency, exception thrown with message: "%s"',
                 $exception->getMessage(),
             ),
+            previous: $exception,
         );
     }
 
@@ -68,6 +69,7 @@ class ContainerException extends \Exception
                 $attributeClass,
                 $exception->getMessage(),
             ),
+            previous: $exception,
         );
     }
 

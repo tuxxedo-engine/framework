@@ -56,17 +56,29 @@ class EnvironmentInputContext implements InputContextInterface
         );
     }
 
-    public function getRaw(string $name, mixed $default = null): mixed
-    {
+    public function getRaw(
+        string $name,
+        mixed $default = null,
+        bool $expectsArray = false,
+    ): mixed {
         if (!\filter_has_var($this->superglobal, $name)) {
             return $default;
         }
 
-        return \filter_input($this->superglobal, $name);
+        return \filter_input(
+            $this->superglobal,
+            $name,
+            \FILTER_UNSAFE_RAW,
+            $expectsArray
+                ? \FILTER_REQUIRE_ARRAY
+                : 0,
+        );
     }
 
-    public function getInt(string $name, int $default = 0): int
-    {
+    public function getInt(
+        string $name,
+        int $default = 0,
+    ): int {
         if (!\filter_has_var($this->superglobal, $name)) {
             return $default;
         }
@@ -84,8 +96,10 @@ class EnvironmentInputContext implements InputContextInterface
         return $value;
     }
 
-    public function getBool(string $name, bool $default = false): bool
-    {
+    public function getBool(
+        string $name,
+        bool $default = false,
+    ): bool {
         if (!\filter_has_var($this->superglobal, $name)) {
             return $default;
         }
@@ -132,8 +146,10 @@ class EnvironmentInputContext implements InputContextInterface
         return $value;
     }
 
-    public function getString(string $name, string $default = ''): string
-    {
+    public function getString(
+        string $name,
+        string $default = '',
+    ): string {
         if (!\filter_has_var($this->superglobal, $name)) {
             return $default;
         }
@@ -155,8 +171,10 @@ class EnvironmentInputContext implements InputContextInterface
      *
      * @throws HttpException
      */
-    public function getEnum(string $name, string $enum): object
-    {
+    public function getEnum(
+        string $name,
+        string $enum,
+    ): object {
         if (
             !\enum_exists($enum) ||
             !\filter_has_var($this->superglobal, $name)
@@ -179,8 +197,9 @@ class EnvironmentInputContext implements InputContextInterface
         throw HttpException::fromInternalServerError();
     }
 
-    public function getArrayOfInt(string $name): array
-    {
+    public function getArrayOfInt(
+        string $name,
+    ): array {
         if (!\filter_has_var($this->superglobal, $name)) {
             return [];
         }
@@ -199,8 +218,9 @@ class EnvironmentInputContext implements InputContextInterface
         return \array_filter($value, \is_int(...));
     }
 
-    public function getArrayOfBool(string $name): array
-    {
+    public function getArrayOfBool(
+        string $name,
+    ): array {
         if (!\filter_has_var($this->superglobal, $name)) {
             return [];
         }
@@ -248,8 +268,9 @@ class EnvironmentInputContext implements InputContextInterface
         return \array_filter($value, \is_float(...));
     }
 
-    public function getArrayOfString(string $name): array
-    {
+    public function getArrayOfString(
+        string $name,
+    ): array {
         if (!\filter_has_var($this->superglobal, $name)) {
             return [];
         }
@@ -276,8 +297,10 @@ class EnvironmentInputContext implements InputContextInterface
      *
      * @throws HttpException
      */
-    public function getArrayOfEnum(string $name, string $enum): array
-    {
+    public function getArrayOfEnum(
+        string $name,
+        string $enum,
+    ): array {
         if (
             !\enum_exists($enum) ||
             !\filter_has_var($this->superglobal, $name)
@@ -325,7 +348,10 @@ class EnvironmentInputContext implements InputContextInterface
             throw HttpException::fromInternalServerError();
         }
 
-        $value = $this->getRaw($name);
+        $value = $this->getRaw(
+            name: $name,
+            expectsArray: true,
+        );
 
         if (!\is_array($value)) {
             throw HttpException::fromInternalServerError();
@@ -342,7 +368,10 @@ class EnvironmentInputContext implements InputContextInterface
             throw HttpException::fromInternalServerError();
         }
 
-        $value = $this->getRaw($name);
+        $value = $this->getRaw(
+            name: $name,
+            expectsArray: true,
+        );
 
         if (!\is_array($value)) {
             throw HttpException::fromInternalServerError();

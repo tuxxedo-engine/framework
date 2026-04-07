@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Service\Entity\PersonOne;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Attribute\MapTo;
@@ -160,6 +161,31 @@ readonly class MappingController
             '<input type="text" name="struct[0][name]">' .
             '<br>' .
             '<input type="text" name="struct[0][age]">' .
+            '<br><input type="submit">' .
+            '</form>',
+        );
+    }
+
+    #[Route\Post(uri: '/mapFour')]
+    public function mapFour(
+        #[MapTo\Post(name: 'struct', className: PersonOne::class)] object $one,
+    ): ResponseInterface {
+        return Response::capture(
+            callback: fn () => \var_dump(
+                $one,
+            ),
+            headers: [
+                new Header('Content-Type', 'text/plain'),
+            ],
+        );
+    }
+
+    #[Route\Get(uri: '/inputMapFour')]
+    public function inputMapFour(): ResponseInterface
+    {
+        return Response::html(
+            html: '<form action="/mapFour" method="post">' .
+            '<input type="text" name="struct[name]">' .
             '<br><input type="submit">' .
             '</form>',
         );
