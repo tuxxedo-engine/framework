@@ -21,8 +21,6 @@ use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Method;
-use Tuxxedo\Http\Request\Attribute\MapTo;
-use Tuxxedo\Http\Request\Attribute\MapToArrayOf;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\Middleware\OutputCapture;
 use Tuxxedo\Http\Request\RequestInterface;
@@ -31,8 +29,6 @@ use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Http\WeightedHeaderInterface;
 use Tuxxedo\Logger\LogLevel;
 use Tuxxedo\Logger\LoggerInterface;
-use Tuxxedo\Mapper\Mapper;
-use Tuxxedo\Mapper\MapperInterface;
 use Tuxxedo\Router\Attribute\Middleware;
 use Tuxxedo\Router\Attribute\Route;
 use Tuxxedo\Version;
@@ -47,13 +43,10 @@ use Tuxxedo\Version;
 // @todo Json body mapping utility attributes
 readonly class TestController
 {
-    private MapperInterface $mapper;
-
     public function __construct(
         private ContainerInterface $container,
         private CustomLoggerInterface $logger,
     ) {
-        $this->mapper = new Mapper();
     }
 
     #[Route\Get(uri: '/log')]
@@ -106,115 +99,6 @@ readonly class TestController
                 $logger->total,
                 $logger->totalInfo,
             ),
-        );
-    }
-
-    #[Route\Get(uri: '/map')]
-    public function map(): ResponseInterface
-    {
-        return Response::capture(
-            callback: fn () => \var_dump(
-                $this->mapper->mapArrayTo(
-                    input: [
-                        'name' => 'Engine',
-                    ],
-                    className: new class () {
-                        public string $name = '';
-                    },
-                ),
-                $this->mapper->mapToArrayOf(
-                    input: [
-                        [
-                            'name' => 'foo',
-                        ],
-                        [
-                            'name' => 'bar',
-                        ],
-                        [
-                            'name' => 'baz',
-                        ],
-                    ],
-                    className: new class () {
-                        public string $name = '';
-                    },
-                ),
-            ),
-            headers: [
-                new Header('Content-Type', 'text/plain'),
-            ],
-        );
-    }
-
-    #[Route\Post(uri: '/mapTwo')]
-    public function mapTwo(
-        #[MapTo\Post(
-            name: 'struct',
-            className: static function (): object {
-                return new class () {
-                    public string $name;
-                    public int $age;
-                };
-            },
-        )] object $one,
-    ): ResponseInterface {
-        return Response::capture(
-            callback: fn () => \var_dump(
-                $one,
-            ),
-            headers: [
-                new Header('Content-Type', 'text/plain'),
-            ],
-        );
-    }
-
-    #[Route\Get(uri: '/inputMapTwo')]
-    public function inputMapTwo(): ResponseInterface
-    {
-        return Response::html(
-            html: '<form action="/mapTwo" method="post">' .
-            '<input type="text" name="struct[name]">' .
-            '<br>' .
-            '<input type="text" name="struct[age]">' .
-            '<br><input type="submit">' .
-            '</form>',
-        );
-    }
-
-    /**
-     * @param array<object{name: string, age: int}> $one
-     */
-    #[Route\Post(uri: '/mapThree')]
-    public function mapThree(
-        #[MapToArrayOf\Post(
-            name: 'struct',
-            className: static function (): object {
-                return new class () {
-                    public string $name;
-                    public int $age;
-                };
-            },
-        )] array $one,
-    ): ResponseInterface {
-        return Response::capture(
-            callback: fn () => \var_dump(
-                $one,
-            ),
-            headers: [
-                new Header('Content-Type', 'text/plain'),
-            ],
-        );
-    }
-
-    #[Route\Get(uri: '/inputMapThree')]
-    public function inputMapThree(): ResponseInterface
-    {
-        return Response::html(
-            html: '<form action="/mapThree" method="post">' .
-            '<input type="text" name="struct[0][name]">' .
-            '<br>' .
-            '<input type="text" name="struct[0][age]">' .
-            '<br><input type="submit">' .
-            '</form>',
         );
     }
 
@@ -319,31 +203,6 @@ readonly class TestController
                 'floatDot' => $request->post->getFloat('test'),
                 'floatComma' => $request->post->getFloat('test', decimalPoint: ',', thousandSeparator: '.'),
             ],
-        );
-    }
-
-    #[Route(uri: '/inputMap', method: [Method::GET, Method::POST])]
-    public function inputMap(RequestInterface $request): ResponseInterface
-    {
-        if ($request->server->method === Method::GET) {
-            return Response::html(
-                html: '<form action="/inputMap" method="post">' .
-                      '<input type="text" name="struct[name]">' .
-                      '<br>' .
-                      '<input type="text" name="struct[age]">' .
-                      '<br><input type="submit">' .
-                      '</form>',
-            );
-        }
-
-        return Response::json(
-            json: $request->post->mapTo(
-                'struct',
-                new class () {
-                    public string $name;
-                    public int $age;
-                },
-            ),
         );
     }
 
