@@ -56,13 +56,11 @@ class EnvironmentInputContext implements InputContextInterface
 
     public function getRaw(string $name, mixed $default = null): mixed
     {
-        $superglobal = $this->all();
-
-        if (!\array_key_exists($name, $superglobal)) {
+        if (!\filter_has_var($this->superglobal, $name)) {
             return $default;
         }
 
-        return $superglobal[$name];
+        return \filter_input($this->superglobal, $name);
     }
 
     public function getInt(string $name, int $default = 0): int
