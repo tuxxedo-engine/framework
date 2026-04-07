@@ -30,6 +30,7 @@ class EnvironmentInputContext implements InputContextInterface
     ) {
     }
 
+    // @todo Consider whether this serves a purpose here at all
     public function all(): array
     {
         return match ($this->superglobal) {
@@ -39,6 +40,7 @@ class EnvironmentInputContext implements InputContextInterface
         };
     }
 
+    // @todo Consider whether this serves a purpose here at all
     public function toCollection(): CollectionInterface
     {
         return new Collection(
