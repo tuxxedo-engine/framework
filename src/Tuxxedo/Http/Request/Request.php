@@ -41,10 +41,8 @@ class Request implements RequestInterface
 
     public function __construct(
         ?DispatchableRouteInterface $route = null,
-        ?MapperInterface $mapper = null,
+        MapperInterface $mapper = new Mapper(),
     ) {
-        $mapper ??= new Mapper();
-
         $this->server = new EnvironmentServerContext();
         $this->headers = new EnvironmentHeaderContext();
 
