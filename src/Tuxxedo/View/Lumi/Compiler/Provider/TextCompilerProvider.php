@@ -154,7 +154,7 @@ class TextCompilerProvider implements CompilerProviderInterface
         }
 
         return \sprintf(
-            '<?php if ($this->hasBlock(\'%1$s\')) { $this->blockExecute(\'%1$s\', $__lumiVariables); } else { ?>%2$s<?php } ?>',
+            '<?php if ($this->hasBlock(\'%1$s\')) { $this->executeBlock(\'%1$s\', $__lumiVariables); } else { ?>%2$s<?php } ?>',
             $compiler->escaper->js($node->name),
             $body,
         );

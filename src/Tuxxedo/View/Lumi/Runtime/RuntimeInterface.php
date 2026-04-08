@@ -142,7 +142,7 @@ interface RuntimeInterface
      *
      * @throws ViewException
      */
-    public function blockExecute(
+    public function executeBlock(
         string $name,
         array &$scope,
     ): void;

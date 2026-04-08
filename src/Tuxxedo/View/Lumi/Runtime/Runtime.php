@@ -217,7 +217,7 @@ class Runtime implements RuntimeInterface
         return \array_key_exists($name, $this->blocks);
     }
 
-    public function blockExecute(
+    public function executeBlock(
         string $name,
         array &$scope,
     ): void {
