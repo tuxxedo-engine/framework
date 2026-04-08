@@ -17,13 +17,15 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
 
 /**
- * @implements DependencyResolverInterface<array<object>>
+ * @template TClassName of object
+ *
+ * @implements DependencyResolverInterface<TClassName[]>
  */
 #[\Attribute(\Attribute::TARGET_PARAMETER)]
 class Tagged implements DependencyResolverInterface
 {
     /**
-     * @param class-string $className
+     * @param class-string<TClassName> $className
      */
     public function __construct(
         private readonly string $className,
@@ -31,7 +33,7 @@ class Tagged implements DependencyResolverInterface
     }
 
     /**
-     * @return object[]
+     * @return TClassName[]
      */
     public function resolve(
         ContainerInterface $container,

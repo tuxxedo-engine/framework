@@ -19,13 +19,15 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
 
 /**
- * @implements DependencyResolverInterface<ImmutableCollection<int, object>>
+ * @template TClassName of object
+ *
+ * @implements DependencyResolverInterface<ImmutableCollection<int, TClassName>>
  */
 #[\Attribute(\Attribute::TARGET_PARAMETER)]
 class TaggedCollection implements DependencyResolverInterface
 {
     /**
-     * @param class-string $className
+     * @param class-string<TClassName> $className
      */
     public function __construct(
         private readonly string $className,
@@ -36,7 +38,7 @@ class TaggedCollection implements DependencyResolverInterface
         ContainerInterface $container,
         \ReflectionParameter $parameter,
     ): CollectionInterface {
-        /** @var ImmutableCollection<int, object> */
+        /** @var ImmutableCollection<int, TClassName> */
         return new ImmutableCollection($container->resolveTagged($this->className));
     }
 }
