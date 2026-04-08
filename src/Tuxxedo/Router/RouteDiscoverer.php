@@ -493,7 +493,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
     private function getRegexUri(string $uri): string
     {
         return '#^' . \preg_replace_callback(
-            '/\/\{(\??)([a-zA-Z_][a-zA-Z0-9_]*)(?::([^}]+)|<([^>]+)>)?}/',
+            '/\{(\??)([a-zA-Z_][a-zA-Z0-9_]*)(?::([^}]+)|<([^>]+)>)?}/',
             function (array $matches): string {
                 $regex = $matches[3] ?? null;
                 $type = $matches[4] ?? null;
@@ -506,8 +506,8 @@ class RouteDiscoverer implements RouteDiscovererInterface
                 $segment = '(?<' . $matches[2] . '>' . $pattern . ')';
 
                 return $matches[1] === '?'
-                    ? '(?:/' . $segment . ')?'
-                    : '/' . $segment;
+                    ? '(?:' . $segment . ')?'
+                    : $segment;
             },
             $uri,
         ) . '$#';

@@ -25,10 +25,12 @@ use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\Middleware\OutputCapture;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
+use Tuxxedo\Http\Response\ResponseCode;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Http\WeightedHeaderInterface;
 use Tuxxedo\Logger\LogLevel;
 use Tuxxedo\Logger\LoggerInterface;
+use Tuxxedo\Router\Attribute\Argument;
 use Tuxxedo\Router\Attribute\Middleware;
 use Tuxxedo\Router\Attribute\Route;
 use Tuxxedo\Version;
@@ -276,9 +278,12 @@ readonly class TestController
         );
     }
 
-    #[Route\Get(uri: '/test-http-500', trailingSlash: true)]
-    public function error(): never
-    {
-        throw HttpException::fromInternalServerError();
+    #[Route\Get(uri: '/test-http-{code:\d+}', trailingSlash: true)]
+    public function error(
+        #[Argument] int $code,
+    ): never {
+        throw new HttpException(
+            responseCode: ResponseCode::tryFrom($code) ?? ResponseCode::INTERNAL_SERVER_ERROR,
+        );
     }
 }
