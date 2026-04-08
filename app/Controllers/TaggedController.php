@@ -14,8 +14,10 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Service\Logger\CustomLoggerInterface;
+use Tuxxedo\Collection\CollectionInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\Resolver\Tagged;
+use Tuxxedo\Container\Resolver\TaggedCollection;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
@@ -32,13 +34,18 @@ readonly class TaggedController
 
     /**
      * @param LoggerInterface[] $tagged
+     * @param CollectionInterface<int, LoggerInterface> $taggedCollection
      */
     #[Route\Get(uri: '/tagged')]
     public function tagged(
         #[Tagged(LoggerInterface::class)] array $tagged,
+        #[TaggedCollection(LoggerInterface::class)] CollectionInterface $taggedCollection,
     ): ResponseInterface {
         return Response::capture(
-            callback: fn () => \var_dump($tagged),
+            callback: fn () => \var_dump(
+                $tagged,
+                $taggedCollection,
+            ),
             headers: [
                 new Header('Content-Type', 'text/plain'),
             ],

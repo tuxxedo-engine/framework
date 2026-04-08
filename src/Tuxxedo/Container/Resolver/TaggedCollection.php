@@ -13,14 +13,16 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container\Resolver;
 
+use Tuxxedo\Collection\CollectionInterface;
+use Tuxxedo\Collection\ImmutableCollection;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
 
 /**
- * @implements DependencyResolverInterface<array<object>>
+ * @implements DependencyResolverInterface<ImmutableCollection<int, object>>
  */
 #[\Attribute(\Attribute::TARGET_PARAMETER)]
-class Tagged implements DependencyResolverInterface
+class TaggedCollection implements DependencyResolverInterface
 {
     /**
      * @param class-string $className
@@ -30,13 +32,11 @@ class Tagged implements DependencyResolverInterface
     ) {
     }
 
-    /**
-     * @return object[]
-     */
     public function resolve(
         ContainerInterface $container,
         \ReflectionParameter $parameter,
-    ): array {
-        return $container->resolveTagged($this->className);
+    ): CollectionInterface {
+        /** @var ImmutableCollection<int, object> */
+        return new ImmutableCollection($container->resolveTagged($this->className));
     }
 }
