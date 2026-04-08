@@ -304,6 +304,28 @@ class Container implements ContainerInterface
         return $class->getName();
     }
 
+    /**
+     * @template TClassName of object
+     *
+     * @param class-string<TClassName> $className
+     * @return TClassName[]
+     *
+     * @throws ContainerException
+     */
+    public function resolveTagged(
+        string $className,
+    ): array {
+        $tagged = [];
+
+        foreach (\array_keys($this->registry) as $class) {
+            if (\is_a($class, $className, true)) {
+                $tagged[] = $this->resolve($class);
+            }
+        }
+
+        return $tagged;
+    }
+
     public function call(
         \Closure $callable,
         array $arguments = [],

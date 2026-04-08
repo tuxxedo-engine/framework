@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Tuxxedo\Logger;
 
 // @todo Consider a SyslogLogger
-// @todo Maybe LoggerManager like DB?
 interface LoggerInterface
 {
     public int $total {

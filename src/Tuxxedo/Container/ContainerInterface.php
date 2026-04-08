@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Container;
 
 // @todo Tagged services support?
+// @todo Recursion checking support
 interface ContainerInterface
 {
     /**
@@ -104,6 +105,18 @@ interface ContainerInterface
     public function resolveName(
         string $className,
     ): string;
+
+    /**
+     * @template TClassName of object
+     *
+     * @param class-string<TClassName> $className
+     * @return TClassName[]
+     *
+     * @throws ContainerException
+     */
+    public function resolveTagged(
+        string $className,
+    ): array;
 
     /**
      * @template TReturnType
