@@ -13,22 +13,11 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request\Context;
 
-use Tuxxedo\Collection\CollectionInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Mapper\MapperException;
 
 interface InputContextInterface
 {
-    /**
-     * @return mixed[]
-     */
-    public function all(): array;
-
-    /**
-     * @return CollectionInterface<array-key, mixed>
-     */
-    public function toCollection(): CollectionInterface;
-
     public function has(
         string $name,
     ): bool;

@@ -13,8 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request\Context;
 
-use Tuxxedo\Collection\Collection;
-use Tuxxedo\Collection\CollectionInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Mapper\Mapper;
 use Tuxxedo\Mapper\MapperInterface;
@@ -28,24 +26,6 @@ class EnvironmentInputContext implements InputContextInterface
         private readonly int $superglobal,
         private readonly MapperInterface $mapper = new Mapper(),
     ) {
-    }
-
-    // @todo Consider whether this serves a purpose here at all
-    public function all(): array
-    {
-        return match ($this->superglobal) {
-            \INPUT_GET => $_GET,
-            \INPUT_POST => $_POST,
-            \INPUT_COOKIE => $_COOKIE,
-        };
-    }
-
-    // @todo Consider whether this serves a purpose here at all
-    public function toCollection(): CollectionInterface
-    {
-        return new Collection(
-            collection: $this->all(),
-        );
     }
 
     public function has(string $name): bool
