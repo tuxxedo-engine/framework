@@ -51,6 +51,9 @@ return [
      * deployed
      *
      * This should always contain a trailing slash
+     *
+     * @type string
+     * @required
      */
     'url' => 'http://localhost:13099/',
 ];
