@@ -13,15 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Driver;
 
-use Tuxxedo\Container\DefaultImplementation;
-
-#[DefaultImplementation(class: ResultRow::class)]
-interface ResultRowInterface extends HydratableInterface
+interface HydratableInterface
 {
     /**
-     * @var mixed[]
+     * @param mixed[] $properties
      */
-    public array $properties {
-        get;
-    }
+    public static function create(
+        array $properties,
+    ): self;
 }

@@ -23,19 +23,26 @@ interface ResultSetInterface extends \Countable, \Iterator
     }
 
     /**
-     * @return array<ResultRowInterface>
+     * @template TClassName of object
+     *
+     * @param class-string<TClassName&HydratableInterface>|\Closure(mixed[] $properties): TClassName $class
+     * @return \Generator<TClassName>
      */
-    public function fetchAllAsArray(): array;
-
-    /**
-     * @return \Generator<ResultRowInterface>
-     */
-    public function fetchAllAsGenerator(): \Generator;
+    public function fetchAll(
+        string|\Closure $class = ResultRowInterface::class,
+    ): \Generator;
 
     public function fetch(): ResultRowInterface;
 
-    // @todo Consider a $class argument for DTO mapping (MapperInterface?)
-    public function fetchObject(): ResultRowInterface;
+    /**
+     * @template TClassName of object
+     *
+     * @param class-string<TClassName&HydratableInterface>|\Closure(mixed[] $properties): TClassName $class
+     * @return TClassName
+     */
+    public function fetchObject(
+        string|\Closure $class = ResultRowInterface::class,
+    ): object;
 
     /**
      * @return mixed[]
@@ -51,6 +58,4 @@ interface ResultSetInterface extends \Countable, \Iterator
      * @return array<int, mixed>
      */
     public function fetchRow(): array;
-
-    public function free(): void;
 }

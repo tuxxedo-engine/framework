@@ -13,12 +13,13 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Driver\Mysql;
 
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\DatabaseException;
-use Tuxxedo\Database\Driver\ResultRow;
+use Tuxxedo\Database\Driver\AbstractResultSet;
+use Tuxxedo\Database\Driver\HydratableInterface;
 use Tuxxedo\Database\Driver\ResultRowInterface;
-use Tuxxedo\Database\Driver\ResultSetInterface;
 
-class MysqlResultSet implements ResultSetInterface
+class MysqlResultSet extends AbstractResultSet
 {
     private int $pointer = 0;
 
@@ -28,6 +29,7 @@ class MysqlResultSet implements ResultSetInterface
     private int $numRows;
 
     public function __construct(
+        protected ContainerInterface $container,
         private ?\mysqli_result $result,
         public readonly int $affectedRows = 0,
     ) {
@@ -41,31 +43,15 @@ class MysqlResultSet implements ResultSetInterface
         }
     }
 
-    public function fetchAllAsArray(): array
-    {
-        $rows = [];
-
-        foreach ($this as $row) {
-            $rows[] = $row;
-        }
-
-        return $rows;
-    }
-
-    public function fetchAllAsGenerator(): \Generator
-    {
-        foreach ($this as $row) {
-            yield $row;
-        }
-    }
-
-    public function fetch(): ResultRowInterface
-    {
-        return $this->fetchObject();
-    }
-
-    public function fetchObject(): ResultRowInterface
-    {
+    /**
+     * @template TClassName of object
+     *
+     * @param class-string<TClassName&HydratableInterface>|\Closure(mixed[] $properties): TClassName $class
+     * @return TClassName
+     */
+    public function fetchObject(
+        string|\Closure $class = ResultRowInterface::class,
+    ): object {
         if ($this->result === null) {
             throw DatabaseException::fromEmptyResultSet();
         }
@@ -76,9 +62,7 @@ class MysqlResultSet implements ResultSetInterface
             throw DatabaseException::fromCannotFetch();
         }
 
-        return new ResultRow(
-            properties: $row,
-        );
+        return parent::hydrate($class, $row);
     }
 
     public function fetchArray(): array
@@ -125,17 +109,6 @@ class MysqlResultSet implements ResultSetInterface
 
         /** @var array<int, mixed> */
         return $row;
-    }
-
-    public function free(): void
-    {
-        if ($this->result !== null) {
-            $this->result->free();
-
-            $this->result = null;
-            $this->pointer = 0;
-            $this->numRows = 0;
-        }
     }
 
     public function count(): int

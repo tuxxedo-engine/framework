@@ -23,6 +23,12 @@ class ResultRow implements ResultRowInterface
     ) {
     }
 
+    public static function create(
+        array $properties,
+    ): self {
+        return new self($properties);
+    }
+
     public function __get(string $property): mixed
     {
         return $this->properties[$property] ?? null;

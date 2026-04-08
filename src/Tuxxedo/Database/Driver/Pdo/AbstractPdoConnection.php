@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver\Pdo;
 
 use Tuxxedo\Config\ConfigInterface;
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Dialect\DialectInterface;
@@ -33,6 +34,7 @@ abstract class AbstractPdoConnection implements ConnectionInterface
     private StatementParserInterface $statementParser;
 
     public function __construct(
+        private readonly ContainerInterface $container,
         ConfigInterface $config,
     ) {
         $this->name = $config->getString('name');
@@ -313,12 +315,14 @@ abstract class AbstractPdoConnection implements ConnectionInterface
 
         if ($statement->columnCount() > 0) {
             return new PdoResultSet(
+                container: $this->container,
                 result: $statement,
                 affectedRows: 0,
             );
         }
 
         return new PdoResultSet(
+            container: $this->container,
             result: null,
             affectedRows: $statement->rowCount(),
         );

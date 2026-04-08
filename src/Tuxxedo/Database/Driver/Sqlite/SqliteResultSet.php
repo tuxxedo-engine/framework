@@ -13,12 +13,14 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Driver\Sqlite;
 
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\DatabaseException;
+use Tuxxedo\Database\Driver\AbstractResultSet;
+use Tuxxedo\Database\Driver\HydratableInterface;
 use Tuxxedo\Database\Driver\ResultRow;
 use Tuxxedo\Database\Driver\ResultRowInterface;
-use Tuxxedo\Database\Driver\ResultSetInterface;
 
-class SqliteResultSet implements ResultSetInterface
+class SqliteResultSet extends AbstractResultSet
 {
     private int $pointer = 0;
     private bool $endedBuffering = false;
@@ -29,6 +31,7 @@ class SqliteResultSet implements ResultSetInterface
     private array $buffer = [];
 
     public function __construct(
+        protected ContainerInterface $container,
         private ?\SQLite3Result $result,
         public readonly int $affectedRows = 0,
     ) {
@@ -71,31 +74,15 @@ class SqliteResultSet implements ResultSetInterface
         return $row;
     }
 
-    public function fetchAllAsArray(): array
-    {
-        $rows = [];
-
-        foreach ($this as $row) {
-            $rows[] = $row;
-        }
-
-        return $rows;
-    }
-
-    public function fetchAllAsGenerator(): \Generator
-    {
-        foreach ($this as $row) {
-            yield $row;
-        }
-    }
-
-    public function fetch(): ResultRowInterface
-    {
-        return $this->fetchObject();
-    }
-
-    public function fetchObject(): ResultRowInterface
-    {
+    /**
+     * @template TClassName of object
+     *
+     * @param class-string<TClassName&HydratableInterface>|\Closure(mixed[] $properties): TClassName $class
+     * @return TClassName
+     */
+    public function fetchObject(
+        string|\Closure $class = ResultRowInterface::class,
+    ): object {
         if ($this->result === null) {
             throw DatabaseException::fromEmptyResultSet();
         }
@@ -105,9 +92,7 @@ class SqliteResultSet implements ResultSetInterface
                 throw DatabaseException::fromCannotFetch();
             }
 
-            return new ResultRow(
-                properties: $this->buffer[$this->pointer++],
-            );
+            return parent::hydrate($class, $this->buffer[$this->pointer++]);
         }
 
         $this->endedBuffering = true;
@@ -170,18 +155,6 @@ class SqliteResultSet implements ResultSetInterface
         $this->endedBuffering = true;
 
         throw DatabaseException::fromCannotFetch();
-    }
-
-    public function free(): void
-    {
-        if ($this->result !== null) {
-            $this->result->finalize();
-
-            $this->result = null;
-            $this->pointer = 0;
-            $this->buffer = [];
-            $this->endedBuffering = false;
-        }
     }
 
     public function count(): int

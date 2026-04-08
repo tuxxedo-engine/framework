@@ -16,6 +16,7 @@ namespace Tuxxedo\Database\Driver\Pgsql;
 use PgSql\Connection;
 use PgSql\Result;
 use Tuxxedo\Config\ConfigInterface;
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Dialect\PgsqlDialect;
@@ -37,6 +38,7 @@ class PgsqlConnection implements ConnectionInterface
     private bool $inTransaction = false;
 
     public function __construct(
+        private readonly ContainerInterface $container,
         ConfigInterface $config,
     ) {
         $this->name = $config->getString('name');
@@ -375,6 +377,7 @@ class PgsqlConnection implements ConnectionInterface
         }
 
         return new PgsqlResultSet(
+            container: $this->container,
             result: $result,
             affectedRows: \pg_affected_rows($result),
         );

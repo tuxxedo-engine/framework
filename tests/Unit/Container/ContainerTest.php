@@ -226,6 +226,16 @@ class ContainerTest extends TestCase
         self::assertNotSame($first->subService::class, $second->subService::class);
     }
 
+    public function testResolveName(): void
+    {
+        $container = new Container();
+
+        $container->alias(CtorArgsService::class, CtorNoArgsService::class);
+
+        self::assertSame(CtorNoArgsService::class, $container->resolveName(CtorNoArgsService::class));
+        self::assertSame(CtorNoArgsService::class, $container->resolveName(CtorArgsService::class));
+    }
+
     public function testResolveWithConstructorNoArgs(): void
     {
         $container = new Container();
@@ -501,6 +511,20 @@ class ContainerTest extends TestCase
         $service = $container->resolve($class);
 
         self::assertInstanceOf($expectedClass, $service);
+    }
+
+    /**
+     * @param class-string $class
+     * @param class-string $expectedClass
+     */
+    #[DataProvider('defaultImplementationDataProvider')]
+    public function testResolveNameWithDefaultImplementation(
+        string $class,
+        string $expectedClass,
+    ): void {
+        $container = new Container();
+
+        self::assertSame($expectedClass, $container->resolveName($class));
     }
 
     public function testDefaultImplementationWithArguments(): void

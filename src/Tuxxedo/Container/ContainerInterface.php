@@ -94,6 +94,18 @@ interface ContainerInterface
     ): object;
 
     /**
+     * @template TClassName of object
+     *
+     * @param class-string<TClassName> $className
+     * @return class-string<TClassName>
+     *
+     * @throws ContainerException
+     */
+    public function resolveName(
+        string $className,
+    ): string;
+
+    /**
      * @template TReturnType
      *
      * @param \Closure(): TReturnType $callable

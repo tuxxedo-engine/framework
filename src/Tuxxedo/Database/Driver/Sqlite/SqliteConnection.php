@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver\Sqlite;
 
 use Tuxxedo\Config\ConfigInterface;
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Dialect\SqliteDialect;
@@ -35,6 +36,7 @@ class SqliteConnection implements ConnectionInterface
     private bool $inTransaction = false;
 
     public function __construct(
+        private readonly ContainerInterface $container,
         ConfigInterface $config,
     ) {
         $this->name = $config->getString('name');
@@ -288,6 +290,7 @@ class SqliteConnection implements ConnectionInterface
         }
 
         return new SqliteResultSet(
+            container: $this->container,
             result: $result,
             affectedRows: $this->sqlite->changes(),
         );

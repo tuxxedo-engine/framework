@@ -14,53 +14,35 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver\Pgsql;
 
 use PgSql\Result;
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\DatabaseException;
-use Tuxxedo\Database\Driver\ResultRow;
+use Tuxxedo\Database\Driver\AbstractResultSet;
+use Tuxxedo\Database\Driver\HydratableInterface;
 use Tuxxedo\Database\Driver\ResultRowInterface;
-use Tuxxedo\Database\Driver\ResultSetInterface;
 
-class PgsqlResultSet implements ResultSetInterface
+class PgsqlResultSet extends AbstractResultSet
 {
     private int $pointer = 0;
     private int $numRows;
 
     public function __construct(
-        private ?Result $result,
+        protected ContainerInterface $container,
+        private Result $result,
         public readonly int $affectedRows = 0,
     ) {
-        if ($this->result !== null) {
-            $this->numRows = \pg_num_rows($this->result);
-        } else {
-            $this->numRows = 0;
-        }
+        $this->numRows = \pg_num_rows($this->result);
     }
 
-    public function fetchAllAsArray(): array
-    {
-        $rows = [];
-
-        foreach ($this as $row) {
-            $rows[] = $row;
-        }
-
-        return $rows;
-    }
-
-    public function fetchAllAsGenerator(): \Generator
-    {
-        foreach ($this as $row) {
-            yield $row;
-        }
-    }
-
-    public function fetch(): ResultRowInterface
-    {
-        return $this->fetchObject();
-    }
-
-    public function fetchObject(): ResultRowInterface
-    {
-        if ($this->result === null) {
+    /**
+     * @template TClassName of object
+     *
+     * @param class-string<TClassName&HydratableInterface>|\Closure(mixed[] $properties): TClassName $class
+     * @return TClassName
+     */
+    public function fetchObject(
+        string|\Closure $class = ResultRowInterface::class,
+    ): object {
+        if ($this->numRows === 0) {
             throw DatabaseException::fromEmptyResultSet();
         }
 
@@ -70,14 +52,12 @@ class PgsqlResultSet implements ResultSetInterface
             throw DatabaseException::fromCannotFetch();
         }
 
-        return new ResultRow(
-            properties: $row,
-        );
+        return parent::hydrate($class, $row);
     }
 
     public function fetchArray(): array
     {
-        if ($this->result === null) {
+        if ($this->numRows === 0) {
             throw DatabaseException::fromEmptyResultSet();
         }
 
@@ -92,7 +72,7 @@ class PgsqlResultSet implements ResultSetInterface
 
     public function fetchAssoc(): array
     {
-        if ($this->result === null) {
+        if ($this->numRows === 0) {
             throw DatabaseException::fromEmptyResultSet();
         }
 
@@ -107,7 +87,7 @@ class PgsqlResultSet implements ResultSetInterface
 
     public function fetchRow(): array
     {
-        if ($this->result === null) {
+        if ($this->numRows === 0) {
             throw DatabaseException::fromEmptyResultSet();
         }
 
@@ -120,17 +100,6 @@ class PgsqlResultSet implements ResultSetInterface
         return \array_values($row);
     }
 
-    public function free(): void
-    {
-        if ($this->result !== null) {
-            \pg_free_result($this->result);
-
-            $this->result = null;
-            $this->pointer = 0;
-            $this->numRows = 0;
-        }
-    }
-
     public function count(): int
     {
         /** @var int<0, max> */
@@ -139,7 +108,7 @@ class PgsqlResultSet implements ResultSetInterface
 
     public function current(): ResultRowInterface
     {
-        if ($this->result !== null) {
+        if ($this->numRows > 0) {
             \pg_result_seek($this->result, $this->pointer);
         }
 
@@ -163,6 +132,6 @@ class PgsqlResultSet implements ResultSetInterface
 
     public function valid(): bool
     {
-        return $this->result !== null && $this->pointer < $this->numRows;
+        return $this->numRows > 0 && $this->pointer < $this->numRows;
     }
 }

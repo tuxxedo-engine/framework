@@ -232,7 +232,7 @@ class Container implements ContainerInterface
         $class = new \ReflectionClass($className);
         $maskedClassName = $className;
 
-        if ($class->isInterface()) {
+        if ($class->isInterface() || $class->isAbstract()) {
             $maskedLifecycle = null;
             $class = $this->resolveDefaultImplementation($class, $maskedLifecycle);
             $maskedClassName = $class->name;
@@ -281,6 +281,27 @@ class Container implements ContainerInterface
 
         /** @var TClassName */
         return $instance;
+    }
+
+    /**
+     * @template TClassName of object
+     *
+     * @param class-string<TClassName> $className
+     * @return class-string<TClassName>
+     *
+     * @throws ContainerException
+     */
+    public function resolveName(
+        string $className,
+    ): string {
+        $class = new \ReflectionClass($this->resolveAlias($className));
+
+        if ($class->isInterface() || $class->isAbstract()) {
+            $class = $this->resolveDefaultImplementation($class);
+        }
+
+        /** @var class-string<TClassName> */
+        return $class->getName();
     }
 
     public function call(

@@ -91,15 +91,17 @@ readonly class DatabaseController
         );
 
         \var_dump(
-            $connection->query(
-                'SELECT * FROM `test` WHERE `a` IN (:ids[])',
-                [
+            \iterator_to_array(
+                $connection->query(
+                    'SELECT * FROM `test` WHERE `a` IN (:ids[])',
+                    [
                     'ids' => [
                         'foo',
                         'bar',
                     ],
                 ],
-            )->fetchAllAsArray(),
+                )->fetchAll(),
+            ),
         );
 
         $connection->query('DROP TABLE `test`');
