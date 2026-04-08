@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver\Pdo\Pgsql;
 
 use Tuxxedo\Config\ConfigInterface;
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\Dialect\DialectInterface;
 use Tuxxedo\Database\Dialect\PgsqlDialect;
 use Tuxxedo\Database\Driver\DefaultDriver;
@@ -21,6 +22,13 @@ use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
 
 class PdoPgsqlConnection extends AbstractPdoConnection
 {
+    public static function create(
+        ContainerInterface $container,
+        ConfigInterface $config,
+    ): self {
+        return new self($container, $config);
+    }
+
     protected function getDriverName(): DefaultDriver
     {
         return DefaultDriver::PDO_PGSQL;

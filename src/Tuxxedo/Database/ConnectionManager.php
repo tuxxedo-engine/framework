@@ -106,9 +106,8 @@ class ConnectionManager implements ConnectionManagerInterface
             $class = $config->getEnum($prefix . '.driver', DefaultDriver::class)->getDriverClass();
         }
 
-        // @todo Ideally this be wired via a factory bound the interface
         $this->registerConnection(
-            connection: new $class(
+            connection: $class::create(
                 container: $this->container,
                 config: $config->section($prefix),
             ),

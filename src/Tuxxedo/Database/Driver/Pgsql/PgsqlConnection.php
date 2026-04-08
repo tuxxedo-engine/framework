@@ -37,7 +37,7 @@ class PgsqlConnection implements ConnectionInterface
 
     private bool $inTransaction = false;
 
-    public function __construct(
+    private function __construct(
         private readonly ContainerInterface $container,
         ConfigInterface $config,
     ) {
@@ -150,6 +150,13 @@ class PgsqlConnection implements ConnectionInterface
         if (!$config->getBool('options.lazy')) {
             $this->connect();
         }
+    }
+
+    public static function create(
+        ContainerInterface $container,
+        ConfigInterface $config,
+    ): self {
+        return new self($container, $config);
     }
 
     private function connectCheck(): void

@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Driver;
 
+use Tuxxedo\Config\ConfigInterface;
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\SqlException;
@@ -31,6 +33,11 @@ interface ConnectionInterface
     public DefaultDriver|string $driver {
         get;
     }
+
+    public static function create(
+        ContainerInterface $container,
+        ConfigInterface $config,
+    ): self;
 
     public function getDriverInstance(): object;
 

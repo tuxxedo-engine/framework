@@ -33,7 +33,7 @@ abstract class AbstractPdoConnection implements ConnectionInterface
     private readonly \Closure $connector;
     private StatementParserInterface $statementParser;
 
-    public function __construct(
+    final protected function __construct(
         private readonly ContainerInterface $container,
         ConfigInterface $config,
     ) {
