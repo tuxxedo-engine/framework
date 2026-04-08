@@ -15,6 +15,7 @@ namespace Tuxxedo\Database\Resolver;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
+use Tuxxedo\Container\Reflection\ParameterInterface;
 use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 
@@ -26,7 +27,7 @@ class ReadConnection implements DependencyResolverInterface
 {
     public function resolve(
         ContainerInterface $container,
-        \ReflectionParameter $parameter,
+        ParameterInterface $parameter,
     ): ConnectionInterface {
         return $container->resolve(ConnectionManagerInterface::class)->getReadConnection();
     }

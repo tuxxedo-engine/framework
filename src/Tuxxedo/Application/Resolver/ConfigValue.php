@@ -15,6 +15,7 @@ namespace Tuxxedo\Application\Resolver;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
+use Tuxxedo\Container\Reflection\ParameterInterface;
 use Tuxxedo\Http\Kernel\KernelInterface;
 
 /**
@@ -30,7 +31,7 @@ class ConfigValue implements DependencyResolverInterface
 
     public function resolve(
         ContainerInterface $container,
-        \ReflectionParameter $parameter,
+        ParameterInterface $parameter,
     ): mixed {
         return $container->resolve(KernelInterface::class)->config->path($this->path);
     }

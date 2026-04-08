@@ -15,6 +15,7 @@ namespace Tuxxedo\Http\Request\Attribute;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
+use Tuxxedo\Container\Reflection\ParameterInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\InputContext;
 use Tuxxedo\Http\Request\RequestInterface;
@@ -36,33 +37,13 @@ class MapToArrayOf implements DependencyResolverInterface
     }
 
     /**
-     * @return class-string
-     */
-    // @todo Consider generalizing this, might be useful for other abstractions
-    private function getDefaultType(
-        \ReflectionParameter $parameter,
-    ): string {
-        $type = $parameter->getType();
-
-        if (
-            $type instanceof \ReflectionNamedType &&
-            !$type->isBuiltin()
-        ) {
-            /** @var class-string */
-            return $type->getName();
-        }
-
-        throw HttpException::fromBadRequest();
-    }
-
-    /**
      * @return object[]
      *
      * @throws HttpException
      */
     public function resolve(
         ContainerInterface $container,
-        \ReflectionParameter $parameter,
+        ParameterInterface $parameter,
     ): array {
         $request = $container->resolve(RequestInterface::class);
         $context = $request->input($this->context ?? InputContext::fromMethod($request->server->method));
@@ -70,7 +51,7 @@ class MapToArrayOf implements DependencyResolverInterface
         try {
             return $context->mapToArrayOf(
                 name: $this->name,
-                className: $this->className ?? $this->getDefaultType($parameter),
+                className: $this->className ?? $parameter->getDefaultType() ?? throw HttpException::fromInternalServerError(),
             );
         } catch (\Throwable $exception) {
             throw HttpException::fromBadRequest(

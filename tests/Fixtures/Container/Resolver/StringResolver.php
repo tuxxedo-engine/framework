@@ -15,6 +15,7 @@ namespace Fixtures\Container\Resolver;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
+use Tuxxedo\Container\Reflection\ParameterInterface;
 
 /**
  * @implements DependencyResolverInterface<string>
@@ -24,7 +25,7 @@ class StringResolver implements DependencyResolverInterface
 {
     public function resolve(
         ContainerInterface $container,
-        \ReflectionParameter $parameter,
+        ParameterInterface $parameter,
     ): mixed {
         return 'foo';
     }

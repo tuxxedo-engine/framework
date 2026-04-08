@@ -16,6 +16,7 @@ namespace Fixtures\Container\Resolver;
 use Fixtures\Container\UnresolvableDependencyOne;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
+use Tuxxedo\Container\Reflection\ParameterInterface;
 
 /**
  * @implements DependencyResolverInterface<UnresolvableDependencyOne>
@@ -25,7 +26,7 @@ class UnresolvableTypeResolver implements DependencyResolverInterface
 {
     public function resolve(
         ContainerInterface $container,
-        \ReflectionParameter $parameter,
+        ParameterInterface $parameter,
     ): UnresolvableDependencyOne {
         return $container->resolve(UnresolvableDependencyOne::class);
     }

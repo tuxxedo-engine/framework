@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
+use Tuxxedo\Container\Reflection\Parameter;
+
 class Container implements ContainerInterface
 {
     /**
@@ -398,7 +400,7 @@ class Container implements ContainerInterface
 
         if (\sizeof($attrs) > 0) {
             try {
-                return $attrs[0]->newInstance()->resolve($this, $parameter);
+                return $attrs[0]->newInstance()->resolve($this, new Parameter($parameter));
             } catch (\Throwable $e) {
                 throw ContainerException::fromAttributeException(
                     attributeClass: $attrs[0]->getName(),

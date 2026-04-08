@@ -25,6 +25,8 @@ use Tuxxedo\Mapper\Mapper;
 use Tuxxedo\Mapper\MapperInterface;
 use Tuxxedo\Router\Attribute\Route;
 
+// @todo Json mapping utility attributes
+// @todo Json body mapping utility attributes
 readonly class MappingController
 {
     public function __construct(
