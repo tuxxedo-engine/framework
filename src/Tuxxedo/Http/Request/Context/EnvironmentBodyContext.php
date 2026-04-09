@@ -41,35 +41,51 @@ class EnvironmentBodyContext implements BodyContextInterface
         return \stream_get_contents($this->getStream());
     }
 
-    public function getJson(): mixed
-    {
+    public function getJson(
+        bool $associative = false,
+        int $flags = 0,
+    ): mixed {
         return \json_decode(
             json: $this->getRaw(),
-            flags: \JSON_THROW_ON_ERROR,
+            associative: $associative,
+            flags: $flags | \JSON_THROW_ON_ERROR,
         );
     }
 
     /**
      * @template TClassName of object
      *
-     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $class
+     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
      * @return TClassName
      *
      * @throws HttpException
-     * @throws \JsonException
      * @throws MapperException
+     * @throws \JsonException
      */
-    public function mapJsonTo(
-        string|object $class,
+    public function jsonMapTo(
+        string|object $className,
+        int $flags = 0,
     ): object {
-        $value = $this->getJson();
+        $value = $this->getJson(
+            flags: $flags,
+        );
 
         if (\is_array($value)) {
-            return $this->mapper->mapArrayTo($value, $class);
+            return $this->mapper->mapArrayTo(
+                input: $value,
+                className: $className,
+                skipInvalidProperties: true,
+                castType: true,
+            );
         }
 
         if (\is_object($value)) {
-            return $this->mapper->mapObjectTo($value, $class);
+            return $this->mapper->mapObjectTo(
+                input: $value,
+                className: $className,
+                skipInvalidProperties: true,
+                castType: true,
+            );
         }
 
         throw HttpException::fromInternalServerError();
@@ -78,22 +94,30 @@ class EnvironmentBodyContext implements BodyContextInterface
     /**
      * @template TClassName of object
      *
-     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $class
+     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
      * @return TClassName[]
      *
      * @throws HttpException
-     * @throws \JsonException
      * @throws MapperException
+     * @throws \JsonException
      */
-    public function mapJsonToArrayOf(
-        string|object $class,
+    public function jsonMapToArrayOf(
+        string|object $className,
+        int $flags = 0,
     ): array {
-        $value = $this->getJson();
+        $value = $this->getJson(
+            flags: $flags,
+        );
 
         if (!\is_array($value)) {
             throw HttpException::fromInternalServerError();
         }
 
-        return $this->mapper->mapToArrayOf($value, $class);
+        return $this->mapper->mapToArrayOf(
+            input: $value,
+            className: $className,
+            skipInvalidProperties: true,
+            castType: true,
+        );
     }
 }

@@ -30,7 +30,6 @@ use Tuxxedo\Router\Attribute\Route;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewInterface;
 
-// @todo Json body mapping utility attributes
 readonly class MappingController
 {
     public function __construct(

@@ -21,7 +21,7 @@ interface BodyContextInterface
     /**
      * @return resource
      *
-     * @throws MapperException
+     * @throws HttpException
      */
     public function getStream();
 
@@ -30,33 +30,38 @@ interface BodyContextInterface
     /**
      * @throws \JsonException
      */
-    public function getJson(): mixed;
+    public function getJson(
+        bool $associative = false,
+        int $flags = 0,
+    ): mixed;
 
     /**
      * @template TClassName of object
      *
-     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $class
+     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
      * @return TClassName
      *
      * @throws HttpException
-     * @throws \JsonException
      * @throws MapperException
+     * @throws \JsonException
      */
-    public function mapJsonTo(
-        string|object $class,
+    public function jsonMapTo(
+        string|object $className,
+        int $flags = 0,
     ): object;
 
     /**
      * @template TClassName of object
      *
-     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $class
+     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
      * @return TClassName[]
      *
      * @throws HttpException
-     * @throws \JsonException
      * @throws MapperException
+     * @throws \JsonException
      */
-    public function mapJsonToArrayOf(
-        string|object $class,
+    public function jsonMapToArrayOf(
+        string|object $className,
+        int $flags = 0,
     ): array;
 }
