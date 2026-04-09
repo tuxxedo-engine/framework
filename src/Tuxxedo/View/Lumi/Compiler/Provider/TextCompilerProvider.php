@@ -86,8 +86,6 @@ class TextCompilerProvider implements CompilerProviderInterface
             $compiler->state->directives->asBool('lumi.autoescape') &&
             !$this->canDisableAutoEscapeFor($node->operand)
         ) {
-            // @todo Consider whether we still want this if its part of a chain, because escape_js you might still want raw HTML
-            //       or should the developer be encouraged to use html decoding?
             // @todo Consider whether a lumi.autoescape_context should exist to override this
             return \sprintf(
                 '<?= $this->filter(%s, \'escape_html\'); ?>',
