@@ -20,6 +20,7 @@ use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewareNode;
 use Tuxxedo\Http\Request\RequestInterface;
+use Tuxxedo\Http\Response\PrefersResponseCodeInterface;
 use Tuxxedo\Http\Response\ResponsableInterface;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Response\ResponseExceptionInterface;
@@ -103,6 +104,9 @@ class Kernel implements KernelInterface
             $response = $e->toResponse();
         } else {
             $exception = $e;
+            $preferredException = $e instanceof PrefersResponseCodeInterface
+                ? $e
+                : null;
 
             while ($exception->getPrevious() !== null) {
                 $exception = $exception->getPrevious();
@@ -112,9 +116,15 @@ class Kernel implements KernelInterface
 
                     break;
                 }
+
+                if ($exception instanceof PrefersResponseCodeInterface) {
+                    $preferredException = $exception;
+                }
             }
 
-            $response ??= HttpException::fromInternalServerError()->toResponse();
+            $response ??= $preferredException !== null && $preferredException->responseCode !== null
+                ? (new HttpException($preferredException->responseCode))->toResponse()
+                : HttpException::fromInternalServerError()->toResponse();
         }
 
         foreach ($handlers as $handler) {

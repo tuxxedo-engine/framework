@@ -261,9 +261,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
             $middlewareInstance = $attribute->newInstance()->middleware;
 
             if (\is_string($middlewareInstance)) {
-                $middleware[] = fn (): MiddlewareInterface => /** @var MiddlewareInterface */
-                    $this->container->resolve($middlewareInstance)
-                ;
+                $middleware[] = fn (): MiddlewareInterface => /** @var MiddlewareInterface */ $this->container->resolve($middlewareInstance);
             } else {
                 $middleware[] = fn (): MiddlewareInterface => $middlewareInstance($this->container);
             }
