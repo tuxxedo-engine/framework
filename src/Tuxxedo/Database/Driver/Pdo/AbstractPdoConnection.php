@@ -54,12 +54,6 @@ abstract class AbstractPdoConnection implements ConnectionInterface
                     ],
                 );
 
-                if (!isset($this->statementParser)) {
-                    $this->statementParser = new StatementParser(
-                        dialect: static::getDriverDialect(),
-                    );
-                }
-
                 $this->postConnectHook($config);
             } catch (\PDOException $exception) {
                 $this->throwFromPdoException($exception);
@@ -278,19 +272,35 @@ abstract class AbstractPdoConnection implements ConnectionInterface
     public function query(
         string $sql,
         array $parameters = [],
+        bool $native = false,
     ): PdoResultSet {
         $this->connectCheck();
 
-        $parsedStatement = $this->statementParser->parse($sql, $parameters);
-        $statement = $this->pdo->prepare($parsedStatement->sql);
+        if (!$native) {
+            $this->statementParser ??= new StatementParser(
+                dialect: static::getDriverDialect(),
+            );
+
+            $parsedStatement = $this->statementParser->parse($sql, $parameters);
+            $sql = $parsedStatement->sql;
+            $parameters = $parsedStatement->parameters;
+        }
+
+        $statement = $this->pdo->prepare($sql);
 
         if ($statement === false) {
             $this->throwFromErrorInfo();
         }
 
-        foreach ($parsedStatement->bindings as $index => $value) {
+        foreach ($parameters as $index => $value) {
+            if (\is_array($value)) {
+                continue;
+            }
+
             $bound = $statement->bindValue(
-                param: $index + 1,
+                param: !$native
+                    ? $index + 1
+                    : $index,
                 value: $value,
                 type: match (true) {
                     \is_int($value) => \PDO::PARAM_INT,

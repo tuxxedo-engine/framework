@@ -173,7 +173,7 @@ class StatementParser implements StatementParserInterface
 
         return new StatementParserResult(
             sql: $buffer,
-            bindings: $bindings,
+            parameters: $bindings,
         );
     }
 }

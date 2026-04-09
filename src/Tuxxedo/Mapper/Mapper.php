@@ -28,7 +28,7 @@ class Mapper implements MapperInterface
         array $input,
         string|object $className,
         bool $skipInvalidProperties = false,
-        bool $castType = false, // @todo Implement
+        bool $castType = false,
     ): object {
         if ($className instanceof \Closure) {
             /** @var TClassName $instance */

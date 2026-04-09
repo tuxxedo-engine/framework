@@ -104,9 +104,9 @@ interface ConnectionInterface
      * @throws DatabaseException
      * @throws SqlException
      */
-    // @todo Consider $native = true (false default) as an escape hatch to bypass StatementParserInterface?
     public function query(
         string $sql,
         array $parameters = [],
+        bool $native = false,
     ): ResultSetInterface;
 }

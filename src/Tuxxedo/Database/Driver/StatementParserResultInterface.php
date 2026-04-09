@@ -22,7 +22,7 @@ interface StatementParserResultInterface
     /**
      * @var array<string|int|float|bool|null>
      */
-    public array $bindings {
+    public array $parameters {
         get;
     }
 }

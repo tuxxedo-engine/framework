@@ -138,12 +138,6 @@ class PgsqlConnection implements ConnectionInterface
                         }
                     }
                 }
-
-                if (!isset($this->statementParser)) {
-                    $this->statementParser = new StatementParser(
-                        dialect: new PgsqlDialect(),
-                    );
-                }
             }
         };
 
@@ -355,13 +349,27 @@ class PgsqlConnection implements ConnectionInterface
     public function query(
         string $sql,
         array $parameters = [],
+        bool $native = false,
     ): PgsqlResultSet {
         $this->connectCheck();
 
         $params = [];
-        $parsedStatement = $this->statementParser->parse($sql, $parameters);
 
-        foreach ($parsedStatement->bindings as $value) {
+        if (!$native) {
+            $this->statementParser ??= new StatementParser(
+                dialect: new PgsqlDialect(),
+            );
+
+            $parsedStatement = $this->statementParser->parse($sql, $parameters);
+            $sql = $parsedStatement->sql;
+            $parameters = $parsedStatement->parameters;
+        }
+
+        foreach ($parameters as $value) {
+            if (\is_array($value)) {
+                continue;
+            }
+
             $params[] = match (true) {
                 \is_int($value) => (string) $value,
                 \is_float($value) => (string) $value,
@@ -369,13 +377,13 @@ class PgsqlConnection implements ConnectionInterface
                     ? 't'
                     : 'f',
                 \is_null($value) => null,
-                default => \strval($value)
+                default => $value,
             } ;
         }
 
         $result = \pg_query_params(
             $this->pgsql,
-            $parsedStatement->sql,
+            $sql,
             $params,
         );
 

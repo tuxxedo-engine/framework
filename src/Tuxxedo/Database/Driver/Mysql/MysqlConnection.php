@@ -120,12 +120,6 @@ class MysqlConnection implements ConnectionInterface
             }
 
             $this->mysqli->set_charset($config->getString('options.charset'));
-
-            if (!isset($this->statementParser)) {
-                $this->statementParser = new StatementParser(
-                    dialect: new MysqlDialect(),
-                );
-            }
         };
 
         if (!$config->getBool('options.lazy')) {
@@ -314,15 +308,28 @@ class MysqlConnection implements ConnectionInterface
     public function query(
         string $sql,
         array $parameters = [],
+        bool $native = false,
     ): MysqlResultSet {
         $this->connectCheck();
 
         $bindingTypes = '';
         $bindingValues = [];
 
-        $parsedStatement = $this->statementParser->parse($sql, $parameters);
+        if (!$native) {
+            $this->statementParser ??= new StatementParser(
+                dialect: new MysqlDialect(),
+            );
 
-        foreach ($parsedStatement->bindings as $value) {
+            $parsedStatement = $this->statementParser->parse($sql, $parameters);
+            $sql = $parsedStatement->sql;
+            $parameters = $parsedStatement->parameters;
+        }
+
+        foreach ($parameters as $value) {
+            if (\is_array($value)) {
+                continue;
+            }
+
             $bindingTypes .= match (true) {
                 \is_int($value) => 'i',
                 \is_float($value) => 'f',
@@ -333,7 +340,7 @@ class MysqlConnection implements ConnectionInterface
             $bindingValues[] = $value;
         }
 
-        $statement = $this->mysqli->prepare($parsedStatement->sql);
+        $statement = $this->mysqli->prepare($sql);
 
         if ($statement === false) {
             $this->throwFromLastError($this->mysqli);

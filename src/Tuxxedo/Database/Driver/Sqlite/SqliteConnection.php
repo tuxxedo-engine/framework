@@ -61,12 +61,6 @@ class SqliteConnection implements ConnectionInterface
                     error: $exception->getMessage(),
                 );
             }
-
-            if (!isset($this->statementParser)) {
-                $this->statementParser = new StatementParser(
-                    dialect: new SqliteDialect(),
-                );
-            }
         };
 
         if (!$config->getBool('options.lazy')) {
@@ -259,19 +253,35 @@ class SqliteConnection implements ConnectionInterface
     public function query(
         string $sql,
         array $parameters = [],
+        bool $native = false,
     ): SqliteResultSet {
         $this->connectCheck();
 
-        $parsedStatement = $this->statementParser->parse($sql, $parameters);
-        $statement = $this->sqlite->prepare($parsedStatement->sql);
+        if (!$native) {
+            $this->statementParser ??= new StatementParser(
+                dialect: new SqliteDialect(),
+            );
+
+            $parsedStatement = $this->statementParser->parse($sql, $parameters);
+            $sql = $parsedStatement->sql;
+            $parameters = $parsedStatement->parameters;
+        }
+
+        $statement = $this->sqlite->prepare($sql);
 
         if ($statement === false) {
             $this->throwFromLastError($this->sqlite);
         }
 
-        foreach ($parsedStatement->bindings as $index => $value) {
+        foreach ($parameters as $index => $value) {
+            if (\is_array($value)) {
+                continue;
+            }
+
             $bound = $statement->bindValue(
-                param: $index + 1,
+                param: !$native
+                    ? $index + 1
+                    : $index,
                 value: $value,
                 type: match (true) {
                     \is_int($value) || \is_bool($value) => \SQLITE3_INTEGER,

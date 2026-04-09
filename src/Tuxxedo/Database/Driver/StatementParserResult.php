@@ -16,11 +16,11 @@ namespace Tuxxedo\Database\Driver;
 readonly class StatementParserResult implements StatementParserResultInterface
 {
     /**
-     * @param array<string|int|float|bool|null> $bindings
+     * @param array<string|int|float|bool|null> $parameters
      */
     public function __construct(
         public string $sql,
-        public array $bindings = [],
+        public array $parameters = [],
     ) {
     }
 }
