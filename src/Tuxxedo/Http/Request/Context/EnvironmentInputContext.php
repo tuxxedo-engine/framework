@@ -373,4 +373,58 @@ class EnvironmentInputContext implements InputContextInterface
 
         return $this->mapper->mapToArrayOf($value, $className);
     }
+
+    public function jsonMapTo(
+        string $name,
+        string|object $className,
+        int $flags = 0,
+    ): object {
+        if ($this->superglobal === \INPUT_COOKIE) {
+            throw HttpException::fromInternalServerError();
+        }
+
+        $value = \json_decode(
+            json: $this->getString($name),
+            associative: true,
+            flags: $flags | \JSON_THROW_ON_ERROR,
+        );
+
+        if (!\is_array($value)) {
+            throw HttpException::fromInternalServerError();
+        }
+
+        return $this->mapper->mapArrayTo(
+            input: $value,
+            className: $className,
+            skipInvalidProperties: true,
+            castType: true,
+        );
+    }
+
+    public function jsonMapToArrayOf(
+        string $name,
+        string|object $className,
+        int $flags = 0,
+    ): array {
+        if ($this->superglobal === \INPUT_COOKIE) {
+            throw HttpException::fromInternalServerError();
+        }
+
+        $value = \json_decode(
+            json: $this->getString($name),
+            associative: true,
+            flags: $flags | \JSON_THROW_ON_ERROR,
+        );
+
+        if (!\is_array($value)) {
+            throw HttpException::fromInternalServerError();
+        }
+
+        return $this->mapper->mapToArrayOf(
+            input: $value,
+            className: $className,
+            skipInvalidProperties: true,
+            castType: true,
+        );
+    }
 }

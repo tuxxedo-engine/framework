@@ -31,6 +31,8 @@ interface MapperInterface
     public function mapArrayTo(
         array $input,
         string|object $className,
+        bool $skipInvalidProperties = false,
+        bool $castType = false,
     ): object;
 
     /**
@@ -44,6 +46,8 @@ interface MapperInterface
     public function mapObjectTo(
         object $input,
         string|object $className,
+        bool $skipInvalidProperties = false,
+        bool $castType = false,
     ): object;
 
     /**
@@ -58,5 +62,7 @@ interface MapperInterface
     public function mapToArrayOf(
         array $input,
         string|object $className,
+        bool $skipInvalidProperties = false,
+        bool $castType = false,
     ): array;
 }

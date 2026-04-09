@@ -27,6 +27,8 @@ class Mapper implements MapperInterface
     public function mapArrayTo(
         array $input,
         string|object $className,
+        bool $skipInvalidProperties = false,
+        bool $castType = false, // @todo Implement
     ): object {
         if ($className instanceof \Closure) {
             /** @var TClassName $instance */
@@ -41,6 +43,10 @@ class Mapper implements MapperInterface
 
         foreach ($input as $property => $value) {
             if (!$reflector->hasProperty($property)) {
+                if ($skipInvalidProperties) {
+                    continue;
+                }
+
                 throw MapperException::fromInvalidProperty(
                     property: $property,
                     className: $instance::class,
@@ -48,7 +54,22 @@ class Mapper implements MapperInterface
             }
 
             try {
-                $reflector->getProperty($property)->setValue(
+                $inputProperty = $reflector->getProperty($property);
+
+                if ($castType) {
+                    $type = $inputProperty->getType();
+
+                    if (
+                        $type instanceof \ReflectionNamedType &&
+                        $type->isBuiltin() &&
+                        $type->getName() !== 'object' &&
+                        $type->getName() !== 'array'
+                    ) {
+                        \settype($value, $type->getName());
+                    }
+                }
+
+                $inputProperty->setValue(
                     objectOrValue: $instance,
                     value: $value,
                 );
@@ -68,16 +89,22 @@ class Mapper implements MapperInterface
     public function mapObjectTo(
         object $input,
         string|object $className,
+        bool $skipInvalidProperties = false,
+        bool $castType = false,
     ): object {
         return $this->mapArrayTo(
             input: \get_object_vars($input),
             className: $className,
+            skipInvalidProperties: $skipInvalidProperties,
+            castType: $castType,
         );
     }
 
     public function mapToArrayOf(
         array $input,
         string|object $className,
+        bool $skipInvalidProperties = false,
+        bool $castType = false,
     ): array {
         $mapped = [];
 
@@ -86,11 +113,15 @@ class Mapper implements MapperInterface
                 $mapped[] = $this->mapObjectTo(
                     input: $value,
                     className: $className,
+                    skipInvalidProperties: $skipInvalidProperties,
+                    castType: $castType,
                 );
             } elseif (\is_array($value)) {
                 $mapped[] = $this->mapArrayTo(
                     input: $value,
                     className: $className,
+                    skipInvalidProperties: $skipInvalidProperties,
+                    castType: $castType,
                 );
             } else {
                 throw MapperException::fromInvalidIterable(

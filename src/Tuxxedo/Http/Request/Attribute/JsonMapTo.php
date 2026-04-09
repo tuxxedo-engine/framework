@@ -21,37 +21,37 @@ use Tuxxedo\Http\InputContext;
 use Tuxxedo\Http\Request\RequestInterface;
 
 /**
- * @implements DependencyResolverInterface<array<object>>
+ * @implements DependencyResolverInterface<object>
  */
 #[\Attribute(flags: \Attribute::TARGET_PARAMETER)]
-class MapToArrayOf implements DependencyResolverInterface
+class JsonMapTo implements DependencyResolverInterface
 {
     /**
-     * @param class-string<object>|(\Closure(): object)|object $className
+     * @param class-string<object>|(\Closure(): object)|object|null $className
      */
     public function __construct(
         protected readonly string $name,
-        protected readonly string|object $className,
+        protected readonly string|object|null $className = null,
         protected readonly ?InputContext $context = null,
+        protected readonly int $flags = 0,
     ) {
     }
 
     /**
-     * @return object[]
-     *
      * @throws HttpException
      */
     public function resolve(
         ContainerInterface $container,
         ParameterInterface $parameter,
-    ): array {
+    ): object {
         $request = $container->resolve(RequestInterface::class);
         $context = $request->input($this->context ?? InputContext::fromMethod($request->server->method));
 
         try {
-            return $context->mapToArrayOf(
+            return $context->jsonMapTo(
                 name: $this->name,
-                className: $this->className,
+                className: $this->className ?? $parameter->getDefaultType() ?? throw HttpException::fromInternalServerError(),
+                flags: $this->flags,
             );
         } catch (\Throwable $exception) {
             throw HttpException::fromBadRequest(

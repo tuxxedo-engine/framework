@@ -143,4 +143,36 @@ interface InputContextInterface
         string $name,
         string|object $className,
     ): array;
+
+    /**
+     * @template TClassName of object
+     *
+     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
+     * @return TClassName
+     *
+     * @throws HttpException
+     * @throws MapperException
+     * @throws \JsonException
+     */
+    public function jsonMapTo(
+        string $name,
+        string|object $className,
+        int $flags = 0,
+    ): object;
+
+    /**
+     * @template TClassName of object
+     *
+     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
+     * @return TClassName[]
+     *
+     * @throws HttpException
+     * @throws MapperException
+     * @throws \JsonException
+     */
+    public function jsonMapToArrayOf(
+        string $name,
+        string|object $className,
+        int $flags = 0,
+    ): array;
 }

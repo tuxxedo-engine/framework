@@ -24,7 +24,7 @@ use Tuxxedo\Http\Request\RequestInterface;
  * @implements DependencyResolverInterface<array<object>>
  */
 #[\Attribute(flags: \Attribute::TARGET_PARAMETER)]
-class MapToArrayOf implements DependencyResolverInterface
+class JsonMapToArrayOf implements DependencyResolverInterface
 {
     /**
      * @param class-string<object>|(\Closure(): object)|object $className
@@ -33,6 +33,7 @@ class MapToArrayOf implements DependencyResolverInterface
         protected readonly string $name,
         protected readonly string|object $className,
         protected readonly ?InputContext $context = null,
+        protected readonly int $flags = 0,
     ) {
     }
 
@@ -49,9 +50,10 @@ class MapToArrayOf implements DependencyResolverInterface
         $context = $request->input($this->context ?? InputContext::fromMethod($request->server->method));
 
         try {
-            return $context->mapToArrayOf(
+            return $context->jsonMapToArrayOf(
                 name: $this->name,
                 className: $this->className,
+                flags: $this->flags,
             );
         } catch (\Throwable $exception) {
             throw HttpException::fromBadRequest(

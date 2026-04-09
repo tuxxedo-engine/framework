@@ -14,8 +14,11 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Service\Entity\PersonOne;
+use App\Service\Entity\PersonTwo;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\Method;
+use Tuxxedo\Http\Request\Attribute\JsonMapTo;
+use Tuxxedo\Http\Request\Attribute\JsonMapToArrayOf;
 use Tuxxedo\Http\Request\Attribute\MapTo;
 use Tuxxedo\Http\Request\Attribute\MapToArrayOf;
 use Tuxxedo\Http\Request\RequestInterface;
@@ -24,8 +27,9 @@ use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Mapper\Mapper;
 use Tuxxedo\Mapper\MapperInterface;
 use Tuxxedo\Router\Attribute\Route;
+use Tuxxedo\View\View;
+use Tuxxedo\View\ViewInterface;
 
-// @todo Json mapping utility attributes
 // @todo Json body mapping utility attributes
 readonly class MappingController
 {
@@ -97,7 +101,7 @@ readonly class MappingController
 
     #[Route\Post(uri: '/mapTwo')]
     public function mapTwo(
-        #[MapTo\Post(
+        #[MapTo(
             name: 'struct',
             className: static function (): object {
                 return new class () {
@@ -108,9 +112,7 @@ readonly class MappingController
         )] object $one,
     ): ResponseInterface {
         return Response::capture(
-            callback: fn () => \var_dump(
-                $one,
-            ),
+            callback: fn () => \var_dump($one),
             headers: [
                 new Header('Content-Type', 'text/plain'),
             ],
@@ -135,7 +137,7 @@ readonly class MappingController
      */
     #[Route\Post(uri: '/mapThree')]
     public function mapThree(
-        #[MapToArrayOf\Post(
+        #[MapToArrayOf(
             name: 'struct',
             className: static function (): object {
                 return new class () {
@@ -146,9 +148,7 @@ readonly class MappingController
         )] array $one,
     ): ResponseInterface {
         return Response::capture(
-            callback: fn () => \var_dump(
-                $one,
-            ),
+            callback: fn () => \var_dump($one),
             headers: [
                 new Header('Content-Type', 'text/plain'),
             ],
@@ -170,12 +170,10 @@ readonly class MappingController
 
     #[Route\Post(uri: '/mapFour')]
     public function mapFour(
-        #[MapTo\Post(name: 'struct', className: PersonOne::class)] object $one,
+        #[MapTo(name: 'struct', className: PersonOne::class)] object $one,
     ): ResponseInterface {
         return Response::capture(
-            callback: fn () => \var_dump(
-                $one,
-            ),
+            callback: fn () => \var_dump($one),
             headers: [
                 new Header('Content-Type', 'text/plain'),
             ],
@@ -195,12 +193,10 @@ readonly class MappingController
 
     #[Route\Post(uri: '/mapFive')]
     public function mapFive(
-        #[MapTo\Post(name: 'struct')] PersonOne $one,
+        #[MapTo(name: 'struct')] PersonOne $one,
     ): ResponseInterface {
         return Response::capture(
-            callback: fn () => \var_dump(
-                $one,
-            ),
+            callback: fn () => \var_dump($one),
             headers: [
                 new Header('Content-Type', 'text/plain'),
             ],
@@ -216,5 +212,38 @@ readonly class MappingController
             '<br><input type="submit">' .
             '</form>',
         );
+    }
+
+    #[Route\Post(uri: '/mapSixA')]
+    public function mapSixA(
+        #[JsonMapTo(name: 'struct')] PersonTwo $person,
+    ): ResponseInterface {
+        return Response::capture(
+            callback: fn () => \var_dump($person),
+            headers: [
+                new Header('Content-Type', 'text/plain'),
+            ],
+        );
+    }
+
+    /**
+     * @param PersonTwo[] $people
+     */
+    #[Route\Post(uri: '/mapSixB')]
+    public function mapSixB(
+        #[JsonMapToArrayOf(name: 'struct', className: PersonTwo::class)] array $people,
+    ): ResponseInterface {
+        return Response::capture(
+            callback: fn () => \var_dump($people),
+            headers: [
+                new Header('Content-Type', 'text/plain'),
+            ],
+        );
+    }
+
+    #[Route\Get(uri: '/inputMapSix')]
+    public function inputMapSix(): ViewInterface
+    {
+        return new View('map_json_form');
     }
 }

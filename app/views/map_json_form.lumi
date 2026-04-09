@@ -1,0 +1,79 @@
+<form action="/mapSixA" method="post">
+    <p>
+        <strong>Name:</strong> <input type="text" name="name">
+    </p>
+    <p>
+        <strong>Age:</strong> <input type="text" name="age">
+    </p>
+    <input type="submit" value="mapTo">
+</form>
+
+<form action="/mapSixB" method="post" data-format="array-of">
+    <p>
+        <strong>Name:</strong> <input type="text" name="name">
+    </p>
+    <p>
+        <strong>Age:</strong> <input type="text" name="age">
+    </p>
+    <input type="submit" value="mapToArrayOf">
+</form>
+
+<script type="text/javascript">
+    document.addEventListener(
+        'DOMContentLoaded',
+        function () {
+            document.querySelectorAll('form').forEach(
+                function (form) {
+                    const output = document.createElement('div');
+                    form.parentNode.insertBefore(output, form.nextSibling);
+
+                    form.addEventListener(
+                        'submit',
+                        function (e) {
+                            e.preventDefault();
+
+                            output.innerHTML = '';
+
+                            let struct = {};
+                            (new FormData(form)).forEach(
+                                function (value, key) {
+                                    struct[key] = value;
+                                },
+                            );
+
+                            if (form.dataset.format === 'array-of') {
+                                struct = [
+                                    struct,
+                                ];
+                            }
+
+                            const xhr = new XMLHttpRequest();
+
+                            xhr.open(form.method, form.action);
+                            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+                            xhr.onload = function () {
+                                if (xhr.status >= 200 && xhr.status < 300) {
+                                    const code = document.createElement('code');
+                                    const pre = document.createElement('pre');
+
+                                    pre.textContent = xhr.responseText;
+                                    code.appendChild(pre);
+                                    output.appendChild(code);
+                                } else {
+                                    output.innerHTML = '<code><span style="color: red;"><strong>Error:</strong> Server returned ' + xhr.status + ' ' + xhr.statusText + '</span></code>';
+                                }
+                            };
+
+                            xhr.onerror = function () {
+                                output.innerHTML = '<code><span style="color: red;"><strong>Error:</strong> Network error, request could not be completed</span></code>';
+                            };
+
+                            xhr.send('struct=' + encodeURIComponent(JSON.stringify(struct)));
+                        },
+                    );
+                },
+            );
+        },
+    );
+</script>
