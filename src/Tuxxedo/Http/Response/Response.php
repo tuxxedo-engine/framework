@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Response;
 
+use Tuxxedo\Http\CookieInterface;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
@@ -165,12 +166,17 @@ class Response implements ResponseInterface
     protected function getHeaderIndex(
         array $headers,
         HeaderInterface|string $lookupHeader,
+        bool $onlyCookies = false,
     ): ?int {
         if ($lookupHeader instanceof HeaderInterface) {
             $lookupHeader = $lookupHeader->name;
         }
 
         foreach ($headers as $index => $header) {
+            if ($onlyCookies && !$header instanceof CookieInterface) {
+                continue;
+            }
+
             if (\strcasecmp($header->name, $lookupHeader) === 0) {
                 return $index;
             }
@@ -180,15 +186,24 @@ class Response implements ResponseInterface
     }
 
     /**
+     * @param HeaderInterface|HeaderInterface[] $headers
+     *
      * @return HeaderInterface[]
      */
     private function getReplacementHeaders(
-        HeaderInterface ...$headers,
+        HeaderInterface|array $headers,
+        bool $onlyCookies = false,
     ): array {
         $newHeaders = $this->headers;
 
+        if (!\is_array($headers)) {
+            $headers = [
+                $headers,
+            ];
+        }
+
         foreach ($headers as $header) {
-            $headerIndex = $this->getHeaderIndex($newHeaders, $header);
+            $headerIndex = $this->getHeaderIndex($newHeaders, $header, $onlyCookies);
 
             if ($headerIndex !== null) {
                 $newHeaders[$headerIndex] = $header;
@@ -227,7 +242,7 @@ class Response implements ResponseInterface
             $this,
             [
                 'headers' => $replace
-                    ? $this->getReplacementHeaders(...$headers)
+                    ? $this->getReplacementHeaders($headers)
                     : \array_merge(
                         $this->headers,
                         $headers,
@@ -241,6 +256,60 @@ class Response implements ResponseInterface
     ): static {
         $headers = $this->headers;
         $index = $this->getHeaderIndex($headers, $name);
+
+        if ($index !== null) {
+            unset($headers[$index]);
+        }
+
+        return clone (
+            $this,
+            [
+                'headers' => $headers,
+            ],
+        );
+    }
+
+    public function withCookie(
+        CookieInterface $cookie,
+        bool $replace = false,
+    ): static {
+        return clone (
+            $this,
+            [
+                'headers' => $replace
+                    ? $this->getReplacementHeaders($cookie, onlyCookies: true)
+                    : \array_merge(
+                        $this->headers,
+                        [
+                            $cookie,
+                        ],
+                    ),
+            ],
+        );
+    }
+
+    public function withCookies(
+        array $cookies,
+        bool $replace = false,
+    ): static {
+        return clone (
+            $this,
+            [
+                'headers' => $replace
+                    ? $this->getReplacementHeaders($cookies, onlyCookies: true)
+                    : \array_merge(
+                        $this->headers,
+                        $cookies,
+                    ),
+            ],
+        );
+    }
+
+    public function withoutCookie(
+        string $name,
+    ): static {
+        $headers = $this->headers;
+        $index = $this->getHeaderIndex($headers, $name, onlyCookies: true);
 
         if ($index !== null) {
             unset($headers[$index]);

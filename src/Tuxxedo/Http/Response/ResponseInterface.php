@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Response;
 
 use Tuxxedo\Container\DefaultImplementation;
+use Tuxxedo\Http\CookieInterface;
 use Tuxxedo\Http\HeaderInterface;
 
 #[DefaultImplementation(class: Response::class)]
@@ -44,6 +45,23 @@ interface ResponseInterface extends ResponseCodeInterface
     ): static;
 
     public function withoutHeader(
+        string $name,
+    ): static;
+
+    public function withCookie(
+        CookieInterface $cookie,
+        bool $replace = false,
+    ): static;
+
+    /**
+     * @param CookieInterface[] $cookies
+     */
+    public function withCookies(
+        array $cookies,
+        bool $replace = false,
+    ): static;
+
+    public function withoutCookie(
         string $name,
     ): static;
 
