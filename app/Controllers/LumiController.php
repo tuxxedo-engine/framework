@@ -521,6 +521,7 @@ readonly class LumiController
             $buffer .= '<h3>Output</h3>';
 
             try {
+                // @todo Load in function table from the ViewRender's version of LumiEngine
                 $buffer .= LumiConfigurator::fromConfig($this->container)
                     ->withoutOptimizers()
                     ->withCustomOptimizer(...$optimizers)
