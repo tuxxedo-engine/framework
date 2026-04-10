@@ -11,18 +11,17 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Dialect;
+namespace Tuxxedo\Database\Builder\Dialect;
 
-class MysqlDialect implements DialectInterface
+class PgsqlDialect implements DialectInterface
 {
     public private(set) array $quotations = [
         '\'',
         '"',
-        '`',
     ];
 
     public function placeholder(int $position): string
     {
-        return '?';
+        return '$' . $position;
     }
 }

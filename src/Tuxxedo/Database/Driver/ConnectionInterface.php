@@ -15,6 +15,7 @@ namespace Tuxxedo\Database\Driver;
 
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Database\Builder\Dialect\DialectInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\SqlException;
@@ -31,6 +32,10 @@ interface ConnectionInterface
     }
 
     public DefaultDriver|string $driver {
+        get;
+    }
+
+    public DialectInterface $dialect {
         get;
     }
 

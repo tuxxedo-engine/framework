@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Dialect;
+namespace Tuxxedo\Database\Builder\Dialect;
 
-class SqliteDialect implements DialectInterface
+class MysqlDialect implements DialectInterface
 {
     public private(set) array $quotations = [
         '\'',

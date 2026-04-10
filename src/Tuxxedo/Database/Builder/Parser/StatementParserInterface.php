@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Driver;
+namespace Tuxxedo\Database\Builder\Parser;
 
-use Tuxxedo\Database\Dialect\DialectInterface;
+use Tuxxedo\Database\Builder\Dialect\DialectInterface;
 use Tuxxedo\Database\SqlException;
 
 interface StatementParserInterface

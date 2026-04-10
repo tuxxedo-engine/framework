@@ -15,19 +15,21 @@ namespace Tuxxedo\Database\Driver\Sqlite;
 
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Database\Builder\Dialect\DialectInterface;
+use Tuxxedo\Database\Builder\Dialect\SqliteDialect;
+use Tuxxedo\Database\Builder\Parser\StatementParser;
+use Tuxxedo\Database\Builder\Parser\StatementParserInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
-use Tuxxedo\Database\Dialect\SqliteDialect;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Driver\DefaultDriver;
-use Tuxxedo\Database\Driver\StatementParser;
-use Tuxxedo\Database\Driver\StatementParserInterface;
 
 class SqliteConnection implements ConnectionInterface
 {
     public readonly string $name;
     public readonly ConnectionRole $role;
     public readonly DefaultDriver $driver;
+    public readonly DialectInterface $dialect;
 
     private \SQLite3 $sqlite;
     private readonly \Closure $connector;
@@ -42,6 +44,7 @@ class SqliteConnection implements ConnectionInterface
         $this->name = $config->getString('name');
         $this->role = $config->getEnum('role', ConnectionRole::class);
         $this->driver = DefaultDriver::SQLITE;
+        $this->dialect = new SqliteDialect();
 
         $this->connector = function () use ($config): void {
             try {
@@ -259,7 +262,7 @@ class SqliteConnection implements ConnectionInterface
 
         if (!$native) {
             $this->statementParser ??= new StatementParser(
-                dialect: new SqliteDialect(),
+                dialect: $this->dialect,
             );
 
             $parsedStatement = $this->statementParser->parse($sql, $parameters);

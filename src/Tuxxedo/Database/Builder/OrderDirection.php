@@ -11,18 +11,10 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Dialect;
+namespace Tuxxedo\Database\Builder;
 
-interface DialectInterface
+enum OrderDirection
 {
-    /**
-     * @var string[]
-     */
-    public array $quotations {
-        get;
-    }
-
-    public function placeholder(
-        int $position,
-    ): string;
+    case ASC;
+    case DESC;
 }

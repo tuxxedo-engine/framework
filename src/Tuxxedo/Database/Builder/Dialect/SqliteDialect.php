@@ -11,13 +11,14 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Dialect;
+namespace Tuxxedo\Database\Builder\Dialect;
 
-class GenericDialect implements DialectInterface
+class SqliteDialect implements DialectInterface
 {
     public private(set) array $quotations = [
         '\'',
         '"',
+        '`',
     ];
 
     public function placeholder(int $position): string

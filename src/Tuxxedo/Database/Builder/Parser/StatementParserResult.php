@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Driver;
+namespace Tuxxedo\Database\Builder\Parser;
 
 readonly class StatementParserResult implements StatementParserResultInterface
 {

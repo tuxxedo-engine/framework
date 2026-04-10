@@ -15,8 +15,8 @@ namespace Tuxxedo\Database\Driver\Pdo\Sqlite;
 
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Database\Dialect\DialectInterface;
-use Tuxxedo\Database\Dialect\SqliteDialect;
+use Tuxxedo\Database\Builder\Dialect\DialectInterface;
+use Tuxxedo\Database\Builder\Dialect\SqliteDialect;
 use Tuxxedo\Database\Driver\DefaultDriver;
 use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
 

@@ -11,18 +11,18 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Driver;
+namespace Tuxxedo\Database\Builder\Dialect;
 
-interface StatementParserResultInterface
+interface DialectInterface
 {
-    public string $sql {
+    /**
+     * @var string[]
+     */
+    public array $quotations {
         get;
     }
 
-    /**
-     * @var array<string|int|float|bool|null>
-     */
-    public array $parameters {
-        get;
-    }
+    public function placeholder(
+        int $position,
+    ): string;
 }

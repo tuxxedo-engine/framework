@@ -15,8 +15,8 @@ namespace Tuxxedo\Database\Driver\Pdo\Mysql;
 
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Database\Dialect\DialectInterface;
-use Tuxxedo\Database\Dialect\MysqlDialect;
+use Tuxxedo\Database\Builder\Dialect\DialectInterface;
+use Tuxxedo\Database\Builder\Dialect\MysqlDialect;
 use Tuxxedo\Database\Driver\DefaultDriver;
 use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
 

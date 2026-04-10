@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Dialect;
+namespace Tuxxedo\Database\Builder\Dialect;
 
-class PgsqlDialect implements DialectInterface
+class GenericDialect implements DialectInterface
 {
     public private(set) array $quotations = [
         '\'',
@@ -22,6 +22,6 @@ class PgsqlDialect implements DialectInterface
 
     public function placeholder(int $position): string
     {
-        return '$' . $position;
+        return '?';
     }
 }
