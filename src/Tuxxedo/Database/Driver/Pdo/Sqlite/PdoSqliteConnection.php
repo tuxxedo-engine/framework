@@ -15,10 +15,10 @@ namespace Tuxxedo\Database\Driver\Pdo\Sqlite;
 
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Database\Query\Dialect\DialectInterface;
-use Tuxxedo\Database\Query\Dialect\SqliteDialect;
 use Tuxxedo\Database\Driver\DefaultDriver;
 use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
+use Tuxxedo\Database\Query\Dialect\DialectInterface;
+use Tuxxedo\Database\Query\Dialect\SqliteDialect;
 
 class PdoSqliteConnection extends AbstractPdoConnection
 {

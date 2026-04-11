@@ -13,10 +13,18 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Builder;
 
-use Tuxxedo\Database\Query\WhereOperator;
-
 abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuilderInterface
 {
+    /**
+     * @var ConditionInterface[]
+     */
+    protected array $conditions = [];
+
+    /**
+     * @var JoinInterface[]
+     */
+    protected array $joins = [];
+
     protected function generateWhereSql(): string
     {
         // @todo Implement
@@ -37,8 +45,12 @@ abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuil
     public function where(
         string $column,
         string|int|float|bool|null|array $value,
-        WhereOperator|string $operator = WhereOperator::EQUALS,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static {
+        if (\is_string($operator)) {
+            $operator = ConditionOperator::from($operator);
+        }
+
         // @todo Implement
 
         return $this;
@@ -50,8 +62,12 @@ abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuil
     public function orWhere(
         string $column,
         string|int|float|bool|null|array $value,
-        WhereOperator|string $operator = WhereOperator::EQUALS,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static {
+        if (\is_string($operator)) {
+            $operator = ConditionOperator::from($operator);
+        }
+
         // @todo Implement
 
         return $this;
@@ -101,8 +117,12 @@ abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuil
         string $table,
         string $first,
         string $second,
-        WhereOperator|string $operator = WhereOperator::EQUALS,
+        JoinOperator|string $operator = JoinOperator::EQUALS,
     ): static {
+        if (\is_string($operator)) {
+            $operator = JoinOperator::from($operator);
+        }
+
         // @todo Implement
 
         return $this;
@@ -112,8 +132,12 @@ abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuil
         string $table,
         string $first,
         string $second,
-        WhereOperator|string $operator = WhereOperator::EQUALS,
+        JoinOperator|string $operator = JoinOperator::EQUALS,
     ): static {
+        if (\is_string($operator)) {
+            $operator = JoinOperator::from($operator);
+        }
+
         // @todo Implement
 
         return $this;
@@ -123,8 +147,12 @@ abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuil
         string $table,
         string $first,
         string $second,
-        WhereOperator|string $operator = WhereOperator::EQUALS,
+        JoinOperator|string $operator = JoinOperator::EQUALS,
     ): static {
+        if (\is_string($operator)) {
+            $operator = JoinOperator::from($operator);
+        }
+
         // @todo Implement
 
         return $this;

@@ -15,7 +15,6 @@ namespace Tuxxedo\Database\Query\Builder;
 
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\HydratableInterface;
-use Tuxxedo\Database\Query\OrderDirection;
 use Tuxxedo\Database\SqlException;
 
 interface SelectBuilderInterface extends WhereBuilderInterface

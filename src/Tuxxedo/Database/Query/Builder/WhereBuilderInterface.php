@@ -13,8 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Builder;
 
-use Tuxxedo\Database\Query\WhereOperator;
-
 interface WhereBuilderInterface extends BuilderInterface
 {
     public function hasConstraints(): bool;
@@ -25,7 +23,7 @@ interface WhereBuilderInterface extends BuilderInterface
     public function where(
         string $column,
         string|int|float|bool|null|array $value,
-        WhereOperator|string $operator = WhereOperator::EQUALS,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static;
 
     /**
@@ -34,7 +32,7 @@ interface WhereBuilderInterface extends BuilderInterface
     public function orWhere(
         string $column,
         string|int|float|bool|null|array $value,
-        WhereOperator|string $operator = WhereOperator::EQUALS,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static;
 
     public function whereNull(
@@ -65,21 +63,21 @@ interface WhereBuilderInterface extends BuilderInterface
         string $table,
         string $first,
         string $second,
-        WhereOperator|string $operator = WhereOperator::EQUALS,
+        JoinOperator|string $operator = JoinOperator::EQUALS,
     ): static;
 
     public function leftJoin(
         string $table,
         string $first,
         string $second,
-        WhereOperator|string $operator = WhereOperator::EQUALS,
+        JoinOperator|string $operator = JoinOperator::EQUALS,
     ): static;
 
     public function rightJoin(
         string $table,
         string $first,
         string $second,
-        WhereOperator|string $operator = WhereOperator::EQUALS,
+        JoinOperator|string $operator = JoinOperator::EQUALS,
     ): static;
 
     public function crossJoin(

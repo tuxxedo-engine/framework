@@ -15,10 +15,10 @@ namespace Tuxxedo\Database\Driver\Pdo\Generic;
 
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Database\Query\Dialect\DialectInterface;
-use Tuxxedo\Database\Query\Dialect\GenericDialect;
 use Tuxxedo\Database\Driver\DefaultDriver;
 use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
+use Tuxxedo\Database\Query\Dialect\DialectInterface;
+use Tuxxedo\Database\Query\Dialect\GenericDialect;
 
 class PdoGenericConnection extends AbstractPdoConnection
 {

@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Query;
+namespace Tuxxedo\Database\Query\Builder;
 
-enum WhereOperator: string
+enum ConditionOperator: string
 {
     case EQUALS = '=';
     case NOT_EQUALS = '!=';
