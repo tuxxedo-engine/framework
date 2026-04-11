@@ -154,12 +154,12 @@ class MapperTest extends TestCase
     public function testMappingWithSkipInvalidProperties(
         object|string $className,
     ): void {
-        /** @var object $country */
         $country = (new Mapper())->mapArrayTo(
             input: [
                 'country' => 'Denmark',
                 'capital' => 'Copenhagen',
                 'constitution' => '1849',
+                'independence' => null,
             ],
             className: $className,
             skipInvalidProperties: true,
