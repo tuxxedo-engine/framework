@@ -91,7 +91,9 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
         string ...$columns,
     ): static {
         foreach ($columns as $column) {
-            $this->columns[] = $this->connection->dialect->identifier($column);
+            $this->columns[] = $column === '*' || (\str_contains($column, '(') && \str_contains($column, ')'))
+                ? $column
+                : $this->connection->dialect->qualifiedIdentifier($column);
         }
 
         return $this;

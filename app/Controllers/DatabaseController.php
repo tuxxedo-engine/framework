@@ -223,6 +223,100 @@ readonly class DatabaseController
 
         $connection->query('DROP TABLE `test_bulk`');
 
+        $statement = $connection->select('users')
+            ->where('active', true)
+            ->compile();
+
+        \var_dump($statement->sql, $statement->parameters);
+
+        $statement = $connection->select('users')
+            ->select('id', 'name', 'email')
+            ->where('active', true)
+            ->orderBy('name')
+            ->limit(10, 50)
+            ->compile();
+
+        \var_dump($statement->sql, $statement->parameters);
+
+        $statement = $connection->select('users')
+            ->whereIn('id', [1, 2, 3])
+            ->compile();
+
+        \var_dump($statement->sql, $statement->parameters);
+
+        $statement = $connection->select('users')
+            ->whereNull('deleted_at')
+            ->compile();
+
+        \var_dump($statement->sql, $statement->parameters);
+
+        $statement = $connection->select('users')
+            ->where('users.active', true)
+            ->innerJoin('orders', 'users.id', 'orders.user_id')
+            ->compile();
+
+        \var_dump($statement->sql, $statement->parameters);
+
+        $statement = $connection->select('users')
+            ->where('role', 'admin')
+            ->orWhere('role', 'superadmin')
+            ->compile();
+
+        \var_dump($statement->sql, $statement->parameters);
+
+        $statement = $connection->select('orders')
+            ->select('user_id', 'COUNT(*)')
+            ->groupBy('user_id')
+            ->compile();
+
+        \var_dump($statement->sql, $statement->parameters);
+
+        $statement = $connection->update('users')
+            ->set('name', 'Kalle')
+            ->where('id', 1)
+            ->compile();
+
+        \var_dump($statement->sql, $statement->parameters);
+
+        $statement = $connection->update('users')
+            ->increment('score', 10)
+            ->where('id', 1)
+            ->compile();
+
+        \var_dump($statement->sql, $statement->parameters);
+
+        $statement = $connection->delete('users')
+            ->where('active', false)
+            ->compile();
+
+        \var_dump($statement->sql, $statement->parameters);
+
+        $statement = $connection->delete('users')
+            ->where('active', false)
+            ->limit(5)
+            ->compile();
+
+        \var_dump($statement->sql, $statement->parameters);
+
+        $statement = $connection->exists('users')
+            ->where('email', 'kalle@php.net')
+            ->compile();
+
+        \var_dump($statement->sql, $statement->parameters);
+
+        $statement = $connection->count('users')
+            ->where('active', true)
+            ->compile();
+
+        \var_dump($statement->sql, $statement->parameters);
+
+        $statement = $connection->count('users')
+            ->column('id')
+            ->where('active', true)
+            ->compile();
+
+        \var_dump($statement->sql, $statement->parameters);
+
         return Response::text('');
     }
 }

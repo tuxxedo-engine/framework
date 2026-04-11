@@ -31,13 +31,15 @@ class PgsqlDialect implements DialectInterface
     ) {
     }
 
-    public function placeholder(int $position): string
-    {
+    public function placeholder(
+        int $position,
+    ): string {
         return '$' . $position;
     }
 
-    public function identifier(string $name): string
-    {
+    public function identifier(
+        string $name,
+    ): string {
         if ($this->connection === null) {
             return '"' . \str_replace('"', '""', $name) . '"';
         }
@@ -54,5 +56,17 @@ class PgsqlDialect implements DialectInterface
         }
 
         return $quotedName;
+    }
+
+    public function qualifiedIdentifier(
+        string $name,
+    ): string {
+        return \join(
+            '.',
+            \array_map(
+                fn (string $segment): string => $this->identifier($segment),
+                \explode('.', $name),
+            ),
+        );
     }
 }

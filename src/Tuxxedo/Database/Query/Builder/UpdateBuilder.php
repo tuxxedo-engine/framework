@@ -72,9 +72,11 @@ class UpdateBuilder extends AbstractWhereBuilder implements UpdateBuilderInterfa
         $identifier = $this->connection->dialect->identifier($column);
 
         $this->expressions[$identifier] = \sprintf(
-            '%s + %F',
+            '%s + %s',
             $identifier,
-            $amount,
+            \is_int($amount)
+                ? (string) $amount
+                : \rtrim(\sprintf('%.10F', $amount), '0'),
         );
 
         return $this;
@@ -87,9 +89,11 @@ class UpdateBuilder extends AbstractWhereBuilder implements UpdateBuilderInterfa
         $identifier = $this->connection->dialect->identifier($column);
 
         $this->expressions[$identifier] = \sprintf(
-            '%s - %F',
+            '%s - %s',
             $identifier,
-            $amount,
+            \is_int($amount)
+                ? (string) $amount
+                : \rtrim(\sprintf('%.10F', $amount), '0'),
         );
 
         return $this;

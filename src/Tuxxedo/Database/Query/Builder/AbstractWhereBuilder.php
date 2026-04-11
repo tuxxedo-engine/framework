@@ -27,9 +27,82 @@ abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuil
 
     protected function generateWhereSql(): string
     {
-        // @todo Implement
+        $sql = '';
 
-        return '';
+        foreach ($this->joins as $join) {
+            $type = match ($join->type) {
+                JoinType::INNER => 'INNER JOIN',
+                JoinType::LEFT  => 'LEFT JOIN',
+                JoinType::RIGHT => 'RIGHT JOIN',
+                JoinType::CROSS => 'CROSS JOIN',
+            };
+
+            if ($join->type === JoinType::CROSS || $join->operator === null) {
+                $sql .= \sprintf(
+                    ' %s %s',
+                    $type,
+                    $join->identifier,
+                );
+
+                continue;
+            }
+
+            $sql .= \sprintf(
+                ' %s %s ON %s %s %s',
+                $type,
+                $join->identifier,
+                $join->first,
+                $join->operator->value,
+                $join->second,
+            );
+        }
+
+        foreach ($this->conditions as $index => $condition) {
+            if (
+                $condition->operator === ConditionOperator::IS_NULL ||
+                $condition->operator === ConditionOperator::IS_NOT_NULL
+            ) {
+                $sql .= \sprintf(
+                    ' %s %s %s',
+                    $index === 0
+                        ? 'WHERE' :
+                        $condition->conjunction->name,
+                    $condition->identifier,
+                    $condition->operator->value,
+                );
+
+                continue;
+            }
+
+            if (
+                $condition->operator === ConditionOperator::IN ||
+                $condition->operator === ConditionOperator::NOT_IN
+            ) {
+                $sql .= \sprintf(
+                    ' %s %s %s (%s)',
+                    $index === 0
+                        ? 'WHERE' :
+                        $condition->conjunction->name,
+                    $condition->identifier,
+                    $condition->operator->value,
+                    $condition->parameter,
+                );
+
+                continue;
+            }
+
+            $sql .= \sprintf(
+                ' %s %s %s %s',
+                $index === 0
+                    ? 'WHERE' :
+                    $condition->conjunction->name,
+                $condition->identifier,
+                $condition->operator->value,
+                $condition->parameter,
+            );
+        }
+
+        return $sql;
     }
 
     public function hasConstraints(): bool
@@ -64,7 +137,7 @@ abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuil
         $this->parameters[$parameterKey] = $value;
         $this->conditions[] = new Condition(
             conjunction: ConditionConjunction::AND,
-            identifier: $this->connection->dialect->identifier($column),
+            identifier: $this->connection->dialect->qualifiedIdentifier($column),
             operator: $operator,
             parameter: ':' . $parameterKey,
         );
@@ -89,7 +162,7 @@ abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuil
         $this->parameters[$parameterKey] = $value;
         $this->conditions[] = new Condition(
             conjunction: ConditionConjunction::OR,
-            identifier: $this->connection->dialect->identifier($column),
+            identifier: $this->connection->dialect->qualifiedIdentifier($column),
             operator: $operator,
             parameter: ':' . $parameterKey,
         );
@@ -102,7 +175,7 @@ abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuil
     ): static {
         $this->conditions[] = new Condition(
             conjunction: ConditionConjunction::AND,
-            identifier: $this->connection->dialect->identifier($column),
+            identifier: $this->connection->dialect->qualifiedIdentifier($column),
             operator: ConditionOperator::IS_NULL,
         );
 
@@ -114,7 +187,7 @@ abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuil
     ): static {
         $this->conditions[] = new Condition(
             conjunction: ConditionConjunction::AND,
-            identifier: $this->connection->dialect->identifier($column),
+            identifier: $this->connection->dialect->qualifiedIdentifier($column),
             operator: ConditionOperator::IS_NOT_NULL,
         );
 
@@ -133,7 +206,7 @@ abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuil
         $this->parameters[$parameterKey] = $values;
         $this->conditions[] = new Condition(
             conjunction: ConditionConjunction::AND,
-            identifier: $this->connection->dialect->identifier($column),
+            identifier: $this->connection->dialect->qualifiedIdentifier($column),
             operator: ConditionOperator::IN,
             parameter: ':' . $parameterKey . '[]',
         );
@@ -153,7 +226,7 @@ abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuil
         $this->parameters[$parameterKey] = $values;
         $this->conditions[] = new Condition(
             conjunction: ConditionConjunction::AND,
-            identifier: $this->connection->dialect->identifier($column),
+            identifier: $this->connection->dialect->qualifiedIdentifier($column),
             operator: ConditionOperator::NOT_IN,
             parameter: ':' . $parameterKey . '[]',
         );
@@ -174,8 +247,8 @@ abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuil
         $this->joins[] = new Join(
             type: JoinType::INNER,
             identifier: $this->connection->dialect->identifier($table),
-            first: $this->connection->dialect->identifier($first),
-            second: $this->connection->dialect->identifier($second),
+            first: $this->connection->dialect->qualifiedIdentifier($first),
+            second: $this->connection->dialect->qualifiedIdentifier($second),
             operator: $operator,
         );
 
@@ -195,8 +268,8 @@ abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuil
         $this->joins[] = new Join(
             type: JoinType::LEFT,
             identifier: $this->connection->dialect->identifier($table),
-            first: $this->connection->dialect->identifier($first),
-            second: $this->connection->dialect->identifier($second),
+            first: $this->connection->dialect->qualifiedIdentifier($first),
+            second: $this->connection->dialect->qualifiedIdentifier($second),
             operator: $operator,
         );
 
@@ -216,8 +289,8 @@ abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuil
         $this->joins[] = new Join(
             type: JoinType::RIGHT,
             identifier: $this->connection->dialect->identifier($table),
-            first: $this->connection->dialect->identifier($first),
-            second: $this->connection->dialect->identifier($second),
+            first: $this->connection->dialect->qualifiedIdentifier($first),
+            second: $this->connection->dialect->qualifiedIdentifier($second),
             operator: $operator,
         );
 

@@ -20,8 +20,9 @@ class GenericDialect implements DialectInterface
         '"',
     ];
 
-    public function placeholder(int $position): string
-    {
+    public function placeholder(
+        int $position,
+    ): string {
         return '?';
     }
 
@@ -29,5 +30,17 @@ class GenericDialect implements DialectInterface
         string $name,
     ): string {
         return '"' . \str_replace('"', '""', $name) . '"';
+    }
+
+    public function qualifiedIdentifier(
+        string $name,
+    ): string {
+        return \join(
+            '.',
+            \array_map(
+                fn (string $segment): string => $this->identifier($segment),
+                \explode('.', $name),
+            ),
+        );
     }
 }

@@ -34,4 +34,8 @@ interface DialectInterface
     public function identifier(
         string $name,
     ): string;
+
+    public function qualifiedIdentifier(
+        string $name,
+    ): string;
 }
