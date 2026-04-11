@@ -23,6 +23,8 @@ interface SelectBuilderInterface extends WhereBuilderInterface
         string ...$columns,
     ): static;
 
+    public function distinct(): static;
+
     public function orderBy(
         string $column,
         OrderDirection|string $direction = OrderDirection::ASC,

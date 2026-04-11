@@ -19,6 +19,8 @@ use Tuxxedo\Database\SqlException;
 
 class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterface
 {
+    private bool $distinct = false;
+
     /**
      * @var string[]
      */
@@ -49,7 +51,10 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
             : '*';
 
         $sql = \sprintf(
-            'SELECT %s FROM %s%s',
+            'SELECT %s%s FROM %s%s',
+            $this->distinct
+                ? 'DISTINCT '
+                : '',
             $columns,
             $this->connection->dialect->identifier($this->table),
             $this->generateWhereSql(),
@@ -139,6 +144,13 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
                 ? $column
                 : $this->connection->dialect->qualifiedIdentifier($column);
         }
+
+        return $this;
+    }
+
+    public function distinct(): static
+    {
+        $this->distinct = true;
 
         return $this;
     }
