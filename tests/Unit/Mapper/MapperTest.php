@@ -168,6 +168,26 @@ class MapperTest extends TestCase
         self::assertFalse(\property_exists($country, 'independence'));
     }
 
+    /**
+     * @param object|class-string $className
+     */
+    #[DataProvider('mapperInvalidPropertiesDataProvider')]
+    public function testMappingWithSkipInvalidPropertiesError(
+        object|string $className,
+    ): void {
+        $this->expectException(MapperException::class);
+
+        (new Mapper())->mapArrayTo(
+            input: [
+                'country' => 'Sweden',
+                'capital' => 'Stockholm',
+                'constitution' => '1809',
+                'independence' => null,
+            ],
+            className: $className,
+        );
+    }
+
     public function testMappingWithCastType(): void
     {
         $country = (new Mapper())->mapArrayTo(
@@ -181,5 +201,19 @@ class MapperTest extends TestCase
         );
 
         self::assertSame($country->constitution, 1919);
+    }
+
+    public function testMappingWithCastTypeError(): void
+    {
+        $this->expectException(MapperException::class);
+
+        (new Mapper())->mapArrayTo(
+            input: [
+                'country' => 'Norway',
+                'capital' => 'Oslo',
+                'constitution' => [],
+            ],
+            className: Country::class,
+        );
     }
 }
