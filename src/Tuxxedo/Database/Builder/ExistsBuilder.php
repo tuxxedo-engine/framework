@@ -18,7 +18,6 @@ class ExistsBuilder extends AbstractWhereBuilder implements ExistsBuilderInterfa
     protected function generateSql(): string
     {
         // @todo Implement
-        // @todo Call parent
 
         return '';
     }

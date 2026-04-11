@@ -18,7 +18,6 @@ class DeleteBuilder extends AbstractWhereBuilder implements DeleteBuilderInterfa
     protected function generateSql(): string
     {
         // @todo Implement
-        // @todo Call parent
 
         return '';
     }

@@ -18,7 +18,6 @@ class UpdateBuilder extends AbstractWhereBuilder implements UpdateBuilderInterfa
     protected function generateSql(): string
     {
         // @todo Implement
-        // @todo Call parent
 
         return '';
     }

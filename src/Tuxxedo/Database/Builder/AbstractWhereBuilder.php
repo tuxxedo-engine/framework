@@ -15,7 +15,7 @@ namespace Tuxxedo\Database\Builder;
 
 abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuilderInterface
 {
-    protected function generateSql(): string
+    protected function generateWhereSql(): string
     {
         // @todo Implement
 
