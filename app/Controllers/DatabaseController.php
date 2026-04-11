@@ -156,6 +156,73 @@ readonly class DatabaseController
 
         $connection->query('DROP TABLE `test_insert`');
 
+        $statement = $connection->insertBulk('users')
+            ->values(
+                [
+                    'name' => 'Kalle',
+                    'score' => 42,
+                ],
+            )
+            ->compile();
+
+        \var_dump($statement->sql, $statement->parameters);
+
+        $statement = $connection->insertBulk('users')
+            ->values(
+                [
+                    'name' => 'Kalle',
+                    'score' => 42,
+                ],
+                [
+                    'name' => 'Tuxxedo',
+                    'score' => 100,
+                ],
+                [
+                    'name' => 'Engine',
+                    'score' => 999,
+                ],
+            )
+            ->compile();
+
+        \var_dump($statement->sql, $statement->parameters);
+
+        $statement = $connection->insertBulk('user`data')
+            ->values(
+                [
+                    'col`name' => 'foo',
+                ],
+                [
+                    'col`name' => 'bar',
+                ],
+            )
+            ->compile();
+
+        \var_dump($statement->sql, $statement->parameters);
+
+        $connection->query('DROP TABLE IF EXISTS `test_bulk`');
+        $connection->query('CREATE TABLE `test_bulk` (`name` VARCHAR(32) NOT NULL, `score` INT NOT NULL)');
+
+        $connection->insertBulk('test_bulk')
+            ->values(
+                [
+                    'name' => 'Kalle',
+                    'score' => 42,
+                ],
+                [
+                    'name' => 'Tuxxedo',
+                    'score' => 100,
+                ],
+            )
+            ->execute();
+
+        \var_dump(
+            \iterator_to_array(
+                $connection->query('SELECT * FROM `test_bulk`')->fetchAll(),
+            ),
+        );
+
+        $connection->query('DROP TABLE `test_bulk`');
+
         return Response::text('');
     }
 }

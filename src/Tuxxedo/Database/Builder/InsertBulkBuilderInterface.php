@@ -13,12 +13,16 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Builder;
 
+use Tuxxedo\Database\SqlException;
+
 interface InsertBulkBuilderInterface extends BuilderInterface
 {
     /**
-     * @param array<array<string, string|int|float|bool|null>> $rows
+     * @param non-empty-array<string, string|int|float|bool|null> ...$rows
+     *
+     * @throws SqlException
      */
     public function values(
-        array $rows,
+        array ...$rows,
     ): static;
 }

@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Builder;
 
+use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\HydratableInterface;
+use Tuxxedo\Database\SqlException;
 
 class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterface
 {
@@ -70,6 +72,9 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
      *
      * @param class-string<TClassName&HydratableInterface>|\Closure(mixed[] $properties): TClassName $class
      * @return TClassName|null
+     *
+     * @throws DatabaseException
+     * @throws SqlException
      */
     public function fetch(
         string|\Closure $class,
@@ -88,6 +93,9 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
      *
      * @param class-string<TClassName&HydratableInterface>|\Closure(mixed[] $properties): TClassName $class
      * @return \Generator<TClassName>
+     *
+     * @throws DatabaseException
+     * @throws SqlException
      */
     public function fetchAll(
         string|\Closure $class,

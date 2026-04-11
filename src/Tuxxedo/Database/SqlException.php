@@ -58,4 +58,17 @@ class SqlException extends \Exception
             ),
         );
     }
+
+    public static function fromUnexpectedInsertBulkSize(
+        int $rows,
+        int $expectedRows,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Bulk insertions must be the same sized array, expected %d but got %d',
+                $expectedRows,
+                $rows,
+            ),
+        );
+    }
 }
