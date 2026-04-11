@@ -59,7 +59,10 @@ class PgsqlConnection implements ConnectionInterface
         $this->name = $config->getString('name');
         $this->role = $config->getEnum('role', ConnectionRole::class);
         $this->driver = DefaultDriver::PGSQL;
-        $this->dialect = new PgsqlDialect();
+        $this->dialect = new PgsqlDialect(
+            connection: fn (): Connection => $this->getDriverInstance(),
+        );
+
         $this->statementParser = new StatementParser(
             dialect: $this->dialect,
         );

@@ -47,4 +47,15 @@ class SqlException extends \Exception
             ),
         );
     }
+
+    public static function fromCannotEscapeIdentifier(
+        string $name,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot escape identifier, as its invalid: %s',
+                $name,
+            ),
+        );
+    }
 }

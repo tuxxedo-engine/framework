@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Builder\Dialect;
 
+use Tuxxedo\Database\SqlException;
+
 interface DialectInterface
 {
     /**
@@ -24,5 +26,12 @@ interface DialectInterface
 
     public function placeholder(
         int $position,
+    ): string;
+
+    /**
+     * @throws SqlException
+     */
+    public function identifier(
+        string $name,
     ): string;
 }

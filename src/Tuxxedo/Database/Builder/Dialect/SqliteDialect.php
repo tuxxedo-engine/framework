@@ -25,4 +25,10 @@ class SqliteDialect implements DialectInterface
     {
         return '?';
     }
+
+    public function identifier(
+        string $name,
+    ): string {
+        return '"' . \str_replace('"', '""', $name) . '"';
+    }
 }
