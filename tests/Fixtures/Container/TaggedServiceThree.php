@@ -15,10 +15,4 @@ namespace Fixtures\Container;
 
 class TaggedServiceThree implements TaggedServiceInterface
 {
-    public readonly string $name;
-
-    public function __construct()
-    {
-        $this->name = __CLASS__;
-    }
 }

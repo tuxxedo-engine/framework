@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Fixtures\Container;
 
-class TaggedServiceOne implements TaggedServiceInterface
+interface ReflectionResolverResultReceiverInterface
 {
+    public ReflectionResolverResult $result {
+        get;
+    }
 }

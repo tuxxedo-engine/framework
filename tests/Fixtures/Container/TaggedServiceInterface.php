@@ -15,10 +15,4 @@ namespace Fixtures\Container;
 
 interface TaggedServiceInterface
 {
-    /**
-     * @var class-string
-     */
-    public string $name {
-        get;
-    }
 }

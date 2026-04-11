@@ -13,6 +13,6 @@ declare(strict_types=1);
 
 namespace Fixtures\Container;
 
-class TaggedServiceOne implements TaggedServiceInterface
+class ReflectionResolverNamedType
 {
 }
