@@ -18,6 +18,7 @@ abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuil
     protected function generateSql(): string
     {
         // @todo Implement
+
         return '';
     }
 

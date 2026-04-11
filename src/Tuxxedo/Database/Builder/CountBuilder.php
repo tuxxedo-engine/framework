@@ -15,6 +15,14 @@ namespace Tuxxedo\Database\Builder;
 
 class CountBuilder extends AbstractWhereBuilder implements CountBuilderInterface
 {
+    protected function generateSql(): string
+    {
+        // @todo Implement
+        // @todo Call parent
+
+        return '';
+    }
+
     public function column(
         string $column = '*',
     ): static {

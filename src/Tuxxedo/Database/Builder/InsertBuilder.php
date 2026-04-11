@@ -15,6 +15,13 @@ namespace Tuxxedo\Database\Builder;
 
 class InsertBuilder extends AbstractBuilder implements InsertBuilderInterface
 {
+    protected function generateSql(): string
+    {
+        // @todo Implement
+
+        return '';
+    }
+
     public function isBulk(): bool
     {
         // @todo Implement

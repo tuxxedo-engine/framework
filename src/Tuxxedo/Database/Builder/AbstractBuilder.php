@@ -27,11 +27,7 @@ abstract class AbstractBuilder implements BuilderInterface
     ) {
     }
 
-    protected function generateSql(): string
-    {
-        // @todo Implement
-        return '';
-    }
+    abstract protected function generateSql(): string;
 
     public function compile(): StatementParserResultInterface
     {

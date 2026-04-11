@@ -15,6 +15,14 @@ namespace Tuxxedo\Database\Builder;
 
 class ExistsBuilder extends AbstractWhereBuilder implements ExistsBuilderInterface
 {
+    protected function generateSql(): string
+    {
+        // @todo Implement
+        // @todo Call parent
+
+        return '';
+    }
+
     public function exists(): bool
     {
         // @todo Implement

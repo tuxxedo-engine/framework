@@ -17,6 +17,14 @@ use Tuxxedo\Database\Driver\HydratableInterface;
 
 class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterface
 {
+    protected function generateSql(): string
+    {
+        // @todo Implement
+        // @todo Call parent
+
+        return '';
+    }
+
     public function select(
         string ...$columns,
     ): static {

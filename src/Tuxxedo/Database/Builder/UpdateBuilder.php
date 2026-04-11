@@ -15,6 +15,14 @@ namespace Tuxxedo\Database\Builder;
 
 class UpdateBuilder extends AbstractWhereBuilder implements UpdateBuilderInterface
 {
+    protected function generateSql(): string
+    {
+        // @todo Implement
+        // @todo Call parent
+
+        return '';
+    }
+
     public function set(
         string $column,
         string|int|float|bool|null $value,

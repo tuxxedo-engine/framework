@@ -15,6 +15,14 @@ namespace Tuxxedo\Database\Builder;
 
 class DeleteBuilder extends AbstractWhereBuilder implements DeleteBuilderInterface
 {
+    protected function generateSql(): string
+    {
+        // @todo Implement
+        // @todo Call parent
+
+        return '';
+    }
+
     public function limit(
         int $limit,
     ): static {
