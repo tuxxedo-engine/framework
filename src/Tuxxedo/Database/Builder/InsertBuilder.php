@@ -22,27 +22,9 @@ class InsertBuilder extends AbstractBuilder implements InsertBuilderInterface
         return '';
     }
 
-    public function isBulk(): bool
-    {
-        // @todo Implement
-
-        return false;
-    }
-
     public function set(
         string $column,
         string|int|float|bool|null $value,
-    ): static {
-        // @todo Implement
-
-        return $this;
-    }
-
-    /**
-     * @param array<array<string, string|int|float|bool|null>> $rows
-     */
-    public function values(
-        array $rows,
     ): static {
         // @todo Implement
 
