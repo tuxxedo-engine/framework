@@ -93,4 +93,45 @@ abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuil
 
         return $this;
     }
+
+    public function innerJoin(
+        string $table,
+        string $first,
+        string $second,
+        WhereOperator|string $operator = WhereOperator::EQUALS,
+    ): static {
+        // @todo Implement
+
+        return $this;
+    }
+
+    public function leftJoin(
+        string $table,
+        string $first,
+        string $second,
+        WhereOperator|string $operator = WhereOperator::EQUALS,
+    ): static {
+        // @todo Implement
+
+        return $this;
+    }
+
+    public function rightJoin(
+        string $table,
+        string $first,
+        string $second,
+        WhereOperator|string $operator = WhereOperator::EQUALS,
+    ): static {
+        // @todo Implement
+
+        return $this;
+    }
+
+    public function crossJoin(
+        string $table,
+    ): static {
+        // @todo Implement
+
+        return $this;
+    }
 }

@@ -58,4 +58,29 @@ interface WhereBuilderInterface extends BuilderInterface
         string $column,
         array $values,
     ): static;
+
+    public function innerJoin(
+        string $table,
+        string $first,
+        string $second,
+        WhereOperator|string $operator = WhereOperator::EQUALS,
+    ): static;
+
+    public function leftJoin(
+        string $table,
+        string $first,
+        string $second,
+        WhereOperator|string $operator = WhereOperator::EQUALS,
+    ): static;
+
+    public function rightJoin(
+        string $table,
+        string $first,
+        string $second,
+        WhereOperator|string $operator = WhereOperator::EQUALS,
+    ): static;
+
+    public function crossJoin(
+        string $table,
+    ): static;
 }
