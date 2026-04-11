@@ -15,17 +15,30 @@ namespace Tuxxedo\Database\Query\Builder;
 
 class DeleteBuilder extends AbstractWhereBuilder implements DeleteBuilderInterface
 {
+    private ?int $limit = null;
+
     protected function generateSql(): string
     {
-        // @todo Implement
+        $sql = \sprintf(
+            'DELETE FROM %s%s',
+            $this->connection->dialect->identifier($this->table),
+            $this->generateWhereSql(),
+        );
 
-        return '';
+        if ($this->limit !== null) {
+            $sql .= \sprintf(
+                ' LIMIT %d',
+                $this->limit,
+            );
+        }
+
+        return $sql;
     }
 
     public function limit(
         int $limit,
     ): static {
-        // @todo Implement
+        $this->limit = $limit;
 
         return $this;
     }

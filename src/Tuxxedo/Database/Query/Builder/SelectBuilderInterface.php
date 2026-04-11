@@ -34,10 +34,7 @@ interface SelectBuilderInterface extends WhereBuilderInterface
 
     public function limit(
         int $limit,
-    ): static;
-
-    public function offset(
-        int $offset,
+        ?int $offset = null,
     ): static;
 
     /**

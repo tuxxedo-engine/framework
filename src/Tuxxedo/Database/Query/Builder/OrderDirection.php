@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Builder;
 
-enum OrderDirection
+enum OrderDirection: string
 {
-    case ASC;
-    case DESC;
+    case ASC = 'ASC';
+    case DESC = 'DESC';
 }
