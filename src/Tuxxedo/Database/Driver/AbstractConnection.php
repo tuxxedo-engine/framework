@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Driver;
 
+use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Query\Builder\CountBuilder;
 use Tuxxedo\Database\Query\Builder\CountBuilderInterface;
 use Tuxxedo\Database\Query\Builder\DeleteBuilder;
@@ -34,6 +35,97 @@ abstract class AbstractConnection implements ConnectionInterface
 {
     abstract protected StatementParserInterface $statementParser {
         get;
+    }
+
+    protected int $savepointsCounter = 0;
+
+    protected function generateSavepointName(): string
+    {
+        return \sprintf(
+            'sp_%s_%d',
+            \spl_object_id($this),
+            $this->savepointsCounter++,
+        );
+    }
+
+    public function savepoint(): string
+    {
+        if (!$this->inTransaction()) {
+            throw DatabaseException::fromSavepointOutsideTransaction();
+        }
+
+        $name = $this->generateSavepointName();
+
+        $this->query(
+            sql: \sprintf(
+                'SAVEPOINT %s',
+                $name,
+            ),
+            native: true,
+        );
+
+        return $name;
+    }
+
+    public function releaseSavepoint(string $name): void
+    {
+        $this->query(
+            sql: \sprintf(
+                'RELEASE SAVEPOINT %s',
+                $name,
+            ),
+            native: true,
+        );
+    }
+
+    public function rollbackToSavepoint(string $name): void
+    {
+        $this->query(
+            sql: \sprintf(
+                'ROLLBACK TO SAVEPOINT %s',
+                $name,
+            ),
+            native: true,
+        );
+    }
+
+    public function transaction(
+        \Closure $transaction,
+    ): void {
+        try {
+            $this->begin();
+
+            $transaction($this);
+
+            $this->commit();
+        } catch (\Exception $exception) {
+            $this->rollback();
+
+            throw $exception;
+        }
+    }
+
+    public function nestedTransaction(
+        \Closure $transaction,
+    ): void {
+        if (!$this->inTransaction()) {
+            $this->transaction($transaction);
+
+            return;
+        }
+
+        $savepoint = $this->savepoint();
+
+        try {
+            $transaction($this);
+
+            $this->releaseSavepoint($savepoint);
+        } catch (\Exception $exception) {
+            $this->rollbackToSavepoint($savepoint);
+            $this->releaseSavepoint($savepoint);
+
+            throw $exception;
+        }
     }
 
     public function select(

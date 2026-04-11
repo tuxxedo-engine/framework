@@ -119,4 +119,11 @@ class DatabaseException extends \Exception
             message: 'No transaction is currently active',
         );
     }
+
+    public static function fromSavepointOutsideTransaction(): self
+    {
+        return new self(
+            message: 'Cannot create savepoint: No transaction is currently active',
+        );
+    }
 }

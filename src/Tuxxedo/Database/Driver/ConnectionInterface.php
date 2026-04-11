@@ -28,7 +28,6 @@ use Tuxxedo\Database\Query\Builder\UpdateBuilderInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\SqlException;
 
-// @todo Support savepoints
 interface ConnectionInterface
 {
     public string $name {
@@ -109,6 +108,34 @@ interface ConnectionInterface
      */
     public function transaction(
         \Closure $transaction,
+    ): void;
+
+    /**
+     * @param \Closure(self $connection): void $transaction
+     *
+     * @throws DatabaseException
+     */
+    public function nestedTransaction(
+        \Closure $transaction,
+    ): void;
+
+    /**
+     * @throws DatabaseException
+     */
+    public function savepoint(): string;
+
+    /**
+     * @throws DatabaseException
+     */
+    public function releaseSavepoint(
+        string $name,
+    ): void;
+
+    /**
+     * @throws DatabaseException
+     */
+    public function rollbackToSavepoint(
+        string $name,
     ): void;
 
     /**

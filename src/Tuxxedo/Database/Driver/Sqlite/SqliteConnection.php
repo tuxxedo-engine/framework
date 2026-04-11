@@ -240,22 +240,6 @@ class SqliteConnection extends AbstractConnection
         return $this->inTransaction;
     }
 
-    public function transaction(
-        \Closure $transaction,
-    ): void {
-        try {
-            $this->begin();
-
-            $transaction($this);
-
-            $this->commit();
-        } catch (\Exception $exception) {
-            $this->rollback();
-
-            throw $exception;
-        }
-    }
-
     public function query(
         string $sql,
         array $parameters = [],
