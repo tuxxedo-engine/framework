@@ -15,10 +15,21 @@ namespace Tuxxedo\Database\Driver\Sqlite;
 
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Database\Builder\CountBuilder;
+use Tuxxedo\Database\Builder\CountBuilderInterface;
+use Tuxxedo\Database\Builder\DeleteBuilder;
+use Tuxxedo\Database\Builder\DeleteBuilderInterface;
 use Tuxxedo\Database\Builder\Dialect\DialectInterface;
 use Tuxxedo\Database\Builder\Dialect\SqliteDialect;
+use Tuxxedo\Database\Builder\ExistsBuilder;
+use Tuxxedo\Database\Builder\InsertBuilder;
+use Tuxxedo\Database\Builder\InsertBuilderInterface;
 use Tuxxedo\Database\Builder\Parser\StatementParser;
 use Tuxxedo\Database\Builder\Parser\StatementParserInterface;
+use Tuxxedo\Database\Builder\SelectBuilder;
+use Tuxxedo\Database\Builder\SelectBuilderInterface;
+use Tuxxedo\Database\Builder\UpdateBuilder;
+use Tuxxedo\Database\Builder\UpdateBuilderInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
@@ -33,7 +44,7 @@ class SqliteConnection implements ConnectionInterface
 
     private \SQLite3 $sqlite;
     private readonly \Closure $connector;
-    private StatementParserInterface $statementParser;
+    private readonly StatementParserInterface $statementParser;
 
     private bool $inTransaction = false;
 
@@ -45,6 +56,9 @@ class SqliteConnection implements ConnectionInterface
         $this->role = $config->getEnum('role', ConnectionRole::class);
         $this->driver = DefaultDriver::SQLITE;
         $this->dialect = new SqliteDialect();
+        $this->statementParser = new StatementParser(
+            dialect: $this->dialect,
+        );
 
         $this->connector = function () use ($config): void {
             try {
@@ -261,10 +275,6 @@ class SqliteConnection implements ConnectionInterface
         $this->connectCheck();
 
         if (!$native) {
-            $this->statementParser ??= new StatementParser(
-                dialect: $this->dialect,
-            );
-
             $parsedStatement = $this->statementParser->parse($sql, $parameters);
             $sql = $parsedStatement->sql;
             $parameters = $parsedStatement->parameters;
@@ -313,6 +323,66 @@ class SqliteConnection implements ConnectionInterface
             container: $this->container,
             result: $result,
             affectedRows: $this->sqlite->changes(),
+        );
+    }
+
+    public function select(
+        string $table,
+    ): SelectBuilderInterface {
+        return new SelectBuilder(
+            connection: $this,
+            table: $table,
+            statementParser: $this->statementParser,
+        );
+    }
+
+    public function insert(
+        string $table,
+    ): InsertBuilderInterface {
+        return new InsertBuilder(
+            connection: $this,
+            table: $table,
+            statementParser: $this->statementParser,
+        );
+    }
+
+    public function update(
+        string $table,
+    ): UpdateBuilderInterface {
+        return new UpdateBuilder(
+            connection: $this,
+            table: $table,
+            statementParser: $this->statementParser,
+        );
+    }
+
+    public function delete(
+        string $table,
+    ): DeleteBuilderInterface {
+        return new DeleteBuilder(
+            connection: $this,
+            table: $table,
+            statementParser: $this->statementParser,
+        );
+    }
+
+    public function exists(
+        string $table,
+    ): ExistsBuilder {
+        return new ExistsBuilder(
+            connection: $this,
+            table: $table,
+            statementParser: $this->statementParser,
+        );
+    }
+
+    public function count(
+        string $table,
+    ): CountBuilderInterface {
+        return new CountBuilder(
+            connection: $this,
+            table: $table,
+            statementParser: $this->statementParser,
         );
     }
 }

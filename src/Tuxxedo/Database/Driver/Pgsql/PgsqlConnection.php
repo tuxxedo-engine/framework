@@ -17,10 +17,21 @@ use PgSql\Connection;
 use PgSql\Result;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Database\Builder\CountBuilder;
+use Tuxxedo\Database\Builder\CountBuilderInterface;
+use Tuxxedo\Database\Builder\DeleteBuilder;
+use Tuxxedo\Database\Builder\DeleteBuilderInterface;
 use Tuxxedo\Database\Builder\Dialect\DialectInterface;
 use Tuxxedo\Database\Builder\Dialect\PgsqlDialect;
+use Tuxxedo\Database\Builder\ExistsBuilder;
+use Tuxxedo\Database\Builder\InsertBuilder;
+use Tuxxedo\Database\Builder\InsertBuilderInterface;
 use Tuxxedo\Database\Builder\Parser\StatementParser;
 use Tuxxedo\Database\Builder\Parser\StatementParserInterface;
+use Tuxxedo\Database\Builder\SelectBuilder;
+use Tuxxedo\Database\Builder\SelectBuilderInterface;
+use Tuxxedo\Database\Builder\UpdateBuilder;
+use Tuxxedo\Database\Builder\UpdateBuilderInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
@@ -35,7 +46,7 @@ class PgsqlConnection implements ConnectionInterface
 
     private Connection $pgsql;
     private readonly \Closure $connector;
-    private StatementParserInterface $statementParser;
+    private readonly StatementParserInterface $statementParser;
 
     private bool $inTransaction = false;
 
@@ -47,6 +58,9 @@ class PgsqlConnection implements ConnectionInterface
         $this->role = $config->getEnum('role', ConnectionRole::class);
         $this->driver = DefaultDriver::PGSQL;
         $this->dialect = new PgsqlDialect();
+        $this->statementParser = new StatementParser(
+            dialect: $this->dialect,
+        );
 
         $this->connector = function () use ($config): void {
             if (!isset($this->pgsql)) {
@@ -359,10 +373,6 @@ class PgsqlConnection implements ConnectionInterface
         $params = [];
 
         if (!$native) {
-            $this->statementParser ??= new StatementParser(
-                dialect: $this->dialect,
-            );
-
             $parsedStatement = $this->statementParser->parse($sql, $parameters);
             $sql = $parsedStatement->sql;
             $parameters = $parsedStatement->parameters;
@@ -398,6 +408,66 @@ class PgsqlConnection implements ConnectionInterface
             container: $this->container,
             result: $result,
             affectedRows: \pg_affected_rows($result),
+        );
+    }
+
+    public function select(
+        string $table,
+    ): SelectBuilderInterface {
+        return new SelectBuilder(
+            connection: $this,
+            table: $table,
+            statementParser: $this->statementParser,
+        );
+    }
+
+    public function insert(
+        string $table,
+    ): InsertBuilderInterface {
+        return new InsertBuilder(
+            connection: $this,
+            table: $table,
+            statementParser: $this->statementParser,
+        );
+    }
+
+    public function update(
+        string $table,
+    ): UpdateBuilderInterface {
+        return new UpdateBuilder(
+            connection: $this,
+            table: $table,
+            statementParser: $this->statementParser,
+        );
+    }
+
+    public function delete(
+        string $table,
+    ): DeleteBuilderInterface {
+        return new DeleteBuilder(
+            connection: $this,
+            table: $table,
+            statementParser: $this->statementParser,
+        );
+    }
+
+    public function exists(
+        string $table,
+    ): ExistsBuilder {
+        return new ExistsBuilder(
+            connection: $this,
+            table: $table,
+            statementParser: $this->statementParser,
+        );
+    }
+
+    public function count(
+        string $table,
+    ): CountBuilderInterface {
+        return new CountBuilder(
+            connection: $this,
+            table: $table,
+            statementParser: $this->statementParser,
         );
     }
 }
