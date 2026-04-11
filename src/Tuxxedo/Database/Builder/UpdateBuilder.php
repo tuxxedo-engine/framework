@@ -13,20 +13,32 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Builder;
 
-interface UpdateBuilderInterface extends WhereBuilderInterface
+class UpdateBuilder extends AbstractWhereBuilder implements UpdateBuilderInterface
 {
     public function set(
         string $column,
         string|int|float|bool|null $value,
-    ): static;
+    ): static {
+        // @todo Implement
+
+        return $this;
+    }
 
     public function increment(
         string $column,
         int|float $amount = 1,
-    ): static;
+    ): static {
+        // @todo Implement
+
+        return $this;
+    }
 
     public function decrement(
         string $column,
         int|float $amount = 1,
-    ): static;
+    ): static {
+        // @todo Implement
+
+        return $this;
+    }
 }

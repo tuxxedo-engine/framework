@@ -13,18 +13,20 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Builder;
 
-use Tuxxedo\Database\DatabaseException;
-use Tuxxedo\Database\SqlException;
-
-interface CountBuilderInterface extends WhereBuilderInterface
+class CountBuilder extends AbstractWhereBuilder implements CountBuilderInterface
 {
     public function column(
         string $column = '*',
-    ): static;
+    ): static {
+        // @todo Implement
 
-    /**
-     * @throws DatabaseException
-     * @throws SqlException
-     */
-    public function count(): int;
+        return $this;
+    }
+
+    public function count(): int
+    {
+        // @todo Implement
+
+        return 0;
+    }
 }

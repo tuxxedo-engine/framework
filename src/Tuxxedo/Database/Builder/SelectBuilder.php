@@ -13,56 +13,78 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Builder;
 
-use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\HydratableInterface;
-use Tuxxedo\Database\SqlException;
 
-interface SelectBuilderInterface extends WhereBuilderInterface
+class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterface
 {
     public function select(
         string ...$columns,
-    ): static;
+    ): static {
+        // @todo Implement
+
+        return $this;
+    }
 
     public function orderBy(
         string $column,
         OrderDirection|string $direction = OrderDirection::ASC,
-    ): static;
+    ): static {
+        // @todo Implement
+
+        return $this;
+    }
 
     public function groupBy(
         string ...$columns,
-    ): static;
+    ): static {
+        // @todo Implement
+
+        return $this;
+    }
 
     public function limit(
         int $limit,
-    ): static;
+    ): static {
+        // @todo Implement
+
+        return $this;
+    }
 
     public function offset(
         int $offset,
-    ): static;
+    ): static {
+        // @todo Implement
+
+        return $this;
+    }
 
     /**
      * @template TClassName of object
      *
      * @param class-string<TClassName&HydratableInterface>|\Closure(mixed[] $properties): TClassName $class
      * @return TClassName|null
-     *
-     * @throws DatabaseException
-     * @throws SqlException
      */
     public function fetch(
         string|\Closure $class,
-    ): ?object;
+    ): ?object {
+        $result = $this->execute();
+
+        if ($result->count() > 0) {
+            return $result->fetchObject($class);
+        }
+
+        return null;
+    }
 
     /**
      * @template TClassName of object
      *
      * @param class-string<TClassName&HydratableInterface>|\Closure(mixed[] $properties): TClassName $class
      * @return \Generator<TClassName>
-     *
-     * @throws DatabaseException
-     * @throws SqlException
      */
     public function fetchAll(
         string|\Closure $class,
-    ): \Generator;
+    ): \Generator {
+        yield from $this->execute()->fetchAll($class);
+    }
 }

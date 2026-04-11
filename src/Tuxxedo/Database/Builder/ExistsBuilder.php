@@ -13,9 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Builder;
 
-interface DeleteBuilderInterface extends WhereBuilderInterface
+class ExistsBuilder extends AbstractWhereBuilder implements ExistsBuilderInterface
 {
-    public function limit(
-        int $limit,
-    ): static;
+    public function exists(): bool
+    {
+        // @todo Implement
+
+        return false;
+    }
 }

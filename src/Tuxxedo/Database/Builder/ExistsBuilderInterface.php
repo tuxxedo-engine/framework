@@ -16,7 +16,6 @@ namespace Tuxxedo\Database\Builder;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\SqlException;
 
-// @todo Implement
 interface ExistsBuilderInterface extends WhereBuilderInterface
 {
     /**

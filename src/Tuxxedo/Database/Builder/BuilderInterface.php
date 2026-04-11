@@ -19,7 +19,7 @@ use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Driver\ResultSetInterface;
 use Tuxxedo\Database\SqlException;
 
-// @todo Implement
+// @todo Joins?
 interface BuilderInterface
 {
     public ConnectionInterface $connection {
