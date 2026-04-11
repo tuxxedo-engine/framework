@@ -17,29 +17,14 @@ use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
-use Tuxxedo\Database\Driver\ConnectionInterface;
+use Tuxxedo\Database\Driver\AbstractConnection;
 use Tuxxedo\Database\Driver\DefaultDriver;
-use Tuxxedo\Database\Query\Builder\CountBuilder;
-use Tuxxedo\Database\Query\Builder\CountBuilderInterface;
-use Tuxxedo\Database\Query\Builder\DeleteBuilder;
-use Tuxxedo\Database\Query\Builder\DeleteBuilderInterface;
-use Tuxxedo\Database\Query\Builder\ExistsBuilder;
-use Tuxxedo\Database\Query\Builder\InsertBuilder;
-use Tuxxedo\Database\Query\Builder\InsertBuilderInterface;
-use Tuxxedo\Database\Query\Builder\InsertBulkBuilder;
-use Tuxxedo\Database\Query\Builder\InsertBulkBuilderInterface;
-use Tuxxedo\Database\Query\Builder\SelectBuilder;
-use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
-use Tuxxedo\Database\Query\Builder\Table\DropTableBuilder;
-use Tuxxedo\Database\Query\Builder\Table\DropTableBuilderInterface;
-use Tuxxedo\Database\Query\Builder\UpdateBuilder;
-use Tuxxedo\Database\Query\Builder\UpdateBuilderInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Dialect\SqliteDialect;
 use Tuxxedo\Database\Query\Parser\StatementParser;
 use Tuxxedo\Database\Query\Parser\StatementParserInterface;
 
-class SqliteConnection implements ConnectionInterface
+class SqliteConnection extends AbstractConnection
 {
     public readonly string $name;
     public readonly ConnectionRole $role;
@@ -48,9 +33,9 @@ class SqliteConnection implements ConnectionInterface
 
     private \SQLite3 $sqlite;
     private readonly \Closure $connector;
-    private readonly StatementParserInterface $statementParser;
-
     private bool $inTransaction = false;
+
+    protected readonly StatementParserInterface $statementParser;
 
     private function __construct(
         private readonly ContainerInterface $container,
@@ -327,86 +312,6 @@ class SqliteConnection implements ConnectionInterface
             container: $this->container,
             result: $result,
             affectedRows: $this->sqlite->changes(),
-        );
-    }
-
-    public function select(
-        string $table,
-    ): SelectBuilderInterface {
-        return new SelectBuilder(
-            connection: $this,
-            table: $table,
-            statementParser: $this->statementParser,
-        );
-    }
-
-    public function insert(
-        string $table,
-    ): InsertBuilderInterface {
-        return new InsertBuilder(
-            connection: $this,
-            table: $table,
-            statementParser: $this->statementParser,
-        );
-    }
-
-    public function insertBulk(
-        string $table,
-    ): InsertBulkBuilderInterface {
-        return new InsertBulkBuilder(
-            connection: $this,
-            table: $table,
-            statementParser: $this->statementParser,
-        );
-    }
-
-    public function update(
-        string $table,
-    ): UpdateBuilderInterface {
-        return new UpdateBuilder(
-            connection: $this,
-            table: $table,
-            statementParser: $this->statementParser,
-        );
-    }
-
-    public function delete(
-        string $table,
-    ): DeleteBuilderInterface {
-        return new DeleteBuilder(
-            connection: $this,
-            table: $table,
-            statementParser: $this->statementParser,
-        );
-    }
-
-    public function exists(
-        string $table,
-    ): ExistsBuilder {
-        return new ExistsBuilder(
-            connection: $this,
-            table: $table,
-            statementParser: $this->statementParser,
-        );
-    }
-
-    public function count(
-        string $table,
-    ): CountBuilderInterface {
-        return new CountBuilder(
-            connection: $this,
-            table: $table,
-            statementParser: $this->statementParser,
-        );
-    }
-
-    public function dropTable(
-        string $table,
-    ): DropTableBuilderInterface {
-        return new DropTableBuilder(
-            connection: $this,
-            table: $table,
-            statementParser: $this->statementParser,
         );
     }
 }
