@@ -65,6 +65,11 @@ class InsertBulkBuilder extends AbstractBuilder implements InsertBulkBuilderInte
         $expectedColumns = \array_keys($rows[0]);
         $expectedSize = \sizeof($expectedColumns);
 
+        if (\sizeof($this->columns) > 0) {
+            $expectedColumns = \array_keys($this->columnMap);
+            $expectedSize = \sizeof($expectedColumns);
+        }
+
         foreach ($rows as $row) {
             $actualColumns = \array_keys($row);
             $rowSize = \sizeof($row);
@@ -80,19 +85,25 @@ class InsertBulkBuilder extends AbstractBuilder implements InsertBulkBuilderInte
             }
         }
 
-        $this->rowCount = \sizeof($rows);
+        if (\sizeof($this->columns) === 0) {
+            foreach ($expectedColumns as $column) {
+                $paramKey = 'col_' . \sizeof($this->columns);
 
-        foreach ($expectedColumns as $column) {
-            $paramKey = 'col_' . \sizeof($this->columns);
-
-            $this->columns[':' . $paramKey] = $this->connection->dialect->identifier($column);
-            $this->columnMap[$paramKey] = $column;
+                $this->columns[':' . $paramKey] = $this->connection->dialect->identifier($column);
+                $this->columnMap[$paramKey] = $column;
+            }
         }
 
-        foreach ($rows as $index => $row) {
+        $index = 0;
+        $offset = $this->rowCount;
+        $this->rowCount += \sizeof($rows);
+
+        foreach ($rows as $row) {
             foreach ($this->columnMap as $paramKey => $originalColumn) {
-                $this->parameters[$paramKey . '_' . $index] = $row[$originalColumn];
+                $this->parameters[$paramKey . '_' . ($offset + $index)] = $row[$originalColumn];
             }
+
+            $index++;
         }
 
         return $this;
