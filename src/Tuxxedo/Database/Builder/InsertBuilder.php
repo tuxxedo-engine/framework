@@ -15,18 +15,32 @@ namespace Tuxxedo\Database\Builder;
 
 class InsertBuilder extends AbstractBuilder implements InsertBuilderInterface
 {
+    /**
+     * @var array<string, string>
+     */
+    private array $columns = [];
+
     protected function generateSql(): string
     {
-        // @todo Implement
+        $columnList = \join(', ', $this->columns);
+        $placeholders = \join(', ', \array_keys($this->columns));
 
-        return '';
+        return \sprintf(
+            'INSERT INTO %s (%s) VALUES (%s)',
+            $this->connection->dialect->identifier($this->table),
+            $columnList,
+            $placeholders,
+        );
     }
 
     public function set(
         string $column,
         string|int|float|bool|null $value,
     ): static {
-        // @todo Implement
+        $parameterKey = 'col_' . \count($this->columns);
+
+        $this->columns[':' . $parameterKey] = $this->connection->dialect->identifier($column);
+        $this->parameters[$parameterKey] = $value;
 
         return $this;
     }
