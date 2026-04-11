@@ -67,8 +67,9 @@ abstract class AbstractConnection implements ConnectionInterface
         return $name;
     }
 
-    public function releaseSavepoint(string $name): void
-    {
+    public function releaseSavepoint(
+        string $name,
+    ): void {
         $this->query(
             sql: \sprintf(
                 'RELEASE SAVEPOINT %s',
@@ -78,8 +79,9 @@ abstract class AbstractConnection implements ConnectionInterface
         );
     }
 
-    public function rollbackToSavepoint(string $name): void
-    {
+    public function rollbackToSavepoint(
+        string $name,
+    ): void {
         $this->query(
             sql: \sprintf(
                 'ROLLBACK TO SAVEPOINT %s',
