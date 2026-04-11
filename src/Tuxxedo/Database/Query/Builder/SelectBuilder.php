@@ -34,6 +34,11 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
      */
     private array $groupBy = [];
 
+    /**
+     * @var ConditionInterface[]
+     */
+    private array $havingConditions = [];
+
     private ?int $limit = null;
     private ?int $offset = null;
 
@@ -55,6 +60,45 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
                 ' GROUP BY %s',
                 \join(', ', $this->groupBy),
             );
+        }
+
+        if (\sizeof($this->havingConditions) > 0) {
+            foreach ($this->havingConditions as $index => $condition) {
+                $keyword = $index === 0
+                    ? 'HAVING' :
+                    $condition->conjunction->name;
+
+                if (
+                    $condition->operator === ConditionOperator::IS_NULL ||
+                    $condition->operator === ConditionOperator::IS_NOT_NULL
+                ) {
+                    $sql .= \sprintf(
+                        ' %s %s %s',
+                        $keyword,
+                        $condition->identifier,
+                        $condition->operator->value,
+                    );
+                } elseif (
+                    $condition->operator === ConditionOperator::IN ||
+                    $condition->operator === ConditionOperator::NOT_IN
+                ) {
+                    $sql .= \sprintf(
+                        ' %s %s %s (%s)',
+                        $keyword,
+                        $condition->identifier,
+                        $condition->operator->value,
+                        $condition->parameter,
+                    );
+                } else {
+                    $sql .= \sprintf(
+                        ' %s %s %s %s',
+                        $keyword,
+                        $condition->identifier,
+                        $condition->operator->value,
+                        $condition->parameter,
+                    );
+                }
+            }
         }
 
         if (\sizeof($this->orderBy) > 0) {
@@ -118,6 +162,166 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
         foreach ($columns as $column) {
             $this->groupBy[] = $this->connection->dialect->identifier($column);
         }
+
+        return $this;
+    }
+
+    public function having(
+        string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static {
+        if (\is_string($operator)) {
+            $operator = ConditionOperator::from($operator);
+        }
+
+        $parameterKey = 'having_' . \sizeof($this->havingConditions);
+
+        $this->parameters[$parameterKey] = $value;
+        $this->havingConditions[] = new Condition(
+            conjunction: ConditionConjunction::AND,
+            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            operator: $operator,
+            parameter: ':' . $parameterKey,
+        );
+
+        return $this;
+    }
+
+    public function orHaving(
+        string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static {
+        if (\is_string($operator)) {
+            $operator = ConditionOperator::from($operator);
+        }
+
+        $parameterKey = 'having_' . \sizeof($this->havingConditions);
+
+        $this->parameters[$parameterKey] = $value;
+        $this->havingConditions[] = new Condition(
+            conjunction: ConditionConjunction::OR,
+            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            operator: $operator,
+            parameter: ':' . $parameterKey,
+        );
+
+        return $this;
+    }
+
+    public function havingIn(
+        string $column,
+        array $values,
+    ): static {
+        $parameterKey = 'having_' . \sizeof($this->havingConditions);
+
+        $this->parameters[$parameterKey] = $values;
+        $this->havingConditions[] = new Condition(
+            conjunction: ConditionConjunction::AND,
+            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            operator: ConditionOperator::IN,
+            parameter: ':' . $parameterKey . '[]',
+        );
+
+        return $this;
+    }
+
+    public function havingNotIn(
+        string $column,
+        array $values,
+    ): static {
+        $parameterKey = 'having_' . \sizeof($this->havingConditions);
+
+        $this->parameters[$parameterKey] = $values;
+        $this->havingConditions[] = new Condition(
+            conjunction: ConditionConjunction::AND,
+            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            operator: ConditionOperator::NOT_IN,
+            parameter: ':' . $parameterKey . '[]',
+        );
+
+        return $this;
+    }
+
+    public function havingNull(
+        string $column,
+    ): static {
+        $this->havingConditions[] = new Condition(
+            conjunction: ConditionConjunction::AND,
+            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            operator: ConditionOperator::IS_NULL,
+        );
+
+        return $this;
+    }
+
+    public function havingNotNull(
+        string $column,
+    ): static {
+        $this->havingConditions[] = new Condition(
+            conjunction: ConditionConjunction::AND,
+            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            operator: ConditionOperator::IS_NOT_NULL,
+        );
+
+        return $this;
+    }
+
+    public function orHavingIn(
+        string $column,
+        array $values,
+    ): static {
+        $parameterKey = 'having_' . \sizeof($this->havingConditions);
+
+        $this->parameters[$parameterKey] = $values;
+        $this->havingConditions[] = new Condition(
+            conjunction: ConditionConjunction::OR,
+            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            operator: ConditionOperator::IN,
+            parameter: ':' . $parameterKey . '[]',
+        );
+
+        return $this;
+    }
+
+    public function orHavingNotIn(
+        string $column,
+        array $values,
+    ): static {
+        $parameterKey = 'having_' . \sizeof($this->havingConditions);
+
+        $this->parameters[$parameterKey] = $values;
+        $this->havingConditions[] = new Condition(
+            conjunction: ConditionConjunction::OR,
+            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            operator: ConditionOperator::NOT_IN,
+            parameter: ':' . $parameterKey . '[]',
+        );
+
+        return $this;
+    }
+
+    public function orHavingNull(
+        string $column,
+    ): static {
+        $this->havingConditions[] = new Condition(
+            conjunction: ConditionConjunction::OR,
+            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            operator: ConditionOperator::IS_NULL,
+        );
+
+        return $this;
+    }
+
+    public function orHavingNotNull(
+        string $column,
+    ): static {
+        $this->havingConditions[] = new Condition(
+            conjunction: ConditionConjunction::OR,
+            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            operator: ConditionOperator::IS_NOT_NULL,
+        );
 
         return $this;
     }

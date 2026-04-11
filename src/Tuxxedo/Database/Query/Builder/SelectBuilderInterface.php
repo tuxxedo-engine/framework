@@ -32,6 +32,66 @@ interface SelectBuilderInterface extends WhereBuilderInterface
         string ...$columns,
     ): static;
 
+    public function having(
+        string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static;
+
+    public function orHaving(
+        string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static;
+
+    /**
+     * @param non-empty-array<string|int|float|bool|null> $values
+     */
+    public function havingIn(
+        string $column,
+        array $values,
+    ): static;
+
+    /**
+     * @param non-empty-array<string|int|float|bool|null> $values
+     */
+    public function havingNotIn(
+        string $column,
+        array $values,
+    ): static;
+
+    public function havingNull(
+        string $column,
+    ): static;
+
+    public function havingNotNull(
+        string $column,
+    ): static;
+
+    /**
+     * @param non-empty-array<string|int|float|bool|null> $values
+     */
+    public function orHavingIn(
+        string $column,
+        array $values,
+    ): static;
+
+    /**
+     * @param non-empty-array<string|int|float|bool|null> $values
+     */
+    public function orHavingNotIn(
+        string $column,
+        array $values,
+    ): static;
+
+    public function orHavingNull(
+        string $column,
+    ): static;
+
+    public function orHavingNotNull(
+        string $column,
+    ): static;
+
     public function limit(
         int $limit,
         ?int $offset = null,
