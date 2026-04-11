@@ -37,6 +37,14 @@ interface WhereBuilderInterface extends BuilderInterface
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static;
 
+    public function orWhereNull(
+        string $column,
+    ): static;
+
+    public function orWhereNotNull(
+        string $column,
+    ): static;
+
     public function whereNull(
         string $column,
     ): static;

@@ -170,6 +170,30 @@ abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuil
         return $this;
     }
 
+    public function orWhereNull(
+        string $column,
+    ): static {
+        $this->conditions[] = new Condition(
+            conjunction: ConditionConjunction::OR,
+            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            operator: ConditionOperator::IS_NULL,
+        );
+
+        return $this;
+    }
+
+    public function orWhereNotNull(
+        string $column,
+    ): static {
+        $this->conditions[] = new Condition(
+            conjunction: ConditionConjunction::OR,
+            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            operator: ConditionOperator::IS_NOT_NULL,
+        );
+
+        return $this;
+    }
+
     public function whereNull(
         string $column,
     ): static {
