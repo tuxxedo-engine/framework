@@ -15,25 +15,31 @@ namespace Tuxxedo\Database\Query\Builder;
 
 class CountBuilder extends AbstractWhereBuilder implements CountBuilderInterface
 {
+    private string $column = '*';
+
     protected function generateSql(): string
     {
-        // @todo Implement
-
-        return '';
+        return \sprintf(
+            'SELECT COUNT(%s) FROM %s%s',
+            $this->column === '*'
+                ? '*'
+                : $this->connection->dialect->identifier($this->column),
+            $this->connection->dialect->identifier($this->table),
+            $this->generateWhereSql(),
+        );
     }
 
     public function column(
         string $column = '*',
     ): static {
-        // @todo Implement
+        $this->column = $column;
 
         return $this;
     }
 
     public function count(): int
     {
-        // @todo Implement
-
-        return 0;
+        /** @var int */
+        return $this->execute()->fetchRow()[0];
     }
 }

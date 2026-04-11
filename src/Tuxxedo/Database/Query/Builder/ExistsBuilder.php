@@ -17,15 +17,15 @@ class ExistsBuilder extends AbstractWhereBuilder implements ExistsBuilderInterfa
 {
     protected function generateSql(): string
     {
-        // @todo Implement
-
-        return '';
+        return \sprintf(
+            'SELECT EXISTS(SELECT 1 FROM %s%s)',
+            $this->connection->dialect->identifier($this->table),
+            $this->generateWhereSql(),
+        );
     }
 
     public function exists(): bool
     {
-        // @todo Implement
-
-        return false;
+        return (bool) $this->execute()->fetchRow()[0];
     }
 }

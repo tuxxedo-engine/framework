@@ -15,18 +15,52 @@ namespace Tuxxedo\Database\Query\Builder;
 
 class UpdateBuilder extends AbstractWhereBuilder implements UpdateBuilderInterface
 {
+    /**
+     * @var array<string, string>
+     */
+    private array $columns = [];
+
+    /**
+     * @var array<string, string>
+     */
+    private array $expressions = [];
+
     protected function generateSql(): string
     {
-        // @todo Implement
+        $clauses = [];
 
-        return '';
+        foreach ($this->columns as $parameterKey => $identifier) {
+            $clauses[] = \sprintf(
+                '%s = :%s',
+                $identifier,
+                $parameterKey,
+            );
+        }
+
+        foreach ($this->expressions as $identifier => $expression) {
+            $clauses[] = \sprintf(
+                '%s = %s',
+                $identifier,
+                $expression,
+            );
+        }
+
+        return \sprintf(
+            'UPDATE %s SET %s%s',
+            $this->connection->dialect->identifier($this->table),
+            \join(', ', $clauses),
+            $this->generateWhereSql(),
+        );
     }
 
     public function set(
         string $column,
         string|int|float|bool|null $value,
     ): static {
-        // @todo Implement
+        $parameterKey = 'set_' . \sizeof($this->columns);
+
+        $this->columns[$parameterKey] = $this->connection->dialect->identifier($column);
+        $this->parameters[$parameterKey] = $value;
 
         return $this;
     }
@@ -35,7 +69,13 @@ class UpdateBuilder extends AbstractWhereBuilder implements UpdateBuilderInterfa
         string $column,
         int|float $amount = 1,
     ): static {
-        // @todo Implement
+        $identifier = $this->connection->dialect->identifier($column);
+
+        $this->expressions[$identifier] = \sprintf(
+            '%s + %F',
+            $identifier,
+            $amount,
+        );
 
         return $this;
     }
@@ -44,7 +84,13 @@ class UpdateBuilder extends AbstractWhereBuilder implements UpdateBuilderInterfa
         string $column,
         int|float $amount = 1,
     ): static {
-        // @todo Implement
+        $identifier = $this->connection->dialect->identifier($column);
+
+        $this->expressions[$identifier] = \sprintf(
+            '%s - %F',
+            $identifier,
+            $amount,
+        );
 
         return $this;
     }
