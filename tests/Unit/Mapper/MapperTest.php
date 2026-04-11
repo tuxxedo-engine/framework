@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Unit\Mapper;
 
+use Fixtures\Mapper\Country;
 use Fixtures\Mapper\Person;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -90,6 +91,7 @@ class MapperTest extends TestCase
     public function testMapToArrayOfIterativeTypeError(): void
     {
         $this->expectException(MapperException::class);
+
         (new Mapper())->mapToArrayOf(
             input: [
                 'string',
@@ -101,6 +103,7 @@ class MapperTest extends TestCase
     public function testMapToArrayOfPropertyTypeError(): void
     {
         $this->expectException(MapperException::class);
+
         (new Mapper())->mapArrayTo(
             input: [
                 'firstName' => new Person(),
@@ -113,6 +116,7 @@ class MapperTest extends TestCase
     public function testMapToArrayOfUnknownPropertyError(): void
     {
         $this->expectException(MapperException::class);
+
         (new Mapper())->mapArrayTo(
             input: [
                 'firstName' => 'Bjarne',
@@ -120,5 +124,62 @@ class MapperTest extends TestCase
             ],
             className: Person::class,
         );
+    }
+
+    /**
+     * @return \Generator<array<class-string|object|\Closure(): object>>
+     */
+    public static function mapperInvalidPropertiesDataProvider(): \Generator
+    {
+        yield [
+            new class () {
+                public function __construct(
+                    public string $country = '',
+                    public string $capital = '',
+                    public ?int $constitution = null,
+                ) {
+                }
+            },
+        ];
+
+        yield [
+            Country::class,
+        ];
+    }
+
+    /**
+     * @param object|class-string $className
+     */
+    #[DataProvider('mapperInvalidPropertiesDataProvider')]
+    public function testMappingWithSkipInvalidProperties(
+        object|string $className,
+    ): void {
+        /** @var object $country */
+        $country = (new Mapper())->mapArrayTo(
+            input: [
+                'country' => 'Denmark',
+                'capital' => 'Copenhagen',
+                'constitution' => '1849',
+            ],
+            className: $className,
+            skipInvalidProperties: true,
+        );
+
+        self::assertFalse(\property_exists($country, 'independence'));
+    }
+
+    public function testMappingWithCastType(): void
+    {
+        $country = (new Mapper())->mapArrayTo(
+            input: [
+                'country' => 'Finland',
+                'capital' => 'Helsinki',
+                'constitution' => '1919',
+            ],
+            className: Country::class,
+            castType: true,
+        );
+
+        self::assertSame($country->constitution, 1919);
     }
 }
