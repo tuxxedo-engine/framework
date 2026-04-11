@@ -20,6 +20,11 @@ use Tuxxedo\Database\Driver\ResultSetInterface;
 
 abstract class AbstractBuilder implements BuilderInterface
 {
+    /**
+     * @var array<string|int|float|bool|null|array<string|int|float|bool|null>>
+     */
+    protected array $parameters = [];
+
     final public function __construct(
         public readonly ConnectionInterface $connection,
         public readonly string $table,
@@ -31,7 +36,10 @@ abstract class AbstractBuilder implements BuilderInterface
 
     public function compile(): StatementParserResultInterface
     {
-        return $this->statementParser->parse($this->generateSql());
+        return $this->statementParser->parse(
+            sql: $this->generateSql(),
+            parameters: $this->parameters,
+        );
     }
 
     public function execute(): ResultSetInterface

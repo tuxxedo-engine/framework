@@ -13,10 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Builder;
 
-interface InsertBuilderInterface extends BuilderInterface
+interface InsertBulkBuilderInterface extends BuilderInterface
 {
-    public function set(
-        string $column,
-        string|int|float|bool|null $value,
+    /**
+     * @param array<array<string, string|int|float|bool|null>> $rows
+     */
+    public function values(
+        array $rows,
     ): static;
 }

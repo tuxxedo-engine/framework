@@ -26,6 +26,8 @@ use Tuxxedo\Database\Builder\Dialect\PgsqlDialect;
 use Tuxxedo\Database\Builder\ExistsBuilder;
 use Tuxxedo\Database\Builder\InsertBuilder;
 use Tuxxedo\Database\Builder\InsertBuilderInterface;
+use Tuxxedo\Database\Builder\InsertBulkBuilder;
+use Tuxxedo\Database\Builder\InsertBulkBuilderInterface;
 use Tuxxedo\Database\Builder\Parser\StatementParser;
 use Tuxxedo\Database\Builder\Parser\StatementParserInterface;
 use Tuxxedo\Database\Builder\SelectBuilder;
@@ -425,6 +427,16 @@ class PgsqlConnection implements ConnectionInterface
         string $table,
     ): InsertBuilderInterface {
         return new InsertBuilder(
+            connection: $this,
+            table: $table,
+            statementParser: $this->statementParser,
+        );
+    }
+
+    public function insertBulk(
+        string $table,
+    ): InsertBulkBuilderInterface {
+        return new InsertBulkBuilder(
             connection: $this,
             table: $table,
             statementParser: $this->statementParser,

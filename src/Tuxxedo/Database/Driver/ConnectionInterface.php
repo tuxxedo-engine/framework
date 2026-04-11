@@ -20,6 +20,7 @@ use Tuxxedo\Database\Builder\DeleteBuilderInterface;
 use Tuxxedo\Database\Builder\Dialect\DialectInterface;
 use Tuxxedo\Database\Builder\ExistsBuilderInterface;
 use Tuxxedo\Database\Builder\InsertBuilderInterface;
+use Tuxxedo\Database\Builder\InsertBulkBuilderInterface;
 use Tuxxedo\Database\Builder\SelectBuilderInterface;
 use Tuxxedo\Database\Builder\UpdateBuilderInterface;
 use Tuxxedo\Database\ConnectionRole;
@@ -128,6 +129,10 @@ interface ConnectionInterface
     public function insert(
         string $table,
     ): InsertBuilderInterface;
+
+    public function insertBulk(
+        string $table,
+    ): InsertBulkBuilderInterface;
 
     public function update(
         string $table,
