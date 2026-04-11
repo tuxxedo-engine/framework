@@ -16,7 +16,7 @@ namespace Tuxxedo\Database\Query\Builder;
 abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuilderInterface
 {
     /**
-     * @var ConditionInterface[]
+     * @var ConditionInterface[]|BetweenCondition[]
      */
     protected array $conditions = [];
 
@@ -58,6 +58,23 @@ abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuil
         }
 
         foreach ($this->conditions as $index => $condition) {
+            $keyword = $index === 0
+                ? 'WHERE' :
+                $condition->conjunction->name;
+
+            if ($condition instanceof BetweenConditionInterface) {
+                $sql .= \sprintf(
+                    ' %s %s %s %s AND %s',
+                    $keyword,
+                    $condition->identifier,
+                    $condition->operator->value,
+                    $condition->from,
+                    $condition->to,
+                );
+
+                continue;
+            }
+
             if (
                 $condition->operator === ConditionOperator::IS_NULL ||
                 $condition->operator === ConditionOperator::IS_NOT_NULL
@@ -330,6 +347,46 @@ abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuil
             first: '',
             second: '',
             operator: null,
+        );
+
+        return $this;
+    }
+
+    public function whereBetween(
+        string $column,
+        string|int|float|bool $from,
+        string|int|float|bool $to,
+    ): static {
+        $parameterKey = 'between_' . \sizeof($this->conditions);
+
+        $this->parameters[$parameterKey . '_from'] = $from;
+        $this->parameters[$parameterKey . '_to'] = $to;
+        $this->conditions[] = new BetweenCondition(
+            conjunction: ConditionConjunction::AND,
+            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            operator: BetweenOperator::BETWEEN,
+            from: ':' . $parameterKey . '_from',
+            to: ':' . $parameterKey . '_to',
+        );
+
+        return $this;
+    }
+
+    public function whereNotBetween(
+        string $column,
+        string|int|float|bool $from,
+        string|int|float|bool $to,
+    ): static {
+        $parameterKey = 'between_' . \sizeof($this->conditions);
+
+        $this->parameters[$parameterKey . '_from'] = $from;
+        $this->parameters[$parameterKey . '_to'] = $to;
+        $this->conditions[] = new BetweenCondition(
+            conjunction: ConditionConjunction::AND,
+            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            operator: BetweenOperator::NOT_BETWEEN,
+            from: ':' . $parameterKey . '_from',
+            to: ':' . $parameterKey . '_to',
         );
 
         return $this;

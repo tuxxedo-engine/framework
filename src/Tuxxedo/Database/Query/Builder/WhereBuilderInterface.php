@@ -93,4 +93,16 @@ interface WhereBuilderInterface extends BuilderInterface
     public function crossJoin(
         string $table,
     ): static;
+
+    public function whereBetween(
+        string $column,
+        string|int|float|bool $from,
+        string|int|float|bool $to,
+    ): static;
+
+    public function whereNotBetween(
+        string $column,
+        string|int|float|bool $from,
+        string|int|float|bool $to,
+    ): static;
 }
