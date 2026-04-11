@@ -81,9 +81,7 @@ abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuil
             ) {
                 $sql .= \sprintf(
                     ' %s %s %s',
-                    $index === 0
-                        ? 'WHERE' :
-                        $condition->conjunction->name,
+                    $keyword,
                     $condition->identifier,
                     $condition->operator->value,
                 );
@@ -97,9 +95,7 @@ abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuil
             ) {
                 $sql .= \sprintf(
                     ' %s %s %s (%s)',
-                    $index === 0
-                        ? 'WHERE' :
-                        $condition->conjunction->name,
+                    $keyword,
                     $condition->identifier,
                     $condition->operator->value,
                     $condition->parameter,
@@ -110,9 +106,7 @@ abstract class AbstractWhereBuilder extends AbstractBuilder implements WhereBuil
 
             $sql .= \sprintf(
                 ' %s %s %s %s',
-                $index === 0
-                    ? 'WHERE' :
-                    $condition->conjunction->name,
+                $keyword,
                 $condition->identifier,
                 $condition->operator->value,
                 $condition->parameter,
