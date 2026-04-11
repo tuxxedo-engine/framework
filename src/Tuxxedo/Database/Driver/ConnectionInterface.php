@@ -15,16 +15,16 @@ namespace Tuxxedo\Database\Driver;
 
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Database\Builder\CountBuilderInterface;
-use Tuxxedo\Database\Builder\DeleteBuilderInterface;
-use Tuxxedo\Database\Builder\Dialect\DialectInterface;
-use Tuxxedo\Database\Builder\ExistsBuilderInterface;
-use Tuxxedo\Database\Builder\InsertBuilderInterface;
-use Tuxxedo\Database\Builder\InsertBulkBuilderInterface;
-use Tuxxedo\Database\Builder\SelectBuilderInterface;
-use Tuxxedo\Database\Builder\UpdateBuilderInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
+use Tuxxedo\Database\Query\Builder\CountBuilderInterface;
+use Tuxxedo\Database\Query\Builder\DeleteBuilderInterface;
+use Tuxxedo\Database\Query\Builder\ExistsBuilderInterface;
+use Tuxxedo\Database\Query\Builder\InsertBuilderInterface;
+use Tuxxedo\Database\Query\Builder\InsertBulkBuilderInterface;
+use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
+use Tuxxedo\Database\Query\Builder\UpdateBuilderInterface;
+use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\SqlException;
 
 // @todo Support savepoints

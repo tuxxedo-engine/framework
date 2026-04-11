@@ -15,8 +15,8 @@ namespace Tuxxedo\Database\Driver\Pdo\Generic;
 
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Database\Builder\Dialect\DialectInterface;
-use Tuxxedo\Database\Builder\Dialect\GenericDialect;
+use Tuxxedo\Database\Query\Dialect\DialectInterface;
+use Tuxxedo\Database\Query\Dialect\GenericDialect;
 use Tuxxedo\Database\Driver\DefaultDriver;
 use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
 

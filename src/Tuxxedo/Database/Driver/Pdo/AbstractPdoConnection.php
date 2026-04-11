@@ -15,26 +15,26 @@ namespace Tuxxedo\Database\Driver\Pdo;
 
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Database\Builder\CountBuilder;
-use Tuxxedo\Database\Builder\CountBuilderInterface;
-use Tuxxedo\Database\Builder\DeleteBuilder;
-use Tuxxedo\Database\Builder\DeleteBuilderInterface;
-use Tuxxedo\Database\Builder\Dialect\DialectInterface;
-use Tuxxedo\Database\Builder\ExistsBuilder;
-use Tuxxedo\Database\Builder\InsertBuilder;
-use Tuxxedo\Database\Builder\InsertBuilderInterface;
-use Tuxxedo\Database\Builder\InsertBulkBuilder;
-use Tuxxedo\Database\Builder\InsertBulkBuilderInterface;
-use Tuxxedo\Database\Builder\Parser\StatementParser;
-use Tuxxedo\Database\Builder\Parser\StatementParserInterface;
-use Tuxxedo\Database\Builder\SelectBuilder;
-use Tuxxedo\Database\Builder\SelectBuilderInterface;
-use Tuxxedo\Database\Builder\UpdateBuilder;
-use Tuxxedo\Database\Builder\UpdateBuilderInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Driver\DefaultDriver;
+use Tuxxedo\Database\Query\Builder\CountBuilder;
+use Tuxxedo\Database\Query\Builder\CountBuilderInterface;
+use Tuxxedo\Database\Query\Builder\DeleteBuilder;
+use Tuxxedo\Database\Query\Builder\DeleteBuilderInterface;
+use Tuxxedo\Database\Query\Builder\ExistsBuilder;
+use Tuxxedo\Database\Query\Builder\InsertBuilder;
+use Tuxxedo\Database\Query\Builder\InsertBuilderInterface;
+use Tuxxedo\Database\Query\Builder\InsertBulkBuilder;
+use Tuxxedo\Database\Query\Builder\InsertBulkBuilderInterface;
+use Tuxxedo\Database\Query\Builder\SelectBuilder;
+use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
+use Tuxxedo\Database\Query\Builder\UpdateBuilder;
+use Tuxxedo\Database\Query\Builder\UpdateBuilderInterface;
+use Tuxxedo\Database\Query\Dialect\DialectInterface;
+use Tuxxedo\Database\Query\Parser\StatementParser;
+use Tuxxedo\Database\Query\Parser\StatementParserInterface;
 
 abstract class AbstractPdoConnection implements ConnectionInterface
 {
