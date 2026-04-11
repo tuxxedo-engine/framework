@@ -16,9 +16,11 @@ namespace Tuxxedo\Database\Query\Builder;
 interface WhereBuilderInterface extends BuilderInterface
 {
     public function hasConstraints(): bool;
+    public function hasConditionConstraints(): bool;
+    public function hasJoinConstraints(): bool;
 
     /**
-     * @param string|int|float|bool|null|array<string|int|float|bool|null> $value
+     * @param string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
      */
     public function where(
         string $column,
@@ -27,7 +29,7 @@ interface WhereBuilderInterface extends BuilderInterface
     ): static;
 
     /**
-     * @param string|int|float|bool|null|array<string|int|float|bool|null> $value
+     * @param string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
      */
     public function orWhere(
         string $column,
@@ -44,7 +46,7 @@ interface WhereBuilderInterface extends BuilderInterface
     ): static;
 
     /**
-     * @param array<string|int|float|bool|null> $values
+     * @param non-empty-array<string|int|float|bool|null> $values
      */
     public function whereIn(
         string $column,
@@ -52,7 +54,7 @@ interface WhereBuilderInterface extends BuilderInterface
     ): static;
 
     /**
-     * @param array<string|int|float|bool|null> $values
+     * @param non-empty-array<string|int|float|bool|null> $values
      */
     public function whereNotIn(
         string $column,
