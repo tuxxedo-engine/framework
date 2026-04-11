@@ -32,6 +32,8 @@ use Tuxxedo\Database\Query\Builder\InsertBulkBuilder;
 use Tuxxedo\Database\Query\Builder\InsertBulkBuilderInterface;
 use Tuxxedo\Database\Query\Builder\SelectBuilder;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
+use Tuxxedo\Database\Query\Builder\Table\DropTableBuilder;
+use Tuxxedo\Database\Query\Builder\Table\DropTableBuilderInterface;
 use Tuxxedo\Database\Query\Builder\UpdateBuilder;
 use Tuxxedo\Database\Query\Builder\UpdateBuilderInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
@@ -480,6 +482,16 @@ class PgsqlConnection implements ConnectionInterface
         string $table,
     ): CountBuilderInterface {
         return new CountBuilder(
+            connection: $this,
+            table: $table,
+            statementParser: $this->statementParser,
+        );
+    }
+
+    public function dropTable(
+        string $table,
+    ): DropTableBuilderInterface {
+        return new DropTableBuilder(
             connection: $this,
             table: $table,
             statementParser: $this->statementParser,

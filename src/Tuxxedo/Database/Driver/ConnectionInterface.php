@@ -23,6 +23,7 @@ use Tuxxedo\Database\Query\Builder\ExistsBuilderInterface;
 use Tuxxedo\Database\Query\Builder\InsertBuilderInterface;
 use Tuxxedo\Database\Query\Builder\InsertBulkBuilderInterface;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
+use Tuxxedo\Database\Query\Builder\Table\DropTableBuilderInterface;
 use Tuxxedo\Database\Query\Builder\UpdateBuilderInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\SqlException;
@@ -149,4 +150,11 @@ interface ConnectionInterface
     public function count(
         string $table,
     ): CountBuilderInterface;
+
+    // @todo createTable builder
+    // @todo alterTable builder
+
+    public function dropTable(
+        string $table,
+    ): DropTableBuilderInterface;
 }
