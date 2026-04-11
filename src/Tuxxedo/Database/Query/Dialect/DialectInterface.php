@@ -24,6 +24,14 @@ interface DialectInterface
         get;
     }
 
+    public string $booleanType {
+        get;
+    }
+
+    public string $jsonType {
+        get;
+    }
+
     public function placeholder(
         int $position,
     ): string;

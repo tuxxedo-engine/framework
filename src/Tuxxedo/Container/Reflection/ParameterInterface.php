@@ -23,4 +23,7 @@ interface ParameterInterface
      * @return class-string|null
      */
     public function getDefaultType(): ?string;
+
+    public function getBuiltinType(): ?string;
+    public function isNullable(): bool;
 }

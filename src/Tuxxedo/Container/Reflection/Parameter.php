@@ -34,4 +34,40 @@ class Parameter implements ParameterInterface
 
         return null;
     }
+
+    public function getBuiltinType(): ?string
+    {
+        $type = $this->reflector->getType();
+
+        if (
+            $type instanceof \ReflectionNamedType &&
+            $type->isBuiltin()
+        ) {
+            return $type->getName();
+        }
+
+        return null;
+    }
+
+    public function isNullable(): bool
+    {
+        $type = $this->reflector->getType();
+
+        if ($type instanceof \ReflectionNamedType) {
+            return $type->allowsNull();
+        }
+
+        if ($type instanceof \ReflectionUnionType) {
+            foreach ($type->getTypes() as $unionType) {
+                if (
+                    $unionType instanceof \ReflectionNamedType &&
+                    $unionType->getName() === 'null'
+                ) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 }

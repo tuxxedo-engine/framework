@@ -20,6 +20,9 @@ class GenericDialect implements DialectInterface
         '"',
     ];
 
+    public private(set) string $booleanType = 'BOOLEAN';
+    public private(set) string $jsonType = 'TEXT';
+
     public function placeholder(
         int $position,
     ): string {

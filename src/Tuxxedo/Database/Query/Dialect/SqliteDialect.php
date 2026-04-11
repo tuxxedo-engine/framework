@@ -21,6 +21,9 @@ class SqliteDialect implements DialectInterface
         '`',
     ];
 
+    public private(set) string $booleanType = 'INTEGER';
+    public private(set) string $jsonType = 'TEXT';
+
     public function placeholder(
         int $position,
     ): string {

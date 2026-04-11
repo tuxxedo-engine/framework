@@ -21,6 +21,9 @@ class MysqlDialect implements DialectInterface
         '`',
     ];
 
+    public private(set) string $booleanType = 'TINYINT(1)';
+    public private(set) string $jsonType = 'JSON';
+
     public function placeholder(
         int $position,
     ): string {

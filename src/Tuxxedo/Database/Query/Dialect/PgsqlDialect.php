@@ -23,6 +23,9 @@ class PgsqlDialect implements DialectInterface
         '"',
     ];
 
+    public private(set) string $booleanType = 'BOOLEAN';
+    public private(set) string $jsonType = 'JSON';
+
     /**
      * @param (\Closure(): Connection)|null $connection
      */
