@@ -38,6 +38,12 @@ use Fixtures\Container\ServiceOne;
 use Fixtures\Container\ServiceOneInterface;
 use Fixtures\Container\ServiceTwo;
 use Fixtures\Container\StringService;
+use Fixtures\Container\TaggedServiceInterface;
+use Fixtures\Container\TaggedServiceOne;
+use Fixtures\Container\TaggedServiceThree;
+use Fixtures\Container\TaggedServiceTwo;
+use Fixtures\Container\TaggedServicesArrayConsumer;
+use Fixtures\Container\TaggedServicesCollectionConsumer;
 use Fixtures\Container\UnionService;
 use Fixtures\Container\UnresolvableService;
 use Fixtures\Container\UnresolvableUnionService;
@@ -45,6 +51,7 @@ use Fixtures\Container\UnresolvableWithNullService;
 use Fixtures\Container\UnresolvableWithResolverService;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Collection\ImmutableCollection;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Container\ContainerException;
 
@@ -596,5 +603,55 @@ class ContainerTest extends TestCase
         self::assertSame($service1, $service2);
         self::assertTrue($container->isPersistent($interfaceName));
         self::assertFalse($container->isTransient($interfaceName));
+    }
+
+    public function testResolveTagged(): void
+    {
+        $container = new Container();
+
+        $container->persistent(TaggedServiceOne::class);
+        $container->persistent(TaggedServiceTwo::class);
+
+        $services = $container->resolveTagged(TaggedServiceInterface::class);
+
+        self::assertTrue(\sizeof($services) === 2);
+        self::assertInstanceOf(TaggedServiceOne::class, $services[0]);
+        self::assertInstanceOf(TaggedServiceTwo::class, $services[1]);
+    }
+
+    public function testResolveTaggedNonBound(): void
+    {
+        $container = new Container();
+
+        $container->persistent(TaggedServiceOne::class);
+        $container->persistent(TaggedServiceTwo::class);
+
+        $services = \array_filter(
+            $container->resolveTagged(TaggedServiceInterface::class),
+            static fn (TaggedServiceInterface $service): bool => $service instanceof TaggedServiceThree,
+        );
+
+        self::assertTrue(\sizeof($services) === 0);
+    }
+
+    public function testTaggedResolvers(): void
+    {
+        $container = new Container();
+
+        $container->persistent(TaggedServiceOne::class);
+        $container->persistent(TaggedServiceTwo::class);
+
+        $services = $container->resolve(TaggedServicesArrayConsumer::class)->services;
+
+        self::assertTrue(\sizeof($services) === 2);
+        self::assertInstanceOf(TaggedServiceOne::class, $services[0]);
+        self::assertInstanceOf(TaggedServiceTwo::class, $services[1]);
+
+        $services = $container->resolve(TaggedServicesCollectionConsumer::class)->services;
+
+        self::assertTrue(\sizeof($services) === 2);
+        self::assertInstanceOf(ImmutableCollection::class, $services);
+        self::assertInstanceOf(TaggedServiceOne::class, $services[0]);
+        self::assertInstanceOf(TaggedServiceTwo::class, $services[1]);
     }
 }
