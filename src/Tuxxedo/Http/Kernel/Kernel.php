@@ -117,7 +117,10 @@ class Kernel implements KernelInterface
                     break;
                 }
 
-                if ($exception instanceof PrefersResponseCodeInterface) {
+                if (
+                    $preferredException === null &&
+                    $exception instanceof PrefersResponseCodeInterface
+                ) {
                     $preferredException = $exception;
                 }
             }
