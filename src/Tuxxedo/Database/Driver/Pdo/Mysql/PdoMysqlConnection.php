@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Driver\Pdo\Mysql;
 
+use Pdo\Mysql;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\Driver\DefaultDriver;
@@ -90,18 +91,18 @@ class PdoMysqlConnection extends AbstractPdoConnection
 
         if ($config->getBool('ssl.enabled')) {
             if ($config->has('ssl.ca') && $config->getString('ssl.ca') !== '') {
-                $options[\PDO::MYSQL_ATTR_SSL_CA] = $config->getString('ssl.ca');
+                $options[Mysql::ATTR_SSL_CA] = $config->getString('ssl.ca');
             }
 
             if ($config->has('ssl.cert') && $config->getString('ssl.cert') !== '') {
-                $options[\PDO::MYSQL_ATTR_SSL_CERT] = $config->getString('ssl.cert');
+                $options[Mysql::ATTR_SSL_CERT] = $config->getString('ssl.cert');
             }
 
             if ($config->has('ssl.key') && $config->getString('ssl.key') !== '') {
-                $options[\PDO::MYSQL_ATTR_SSL_KEY] = $config->getString('ssl.key');
+                $options[Mysql::ATTR_SSL_KEY] = $config->getString('ssl.key');
             }
 
-            $options[\PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = $config->getBool('ssl.verifyPeer');
+            $options[Mysql::ATTR_SSL_VERIFY_SERVER_CERT] = $config->getBool('ssl.verifyPeer');
         }
 
         return $options;
