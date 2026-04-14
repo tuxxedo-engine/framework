@@ -206,7 +206,6 @@ abstract class AbstractConnection implements ConnectionInterface
         return new DropTableBuilder(
             connection: $this,
             table: $table,
-            statementParser: $this->statementParser,
         );
     }
 }

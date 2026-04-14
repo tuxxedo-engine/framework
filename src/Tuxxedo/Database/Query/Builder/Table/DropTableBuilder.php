@@ -13,9 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Builder\Table;
 
-use Tuxxedo\Database\Query\Builder\AbstractBuilder;
-
-class DropTableBuilder extends AbstractBuilder implements DropTableBuilderInterface
+class DropTableBuilder extends AbstractTableBuilder implements DropTableBuilderInterface
 {
     private bool $ifExists = false;
 
