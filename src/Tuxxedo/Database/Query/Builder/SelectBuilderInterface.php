@@ -100,9 +100,9 @@ interface SelectBuilderInterface extends WhereBuilderInterface
     ): static;
 
     /**
-     * @template TClassName of object
+     * @template TClassName of object&HydratableInterface
      *
-     * @param class-string<TClassName&HydratableInterface>|\Closure(mixed[] $properties): TClassName $class
+     * @param class-string<TClassName>|\Closure(mixed[] $properties): TClassName $class
      * @return TClassName|null
      *
      * @throws DatabaseException
@@ -113,9 +113,9 @@ interface SelectBuilderInterface extends WhereBuilderInterface
     ): ?object;
 
     /**
-     * @template TClassName of object
+     * @template TClassName of object&HydratableInterface
      *
-     * @param class-string<TClassName&HydratableInterface>|\Closure(mixed[] $properties): TClassName $class
+     * @param class-string<TClassName>|\Closure(mixed[] $properties): TClassName $class
      * @return \Generator<TClassName>
      *
      * @throws DatabaseException

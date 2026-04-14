@@ -22,9 +22,9 @@ abstract class AbstractResultSet implements ResultSetInterface
     }
 
     /**
-     * @template TClassName of object
+     * @template TClassName of object&HydratableInterface
      *
-     * @param class-string<TClassName&HydratableInterface>|\Closure(mixed[] $properties): TClassName $class
+     * @param class-string<TClassName>|\Closure(mixed[] $properties): TClassName $class
      * @return \Generator<TClassName>
      */
     public function fetchAll(
@@ -41,9 +41,9 @@ abstract class AbstractResultSet implements ResultSetInterface
     }
 
     /**
-     * @template TClassName of object
+     * @template TClassName of object&HydratableInterface
      *
-     * @param class-string<TClassName&HydratableInterface>|\Closure(mixed[] $properties): TClassName $class
+     * @param class-string<TClassName>|\Closure(mixed[] $properties): TClassName $class
      * @param mixed[] $properties
      * @return TClassName
      */
@@ -52,7 +52,7 @@ abstract class AbstractResultSet implements ResultSetInterface
         array $properties,
     ): object {
         if (!$class instanceof \Closure) {
-            $class = (/** @var HydratableInterface */ $this->container->resolveName($class))::create(...);
+            $class = ($this->container->resolveName($class))::create(...);
         }
 
         /** @var \Closure(): TClassName $class */

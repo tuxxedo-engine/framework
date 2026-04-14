@@ -44,9 +44,9 @@ class MysqlResultSet extends AbstractResultSet
     }
 
     /**
-     * @template TClassName of object
+     * @template TClassName of object&HydratableInterface
      *
-     * @param class-string<TClassName&HydratableInterface>|\Closure(mixed[] $properties): TClassName $class
+     * @param class-string<TClassName>|\Closure(mixed[] $properties): TClassName $class
      * @return TClassName
      */
     public function fetchObject(
