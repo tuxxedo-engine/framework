@@ -16,6 +16,7 @@ namespace Tuxxedo\Database\Query\Dialect;
 use PgSql\Connection;
 use Tuxxedo\Database\SqlException;
 use Tuxxedo\Model\Attribute\Column\Blob;
+use Tuxxedo\Model\Attribute\Column\DateTime;
 use Tuxxedo\Model\Attribute\Column\Double;
 use Tuxxedo\Model\Attribute\Column\Json;
 use Tuxxedo\Model\Attribute\Column\TinyInteger;
@@ -80,6 +81,7 @@ class PgsqlDialect implements DialectInterface
     ): ?string {
         return match ($columnClass::class) {
             Blob::class => 'BYTEA',
+            DateTime::class => 'TIMESTAMP',
             Double::class => 'DOUBLE PRECISION',
             Json::class => 'JSON',
             TinyInteger::class => 'SMALLINT',
