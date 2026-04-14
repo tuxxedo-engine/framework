@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Dialect;
 
+use Tuxxedo\Model\Attribute\Column\Boolean;
 use Tuxxedo\Model\Attribute\Column\Json;
 use Tuxxedo\Model\Attribute\ColumnInterface;
-use Tuxxedo\Router\Pattern\Type\Boolean;
 
 class MysqlDialect implements DialectInterface
 {
