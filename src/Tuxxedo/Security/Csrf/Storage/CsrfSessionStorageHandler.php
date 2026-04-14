@@ -25,7 +25,7 @@ class CsrfSessionStorageHandler implements CsrfStorageHandlerInterface
 
     public function clear(): void
     {
-        $this->session->set($this->key, null);
+        $this->session->remove($this->key);
     }
 
     public function get(): ?string

@@ -139,6 +139,14 @@ class PhpSessionAdapter implements SessionAdapterInterface
         return $this;
     }
 
+    public function remove(
+        string $name,
+    ): void {
+        $this->startCheck();
+
+        unset($_SESSION[$name]);
+    }
+
     public function has(
         string $name,
     ): bool {

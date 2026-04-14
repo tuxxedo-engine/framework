@@ -39,6 +39,12 @@ class Session implements SessionInterface
         return $this->adapter->getIdentifier();
     }
 
+    public function remove(
+        string $name,
+    ): void {
+        $this->adapter->remove($name);
+    }
+
     public function has(
         string $name,
     ): bool {

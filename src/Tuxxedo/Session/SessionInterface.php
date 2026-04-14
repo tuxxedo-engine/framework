@@ -31,6 +31,13 @@ interface SessionInterface
     /**
      * @throws SessionException
      */
+    public function remove(
+        string $name,
+    ): void;
+
+    /**
+     * @throws SessionException
+     */
     public function has(
         string $name,
     ): bool;
