@@ -23,6 +23,7 @@ use Fixtures\Container\DefaultServiceOneInterface;
 use Fixtures\Container\DefaultServiceThreeInterface;
 use Fixtures\Container\DefaultServiceTwo;
 use Fixtures\Container\DefaultServiceTwoInterface;
+use Fixtures\Container\GlueService;
 use Fixtures\Container\IntService;
 use Fixtures\Container\IntersectionService;
 use Fixtures\Container\LazyService;
@@ -653,5 +654,19 @@ class ContainerTest extends TestCase
         self::assertInstanceOf(ImmutableCollection::class, $services);
         self::assertInstanceOf(TaggedServiceOne::class, $services[0]);
         self::assertInstanceOf(TaggedServiceTwo::class, $services[1]);
+    }
+
+    public function testGlue(): void
+    {
+        $container = new Container();
+
+        $container->persistent(TaggedServiceOne::class);
+        $container->persistent(TaggedServiceTwo::class);
+
+        $service = $container->resolve(GlueService::class);
+
+        self::assertSame($service->greeting, 'Hello World');
+        self::assertSame($service->secret, 'phpfi');
+        self::assertSame($service->numberOfServices, 2);
     }
 }

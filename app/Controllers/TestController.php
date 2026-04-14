@@ -15,11 +15,15 @@ namespace App\Controllers;
 
 use App\Middleware\LoggerMiddleware;
 use App\Service\Logger\CustomLoggerInterface;
+use Tuxxedo\Application\Resolver\AppName;
+use Tuxxedo\Config\Resolver\ConfigValue;
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Container\Resolver\Glue;
 use Tuxxedo\Http\Cookie;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
+use Tuxxedo\Http\Kernel\KernelInterface;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\Middleware\OutputCapture;
@@ -284,6 +288,26 @@ readonly class TestController
     ): never {
         throw new HttpException(
             responseCode: ResponseCode::tryFrom($code) ?? ResponseCode::INTERNAL_SERVER_ERROR,
+        );
+    }
+
+    #[Route\Get(uri: '/app-test')]
+    #[OutputCapture]
+    public function appTest(
+        #[AppName] string $appNameOne,
+        #[ConfigValue('app.name')] string $appNameTwo,
+        #[Glue(
+            static function (ContainerInterface $container): string {
+                return $container->resolve(KernelInterface::class)->appName;
+            },
+        )] string $appNameThree,
+    ): ResponseInterface {
+        \var_dump($appNameOne, $appNameTwo, $appNameThree);
+
+        return Response::empty(
+            headers: [
+                new Header('Content-Type', 'text/plain'),
+            ],
         );
     }
 }
