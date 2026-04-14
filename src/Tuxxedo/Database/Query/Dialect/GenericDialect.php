@@ -13,15 +13,14 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Dialect;
 
+use Tuxxedo\Model\Attribute\ColumnInterface;
+
 class GenericDialect implements DialectInterface
 {
     public private(set) array $quotations = [
         '\'',
         '"',
     ];
-
-    public private(set) string $booleanType = 'BOOLEAN';
-    public private(set) string $jsonType = 'TEXT';
 
     public function placeholder(
         int $position,
@@ -45,5 +44,11 @@ class GenericDialect implements DialectInterface
                 \explode('.', $name),
             ),
         );
+    }
+
+    public function nativeColumnType(
+        ColumnInterface $columnClass,
+    ): ?string {
+        return null;
     }
 }

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Query\Dialect;
 
 use Tuxxedo\Database\SqlException;
+use Tuxxedo\Model\Attribute\ColumnInterface;
 
 interface DialectInterface
 {
@@ -21,14 +22,6 @@ interface DialectInterface
      * @var string[]
      */
     public array $quotations {
-        get;
-    }
-
-    public string $booleanType {
-        get;
-    }
-
-    public string $jsonType {
         get;
     }
 
@@ -46,4 +39,8 @@ interface DialectInterface
     public function qualifiedIdentifier(
         string $name,
     ): string;
+
+    public function nativeColumnType(
+        ColumnInterface $columnClass,
+    ): ?string;
 }

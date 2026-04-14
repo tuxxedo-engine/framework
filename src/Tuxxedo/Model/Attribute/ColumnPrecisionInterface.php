@@ -13,11 +13,13 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\Attribute;
 
-use Tuxxedo\Database\Query\Dialect\DialectInterface;
-
-interface ColumnFormatInterface
+interface ColumnPrecisionInterface
 {
-    public function getFormat(
-        DialectInterface $dialect,
-    ): string;
+    public int $precision {
+        get;
+    }
+
+    public int $scale {
+        get;
+    }
 }

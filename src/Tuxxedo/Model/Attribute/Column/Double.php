@@ -27,6 +27,6 @@ readonly class Double implements ColumnInterface
     public function getNativeType(
         DialectInterface $dialect,
     ): string {
-        return 'DOUBLE';
+        return $dialect->nativeColumnType($this) ?? 'DOUBLE';
     }
 }

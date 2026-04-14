@@ -15,6 +15,8 @@ namespace Tuxxedo\Database\Query\Dialect;
 
 use PgSql\Connection;
 use Tuxxedo\Database\SqlException;
+use Tuxxedo\Model\Attribute\Column\Json;
+use Tuxxedo\Model\Attribute\ColumnInterface;
 
 class PgsqlDialect implements DialectInterface
 {
@@ -22,9 +24,6 @@ class PgsqlDialect implements DialectInterface
         '\'',
         '"',
     ];
-
-    public private(set) string $booleanType = 'BOOLEAN';
-    public private(set) string $jsonType = 'JSON';
 
     /**
      * @param (\Closure(): Connection)|null $connection
@@ -71,5 +70,14 @@ class PgsqlDialect implements DialectInterface
                 \explode('.', $name),
             ),
         );
+    }
+
+    public function nativeColumnType(
+        ColumnInterface $columnClass,
+    ): ?string {
+        return match ($columnClass::class) {
+            Json::class => 'JSON',
+            default => null,
+        };
     }
 }

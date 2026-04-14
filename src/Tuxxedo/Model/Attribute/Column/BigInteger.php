@@ -27,6 +27,6 @@ readonly class BigInteger implements ColumnInterface
     public function getNativeType(
         DialectInterface $dialect,
     ): string {
-        return 'BIGINT';
+        return $dialect->nativeColumnType($this) ?? 'BIGINT';
     }
 }

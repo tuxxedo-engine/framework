@@ -15,9 +15,10 @@ namespace Tuxxedo\Model\Attribute\Column;
 
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
+use Tuxxedo\Model\Attribute\ColumnLengthInterface;
 
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
-readonly class Varchar implements ColumnInterface
+readonly class Varchar implements ColumnInterface, ColumnLengthInterface
 {
     public function __construct(
         public int $length = 255,
@@ -28,7 +29,7 @@ readonly class Varchar implements ColumnInterface
     public function getNativeType(
         DialectInterface $dialect,
     ): string {
-        return \sprintf(
+        return $dialect->nativeColumnType($this) ?? \sprintf(
             'VARCHAR(%d)',
             $this->length,
         );

@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Dialect;
 
+use Tuxxedo\Model\Attribute\Column\Boolean;
+use Tuxxedo\Model\Attribute\ColumnInterface;
+
 class SqliteDialect implements DialectInterface
 {
     public private(set) array $quotations = [
@@ -20,9 +23,6 @@ class SqliteDialect implements DialectInterface
         '"',
         '`',
     ];
-
-    public private(set) string $booleanType = 'INTEGER';
-    public private(set) string $jsonType = 'TEXT';
 
     public function placeholder(
         int $position,
@@ -46,5 +46,14 @@ class SqliteDialect implements DialectInterface
                 \explode('.', $name),
             ),
         );
+    }
+
+    public function nativeColumnType(
+        ColumnInterface $columnClass,
+    ): ?string {
+        return match ($columnClass::class) {
+            Boolean::class => 'INTEGER',
+            default => null,
+        };
     }
 }

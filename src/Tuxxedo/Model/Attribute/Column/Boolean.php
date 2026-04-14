@@ -27,6 +27,6 @@ readonly class Boolean implements ColumnInterface
     public function getNativeType(
         DialectInterface $dialect,
     ): string {
-        return $dialect->booleanType;
+        return $dialect->nativeColumnType($this) ?? 'BOOLEAN';
     }
 }

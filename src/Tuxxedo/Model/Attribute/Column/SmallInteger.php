@@ -27,6 +27,6 @@ readonly class SmallInteger implements ColumnInterface
     public function getNativeType(
         DialectInterface $dialect,
     ): string {
-        return 'SMALLINT';
+        return $dialect->nativeColumnType($this) ?? 'SMALLINT';
     }
 }

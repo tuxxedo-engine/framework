@@ -27,6 +27,6 @@ readonly class Text implements ColumnInterface
     public function getNativeType(
         DialectInterface $dialect,
     ): string {
-        return 'TEXT';
+        return $dialect->nativeColumnType($this) ?? 'TEXT';
     }
 }

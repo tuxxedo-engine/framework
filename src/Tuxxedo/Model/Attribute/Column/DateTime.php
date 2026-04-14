@@ -15,9 +15,10 @@ namespace Tuxxedo\Model\Attribute\Column;
 
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Model\Attribute\ColumnFormatInterface;
+use Tuxxedo\Model\Attribute\ColumnInterface;
 
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
-readonly class DateTime implements ColumnFormatInterface
+readonly class DateTime implements ColumnInterface, ColumnFormatInterface
 {
     public function __construct(
         public DateFormat|string $format = DateFormat::DEFAULT,
@@ -28,7 +29,7 @@ readonly class DateTime implements ColumnFormatInterface
     public function getNativeType(
         DialectInterface $dialect,
     ): string {
-        return 'DATETIME';
+        return $dialect->nativeColumnType($this) ?? 'DATETIME';
     }
 
     public function getFormat(

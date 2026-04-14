@@ -15,9 +15,10 @@ namespace Tuxxedo\Model\Attribute\Column;
 
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
+use Tuxxedo\Model\Attribute\ColumnPrecisionInterface;
 
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
-readonly class Decimal implements ColumnInterface
+readonly class Decimal implements ColumnInterface, ColumnPrecisionInterface
 {
     public function __construct(
         public int $precision,
@@ -29,7 +30,7 @@ readonly class Decimal implements ColumnInterface
     public function getNativeType(
         DialectInterface $dialect,
     ): string {
-        return \sprintf(
+        return $dialect->nativeColumnType($this) ?? \sprintf(
             'DECIMAL(%d, %d)',
             $this->precision,
             $this->scale,

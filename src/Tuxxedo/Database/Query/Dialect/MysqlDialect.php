@@ -13,6 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Dialect;
 
+use Tuxxedo\Model\Attribute\Column\Json;
+use Tuxxedo\Model\Attribute\ColumnInterface;
+use Tuxxedo\Router\Pattern\Type\Boolean;
+
 class MysqlDialect implements DialectInterface
 {
     public private(set) array $quotations = [
@@ -20,9 +24,6 @@ class MysqlDialect implements DialectInterface
         '"',
         '`',
     ];
-
-    public private(set) string $booleanType = 'TINYINT(1)';
-    public private(set) string $jsonType = 'JSON';
 
     public function placeholder(
         int $position,
@@ -46,5 +47,15 @@ class MysqlDialect implements DialectInterface
                 \explode('.', $name),
             ),
         );
+    }
+
+    public function nativeColumnType(
+        ColumnInterface $columnClass,
+    ): ?string {
+        return match ($columnClass::class) {
+            Boolean::class => 'TINYINT(1)',
+            Json::class => 'JSON',
+            default => null,
+        };
     }
 }

@@ -27,6 +27,6 @@ readonly class Float implements ColumnInterface
     public function getNativeType(
         DialectInterface $dialect,
     ): string {
-        return 'FLOAT';
+        return $dialect->nativeColumnType($this) ?? 'FLOAT';
     }
 }

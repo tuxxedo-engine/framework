@@ -15,9 +15,10 @@ namespace Tuxxedo\Model\Attribute\Column;
 
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
+use Tuxxedo\Model\Attribute\ColumnLengthInterface;
 
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
-readonly class Char implements ColumnInterface
+readonly class Char implements ColumnInterface, ColumnLengthInterface
 {
     public function __construct(
         public int $length = 1,
@@ -28,7 +29,7 @@ readonly class Char implements ColumnInterface
     public function getNativeType(
         DialectInterface $dialect,
     ): string {
-        return \sprintf(
+        return $dialect->nativeColumnType($this) ?? \sprintf(
             'CHAR(%d)',
             $this->length,
         );

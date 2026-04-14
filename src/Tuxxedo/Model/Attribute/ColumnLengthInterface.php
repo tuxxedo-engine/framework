@@ -13,11 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\Attribute;
 
-use Tuxxedo\Database\Query\Dialect\DialectInterface;
-
-interface ColumnFormatInterface
+interface ColumnLengthInterface
 {
-    public function getFormat(
-        DialectInterface $dialect,
-    ): string;
+    public int $length {
+        get;
+    }
 }

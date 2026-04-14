@@ -27,6 +27,6 @@ readonly class Blob implements ColumnInterface
     public function getNativeType(
         DialectInterface $dialect,
     ): string {
-        return 'BLOB';
+        return $dialect->nativeColumnType($this) ?? 'BLOB';
     }
 }

@@ -27,6 +27,6 @@ readonly class Integer implements ColumnInterface
     public function getNativeType(
         DialectInterface $dialect,
     ): string {
-        return 'INTEGER';
+        return $dialect->nativeColumnType($this) ?? 'INTEGER';
     }
 }

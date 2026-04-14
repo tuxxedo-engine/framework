@@ -27,6 +27,6 @@ readonly class Json implements ColumnInterface
     public function getNativeType(
         DialectInterface $dialect,
     ): string {
-        return $dialect->jsonType;
+        return $dialect->nativeColumnType($this) ?? 'TEXT';
     }
 }
