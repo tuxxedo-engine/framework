@@ -1,0 +1,7 @@
+<form action="/csrf/form" method="post">
+    {! csrf_field() !}
+    <p>
+        <label><strong>Message:</strong> <input type="text" name="message" value="Hello Engine"></label>
+    </p>
+    <input type="submit" value="Submit">
+</form>

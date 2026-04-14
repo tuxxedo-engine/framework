@@ -1,0 +1,28 @@
+<button id="sendButton">Send AJAX Request</button>
+<div id="output"></div>
+
+<script type="text/javascript">
+    document.getElementById('sendButton').addEventListener('click', function () {
+        const output = document.getElementById('output');
+        output.innerHTML = '';
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/csrf/ajax');
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.setRequestHeader('X-Csrf-Token', '{! csrf_token() | escape_js !}');
+
+        xhr.onload = function () {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                output.innerHTML = '<p style="color: green"><strong>Success:</strong> ' + xhr.responseText + '</p>';
+            } else {
+                output.innerHTML = '<p style="color: red"><strong>Failed:</strong> Server returned ' + xhr.status + '</p>';
+            }
+        };
+
+        xhr.onerror = function () {
+            output.innerHTML = '<p style="color: red"><strong>Error:</strong> Network error</p>';
+        };
+
+        xhr.send();
+    });
+</script>

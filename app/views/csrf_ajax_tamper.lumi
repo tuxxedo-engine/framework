@@ -1,0 +1,38 @@
+<p>
+    <label>
+        <input type="checkbox" id="tamperCheck">
+        Tamper with token (send invalid token)
+    </label>
+</p>
+<button id="sendButton">Send AJAX Request</button>
+<div id="output"></div>
+
+<script type="text/javascript">
+    document.getElementById('sendButton').addEventListener('click', function () {
+        var output = document.getElementById('output');
+        output.innerHTML = '';
+
+        var token = document.getElementById('tamperCheck').checked
+            ? 'tampered_invalid_token'
+            : '{! csrf_token() | escape_js !}';
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/csrf/ajax-tamper');
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.setRequestHeader('X-Csrf-Token', token);
+
+        xhr.onload = function () {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                output.innerHTML = '<p style="color: green"><strong>Success:</strong> ' + xhr.responseText + '</p>';
+            } else {
+                output.innerHTML = '<p style="color: red"><strong>Failed (expected):</strong> Server returned ' + xhr.status + '</p>';
+            }
+        };
+
+        xhr.onerror = function () {
+            output.innerHTML = '<p style="color: red"><strong>Error:</strong> Network error</p>';
+        };
+
+        xhr.send();
+    });
+</script>

@@ -18,6 +18,7 @@ use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
+#[\Attribute(flags: \Attribute::TARGET_METHOD)]
 class XssProtection implements MiddlewareInterface
 {
     /**

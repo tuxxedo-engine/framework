@@ -15,6 +15,7 @@ namespace Tuxxedo\View;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Response\Response;
+use Tuxxedo\Http\Response\ResponseCode;
 use Tuxxedo\Http\Response\ResponseInterface;
 
 readonly class View implements ViewInterface
@@ -25,6 +26,7 @@ readonly class View implements ViewInterface
     public function __construct(
         public string $name,
         public array $scope = [],
+        public ResponseCode $responseCode = ResponseCode::OK,
     ) {
     }
 
@@ -33,6 +35,7 @@ readonly class View implements ViewInterface
     ): ResponseInterface {
         return new Response(
             body: $container->resolve(ViewRenderInterface::class)->render($this),
+            responseCode: $this->responseCode,
         );
     }
 }

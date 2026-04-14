@@ -17,6 +17,9 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionProviderInterface;
 use Tuxxedo\View\Lumi\Library\Function\PhpFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\ConfigFunction;
+use Tuxxedo\View\Lumi\Runtime\Library\Function\CsrfFieldFunction;
+use Tuxxedo\View\Lumi\Runtime\Library\Function\CsrfFieldNameFunction;
+use Tuxxedo\View\Lumi\Runtime\Library\Function\CsrfTokenFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\DateFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\DirectiveFunction;
 use Tuxxedo\View\Lumi\Runtime\Library\Function\DumpFunction;
@@ -55,6 +58,9 @@ class StandardFunctions implements FunctionProviderInterface
         yield new RequestFunction($container);
         yield new UrlFunction($container);
         yield new RouteFunction($container);
+        yield new CsrfFieldFunction($container);
+        yield new CsrfFieldNameFunction($container);
+        yield new CsrfTokenFunction($container);
 
         yield new PhpFunction(
             name: 'count',

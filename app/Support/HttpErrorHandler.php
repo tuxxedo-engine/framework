@@ -31,13 +31,14 @@ class HttpErrorHandler implements ErrorHandlerInterface
         /** @var HttpException $exception */
 
         return new View(
-            match ($exception->responseCode) {
+            name: match ($exception->responseCode) {
                 ResponseCode::NOT_FOUND => 'support/not_found',
                 default => 'support/generic',
             },
-            [
+            scope: [
                 'exception' => $exception,
             ],
+            responseCode: $exception->responseCode,
         );
     }
 }

@@ -16,7 +16,7 @@ namespace Tuxxedo\Http\Response;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\HttpException;
 
-interface ResponsableInterface
+interface ResponsableInterface extends ResponseCodeInterface
 {
     /**
      * @throws HttpException

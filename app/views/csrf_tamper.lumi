@@ -1,0 +1,22 @@
+<form action="/csrf/tamper" method="post" id="tamperForm">
+    {! csrf_field() !}
+    <p>
+        <label>
+            <input type="checkbox" id="tamperCheck">
+            Tamper with token before submit
+        </label>
+    </p>
+    <input type="submit" value="Submit">
+</form>
+
+<script>
+    document.getElementById('tamperForm').addEventListener('submit', function () {
+        if (document.getElementById('tamperCheck').checked) {
+            const field = document.querySelector('input[name="{! csrf_field_name() | escape_attr !}"]');
+
+            if (field) {
+                field.value = 'tampered_invalid_token';
+            }
+        }
+    });
+</script>
