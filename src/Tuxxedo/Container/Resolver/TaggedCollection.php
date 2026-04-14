@@ -17,7 +17,7 @@ use Tuxxedo\Collection\CollectionInterface;
 use Tuxxedo\Collection\ImmutableCollection;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
-use Tuxxedo\Container\Reflection\ParameterInterface;
+use Tuxxedo\Reflection\ParameterInterface;
 
 /**
  * @template TClassName of object

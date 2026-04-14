@@ -33,11 +33,6 @@ use Fixtures\Container\PersistentService;
 use Fixtures\Container\RebindA;
 use Fixtures\Container\RebindB;
 use Fixtures\Container\RebindC;
-use Fixtures\Container\ReflectionResolverResult;
-use Fixtures\Container\ReflectionResolverResultReceiverInterface;
-use Fixtures\Container\Resolver\ReflectionBuiltinTypeResolver;
-use Fixtures\Container\Resolver\ReflectionDefaultTypeResolver;
-use Fixtures\Container\Resolver\ReflectionIsNullableResolver;
 use Fixtures\Container\ServiceInterface;
 use Fixtures\Container\ServiceOne;
 use Fixtures\Container\ServiceOneInterface;
@@ -659,85 +654,4 @@ class ContainerTest extends TestCase
         self::assertInstanceOf(TaggedServiceOne::class, $services[0]);
         self::assertInstanceOf(TaggedServiceTwo::class, $services[1]);
     }
-
-    /**
-     * @return \Generator<array{0: ReflectionResolverResultReceiverInterface, 1: mixed}>
-     *
-    public static function reflectionResolverDataProvider(): \Generator
-    {
-        yield [
-            new readonly class () implements ReflectionResolverResultReceiverInterface {
-                public function __construct(
-                    #[ReflectionBuiltinTypeResolver] public ReflectionResolverResult $result = new ReflectionResolverResult(''),
-                    public string $name = '',
-                ) {
-                }
-            },
-            'string',
-        ];
-
-        yield [
-            new readonly class () implements ReflectionResolverResultReceiverInterface {
-                public function __construct(
-                    #[ReflectionBuiltinTypeResolver] public ReflectionResolverResult $result = new ReflectionResolverResult(''),
-                    public ReflectionResolverResult $name = new ReflectionResolverResult(''),
-                ) {
-                }
-            },
-            null,
-        ];
-
-        yield [
-            new readonly class () implements ReflectionResolverResultReceiverInterface {
-                public function __construct(
-                    #[ReflectionDefaultTypeResolver] public ReflectionResolverResult $result = new ReflectionResolverResult(''),
-                    public ReflectionResolverResult $name = new ReflectionResolverResult(''),
-                ) {
-                }
-            },
-            ReflectionResolverResult::class,
-        ];
-
-        yield [
-            new readonly class () implements ReflectionResolverResultReceiverInterface {
-                public function __construct(
-                    #[ReflectionDefaultTypeResolver] public ReflectionResolverResult $result = new ReflectionResolverResult(''),
-                    public string $name = '',
-                ) {
-                }
-            },
-            null,
-        ];
-
-        yield [
-            new readonly class () implements ReflectionResolverResultReceiverInterface {
-                public function __construct(
-                    #[ReflectionIsNullableResolver] public ReflectionResolverResult $result = new ReflectionResolverResult(''),
-                    public ?string $name = null,
-                ) {
-                }
-            },
-            true,
-        ];
-
-        yield [
-            new readonly class () implements ReflectionResolverResultReceiverInterface {
-                public function __construct(
-                    #[ReflectionIsNullableResolver] public ReflectionResolverResult $result = new ReflectionResolverResult(''),
-                    public string $name = '',
-                ) {
-                }
-            },
-            false,
-        ];
-    }
-
-    #[DataProvider('reflectionResolverDataProvider')]
-    public function testReflectionResolvers(
-        ReflectionResolverResultReceiverInterface $receiver,
-        mixed $expected,
-    ): void {
-        $container = new Container();
-    }
-     */
 }

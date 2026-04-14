@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
-use Tuxxedo\Container\Reflection\Parameter;
+use Tuxxedo\Reflection\Parameter;
 
 class Container implements ContainerInterface
 {

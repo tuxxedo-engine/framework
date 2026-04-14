@@ -15,10 +15,10 @@ namespace Tuxxedo\Model\Attribute\Connection;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
-use Tuxxedo\Container\Reflection\ParameterInterface;
 use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Model\ModelsManager;
 use Tuxxedo\Model\ModelsManagerInterface;
+use Tuxxedo\Reflection\ParameterInterface;
 
 /**
  * @implements DependencyResolverInterface<ModelsManagerInterface>

@@ -16,7 +16,7 @@ namespace Fixtures\Container\Resolver;
 use Fixtures\Container\UnresolvableDependencyOne;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
-use Tuxxedo\Container\Reflection\ParameterInterface;
+use Tuxxedo\Reflection\ParameterInterface;
 
 /**
  * @implements DependencyResolverInterface<UnresolvableDependencyOne>

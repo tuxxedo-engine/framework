@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
-use Tuxxedo\Container\Reflection\ParameterInterface;
+use Tuxxedo\Reflection\ParameterInterface;
 
 /**
  * @template TType

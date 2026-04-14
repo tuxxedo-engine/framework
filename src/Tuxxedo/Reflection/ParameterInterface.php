@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Container\Reflection;
+namespace Tuxxedo\Reflection;
 
 interface ParameterInterface
 {

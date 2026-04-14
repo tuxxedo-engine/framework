@@ -15,10 +15,10 @@ namespace Tuxxedo\Http\Request\Attribute;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
-use Tuxxedo\Container\Reflection\ParameterInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\InputContext;
 use Tuxxedo\Http\Request\RequestInterface;
+use Tuxxedo\Reflection\ParameterInterface;
 
 /**
  * @implements DependencyResolverInterface<object>

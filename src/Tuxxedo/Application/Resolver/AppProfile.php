@@ -16,8 +16,8 @@ namespace Tuxxedo\Application\Resolver;
 use Tuxxedo\Application\Profile;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
-use Tuxxedo\Container\Reflection\ParameterInterface;
 use Tuxxedo\Http\Kernel\KernelInterface;
+use Tuxxedo\Reflection\ParameterInterface;
 
 /**
  * @implements DependencyResolverInterface<Profile>

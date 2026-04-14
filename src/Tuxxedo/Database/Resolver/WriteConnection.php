@@ -15,9 +15,9 @@ namespace Tuxxedo\Database\Resolver;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
-use Tuxxedo\Container\Reflection\ParameterInterface;
 use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Database\Driver\ConnectionInterface;
+use Tuxxedo\Reflection\ParameterInterface;
 
 /**
  * @implements DependencyResolverInterface<ConnectionInterface>
