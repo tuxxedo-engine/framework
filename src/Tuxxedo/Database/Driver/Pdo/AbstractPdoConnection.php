@@ -53,11 +53,10 @@ abstract class AbstractPdoConnection extends AbstractConnection
                     dsn: static::getDsn($config),
                     username: $config->getString('username'),
                     password: $config->getString('password'),
-                    options: [
+                    options: static::getPdoOptions($config) + [
                         \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
                         \PDO::ATTR_EMULATE_PREPARES => true,
                         \PDO::ATTR_PERSISTENT => $config->getBool('options.persistent'),
-                        ...static::getPdoOptions($config),
                     ],
                 );
 
