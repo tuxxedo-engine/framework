@@ -257,6 +257,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
     ): array {
         $middleware = [];
 
+        /** @var \ReflectionAttribute<Middleware> $attribute */
         foreach ($reflector->getAttributes(Middleware::class, \ReflectionAttribute::IS_INSTANCEOF) as $attribute) {
             $middlewareInstance = $attribute->newInstance()->middleware;
 
