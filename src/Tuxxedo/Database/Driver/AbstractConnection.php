@@ -37,14 +37,14 @@ abstract class AbstractConnection implements ConnectionInterface
         get;
     }
 
-    protected int $savepointsCounter = 0;
+    protected private(set) int $savepointCounter = 0;
 
     protected function generateSavepointName(): string
     {
         return \sprintf(
             'sp_%s_%d',
             \spl_object_id($this),
-            $this->savepointsCounter++,
+            $this->savepointCounter++,
         );
     }
 
