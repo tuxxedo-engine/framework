@@ -17,6 +17,11 @@ use Fixtures\Container\AbstractService;
 use Fixtures\Container\ComplexService;
 use Fixtures\Container\CtorArgsService;
 use Fixtures\Container\CtorNoArgsService;
+use Fixtures\Container\CycleServiceA;
+use Fixtures\Container\CycleServiceB;
+use Fixtures\Container\CycleServiceX;
+use Fixtures\Container\CycleServiceY;
+use Fixtures\Container\CycleServiceZ;
 use Fixtures\Container\DefaultServiceFourInterface;
 use Fixtures\Container\DefaultServiceOne;
 use Fixtures\Container\DefaultServiceOneInterface;
@@ -34,6 +39,7 @@ use Fixtures\Container\PersistentService;
 use Fixtures\Container\RebindA;
 use Fixtures\Container\RebindB;
 use Fixtures\Container\RebindC;
+use Fixtures\Container\SelfCycleService;
 use Fixtures\Container\ServiceInterface;
 use Fixtures\Container\ServiceOne;
 use Fixtures\Container\ServiceOneInterface;
@@ -668,5 +674,79 @@ class ContainerTest extends TestCase
         self::assertSame($service->greeting, 'Hello World');
         self::assertSame($service->secret, 'phpfi');
         self::assertSame($service->numberOfServices, 2);
+    }
+
+    public function testResolveThrowsOnSelfCycle(): void
+    {
+        $container = new Container();
+
+        self::expectException(ContainerException::class);
+        self::expectExceptionMessage('Circular dependency detected');
+        self::expectExceptionMessage(SelfCycleService::class);
+
+        $container->resolve(SelfCycleService::class);
+    }
+
+    public function testResolveThrowsOnTwoClassCycle(): void
+    {
+        $container = new Container();
+
+        self::expectException(ContainerException::class);
+        self::expectExceptionMessage(
+            \sprintf(
+                '%s -> %s -> %s',
+                CycleServiceA::class,
+                CycleServiceB::class,
+                CycleServiceA::class,
+            ),
+        );
+
+        $container->resolve(CycleServiceA::class);
+    }
+
+    public function testResolveThrowsOnThreeClassCycle(): void
+    {
+        $container = new Container();
+
+        self::expectException(ContainerException::class);
+        self::expectExceptionMessage(
+            \sprintf(
+                '%s -> %s -> %s -> %s',
+                CycleServiceX::class,
+                CycleServiceY::class,
+                CycleServiceZ::class,
+                CycleServiceX::class,
+            ),
+        );
+
+        $container->resolve(CycleServiceX::class);
+    }
+
+    public function testResolveThrowsOnCycleThroughAlias(): void
+    {
+        $container = new Container();
+        $container->alias(ServiceInterface::class, CycleServiceA::class);
+
+        self::expectException(ContainerException::class);
+        self::expectExceptionMessage('Circular dependency detected');
+
+        $container->resolve(ServiceInterface::class);
+    }
+
+    public function testContainerRecoversAfterCycleDetected(): void
+    {
+        $container = new Container();
+
+        try {
+            $container->resolve(CycleServiceA::class);
+
+            self::fail('Expected ContainerException was not thrown');
+        } catch (ContainerException) {
+        }
+
+        $service = $container->resolve(ServiceOne::class);
+
+        self::assertInstanceOf(ServiceOne::class, $service);
+        self::assertSame($service->foo(), 'bar');
     }
 }

@@ -112,4 +112,18 @@ class ContainerException extends \Exception
             ),
         );
     }
+
+    /**
+     * @param class-string[] $chain
+     */
+    public static function fromCircularDependency(
+        array $chain,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Circular dependency detected while resolving: %s',
+                \join(' -> ', $chain),
+            ),
+        );
+    }
 }

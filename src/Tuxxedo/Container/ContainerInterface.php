@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
-// @todo Recursion checking support
 interface ContainerInterface
 {
     /**

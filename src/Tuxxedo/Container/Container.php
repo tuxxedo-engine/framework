@@ -38,6 +38,11 @@ class Container implements ContainerInterface
     private array $initializers = [];
 
     /**
+     * @var array<class-string, true>
+     */
+    private array $resolving = [];
+
+    /**
      * @template TClassName of object
      *
      * @param class-string<TClassName> $class
@@ -218,71 +223,86 @@ class Container implements ContainerInterface
             return $this->persistentDependencies[$className];
         }
 
-        if (isset($this->initializers[$className])) {
-            /** @var TClassName $instance */
-            $instance = ($this->initializers[$className])($this, $arguments);
-
-            if ($lifecycle === Lifecycle::PERSISTENT) {
-                unset($this->initializers[$className]);
-
-                $this->persistentDependencies[$className] = $instance;
-            }
-
-            return $instance;
-        }
-
-        $class = new \ReflectionClass($className);
-        $maskedClassName = $className;
-
-        if ($class->isInterface() || $class->isAbstract()) {
-            $maskedLifecycle = null;
-            $class = $this->resolveDefaultImplementation($class, $maskedLifecycle);
-            $maskedClassName = $class->name;
-
-            if ($maskedLifecycle !== null) {
-                $this->register(
-                    class: $className,
-                    lifecycle: $maskedLifecycle,
-                    bindInterfaces: false,
-                    bindParent: false,
-                );
-
-                $lifecycle = $maskedLifecycle;
-            }
-        }
-
-        if (($initializer = $this->resolveDefaultInitializer($class)) !== null) {
-            /** @var TClassName $instance */
-            $instance = $initializer($this, $arguments);
-        } else {
-            $callArguments = [];
-
-            if (($ctor = $class->getConstructor()) !== null) {
-                foreach ($ctor->getParameters() as $parameter) {
-                    $callArguments[$parameter->getName()] = \array_key_exists($parameter->getName(), $arguments)
-                        ? $arguments[$parameter->getName()]
-                        : (
-                            \array_key_exists($parameter->getPosition(), $arguments)
-                                ? $arguments[$parameter->getPosition()]
-                                : $this->resolveParameter($parameter)
-                        );
-                }
-            }
-
-            $instance = new $maskedClassName(
-                ...$callArguments,
+        if (isset($this->resolving[$className])) {
+            throw ContainerException::fromCircularDependency(
+                chain: [
+                    ...\array_keys($this->resolving),
+                    $className,
+                ],
             );
         }
 
-        if (
-            $lifecycle === Lifecycle::PERSISTENT &&
-            \array_key_exists($className, $this->persistentDependencies)
-        ) {
-            $this->persistentDependencies[$className] = $instance;
-        }
+        $this->resolving[$className] = true;
 
-        /** @var TClassName */
-        return $instance;
+        try {
+            if (isset($this->initializers[$className])) {
+                /** @var TClassName $instance */
+                $instance = ($this->initializers[$className])($this, $arguments);
+
+                if ($lifecycle === Lifecycle::PERSISTENT) {
+                    unset($this->initializers[$className]);
+
+                    $this->persistentDependencies[$className] = $instance;
+                }
+
+                return $instance;
+            }
+
+            $class = new \ReflectionClass($className);
+            $maskedClassName = $className;
+
+            if ($class->isInterface() || $class->isAbstract()) {
+                $maskedLifecycle = null;
+                $class = $this->resolveDefaultImplementation($class, $maskedLifecycle);
+                $maskedClassName = $class->name;
+
+                if ($maskedLifecycle !== null) {
+                    $this->register(
+                        class: $className,
+                        lifecycle: $maskedLifecycle,
+                        bindInterfaces: false,
+                        bindParent: false,
+                    );
+
+                    $lifecycle = $maskedLifecycle;
+                }
+            }
+
+            if (($initializer = $this->resolveDefaultInitializer($class)) !== null) {
+                /** @var TClassName $instance */
+                $instance = $initializer($this, $arguments);
+            } else {
+                $callArguments = [];
+
+                if (($ctor = $class->getConstructor()) !== null) {
+                    foreach ($ctor->getParameters() as $parameter) {
+                        $callArguments[$parameter->getName()] = \array_key_exists($parameter->getName(), $arguments)
+                            ? $arguments[$parameter->getName()]
+                            : (
+                                \array_key_exists($parameter->getPosition(), $arguments)
+                                    ? $arguments[$parameter->getPosition()]
+                                    : $this->resolveParameter($parameter)
+                            );
+                    }
+                }
+
+                $instance = new $maskedClassName(
+                    ...$callArguments,
+                );
+            }
+
+            if (
+                $lifecycle === Lifecycle::PERSISTENT &&
+                \array_key_exists($className, $this->persistentDependencies)
+            ) {
+                $this->persistentDependencies[$className] = $instance;
+            }
+
+            /** @var TClassName */
+            return $instance;
+        } finally {
+            unset($this->resolving[$className]);
+        }
     }
 
     /**
