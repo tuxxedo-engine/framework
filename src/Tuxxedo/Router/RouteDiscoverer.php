@@ -344,6 +344,23 @@ class RouteDiscoverer implements RouteDiscovererInterface
         ?PrefixInterface $prefix,
     ): array {
         $nodes = [];
+        $prefixedArguments = [];
+
+        if ($prefix !== null) {
+            $regex = \preg_match_all(
+                '/\{(\??)([a-zA-Z_][a-zA-Z0-9_]*)(?::([^}]+)|<([^>]+)>)?}/',
+                $prefix->uri,
+                $matches,
+                \PREG_SET_ORDER,
+            );
+
+            if ($regex !== false && $regex > 0) {
+                foreach ($matches as $match) {
+                    $prefixedArguments[] = $match[2];
+                }
+            }
+        }
+
         $regex = \preg_match_all(
             '/\{(\??)([a-zA-Z_][a-zA-Z0-9_]*)(?::([^}]+)|<([^>]+)>)?}/',
             $uri,
@@ -369,7 +386,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
                     kind: $kind,
                     constraint: $constraint,
                     optional: $match[1] === '?',
-                    prefixed: $prefix !== null && \in_array($match[2], $prefix->arguments, true),
+                    prefixed: \in_array($match[2], $prefixedArguments, true),
                 );
             }
         }
@@ -467,14 +484,6 @@ class RouteDiscoverer implements RouteDiscovererInterface
             );
 
             if (\sizeof($parameterAttributes) === 0) {
-                $this->handleError(
-                    static fn (): RouterException => RouterException::fromNoArgumentAttributeFound(
-                        className: $method->getDeclaringClass()->getName(),
-                        method: $method->getName(),
-                        parameter: $parameter->getName(),
-                    ),
-                );
-
                 continue;
             }
 

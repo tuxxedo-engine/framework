@@ -63,6 +63,7 @@ readonly class ListController
         $html .= '<th><strong>Priority</strong></th>';
         $html .= '<th><strong>Regex URI</strong></th>';
         $html .= '<th><strong>Argument count</strong></th>';
+        $html .= '<th><strong>Prefixed argument count</strong></th>';
         $html .= '<th><strong>Middleware count</strong></th>';
         $html .= '</tr>';
         $html .= '</thead>';
@@ -82,6 +83,14 @@ readonly class ListController
                     $regexUri = $route->regexUri;
                 }
 
+                $prefixedArgumentsCount = 0;
+
+                foreach ($route->arguments as $argument) {
+                    if ($argument->node->prefixed) {
+                        $prefixedArgumentsCount++;
+                    }
+                }
+
                 $html .= '<tr>';
                 $html .= '<td>' . $method . '</td>';
                 $html .= '<td>' . $uri . '</td>';
@@ -90,6 +99,7 @@ readonly class ListController
                 $html .= '<td>' . $route->priority->name . '</td>';
                 $html .= '<td>' . $regexUri . '</td>';
                 $html .= '<td>' . \sizeof($route->arguments) . '</td>';
+                $html .= '<td>' . $prefixedArgumentsCount . '</td>';
                 $html .= '<td>' . \sizeof($route->middleware) . '</td>';
                 $html .= '</tr>';
             }

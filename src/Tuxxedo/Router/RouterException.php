@@ -70,21 +70,6 @@ class RouterException extends \Exception
         );
     }
 
-    public static function fromNoArgumentAttributeFound(
-        string $className,
-        string $method,
-        string $parameter,
-    ): self {
-        return new self(
-            message: \sprintf(
-                '%s::%s() with parameter $%s does not have an argument attribute',
-                $className,
-                $method,
-                $parameter,
-            ),
-        );
-    }
-
     public static function fromHasNoType(
         string $className,
         string $method,

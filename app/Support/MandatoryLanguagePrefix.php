@@ -18,7 +18,4 @@ use Tuxxedo\Router\PrefixInterface;
 class MandatoryLanguagePrefix implements PrefixInterface
 {
     public private(set) string $uri = '/{language<language-code>}';
-    public private(set) array $arguments = [
-        'language',
-    ];
 }
