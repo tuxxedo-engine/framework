@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Logger;
 
-// @todo Consider a SyslogLogger
 interface LoggerInterface
 {
     public int $total {
