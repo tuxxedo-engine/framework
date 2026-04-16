@@ -18,10 +18,28 @@ interface LogMessageFormatterInterface
     /**
      * @param array<string, scalar> $placeholders
      */
+    public function interpolate(
+        string $message,
+        array $placeholders,
+    ): string;
+
+    /**
+     * @param array<string, scalar> $placeholders
+     */
     public function format(
         string $message,
         array $placeholders = [],
         ?LogLevel $level = null,
         ?\DateTimeImmutable $timestamp = null,
+    ): string;
+
+    public function formatLogLevel(
+        string $message,
+        LogLevel $level,
+    ): string;
+
+    public function formatTimestamp(
+        string $message,
+        \DateTimeImmutable $timestamp,
     ): string;
 }

@@ -15,14 +15,9 @@ namespace Tuxxedo\Logger;
 
 class LogMessageFormatter implements LogMessageFormatterInterface
 {
-    /**
-     * @param array<string, scalar> $placeholders
-     */
-    public function format(
+    public function interpolate(
         string $message,
-        array $placeholders = [],
-        ?LogLevel $level = null,
-        ?\DateTimeImmutable $timestamp = null,
+        array $placeholders,
     ): string {
         $replacements = [];
         $values = [];
@@ -32,7 +27,19 @@ class LogMessageFormatter implements LogMessageFormatterInterface
             $values[] = \strval($value);
         }
 
-        $message = \str_replace($replacements, $values, $message);
+        return \str_replace($replacements, $values, $message);
+    }
+
+    /**
+     * @param array<string, scalar> $placeholders
+     */
+    public function format(
+        string $message,
+        array $placeholders = [],
+        ?LogLevel $level = null,
+        ?\DateTimeImmutable $timestamp = null,
+    ): string {
+        $message = $this->interpolate($message, $placeholders);
 
         if ($level !== null) {
             $message = $this->formatLogLevel($message, $level);
@@ -41,7 +48,7 @@ class LogMessageFormatter implements LogMessageFormatterInterface
         return $this->formatTimestamp($message, $timestamp ?? new \DateTimeImmutable()) . \PHP_EOL;
     }
 
-    protected function formatLogLevel(
+    public function formatLogLevel(
         string $message,
         LogLevel $level,
     ): string {
@@ -52,7 +59,7 @@ class LogMessageFormatter implements LogMessageFormatterInterface
         );
     }
 
-    protected function formatTimestamp(
+    public function formatTimestamp(
         string $message,
         \DateTimeImmutable $timestamp,
     ): string {
