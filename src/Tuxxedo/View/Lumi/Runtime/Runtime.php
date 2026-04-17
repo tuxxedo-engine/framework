@@ -21,7 +21,6 @@ use Tuxxedo\View\Lumi\LumiViewRenderInterface;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewException;
 
-// @todo Investigate cleanup when re-using runtime across 2 different views in one request, blocks may linger(?)
 class Runtime implements RuntimeInterface
 {
     /**
