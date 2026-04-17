@@ -43,6 +43,7 @@
   },
   "autoload-dev": {
     "psr-4": {
+      "Integration\\": "tests/Integration/",
       "Unit\\": "tests/Unit/"
     }
   },
