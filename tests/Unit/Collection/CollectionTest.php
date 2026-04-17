@@ -13,12 +13,12 @@ declare(strict_types=1);
 
 namespace Unit\Collection;
 
-use Fixtures\Collection\IntTestEnum;
-use Fixtures\Collection\StringTestEnum;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Collection\Collection;
 use Tuxxedo\Collection\IntCollection;
 use Tuxxedo\Collection\StringCollection;
+use Unit\Fixtures\Collection\IntTestEnum;
+use Unit\Fixtures\Collection\StringTestEnum;
 
 class CollectionTest extends TestCase
 {

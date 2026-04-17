@@ -43,7 +43,6 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "Fixtures\\": "tests/Fixtures",
       "Unit\\": "tests/Unit/"
     }
   },

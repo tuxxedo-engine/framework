@@ -13,12 +13,12 @@ declare(strict_types=1);
 
 namespace Unit\Reflection;
 
-use Fixtures\Reflection\DefaultType;
-use Fixtures\Reflection\DefaultTypeInterfaceA;
-use Fixtures\Reflection\DefaultTypeInterfaceB;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Reflection\Parameter;
+use Unit\Fixtures\Reflection\DefaultType;
+use Unit\Fixtures\Reflection\DefaultTypeInterfaceA;
+use Unit\Fixtures\Reflection\DefaultTypeInterfaceB;
 
 class ReflectionParameterTest extends TestCase
 {

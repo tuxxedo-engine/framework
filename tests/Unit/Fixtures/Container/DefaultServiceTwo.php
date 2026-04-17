@@ -1,0 +1,36 @@
+<?php
+
+/**
+ * Tuxxedo Engine
+ *
+ * This file is part of the Tuxxedo Engine framework and is licensed under
+ * the MIT license.
+ *
+ * Copyright (C) 2026 Kalle Sommer Nielsen <kalle@php.net>
+ */
+
+declare(strict_types=1);
+
+namespace Unit\Fixtures\Container;
+
+use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Container\DefaultInitializer;
+
+#[DefaultInitializer(
+    static function (
+        ContainerInterface $container,
+        array $arguments,
+    ): DefaultServiceTwoInterface {
+        return new self($arguments);
+    },
+)]
+class DefaultServiceTwo implements DefaultServiceTwoInterface
+{
+    /**
+     * @param array<mixed> $arguments
+     */
+    private function __construct(
+        public readonly array $arguments,
+    ) {
+    }
+}

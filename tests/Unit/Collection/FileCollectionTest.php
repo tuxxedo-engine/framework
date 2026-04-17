@@ -18,8 +18,8 @@ use Tuxxedo\Collection\FileCollection;
 
 class FileCollectionTest extends TestCase
 {
-    private const string GOOD_DIRECTORY = __DIR__ . '/../../Fixtures/Collection/Files';
-    private const string BAD_DIRECTORY = __DIR__ . '/../../Fixtures/Collection/Files/Bad';
+    private const string GOOD_DIRECTORY = __DIR__ . '/../Fixtures/Collection/Files';
+    private const string BAD_DIRECTORY = __DIR__ . '/../Fixtures/Collection/Files/Bad';
 
     public function testFromGlob(): void
     {

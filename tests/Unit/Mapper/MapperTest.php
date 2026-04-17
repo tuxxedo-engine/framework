@@ -13,12 +13,12 @@ declare(strict_types=1);
 
 namespace Unit\Mapper;
 
-use Fixtures\Mapper\Country;
-use Fixtures\Mapper\Person;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Mapper\Mapper;
 use Tuxxedo\Mapper\MapperException;
+use Unit\Fixtures\Mapper\Country;
+use Unit\Fixtures\Mapper\Person;
 
 class MapperTest extends TestCase
 {
