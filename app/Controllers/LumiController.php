@@ -30,13 +30,16 @@ use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\LumiConfigurator;
 use Tuxxedo\View\Lumi\LumiEngine;
 use Tuxxedo\View\Lumi\LumiException;
+use Tuxxedo\View\Lumi\LumiViewRenderInterface;
 use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
 use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpOptimizer;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
+use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Operator\SymbolInterface;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewException;
+use Tuxxedo\View\ViewRenderInterface;
 
 #[Controller(uri: '/lumi', autoTrailingSlash: true)]
 readonly class LumiController
@@ -46,6 +49,7 @@ readonly class LumiController
         #[ConfigValue('view.cacheDirectory')] private string $viewCacheDirectory,
         private ContainerInterface $container,
         private ViewController $viewController,
+        private LumiViewRenderInterface $viewRender,
     ) {
     }
 
@@ -320,6 +324,32 @@ readonly class LumiController
         };
     }
 
+    private function getReconfiguredLumiEngine(
+        LumiEngine $engine,
+    ): ViewRenderInterface {
+        $configurator = LumiConfigurator::fromConfig($this->container)
+            ->withoutOptimizers()
+            ->withCustomOptimizer(...$engine->optimizers);
+
+        foreach ($this->viewRender->runtime->filters as $filter) {
+            $configurator->defineFilter($filter);
+        }
+
+        match ($this->viewRender->runtime->functionPolicy) {
+            RuntimeFunctionPolicy::ALLOW_ALL => $configurator->allowAllFunctions(),
+            RuntimeFunctionPolicy::DISALLOW_ALL => $configurator->disallowAllFunctions(),
+            RuntimeFunctionPolicy::CUSTOM_ONLY => (
+                function () use ($configurator): void {
+                    foreach ($this->viewRender->runtime->functions as $function) {
+                        $configurator->defineFunction($function);
+                    }
+                }
+            )(),
+        };
+
+        return $configurator->build();
+    }
+
     #[Route\Get]
     public function index(RequestInterface $request): ResponseInterface
     {
@@ -521,11 +551,7 @@ readonly class LumiController
             $buffer .= '<h3>Output</h3>';
 
             try {
-                // @todo Load in function table from the ViewRender's version of LumiEngine
-                $buffer .= LumiConfigurator::fromConfig($this->container)
-                    ->withoutOptimizers()
-                    ->withCustomOptimizer(...$optimizers)
-                    ->build()
+                $buffer .= $this->getReconfiguredLumiEngine($engine)
                     ->render(
                         view: new View(
                             name: $viewName,
