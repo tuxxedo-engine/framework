@@ -123,7 +123,7 @@ class Runtime implements RuntimeInterface
 
             return ($this->functions[$function])->call(
                 arguments: $arguments,
-                frame: fn (): RuntimeFrameInterface => new RuntimeFrame(
+                context: fn (): RuntimeContextInterface => new RuntimeContext(
                     runtime: $this,
                 ),
             );
@@ -176,7 +176,7 @@ class Runtime implements RuntimeInterface
 
         return ($this->filters[$filter])->call(
             value: $value,
-            frame: fn (): RuntimeFrameInterface => new RuntimeFrame(
+            context: fn (): RuntimeContextInterface => new RuntimeContext(
                 runtime: $this,
             ),
         );

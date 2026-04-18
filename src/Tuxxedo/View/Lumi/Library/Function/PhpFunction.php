@@ -28,7 +28,7 @@ class PhpFunction implements FunctionInterface
 
     public function call(
         array $arguments,
-        \Closure $frame,
+        \Closure $context,
     ): mixed {
         /** @var callable-string $function */
         $function = $this->mappedName ?? $this->name;

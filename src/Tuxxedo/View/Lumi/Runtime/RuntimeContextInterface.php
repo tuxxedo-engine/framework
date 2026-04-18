@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime;
 
-interface RuntimeFrameInterface
+interface RuntimeContextInterface
 {
     public RuntimeFunctionPolicy $functionPolicy {
         get;

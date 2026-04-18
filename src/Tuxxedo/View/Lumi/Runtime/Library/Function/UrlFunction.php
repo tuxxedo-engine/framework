@@ -16,7 +16,7 @@ namespace Tuxxedo\View\Lumi\Runtime\Library\Function;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Url\UrlInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
-use Tuxxedo\View\Lumi\Runtime\RuntimeFrameInterface;
+use Tuxxedo\View\Lumi\Runtime\RuntimeContextInterface;
 
 class UrlFunction implements FunctionInterface
 {
@@ -29,11 +29,11 @@ class UrlFunction implements FunctionInterface
     }
 
     /**
-     * @param \Closure(): RuntimeFrameInterface $frame
+     * @param \Closure(): RuntimeContextInterface $context
      */
     public function call(
         array $arguments,
-        \Closure $frame,
+        \Closure $context,
     ): string {
         /** @var string $path */
         $path = $arguments[0];

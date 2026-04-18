@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Runtime\Library\Function;
 
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
-use Tuxxedo\View\Lumi\Runtime\RuntimeFrameInterface;
+use Tuxxedo\View\Lumi\Runtime\RuntimeContextInterface;
 
 class TruncateFunction implements FunctionInterface
 {
@@ -24,11 +24,11 @@ class TruncateFunction implements FunctionInterface
     ];
 
     /**
-     * @param \Closure(): RuntimeFrameInterface $frame
+     * @param \Closure(): RuntimeContextInterface $context
      */
     public function call(
         array $arguments,
-        \Closure $frame,
+        \Closure $context,
     ): string {
         /** @var string $value */
         $value = $arguments[0];

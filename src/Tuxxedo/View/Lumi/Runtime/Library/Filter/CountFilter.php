@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Runtime\Library\Filter;
 
 use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
-use Tuxxedo\View\Lumi\Runtime\RuntimeFrameInterface;
+use Tuxxedo\View\Lumi\Runtime\RuntimeContextInterface;
 
 class CountFilter implements FilterInterface
 {
@@ -24,11 +24,11 @@ class CountFilter implements FilterInterface
     ];
 
     /**
-     * @param \Closure(): RuntimeFrameInterface $frame
+     * @param \Closure(): RuntimeContextInterface $context
      */
     public function call(
         mixed $value,
-        \Closure $frame,
+        \Closure $context,
     ): int {
         /** @var array<mixed> $value */
 

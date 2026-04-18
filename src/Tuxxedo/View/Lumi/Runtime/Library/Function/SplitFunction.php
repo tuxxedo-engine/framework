@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Runtime\Library\Function;
 
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
-use Tuxxedo\View\Lumi\Runtime\RuntimeFrameInterface;
+use Tuxxedo\View\Lumi\Runtime\RuntimeContextInterface;
 
 class SplitFunction implements FunctionInterface
 {
@@ -23,12 +23,12 @@ class SplitFunction implements FunctionInterface
 
     /**
      * @param mixed[] $arguments
-     * @param \Closure(): RuntimeFrameInterface $frame
+     * @param \Closure(): RuntimeContextInterface $context
      * @return string[]
      */
     public function call(
         array $arguments,
-        \Closure $frame,
+        \Closure $context,
     ): array {
         /** @var string $value */
         $value = $arguments[0];

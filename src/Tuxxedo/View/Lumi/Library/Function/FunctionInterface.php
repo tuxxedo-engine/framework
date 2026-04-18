@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Library\Function;
 
-use Tuxxedo\View\Lumi\Runtime\RuntimeFrameInterface;
+use Tuxxedo\View\Lumi\Runtime\RuntimeContextInterface;
 use Tuxxedo\View\ViewException;
 
 interface FunctionInterface
@@ -31,12 +31,12 @@ interface FunctionInterface
 
     /**
      * @param mixed[] $arguments
-     * @param \Closure(): RuntimeFrameInterface $frame
+     * @param \Closure(): RuntimeContextInterface $context
      *
      * @throws ViewException
      */
     public function call(
         array $arguments,
-        \Closure $frame,
+        \Closure $context,
     ): mixed;
 }

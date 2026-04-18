@@ -15,7 +15,7 @@ namespace Tuxxedo\View\Lumi\Runtime;
 
 use Tuxxedo\View\ViewException;
 
-readonly class RuntimeFrame implements RuntimeFrameInterface
+readonly class RuntimeContext implements RuntimeContextInterface
 {
     public RuntimeFunctionPolicy $functionPolicy;
 

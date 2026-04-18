@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Library\Filter;
 
-use Tuxxedo\View\Lumi\Runtime\RuntimeFrameInterface;
+use Tuxxedo\View\Lumi\Runtime\RuntimeContextInterface;
 use Tuxxedo\View\ViewException;
 
 interface FilterInterface
@@ -30,12 +30,12 @@ interface FilterInterface
     }
 
     /**
-     * @param \Closure(): RuntimeFrameInterface $frame
+     * @param \Closure(): RuntimeContextInterface $context
      *
      * @throws ViewException
      */
     public function call(
         mixed $value,
-        \Closure $frame,
+        \Closure $context,
     ): mixed;
 }

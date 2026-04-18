@@ -17,7 +17,7 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Router\RouterException;
 use Tuxxedo\Router\RouterInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
-use Tuxxedo\View\Lumi\Runtime\RuntimeFrameInterface;
+use Tuxxedo\View\Lumi\Runtime\RuntimeContextInterface;
 
 class RouteFunction implements FunctionInterface
 {
@@ -30,11 +30,11 @@ class RouteFunction implements FunctionInterface
     }
 
     /**
-     * @param \Closure(): RuntimeFrameInterface $frame
+     * @param \Closure(): RuntimeContextInterface $context
      */
     public function call(
         array $arguments,
-        \Closure $frame,
+        \Closure $context,
     ): string {
         /** @var string $name */
         $name = \array_shift($arguments);

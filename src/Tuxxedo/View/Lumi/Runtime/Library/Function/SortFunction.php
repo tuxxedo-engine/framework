@@ -22,12 +22,12 @@ class SortFunction implements FunctionInterface
 
     /**
      * @param mixed[] $arguments
-     * @param \Closure $frame
+     * @param \Closure $context
      * @return mixed[]
      */
     public function call(
         array $arguments,
-        \Closure $frame,
+        \Closure $context,
     ): array {
         /** @var mixed[] $array */
         $array = $arguments[0];
