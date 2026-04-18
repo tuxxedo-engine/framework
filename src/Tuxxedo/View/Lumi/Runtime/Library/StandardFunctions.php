@@ -77,10 +77,6 @@ class StandardFunctions implements FunctionProviderInterface
         );
 
         yield new PhpFunction(
-            name: 'hash',
-        );
-
-        yield new PhpFunction(
             name: 'base64',
             mappedName: 'base64_encode',
         );
