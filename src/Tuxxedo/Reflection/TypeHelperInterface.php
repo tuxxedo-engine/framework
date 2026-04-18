@@ -19,14 +19,14 @@ interface TypeHelperInterface
      * @return class-string|null
      */
     public function getDefaultType(
-        \ReflectionParameter $reflector,
+        \ReflectionParameter|\ReflectionProperty $reflector,
     ): ?string;
 
     public function getBuiltinType(
-        \ReflectionParameter $reflector,
+        \ReflectionParameter|\ReflectionProperty $reflector,
     ): ?string;
 
     public function isNullable(
-        \ReflectionParameter $reflector,
+        \ReflectionParameter|\ReflectionProperty $reflector,
     ): bool;
 }

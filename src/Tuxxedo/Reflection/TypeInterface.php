@@ -13,9 +13,13 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Reflection;
 
-interface ParameterInterface extends TypeInterface, AttributeInterface
+interface TypeInterface
 {
-    public \ReflectionParameter $reflector {
-        get;
-    }
+    /**
+     * @return class-string|null
+     */
+    public function getDefaultType(): ?string;
+
+    public function getBuiltinType(): ?string;
+    public function isNullable(): bool;
 }

@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Reflection;
 
-interface ParameterInterface extends TypeInterface, AttributeInterface
+interface PropertyInterface extends TypeInterface, AttributeInterface
 {
-    public \ReflectionParameter $reflector {
+    public \ReflectionProperty $reflector {
         get;
     }
 }

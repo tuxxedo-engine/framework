@@ -20,7 +20,6 @@ use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
 
 // @todo Support relations
 // @todo Support CreatedAt, UpdatedAt & DeletedAt contracts
-// @todo PropertyReflection for attributes
 #[DefaultImplementation(class: ModelsManager::class, lifecycle: Lifecycle::PERSISTENT)]
 interface ModelsManagerInterface
 {

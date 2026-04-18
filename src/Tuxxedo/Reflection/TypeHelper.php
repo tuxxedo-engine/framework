@@ -16,7 +16,7 @@ namespace Tuxxedo\Reflection;
 class TypeHelper implements TypeHelperInterface
 {
     public function getDefaultType(
-        \ReflectionParameter $reflector,
+        \ReflectionParameter|\ReflectionProperty $reflector,
     ): ?string {
         $type = $reflector->getType();
 
@@ -32,7 +32,7 @@ class TypeHelper implements TypeHelperInterface
     }
 
     public function getBuiltinType(
-        \ReflectionParameter $reflector,
+        \ReflectionParameter|\ReflectionProperty $reflector,
     ): ?string {
         $type = $reflector->getType();
 
@@ -47,7 +47,7 @@ class TypeHelper implements TypeHelperInterface
     }
 
     public function isNullable(
-        \ReflectionParameter $reflector,
+        \ReflectionParameter|\ReflectionProperty $reflector,
     ): bool {
         $type = $reflector->getType();
 
