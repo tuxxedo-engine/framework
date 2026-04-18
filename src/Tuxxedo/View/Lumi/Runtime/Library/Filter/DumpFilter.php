@@ -13,17 +13,20 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime\Library\Filter;
 
-use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
+use Tuxxedo\View\Lumi\Runtime\RuntimeFrameInterface;
 
 class DumpFilter implements FilterInterface
 {
     public private(set) string $name = 'dump';
     public private(set) array $aliases = [];
 
+    /**
+     * @param \Closure(): RuntimeFrameInterface $frame
+     */
     public function call(
         mixed $value,
-        DirectivesInterface $directives,
+        \Closure $frame,
     ): string {
         \ob_start();
         \var_dump($value);

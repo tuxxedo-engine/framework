@@ -13,17 +13,20 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime\Library\Filter;
 
-use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
+use Tuxxedo\View\Lumi\Runtime\RuntimeFrameInterface;
 
 class JsonPrettyFilter implements FilterInterface
 {
     public private(set) string $name = 'json_pretty';
     public private(set) array $aliases = [];
 
+    /**
+     * @param \Closure(): RuntimeFrameInterface $frame
+     */
     public function call(
         mixed $value,
-        DirectivesInterface $directives,
+        \Closure $frame,
     ): string {
         /** @var string $value */
 

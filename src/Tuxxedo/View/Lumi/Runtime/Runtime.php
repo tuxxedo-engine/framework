@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime;
 
-use Tuxxedo\View\Lumi\Library\Directive\Directives;
 use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
 use Tuxxedo\View\Lumi\LumiEngineInterface;
@@ -177,8 +176,8 @@ class Runtime implements RuntimeInterface
 
         return ($this->filters[$filter])->call(
             value: $value,
-            directives: new Directives(
-                directives: $this->directives,
+            frame: fn (): RuntimeFrameInterface => new RuntimeFrame(
+                runtime: $this,
             ),
         );
     }

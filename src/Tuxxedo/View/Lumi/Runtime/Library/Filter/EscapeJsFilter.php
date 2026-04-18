@@ -15,25 +15,25 @@ namespace Tuxxedo\View\Lumi\Runtime\Library\Filter;
 
 use Tuxxedo\Escaper\Escaper;
 use Tuxxedo\Escaper\EscaperInterface;
-use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
+use Tuxxedo\View\Lumi\Runtime\RuntimeFrameInterface;
 
 class EscapeJsFilter implements FilterInterface
 {
     public private(set) string $name = 'escape_js';
     public private(set) array $aliases = [];
 
-    private readonly EscaperInterface $escaper;
-
     public function __construct(
-        ?EscaperInterface $escaper = null,
+        private readonly EscaperInterface $escaper = new Escaper(),
     ) {
-        $this->escaper = $escaper ?? new Escaper();
     }
 
+    /**
+     * @param \Closure(): RuntimeFrameInterface $frame
+     */
     public function call(
         mixed $value,
-        DirectivesInterface $directives,
+        \Closure $frame,
     ): string {
         /** @var string $value */
 
