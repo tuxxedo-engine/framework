@@ -13,61 +13,26 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Reflection;
 
-class Parameter implements ParameterInterface
+readonly class Parameter implements ParameterInterface
 {
     public function __construct(
-        public readonly \ReflectionParameter $reflector,
+        public \ReflectionParameter $reflector,
+        private TypeHelperInterface $typeHelper = new TypeHelper(),
     ) {
     }
 
     public function getDefaultType(): ?string
     {
-        $type = $this->reflector->getType();
-
-        if (
-            $type instanceof \ReflectionNamedType &&
-            !$type->isBuiltin()
-        ) {
-            /** @var class-string */
-            return $type->getName();
-        }
-
-        return null;
+        return $this->typeHelper->getDefaultType($this->reflector);
     }
 
     public function getBuiltinType(): ?string
     {
-        $type = $this->reflector->getType();
-
-        if (
-            $type instanceof \ReflectionNamedType &&
-            $type->isBuiltin()
-        ) {
-            return $type->getName();
-        }
-
-        return null;
+        return $this->typeHelper->getBuiltinType($this->reflector);
     }
 
     public function isNullable(): bool
     {
-        $type = $this->reflector->getType();
-
-        if ($type instanceof \ReflectionNamedType) {
-            return $type->allowsNull();
-        }
-
-        if ($type instanceof \ReflectionUnionType) {
-            foreach ($type->getTypes() as $unionType) {
-                if (
-                    $unionType instanceof \ReflectionNamedType &&
-                    $unionType->getName() === 'null'
-                ) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return $this->typeHelper->isNullable($this->reflector);
     }
 }
