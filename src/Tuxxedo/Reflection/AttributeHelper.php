@@ -16,7 +16,7 @@ namespace Tuxxedo\Reflection;
 class AttributeHelper implements AttributeHelperInterface
 {
     public function hasAttribute(
-        \ReflectionParameter|\ReflectionProperty $reflector,
+        \ReflectionParameter|\ReflectionProperty|\ReflectionMethod $reflector,
         string $attribute,
     ): bool {
         return \sizeof($reflector->getAttributes($attribute, \ReflectionAttribute::IS_INSTANCEOF)) > 0;
@@ -29,7 +29,7 @@ class AttributeHelper implements AttributeHelperInterface
      * @return TAttributeName
      */
     public function getAttribute(
-        \ReflectionParameter|\ReflectionProperty $reflector,
+        \ReflectionParameter|\ReflectionProperty|\ReflectionMethod $reflector,
         string $attribute,
     ): object {
         $attributes = $reflector->getAttributes(
@@ -52,7 +52,7 @@ class AttributeHelper implements AttributeHelperInterface
      * @return \Generator<TAttributeName>
      */
     public function getAttributes(
-        \ReflectionParameter|\ReflectionProperty $reflector,
+        \ReflectionParameter|\ReflectionProperty|\ReflectionMethod $reflector,
         string $attribute,
     ): \Generator {
         $attributes = $reflector->getAttributes(

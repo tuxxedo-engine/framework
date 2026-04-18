@@ -13,15 +13,19 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Reflection;
 
-interface AttributeHelperInterface
+readonly class Method implements MethodInterface
 {
-    /**
-     * @param class-string $attribute
-     */
+    public function __construct(
+        public \ReflectionMethod $reflector,
+        private AttributeHelperInterface $attributeHelper = new AttributeHelper(),
+    ) {
+    }
+
     public function hasAttribute(
-        \ReflectionParameter|\ReflectionProperty|\ReflectionMethod $reflector,
         string $attribute,
-    ): bool;
+    ): bool {
+        return $this->attributeHelper->hasAttribute($this->reflector, $attribute);
+    }
 
     /**
      * @template TAttributeName of object
@@ -30,9 +34,10 @@ interface AttributeHelperInterface
      * @return TAttributeName
      */
     public function getAttribute(
-        \ReflectionParameter|\ReflectionProperty|\ReflectionMethod $reflector,
         string $attribute,
-    ): object;
+    ): object {
+        return $this->attributeHelper->getAttribute($this->reflector, $attribute);
+    }
 
     /**
      * @template TAttributeName of object
@@ -41,7 +46,8 @@ interface AttributeHelperInterface
      * @return \Generator<TAttributeName>
      */
     public function getAttributes(
-        \ReflectionParameter|\ReflectionProperty|\ReflectionMethod $reflector,
         string $attribute,
-    ): \Generator;
+    ): \Generator {
+        yield from $this->attributeHelper->getAttributes($this->reflector, $attribute);
+    }
 }

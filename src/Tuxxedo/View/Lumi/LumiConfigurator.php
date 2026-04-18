@@ -15,18 +15,24 @@ namespace Tuxxedo\View\Lumi;
 
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Reflection\Method;
 use Tuxxedo\View\Lumi\Compiler\Compiler;
 use Tuxxedo\View\Lumi\Compiler\CompilerDirectives;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Compiler\CompilerState;
 use Tuxxedo\View\Lumi\Highlight\HighlighterInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
+use Tuxxedo\View\Lumi\Library\Attribute\LumiFilter;
+use Tuxxedo\View\Lumi\Library\Attribute\LumiFunction;
 use Tuxxedo\View\Lumi\Library\Directive\DefaultDirectives;
+use Tuxxedo\View\Lumi\Library\Filter\CustomFilter;
 use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
 use Tuxxedo\View\Lumi\Library\Filter\FilterProviderInterface;
+use Tuxxedo\View\Lumi\Library\Function\CustomFunction;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionProviderInterface;
 use Tuxxedo\View\Lumi\Library\Function\PhpFunction;
+use Tuxxedo\View\Lumi\Library\LibraryDiscoveryInterface;
 use Tuxxedo\View\Lumi\Library\LibraryInterface;
 use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
@@ -283,8 +289,14 @@ class LumiConfigurator implements LumiConfiguratorInterface
     }
 
     public function withLibrary(
-        LibraryInterface $library,
+        LibraryInterface|LibraryDiscoveryInterface $library,
     ): LumiConfiguratorInterface {
+        if ($library instanceof LibraryDiscoveryInterface) {
+            $this->loadDiscoveredLibrary($library);
+
+            return $this;
+        }
+
         if (($filterProvider = $library->filters()) !== null) {
             $this->withFilterProvider($filterProvider);
         }
@@ -436,6 +448,53 @@ class LumiConfigurator implements LumiConfiguratorInterface
         }
 
         return true;
+    }
+
+    private function loadDiscoveredLibrary(
+        LibraryDiscoveryInterface $library,
+    ): void {
+        $instance = new \ReflectionObject($library);
+
+        foreach ($instance->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
+            $method = new Method(
+                reflector: $method,
+            );
+
+            $callback = [
+                $library,
+                $method->reflector->getName(),
+            ];
+
+            if (!\is_callable($callback)) {
+                continue;
+            }
+
+            if ($method->hasAttribute(LumiFunction::class)) {
+                $function = $method->getAttribute(LumiFunction::class);
+
+                $this->defineFunction(
+                    handler: new CustomFunction(
+                        name: $function->name,
+                        implementation: fn (): mixed => $callback(...),
+                        aliases: $function->aliases,
+                    ),
+                );
+
+                continue;
+            }
+
+            if ($method->hasAttribute(LumiFilter::class)) {
+                $filter = $method->getAttribute(LumiFilter::class);
+
+                $this->defineFilter(
+                    handler: new CustomFilter(
+                        name: $filter->name,
+                        implementation: fn (): mixed => $callback(...),
+                        aliases: $filter->aliases,
+                    ),
+                );
+            }
+        }
     }
 
     /**
