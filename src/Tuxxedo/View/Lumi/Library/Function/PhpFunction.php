@@ -13,9 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Library\Function;
 
-use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
-use Tuxxedo\View\ViewRenderInterface;
-
 class PhpFunction implements FunctionInterface
 {
     /**
@@ -31,8 +28,7 @@ class PhpFunction implements FunctionInterface
 
     public function call(
         array $arguments,
-        ViewRenderInterface $render,
-        DirectivesInterface $directives,
+        \Closure $frame,
     ): mixed {
         /** @var callable-string $function */
         $function = $this->mappedName ?? $this->name;

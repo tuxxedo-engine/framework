@@ -16,9 +16,8 @@ namespace Tuxxedo\View\Lumi\Runtime\Library\Function;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Request\Context\ServerContextInterface;
 use Tuxxedo\Http\Request\RequestInterface;
-use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
-use Tuxxedo\View\ViewRenderInterface;
+use Tuxxedo\View\Lumi\Runtime\RuntimeFrameInterface;
 
 class RequestFunction implements FunctionInterface
 {
@@ -30,10 +29,12 @@ class RequestFunction implements FunctionInterface
     ) {
     }
 
+    /**
+     * @param \Closure(): RuntimeFrameInterface $frame
+     */
     public function call(
         array $arguments,
-        ViewRenderInterface $render,
-        DirectivesInterface $directives,
+        \Closure $frame,
     ): ServerContextInterface {
         return $this->container->resolve(RequestInterface::class)->server;
     }

@@ -13,9 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime\Library\Function;
 
-use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
-use Tuxxedo\View\ViewRenderInterface;
+use Tuxxedo\View\Lumi\Runtime\RuntimeFrameInterface;
 
 class TruncateFunction implements FunctionInterface
 {
@@ -24,10 +23,12 @@ class TruncateFunction implements FunctionInterface
         'cut',
     ];
 
+    /**
+     * @param \Closure(): RuntimeFrameInterface $frame
+     */
     public function call(
         array $arguments,
-        ViewRenderInterface $render,
-        DirectivesInterface $directives,
+        \Closure $frame,
     ): string {
         /** @var string $value */
         $value = $arguments[0];

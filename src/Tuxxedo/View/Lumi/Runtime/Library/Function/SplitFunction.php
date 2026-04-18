@@ -13,9 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime\Library\Function;
 
-use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
-use Tuxxedo\View\ViewRenderInterface;
+use Tuxxedo\View\Lumi\Runtime\RuntimeFrameInterface;
 
 class SplitFunction implements FunctionInterface
 {
@@ -23,13 +22,13 @@ class SplitFunction implements FunctionInterface
     public private(set) array $aliases = [];
 
     /**
-     * @param array<mixed> $arguments
+     * @param mixed[] $arguments
+     * @param \Closure(): RuntimeFrameInterface $frame
      * @return string[]
      */
     public function call(
         array $arguments,
-        ViewRenderInterface $render,
-        DirectivesInterface $directives,
+        \Closure $frame,
     ): array {
         /** @var string $value */
         $value = $arguments[0];

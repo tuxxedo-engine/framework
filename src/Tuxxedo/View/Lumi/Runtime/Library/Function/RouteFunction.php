@@ -16,9 +16,8 @@ namespace Tuxxedo\View\Lumi\Runtime\Library\Function;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Router\RouterException;
 use Tuxxedo\Router\RouterInterface;
-use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
-use Tuxxedo\View\ViewRenderInterface;
+use Tuxxedo\View\Lumi\Runtime\RuntimeFrameInterface;
 
 class RouteFunction implements FunctionInterface
 {
@@ -30,10 +29,12 @@ class RouteFunction implements FunctionInterface
     ) {
     }
 
+    /**
+     * @param \Closure(): RuntimeFrameInterface $frame
+     */
     public function call(
         array $arguments,
-        ViewRenderInterface $render,
-        DirectivesInterface $directives,
+        \Closure $frame,
     ): string {
         /** @var string $name */
         $name = \array_shift($arguments);

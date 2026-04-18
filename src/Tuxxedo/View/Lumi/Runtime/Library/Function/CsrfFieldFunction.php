@@ -15,9 +15,8 @@ namespace Tuxxedo\View\Lumi\Runtime\Library\Function;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Security\Csrf\CsrfManagerInterface;
-use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
-use Tuxxedo\View\ViewRenderInterface;
+use Tuxxedo\View\Lumi\Runtime\RuntimeFrameInterface;
 
 class CsrfFieldFunction implements FunctionInterface
 {
@@ -29,10 +28,12 @@ class CsrfFieldFunction implements FunctionInterface
     ) {
     }
 
+    /**
+     * @param \Closure(): RuntimeFrameInterface $frame
+     */
     public function call(
         array $arguments,
-        ViewRenderInterface $render,
-        DirectivesInterface $directives,
+        \Closure $frame,
     ): string {
         $manager = $this->container->resolve(CsrfManagerInterface::class);
 

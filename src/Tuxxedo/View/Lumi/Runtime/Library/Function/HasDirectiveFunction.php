@@ -13,23 +13,24 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime\Library\Function;
 
-use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
-use Tuxxedo\View\ViewRenderInterface;
+use Tuxxedo\View\Lumi\Runtime\RuntimeFrameInterface;
 
 class HasDirectiveFunction implements FunctionInterface
 {
     public private(set) string $name = 'hasDirective';
     public private(set) array $aliases = [];
 
+    /**
+     * @param \Closure(): RuntimeFrameInterface $frame
+     */
     public function call(
         array $arguments,
-        ViewRenderInterface $render,
-        DirectivesInterface $directives,
+        \Closure $frame,
     ): bool {
         /** @var string $directive */
         $directive = $arguments[0];
 
-        return $directives->has($directive);
+        return $frame()->hasDirective($directive);
     }
 }

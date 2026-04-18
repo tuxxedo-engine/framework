@@ -13,9 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime\Library\Function;
 
-use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
-use Tuxxedo\View\ViewRenderInterface;
 
 class SortFunction implements FunctionInterface
 {
@@ -23,15 +21,15 @@ class SortFunction implements FunctionInterface
     public private(set) array $aliases = [];
 
     /**
-     * @param array<mixed> $arguments
-     * @return array<mixed>
+     * @param mixed[] $arguments
+     * @param \Closure $frame
+     * @return mixed[]
      */
     public function call(
         array $arguments,
-        ViewRenderInterface $render,
-        DirectivesInterface $directives,
+        \Closure $frame,
     ): array {
-        /** @var array<mixed> $array */
+        /** @var mixed[] $array */
         $array = $arguments[0];
 
         \asort($array);

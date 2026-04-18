@@ -15,9 +15,8 @@ namespace Tuxxedo\View\Lumi\Runtime\Library\Function;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Kernel\KernelInterface;
-use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
-use Tuxxedo\View\ViewRenderInterface;
+use Tuxxedo\View\Lumi\Runtime\RuntimeFrameInterface;
 
 class ConfigFunction implements FunctionInterface
 {
@@ -29,10 +28,12 @@ class ConfigFunction implements FunctionInterface
     ) {
     }
 
+    /**
+     * @param \Closure(): RuntimeFrameInterface $frame
+     */
     public function call(
         array $arguments,
-        ViewRenderInterface $render,
-        DirectivesInterface $directives,
+        \Closure $frame,
     ): mixed {
         /** @var array{0: string} $arguments */
 

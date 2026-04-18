@@ -124,9 +124,8 @@ class Runtime implements RuntimeInterface
 
             return ($this->functions[$function])->call(
                 arguments: $arguments,
-                render: $this->renderer,
-                directives: new Directives(
-                    directives: $this->directives,
+                frame: fn (): RuntimeFrameInterface => new RuntimeFrame(
+                    runtime: $this,
                 ),
             );
         }
