@@ -17,6 +17,8 @@ use Tuxxedo\Http\CookieInterface;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
+use Tuxxedo\Http\Response\Stream\Stream;
+use Tuxxedo\Http\Response\Stream\StreamInterface;
 
 class Response implements ResponseInterface
 {
@@ -24,7 +26,7 @@ class Response implements ResponseInterface
      * @param HeaderInterface[] $headers
      */
     final public function __construct(
-        public readonly string $body = '',
+        public readonly StreamInterface|string $body = '',
         public readonly array $headers = [],
         public readonly ResponseCode $responseCode = ResponseCode::OK,
     ) {
@@ -157,6 +159,40 @@ class Response implements ResponseInterface
             headers: $headers,
             responseCode: $responseCode,
             body: '',
+        );
+    }
+
+    /**
+     * @param \Closure(): \Generator<string>|\Generator<string>|resource|StreamInterface $stream
+     * @param positive-int $chunkSize
+     * @param HeaderInterface[] $headers
+     */
+    public static function stream(
+        mixed $stream,
+        bool $autoFlush = false,
+        int $chunkSize = 8192,
+        array $headers = [],
+        ResponseCode $responseCode = ResponseCode::OK,
+    ): static {
+        if ($stream instanceof \Closure || $stream instanceof \Generator) {
+            $body = Stream::fromGenerator(
+                generator: $stream,
+                autoFlush: $autoFlush,
+            );
+        } elseif (\is_resource($stream)) {
+            $body = Stream::fromResource(
+                resource: $stream,
+                autoFlush: $autoFlush,
+                chunkSize: $chunkSize,
+            );
+        } elseif ($stream instanceof StreamInterface) {
+            $body = $stream;
+        }
+
+        return new static(
+            headers: $headers,
+            responseCode: $responseCode,
+            body: $body ?? '',
         );
     }
 
@@ -337,8 +373,10 @@ class Response implements ResponseInterface
     }
 
     public function withBody(
-        string $body,
+        StreamInterface|string $body,
     ): static {
+        // @todo Body cloning may be impossible with streams because they may be resources, sigh
+
         return clone (
             $this,
             [

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Response;
 
 use Tuxxedo\Http\CookieInterface;
+use Tuxxedo\Http\Response\Stream\StreamInterface;
 
 class ResponseEmitter implements ResponseEmitterInterface
 {
@@ -63,10 +64,55 @@ class ResponseEmitter implements ResponseEmitterInterface
             $this->sent = true;
         }
 
-        if ($maxLength !== null && $maxLength > -1) {
-            echo \mb_substr($response->body, 0, $maxLength);
+        if ($response->body instanceof StreamInterface) {
+            if (($length = $response->body->getSize()) !== null) {
+                \header(
+                    \sprintf(
+                        'Content-Length: %d',
+                        $length,
+                    ),
+                );
+            }
+
+            $currentOutputSize = 0;
+
+            while (!$response->body->eof()) {
+                $chunk = $response->body->read();
+
+                if ($chunk === null) {
+                    break;
+                }
+
+                if ($maxLength !== null) {
+                    $currentOutputSize += \mb_strlen($chunk);
+
+                    if ($currentOutputSize >= $maxLength) {
+                        $chunk = \mb_substr($chunk, 0, $currentOutputSize - $maxLength);
+                    }
+                }
+
+                echo $chunk;
+
+                if ($response->body->autoFlush) {
+                    \flush();
+                }
+
+                if ($maxLength !== null && $currentOutputSize === $maxLength) {
+                    break;
+                }
+
+                if (\connection_aborted() === 1) {
+                    break;
+                }
+            }
+
+            $response->body->close();
         } else {
-            echo $response->body;
+            if ($maxLength !== null && $maxLength > -1) {
+                echo \mb_substr($response->body, 0, $maxLength);
+            } else {
+                echo $response->body;
+            }
         }
     }
 

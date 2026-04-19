@@ -16,6 +16,7 @@ namespace Tuxxedo\Http\Response;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Http\CookieInterface;
 use Tuxxedo\Http\HeaderInterface;
+use Tuxxedo\Http\Response\Stream\StreamInterface;
 
 #[DefaultImplementation(class: Response::class)]
 interface ResponseInterface extends ResponseCodeInterface
@@ -27,7 +28,7 @@ interface ResponseInterface extends ResponseCodeInterface
         get;
     }
 
-    public string $body {
+    public StreamInterface|string $body {
         get;
     }
 
@@ -70,6 +71,6 @@ interface ResponseInterface extends ResponseCodeInterface
     ): static;
 
     public function withBody(
-        string $body,
+        StreamInterface|string $body,
     ): static;
 }
