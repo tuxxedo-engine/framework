@@ -40,7 +40,7 @@ class ReflectionMethodTest extends TestCase
         self::assertSame($reflection->getAttribute(SimpleAttribute::class)->value, 'one');
     }
 
-    public function testParameterGetAttributeFailure(): void
+    public function testMethodGetAttributeFailure(): void
     {
         $reflection = new Method(
             reflector: (new \ReflectionClass(MethodIntrospector::class)->getMethod('one')),
@@ -51,7 +51,7 @@ class ReflectionMethodTest extends TestCase
         $reflection->getAttribute(AnotherSimpleAttribute::class);
     }
 
-    public function testParameterGetAttributes(): void
+    public function testMethodGetAttributes(): void
     {
         $reflection = new Method(
             reflector: (new \ReflectionClass(MethodIntrospector::class)->getMethod('two')),
