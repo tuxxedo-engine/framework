@@ -17,8 +17,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Mapper\Mapper;
 use Tuxxedo\Mapper\MapperException;
-use Unit\Fixtures\Mapper\Country;
-use Unit\Fixtures\Mapper\Person;
+use Unit\Fixture\Mapper\Country;
+use Unit\Fixture\Mapper\Person;
 
 class MapperTest extends TestCase
 {

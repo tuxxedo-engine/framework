@@ -17,7 +17,7 @@ use PHPUnit\Framework\TestCase;
 use Tuxxedo\Collection\CollectionException;
 use Tuxxedo\Collection\IntCollection;
 use Tuxxedo\Collection\StringCollection;
-use Unit\Fixtures\Collection\StringTestEnum;
+use Unit\Fixture\Collection\StringTestEnum;
 
 class ImmutableCollectionTest extends TestCase
 {

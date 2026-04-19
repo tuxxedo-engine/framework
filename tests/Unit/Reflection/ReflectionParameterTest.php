@@ -16,9 +16,9 @@ namespace Unit\Reflection;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Reflection\Parameter;
-use Unit\Fixtures\Reflection\DefaultType;
-use Unit\Fixtures\Reflection\DefaultTypeInterfaceA;
-use Unit\Fixtures\Reflection\DefaultTypeInterfaceB;
+use Unit\Fixture\Reflection\DefaultType;
+use Unit\Fixture\Reflection\DefaultTypeInterfaceA;
+use Unit\Fixture\Reflection\DefaultTypeInterfaceB;
 
 class ReflectionParameterTest extends TestCase
 {

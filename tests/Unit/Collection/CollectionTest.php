@@ -17,8 +17,8 @@ use PHPUnit\Framework\TestCase;
 use Tuxxedo\Collection\Collection;
 use Tuxxedo\Collection\IntCollection;
 use Tuxxedo\Collection\StringCollection;
-use Unit\Fixtures\Collection\IntTestEnum;
-use Unit\Fixtures\Collection\StringTestEnum;
+use Unit\Fixture\Collection\IntTestEnum;
+use Unit\Fixture\Collection\StringTestEnum;
 
 class CollectionTest extends TestCase
 {

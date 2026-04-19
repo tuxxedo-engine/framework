@@ -16,13 +16,13 @@ namespace Unit\Config;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Config\Config;
 use Tuxxedo\Config\ConfigException;
-use Unit\Fixtures\Config\SecondTestEnum;
-use Unit\Fixtures\Config\TestEnum;
+use Unit\Fixture\Config\SecondTestEnum;
+use Unit\Fixture\Config\TestEnum;
 
 class ConfigTest extends TestCase
 {
-    private const string SINGLE_FILE = __DIR__ . '/../Fixtures/Config/single.php';
-    private const string DIRECTORY = __DIR__ . '/../Fixtures/Config/Many/';
+    private const string SINGLE_FILE = __DIR__ . '/../Fixture/Config/single.php';
+    private const string DIRECTORY = __DIR__ . '/../Fixture/Config/Many/';
 
     public function testCreateManually(): void
     {
