@@ -16,9 +16,11 @@ namespace Unit\Reflection;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Reflection\Parameter;
+use Unit\Fixture\Reflection\AnotherSimpleAttribute;
 use Unit\Fixture\Reflection\DefaultType;
 use Unit\Fixture\Reflection\DefaultTypeInterfaceA;
 use Unit\Fixture\Reflection\DefaultTypeInterfaceB;
+use Unit\Fixture\Reflection\SimpleAttribute;
 
 class ReflectionParameterTest extends TestCase
 {
@@ -184,5 +186,68 @@ class ReflectionParameterTest extends TestCase
         );
 
         self::assertSame($expected, $reflection->isNullable());
+    }
+
+    public function testParameterHasAttribute(): void
+    {
+        $object = static function (
+            #[SimpleAttribute(value: 'one')] string $value,
+        ): void {
+        };
+
+        $reflection = new Parameter(
+            reflector: (new \ReflectionFunction($object)->getParameters()[0]),
+        );
+
+        self::assertTrue($reflection->hasAttribute(SimpleAttribute::class));
+        self::assertFalse($reflection->hasAttribute(AnotherSimpleAttribute::class));
+    }
+
+    public function testParameterGetAttributeAlwaysFirst(): void
+    {
+        $object = static function (
+            #[SimpleAttribute(value: 'one')] #[SimpleAttribute(value: 'two')] string $value,
+        ): void {
+        };
+
+        $reflection = new Parameter(
+            reflector: (new \ReflectionFunction($object)->getParameters()[0]),
+        );
+
+        self::assertSame($reflection->getAttribute(SimpleAttribute::class)->value, 'one');
+    }
+
+    public function testParameterGetAttributeFailure(): void
+    {
+        $object = static function (
+            #[SimpleAttribute(value: 'one')] string $value,
+        ): void {
+        };
+
+        $reflection = new Parameter(
+            reflector: (new \ReflectionFunction($object)->getParameters()[0]),
+        );
+
+        self::expectException(\ReflectionException::class);
+
+        $reflection->getAttribute(AnotherSimpleAttribute::class);
+    }
+
+    public function testParameterGetAttributes(): void
+    {
+        $object = static function (
+            #[SimpleAttribute(value: 'one')] #[SimpleAttribute(value: 'two')] string $value,
+        ): void {
+        };
+
+        $reflection = new Parameter(
+            reflector: (new \ReflectionFunction($object)->getParameters()[0]),
+        );
+
+        /** @var array{0: SimpleAttribute, 1: SimpleAttribute} $attributes */
+        $attributes = \iterator_to_array($reflection->getAttributes(SimpleAttribute::class));
+
+        self::assertSame($attributes[0]->value, 'one');
+        self::assertSame($attributes[1]->value, 'two');
     }
 }
