@@ -64,4 +64,11 @@ interface RequestInterface
     public function input(
         InputContext $context,
     ): InputContextInterface;
+
+    /**
+     * @param non-empty-array<string> $supported
+     */
+    public function negotiate(
+        array $supported,
+    ): ?string;
 }

@@ -92,4 +92,71 @@ class Request implements RequestInterface
             InputContext::COOKIE => $this->cookies,
         };
     }
+
+    public function negotiate(
+        array $supported,
+    ): ?string {
+        if (!$this->headers->has('Accept')) {
+            return $supported[0] ?? null;
+        }
+
+        foreach ($this->headers->getWeighted('Accept')->getWeightedPairs() as $pair) {
+            if ($pair->weight === 0.0) {
+                continue;
+            }
+
+            $match = $this->matchNegotiation($pair->value, $supported);
+
+            if ($match !== null) {
+                return $match;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param string[] $supported
+     */
+    private function matchNegotiation(
+        string $clientType,
+        array $supported,
+    ): ?string {
+        if ($clientType === '*/*') {
+            return $supported[0] ?? null;
+        }
+
+        [$clientMime, $clientSubtype] = $this->splitNegotiationType($clientType);
+
+        foreach ($supported as $type) {
+            if (\strcasecmp($type, $clientType) === 0) {
+                return $type;
+            }
+        }
+
+        if ($clientSubtype === '*') {
+            foreach ($supported as $type) {
+                [$mime,] = $this->splitNegotiationType($type);
+
+                if (\strcasecmp($mime, $clientMime) === 0) {
+                    return $type;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array{0: string, 1: string}
+     */
+    private function splitNegotiationType(string $type): array
+    {
+        $parts = \explode('/', $type, 2);
+
+        return [
+            $parts[0],
+            $parts[1] ?? '*',
+        ];
+    }
 }
