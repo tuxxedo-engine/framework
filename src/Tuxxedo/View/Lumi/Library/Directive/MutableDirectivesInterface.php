@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Compiler;
+namespace Tuxxedo\View\Lumi\Library\Directive;
 
-interface CompilerDirectivesInterface
+interface MutableDirectivesInterface
 {
     public function set(
         string $directive,

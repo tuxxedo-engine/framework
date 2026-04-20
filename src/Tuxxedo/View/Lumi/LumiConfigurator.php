@@ -17,7 +17,6 @@ use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Reflection\Method;
 use Tuxxedo\View\Lumi\Compiler\Compiler;
-use Tuxxedo\View\Lumi\Compiler\CompilerDirectives;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Compiler\CompilerState;
 use Tuxxedo\View\Lumi\Highlight\HighlighterInterface;
@@ -25,6 +24,7 @@ use Tuxxedo\View\Lumi\Lexer\LexerInterface;
 use Tuxxedo\View\Lumi\Library\Attribute\LumiFilter;
 use Tuxxedo\View\Lumi\Library\Attribute\LumiFunction;
 use Tuxxedo\View\Lumi\Library\Directive\DefaultDirectives;
+use Tuxxedo\View\Lumi\Library\Directive\MutableDirectives;
 use Tuxxedo\View\Lumi\Library\Filter\CustomFilter;
 use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
 use Tuxxedo\View\Lumi\Library\Filter\FilterProviderInterface;
@@ -581,7 +581,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
             if ($this->defaultDirectives !== DefaultDirectives::defaults()) {
                 $compiler = Compiler::createWithDefaultProviders(
                     state: new CompilerState(
-                        directives: new CompilerDirectives(
+                        directives: new MutableDirectives(
                             directives: $this->defaultDirectives,
                         ),
                     ),

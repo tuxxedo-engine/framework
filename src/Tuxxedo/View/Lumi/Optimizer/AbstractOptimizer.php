@@ -13,10 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Optimizer;
 
-use Tuxxedo\View\Lumi\Compiler\CompilerDirectives;
-use Tuxxedo\View\Lumi\Compiler\CompilerDirectivesInterface;
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
+use Tuxxedo\View\Lumi\Library\Directive\MutableDirectives;
+use Tuxxedo\View\Lumi\Library\Directive\MutableDirectivesInterface;
 use Tuxxedo\View\Lumi\Optimizer\Evaluator\Evaluator;
 use Tuxxedo\View\Lumi\Optimizer\Evaluator\EvaluatorInterface;
 use Tuxxedo\View\Lumi\Optimizer\Scope\Scope;
@@ -36,7 +36,7 @@ use Tuxxedo\View\Lumi\Syntax\Type;
 abstract class AbstractOptimizer implements OptimizerInterface
 {
     protected readonly EvaluatorInterface $evaluator;
-    protected private(set) CompilerDirectivesInterface&DirectivesInterface $directives;
+    protected private(set) MutableDirectivesInterface&DirectivesInterface $directives;
     protected private(set) ScopeInterface $scope;
 
     /**
@@ -47,7 +47,7 @@ abstract class AbstractOptimizer implements OptimizerInterface
     public function __construct(
         ?EvaluatorInterface $evaluator = null,
     ) {
-        $this->directives = CompilerDirectives::createWithDefaults();
+        $this->directives = MutableDirectives::createWithDefaults();
         $this->evaluator = $evaluator ?? new Evaluator();
         $this->scope = new Scope(
             evaluator: $this->evaluator,
@@ -267,7 +267,7 @@ abstract class AbstractOptimizer implements OptimizerInterface
         $oldStream = clone $stream;
         $stream = static::optimizer($stream);
 
-        $this->directives = CompilerDirectives::createWithDefaults();
+        $this->directives = MutableDirectives::createWithDefaults();
 
         return OptimizerResult::create(
             oldStream: $oldStream,
