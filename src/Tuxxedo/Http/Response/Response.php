@@ -375,8 +375,6 @@ class Response implements ResponseInterface
     public function withBody(
         StreamInterface|string $body,
     ): static {
-        // @todo Body cloning may be impossible with streams because they may be resources, sigh
-
         return clone (
             $this,
             [
