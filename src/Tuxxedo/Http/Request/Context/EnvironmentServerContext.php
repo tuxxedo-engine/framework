@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request\Context;
 
+use Tuxxedo\Http\HttpVersion;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Http\WeightedHeader;
 
@@ -27,6 +28,17 @@ class EnvironmentServerContext implements ServerContextInterface
     public bool $ajax {
         get {
             return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest';
+        }
+    }
+
+    public HttpVersion $protocolVersion {
+        get {
+            /** @var string|null $protocol */
+            $protocol = $_SERVER['SERVER_PROTOCOL'] ?? null;
+
+            return $protocol !== null
+                ? (HttpVersion::tryFrom($protocol) ?? HttpVersion::V1_1)
+                : HttpVersion::V1_1;
         }
     }
 

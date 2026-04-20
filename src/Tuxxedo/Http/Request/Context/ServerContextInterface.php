@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request\Context;
 
+use Tuxxedo\Http\HttpVersion;
 use Tuxxedo\Http\Method;
 
 interface ServerContextInterface
@@ -22,6 +23,10 @@ interface ServerContextInterface
     }
 
     public bool $ajax {
+        get;
+    }
+
+    public HttpVersion $protocolVersion {
         get;
     }
 
