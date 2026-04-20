@@ -214,7 +214,6 @@ class ContainerTest extends TestCase
             class: PersistentService::class,
             initializer: static fn (): PersistentService => new PersistentService(),
             bindInterfaces: false,
-            bindParent: false,
         );
 
         self::assertInstanceOf(PersistentService::class, $container->resolve(PersistentService::class));

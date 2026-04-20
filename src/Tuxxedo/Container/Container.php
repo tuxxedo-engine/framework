@@ -55,7 +55,7 @@ class Container implements ContainerInterface
         Lifecycle $lifecycle,
         ?\Closure $initializer = null,
         bool $bindInterfaces = true,
-        bool $bindParent = true,
+        bool $bindParent = false,
     ): static {
         $className = \is_object($class) ? $class::class : $class;
 
@@ -105,7 +105,7 @@ class Container implements ContainerInterface
     public function transient(
         string|object $class,
         bool $bindInterfaces = true,
-        bool $bindParent = true,
+        bool $bindParent = false,
     ): static {
         return $this->register(
             class: $class,
@@ -127,7 +127,7 @@ class Container implements ContainerInterface
         string $class,
         \Closure $initializer,
         bool $bindInterfaces = true,
-        bool $bindParent = true,
+        bool $bindParent = false,
     ): static {
         return $this->register(
             class: $class,
@@ -146,7 +146,7 @@ class Container implements ContainerInterface
     public function persistent(
         string|object $class,
         bool $bindInterfaces = true,
-        bool $bindParent = true,
+        bool $bindParent = false,
     ): static {
         return $this->register(
             class: $class,
@@ -168,7 +168,7 @@ class Container implements ContainerInterface
         string $class,
         \Closure $initializer,
         bool $bindInterfaces = true,
-        bool $bindParent = true,
+        bool $bindParent = false,
     ): static {
         return $this->register(
             class: $class,
@@ -261,7 +261,6 @@ class Container implements ContainerInterface
                         class: $className,
                         lifecycle: $maskedLifecycle,
                         bindInterfaces: false,
-                        bindParent: false,
                     );
 
                     $lifecycle = $maskedLifecycle;

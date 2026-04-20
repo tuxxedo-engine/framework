@@ -23,7 +23,7 @@ interface ContainerInterface
     public function transient(
         string|object $class,
         bool $bindInterfaces = true,
-        bool $bindParent = true,
+        bool $bindParent = false,
     ): static;
 
     /**
@@ -38,7 +38,7 @@ interface ContainerInterface
         string $class,
         \Closure $initializer,
         bool $bindInterfaces = true,
-        bool $bindParent = true,
+        bool $bindParent = false,
     ): static;
 
     /**
@@ -49,7 +49,7 @@ interface ContainerInterface
     public function persistent(
         string|object $class,
         bool $bindInterfaces = true,
-        bool $bindParent = true,
+        bool $bindParent = false,
     ): static;
 
     /**
@@ -64,7 +64,7 @@ interface ContainerInterface
         string $class,
         \Closure $initializer,
         bool $bindInterfaces = true,
-        bool $bindParent = true,
+        bool $bindParent = false,
     ): static;
 
     /**
