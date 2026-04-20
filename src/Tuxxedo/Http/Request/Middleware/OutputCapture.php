@@ -16,7 +16,7 @@ namespace Tuxxedo\Http\Request\Middleware;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
-#[\Attribute(flags: \Attribute::TARGET_METHOD)]
+#[\Attribute(flags: \Attribute::TARGET_CLASS | \Attribute::TARGET_METHOD)]
 class OutputCapture implements MiddlewareInterface
 {
     public function handle(

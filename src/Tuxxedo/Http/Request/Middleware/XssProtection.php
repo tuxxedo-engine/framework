@@ -18,7 +18,7 @@ use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
-#[\Attribute(flags: \Attribute::TARGET_METHOD)]
+#[\Attribute(flags: \Attribute::TARGET_CLASS | \Attribute::TARGET_METHOD)]
 class XssProtection implements MiddlewareInterface
 {
     /**
@@ -87,9 +87,6 @@ class XssProtection implements MiddlewareInterface
         RequestInterface $request,
         MiddlewareInterface $next,
     ): ResponseInterface {
-        return $next->handle($request, $next)
-            ->withHeaders(
-                $this->getHeaders(),
-            );
+        return $next->handle($request, $next)->withHeaders($this->getHeaders());
     }
 }

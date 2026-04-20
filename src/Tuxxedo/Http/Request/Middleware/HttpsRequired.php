@@ -18,7 +18,7 @@ use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseCode;
 use Tuxxedo\Http\Response\ResponseInterface;
 
-#[\Attribute(flags: \Attribute::TARGET_METHOD)]
+#[\Attribute(flags: \Attribute::TARGET_CLASS | \Attribute::TARGET_METHOD)]
 class HttpsRequired implements MiddlewareInterface
 {
     public function __construct(
