@@ -14,19 +14,21 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Compiler;
 
 use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
+use Tuxxedo\View\Lumi\Library\Directive\MutableDirectives;
+use Tuxxedo\View\Lumi\Library\Directive\MutableDirectivesInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
 
 class CompilerState implements CompilerStateInterface
 {
     public private(set) ?NodeScope $expects = null;
-    public readonly DirectivesInterface&CompilerDirectivesInterface $directives;
+    public readonly DirectivesInterface&MutableDirectivesInterface $directives;
     public private(set) int $flags = 0;
 
     public function __construct(
-        (DirectivesInterface&CompilerDirectivesInterface)|null $directives = null,
+        (DirectivesInterface&MutableDirectivesInterface)|null $directives = null,
     ) {
-        $this->directives = $directives ?? CompilerDirectives::createWithDefaults();
+        $this->directives = $directives ?? MutableDirectives::createWithDefaults();
     }
 
     public function hasFlag(
