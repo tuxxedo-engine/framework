@@ -63,7 +63,8 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
     public static function createFromConfigFile(
         string $file,
     ): static {
-        $config = Config::createFromFile($file);
+        $container = new Container();
+        $config = Config::createFromFile($container, $file);
 
         /** @var static */
         return (new static(
@@ -72,13 +73,15 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
             appProfile: $config->getEnum('app.profile', Profile::class),
             appUrl: $config->getString('app.url'),
         ))
+            ->withContainer($container)
             ->withConfig($config);
     }
 
     public static function createFromConfigDirectory(
         string $directory,
     ): static {
-        $config = Config::createFromDirectory($directory);
+        $container = new Container();
+        $config = Config::createFromDirectory($container, $directory);
 
         /** @var static */
         return (new static(
@@ -87,6 +90,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
             appProfile: $config->getEnum('app.profile', Profile::class),
             appUrl: $config->getString('app.url'),
         ))
+            ->withContainer($container)
             ->withConfig($config);
     }
 

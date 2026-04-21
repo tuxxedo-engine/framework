@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Config;
 
 use Tuxxedo\Collection\FileCollection;
+use Tuxxedo\Container\ContainerInterface;
 
 class Config implements ConfigInterface
 {
@@ -29,12 +30,23 @@ class Config implements ConfigInterface
      * @return array<mixed>
      */
     protected static function isolatedInclude(
+        ContainerInterface $container,
         string $configFileName,
     ): array {
-        return (static fn (): array => (array) require $configFileName)();
+        return (static function () use ($configFileName, $container): array {
+            $config = require $configFileName;
+
+            if ($config instanceof \Closure) {
+                /** @var \Closure(): mixed $config */
+                return (array) $container->call($config);
+            }
+
+            return (array) $config;
+        })();
     }
 
     public static function createFromDirectory(
+        ContainerInterface $container,
         string $directory,
     ): static {
         $directives = [];
@@ -54,11 +66,11 @@ class Config implements ConfigInterface
                 }
 
                 /** @var array<mixed> $ref */
-                $ref[$leaf] = static::isolatedInclude($configFile);
+                $ref[$leaf] = static::isolatedInclude($container, $configFile);
 
                 unset($ref);
             } else {
-                $directives[$index] = static::isolatedInclude($configFile);
+                $directives[$index] = static::isolatedInclude($container, $configFile);
             }
         }
 
@@ -68,11 +80,12 @@ class Config implements ConfigInterface
     }
 
     public static function createFromFile(
+        ContainerInterface $container,
         string $file,
     ): static {
         return new static(
             directives: [
-                ...static::isolatedInclude($file),
+                ...static::isolatedInclude($container, $file),
             ],
         );
     }

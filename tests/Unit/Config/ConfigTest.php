@@ -16,12 +16,14 @@ namespace Unit\Config;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Config\Config;
 use Tuxxedo\Config\ConfigException;
+use Tuxxedo\Container\Container;
 use Unit\Fixture\Config\SecondTestEnum;
 use Unit\Fixture\Config\TestEnum;
 
 class ConfigTest extends TestCase
 {
     private const string SINGLE_FILE = __DIR__ . '/../Fixture/Config/single.php';
+    private const string CLOSURE_FILE = __DIR__ . '/../Fixture/Config/app.php';
     private const string DIRECTORY = __DIR__ . '/../Fixture/Config/Many/';
 
     public function testCreateManually(): void
@@ -37,7 +39,7 @@ class ConfigTest extends TestCase
 
     public function testCreateFromFile(): void
     {
-        $config = Config::createFromFile(self::SINGLE_FILE);
+        $config = Config::createFromFile(new Container(), self::SINGLE_FILE);
 
         self::assertTrue($config->isString('types.string'));
         self::assertTrue($config->isInt('types.int'));
@@ -57,7 +59,7 @@ class ConfigTest extends TestCase
 
     public function testCreateFromDirectory(): void
     {
-        $config = Config::createFromDirectory(self::DIRECTORY);
+        $config = Config::createFromDirectory(new Container(), self::DIRECTORY);
 
         self::assertTrue($config->has('credentials.port'));
         self::assertFalse($config->has('credential.port'));
@@ -65,7 +67,7 @@ class ConfigTest extends TestCase
 
     public function testGetStringError(): void
     {
-        $config = Config::createFromFile(self::SINGLE_FILE);
+        $config = Config::createFromFile(new Container(), self::SINGLE_FILE);
 
         $this->expectException(ConfigException::class);
         $config->getString('types.int');
@@ -73,7 +75,7 @@ class ConfigTest extends TestCase
 
     public function testGetIntError(): void
     {
-        $config = Config::createFromFile(self::SINGLE_FILE);
+        $config = Config::createFromFile(new Container(), self::SINGLE_FILE);
 
         $this->expectException(ConfigException::class);
         $config->getInt('types.float');
@@ -81,7 +83,7 @@ class ConfigTest extends TestCase
 
     public function testGetFloatError(): void
     {
-        $config = Config::createFromFile(self::SINGLE_FILE);
+        $config = Config::createFromFile(new Container(), self::SINGLE_FILE);
 
         $this->expectException(ConfigException::class);
         $config->getFloat('types.bool');
@@ -89,7 +91,7 @@ class ConfigTest extends TestCase
 
     public function testGetBoolError(): void
     {
-        $config = Config::createFromFile(self::SINGLE_FILE);
+        $config = Config::createFromFile(new Container(), self::SINGLE_FILE);
 
         $this->expectException(ConfigException::class);
         $config->getBool('types.null');
@@ -97,7 +99,7 @@ class ConfigTest extends TestCase
 
     public function testPath(): void
     {
-        $config = Config::createFromFile(self::SINGLE_FILE);
+        $config = Config::createFromFile(new Container(), self::SINGLE_FILE);
 
         self::assertIsArray($config->path('types'));
         self::assertIsString($config->path('a'));
@@ -109,7 +111,7 @@ class ConfigTest extends TestCase
 
     public function testEnum(): void
     {
-        $config = Config::createFromFile(self::SINGLE_FILE);
+        $config = Config::createFromFile(new Container(), self::SINGLE_FILE);
 
         self::assertSame($config->path('enum.foo'), TestEnum::FOO);
         self::assertSame($config->getEnum('enum.bar', TestEnum::class), TestEnum::BAR);
@@ -120,7 +122,7 @@ class ConfigTest extends TestCase
 
     public function testSection(): void
     {
-        $config = Config::createFromDirectory(self::DIRECTORY);
+        $config = Config::createFromDirectory(new Container(), self::DIRECTORY);
         $dirs = $config->section('other.dirs');
 
         self::assertTrue($dirs->has('temp'));
@@ -133,5 +135,20 @@ class ConfigTest extends TestCase
 
         $this->expectException(ConfigException::class);
         $config->section('credentials.port');
+    }
+
+    public function testContainerResolvedFile(): void
+    {
+        $config = Config::createFromFile(new Container(), self::CLOSURE_FILE);
+
+        self::assertSame(
+            $config->getString('name'),
+            'KalleLoad',
+        );
+
+        self::assertSame(
+            $config->getString('version'),
+            '2.0.0',
+        );
     }
 }
