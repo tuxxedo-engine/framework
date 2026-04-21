@@ -33,16 +33,16 @@ class Config implements ConfigInterface
         ContainerInterface $container,
         string $configFileName,
     ): array {
-        return (static function () use ($configFileName, $container): array {
-            $config = require $configFileName;
+        $config = (static function (string $configFileName): mixed {
+            return require $configFileName;
+        })($configFileName);
 
-            if ($config instanceof \Closure) {
-                /** @var \Closure(): mixed $config */
-                return (array) $container->call($config);
-            }
+        if ($config instanceof \Closure) {
+            /** @var \Closure(): mixed $config */
+            return (array) $container->call($config);
+        }
 
-            return (array) $config;
-        })();
+        return (array) $config;
     }
 
     public static function createFromDirectory(
