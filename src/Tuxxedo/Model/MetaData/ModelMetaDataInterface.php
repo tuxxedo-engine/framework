@@ -25,4 +25,10 @@ interface ModelMetaDataInterface
     public string $table {
         get;
     }
+
+    // @todo Implement columns
+    // @todo Implement primary keys
+    // @todo Implement composite keys
+    // @todo Implement relations
+    // @todo Implement identifiers
 }
