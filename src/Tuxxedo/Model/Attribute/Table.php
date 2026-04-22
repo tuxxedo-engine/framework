@@ -16,9 +16,11 @@ namespace Tuxxedo\Model\Attribute;
 #[\Attribute(flags: \Attribute::TARGET_CLASS)]
 readonly class Table
 {
+    /**
+     * @param non-empty-string $name
+     */
     public function __construct(
         public string $name,
-        public bool $readOnly = false,
     ) {
     }
 }

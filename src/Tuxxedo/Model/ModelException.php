@@ -15,12 +15,29 @@ namespace Tuxxedo\Model;
 
 class ModelException extends \Exception
 {
+    /**
+     * @param class-string $modelClass
+     */
     public static function fromInvalidModelClass(
         string $modelClass,
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s"',
+                'Invalid model class "%s": Class does not exist or is not a non-abstract class',
+                $modelClass,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromMissingTableAttribute(
+        string $modelClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Model is missing the #[Table] attribute',
                 $modelClass,
             ),
         );

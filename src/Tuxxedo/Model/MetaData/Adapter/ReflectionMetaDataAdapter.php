@@ -13,9 +13,11 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\MetaData\Adapter;
 
+use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\MetaData\ModelMetaData;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 use Tuxxedo\Model\ModelException;
+use Tuxxedo\Reflection\ClassReflector;
 
 class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
 {
@@ -28,14 +30,13 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         string $model,
     ): ModelMetaDataInterface {
         try {
-            // @todo Class reflection in Reflection namespace?
-            $reflection = new \ReflectionClass($model);
+            $class = new ClassReflector(new \ReflectionClass($model));
 
             if (
-                $reflection->isAbstract() ||
-                $reflection->isTrait() ||
-                $reflection->isInterface() ||
-                $reflection->isEnum()
+                $class->reflector->isAbstract() ||
+                $class->reflector->isTrait() ||
+                $class->reflector->isInterface() ||
+                $class->reflector->isEnum()
             ) {
                 throw new \ReflectionException();
             }
@@ -47,18 +48,22 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
 
         return new ModelMetaData(
             model: $model,
-            table: $this->getTable($reflection),
+            table: $this->getTable($class),
         );
     }
 
     /**
-     * @param \ReflectionClass<object> $reflection
-     *
-     * @todo Add @throw-tag
+     * @throws ModelException
      */
     private function getTable(
-        \ReflectionClass $reflection,
+        ClassReflector $class,
     ): string {
-        return '';
+        try {
+            return $class->getAttribute(Table::class)->name;
+        } catch (\ReflectionException) {
+            throw ModelException::fromMissingTableAttribute(
+                modelClass: $class->reflector->getName(),
+            );
+        }
     }
 }
