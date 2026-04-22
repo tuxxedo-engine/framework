@@ -17,6 +17,7 @@ use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Query\Builder\WhereBuilderInterface;
+use Tuxxedo\Model\MetaData\MetaDataInterface;
 
 // @todo Support relations
 // @todo Support CreatedAt, UpdatedAt & DeletedAt contracts
@@ -24,6 +25,10 @@ use Tuxxedo\Database\Query\Builder\WhereBuilderInterface;
 interface ModelsManagerInterface
 {
     public ConnectionInterface $connection {
+        get;
+    }
+
+    public MetaDataInterface $metaData {
         get;
     }
 

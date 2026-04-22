@@ -16,6 +16,7 @@ namespace Tuxxedo\Model\Attribute\Connection;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
 use Tuxxedo\Database\ConnectionManagerInterface;
+use Tuxxedo\Model\MetaData\MetaDataInterface;
 use Tuxxedo\Model\ModelsManager;
 use Tuxxedo\Model\ModelsManagerInterface;
 use Tuxxedo\Reflection\ParameterInterface;
@@ -32,6 +33,7 @@ readonly class ModelDefaultConnection implements DependencyResolverInterface
     ): ModelsManagerInterface {
         return new ModelsManager(
             connection: $container->resolve(ConnectionManagerInterface::class)->getDefaultConnection(),
+            metaData: $container->resolve(MetaDataInterface::class),
         );
     }
 }

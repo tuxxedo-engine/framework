@@ -18,11 +18,13 @@ use Tuxxedo\Container\DefaultInitializer;
 use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Query\Builder\WhereBuilderInterface;
+use Tuxxedo\Model\MetaData\MetaDataInterface;
 
 #[DefaultInitializer(
     static function (ContainerInterface $container): ModelsManagerInterface {
         return new ModelsManager(
             connection: $container->resolve(ConnectionManagerInterface::class)->getDefaultConnection(),
+            metaData: $container->resolve(MetaDataInterface::class),
         );
     },
 )]
@@ -30,6 +32,7 @@ class ModelsManager implements ModelsManagerInterface
 {
     public function __construct(
         public readonly ConnectionInterface $connection,
+        public readonly MetaDataInterface $metaData,
     ) {
     }
 
