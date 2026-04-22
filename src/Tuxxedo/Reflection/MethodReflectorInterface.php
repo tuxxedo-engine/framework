@@ -18,4 +18,11 @@ interface MethodReflectorInterface extends AttributeInterface
     public \ReflectionMethod $reflector {
         get;
     }
+
+    /**
+     * @throws \ReflectionException
+     */
+    public function parameter(
+        string $name,
+    ): ParameterReflectorInterface;
 }

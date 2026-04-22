@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Unit\Reflection;
 
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Reflection\MethodReflectorReflector;
+use Tuxxedo\Reflection\MethodReflector;
 use Unit\Fixture\Reflection\AnotherSimpleAttribute;
 use Unit\Fixture\Reflection\MethodIntrospector;
 use Unit\Fixture\Reflection\SimpleAttribute;
@@ -23,7 +23,7 @@ class ReflectionMethodTest extends TestCase
 {
     public function testParameterHasAttribute(): void
     {
-        $reflection = new MethodReflectorReflector(
+        $reflection = new MethodReflector(
             reflector: (new \ReflectionClass(MethodIntrospector::class)->getMethod('one')),
         );
 
@@ -33,7 +33,7 @@ class ReflectionMethodTest extends TestCase
 
     public function testParameterGetAttributeAlwaysFirst(): void
     {
-        $reflection = new MethodReflectorReflector(
+        $reflection = new MethodReflector(
             reflector: (new \ReflectionClass(MethodIntrospector::class)->getMethod('two')),
         );
 
@@ -42,7 +42,7 @@ class ReflectionMethodTest extends TestCase
 
     public function testMethodGetAttributeFailure(): void
     {
-        $reflection = new MethodReflectorReflector(
+        $reflection = new MethodReflector(
             reflector: (new \ReflectionClass(MethodIntrospector::class)->getMethod('one')),
         );
 
@@ -53,7 +53,7 @@ class ReflectionMethodTest extends TestCase
 
     public function testMethodGetAttributes(): void
     {
-        $reflection = new MethodReflectorReflector(
+        $reflection = new MethodReflector(
             reflector: (new \ReflectionClass(MethodIntrospector::class)->getMethod('two')),
         );
 

@@ -16,32 +16,35 @@ namespace Tuxxedo\Reflection;
 interface AttributeHelperInterface
 {
     /**
+     * @param \ReflectionClass<object>|\ReflectionParameter|\ReflectionProperty|\ReflectionMethod $reflector
      * @param class-string $attribute
      */
     public function hasAttribute(
-        \ReflectionParameter|\ReflectionProperty|\ReflectionMethod $reflector,
+        \ReflectionClass|\ReflectionParameter|\ReflectionProperty|\ReflectionMethod $reflector,
         string $attribute,
     ): bool;
 
     /**
      * @template TAttributeName of object
      *
+     * @param \ReflectionClass<object>|\ReflectionParameter|\ReflectionProperty|\ReflectionMethod $reflector
      * @param class-string<TAttributeName> $attribute
      * @return TAttributeName
      */
     public function getAttribute(
-        \ReflectionParameter|\ReflectionProperty|\ReflectionMethod $reflector,
+        \ReflectionClass|\ReflectionParameter|\ReflectionProperty|\ReflectionMethod $reflector,
         string $attribute,
     ): object;
 
     /**
      * @template TAttributeName of object
      *
+     * @param \ReflectionClass<object>|\ReflectionParameter|\ReflectionProperty|\ReflectionMethod $reflector
      * @param class-string<TAttributeName> $attribute
      * @return \Generator<TAttributeName>
      */
     public function getAttributes(
-        \ReflectionParameter|\ReflectionProperty|\ReflectionMethod $reflector,
+        \ReflectionClass|\ReflectionParameter|\ReflectionProperty|\ReflectionMethod $reflector,
         string $attribute,
     ): \Generator;
 }

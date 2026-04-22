@@ -13,12 +13,27 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Reflection;
 
-readonly class MethodReflectorReflector implements MethodReflectorInterface
+readonly class MethodReflector implements MethodReflectorInterface
 {
     public function __construct(
         public \ReflectionMethod $reflector,
         private AttributeHelperInterface $attributeHelper = new AttributeHelper(),
     ) {
+    }
+
+    public function parameter(
+        string $name,
+    ): ParameterReflectorInterface {
+        foreach ($this->reflector->getParameters() as $parameter) {
+            if ($parameter->getName() === $name) {
+                return new ParameterReflector(
+                    reflector: $parameter,
+                    attributeHelper: $this->attributeHelper,
+                );
+            }
+        }
+
+        throw new \ReflectionException();
     }
 
     public function hasAttribute(
