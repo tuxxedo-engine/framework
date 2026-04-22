@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
-use Tuxxedo\Reflection\ParameterInterface;
+use Tuxxedo\Reflection\ParameterReflectorInterface;
 
 /**
  * @template TType
@@ -27,6 +27,6 @@ interface DependencyResolverInterface
      */
     public function resolve(
         ContainerInterface $container,
-        ParameterInterface $parameter,
+        ParameterReflectorInterface $parameter,
     ): mixed;
 }

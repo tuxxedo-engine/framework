@@ -18,7 +18,7 @@ use Tuxxedo\Container\DependencyResolverInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\InputContext;
 use Tuxxedo\Http\Request\RequestInterface;
-use Tuxxedo\Reflection\ParameterInterface;
+use Tuxxedo\Reflection\ParameterReflectorInterface;
 
 /**
  * @implements DependencyResolverInterface<object>
@@ -42,7 +42,7 @@ class JsonMapTo implements DependencyResolverInterface
      */
     public function resolve(
         ContainerInterface $container,
-        ParameterInterface $parameter,
+        ParameterReflectorInterface $parameter,
     ): object {
         $request = $container->resolve(RequestInterface::class);
         $context = $request->input($this->context ?? InputContext::fromMethod($request->server->method));

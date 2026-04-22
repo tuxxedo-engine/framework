@@ -15,7 +15,7 @@ namespace Tuxxedo\Container\Resolver;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
-use Tuxxedo\Reflection\ParameterInterface;
+use Tuxxedo\Reflection\ParameterReflectorInterface;
 
 /**
  * @implements DependencyResolverInterface<mixed>
@@ -30,7 +30,7 @@ class Glue implements DependencyResolverInterface
 
     public function resolve(
         ContainerInterface $container,
-        ParameterInterface $parameter,
+        ParameterReflectorInterface $parameter,
     ): mixed {
         /** @var \Closure(): mixed */
         $binder = $this->binder;

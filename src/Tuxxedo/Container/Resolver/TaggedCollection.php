@@ -16,7 +16,7 @@ namespace Tuxxedo\Container\Resolver;
 use Tuxxedo\Collection\ImmutableCollection;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
-use Tuxxedo\Reflection\ParameterInterface;
+use Tuxxedo\Reflection\ParameterReflectorInterface;
 
 /**
  * @template TClassName of object
@@ -36,7 +36,7 @@ class TaggedCollection implements DependencyResolverInterface
 
     public function resolve(
         ContainerInterface $container,
-        ParameterInterface $parameter,
+        ParameterReflectorInterface $parameter,
     ): ImmutableCollection {
         /** @var ImmutableCollection<int, TClassName> */
         return new ImmutableCollection($container->resolveTagged($this->className));

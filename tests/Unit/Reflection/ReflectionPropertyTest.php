@@ -15,7 +15,7 @@ namespace Unit\Reflection;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Reflection\Property;
+use Tuxxedo\Reflection\PropertyReflector;
 use Unit\Fixture\Reflection\AnotherSimpleAttribute;
 use Unit\Fixture\Reflection\PropertyIntrospector;
 use Unit\Fixture\Reflection\SimpleAttribute;
@@ -84,7 +84,7 @@ class ReflectionPropertyTest extends TestCase
         bool $expectsDefaultType,
         bool $expectsNullable,
     ): void {
-        $reflection = new Property(
+        $reflection = new PropertyReflector(
             reflector: (new \ReflectionClass(PropertyIntrospector::class)->getProperty($property)),
         );
 
@@ -95,7 +95,7 @@ class ReflectionPropertyTest extends TestCase
 
     public function testPropertyHasAttribute(): void
     {
-        $reflection = new Property(
+        $reflection = new PropertyReflector(
             reflector: (new \ReflectionClass(PropertyIntrospector::class)->getProperty('one')),
         );
 
@@ -105,7 +105,7 @@ class ReflectionPropertyTest extends TestCase
 
     public function testPropertyGetAttribute(): void
     {
-        $reflection = new Property(
+        $reflection = new PropertyReflector(
             reflector: (new \ReflectionClass(PropertyIntrospector::class)->getProperty('one')),
         );
 
@@ -114,7 +114,7 @@ class ReflectionPropertyTest extends TestCase
 
     public function testPropertyGetAttributes(): void
     {
-        $reflection = new Property(
+        $reflection = new PropertyReflector(
             reflector: (new \ReflectionClass(PropertyIntrospector::class)->getProperty('two')),
         );
 

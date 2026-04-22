@@ -19,7 +19,7 @@ use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 use Tuxxedo\Model\ModelsManager;
 use Tuxxedo\Model\ModelsManagerInterface;
-use Tuxxedo\Reflection\ParameterInterface;
+use Tuxxedo\Reflection\ParameterReflectorInterface;
 
 /**
  * @implements DependencyResolverInterface<ModelsManagerInterface>
@@ -29,7 +29,7 @@ readonly class ModelDefaultConnection implements DependencyResolverInterface
 {
     public function resolve(
         ContainerInterface $container,
-        ParameterInterface $parameter,
+        ParameterReflectorInterface $parameter,
     ): ModelsManagerInterface {
         return new ModelsManager(
             connection: $container->resolve(ConnectionManagerInterface::class)->getDefaultConnection(),

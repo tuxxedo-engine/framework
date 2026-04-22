@@ -15,7 +15,7 @@ namespace Unit\Reflection;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Reflection\Parameter;
+use Tuxxedo\Reflection\ParameterReflector;
 use Unit\Fixture\Reflection\AnotherSimpleAttribute;
 use Unit\Fixture\Reflection\DefaultType;
 use Unit\Fixture\Reflection\DefaultTypeInterfaceA;
@@ -60,7 +60,7 @@ class ReflectionParameterTest extends TestCase
         \Closure $object,
         bool $expected,
     ): void {
-        $reflection = new Parameter(
+        $reflection = new ParameterReflector(
             reflector: (new \ReflectionFunction($object)->getParameters()[0]),
         );
 
@@ -143,7 +143,7 @@ class ReflectionParameterTest extends TestCase
         \Closure $object,
         bool $expected,
     ): void {
-        $reflection = new Parameter(
+        $reflection = new ParameterReflector(
             reflector: (new \ReflectionFunction($object)->getParameters()[0]),
         );
 
@@ -181,7 +181,7 @@ class ReflectionParameterTest extends TestCase
         \Closure $object,
         bool $expected,
     ): void {
-        $reflection = new Parameter(
+        $reflection = new ParameterReflector(
             reflector: (new \ReflectionFunction($object)->getParameters()[0]),
         );
 
@@ -195,7 +195,7 @@ class ReflectionParameterTest extends TestCase
         ): void {
         };
 
-        $reflection = new Parameter(
+        $reflection = new ParameterReflector(
             reflector: (new \ReflectionFunction($object)->getParameters()[0]),
         );
 
@@ -210,7 +210,7 @@ class ReflectionParameterTest extends TestCase
         ): void {
         };
 
-        $reflection = new Parameter(
+        $reflection = new ParameterReflector(
             reflector: (new \ReflectionFunction($object)->getParameters()[0]),
         );
 
@@ -224,7 +224,7 @@ class ReflectionParameterTest extends TestCase
         ): void {
         };
 
-        $reflection = new Parameter(
+        $reflection = new ParameterReflector(
             reflector: (new \ReflectionFunction($object)->getParameters()[0]),
         );
 
@@ -240,7 +240,7 @@ class ReflectionParameterTest extends TestCase
         ): void {
         };
 
-        $reflection = new Parameter(
+        $reflection = new ParameterReflector(
             reflector: (new \ReflectionFunction($object)->getParameters()[0]),
         );
 

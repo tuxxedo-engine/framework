@@ -15,7 +15,7 @@ namespace Tuxxedo\View\Lumi;
 
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Reflection\Method;
+use Tuxxedo\Reflection\MethodReflectorReflector;
 use Tuxxedo\View\Lumi\Compiler\Compiler;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Compiler\CompilerState;
@@ -456,7 +456,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
         $instance = new \ReflectionObject($library);
 
         foreach ($instance->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
-            $method = new Method(
+            $method = new MethodReflectorReflector(
                 reflector: $method,
             );
 

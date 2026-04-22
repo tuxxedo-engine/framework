@@ -15,7 +15,7 @@ namespace Tuxxedo\Container\Resolver;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
-use Tuxxedo\Reflection\ParameterInterface;
+use Tuxxedo\Reflection\ParameterReflectorInterface;
 
 /**
  * @template TClassName of object
@@ -38,7 +38,7 @@ class Tagged implements DependencyResolverInterface
      */
     public function resolve(
         ContainerInterface $container,
-        ParameterInterface $parameter,
+        ParameterReflectorInterface $parameter,
     ): array {
         return $container->resolveTagged($this->className);
     }

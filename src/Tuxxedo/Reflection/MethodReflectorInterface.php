@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Reflection;
 
-interface MethodInterface extends AttributeInterface
+interface MethodReflectorInterface extends AttributeInterface
 {
     public \ReflectionMethod $reflector {
         get;

@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Reflection;
 
-readonly class Method implements MethodInterface
+readonly class MethodReflectorReflector implements MethodReflectorInterface
 {
     public function __construct(
         public \ReflectionMethod $reflector,

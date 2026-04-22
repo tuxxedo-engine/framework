@@ -17,7 +17,7 @@ use Tuxxedo\Application\Profile;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
 use Tuxxedo\Http\Kernel\KernelInterface;
-use Tuxxedo\Reflection\ParameterInterface;
+use Tuxxedo\Reflection\ParameterReflectorInterface;
 
 /**
  * @implements DependencyResolverInterface<Profile>
@@ -27,7 +27,7 @@ class AppProfile implements DependencyResolverInterface
 {
     public function resolve(
         ContainerInterface $container,
-        ParameterInterface $parameter,
+        ParameterReflectorInterface $parameter,
     ): mixed {
         return $container->resolve(KernelInterface::class)->appProfile;
     }

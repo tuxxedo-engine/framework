@@ -17,7 +17,7 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Request\RequestInterface;
-use Tuxxedo\Reflection\ParameterInterface;
+use Tuxxedo\Reflection\ParameterReflectorInterface;
 
 /**
  * @implements DependencyResolverInterface<array<object>>
@@ -41,7 +41,7 @@ class JsonBodyMapToArrayOf implements DependencyResolverInterface
      */
     public function resolve(
         ContainerInterface $container,
-        ParameterInterface $parameter,
+        ParameterReflectorInterface $parameter,
     ): array {
         try {
             return $container->resolve(RequestInterface::class)->body->jsonMapToArrayOf(
