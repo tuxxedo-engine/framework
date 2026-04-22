@@ -24,7 +24,7 @@ use Tuxxedo\Reflection\ParameterReflectorInterface;
 /**
  * @implements DependencyResolverInterface<ModelsManagerInterface>
  */
-#[\Attribute(\Attribute::TARGET_PARAMETER)]
+#[\Attribute(flags: \Attribute::TARGET_PARAMETER)]
 readonly class ModelDefaultReadConnection implements DependencyResolverInterface
 {
     public function resolve(

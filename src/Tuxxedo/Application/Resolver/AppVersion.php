@@ -21,7 +21,7 @@ use Tuxxedo\Reflection\ParameterReflectorInterface;
 /**
  * @implements DependencyResolverInterface<string>
  */
-#[\Attribute(\Attribute::TARGET_PARAMETER)]
+#[\Attribute(flags: \Attribute::TARGET_PARAMETER)]
 class AppVersion implements DependencyResolverInterface
 {
     public function resolve(

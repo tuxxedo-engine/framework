@@ -22,7 +22,7 @@ use Tuxxedo\Reflection\ParameterReflectorInterface;
 /**
  * @implements DependencyResolverInterface<ConnectionInterface>
  */
-#[\Attribute(\Attribute::TARGET_PARAMETER)]
+#[\Attribute(flags: \Attribute::TARGET_PARAMETER)]
 class NamedConnection implements DependencyResolverInterface
 {
     public function __construct(

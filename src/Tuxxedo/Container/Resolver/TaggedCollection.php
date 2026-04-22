@@ -23,7 +23,7 @@ use Tuxxedo\Reflection\ParameterReflectorInterface;
  *
  * @implements DependencyResolverInterface<ImmutableCollection<int, TClassName>>
  */
-#[\Attribute(\Attribute::TARGET_PARAMETER)]
+#[\Attribute(flags: \Attribute::TARGET_PARAMETER)]
 class TaggedCollection implements DependencyResolverInterface
 {
     /**

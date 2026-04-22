@@ -21,7 +21,7 @@ use Unit\Fixture\Container\UnresolvableDependencyOne;
 /**
  * @implements DependencyResolverInterface<UnresolvableDependencyOne>
  */
-#[\Attribute(\Attribute::TARGET_PARAMETER)]
+#[\Attribute(flags: \Attribute::TARGET_PARAMETER)]
 class UnresolvableTypeResolver implements DependencyResolverInterface
 {
     public function resolve(

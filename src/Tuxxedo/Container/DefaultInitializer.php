@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
-#[\Attribute(\Attribute::TARGET_CLASS)]
+#[\Attribute(flags: \Attribute::TARGET_CLASS)]
 readonly class DefaultInitializer
 {
     /**
