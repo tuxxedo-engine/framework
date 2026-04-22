@@ -17,7 +17,7 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DefaultInitializer;
 use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Database\Driver\ConnectionInterface;
-use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
+use Tuxxedo\Database\Query\Builder\WhereBuilderInterface;
 
 #[DefaultInitializer(
     static function (ContainerInterface $container): ModelsManagerInterface {
@@ -51,7 +51,7 @@ class ModelsManager implements ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
-     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @param (\Closure(WhereBuilderInterface $builder): void)|null $criteria
      * @return TModel|null
      */
     public function find(
@@ -66,7 +66,7 @@ class ModelsManager implements ModelsManagerInterface
     /**
      * @template TModel of object
      * @param class-string<TModel> $class
-     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @param (\Closure(WhereBuilderInterface $builder): void)|null $criteria
      * @return TModel|null
      */
     public function findByIdentifier(
@@ -83,7 +83,7 @@ class ModelsManager implements ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
-     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @param (\Closure(WhereBuilderInterface $builder): void)|null $criteria
      * @return \Generator<TModel>
      */
     public function findAll(

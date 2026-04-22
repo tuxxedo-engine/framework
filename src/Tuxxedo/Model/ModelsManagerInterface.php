@@ -16,7 +16,7 @@ namespace Tuxxedo\Model;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Database\Driver\ConnectionInterface;
-use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
+use Tuxxedo\Database\Query\Builder\WhereBuilderInterface;
 
 // @todo Support relations
 // @todo Support CreatedAt, UpdatedAt & DeletedAt contracts
@@ -41,7 +41,7 @@ interface ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
-     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @param (\Closure(WhereBuilderInterface $builder): void)|null $criteria
      * @return TModel|null
      */
     public function find(
@@ -52,7 +52,7 @@ interface ModelsManagerInterface
     /**
      * @template TModel of object
      * @param class-string<TModel> $class
-     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @param (\Closure(WhereBuilderInterface $builder): void)|null $criteria
      * @return TModel|null
      */
     public function findByIdentifier(
@@ -65,7 +65,7 @@ interface ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
-     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @param (\Closure(WhereBuilderInterface $builder): void)|null $criteria
      * @return \Generator<TModel>
      */
     public function findAll(
