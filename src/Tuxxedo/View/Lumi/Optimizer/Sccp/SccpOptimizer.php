@@ -94,6 +94,8 @@ class SccpOptimizer extends AbstractOptimizer
         $this->scope->assign($node);
 
         if ($node->name instanceof IdentifierNode) {
+            // @todo This generates an infinite loop in hello_world_while.lumi because n -= 1 is
+            //       optimized into n = 4 so the do-while never actually causes n to be reduced
             $variable = $this->scope->get($node->name);
 
             if ($variable->hasComputedValue()) {
