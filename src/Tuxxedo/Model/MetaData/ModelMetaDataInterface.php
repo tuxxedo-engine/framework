@@ -16,6 +16,7 @@ namespace Tuxxedo\Model\MetaData;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\Identifier;
 
+// @todo Support Unique columns + CompositeKeys
 interface ModelMetaDataInterface
 {
     /**
