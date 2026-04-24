@@ -23,11 +23,34 @@ interface ClassReflectorInterface extends AttributeInterface
     }
 
     /**
+     * @var class-string
+     */
+    public string $name {
+        get;
+    }
+
+    /**
+     * @param int-mask-of<\ReflectionProperty::IS_*>|null $filter
+     * @return \Generator<PropertyReflectorInterface>
+     */
+    public function properties(
+        ?int $filter = null,
+    ): \Generator;
+
+    /**
      * @throws \ReflectionException
      */
     public function property(
         string $name,
     ): PropertyReflectorInterface;
+
+    /**
+     * @param int-mask-of<\ReflectionMethod::IS_*>|null $filter
+     * @return \Generator<MethodReflectorInterface>
+     */
+    public function methods(
+        ?int $filter = null,
+    ): \Generator;
 
     /**
      * @throws \ReflectionException

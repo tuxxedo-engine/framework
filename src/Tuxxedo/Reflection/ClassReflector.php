@@ -13,15 +13,29 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Reflection;
 
-readonly class ClassReflector implements ClassReflectorInterface
+class ClassReflector implements ClassReflectorInterface
 {
+    public string $name {
+        get {
+            return $this->name;
+        }
+    }
+
     /**
      * @param \ReflectionClass<object> $reflector
      */
     public function __construct(
-        public \ReflectionClass $reflector,
-        private AttributeHelperInterface $attributeHelper = new AttributeHelper(),
+        public readonly \ReflectionClass $reflector,
+        private readonly AttributeHelperInterface $attributeHelper = new AttributeHelper(),
     ) {
+    }
+
+    public function properties(
+        ?int $filter = null,
+    ): \Generator {
+        foreach ($this->reflector->getProperties($filter) as $property) {
+            yield $this->property($property->getName());
+        }
     }
 
     public function property(
@@ -31,6 +45,14 @@ readonly class ClassReflector implements ClassReflectorInterface
             reflector: $this->reflector->getProperty($name),
             attributeHelper: $this->attributeHelper,
         );
+    }
+
+    public function methods(
+        ?int $filter = null,
+    ): \Generator {
+        foreach ($this->reflector->getMethods($filter) as $method) {
+            yield $this->method($method->getName());
+        }
     }
 
     public function method(

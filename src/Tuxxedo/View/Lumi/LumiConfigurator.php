@@ -462,7 +462,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
             $callback = [
                 $library,
-                $method->reflector->getName(),
+                $method->name,
             ];
 
             if (!\is_callable($callback)) {

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\MetaData\Adapter;
 
+use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\MetaData\ModelMetaData;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
@@ -30,7 +31,9 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         string $model,
     ): ModelMetaDataInterface {
         try {
-            $class = new ClassReflector(new \ReflectionClass($model));
+            $class = new ClassReflector(
+                reflector: new \ReflectionClass($model),
+            );
 
             if (
                 $class->reflector->isAbstract() ||
@@ -46,9 +49,12 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             );
         }
 
+        $columns = $this->getColumns($class);
+
         return new ModelMetaData(
             model: $model,
             table: $this->getTable($class),
+            columns: $columns,
         );
     }
 
@@ -58,12 +64,49 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
     private function getTable(
         ClassReflector $class,
     ): string {
-        try {
-            return $class->getAttribute(Table::class)->name;
-        } catch (\ReflectionException) {
+        if (!$class->hasAttribute(Table::class)) {
             throw ModelException::fromMissingTableAttribute(
-                modelClass: $class->reflector->getName(),
+                modelClass: $class->name,
             );
         }
+
+        return $class->getAttribute(Table::class)->name;
+    }
+
+    /**
+     * @return non-empty-array<string, ColumnInterface>
+     *
+     * @throws ModelException
+     */
+    private function getColumns(
+        ClassReflector $class,
+    ): array {
+        $columns = [];
+
+        foreach ($class->properties() as $property) {
+            $propertyColumns = \iterator_to_array($property->getAttributes(ColumnInterface::class));
+            $propertyColumnsCount = \sizeof($propertyColumns);
+
+            if ($propertyColumnsCount === 0) {
+                continue;
+            }
+
+            if ($propertyColumnsCount > 1) {
+                throw ModelException::fromPropertyMayOnlyHaveOneColumn(
+                    modelClass: $class->name,
+                    property: $property->name,
+                );
+            }
+
+            $columns[$property->name] = $propertyColumns[0];
+        }
+
+        if (\sizeof($columns) === 0) {
+            throw ModelException::fromHasNoColumns(
+                modelClass: $class->name,
+            );
+        }
+
+        return $columns;
     }
 }

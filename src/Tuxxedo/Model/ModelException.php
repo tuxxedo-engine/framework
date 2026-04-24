@@ -42,4 +42,34 @@ class ModelException extends \Exception
             ),
         );
     }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromHasNoColumns(
+        string $modelClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Model does not have any #[Column] attributes',
+                $modelClass,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromPropertyMayOnlyHaveOneColumn(
+        string $modelClass,
+        string $property,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Property \$%s has more than one #[Column] attribute',
+                $modelClass,
+                $property,
+            ),
+        );
+    }
 }

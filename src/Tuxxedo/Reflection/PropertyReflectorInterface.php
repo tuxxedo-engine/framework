@@ -18,4 +18,8 @@ interface PropertyReflectorInterface extends TypeInterface, AttributeInterface
     public \ReflectionProperty $reflector {
         get;
     }
+
+    public string $name {
+        get;
+    }
 }

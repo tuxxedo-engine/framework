@@ -19,6 +19,15 @@ interface MethodReflectorInterface extends AttributeInterface
         get;
     }
 
+    public string $name {
+        get;
+    }
+
+    /**
+     * @return \Generator<ParameterReflectorInterface>
+     */
+    public function parameters(): \Generator;
+
     /**
      * @throws \ReflectionException
      */

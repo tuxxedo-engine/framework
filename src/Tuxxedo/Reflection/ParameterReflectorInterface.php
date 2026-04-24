@@ -18,4 +18,8 @@ interface ParameterReflectorInterface extends TypeInterface, AttributeInterface
     public \ReflectionParameter $reflector {
         get;
     }
+
+    public string $name {
+        get;
+    }
 }

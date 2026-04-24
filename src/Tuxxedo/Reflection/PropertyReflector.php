@@ -13,12 +13,18 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Reflection;
 
-readonly class PropertyReflector implements PropertyReflectorInterface
+class PropertyReflector implements PropertyReflectorInterface
 {
+    public string $name {
+        get {
+            return $this->name;
+        }
+    }
+
     public function __construct(
-        public \ReflectionProperty $reflector,
-        private TypeHelperInterface $typeHelper = new TypeHelper(),
-        private AttributeHelperInterface $attributeHelper = new AttributeHelper(),
+        public readonly \ReflectionProperty $reflector,
+        private readonly TypeHelperInterface $typeHelper = new TypeHelper(),
+        private readonly AttributeHelperInterface $attributeHelper = new AttributeHelper(),
     ) {
     }
 

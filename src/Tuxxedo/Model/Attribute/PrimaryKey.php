@@ -17,7 +17,7 @@ namespace Tuxxedo\Model\Attribute;
 readonly class PrimaryKey
 {
     public function __construct(
-        public string $column,
+        public ?string $column = null,
         public bool $autoIncrement = true,
     ) {
     }
