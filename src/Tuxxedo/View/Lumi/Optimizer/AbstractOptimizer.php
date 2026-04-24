@@ -35,7 +35,6 @@ use Tuxxedo\View\Lumi\Syntax\Type;
 
 abstract class AbstractOptimizer implements OptimizerInterface
 {
-    protected readonly EvaluatorInterface $evaluator;
     protected private(set) MutableDirectivesInterface&DirectivesInterface $directives;
     protected private(set) ScopeInterface $scope;
 
@@ -45,10 +44,9 @@ abstract class AbstractOptimizer implements OptimizerInterface
     protected private(set) array $scopeStack = [];
 
     public function __construct(
-        ?EvaluatorInterface $evaluator = null,
+        protected readonly EvaluatorInterface $evaluator = new Evaluator(),
     ) {
         $this->directives = MutableDirectives::createWithDefaults();
-        $this->evaluator = $evaluator ?? new Evaluator();
         $this->scope = new Scope(
             evaluator: $this->evaluator,
         );
