@@ -15,6 +15,7 @@ namespace Tuxxedo\Model\MetaData\Adapter;
 
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\CompositeKey;
+use Tuxxedo\Model\Attribute\Identifier;
 use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\MetaData\ModelCompositeKey;
@@ -56,8 +57,9 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         }
 
         $primaryKey = null;
+        $identifiers = [];
         $compositeKey = $this->getCompositeKey($class);
-        $columns = $this->getColumns($class, $primaryKey);
+        $columns = $this->getColumns($class, $primaryKey, $identifiers);
 
         if ($primaryKey !== null && $compositeKey !== null) {
             throw ModelException::fromModelMayOnlyHaveOneKey(
@@ -68,8 +70,9 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         return new ModelMetaData(
             model: $model,
             table: $this->getTable($class),
-            columns: $columns,
             key: $primaryKey ?? $compositeKey,
+            columns: $columns,
+            identifiers: $identifiers,
         );
     }
 
@@ -101,6 +104,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
     }
 
     /**
+     * @param Identifier[] $identifiers
      * @return non-empty-array<string, ColumnInterface>
      *
      * @throws ModelException
@@ -108,6 +112,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
     private function getColumns(
         ClassReflector $class,
         ?ModelPrimaryKeyInterface &$primaryKey,
+        array &$identifiers,
     ): array {
         $columns = [];
         $foundPrimaryKey = null;
@@ -138,6 +143,16 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
 
                 $foundPrimaryKey = $property->getAttribute(PrimaryKey::class);
                 $foundPrimaryKeyColumn = $property->name;
+            }
+
+            if ($property->hasAttribute(Identifier::class)) {
+                $identifier = $property->getAttribute(Identifier::class);
+
+                if ($identifier->column === null) {
+                    $identifier = new Identifier($property->name);
+                }
+
+                $identifiers[] = $identifier;
             }
 
             $columns[$property->name] = $propertyColumns[0];

@@ -17,7 +17,7 @@ namespace Tuxxedo\Model\Attribute;
 readonly class Identifier
 {
     public function __construct(
-        public string $column,
+        public ?string $column = null,
     ) {
     }
 }
