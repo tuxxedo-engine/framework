@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Tuxxedo\Model\MetaData;
 
 use Tuxxedo\Model\Attribute\ColumnInterface;
-use Tuxxedo\Model\Attribute\PrimaryKey;
 
 interface ModelMetaDataInterface
 {
@@ -36,12 +35,10 @@ interface ModelMetaDataInterface
         get;
     }
 
-    public ?PrimaryKey $primaryKey {
+    public ModelPrimaryKeyInterface|ModelCompositeKeyInterface|null $key {
         get;
     }
 
-    // @todo Implement primary keys
-    // @todo Implement composite keys
     // @todo Implement relations
     // @todo Implement identifiers
 }

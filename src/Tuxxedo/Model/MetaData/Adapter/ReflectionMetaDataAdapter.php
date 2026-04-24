@@ -14,9 +14,15 @@ declare(strict_types=1);
 namespace Tuxxedo\Model\MetaData\Adapter;
 
 use Tuxxedo\Model\Attribute\ColumnInterface;
+use Tuxxedo\Model\Attribute\CompositeKey;
+use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Table;
+use Tuxxedo\Model\MetaData\ModelCompositeKey;
+use Tuxxedo\Model\MetaData\ModelCompositeKeyInterface;
 use Tuxxedo\Model\MetaData\ModelMetaData;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
+use Tuxxedo\Model\MetaData\ModelPrimaryKey;
+use Tuxxedo\Model\MetaData\ModelPrimaryKeyInterface;
 use Tuxxedo\Model\ModelException;
 use Tuxxedo\Reflection\ClassReflector;
 
@@ -49,13 +55,34 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             );
         }
 
-        $columns = $this->getColumns($class);
+        $primaryKey = null;
+        $compositeKey = $this->getCompositeKey($class);
+        $columns = $this->getColumns($class, $primaryKey);
+
+        if ($primaryKey !== null && $compositeKey !== null) {
+            throw ModelException::fromModelMayOnlyHaveOneKey(
+                modelClass: $class->name,
+            );
+        }
 
         return new ModelMetaData(
             model: $model,
             table: $this->getTable($class),
             columns: $columns,
+            key: $primaryKey ?? $compositeKey,
         );
+    }
+
+    private function getCompositeKey(
+        ClassReflector $class,
+    ): ?ModelCompositeKeyInterface {
+        if ($class->hasAttribute(CompositeKey::class)) {
+            return new ModelCompositeKey(
+                columns: $class->getAttribute(CompositeKey::class)->columns,
+            );
+        }
+
+        return null;
     }
 
     /**
@@ -80,8 +107,11 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
      */
     private function getColumns(
         ClassReflector $class,
+        ?ModelPrimaryKeyInterface &$primaryKey,
     ): array {
         $columns = [];
+        $foundPrimaryKey = null;
+        $foundPrimaryKeyColumn = null;
 
         foreach ($class->properties() as $property) {
             $propertyColumns = \iterator_to_array($property->getAttributes(ColumnInterface::class));
@@ -98,6 +128,18 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 );
             }
 
+            if ($property->hasAttribute(PrimaryKey::class)) {
+                if ($foundPrimaryKey !== null) {
+                    throw ModelException::fromDuplicatePrimaryKey(
+                        modelClass: $class->name,
+                        property: $property->name,
+                    );
+                }
+
+                $foundPrimaryKey = $property->getAttribute(PrimaryKey::class);
+                $foundPrimaryKeyColumn = $property->name;
+            }
+
             $columns[$property->name] = $propertyColumns[0];
         }
 
@@ -106,6 +148,15 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 modelClass: $class->name,
             );
         }
+
+        if ($foundPrimaryKey !== null && $foundPrimaryKeyColumn !== null) {
+            $primaryKey = new ModelPrimaryKey(
+                column: $foundPrimaryKey->column ?? $foundPrimaryKeyColumn,
+                autoIncrement: $foundPrimaryKey->autoIncrement,
+            );
+        }
+
+        $primaryKey ??= null;
 
         return $columns;
     }

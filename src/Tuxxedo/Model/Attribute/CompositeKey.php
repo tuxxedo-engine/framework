@@ -17,13 +17,17 @@ namespace Tuxxedo\Model\Attribute;
 readonly class CompositeKey
 {
     /**
-     * @var string[]
+     * @var non-empty-array<string>
      */
     public array $columns;
 
+    /**
+     * @param non-empty-array<string> ...$columns
+     */
     public function __construct(
         string ...$columns,
     ) {
+        /** @var non-empty-array<string> $columns */
         $this->columns = $columns;
     }
 }

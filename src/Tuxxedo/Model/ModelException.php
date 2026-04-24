@@ -66,7 +66,37 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Property \$%s has more than one #[Column] attribute',
+                'Invalid model class "%s": Property %1$s::\$%s has more than one #[Column] attribute',
+                $modelClass,
+                $property,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromModelMayOnlyHaveOneKey(
+        string $modelClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Model defines both a #[PrimaryKey] and #[CompositeKey] but these are mutually exclusive',
+                $modelClass,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromDuplicatePrimaryKey(
+        string $modelClass,
+        string $property,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Models may only define one #[PrimaryKey] (duplicate declared at %1$s::\$%s)',
                 $modelClass,
                 $property,
             ),
