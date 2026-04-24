@@ -15,8 +15,6 @@ namespace Tuxxedo\Model\MetaData;
 
 use Tuxxedo\Model\Attribute\ColumnInterface;
 
-// @todo Should the attributes be translated into DTOs? So we don't need TKey for $columns but can always set
-//       ->columns[0]->name to the value if its NULL? This is how the Router and others does it
 readonly class ModelMetaData implements ModelMetaDataInterface
 {
     /**
