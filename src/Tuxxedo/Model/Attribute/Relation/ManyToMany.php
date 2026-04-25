@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Model\Attribute\Relation;
 
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
-readonly class ManyToMany
+readonly class ManyToMany implements RelationInterface
 {
     /**
      * @param class-string $related

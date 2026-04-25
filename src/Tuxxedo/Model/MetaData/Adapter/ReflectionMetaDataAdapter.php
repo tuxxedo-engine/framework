@@ -17,6 +17,7 @@ use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\CompositeKey;
 use Tuxxedo\Model\Attribute\Identifier;
 use Tuxxedo\Model\Attribute\PrimaryKey;
+use Tuxxedo\Model\Attribute\Relation\RelationInterface;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\MetaData\ModelColumn;
 use Tuxxedo\Model\MetaData\ModelColumnInterface;
@@ -163,6 +164,13 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 $identifiers[$property->name] = $identifier;
             }
 
+            $relations = [];
+
+            // @todo ??? Validate relations
+            foreach ($property->getAttributes(RelationInterface::class) as $relation) {
+                $relations[] = $relation;
+            }
+
             $columns[] = new ModelColumn(
                 name: $property->name,
                 nullable: $property->isNullable(),
@@ -171,6 +179,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                     ? $primaryKey
                     : null,
                 identifier: $identifiers[$property->name] ?? null,
+                relations: $relations,
             );
         }
 
