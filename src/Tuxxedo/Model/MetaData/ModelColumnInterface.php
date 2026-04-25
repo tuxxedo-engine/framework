@@ -35,4 +35,5 @@ interface ModelColumnInterface
     }
 
     // @todo Relations
+    // @todo Nullability detection
 }
