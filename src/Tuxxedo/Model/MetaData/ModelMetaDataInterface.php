@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\MetaData;
 
-use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\Identifier;
 
 // @todo Support Unique columns + CompositeKeys
@@ -35,7 +34,7 @@ interface ModelMetaDataInterface
     }
 
     /**
-     * @var non-empty-array<ColumnInterface>
+     * @var non-empty-array<ModelColumnInterface>
      */
     public array $columns {
         get;
@@ -47,6 +46,4 @@ interface ModelMetaDataInterface
     public array $identifiers {
         get;
     }
-
-    // @todo Implement relations
 }

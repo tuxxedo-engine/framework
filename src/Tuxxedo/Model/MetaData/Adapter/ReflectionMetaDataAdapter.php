@@ -18,6 +18,8 @@ use Tuxxedo\Model\Attribute\CompositeKey;
 use Tuxxedo\Model\Attribute\Identifier;
 use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Table;
+use Tuxxedo\Model\MetaData\ModelColumn;
+use Tuxxedo\Model\MetaData\ModelColumnInterface;
 use Tuxxedo\Model\MetaData\ModelCompositeKey;
 use Tuxxedo\Model\MetaData\ModelCompositeKeyInterface;
 use Tuxxedo\Model\MetaData\ModelMetaData;
@@ -105,7 +107,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
 
     /**
      * @param Identifier[] $identifiers
-     * @return non-empty-array<string, ColumnInterface>
+     * @return non-empty-array<ModelColumnInterface>
      *
      * @throws ModelException
      */
@@ -114,9 +116,10 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         ?ModelPrimaryKeyInterface &$primaryKey,
         array &$identifiers,
     ): array {
-        $columns = [];
         $foundPrimaryKey = null;
         $foundPrimaryKeyColumn = null;
+
+        $columns = [];
 
         foreach ($class->properties() as $property) {
             $propertyColumns = \iterator_to_array($property->getAttributes(ColumnInterface::class));
@@ -152,7 +155,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                     $identifier = new Identifier($property->name);
                 }
 
-                $identifiers[] = $identifier;
+                $identifiers[$property->name] = $identifier;
             }
 
             $columns[$property->name] = $propertyColumns[0];
@@ -172,6 +175,17 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         }
 
         $primaryKey ??= null;
+
+        foreach ($columns as $index => $column) {
+            $columns[$index] = new ModelColumn(
+                name: $index,
+                meta: $column,
+                primaryKey: $primaryKey,
+                identifier: $identifiers[$index] ?? null,
+            );
+        }
+
+        $identifiers = \array_values($identifiers);
 
         return $columns;
     }
