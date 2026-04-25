@@ -13,6 +13,13 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Router\Pattern;
 
+use Tuxxedo\Container\DefaultInitializer;
+
+#[DefaultInitializer(
+    static function (): TypePatternRegistryInterface {
+        return TypePatternRegistry::createDefault();
+    },
+)]
 class TypePatternRegistry implements TypePatternRegistryInterface
 {
     /**
