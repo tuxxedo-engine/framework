@@ -30,7 +30,7 @@ readonly class Route
      * @param class-string<PrefixInterface>|null $prefix
      */
     public function __construct(
-        public ?string $uri,
+        public ?string $uri = null,
         array $method = [],
         public ?string $name = null,
         public bool $trailingSlash = false,

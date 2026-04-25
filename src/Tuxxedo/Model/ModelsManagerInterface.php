@@ -16,6 +16,7 @@ namespace Tuxxedo\Model;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Database\Driver\ConnectionInterface;
+use Tuxxedo\Database\Query\Builder\ExistsBuilderInterface;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 
@@ -86,6 +87,25 @@ interface ModelsManagerInterface
     public function refresh(
         object $model,
     ): object;
+
+    /**
+     * @param class-string $class
+     * @param \Closure(ExistsBuilderInterface $builder): void $criteria
+     */
+    public function exists(
+        string $class,
+        \Closure $criteria,
+    ): bool;
+
+    /**
+     * @param class-string $class
+     * @param (\Closure(ExistsBuilderInterface $builder): void) $criteria
+     */
+    public function existsByIdentifier(
+        string $class,
+        int|string $id,
+        ?\Closure $criteria = null,
+    ): bool;
 
     public function delete(
         object $model,

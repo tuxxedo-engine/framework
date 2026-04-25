@@ -106,12 +106,12 @@ class ModelException extends \Exception
     /**
      * @param class-string $modelClass
      */
-    public static function fromCantDeleteWithNoPrimaryKeyOrCompositeKey(
+    public static function fromNoPrimaryKeyOrCompositeKey(
         string $modelClass,
     ): self {
         return new self(
             message: \sprintf(
-                'Cannot delete model "%s", as the model does not have a #[PrimaryKey] or a #[CompositeKey]',
+                'Cannot perform action on model "%s", as the model does not have a #[PrimaryKey] or a #[CompositeKey]',
                 $modelClass,
             ),
         );
@@ -177,6 +177,22 @@ class ModelException extends \Exception
             message: \sprintf(
                 'Cannot fetch model "%s", as the record no longer exists',
                 $modelClass,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromNullValueOnNonNullableColumn(
+        string $modelClass,
+        string $property,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot perform action on model "%s": A NULL value was supplied to property "%s", but it is not marked as nullable',
+                $modelClass,
+                $property,
             ),
         );
     }

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver;
 
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Reflection\ClassReflector;
 
 abstract class AbstractResultSet implements ResultSetInterface
 {
@@ -60,10 +61,10 @@ abstract class AbstractResultSet implements ResultSetInterface
             } else {
                 $class = function (array $properties) use ($class): object {
                     $model = $this->container->resolve($class);
-                    $reflector = new \ReflectionObject($model);
+                    $reflector = ClassReflector::createFromObject($model);
 
                     foreach ($properties as $column => $value) {
-                        $reflector->getProperty($column)->setValue($model, $value);
+                        $reflector->property($column)->setValue($model, $value);
                     }
 
                     return $model;

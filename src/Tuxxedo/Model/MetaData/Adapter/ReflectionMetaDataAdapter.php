@@ -63,6 +63,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
 
         $primaryKey = null;
         $identifiers = [];
+        // @todo Validate columns against $columns here
         $compositeKey = $this->getCompositeKey($class);
         $columns = $this->getColumns($class, $primaryKey, $identifiers);
 

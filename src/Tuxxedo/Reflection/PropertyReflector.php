@@ -87,9 +87,20 @@ class PropertyReflector implements PropertyReflectorInterface
         yield from $this->attributeHelper->getAttributes($this->reflector, $attribute);
     }
 
-    public function value(
+    public function getValue(
         ?object $object = null,
     ): mixed {
+        if (!$this->reflector->isInitialized($object)) {
+            return null;
+        }
+
         return $this->reflector->getValue($object);
+    }
+
+    public function setValue(
+        object $object,
+        mixed $value,
+    ): void {
+        $this->reflector->setValue($object, $value);
     }
 }

@@ -17,9 +17,11 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DefaultInitializer;
 use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Database\Driver\ConnectionInterface;
+use Tuxxedo\Database\Query\Builder\ExistsBuilderInterface;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelCompositeKeyInterface;
+use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelPrimaryKeyInterface;
 use Tuxxedo\Reflection\PropertyReflector;
 
@@ -48,7 +50,173 @@ class ModelsManager implements ModelsManagerInterface
     public function save(
         object $model,
     ): object {
-        // @todo Implement
+        $metaData = $this->metaData->getModel($model::class);
+
+        return $this->isNewModel($model, $metaData)
+            ? $this->insert($model, $metaData)
+            : $this->update($model, $metaData);
+    }
+
+    private function isNewModel(
+        object $model,
+        ModelMetaDataInterface $metaData,
+    ): bool {
+        if ($metaData->key === null) {
+            throw ModelException::fromNoPrimaryKeyOrCompositeKey(
+                modelClass: $metaData->model,
+            );
+        }
+
+        if ($metaData->key instanceof ModelPrimaryKeyInterface) {
+            return PropertyReflector::createFromObject($model, $metaData->key->column)->getValue($model) === null;
+        }
+
+        foreach ($metaData->key->columns as $column) {
+            if (PropertyReflector::createFromObject($model, $column)->getValue($model) !== null) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @param string[] $skipColumns
+     * @return array<string, scalar|null>
+     */
+    private function buildColumnMap(
+        object $model,
+        ModelMetaDataInterface $metaData,
+        array $skipColumns = [],
+    ): array {
+        $map = [];
+
+        foreach ($metaData->columns as $column) {
+            if (\in_array($column->name, $skipColumns, true)) {
+                continue;
+            }
+
+            $value = PropertyReflector::createFromObject($model, $column->name)->getValue($model);
+
+            if ($value === null && !$column->nullable) {
+                throw ModelException::fromNullValueOnNonNullableColumn(
+                    modelClass: $metaData->model,
+                    property: $column->name,
+                );
+            }
+
+            if ($value !== null && !\is_scalar($value)) {
+                throw ModelException::fromPropertyValueMustBeScalar(
+                    modelClass: $metaData->model,
+                    property: $column->name,
+                    actualType: \get_debug_type($value),
+                );
+            }
+
+            $map[$column->name] = $value;
+        }
+
+        return $map;
+    }
+
+    /**
+     * @template TModel of object
+     *
+     * @param TModel $model
+     * @return TModel
+     */
+    private function insert(
+        object $model,
+        ModelMetaDataInterface $metaData,
+    ): object {
+        $skipColumns = [];
+
+        if (
+            $metaData->key instanceof ModelPrimaryKeyInterface
+            && $metaData->key->autoIncrement
+        ) {
+            $skipColumns[] = $metaData->key->column;
+        }
+
+        $columns = $this->buildColumnMap($model, $metaData, $skipColumns);
+        $query = $this->connection->insert($metaData->table);
+
+        foreach ($columns as $column => $value) {
+            $query->set($column, $value);
+        }
+
+        $query->execute();
+
+        if (
+            $metaData->key instanceof ModelPrimaryKeyInterface
+            && $metaData->key->autoIncrement
+        ) {
+            $id = $this->connection->lastInsertIdAsInt();
+
+            if ($id !== null) {
+                PropertyReflector::createFromObject($model, $metaData->key->column)->setValue($model, $id);
+            }
+        }
+
+        return $model;
+    }
+
+    /**
+     * @template TModel of object
+     *
+     * @param TModel $model
+     * @return TModel
+     */
+    private function update(
+        object $model,
+        ModelMetaDataInterface $metaData,
+    ): object {
+        $skipColumns = [];
+
+        if ($metaData->key instanceof ModelPrimaryKeyInterface) {
+            $skipColumns[] = $metaData->key->column;
+        } elseif ($metaData->key instanceof ModelCompositeKeyInterface) {
+            foreach ($metaData->key->columns as $column) {
+                $skipColumns[] = $column;
+            }
+        }
+
+        $columns = $this->buildColumnMap($model, $metaData, $skipColumns);
+        $query = $this->connection->update($metaData->table);
+
+        foreach ($columns as $column => $value) {
+            $query->set($column, $value);
+        }
+
+        if ($metaData->key instanceof ModelPrimaryKeyInterface) {
+            $value = PropertyReflector::createFromObject($model, $metaData->key->column)->getValue($model);
+
+            if (!\is_scalar($value)) {
+                throw ModelException::fromPropertyValueMustBeScalar(
+                    modelClass: $metaData->model,
+                    property: $metaData->key->column,
+                    actualType: \get_debug_type($value),
+                );
+            }
+
+            $query->where($metaData->key->column, $value);
+        } elseif ($metaData->key instanceof ModelCompositeKeyInterface) {
+            foreach ($metaData->key->columns as $column) {
+                $value = PropertyReflector::createFromObject($model, $column)->getValue($model);
+
+                if (!\is_scalar($value)) {
+                    throw ModelException::fromPropertyValueMustBeScalar(
+                        modelClass: $metaData->model,
+                        property: $column,
+                        actualType: \get_debug_type($value),
+                    );
+                }
+
+                $query->where($column, $value);
+            }
+        }
+
+        $query->execute();
 
         return $model;
     }
@@ -140,7 +308,7 @@ class ModelsManager implements ModelsManagerInterface
             );
         }
 
-        $value = PropertyReflector::createFromObject($metaData->model, $metaData->key->column)->value($model);
+        $value = PropertyReflector::createFromObject($metaData->model, $metaData->key->column)->getValue($model);
 
         if (!\is_int($value) && !\is_string($value)) {
             throw ModelException::fromPropertyValueMustBeIdentifierType(
@@ -161,13 +329,57 @@ class ModelsManager implements ModelsManagerInterface
         return $fresh;
     }
 
+    /**
+     * @param class-string $class
+     * @param \Closure(ExistsBuilderInterface $builder): void $criteria
+     */
+    public function exists(
+        string $class,
+        \Closure $criteria,
+    ): bool {
+        $query = $this->connection->exists($this->metaData->getModel($class)->table);
+
+        $criteria($query);
+
+        return $query->exists();
+    }
+
+    /**
+     * @param class-string $class
+     * @param (\Closure(ExistsBuilderInterface $builder): void) $criteria
+     */
+    public function existsByIdentifier(
+        string $class,
+        int|string $id,
+        ?\Closure $criteria = null,
+    ): bool {
+        $metaData = $this->metaData->getModel($class);
+
+        if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
+            throw ModelException::fromCantFetchWithoutPrimaryKey(
+                modelClass: $metaData->model,
+            );
+        }
+
+        return $this->exists(
+            class: $class,
+            criteria: static function (ExistsBuilderInterface $builder) use ($criteria, $metaData, $id): void {
+                if ($criteria !== null) {
+                    $criteria($builder);
+                }
+
+                $builder->where($metaData->key->column, $id);
+            },
+        );
+    }
+
     public function delete(
         object $model,
     ): bool {
         $metaData = $this->metaData->getModel($model::class);
 
         if ($metaData->key === null) {
-            throw ModelException::fromCantDeleteWithNoPrimaryKeyOrCompositeKey(
+            throw ModelException::fromNoPrimaryKeyOrCompositeKey(
                 modelClass: $metaData->model,
             );
         }
@@ -175,7 +387,7 @@ class ModelsManager implements ModelsManagerInterface
         $query = $this->connection->delete($metaData->table);
 
         if ($metaData->key instanceof ModelPrimaryKeyInterface) {
-            $value = PropertyReflector::createFromObject($metaData->model, $metaData->key->column)->value($model);
+            $value = PropertyReflector::createFromObject($metaData->model, $metaData->key->column)->getValue($model);
 
             if (!\is_scalar($value)) {
                 throw ModelException::fromPropertyValueMustBeScalar(
@@ -191,7 +403,7 @@ class ModelsManager implements ModelsManagerInterface
             );
         } elseif ($metaData->key instanceof ModelCompositeKeyInterface) {
             foreach ($metaData->key->columns as $column) {
-                $value = PropertyReflector::createFromObject($metaData->model, $column)->value($model);
+                $value = PropertyReflector::createFromObject($metaData->model, $column)->getValue($model);
 
                 if (!\is_scalar($value)) {
                     throw ModelException::fromPropertyValueMustBeScalar(
