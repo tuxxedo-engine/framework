@@ -57,4 +57,18 @@ readonly class ModelController
             ],
         );
     }
+
+    #[Route\Get]
+    public function fetchAll(): ResponseInterface
+    {
+        \var_dump(
+            \iterator_to_array($this->modelsManager->findAll(User::class)),
+        );
+
+        return Response::empty(
+            headers: [
+                new Header('Content-Type', 'text/plain'),
+            ],
+        );
+    }
 }

@@ -138,12 +138,44 @@ class ModelException extends \Exception
     /**
      * @param class-string $modelClass
      */
+    public static function fromPropertyValueMustBeIdentifierType(
+        string $modelClass,
+        string $property,
+        string $actualType,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot perform action on model "%s": The property value for "%s" must be string|int, but "%s" was given',
+                $modelClass,
+                $property,
+                $actualType,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
     public static function fromCantFetchWithoutPrimaryKey(
         string $modelClass,
     ): self {
         return new self(
             message: \sprintf(
                 'Cannot fetch model "%s", as the model does not have a #[PrimaryKey]',
+                $modelClass,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromModelNoLongerExists(
+        string $modelClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot fetch model "%s", as the record no longer exists',
                 $modelClass,
             ),
         );

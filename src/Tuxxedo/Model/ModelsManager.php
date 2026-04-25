@@ -115,9 +115,13 @@ class ModelsManager implements ModelsManagerInterface
         string $class,
         ?\Closure $criteria = null,
     ): \Generator {
-        // @todo Implement
+        $query = $this->connection->select($this->metaData->getModel($class)->table);
 
-        yield new $class();
+        if ($criteria !== null) {
+            $criteria($query);
+        }
+
+        yield from $query->fetchAll($class);
     }
 
     /**
@@ -128,9 +132,33 @@ class ModelsManager implements ModelsManagerInterface
     public function refresh(
         object $model,
     ): object {
-        // @todo Implement
+        $metaData = $this->metaData->getModel($model::class);
 
-        return $model;
+        if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
+            throw ModelException::fromCantFetchWithoutPrimaryKey(
+                modelClass: $metaData->model,
+            );
+        }
+
+        $value = PropertyReflector::createFromObject($metaData->model, $metaData->key->column)->value($model);
+
+        if (!\is_int($value) && !\is_string($value)) {
+            throw ModelException::fromPropertyValueMustBeIdentifierType(
+                modelClass: $metaData->model,
+                property: $metaData->key->column,
+                actualType: \get_debug_type($value),
+            );
+        }
+
+        $fresh = $this->findByIdentifier($model::class, $value);
+
+        if ($fresh === null) {
+            throw ModelException::fromModelNoLongerExists(
+                modelClass: $metaData->model,
+            );
+        }
+
+        return $fresh;
     }
 
     public function delete(
