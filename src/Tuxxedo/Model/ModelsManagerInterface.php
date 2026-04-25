@@ -16,7 +16,7 @@ namespace Tuxxedo\Model;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Database\Driver\ConnectionInterface;
-use Tuxxedo\Database\Query\Builder\WhereBuilderInterface;
+use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 
 // @todo Support relations
@@ -46,10 +46,10 @@ interface ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
-     * @param (\Closure(WhereBuilderInterface $builder): void)|null $criteria
+     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
      * @return TModel|null
      */
-    public function find(
+    public function findFirst(
         string $class,
         ?\Closure $criteria = null,
     ): ?object;
@@ -57,7 +57,7 @@ interface ModelsManagerInterface
     /**
      * @template TModel of object
      * @param class-string<TModel> $class
-     * @param (\Closure(WhereBuilderInterface $builder): void)|null $criteria
+     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
      * @return TModel|null
      */
     public function findByIdentifier(
@@ -70,7 +70,7 @@ interface ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
-     * @param (\Closure(WhereBuilderInterface $builder): void)|null $criteria
+     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
      * @return \Generator<TModel>
      */
     public function findAll(

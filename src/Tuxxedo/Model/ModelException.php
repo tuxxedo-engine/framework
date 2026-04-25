@@ -102,4 +102,50 @@ class ModelException extends \Exception
             ),
         );
     }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromCantDeleteWithNoPrimaryKeyOrCompositeKey(
+        string $modelClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot delete model "%s", as the model does not have a #[PrimaryKey] or a #[CompositeKey]',
+                $modelClass,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromPropertyValueMustBeScalar(
+        string $modelClass,
+        string $property,
+        string $actualType,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot perform action on model "%s": The property value for "%s" must be a scalar, but "%s" was given',
+                $modelClass,
+                $property,
+                $actualType,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromCantFetchWithoutPrimaryKey(
+        string $modelClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot fetch model "%s", as the model does not have a #[PrimaryKey]',
+                $modelClass,
+            ),
+        );
+    }
 }

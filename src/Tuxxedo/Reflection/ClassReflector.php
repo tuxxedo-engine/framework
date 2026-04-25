@@ -24,10 +24,18 @@ class ClassReflector implements ClassReflectorInterface
     /**
      * @param \ReflectionClass<object> $reflector
      */
-    public function __construct(
+    final public function __construct(
         public readonly \ReflectionClass $reflector,
         private readonly AttributeHelperInterface $attributeHelper = new AttributeHelper(),
     ) {
+    }
+
+    public static function createFromObject(
+        object $object,
+    ): static {
+        return new static(
+            reflector: new \ReflectionObject($object),
+        );
     }
 
     public function properties(

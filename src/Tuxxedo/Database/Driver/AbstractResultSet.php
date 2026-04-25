@@ -22,9 +22,9 @@ abstract class AbstractResultSet implements ResultSetInterface
     }
 
     /**
-     * @template TClassName of object&HydratableInterface
+     * @template TClassName of object
      *
-     * @param class-string<TClassName>|\Closure(mixed[] $properties): TClassName $class
+     * @param class-string<TClassName>|class-string<TClassName&HydratableInterface>|\Closure(mixed[] $properties): TClassName $class
      * @return \Generator<TClassName>
      */
     public function fetchAll(
@@ -41,9 +41,9 @@ abstract class AbstractResultSet implements ResultSetInterface
     }
 
     /**
-     * @template TClassName of object&HydratableInterface
+     * @template TClassName of object
      *
-     * @param class-string<TClassName>|\Closure(mixed[] $properties): TClassName $class
+     * @param class-string<TClassName>|class-string<TClassName&HydratableInterface>|\Closure(mixed[] $properties): TClassName $class
      * @param mixed[] $properties
      * @return TClassName
      */
@@ -52,7 +52,23 @@ abstract class AbstractResultSet implements ResultSetInterface
         array $properties,
     ): object {
         if (!$class instanceof \Closure) {
-            $class = ($this->container->resolveName($class))::create(...);
+            if (\in_array(HydratableInterface::class, ($interfaces = \class_implements($class)) !== false ? $interfaces : [], true)) {
+                /** @var class-string<TClassName&HydratableInterface> $class */
+                $class = $this->container->resolveName($class);
+
+                $class = $class::create(...);
+            } else {
+                $class = function (array $properties) use ($class): object {
+                    $model = $this->container->resolve($class);
+                    $reflector = new \ReflectionObject($model);
+
+                    foreach ($properties as $column => $value) {
+                        $reflector->getProperty($column)->setValue($model, $value);
+                    }
+
+                    return $model;
+                };
+            }
         }
 
         /** @var \Closure(): TClassName $class */

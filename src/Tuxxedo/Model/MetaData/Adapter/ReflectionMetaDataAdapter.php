@@ -122,6 +122,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         $columns = [];
 
         foreach ($class->properties() as $property) {
+            $foundPrimaryKey = null;
             $propertyColumns = \iterator_to_array($property->getAttributes(ColumnInterface::class));
             $propertyColumnsCount = \sizeof($propertyColumns);
 
@@ -172,10 +173,12 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             }
 
             $columns[] = new ModelColumn(
+                // @todo This may need a secondary to differentiate between the property and column, so a user
+                //       does not need to read $column->attribute->name ?? $column->name?
                 name: $property->name,
                 nullable: $property->isNullable(),
                 attribute: $propertyColumns[0],
-                primaryKey: $primaryKey !== null && $primaryKey->column === $property->name
+                primaryKey: $foundPrimaryKey !== null
                     ? $primaryKey
                     : null,
                 identifier: $identifiers[$property->name] ?? null,

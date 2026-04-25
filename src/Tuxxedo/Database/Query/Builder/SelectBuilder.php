@@ -349,9 +349,9 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
     }
 
     /**
-     * @template TClassName of object&HydratableInterface
+     * @template TClassName of object
      *
-     * @param class-string<TClassName>|\Closure(mixed[] $properties): TClassName $class
+     * @param class-string<TClassName>|class-string<TClassName&HydratableInterface>|\Closure(mixed[] $properties): TClassName $class
      * @return TClassName|null
      *
      * @throws DatabaseException
@@ -370,9 +370,9 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
     }
 
     /**
-     * @template TClassName of object&HydratableInterface
+     * @template TClassName of object
      *
-     * @param class-string<TClassName>|\Closure(mixed[] $properties): TClassName $class
+     * @param class-string<TClassName>|class-string<TClassName&HydratableInterface>|\Closure(mixed[] $properties): TClassName $class
      * @return \Generator<TClassName>
      *
      * @throws DatabaseException

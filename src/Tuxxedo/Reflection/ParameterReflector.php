@@ -21,7 +21,7 @@ class ParameterReflector implements ParameterReflectorInterface
         }
     }
 
-    public function __construct(
+    final public function __construct(
         public readonly \ReflectionParameter $reflector,
         private readonly TypeHelperInterface $typeHelper = new TypeHelper(),
         private readonly AttributeHelperInterface $attributeHelper = new AttributeHelper(),

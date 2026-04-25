@@ -21,7 +21,7 @@ class MethodReflector implements MethodReflectorInterface
         }
     }
 
-    public function __construct(
+    final public function __construct(
         public readonly \ReflectionMethod $reflector,
         private readonly AttributeHelperInterface $attributeHelper = new AttributeHelper(),
     ) {

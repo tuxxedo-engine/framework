@@ -21,11 +21,25 @@ class PropertyReflector implements PropertyReflectorInterface
         }
     }
 
-    public function __construct(
+    final public function __construct(
         public readonly \ReflectionProperty $reflector,
         private readonly TypeHelperInterface $typeHelper = new TypeHelper(),
         private readonly AttributeHelperInterface $attributeHelper = new AttributeHelper(),
     ) {
+    }
+
+    /**
+     * @param object|class-string $object
+     *
+     * @throws \ReflectionException
+     */
+    public static function createFromObject(
+        object|string $object,
+        string $property,
+    ): self {
+        return new static(
+            reflector: new \ReflectionProperty($object, $property),
+        );
     }
 
     public function getDefaultType(): ?string
@@ -71,5 +85,11 @@ class PropertyReflector implements PropertyReflectorInterface
         string $attribute,
     ): \Generator {
         yield from $this->attributeHelper->getAttributes($this->reflector, $attribute);
+    }
+
+    public function value(
+        ?object $object = null,
+    ): mixed {
+        return $this->reflector->getValue($object);
     }
 }

@@ -48,7 +48,9 @@ abstract class AbstractBuilder implements BuilderInterface
 
         return $this->connection->query(
             sql: $statement->sql,
-            parameters: \array_combine(\range(1, \sizeof($statement->parameters)), $statement->parameters),
+            parameters: \sizeof($statement->parameters) > 0
+                ? \array_combine(\range(1, \sizeof($statement->parameters)), $statement->parameters)
+                : [],
             native: true,
         );
     }

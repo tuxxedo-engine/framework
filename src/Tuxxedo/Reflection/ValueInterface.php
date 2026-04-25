@@ -13,13 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Reflection;
 
-interface PropertyReflectorInterface extends TypeInterface, AttributeInterface, ValueInterface
+interface ValueInterface
 {
-    public \ReflectionProperty $reflector {
-        get;
-    }
-
-    public string $name {
-        get;
-    }
+    public function value(
+        ?object $object = null,
+    ): mixed;
 }

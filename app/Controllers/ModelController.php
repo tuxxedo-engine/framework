@@ -42,4 +42,19 @@ readonly class ModelController
             ],
         );
     }
+
+    #[Route\Get]
+    public function fetch(): ResponseInterface
+    {
+        \var_dump(
+            $this->modelsManager->findByIdentifier(User::class, 1),
+            $this->modelsManager->findFirst(User::class),
+        );
+
+        return Response::empty(
+            headers: [
+                new Header('Content-Type', 'text/plain'),
+            ],
+        );
+    }
 }
