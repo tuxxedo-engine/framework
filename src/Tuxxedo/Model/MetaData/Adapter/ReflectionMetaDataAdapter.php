@@ -22,6 +22,8 @@ use Tuxxedo\Model\MetaData\ModelColumn;
 use Tuxxedo\Model\MetaData\ModelColumnInterface;
 use Tuxxedo\Model\MetaData\ModelCompositeKey;
 use Tuxxedo\Model\MetaData\ModelCompositeKeyInterface;
+use Tuxxedo\Model\MetaData\ModelIdentifier;
+use Tuxxedo\Model\MetaData\ModelIdentifierInterface;
 use Tuxxedo\Model\MetaData\ModelMetaData;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelPrimaryKey;
@@ -106,7 +108,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
     }
 
     /**
-     * @param Identifier[] $identifiers
+     * @param ModelIdentifierInterface[] $identifiers
      * @return non-empty-array<ModelColumnInterface>
      *
      * @throws ModelException
@@ -116,9 +118,6 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         ?ModelPrimaryKeyInterface &$primaryKey,
         array &$identifiers,
     ): array {
-        $foundPrimaryKey = null;
-        $foundPrimaryKeyColumn = null;
-
         $columns = [];
 
         foreach ($class->properties() as $property) {
@@ -137,7 +136,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             }
 
             if ($property->hasAttribute(PrimaryKey::class)) {
-                if ($foundPrimaryKey !== null) {
+                if ($primaryKey !== null) {
                     throw ModelException::fromDuplicatePrimaryKey(
                         modelClass: $class->name,
                         property: $property->name,
@@ -145,43 +144,39 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 }
 
                 $foundPrimaryKey = $property->getAttribute(PrimaryKey::class);
-                $foundPrimaryKeyColumn = $property->name;
+
+                $primaryKey = new ModelPrimaryKey(
+                    column: $foundPrimaryKey->column ?? $property->name,
+                    autoIncrement: $foundPrimaryKey->autoIncrement,
+                );
             }
 
             if ($property->hasAttribute(Identifier::class)) {
                 $identifier = $property->getAttribute(Identifier::class);
 
-                if ($identifier->column === null) {
-                    $identifier = new Identifier($property->name);
+                if ($identifier->column !== null) {
+                    $identifier = new ModelIdentifier($identifier->column);
+                } else {
+                    $identifier = new ModelIdentifier($property->name);
                 }
 
                 $identifiers[$property->name] = $identifier;
             }
 
-            $columns[$property->name] = $propertyColumns[0];
+            $columns[] = new ModelColumn(
+                name: $property->name,
+                nullable: $property->isNullable(),
+                attribute: $propertyColumns[0],
+                primaryKey: $primaryKey !== null && $primaryKey->column === $property->name
+                    ? $primaryKey
+                    : null,
+                identifier: $identifiers[$property->name] ?? null,
+            );
         }
 
         if (\sizeof($columns) === 0) {
             throw ModelException::fromHasNoColumns(
                 modelClass: $class->name,
-            );
-        }
-
-        if ($foundPrimaryKey !== null && $foundPrimaryKeyColumn !== null) {
-            $primaryKey = new ModelPrimaryKey(
-                column: $foundPrimaryKey->column ?? $foundPrimaryKeyColumn,
-                autoIncrement: $foundPrimaryKey->autoIncrement,
-            );
-        }
-
-        $primaryKey ??= null;
-
-        foreach ($columns as $index => $column) {
-            $columns[$index] = new ModelColumn(
-                name: $index,
-                meta: $column,
-                primaryKey: $primaryKey,
-                identifier: $identifiers[$index] ?? null,
             );
         }
 

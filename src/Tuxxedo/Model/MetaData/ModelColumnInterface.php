@@ -14,15 +14,19 @@ declare(strict_types=1);
 namespace Tuxxedo\Model\MetaData;
 
 use Tuxxedo\Model\Attribute\ColumnInterface;
-use Tuxxedo\Model\Attribute\Identifier;
 
+// @todo Relations
 interface ModelColumnInterface
 {
     public string $name {
         get;
     }
 
-    public ColumnInterface $meta {
+    public bool $nullable {
+        get;
+    }
+
+    public ColumnInterface $attribute {
         get;
     }
 
@@ -30,10 +34,7 @@ interface ModelColumnInterface
         get;
     }
 
-    public ?Identifier $identifier {
+    public ?ModelIdentifierInterface $identifier {
         get;
     }
-
-    // @todo Relations
-    // @todo Nullability detection
 }

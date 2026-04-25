@@ -14,15 +14,15 @@ declare(strict_types=1);
 namespace Tuxxedo\Model\MetaData;
 
 use Tuxxedo\Model\Attribute\ColumnInterface;
-use Tuxxedo\Model\Attribute\Identifier;
 
 readonly class ModelColumn implements ModelColumnInterface
 {
     public function __construct(
         public string $name,
-        public ColumnInterface $meta,
+        public bool $nullable,
+        public ColumnInterface $attribute,
         public ?ModelPrimaryKeyInterface $primaryKey = null,
-        public ?Identifier $identifier = null,
+        public ?ModelIdentifierInterface $identifier = null,
     ) {
     }
 }

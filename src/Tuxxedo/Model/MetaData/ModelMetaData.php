@@ -13,14 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\MetaData;
 
-use Tuxxedo\Model\Attribute\Identifier;
-
 readonly class ModelMetaData implements ModelMetaDataInterface
 {
     /**
      * @param class-string $model
      * @param non-empty-array<ModelColumnInterface> $columns
-     * @param Identifier[] $identifiers
+     * @param ModelIdentifierInterface[] $identifiers
      */
     public function __construct(
         public string $model,
