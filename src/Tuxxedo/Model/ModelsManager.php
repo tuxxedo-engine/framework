@@ -94,7 +94,11 @@ class ModelsManager implements ModelsManagerInterface
 
         return $this->findFirst(
             class: $class,
-            criteria: static function (SelectBuilderInterface $builder) use ($metaData, $id): void {
+            criteria: static function (SelectBuilderInterface $builder) use ($criteria, $metaData, $id): void {
+                if ($criteria !== null) {
+                    $criteria($builder);
+                }
+
                 $builder->where($metaData->key->column, $id);
             },
         );
