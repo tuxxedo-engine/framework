@@ -17,7 +17,7 @@ class MethodReflector implements MethodReflectorInterface
 {
     public string $name {
         get {
-            return $this->name;
+            return $this->reflector->name;
         }
     }
 

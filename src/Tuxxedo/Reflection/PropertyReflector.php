@@ -17,7 +17,7 @@ class PropertyReflector implements PropertyReflectorInterface
 {
     public string $name {
         get {
-            return $this->name;
+            return $this->reflector->name;
         }
     }
 

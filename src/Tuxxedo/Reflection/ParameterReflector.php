@@ -17,7 +17,7 @@ class ParameterReflector implements ParameterReflectorInterface
 {
     public string $name {
         get {
-            return $this->name;
+            return $this->reflector->name;
         }
     }
 
