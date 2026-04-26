@@ -1,0 +1,12 @@
+{% layout 'model/base' %}
+
+{% block buttons %}
+    <button onclick="location.href = '{! route('model.list') | escape_js !}';">Back</button>
+{% endblock %}
+
+{% block content %}
+    <form action="{{ route() }}" method="post">
+        <strong>Name</strong>: <input type="text" name="name" value="{! user.name | escape_attr !}">
+        <input type="submit" name="Update">
+    </form>
+{% endblock %}

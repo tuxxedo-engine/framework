@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Runtime\Library\Function;
 
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Http\HttpException;
+use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Router\RouterException;
 use Tuxxedo\Router\RouterInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
@@ -36,11 +38,16 @@ class RouteFunction implements FunctionInterface
         array $arguments,
         \Closure $context,
     ): string {
-        /** @var string $name */
+        /** @var string|null $name */
         $name = \array_shift($arguments);
 
         /** @var array<string, string> $args */
         $args = $arguments[0] ?? [];
+
+        // @todo If there is any $args, then perhaps the route should resolve its own name and go to the findByName() branch
+        if ($name === null) {
+            return $this->container->resolve(RequestInterface::class)->route->asUrl() ?? throw HttpException::fromInternalServerError();
+        }
 
         return $this->container->resolve(RouterInterface::class)->findByName($name, $args)?->asUrl() ?? throw RouterException::fromInvalidNamedRoute(
             name: $name,

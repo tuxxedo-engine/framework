@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Middleware\ValidUser;
 use App\Models\User;
-use Tuxxedo\Escaper\EscaperInterface;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Method;
@@ -25,7 +25,11 @@ use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Model\ModelsManagerInterface;
 use Tuxxedo\Router\Attribute\Argument;
 use Tuxxedo\Router\Attribute\Controller;
+use Tuxxedo\Router\Attribute\Index;
+use Tuxxedo\Router\Attribute\Middleware;
 use Tuxxedo\Router\Attribute\Route;
+use Tuxxedo\View\View;
+use Tuxxedo\View\ViewInterface;
 
 #[Controller(uri: '/model/')]
 #[OutputCapture]
@@ -63,7 +67,7 @@ readonly class ModelController
         );
     }
 
-    #[Route\Get]
+    #[Route\Get(name: 'model.delete')]
     public function fetchAll(): ResponseInterface
     {
         \var_dump(
@@ -77,38 +81,31 @@ readonly class ModelController
         );
     }
 
-    #[Route(method: ['POST', 'GET'])]
+    #[Route(method: ['POST', 'GET'], name: 'model.new')]
     public function new(
         RequestInterface $request,
-    ): ResponseInterface {
+    ): ViewInterface|ResponseInterface {
         if ($request->server->method === Method::POST) {
             $user = new User();
             $user->name = $request->post->getString('name');
 
             $this->modelsManager->save($user);
 
-            return Response::html(
-                \sprintf(
-                    '<p>Created new user with id #%d</p>',
-                    $user->id,
-                ),
-            );
+            return Response::redirect('/model/');
         }
 
-        return Response::html(
-            html: '<form action="/model/new" method="post">' .
-            '<input type="text" name="name">' .
-            '<br><input type="submit">' .
-            '</form>',
+        return new View(
+            'model/new',
         );
     }
 
-    #[Route(uri: 'update/{id<numeric-id>}', method: ['POST', 'GET'])]
+    #[Middleware(ValidUser::class)]
+    #[Route(uri: 'update/{id<numeric-id>}', method: ['POST', 'GET'], name: 'model.update')]
     public function update(
         RequestInterface $request,
-        EscaperInterface $escaper,
         #[Argument] int $id,
-    ): ResponseInterface {
+    ): ViewInterface|ResponseInterface {
+        // @todo Consider fetch() + fetchByIdentifier() variants that throws on not found
         $user = $this->modelsManager->findByIdentifier(User::class, $id) ?? throw HttpException::fromNotFound();
 
         if ($request->server->method === Method::POST) {
@@ -116,19 +113,26 @@ readonly class ModelController
 
             $this->modelsManager->save($user);
 
-            return Response::html(
-                \sprintf(
-                    '<p>Updated user with id #%d</p>',
-                    $user->id,
-                ),
-            );
+            return Response::redirect('/model/');
         }
 
-        return Response::html(
-            html: '<form action="/model/update/' . $user->id . '" method="post">' .
-            '<input type="text" name="name" value="' . $escaper->attribute($user->name) . '">' .
-            '<br><input type="submit">' .
-            '</form>',
+        return new View(
+            'model/update',
+            [
+                'user' => $user,
+            ],
+        );
+    }
+
+    #[Index]
+    #[Route\Get(name: 'model.list')]
+    public function list(): ViewInterface
+    {
+        return new View(
+            'model/list',
+            [
+                'users' => $this->modelsManager->findAll(User::class),
+            ],
         );
     }
 }

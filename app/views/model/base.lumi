@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Models playground</title>
+    </head>
+    <body>
+        <div style="text-align: right;">
+            {% block buttons %}{% endblock %}
+        </div>
+
+        <div>
+            {% block content %}{% endblock %}
+        </div>
+    </body>
+</html>

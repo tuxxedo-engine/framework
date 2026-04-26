@@ -47,7 +47,6 @@ readonly class DispatchableRoute implements DispatchableRouteInterface
             '/\\/\\{(\\??)([a-zA-Z_][a-zA-Z0-9_]*)(?::([^}]+)|<([^>]+)>)?}/',
             function (array $matches): string {
                 $name = $matches[2];
-
                 $value = $this->arguments[$name] ?? null;
 
                 if ($value === null) {

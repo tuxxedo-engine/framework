@@ -20,6 +20,7 @@ use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Response\Stream\Stream;
 use Tuxxedo\Http\Response\Stream\StreamInterface;
 
+// @todo redirectRoute helper?
 class Response implements ResponseInterface
 {
     /**

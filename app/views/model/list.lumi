@@ -1,0 +1,31 @@
+{% layout 'model/base' %}
+
+{% block buttons %}
+    <button onclick="location.href = '{! route('model.new') | escape_js !}';">New</button>
+{% endblock %}
+
+{% block content %}
+    <table>
+        <thead>
+            <tr>
+                <th><strong>#</strong></th>
+                <th><strong>Name</strong></th>
+                <th colspan="2">&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.name }}</td>
+                    <td nowrap="nowrap">
+                        <a href="{! route('model.update', ['id': user.id]) | escape_attr !}">Edit</a>
+                    </td>
+                    <td nowrap="nowrap">
+                        <a href="{! route('model.delete', ['id': user.id]) | escape_attr !}">Delete</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
