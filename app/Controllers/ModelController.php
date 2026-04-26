@@ -114,7 +114,7 @@ readonly class ModelController
 
             $this->modelsManager->save($user);
 
-            return Response::redirect('/model/');
+            return Response::redirectRoute('model.list');
         }
 
         return new View(

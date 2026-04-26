@@ -33,9 +33,7 @@ class ValidUser implements MiddlewareInterface
         RequestInterface $request,
         MiddlewareInterface $next,
     ): ResponseInterface {
-        // @todo This could use a better API for fetching a named route argument, the current form is not very robust
-        //       and very easily error prone when modifying the arguments to the route
-        if (!$this->container->resolve(ModelsManagerInterface::class)->existsByIdentifier(User::class, $request->route->arguments[0])) {
+        if (!$this->container->resolve(ModelsManagerInterface::class)->existsByIdentifier(User::class, $request->route->arguments['id'])) {
             throw HttpException::fromNotFound();
         }
 

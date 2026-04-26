@@ -13,16 +13,22 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Response;
 
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\CookieInterface;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Response\Stream\Stream;
 use Tuxxedo\Http\Response\Stream\StreamInterface;
+use Tuxxedo\Router\RouterInterface;
 
-// @todo redirectRoute helper?
-class Response implements ResponseInterface
+class Response implements ResponseInterface, ResponsableInterface
 {
+    /**
+     * @var (\Closure(): ResponseInterface)|null
+     */
+    private ?\Closure $responseResolver = null;
+
     /**
      * @param HeaderInterface[] $headers
      */
@@ -31,6 +37,27 @@ class Response implements ResponseInterface
         public readonly array $headers = [],
         public readonly ResponseCode $responseCode = ResponseCode::OK,
     ) {
+    }
+
+    private function responseResolver(
+        ?\Closure $responseResolver,
+    ): void {
+        $this->responseResolver = $responseResolver;
+    }
+
+    public function toResponse(
+        ContainerInterface $container,
+    ): ResponseInterface {
+        if ($this->responseResolver !== null) {
+            return $container->call(
+                $this->responseResolver,
+                [
+                    'response' => $this,
+                ],
+            );
+        }
+
+        return $this;
     }
 
     /**
@@ -147,6 +174,37 @@ class Response implements ResponseInterface
             header: new Header('Location', $uri),
             replace: true,
         );
+    }
+
+    /**
+     * @param array<string, scalar> $arguments
+     * @param HeaderInterface[] $headers
+     */
+    public static function redirectRoute(
+        string $name,
+        array $arguments = [],
+        array $headers = [],
+        ResponseCode $responseCode = ResponseCode::FOUND,
+        string $body = '',
+    ): static {
+        $response = new static(
+            headers: $headers,
+            responseCode: $responseCode,
+            body: $body,
+        );
+
+        $response->responseResolver(
+            function (ResponseInterface $response, RouterInterface $router) use ($name, $arguments): ResponseInterface {
+                $route = $router->findByName($name, \array_map(\strval(...), $arguments)) ?? throw HttpException::fromInternalServerError();
+
+                return $response->withHeader(
+                    header: new Header('Location', $route->asUrl() ?? throw HttpException::fromInternalServerError()),
+                    replace: true,
+                );
+            },
+        );
+
+        return $response;
     }
 
     /**
