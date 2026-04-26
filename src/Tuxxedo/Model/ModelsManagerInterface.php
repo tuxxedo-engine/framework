@@ -23,6 +23,7 @@ use Tuxxedo\Model\MetaData\MetaDataInterface;
 // @todo Support relations
 // @todo Support CreatedAt, UpdatedAt & DeletedAt contracts
 // @todo Support value hydration and serialization from complex types like Enums, Objects
+// @todo Should save() return a boolean? Given it doesn't clone or refresh the model but modifies the input, it might make sense
 #[DefaultImplementation(class: ModelsManager::class, lifecycle: Lifecycle::PERSISTENT)]
 interface ModelsManagerInterface
 {
