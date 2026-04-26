@@ -89,7 +89,7 @@ readonly class ModelController
 
             return Response::html(
                 \sprintf(
-                    '<p>Created new user with id #%d',
+                    '<p>Created new user with id #%d</p>',
                     $user->id,
                 ),
             );
@@ -118,7 +118,7 @@ readonly class ModelController
 
             return Response::html(
                 \sprintf(
-                    '<p>Updated user with id #%d',
+                    '<p>Updated user with id #%d</p>',
                     $user->id,
                 ),
             );
