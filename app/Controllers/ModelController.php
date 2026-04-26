@@ -67,8 +67,7 @@ readonly class ModelController
         );
     }
 
-    // @todo Make a delete endpoint test and fix this name
-    #[Route\Get(name: 'model.delete')]
+    #[Route\Get]
     public function fetchAll(): ResponseInterface
     {
         \var_dump(
@@ -78,6 +77,29 @@ readonly class ModelController
         return Response::empty(
             headers: [
                 new Header('Content-Type', 'text/plain'),
+            ],
+        );
+    }
+
+    #[Middleware(ValidUser::class)]
+    #[Route(uri: 'delete/{id<numeric-id>}', method: ['POST', 'GET'], name: 'model.delete')]
+    public function delete(
+        RequestInterface $request,
+        #[Argument] int $id,
+    ): ViewInterface|ResponseInterface {
+        // @todo Consider fetch() + fetchByIdentifier() variants that throws on not found
+        $user = $this->modelsManager->findByIdentifier(User::class, $id) ?? throw HttpException::fromNotFound();
+
+        if ($request->server->method === Method::POST) {
+            $this->modelsManager->delete($user);
+
+            return Response::redirectRoute('model.list');
+        }
+
+        return new View(
+            'model/delete',
+            [
+                'user' => $user,
             ],
         );
     }

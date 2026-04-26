@@ -1,0 +1,12 @@
+{% layout 'model/base' %}
+
+{% block buttons %}
+{% endblock %}
+
+{% block content %}
+    <form action="{! route() | escape_attr !}" method="post">
+        <p>Please confirm whether you really wish to delete user #{{ user.id }}</p>
+        <input type="submit" value="Confirm">
+        <button onclick="location.href = '{! route('model.list') | escape_js !}';">Back</button>
+    </form>
+{% endblock %}
