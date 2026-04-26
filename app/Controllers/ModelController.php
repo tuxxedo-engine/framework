@@ -67,6 +67,7 @@ readonly class ModelController
         );
     }
 
+    // @todo Make a delete endpoint test and fix this name
     #[Route\Get(name: 'model.delete')]
     public function fetchAll(): ResponseInterface
     {

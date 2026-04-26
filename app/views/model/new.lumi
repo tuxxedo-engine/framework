@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-    <form action="{{ route() }}" method="post">
+    <form action="{! route() | escape_attr !}" method="post">
         <strong>Name</strong>: <input type="text" name="name">
         <input type="submit" name="Create">
     </form>
