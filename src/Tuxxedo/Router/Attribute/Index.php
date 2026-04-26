@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Router\Attribute;
 
+// @todo Consider a name property, because this is effectively an alias. This will allow developers to pick whether
+//       to send redirects or make routes to this alias which may be a nicer looking URL
 #[\Attribute(flags: \Attribute::TARGET_METHOD)]
 readonly class Index
 {
