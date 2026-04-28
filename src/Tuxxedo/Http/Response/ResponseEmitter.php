@@ -84,10 +84,10 @@ class ResponseEmitter implements ResponseEmitterInterface
                 }
 
                 if ($maxLength !== null) {
-                    $currentOutputSize += \mb_strlen($chunk);
+                    $currentOutputSize += \strlen($chunk);
 
                     if ($currentOutputSize >= $maxLength) {
-                        $chunk = \mb_substr($chunk, 0, $currentOutputSize - $maxLength);
+                        $chunk = \substr($chunk, 0, $currentOutputSize - $maxLength);
                     }
                 }
 
@@ -109,7 +109,7 @@ class ResponseEmitter implements ResponseEmitterInterface
             $response->body->close();
         } else {
             if ($maxLength !== null && $maxLength > -1) {
-                echo \mb_substr($response->body, 0, $maxLength);
+                echo \substr($response->body, 0, $maxLength);
             } else {
                 echo $response->body;
             }
