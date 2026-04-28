@@ -33,12 +33,12 @@ use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionProviderInterface;
 use Tuxxedo\View\Lumi\Library\Function\PhpFunction;
 use Tuxxedo\View\Lumi\Library\LibraryDiscoveryInterface;
-use Tuxxedo\View\Lumi\Library\LibraryInterface;
+use Tuxxedo\View\Lumi\Library\LibraryProviderInterface;
 use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
 use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpOptimizer;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
-use Tuxxedo\View\Lumi\Runtime\Library\StandardLibrary;
+use Tuxxedo\View\Lumi\Runtime\Library\StandardLibraryProvider;
 use Tuxxedo\View\Lumi\Runtime\Loader;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\Runtime;
@@ -289,7 +289,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
     }
 
     public function withLibrary(
-        LibraryInterface|LibraryDiscoveryInterface $library,
+        LibraryProviderInterface|LibraryDiscoveryInterface $library,
     ): LumiConfiguratorInterface {
         if ($library instanceof LibraryDiscoveryInterface) {
             $this->loadDiscoveredLibrary($library);
@@ -595,7 +595,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
         if ($this->withStandardLibrary) {
             $this->withLibrary(
-                library: new StandardLibrary(),
+                library: new StandardLibraryProvider(),
             );
         }
 

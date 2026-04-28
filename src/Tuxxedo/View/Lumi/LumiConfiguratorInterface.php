@@ -21,7 +21,7 @@ use Tuxxedo\View\Lumi\Library\Filter\FilterProviderInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionProviderInterface;
 use Tuxxedo\View\Lumi\Library\LibraryDiscoveryInterface;
-use Tuxxedo\View\Lumi\Library\LibraryInterface;
+use Tuxxedo\View\Lumi\Library\LibraryProviderInterface;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
@@ -182,7 +182,7 @@ interface LumiConfiguratorInterface
     ): self;
 
     public function withLibrary(
-        LibraryInterface|LibraryDiscoveryInterface $library,
+        LibraryProviderInterface|LibraryDiscoveryInterface $library,
     ): self;
 
     public function withStandardLibrary(): self;

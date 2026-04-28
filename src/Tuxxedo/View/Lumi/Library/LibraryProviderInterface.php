@@ -16,7 +16,7 @@ namespace Tuxxedo\View\Lumi\Library;
 use Tuxxedo\View\Lumi\Library\Filter\FilterProviderInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionProviderInterface;
 
-interface LibraryInterface
+interface LibraryProviderInterface
 {
     public function filters(): ?FilterProviderInterface;
 
