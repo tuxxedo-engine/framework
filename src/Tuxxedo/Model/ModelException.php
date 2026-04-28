@@ -212,6 +212,22 @@ class ModelException extends \Exception
     /**
      * @param class-string $modelClass
      */
+    public static function fromCompositeKeyReferencesUnknownColumn(
+        string $modelClass,
+        string $column,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": #[CompositeKey] references column "%s" which does not exist on the model',
+                $modelClass,
+                $column,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
     public static function fromNullValueOnNonNullableColumn(
         string $modelClass,
         string $property,

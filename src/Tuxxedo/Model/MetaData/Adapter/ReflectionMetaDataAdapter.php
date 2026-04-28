@@ -64,9 +64,24 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
 
         $primaryKey = null;
         $identifiers = [];
-        // @todo Validate columns against $columns here
         $compositeKey = $this->getCompositeKey($class);
         $columns = $this->getColumns($class, $primaryKey, $identifiers);
+
+        if ($compositeKey !== null) {
+            $knownColumnNames = \array_map(
+                static fn (ModelColumnInterface $column): string => $column->name,
+                $columns,
+            );
+
+            foreach ($compositeKey->columns as $compositeKeyColumn) {
+                if (!\in_array($compositeKeyColumn, $knownColumnNames, true)) {
+                    throw ModelException::fromCompositeKeyReferencesUnknownColumn(
+                        modelClass: $class->name,
+                        column: $compositeKeyColumn,
+                    );
+                }
+            }
+        }
 
         if ($primaryKey !== null && $compositeKey !== null) {
             throw ModelException::fromModelMayOnlyHaveOneKey(
