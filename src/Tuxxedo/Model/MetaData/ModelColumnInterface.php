@@ -18,7 +18,11 @@ use Tuxxedo\Model\Attribute\Relation\RelationInterface;
 
 interface ModelColumnInterface
 {
-    public string $name {
+    public string $property {
+        get;
+    }
+
+    public string $column {
         get;
     }
 

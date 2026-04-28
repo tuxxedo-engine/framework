@@ -22,7 +22,8 @@ readonly class ModelColumn implements ModelColumnInterface
      * @param RelationInterface[] $relations
      */
     public function __construct(
-        public string $name,
+        public string $property,
+        public string $column,
         public bool $nullable,
         public bool $unique,
         public ColumnInterface $attribute,

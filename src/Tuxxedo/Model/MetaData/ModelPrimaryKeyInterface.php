@@ -15,6 +15,10 @@ namespace Tuxxedo\Model\MetaData;
 
 interface ModelPrimaryKeyInterface
 {
+    public string $property {
+        get;
+    }
+
     public string $column {
         get;
     }

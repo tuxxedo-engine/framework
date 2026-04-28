@@ -18,6 +18,13 @@ interface ModelCompositeKeyInterface
     /**
      * @var non-empty-array<string>
      */
+    public array $properties {
+        get;
+    }
+
+    /**
+     * @var non-empty-array<string>
+     */
     public array $columns {
         get;
     }

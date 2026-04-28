@@ -16,9 +16,11 @@ namespace Tuxxedo\Model\MetaData;
 class ModelCompositeKey implements ModelCompositeKeyInterface
 {
     /**
+     * @param non-empty-array<string> $properties
      * @param non-empty-array<string> $columns
      */
     public function __construct(
+        public array $properties,
         public array $columns,
     ) {
     }

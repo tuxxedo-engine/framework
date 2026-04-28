@@ -68,11 +68,11 @@ class ModelsManager implements ModelsManagerInterface
         }
 
         if ($metaData->key instanceof ModelPrimaryKeyInterface) {
-            return PropertyReflector::createFromObject($model, $metaData->key->column)->getValue($model) === null;
+            return PropertyReflector::createFromObject($model, $metaData->key->property)->getValue($model) === null;
         }
 
-        foreach ($metaData->key->columns as $column) {
-            if (PropertyReflector::createFromObject($model, $column)->getValue($model) !== null) {
+        foreach ($metaData->key->properties as $property) {
+            if (PropertyReflector::createFromObject($model, $property)->getValue($model) !== null) {
                 return false;
             }
         }
@@ -92,28 +92,28 @@ class ModelsManager implements ModelsManagerInterface
         $map = [];
 
         foreach ($metaData->columns as $column) {
-            if (\in_array($column->name, $skipColumns, true)) {
+            if (\in_array($column->column, $skipColumns, true)) {
                 continue;
             }
 
-            $value = PropertyReflector::createFromObject($model, $column->name)->getValue($model);
+            $value = PropertyReflector::createFromObject($model, $column->property)->getValue($model);
 
             if ($value === null && !$column->nullable) {
                 throw ModelException::fromNullValueOnNonNullableColumn(
                     modelClass: $metaData->model,
-                    property: $column->name,
+                    property: $column->property,
                 );
             }
 
             if ($value !== null && !\is_scalar($value)) {
                 throw ModelException::fromPropertyValueMustBeScalar(
                     modelClass: $metaData->model,
-                    property: $column->name,
+                    property: $column->property,
                     actualType: \get_debug_type($value),
                 );
             }
 
-            $map[$column->name] = $value;
+            $map[$column->column] = $value;
         }
 
         return $map;
@@ -154,7 +154,7 @@ class ModelsManager implements ModelsManagerInterface
             $id = $this->connection->lastInsertIdAsInt();
 
             if ($id !== null) {
-                PropertyReflector::createFromObject($model, $metaData->key->column)->setValue($model, $id);
+                PropertyReflector::createFromObject($model, $metaData->key->property)->setValue($model, $id);
             }
         }
 
@@ -189,25 +189,25 @@ class ModelsManager implements ModelsManagerInterface
         }
 
         if ($metaData->key instanceof ModelPrimaryKeyInterface) {
-            $value = PropertyReflector::createFromObject($model, $metaData->key->column)->getValue($model);
+            $value = PropertyReflector::createFromObject($model, $metaData->key->property)->getValue($model);
 
             if (!\is_scalar($value)) {
                 throw ModelException::fromPropertyValueMustBeScalar(
                     modelClass: $metaData->model,
-                    property: $metaData->key->column,
+                    property: $metaData->key->property,
                     actualType: \get_debug_type($value),
                 );
             }
 
             $query->where($metaData->key->column, $value);
         } elseif ($metaData->key instanceof ModelCompositeKeyInterface) {
-            foreach ($metaData->key->columns as $column) {
-                $value = PropertyReflector::createFromObject($model, $column)->getValue($model);
+            foreach (\array_combine($metaData->key->properties, $metaData->key->columns) as $property => $column) {
+                $value = PropertyReflector::createFromObject($model, $property)->getValue($model);
 
                 if (!\is_scalar($value)) {
                     throw ModelException::fromPropertyValueMustBeScalar(
                         modelClass: $metaData->model,
-                        property: $column,
+                        property: $property,
                         actualType: \get_debug_type($value),
                     );
                 }
@@ -402,12 +402,12 @@ class ModelsManager implements ModelsManagerInterface
             );
         }
 
-        $value = PropertyReflector::createFromObject($metaData->model, $metaData->key->column)->getValue($model);
+        $value = PropertyReflector::createFromObject($metaData->model, $metaData->key->property)->getValue($model);
 
         if (!\is_int($value) && !\is_string($value)) {
             throw ModelException::fromPropertyValueMustBeIdentifierType(
                 modelClass: $metaData->model,
-                property: $metaData->key->column,
+                property: $metaData->key->property,
                 actualType: \get_debug_type($value),
             );
         }
@@ -481,12 +481,12 @@ class ModelsManager implements ModelsManagerInterface
         $query = $this->connection->delete($metaData->table);
 
         if ($metaData->key instanceof ModelPrimaryKeyInterface) {
-            $value = PropertyReflector::createFromObject($metaData->model, $metaData->key->column)->getValue($model);
+            $value = PropertyReflector::createFromObject($metaData->model, $metaData->key->property)->getValue($model);
 
             if (!\is_scalar($value)) {
                 throw ModelException::fromPropertyValueMustBeScalar(
                     modelClass: $metaData->model,
-                    property: $metaData->key->column,
+                    property: $metaData->key->property,
                     actualType: \get_debug_type($value),
                 );
             }
@@ -496,13 +496,13 @@ class ModelsManager implements ModelsManagerInterface
                 $value,
             );
         } elseif ($metaData->key instanceof ModelCompositeKeyInterface) {
-            foreach ($metaData->key->columns as $column) {
-                $value = PropertyReflector::createFromObject($metaData->model, $column)->getValue($model);
+            foreach (\array_combine($metaData->key->properties, $metaData->key->columns) as $property => $column) {
+                $value = PropertyReflector::createFromObject($metaData->model, $property)->getValue($model);
 
                 if (!\is_scalar($value)) {
                     throw ModelException::fromPropertyValueMustBeScalar(
                         modelClass: $metaData->model,
-                        property: $column,
+                        property: $property,
                         actualType: \get_debug_type($value),
                     );
                 }

@@ -16,6 +16,7 @@ namespace Tuxxedo\Model\MetaData;
 readonly class ModelPrimaryKey implements ModelPrimaryKeyInterface
 {
     public function __construct(
+        public string $property,
         public string $column,
         public bool $autoIncrement,
     ) {

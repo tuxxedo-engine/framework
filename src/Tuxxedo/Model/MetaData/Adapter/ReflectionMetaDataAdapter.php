@@ -64,20 +64,24 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
 
         $primaryKey = null;
         $identifiers = [];
-        $compositeKey = $this->getCompositeKey($class);
         $columns = $this->getColumns($class, $primaryKey, $identifiers);
+        $compositeKey = $this->getCompositeKey($class, $columns);
 
         if ($compositeKey !== null) {
-            $knownColumnNames = \array_map(
-                static fn (ModelColumnInterface $column): string => $column->name,
-                $columns,
-            );
+            foreach ($compositeKey->properties as $compositeKeyProperty) {
+                $found = false;
 
-            foreach ($compositeKey->columns as $compositeKeyColumn) {
-                if (!\in_array($compositeKeyColumn, $knownColumnNames, true)) {
+                foreach ($columns as $column) {
+                    if ($column->property === $compositeKeyProperty) {
+                        $found = true;
+                        break;
+                    }
+                }
+
+                if (!$found) {
                     throw ModelException::fromCompositeKeyReferencesUnknownColumn(
                         modelClass: $class->name,
-                        column: $compositeKeyColumn,
+                        column: $compositeKeyProperty,
                     );
                 }
             }
@@ -98,16 +102,36 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         );
     }
 
+    /**
+     * @param non-empty-array<ModelColumnInterface> $columns
+     */
     private function getCompositeKey(
         ClassReflector $class,
+        array $columns,
     ): ?ModelCompositeKeyInterface {
-        if ($class->hasAttribute(CompositeKey::class)) {
-            return new ModelCompositeKey(
-                columns: $class->getAttribute(CompositeKey::class)->columns,
-            );
+        if (!$class->hasAttribute(CompositeKey::class)) {
+            return null;
         }
 
-        return null;
+        $declaredProperties = $class->getAttribute(CompositeKey::class)->columns;
+        $resolvedColumns = [];
+
+        foreach ($declaredProperties as $declaredProperty) {
+            foreach ($columns as $column) {
+                if ($column->property === $declaredProperty) {
+                    $resolvedColumns[] = $column->column;
+
+                    break;
+                }
+            }
+        }
+
+        return new ModelCompositeKey(
+            properties: $declaredProperties,
+            columns: $resolvedColumns !== []
+                ? $resolvedColumns
+                : $declaredProperties,
+        );
     }
 
     /**
@@ -165,6 +189,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 $foundPrimaryKey = $property->getAttribute(PrimaryKey::class);
 
                 $primaryKey = new ModelPrimaryKey(
+                    property: $property->name,
                     column: $foundPrimaryKey->column ?? $property->name,
                     autoIncrement: $foundPrimaryKey->autoIncrement,
                 );
@@ -190,9 +215,8 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             }
 
             $columns[] = new ModelColumn(
-                // @todo This may need a secondary to differentiate between the property and column, so a user
-                //       does not need to read $column->attribute->name ?? $column->name?
-                name: $property->name,
+                property: $property->name,
+                column: $propertyColumns[0]->name ?? $property->name,
                 nullable: $property->isNullable(),
                 unique: $property->hasAttribute(Unique::class),
                 attribute: $propertyColumns[0],
