@@ -170,6 +170,20 @@ class ModelException extends \Exception
     /**
      * @param class-string $modelClass
      */
+    public static function fromCantFetchWithoutCompositeKey(
+        string $modelClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot fetch model "%s", as the model does not have a #[CompositeKey]',
+                $modelClass,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
     public static function fromModelNoLongerExists(
         string $modelClass,
     ): self {

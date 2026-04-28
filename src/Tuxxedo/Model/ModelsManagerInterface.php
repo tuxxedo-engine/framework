@@ -103,6 +103,38 @@ interface ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
+     * @param array<string, int|string> $keys
+     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @return TModel|null
+     *
+     * @throws ModelException
+     */
+    public function findByCompositeKey(
+        string $class,
+        array $keys,
+        ?\Closure $criteria = null,
+    ): ?object;
+
+    /**
+     * @template TModel of object
+     *
+     * @param class-string<TModel> $class
+     * @param array<string, int|string> $keys
+     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @return TModel
+     *
+     * @throws ModelException
+     */
+    public function fetchByCompositeKey(
+        string $class,
+        array $keys,
+        ?\Closure $criteria = null,
+    ): object;
+
+    /**
+     * @template TModel of object
+     *
+     * @param class-string<TModel> $class
      * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
      * @return \Generator<TModel>
      */

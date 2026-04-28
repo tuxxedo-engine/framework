@@ -19,6 +19,7 @@ use Tuxxedo\Model\Attribute\Identifier;
 use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Relation\RelationInterface;
 use Tuxxedo\Model\Attribute\Table;
+use Tuxxedo\Model\Attribute\Unique;
 use Tuxxedo\Model\MetaData\ModelColumn;
 use Tuxxedo\Model\MetaData\ModelColumnInterface;
 use Tuxxedo\Model\MetaData\ModelCompositeKey;
@@ -178,6 +179,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 //       does not need to read $column->attribute->name ?? $column->name?
                 name: $property->name,
                 nullable: $property->isNullable(),
+                unique: $property->hasAttribute(Unique::class),
                 attribute: $propertyColumns[0],
                 primaryKey: $foundPrimaryKey !== null
                     ? $primaryKey

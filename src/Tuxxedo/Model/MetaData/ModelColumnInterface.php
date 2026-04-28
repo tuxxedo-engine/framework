@@ -26,6 +26,10 @@ interface ModelColumnInterface
         get;
     }
 
+    public bool $unique {
+        get;
+    }
+
     public ColumnInterface $attribute {
         get;
     }

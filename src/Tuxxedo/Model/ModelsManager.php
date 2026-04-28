@@ -313,6 +313,63 @@ class ModelsManager implements ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
+     * @param array<string, int|string> $keys
+     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @return TModel|null
+     *
+     * @throws ModelException
+     */
+    public function findByCompositeKey(
+        string $class,
+        array $keys,
+        ?\Closure $criteria = null,
+    ): ?object {
+        $metaData = $this->metaData->getModel($class);
+
+        if (!$metaData->key instanceof ModelCompositeKeyInterface) {
+            throw ModelException::fromCantFetchWithoutCompositeKey(
+                modelClass: $metaData->model,
+            );
+        }
+
+        return $this->findFirst(
+            class: $class,
+            criteria: static function (SelectBuilderInterface $builder) use ($criteria, $keys): void {
+                if ($criteria !== null) {
+                    $criteria($builder);
+                }
+
+                foreach ($keys as $column => $value) {
+                    $builder->where($column, $value);
+                }
+            },
+        );
+    }
+
+    /**
+     * @template TModel of object
+     *
+     * @param class-string<TModel> $class
+     * @param array<string, int|string> $keys
+     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @return TModel
+     *
+     * @throws ModelException
+     */
+    public function fetchByCompositeKey(
+        string $class,
+        array $keys,
+        ?\Closure $criteria = null,
+    ): object {
+        return $this->findByCompositeKey($class, $keys, $criteria) ?? throw ModelException::fromModelNotFound(
+            modelClass: $class,
+        );
+    }
+
+    /**
+     * @template TModel of object
+     *
+     * @param class-string<TModel> $class
      * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
      * @return \Generator<TModel>
      */

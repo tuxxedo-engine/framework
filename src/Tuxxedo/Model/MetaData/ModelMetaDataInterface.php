@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\MetaData;
 
-// @todo Support Unique columns + CompositeKeys
 interface ModelMetaDataInterface
 {
     /**

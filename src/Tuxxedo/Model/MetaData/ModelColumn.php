@@ -24,6 +24,7 @@ readonly class ModelColumn implements ModelColumnInterface
     public function __construct(
         public string $name,
         public bool $nullable,
+        public bool $unique,
         public ColumnInterface $attribute,
         public ?ModelPrimaryKeyInterface $primaryKey = null,
         public ?ModelIdentifierInterface $identifier = null,
