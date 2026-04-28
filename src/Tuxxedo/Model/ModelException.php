@@ -184,6 +184,20 @@ class ModelException extends \Exception
     /**
      * @param class-string $modelClass
      */
+    public static function fromModelNotFound(
+        string $modelClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot fetch model "%s", as the record does not exist',
+                $modelClass,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
     public static function fromNullValueOnNonNullableColumn(
         string $modelClass,
         string $property,

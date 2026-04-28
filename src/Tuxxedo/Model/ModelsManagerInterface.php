@@ -24,6 +24,7 @@ use Tuxxedo\Model\MetaData\MetaDataInterface;
 // @todo Support CreatedAt, UpdatedAt & DeletedAt contracts
 // @todo Support value hydration and serialization from complex types like Enums, Objects
 // @todo Should save() return a boolean? Given it doesn't clone or refresh the model but modifies the input, it might make sense
+// @todo Implement a cache strategy
 #[DefaultImplementation(class: ModelsManager::class, lifecycle: Lifecycle::PERSISTENT)]
 interface ModelsManagerInterface
 {
@@ -59,6 +60,20 @@ interface ModelsManagerInterface
 
     /**
      * @template TModel of object
+     *
+     * @param class-string<TModel> $class
+     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @return TModel
+     *
+     * @throws ModelException
+     */
+    public function fetch(
+        string $class,
+        ?\Closure $criteria = null,
+    ): object;
+
+    /**
+     * @template TModel of object
      * @param class-string<TModel> $class
      * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
      * @return TModel|null
@@ -68,6 +83,21 @@ interface ModelsManagerInterface
         int|string $id,
         ?\Closure $criteria = null,
     ): ?object;
+
+    /**
+     * @template TModel of object
+     *
+     * @param class-string<TModel> $class
+     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @return TModel
+     *
+     * @throws ModelException
+     */
+    public function fetchByIdentifier(
+        string $class,
+        int|string $id,
+        ?\Closure $criteria = null,
+    ): object;
 
     /**
      * @template TModel of object

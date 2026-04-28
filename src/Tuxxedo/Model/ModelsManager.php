@@ -243,6 +243,24 @@ class ModelsManager implements ModelsManagerInterface
 
     /**
      * @template TModel of object
+     *
+     * @param class-string<TModel> $class
+     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @return TModel
+     *
+     * @throws ModelException
+     */
+    public function fetch(
+        string $class,
+        ?\Closure $criteria = null,
+    ): object {
+        return $this->findFirst($class, $criteria) ?? throw ModelException::fromModelNotFound(
+            modelClass: $class,
+        );
+    }
+
+    /**
+     * @template TModel of object
      * @param class-string<TModel> $class
      * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
      * @return TModel|null
@@ -269,6 +287,25 @@ class ModelsManager implements ModelsManagerInterface
 
                 $builder->where($metaData->key->column, $id);
             },
+        );
+    }
+
+    /**
+     * @template TModel of object
+     *
+     * @param class-string<TModel> $class
+     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @return TModel
+     *
+     * @throws ModelException
+     */
+    public function fetchByIdentifier(
+        string $class,
+        int|string $id,
+        ?\Closure $criteria = null,
+    ): object {
+        return $this->findByIdentifier($class, $id, $criteria) ?? throw ModelException::fromModelNotFound(
+            modelClass: $class,
         );
     }
 

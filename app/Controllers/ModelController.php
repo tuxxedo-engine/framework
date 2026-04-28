@@ -16,7 +16,6 @@ namespace App\Controllers;
 use App\Middleware\ValidUser;
 use App\Models\User;
 use Tuxxedo\Http\Header;
-use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Middleware\OutputCapture;
 use Tuxxedo\Http\Request\RequestInterface;
@@ -87,8 +86,7 @@ readonly class ModelController
         RequestInterface $request,
         #[Argument] int $id,
     ): ViewInterface|ResponseInterface {
-        // @todo Consider fetch() + fetchByIdentifier() variants that throws on not found
-        $user = $this->modelsManager->findByIdentifier(User::class, $id) ?? throw HttpException::fromNotFound();
+        $user = $this->modelsManager->fetchByIdentifier(User::class, $id);
 
         if ($request->server->method === Method::POST) {
             $this->modelsManager->delete($user);
@@ -128,8 +126,7 @@ readonly class ModelController
         RequestInterface $request,
         #[Argument] int $id,
     ): ViewInterface|ResponseInterface {
-        // @todo Consider fetch() + fetchByIdentifier() variants that throws on not found
-        $user = $this->modelsManager->findByIdentifier(User::class, $id) ?? throw HttpException::fromNotFound();
+        $user = $this->modelsManager->fetchByIdentifier(User::class, $id);
 
         if ($request->server->method === Method::POST) {
             $user->name = $request->post->getString('name');
