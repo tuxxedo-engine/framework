@@ -1,7 +1,7 @@
 {% layout 'model/base' %}
 
 {% block buttons %}
-    <button onclick="location.href = '{! route('model.list') | escape_js !}';">Back</button>
+    <button onclick="location.href = '{! route('model.index') | escape_js !}';">Back</button>
 {% endblock %}
 
 {% block content %}

@@ -147,7 +147,7 @@ readonly class ModelController
         );
     }
 
-    #[Index]
+    #[Index(name: 'model.index')]
     #[Route\Get(name: 'model.list')]
     public function list(): ViewInterface
     {

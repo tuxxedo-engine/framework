@@ -111,6 +111,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
                     $route = $attribute->newInstance();
                     $prefix = null;
                     $uri = $route->uri;
+                    $indexAttribute = null;
 
                     if ($controllerAttribute === null && $uri === null) {
                         $this->handleError(
@@ -122,7 +123,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
 
                         return;
                     } elseif ($uri === null) {
-                        if ($this->isIndexMethod($controllerAttribute, $method)) {
+                        if ($this->isIndexMethod($controllerAttribute, $method, $indexAttribute)) {
                             $uri = $controllerAttribute->uri;
                         } else {
                             $uri = $controllerAttribute->uri . $method->getName();
@@ -144,8 +145,12 @@ class RouteDiscoverer implements RouteDiscovererInterface
                         $uri = $prefix->uri . $uri;
                     }
 
+                    $effectiveRoute = ($indexAttribute?->name !== null && $route->name === null)
+                        ? $route->withName($indexAttribute->name)
+                        : $route;
+
                     yield from $this->emitRoutes(
-                        route: $route,
+                        route: $effectiveRoute,
                         prefix: $prefix,
                         uri: $uri,
                         middleware: $middleware,
@@ -153,6 +158,18 @@ class RouteDiscoverer implements RouteDiscovererInterface
                         method: $method,
                         namedRoutes: $namedRoutes,
                     );
+
+                    if ($indexAttribute?->name !== null && $route->name !== null) {
+                        yield from $this->emitRoutes(
+                            route: $route->withName($indexAttribute->name),
+                            prefix: $prefix,
+                            uri: $uri,
+                            middleware: $middleware,
+                            reflector: $reflector,
+                            method: $method,
+                            namedRoutes: $namedRoutes,
+                        );
+                    }
 
                     if (
                         (
@@ -316,6 +333,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
     private function isIndexMethod(
         Attribute\Controller $controllerAttribute,
         \ReflectionMethod $method,
+        ?Attribute\Index &$indexAttribute = null,
     ): bool {
         if (
             $controllerAttribute->autoIndex &&
@@ -324,12 +342,15 @@ class RouteDiscoverer implements RouteDiscovererInterface
             return true;
         }
 
-        $indexAttribute = $method->getAttributes(
+        $attributes = $method->getAttributes(
             name: Attribute\Index::class,
             flags: \ReflectionAttribute::IS_INSTANCEOF,
         );
 
-        if (\sizeof($indexAttribute) > 0) {
+        if (\sizeof($attributes) > 0) {
+            /** @var Attribute\Index */
+            $indexAttribute = $attributes[0]->newInstance();
+
             return true;
         }
 

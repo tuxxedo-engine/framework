@@ -45,6 +45,17 @@ readonly class Route
         );
     }
 
+    public function withName(
+        ?string $name,
+    ): static {
+        return clone (
+            $this,
+            [
+                'name' => $name,
+            ],
+        );
+    }
+
     public function withUri(
         ?string $uri,
     ): static {
