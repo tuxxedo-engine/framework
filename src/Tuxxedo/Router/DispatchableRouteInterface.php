@@ -20,7 +20,7 @@ interface DispatchableRouteInterface
     }
 
     /**
-     * @var string[]
+     * @var array<string, string>
      */
     public array $arguments {
         get;
