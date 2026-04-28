@@ -16,7 +16,6 @@ namespace Tuxxedo\Router\Attribute;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 
-// @todo Closure variant does not receive enough arguments to allow continuing the chain when its called
 #[\Attribute(flags: \Attribute::IS_REPEATABLE | \Attribute::TARGET_CLASS | \Attribute::TARGET_METHOD)]
 readonly class Middleware
 {
