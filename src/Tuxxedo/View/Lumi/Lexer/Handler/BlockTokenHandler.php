@@ -142,7 +142,7 @@ class BlockTokenHandler implements TokenHandlerInterface
     ): array {
         $buffer = \mb_trim($buffer);
 
-        if (\preg_match('/^([a-z_][a-z0-9_]*)(.*)$/i', $buffer, $matches) !== 1) {
+        if (\preg_match('/^([a-z_][a-z0-9_]*)((?:\s+.*)?)$/i', $buffer, $matches) !== 1) {
             throw LexerException::fromUnexpectedSequenceFound(
                 sequence: $buffer,
                 line: $startingLine,
