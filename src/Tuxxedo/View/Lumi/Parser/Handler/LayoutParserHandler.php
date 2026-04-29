@@ -84,7 +84,7 @@ class LayoutParserHandler implements ParserHandlerInterface
 
             if (
                 !$token instanceof TextToken ||
-                \preg_match('/(?s)(?=.*\s)/u', $token->op1) !== 1
+                \preg_match('/^\s*$/u', $token->op1) !== 1
             ) {
                 throw ParserException::fromLayoutModeMustNotHaveRootElements(
                     line: $token->line,
