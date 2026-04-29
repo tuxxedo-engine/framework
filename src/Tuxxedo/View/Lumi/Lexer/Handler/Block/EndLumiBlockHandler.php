@@ -43,7 +43,7 @@ class EndLumiBlockHandler implements BlockHandlerInterface, AlwaysStandaloneInte
         $state->removeFlag(LexerStateFlag::TEXT_AS_RAW);
         $state->setInternalBuffer('');
 
-        if (\preg_match('/^[A-Za-z]+/u', $theme) !== 1) {
+        if (\preg_match('/^[A-Za-z]+$/u', $theme) !== 1) {
             throw LexerException::fromInvalidLumiTheme(
                 line: $startingLine,
                 theme: $theme,
