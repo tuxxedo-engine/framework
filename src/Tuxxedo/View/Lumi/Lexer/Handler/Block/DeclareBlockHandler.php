@@ -42,6 +42,12 @@ class DeclareBlockHandler implements BlockHandlerInterface, AlwaysExpressiveInte
         $op1 = \mb_trim($parts[0]);
         $op2Raw = \mb_trim($parts[1]);
 
+        if ($op1 === '') {
+            throw LexerException::fromInvalidDeclare(
+                line: $startingLine,
+            );
+        }
+
         $tokens = $expressionLexer->lex(
             startingLine: $startingLine,
             operand: $op2Raw,
