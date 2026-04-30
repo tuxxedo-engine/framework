@@ -64,7 +64,6 @@ abstract class AbstractOptimizer implements OptimizerInterface
     protected function pushScope(
         bool $inherit = false,
     ): void {
-
         if ($inherit) {
             $newScope = clone $this->scope;
 
