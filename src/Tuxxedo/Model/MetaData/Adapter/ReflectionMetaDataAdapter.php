@@ -74,6 +74,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 foreach ($columns as $column) {
                     if ($column->property === $compositeKeyProperty) {
                         $found = true;
+
                         break;
                     }
                 }

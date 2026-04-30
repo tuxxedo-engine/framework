@@ -39,7 +39,7 @@ readonly class CompiledFile implements CompiledFileInterface
 
         if (
             !\is_dir($directory) &&
-            !\mkdir($directory, recursive: true, permissions: 0755)
+            !\mkdir($directory, permissions: 0755, recursive: true)
         ) {
             return false;
         }

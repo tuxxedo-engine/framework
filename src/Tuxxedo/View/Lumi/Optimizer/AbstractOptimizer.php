@@ -46,6 +46,11 @@ abstract class AbstractOptimizer implements OptimizerInterface
     public function __construct(
         protected readonly EvaluatorInterface $evaluator = new Evaluator(),
     ) {
+        $this->blankState();
+    }
+
+    private function blankState(): void
+    {
         $this->directives = MutableDirectives::createWithDefaults();
         $this->scope = new Scope(
             evaluator: $this->evaluator,
@@ -265,7 +270,7 @@ abstract class AbstractOptimizer implements OptimizerInterface
         $oldStream = clone $stream;
         $stream = static::optimizer($stream);
 
-        $this->directives = MutableDirectives::createWithDefaults();
+        $this->blankState();
 
         return OptimizerResult::create(
             oldStream: $oldStream,
