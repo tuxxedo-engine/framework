@@ -16,7 +16,6 @@ namespace Tuxxedo\Mapper;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 
-// @todo Support recursively deep mapping via attributes (like Container style resolvers maybe?)
 #[DefaultImplementation(class: Mapper::class, lifecycle: Lifecycle::PERSISTENT)]
 interface MapperInterface
 {
@@ -34,6 +33,7 @@ interface MapperInterface
         string|object $className,
         bool $skipInvalidProperties = false,
         bool $castType = false,
+        bool $deepMap = false,
     ): object;
 
     /**
@@ -49,6 +49,7 @@ interface MapperInterface
         string|object $className,
         bool $skipInvalidProperties = false,
         bool $castType = false,
+        bool $deepMap = false,
     ): object;
 
     /**
@@ -65,5 +66,6 @@ interface MapperInterface
         string|object $className,
         bool $skipInvalidProperties = false,
         bool $castType = false,
+        bool $deepMap = false,
     ): array;
 }

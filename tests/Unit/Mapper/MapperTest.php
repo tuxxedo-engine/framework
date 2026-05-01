@@ -17,8 +17,12 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Mapper\Mapper;
 use Tuxxedo\Mapper\MapperException;
+use Unit\Fixture\Mapper\Address;
+use Unit\Fixture\Mapper\CircularA;
+use Unit\Fixture\Mapper\CircularB;
 use Unit\Fixture\Mapper\Country;
 use Unit\Fixture\Mapper\Person;
+use Unit\Fixture\Mapper\PersonWithAddress;
 
 class MapperTest extends TestCase
 {
@@ -214,6 +218,103 @@ class MapperTest extends TestCase
                 'constitution' => [],
             ],
             className: Country::class,
+        );
+    }
+
+    public function testDeepMapArrayToWithNestedArray(): void
+    {
+        $person = (new Mapper())->mapArrayTo(
+            input: [
+                'name' => 'Rasmus Lerdorf',
+                'address' => [
+                    'street' => 'Infinite Loop',
+                    'zip' => '95014',
+                ],
+            ],
+            className: PersonWithAddress::class,
+            deepMap: true,
+        );
+
+        self::assertInstanceOf(PersonWithAddress::class, $person);
+        self::assertInstanceOf(Address::class, $person->address);
+        self::assertSame('Rasmus Lerdorf', $person->name);
+        self::assertSame('Infinite Loop', $person->address->street);
+        self::assertSame('95014', $person->address->zip);
+    }
+
+    public function testDeepMapObjectToWithNestedObject(): void
+    {
+        $input = new PersonWithAddress(
+            name: 'Linus Torvalds',
+            address: new Address(
+                street: 'Penguin Lane',
+                zip: '00100',
+            ),
+        );
+
+        $person = (new Mapper())->mapObjectTo(
+            input: $input,
+            className: PersonWithAddress::class,
+            deepMap: true,
+        );
+
+        self::assertInstanceOf(PersonWithAddress::class, $person);
+        self::assertInstanceOf(Address::class, $person->address);
+        self::assertSame('Linus Torvalds', $person->name);
+        self::assertSame('Penguin Lane', $person->address->street);
+        self::assertSame('00100', $person->address->zip);
+    }
+
+    public function testDeepMapArrayToWithNestedObject(): void
+    {
+        $person = (new Mapper())->mapArrayTo(
+            input: [
+                'name' => 'Guido van Rossum',
+                'address' => new Address(
+                    street: 'Snake Street',
+                    zip: '12345',
+                ),
+            ],
+            className: PersonWithAddress::class,
+            deepMap: true,
+        );
+
+        self::assertInstanceOf(PersonWithAddress::class, $person);
+        self::assertInstanceOf(Address::class, $person->address);
+        self::assertSame('Guido van Rossum', $person->name);
+        self::assertSame('Snake Street', $person->address->street);
+        self::assertSame('12345', $person->address->zip);
+    }
+
+    public function testDeepMapWithoutFlagDoesNotRecurse(): void
+    {
+        $this->expectException(MapperException::class);
+
+        (new Mapper())->mapArrayTo(
+            input: [
+                'name' => 'Bjarne Stroustrup',
+                'address' => [
+                    'street' => 'Template Avenue',
+                    'zip' => '54321',
+                ],
+            ],
+            className: PersonWithAddress::class,
+        );
+    }
+
+    public function testDeepMapCircularReferenceThrows(): void
+    {
+        $this->expectException(MapperException::class);
+
+        $circularA = new CircularA();
+        $circularB = new CircularB();
+        $circularA->circularB = $circularB;
+        $circularB->circularA = $circularA;
+
+        (new Mapper())->mapObjectTo(
+            input: $circularA,
+            className: CircularA::class,
+            deepMap: true,
         );
     }
 }
