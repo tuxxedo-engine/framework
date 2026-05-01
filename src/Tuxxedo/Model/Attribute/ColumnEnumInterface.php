@@ -13,15 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\Attribute;
 
-use Tuxxedo\Database\Query\Dialect\DialectInterface;
-
-interface ColumnInterface
+interface ColumnEnumInterface
 {
-    public ?string $name {
+    /**
+     * @var class-string<\BackedEnum>
+     */
+    public string $enum {
         get;
     }
-
-    public function getNativeType(
-        DialectInterface $dialect,
-    ): ?string;
 }
