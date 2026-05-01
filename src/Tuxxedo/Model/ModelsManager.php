@@ -132,8 +132,8 @@ class ModelsManager implements ModelsManagerInterface
         $skipColumns = [];
 
         if (
-            $metaData->key instanceof ModelPrimaryKeyInterface
-            && $metaData->key->autoIncrement
+            $metaData->key instanceof ModelPrimaryKeyInterface &&
+            $metaData->key->autoIncrement
         ) {
             $skipColumns[] = $metaData->key->column;
         }
@@ -148,8 +148,8 @@ class ModelsManager implements ModelsManagerInterface
         $query->execute();
 
         if (
-            $metaData->key instanceof ModelPrimaryKeyInterface
-            && $metaData->key->autoIncrement
+            $metaData->key instanceof ModelPrimaryKeyInterface &&
+            $metaData->key->autoIncrement
         ) {
             $id = $this->connection->lastInsertIdAsInt();
 
@@ -507,10 +507,7 @@ class ModelsManager implements ModelsManagerInterface
                     );
                 }
 
-                $query->where(
-                    $column,
-                    $value,
-                );
+                $query->where($column, $value);
             }
         }
 

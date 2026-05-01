@@ -45,6 +45,7 @@ use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Lexer\LexerStateFlag;
 use Tuxxedo\View\Lumi\Lexer\LexerStateInterface;
 
+// @todo The recent change to require ws after the statement name broke include tests
 class BlockTokenHandler implements TokenHandlerInterface
 {
     /**
