@@ -16,6 +16,7 @@ namespace Tuxxedo\View\Lumi\Lexer\Handler;
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\AlwaysExpressiveInterface;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\AlwaysStandaloneInterface;
+use Tuxxedo\View\Lumi\Lexer\Handler\Block\ExpressionSeparatorOptionalInterface;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\BlockBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\BlockHandlerInterface;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\BlockHandlerState;
@@ -45,7 +46,6 @@ use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Lexer\LexerStateFlag;
 use Tuxxedo\View\Lumi\Lexer\LexerStateInterface;
 
-// @todo The recent change to require ws after the statement name broke include tests
 class BlockTokenHandler implements TokenHandlerInterface
 {
     /**
@@ -143,7 +143,7 @@ class BlockTokenHandler implements TokenHandlerInterface
     ): array {
         $buffer = \mb_trim($buffer);
 
-        if (\preg_match('/^([a-z_][a-z0-9_]*)((?:\s+.*)?)$/i', $buffer, $matches) !== 1) {
+        if (\preg_match('/^([a-z_][a-z0-9_]*)((?:[\s(].*)?)$/i', $buffer, $matches) !== 1) {
             throw LexerException::fromUnexpectedSequenceFound(
                 sequence: $buffer,
                 line: $startingLine,
@@ -166,6 +166,11 @@ class BlockTokenHandler implements TokenHandlerInterface
             (
                 !isset($expr) &&
                 $this->handlers[$directive] instanceof AlwaysExpressiveInterface
+            ) ||
+            (
+                isset($expr) &&
+                \mb_substr($matches[2], 0, 1) === '(' &&
+                !$this->handlers[$directive] instanceof ExpressionSeparatorOptionalInterface
             )
         ) {
             throw LexerException::fromUnexpectedSequenceFound(

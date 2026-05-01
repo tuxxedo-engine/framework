@@ -18,7 +18,7 @@ use Tuxxedo\View\Lumi\Lexer\LexerStateInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\EndToken;
 use Tuxxedo\View\Lumi\Syntax\Token\IncludeToken;
 
-class IncludeBlockHandler implements BlockHandlerInterface, AlwaysExpressiveInterface
+class IncludeBlockHandler implements BlockHandlerInterface, AlwaysExpressiveInterface, ExpressionSeparatorOptionalInterface
 {
     public private(set) string $directive = 'include';
 
