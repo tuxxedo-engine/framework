@@ -47,14 +47,16 @@ class ModelsManager implements ModelsManagerInterface
      * @param TModel $model
      * @return TModel
      */
+    #[\NoDiscard]
     public function save(
         object $model,
     ): object {
         $metaData = $this->metaData->getModel($model::class);
+        $clone = clone $model;
 
         return $this->isNewModel($model, $metaData)
-            ? $this->insert($model, $metaData)
-            : $this->update($model, $metaData);
+            ? $this->insert($clone, $metaData)
+            : $this->update($clone, $metaData);
     }
 
     private function isNewModel(

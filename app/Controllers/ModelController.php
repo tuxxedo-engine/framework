@@ -110,9 +110,12 @@ readonly class ModelController
             $user = new User();
             $user->name = $request->post->getString('name');
 
-            $this->modelsManager->save($user);
-
-            return Response::redirect('/model/');
+            return Response::redirectRoute(
+                'model.update',
+                [
+                    'id' => $this->modelsManager->save($user)->id,
+                ],
+            );
         }
 
         return new View(
@@ -131,9 +134,12 @@ readonly class ModelController
         if ($request->server->method === Method::POST) {
             $user->name = $request->post->getString('name');
 
-            $this->modelsManager->save($user);
-
-            return Response::redirectRoute('model.list');
+            return Response::redirectRoute(
+                'model.update',
+                [
+                    'id' => $this->modelsManager->save($user)->id,
+                ],
+            );
         }
 
         return new View(
