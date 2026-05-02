@@ -17,6 +17,7 @@ use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Model\Attribute\ColumnEnumInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 
+// @todo Can't $enum be implicitly discovered via Reflection, like some container resolvers do?
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
 readonly class Enumeration implements ColumnInterface, ColumnEnumInterface
 {
