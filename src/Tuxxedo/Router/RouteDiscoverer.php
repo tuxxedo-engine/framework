@@ -239,6 +239,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
                 className: $reflector->getName(),
                 method: $method,
                 route: $route,
+                prefix: $prefix,
             );
         } elseif (\sizeof($route->methods) > 0) {
             foreach ($route->methods as $requestMethod) {
@@ -428,6 +429,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
         string $className,
         \ReflectionMethod $method,
         RouteAttr $route,
+        ?PrefixInterface $prefix = null,
     ): \Generator {
         $arguments = [];
 
@@ -435,6 +437,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
             $argument = $this->getRouteArgument(
                 node: $node,
                 method: $method,
+                prefix: $prefix,
             );
 
             if ($argument === null) {
@@ -522,21 +525,17 @@ class RouteDiscoverer implements RouteDiscovererInterface
     private function getRegexUri(string $uri): string
     {
         return '#^' . \preg_replace_callback(
-            '/\{(\??)([a-zA-Z_][a-zA-Z0-9_]*)(?::([^}]+)|<([^>]+)>)?}/',
+            '/(\/?)\{(\??)([a-zA-Z_][a-zA-Z0-9_]*)(?::([^}]+)|<([^>]+)>)?}/',
             function (array $matches): string {
-                $regex = $matches[3] ?? null;
-                $type = $matches[4] ?? null;
-
-                if ($regex === '') {
-                    $regex = null;
-                }
+                $regex = ($matches[4] ?? '') !== '' ? $matches[4] : null;
+                $type = ($matches[5] ?? '') !== '' ? $matches[5] : null;
 
                 $pattern = $regex ?? $this->patterns->get($type ?? '')->regex ?? '[^/]+';
-                $segment = '(?<' . $matches[2] . '>' . $pattern . ')';
+                $segment = '(?<' . $matches[3] . '>' . $pattern . ')';
 
-                return $matches[1] === '?'
-                    ? '(?:' . $segment . ')?'
-                    : $segment;
+                return $matches[2] === '?'
+                    ? '(?:' . $matches[1] . $segment . ')?'
+                    : $matches[1] . $segment;
             },
             $uri,
         ) . '$#';
@@ -596,14 +595,34 @@ class RouteDiscoverer implements RouteDiscovererInterface
     private function getRouteArgument(
         ArgumentNode $node,
         \ReflectionMethod $method,
+        ?PrefixInterface $prefix = null,
     ): ?RouteArgumentInterface {
         $parameter = $this->getNamedParameter($method, $node->name);
 
         if ($parameter === null) {
+            if (
+                $node->prefixed &&
+                $prefix instanceof PrefixDefaultsInterface
+            ) {
+                $defaultValue = $prefix->getDefaultValue($node->name);
+
+                return new RouteArgument(
+                    node: $node,
+                    mappedName: null,
+                    nativeType: \get_debug_type($defaultValue),
+                    allowsNull: $defaultValue === null,
+                    defaultValue: $defaultValue,
+                );
+            }
+
             return null;
         }
 
-        if ($node->optional && !$parameter->isDefaultValueAvailable()) {
+        if (
+            $node->optional &&
+            !$parameter->isDefaultValueAvailable() &&
+            !($node->prefixed && $prefix instanceof PrefixDefaultsInterface)
+        ) {
             $this->handleError(
                 static fn (): RouterException => RouterException::fromOptionalArgumentHasNoDefaultValue(
                     className: $method->getDeclaringClass()->getName(),
@@ -637,7 +656,11 @@ class RouteDiscoverer implements RouteDiscovererInterface
             allowsNull: $allowsNull,
             defaultValue: $parameter->isDefaultValueAvailable()
                 ? $parameter->getDefaultValue()
-                : null,
+                : (
+                    $node->prefixed && $prefix instanceof PrefixDefaultsInterface
+                        ? $prefix->getDefaultValue($node->name)
+                        : null
+                ),
         );
     }
 }

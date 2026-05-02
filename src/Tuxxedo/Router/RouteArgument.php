@@ -29,8 +29,8 @@ readonly class RouteArgument implements RouteArgumentInterface
     ): mixed {
         $value = $matches[$this->node->name] ?? $matches[$this->mappedName ?? ''] ?? null;
 
-        if ($this->node->optional) {
-            $value ??= $this->defaultValue;
+        if ($this->node->optional && ($value === null || $value === '')) {
+            $value = $this->defaultValue;
         }
 
         if ($value === null && $this->allowsNull) {

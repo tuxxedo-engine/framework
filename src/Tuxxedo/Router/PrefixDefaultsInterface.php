@@ -13,9 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Router;
 
-interface PrefixInterface
+interface PrefixDefaultsInterface extends PrefixInterface
 {
-    public string $uri {
-        get;
-    }
+    public function getDefaultValue(string $argument): mixed;
 }

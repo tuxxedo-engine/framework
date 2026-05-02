@@ -27,6 +27,14 @@ interface RouteArgumentInterface
         get;
     }
 
+    public bool $allowsNull {
+        get;
+    }
+
+    public mixed $defaultValue {
+        get;
+    }
+
     /**
      * @param string[] $matches
      */
