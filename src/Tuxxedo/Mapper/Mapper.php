@@ -24,6 +24,7 @@ class Mapper implements MapperInterface
      *
      * @throws MapperException
      */
+    #[\NoDiscard]
     public function mapArrayTo(
         array $input,
         string|object $className,
@@ -51,6 +52,7 @@ class Mapper implements MapperInterface
      *
      * @throws MapperException
      */
+    #[\NoDiscard]
     public function mapObjectTo(
         object $input,
         string|object $className,
@@ -79,6 +81,7 @@ class Mapper implements MapperInterface
      *
      * @throws MapperException
      */
+    #[\NoDiscard]
     public function mapToArrayOf(
         array $input,
         string|object $className,

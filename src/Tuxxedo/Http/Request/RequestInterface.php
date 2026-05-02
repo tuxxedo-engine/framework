@@ -57,6 +57,7 @@ interface RequestInterface
         get;
     }
 
+    #[\NoDiscard]
     public function withRoute(
         DispatchableRouteInterface $route,
     ): static;

@@ -50,6 +50,7 @@ class FileCollection
     /**
      * @return Collection<int, string>
      */
+    #[\NoDiscard]
     public static function fromGlob(
         string $pattern,
         int $flags = 0,
@@ -62,6 +63,7 @@ class FileCollection
     /**
      * @return Collection<int, string>
      */
+    #[\NoDiscard]
     public static function fromDirectory(
         string $directory,
     ): Collection {
@@ -73,6 +75,7 @@ class FileCollection
     /**
      * @return Collection<int, string>
      */
+    #[\NoDiscard]
     public static function fromRecursiveDirectory(
         string $directory,
     ): Collection {
@@ -87,6 +90,7 @@ class FileCollection
     /**
      * @return Collection<int, string>
      */
+    #[\NoDiscard]
     public static function fromFileType(
         string $directory,
         string $extension,
@@ -99,6 +103,7 @@ class FileCollection
     /**
      * @return Collection<int, string>
      */
+    #[\NoDiscard]
     public static function fromRecursiveFileType(
         string $directory,
         string $extension,

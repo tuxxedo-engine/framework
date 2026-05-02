@@ -65,6 +65,7 @@ class Response implements ResponseInterface, ResponsableInterface
      *
      * @throws HttpException
      */
+    #[\NoDiscard]
     public static function json(
         mixed $json,
         bool $prettyPrint = false,
@@ -100,6 +101,7 @@ class Response implements ResponseInterface, ResponsableInterface
      *
      * @throws HttpException
      */
+    #[\NoDiscard]
     public static function capture(
         \Closure $callback,
         array $headers = [],
@@ -124,6 +126,7 @@ class Response implements ResponseInterface, ResponsableInterface
     /**
      * @param HeaderInterface[] $headers
      */
+    #[\NoDiscard]
     public static function html(
         string $html,
         array $headers = [],
@@ -142,6 +145,7 @@ class Response implements ResponseInterface, ResponsableInterface
     /**
      * @param HeaderInterface[] $headers
      */
+    #[\NoDiscard]
     public static function text(
         string $text,
         array $headers = [],
@@ -160,6 +164,7 @@ class Response implements ResponseInterface, ResponsableInterface
     /**
      * @param HeaderInterface[] $headers
      */
+    #[\NoDiscard]
     public static function redirect(
         string $uri,
         array $headers = [],
@@ -180,6 +185,7 @@ class Response implements ResponseInterface, ResponsableInterface
      * @param array<string, scalar> $arguments
      * @param HeaderInterface[] $headers
      */
+    #[\NoDiscard]
     public static function redirectRoute(
         string $name,
         array $arguments = [],
@@ -210,6 +216,7 @@ class Response implements ResponseInterface, ResponsableInterface
     /**
      * @param HeaderInterface[] $headers
      */
+    #[\NoDiscard]
     public static function empty(
         array $headers = [],
         ResponseCode $responseCode = ResponseCode::OK,
@@ -226,6 +233,7 @@ class Response implements ResponseInterface, ResponsableInterface
      * @param positive-int $chunkSize
      * @param HeaderInterface[] $headers
      */
+    #[\NoDiscard]
     public static function stream(
         mixed $stream,
         bool $autoFlush = false,
@@ -310,6 +318,7 @@ class Response implements ResponseInterface, ResponsableInterface
         return $newHeaders;
     }
 
+    #[\NoDiscard]
     public function withHeader(
         HeaderInterface $header,
         bool $replace = false,
@@ -329,6 +338,7 @@ class Response implements ResponseInterface, ResponsableInterface
         );
     }
 
+    #[\NoDiscard]
     public function withHeaders(
         array $headers,
         bool $replace = false,
@@ -346,6 +356,7 @@ class Response implements ResponseInterface, ResponsableInterface
         );
     }
 
+    #[\NoDiscard]
     public function withoutHeader(
         string $name,
     ): static {
@@ -364,6 +375,7 @@ class Response implements ResponseInterface, ResponsableInterface
         );
     }
 
+    #[\NoDiscard]
     public function withCookie(
         CookieInterface $cookie,
         bool $replace = false,
@@ -383,6 +395,7 @@ class Response implements ResponseInterface, ResponsableInterface
         );
     }
 
+    #[\NoDiscard]
     public function withCookies(
         array $cookies,
         bool $replace = false,
@@ -400,6 +413,7 @@ class Response implements ResponseInterface, ResponsableInterface
         );
     }
 
+    #[\NoDiscard]
     public function withoutCookie(
         string $name,
     ): static {
@@ -418,6 +432,7 @@ class Response implements ResponseInterface, ResponsableInterface
         );
     }
 
+    #[\NoDiscard]
     public function withResponseCode(
         ResponseCode|int $responseCode,
     ): static {
@@ -431,6 +446,7 @@ class Response implements ResponseInterface, ResponsableInterface
         );
     }
 
+    #[\NoDiscard]
     public function withBody(
         StreamInterface|string $body,
     ): static {

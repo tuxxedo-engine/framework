@@ -96,7 +96,7 @@ class MapperTest extends TestCase
     {
         $this->expectException(MapperException::class);
 
-        (new Mapper())->mapToArrayOf(
+        (void) (new Mapper())->mapToArrayOf(
             input: [
                 'string',
             ],
@@ -108,7 +108,7 @@ class MapperTest extends TestCase
     {
         $this->expectException(MapperException::class);
 
-        (new Mapper())->mapArrayTo(
+        (void) (new Mapper())->mapArrayTo(
             input: [
                 'firstName' => new Person(),
                 'lastName' => 'Foo',
@@ -121,7 +121,7 @@ class MapperTest extends TestCase
     {
         $this->expectException(MapperException::class);
 
-        (new Mapper())->mapArrayTo(
+        (void) (new Mapper())->mapArrayTo(
             input: [
                 'firstName' => 'Bjarne',
                 'surName' => 'Stroustrup',
@@ -181,7 +181,7 @@ class MapperTest extends TestCase
     ): void {
         $this->expectException(MapperException::class);
 
-        (new Mapper())->mapArrayTo(
+        (void) (new Mapper())->mapArrayTo(
             input: [
                 'country' => 'Sweden',
                 'capital' => 'Stockholm',
@@ -211,7 +211,7 @@ class MapperTest extends TestCase
     {
         $this->expectException(MapperException::class);
 
-        (new Mapper())->mapArrayTo(
+        (void) (new Mapper())->mapArrayTo(
             input: [
                 'country' => 'Norway',
                 'capital' => 'Oslo',
@@ -290,7 +290,7 @@ class MapperTest extends TestCase
     {
         $this->expectException(MapperException::class);
 
-        (new Mapper())->mapArrayTo(
+        (void) (new Mapper())->mapArrayTo(
             input: [
                 'name' => 'Bjarne Stroustrup',
                 'address' => [
@@ -311,7 +311,7 @@ class MapperTest extends TestCase
         $circularA->circularB = $circularB;
         $circularB->circularA = $circularA;
 
-        (new Mapper())->mapObjectTo(
+        (void) (new Mapper())->mapObjectTo(
             input: $circularA,
             className: CircularA::class,
             deepMap: true,

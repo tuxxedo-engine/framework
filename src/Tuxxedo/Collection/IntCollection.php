@@ -25,6 +25,7 @@ class IntCollection
     /**
      * @return Collection<int, int>
      */
+    #[\NoDiscard]
     public static function from(
         int ...$values,
     ): Collection {
@@ -34,6 +35,7 @@ class IntCollection
     /**
      * @return Collection<int, int>
      */
+    #[\NoDiscard]
     public static function fromRange(
         int $start,
         int $end,
@@ -47,6 +49,7 @@ class IntCollection
      * @param class-string<\BackedEnum> $enum
      * @return Collection<int, int>
      */
+    #[\NoDiscard]
     public static function fromEnum(
         string $enum,
     ): Collection {

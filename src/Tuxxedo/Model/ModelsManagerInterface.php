@@ -55,6 +55,7 @@ interface ModelsManagerInterface
      * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
      * @return TModel|null
      */
+    #[\NoDiscard]
     public function findFirst(
         string $class,
         ?\Closure $criteria = null,
@@ -69,6 +70,7 @@ interface ModelsManagerInterface
      *
      * @throws ModelException
      */
+    #[\NoDiscard]
     public function fetch(
         string $class,
         ?\Closure $criteria = null,
@@ -80,6 +82,7 @@ interface ModelsManagerInterface
      * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
      * @return TModel|null
      */
+    #[\NoDiscard]
     public function findByIdentifier(
         string $class,
         int|string $id,
@@ -95,6 +98,7 @@ interface ModelsManagerInterface
      *
      * @throws ModelException
      */
+    #[\NoDiscard]
     public function fetchByIdentifier(
         string $class,
         int|string $id,
@@ -111,6 +115,7 @@ interface ModelsManagerInterface
      *
      * @throws ModelException
      */
+    #[\NoDiscard]
     public function findByCompositeKey(
         string $class,
         array $keys,
@@ -127,6 +132,7 @@ interface ModelsManagerInterface
      *
      * @throws ModelException
      */
+    #[\NoDiscard]
     public function fetchByCompositeKey(
         string $class,
         array $keys,
@@ -140,6 +146,7 @@ interface ModelsManagerInterface
      * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
      * @return \Generator<TModel>
      */
+    #[\NoDiscard]
     public function findAll(
         string $class,
         ?\Closure $criteria = null,
@@ -150,6 +157,7 @@ interface ModelsManagerInterface
      * @param TModel $model
      * @return TModel
      */
+    #[\NoDiscard]
     public function refresh(
         object $model,
     ): object;
@@ -158,6 +166,7 @@ interface ModelsManagerInterface
      * @param class-string $class
      * @param \Closure(ExistsBuilderInterface $builder): void $criteria
      */
+    #[\NoDiscard]
     public function exists(
         string $class,
         \Closure $criteria,
@@ -167,12 +176,14 @@ interface ModelsManagerInterface
      * @param class-string $class
      * @param (\Closure(ExistsBuilderInterface $builder): void) $criteria
      */
+    #[\NoDiscard]
     public function existsByIdentifier(
         string $class,
         int|string $id,
         ?\Closure $criteria = null,
     ): bool;
 
+    #[\NoDiscard]
     public function delete(
         object $model,
     ): bool;

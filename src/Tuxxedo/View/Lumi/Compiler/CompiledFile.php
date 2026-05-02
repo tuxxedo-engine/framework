@@ -32,6 +32,7 @@ readonly class CompiledFile implements CompiledFileInterface
         }
     }
 
+    #[\NoDiscard]
     public function saveTo(
         string $file,
     ): bool {

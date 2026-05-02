@@ -89,7 +89,7 @@ readonly class ModelController
         $user = $this->modelsManager->fetchByIdentifier(User::class, $id);
 
         if ($request->server->method === Method::POST) {
-            $this->modelsManager->delete($user);
+            (void) $this->modelsManager->delete($user);
 
             return Response::redirectRoute('model.list');
         }
