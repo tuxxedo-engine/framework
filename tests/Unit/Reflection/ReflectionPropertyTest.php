@@ -124,4 +124,59 @@ class ReflectionPropertyTest extends TestCase
         self::assertSame($attributes[0]->value, 'one');
         self::assertSame($attributes[1]->value, 'two');
     }
+
+    public function testPropertyNamePropertyHook(): void
+    {
+        $reflection = new PropertyReflector(
+            reflector: (new \ReflectionClass(PropertyIntrospector::class)->getProperty('one')),
+        );
+
+        self::assertSame('one', $reflection->name);
+    }
+
+    public function testPropertyCreateFromObject(): void
+    {
+        $reflection = PropertyReflector::createFromObject(new PropertyIntrospector(), 'one');
+
+        self::assertSame('one', $reflection->name);
+    }
+
+    public function testGetValueInitialized(): void
+    {
+        $object = new PropertyIntrospector();
+
+        $reflection = new PropertyReflector(
+            reflector: (new \ReflectionClass(PropertyIntrospector::class)->getProperty('one')),
+        );
+
+        self::assertSame('one', $reflection->getValue($object));
+    }
+
+    public function testGetValueUninitialized(): void
+    {
+        $object = new class () {
+            public string $uninitialized;
+        };
+
+        $reflection = new PropertyReflector(
+            reflector: new \ReflectionProperty($object, 'uninitialized'),
+        );
+
+        self::assertNull($reflection->getValue($object));
+    }
+
+    public function testSetValue(): void
+    {
+        $object = new class () {
+            public string $mutable = 'original';
+        };
+
+        $reflection = new PropertyReflector(
+            reflector: new \ReflectionProperty($object, 'mutable'),
+        );
+
+        $reflection->setValue($object, 'changed');
+
+        self::assertSame('changed', $object->mutable);
+    }
 }

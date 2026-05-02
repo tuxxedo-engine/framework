@@ -15,6 +15,7 @@ namespace Unit\Reflection;
 
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Reflection\MethodReflector;
+use Tuxxedo\Reflection\ParameterReflector;
 use Unit\Fixture\Reflection\AnotherSimpleAttribute;
 use Unit\Fixture\Reflection\MethodIntrospector;
 use Unit\Fixture\Reflection\SimpleAttribute;
@@ -62,5 +63,46 @@ class ReflectionMethodTest extends TestCase
 
         self::assertSame($attributes[0]->value, 'one');
         self::assertSame($attributes[1]->value, 'two');
+    }
+
+    public function testMethodNamePropertyHook(): void
+    {
+        $reflection = new MethodReflector(
+            reflector: (new \ReflectionClass(MethodIntrospector::class)->getMethod('one')),
+        );
+
+        self::assertSame('one', $reflection->name);
+    }
+
+    public function testMethodParameters(): void
+    {
+        $reflection = new MethodReflector(
+            reflector: (new \ReflectionClass(MethodIntrospector::class)->getMethod('three')),
+        );
+
+        $parameters = \iterator_to_array($reflection->parameters());
+
+        self::assertCount(2, $parameters);
+        self::assertContainsOnlyInstancesOf(ParameterReflector::class, $parameters);
+    }
+
+    public function testMethodParameterFound(): void
+    {
+        $reflection = new MethodReflector(
+            reflector: (new \ReflectionClass(MethodIntrospector::class)->getMethod('three')),
+        );
+
+        self::assertSame('name', $reflection->parameter('name')->name);
+    }
+
+    public function testMethodParameterNotFound(): void
+    {
+        $reflection = new MethodReflector(
+            reflector: (new \ReflectionClass(MethodIntrospector::class)->getMethod('three')),
+        );
+
+        self::expectException(\ReflectionException::class);
+
+        $reflection->parameter('nonexistent');
     }
 }

@@ -26,4 +26,8 @@ class MethodIntrospector
     public function two(): void
     {
     }
+
+    public function three(string $name, int $count): void
+    {
+    }
 }
