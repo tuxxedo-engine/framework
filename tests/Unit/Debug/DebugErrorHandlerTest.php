@@ -41,9 +41,9 @@ class DebugErrorHandlerTest extends TestCase
     {
         $handler = new DebugErrorHandler(registerPhpErrorHandler: false);
 
-        $prop = new \ReflectionProperty(DebugErrorHandler::class, 'registeredPhpErrorHandler');
+        $property = new \ReflectionProperty(DebugErrorHandler::class, 'registeredPhpErrorHandler');
 
-        self::assertFalse($prop->getValue());
+        self::assertFalse($property->getValue());
     }
 
     public function testRegisterPhpErrorHandlerConvertsErrorToException(): void
@@ -59,9 +59,9 @@ class DebugErrorHandlerTest extends TestCase
     {
         DebugErrorHandler::registerPhpErrorHandler();
 
-        $prop = new \ReflectionProperty(DebugErrorHandler::class, 'registeredPhpErrorHandler');
+        $property = new \ReflectionProperty(DebugErrorHandler::class, 'registeredPhpErrorHandler');
 
-        self::assertTrue($prop->getValue());
+        self::assertTrue($property->getValue());
     }
 
     public function testRestorePhpErrorHandlerClearsStaticFlag(): void
@@ -69,9 +69,9 @@ class DebugErrorHandlerTest extends TestCase
         DebugErrorHandler::registerPhpErrorHandler();
         DebugErrorHandler::restorePhpErrorHandler();
 
-        $prop = new \ReflectionProperty(DebugErrorHandler::class, 'registeredPhpErrorHandler');
+        $property = new \ReflectionProperty(DebugErrorHandler::class, 'registeredPhpErrorHandler');
 
-        self::assertFalse($prop->getValue());
+        self::assertFalse($property->getValue());
     }
 
     public function testDestructorRestoresHandlerWhenRegistered(): void
@@ -80,9 +80,9 @@ class DebugErrorHandlerTest extends TestCase
 
         unset($handler);
 
-        $prop = new \ReflectionProperty(DebugErrorHandler::class, 'registeredPhpErrorHandler');
+        $property = new \ReflectionProperty(DebugErrorHandler::class, 'registeredPhpErrorHandler');
 
-        self::assertFalse($prop->getValue());
+        self::assertFalse($property->getValue());
     }
 
     public function testDestructorDoesNothingWhenNotRegistered(): void
@@ -91,8 +91,8 @@ class DebugErrorHandlerTest extends TestCase
 
         unset($handler);
 
-        $prop = new \ReflectionProperty(DebugErrorHandler::class, 'registeredPhpErrorHandler');
+        $property = new \ReflectionProperty(DebugErrorHandler::class, 'registeredPhpErrorHandler');
 
-        self::assertFalse($prop->getValue());
+        self::assertFalse($property->getValue());
     }
 }
