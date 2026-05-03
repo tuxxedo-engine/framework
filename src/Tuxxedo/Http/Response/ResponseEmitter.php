@@ -87,7 +87,7 @@ class ResponseEmitter implements ResponseEmitterInterface
                     $currentOutputSize += \strlen($chunk);
 
                     if ($currentOutputSize >= $maxLength) {
-                        $chunk = \substr($chunk, 0, $currentOutputSize - $maxLength);
+                        $chunk = \substr($chunk, 0, \strlen($chunk) - ($currentOutputSize - $maxLength));
                     }
                 }
 
