@@ -45,6 +45,7 @@
     "psr-4": {
       "Fixture\\": "tests/Fixture/",
       "Integration\\": "tests/Integration/",
+      "Support\\": "tests/Support/",
       "Unit\\": "tests/Unit/"
     }
   },
