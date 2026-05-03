@@ -15,12 +15,12 @@ namespace Unit\Reflection;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Fixture\Reflection\AnotherSimpleAttribute;
+use Fixture\Reflection\DefaultType;
+use Fixture\Reflection\DefaultTypeInterfaceA;
+use Fixture\Reflection\DefaultTypeInterfaceB;
+use Fixture\Reflection\SimpleAttribute;
 use Tuxxedo\Reflection\ParameterReflector;
-use Unit\Fixture\Reflection\AnotherSimpleAttribute;
-use Unit\Fixture\Reflection\DefaultType;
-use Unit\Fixture\Reflection\DefaultTypeInterfaceA;
-use Unit\Fixture\Reflection\DefaultTypeInterfaceB;
-use Unit\Fixture\Reflection\SimpleAttribute;
 
 class ReflectionParameterTest extends TestCase
 {

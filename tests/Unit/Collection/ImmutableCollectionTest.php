@@ -14,10 +14,10 @@ declare(strict_types=1);
 namespace Unit\Collection;
 
 use PHPUnit\Framework\TestCase;
+use Fixture\Collection\StringTestEnum;
 use Tuxxedo\Collection\CollectionException;
 use Tuxxedo\Collection\IntCollection;
 use Tuxxedo\Collection\StringCollection;
-use Unit\Fixture\Collection\StringTestEnum;
 
 class ImmutableCollectionTest extends TestCase
 {

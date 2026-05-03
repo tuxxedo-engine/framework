@@ -15,14 +15,14 @@ namespace Unit\Mapper;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Fixture\Mapper\Address;
+use Fixture\Mapper\CircularA;
+use Fixture\Mapper\CircularB;
+use Fixture\Mapper\Country;
+use Fixture\Mapper\Person;
+use Fixture\Mapper\PersonWithAddress;
 use Tuxxedo\Mapper\Mapper;
 use Tuxxedo\Mapper\MapperException;
-use Unit\Fixture\Mapper\Address;
-use Unit\Fixture\Mapper\CircularA;
-use Unit\Fixture\Mapper\CircularB;
-use Unit\Fixture\Mapper\Country;
-use Unit\Fixture\Mapper\Person;
-use Unit\Fixture\Mapper\PersonWithAddress;
 
 class MapperTest extends TestCase
 {

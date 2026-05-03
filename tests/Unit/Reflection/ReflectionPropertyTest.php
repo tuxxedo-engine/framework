@@ -15,10 +15,10 @@ namespace Unit\Reflection;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Fixture\Reflection\AnotherSimpleAttribute;
+use Fixture\Reflection\PropertyIntrospector;
+use Fixture\Reflection\SimpleAttribute;
 use Tuxxedo\Reflection\PropertyReflector;
-use Unit\Fixture\Reflection\AnotherSimpleAttribute;
-use Unit\Fixture\Reflection\PropertyIntrospector;
-use Unit\Fixture\Reflection\SimpleAttribute;
 
 class ReflectionPropertyTest extends TestCase
 {

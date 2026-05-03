@@ -14,10 +14,10 @@ declare(strict_types=1);
 namespace Unit\Reflection;
 
 use PHPUnit\Framework\TestCase;
+use Fixture\Reflection\AnotherSimpleAttribute;
+use Fixture\Reflection\ClassIntrospector;
+use Fixture\Reflection\SimpleAttribute;
 use Tuxxedo\Reflection\ClassReflector;
-use Unit\Fixture\Reflection\AnotherSimpleAttribute;
-use Unit\Fixture\Reflection\ClassIntrospector;
-use Unit\Fixture\Reflection\SimpleAttribute;
 
 class ClassReflectorTest extends TestCase
 {

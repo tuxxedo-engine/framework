@@ -14,17 +14,17 @@ declare(strict_types=1);
 namespace Unit\Config;
 
 use PHPUnit\Framework\TestCase;
+use Fixture\Config\SecondTestEnum;
+use Fixture\Config\TestEnum;
 use Tuxxedo\Config\Config;
 use Tuxxedo\Config\ConfigException;
 use Tuxxedo\Container\Container;
-use Unit\Fixture\Config\SecondTestEnum;
-use Unit\Fixture\Config\TestEnum;
 
 class ConfigTest extends TestCase
 {
-    private const string SINGLE_FILE = __DIR__ . '/../Fixture/Config/single.php';
-    private const string CLOSURE_FILE = __DIR__ . '/../Fixture/Config/app.php';
-    private const string DIRECTORY = __DIR__ . '/../Fixture/Config/Many/';
+    private const string SINGLE_FILE = __DIR__ . '/../../Fixture/Config/single.php';
+    private const string CLOSURE_FILE = __DIR__ . '/../../Fixture/Config/app.php';
+    private const string DIRECTORY = __DIR__ . '/../../Fixture/Config/Many/';
 
     public function testCreateManually(): void
     {

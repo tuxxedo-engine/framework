@@ -14,11 +14,11 @@ declare(strict_types=1);
 namespace Unit\Reflection;
 
 use PHPUnit\Framework\TestCase;
+use Fixture\Reflection\AnotherSimpleAttribute;
+use Fixture\Reflection\MethodIntrospector;
+use Fixture\Reflection\SimpleAttribute;
 use Tuxxedo\Reflection\MethodReflector;
 use Tuxxedo\Reflection\ParameterReflector;
-use Unit\Fixture\Reflection\AnotherSimpleAttribute;
-use Unit\Fixture\Reflection\MethodIntrospector;
-use Unit\Fixture\Reflection\SimpleAttribute;
 
 class ReflectionMethodTest extends TestCase
 {
