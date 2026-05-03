@@ -13,11 +13,11 @@ declare(strict_types=1);
 
 namespace Unit\Reflection;
 
-use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\TestCase;
 use Fixture\Reflection\AnotherSimpleAttribute;
 use Fixture\Reflection\PropertyIntrospector;
 use Fixture\Reflection\SimpleAttribute;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
 use Tuxxedo\Reflection\PropertyReflector;
 
 class ReflectionPropertyTest extends TestCase

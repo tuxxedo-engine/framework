@@ -13,14 +13,14 @@ declare(strict_types=1);
 
 namespace Unit\Mapper;
 
-use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\TestCase;
 use Fixture\Mapper\Address;
 use Fixture\Mapper\CircularA;
 use Fixture\Mapper\CircularB;
 use Fixture\Mapper\Country;
 use Fixture\Mapper\Person;
 use Fixture\Mapper\PersonWithAddress;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
 use Tuxxedo\Mapper\Mapper;
 use Tuxxedo\Mapper\MapperException;
 

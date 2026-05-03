@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace Unit\Config;
 
-use PHPUnit\Framework\TestCase;
 use Fixture\Config\SecondTestEnum;
 use Fixture\Config\TestEnum;
+use PHPUnit\Framework\TestCase;
 use Tuxxedo\Config\Config;
 use Tuxxedo\Config\ConfigException;
 use Tuxxedo\Container\Container;

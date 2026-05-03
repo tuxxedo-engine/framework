@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Unit\Collection;
 
-use PHPUnit\Framework\TestCase;
 use Fixture\Collection\StringTestEnum;
+use PHPUnit\Framework\TestCase;
 use Tuxxedo\Collection\CollectionException;
 use Tuxxedo\Collection\IntCollection;
 use Tuxxedo\Collection\StringCollection;

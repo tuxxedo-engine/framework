@@ -13,10 +13,10 @@ declare(strict_types=1);
 
 namespace Unit\Reflection;
 
-use PHPUnit\Framework\TestCase;
 use Fixture\Reflection\AnotherSimpleAttribute;
 use Fixture\Reflection\MethodIntrospector;
 use Fixture\Reflection\SimpleAttribute;
+use PHPUnit\Framework\TestCase;
 use Tuxxedo\Reflection\MethodReflector;
 use Tuxxedo\Reflection\ParameterReflector;
 
