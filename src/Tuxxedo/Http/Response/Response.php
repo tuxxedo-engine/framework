@@ -82,8 +82,10 @@ class Response implements ResponseInterface, ResponsableInterface
                 value: $json,
                 flags: $flags | \JSON_THROW_ON_ERROR,
             );
-        } catch (\Exception) {
-            throw HttpException::fromInternalServerError();
+        } catch (\Exception $exception) {
+            throw HttpException::fromInternalServerError(
+                exception: $exception,
+            );
         }
 
         return new static(
@@ -113,7 +115,7 @@ class Response implements ResponseInterface, ResponsableInterface
         $contents = \ob_get_clean();
 
         if (\is_bool($contents)) {
-            throw HttpException::fromInternalServerError();
+            throw HttpException::fromInternalServerError(); // @codeCoverageIgnore
         }
 
         return new static(
