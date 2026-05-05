@@ -30,6 +30,7 @@ interface CompiledFileInterface
         string $file,
     ): void;
 
+    #[\NoDiscard]
     public function saveTo(
         string $file,
     ): bool;

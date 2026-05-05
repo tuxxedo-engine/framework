@@ -1,0 +1,523 @@
+<?php
+
+/**
+ * Tuxxedo Engine
+ *
+ * This file is part of the Tuxxedo Engine framework and is licensed under
+ * the MIT license.
+ *
+ * Copyright (C) 2026 Kalle Sommer Nielsen <kalle@php.net>
+ */
+
+declare(strict_types=1);
+
+namespace Unit\Http\Response;
+
+use PHPUnit\Framework\TestCase;
+use Tuxxedo\Container\Container;
+use Tuxxedo\Http\Cookie;
+use Tuxxedo\Http\Header;
+use Tuxxedo\Http\HttpException;
+use Tuxxedo\Http\Response\Response;
+use Tuxxedo\Http\Response\ResponseCode;
+use Tuxxedo\Http\Response\Stream\Stream;
+use Tuxxedo\Http\Response\Stream\StreamInterface;
+
+class ResponseTest extends TestCase
+{
+    public function testConstructorDefaults(): void
+    {
+        $response = new Response();
+
+        self::assertSame('', $response->body);
+        self::assertSame([], $response->headers);
+        self::assertSame(ResponseCode::OK, $response->responseCode);
+    }
+
+    public function testConstructorExplicit(): void
+    {
+        $response = new Response(
+            body: 'hello',
+            headers: [
+                new Header('X-Foo', 'bar'),
+            ],
+            responseCode: ResponseCode::NOT_FOUND,
+        );
+
+        self::assertSame('hello', $response->body);
+        self::assertCount(1, $response->headers);
+        self::assertSame(ResponseCode::NOT_FOUND, $response->responseCode);
+    }
+
+    public function testToResponseReturnsSelf(): void
+    {
+        $response = new Response('hello');
+
+        self::assertSame($response, $response->toResponse(new Container()));
+    }
+
+    public function testJsonEncodesValue(): void
+    {
+        $response = Response::json(
+            [
+                'key' => 'value',
+            ],
+        );
+
+        self::assertSame('{"key":"value"}', $response->body);
+    }
+
+    public function testJsonSetsContentTypeHeader(): void
+    {
+        $response = Response::json([]);
+
+        self::assertSame('Content-Type', $response->headers[0]->name);
+        self::assertSame('application/json', $response->headers[0]->value);
+    }
+
+    public function testJsonPrettyPrint(): void
+    {
+        $response = Response::json(
+            json: [
+                'key' => 'value',
+            ],
+            prettyPrint: true,
+        );
+
+        self::assertIsString($response->body);
+        self::assertStringContainsString("\n", $response->body);
+    }
+
+    public function testJsonWithResponseCode(): void
+    {
+        $response = Response::json(
+            json: [],
+            responseCode: ResponseCode::CREATED,
+        );
+
+        self::assertSame(ResponseCode::CREATED, $response->responseCode);
+    }
+
+    public function testJsonInvalidThrowsHttpException(): void
+    {
+        self::expectException(HttpException::class);
+
+        (void) Response::json(\NAN);
+    }
+
+    public function testJsonInvalidHasJsonExceptionAsPrevious(): void
+    {
+        try {
+            (void) Response::json(\NAN);
+
+            self::fail('Expected HttpException to be thrown');
+        } catch (HttpException $e) {
+            self::assertInstanceOf(\JsonException::class, $e->getPrevious());
+        }
+    }
+
+    public function testCaptureOutputBecomesBody(): void
+    {
+        $response = Response::capture(
+            static function (): void {
+                echo 'hello world';
+            },
+        );
+
+        self::assertSame('hello world', $response->body);
+    }
+
+    public function testCaptureWithResponseCode(): void
+    {
+        $response = Response::capture(
+            callback: static function (): void {
+            },
+            responseCode: ResponseCode::CREATED,
+        );
+
+        self::assertSame(ResponseCode::CREATED, $response->responseCode);
+    }
+
+    public function testHtmlSetsBody(): void
+    {
+        $response = Response::html('<p>hello</p>');
+
+        self::assertSame('<p>hello</p>', $response->body);
+    }
+
+    public function testHtmlSetsContentTypeHeader(): void
+    {
+        $response = Response::html('');
+
+        self::assertSame('Content-Type', $response->headers[0]->name);
+        self::assertSame('text/html', $response->headers[0]->value);
+    }
+
+    public function testHtmlWithResponseCode(): void
+    {
+        $response = Response::html(
+            html: '',
+            responseCode: ResponseCode::CREATED,
+        );
+
+        self::assertSame(ResponseCode::CREATED, $response->responseCode);
+    }
+
+    public function testTextSetsBody(): void
+    {
+        $response = Response::text('hello world');
+
+        self::assertSame('hello world', $response->body);
+    }
+
+    public function testTextSetsContentTypeHeader(): void
+    {
+        $response = Response::text('');
+
+        self::assertSame('Content-Type', $response->headers[0]->name);
+        self::assertSame('text/plain', $response->headers[0]->value);
+    }
+
+    public function testRedirectSetsLocationHeader(): void
+    {
+        $response = Response::redirect('https://example.com');
+
+        self::assertSame('Location', $response->headers[0]->name);
+        self::assertSame('https://example.com', $response->headers[0]->value);
+    }
+
+    public function testRedirectDefaultResponseCode(): void
+    {
+        $response = Response::redirect('https://example.com');
+
+        self::assertSame(ResponseCode::FOUND, $response->responseCode);
+    }
+
+    public function testRedirectWithCustomResponseCode(): void
+    {
+        $response = Response::redirect(
+            uri: 'https://example.com',
+            responseCode: ResponseCode::MOVED_PERMANENTLY,
+        );
+
+        self::assertSame(ResponseCode::MOVED_PERMANENTLY, $response->responseCode);
+    }
+
+    public function testEmptyHasEmptyBody(): void
+    {
+        $response = Response::empty();
+
+        self::assertSame('', $response->body);
+        self::assertSame(ResponseCode::OK, $response->responseCode);
+    }
+
+    public function testEmptyWithResponseCode(): void
+    {
+        $response = Response::empty(
+            responseCode: ResponseCode::NO_CONTENT,
+        );
+
+        self::assertSame(ResponseCode::NO_CONTENT, $response->responseCode);
+    }
+
+    public function testStreamWithClosure(): void
+    {
+        $response = Response::stream(
+            stream: static function (): \Generator {
+                yield 'hello';
+            },
+        );
+
+        self::assertInstanceOf(StreamInterface::class, $response->body);
+    }
+
+    public function testStreamWithGenerator(): void
+    {
+        $generator = (static function (): \Generator {
+            yield 'hello';
+        })();
+
+        $response = Response::stream($generator);
+
+        self::assertInstanceOf(StreamInterface::class, $response->body);
+    }
+
+    public function testStreamWithResource(): void
+    {
+        $resource = \fopen('php://memory', 'r+b');
+
+        self::assertIsResource($resource);
+
+        $response = Response::stream($resource);
+
+        self::assertInstanceOf(StreamInterface::class, $response->body);
+    }
+
+    public function testStreamWithStreamInterface(): void
+    {
+        $stream = Stream::fromGenerator(
+            static function (): \Generator {
+                yield 'hello';
+            },
+        );
+
+        $response = Response::stream($stream);
+
+        self::assertSame($stream, $response->body);
+    }
+
+    public function testWithHeaderAppendsHeader(): void
+    {
+        $response = new Response();
+        $updated = $response->withHeader(new Header('X-Foo', 'bar'));
+
+        self::assertNotSame($response, $updated);
+        self::assertCount(0, $response->headers);
+        self::assertCount(1, $updated->headers);
+    }
+
+    public function testWithHeaderReplacesExistingHeader(): void
+    {
+        $response = new Response(
+            headers: [
+                new Header('Content-Type', 'text/plain'),
+            ],
+        );
+
+        $updated = $response->withHeader(
+            header: new Header('Content-Type', 'application/json'),
+            replace: true,
+        );
+
+        self::assertCount(1, $updated->headers);
+        self::assertSame('application/json', $updated->headers[0]->value);
+    }
+
+    public function testWithHeaderReplaceCaseInsensitive(): void
+    {
+        $response = new Response(
+            headers: [
+                new Header('content-type', 'text/plain'),
+            ],
+        );
+
+        $updated = $response->withHeader(
+            header: new Header('Content-Type', 'application/json'),
+            replace: true,
+        );
+
+        self::assertCount(1, $updated->headers);
+        self::assertSame('application/json', $updated->headers[0]->value);
+    }
+
+    public function testWithHeadersAppendsMultiple(): void
+    {
+        $response = new Response();
+        $updated = $response->withHeaders(
+            headers: [
+                new Header('X-Foo', 'foo'),
+                new Header('X-Bar', 'bar'),
+            ],
+        );
+
+        self::assertCount(2, $updated->headers);
+    }
+
+    public function testWithHeadersReplacesExisting(): void
+    {
+        $response = new Response(
+            headers: [
+                new Header('X-Foo', 'old'),
+            ],
+        );
+
+        $updated = $response->withHeaders(
+            headers: [
+                new Header('X-Foo', 'new'),
+            ],
+            replace: true,
+        );
+
+        self::assertCount(1, $updated->headers);
+        self::assertSame('new', $updated->headers[0]->value);
+    }
+
+    public function testWithoutHeaderRemovesHeader(): void
+    {
+        $response = new Response(
+            headers: [
+                new Header('X-Foo', 'bar'),
+                new Header('X-Baz', 'qux'),
+            ],
+        );
+
+        $updated = $response->withoutHeader('X-Foo');
+
+        $key = \array_key_first($updated->headers);
+
+        self::assertNotSame($response, $updated);
+        self::assertCount(1, $updated->headers);
+        self::assertNotNull($key);
+        self::assertSame('X-Baz', $updated->headers[$key]->name);
+    }
+
+    public function testWithoutHeaderNoOpWhenMissing(): void
+    {
+        $response = new Response(
+            headers: [
+                new Header('X-Foo', 'bar'),
+            ],
+        );
+
+        $updated = $response->withoutHeader('X-Missing');
+
+        self::assertCount(1, $updated->headers);
+    }
+
+    public function testWithCookieAppendsCookie(): void
+    {
+        $response = new Response();
+        $updated = $response->withCookie(new Cookie('session', 'abc', 0));
+
+        self::assertNotSame($response, $updated);
+        self::assertCount(0, $response->headers);
+        self::assertCount(1, $updated->headers);
+    }
+
+    public function testWithCookieReplacesCookie(): void
+    {
+        $response = new Response(
+            headers: [
+                new Cookie('session', 'old', 0),
+            ],
+        );
+
+        $updated = $response->withCookie(
+            cookie: new Cookie('session', 'new', 0),
+            replace: true,
+        );
+
+        self::assertCount(1, $updated->headers);
+        self::assertSame('new', $updated->headers[0]->value);
+    }
+
+    public function testWithCookieReplaceDoesNotReplaceRegularHeader(): void
+    {
+        $response = new Response(
+            headers: [
+                new Header('session', 'old'),
+            ],
+        );
+
+        $updated = $response->withCookie(
+            cookie: new Cookie('session', 'new', 0),
+            replace: true,
+        );
+
+        self::assertCount(2, $updated->headers);
+    }
+
+    public function testWithCookiesAppendsMultiple(): void
+    {
+        $response = new Response();
+        $updated = $response->withCookies(
+            cookies: [
+                new Cookie('foo', 'a', 0),
+                new Cookie('bar', 'b', 0),
+            ],
+        );
+
+        self::assertCount(2, $updated->headers);
+    }
+
+    public function testWithCookiesReplacesExisting(): void
+    {
+        $response = new Response(
+            headers: [
+                new Cookie('foo', 'old', 0),
+            ],
+        );
+        $updated = $response->withCookies(
+            cookies: [
+                new Cookie('foo', 'new', 0),
+            ],
+            replace: true,
+        );
+
+        self::assertCount(1, $updated->headers);
+        self::assertSame('new', $updated->headers[0]->value);
+    }
+
+    public function testWithoutCookieRemovesCookie(): void
+    {
+        $response = new Response(
+            headers: [
+                new Cookie('session', 'abc', 0),
+                new Header('X-Foo', 'bar'),
+            ],
+        );
+
+        $updated = $response->withoutCookie('session');
+
+        $key = \array_key_first($updated->headers);
+
+        self::assertCount(1, $updated->headers);
+        self::assertNotNull($key);
+        self::assertInstanceOf(Header::class, $updated->headers[$key]);
+    }
+
+    public function testWithoutCookieNoOpWhenMissing(): void
+    {
+        $response = new Response(
+            headers: [
+                new Cookie('session', 'abc', 0),
+            ],
+        );
+
+        $updated = $response->withoutCookie('other');
+
+        self::assertCount(1, $updated->headers);
+    }
+
+    public function testWithResponseCodeWithEnum(): void
+    {
+        $response = new Response();
+        $updated = $response->withResponseCode(ResponseCode::NOT_FOUND);
+
+        self::assertNotSame($response, $updated);
+        self::assertSame(ResponseCode::NOT_FOUND, $updated->responseCode);
+        self::assertSame(ResponseCode::OK, $response->responseCode);
+    }
+
+    public function testWithResponseCodeWithInt(): void
+    {
+        $response = new Response();
+        $updated = $response->withResponseCode(404);
+
+        self::assertSame(ResponseCode::NOT_FOUND, $updated->responseCode);
+    }
+
+    public function testWithBodyString(): void
+    {
+        $response = new Response();
+        $updated = $response->withBody('new body');
+
+        self::assertNotSame($response, $updated);
+        self::assertSame('new body', $updated->body);
+        self::assertSame('', $response->body);
+    }
+
+    public function testWithBodyStream(): void
+    {
+        $stream = Stream::fromGenerator(
+            static function (): \Generator {
+                yield 'hello';
+            },
+        );
+
+        $response = new Response();
+        $updated = $response->withBody($stream);
+
+        self::assertSame($stream, $updated->body);
+    }
+}

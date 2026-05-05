@@ -48,6 +48,7 @@ abstract class AbstractConnection implements ConnectionInterface
         );
     }
 
+    #[\NoDiscard]
     public function savepoint(): string
     {
         if (!$this->inTransaction()) {

@@ -108,6 +108,7 @@ interface SelectBuilderInterface extends WhereBuilderInterface
      * @throws DatabaseException
      * @throws SqlException
      */
+    #[\NoDiscard]
     public function fetch(
         string|\Closure $class,
     ): ?object;
@@ -121,6 +122,7 @@ interface SelectBuilderInterface extends WhereBuilderInterface
      * @throws DatabaseException
      * @throws SqlException
      */
+    #[\NoDiscard]
     public function fetchAll(
         string|\Closure $class,
     ): \Generator;

@@ -122,6 +122,7 @@ interface ConnectionInterface
     /**
      * @throws DatabaseException
      */
+    #[\NoDiscard]
     public function savepoint(): string;
 
     /**

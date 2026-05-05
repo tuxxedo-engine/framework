@@ -32,6 +32,7 @@ use Tuxxedo\View\Lumi\Lexer\Handler\Block\EndIfBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\EndLumiBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\EndRawBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\EndWhileBlockHandler;
+use Tuxxedo\View\Lumi\Lexer\Handler\Block\ExpressionSeparatorOptionalInterface;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\ForBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\ForEachBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\IfBlockHandler;
@@ -142,7 +143,7 @@ class BlockTokenHandler implements TokenHandlerInterface
     ): array {
         $buffer = \mb_trim($buffer);
 
-        if (\preg_match('/^([a-z_][a-z0-9_]*)((?:\s+.*)?)$/i', $buffer, $matches) !== 1) {
+        if (\preg_match('/^([a-z_][a-z0-9_]*)((?:[\s(].*)?)$/i', $buffer, $matches) !== 1) {
             throw LexerException::fromUnexpectedSequenceFound(
                 sequence: $buffer,
                 line: $startingLine,
@@ -165,6 +166,11 @@ class BlockTokenHandler implements TokenHandlerInterface
             (
                 !isset($expr) &&
                 $this->handlers[$directive] instanceof AlwaysExpressiveInterface
+            ) ||
+            (
+                isset($expr) &&
+                \mb_substr($matches[2], 0, 1) === '(' &&
+                !$this->handlers[$directive] instanceof ExpressionSeparatorOptionalInterface
             )
         ) {
             throw LexerException::fromUnexpectedSequenceFound(

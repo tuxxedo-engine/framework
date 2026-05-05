@@ -15,7 +15,6 @@ namespace Tuxxedo\Model\Attribute;
 
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 
-// @todo Support Enum column types
 interface ColumnInterface
 {
     public ?string $name {

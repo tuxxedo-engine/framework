@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Support\DefaultLanguagePrefix;
+use App\Support\LocaleAwarePrefix;
+use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\Attribute\Argument;
@@ -203,6 +206,46 @@ readonly class ArgumentsController
     ): ResponseInterface {
         return Response::capture(
             callback: static fn () => \var_dump($id, $uuid, $uuidv4),
+        );
+    }
+
+    #[Route\Get(uri: 'prefix/a/{page:\d+}', prefix: DefaultLanguagePrefix::class)]
+    public function show20(
+        #[Argument] string $language,
+        #[Argument] int $page,
+    ): ResponseInterface {
+        return Response::capture(
+            callback: static fn () => \var_dump($language, $page),
+        );
+    }
+
+    #[Route\Get(uri: 'prefix/b/{page:\d+}', prefix: LocaleAwarePrefix::class)]
+    public function show21(
+        #[Argument] string $language,
+        #[Argument] int $page,
+    ): ResponseInterface {
+        return Response::capture(
+            callback: static fn () => \var_dump($language, $page),
+        );
+    }
+
+    #[Route\Get(uri: 'prefix/c/{page:\d+}', prefix: DefaultLanguagePrefix::class)]
+    public function show22(
+        #[Argument] int $page,
+        RequestInterface $request,
+    ): ResponseInterface {
+        return Response::capture(
+            callback: static fn () => \var_dump($request->route->route->arguments[0]->defaultValue, $page),
+        );
+    }
+
+    #[Route\Get(uri: 'prefix/d/{page:\d+}', prefix: LocaleAwarePrefix::class)]
+    public function show23(
+        #[Argument] int $page,
+        RequestInterface $request,
+    ): ResponseInterface {
+        return Response::capture(
+            callback: static fn () => \var_dump($request->route->route->arguments[0]->defaultValue, $page),
         );
     }
 }

@@ -13,12 +13,12 @@ declare(strict_types=1);
 
 namespace Unit\Reflection;
 
+use Fixture\Reflection\AnotherSimpleAttribute;
+use Fixture\Reflection\PropertyIntrospector;
+use Fixture\Reflection\SimpleAttribute;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Reflection\PropertyReflector;
-use Unit\Fixture\Reflection\AnotherSimpleAttribute;
-use Unit\Fixture\Reflection\PropertyIntrospector;
-use Unit\Fixture\Reflection\SimpleAttribute;
 
 class ReflectionPropertyTest extends TestCase
 {
@@ -123,5 +123,60 @@ class ReflectionPropertyTest extends TestCase
 
         self::assertSame($attributes[0]->value, 'one');
         self::assertSame($attributes[1]->value, 'two');
+    }
+
+    public function testPropertyNamePropertyHook(): void
+    {
+        $reflection = new PropertyReflector(
+            reflector: (new \ReflectionClass(PropertyIntrospector::class)->getProperty('one')),
+        );
+
+        self::assertSame('one', $reflection->name);
+    }
+
+    public function testPropertyCreateFromObject(): void
+    {
+        $reflection = PropertyReflector::createFromObject(new PropertyIntrospector(), 'one');
+
+        self::assertSame('one', $reflection->name);
+    }
+
+    public function testGetValueInitialized(): void
+    {
+        $object = new PropertyIntrospector();
+
+        $reflection = new PropertyReflector(
+            reflector: (new \ReflectionClass(PropertyIntrospector::class)->getProperty('one')),
+        );
+
+        self::assertSame('one', $reflection->getValue($object));
+    }
+
+    public function testGetValueUninitialized(): void
+    {
+        $object = new class () {
+            public string $uninitialized;
+        };
+
+        $reflection = new PropertyReflector(
+            reflector: new \ReflectionProperty($object, 'uninitialized'),
+        );
+
+        self::assertNull($reflection->getValue($object));
+    }
+
+    public function testSetValue(): void
+    {
+        $object = new class () {
+            public string $mutable = 'original';
+        };
+
+        $reflection = new PropertyReflector(
+            reflector: new \ReflectionProperty($object, 'mutable'),
+        );
+
+        $reflection->setValue($object, 'changed');
+
+        self::assertSame('changed', $object->mutable);
     }
 }

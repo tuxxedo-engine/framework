@@ -35,22 +35,27 @@ interface CookieInterface extends HeaderInterface
         get;
     }
 
+    #[\NoDiscard]
     public function withExpires(
         int $expires,
     ): static;
 
+    #[\NoDiscard]
     public function withPath(
         string $path,
     ): static;
 
+    #[\NoDiscard]
     public function withDomain(
         string $domain,
     ): static;
 
+    #[\NoDiscard]
     public function withSecure(
         bool $secure,
     ): static;
 
+    #[\NoDiscard]
     public function withHttpOnly(
         bool $httpOnly,
     ): static;

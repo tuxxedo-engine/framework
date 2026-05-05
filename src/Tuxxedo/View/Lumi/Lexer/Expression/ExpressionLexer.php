@@ -188,12 +188,6 @@ class ExpressionLexer implements ExpressionLexerInterface
                 $lastValid = null;
 
                 while (!$stream->eof()) {
-                    $char = $stream->peek(1);
-
-                    if (\preg_match('/^[^\p{L}\p{N}\s]$/u', $char) !== 1) {
-                        break;
-                    }
-
                     $buffer .= $stream->consume();
 
                     if (
@@ -213,12 +207,6 @@ class ExpressionLexer implements ExpressionLexerInterface
 
                 if ($lastValid !== null) {
                     $tokens[] = $this->classifySymbol($line, $lastValid);
-
-                    $remainingLength = \mb_strlen($buffer) - \mb_strlen($lastValid);
-                    for ($i = 0; $i < $remainingLength; $i++) {
-                        $stream->consume();
-                    }
-
                     $buffer = '';
                     $line = $startingLine + ($stream->line - 1);
                 } else {
@@ -254,22 +242,6 @@ class ExpressionLexer implements ExpressionLexerInterface
         int $line,
         string $value,
     ): TokenInterface {
-        if ($this->isValidFloat($value)) {
-            return new LiteralToken(
-                line: $line,
-                op1: $value,
-                op2: Type::FLOAT->name,
-            );
-        }
-
-        if ($this->isValidInteger($value)) {
-            return new LiteralToken(
-                line: $line,
-                op1: $value,
-                op2: Type::INT->name,
-            );
-        }
-
         if (\in_array(\mb_strtolower($value), ['true', 'false'], true)) {
             return new LiteralToken(
                 line: $line,
@@ -310,10 +282,12 @@ class ExpressionLexer implements ExpressionLexerInterface
             );
         }
 
+        // @codeCoverageIgnoreStart
         throw LexerException::fromUnknownSymbol(
             symbol: $symbol,
             line: $line,
         );
+        // @codeCoverageIgnoreEnd
     }
 
     private function isStartOfNumber(
@@ -347,12 +321,6 @@ class ExpressionLexer implements ExpressionLexerInterface
     {
         foreach ($this->operators as $op) {
             if (\str_starts_with($op, $prefix)) {
-                return true;
-            }
-        }
-
-        foreach ($this->characterSymbols as $sym) {
-            if (\str_starts_with($sym, $prefix)) {
                 return true;
             }
         }

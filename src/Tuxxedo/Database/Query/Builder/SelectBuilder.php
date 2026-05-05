@@ -357,6 +357,7 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
      * @throws DatabaseException
      * @throws SqlException
      */
+    #[\NoDiscard]
     public function fetch(
         string|\Closure $class,
     ): ?object {
@@ -378,6 +379,7 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
      * @throws DatabaseException
      * @throws SqlException
      */
+    #[\NoDiscard]
     public function fetchAll(
         string|\Closure $class,
     ): \Generator {

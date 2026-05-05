@@ -171,6 +171,7 @@ class ImmutableCollection implements CollectionInterface
         return true;
     }
 
+    #[\NoDiscard]
     public function sort(): static
     {
         $collection = clone $this;
@@ -180,6 +181,7 @@ class ImmutableCollection implements CollectionInterface
         return $collection;
     }
 
+    #[\NoDiscard]
     public function sortKeys(): static
     {
         $collection = clone $this;
@@ -189,6 +191,7 @@ class ImmutableCollection implements CollectionInterface
         return $collection;
     }
 
+    #[\NoDiscard]
     public function reverse(): static
     {
         $collection = clone $this;
@@ -201,6 +204,7 @@ class ImmutableCollection implements CollectionInterface
         return $collection;
     }
 
+    #[\NoDiscard]
     public function reverseKeys(): static
     {
         $collection = clone $this;
@@ -237,6 +241,7 @@ class ImmutableCollection implements CollectionInterface
     /**
      * @return Collection<TKey, TValue>
      */
+    #[\NoDiscard]
     public function toMutable(): Collection
     {
         return new Collection($this->collection);

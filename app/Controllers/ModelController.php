@@ -89,7 +89,7 @@ readonly class ModelController
         $user = $this->modelsManager->fetchByIdentifier(User::class, $id);
 
         if ($request->server->method === Method::POST) {
-            $this->modelsManager->delete($user);
+            (void) $this->modelsManager->delete($user);
 
             return Response::redirectRoute('model.list');
         }
@@ -110,7 +110,7 @@ readonly class ModelController
             $user = new User();
             $user->name = $request->post->getString('name');
 
-            $this->modelsManager->save($user);
+            (void) $this->modelsManager->save($user);
 
             return Response::redirect('/model/');
         }
@@ -131,7 +131,7 @@ readonly class ModelController
         if ($request->server->method === Method::POST) {
             $user->name = $request->post->getString('name');
 
-            $this->modelsManager->save($user);
+            (void) $this->modelsManager->save($user);
 
             return Response::redirectRoute('model.list');
         }

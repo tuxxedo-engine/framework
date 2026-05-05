@@ -25,6 +25,7 @@ class StringCollection
     /**
      * @return Collection<int, string>
      */
+    #[\NoDiscard]
     public static function from(
         string ...$values,
     ): Collection {
@@ -35,6 +36,7 @@ class StringCollection
      * @param class-string<\BackedEnum> $enum
      * @return Collection<int, string>
      */
+    #[\NoDiscard]
     public static function fromEnum(
         string $enum,
     ): Collection {

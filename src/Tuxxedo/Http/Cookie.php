@@ -26,6 +26,7 @@ readonly class Cookie implements CookieInterface
     ) {
     }
 
+    #[\NoDiscard]
     public function withValue(
         string $value,
     ): static {
@@ -37,6 +38,7 @@ readonly class Cookie implements CookieInterface
         );
     }
 
+    #[\NoDiscard]
     public function withExpires(
         int $expires,
     ): static {
@@ -48,6 +50,7 @@ readonly class Cookie implements CookieInterface
         );
     }
 
+    #[\NoDiscard]
     public function withPath(
         string $path,
     ): static {
@@ -59,6 +62,7 @@ readonly class Cookie implements CookieInterface
         );
     }
 
+    #[\NoDiscard]
     public function withDomain(
         string $domain,
     ): static {
@@ -70,6 +74,7 @@ readonly class Cookie implements CookieInterface
         );
     }
 
+    #[\NoDiscard]
     public function withSecure(
         bool $secure,
     ): static {
@@ -81,6 +86,7 @@ readonly class Cookie implements CookieInterface
         );
     }
 
+    #[\NoDiscard]
     public function withHttpOnly(
         bool $httpOnly,
     ): static {

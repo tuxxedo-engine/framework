@@ -114,10 +114,7 @@ class Stream implements StreamInterface
         }
 
         if ($resource === false) {
-            /**
-             * @codeCoverageIgnore
-             */
-            throw HttpException::fromInternalServerError();
+            throw HttpException::fromInternalServerError(); // @codeCoverageIgnore
         }
 
         return new static(

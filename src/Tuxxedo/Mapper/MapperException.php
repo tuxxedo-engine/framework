@@ -15,6 +15,9 @@ namespace Tuxxedo\Mapper;
 
 class MapperException extends \Exception
 {
+    /**
+     * @param class-string $className
+     */
     public static function fromInvalidProperty(
         string $property,
         string $className,
@@ -28,6 +31,9 @@ class MapperException extends \Exception
         );
     }
 
+    /**
+     * @param class-string $className
+     */
     public static function fromInvalidType(
         string $property,
         string $type,
@@ -52,6 +58,20 @@ class MapperException extends \Exception
             message: \sprintf(
                 'Invalid iterable type "%s" supplied to array of',
                 $type,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $className
+     */
+    public static function fromCircularReference(
+        string $className,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Circular reference detected while deep mapping class "%s"',
+                $className,
             ),
         );
     }

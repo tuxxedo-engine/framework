@@ -32,6 +32,7 @@ interface ResponseInterface extends ResponseCodeInterface
         get;
     }
 
+    #[\NoDiscard]
     public function withHeader(
         HeaderInterface $header,
         bool $replace = false,
@@ -40,15 +41,18 @@ interface ResponseInterface extends ResponseCodeInterface
     /**
      * @param HeaderInterface[] $headers
      */
+    #[\NoDiscard]
     public function withHeaders(
         array $headers,
         bool $replace = false,
     ): static;
 
+    #[\NoDiscard]
     public function withoutHeader(
         string $name,
     ): static;
 
+    #[\NoDiscard]
     public function withCookie(
         CookieInterface $cookie,
         bool $replace = false,
@@ -57,19 +61,23 @@ interface ResponseInterface extends ResponseCodeInterface
     /**
      * @param CookieInterface[] $cookies
      */
+    #[\NoDiscard]
     public function withCookies(
         array $cookies,
         bool $replace = false,
     ): static;
 
+    #[\NoDiscard]
     public function withoutCookie(
         string $name,
     ): static;
 
+    #[\NoDiscard]
     public function withResponseCode(
         ResponseCode|int $responseCode,
     ): static;
 
+    #[\NoDiscard]
     public function withBody(
         StreamInterface|string $body,
     ): static;

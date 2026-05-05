@@ -72,6 +72,7 @@ class Request implements RequestInterface
         }
     }
 
+    #[\NoDiscard]
     public function withRoute(
         DispatchableRouteInterface $route,
     ): static {
