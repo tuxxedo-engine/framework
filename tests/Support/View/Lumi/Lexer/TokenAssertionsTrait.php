@@ -14,9 +14,13 @@ declare(strict_types=1);
 namespace Support\View\Lumi\Lexer;
 
 use Tuxxedo\View\Lumi\Syntax\Token\CharacterToken;
+use Tuxxedo\View\Lumi\Syntax\Token\CommentToken;
+use Tuxxedo\View\Lumi\Syntax\Token\EchoToken;
+use Tuxxedo\View\Lumi\Syntax\Token\EndToken;
 use Tuxxedo\View\Lumi\Syntax\Token\IdentifierToken;
 use Tuxxedo\View\Lumi\Syntax\Token\LiteralToken;
 use Tuxxedo\View\Lumi\Syntax\Token\OperatorToken;
+use Tuxxedo\View\Lumi\Syntax\Token\TextToken;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
 trait TokenAssertionsTrait
@@ -84,6 +88,90 @@ trait TokenAssertionsTrait
         self::assertSame(
             $expectedOp1,
             $token->op1,
+        );
+    }
+
+    private function assertCommentToken(
+        TokenInterface $token,
+        int $expectedLine,
+        string $expectedOp1,
+    ): void {
+        self::assertInstanceOf(
+            CommentToken::class,
+            $token,
+        );
+
+        self::assertSame(
+            $expectedLine,
+            $token->line,
+        );
+
+        self::assertSame(
+            $expectedOp1,
+            $token->op1,
+        );
+    }
+
+    private function assertEchoToken(
+        TokenInterface $token,
+        int $expectedLine,
+        ?string $expectedOp1 = null,
+    ): void {
+        self::assertInstanceOf(
+            EchoToken::class,
+            $token,
+        );
+
+        self::assertSame(
+            $expectedLine,
+            $token->line,
+        );
+
+        self::assertSame(
+            $expectedOp1,
+            $token->op1,
+        );
+    }
+
+    private function assertEndToken(
+        TokenInterface $token,
+        int $expectedLine,
+    ): void {
+        self::assertInstanceOf(
+            EndToken::class,
+            $token,
+        );
+
+        self::assertSame(
+            $expectedLine,
+            $token->line,
+        );
+    }
+
+    private function assertTextToken(
+        TokenInterface $token,
+        int $expectedLine,
+        string $expectedOp1,
+        ?string $expectedOp2 = null,
+    ): void {
+        self::assertInstanceOf(
+            TextToken::class,
+            $token,
+        );
+
+        self::assertSame(
+            $expectedLine,
+            $token->line,
+        );
+
+        self::assertSame(
+            $expectedOp1,
+            $token->op1,
+        );
+
+        self::assertSame(
+            $expectedOp2,
+            $token->op2,
         );
     }
 }
