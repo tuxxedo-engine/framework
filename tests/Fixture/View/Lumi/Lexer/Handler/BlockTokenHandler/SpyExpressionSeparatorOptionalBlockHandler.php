@@ -17,10 +17,7 @@ use Tuxxedo\View\Lumi\Lexer\Handler\Block\AlwaysExpressiveInterface;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\BlockHandlerInterface;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\ExpressionSeparatorOptionalInterface;
 
-class SpyExpressionSeparatorOptionalBlockHandler implements
-    BlockHandlerInterface,
-    AlwaysExpressiveInterface,
-    ExpressionSeparatorOptionalInterface
+class SpyExpressionSeparatorOptionalBlockHandler implements BlockHandlerInterface, AlwaysExpressiveInterface, ExpressionSeparatorOptionalInterface
 {
     use SpyBlockHandlerTrait;
 

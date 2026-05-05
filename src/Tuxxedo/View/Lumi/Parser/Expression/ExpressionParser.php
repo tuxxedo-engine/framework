@@ -382,10 +382,12 @@ class ExpressionParser implements ExpressionParserInterface
             }
         }
 
+        // @codeCoverageIgnoreStart
         throw ParserException::fromUnexpectedToken(
             tokenName: $token->op1 ?? $token::name(),
             line: $token->line,
         );
+        // @codeCoverageIgnoreEnd
     }
 
     private function lbp(
@@ -417,10 +419,6 @@ class ExpressionParser implements ExpressionParserInterface
     private function parseArgumentList(
         TokenStreamInterface $stream,
     ): array {
-        if ($stream->eof()) {
-            return [];
-        }
-
         $token = $stream->current();
 
         if (

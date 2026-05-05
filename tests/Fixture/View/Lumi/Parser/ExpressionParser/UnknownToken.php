@@ -1,0 +1,26 @@
+<?php
+
+/**
+ * Tuxxedo Engine
+ *
+ * This file is part of the Tuxxedo Engine framework and is licensed under
+ * the MIT license.
+ *
+ * Copyright (C) 2026 Kalle Sommer Nielsen <kalle@php.net>
+ */
+
+declare(strict_types=1);
+
+namespace Fixture\View\Lumi\Parser\ExpressionParser;
+
+use Tuxxedo\View\Lumi\Syntax\Token\AbstractToken;
+
+readonly class UnknownToken extends AbstractToken
+{
+    public function __construct(
+        public int $line,
+        public ?string $op1 = null,
+        public ?string $op2 = null,
+    ) {
+    }
+}

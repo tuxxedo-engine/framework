@@ -17,6 +17,7 @@ use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexer;
 use Tuxxedo\View\Lumi\Lexer\TokenStream;
 use Tuxxedo\View\Lumi\Parser\Expression\ExpressionParser;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
 class ExpressionParserHelper
 {
@@ -39,6 +40,21 @@ class ExpressionParserHelper
                     startingLine: $startingLine,
                     operand: $expression,
                 ),
+            ),
+            startingLine: $startingLine,
+        );
+    }
+
+    /**
+     * @param TokenInterface[] $tokens
+     */
+    public function parseTokens(
+        array $tokens,
+        int $startingLine = 1,
+    ): ExpressionNodeInterface {
+        return $this->expressionParser->parse(
+            stream: new TokenStream(
+                tokens: $tokens,
             ),
             startingLine: $startingLine,
         );
