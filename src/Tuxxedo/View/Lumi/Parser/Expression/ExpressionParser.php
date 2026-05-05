@@ -289,12 +289,9 @@ class ExpressionParser implements ExpressionParserInterface
                 if ($after instanceof IdentifierToken) {
                     $stream->consume();
 
-                    $maybeCall = $stream->peek();
-
                     if (
-                        $maybeCall !== null &&
-                        $maybeCall instanceof CharacterToken &&
-                        $maybeCall->op1 === CharacterSymbol::LEFT_PARENTHESIS->symbol()
+                        !$stream->eof() &&
+                        $stream->currentIs(CharacterToken::class, CharacterSymbol::LEFT_PARENTHESIS->symbol())
                     ) {
                         $stream->consume();
 

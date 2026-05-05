@@ -314,7 +314,7 @@ class ExpressionLexer implements ExpressionLexerInterface
 
     private function isValidFloat(string $value): bool
     {
-        return \preg_match('/^-?(?:\d*\.\d+|\d+\.\d*)(?:[eE]-?\d+)?$/', $value) === 1;
+        return \preg_match('/^-?(?:(?:\d*\.\d+|\d+\.\d*)(?:[eE]-?\d+)?|\d+[eE]-?\d+)$/', $value) === 1;
     }
 
     private function isSymbolPrefix(string $prefix): bool
