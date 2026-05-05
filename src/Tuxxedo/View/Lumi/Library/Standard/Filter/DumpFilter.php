@@ -1,0 +1,36 @@
+<?php
+
+/**
+ * Tuxxedo Engine
+ *
+ * This file is part of the Tuxxedo Engine framework and is licensed under
+ * the MIT license.
+ *
+ * Copyright (C) 2026 Kalle Sommer Nielsen <kalle@php.net>
+ */
+
+declare(strict_types=1);
+
+namespace Tuxxedo\View\Lumi\Library\Standard\Filter;
+
+use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
+use Tuxxedo\View\Lumi\Runtime\RuntimeContextInterface;
+
+class DumpFilter implements FilterInterface
+{
+    public private(set) string $name = 'dump';
+    public private(set) array $aliases = [];
+
+    /**
+     * @param \Closure(): RuntimeContextInterface $context
+     */
+    public function call(
+        mixed $value,
+        \Closure $context,
+    ): string {
+        \ob_start();
+        \var_dump($value);
+
+        return \rtrim(!\is_bool($dump = \ob_get_clean()) ? $dump : '');
+    }
+}
