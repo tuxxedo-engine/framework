@@ -17,17 +17,26 @@ use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayItemNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
+use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
+use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
+use Tuxxedo\View\Lumi\Syntax\Node\DeclareNode;
+use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FilterOrBitwiseOrNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
+use Tuxxedo\View\Lumi\Syntax\Node\IncludeNode;
+use Tuxxedo\View\Lumi\Syntax\Node\LayoutNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
+use Tuxxedo\View\Lumi\Syntax\Node\LumiNode;
 use Tuxxedo\View\Lumi\Syntax\Node\MethodCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
+use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
+use Tuxxedo\View\Lumi\Syntax\TextContext;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
 trait NodeAssertionsTrait
@@ -209,6 +218,155 @@ trait NodeAssertionsTrait
         self::assertSame(
             $expectedNullSafe,
             $node->nullSafe,
+        );
+    }
+
+    private function assertCommentNode(
+        NodeInterface $node,
+        string $expectedText,
+    ): void {
+        self::assertInstanceOf(
+            CommentNode::class,
+            $node,
+        );
+
+        self::assertSame(
+            $expectedText,
+            $node->text,
+        );
+    }
+
+    private function assertTextNode(
+        NodeInterface $node,
+        string $expectedText,
+        TextContext $expectedContext = TextContext::NONE,
+    ): void {
+        self::assertInstanceOf(
+            TextNode::class,
+            $node,
+        );
+
+        self::assertSame(
+            $expectedText,
+            $node->text,
+        );
+
+        self::assertSame(
+            $expectedContext,
+            $node->context,
+        );
+    }
+
+    private function assertEchoNode(
+        NodeInterface $node,
+        TextContext $expectedContext = TextContext::NONE,
+    ): void {
+        self::assertInstanceOf(
+            EchoNode::class,
+            $node,
+        );
+
+        self::assertSame(
+            $expectedContext,
+            $node->context,
+        );
+    }
+
+    private function assertDeclareNode(
+        NodeInterface $node,
+        string $expectedDirective,
+        string $expectedValue,
+        Type $expectedValueType,
+    ): void {
+        self::assertInstanceOf(
+            DeclareNode::class,
+            $node,
+        );
+
+        self::assertSame(
+            $expectedDirective,
+            $node->directive->operand,
+        );
+
+        self::assertSame(
+            Type::STRING,
+            $node->directive->type,
+        );
+
+        self::assertSame(
+            $expectedValue,
+            $node->value->operand,
+        );
+
+        self::assertSame(
+            $expectedValueType,
+            $node->value->type,
+        );
+    }
+
+    private function assertLumiNode(
+        NodeInterface $node,
+        string $expectedTheme,
+        string $expectedSourceCode,
+    ): void {
+        self::assertInstanceOf(
+            LumiNode::class,
+            $node,
+        );
+
+        self::assertSame(
+            $expectedTheme,
+            $node->theme,
+        );
+
+        self::assertSame(
+            $expectedSourceCode,
+            $node->sourceCode,
+        );
+    }
+
+    private function assertIncludeNode(
+        NodeInterface $node,
+    ): void {
+        self::assertInstanceOf(
+            IncludeNode::class,
+            $node,
+        );
+    }
+
+    private function assertBlockNode(
+        NodeInterface $node,
+        string $expectedName,
+        int $expectedBodyCount,
+    ): void {
+        self::assertInstanceOf(
+            BlockNode::class,
+            $node,
+        );
+
+        self::assertSame(
+            $expectedName,
+            $node->name,
+        );
+
+        self::assertCount(
+            $expectedBodyCount,
+            $node->body,
+        );
+    }
+
+    private function assertLayoutNode(
+        NodeInterface $node,
+        string $expectedFile,
+    ): void {
+        self::assertInstanceOf(
+            LayoutNode::class,
+            $node,
+        );
+
+        self::assertSame(
+            $expectedFile,
+            $node->file,
         );
     }
 }
