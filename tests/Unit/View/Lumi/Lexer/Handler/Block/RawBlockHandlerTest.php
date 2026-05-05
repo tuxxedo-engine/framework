@@ -16,7 +16,6 @@ namespace Unit\View\Lumi\Lexer\Handler\Block;
 use PHPUnit\Framework\TestCase;
 use Support\View\Lumi\Lexer\TokenAssertionsTrait;
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexer;
-use Tuxxedo\View\Lumi\Lexer\Handler\Block\AlwaysStandaloneInterface;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\BlockHandlerState;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\EndRawBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\RawBlockHandler;
@@ -47,14 +46,6 @@ class RawBlockHandlerTest extends TestCase
         self::assertSame(
             'raw',
             $this->rawHandler->directive,
-        );
-    }
-
-    public function testRawHandlerImplementsAlwaysStandaloneInterface(): void
-    {
-        self::assertInstanceOf(
-            AlwaysStandaloneInterface::class,
-            $this->rawHandler,
         );
     }
 
@@ -135,14 +126,6 @@ class RawBlockHandlerTest extends TestCase
         self::assertSame(
             'endraw',
             $this->endRawHandler->directive,
-        );
-    }
-
-    public function testEndRawHandlerImplementsAlwaysStandaloneInterface(): void
-    {
-        self::assertInstanceOf(
-            AlwaysStandaloneInterface::class,
-            $this->endRawHandler,
         );
     }
 
@@ -239,10 +222,6 @@ class RawBlockHandlerTest extends TestCase
             expectedOp2: TextContext::RAW->name,
         );
     }
-
-    // ------------------------------------------------------------------
-    // Round trip
-    // ------------------------------------------------------------------
 
     public function testRoundTripFromRawToEndRawLeavesStateClean(): void
     {

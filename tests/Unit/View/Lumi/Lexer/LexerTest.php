@@ -17,17 +17,25 @@ use Fixture\View\Lumi\Lexer\Lexer\IfCloseHandler;
 use Fixture\View\Lumi\Lexer\Lexer\IfCloseToken;
 use Fixture\View\Lumi\Lexer\Lexer\IfOpenHandler;
 use Fixture\View\Lumi\Lexer\Lexer\IfOpenToken;
+use Fixture\View\Lumi\Lexer\Lexer\NoopHandler;
+use Fixture\View\Lumi\Lexer\Lexer\RawEnterHandler;
+use Fixture\View\Lumi\Lexer\Lexer\RawExitHandler;
 use Fixture\View\Lumi\Lexer\Lexer\StateLeakingHandler;
+use Fixture\View\Lumi\Lexer\Lexer\WrapHandler;
 use PHPUnit\Framework\TestCase;
+use Support\View\Lumi\Lexer\TokenAssertionsTrait;
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexer;
 use Tuxxedo\View\Lumi\Lexer\Handler\TokenHandlerInterface;
 use Tuxxedo\View\Lumi\Lexer\Lexer;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Lexer\LexerState;
+use Tuxxedo\View\Lumi\Syntax\TextContext;
 use Tuxxedo\View\Lumi\Syntax\Token\TextToken;
 
 class LexerTest extends TestCase
 {
+    use TokenAssertionsTrait;
+
     private const string FIXTURE_FILE = __DIR__ . '/../../../../Fixture/View/Lumi/Lexer/Lexer/sample.lumi';
 
     public function testCreateDefaultExpressionLexerReturnsExpressionLexer(): void
@@ -309,5 +317,98 @@ class LexerTest extends TestCase
 
         self::assertInstanceOf(TextToken::class, $stream->tokens[4]);
         self::assertSame('!', $stream->tokens[4]->op1);
+    }
+
+    public function testTextAsRawRoundTripEmitsRawMarkedTextTokenAndPreservesAdjacentText(): void
+    {
+        $lexer = Lexer::createWithoutDefaultHandlers(
+            handlers: [
+                new RawEnterHandler(),
+                new RawExitHandler(),
+            ],
+        );
+
+        $stream = $lexer->tokenizeByString('prefix{raw}body{endraw}suffix');
+
+        self::assertCount(3, $stream->tokens);
+
+        $this->assertTextToken(
+            token: $stream->tokens[0],
+            expectedLine: 1,
+            expectedOp1: 'prefix',
+        );
+
+        $this->assertTextToken(
+            token: $stream->tokens[1],
+            expectedLine: 1,
+            expectedOp1: 'body',
+            expectedOp2: TextContext::RAW->name,
+        );
+
+        $this->assertTextToken(
+            token: $stream->tokens[2],
+            expectedLine: 1,
+            expectedOp1: 'suffix',
+        );
+    }
+
+    public function testNoopHandlerInsideRawBlockIsAbsorbedIntoRawBuffer(): void
+    {
+        $lexer = Lexer::createWithoutDefaultHandlers(
+            handlers: [
+                new RawEnterHandler(),
+                new RawExitHandler(),
+                new NoopHandler(),
+            ],
+        );
+
+        $stream = $lexer->tokenizeByString('{raw}{noop}body{endraw}');
+
+        self::assertCount(1, $stream->tokens);
+
+        $this->assertTextToken(
+            token: $stream->tokens[0],
+            expectedLine: 1,
+            expectedOp1: '{noop}body',
+            expectedOp2: TextContext::RAW->name,
+        );
+    }
+
+    public function testUnterminatedHandlerInsideRawBlockTripsUncleanStateGuard(): void
+    {
+        $lexer = Lexer::createWithoutDefaultHandlers(
+            handlers: [
+                new RawEnterHandler(),
+                new RawExitHandler(),
+                new WrapHandler(),
+            ],
+        );
+
+        $this->expectException(LexerException::class);
+        $this->expectExceptionMessage('Lexer state was left in an unclean state, possible end of sequence tag missing');
+
+        $lexer->tokenizeByString('{raw}{wrap unterminated content');
+    }
+
+    public function testNonEndSequenceMatchInsideRawBlockIsTreatedAsRawText(): void
+    {
+        $lexer = Lexer::createWithoutDefaultHandlers(
+            handlers: [
+                new RawEnterHandler(),
+                new RawExitHandler(),
+                new NoopHandler(),
+            ],
+        );
+
+        $stream = $lexer->tokenizeByString('{raw}text{noop}{endraw}');
+
+        self::assertCount(1, $stream->tokens);
+
+        $this->assertTextToken(
+            token: $stream->tokens[0],
+            expectedLine: 1,
+            expectedOp1: 'text{noop}',
+            expectedOp2: TextContext::RAW->name,
+        );
     }
 }

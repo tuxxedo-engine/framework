@@ -11,29 +11,35 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Lexer\Handler\Block;
+namespace Fixture\View\Lumi\Lexer\Lexer;
 
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
+use Tuxxedo\View\Lumi\Lexer\Handler\TokenHandlerInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerStateInterface;
-use Tuxxedo\View\Lumi\Syntax\Token\BreakToken;
+use Tuxxedo\View\Lumi\Syntax\Token\TextToken;
 
-class BreakBlockHandler extends AbstractLoopConstructHandler
+class WrapHandler implements TokenHandlerInterface
 {
-    public private(set) string $directive = 'break';
+    public function getStartingSequence(): string
+    {
+        return '{wrap';
+    }
 
-    public function lex(
+    public function getEndingSequence(): string
+    {
+        return '}wrap';
+    }
+
+    public function tokenize(
         int $startingLine,
-        string $expression,
+        string $buffer,
         ExpressionLexerInterface $expressionLexer,
         LexerStateInterface $state,
-        BlockHandlerState $blockState,
     ): array {
         return [
-            new BreakToken(
+            new TextToken(
                 line: $startingLine,
-                op1: $blockState === BlockHandlerState::EXPRESSIVE
-                    ? parent::lexDepth($startingLine, $expression)
-                    : null, // @codeCoverageIgnore
+                op1: $buffer,
             ),
         ];
     }

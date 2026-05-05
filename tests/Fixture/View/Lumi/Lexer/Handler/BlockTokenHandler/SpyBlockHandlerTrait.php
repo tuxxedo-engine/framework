@@ -11,16 +11,22 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Lexer\Handler\Block;
+namespace Fixture\View\Lumi\Lexer\Handler\BlockTokenHandler;
 
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexerInterface;
+use Tuxxedo\View\Lumi\Lexer\Handler\Block\BlockHandlerState;
 use Tuxxedo\View\Lumi\Lexer\LexerStateInterface;
-use Tuxxedo\View\Lumi\Syntax\Token\BreakToken;
 
-class BreakBlockHandler extends AbstractLoopConstructHandler
+trait SpyBlockHandlerTrait
 {
-    public private(set) string $directive = 'break';
+    public ?int $lastStartingLine = null;
+    public ?string $lastExpression = null;
+    public ?BlockHandlerState $lastBlockState = null;
+    public int $callCount = 0;
 
+    /**
+     * @return array{}
+     */
     public function lex(
         int $startingLine,
         string $expression,
@@ -28,13 +34,11 @@ class BreakBlockHandler extends AbstractLoopConstructHandler
         LexerStateInterface $state,
         BlockHandlerState $blockState,
     ): array {
-        return [
-            new BreakToken(
-                line: $startingLine,
-                op1: $blockState === BlockHandlerState::EXPRESSIVE
-                    ? parent::lexDepth($startingLine, $expression)
-                    : null, // @codeCoverageIgnore
-            ),
-        ];
+        $this->lastStartingLine = $startingLine;
+        $this->lastExpression = $expression;
+        $this->lastBlockState = $blockState;
+        $this->callCount++;
+
+        return [];
     }
 }

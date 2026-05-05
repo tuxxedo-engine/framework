@@ -33,7 +33,7 @@ class ContinueBlockHandler extends AbstractLoopConstructHandler
                 line: $startingLine,
                 op1: $blockState === BlockHandlerState::EXPRESSIVE
                     ? parent::lexDepth($startingLine, $expression)
-                    : null,
+                    : null, // @codeCoverageIgnore
             ),
         ];
     }

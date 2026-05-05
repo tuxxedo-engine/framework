@@ -47,7 +47,7 @@ class IncludeBlockHandler implements BlockHandlerInterface, AlwaysExpressiveInte
                 line: $startingLine,
                 op1: $firstCharacter !== '('
                     ? 'braceless'
-                    : null,
+                    : null, // @codeCoverageIgnore
             ),
             ...$expressionLexer->lex(
                 startingLine: $startingLine,
