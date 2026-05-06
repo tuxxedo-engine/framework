@@ -54,3 +54,60 @@
 {% set n = 1 %}
 {% set n ~= 2 %}
 {{ n }}
+
+{% let name = "Lumi" %}
+<h1>Hello, {{ name }}!</h1>
+
+{% let n = 1 %}
+{% let n += 2 %}
+<p>{{ n }}</p>
+
+{% let n = n + 3 %}
+<p>{{ n }}</p>
+
+{% let n = 3 + n %}
+<p>{{ n }}</p>
+
+{% let n = 3 + 3 %}
+{{ n }}
+
+{% let n = 3 - 3 %}
+{{ n }}
+
+{% let n = 3 * 3 %}
+{{ n }}
+
+{% let n = 3 / 3 %}
+{{ n }}
+
+{% let n = 3 % 3 %}
+{{ n }}
+
+{% let a.b = 1 %}
+{{ a.b }}
+
+{% let a.c.d = 1 %}
+{{ a.c.d }}
+
+{% let b[0] = 1 %}
+{{ b[0] }}
+
+{% let b[1][0] = 1 %}
+{{ b[1][0] }}
+
+{% let a.e.f.g = 1 %}
+{{ a.e.f.g }}
+
+{% let b['x'][0].y = 1 %}
+{{ b['x'][0].y }}
+
+{% let b[2][3] = 1 %}
+{{ b[2][3] }}
+
+{% let php = 'Hello' %}
+{% let php ~= ' World' %}
+{{ php }}
+
+{% let n = 1 %}
+{% let n ~= 2 %}
+{{ n }}

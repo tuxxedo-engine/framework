@@ -38,6 +38,7 @@ use Tuxxedo\View\Lumi\Lexer\Handler\Block\ForEachBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\IfBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\IncludeBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\LayoutBlockHandler;
+use Tuxxedo\View\Lumi\Lexer\Handler\Block\LetBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\LumiBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\RawBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\SetBlockHandler;
@@ -93,6 +94,7 @@ class BlockTokenHandler implements TokenHandlerInterface
             new IfBlockHandler(),
             new IncludeBlockHandler(),
             new LayoutBlockHandler(),
+            new LetBlockHandler(),
             new LumiBlockHandler(),
             new RawBlockHandler(),
             new SetBlockHandler(),

@@ -13,39 +13,61 @@ declare(strict_types=1);
 
 namespace Unit\View\Lumi\Lexer\Handler\Block;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Support\View\Lumi\Lexer\TokenAssertionsTrait;
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexer;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\BlockHandlerState;
+use Tuxxedo\View\Lumi\Lexer\Handler\Block\LetBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\SetBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\LexerState;
 
-class SetBlockHandlerTest extends TestCase
+class AssignmentBlockHandlerTest extends TestCase
 {
     use TokenAssertionsTrait;
 
-    private SetBlockHandler $handler;
     private ExpressionLexer $expressionLexer;
     private LexerState $state;
 
     protected function setUp(): void
     {
-        $this->handler = new SetBlockHandler();
         $this->expressionLexer = new ExpressionLexer();
         $this->state = new LexerState();
     }
 
-    public function testSetHandlerDirectiveIsSet(): void
+    /**
+     * @return \Generator<array{0: string, 1: SetBlockHandler|LetBlockHandler}>
+     */
+    public static function handlerDataProvider(): \Generator
     {
-        self::assertSame(
+        yield [
             'set',
-            $this->handler->directive,
+            new SetBlockHandler(),
+        ];
+
+        yield [
+            'let',
+            new LetBlockHandler(),
+        ];
+    }
+
+    #[DataProvider('handlerDataProvider')]
+    public function testSetHandlerDirectiveIsSet(
+        string $verb,
+        SetBlockHandler|LetBlockHandler $handler,
+    ): void {
+        self::assertSame(
+            $verb,
+            $handler->directive,
         );
     }
 
-    public function testSetHandlerLexWrapsAssignmentWithAssignAndEndTokens(): void
-    {
-        $tokens = $this->handler->lex(
+    #[DataProvider('handlerDataProvider')]
+    public function testSetHandlerLexWrapsAssignmentWithAssignAndEndTokens(
+        string $verb,
+        SetBlockHandler|LetBlockHandler $handler,
+    ): void {
+        $tokens = $handler->lex(
             startingLine: 1,
             expression: "var = 'value'",
             expressionLexer: $this->expressionLexer,
@@ -66,9 +88,12 @@ class SetBlockHandlerTest extends TestCase
         );
     }
 
-    public function testSetHandlerLexWrapsSingleIdentifierWithAssignAndEndTokens(): void
-    {
-        $tokens = $this->handler->lex(
+    #[DataProvider('handlerDataProvider')]
+    public function testSetHandlerLexWrapsSingleIdentifierWithAssignAndEndTokens(
+        string $verb,
+        SetBlockHandler|LetBlockHandler $handler,
+    ): void {
+        $tokens = $handler->lex(
             startingLine: 1,
             expression: 'var',
             expressionLexer: $this->expressionLexer,
@@ -94,9 +119,12 @@ class SetBlockHandlerTest extends TestCase
         );
     }
 
-    public function testSetHandlerLexPropagatesStartingLineToWrapperTokens(): void
-    {
-        $tokens = $this->handler->lex(
+    #[DataProvider('handlerDataProvider')]
+    public function testSetHandlerLexPropagatesStartingLineToWrapperTokens(
+        string $verb,
+        SetBlockHandler|LetBlockHandler $handler,
+    ): void {
+        $tokens = $handler->lex(
             startingLine: 7,
             expression: 'var',
             expressionLexer: $this->expressionLexer,
