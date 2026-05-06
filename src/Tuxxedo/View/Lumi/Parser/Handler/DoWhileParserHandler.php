@@ -124,7 +124,7 @@ class DoWhileParserHandler extends AbstractWhileParserHandler
 
             if ($token === EndWhileToken::class) {
                 if (\sizeof($whileStack) === 0) {
-                    continue;
+                    continue; // @codeCoverageIgnore
                 }
 
                 $headerIndex = \array_pop($whileStack);
@@ -175,6 +175,6 @@ class DoWhileParserHandler extends AbstractWhileParserHandler
             $index++;
         }
 
-        return 0;
+        return 0; // @codeCoverageIgnore
     }
 }

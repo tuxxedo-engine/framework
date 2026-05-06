@@ -24,6 +24,7 @@ use Fixture\View\Lumi\Parser\Parser\StateLeakingHandler;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\View\Lumi\Lexer\TokenStream;
 use Tuxxedo\View\Lumi\Parser\Expression\ExpressionParser;
+use Tuxxedo\View\Lumi\Parser\Handler\ParserHandlerInterface;
 use Tuxxedo\View\Lumi\Parser\Parser;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserState;
@@ -222,5 +223,36 @@ class ParserTest extends TestCase
 
         self::assertFalse($state->has(StateLeakingHandler::LEAKED_KEY));
         self::assertSame([], $state->stateStack);
+    }
+
+    public function testCreateDefaultHandlersReturnsParserHandlerInstances(): void
+    {
+        $handlers = Parser::createDefaultHandlers();
+
+        self::assertNotEmpty($handlers);
+
+        foreach ($handlers as $handler) {
+            self::assertInstanceOf(ParserHandlerInterface::class, $handler);
+        }
+    }
+
+    public function testCreateWithDefaultHandlersConstructsParser(): void
+    {
+        $parser = Parser::createWithDefaultHandlers();
+
+        self::assertInstanceOf(Parser::class, $parser);
+        self::assertInstanceOf(ExpressionParser::class, $parser->expressionParser);
+        self::assertInstanceOf(ParserState::class, $parser->state);
+    }
+
+    public function testCreateWithDefaultHandlersAcceptsAdditionalHandlers(): void
+    {
+        $parser = Parser::createWithDefaultHandlers(
+            handlers: [
+                new FooHandler(),
+            ],
+        );
+
+        self::assertArrayHasKey(FooToken::class, $parser->handlers);
     }
 }

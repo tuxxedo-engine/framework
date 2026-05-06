@@ -201,4 +201,89 @@ class DoWhileParserHandlerTest extends TestCase
             ),
         );
     }
+
+    public function testParsesNestedDoWhileInBody(): void
+    {
+        $parser = Parser::createWithoutDefaultHandlers(
+            handlers: [
+                new TextParserHandler(),
+                new DoWhileParserHandler(),
+            ],
+        );
+
+        $nodes = $this->handler->parse(
+            parser: $parser,
+            stream: new TokenStream(
+                tokens: [
+                    new DoToken(
+                        line: 1,
+                    ),
+                    new TextToken(
+                        line: 2,
+                        op1: 'a',
+                    ),
+                    new DoToken(
+                        line: 3,
+                    ),
+                    new TextToken(
+                        line: 4,
+                        op1: 'b',
+                    ),
+                    new WhileToken(
+                        line: 5,
+                    ),
+                    new IdentifierToken(
+                        line: 5,
+                        op1: 'y',
+                    ),
+                    new EndToken(
+                        line: 5,
+                    ),
+                    new TextToken(
+                        line: 6,
+                        op1: 'c',
+                    ),
+                    new WhileToken(
+                        line: 7,
+                    ),
+                    new IdentifierToken(
+                        line: 7,
+                        op1: 'z',
+                    ),
+                    new EndToken(
+                        line: 7,
+                    ),
+                ],
+            ),
+        );
+
+        self::assertCount(1, $nodes);
+
+        $this->assertDoWhileNode(
+            node: $nodes[0],
+            expectedBodyCount: 3,
+        );
+
+        self::assertInstanceOf(DoWhileNode::class, $nodes[0]);
+
+        $this->assertIdentifierNode(
+            node: $nodes[0]->operand,
+            expectedName: 'z',
+        );
+
+        $this->assertTextNode(
+            node: $nodes[0]->body[0],
+            expectedText: 'a',
+        );
+
+        $this->assertDoWhileNode(
+            node: $nodes[0]->body[1],
+            expectedBodyCount: 1,
+        );
+
+        $this->assertTextNode(
+            node: $nodes[0]->body[2],
+            expectedText: 'c',
+        );
+    }
 }

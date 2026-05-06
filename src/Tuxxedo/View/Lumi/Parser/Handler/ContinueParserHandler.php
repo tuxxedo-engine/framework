@@ -48,7 +48,7 @@ class ContinueParserHandler implements ParserHandlerInterface
             new ContinueNode(
                 count: $token->op1 !== null
                     ? (int) $token->op1
-                    : null,
+                    : null, // @codeCoverageIgnore
             ),
         ];
     }

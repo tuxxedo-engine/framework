@@ -320,4 +320,91 @@ class ConditionParserHandlerTest extends TestCase
             ),
         );
     }
+
+    public function testParsesNestedIfInsideElseBranch(): void
+    {
+        $parser = Parser::createWithoutDefaultHandlers(
+            handlers: [
+                new TextParserHandler(),
+                new ConditionParserHandler(),
+            ],
+        );
+
+        $nodes = $this->handler->parse(
+            parser: $parser,
+            stream: new TokenStream(
+                tokens: [
+                    new IfToken(
+                        line: 1,
+                    ),
+                    new IdentifierToken(
+                        line: 1,
+                        op1: 'a',
+                    ),
+                    new EndToken(
+                        line: 1,
+                    ),
+                    new TextToken(
+                        line: 2,
+                        op1: 'A',
+                    ),
+                    new ElseToken(
+                        line: 3,
+                    ),
+                    new IfToken(
+                        line: 4,
+                    ),
+                    new IdentifierToken(
+                        line: 4,
+                        op1: 'b',
+                    ),
+                    new EndToken(
+                        line: 4,
+                    ),
+                    new TextToken(
+                        line: 5,
+                        op1: 'B',
+                    ),
+                    new EndIfToken(
+                        line: 6,
+                    ),
+                    new TextToken(
+                        line: 7,
+                        op1: 'C',
+                    ),
+                    new EndIfToken(
+                        line: 8,
+                    ),
+                ],
+            ),
+        );
+
+        self::assertCount(1, $nodes);
+
+        $this->assertConditionalNode(
+            node: $nodes[0],
+            expectedBodyCount: 1,
+            expectedBranchCount: 0,
+            expectedElseCount: 2,
+        );
+
+        self::assertInstanceOf(ConditionalNode::class, $nodes[0]);
+
+        $this->assertTextNode(
+            node: $nodes[0]->body[0],
+            expectedText: 'A',
+        );
+
+        $this->assertConditionalNode(
+            node: $nodes[0]->else[0],
+            expectedBodyCount: 1,
+            expectedBranchCount: 0,
+            expectedElseCount: 0,
+        );
+
+        $this->assertTextNode(
+            node: $nodes[0]->else[1],
+            expectedText: 'C',
+        );
+    }
 }

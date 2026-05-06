@@ -605,4 +605,211 @@ class AssignmentParserHandlerTest extends TestCase
             ),
         );
     }
+
+    public function testParsesArrayKeyAsPropertyChain(): void
+    {
+        $nodes = $this->handler->parse(
+            parser: $this->parser,
+            stream: new TokenStream(
+                tokens: [
+                    new AssignToken(
+                        line: 1,
+                    ),
+                    new IdentifierToken(
+                        line: 1,
+                        op1: 'foo',
+                    ),
+                    new CharacterToken(
+                        line: 1,
+                        op1: CharacterSymbol::LEFT_SQUARE_BRACKET->symbol(),
+                    ),
+                    new IdentifierToken(
+                        line: 1,
+                        op1: 'a',
+                    ),
+                    new CharacterToken(
+                        line: 1,
+                        op1: CharacterSymbol::DOT->symbol(),
+                    ),
+                    new IdentifierToken(
+                        line: 1,
+                        op1: 'b',
+                    ),
+                    new CharacterToken(
+                        line: 1,
+                        op1: CharacterSymbol::RIGHT_SQUARE_BRACKET->symbol(),
+                    ),
+                    new OperatorToken(
+                        line: 1,
+                        op1: AssignmentSymbol::ASSIGN->symbol(),
+                    ),
+                    new IdentifierToken(
+                        line: 1,
+                        op1: 'value',
+                    ),
+                    new EndToken(
+                        line: 1,
+                    ),
+                ],
+            ),
+        );
+
+        self::assertCount(1, $nodes);
+
+        self::assertInstanceOf(AssignmentNode::class, $nodes[0]);
+        self::assertInstanceOf(ArrayAccessNode::class, $nodes[0]->name);
+
+        self::assertNotNull($nodes[0]->name->key);
+
+        $this->assertPropertyAccessNode(
+            node: $nodes[0]->name->key,
+            expectedProperty: 'b',
+        );
+
+        self::assertInstanceOf(PropertyAccessNode::class, $nodes[0]->name->key);
+
+        $this->assertIdentifierNode(
+            node: $nodes[0]->name->key->accessor,
+            expectedName: 'a',
+        );
+    }
+
+    public function testParsesChainedArrayAccessAssignment(): void
+    {
+        $nodes = $this->handler->parse(
+            parser: $this->parser,
+            stream: new TokenStream(
+                tokens: [
+                    new AssignToken(
+                        line: 1,
+                    ),
+                    new IdentifierToken(
+                        line: 1,
+                        op1: 'users',
+                    ),
+                    new CharacterToken(
+                        line: 1,
+                        op1: CharacterSymbol::LEFT_SQUARE_BRACKET->symbol(),
+                    ),
+                    new LiteralToken(
+                        line: 1,
+                        op1: '0',
+                        op2: Type::INT->name,
+                    ),
+                    new CharacterToken(
+                        line: 1,
+                        op1: CharacterSymbol::RIGHT_SQUARE_BRACKET->symbol(),
+                    ),
+                    new CharacterToken(
+                        line: 1,
+                        op1: CharacterSymbol::LEFT_SQUARE_BRACKET->symbol(),
+                    ),
+                    new LiteralToken(
+                        line: 1,
+                        op1: '1',
+                        op2: Type::INT->name,
+                    ),
+                    new CharacterToken(
+                        line: 1,
+                        op1: CharacterSymbol::RIGHT_SQUARE_BRACKET->symbol(),
+                    ),
+                    new OperatorToken(
+                        line: 1,
+                        op1: AssignmentSymbol::ASSIGN->symbol(),
+                    ),
+                    new IdentifierToken(
+                        line: 1,
+                        op1: 'value',
+                    ),
+                    new EndToken(
+                        line: 1,
+                    ),
+                ],
+            ),
+        );
+
+        self::assertCount(1, $nodes);
+
+        self::assertInstanceOf(AssignmentNode::class, $nodes[0]);
+        self::assertInstanceOf(ArrayAccessNode::class, $nodes[0]->name);
+        self::assertInstanceOf(ArrayAccessNode::class, $nodes[0]->name->array);
+
+        $this->assertIdentifierNode(
+            node: $nodes[0]->name->array->array,
+            expectedName: 'users',
+        );
+    }
+
+    public function testParsesArrayKeyAsNestedArrayAccess(): void
+    {
+        $nodes = $this->handler->parse(
+            parser: $this->parser,
+            stream: new TokenStream(
+                tokens: [
+                    new AssignToken(
+                        line: 1,
+                    ),
+                    new IdentifierToken(
+                        line: 1,
+                        op1: 'foo',
+                    ),
+                    new CharacterToken(
+                        line: 1,
+                        op1: CharacterSymbol::LEFT_SQUARE_BRACKET->symbol(),
+                    ),
+                    new IdentifierToken(
+                        line: 1,
+                        op1: 'a',
+                    ),
+                    new CharacterToken(
+                        line: 1,
+                        op1: CharacterSymbol::LEFT_SQUARE_BRACKET->symbol(),
+                    ),
+                    new IdentifierToken(
+                        line: 1,
+                        op1: 'b',
+                    ),
+                    new CharacterToken(
+                        line: 1,
+                        op1: CharacterSymbol::RIGHT_SQUARE_BRACKET->symbol(),
+                    ),
+                    new CharacterToken(
+                        line: 1,
+                        op1: CharacterSymbol::RIGHT_SQUARE_BRACKET->symbol(),
+                    ),
+                    new OperatorToken(
+                        line: 1,
+                        op1: AssignmentSymbol::ASSIGN->symbol(),
+                    ),
+                    new IdentifierToken(
+                        line: 1,
+                        op1: 'value',
+                    ),
+                    new EndToken(
+                        line: 1,
+                    ),
+                ],
+            ),
+        );
+
+        self::assertCount(1, $nodes);
+
+        self::assertInstanceOf(AssignmentNode::class, $nodes[0]);
+        self::assertInstanceOf(ArrayAccessNode::class, $nodes[0]->name);
+
+        self::assertNotNull($nodes[0]->name->key);
+        self::assertInstanceOf(ArrayAccessNode::class, $nodes[0]->name->key);
+
+        $this->assertIdentifierNode(
+            node: $nodes[0]->name->key->array,
+            expectedName: 'a',
+        );
+
+        self::assertNotNull($nodes[0]->name->key->key);
+
+        $this->assertIdentifierNode(
+            node: $nodes[0]->name->key->key,
+            expectedName: 'b',
+        );
+    }
 }

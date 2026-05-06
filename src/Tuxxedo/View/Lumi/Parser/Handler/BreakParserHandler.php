@@ -48,7 +48,7 @@ class BreakParserHandler implements ParserHandlerInterface
             new BreakNode(
                 count: $token->op1 !== null
                     ? (int) $token->op1
-                    : null,
+                    : null, // @codeCoverageIgnore
             ),
         ];
     }
