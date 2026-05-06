@@ -90,7 +90,9 @@ class GroupExpressionTest extends TestCase
     {
         $node = $this->helper->parse('(a + b)');
 
-        $this->assertGroupNode(node: $node);
+        $this->assertGroupNode(
+            node: $node,
+        );
 
         self::assertInstanceOf(GroupNode::class, $node);
 

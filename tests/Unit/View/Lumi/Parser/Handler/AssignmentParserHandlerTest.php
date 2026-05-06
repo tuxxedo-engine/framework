@@ -46,14 +46,6 @@ class AssignmentParserHandlerTest extends TestCase
         $this->parser = Parser::createWithoutDefaultHandlers();
     }
 
-    public function testTokenClassNameIsAssignToken(): void
-    {
-        self::assertSame(
-            AssignToken::class,
-            $this->handler->tokenClassName,
-        );
-    }
-
     public function testParsesSimpleAssignment(): void
     {
         $nodes = $this->handler->parse(

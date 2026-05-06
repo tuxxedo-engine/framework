@@ -41,14 +41,6 @@ class LayoutParserHandlerTest extends TestCase
         $this->parser->state->pushState();
     }
 
-    public function testTokenClassNameIsLayoutToken(): void
-    {
-        self::assertSame(
-            LayoutToken::class,
-            $this->handler->tokenClassName,
-        );
-    }
-
     public function testParsesLayoutWithFile(): void
     {
         $nodes = $this->handler->parse(

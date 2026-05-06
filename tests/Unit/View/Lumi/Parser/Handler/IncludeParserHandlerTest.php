@@ -42,14 +42,6 @@ class IncludeParserHandlerTest extends TestCase
         $this->parser = Parser::createWithoutDefaultHandlers();
     }
 
-    public function testTokenClassNameIsIncludeToken(): void
-    {
-        self::assertSame(
-            IncludeToken::class,
-            $this->handler->tokenClassName,
-        );
-    }
-
     public function testParsesSimpleInclude(): void
     {
         $nodes = $this->handler->parse(

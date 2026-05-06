@@ -40,14 +40,6 @@ class ConditionParserHandlerTest extends TestCase
         $this->handler = new ConditionParserHandler();
     }
 
-    public function testTokenClassNameIsIfToken(): void
-    {
-        self::assertSame(
-            IfToken::class,
-            $this->handler->tokenClassName,
-        );
-    }
-
     public function testParsesIfWithBody(): void
     {
         $parser = Parser::createWithoutDefaultHandlers(

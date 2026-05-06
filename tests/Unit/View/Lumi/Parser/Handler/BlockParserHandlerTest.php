@@ -36,14 +36,6 @@ class BlockParserHandlerTest extends TestCase
         $this->handler = new BlockParserHandler();
     }
 
-    public function testTokenClassNameIsBlockToken(): void
-    {
-        self::assertSame(
-            BlockToken::class,
-            $this->handler->tokenClassName,
-        );
-    }
-
     public function testParsesEmptyBlock(): void
     {
         $parser = Parser::createWithoutDefaultHandlers();

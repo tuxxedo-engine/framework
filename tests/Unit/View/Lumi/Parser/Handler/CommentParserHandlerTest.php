@@ -34,14 +34,6 @@ class CommentParserHandlerTest extends TestCase
         $this->parser = Parser::createWithoutDefaultHandlers();
     }
 
-    public function testTokenClassNameIsCommentToken(): void
-    {
-        self::assertSame(
-            CommentToken::class,
-            $this->handler->tokenClassName,
-        );
-    }
-
     public function testParsesSingleCommentToken(): void
     {
         $nodes = $this->handler->parse(

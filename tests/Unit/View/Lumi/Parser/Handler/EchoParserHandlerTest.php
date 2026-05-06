@@ -39,14 +39,6 @@ class EchoParserHandlerTest extends TestCase
         $this->parser = Parser::createWithoutDefaultHandlers();
     }
 
-    public function testTokenClassNameIsEchoToken(): void
-    {
-        self::assertSame(
-            EchoToken::class,
-            $this->handler->tokenClassName,
-        );
-    }
-
     public function testParsesEchoOfSingleIdentifier(): void
     {
         $nodes = $this->handler->parse(

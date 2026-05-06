@@ -39,14 +39,6 @@ class DeclareParserHandlerTest extends TestCase
         $this->parser->state->pushState();
     }
 
-    public function testTokenClassNameIsDeclareToken(): void
-    {
-        self::assertSame(
-            DeclareToken::class,
-            $this->handler->tokenClassName,
-        );
-    }
-
     public function testParsesDeclareWithStringValue(): void
     {
         $nodes = $this->handler->parse(

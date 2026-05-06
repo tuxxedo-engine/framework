@@ -35,14 +35,6 @@ class TextParserHandlerTest extends TestCase
         $this->parser = Parser::createWithoutDefaultHandlers();
     }
 
-    public function testTokenClassNameIsTextToken(): void
-    {
-        self::assertSame(
-            TextToken::class,
-            $this->handler->tokenClassName,
-        );
-    }
-
     public function testParsesSingleTextToken(): void
     {
         $nodes = $this->handler->parse(

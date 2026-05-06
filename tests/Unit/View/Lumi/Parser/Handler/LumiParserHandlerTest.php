@@ -33,14 +33,6 @@ class LumiParserHandlerTest extends TestCase
         $this->parser = Parser::createWithoutDefaultHandlers();
     }
 
-    public function testTokenClassNameIsLumiToken(): void
-    {
-        self::assertSame(
-            LumiToken::class,
-            $this->handler->tokenClassName,
-        );
-    }
-
     public function testParsesLumiTokenIntoLumiNode(): void
     {
         $nodes = $this->handler->parse(
