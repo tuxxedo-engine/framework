@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Optimizer\Sccp;
 
 use Tuxxedo\View\Lumi\Optimizer\AbstractOptimizer;
+use Tuxxedo\View\Lumi\Optimizer\OptimizerContext;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
@@ -43,6 +44,7 @@ class SccpOptimizer extends AbstractOptimizer
     protected function optimizeNode(
         NodeStreamInterface $stream,
         NodeInterface $node,
+        OptimizerContext $context,
     ): array {
         return match (true) {
             $node instanceof AssignmentNode => $this->optimizeAssignment($node),
@@ -132,7 +134,11 @@ class SccpOptimizer extends AbstractOptimizer
             return [];
         }
 
-        $operand = $this->optimizeNode($stream, $node->operand);
+        $operand = $this->optimizeNode(
+            stream: $stream,
+            node: $node->operand,
+            context: OptimizerContext::EXPRESSION,
+        );
 
         if (
             \sizeof($operand) === 1 &&
@@ -198,6 +204,7 @@ class SccpOptimizer extends AbstractOptimizer
                     node: new ConcatNode(
                         operands: $operands,
                     ),
+                    context: OptimizerContext::EXPRESSION,
                 ),
             ];
         }
@@ -269,10 +276,18 @@ class SccpOptimizer extends AbstractOptimizer
         ConditionalNode $node,
     ): array {
         $branches = [];
-        $condition = $this->optimizeNode($stream, $node->operand);
+        $condition = $this->optimizeNode(
+            stream: $stream,
+            node: $node->operand,
+            context: OptimizerContext::EXPRESSION,
+        );
 
         foreach ($node->branches as $branch) {
-            $optimizedBranch = $this->optimizeNode($stream, $branch->operand);
+            $optimizedBranch = $this->optimizeNode(
+                stream: $stream,
+                node: $branch->operand,
+                context: OptimizerContext::EXPRESSION,
+            );
 
             if (
                 \sizeof($optimizedBranch) === 1 &&
@@ -281,12 +296,18 @@ class SccpOptimizer extends AbstractOptimizer
             ) {
                 $branches[] = new ConditionalBranchNode(
                     operand: $optimizedBranch[0],
-                    body: parent::optimizeNodes($branch->body),
+                    body: parent::optimizeNodes(
+                        nodes: $branch->body,
+                        context: OptimizerContext::CONDITION,
+                    ),
                 );
             } else {
                 $branches[] = new ConditionalBranchNode(
                     operand: $branch->operand,
-                    body: parent::optimizeNodes($branch->body),
+                    body: parent::optimizeNodes(
+                        nodes: $branch->body,
+                        context: OptimizerContext::CONDITION,
+                    ),
                 );
             }
         }
@@ -299,8 +320,14 @@ class SccpOptimizer extends AbstractOptimizer
             return [
                 new ConditionalNode(
                     operand: $condition[0],
-                    body: parent::optimizeNodes($node->body),
-                    else: parent::optimizeNodes($node->else),
+                    body: parent::optimizeNodes(
+                        nodes: $node->body,
+                        context: OptimizerContext::CONDITION,
+                    ),
+                    else: parent::optimizeNodes(
+                        nodes: $node->else,
+                        context: OptimizerContext::CONDITION,
+                    ),
                     branches: $branches,
                 ),
             ];
@@ -309,8 +336,14 @@ class SccpOptimizer extends AbstractOptimizer
         return [
             new ConditionalNode(
                 operand: $node->operand,
-                body: parent::optimizeNodes($node->body),
-                else: parent::optimizeNodes($node->else),
+                body: parent::optimizeNodes(
+                    nodes: $node->body,
+                    context: OptimizerContext::CONDITION,
+                ),
+                else: parent::optimizeNodes(
+                    nodes: $node->else,
+                    context: OptimizerContext::CONDITION,
+                ),
                 branches: $branches,
             ),
         ];

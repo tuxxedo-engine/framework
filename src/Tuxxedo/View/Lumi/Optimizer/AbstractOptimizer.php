@@ -59,11 +59,12 @@ abstract class AbstractOptimizer implements OptimizerInterface
 
     protected function optimizer(
         NodeStreamInterface $stream,
+        OptimizerContext $context = OptimizerContext::NONE,
     ): NodeStreamInterface {
         $nodes = [];
 
         while (!$stream->eof()) {
-            $optimizedNodes = $this->optimizeNode($stream, $stream->consume());
+            $optimizedNodes = $this->optimizeNode($stream, $stream->consume(), $context);
 
             if (\sizeof($optimizedNodes) > 0) {
                 \array_push($nodes, ...$optimizedNodes);
@@ -76,11 +77,46 @@ abstract class AbstractOptimizer implements OptimizerInterface
     }
 
     /**
+     * @param NodeInterface[] $nodes
+     * @return NodeInterface[]
+     */
+    protected function optimizeNodes(
+        array $nodes,
+        OptimizerContext $context,
+    ): array {
+        if (\sizeof($nodes) === 0) {
+            return $nodes;
+        }
+
+        return $this->optimizer(
+            stream: new NodeStream(
+                nodes: $nodes,
+            ),
+            context: $context,
+        )->nodes;
+    }
+
+    public function optimize(
+        NodeStreamInterface $stream,
+    ): OptimizerResultInterface {
+        $oldStream = clone $stream;
+        $stream = static::optimizer($stream);
+
+        $this->blankState();
+
+        return OptimizerResult::create(
+            oldStream: $oldStream,
+            newStream: $stream,
+        );
+    }
+
+    /**
      * @return NodeInterface[]
      */
     abstract protected function optimizeNode(
         NodeStreamInterface $stream,
         NodeInterface $node,
+        OptimizerContext $context,
     ): array;
 
     protected function pushScope(
@@ -150,7 +186,10 @@ abstract class AbstractOptimizer implements OptimizerInterface
     ): BlockNode {
         $this->pushScope();
 
-        $nodes = $this->optimizeNodes($node->body);
+        $nodes = $this->optimizeNodes(
+            nodes: $node->body,
+            context: OptimizerContext::BLOCK,
+        );
 
         $this->popScope();
 
@@ -174,7 +213,10 @@ abstract class AbstractOptimizer implements OptimizerInterface
 
         $this->pushScope(inherit: true);
 
-        $nodes = $this->optimizeNodes($node->body);
+        $nodes = $this->optimizeNodes(
+            nodes: $node->body,
+            context: OptimizerContext::FOR,
+        );
 
         $this->popScope(merge: true);
 
@@ -194,7 +236,10 @@ abstract class AbstractOptimizer implements OptimizerInterface
     ): DoWhileNode {
         $this->pushScope(inherit: true);
 
-        $nodes = $this->optimizeNodes($node->body);
+        $nodes = $this->optimizeNodes(
+            nodes: $node->body,
+            context: OptimizerContext::DO_WHILE,
+        );
 
         $this->popScope(merge: true);
 
@@ -212,7 +257,10 @@ abstract class AbstractOptimizer implements OptimizerInterface
     ): WhileNode {
         $this->pushScope(inherit: true);
 
-        $nodes = $this->optimizeNodes($node->body);
+        $nodes = $this->optimizeNodes(
+            nodes: $node->body,
+            context: OptimizerContext::WHILE,
+        );
 
         $this->popScope(merge: true);
 
@@ -264,38 +312,5 @@ abstract class AbstractOptimizer implements OptimizerInterface
         return [
             $node,
         ];
-    }
-
-
-    /**
-     * @param NodeInterface[] $nodes
-     * @return NodeInterface[]
-     */
-    protected function optimizeNodes(
-        array $nodes,
-    ): array {
-        if (\sizeof($nodes) === 0) {
-            return $nodes;
-        }
-
-        return $this->optimizer(
-            stream: new NodeStream(
-                nodes: $nodes,
-            ),
-        )->nodes;
-    }
-
-    public function optimize(
-        NodeStreamInterface $stream,
-    ): OptimizerResultInterface {
-        $oldStream = clone $stream;
-        $stream = static::optimizer($stream);
-
-        $this->blankState();
-
-        return OptimizerResult::create(
-            oldStream: $oldStream,
-            newStream: $stream,
-        );
     }
 }

@@ -15,6 +15,7 @@ namespace Tuxxedo\View\Lumi\Optimizer\Dce;
 
 use Tuxxedo\View\Lumi\Optimizer\AbstractOptimizer;
 use Tuxxedo\View\Lumi\Optimizer\Evaluator\EvaluatorResult;
+use Tuxxedo\View\Lumi\Optimizer\OptimizerContext;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
@@ -39,6 +40,7 @@ class DceOptimizer extends AbstractOptimizer
     protected function optimizeNode(
         NodeStreamInterface $stream,
         NodeInterface $node,
+        OptimizerContext $context,
     ): array {
         return match (true) {
             $node instanceof AssignmentNode => $this->optimizeAssignment($node),
