@@ -16,9 +16,12 @@ namespace Support\View\Lumi\Parser;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayItemNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
+use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
 use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ConditionalBranchNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ConditionalNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DeclareNode;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FilterOrBitwiseOrNode;
@@ -34,6 +37,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
+use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 use Tuxxedo\View\Lumi\Syntax\TextContext;
@@ -367,6 +371,63 @@ trait NodeAssertionsTrait
         self::assertSame(
             $expectedFile,
             $node->file,
+        );
+    }
+
+    private function assertConditionalNode(
+        NodeInterface $node,
+        int $expectedBodyCount,
+        int $expectedBranchCount,
+        int $expectedElseCount,
+    ): void {
+        self::assertInstanceOf(
+            ConditionalNode::class,
+            $node,
+        );
+
+        self::assertCount(
+            $expectedBodyCount,
+            $node->body,
+        );
+
+        self::assertCount(
+            $expectedBranchCount,
+            $node->branches,
+        );
+
+        self::assertCount(
+            $expectedElseCount,
+            $node->else,
+        );
+    }
+
+    private function assertConditionalBranchNode(
+        NodeInterface $node,
+        int $expectedBodyCount,
+    ): void {
+        self::assertInstanceOf(
+            ConditionalBranchNode::class,
+            $node,
+        );
+
+        self::assertCount(
+            $expectedBodyCount,
+            $node->body,
+        );
+    }
+
+    private function assertAssignmentNode(
+        NodeInterface $node,
+        AssignmentSymbol $expectedOperator,
+    ): void {
+        self::assertInstanceOf(
+            AssignmentNode::class,
+            $node,
+        );
+
+        self::assertSame(
+            $expectedOperator,
+            $node->operator,
         );
     }
 }
