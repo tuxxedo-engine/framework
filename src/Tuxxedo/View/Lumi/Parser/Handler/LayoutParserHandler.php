@@ -66,10 +66,6 @@ class LayoutParserHandler implements ParserHandlerInterface
                 continue;
             }
 
-            if ($inBlock) {
-                continue;
-            }
-
             if ($token instanceof BlockToken) {
                 $inBlock = true;
 
@@ -79,6 +75,10 @@ class LayoutParserHandler implements ParserHandlerInterface
             if ($token instanceof EndBlockToken) {
                 $inBlock = false;
 
+                continue;
+            }
+
+            if ($inBlock) {
                 continue;
             }
 

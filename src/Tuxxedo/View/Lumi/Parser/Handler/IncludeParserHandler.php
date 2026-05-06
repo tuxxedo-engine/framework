@@ -36,15 +36,7 @@ class IncludeParserHandler implements ParserHandlerInterface
         ParserInterface $parser,
         TokenStreamInterface $stream,
     ): array {
-        $include = $stream->consume();
-
-        if (!$include instanceof IncludeToken) {
-            throw ParserException::fromUnexpectedToken(
-                tokenName: $include::name(),
-                line: $include->line,
-            );
-        }
-
+        $include = $stream->expect($this->tokenClassName);
         $tokens = [];
 
         while (!$stream->eof()) {
