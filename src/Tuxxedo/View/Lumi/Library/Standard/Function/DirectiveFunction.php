@@ -15,7 +15,7 @@ namespace Tuxxedo\View\Lumi\Library\Standard\Function;
 
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
 use Tuxxedo\View\Lumi\Runtime\RuntimeContextInterface;
-use Tuxxedo\View\ViewException;
+use Tuxxedo\View\Lumi\Runtime\RuntimeException;
 
 class DirectiveFunction implements FunctionInterface
 {
@@ -35,7 +35,7 @@ class DirectiveFunction implements FunctionInterface
         $context = $context();
 
         if (!$context->hasDirective($directive)) {
-            throw ViewException::fromInvalidDirective(
+            throw RuntimeException::fromInvalidDirective(
                 directive: $directive,
             );
         }

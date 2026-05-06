@@ -17,7 +17,6 @@ use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
 use Tuxxedo\View\Lumi\LumiEngineInterface;
 use Tuxxedo\View\Lumi\LumiViewRenderInterface;
-use Tuxxedo\View\ViewException;
 
 interface RuntimeInterface
 {
@@ -78,7 +77,7 @@ interface RuntimeInterface
     ): void;
 
     /**
-     * @throws ViewException
+     * @throws RuntimeException
      */
     public function popState(): void;
 
@@ -91,7 +90,7 @@ interface RuntimeInterface
      * @param callable-string $function
      * @param mixed[] $arguments
      *
-     * @throws ViewException
+     * @throws RuntimeException
      */
     public function functionCall(
         string $function,
@@ -99,7 +98,7 @@ interface RuntimeInterface
     ): mixed;
 
     /**
-     * @throws ViewException
+     * @throws RuntimeException
      */
     public function instanceCall(
         mixed $instance,
@@ -111,7 +110,7 @@ interface RuntimeInterface
     ): bool;
 
     /**
-     * @throws ViewException
+     * @throws RuntimeException
      */
     public function filter(
         mixed $value,
@@ -119,7 +118,7 @@ interface RuntimeInterface
     ): mixed;
 
     /**
-     * @throws ViewException
+     * @throws RuntimeException
      */
     public function propertyAccess(
         mixed $instance,
@@ -127,7 +126,7 @@ interface RuntimeInterface
     ): ?object;
 
     /**
-     * @throws ViewException
+     * @throws RuntimeException
      */
     public function assertThis(
         mixed $value,
@@ -140,7 +139,7 @@ interface RuntimeInterface
     /**
      * @param array<string, mixed> $scope
      *
-     * @throws ViewException
+     * @throws RuntimeException
      */
     public function executeBlock(
         string $name,
@@ -158,7 +157,7 @@ interface RuntimeInterface
     /**
      * @param array<string, mixed> $scope
      *
-     * @throws ViewException
+     * @throws RuntimeException
      */
     public function layout(
         string $file,
@@ -173,7 +172,7 @@ interface RuntimeInterface
     /**
      * @param array<string, mixed> $scope
      *
-     * @throws ViewException
+     * @throws RuntimeException
      */
     public function include(
         mixed $file,

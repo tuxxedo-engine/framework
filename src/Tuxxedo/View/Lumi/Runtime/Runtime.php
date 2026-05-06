@@ -18,7 +18,6 @@ use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
 use Tuxxedo\View\Lumi\LumiEngineInterface;
 use Tuxxedo\View\Lumi\LumiViewRenderInterface;
 use Tuxxedo\View\View;
-use Tuxxedo\View\ViewException;
 
 class Runtime implements RuntimeInterface
 {
@@ -87,7 +86,7 @@ class Runtime implements RuntimeInterface
         $blocks = \array_pop($this->blocksStack);
 
         if ($directives === null || $blocks === null) {
-            throw ViewException::fromUnableToPopStateStack();
+            throw RuntimeException::fromUnableToPopStateStack();
         }
 
         $this->directives = $directives;
@@ -106,19 +105,19 @@ class Runtime implements RuntimeInterface
         array $arguments = [],
     ): mixed {
         if ($this->functionPolicy === RuntimeFunctionPolicy::DISALLOW_ALL) {
-            throw ViewException::fromFunctionCallsDisabled();
+            throw RuntimeException::fromFunctionCallsDisabled();
         } elseif (
             $this->functionPolicy === RuntimeFunctionPolicy::CUSTOM_ONLY &&
             !\array_key_exists($function, $this->functions)
         ) {
-            throw ViewException::fromCannotCallCustomFunction(
+            throw RuntimeException::fromCannotCallCustomFunction(
                 function: $function,
             );
         }
 
         if (\array_key_exists($function, $this->functions)) {
             if (!isset($this->renderer)) {
-                throw ViewException::fromCannotCallCustomFunctionWithRender();
+                throw RuntimeException::fromCannotCallCustomFunctionWithRender();
             }
 
             return ($this->functions[$function])->call(
@@ -141,16 +140,16 @@ class Runtime implements RuntimeInterface
                 return null;
             }
 
-            throw ViewException::fromCannotAccessNonObject();
+            throw RuntimeException::fromCannotAccessNonObject();
         } elseif (
             \sizeof($this->instanceCallClasses) > 0 &&
             !\in_array($instance::class, $this->instanceCallClasses, true)
         ) {
-            throw ViewException::fromCannotCallInstance(
+            throw RuntimeException::fromCannotCallInstance(
                 class: $instance::class,
             );
         } elseif ($instance === $this) {
-            throw ViewException::fromCannotAccessThis();
+            throw RuntimeException::fromCannotAccessThis();
         }
 
         return $instance;
@@ -167,11 +166,11 @@ class Runtime implements RuntimeInterface
         string $filter,
     ): mixed {
         if (!\array_key_exists($filter, $this->filters)) {
-            throw ViewException::fromUnknownFilterCall(
+            throw RuntimeException::fromUnknownFilterCall(
                 filter: $filter,
             );
         } elseif (!isset($this->renderer)) {
-            throw ViewException::fromCannotCallCustomFunctionWithRender();
+            throw RuntimeException::fromCannotCallCustomFunctionWithRender();
         }
 
         return ($this->filters[$filter])->call(
@@ -191,11 +190,11 @@ class Runtime implements RuntimeInterface
                 return null;
             }
 
-            throw ViewException::fromCannotAccessNonObject();
+            throw RuntimeException::fromCannotAccessNonObject();
         }
 
         if ($instance === $this) {
-            throw ViewException::fromCannotAccessThis();
+            throw RuntimeException::fromCannotAccessThis();
         }
 
         return $instance;
@@ -205,7 +204,7 @@ class Runtime implements RuntimeInterface
         mixed $value,
     ): void {
         if ($value === $this) {
-            throw ViewException::fromCannotAccessThis();
+            throw RuntimeException::fromCannotAccessThis();
         }
     }
 
@@ -220,7 +219,7 @@ class Runtime implements RuntimeInterface
         array &$scope,
     ): void {
         if (!\array_key_exists($name, $this->blocks)) {
-            throw ViewException::fromInvalidBlock(
+            throw RuntimeException::fromInvalidBlock(
                 name: $name,
             );
         }
@@ -240,7 +239,7 @@ class Runtime implements RuntimeInterface
         array $scope = [],
     ): void {
         if (!isset($this->renderer)) {
-            throw ViewException::fromCannotCallCustomFunctionWithRender();
+            throw RuntimeException::fromCannotCallCustomFunctionWithRender();
         }
 
         echo ($this->renderer)->render(
@@ -269,14 +268,14 @@ class Runtime implements RuntimeInterface
         array $scope = [],
     ): void {
         if (!\is_string($file)) {
-            throw ViewException::fromInvalidIncludeFile();
+            throw RuntimeException::fromInvalidIncludeFile();
         }
 
         $resolved = \realpath($this->renderer->getViewFileName($file));
         $base = \realpath($this->renderer->loader->directory);
 
         if ($resolved === false || $base === false || !\str_starts_with($resolved, $base)) {
-            throw ViewException::fromInvalidIncludeFile();
+            throw RuntimeException::fromInvalidIncludeFile();
         }
 
         echo $this->renderer->render(

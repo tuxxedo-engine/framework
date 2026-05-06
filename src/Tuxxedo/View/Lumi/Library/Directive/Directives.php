@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Library\Directive;
 
-use Tuxxedo\View\ViewException;
+use Tuxxedo\View\Lumi\Runtime\RuntimeException;
 
 class Directives implements DirectivesInterface
 {
@@ -35,11 +35,11 @@ class Directives implements DirectivesInterface
         string $directive,
     ): string {
         if (!\array_key_exists($directive, $this->directives)) {
-            throw ViewException::fromInvalidDirective(
+            throw RuntimeException::fromInvalidDirective(
                 directive: $directive,
             );
         } elseif (!\is_string($this->directives[$directive])) {
-            throw ViewException::fromInvalidDirectiveType(
+            throw RuntimeException::fromInvalidDirectiveType(
                 directive: $directive,
                 type: \gettype($this->directives[$directive]),
                 expectedType: 'string',
@@ -53,11 +53,11 @@ class Directives implements DirectivesInterface
         string $directive,
     ): int {
         if (!\array_key_exists($directive, $this->directives)) {
-            throw ViewException::fromInvalidDirective(
+            throw RuntimeException::fromInvalidDirective(
                 directive: $directive,
             );
         } elseif (!\is_int($this->directives[$directive])) {
-            throw ViewException::fromInvalidDirectiveType(
+            throw RuntimeException::fromInvalidDirectiveType(
                 directive: $directive,
                 type: \gettype($this->directives[$directive]),
                 expectedType: 'int',
@@ -71,11 +71,11 @@ class Directives implements DirectivesInterface
         string $directive,
     ): float {
         if (!\array_key_exists($directive, $this->directives)) {
-            throw ViewException::fromInvalidDirective(
+            throw RuntimeException::fromInvalidDirective(
                 directive: $directive,
             );
         } elseif (!\is_float($this->directives[$directive])) {
-            throw ViewException::fromInvalidDirectiveType(
+            throw RuntimeException::fromInvalidDirectiveType(
                 directive: $directive,
                 type: \gettype($this->directives[$directive]),
                 expectedType: 'float',
@@ -89,11 +89,11 @@ class Directives implements DirectivesInterface
         string $directive,
     ): bool {
         if (!\array_key_exists($directive, $this->directives)) {
-            throw ViewException::fromInvalidDirective(
+            throw RuntimeException::fromInvalidDirective(
                 directive: $directive,
             );
         } elseif (!\is_bool($this->directives[$directive])) {
-            throw ViewException::fromInvalidDirectiveType(
+            throw RuntimeException::fromInvalidDirectiveType(
                 directive: $directive,
                 type: \gettype($this->directives[$directive]),
                 expectedType: 'bool',
@@ -107,7 +107,7 @@ class Directives implements DirectivesInterface
         string $directive,
     ): bool {
         if (!\array_key_exists($directive, $this->directives)) {
-            throw ViewException::fromInvalidDirective(
+            throw RuntimeException::fromInvalidDirective(
                 directive: $directive,
             );
         }

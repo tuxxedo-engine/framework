@@ -13,8 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime;
 
-use Tuxxedo\View\ViewException;
-
 readonly class RuntimeContext implements RuntimeContextInterface
 {
     public RuntimeFunctionPolicy $functionPolicy;
@@ -35,7 +33,7 @@ readonly class RuntimeContext implements RuntimeContextInterface
         string $directive,
     ): string|int|float|bool|null {
         if (!\array_key_exists($directive, $this->runtime->directives)) {
-            throw ViewException::fromInvalidDirective(
+            throw RuntimeException::fromInvalidDirective(
                 directive: $directive,
             );
         }
