@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use Tuxxedo\Application\Resolver\App;
 use Tuxxedo\Escaper\EscaperInterface;
 use Tuxxedo\Http\Kernel\KernelInterface;
+use Tuxxedo\Http\Kernel\Resolver\App;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\Attribute\Controller;

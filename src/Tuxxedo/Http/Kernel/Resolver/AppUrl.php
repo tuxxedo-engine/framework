@@ -11,24 +11,23 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Application\Resolver;
+namespace Tuxxedo\Http\Kernel\Resolver;
 
-use Tuxxedo\Application\Profile;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
 use Tuxxedo\Http\Kernel\KernelInterface;
 use Tuxxedo\Reflection\ParameterReflectorInterface;
 
 /**
- * @implements DependencyResolverInterface<Profile>
+ * @implements DependencyResolverInterface<string>
  */
 #[\Attribute(flags: \Attribute::TARGET_PARAMETER)]
-class AppProfile implements DependencyResolverInterface
+class AppUrl implements DependencyResolverInterface
 {
     public function resolve(
         ContainerInterface $container,
         ParameterReflectorInterface $parameter,
     ): mixed {
-        return $container->resolve(KernelInterface::class)->appProfile;
+        return $container->resolve(KernelInterface::class)->appUrl;
     }
 }

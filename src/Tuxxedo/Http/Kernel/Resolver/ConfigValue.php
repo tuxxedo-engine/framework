@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Application\Resolver;
+namespace Tuxxedo\Http\Kernel\Resolver;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
@@ -19,15 +19,20 @@ use Tuxxedo\Http\Kernel\KernelInterface;
 use Tuxxedo\Reflection\ParameterReflectorInterface;
 
 /**
- * @implements DependencyResolverInterface<KernelInterface>
+ * @implements DependencyResolverInterface<mixed>
  */
 #[\Attribute(flags: \Attribute::TARGET_PARAMETER)]
-class App implements DependencyResolverInterface
+class ConfigValue implements DependencyResolverInterface
 {
+    public function __construct(
+        protected readonly string $path,
+    ) {
+    }
+
     public function resolve(
         ContainerInterface $container,
         ParameterReflectorInterface $parameter,
     ): mixed {
-        return $container->resolve(KernelInterface::class);
+        return $container->resolve(KernelInterface::class)->config->path($this->path);
     }
 }

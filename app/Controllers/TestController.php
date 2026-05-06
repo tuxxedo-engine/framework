@@ -15,8 +15,6 @@ namespace App\Controllers;
 
 use App\Middleware\LoggerMiddleware;
 use App\Service\Logger\CustomLoggerInterface;
-use Tuxxedo\Application\Resolver\AppName;
-use Tuxxedo\Config\Resolver\ConfigValue;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\Resolver\Glue;
 use Tuxxedo\Http\Cookie;
@@ -24,6 +22,8 @@ use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Kernel\KernelInterface;
+use Tuxxedo\Http\Kernel\Resolver\AppName;
+use Tuxxedo\Http\Kernel\Resolver\ConfigValue;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\Middleware\OutputCapture;
