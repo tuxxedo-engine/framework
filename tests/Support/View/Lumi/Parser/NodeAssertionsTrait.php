@@ -19,12 +19,16 @@ use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
+use Tuxxedo\View\Lumi\Syntax\Node\BreakNode;
 use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ConditionalBranchNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ConditionalNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ContinueNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DeclareNode;
+use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FilterOrBitwiseOrNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ForNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
@@ -37,6 +41,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
+use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
@@ -429,5 +434,97 @@ trait NodeAssertionsTrait
             $expectedOperator,
             $node->operator,
         );
+    }
+
+    private function assertBreakNode(
+        NodeInterface $node,
+        ?int $expectedCount = null,
+    ): void {
+        self::assertInstanceOf(
+            BreakNode::class,
+            $node,
+        );
+
+        self::assertSame(
+            $expectedCount,
+            $node->count,
+        );
+    }
+
+    private function assertContinueNode(
+        NodeInterface $node,
+        ?int $expectedCount = null,
+    ): void {
+        self::assertInstanceOf(
+            ContinueNode::class,
+            $node,
+        );
+
+        self::assertSame(
+            $expectedCount,
+            $node->count,
+        );
+    }
+
+    private function assertWhileNode(
+        NodeInterface $node,
+        int $expectedBodyCount,
+    ): void {
+        self::assertInstanceOf(
+            WhileNode::class,
+            $node,
+        );
+
+        self::assertCount(
+            $expectedBodyCount,
+            $node->body,
+        );
+    }
+
+    private function assertDoWhileNode(
+        NodeInterface $node,
+        int $expectedBodyCount,
+    ): void {
+        self::assertInstanceOf(
+            DoWhileNode::class,
+            $node,
+        );
+
+        self::assertCount(
+            $expectedBodyCount,
+            $node->body,
+        );
+    }
+
+    private function assertForNode(
+        NodeInterface $node,
+        string $expectedValueName,
+        int $expectedBodyCount,
+        ?string $expectedKeyName = null,
+    ): void {
+        self::assertInstanceOf(
+            ForNode::class,
+            $node,
+        );
+
+        self::assertSame(
+            $expectedValueName,
+            $node->value->name,
+        );
+
+        self::assertCount(
+            $expectedBodyCount,
+            $node->body,
+        );
+
+        if ($expectedKeyName === null) {
+            self::assertNull($node->key);
+        } else {
+            self::assertNotNull($node->key);
+            self::assertSame(
+                $expectedKeyName,
+                $node->key->name,
+            );
+        }
     }
 }

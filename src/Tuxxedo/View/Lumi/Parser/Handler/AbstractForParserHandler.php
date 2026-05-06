@@ -26,7 +26,6 @@ use Tuxxedo\View\Lumi\Syntax\Token\EndForToken;
 use Tuxxedo\View\Lumi\Syntax\Token\EndToken;
 use Tuxxedo\View\Lumi\Syntax\Token\ForEachToken;
 use Tuxxedo\View\Lumi\Syntax\Token\ForToken;
-use Tuxxedo\View\Lumi\Syntax\Token\IdentifierToken;
 
 abstract class AbstractForParserHandler implements ParserHandlerInterface
 {
@@ -44,50 +43,14 @@ abstract class AbstractForParserHandler implements ParserHandlerInterface
         /** @var ForToken|ForEachToken $startToken */
         $startToken = $stream->expect($this->tokenClassName);
 
-        $value = $parser->expressionParser->parse(
-            stream: new TokenStream(
-                tokens: [
-                    new IdentifierToken(
-                        line: $startToken->line,
-                        op1: $startToken->op1,
-                    ),
-                ],
-            ),
-            startingLine: $startToken->line,
+        $value = new IdentifierNode(
+            name: $startToken->op1,
         );
 
-        if (!$value instanceof IdentifierNode) {
-            throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
-                tokenName: $startToken->op1,
-                expectedTokenNames: [
-                    IdentifierToken::name(),
-                ],
-                line: $startToken->line,
-            );
-        }
-
         if ($startToken->op2 !== null) {
-            $key = $parser->expressionParser->parse(
-                stream: new TokenStream(
-                    tokens: [
-                        new IdentifierToken(
-                            line: $startToken->line,
-                            op1: $startToken->op2,
-                        ),
-                    ],
-                ),
-                startingLine: $startToken->line,
+            $key = new IdentifierNode(
+                name: $startToken->op2,
             );
-
-            if (!$key instanceof IdentifierNode) {
-                throw ParserException::fromUnexpectedTokenWithExpectsOneOf(
-                    tokenName: $startToken->op2,
-                    expectedTokenNames: [
-                        IdentifierToken::name(),
-                    ],
-                    line: $startToken->line,
-                );
-            }
         }
 
         $expressionTokens = [];
