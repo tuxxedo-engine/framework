@@ -57,9 +57,31 @@ abstract class AbstractOptimizer implements OptimizerInterface
         );
     }
 
-    abstract protected function optimizer(
+    protected function optimizer(
         NodeStreamInterface $stream,
-    ): NodeStreamInterface;
+    ): NodeStreamInterface {
+        $nodes = [];
+
+        while (!$stream->eof()) {
+            $optimizedNodes = $this->optimizeNode($stream, $stream->consume());
+
+            if (\sizeof($optimizedNodes) > 0) {
+                \array_push($nodes, ...$optimizedNodes);
+            }
+        }
+
+        return new NodeStream(
+            nodes: $nodes,
+        );
+    }
+
+    /**
+     * @return NodeInterface[]
+     */
+    abstract protected function optimizeNode(
+        NodeStreamInterface $stream,
+        NodeInterface $node,
+    ): array;
 
     protected function pushScope(
         bool $inherit = false,

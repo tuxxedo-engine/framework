@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Optimizer\Sccp;
 
 use Tuxxedo\View\Lumi\Optimizer\AbstractOptimizer;
-use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
@@ -38,28 +37,10 @@ use Tuxxedo\View\Lumi\Syntax\Type;
 
 class SccpOptimizer extends AbstractOptimizer
 {
-    protected function optimizer(
-        NodeStreamInterface $stream,
-    ): NodeStreamInterface {
-        $nodes = [];
-
-        while (!$stream->eof()) {
-            $optimizedNodes = $this->optimizeNode($stream, $stream->consume());
-
-            if (\sizeof($optimizedNodes) > 0) {
-                \array_push($nodes, ...$optimizedNodes);
-            }
-        }
-
-        return new NodeStream(
-            nodes: $nodes,
-        );
-    }
-
     /**
      * @return NodeInterface[]
      */
-    private function optimizeNode(
+    protected function optimizeNode(
         NodeStreamInterface $stream,
         NodeInterface $node,
     ): array {
