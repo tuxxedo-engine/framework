@@ -42,7 +42,7 @@ readonly class CompiledFile implements CompiledFileInterface
             !\is_dir($directory) &&
             !\mkdir($directory, permissions: 0755, recursive: true)
         ) {
-            return false;
+            return false; // @codeCoverageIgnore
         }
 
         return @\file_put_contents(
