@@ -242,7 +242,15 @@ class RouteDiscoverer implements RouteDiscovererInterface
                 prefix: $prefix,
             );
         } elseif (\sizeof($route->methods) > 0) {
+            $emittedMethods = [];
+
             foreach ($route->methods as $requestMethod) {
+                if (\in_array($requestMethod, $emittedMethods, true)) {
+                    continue;
+                }
+
+                $emittedMethods[] = $requestMethod;
+
                 yield new Route(
                     method: $requestMethod,
                     uri: $uri,
@@ -467,7 +475,15 @@ class RouteDiscoverer implements RouteDiscovererInterface
         }
 
         if (\sizeof($route->methods) > 0) {
+            $emittedMethods = [];
+
             foreach ($route->methods as $requestMethod) {
+                if (\in_array($requestMethod, $emittedMethods, true)) {
+                    continue;
+                }
+
+                $emittedMethods[] = $requestMethod;
+
                 yield new Route(
                     method: $requestMethod,
                     uri: $uri,

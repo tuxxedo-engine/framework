@@ -15,6 +15,7 @@ namespace Unit\Router;
 
 use Fixture\Router\RouteDiscoverer\Support\AnotherMiddleware;
 use Fixture\Router\RouteDiscoverer\Support\TestMiddleware;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Container\ContainerInterface;
@@ -227,10 +228,26 @@ class RouteDiscovererTest extends TestCase
         );
     }
 
-    public function testHttpMethodAttributesEmitTheirSpecificMethod(): void
+    /**
+     * @return \Generator<array{0: string}>
+     */
+    public static function httpMethodScenarioDataProvider(): \Generator
     {
+        yield [
+            'HttpMethods',
+        ];
+
+        yield [
+            'HttpManualMethods',
+        ];
+    }
+
+    #[DataProvider('httpMethodScenarioDataProvider')]
+    public function testHttpMethodAttributesEmitTheirSpecificMethod(
+        string $scenario,
+    ): void {
         $routes = $this->discoverAll(
-            $this->createDiscoverer('HttpMethods'),
+            $this->createDiscoverer($scenario),
         );
 
         $byUri = [];
@@ -240,10 +257,15 @@ class RouteDiscovererTest extends TestCase
         }
 
         self::assertSame(Method::GET, $byUri['/get']);
+        self::assertSame(Method::HEAD, $byUri['/head']);
         self::assertSame(Method::POST, $byUri['/post']);
         self::assertSame(Method::PUT, $byUri['/put']);
-        self::assertSame(Method::PATCH, $byUri['/patch']);
         self::assertSame(Method::DELETE, $byUri['/delete']);
+        self::assertSame(Method::CONNECT, $byUri['/connect']);
+        self::assertSame(Method::OPTIONS, $byUri['/options']);
+        self::assertSame(Method::TRACE, $byUri['/trace']);
+        self::assertSame(Method::PATCH, $byUri['/patch']);
+        self::assertSameSize(Method::cases(), $byUri);
     }
 
     public function testMultipleMethodsOnSingleRouteAttributeEmitOneRoutePerMethod(): void
