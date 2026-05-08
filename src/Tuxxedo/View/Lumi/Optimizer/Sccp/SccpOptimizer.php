@@ -44,28 +44,38 @@ class SccpOptimizer extends AbstractOptimizer
     protected function optimizeNode(
         NodeStreamInterface $stream,
         NodeInterface $node,
-        OptimizerContext $context,
+        ?OptimizerContext $context = null,
     ): array {
-        return match (true) {
-            $node instanceof AssignmentNode => $this->optimizeAssignment($node),
-            $node instanceof BlockNode => [
-                parent::optimizeBlockBody($node),
-            ],
-            $node instanceof BinaryOpNode => $this->optimizeBinaryOp($stream, $node),
-            $node instanceof ConcatNode => $this->optimizeConcat($node),
-            $node instanceof ConditionalNode => $this->optimizeConditional($stream, $node),
-            $node instanceof DirectiveNodeInterface => parent::optimizeDirective($node),
-            $node instanceof DoWhileNode => [
-                parent::optimizeDoWhileBody($node),
-            ],
-            $node instanceof EchoNode => $this->optimizeEcho($stream, $node),
-            $node instanceof GroupNode => $this->optimizeGroup($stream, $node),
-            $node instanceof TextNode => parent::optimizeText($stream, $node),
-            $node instanceof UnaryOpNode => $this->optimizeUnaryOp($node),
-            default => [
-                $node,
-            ],
-        };
+        try {
+            if ($context !== null) {
+                parent::pushContext($context);
+            }
+
+            return match (true) {
+                $node instanceof AssignmentNode => $this->optimizeAssignment($node),
+                $node instanceof BlockNode => [
+                    parent::optimizeBlockBody($node),
+                ],
+                $node instanceof BinaryOpNode => $this->optimizeBinaryOp($stream, $node),
+                $node instanceof ConcatNode => $this->optimizeConcat($node),
+                $node instanceof ConditionalNode => $this->optimizeConditional($stream, $node),
+                $node instanceof DirectiveNodeInterface => parent::optimizeDirective($node),
+                $node instanceof DoWhileNode => [
+                    parent::optimizeDoWhileBody($node),
+                ],
+                $node instanceof EchoNode => $this->optimizeEcho($stream, $node),
+                $node instanceof GroupNode => $this->optimizeGroup($stream, $node),
+                $node instanceof TextNode => parent::optimizeText($stream, $node),
+                $node instanceof UnaryOpNode => $this->optimizeUnaryOp($node),
+                default => [
+                    $node,
+                ],
+            };
+        } finally {
+            if ($context !== null) {
+                parent::popContext();
+            }
+        }
     }
 
     /**
@@ -77,18 +87,20 @@ class SccpOptimizer extends AbstractOptimizer
         $this->scope->assign($node);
 
         if ($node->name instanceof IdentifierNode) {
-            // @todo This generates an infinite loop in hello_world_while.lumi because n -= 1 is
-            //       optimized into n = 4 so the do-while never actually causes n to be reduced
-            $variable = $this->scope->get($node->name);
+            if (parent::isInOneOfContext(OptimizerContext::DO_WHILE, OptimizerContext::FOR, OptimizerContext::WHILE)) {
+                $this->scope->create($node->name);
+            } else {
+                $variable = $this->scope->get($node->name);
 
-            if ($variable->hasComputedValue()) {
-                return [
-                    new AssignmentNode(
-                        name: $node->name,
-                        value: LiteralNode::createFromNativeType($variable->computedValue),
-                        operator: AssignmentSymbol::ASSIGN,
-                    ),
-                ];
+                if ($variable->hasComputedValue()) {
+                    return [
+                        new AssignmentNode(
+                            name: $node->name,
+                            value: LiteralNode::createFromNativeType($variable->computedValue),
+                            operator: AssignmentSymbol::ASSIGN,
+                        ),
+                    ];
+                }
             }
         }
 

@@ -17,6 +17,13 @@ use Tuxxedo\View\Lumi\LumiException;
 
 class OptimizerException extends LumiException
 {
+    public static function fromCannotPopOptimizerContext(): self
+    {
+        return new self(
+            message: 'Cannot pop optimizer context, possible optimizer corruption',
+        );
+    }
+
     public static function fromCannotPopOptimizerScope(): self
     {
         return new self(

@@ -35,7 +35,13 @@ use Tuxxedo\View\Lumi\Syntax\Type;
 abstract class AbstractOptimizer implements OptimizerInterface
 {
     protected private(set) MutableDirectivesInterface&DirectivesInterface $directives;
+    protected private(set) OptimizerContext $context;
     protected private(set) ScopeInterface $scope;
+
+    /**
+     * @var OptimizerContext[]
+     */
+    protected private(set) array $contextStack = [];
 
     /**
      * @var ScopeInterface[]
@@ -51,6 +57,7 @@ abstract class AbstractOptimizer implements OptimizerInterface
     private function blankState(): void
     {
         $this->directives = MutableDirectives::createWithDefaults();
+        $this->context = OptimizerContext::NONE;
         $this->scope = new Scope(
             evaluator: $this->evaluator,
         );
@@ -58,12 +65,11 @@ abstract class AbstractOptimizer implements OptimizerInterface
 
     protected function optimizer(
         NodeStreamInterface $stream,
-        OptimizerContext $context = OptimizerContext::NONE,
     ): NodeStreamInterface {
         $nodes = [];
 
         while (!$stream->eof()) {
-            $optimizedNodes = $this->optimizeNode($stream, $stream->consume(), $context);
+            $optimizedNodes = $this->optimizeNode($stream, $stream->consume());
 
             if (\sizeof($optimizedNodes) > 0) {
                 \array_push($nodes, ...$optimizedNodes);
@@ -87,12 +93,17 @@ abstract class AbstractOptimizer implements OptimizerInterface
             return $nodes;
         }
 
-        return $this->optimizer(
-            stream: new NodeStream(
-                nodes: $nodes,
-            ),
-            context: $context,
-        )->nodes;
+        try {
+            $this->pushContext($context);
+
+            return $this->optimizer(
+                stream: new NodeStream(
+                    nodes: $nodes,
+                ),
+            )->nodes;
+        } finally {
+            $this->popContext();
+        }
     }
 
     public function optimize(
@@ -115,8 +126,48 @@ abstract class AbstractOptimizer implements OptimizerInterface
     abstract protected function optimizeNode(
         NodeStreamInterface $stream,
         NodeInterface $node,
-        OptimizerContext $context,
+        ?OptimizerContext $context = null,
     ): array;
+
+    protected function isInContext(
+        OptimizerContext $context,
+    ): bool {
+        return $this->context === $context || \in_array($context, $this->contextStack, true);
+    }
+
+    protected function isInOneOfContext(
+        OptimizerContext ...$context,
+    ): bool {
+        foreach ($context as $specificContext) {
+            if ($this->isInContext($specificContext)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected function pushContext(
+        OptimizerContext $context,
+    ): void {
+        \array_push($this->contextStack, $this->context);
+
+        $this->context = $context;
+    }
+
+    /**
+     * @throws OptimizerException
+     */
+    protected function popContext(): void
+    {
+        $context = \array_pop($this->contextStack);
+
+        if ($context === null) {
+            throw OptimizerException::fromCannotPopOptimizerContext();
+        }
+
+        $this->context = $context;
+    }
 
     protected function pushScope(
         bool $inherit = false,

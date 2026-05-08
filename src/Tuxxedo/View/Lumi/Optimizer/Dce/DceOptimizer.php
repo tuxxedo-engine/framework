@@ -40,28 +40,38 @@ class DceOptimizer extends AbstractOptimizer
     protected function optimizeNode(
         NodeStreamInterface $stream,
         NodeInterface $node,
-        OptimizerContext $context,
+        ?OptimizerContext $context = null,
     ): array {
-        return match (true) {
-            $node instanceof AssignmentNode => $this->optimizeAssignment($node),
-            $node instanceof BreakNode => $this->optimizeLoopStatement($stream),
-            $node instanceof BlockNode => [
-                parent::optimizeBlockBody($node),
-            ],
-            $node instanceof CommentNode => $this->optimizeComment($node),
-            $node instanceof ConditionalNode => $this->optimizeConditional($node),
-            $node instanceof ContinueNode => $this->optimizeLoopStatement($stream),
-            $node instanceof DirectiveNodeInterface => parent::optimizeDirective($node),
-            $node instanceof DoWhileNode => $this->optimizeDoWhile($node),
-            $node instanceof ForNode => [
-                parent::optimizeForBody($node),
-            ],
-            $node instanceof TextNode => parent::optimizeText($stream, $node),
-            $node instanceof WhileNode => $this->optimizeWhile($node),
-            default => [
-                $node,
-            ],
-        };
+        try {
+            if ($context !== null) {
+                parent::pushContext($context);
+            }
+
+            return match (true) {
+                $node instanceof AssignmentNode => $this->optimizeAssignment($node),
+                $node instanceof BreakNode => $this->optimizeLoopStatement($stream),
+                $node instanceof BlockNode => [
+                    parent::optimizeBlockBody($node),
+                ],
+                $node instanceof CommentNode => $this->optimizeComment($node),
+                $node instanceof ConditionalNode => $this->optimizeConditional($node),
+                $node instanceof ContinueNode => $this->optimizeLoopStatement($stream),
+                $node instanceof DirectiveNodeInterface => parent::optimizeDirective($node),
+                $node instanceof DoWhileNode => $this->optimizeDoWhile($node),
+                $node instanceof ForNode => [
+                    parent::optimizeForBody($node),
+                ],
+                $node instanceof TextNode => parent::optimizeText($stream, $node),
+                $node instanceof WhileNode => $this->optimizeWhile($node),
+                default => [
+                    $node,
+                ],
+            };
+        } finally {
+            if ($context !== null) {
+                parent::popContext();
+            }
+        }
     }
 
     /**
