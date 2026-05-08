@@ -27,7 +27,13 @@ use Tuxxedo\View\Lumi\Compiler\Compiler;
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Compiler\CompilerState;
 use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompiler;
+use Tuxxedo\View\Lumi\Compiler\Provider\CompilerProviderInterface;
+use Tuxxedo\View\Lumi\Compiler\Provider\ConditionalCompilerProvider;
+use Tuxxedo\View\Lumi\Compiler\Provider\ExpressionCompilerProvider;
+use Tuxxedo\View\Lumi\Compiler\Provider\LoopCompilerProvider;
+use Tuxxedo\View\Lumi\Compiler\Provider\TextCompilerProvider;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
+use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
@@ -83,6 +89,100 @@ class CompilerTest extends TestCase
         self::assertInstanceOf(ExpressionCompiler::class, $compiler->expressionCompiler);
         self::assertInstanceOf(CompilerState::class, $compiler->state);
         self::assertInstanceOf(Escaper::class, $compiler->escaper);
+    }
+
+    public function testCreateDefaultProvidersReturnsBuiltInProviderSet(): void
+    {
+        $providers = Compiler::createDefaultProviders();
+
+        self::assertCount(4, $providers);
+        self::assertInstanceOf(ExpressionCompilerProvider::class, $providers[0]);
+        self::assertInstanceOf(TextCompilerProvider::class, $providers[1]);
+        self::assertInstanceOf(ConditionalCompilerProvider::class, $providers[2]);
+        self::assertInstanceOf(LoopCompilerProvider::class, $providers[3]);
+    }
+
+    public function testCreateDefaultProvidersReturnsFreshInstancesEachCall(): void
+    {
+        $first = Compiler::createDefaultProviders();
+        $second = Compiler::createDefaultProviders();
+
+        self::assertNotSame($first[0], $second[0]);
+        self::assertNotSame($first[1], $second[1]);
+        self::assertNotSame($first[2], $second[2]);
+        self::assertNotSame($first[3], $second[3]);
+    }
+
+    public function testCreateDefaultProvidersEntriesImplementProviderInterface(): void
+    {
+        foreach (Compiler::createDefaultProviders() as $provider) {
+            self::assertInstanceOf(CompilerProviderInterface::class, $provider);
+        }
+    }
+
+    public function testCreateWithDefaultProvidersExposesProvidedDependencies(): void
+    {
+        $expressionCompiler = new ExpressionCompiler();
+        $state = new CompilerState();
+        $escaper = new Escaper();
+
+        $compiler = Compiler::createWithDefaultProviders(
+            expressionCompiler: $expressionCompiler,
+            state: $state,
+            escaper: $escaper,
+        );
+
+        self::assertSame($expressionCompiler, $compiler->expressionCompiler);
+        self::assertSame($state, $compiler->state);
+        self::assertSame($escaper, $compiler->escaper);
+    }
+
+    public function testCreateWithDefaultProvidersFallsBackToDefaults(): void
+    {
+        $compiler = Compiler::createWithDefaultProviders();
+
+        self::assertInstanceOf(ExpressionCompiler::class, $compiler->expressionCompiler);
+        self::assertInstanceOf(CompilerState::class, $compiler->state);
+        self::assertInstanceOf(Escaper::class, $compiler->escaper);
+    }
+
+    public function testCreateWithDefaultProvidersCompilesNodesUsingDefaultProviderSet(): void
+    {
+        $compiler = Compiler::createWithDefaultProviders();
+
+        $output = $compiler->compile(
+            stream: new NodeStream(
+                nodes: [
+                    new EchoNode(
+                        operand: new LiteralNode(
+                            operand: '5',
+                            type: Type::INT,
+                        ),
+                    ),
+                ],
+            ),
+        );
+
+        self::assertStringContainsString('5', $output);
+    }
+
+    public function testCreateWithDefaultProvidersAppendsExtraProvidersAfterDefaults(): void
+    {
+        $compiler = Compiler::createWithDefaultProviders(
+            providers: [
+                new FooProvider(),
+            ],
+        );
+
+        $output = $compiler->compile(
+            stream: new NodeStream(
+                nodes: [
+                    new FooNode(),
+                ],
+            ),
+        );
+
+        self::assertSame('<?php declare(strict_types=1); ?>/* foo */', $output);
     }
 
     public function testEmptyStreamProducesEmptyOutput(): void

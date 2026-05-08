@@ -90,6 +90,9 @@ class CompilerException extends LumiException
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromCannotEscapePhp(): self
     {
         return new self(
@@ -101,13 +104,6 @@ class CompilerException extends LumiException
     {
         return new self(
             message: 'Array access must have a key in read context',
-        );
-    }
-
-    public static function fromCannotPopOptimizerScope(): self
-    {
-        return new self(
-            message: 'Cannot pop optimizer scope, possible optimizer corruption',
         );
     }
 

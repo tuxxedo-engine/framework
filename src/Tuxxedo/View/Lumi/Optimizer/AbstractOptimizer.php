@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Optimizer;
 
-use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Library\Directive\MutableDirectives;
 use Tuxxedo\View\Lumi\Library\Directive\MutableDirectivesInterface;
@@ -138,7 +137,7 @@ abstract class AbstractOptimizer implements OptimizerInterface
     }
 
     /**
-     * @throws CompilerException
+     * @throws OptimizerException
      */
     protected function popScope(
         bool $merge = false,
@@ -146,7 +145,7 @@ abstract class AbstractOptimizer implements OptimizerInterface
         $scope = \array_pop($this->scopeStack);
 
         if ($scope === null) {
-            throw CompilerException::fromCannotPopOptimizerScope();
+            throw OptimizerException::fromCannotPopOptimizerScope();
         }
 
         if ($merge) {
@@ -179,7 +178,7 @@ abstract class AbstractOptimizer implements OptimizerInterface
     }
 
     /**
-     * @throws CompilerException
+     * @throws OptimizerException
      */
     protected function optimizeBlockBody(
         BlockNode $node,
@@ -200,7 +199,7 @@ abstract class AbstractOptimizer implements OptimizerInterface
     }
 
     /**
-     * @throws CompilerException
+     * @throws OptimizerException
      */
     protected function optimizeForBody(
         ForNode $node,
@@ -229,7 +228,7 @@ abstract class AbstractOptimizer implements OptimizerInterface
     }
 
     /**
-     * @throws CompilerException
+     * @throws OptimizerException
      */
     protected function optimizeDoWhileBody(
         DoWhileNode $node,
@@ -250,7 +249,7 @@ abstract class AbstractOptimizer implements OptimizerInterface
     }
 
     /**
-     * @throws CompilerException
+     * @throws OptimizerException
      */
     protected function optimizeWhileBody(
         WhileNode $node,
