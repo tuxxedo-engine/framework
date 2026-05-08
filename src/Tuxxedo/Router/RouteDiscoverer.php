@@ -394,13 +394,15 @@ class RouteDiscoverer implements RouteDiscovererInterface
             foreach ($matches as $match) {
                 $regexConstraint = $match[3] ?? null;
                 $typeConstraint = $match[4] ?? null;
-                $constraint = $regexConstraint ?? $typeConstraint;
+                $constraint = null;
                 $kind = ArgumentKind::TYPED_IMPLICIT;
 
-                if ($regexConstraint !== null) {
-                    $kind = ArgumentKind::REGEX;
-                } elseif ($typeConstraint !== null) {
+                if ($typeConstraint !== null) {
                     $kind = ArgumentKind::TYPED_EXPLICIT;
+                    $constraint = $typeConstraint;
+                } elseif ($regexConstraint !== null) {
+                    $kind = ArgumentKind::REGEX;
+                    $constraint = $regexConstraint;
                 }
 
                 $nodes[] = new ArgumentNode(
