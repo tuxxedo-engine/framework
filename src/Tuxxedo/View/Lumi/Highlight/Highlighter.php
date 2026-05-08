@@ -385,9 +385,19 @@ class Highlighter implements HighlighterInterface
     private function highlightEchoNode(
         EchoNode $node,
     ): string {
-        return $this->dye(ColorSlot::DELIMITER, '{{ ') .
-            $this->highlightNode($node->operand) .
-            $this->dye(ColorSlot::DELIMITER, ' }}');
+        return $this->dye(
+            ColorSlot::DELIMITER,
+            $node->context === TextContext::RAW
+                ? '{! '
+                : '{{ ',
+        ) .
+        $this->highlightNode($node->operand) .
+        $this->dye(
+            ColorSlot::DELIMITER,
+            $node->context === TextContext::RAW
+                ? ' !}'
+                : ' }}',
+        );
     }
 
     private function highlightFilterOrBitwiseOrNode(
