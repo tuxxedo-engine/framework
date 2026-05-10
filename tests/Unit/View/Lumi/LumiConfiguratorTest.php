@@ -853,8 +853,6 @@ class LumiConfiguratorTest extends TestCase
     {
         $configurator = $this->makeConfigurator();
 
-        $configurator->withoutStandardLibrary();
-
         self::assertInstanceOf(ViewRenderInterface::class, $configurator->build());
     }
 
