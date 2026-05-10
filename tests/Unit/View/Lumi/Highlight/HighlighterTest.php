@@ -1584,6 +1584,58 @@ class HighlighterTest extends TestCase
     }
 
     #[DataProvider('provideThemes')]
+    public function testHighlightFunctionCallWithArrayDereference(
+        ThemeInterface $theme,
+    ): void {
+        $expected = $this->dye(
+            theme: $theme,
+            slot: ColorSlot::IDENTIFIER,
+            text: 'arr',
+        ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: '[',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::NUMBER,
+                text: '0',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: ']',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: '(',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: ')',
+            );
+
+        self::assertSame(
+            $expected,
+            $this->highlight(
+                theme: $theme,
+                node: new FunctionCallNode(
+                    name: new ArrayAccessNode(
+                        array: new IdentifierNode(
+                            name: 'arr',
+                        ),
+                        key: LiteralNode::createInt(0),
+                    ),
+                    arguments: [],
+                ),
+            ),
+        );
+    }
+
+    #[DataProvider('provideThemes')]
     public function testHighlightFunctionCallWithoutArguments(
         ThemeInterface $theme,
     ): void {
