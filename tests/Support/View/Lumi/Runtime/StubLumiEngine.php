@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Support\View\Lumi\Runtime;
 
+use Tuxxedo\View\Lumi\Compiler\CompiledFile;
 use Tuxxedo\View\Lumi\Compiler\CompiledFileInterface;
 use Tuxxedo\View\Lumi\Compiler\Compiler;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
@@ -33,6 +34,10 @@ class StubLumiEngine implements LumiEngineInterface
     public ?string $lastHighlightedSource = null;
     public ThemeInterface|string|null $lastHighlightedTheme = null;
     public ?bool $lastHighlightedOptimized = null;
+
+    public ?string $lastCompiledFile = null;
+    public int $compileCallCount = 0;
+    public string $compileSourceCode = '<?php /* compiled */ ?>';
 
     public LexerInterface $lexer;
     public ParserInterface $parser;
@@ -56,7 +61,13 @@ class StubLumiEngine implements LumiEngineInterface
     public function compileFile(
         string $file,
     ): CompiledFileInterface {
-        throw new \LogicException('StubLumiEngine::compileFile not used');
+        $this->lastCompiledFile = $file;
+        $this->compileCallCount++;
+
+        return new CompiledFile(
+            sourceFile: $file,
+            sourceCode: $this->compileSourceCode,
+        );
     }
 
     public function compileString(

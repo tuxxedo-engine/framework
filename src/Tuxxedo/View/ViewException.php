@@ -40,6 +40,9 @@ class ViewException extends \Exception
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromUnableToCaptureBuffer(): self
     {
         return new self(

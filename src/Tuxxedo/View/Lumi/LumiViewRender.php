@@ -44,7 +44,7 @@ class LumiViewRender implements LumiViewRenderInterface
                 $buffer = \ob_get_clean();
 
                 if ($buffer === false) {
-                    throw ViewException::fromUnableToCaptureBuffer();
+                    throw ViewException::fromUnableToCaptureBuffer(); // @codeCoverageIgnore
                 }
 
                 return $buffer;
@@ -58,7 +58,7 @@ class LumiViewRender implements LumiViewRenderInterface
                 $buffer = \ob_get_clean();
 
                 if ($buffer === false) {
-                    throw ViewException::fromUnableToCaptureBuffer();
+                    throw ViewException::fromUnableToCaptureBuffer(); // @codeCoverageIgnore
                 }
 
                 return $buffer;
