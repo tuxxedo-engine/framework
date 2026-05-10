@@ -598,6 +598,106 @@ class RouteDiscovererTest extends TestCase
         );
     }
 
+    public function testDuplicateArgumentNameSkipsInNonStrictMode(): void
+    {
+        $routes = $this->discoverAll(
+            $this->createDiscoverer('DuplicateArgument'),
+        );
+
+        self::assertSame([], $routes);
+    }
+
+    public function testDuplicateMethodsOnSingleRouteAttributeEmitsOnlyOneRoutePerMethod(): void
+    {
+        $routes = $this->discoverAll(
+            $this->createDiscoverer('DuplicateMethod'),
+        );
+
+        $methods = \array_map(
+            static fn (RouteInterface $route): ?Method => $route->method,
+            $routes,
+        );
+
+        self::assertCount(2, $routes);
+        self::assertContains(Method::GET, $methods);
+        self::assertContains(Method::POST, $methods);
+        self::assertSame('/contact/{id}', $routes[0]->uri);
+    }
+
+    public function testRouteWithArgumentAndNoMethodEmitsRouteWithNullMethod(): void
+    {
+        $routes = $this->discoverAll(
+            $this->createDiscoverer('NoMethodWithArgument'),
+        );
+
+        self::assertCount(1, $routes);
+        self::assertNull($routes[0]->method);
+        self::assertSame('/users/{id}', $routes[0]->uri);
+    }
+
+    public function testPrefixDefaultIsUsedWhenParameterExistsButHasNoDefaultValue(): void
+    {
+        $routes = $this->discoverAll(
+            $this->createDiscoverer('PrefixDefaultWithParam'),
+        );
+
+        self::assertCount(1, $routes);
+        self::assertCount(1, $routes[0]->arguments);
+        self::assertSame('en', $routes[0]->arguments[0]->defaultValue);
+    }
+
+    public function testMultipleParametersWithoutArgumentAttributeAreSkippedDuringNameLookup(): void
+    {
+        $routes = $this->discoverAll(
+            $this->createDiscoverer('MultiParam'),
+        );
+
+        self::assertCount(1, $routes);
+        self::assertCount(2, $routes[0]->arguments);
+        self::assertSame('id', $routes[0]->arguments[0]->node->name);
+        self::assertSame('page', $routes[0]->arguments[1]->node->name);
+    }
+
+    public function testNullableClassTypeParameterEmitsRouteWithNullNativeType(): void
+    {
+        $routes = $this->discoverAll(
+            $this->createDiscoverer('NullableClassType'),
+        );
+
+        self::assertCount(1, $routes);
+        self::assertSame('null', $routes[0]->arguments[0]->nativeType);
+    }
+
+    public function testUnsupportedTypeThrowsInStrictMode(): void
+    {
+        self::expectException(RouterException::class);
+
+        $this->discoverAll(
+            $this->createDiscoverer(
+                scenario: 'UnsupportedType',
+                strictMode: true,
+            ),
+        );
+    }
+
+    public function testUnsupportedTypeSkipsInNonStrictMode(): void
+    {
+        $routes = $this->discoverAll(
+            $this->createDiscoverer('UnsupportedType'),
+        );
+
+        self::assertSame([], $routes);
+    }
+
+    public function testMissingParameterForUriArgumentSkipsRoute(): void
+    {
+        $routes = $this->discoverAll(
+            $this->createDiscoverer('MissingParameter'),
+        );
+
+        self::assertSame([], $routes);
+    }
+
     public function testPrefixWithDefaultsProvidesDefaultArgumentValue(): void
     {
         $routes = $this->discoverAll(
