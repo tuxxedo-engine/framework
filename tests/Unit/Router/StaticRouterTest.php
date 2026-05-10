@@ -201,6 +201,7 @@ class StaticRouterTest extends TestCase
             method: Method::GET,
             uri: '/users',
         );
+
         $router = $this->makeRouter(
             routes: [
                 $route,
@@ -310,10 +311,12 @@ class StaticRouterTest extends TestCase
             method: Method::GET,
             uri: '/users',
         );
+
         $postRoute = $this->makeRoute(
             method: Method::POST,
             uri: '/users',
         );
+
         $router = $this->makeRouter(
             routes: [
                 $getRoute,
@@ -357,6 +360,7 @@ class StaticRouterTest extends TestCase
             method: Method::POST,
             uri: '/users',
         );
+
         $router = $this->makeRouter(
             routes: [
                 $route,
@@ -428,6 +432,7 @@ class StaticRouterTest extends TestCase
             uri: '/users',
             name: 'users.index',
         );
+
         $router = $this->makeRouter(
             routes: [
                 $route,
@@ -450,6 +455,7 @@ class StaticRouterTest extends TestCase
             name: 'users.show',
             regexUri: '#^/users/(?<id>\d+)$#',
         );
+
         $router = $this->makeRouter(
             routes: [
                 $route,
@@ -499,6 +505,7 @@ class StaticRouterTest extends TestCase
             uri: '/users',
             name: 'users.index',
         );
+
         $router = $this->makeRouter(
             routes: [
                 $route,
