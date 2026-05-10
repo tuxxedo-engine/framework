@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use Tuxxedo\Http\Request\Middleware\CsrfMiddleware;
+use Tuxxedo\Http\Request\Middleware\Csrf;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
@@ -35,7 +35,7 @@ readonly class CsrfController
     }
 
     #[Route\Post(uri: '/form')]
-    #[Middleware(CsrfMiddleware::class)]
+    #[Middleware(Csrf::class)]
     public function formPost(RequestInterface $request): ResponseInterface
     {
         return Response::html(
@@ -55,7 +55,7 @@ readonly class CsrfController
     }
 
     #[Route\Post(uri: '/tamper')]
-    #[Middleware(CsrfMiddleware::class)]
+    #[Middleware(Csrf::class)]
     public function tamperPost(): ResponseInterface
     {
         return Response::html(
@@ -72,7 +72,7 @@ readonly class CsrfController
     }
 
     #[Route\Post(uri: '/ajax')]
-    #[Middleware(CsrfMiddleware::class)]
+    #[Middleware(Csrf::class)]
     public function ajaxPost(): ResponseInterface
     {
         return Response::json(
@@ -92,7 +92,7 @@ readonly class CsrfController
     }
 
     #[Route\Post(uri: '/ajax-tamper')]
-    #[Middleware(CsrfMiddleware::class)]
+    #[Middleware(Csrf::class)]
     public function ajaxTamperPost(): ResponseInterface
     {
         return Response::json(

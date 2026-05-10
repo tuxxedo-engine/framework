@@ -19,7 +19,7 @@ use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Security\Csrf\CsrfManagerInterface;
 
-class CsrfMiddleware implements MiddlewareInterface
+class Csrf implements MiddlewareInterface
 {
     public function __construct(
         private readonly CsrfManagerInterface $csrf,
