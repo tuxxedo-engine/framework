@@ -167,7 +167,7 @@ class BinarySymbolTest extends TestCase
     public function testAllMatchesCasesCount(): void
     {
         self::assertCount(
-            \count(BinarySymbol::cases()),
+            \sizeof(BinarySymbol::cases()),
             BinarySymbol::all(),
         );
     }

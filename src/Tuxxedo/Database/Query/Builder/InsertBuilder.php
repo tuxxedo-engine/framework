@@ -37,7 +37,7 @@ class InsertBuilder extends AbstractBuilder implements InsertBuilderInterface
         string $column,
         string|int|float|bool|null $value,
     ): static {
-        $parameterKey = 'col_' . \count($this->columns);
+        $parameterKey = 'col_' . \sizeof($this->columns);
 
         $this->columns[':' . $parameterKey] = $this->connection->dialect->identifier($column);
         $this->parameters[$parameterKey] = $value;

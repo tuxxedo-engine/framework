@@ -90,7 +90,7 @@ class IfBlockHandlerTest extends TestCase
             blockState: BlockHandlerState::EXPRESSIVE,
         );
 
-        self::assertGreaterThan(3, \count($tokens));
+        self::assertGreaterThan(3, \sizeof($tokens));
 
         $this->assertIfToken(
             token: $tokens[0],
@@ -98,7 +98,7 @@ class IfBlockHandlerTest extends TestCase
         );
 
         $this->assertEndToken(
-            token: $tokens[\count($tokens) - 1],
+            token: $tokens[\sizeof($tokens) - 1],
             expectedLine: 1,
         );
     }
@@ -172,7 +172,7 @@ class IfBlockHandlerTest extends TestCase
             blockState: BlockHandlerState::EXPRESSIVE,
         );
 
-        self::assertGreaterThan(3, \count($tokens));
+        self::assertGreaterThan(3, \sizeof($tokens));
 
         $this->assertElseIfToken(
             token: $tokens[0],
@@ -180,7 +180,7 @@ class IfBlockHandlerTest extends TestCase
         );
 
         $this->assertEndToken(
-            token: $tokens[\count($tokens) - 1],
+            token: $tokens[\sizeof($tokens) - 1],
             expectedLine: 1,
         );
     }

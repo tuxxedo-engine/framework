@@ -92,7 +92,7 @@ class CharacterSymbolTest extends TestCase
     public function testAllMatchesCasesCount(): void
     {
         self::assertCount(
-            \count(CharacterSymbol::cases()),
+            \sizeof(CharacterSymbol::cases()),
             CharacterSymbol::all(),
         );
     }

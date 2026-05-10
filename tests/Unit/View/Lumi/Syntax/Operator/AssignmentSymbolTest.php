@@ -110,7 +110,7 @@ class AssignmentSymbolTest extends TestCase
     public function testAllMatchesCasesCount(): void
     {
         self::assertCount(
-            \count(AssignmentSymbol::cases()),
+            \sizeof(AssignmentSymbol::cases()),
             AssignmentSymbol::all(),
         );
     }

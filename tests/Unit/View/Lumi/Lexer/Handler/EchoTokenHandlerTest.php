@@ -113,7 +113,7 @@ class EchoTokenHandlerTest extends TestCase
             state: $this->state,
         );
 
-        self::assertGreaterThan(3, \count($tokens));
+        self::assertGreaterThan(3, \sizeof($tokens));
 
         $this->assertEchoToken(
             token: $tokens[0],
@@ -121,7 +121,7 @@ class EchoTokenHandlerTest extends TestCase
         );
 
         $this->assertEndToken(
-            token: $tokens[\count($tokens) - 1],
+            token: $tokens[\sizeof($tokens) - 1],
             expectedLine: 1,
         );
     }

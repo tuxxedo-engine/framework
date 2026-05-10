@@ -181,7 +181,7 @@ class ConditionParserHandler implements ParserHandlerInterface
             $parser->state->leaveCondition();
         }
 
-        if (\count($elseTokens) > 0) {
+        if (\sizeof($elseTokens) > 0) {
             $parser->state->enterCondition();
 
             $elseBody = $parser->parse(

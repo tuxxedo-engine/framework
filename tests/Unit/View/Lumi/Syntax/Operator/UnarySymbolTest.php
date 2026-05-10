@@ -76,7 +76,7 @@ class UnarySymbolTest extends TestCase
     public function testAllMatchesCasesCount(): void
     {
         self::assertCount(
-            \count(UnarySymbol::cases()),
+            \sizeof(UnarySymbol::cases()),
             UnarySymbol::all(),
         );
     }

@@ -65,8 +65,8 @@ class LumiEngineTest extends TestCase
         self::assertInstanceOf(Compiler::class, $engine->compiler);
         self::assertInstanceOf(Highlighter::class, $engine->highlighter);
         self::assertSame(
-            \count(LumiEngine::createDefaultOptimizers()),
-            \count($engine->optimizers),
+            \sizeof(LumiEngine::createDefaultOptimizers()),
+            \sizeof($engine->optimizers),
         );
     }
 

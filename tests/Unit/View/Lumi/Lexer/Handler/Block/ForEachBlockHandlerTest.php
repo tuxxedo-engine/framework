@@ -117,7 +117,7 @@ class ForEachBlockHandlerTest extends TestCase
             blockState: BlockHandlerState::EXPRESSIVE,
         );
 
-        self::assertGreaterThan(3, \count($tokens));
+        self::assertGreaterThan(3, \sizeof($tokens));
 
         $this->assertForEachToken(
             token: $tokens[0],
@@ -126,7 +126,7 @@ class ForEachBlockHandlerTest extends TestCase
         );
 
         $this->assertEndToken(
-            token: $tokens[\count($tokens) - 1],
+            token: $tokens[\sizeof($tokens) - 1],
             expectedLine: 1,
         );
     }
@@ -187,7 +187,7 @@ class ForEachBlockHandlerTest extends TestCase
         );
 
         $this->assertEndToken(
-            token: $tokens[\count($tokens) - 1],
+            token: $tokens[\sizeof($tokens) - 1],
             expectedLine: 7,
         );
     }

@@ -71,7 +71,7 @@ readonly class DatabaseController
             throw $exception;
         }
 
-        \var_dump(\count($result));
+        \var_dump(\sizeof($result));
         \var_dump($result->fetchObject()->properties['one'] ?? null);
 
         $connection->query('DROP TABLE IF EXISTS `test`');

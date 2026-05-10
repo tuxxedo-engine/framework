@@ -53,7 +53,7 @@ class IncludeBlockHandlerTest extends TestCase
             blockState: BlockHandlerState::EXPRESSIVE,
         );
 
-        self::assertGreaterThan(2, \count($tokens));
+        self::assertGreaterThan(2, \sizeof($tokens));
 
         $this->assertIncludeToken(
             token: $tokens[0],
@@ -62,7 +62,7 @@ class IncludeBlockHandlerTest extends TestCase
         );
 
         $this->assertEndToken(
-            token: $tokens[\count($tokens) - 1],
+            token: $tokens[\sizeof($tokens) - 1],
             expectedLine: 1,
         );
     }
@@ -77,7 +77,7 @@ class IncludeBlockHandlerTest extends TestCase
             blockState: BlockHandlerState::EXPRESSIVE,
         );
 
-        self::assertGreaterThan(2, \count($tokens));
+        self::assertGreaterThan(2, \sizeof($tokens));
 
         $this->assertIncludeToken(
             token: $tokens[0],
@@ -85,7 +85,7 @@ class IncludeBlockHandlerTest extends TestCase
         );
 
         $this->assertEndToken(
-            token: $tokens[\count($tokens) - 1],
+            token: $tokens[\sizeof($tokens) - 1],
             expectedLine: 1,
         );
     }
@@ -107,7 +107,7 @@ class IncludeBlockHandlerTest extends TestCase
         );
 
         $this->assertEndToken(
-            token: $tokens[\count($tokens) - 1],
+            token: $tokens[\sizeof($tokens) - 1],
             expectedLine: 7,
         );
     }
