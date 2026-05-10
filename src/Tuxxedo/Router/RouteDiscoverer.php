@@ -172,13 +172,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
                     }
 
                     if (
-                        (
-                            $route->trailingSlash ||
-                            (
-                                $controllerAttribute !== null &&
-                                $controllerAttribute->autoTrailingSlash
-                            )
-                        ) &&
+                        ($route->trailingSlash || ($controllerAttribute !== null && $controllerAttribute->autoTrailingSlash)) &&
                         !\str_ends_with($uri, '/')
                     ) {
                         yield from $this->emitRoutes(
