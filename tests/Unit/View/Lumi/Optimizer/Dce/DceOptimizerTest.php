@@ -440,6 +440,202 @@ class DceOptimizerTest extends TestCase
         self::assertTrue($result->changed);
     }
 
+    public function testConditionalWithFalseOperandAndFalseBranchReconstructsFromBranch(): void
+    {
+        $branchBody = new TextNode(
+            text: 'branch',
+        );
+
+        $else = new TextNode(
+            text: 'fallback',
+        );
+
+        $falseBranchOperand = LiteralNode::createBool(false);
+
+        $result = $this->optimize(
+            nodes: [
+                new ConditionalNode(
+                    operand: LiteralNode::createBool(false),
+                    body: [
+                        new TextNode(
+                            text: 'main',
+                        ),
+                    ],
+                    branches: [
+                        new ConditionalBranchNode(
+                            operand: $falseBranchOperand,
+                            body: [
+                                $branchBody,
+                            ],
+                        ),
+                    ],
+                    else: [
+                        $else,
+                    ],
+                ),
+            ],
+        );
+
+        self::assertCount(1, $result->stream->nodes);
+        self::assertInstanceOf(ConditionalNode::class, $result->stream->nodes[0]);
+        self::assertSame($falseBranchOperand, $result->stream->nodes[0]->operand);
+
+        self::assertSame(
+            [
+                $branchBody,
+            ],
+            $result->stream->nodes[0]->body,
+        );
+
+        self::assertSame([], $result->stream->nodes[0]->branches);
+
+        self::assertSame(
+            [
+                $else,
+            ],
+            $result->stream->nodes[0]->else,
+        );
+
+        self::assertTrue($result->changed);
+    }
+
+    public function testConditionalWithFalseOperandAndTrueBranchPromotesItAsNewElse(): void
+    {
+        $falseBranchOperand = LiteralNode::createBool(false);
+
+        $falseBranchBody = new TextNode(
+            text: 'false-branch',
+        );
+
+        $trueBranchBody = new TextNode(
+            text: 'true-branch',
+        );
+
+        $result = $this->optimize(
+            nodes: [
+                new ConditionalNode(
+                    operand: LiteralNode::createBool(false),
+                    body: [
+                        new TextNode(
+                            text: 'main',
+                        ),
+                    ],
+                    branches: [
+                        new ConditionalBranchNode(
+                            operand: $falseBranchOperand,
+                            body: [
+                                $falseBranchBody,
+                            ],
+                        ),
+                        new ConditionalBranchNode(
+                            operand: LiteralNode::createBool(true),
+                            body: [
+                                $trueBranchBody,
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+        );
+
+        self::assertCount(1, $result->stream->nodes);
+        self::assertInstanceOf(ConditionalNode::class, $result->stream->nodes[0]);
+        self::assertSame($falseBranchOperand, $result->stream->nodes[0]->operand);
+
+        self::assertSame(
+            [
+                $falseBranchBody,
+            ],
+            $result->stream->nodes[0]->body,
+        );
+
+        self::assertSame([], $result->stream->nodes[0]->branches);
+
+        self::assertSame(
+            [
+                $trueBranchBody,
+            ],
+            $result->stream->nodes[0]->else,
+        );
+
+        self::assertTrue($result->changed);
+    }
+
+    public function testConditionalWithFalseOperandPreservesUnknownBranchesBeforeFirstFalseBranch(): void
+    {
+        $unknownBranchOperand = new IdentifierNode(
+            name: 'unknown',
+        );
+
+        $unknownBranchBody = new TextNode(
+            text: 'unknown-branch',
+        );
+
+        $falseBranchOperand = LiteralNode::createBool(false);
+
+        $falseBranchBody = new TextNode(
+            text: 'false-branch',
+        );
+
+        $else = new TextNode(
+            text: 'fallback',
+        );
+
+        $result = $this->optimize(
+            nodes: [
+                new ConditionalNode(
+                    operand: LiteralNode::createBool(false),
+                    body: [
+                        new TextNode(
+                            text: 'main',
+                        ),
+                    ],
+                    branches: [
+                        new ConditionalBranchNode(
+                            operand: $unknownBranchOperand,
+                            body: [
+                                $unknownBranchBody,
+                            ],
+                        ),
+                        new ConditionalBranchNode(
+                            operand: $falseBranchOperand,
+                            body: [
+                                $falseBranchBody,
+                            ],
+                        ),
+                    ],
+                    else: [
+                        $else,
+                    ],
+                ),
+            ],
+        );
+
+        self::assertCount(1, $result->stream->nodes);
+        self::assertInstanceOf(ConditionalNode::class, $result->stream->nodes[0]);
+        self::assertSame($falseBranchOperand, $result->stream->nodes[0]->operand);
+
+        self::assertSame(
+            [
+                $falseBranchBody,
+            ],
+            $result->stream->nodes[0]->body,
+        );
+
+        self::assertCount(1, $result->stream->nodes[0]->branches);
+        self::assertInstanceOf(ConditionalBranchNode::class, $result->stream->nodes[0]->branches[0]);
+        self::assertSame($unknownBranchOperand, $result->stream->nodes[0]->branches[0]->operand);
+
+        self::assertSame(
+            [
+                $else,
+            ],
+            $result->stream->nodes[0]->else,
+        );
+
+        self::assertTrue($result->changed);
+    }
+
     public function testWhileWithLiteralFalseOperandIsRemoved(): void
     {
         $result = $this->optimize(

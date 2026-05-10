@@ -44,7 +44,7 @@ class DceOptimizer extends AbstractOptimizer
     ): array {
         try {
             if ($context !== null) {
-                parent::pushContext($context);
+                parent::pushContext($context); // @codeCoverageIgnore
             }
 
             return match (true) {
@@ -149,8 +149,6 @@ class DceOptimizer extends AbstractOptimizer
             foreach ($eliminationBranches as $index => $branch) {
                 if ($index === $newIf) {
                     continue;
-                } elseif ($index === $newElse) {
-                    break;
                 }
 
                 if ($branch === false) {
