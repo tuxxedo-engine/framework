@@ -466,7 +466,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
             ];
 
             if (!\is_callable($callback)) {
-                continue;
+                continue; // @codeCoverageIgnore
             }
 
             if ($method->hasAttribute(LumiFunction::class)) {
