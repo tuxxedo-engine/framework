@@ -102,7 +102,7 @@ class ResponseEmitter implements ResponseEmitterInterface
                 }
 
                 if (\connection_aborted() === 1) {
-                    break;
+                    break; // @codeCoverageIgnore
                 }
             }
 
