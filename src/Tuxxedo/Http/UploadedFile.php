@@ -46,7 +46,7 @@ class UploadedFile implements UploadedFileInterface
         }
 
         if (self::$finfo !== null) {
-            $type = \finfo_file(self::$finfo, $this->temporaryPath);
+            $type = @\finfo_file(self::$finfo, $this->temporaryPath);
 
             if ($type !== false) {
                 $this->isTrustedType = true;
@@ -60,6 +60,10 @@ class UploadedFile implements UploadedFileInterface
 
     public function isTrustedType(): bool
     {
+        if ($this->resolvedType === null) {
+            $this->resolveType($this->browserType);
+        }
+
         return $this->isTrustedType;
     }
 

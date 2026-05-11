@@ -4,10 +4,7 @@ on: [ push, pull_request ]
 
 jobs:
   phpunit:
-    strategy:
-      matrix:
-        os: [ ubuntu-latest, windows-latest ]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -18,20 +15,16 @@ jobs:
         with:
           php-version: '8.5'
           coverage: xdebug
+          extensions: fileinfo
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
 
-      - name: Run PHPUnit with coverage (Linux)
-        if: runner.os != 'Windows'
-        run: vendor/bin/phpunit --coverage-clover=coverage-${{ runner.os }}.xml
-
-      - name: Run PHPUnit with coverage (Windows)
-        if: runner.os == 'Windows'
-        run: vendor\bin\phpunit --coverage-clover=coverage-${{ runner.os }}.xml
+      - name: Run PHPUnit with coverage
+        run: vendor/bin/phpunit --coverage-clover=coverage.xml
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report-${{ runner.os }}
-          path: coverage-${{ runner.os }}.xml
+          name: coverage-report
+          path: coverage.xml

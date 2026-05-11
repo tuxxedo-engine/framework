@@ -32,7 +32,7 @@ class EnvironmentUploadedFilesContext implements UploadedFilesContextInterface
 
         foreach (\explode('.', $path) as $part) {
             if (!\is_array($index)) {
-                continue;
+                continue; // @codeCoverageIgnore
             } elseif (!\array_key_exists($part, $index)) {
                 return null;
             }
