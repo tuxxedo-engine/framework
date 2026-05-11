@@ -24,6 +24,7 @@ use Tuxxedo\View\Lumi\Library\Standard\Function\DateFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\DirectiveFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\DumpFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\HasDirectiveFunction;
+use Tuxxedo\View\Lumi\Library\Standard\Function\HasSessionFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\IsEvenFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\IsOddFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\JoinFunction;
@@ -41,6 +42,8 @@ use Tuxxedo\View\Lumi\Library\Standard\Function\ReverseFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\RightPadFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\RoundFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\RouteFunction;
+use Tuxxedo\View\Lumi\Library\Standard\Function\SessionFunction;
+use Tuxxedo\View\Lumi\Library\Standard\Function\SessionIdFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\SortFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\SplitFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\TruncateFunction;
@@ -61,6 +64,9 @@ class StandardFunctions implements FunctionProviderInterface
         yield new CsrfFieldFunction($container);
         yield new CsrfFieldNameFunction($container);
         yield new CsrfTokenFunction($container);
+        yield new HasSessionFunction($container);
+        yield new SessionFunction($container);
+        yield new SessionIdFunction($container);
 
         yield new PhpFunction(
             name: 'count',
