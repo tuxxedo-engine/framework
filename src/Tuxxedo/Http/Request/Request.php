@@ -24,49 +24,28 @@ use Tuxxedo\Http\Request\Context\HeaderContextInterface;
 use Tuxxedo\Http\Request\Context\InputContextInterface;
 use Tuxxedo\Http\Request\Context\ServerContextInterface;
 use Tuxxedo\Http\Request\Context\UploadedFilesContextInterface;
-use Tuxxedo\Mapper\Mapper;
-use Tuxxedo\Mapper\MapperInterface;
 use Tuxxedo\Router\DispatchableRouteInterface;
 
 class Request implements RequestInterface
 {
-    public readonly ServerContextInterface $server;
-    public readonly HeaderContextInterface $headers;
-    public readonly InputContextInterface $cookies;
-    public readonly InputContextInterface $get;
-    public readonly InputContextInterface $post;
-    public readonly UploadedFilesContextInterface $files;
-    public readonly BodyContextInterface $body;
     public private(set) DispatchableRouteInterface $route;
 
     public function __construct(
         ?DispatchableRouteInterface $route = null,
-        MapperInterface $mapper = new Mapper(),
+        public readonly ServerContextInterface $server = new EnvironmentServerContext(),
+        public readonly HeaderContextInterface $headers = new EnvironmentHeaderContext(),
+        public readonly InputContextInterface $cookies = new EnvironmentInputContext(
+            inputContext: InputContext::COOKIE,
+        ),
+        public readonly InputContextInterface $get = new EnvironmentInputContext(
+            inputContext: InputContext::GET,
+        ),
+        public readonly InputContextInterface $post = new EnvironmentInputContext(
+            inputContext: InputContext::POST,
+        ),
+        public readonly UploadedFilesContextInterface $files = new EnvironmentUploadedFilesContext(),
+        public readonly BodyContextInterface $body = new EnvironmentBodyContext(),
     ) {
-        $this->server = new EnvironmentServerContext();
-        $this->headers = new EnvironmentHeaderContext();
-
-        $this->cookies = new EnvironmentInputContext(
-            superglobal: \INPUT_COOKIE,
-            mapper: $mapper,
-        );
-
-        $this->get = new EnvironmentInputContext(
-            superglobal: \INPUT_GET,
-            mapper: $mapper,
-        );
-
-        $this->post = new EnvironmentInputContext(
-            superglobal: \INPUT_POST,
-            mapper: $mapper,
-        );
-
-        $this->files = new EnvironmentUploadedFilesContext();
-
-        $this->body = new EnvironmentBodyContext(
-            mapper: $mapper,
-        );
-
         if ($route !== null) {
             $this->route = $route;
         }

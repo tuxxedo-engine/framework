@@ -14,41 +14,47 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Request\Context;
 
 use Tuxxedo\Http\HttpException;
+use Tuxxedo\Http\InputContext;
 use Tuxxedo\Mapper\Mapper;
 use Tuxxedo\Mapper\MapperInterface;
 
 class EnvironmentInputContext implements InputContextInterface
 {
-    /**
-     * @param 0|1|2 $superglobal
-     */
     public function __construct(
-        private readonly int $superglobal,
+        private readonly InputContext $inputContext,
         private readonly MapperInterface $mapper = new Mapper(),
     ) {
     }
 
-    public function has(string $name): bool
+    /**
+     * @return mixed[]
+     */
+    private function input(): array
     {
-        return \filter_has_var(
-            $this->superglobal,
-            $name,
-        );
+        return match ($this->inputContext) {
+            InputContext::GET => $_GET,
+            InputContext::POST => $_POST,
+            InputContext::COOKIE => $_COOKIE,
+        };
+    }
+
+    public function has(
+        string $name,
+    ): bool {
+        return \array_key_exists($name, $this->input());
     }
 
     public function getRaw(
         string $name,
         mixed $default = null,
     ): mixed {
-        if (!\filter_has_var($this->superglobal, $name)) {
+        $data = $this->input();
+
+        if (!\array_key_exists($name, $data)) {
             return $default;
         }
 
-        $input = \filter_input(
-            $this->superglobal,
-            $name,
-            \FILTER_UNSAFE_RAW,
-        );
+        $input = \filter_var($data[$name], \FILTER_UNSAFE_RAW);
 
         return $input !== false && $default !== false
             ? $input
@@ -59,19 +65,16 @@ class EnvironmentInputContext implements InputContextInterface
         string $name,
         mixed $default = null,
     ): mixed {
-        if (!\filter_has_var($this->superglobal, $name)) {
+        $input = $this->input();
+
+        if (!\array_key_exists($name, $input)) {
             return $default;
         }
 
-        $input = \filter_input(
-            $this->superglobal,
-            $name,
-            \FILTER_UNSAFE_RAW,
-            \FILTER_REQUIRE_ARRAY,
-        );
+        $value = \filter_var($input[$name], \FILTER_UNSAFE_RAW, \FILTER_REQUIRE_ARRAY);
 
-        return $input !== false && $default !== false
-            ? $input
+        return $value !== false && $default !== false
+            ? $value
             : $default;
     }
 
@@ -79,15 +82,13 @@ class EnvironmentInputContext implements InputContextInterface
         string $name,
         int $default = 0,
     ): int {
-        if (!\filter_has_var($this->superglobal, $name)) {
+        $input = $this->input();
+
+        if (!\array_key_exists($name, $input)) {
             return $default;
         }
 
-        $value = \filter_input(
-            $this->superglobal,
-            $name,
-            \FILTER_VALIDATE_INT,
-        );
+        $value = \filter_var($input[$name], \FILTER_VALIDATE_INT);
 
         if (!\is_int($value)) {
             return $default;
@@ -100,15 +101,13 @@ class EnvironmentInputContext implements InputContextInterface
         string $name,
         bool $default = false,
     ): bool {
-        if (!\filter_has_var($this->superglobal, $name)) {
+        $input = $this->input();
+
+        if (!\array_key_exists($name, $input)) {
             return $default;
         }
 
-        $value = \filter_input(
-            $this->superglobal,
-            $name,
-            \FILTER_VALIDATE_BOOL,
-        );
+        $value = \filter_var($input[$name], \FILTER_VALIDATE_BOOL, \FILTER_NULL_ON_FAILURE);
 
         if (!\is_bool($value)) {
             return $default;
@@ -123,13 +122,14 @@ class EnvironmentInputContext implements InputContextInterface
         string $decimalPoint = '.',
         string $thousandSeparator = ',',
     ): float {
-        if (!\filter_has_var($this->superglobal, $name)) {
+        $input = $this->input();
+
+        if (!\array_key_exists($name, $input)) {
             return $default;
         }
 
-        $value = \filter_input(
-            $this->superglobal,
-            $name,
+        $value = \filter_var(
+            $input[$name],
             \FILTER_VALIDATE_FLOAT,
             [
                 'options' => [
@@ -150,11 +150,13 @@ class EnvironmentInputContext implements InputContextInterface
         string $name,
         string $default = '',
     ): string {
-        if (!\filter_has_var($this->superglobal, $name)) {
+        $input = $this->input();
+
+        if (!\array_key_exists($name, $input)) {
             return $default;
         }
 
-        $value = \filter_input($this->superglobal, $name);
+        $value = \filter_var($input[$name]);
 
         if (!\is_string($value)) {
             return $default;
@@ -175,14 +177,16 @@ class EnvironmentInputContext implements InputContextInterface
         string $name,
         string $enum,
     ): object {
+        $input = $this->input();
+
         if (
             !\enum_exists($enum) ||
-            !\filter_has_var($this->superglobal, $name)
+            !\array_key_exists($name, $input)
         ) {
             throw HttpException::fromInternalServerError();
         }
 
-        $value = \filter_input($this->superglobal, $name);
+        $value = \filter_var($input[$name]);
 
         if (!\is_string($value)) {
             throw HttpException::fromInternalServerError();
@@ -200,16 +204,13 @@ class EnvironmentInputContext implements InputContextInterface
     public function getArrayOfInt(
         string $name,
     ): array {
-        if (!\filter_has_var($this->superglobal, $name)) {
+        $input = $this->input();
+
+        if (!\array_key_exists($name, $input)) {
             return [];
         }
 
-        $value = \filter_input(
-            $this->superglobal,
-            $name,
-            \FILTER_VALIDATE_INT,
-            \FILTER_REQUIRE_ARRAY,
-        );
+        $value = \filter_var($input[$name], \FILTER_VALIDATE_INT, \FILTER_REQUIRE_ARRAY);
 
         if (!\is_array($value)) {
             return [];
@@ -221,22 +222,19 @@ class EnvironmentInputContext implements InputContextInterface
     public function getArrayOfBool(
         string $name,
     ): array {
-        if (!\filter_has_var($this->superglobal, $name)) {
+        $input = $this->input();
+
+        if (!\array_key_exists($name, $input)) {
             return [];
         }
 
-        $value = \filter_input(
-            $this->superglobal,
-            $name,
-            \FILTER_VALIDATE_BOOL,
-            \FILTER_REQUIRE_ARRAY,
-        );
+        $value = \filter_var($input[$name], \FILTER_VALIDATE_BOOL, \FILTER_REQUIRE_ARRAY | \FILTER_NULL_ON_FAILURE);
 
         if (!\is_array($value)) {
             return [];
         }
 
-        return $value;
+        return \array_filter($value, \is_bool(...));
     }
 
     public function getArrayOfFloat(
@@ -244,13 +242,14 @@ class EnvironmentInputContext implements InputContextInterface
         string $decimalPoint = '.',
         string $thousandSeparator = ',',
     ): array {
-        if (!\filter_has_var($this->superglobal, $name)) {
+        $input = $this->input();
+
+        if (!\array_key_exists($name, $input)) {
             return [];
         }
 
-        $value = \filter_input(
-            $this->superglobal,
-            $name,
+        $value = \filter_var(
+            $input[$name],
             \FILTER_VALIDATE_FLOAT,
             [
                 'flags' => \FILTER_REQUIRE_ARRAY,
@@ -271,16 +270,13 @@ class EnvironmentInputContext implements InputContextInterface
     public function getArrayOfString(
         string $name,
     ): array {
-        if (!\filter_has_var($this->superglobal, $name)) {
+        $input = $this->input();
+
+        if (!\array_key_exists($name, $input)) {
             return [];
         }
 
-        $value = \filter_input(
-            $this->superglobal,
-            $name,
-            \FILTER_DEFAULT,
-            \FILTER_REQUIRE_ARRAY,
-        );
+        $value = \filter_var($input[$name], \FILTER_DEFAULT, \FILTER_REQUIRE_ARRAY);
 
         if (!\is_array($value)) {
             return [];
@@ -301,19 +297,16 @@ class EnvironmentInputContext implements InputContextInterface
         string $name,
         string $enum,
     ): array {
+        $input = $this->input();
+
         if (
             !\enum_exists($enum) ||
-            !\filter_has_var($this->superglobal, $name)
+            !\array_key_exists($name, $input)
         ) {
             throw HttpException::fromInternalServerError();
         }
 
-        $values = \filter_input(
-            $this->superglobal,
-            $name,
-            \FILTER_DEFAULT,
-            \FILTER_REQUIRE_ARRAY,
-        );
+        $values = \filter_var($input[$name], \FILTER_DEFAULT, \FILTER_REQUIRE_ARRAY);
 
         if (!\is_array($values)) {
             throw HttpException::fromInternalServerError();
@@ -344,7 +337,7 @@ class EnvironmentInputContext implements InputContextInterface
         string $name,
         string|object $className,
     ): object {
-        if ($this->superglobal === \INPUT_COOKIE) {
+        if ($this->inputContext === InputContext::COOKIE) {
             throw HttpException::fromInternalServerError();
         }
 
@@ -361,7 +354,7 @@ class EnvironmentInputContext implements InputContextInterface
         string $name,
         string|object $className,
     ): array {
-        if ($this->superglobal === \INPUT_COOKIE) {
+        if ($this->inputContext === InputContext::COOKIE) {
             throw HttpException::fromInternalServerError();
         }
 
@@ -379,7 +372,7 @@ class EnvironmentInputContext implements InputContextInterface
         string|object $className,
         int $flags = 0,
     ): object {
-        if ($this->superglobal === \INPUT_COOKIE) {
+        if ($this->inputContext === InputContext::COOKIE) {
             throw HttpException::fromInternalServerError();
         }
 
@@ -406,7 +399,7 @@ class EnvironmentInputContext implements InputContextInterface
         string|object $className,
         int $flags = 0,
     ): array {
-        if ($this->superglobal === \INPUT_COOKIE) {
+        if ($this->inputContext === InputContext::COOKIE) {
             throw HttpException::fromInternalServerError();
         }
 
