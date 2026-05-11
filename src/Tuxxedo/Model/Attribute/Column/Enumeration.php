@@ -35,7 +35,7 @@ readonly class Enumeration implements ColumnInterface, ColumnEnumInterface
     ): string {
         return $dialect->nativeColumnType($this) ?? \sprintf(
             'ENUM(%s)',
-            \implode(
+            \join(
                 ', ',
                 \array_map(
                     static fn (\BackedEnum $case): string => \sprintf(

@@ -26,7 +26,7 @@ class ContainerException extends \Exception
     protected static function formatUnionType(
         \ReflectionUnionType $unionType,
     ): string {
-        return \implode(
+        return \join(
             '|',
             \array_map(
                 static fn (\ReflectionIntersectionType|\ReflectionNamedType $type): string => match (true) {
@@ -41,7 +41,7 @@ class ContainerException extends \Exception
     protected static function formatIntersectionType(
         \ReflectionIntersectionType $intersectionType,
     ): string {
-        return '(' . \implode('&', \array_map(\strval(...), $intersectionType->getTypes())) . ')';
+        return '(' . \join('&', \array_map(\strval(...), $intersectionType->getTypes())) . ')';
     }
 
     public static function fromException(

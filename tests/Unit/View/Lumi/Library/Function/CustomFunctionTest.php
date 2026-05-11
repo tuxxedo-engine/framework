@@ -23,7 +23,7 @@ class CustomFunctionTest extends TestCase
     {
         $function = new CustomFunction(
             name: 'join',
-            implementation: static fn (array $args, \Closure $context): string => \implode('', \array_filter($args, \is_string(...))),
+            implementation: static fn (array $args, \Closure $context): string => \join('', \array_filter($args, \is_string(...))),
         );
 
         self::assertSame(

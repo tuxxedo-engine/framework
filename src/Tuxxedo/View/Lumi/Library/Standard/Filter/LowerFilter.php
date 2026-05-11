@@ -30,6 +30,6 @@ class LowerFilter implements FilterInterface
     ): string {
         /** @var string $value */
 
-        return \mb_strtoupper($value);
+        return \mb_strtolower($value);
     }
 }

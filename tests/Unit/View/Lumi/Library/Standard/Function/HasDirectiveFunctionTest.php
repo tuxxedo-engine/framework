@@ -15,16 +15,14 @@ namespace Unit\View\Lumi\Library\Standard\Function;
 
 use PHPUnit\Framework\TestCase;
 use Support\View\Lumi\Runtime\StubRuntimeContext;
-use Tuxxedo\View\Lumi\Library\Standard\Function\DirectiveFunction;
-use Tuxxedo\View\Lumi\Runtime\RuntimeException;
+use Tuxxedo\View\Lumi\Library\Standard\Function\HasDirectiveFunction;
 
-class DirectiveFunctionTest extends TestCase
+class HasDirectiveFunctionTest extends TestCase
 {
     public function testCallReturnsDirectiveValue(): void
     {
-        self::assertSame(
-            'bar',
-            (new DirectiveFunction())->call(
+        self::assertTrue(
+            (new HasDirectiveFunction())->call(
                 [
                     'foo',
                 ],
@@ -34,18 +32,6 @@ class DirectiveFunctionTest extends TestCase
                     ],
                 ),
             ),
-        );
-    }
-
-    public function testCallThrowsForMissingDirective(): void
-    {
-        $this->expectException(RuntimeException::class);
-
-        (new DirectiveFunction())->call(
-            [
-                'missing',
-            ],
-            static fn () => new StubRuntimeContext(),
         );
     }
 }

@@ -146,7 +146,7 @@ class StatementParser implements StatementParserInterface
                             $slot++;
                         }
 
-                        $buffer .= \implode(', ', $slots);
+                        $buffer .= \join(', ', $slots);
 
                         continue;
                     }

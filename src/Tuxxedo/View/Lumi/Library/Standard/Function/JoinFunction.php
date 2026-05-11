@@ -34,6 +34,6 @@ class JoinFunction implements FunctionInterface
         /** @var string $separator */
         $separator = $arguments[1];
 
-        return \implode($separator, $value);
+        return \join($separator, $value);
     }
 }
