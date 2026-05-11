@@ -21,13 +21,14 @@ use Tuxxedo\Mapper\MapperInterface;
 class EnvironmentBodyContext implements BodyContextInterface
 {
     public function __construct(
+        private string $streamInputSource = 'php://input',
         private MapperInterface $mapper = new Mapper(),
     ) {
     }
 
     public function getStream()
     {
-        $stream = @\fopen('php://input', 'r');
+        $stream = @\fopen($this->streamInputSource, 'r');
 
         if ($stream === false) {
             throw HttpException::fromInternalServerError();
