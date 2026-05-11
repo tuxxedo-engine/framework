@@ -14,8 +14,14 @@ declare(strict_types=1);
 namespace Unit\Router;
 
 use PHPUnit\Framework\TestCase;
+use Support\Http\Request\Context\StubBodyContext;
+use Support\Http\Request\Context\StubHeaderContext;
+use Support\Http\Request\Context\StubInputContext;
+use Support\Http\Request\Context\StubServerContext;
+use Support\Http\Request\Context\StubUploadedFilesContext;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Method;
+use Tuxxedo\Http\Request\Request;
 use Tuxxedo\Router\DispatchableRouteInterface;
 use Tuxxedo\Router\Route;
 use Tuxxedo\Router\RouteInterface;
@@ -518,6 +524,37 @@ class StaticRouterTest extends TestCase
         );
 
         self::assertNotNull($dispatchable);
+        self::assertSame($route, $dispatchable->route);
+    }
+
+    public function testFindByRequestDelegatesToFindByUri(): void
+    {
+        $route = $this->makeRoute(
+            method: Method::GET,
+            uri: '/users',
+        );
+
+        $server = new StubServerContext();
+        $server->method = Method::GET;
+        $server->uri = '/users';
+
+        $request = new Request(
+            server: $server,
+            headers: new StubHeaderContext(),
+            cookies: new StubInputContext(),
+            get: new StubInputContext(),
+            post: new StubInputContext(),
+            files: new StubUploadedFilesContext(),
+            body: new StubBodyContext(),
+        );
+
+        $dispatchable = $this->makeRouter(
+            routes: [
+                $route,
+            ],
+        )->findByRequest($request);
+
+        self::assertInstanceOf(DispatchableRouteInterface::class, $dispatchable);
         self::assertSame($route, $dispatchable->route);
     }
 

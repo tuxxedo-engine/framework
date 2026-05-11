@@ -22,6 +22,8 @@ use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseCode;
 use Tuxxedo\Http\Response\Stream\Stream;
 use Tuxxedo\Http\Response\Stream\StreamInterface;
+use Tuxxedo\Router\Route;
+use Tuxxedo\Router\StaticRouter;
 
 class ResponseTest extends TestCase
 {
@@ -519,5 +521,64 @@ class ResponseTest extends TestCase
         $updated = $response->withBody($stream);
 
         self::assertSame($stream, $updated->body);
+    }
+
+    private function makeContainerWithRoute(
+        string $name,
+        string $uri = '/home',
+    ): Container {
+        return (new Container())->persistent(
+            class: new StaticRouter(
+                routes: [
+                    new Route(
+                        method: null,
+                        uri: $uri,
+                        controller: self::class,
+                        action: 'index',
+                        name: $name,
+                    ),
+                ],
+            ),
+        );
+    }
+
+    public function testRedirectRouteSetsLocationHeader(): void
+    {
+        $response = Response::redirectRoute('home')->toResponse(
+            $this->makeContainerWithRoute('home'),
+        );
+
+        self::assertSame('Location', $response->headers[0]->name);
+        self::assertSame('/home', $response->headers[0]->value);
+    }
+
+    public function testRedirectRouteDefaultResponseCode(): void
+    {
+        $response = Response::redirectRoute('home')->toResponse(
+            $this->makeContainerWithRoute('home'),
+        );
+
+        self::assertSame(ResponseCode::FOUND, $response->responseCode);
+    }
+
+    public function testRedirectRouteWithCustomResponseCode(): void
+    {
+        $response = Response::redirectRoute(
+            name: 'home',
+            responseCode: ResponseCode::MOVED_PERMANENTLY,
+        )->toResponse(
+            $this->makeContainerWithRoute('home'),
+        );
+
+        self::assertSame(ResponseCode::MOVED_PERMANENTLY, $response->responseCode);
+    }
+
+    public function testRedirectRouteThrowsWhenRouteNotFound(): void
+    {
+        $this->expectException(HttpException::class);
+
+        Response::redirectRoute('missing')->toResponse(
+            $this->makeContainerWithRoute('home'),
+        );
     }
 }
