@@ -22,10 +22,6 @@ interface ServerContextInterface
         get;
     }
 
-    public bool $ajax {
-        get;
-    }
-
     public HttpVersion $protocolVersion {
         get;
     }

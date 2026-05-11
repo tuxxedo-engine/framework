@@ -20,7 +20,6 @@ use Tuxxedo\Http\Request\Context\ServerContextInterface;
 class StubServerContext implements ServerContextInterface
 {
     public bool $https = false;
-    public bool $ajax = false;
     public HttpVersion $protocolVersion = HttpVersion::V1_1;
     public Method $method = Method::GET;
     public string $uri = '/';

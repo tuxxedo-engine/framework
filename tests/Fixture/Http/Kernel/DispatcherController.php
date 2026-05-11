@@ -32,7 +32,9 @@ class DispatcherController
     {
         return new class () implements ResponsableInterface {
             public ResponseCode $responseCode {
-                get => ResponseCode::OK;
+                get {
+                    return ResponseCode::OK;
+                }
             }
 
             public function toResponse(

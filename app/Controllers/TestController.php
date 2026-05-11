@@ -126,7 +126,6 @@ readonly class TestController
                 'https' => $request->server->https,
                 'host' => $request->server->host,
                 'port' => $request->server->port,
-                'ajax' => $request->server->ajax,
                 'userAgent' => $request->server->userAgent,
             ],
             prettyPrint: true,

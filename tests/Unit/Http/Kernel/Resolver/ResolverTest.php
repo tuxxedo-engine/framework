@@ -65,7 +65,9 @@ class ResolverTest extends TestCase
     {
         return new class () implements ParameterReflectorInterface {
             public \ReflectionParameter $reflector {
-                get => throw new \LogicException('Not implemented in stub');
+                get {
+                    throw new \LogicException('Not implemented in stub');
+                }
             }
 
             public string $name {

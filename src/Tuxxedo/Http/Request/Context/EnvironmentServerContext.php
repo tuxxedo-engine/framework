@@ -25,12 +25,6 @@ class EnvironmentServerContext implements ServerContextInterface
         }
     }
 
-    public bool $ajax {
-        get {
-            return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest';
-        }
-    }
-
     public HttpVersion $protocolVersion {
         get {
             /** @var string|null $protocol */
