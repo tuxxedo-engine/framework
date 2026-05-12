@@ -37,6 +37,16 @@ class MethodReflector implements MethodReflectorInterface
         }
     }
 
+    public function parametersWithAttribute(
+        string $attribute,
+    ): \Generator {
+        foreach ($this->parameters() as $parameter) {
+            if ($parameter->hasAttribute($attribute)) {
+                yield $parameter;
+            }
+        }
+    }
+
     public function parameter(
         string $name,
     ): ParameterReflectorInterface {

@@ -46,6 +46,17 @@ class ClassReflector implements ClassReflectorInterface
         }
     }
 
+    public function propertiesWithAttribute(
+        string $attribute,
+        ?int $filter = null,
+    ): \Generator {
+        foreach ($this->properties($filter) as $property) {
+            if ($property->hasAttribute($attribute)) {
+                yield $property;
+            }
+        }
+    }
+
     public function property(
         string $name,
     ): PropertyReflectorInterface {
@@ -60,6 +71,17 @@ class ClassReflector implements ClassReflectorInterface
     ): \Generator {
         foreach ($this->reflector->getMethods($filter) as $method) {
             yield $this->method($method->getName());
+        }
+    }
+
+    public function methodsWithAttribute(
+        string $attribute,
+        ?int $filter = null,
+    ): \Generator {
+        foreach ($this->methods($filter) as $method) {
+            if ($method->hasAttribute($attribute)) {
+                yield $method;
+            }
         }
     }
 

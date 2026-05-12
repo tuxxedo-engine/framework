@@ -38,6 +38,16 @@ interface ClassReflectorInterface extends AttributeInterface
     ): \Generator;
 
     /**
+     * @param class-string $attribute
+     * @param int-mask-of<\ReflectionProperty::IS_*>|null $filter
+     * @return \Generator<PropertyReflectorInterface>
+     */
+    public function propertiesWithAttribute(
+        string $attribute,
+        ?int $filter = null,
+    ): \Generator;
+
+    /**
      * @throws \ReflectionException
      */
     public function property(
@@ -49,6 +59,16 @@ interface ClassReflectorInterface extends AttributeInterface
      * @return \Generator<MethodReflectorInterface>
      */
     public function methods(
+        ?int $filter = null,
+    ): \Generator;
+
+    /**
+     * @param class-string $attribute
+     * @param int-mask-of<\ReflectionMethod::IS_*>|null $filter
+     * @return \Generator<MethodReflectorInterface>
+     */
+    public function methodsWithAttribute(
+        string $attribute,
         ?int $filter = null,
     ): \Generator;
 

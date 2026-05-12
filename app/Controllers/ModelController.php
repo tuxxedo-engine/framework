@@ -15,6 +15,8 @@ namespace App\Controllers;
 
 use App\Middleware\ValidUser;
 use App\Models\User;
+use App\Subscribers\Events\UserCreatedEvent;
+use Tuxxedo\Event\EventsManagerInterface;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Middleware\OutputCapture;
@@ -105,12 +107,20 @@ readonly class ModelController
     #[Route(method: ['POST', 'GET'], name: 'model.new')]
     public function new(
         RequestInterface $request,
+        EventsManagerInterface $eventsManager,
     ): ViewInterface|ResponseInterface {
         if ($request->server->method === Method::POST) {
             $user = new User();
             $user->name = $request->post->getString('name');
 
-            (void) $this->modelsManager->save($user);
+            $user = $this->modelsManager->save($user);
+
+            $eventsManager->fire(
+                event: new UserCreatedEvent(
+                    createdAt: new \DateTimeImmutable('now'),
+                    model: $user,
+                ),
+            );
 
             return Response::redirect('/model/');
         }

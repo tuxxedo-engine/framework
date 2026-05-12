@@ -97,7 +97,7 @@ return [
      *
      * Host name or IP address of the host where the database server is located
      *
-     * DefaultDriver::MYSQL                     - This value is ignored if a unix socket is used
+     * DefaultDriver::MYSQL                     - This value is ignored if a Unix socket is used
      * DefaultDriver::PDO_SQLITE                - This value has no effect
      * DefaultDriver::SQLITE                    - This value has no effect
      *
@@ -110,7 +110,7 @@ return [
      *
      * Port number of the host where the database server is located
      *
-     * DefaultDriver::MYSQL                     - This value is ignored if a unix socket is used
+     * DefaultDriver::MYSQL                     - This value is ignored if a Unix socket is used
      * DefaultDriver::PDO_SQLITE                - This value has no effect
      * DefaultDriver::SQLITE                    - This value has no effect
      *
