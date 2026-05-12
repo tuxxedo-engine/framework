@@ -33,6 +33,7 @@ use Tuxxedo\Router\RouterInterface;
 use Tuxxedo\Router\StaticRouter;
 
 // @todo Implement a dotenv loader here
+// @todo Event handling support
 class ApplicationConfigurator implements ApplicationConfiguratorInterface
 {
     public private(set) ?ConfigInterface $config = null;
