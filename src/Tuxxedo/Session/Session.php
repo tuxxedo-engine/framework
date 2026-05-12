@@ -143,7 +143,7 @@ class Session implements SessionInterface
             );
         }
 
-        if (!\array_key_exists($name, $_SESSION)) {
+        if (!\array_key_exists($name, $this->adapter->all())) {
             throw SessionException::fromInvalidEnum(
                 name: $name,
                 enum: $enum,

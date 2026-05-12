@@ -57,11 +57,15 @@ class PhpSessionAdapter implements SessionAdapterInterface
      */
     private function startCheck(): void
     {
-        if ($this->startMode === SessionStartMode::LAZY) {
-            $this->start();
-        } else {
+        if ($this->started) {
+            return;
+        }
+
+        if ($this->startMode === SessionStartMode::EXPLICIT) {
             throw SessionException::fromNotStarted();
         }
+
+        $this->start();
     }
 
     public function isStarted(): bool
@@ -122,7 +126,7 @@ class PhpSessionAdapter implements SessionAdapterInterface
         $identifier = \session_id();
 
         if ($identifier === false) {
-            throw SessionException::fromCannotFetchIdentifier();
+            throw SessionException::fromCannotFetchIdentifier(); // @codeCoverageIgnore
         }
 
         return $identifier;
@@ -133,7 +137,7 @@ class PhpSessionAdapter implements SessionAdapterInterface
         $this->startCheck();
 
         if (!\session_regenerate_id()) {
-            throw SessionException::fromCannotRegenerateIdentifier();
+            throw SessionException::fromCannotRegenerateIdentifier(); // @codeCoverageIgnore
         }
 
         return $this;

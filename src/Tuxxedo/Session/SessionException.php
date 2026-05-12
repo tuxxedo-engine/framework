@@ -22,6 +22,9 @@ class SessionException extends \Exception
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromCannotStart(): self
     {
         return new self(
@@ -29,6 +32,9 @@ class SessionException extends \Exception
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromCannotStop(): self
     {
         return new self(
@@ -36,6 +42,9 @@ class SessionException extends \Exception
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromCannotFetchIdentifier(): self
     {
         return new self(
@@ -43,6 +52,9 @@ class SessionException extends \Exception
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromCannotRegenerateIdentifier(): self
     {
         return new self(
