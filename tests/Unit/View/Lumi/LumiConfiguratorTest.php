@@ -789,6 +789,24 @@ class LumiConfiguratorTest extends TestCase
         self::assertArrayNotHasKey(DceOptimizer::class, $configurator->optimizers);
     }
 
+    public function testWithSccpOptimizerAddsSccpOptimizer(): void
+    {
+        $configurator = $this->makeConfigurator();
+        $configurator->withoutOptimizers();
+        $configurator->withSccpOptimizer();
+
+        self::assertArrayHasKey(SccpOptimizer::class, $configurator->optimizers);
+        self::assertInstanceOf(SccpOptimizer::class, $configurator->optimizers[SccpOptimizer::class]);
+    }
+
+    public function testWithoutSccpOptimizerRemovesSccpOptimizer(): void
+    {
+        $configurator = $this->makeConfigurator();
+        $configurator->withoutSccpOptimizer();
+
+        self::assertArrayNotHasKey(SccpOptimizer::class, $configurator->optimizers);
+    }
+
     public function testWithCustomOptimizerAddsOptimizer(): void
     {
         $configurator = $this->makeConfigurator();
