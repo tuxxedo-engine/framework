@@ -260,9 +260,12 @@ class Response implements ResponseInterface, ResponsableInterface
         }
 
         return new static(
-            headers: $headers,
+            headers: $body->headers ?? [],
             responseCode: $responseCode,
             body: $body ?? '',
+        )->withHeaders(
+            headers: $headers,
+            replace: !isset($body),
         );
     }
 

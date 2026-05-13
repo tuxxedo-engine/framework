@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Response\Stream;
 
-interface StreamInterface
+use Tuxxedo\Http\Response\PrefersHeadersInterface;
+
+interface StreamInterface extends PrefersHeadersInterface
 {
     public bool $autoFlush {
         get;

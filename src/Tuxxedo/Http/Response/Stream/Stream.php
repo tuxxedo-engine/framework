@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Response\Stream;
 
 use Tuxxedo\Http\HttpException;
+use Tuxxedo\Http\Response\PrefersHeadersInterface;
 
 class Stream implements StreamInterface
 {
@@ -25,11 +26,16 @@ class Stream implements StreamInterface
         }
     }
 
+    public readonly array $headers;
+
     final public function __construct(
         StreamProxyInterface $streamProxy,
         public readonly bool $autoFlush = false,
     ) {
         $this->streamProxy = $streamProxy;
+        $this->headers = $streamProxy instanceof PrefersHeadersInterface
+            ? $streamProxy->headers
+            : [];
     }
 
     /**
