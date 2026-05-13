@@ -236,7 +236,6 @@ class Response implements ResponseInterface, ResponsableInterface
      * @param HeaderInterface[] $headers
      */
     #[\NoDiscard]
-    // @todo Support JsonStream among other stream responses that is generator based
     public static function stream(
         mixed $stream,
         bool $autoFlush = false,
