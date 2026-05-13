@@ -54,6 +54,23 @@ class Stream implements StreamInterface
     }
 
     /**
+     * @param \Generator<object|array<mixed>> $generator
+     */
+    #[\NoDiscard]
+    public static function fromJson(
+        \Generator $generator,
+        JsonStreamFormat $format = JsonStreamFormat::JSONL,
+    ): static {
+        return new static(
+            streamProxy: new JsonStreamProxy(
+                generator: $generator,
+                format: $format,
+            ),
+            autoFlush: true,
+        );
+    }
+
+    /**
      * @param positive-int $chunkSize
      *
      * @throws HttpException
