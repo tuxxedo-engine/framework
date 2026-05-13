@@ -24,9 +24,7 @@ use Tuxxedo\Container\Lifecycle;
 interface EventsManagerInterface
 {
     /**
-     * @template TSubscriber of object
-     *
-     * @param class-string<TSubscriber>|(\Closure(): TSubscriber)|TSubscriber $subscriber
+     * @param class-string|(\Closure(): object)|object $subscriber
      */
     public function registerSubscriber(
         string|object $subscriber,

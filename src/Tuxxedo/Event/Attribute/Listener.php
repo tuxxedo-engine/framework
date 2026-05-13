@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Event\Attribute;
 
 #[\Attribute(flags: \Attribute::TARGET_METHOD)]
+// @todo Consider a filter argument?
 readonly class Listener
 {
 }
