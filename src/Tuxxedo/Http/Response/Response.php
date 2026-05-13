@@ -270,6 +270,30 @@ class Response implements ResponseInterface, ResponsableInterface
     }
 
     /**
+     * @param \Closure(): \Generator<string>|\Generator<string> $stream
+     * @param HeaderInterface[] $headers
+     */
+    #[\NoDiscard]
+    public static function streamJson(
+        \Closure|\Generator $stream,
+        array $headers = [],
+        ResponseCode $responseCode = ResponseCode::OK,
+    ): static {
+        $body = Stream::fromJson(
+            generator: $stream,
+        );
+
+        return new static(
+            headers: $body->headers,
+            responseCode: $responseCode,
+            body: $body,
+        )->withHeaders(
+            headers: $headers,
+            replace: true,
+        );
+    }
+
+    /**
      * @param HeaderInterface[] $headers
      */
     protected function getHeaderIndex(

@@ -54,11 +54,11 @@ class Stream implements StreamInterface
     }
 
     /**
-     * @param \Generator<object|array<mixed>> $generator
+     * @param \Closure(): \Generator<string>|\Generator<string> $generator
      */
     #[\NoDiscard]
     public static function fromJson(
-        \Generator $generator,
+        \Closure|\Generator $generator,
         JsonStreamFormat $format = JsonStreamFormat::JSONL,
     ): static {
         return new static(

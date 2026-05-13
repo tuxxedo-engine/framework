@@ -18,17 +18,25 @@ use Tuxxedo\Http\Response\PrefersHeadersInterface;
 
 class JsonStreamProxy implements StreamProxyInterface, PrefersHeadersInterface
 {
+    /**
+     * @var \Generator<string>
+     */
+    private \Generator $inner;
     private bool $done = false;
 
     public readonly array $headers;
 
     /**
-     * @param \Generator<object|array<mixed>> $generator
+     * @param \Closure(): \Generator<string>|\Generator<string> $generator
      */
     public function __construct(
-        private readonly \Generator $generator,
+        \Closure|\Generator $generator,
         private readonly JsonStreamFormat $format = JsonStreamFormat::JSONL,
     ) {
+        $this->inner = $generator instanceof \Closure
+            ? $generator()
+            : $generator;
+
         $this->headers = [
              new Header('Content-Type', $this->format->getContentType()),
         ];
@@ -46,17 +54,17 @@ class JsonStreamProxy implements StreamProxyInterface, PrefersHeadersInterface
 
     public function read(): ?string
     {
-        if ($this->done || !$this->generator->valid()) {
+        if ($this->done || !$this->inner->valid()) {
             $this->done = true;
 
             return null;
         }
 
-        $current = $this->generator->current();
+        $current = $this->inner->current();
 
-        $this->generator->next();
+        $this->inner->next();
 
-        if (!$this->generator->valid()) {
+        if (!$this->inner->valid()) {
             $this->done = true;
         }
 
