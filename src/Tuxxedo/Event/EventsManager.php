@@ -113,4 +113,15 @@ class EventsManager implements EventsManagerInterface
             );
         }
     }
+
+    public function fireLazy(
+        string $eventClass,
+        \Closure $event,
+    ): void {
+        if ($this->findListenersFor($eventClass) === []) {
+            return;
+        }
+
+        $this->fire($event());
+    }
 }
