@@ -299,6 +299,7 @@ class Response implements ResponseInterface, ResponsableInterface
      * @param string[]|null $columns
      * @param HeaderInterface[] $headers
      */
+    #[\NoDiscard]
     public static function streamCsv(
         \Closure|\Generator $generator,
         string $separator = ',',
@@ -330,6 +331,7 @@ class Response implements ResponseInterface, ResponsableInterface
      * @param \Closure(): \Generator<SseEventInterface>|\Generator<SseEventInterface> $generator
      * @param HeaderInterface[] $headers
      */
+    #[\NoDiscard]
     public static function streamSse(
         \Closure|\Generator $generator,
         array $headers = [],
