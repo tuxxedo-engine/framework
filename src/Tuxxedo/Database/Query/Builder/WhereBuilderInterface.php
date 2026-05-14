@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Builder;
 
+// @todo Consider multi binding for one condition, e.g. where('a = :a AND b > :b', ['a' => ..., 'b' => ...])
 interface WhereBuilderInterface extends BuilderInterface
 {
     public function hasConstraints(): bool;
