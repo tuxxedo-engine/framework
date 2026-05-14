@@ -26,6 +26,7 @@ use Tuxxedo\Model\MetaData\MetaDataInterface;
 // @todo Implement a cache strategy
 // @todo Support readonly model objects
 // @todo Dirty models handling
+// @todo Consider findWhere and other shorthands?
 #[DefaultImplementation(class: ModelsManager::class, lifecycle: Lifecycle::PERSISTENT)]
 interface ModelsManagerInterface
 {
