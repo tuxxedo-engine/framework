@@ -86,7 +86,6 @@ class TextCompilerProvider implements CompilerProviderInterface
             $compiler->state->directives->asBool('lumi.autoescape') &&
             !$this->canDisableAutoEscapeFor($node->operand)
         ) {
-            // @todo Consider whether a lumi.autoescape_context should exist to override this
             return \sprintf(
                 '<?= $this->filter(%s, \'escape_html\'); ?>',
                 $value,
