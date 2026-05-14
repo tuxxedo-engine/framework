@@ -18,6 +18,8 @@ use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Debug\DebugErrorHandler;
+use Tuxxedo\Event\EventsManager;
+use Tuxxedo\Event\EventsManagerInterface;
 use Tuxxedo\Http\Kernel\Dispatcher;
 use Tuxxedo\Http\Kernel\DispatcherInterface;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
@@ -33,7 +35,6 @@ use Tuxxedo\Router\RouterInterface;
 use Tuxxedo\Router\StaticRouter;
 
 // @todo Implement a dotenv loader here
-// @todo Event handling support
 class ApplicationConfigurator implements ApplicationConfiguratorInterface
 {
     public private(set) ?ConfigInterface $config = null;
@@ -46,6 +47,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
     public private(set) ?RouterInterface $router = null;
     public private(set) ?ResponseEmitterInterface $emitter = null;
     public private(set) ?DispatcherInterface $dispatcher = null;
+    public private(set) ?EventsManagerInterface $eventsManager = null;
     public private(set) ?UrlInterface $url = null;
 
     public private(set) array $middleware = [];
@@ -127,24 +129,10 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         return $this;
     }
 
-    public function withoutConfig(): self
-    {
-        $this->config = null;
-
-        return $this;
-    }
-
     public function withConfig(
         ConfigInterface $config,
     ): self {
         $this->config = $config;
-
-        return $this;
-    }
-
-    public function withoutContainer(): self
-    {
-        $this->container = null;
 
         return $this;
     }
@@ -192,6 +180,14 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         DispatcherInterface $dispatcher,
     ): self {
         $this->dispatcher = $dispatcher;
+
+        return $this;
+    }
+
+    public function withEventsManager(
+        EventsManagerInterface $eventsManager,
+    ): self {
+        $this->eventsManager = $eventsManager;
 
         return $this;
     }
@@ -297,34 +293,12 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
     public function build(): KernelInterface
     {
         $container = $this->container ?? new Container();
+
         $container->persistent($container);
-
-        if ($this->config !== null) {
-            $container->persistent($this->config);
-        } else {
-            $container->persistentLazy(
-                ConfigInterface::class,
-                static fn (): ConfigInterface => new Config(),
-            );
-        }
-
-        if ($this->emitter !== null) {
-            $container->persistent($this->emitter);
-        } else {
-            $container->persistentLazy(
-                ResponseEmitterInterface::class,
-                static fn (): ResponseEmitterInterface => new ResponseEmitter(),
-            );
-        }
-
-        if ($this->dispatcher !== null) {
-            $container->persistent($this->dispatcher);
-        } else {
-            $container->persistentLazy(
-                DispatcherInterface::class,
-                static fn (): DispatcherInterface => new Dispatcher(),
-            );
-        }
+        $container->persistent($this->config ?? Config::class);
+        $container->persistent($this->emitter ?? ResponseEmitter::class);
+        $container->persistent($this->dispatcher ?? Dispatcher::class);
+        $container->persistent($this->eventsManager ?? EventsManager::class);
 
         if ($this->url !== null) {
             $container->persistent($this->url);

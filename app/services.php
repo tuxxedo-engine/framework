@@ -14,7 +14,6 @@ declare(strict_types=1);
 use App\Subscribers\UserSubscriber;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionManager;
-use Tuxxedo\Event\EventsManager;
 use Tuxxedo\Event\EventsManagerInterface;
 use Tuxxedo\Logger\LoggerInterface;
 use Tuxxedo\Logger\StreamLogger;
@@ -22,7 +21,10 @@ use Tuxxedo\View\Lumi\LumiConfigurator;
 use Tuxxedo\View\Lumi\LumiViewRender;
 use Tuxxedo\View\ViewRenderInterface;
 
-return static function (ContainerInterface $container): void {
+return static function (
+    ContainerInterface $container,
+    EventsManagerInterface $eventsManager,
+): void {
     $container->persistent(ConnectionManager::class);
 
     $container->persistentLazy(
@@ -46,14 +48,5 @@ return static function (ContainerInterface $container): void {
         ),
     );
 
-    $container->persistentLazy(
-        EventsManager::class,
-        static function (ContainerInterface $container): EventsManagerInterface {
-            $eventsManager = new EventsManager($container);
-
-            $eventsManager->registerSubscriber(UserSubscriber::class);
-
-            return $eventsManager;
-        },
-    );
+    $eventsManager->registerSubscriber(UserSubscriber::class);
 };

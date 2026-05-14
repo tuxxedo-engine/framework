@@ -15,6 +15,7 @@ namespace Tuxxedo\Application;
 
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Event\EventsManagerInterface;
 use Tuxxedo\Http\Kernel\DispatcherInterface;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
 use Tuxxedo\Http\Kernel\KernelInterface;
@@ -81,6 +82,10 @@ interface ApplicationConfiguratorInterface
         get;
     }
 
+    public ?EventsManagerInterface $eventsManager {
+        get;
+    }
+
     public ?UrlInterface $url {
         get;
     }
@@ -129,13 +134,9 @@ interface ApplicationConfiguratorInterface
         string $url,
     ): self;
 
-    public function withoutConfig(): self;
-
     public function withConfig(
         ConfigInterface $config,
     ): self;
-
-    public function withoutContainer(): self;
 
     public function withContainer(
         ContainerInterface $container,
@@ -157,6 +158,10 @@ interface ApplicationConfiguratorInterface
 
     public function withDispatcher(
         DispatcherInterface $dispatcher,
+    ): self;
+
+    public function withEventsManager(
+        EventsManagerInterface $eventsManager,
     ): self;
 
     public function withUrl(
