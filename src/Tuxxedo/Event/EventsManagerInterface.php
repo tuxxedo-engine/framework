@@ -16,7 +16,6 @@ namespace Tuxxedo\Event;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 
-// @todo Event prioritization instead of first to come via registerSubscriber()
 // @todo Request deferred event queuing?
 #[DefaultImplementation(class: EventsManager::class, lifecycle: Lifecycle::PERSISTENT)]
 interface EventsManagerInterface
@@ -26,6 +25,7 @@ interface EventsManagerInterface
      */
     public function registerSubscriber(
         string|object $subscriber,
+        ListenerPriority $priority = ListenerPriority::NORMAL,
     ): void;
 
     public function fire(

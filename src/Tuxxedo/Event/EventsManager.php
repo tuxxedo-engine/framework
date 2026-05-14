@@ -21,7 +21,7 @@ use Tuxxedo\Reflection\ClassReflector;
 class EventsManager implements EventsManagerInterface
 {
     /**
-     * @var array<\Closure(): object>
+     * @var array<array{0: \Closure(): object, 1: ListenerPriority}>
      */
     private array $subscribers = [];
 
@@ -37,6 +37,7 @@ class EventsManager implements EventsManagerInterface
 
     public function registerSubscriber(
         string|object $subscriber,
+        ListenerPriority $priority = ListenerPriority::NORMAL,
     ): void {
         if (\is_string($subscriber)) {
             $subscriber = fn (): object => $this->container->resolve($subscriber);
@@ -44,12 +45,15 @@ class EventsManager implements EventsManagerInterface
             $subscriber = fn (): object => $subscriber;
         }
 
-        $this->subscribers[] = $subscriber;
+        $this->subscribers[] = [
+            $subscriber,
+            $priority,
+        ];
     }
 
     private function discoverListeners(): void
     {
-        foreach ($this->subscribers as $subscriber) {
+        foreach ($this->subscribers as [$subscriber, $priority]) {
             $subscriber = $subscriber();
 
             foreach (ClassReflector::createFromObject($subscriber)->methodsWithAttribute(Listener::class) as $method) {
@@ -75,8 +79,16 @@ class EventsManager implements EventsManagerInterface
                 $this->listeners[$eventType][] = new DispatchableListener(
                     callback: $eventCallback,
                     eventName: $eventParameter->name,
+                    priority: $method->getAttribute(Listener::class)->priority ?? $priority,
                 );
             }
+        }
+
+        foreach (\array_keys($this->listeners) as $eventType) {
+            \uasort(
+                $this->listeners[$eventType],
+                static fn (DispatchableListenerInterface $a, DispatchableListenerInterface $b): int => $a->priority->value <=> $b->priority->value,
+            );
         }
 
         $this->subscribers = [];

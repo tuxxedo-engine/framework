@@ -13,20 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Event;
 
-interface DispatchableListenerInterface
+enum ListenerPriority: int
 {
-    /**
-     * @var \Closure(): void
-     */
-    public \Closure $callback {
-        get;
-    }
-
-    public string $eventName {
-        get;
-    }
-
-    public ListenerPriority $priority {
-        get;
-    }
+    case HIGH = -1;
+    case NORMAL = 0;
+    case LOW = 1;
 }

@@ -21,6 +21,7 @@ readonly class DispatchableListener implements DispatchableListenerInterface
     public function __construct(
         public \Closure $callback,
         public string $eventName,
+        public ListenerPriority $priority = ListenerPriority::NORMAL,
     ) {
     }
 }

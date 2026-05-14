@@ -13,7 +13,13 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Event\Attribute;
 
+use Tuxxedo\Event\ListenerPriority;
+
 #[\Attribute(flags: \Attribute::TARGET_METHOD)]
 readonly class Listener
 {
+    public function __construct(
+        public ?ListenerPriority $priority = null,
+    ) {
+    }
 }
