@@ -265,7 +265,7 @@ class Response implements ResponseInterface, ResponsableInterface
             body: $body,
         )->withHeaders(
             headers: $headers,
-            replace: true,
+            replace: \sizeof($headers) > 0,
         );
     }
 
@@ -289,7 +289,39 @@ class Response implements ResponseInterface, ResponsableInterface
             body: $body,
         )->withHeaders(
             headers: $headers,
-            replace: true,
+            replace: \sizeof($headers) > 0,
+        );
+    }
+
+    /**
+     * @param \Closure(): \Generator<scalar[]>|\Generator<scalar[]> $generator
+     * @param string[]|null $columns
+     * @param HeaderInterface[] $headers
+     */
+    public static function streamCsv(
+        \Closure|\Generator $generator,
+        string $separator = ',',
+        string $enclosure = '"',
+        string $eol = "\n",
+        ?array $columns = null,
+        array $headers = [],
+        ResponseCode $responseCode = ResponseCode::OK,
+    ): static {
+        $body = Stream::fromCsv(
+            generator: $generator,
+            separator: $separator,
+            enclosure: $enclosure,
+            eol: $eol,
+            columns: $columns,
+        );
+
+        return new static(
+            headers: $body->headers,
+            responseCode: $responseCode,
+            body: $body,
+        )->withHeaders(
+            headers: $headers,
+            replace: \sizeof($headers) > 0,
         );
     }
 

@@ -71,6 +71,29 @@ class Stream implements StreamInterface
     }
 
     /**
+     * @param \Closure(): \Generator<scalar[]>|\Generator<scalar[]> $generator
+     * @param string[]|null $columns
+     */
+    public static function fromCsv(
+        \Closure|\Generator $generator,
+        string $separator = ',',
+        string $enclosure = '"',
+        string $eol = "\n",
+        ?array $columns = null,
+    ): static {
+        return new static(
+            streamProxy: new CsvStreamProxy(
+                generator: $generator,
+                separator: $separator,
+                enclosure: $enclosure,
+                eol: $eol,
+                columns: $columns,
+            ),
+            autoFlush: true,
+        );
+    }
+
+    /**
      * @param positive-int $chunkSize
      *
      * @throws HttpException
