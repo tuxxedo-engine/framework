@@ -254,17 +254,18 @@ class Response implements ResponseInterface, ResponsableInterface
                 autoFlush: $autoFlush,
                 chunkSize: $chunkSize,
             );
-        } elseif ($stream instanceof StreamInterface) {
+        } else {
+            /** @var StreamInterface $body */
             $body = $stream;
         }
 
         return new static(
-            headers: $body->headers ?? [],
+            headers: $body->headers,
             responseCode: $responseCode,
-            body: $body ?? '',
+            body: $body,
         )->withHeaders(
             headers: $headers,
-            replace: !isset($body),
+            replace: true,
         );
     }
 
