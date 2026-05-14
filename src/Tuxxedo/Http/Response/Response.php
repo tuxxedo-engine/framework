@@ -18,6 +18,7 @@ use Tuxxedo\Http\CookieInterface;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
+use Tuxxedo\Http\Response\Stream\SseEventInterface;
 use Tuxxedo\Http\Response\Stream\Stream;
 use Tuxxedo\Http\Response\Stream\StreamInterface;
 use Tuxxedo\Router\RouterInterface;
@@ -319,6 +320,26 @@ class Response implements ResponseInterface, ResponsableInterface
             headers: $body->headers,
             responseCode: $responseCode,
             body: $body,
+        )->withHeaders(
+            headers: $headers,
+            replace: \sizeof($headers) > 0,
+        );
+    }
+
+    /**
+     * @param \Closure(): \Generator<SseEventInterface>|\Generator<SseEventInterface> $generator
+     * @param HeaderInterface[] $headers
+     */
+    public static function streamSse(
+        \Closure|\Generator $generator,
+        array $headers = [],
+        ResponseCode $responseCode = ResponseCode::OK,
+    ): static {
+        return new static(
+            body: Stream::fromSse(
+                generator: $generator,
+            ),
+            responseCode: $responseCode,
         )->withHeaders(
             headers: $headers,
             replace: \sizeof($headers) > 0,

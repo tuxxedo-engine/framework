@@ -94,6 +94,20 @@ class Stream implements StreamInterface
     }
 
     /**
+     * @param \Closure(): \Generator<SseEventInterface>|\Generator<SseEventInterface> $generator
+     */
+    public static function fromSse(
+        \Closure|\Generator $generator,
+    ): static {
+        return new static(
+            streamProxy: new SseStreamProxy(
+                generator: $generator,
+            ),
+            autoFlush: true,
+        );
+    }
+
+    /**
      * @param positive-int $chunkSize
      *
      * @throws HttpException
