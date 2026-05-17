@@ -32,6 +32,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
 
+// Look into hello_world_dce breaking, specifically the for loop body is consumed
 class DceOptimizer extends AbstractOptimizer
 {
     /**

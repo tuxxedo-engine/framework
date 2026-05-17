@@ -16,6 +16,7 @@ namespace Tuxxedo\View\Lumi\Highlight;
 use Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 
+// @todo Support IncludeNode
 interface HighlighterInterface
 {
     /**
