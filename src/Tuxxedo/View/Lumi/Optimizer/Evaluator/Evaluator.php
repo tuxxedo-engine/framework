@@ -55,16 +55,16 @@ class Evaluator implements EvaluatorInterface
             return $node;
         }
 
+        if ($type === Type::BOOL) {
+            return LiteralNode::createBool($this->toBool($node));
+        }
+
         $value = $this->castValue($type, $node->operand);
 
         return new LiteralNode(
-            operand: match (true) {
-                \is_bool($value) => $value
-                    ? 'true'
-                    : 'false',
-                \is_null($value) => 'null',
-                default => \strval($value),
-            },
+            operand: $value === null
+                ? 'null'
+                : \strval($value),
             type: $type,
         );
     }
@@ -136,8 +136,7 @@ class Evaluator implements EvaluatorInterface
             return false;
         }
 
-        /** @var bool */
-        return $this->castValue(Type::BOOL, $node->operand);
+        return \boolval($this->castNodeToValue($node));
     }
 
     public function isTrue(
@@ -189,9 +188,7 @@ class Evaluator implements EvaluatorInterface
         LiteralNode|IdentifierNode $node,
     ): bool {
         if ($node instanceof IdentifierNode) {
-            do {
-                $node = $scope->get($node);
-            } while ($node instanceof IdentifierNode);
+            $node = $this->dereferenceIdentifier($scope, $node);
 
             if (!$node instanceof LiteralNode) {
                 return false;
@@ -210,9 +207,7 @@ class Evaluator implements EvaluatorInterface
         LiteralNode|IdentifierNode $node,
     ): bool {
         if ($node instanceof IdentifierNode) {
-            do {
-                $node = $scope->get($node);
-            } while ($node instanceof IdentifierNode);
+            $node = $this->dereferenceIdentifier($scope, $node);
 
             if (!$node instanceof LiteralNode) {
                 return false;
@@ -231,9 +226,7 @@ class Evaluator implements EvaluatorInterface
         LiteralNode|IdentifierNode $node,
     ): bool {
         if ($node instanceof IdentifierNode) {
-            do {
-                $node = $scope->get($node);
-            } while ($node instanceof IdentifierNode);
+            $node = $this->dereferenceIdentifier($scope, $node);
 
             if (!$node instanceof LiteralNode) {
                 return false;
@@ -314,10 +307,6 @@ class Evaluator implements EvaluatorInterface
 
         if ($node instanceof UnaryOpNode) {
             return $this->unaryOp($scope, $node);
-        }
-
-        if ($node instanceof AssignmentNode) {
-            return $this->assignment($scope, $node);
         }
 
         if ($node instanceof LiteralNode) {
