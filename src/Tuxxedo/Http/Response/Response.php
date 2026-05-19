@@ -23,6 +23,7 @@ use Tuxxedo\Http\Response\Stream\Stream;
 use Tuxxedo\Http\Response\Stream\StreamInterface;
 use Tuxxedo\Router\RouterInterface;
 
+// @todo Download helper method for Content-Disposition?
 class Response implements ResponseInterface, ResponsableInterface
 {
     /**
