@@ -286,17 +286,17 @@ class ExpressionReducerTest extends TestCase
     public static function divisibleNumericPairs(): \Generator
     {
         yield [
+            LiteralNode::createInt(6),
             LiteralNode::createInt(2),
-            LiteralNode::createInt(3),
+            6,
             2,
-            3,
         ];
 
         yield [
-            LiteralNode::createInt(-5),
-            LiteralNode::createInt(3),
-            -5,
-            3,
+            LiteralNode::createInt(-10),
+            LiteralNode::createInt(2),
+            -10,
+            2,
         ];
 
         yield [
@@ -304,6 +304,13 @@ class ExpressionReducerTest extends TestCase
             LiteralNode::createInt(7),
             0,
             7,
+        ];
+
+        yield [
+            LiteralNode::createInt(7),
+            LiteralNode::createInt(2),
+            7,
+            2,
         ];
 
         yield [
@@ -325,6 +332,20 @@ class ExpressionReducerTest extends TestCase
             LiteralNode::createInt(2),
             0.5,
             2,
+        ];
+
+        yield [
+            LiteralNode::createInt(5),
+            LiteralNode::createFloat(0.5),
+            5,
+            0.5,
+        ];
+
+        yield [
+            LiteralNode::createInt(5),
+            LiteralNode::createFloat(0.25),
+            5,
+            0.25,
         ];
 
         yield [
@@ -370,10 +391,10 @@ class ExpressionReducerTest extends TestCase
         ];
 
         yield [
-            LiteralNode::createString('-5'),
-            LiteralNode::createInt(3),
-            -5,
-            3,
+            LiteralNode::createInt(10),
+            LiteralNode::createString('0.5'),
+            10,
+            0.5,
         ];
     }
 
@@ -858,8 +879,6 @@ class ExpressionReducerTest extends TestCase
         );
     }
 
-    // @todo Fix this case, precision seems to be wrong here
-    /**
     #[DataProvider('divisibleNumericPairs')]
     public function testReduceDivideQuotientsDivisibleNumericPairs(
         LiteralNode $left,
@@ -875,7 +894,7 @@ class ExpressionReducerTest extends TestCase
 
         self::assertInstanceOf(LiteralNode::class, $result);
 
-        /** @var int|float $actual *
+        /** @var int|float $actual */
         $actual = $this->evaluator->castNodeToValue($result);
 
         self::assertSame(
@@ -883,7 +902,6 @@ class ExpressionReducerTest extends TestCase
             $actual,
         );
     }
-    */
 
     #[DataProvider('nonNumericLiteralPairs')]
     public function testReduceDivideReturnsNullForNonNumericPairs(
