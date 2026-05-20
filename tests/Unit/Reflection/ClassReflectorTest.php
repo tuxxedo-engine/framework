@@ -15,6 +15,8 @@ namespace Unit\Reflection;
 
 use Fixture\Reflection\AnotherSimpleAttribute;
 use Fixture\Reflection\ClassIntrospector;
+use Fixture\Reflection\MethodIntrospector;
+use Fixture\Reflection\PropertyIntrospector;
 use Fixture\Reflection\SimpleAttribute;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Reflection\ClassReflector;
@@ -102,5 +104,45 @@ class ClassReflectorTest extends TestCase
 
         self::assertSame('one', $attributes[0]->value);
         self::assertSame('two', $attributes[1]->value);
+    }
+
+    public function testClassPropertiesWithAttribute(): void
+    {
+        $reflection = ClassReflector::createFromObject(new PropertyIntrospector());
+
+        $properties = \iterator_to_array($reflection->propertiesWithAttribute(SimpleAttribute::class));
+
+        self::assertCount(2, $properties);
+        self::assertSame('one', $properties[0]->name);
+        self::assertSame('two', $properties[1]->name);
+    }
+
+    public function testClassPropertiesWithAttributeYieldsEmptyWhenNoneMatch(): void
+    {
+        $reflection = ClassReflector::createFromObject(new PropertyIntrospector());
+
+        $properties = \iterator_to_array($reflection->propertiesWithAttribute(AnotherSimpleAttribute::class));
+
+        self::assertCount(0, $properties);
+    }
+
+    public function testClassMethodsWithAttribute(): void
+    {
+        $reflection = ClassReflector::createFromObject(new MethodIntrospector());
+
+        $methods = \iterator_to_array($reflection->methodsWithAttribute(SimpleAttribute::class));
+
+        self::assertCount(2, $methods);
+        self::assertSame('one', $methods[0]->name);
+        self::assertSame('two', $methods[1]->name);
+    }
+
+    public function testClassMethodsWithAttributeYieldsEmptyWhenNoneMatch(): void
+    {
+        $reflection = ClassReflector::createFromObject(new MethodIntrospector());
+
+        $methods = \iterator_to_array($reflection->methodsWithAttribute(AnotherSimpleAttribute::class));
+
+        self::assertCount(0, $methods);
     }
 }

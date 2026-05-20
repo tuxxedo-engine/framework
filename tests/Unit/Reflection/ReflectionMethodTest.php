@@ -105,4 +105,39 @@ class ReflectionMethodTest extends TestCase
 
         $reflection->parameter('nonexistent');
     }
+
+    public function testMethodParametersWithAttribute(): void
+    {
+        $reflection = new MethodReflector(
+            reflector: (new \ReflectionClass(MethodIntrospector::class)->getMethod('four')),
+        );
+
+        $parameters = \iterator_to_array($reflection->parametersWithAttribute(SimpleAttribute::class));
+
+        self::assertCount(2, $parameters);
+        self::assertSame('a', $parameters[0]->name);
+        self::assertSame('c', $parameters[1]->name);
+    }
+
+    public function testMethodParametersWithAttributeYieldsEmptyWhenNoneMatch(): void
+    {
+        $reflection = new MethodReflector(
+            reflector: (new \ReflectionClass(MethodIntrospector::class)->getMethod('four')),
+        );
+
+        $parameters = \iterator_to_array($reflection->parametersWithAttribute(AnotherSimpleAttribute::class));
+
+        self::assertCount(0, $parameters);
+    }
+
+    public function testMethodParametersWithAttributeYieldsEmptyForMethodWithoutAttributedParameters(): void
+    {
+        $reflection = new MethodReflector(
+            reflector: (new \ReflectionClass(MethodIntrospector::class)->getMethod('three')),
+        );
+
+        $parameters = \iterator_to_array($reflection->parametersWithAttribute(SimpleAttribute::class));
+
+        self::assertCount(0, $parameters);
+    }
 }

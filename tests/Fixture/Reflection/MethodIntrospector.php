@@ -30,4 +30,13 @@ class MethodIntrospector
     public function three(string $name, int $count): void
     {
     }
+
+    public function four(
+        #[SimpleAttribute(value: 'first')]
+        string $a,
+        string $b,
+        #[SimpleAttribute(value: 'third')]
+        int $c,
+    ): void {
+    }
 }
