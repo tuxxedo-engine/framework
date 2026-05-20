@@ -263,7 +263,7 @@ class ExpressionReducer implements ExpressionReducerInterface
             return null;
         }
 
-        if (\intval($rightValue) === 0) {
+        if ($rightValue === 0 || $rightValue === 0.0) {
             return null;
         }
 
@@ -283,6 +283,17 @@ class ExpressionReducer implements ExpressionReducerInterface
             !$this->resolveNumber($scope, $right, $rightValue)
         ) {
             return null;
+        }
+
+        if (\is_float($leftValue) || \is_float($rightValue)) {
+            $leftValue = (float) $leftValue;
+            $rightValue = (float) $rightValue;
+
+            if ($rightValue === 0.0) {
+                return null;
+            }
+
+            return LiteralNode::createFromNativeType(\fmod($leftValue, $rightValue));
         }
 
         if (\intval($rightValue) === 0) {
