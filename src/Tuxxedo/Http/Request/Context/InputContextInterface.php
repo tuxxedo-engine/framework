@@ -44,7 +44,7 @@ interface InputContextInterface
 
     /**
      * @param '.'|',' $decimalPoint
-     * @param ','|'.' $thousandSeparator
+     * @param '.'|','|' ' $thousandSeparator
      */
     public function getFloat(
         string $name,
@@ -87,7 +87,7 @@ interface InputContextInterface
 
     /**
      * @param '.'|',' $decimalPoint
-     * @param ','|'.' $thousandSeparator
+     * @param '.'|','|' ' $thousandSeparator
      * @return float[]
      */
     public function getArrayOfFloat(

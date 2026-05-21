@@ -128,13 +128,18 @@ class EnvironmentInputContext implements InputContextInterface
             return $default;
         }
 
+        $raw = $input[$name];
+
+        if (\is_string($raw)) {
+            $raw = \str_replace($thousandSeparator, '', $raw);
+        }
+
         $value = \filter_var(
-            $input[$name],
+            $raw,
             \FILTER_VALIDATE_FLOAT,
             [
                 'options' => [
                     'decimal' => $decimalPoint,
-                    'thousand' => $thousandSeparator,
                 ],
             ],
         );
@@ -248,14 +253,24 @@ class EnvironmentInputContext implements InputContextInterface
             return [];
         }
 
+        $raw = $input[$name];
+
+        if (\is_array($raw)) {
+            $raw = \array_map(
+                static fn (mixed $entry): mixed => \is_string($entry)
+                    ? \str_replace($thousandSeparator, '', $entry)
+                    : $entry,
+                $raw,
+            );
+        }
+
         $value = \filter_var(
-            $input[$name],
+            $raw,
             \FILTER_VALIDATE_FLOAT,
             [
                 'flags' => \FILTER_REQUIRE_ARRAY,
                 'options' => [
                     'decimal' => $decimalPoint,
-                    'thousand' => $thousandSeparator,
                 ],
             ],
         );
