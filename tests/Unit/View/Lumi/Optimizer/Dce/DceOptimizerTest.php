@@ -900,6 +900,9 @@ class DceOptimizerTest extends TestCase
         $result = $this->optimize(
             nodes: [
                 new ForNode(
+                    key: new IdentifierNode(
+                        name: 'index',
+                    ),
                     value: new IdentifierNode(
                         name: 'item',
                     ),

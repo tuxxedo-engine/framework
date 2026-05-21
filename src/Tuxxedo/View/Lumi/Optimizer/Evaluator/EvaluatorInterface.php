@@ -23,6 +23,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
+// @todo This depends on the Reducer and the Reducer depends on this, resolved this circular dependency
 interface EvaluatorInterface
 {
     public function castValue(
