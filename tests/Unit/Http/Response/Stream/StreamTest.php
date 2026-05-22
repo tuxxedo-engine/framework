@@ -16,6 +16,8 @@ namespace Unit\Http\Response\Stream;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Response\Stream\GeneratorStreamProxy;
+use Tuxxedo\Http\Response\Stream\JsonStreamFormat;
+use Tuxxedo\Http\Response\Stream\SseEvent;
 use Tuxxedo\Http\Response\Stream\Stream;
 
 class StreamTest extends TestCase
@@ -361,8 +363,185 @@ class StreamTest extends TestCase
                     'a',
                 ];
             },
+            eol: "\r\n",
         );
 
         self::assertSame("a\r\n", $stream->read());
+    }
+
+    public function testFromSseWithClosure(): void
+    {
+        $stream = Stream::fromSse(
+            generator: static function (): \Generator {
+                yield SseEvent::create(
+                    data: 'hello',
+                );
+            },
+        );
+
+        self::assertSame("data: hello\n\n", $stream->read());
+    }
+
+    public function testFromSseWithGenerator(): void
+    {
+        $generator = (static function (): \Generator {
+            yield SseEvent::create(
+                data: 'hello',
+            );
+        })();
+
+        $stream = Stream::fromSse(
+            generator: $generator,
+        );
+
+        self::assertSame("data: hello\n\n", $stream->read());
+    }
+
+    public function testFromSseAutoFlushDefaultIsTrue(): void
+    {
+        $stream = Stream::fromSse(
+            generator: static function (): \Generator {
+                yield from [];
+            },
+        );
+
+        self::assertTrue($stream->autoFlush);
+    }
+
+    public function testFromSseExposesEventStreamHeaders(): void
+    {
+        $stream = Stream::fromSse(
+            generator: static function (): \Generator {
+                yield from [];
+            },
+        );
+
+        self::assertCount(2, $stream->headers);
+        self::assertSame('Content-Type', $stream->headers[0]->name);
+        self::assertSame('text/event-stream', $stream->headers[0]->value);
+        self::assertSame('Cache-Control', $stream->headers[1]->name);
+        self::assertSame('no-cache', $stream->headers[1]->value);
+    }
+
+    public function testFromSseGetContentsFormatsAllEvents(): void
+    {
+        $stream = Stream::fromSse(
+            generator: static function (): \Generator {
+                yield SseEvent::create(
+                    data: 'first',
+                    id: 'evt-1',
+                );
+
+                yield SseEvent::keepalive();
+
+                yield SseEvent::create(
+                    data: 'second',
+                );
+            },
+        );
+
+        self::assertSame(
+            "id: evt-1\ndata: first\n\n: keepalive\n\ndata: second\n\n",
+            $stream->getContents(),
+        );
+    }
+
+    public function testFromJsonWithClosure(): void
+    {
+        $stream = Stream::fromJson(
+            generator: static function (): \Generator {
+                yield [
+                    'a' => 1,
+                ];
+            },
+        );
+
+        self::assertSame("{\"a\":1}\n", $stream->read());
+    }
+
+    public function testFromJsonWithGenerator(): void
+    {
+        $generator = (static function (): \Generator {
+            yield [
+                'a' => 1,
+            ];
+        })();
+
+        $stream = Stream::fromJson(
+            generator: $generator,
+        );
+
+        self::assertSame("{\"a\":1}\n", $stream->read());
+    }
+
+    public function testFromJsonAutoFlushDefaultIsTrue(): void
+    {
+        $stream = Stream::fromJson(
+            generator: static function (): \Generator {
+                yield from [];
+            },
+        );
+
+        self::assertTrue($stream->autoFlush);
+    }
+
+    public function testFromJsonExposesJsonlContentTypeByDefault(): void
+    {
+        $stream = Stream::fromJson(
+            generator: static function (): \Generator {
+                yield from [];
+            },
+        );
+
+        self::assertCount(1, $stream->headers);
+        self::assertSame('Content-Type', $stream->headers[0]->name);
+        self::assertSame('application/x-ndjson', $stream->headers[0]->value);
+    }
+
+    public function testFromJsonExposesRfc7464ContentTypeWhenFormatSet(): void
+    {
+        $stream = Stream::fromJson(
+            generator: static function (): \Generator {
+                yield from [];
+            },
+            format: JsonStreamFormat::RFC7464,
+        );
+
+        self::assertSame('application/json-seq', $stream->headers[0]->value);
+    }
+
+    public function testFromJsonGetContentsFormatsJsonlItems(): void
+    {
+        $stream = Stream::fromJson(
+            generator: static function (): \Generator {
+                yield [
+                    'a' => 1,
+                ];
+
+                yield [
+                    'b' => 2,
+                ];
+            },
+        );
+
+        self::assertSame("{\"a\":1}\n{\"b\":2}\n", $stream->getContents());
+    }
+
+    public function testFromJsonGetContentsFormatsRfc7464Items(): void
+    {
+        $stream = Stream::fromJson(
+            generator: static function (): \Generator {
+                yield [
+                    'a' => 1,
+                ];
+
+                yield [
+                    'b' => 2,
+                ];
+            },
+            format: JsonStreamFormat::RFC7464,
+        );
+
+        self::assertSame("\x1e{\"a\":1}\n\x1e{\"b\":2}\n", $stream->getContents());
     }
 }

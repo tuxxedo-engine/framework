@@ -16,9 +16,30 @@ namespace Unit\Http\Response\Stream;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Http\Response\PrefersHeadersInterface;
 use Tuxxedo\Http\Response\Stream\CsvStreamProxy;
+use Tuxxedo\Http\Response\Stream\StreamProxyInterface;
 
 class CsvStreamProxyTest extends TestCase
 {
+    /**
+     * @param \Closure(): \Generator<scalar[]>|\Generator<scalar[]> $generator
+     * @param string[]|null $columns
+     */
+    private static function makeProxy(
+        \Closure|\Generator $generator,
+        string $separator = ',',
+        string $enclosure = '"',
+        string $eol = "\n",
+        ?array $columns = null,
+    ): StreamProxyInterface {
+        return new CsvStreamProxy(
+            generator: $generator,
+            separator: $separator,
+            enclosure: $enclosure,
+            eol: $eol,
+            columns: $columns,
+        );
+    }
+
     public function testConstructorWithClosure(): void
     {
         $proxy = new CsvStreamProxy(
@@ -72,13 +93,12 @@ class CsvStreamProxyTest extends TestCase
         self::assertSame('Content-Type', $proxy->headers[0]->name);
         self::assertSame('text/csv; charset=utf-8', $proxy->headers[0]->value);
     }
-
     public function testGetSizeAlwaysReturnsNull(): void
     {
-        $proxy = new CsvStreamProxy(
+        $proxy = self::makeProxy(
             generator: static function (): \Generator {
                 yield [
-                    'a',
+                    'a' => 1,
                 ];
             },
         );

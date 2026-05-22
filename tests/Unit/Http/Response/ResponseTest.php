@@ -20,6 +20,8 @@ use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseCode;
+use Tuxxedo\Http\Response\Stream\JsonStreamFormat;
+use Tuxxedo\Http\Response\Stream\SseEvent;
 use Tuxxedo\Http\Response\Stream\Stream;
 use Tuxxedo\Http\Response\Stream\StreamInterface;
 use Tuxxedo\Router\Route;
@@ -740,11 +742,287 @@ class ResponseTest extends TestCase
                     'a',
                 ];
             },
+            eol: "\r\n",
         );
 
         /** @var StreamInterface $body */
         $body = $response->body;
 
         self::assertSame("a\r\n", $body->getContents());
+    }
+
+    public function testStreamSseWithClosureReturnsStreamBody(): void
+    {
+        $response = Response::streamSse(
+            generator: static function (): \Generator {
+                yield SseEvent::create(
+                    data: 'hello',
+                );
+            },
+        );
+
+        self::assertInstanceOf(StreamInterface::class, $response->body);
+    }
+
+    public function testStreamSseWithGeneratorReturnsStreamBody(): void
+    {
+        $generator = (static function (): \Generator {
+            yield SseEvent::create(
+                data: 'hello',
+            );
+        })();
+
+        $response = Response::streamSse(
+            generator: $generator,
+        );
+
+        self::assertInstanceOf(StreamInterface::class, $response->body);
+    }
+
+    public function testStreamSseDefaultResponseCodeIsOk(): void
+    {
+        $response = Response::streamSse(
+            generator: static function (): \Generator {
+                yield from [];
+            },
+        );
+
+        self::assertSame(ResponseCode::OK, $response->responseCode);
+    }
+
+    public function testStreamSsePropagatesCustomResponseCode(): void
+    {
+        $response = Response::streamSse(
+            generator: static function (): \Generator {
+                yield from [];
+            },
+            responseCode: ResponseCode::ACCEPTED,
+        );
+
+        self::assertSame(ResponseCode::ACCEPTED, $response->responseCode);
+    }
+
+    public function testStreamSseIncludesEventStreamHeadersFromProxy(): void
+    {
+        $response = Response::streamSse(
+            generator: static function (): \Generator {
+                yield from [];
+            },
+        );
+
+        $contentType = null;
+        $cacheControl = null;
+
+        foreach ($response->headers as $header) {
+            if (\strcasecmp($header->name, 'Content-Type') === 0) {
+                $contentType = $header->value;
+            }
+
+            if (\strcasecmp($header->name, 'Cache-Control') === 0) {
+                $cacheControl = $header->value;
+            }
+        }
+
+        self::assertSame('text/event-stream', $contentType);
+        self::assertSame('no-cache', $cacheControl);
+    }
+
+    public function testStreamSseMergesCustomHeaders(): void
+    {
+        $response = Response::streamSse(
+            generator: static function (): \Generator {
+                yield from [];
+            },
+            headers: [
+                new Header('X-Custom', 'value'),
+            ],
+        );
+
+        $custom = null;
+
+        foreach ($response->headers as $header) {
+            if (\strcasecmp($header->name, 'X-Custom') === 0) {
+                $custom = $header->value;
+            }
+        }
+
+        self::assertSame('value', $custom);
+    }
+
+    public function testStreamSseBodyFormatsEventsInOrder(): void
+    {
+        $response = Response::streamSse(
+            generator: static function (): \Generator {
+                yield SseEvent::create(
+                    data: 'first',
+                    id: 'evt-1',
+                );
+
+                yield SseEvent::create(
+                    data: 'second',
+                );
+            },
+        );
+
+        /** @var StreamInterface $body */
+        $body = $response->body;
+
+        self::assertSame(
+            "id: evt-1\ndata: first\n\ndata: second\n\n",
+            $body->getContents(),
+        );
+    }
+
+    public function testStreamJsonWithClosureReturnsStreamBody(): void
+    {
+        $response = Response::streamJson(
+            stream: static function (): \Generator {
+                yield [
+                    'a' => 1,
+                ];
+            },
+        );
+
+        self::assertInstanceOf(StreamInterface::class, $response->body);
+    }
+
+    public function testStreamJsonWithGeneratorReturnsStreamBody(): void
+    {
+        $generator = (static function (): \Generator {
+            yield [
+                'a' => 1,
+            ];
+        })();
+
+        $response = Response::streamJson(
+            stream: $generator,
+        );
+
+        self::assertInstanceOf(StreamInterface::class, $response->body);
+    }
+
+    public function testStreamJsonDefaultResponseCodeIsOk(): void
+    {
+        $response = Response::streamJson(
+            stream: static function (): \Generator {
+                yield from [];
+            },
+        );
+
+        self::assertSame(ResponseCode::OK, $response->responseCode);
+    }
+
+    public function testStreamJsonPropagatesCustomResponseCode(): void
+    {
+        $response = Response::streamJson(
+            stream: static function (): \Generator {
+                yield from [];
+            },
+            responseCode: ResponseCode::ACCEPTED,
+        );
+
+        self::assertSame(ResponseCode::ACCEPTED, $response->responseCode);
+    }
+
+    public function testStreamJsonIncludesJsonlContentTypeByDefault(): void
+    {
+        $response = Response::streamJson(
+            stream: static function (): \Generator {
+                yield from [];
+            },
+        );
+
+        $contentType = null;
+
+        foreach ($response->headers as $header) {
+            if (\strcasecmp($header->name, 'Content-Type') === 0) {
+                $contentType = $header->value;
+            }
+        }
+
+        self::assertSame('application/x-ndjson', $contentType);
+    }
+
+    public function testStreamJsonIncludesRfc7464ContentTypeWhenFormatSet(): void
+    {
+        $response = Response::streamJson(
+            stream: static function (): \Generator {
+                yield from [];
+            },
+            format: JsonStreamFormat::RFC7464,
+        );
+
+        $contentType = null;
+
+        foreach ($response->headers as $header) {
+            if (\strcasecmp($header->name, 'Content-Type') === 0) {
+                $contentType = $header->value;
+            }
+        }
+
+        self::assertSame('application/json-seq', $contentType);
+    }
+
+    public function testStreamJsonMergesCustomHeaders(): void
+    {
+        $response = Response::streamJson(
+            stream: static function (): \Generator {
+                yield from [];
+            },
+            headers: [
+                new Header('X-Custom', 'value'),
+            ],
+        );
+
+        $custom = null;
+
+        foreach ($response->headers as $header) {
+            if (\strcasecmp($header->name, 'X-Custom') === 0) {
+                $custom = $header->value;
+            }
+        }
+
+        self::assertSame('value', $custom);
+    }
+
+    public function testStreamJsonBodyEncodesItemsAsJsonl(): void
+    {
+        $response = Response::streamJson(
+            stream: static function (): \Generator {
+                yield [
+                    'a' => 1,
+                ];
+
+                yield [
+                    'b' => 2,
+                ];
+            },
+        );
+
+        /** @var StreamInterface $body */
+        $body = $response->body;
+
+        self::assertSame("{\"a\":1}\n{\"b\":2}\n", $body->getContents());
+    }
+
+    public function testStreamJsonBodyEncodesItemsAsRfc7464(): void
+    {
+        $response = Response::streamJson(
+            stream: static function (): \Generator {
+                yield [
+                    'a' => 1,
+                ];
+
+                yield [
+                    'b' => 2,
+                ];
+            },
+            format: JsonStreamFormat::RFC7464,
+        );
+
+        /** @var StreamInterface $body */
+        $body = $response->body;
+
+        self::assertSame("\x1e{\"a\":1}\n\x1e{\"b\":2}\n", $body->getContents());
     }
 }

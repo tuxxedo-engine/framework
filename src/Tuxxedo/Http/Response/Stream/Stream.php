@@ -54,7 +54,7 @@ class Stream implements StreamInterface
     }
 
     /**
-     * @param \Closure(): \Generator<string>|\Generator<string> $generator
+     * @param \Closure(): \Generator<mixed>|\Generator<mixed> $generator
      */
     #[\NoDiscard]
     public static function fromJson(

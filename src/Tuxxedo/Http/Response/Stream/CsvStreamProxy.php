@@ -32,7 +32,7 @@ class CsvStreamProxy implements StreamProxyInterface, PrefersHeadersInterface
      * @param string[]|null $columns
      */
     public function __construct(
-        \Closure|\Generator     $generator,
+        \Closure|\Generator $generator,
         private readonly string $separator = ',',
         private readonly string $enclosure = '"',
         private readonly string $eol = "\n",

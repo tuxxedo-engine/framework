@@ -19,7 +19,7 @@ use Tuxxedo\Http\Response\PrefersHeadersInterface;
 class JsonStreamProxy implements StreamProxyInterface, PrefersHeadersInterface
 {
     /**
-     * @var \Generator<string>
+     * @var \Generator<mixed>
      */
     private \Generator $inner;
     private bool $done = false;
@@ -27,7 +27,7 @@ class JsonStreamProxy implements StreamProxyInterface, PrefersHeadersInterface
     public readonly array $headers;
 
     /**
-     * @param \Closure(): \Generator<string>|\Generator<string> $generator
+     * @param \Closure(): \Generator<mixed>|\Generator<mixed> $generator
      */
     public function __construct(
         \Closure|\Generator $generator,

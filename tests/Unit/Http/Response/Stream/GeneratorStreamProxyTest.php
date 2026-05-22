@@ -22,11 +22,13 @@ class GeneratorStreamProxyTest extends TestCase
     /**
      * @param \Closure(): \Generator<string>|\Generator<string> $generator
      */
-    private static function makeProxy(\Closure|\Generator $generator): StreamProxyInterface
-    {
-        return new GeneratorStreamProxy($generator);
+    private static function makeProxy(
+        \Closure|\Generator $generator,
+    ): StreamProxyInterface {
+        return new GeneratorStreamProxy(
+            generator: $generator,
+        );
     }
-
 
     public function testConstructorWithClosure(): void
     {

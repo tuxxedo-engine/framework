@@ -18,6 +18,7 @@ use Tuxxedo\Http\CookieInterface;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
+use Tuxxedo\Http\Response\Stream\JsonStreamFormat;
 use Tuxxedo\Http\Response\Stream\SseEventInterface;
 use Tuxxedo\Http\Response\Stream\Stream;
 use Tuxxedo\Http\Response\Stream\StreamInterface;
@@ -272,17 +273,19 @@ class Response implements ResponseInterface, ResponsableInterface
     }
 
     /**
-     * @param \Closure(): \Generator<string>|\Generator<string> $stream
+     * @param \Closure(): \Generator<mixed>|\Generator<mixed> $stream
      * @param HeaderInterface[] $headers
      */
     #[\NoDiscard]
     public static function streamJson(
         \Closure|\Generator $stream,
+        JsonStreamFormat $format = JsonStreamFormat::JSONL,
         array $headers = [],
         ResponseCode $responseCode = ResponseCode::OK,
     ): static {
         $body = Stream::fromJson(
             generator: $stream,
+            format: $format,
         );
 
         return new static(
@@ -338,11 +341,14 @@ class Response implements ResponseInterface, ResponsableInterface
         array $headers = [],
         ResponseCode $responseCode = ResponseCode::OK,
     ): static {
+        $body = Stream::fromSse(
+            generator: $generator,
+        );
+
         return new static(
-            body: Stream::fromSse(
-                generator: $generator,
-            ),
+            headers: $body->headers,
             responseCode: $responseCode,
+            body: $body,
         )->withHeaders(
             headers: $headers,
             replace: \sizeof($headers) > 0,
