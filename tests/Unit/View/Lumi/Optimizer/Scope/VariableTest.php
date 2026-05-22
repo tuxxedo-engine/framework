@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Unit\View\Lumi\Optimizer\Scope;
 
+use Fixture\View\Lumi\Optimizer\Scope\IdentifierReturningEvaluator;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\View\Lumi\Optimizer\Evaluator\Evaluator;
 use Tuxxedo\View\Lumi\Optimizer\Scope\Lattice;
@@ -453,6 +454,31 @@ class VariableTest extends TestCase
 
         self::assertSame(Lattice::CONST, $variable->lattice);
         self::assertSame(7, $variable->computedValue);
+    }
+
+    public function testMutateWithDereferenceReturningIdentifierBecomesVarying(): void
+    {
+        $scope = new Scope(
+            evaluator: new IdentifierReturningEvaluator(
+                alwaysReturn: new IdentifierNode(
+                    name: 'sentinel',
+                ),
+            ),
+        );
+
+        $variable = Variable::fromVarying(
+            scope: $scope,
+            name: 'dst',
+        );
+
+        $variable->mutate(
+            scope: $scope,
+            value: new IdentifierNode(
+                name: 'src',
+            ),
+        );
+
+        self::assertSame(Lattice::VARYING, $variable->lattice);
     }
 
     public function testMutateWithCompoundOperatorReturningNonLiteralBecomesVarying(): void
