@@ -251,4 +251,118 @@ class StreamTest extends TestCase
 
         self::assertFalse($stream->closed);
     }
+
+    public function testFromCsvWithClosure(): void
+    {
+        $stream = Stream::fromCsv(
+            generator: static function (): \Generator {
+                yield [
+                    'a',
+                    'b',
+                ];
+            },
+        );
+
+        self::assertSame("a,b\n", $stream->read());
+    }
+
+    public function testFromCsvWithGenerator(): void
+    {
+        $generator = (static function (): \Generator {
+            yield [
+                'a',
+                'b',
+            ];
+        })();
+
+        $stream = Stream::fromCsv(
+            generator: $generator,
+        );
+
+        self::assertSame("a,b\n", $stream->read());
+    }
+
+    public function testFromCsvAutoFlushDefaultIsTrue(): void
+    {
+        $stream = Stream::fromCsv(
+            generator: static function (): \Generator {
+                yield from [];
+            },
+        );
+
+        self::assertTrue($stream->autoFlush);
+    }
+
+    public function testFromCsvExposesCsvContentTypeHeader(): void
+    {
+        $stream = Stream::fromCsv(
+            generator: static function (): \Generator {
+                yield from [];
+            },
+        );
+
+        self::assertCount(1, $stream->headers);
+        self::assertSame('Content-Type', $stream->headers[0]->name);
+        self::assertSame('text/csv; charset=utf-8', $stream->headers[0]->value);
+    }
+
+    public function testFromCsvIncludesColumnsRowInContents(): void
+    {
+        $stream = Stream::fromCsv(
+            generator: static function (): \Generator {
+                yield [
+                    'value-a',
+                    'value-b',
+                ];
+            },
+            columns: [
+                'col-a',
+                'col-b',
+            ],
+        );
+
+        self::assertSame("col-a,col-b\nvalue-a,value-b\n", $stream->getContents());
+    }
+
+    public function testFromCsvPropagatesSeparatorOption(): void
+    {
+        $stream = Stream::fromCsv(
+            generator: static function (): \Generator {
+                yield [
+                    'a',
+                    'b',
+                ];
+            },
+            separator: ';',
+        );
+
+        self::assertSame("a;b\n", $stream->read());
+    }
+
+    public function testFromCsvPropagatesEnclosureOption(): void
+    {
+        $stream = Stream::fromCsv(
+            generator: static function (): \Generator {
+                yield [
+                    'a,b',
+                ];
+            },
+            enclosure: '\'',
+        );
+
+        self::assertSame("'a,b'\n", $stream->read());
+    }
+
+    public function testFromCsvPropagatesEolOption(): void
+    {
+        $stream = Stream::fromCsv(
+            generator: static function (): \Generator {
+                yield [
+                    'a',
+                ];
+            },
+        );
+
+        self::assertSame("a\r\n", $stream->read());
+    }
 }

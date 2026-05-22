@@ -581,4 +581,170 @@ class ResponseTest extends TestCase
             $this->makeContainerWithRoute('home'),
         );
     }
+
+    public function testStreamCsvWithClosureReturnsStreamBody(): void
+    {
+        $response = Response::streamCsv(
+            generator: static function (): \Generator {
+                yield [
+                    'a',
+                    'b',
+                ];
+            },
+        );
+
+        self::assertInstanceOf(StreamInterface::class, $response->body);
+    }
+
+    public function testStreamCsvWithGeneratorReturnsStreamBody(): void
+    {
+        $generator = (static function (): \Generator {
+            yield [
+                'a',
+                'b',
+            ];
+        })();
+
+        $response = Response::streamCsv(
+            generator: $generator,
+        );
+
+        self::assertInstanceOf(StreamInterface::class, $response->body);
+    }
+
+    public function testStreamCsvDefaultResponseCodeIsOk(): void
+    {
+        $response = Response::streamCsv(
+            generator: static function (): \Generator {
+                yield from [];
+            },
+        );
+
+        self::assertSame(ResponseCode::OK, $response->responseCode);
+    }
+
+    public function testStreamCsvPropagatesCustomResponseCode(): void
+    {
+        $response = Response::streamCsv(
+            generator: static function (): \Generator {
+                yield from [];
+            },
+            responseCode: ResponseCode::ACCEPTED,
+        );
+
+        self::assertSame(ResponseCode::ACCEPTED, $response->responseCode);
+    }
+
+    public function testStreamCsvIncludesCsvContentTypeHeaderFromProxy(): void
+    {
+        $response = Response::streamCsv(
+            generator: static function (): \Generator {
+                yield from [];
+            },
+        );
+
+        $contentType = null;
+
+        foreach ($response->headers as $header) {
+            if (\strcasecmp($header->name, 'Content-Type') === 0) {
+                $contentType = $header->value;
+            }
+        }
+
+        self::assertSame('text/csv; charset=utf-8', $contentType);
+    }
+
+    public function testStreamCsvMergesCustomHeaders(): void
+    {
+        $response = Response::streamCsv(
+            generator: static function (): \Generator {
+                yield from [];
+            },
+            headers: [
+                new Header('X-Custom', 'value'),
+            ],
+        );
+
+        $custom = null;
+
+        foreach ($response->headers as $header) {
+            if (\strcasecmp($header->name, 'X-Custom') === 0) {
+                $custom = $header->value;
+            }
+        }
+
+        self::assertSame('value', $custom);
+    }
+
+    public function testStreamCsvBodyContainsColumnsAndRows(): void
+    {
+        $response = Response::streamCsv(
+            generator: static function (): \Generator {
+                yield [
+                    'value-a',
+                    'value-b',
+                ];
+            },
+            columns: [
+                'col-a',
+                'col-b',
+            ],
+        );
+
+        /** @var StreamInterface $body */
+        $body = $response->body;
+
+        self::assertSame("col-a,col-b\nvalue-a,value-b\n", $body->getContents());
+    }
+
+    public function testStreamCsvBodyHonorsSeparatorOption(): void
+    {
+        $response = Response::streamCsv(
+            generator: static function (): \Generator {
+                yield [
+                    'a',
+                    'b',
+                ];
+            },
+            separator: ';',
+        );
+
+        /** @var StreamInterface $body */
+        $body = $response->body;
+
+        self::assertSame("a;b\n", $body->getContents());
+    }
+
+    public function testStreamCsvBodyHonorsEnclosureOption(): void
+    {
+        $response = Response::streamCsv(
+            generator: static function (): \Generator {
+                yield [
+                    'a,b',
+                ];
+            },
+            enclosure: '\'',
+        );
+
+        /** @var StreamInterface $body */
+        $body = $response->body;
+
+        self::assertSame("'a,b'\n", $body->getContents());
+    }
+
+    public function testStreamCsvBodyHonorsEolOption(): void
+    {
+        $response = Response::streamCsv(
+            generator: static function (): \Generator {
+                yield [
+                    'a',
+                ];
+            },
+        );
+
+        /** @var StreamInterface $body */
+        $body = $response->body;
+
+        self::assertSame("a\r\n", $body->getContents());
+    }
 }
