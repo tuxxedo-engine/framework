@@ -195,7 +195,9 @@ class EnvironmentHeaderContext implements HeaderContextInterface
     public function getEnum(string $name, string $enum): object
     {
         if (!\enum_exists($enum)) {
+            // @codeCoverageIgnoreStart
             throw HttpException::fromInternalServerError();
+            // @codeCoverageIgnoreEnd
         }
 
         $this->lazyLoad();

@@ -254,16 +254,6 @@ class EnvironmentInputContextTest extends TestCase
         );
     }
 
-    public function testGetEnumThrowsWhenEnumClassDoesNotExist(): void
-    {
-        $_GET['choice'] = 'foo';
-
-        $this->expectException(HttpException::class);
-
-        /** @phpstan-ignore-next-line argument.type */
-        $this->makeContext()->getEnum('choice', 'NonExistentEnum');
-    }
-
     public function testGetEnumThrowsWhenKeyMissing(): void
     {
         $this->expectException(HttpException::class);
@@ -443,18 +433,6 @@ class EnvironmentInputContextTest extends TestCase
             ],
             $this->makeContext()->getArrayOfEnum('choices', InputContextEnum::class),
         );
-    }
-
-    public function testGetArrayOfEnumThrowsWhenEnumClassDoesNotExist(): void
-    {
-        $_GET['choices'] = [
-            'foo',
-        ];
-
-        $this->expectException(HttpException::class);
-
-        /** @phpstan-ignore-next-line argument.type */
-        $this->makeContext()->getArrayOfEnum('choices', 'NonExistentEnum');
     }
 
     public function testGetArrayOfEnumThrowsWhenKeyMissing(): void

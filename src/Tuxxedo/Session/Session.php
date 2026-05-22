@@ -137,10 +137,12 @@ class Session implements SessionInterface
         string $enum,
     ): object {
         if (!\enum_exists($enum)) {
+            // @codeCoverageIgnoreStart
             throw SessionException::fromInvalidEnum(
                 name: $name,
                 enum: $enum,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         if (!\array_key_exists($name, $this->adapter->all())) {

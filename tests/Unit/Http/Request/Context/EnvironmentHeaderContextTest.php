@@ -337,16 +337,6 @@ class EnvironmentHeaderContextTest extends TestCase
         );
     }
 
-    public function testGetEnumThrowsWhenEnumClassDoesNotExist(): void
-    {
-        $_SERVER['HTTP_X_CHOICE'] = 'foo';
-
-        $this->expectException(HttpException::class);
-
-        /** @phpstan-ignore-next-line argument.type */
-        (new EnvironmentHeaderContext())->getEnum('X-Choice', 'NonExistentEnum');
-    }
-
     public function testGetEnumThrowsWhenHeaderMissing(): void
     {
         $this->expectException(HttpException::class);

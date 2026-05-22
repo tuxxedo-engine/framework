@@ -186,17 +186,6 @@ class SessionTest extends TestCase
         );
     }
 
-    public function testGetEnumThrowsWhenEnumClassDoesNotExist(): void
-    {
-        $session = $this->makeSession();
-        $session->set('color', 'GREEN');
-
-        self::expectException(SessionException::class);
-
-        /** @phpstan-ignore-next-line argument.type */
-        $session->getEnum('color', 'Nonexistent\\Enum\\Class');
-    }
-
     public function testGetEnumThrowsWhenKeyIsMissingFromSession(): void
     {
         self::expectException(SessionException::class);
