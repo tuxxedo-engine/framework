@@ -22,8 +22,10 @@ use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
+use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
+use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
 class ExpressionReducerTest extends TestCase
@@ -2803,6 +2805,1355 @@ class ExpressionReducerTest extends TestCase
                     left: LiteralNode::createInt(1),
                     right: LiteralNode::createInt(2),
                     operator: BinarySymbol::NULL_SAFE_ACCESS,
+                ),
+            ),
+        );
+    }
+
+    /**
+     * @return \Generator<array{
+     *     0: LiteralNode,
+     *     1: LiteralNode,
+     *     2: bool,
+     * }>
+     */
+    public static function orBoolPairs(): \Generator
+    {
+        yield [
+            LiteralNode::createBool(true),
+            LiteralNode::createBool(true),
+            true,
+        ];
+
+        yield [
+            LiteralNode::createBool(true),
+            LiteralNode::createBool(false),
+            true,
+        ];
+
+        yield [
+            LiteralNode::createBool(false),
+            LiteralNode::createBool(true),
+            true,
+        ];
+
+        yield [
+            LiteralNode::createBool(false),
+            LiteralNode::createBool(false),
+            false,
+        ];
+    }
+
+    #[DataProvider('orBoolPairs')]
+    public function testReduceOrCombinesBooleanLiterals(
+        LiteralNode $left,
+        LiteralNode $right,
+        bool $expected,
+    ): void {
+        $result = $this->reducer->reduceOr(
+            scope: $this->scope,
+            left: $left,
+            right: $right,
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::BOOL, $result->type);
+        self::assertSame(
+            $expected
+                ? 'true'
+                : 'false',
+            $result->operand,
+        );
+    }
+
+    public function testReduceOrCoercesNonBooleanTruthyLeftToTrue(): void
+    {
+        $result = $this->reducer->reduceOr(
+            scope: $this->scope,
+            left: LiteralNode::createInt(1),
+            right: LiteralNode::createBool(false),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::BOOL, $result->type);
+        self::assertSame('true', $result->operand);
+    }
+
+    public function testReduceOrCoercesNonBooleanFalsyOperandsToFalse(): void
+    {
+        $result = $this->reducer->reduceOr(
+            scope: $this->scope,
+            left: LiteralNode::createInt(0),
+            right: LiteralNode::createString(''),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::BOOL, $result->type);
+        self::assertSame('false', $result->operand);
+    }
+
+    public function testReduceOrCoercesNonBooleanTruthyRightToTrue(): void
+    {
+        $result = $this->reducer->reduceOr(
+            scope: $this->scope,
+            left: LiteralNode::createBool(false),
+            right: LiteralNode::createString('yes'),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::BOOL, $result->type);
+        self::assertSame('true', $result->operand);
+    }
+
+    public function testReduceOrResolvesIdentifiersWithComputedValues(): void
+    {
+        $this->assign(
+            name: 'a',
+            value: LiteralNode::createBool(false),
+        );
+
+        $this->assign(
+            name: 'b',
+            value: LiteralNode::createBool(true),
+        );
+
+        $result = $this->reducer->reduceOr(
+            scope: $this->scope,
+            left: new IdentifierNode(
+                name: 'a',
+            ),
+            right: new IdentifierNode(
+                name: 'b',
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::BOOL, $result->type);
+        self::assertSame('true', $result->operand);
+    }
+
+    public function testReduceOrReturnsNullForUnresolvableLeft(): void
+    {
+        self::assertNull(
+            $this->reducer->reduceOr(
+                scope: $this->scope,
+                left: new IdentifierNode(
+                    name: 'missing',
+                ),
+                right: LiteralNode::createBool(true),
+            ),
+        );
+    }
+
+    public function testReduceOrReturnsNullForUnresolvableRight(): void
+    {
+        self::assertNull(
+            $this->reducer->reduceOr(
+                scope: $this->scope,
+                left: LiteralNode::createBool(true),
+                right: new IdentifierNode(
+                    name: 'missing',
+                ),
+            ),
+        );
+    }
+
+    public function testReduceOrViaReduceBinaryOpDispatch(): void
+    {
+        $result = $this->reducer->reduceBinaryOp(
+            scope: $this->scope,
+            node: new BinaryOpNode(
+                left: LiteralNode::createBool(false),
+                right: LiteralNode::createBool(true),
+                operator: BinarySymbol::OR,
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::BOOL, $result->type);
+        self::assertSame('true', $result->operand);
+    }
+
+    /**
+     * @return \Generator<array{
+     *     0: LiteralNode,
+     *     1: bool,
+     * }>
+     */
+    public static function notLiterals(): \Generator
+    {
+        yield [
+            LiteralNode::createBool(true),
+            false,
+        ];
+
+        yield [
+            LiteralNode::createBool(false),
+            true,
+        ];
+
+        yield [
+            LiteralNode::createInt(1),
+            false,
+        ];
+
+        yield [
+            LiteralNode::createInt(0),
+            true,
+        ];
+
+        yield [
+            LiteralNode::createInt(-5),
+            false,
+        ];
+
+        yield [
+            LiteralNode::createFloat(3.14),
+            false,
+        ];
+
+        yield [
+            LiteralNode::createFloat(0.0),
+            true,
+        ];
+
+        yield [
+            LiteralNode::createString('yes'),
+            false,
+        ];
+
+        yield [
+            LiteralNode::createString(''),
+            true,
+        ];
+
+        yield [
+            LiteralNode::createString('0'),
+            true,
+        ];
+
+        yield [
+            LiteralNode::createNull(),
+            true,
+        ];
+    }
+
+    #[DataProvider('notLiterals')]
+    public function testReduceNotInvertsTruthinessOfLiterals(
+        LiteralNode $expression,
+        bool $expected,
+    ): void {
+        $result = $this->reducer->reduceNot(
+            scope: $this->scope,
+            expression: $expression,
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::BOOL, $result->type);
+        self::assertSame(
+            $expected
+                ? 'true'
+                : 'false',
+            $result->operand,
+        );
+    }
+
+    public function testReduceNotResolvesIdentifierWithComputedValue(): void
+    {
+        $this->assign(
+            name: 'flag',
+            value: LiteralNode::createBool(true),
+        );
+
+        $result = $this->reducer->reduceNot(
+            scope: $this->scope,
+            expression: new IdentifierNode(
+                name: 'flag',
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::BOOL, $result->type);
+        self::assertSame('false', $result->operand);
+    }
+
+    public function testReduceNotResolvesIdentifierWithTruthyIntValue(): void
+    {
+        $this->assign(
+            name: 'count',
+            value: LiteralNode::createInt(5),
+        );
+
+        $result = $this->reducer->reduceNot(
+            scope: $this->scope,
+            expression: new IdentifierNode(
+                name: 'count',
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::BOOL, $result->type);
+        self::assertSame('false', $result->operand);
+    }
+
+    public function testReduceNotReturnsNullForUnresolvableIdentifier(): void
+    {
+        self::assertNull(
+            $this->reducer->reduceNot(
+                scope: $this->scope,
+                expression: new IdentifierNode(
+                    name: 'missing',
+                ),
+            ),
+        );
+    }
+
+    public function testReduceNotViaReduceUnaryOpDispatch(): void
+    {
+        $result = $this->reducer->reduceUnaryOp(
+            scope: $this->scope,
+            node: new UnaryOpNode(
+                operand: LiteralNode::createBool(true),
+                operator: UnarySymbol::NOT,
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::BOOL, $result->type);
+        self::assertSame('false', $result->operand);
+    }
+
+    /**
+     * @return \Generator<array{
+     *     0: LiteralNode,
+     *     1: Type,
+     *     2: string,
+     * }>
+     */
+    public static function negateLiterals(): \Generator
+    {
+        yield [
+            LiteralNode::createInt(5),
+            Type::INT,
+            '-5',
+        ];
+
+        yield [
+            LiteralNode::createInt(-7),
+            Type::INT,
+            '7',
+        ];
+
+        yield [
+            LiteralNode::createInt(0),
+            Type::INT,
+            '0',
+        ];
+
+        yield [
+            LiteralNode::createFloat(3.14),
+            Type::FLOAT,
+            '-3.14',
+        ];
+
+        yield [
+            LiteralNode::createFloat(-2.5),
+            Type::FLOAT,
+            '2.5',
+        ];
+    }
+
+    #[DataProvider('negateLiterals')]
+    public function testReduceNegateInvertsNumericLiterals(
+        LiteralNode $expression,
+        Type $expectedType,
+        string $expectedOperand,
+    ): void {
+        $result = $this->reducer->reduceNegate(
+            scope: $this->scope,
+            expression: $expression,
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame($expectedType, $result->type);
+        self::assertSame($expectedOperand, $result->operand);
+    }
+
+    public function testReduceNegateReturnsNullForStringLiteral(): void
+    {
+        self::assertNull(
+            $this->reducer->reduceNegate(
+                scope: $this->scope,
+                expression: LiteralNode::createString('5'),
+            ),
+        );
+    }
+
+    public function testReduceNegateReturnsNullForBoolLiteral(): void
+    {
+        self::assertNull(
+            $this->reducer->reduceNegate(
+                scope: $this->scope,
+                expression: LiteralNode::createBool(true),
+            ),
+        );
+    }
+
+    public function testReduceNegateReturnsNullForNullLiteral(): void
+    {
+        self::assertNull(
+            $this->reducer->reduceNegate(
+                scope: $this->scope,
+                expression: LiteralNode::createNull(),
+            ),
+        );
+    }
+
+    public function testReduceNegateResolvesIdentifierWithComputedIntValue(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(42),
+        );
+
+        $result = $this->reducer->reduceNegate(
+            scope: $this->scope,
+            expression: new IdentifierNode(
+                name: 'x',
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::INT, $result->type);
+        self::assertSame('-42', $result->operand);
+    }
+
+    public function testReduceNegateResolvesIdentifierWithComputedFloatValue(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createFloat(1.5),
+        );
+
+        $result = $this->reducer->reduceNegate(
+            scope: $this->scope,
+            expression: new IdentifierNode(
+                name: 'x',
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::FLOAT, $result->type);
+        self::assertSame('-1.5', $result->operand);
+    }
+
+    public function testReduceNegateReturnsNullForUnresolvableIdentifier(): void
+    {
+        self::assertNull(
+            $this->reducer->reduceNegate(
+                scope: $this->scope,
+                expression: new IdentifierNode(
+                    name: 'missing',
+                ),
+            ),
+        );
+    }
+
+    public function testReduceNegateViaReduceUnaryOpDispatch(): void
+    {
+        $result = $this->reducer->reduceUnaryOp(
+            scope: $this->scope,
+            node: new UnaryOpNode(
+                operand: LiteralNode::createInt(8),
+                operator: UnarySymbol::NEGATE,
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::INT, $result->type);
+        self::assertSame('-8', $result->operand);
+    }
+
+    /**
+     * @return \Generator<array{
+     *     0: LiteralNode,
+     *     1: int,
+     * }>
+     */
+    public static function bitwiseNotLiterals(): \Generator
+    {
+        yield [
+            LiteralNode::createInt(5),
+            -6,
+        ];
+
+        yield [
+            LiteralNode::createInt(0),
+            -1,
+        ];
+
+        yield [
+            LiteralNode::createInt(-1),
+            0,
+        ];
+
+        yield [
+            LiteralNode::createInt(0xFF),
+            -256,
+        ];
+
+        yield [
+            LiteralNode::createString('10'),
+            -11,
+        ];
+
+        yield [
+            LiteralNode::createBool(true),
+            -2,
+        ];
+
+        yield [
+            LiteralNode::createBool(false),
+            -1,
+        ];
+
+        yield [
+            LiteralNode::createNull(),
+            -1,
+        ];
+    }
+
+    #[DataProvider('bitwiseNotLiterals')]
+    public function testReduceBitwiseNotInvertsBitsOfLiteralCastToInt(
+        LiteralNode $expression,
+        int $expected,
+    ): void {
+        $result = $this->reducer->reduceBitwiseNot(
+            scope: $this->scope,
+            expression: $expression,
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::INT, $result->type);
+        self::assertSame((string) $expected, $result->operand);
+    }
+
+    public function testReduceBitwiseNotResolvesIdentifierWithComputedValue(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(0b1010),
+        );
+
+        $result = $this->reducer->reduceBitwiseNot(
+            scope: $this->scope,
+            expression: new IdentifierNode(
+                name: 'x',
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::INT, $result->type);
+        self::assertSame((string) ~0b1010, $result->operand);
+    }
+
+    public function testReduceBitwiseNotReturnsNullForUnresolvableIdentifier(): void
+    {
+        self::assertNull(
+            $this->reducer->reduceBitwiseNot(
+                scope: $this->scope,
+                expression: new IdentifierNode(
+                    name: 'missing',
+                ),
+            ),
+        );
+    }
+
+    public function testReduceBitwiseNotViaReduceUnaryOpDispatch(): void
+    {
+        $result = $this->reducer->reduceUnaryOp(
+            scope: $this->scope,
+            node: new UnaryOpNode(
+                operand: LiteralNode::createInt(0),
+                operator: UnarySymbol::BITWISE_NOT,
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::INT, $result->type);
+        self::assertSame('-1', $result->operand);
+    }
+
+    public function testReduceIncrementPreReturnsIncrementedIntForIdentifier(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(5),
+        );
+
+        $result = $this->reducer->reduceIncrementPre(
+            scope: $this->scope,
+            expression: new IdentifierNode(
+                name: 'x',
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::INT, $result->type);
+        self::assertSame('6', $result->operand);
+    }
+
+    public function testReduceIncrementPreReturnsIncrementedFloatForIdentifier(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createFloat(1.5),
+        );
+
+        $result = $this->reducer->reduceIncrementPre(
+            scope: $this->scope,
+            expression: new IdentifierNode(
+                name: 'x',
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::FLOAT, $result->type);
+        self::assertSame('2.5', $result->operand);
+    }
+
+    public function testReduceIncrementPreMutatesVariableInScope(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(5),
+        );
+
+        $this->reducer->reduceIncrementPre(
+            scope: $this->scope,
+            expression: new IdentifierNode(
+                name: 'x',
+            ),
+        );
+
+        self::assertSame(
+            6,
+            $this->scope->get(
+                name: new IdentifierNode(
+                    name: 'x',
+                ),
+            )->computedValue,
+        );
+    }
+
+    public function testReduceIncrementPreReturnsNullForLiteralOperand(): void
+    {
+        self::assertNull(
+            $this->reducer->reduceIncrementPre(
+                scope: $this->scope,
+                expression: LiteralNode::createInt(5),
+            ),
+        );
+    }
+
+    public function testReduceIncrementPreReturnsNullForUnassignedIdentifier(): void
+    {
+        self::assertNull(
+            $this->reducer->reduceIncrementPre(
+                scope: $this->scope,
+                expression: new IdentifierNode(
+                    name: 'missing',
+                ),
+            ),
+        );
+    }
+
+    public function testReduceIncrementPreReturnsNullForNonNumericIdentifier(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createString('abc'),
+        );
+
+        self::assertNull(
+            $this->reducer->reduceIncrementPre(
+                scope: $this->scope,
+                expression: new IdentifierNode(
+                    name: 'x',
+                ),
+            ),
+        );
+    }
+
+    public function testReduceIncrementPreViaReduceUnaryOpDispatch(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(10),
+        );
+
+        $result = $this->reducer->reduceUnaryOp(
+            scope: $this->scope,
+            node: new UnaryOpNode(
+                operand: new IdentifierNode(
+                    name: 'x',
+                ),
+                operator: UnarySymbol::INCREMENT_PRE,
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::INT, $result->type);
+        self::assertSame('11', $result->operand);
+    }
+
+    public function testReduceIncrementPostReturnsOriginalIntForIdentifier(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(5),
+        );
+
+        $result = $this->reducer->reduceIncrementPost(
+            scope: $this->scope,
+            expression: new IdentifierNode(
+                name: 'x',
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::INT, $result->type);
+        self::assertSame('5', $result->operand);
+    }
+
+    public function testReduceIncrementPostReturnsOriginalFloatForIdentifier(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createFloat(1.5),
+        );
+
+        $result = $this->reducer->reduceIncrementPost(
+            scope: $this->scope,
+            expression: new IdentifierNode(
+                name: 'x',
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::FLOAT, $result->type);
+        self::assertSame('1.5', $result->operand);
+    }
+
+    public function testReduceIncrementPostMutatesVariableInScope(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(5),
+        );
+
+        $this->reducer->reduceIncrementPost(
+            scope: $this->scope,
+            expression: new IdentifierNode(
+                name: 'x',
+            ),
+        );
+
+        self::assertSame(
+            6,
+            $this->scope->get(
+                name: new IdentifierNode(
+                    name: 'x',
+                ),
+            )->computedValue,
+        );
+    }
+
+    public function testReduceIncrementPostReturnsNullForLiteralOperand(): void
+    {
+        self::assertNull(
+            $this->reducer->reduceIncrementPost(
+                scope: $this->scope,
+                expression: LiteralNode::createInt(5),
+            ),
+        );
+    }
+
+    public function testReduceIncrementPostReturnsNullForUnassignedIdentifier(): void
+    {
+        self::assertNull(
+            $this->reducer->reduceIncrementPost(
+                scope: $this->scope,
+                expression: new IdentifierNode(
+                    name: 'missing',
+                ),
+            ),
+        );
+    }
+
+    public function testReduceIncrementPostReturnsNullForNonNumericIdentifier(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createString('abc'),
+        );
+
+        self::assertNull(
+            $this->reducer->reduceIncrementPost(
+                scope: $this->scope,
+                expression: new IdentifierNode(
+                    name: 'x',
+                ),
+            ),
+        );
+    }
+
+    public function testReduceIncrementPostViaReduceUnaryOpDispatch(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(10),
+        );
+
+        $result = $this->reducer->reduceUnaryOp(
+            scope: $this->scope,
+            node: new UnaryOpNode(
+                operand: new IdentifierNode(
+                    name: 'x',
+                ),
+                operator: UnarySymbol::INCREMENT_POST,
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::INT, $result->type);
+        self::assertSame('10', $result->operand);
+        self::assertSame(
+            11,
+            $this->scope->get(
+                name: new IdentifierNode(
+                    name: 'x',
+                ),
+            )->computedValue,
+        );
+    }
+
+    public function testReduceDecrementPreReturnsDecrementedIntForIdentifier(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(5),
+        );
+
+        $result = $this->reducer->reduceDecrementPre(
+            scope: $this->scope,
+            expression: new IdentifierNode(
+                name: 'x',
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::INT, $result->type);
+        self::assertSame('4', $result->operand);
+    }
+
+    public function testReduceDecrementPreReturnsDecrementedFloatForIdentifier(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createFloat(2.5),
+        );
+
+        $result = $this->reducer->reduceDecrementPre(
+            scope: $this->scope,
+            expression: new IdentifierNode(
+                name: 'x',
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::FLOAT, $result->type);
+        self::assertSame('1.5', $result->operand);
+    }
+
+    public function testReduceDecrementPreMutatesVariableInScope(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(5),
+        );
+
+        $this->reducer->reduceDecrementPre(
+            scope: $this->scope,
+            expression: new IdentifierNode(
+                name: 'x',
+            ),
+        );
+
+        self::assertSame(
+            4,
+            $this->scope->get(
+                name: new IdentifierNode(
+                    name: 'x',
+                ),
+            )->computedValue,
+        );
+    }
+
+    public function testReduceDecrementPreReturnsNullForLiteralOperand(): void
+    {
+        self::assertNull(
+            $this->reducer->reduceDecrementPre(
+                scope: $this->scope,
+                expression: LiteralNode::createInt(5),
+            ),
+        );
+    }
+
+    public function testReduceDecrementPreReturnsNullForUnassignedIdentifier(): void
+    {
+        self::assertNull(
+            $this->reducer->reduceDecrementPre(
+                scope: $this->scope,
+                expression: new IdentifierNode(
+                    name: 'missing',
+                ),
+            ),
+        );
+    }
+
+    public function testReduceDecrementPreReturnsNullForNonNumericIdentifier(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createString('abc'),
+        );
+
+        self::assertNull(
+            $this->reducer->reduceDecrementPre(
+                scope: $this->scope,
+                expression: new IdentifierNode(
+                    name: 'x',
+                ),
+            ),
+        );
+    }
+
+    public function testReduceDecrementPreViaReduceUnaryOpDispatch(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(10),
+        );
+
+        $result = $this->reducer->reduceUnaryOp(
+            scope: $this->scope,
+            node: new UnaryOpNode(
+                operand: new IdentifierNode(
+                    name: 'x',
+                ),
+                operator: UnarySymbol::DECREMENT_PRE,
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::INT, $result->type);
+        self::assertSame('9', $result->operand);
+    }
+
+    public function testReduceDecrementPostReturnsOriginalIntForIdentifier(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(5),
+        );
+
+        $result = $this->reducer->reduceDecrementPost(
+            scope: $this->scope,
+            expression: new IdentifierNode(
+                name: 'x',
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::INT, $result->type);
+        self::assertSame('5', $result->operand);
+    }
+
+    public function testReduceDecrementPostReturnsOriginalFloatForIdentifier(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createFloat(2.5),
+        );
+
+        $result = $this->reducer->reduceDecrementPost(
+            scope: $this->scope,
+            expression: new IdentifierNode(
+                name: 'x',
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::FLOAT, $result->type);
+        self::assertSame('2.5', $result->operand);
+    }
+
+    public function testReduceDecrementPostMutatesVariableInScope(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(5),
+        );
+
+        $this->reducer->reduceDecrementPost(
+            scope: $this->scope,
+            expression: new IdentifierNode(
+                name: 'x',
+            ),
+        );
+
+        self::assertSame(
+            4,
+            $this->scope->get(
+                name: new IdentifierNode(
+                    name: 'x',
+                ),
+            )->computedValue,
+        );
+    }
+
+    public function testReduceDecrementPostReturnsNullForLiteralOperand(): void
+    {
+        self::assertNull(
+            $this->reducer->reduceDecrementPost(
+                scope: $this->scope,
+                expression: LiteralNode::createInt(5),
+            ),
+        );
+    }
+
+    public function testReduceDecrementPostReturnsNullForUnassignedIdentifier(): void
+    {
+        self::assertNull(
+            $this->reducer->reduceDecrementPost(
+                scope: $this->scope,
+                expression: new IdentifierNode(
+                    name: 'missing',
+                ),
+            ),
+        );
+    }
+
+    public function testReduceDecrementPostReturnsNullForNonNumericIdentifier(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createString('abc'),
+        );
+
+        self::assertNull(
+            $this->reducer->reduceDecrementPost(
+                scope: $this->scope,
+                expression: new IdentifierNode(
+                    name: 'x',
+                ),
+            ),
+        );
+    }
+
+    public function testReduceDecrementPostViaReduceUnaryOpDispatch(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(10),
+        );
+
+        $result = $this->reducer->reduceUnaryOp(
+            scope: $this->scope,
+            node: new UnaryOpNode(
+                operand: new IdentifierNode(
+                    name: 'x',
+                ),
+                operator: UnarySymbol::DECREMENT_POST,
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::INT, $result->type);
+        self::assertSame('10', $result->operand);
+        self::assertSame(
+            9,
+            $this->scope->get(
+                name: new IdentifierNode(
+                    name: 'x',
+                ),
+            )->computedValue,
+        );
+    }
+
+    public function testReduceAssignmentSubtractCombinesLeftAndRight(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(10),
+        );
+
+        $result = $this->reducer->reduceAssignment(
+            scope: $this->scope,
+            node: new AssignmentNode(
+                name: new IdentifierNode(
+                    name: 'x',
+                ),
+                value: LiteralNode::createInt(3),
+                operator: AssignmentSymbol::SUBTRACT,
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::INT, $result->type);
+        self::assertSame('7', $result->operand);
+    }
+
+    public function testReduceAssignmentMultiplyCombinesLeftAndRight(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(4),
+        );
+
+        $result = $this->reducer->reduceAssignment(
+            scope: $this->scope,
+            node: new AssignmentNode(
+                name: new IdentifierNode(
+                    name: 'x',
+                ),
+                value: LiteralNode::createInt(5),
+                operator: AssignmentSymbol::MULTIPLY,
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::INT, $result->type);
+        self::assertSame('20', $result->operand);
+    }
+
+    public function testReduceAssignmentDivideCombinesLeftAndRight(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(20),
+        );
+
+        $result = $this->reducer->reduceAssignment(
+            scope: $this->scope,
+            node: new AssignmentNode(
+                name: new IdentifierNode(
+                    name: 'x',
+                ),
+                value: LiteralNode::createInt(4),
+                operator: AssignmentSymbol::DIVIDE,
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::INT, $result->type);
+        self::assertSame('5', $result->operand);
+    }
+
+    public function testReduceAssignmentModulusCombinesLeftAndRight(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(10),
+        );
+
+        $result = $this->reducer->reduceAssignment(
+            scope: $this->scope,
+            node: new AssignmentNode(
+                name: new IdentifierNode(
+                    name: 'x',
+                ),
+                value: LiteralNode::createInt(3),
+                operator: AssignmentSymbol::MODULUS,
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::INT, $result->type);
+        self::assertSame('1', $result->operand);
+    }
+
+    public function testReduceAssignmentExponentiateCombinesLeftAndRight(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(2),
+        );
+
+        $result = $this->reducer->reduceAssignment(
+            scope: $this->scope,
+            node: new AssignmentNode(
+                name: new IdentifierNode(
+                    name: 'x',
+                ),
+                value: LiteralNode::createInt(5),
+                operator: AssignmentSymbol::EXPONENTIATE,
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::INT, $result->type);
+        self::assertSame('32', $result->operand);
+    }
+
+    public function testReduceAssignmentBitwiseAndCombinesLeftAndRight(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(0b1100),
+        );
+
+        $result = $this->reducer->reduceAssignment(
+            scope: $this->scope,
+            node: new AssignmentNode(
+                name: new IdentifierNode(
+                    name: 'x',
+                ),
+                value: LiteralNode::createInt(0b1010),
+                operator: AssignmentSymbol::BITWISE_AND,
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::INT, $result->type);
+        self::assertSame((string) 0b1000, $result->operand);
+    }
+
+    public function testReduceAssignmentBitwiseOrCombinesLeftAndRight(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(0b1100),
+        );
+
+        $result = $this->reducer->reduceAssignment(
+            scope: $this->scope,
+            node: new AssignmentNode(
+                name: new IdentifierNode(
+                    name: 'x',
+                ),
+                value: LiteralNode::createInt(0b0011),
+                operator: AssignmentSymbol::BITWISE_OR,
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::INT, $result->type);
+        self::assertSame((string) 0b1111, $result->operand);
+    }
+
+    public function testReduceAssignmentBitwiseXorCombinesLeftAndRight(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(0b1100),
+        );
+
+        $result = $this->reducer->reduceAssignment(
+            scope: $this->scope,
+            node: new AssignmentNode(
+                name: new IdentifierNode(
+                    name: 'x',
+                ),
+                value: LiteralNode::createInt(0b1010),
+                operator: AssignmentSymbol::BITWISE_XOR,
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::INT, $result->type);
+        self::assertSame((string) 0b0110, $result->operand);
+    }
+
+    public function testReduceAssignmentBitwiseShiftLeftCombinesLeftAndRight(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(1),
+        );
+
+        $result = $this->reducer->reduceAssignment(
+            scope: $this->scope,
+            node: new AssignmentNode(
+                name: new IdentifierNode(
+                    name: 'x',
+                ),
+                value: LiteralNode::createInt(4),
+                operator: AssignmentSymbol::BITWISE_SHIFT_LEFT,
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::INT, $result->type);
+        self::assertSame('16', $result->operand);
+    }
+
+    public function testReduceAssignmentBitwiseShiftRightCombinesLeftAndRight(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(32),
+        );
+
+        $result = $this->reducer->reduceAssignment(
+            scope: $this->scope,
+            node: new AssignmentNode(
+                name: new IdentifierNode(
+                    name: 'x',
+                ),
+                value: LiteralNode::createInt(2),
+                operator: AssignmentSymbol::BITWISE_SHIFT_RIGHT,
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::INT, $result->type);
+        self::assertSame('8', $result->operand);
+    }
+
+    public function testReduceAssignmentReturnsNullWhenLeftResolvesToNonLiteral(): void
+    {
+        self::assertNull(
+            $this->reducer->reduceAssignment(
+                scope: $this->scope,
+                node: new AssignmentNode(
+                    name: new IdentifierNode(
+                        name: 'missing',
+                    ),
+                    value: LiteralNode::createInt(1),
+                    operator: AssignmentSymbol::ADD,
+                ),
+            ),
+        );
+    }
+
+    public function testReduceAssignmentReturnsNullForUnsupportedOperator(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(5),
+        );
+
+        self::assertNull(
+            $this->reducer->reduceAssignment(
+                scope: $this->scope,
+                node: new AssignmentNode(
+                    name: new IdentifierNode(
+                        name: 'x',
+                    ),
+                    value: LiteralNode::createInt(7),
+                    operator: AssignmentSymbol::ASSIGN,
                 ),
             ),
         );

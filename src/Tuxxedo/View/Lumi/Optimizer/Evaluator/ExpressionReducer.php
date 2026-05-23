@@ -729,7 +729,7 @@ class ExpressionReducer implements ExpressionReducerInterface
         }
 
         $value = LiteralNode::createFromNativeType(
-            value: 1 - $numericValue,
+            value: $numericValue - 1,
         );
 
         $variable->mutate($scope, $value);
@@ -759,7 +759,7 @@ class ExpressionReducer implements ExpressionReducerInterface
         }
 
         $value = LiteralNode::createFromNativeType(
-            value: 1 - $numericValue,
+            value: $numericValue - 1,
         );
 
         $variable->mutate($scope, $value);
