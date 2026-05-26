@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Response\Stream;
 
+// @todo Should Generator style streams have a serializer or similar option to ease plumbing?
 interface StreamProxyInterface
 {
     public function eof(): bool;
