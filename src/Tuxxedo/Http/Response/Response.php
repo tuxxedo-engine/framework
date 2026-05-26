@@ -25,7 +25,6 @@ use Tuxxedo\Http\Response\Stream\StreamInterface;
 use Tuxxedo\Router\RouterInterface;
 
 // @todo Download helper method for Content-Disposition?
-// @todo allow $responseCode to be ResponseCode|int
 class Response implements ResponseInterface, ResponsableInterface
 {
     /**
@@ -33,14 +32,21 @@ class Response implements ResponseInterface, ResponsableInterface
      */
     private ?\Closure $responseResolver = null;
 
+    public readonly ResponseCode $responseCode;
+
     /**
      * @param HeaderInterface[] $headers
      */
     final public function __construct(
         public readonly StreamInterface|string $body = '',
         public readonly array $headers = [],
-        public readonly ResponseCode $responseCode = ResponseCode::OK,
+        ResponseCode|int $responseCode = ResponseCode::OK,
     ) {
+        if (!$responseCode instanceof ResponseCode) {
+            $responseCode = ResponseCode::from($responseCode);
+        }
+
+        $this->responseCode = $responseCode;
     }
 
     private function responseResolver(
@@ -75,7 +81,7 @@ class Response implements ResponseInterface, ResponsableInterface
         bool $prettyPrint = false,
         int $flags = 0,
         array $headers = [],
-        ResponseCode $responseCode = ResponseCode::OK,
+        ResponseCode|int $responseCode = ResponseCode::OK,
     ): static {
         try {
             if ($prettyPrint) {
@@ -111,7 +117,7 @@ class Response implements ResponseInterface, ResponsableInterface
     public static function capture(
         \Closure $callback,
         array $headers = [],
-        ResponseCode $responseCode = ResponseCode::OK,
+        ResponseCode|int $responseCode = ResponseCode::OK,
     ): static {
         \ob_start();
         $callback();
@@ -136,7 +142,7 @@ class Response implements ResponseInterface, ResponsableInterface
     public static function html(
         string $html,
         array $headers = [],
-        ResponseCode $responseCode = ResponseCode::OK,
+        ResponseCode|int $responseCode = ResponseCode::OK,
     ): static {
         return new static(
             headers: $headers,
@@ -155,7 +161,7 @@ class Response implements ResponseInterface, ResponsableInterface
     public static function text(
         string $text,
         array $headers = [],
-        ResponseCode $responseCode = ResponseCode::OK,
+        ResponseCode|int $responseCode = ResponseCode::OK,
     ): static {
         return new static(
             headers: $headers,
@@ -174,7 +180,7 @@ class Response implements ResponseInterface, ResponsableInterface
     public static function redirect(
         string $uri,
         array $headers = [],
-        ResponseCode $responseCode = ResponseCode::FOUND,
+        ResponseCode|int $responseCode = ResponseCode::FOUND,
         string $body = '',
     ): static {
         return new static(
@@ -196,7 +202,7 @@ class Response implements ResponseInterface, ResponsableInterface
         string $name,
         array $arguments = [],
         array $headers = [],
-        ResponseCode $responseCode = ResponseCode::FOUND,
+        ResponseCode|int $responseCode = ResponseCode::FOUND,
         string $body = '',
     ): static {
         $response = new static(
@@ -225,7 +231,7 @@ class Response implements ResponseInterface, ResponsableInterface
     #[\NoDiscard]
     public static function empty(
         array $headers = [],
-        ResponseCode $responseCode = ResponseCode::OK,
+        ResponseCode|int $responseCode = ResponseCode::OK,
     ): static {
         return new static(
             headers: $headers,
@@ -245,7 +251,7 @@ class Response implements ResponseInterface, ResponsableInterface
         bool $autoFlush = false,
         int $chunkSize = 8192,
         array $headers = [],
-        ResponseCode $responseCode = ResponseCode::OK,
+        ResponseCode|int $responseCode = ResponseCode::OK,
     ): static {
         if ($stream instanceof \Closure || $stream instanceof \Generator) {
             $body = Stream::fromGenerator(
@@ -282,7 +288,7 @@ class Response implements ResponseInterface, ResponsableInterface
         \Closure|\Generator $stream,
         JsonStreamFormat $format = JsonStreamFormat::JSONL,
         array $headers = [],
-        ResponseCode $responseCode = ResponseCode::OK,
+        ResponseCode|int $responseCode = ResponseCode::OK,
     ): static {
         $body = Stream::fromJson(
             generator: $stream,
@@ -312,7 +318,7 @@ class Response implements ResponseInterface, ResponsableInterface
         string $eol = "\n",
         ?array $columns = null,
         array $headers = [],
-        ResponseCode $responseCode = ResponseCode::OK,
+        ResponseCode|int $responseCode = ResponseCode::OK,
     ): static {
         $body = Stream::fromCsv(
             generator: $generator,
@@ -340,7 +346,7 @@ class Response implements ResponseInterface, ResponsableInterface
     public static function streamSse(
         \Closure|\Generator $generator,
         array $headers = [],
-        ResponseCode $responseCode = ResponseCode::OK,
+        ResponseCode|int $responseCode = ResponseCode::OK,
     ): static {
         $body = Stream::fromSse(
             generator: $generator,
@@ -532,9 +538,9 @@ class Response implements ResponseInterface, ResponsableInterface
         return clone (
             $this,
             [
-                'responseCode' => $responseCode instanceof ResponseCode
-                    ? $responseCode
-                    : ResponseCode::from($responseCode),
+                'responseCode' => !$responseCode instanceof ResponseCode
+                    ? ResponseCode::from($responseCode)
+                    : $responseCode,
             ],
         );
     }

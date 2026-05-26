@@ -53,6 +53,46 @@ class ResponseTest extends TestCase
         self::assertSame(ResponseCode::NOT_FOUND, $response->responseCode);
     }
 
+    public function testConstructorAcceptsResponseCodeAsInt(): void
+    {
+        $response = new Response(
+            responseCode: 404,
+        );
+
+        self::assertSame(ResponseCode::NOT_FOUND, $response->responseCode);
+    }
+
+    public function testConstructorAcceptsResponseCodeAsEnum(): void
+    {
+        $response = new Response(
+            responseCode: ResponseCode::CREATED,
+        );
+
+        self::assertSame(ResponseCode::CREATED, $response->responseCode);
+    }
+
+    public function testConstructorNormalizesIntToMatchingEnumCase(): void
+    {
+        $fromInt = new Response(
+            responseCode: 201,
+        );
+
+        $fromEnum = new Response(
+            responseCode: ResponseCode::CREATED,
+        );
+
+        self::assertSame($fromEnum->responseCode, $fromInt->responseCode);
+    }
+
+    public function testConstructorThrowsForUnknownIntResponseCode(): void
+    {
+        self::expectException(\ValueError::class);
+
+        new Response(
+            responseCode: 999,
+        );
+    }
+
     public function testToResponseReturnsSelf(): void
     {
         $response = new Response('hello');
