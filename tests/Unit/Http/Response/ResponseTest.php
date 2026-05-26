@@ -17,6 +17,7 @@ use PHPUnit\Framework\TestCase;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Http\Cookie;
 use Tuxxedo\Http\Header;
+use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseCode;
@@ -1064,5 +1065,298 @@ class ResponseTest extends TestCase
         $body = $response->body;
 
         self::assertSame("\x1e{\"a\":1}\n\x1e{\"b\":2}\n", $body->getContents());
+    }
+
+    private function findHeader(
+        Response $response,
+        string $name,
+    ): ?HeaderInterface {
+        foreach ($response->headers as $header) {
+            if (\strcasecmp($header->name, $name) === 0) {
+                return $header;
+            }
+        }
+
+        return null;
+    }
+
+    public function testDownloadWithStringBody(): void
+    {
+        $response = Response::download(
+            body: 'binary-content',
+            filename: 'file.bin',
+        );
+
+        self::assertSame('binary-content', $response->body);
+    }
+
+    public function testDownloadWithStreamBody(): void
+    {
+        $stream = Stream::fromGenerator(
+            static function (): \Generator {
+                yield 'chunk';
+            },
+        );
+
+        $response = Response::download(
+            body: $stream,
+            filename: 'file.bin',
+        );
+
+        self::assertSame($stream, $response->body);
+    }
+
+    public function testDownloadSetsDefaultContentTypeToOctetStream(): void
+    {
+        $response = Response::download(
+            body: 'data',
+            filename: 'file.bin',
+        );
+
+        $contentType = $this->findHeader($response, 'Content-Type');
+
+        self::assertNotNull($contentType);
+        self::assertSame('application/octet-stream', $contentType->value);
+    }
+
+    public function testDownloadAcceptsCustomContentType(): void
+    {
+        $response = Response::download(
+            body: 'data',
+            filename: 'report.pdf',
+            contentType: 'application/pdf',
+        );
+
+        $contentType = $this->findHeader($response, 'Content-Type');
+
+        self::assertNotNull($contentType);
+        self::assertSame('application/pdf', $contentType->value);
+    }
+
+    public function testDownloadReplacesContentTypeFromStreamBody(): void
+    {
+        $stream = Stream::fromJson(
+            generator: static function (): \Generator {
+                yield [
+                    'a' => 1,
+                ];
+            },
+        );
+
+        $response = Response::download(
+            body: $stream,
+            filename: 'file.bin',
+        );
+
+        $contentTypes = \array_values(
+            \array_filter(
+                $response->headers,
+                static fn (HeaderInterface $header): bool => \strcasecmp($header->name, 'Content-Type') === 0,
+            ),
+        );
+
+        self::assertCount(1, $contentTypes);
+        self::assertSame('application/octet-stream', $contentTypes[0]->value);
+    }
+
+    public function testDownloadMergesAdditionalHeaders(): void
+    {
+        $response = Response::download(
+            body: 'data',
+            filename: 'file.bin',
+            headers: [
+                new Header('X-Custom', 'value'),
+            ],
+        );
+
+        $custom = $this->findHeader($response, 'X-Custom');
+
+        self::assertNotNull($custom);
+        self::assertSame('value', $custom->value);
+    }
+
+    public function testDownloadSetsContentDispositionHeader(): void
+    {
+        $response = Response::download(
+            body: 'data',
+            filename: 'report.csv',
+        );
+
+        $disposition = $this->findHeader($response, 'Content-Disposition');
+
+        self::assertNotNull($disposition);
+        self::assertSame('attachment; filename="report.csv"', $disposition->value);
+    }
+
+    public function testDownloadDefaultResponseCodeIsOk(): void
+    {
+        $response = Response::download(
+            body: 'data',
+            filename: 'file.bin',
+        );
+
+        self::assertSame(ResponseCode::OK, $response->responseCode);
+    }
+
+    public function testDownloadAcceptsCustomResponseCodeEnum(): void
+    {
+        $response = Response::download(
+            body: 'data',
+            filename: 'file.bin',
+            responseCode: ResponseCode::CREATED,
+        );
+
+        self::assertSame(ResponseCode::CREATED, $response->responseCode);
+    }
+
+    public function testDownloadAcceptsIntResponseCode(): void
+    {
+        $response = Response::download(
+            body: 'data',
+            filename: 'file.bin',
+            responseCode: 201,
+        );
+
+        self::assertSame(ResponseCode::CREATED, $response->responseCode);
+    }
+
+    public function testWithDownloadSetsContentDispositionHeader(): void
+    {
+        $response = new Response();
+        $updated = $response->withDownload(
+            filename: 'report.csv',
+        );
+
+        $disposition = $this->findHeader($updated, 'Content-Disposition');
+
+        self::assertNotNull($disposition);
+        self::assertSame('attachment; filename="report.csv"', $disposition->value);
+    }
+
+    public function testWithDownloadReturnsNewInstanceWithoutMutatingOriginal(): void
+    {
+        $response = new Response();
+        $updated = $response->withDownload(
+            filename: 'report.csv',
+        );
+
+        self::assertNotSame($response, $updated);
+        self::assertCount(0, $response->headers);
+    }
+
+    public function testWithDownloadEscapesDoubleQuotesInAsciiFilename(): void
+    {
+        $response = (new Response())->withDownload(
+            filename: 'say "hi".txt',
+        );
+
+        $disposition = $this->findHeader($response, 'Content-Disposition');
+
+        self::assertNotNull($disposition);
+        self::assertSame('attachment; filename="say \\"hi\\".txt"', $disposition->value);
+    }
+
+    public function testWithDownloadStripsForwardSlashes(): void
+    {
+        $response = (new Response())->withDownload(
+            filename: '../etc/passwd',
+        );
+
+        $disposition = $this->findHeader($response, 'Content-Disposition');
+
+        self::assertNotNull($disposition);
+        self::assertSame('attachment; filename="..etcpasswd"', $disposition->value);
+    }
+
+    public function testWithDownloadStripsBackslashes(): void
+    {
+        $response = (new Response())->withDownload(
+            filename: 'path\\to\\file.txt',
+        );
+
+        $disposition = $this->findHeader($response, 'Content-Disposition');
+
+        self::assertNotNull($disposition);
+        self::assertSame('attachment; filename="pathtofile.txt"', $disposition->value);
+    }
+
+    public function testWithDownloadStripsNullByte(): void
+    {
+        $response = (new Response())->withDownload(
+            filename: "evil\0.txt",
+        );
+
+        $disposition = $this->findHeader($response, 'Content-Disposition');
+
+        self::assertNotNull($disposition);
+        self::assertSame('attachment; filename="evil.txt"', $disposition->value);
+    }
+
+    public function testWithDownloadEncodesNonAsciiFilenameWithRfc5987(): void
+    {
+        $response = (new Response())->withDownload(
+            filename: 'résumé.pdf',
+        );
+
+        $disposition = $this->findHeader($response, 'Content-Disposition');
+
+        self::assertNotNull($disposition);
+        self::assertSame(
+            'attachment; filename="r__sum__.pdf"; filename*=UTF-8\'\'r%C3%A9sum%C3%A9.pdf',
+            $disposition->value,
+        );
+    }
+
+    public function testWithDownloadReplacesExistingContentDispositionHeader(): void
+    {
+        $response = (new Response())->withHeader(
+            new Header('Content-Disposition', 'inline'),
+        );
+
+        $updated = $response->withDownload(
+            filename: 'file.bin',
+        );
+
+        $dispositions = \array_values(
+            \array_filter(
+                $updated->headers,
+                static fn (HeaderInterface $header): bool => \strcasecmp($header->name, 'Content-Disposition') === 0,
+            ),
+        );
+
+        self::assertCount(1, $dispositions);
+        self::assertSame('attachment; filename="file.bin"', $dispositions[0]->value);
+    }
+
+    public function testWithoutDownloadRemovesContentDispositionHeader(): void
+    {
+        $response = (new Response())->withDownload(
+            filename: 'file.bin',
+        );
+
+        $updated = $response->withoutDownload();
+
+        self::assertNull($this->findHeader($updated, 'Content-Disposition'));
+    }
+
+    public function testWithoutDownloadOnResponseWithoutDispositionIsNoOp(): void
+    {
+        $response = new Response();
+        $updated = $response->withoutDownload();
+
+        self::assertNull($this->findHeader($updated, 'Content-Disposition'));
+        self::assertCount(0, $updated->headers);
+    }
+
+    public function testWithoutDownloadReturnsNewInstance(): void
+    {
+        $response = (new Response())->withDownload(
+            filename: 'file.bin',
+        );
+
+        $updated = $response->withoutDownload();
+
+        self::assertNotSame($response, $updated);
+        self::assertCount(1, $response->headers);
     }
 }

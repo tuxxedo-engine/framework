@@ -24,7 +24,6 @@ use Tuxxedo\Http\Response\Stream\Stream;
 use Tuxxedo\Http\Response\Stream\StreamInterface;
 use Tuxxedo\Router\RouterInterface;
 
-// @todo Download helper method for Content-Disposition?
 class Response implements ResponseInterface, ResponsableInterface
 {
     /**
@@ -170,6 +169,36 @@ class Response implements ResponseInterface, ResponsableInterface
         )->withHeader(
             header: new Header('Content-Type', 'text/plain'),
             replace: true,
+        );
+    }
+
+    /**
+     * @param HeaderInterface[] $headers
+     */
+    #[\NoDiscard]
+    public static function download(
+        StreamInterface|string $body,
+        string $filename,
+        string $contentType = 'application/octet-stream',
+        array $headers = [],
+        ResponseCode|int $responseCode = ResponseCode::OK,
+    ): static {
+        $bodyHeaders = $body instanceof StreamInterface
+            ? $body->headers
+            : [];
+
+        return new static(
+            headers: $bodyHeaders,
+            responseCode: $responseCode,
+            body: $body,
+        )->withHeaders(
+            headers: $headers,
+            replace: \sizeof($headers) > 0,
+        )->withHeader(
+            header: new Header('Content-Type', $contentType),
+            replace: true,
+        )->withDownload(
+            filename: $filename,
         );
     }
 
@@ -554,6 +583,37 @@ class Response implements ResponseInterface, ResponsableInterface
             [
                 'body' => $body,
             ],
+        );
+    }
+
+    #[\NoDiscard]
+    public function withDownload(
+        string $filename,
+    ): static {
+        $filename = \str_replace(['/', '\\', "\0"], '', $filename);
+        $hasNonAscii = \preg_match('/[^\x20-\x7E]/', $filename) === 1;
+        $asciiFallback = $hasNonAscii
+            ? (\preg_replace('/[^\x20-\x7E]/', '_', $filename) ?? '')
+            : $filename;
+
+        $asciiFallback = \str_replace('"', '\\"', $asciiFallback);
+        $disposition = 'attachment; filename="' . $asciiFallback . '"';
+
+        if ($hasNonAscii) {
+            $disposition .= "; filename*=UTF-8''" . \rawurlencode($filename);
+        }
+
+        return $this->withHeader(
+            header: new Header('Content-Disposition', $disposition),
+            replace: true,
+        );
+    }
+
+    #[\NoDiscard]
+    public function withoutDownload(): static
+    {
+        return $this->withoutHeader(
+            name: 'Content-Disposition',
         );
     }
 }

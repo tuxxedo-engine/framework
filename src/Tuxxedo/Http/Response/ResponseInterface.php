@@ -81,4 +81,12 @@ interface ResponseInterface extends ResponseCodeInterface
     public function withBody(
         StreamInterface|string $body,
     ): static;
+
+    #[\NoDiscard]
+    public function withDownload(
+        string $filename,
+    ): static;
+
+    #[\NoDiscard]
+    public function withoutDownload(): static;
 }
