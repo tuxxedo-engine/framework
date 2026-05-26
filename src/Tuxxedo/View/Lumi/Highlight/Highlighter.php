@@ -39,6 +39,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ForNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
+use Tuxxedo\View\Lumi\Syntax\Node\IncludeNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LayoutNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LumiNode;
@@ -115,6 +116,7 @@ class Highlighter implements HighlighterInterface
             $node instanceof FunctionCallNode => $this->highlightFunctionCallNode($node),
             $node instanceof GroupNode => $this->highlightGroupNode($node),
             $node instanceof IdentifierNode => $this->highlightIdentifierNode($node),
+            $node instanceof IncludeNode => $this->highlightIncludeNode($node),
             $node instanceof LayoutNode => $this->highlightLayoutNode($node),
             $node instanceof LiteralNode => $this->highlightLiteralNode($node),
             $node instanceof LumiNode => $this->highlightLumiNode($node),
@@ -474,6 +476,22 @@ class Highlighter implements HighlighterInterface
         IdentifierNode $node,
     ): string {
         return $this->dye(ColorSlot::IDENTIFIER, $node->name);
+    }
+
+    private function highlightIncludeNode(
+        IncludeNode $node,
+    ): string {
+        $scope = $node->scope !== null
+            ? $this->dye(ColorSlot::DELIMITER, CharacterSymbol::COMMA) . ' ' . $this->highlightNode($node->scope)
+            : '';
+
+        return $this->dye(ColorSlot::DELIMITER, '{% ') .
+            $this->dye(ColorSlot::FUNCTION_NAME, 'include') .
+            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::LEFT_PARENTHESIS) .
+            $this->highlightNode($node->file) .
+            $scope .
+            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::RIGHT_PARENTHESIS) .
+            $this->dye(ColorSlot::DELIMITER, ' %}');
     }
 
     private function highlightLayoutNode(

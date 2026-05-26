@@ -45,6 +45,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ForNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
+use Tuxxedo\View\Lumi\Syntax\Node\IncludeNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LayoutNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LumiNode;
@@ -2104,6 +2105,188 @@ class HighlighterTest extends TestCase
                         name: 'i',
                     ),
                     operator: UnarySymbol::INCREMENT_POST,
+                ),
+            ),
+        );
+    }
+
+    #[DataProvider('provideThemes')]
+    public function testHighlightIncludeNodeWithoutScope(
+        ThemeInterface $theme,
+    ): void {
+        $expected = $this->dye(
+            theme: $theme,
+            slot: ColorSlot::DELIMITER,
+            text: '{% ',
+        ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::FUNCTION_NAME,
+                text: 'include',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: '(',
+            ) .
+            $this->expectedLiteralString(
+                theme: $theme,
+                operand: 'partial.lumi',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: ')',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: ' %}',
+            );
+
+        self::assertSame(
+            $expected,
+            $this->highlight(
+                theme: $theme,
+                node: new IncludeNode(
+                    file: LiteralNode::createString('partial.lumi'),
+                    scope: null,
+                ),
+            ),
+        );
+    }
+
+    #[DataProvider('provideThemes')]
+    public function testHighlightIncludeNodeWithScope(
+        ThemeInterface $theme,
+    ): void {
+        $expected = $this->dye(
+            theme: $theme,
+            slot: ColorSlot::DELIMITER,
+            text: '{% ',
+        ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::FUNCTION_NAME,
+                text: 'include',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: '(',
+            ) .
+            $this->expectedLiteralString(
+                theme: $theme,
+                operand: 'partial.lumi',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: ',',
+            ) .
+            ' ' .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: '[',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::IDENTIFIER,
+                text: 'key',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: ':',
+            ) .
+            ' ' .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::NUMBER,
+                text: '1',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: ']',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: ')',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: ' %}',
+            );
+
+        self::assertSame(
+            $expected,
+            $this->highlight(
+                theme: $theme,
+                node: new IncludeNode(
+                    file: LiteralNode::createString('partial.lumi'),
+                    scope: new ArrayNode(
+                        items: [
+                            new ArrayItemNode(
+                                key: new IdentifierNode(
+                                    name: 'key',
+                                ),
+                                value: LiteralNode::createInt(1),
+                            ),
+                        ],
+                    ),
+                ),
+            ),
+        );
+    }
+
+    #[DataProvider('provideThemes')]
+    public function testHighlightIncludeNodeWithIdentifierFile(
+        ThemeInterface $theme,
+    ): void {
+        $expected = $this->dye(
+            theme: $theme,
+            slot: ColorSlot::DELIMITER,
+            text: '{% ',
+        ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::FUNCTION_NAME,
+                text: 'include',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: '(',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::IDENTIFIER,
+                text: 'template',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: ')',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: ' %}',
+            );
+
+        self::assertSame(
+            $expected,
+            $this->highlight(
+                theme: $theme,
+                node: new IncludeNode(
+                    file: new IdentifierNode(
+                        name: 'template',
+                    ),
+                    scope: null,
                 ),
             ),
         );
