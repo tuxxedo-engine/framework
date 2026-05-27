@@ -640,7 +640,7 @@ class Response implements ResponseInterface, ResponsableInterface
         $merged = $this->mergeVaryEntries($this->parseVaryEntries(), $headers);
 
         return $this->withHeader(
-            header: new Header('Vary', \implode(', ', $merged)),
+            header: new Header('Vary', \join(', ', $merged)),
             replace: true,
         );
     }
@@ -680,7 +680,7 @@ class Response implements ResponseInterface, ResponsableInterface
         }
 
         return $this->withHeader(
-            header: new Header('Vary', \implode(', ', $remaining)),
+            header: new Header('Vary', \join(', ', $remaining)),
             replace: true,
         );
     }
@@ -845,7 +845,7 @@ class Response implements ResponseInterface, ResponsableInterface
         }
 
         return $this->withHeader(
-            header: new Header('Cache-Control', \implode(', ', $directives)),
+            header: new Header('Cache-Control', \join(', ', $directives)),
             replace: true,
         );
     }
