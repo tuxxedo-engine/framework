@@ -311,6 +311,92 @@ class ResponseTest extends TestCase
         self::assertSame($stream, $response->body);
     }
 
+    public function testHasHeaderReturnsTrueWhenHeaderPresent(): void
+    {
+        $response = (new Response())->withHeader(
+            new Header('Content-Type', 'text/plain'),
+        );
+
+        self::assertTrue($response->hasHeader('Content-Type'));
+    }
+
+    public function testHasHeaderReturnsFalseWhenHeaderAbsent(): void
+    {
+        $response = new Response();
+
+        self::assertFalse($response->hasHeader('Content-Type'));
+    }
+
+    public function testHasHeaderIsCaseInsensitive(): void
+    {
+        $response = (new Response())->withHeader(
+            new Header('Content-Type', 'text/plain'),
+        );
+
+        self::assertTrue($response->hasHeader('content-type'));
+    }
+
+    public function testHasHeaderMatchesCookieByName(): void
+    {
+        $response = (new Response())->withCookie(
+            new Cookie('session', 'abc', 0),
+        );
+
+        self::assertTrue($response->hasHeader('session'));
+    }
+
+    public function testHasHeaderSkipsNonMatchingHeaders(): void
+    {
+        $response = (new Response())->withHeader(
+            new Header('X-Custom', 'value'),
+        );
+
+        self::assertFalse($response->hasHeader('Content-Type'));
+    }
+
+    public function testHasCookieReturnsTrueWhenCookiePresent(): void
+    {
+        $response = (new Response())->withCookie(
+            new Cookie('session', 'abc', 0),
+        );
+
+        self::assertTrue($response->hasCookie('session'));
+    }
+
+    public function testHasCookieReturnsFalseWhenCookieAbsent(): void
+    {
+        $response = new Response();
+
+        self::assertFalse($response->hasCookie('session'));
+    }
+
+    public function testHasCookieIsCaseInsensitive(): void
+    {
+        $response = (new Response())->withCookie(
+            new Cookie('SESSION', 'abc', 0),
+        );
+
+        self::assertTrue($response->hasCookie('session'));
+    }
+
+    public function testHasCookieIgnoresHeadersWithSameName(): void
+    {
+        $response = (new Response())->withHeader(
+            new Header('session', 'abc'),
+        );
+
+        self::assertFalse($response->hasCookie('session'));
+    }
+
+    public function testHasCookieSkipsNonMatchingCookies(): void
+    {
+        $response = (new Response())->withCookie(
+            new Cookie('other', 'value', 0),
+        );
+
+        self::assertFalse($response->hasCookie('session'));
+    }
+
     public function testWithHeaderAppendsHeader(): void
     {
         $response = new Response();

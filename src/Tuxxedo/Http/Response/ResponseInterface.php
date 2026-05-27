@@ -33,6 +33,10 @@ interface ResponseInterface extends ResponseCodeInterface
         get;
     }
 
+    public function hasHeader(
+        string $name,
+    ): bool;
+
     #[\NoDiscard]
     public function withHeader(
         HeaderInterface $header,
@@ -52,6 +56,10 @@ interface ResponseInterface extends ResponseCodeInterface
     public function withoutHeader(
         string $name,
     ): static;
+
+    public function hasCookie(
+        string $name,
+    ): bool;
 
     #[\NoDiscard]
     public function withCookie(

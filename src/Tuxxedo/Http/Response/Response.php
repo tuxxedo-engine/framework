@@ -460,6 +460,12 @@ class Response implements ResponseInterface, ResponsableInterface
         return $newHeaders;
     }
 
+    public function hasHeader(
+        string $name,
+    ): bool {
+        return $this->getHeaderIndex($this->headers, $name) !== null;
+    }
+
     #[\NoDiscard]
     public function withHeader(
         HeaderInterface $header,
@@ -515,6 +521,12 @@ class Response implements ResponseInterface, ResponsableInterface
                 'headers' => $headers,
             ],
         );
+    }
+
+    public function hasCookie(
+        string $name,
+    ): bool {
+        return $this->getHeaderIndex($this->headers, $name, onlyCookies: true) !== null;
     }
 
     #[\NoDiscard]
