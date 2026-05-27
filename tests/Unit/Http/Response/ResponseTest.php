@@ -1667,34 +1667,6 @@ class ResponseTest extends TestCase
         self::assertNotNull($vary);
     }
 
-    public function testNotModifiedReturnsResponseWith304Status(): void
-    {
-        $response = Response::notModified();
-
-        self::assertSame(ResponseCode::NOT_MODIFIED, $response->responseCode);
-    }
-
-    public function testNotModifiedReturnsEmptyBody(): void
-    {
-        $response = Response::notModified();
-
-        self::assertSame('', $response->body);
-    }
-
-    public function testNotModifiedAcceptsHeaders(): void
-    {
-        $response = Response::notModified(
-            headers: [
-                new Header('X-Custom', 'value'),
-            ],
-        );
-
-        $custom = $this->findHeader($response, 'X-Custom');
-
-        self::assertNotNull($custom);
-        self::assertSame('value', $custom->value);
-    }
-
     public function testWithEtagSetsStrongEtagHeaderByDefault(): void
     {
         $response = (new Response())->withEtag('abc123');

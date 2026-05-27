@@ -270,20 +270,6 @@ class Response implements ResponseInterface, ResponsableInterface
     }
 
     /**
-     * @param HeaderInterface[] $headers
-     */
-    #[\NoDiscard]
-    public static function notModified(
-        array $headers = [],
-    ): static {
-        return new static(
-            headers: $headers,
-            responseCode: ResponseCode::NOT_MODIFIED,
-            body: '',
-        );
-    }
-
-    /**
      * @param \Closure(): \Generator<string>|\Generator<string>|resource|StreamInterface $stream
      * @param positive-int $chunkSize
      * @param HeaderInterface[] $headers
