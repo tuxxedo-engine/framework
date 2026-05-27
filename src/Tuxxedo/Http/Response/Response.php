@@ -616,4 +616,116 @@ class Response implements ResponseInterface, ResponsableInterface
             name: 'Content-Disposition',
         );
     }
+
+    #[\NoDiscard]
+    public function withVary(
+        string ...$headers,
+    ): static {
+        if (\sizeof($headers) === 0) {
+            return clone $this;
+        }
+
+        $merged = $this->mergeVaryEntries($this->parseVaryEntries(), $headers);
+
+        return $this->withHeader(
+            header: new Header('Vary', \implode(', ', $merged)),
+            replace: true,
+        );
+    }
+
+    #[\NoDiscard]
+    public function withoutVary(
+        string ...$headers,
+    ): static {
+        if (\sizeof($headers) === 0) {
+            return $this->withoutHeader(
+                name: 'Vary',
+            );
+        }
+
+        $remaining = [];
+
+        foreach ($this->parseVaryEntries() as $entry) {
+            $keep = true;
+
+            foreach ($headers as $remove) {
+                if (\strcasecmp($entry, $remove) === 0) {
+                    $keep = false;
+
+                    break;
+                }
+            }
+
+            if ($keep) {
+                $remaining[] = $entry;
+            }
+        }
+
+        if (\sizeof($remaining) === 0) {
+            return $this->withoutHeader(
+                name: 'Vary',
+            );
+        }
+
+        return $this->withHeader(
+            header: new Header('Vary', \implode(', ', $remaining)),
+            replace: true,
+        );
+    }
+
+    /**
+     * @return string[]
+     */
+    private function parseVaryEntries(): array
+    {
+        foreach ($this->headers as $header) {
+            if (\strcasecmp($header->name, 'Vary') !== 0) {
+                continue;
+            }
+
+            $entries = [];
+
+            foreach (\explode(',', $header->value) as $part) {
+                $part = \trim($part);
+
+                if ($part !== '') {
+                    $entries[] = $part;
+                }
+            }
+
+            return $entries;
+        }
+
+        return [];
+    }
+
+    /**
+     * @param string[] $existing
+     * @param string[] $new
+     * @return string[]
+     */
+    private function mergeVaryEntries(
+        array $existing,
+        array $new,
+    ): array {
+        $result = $existing;
+
+        foreach ($new as $entry) {
+            $found = false;
+
+            foreach ($result as $existingEntry) {
+                if (\strcasecmp($existingEntry, $entry) === 0) {
+                    $found = true;
+
+                    break;
+                }
+            }
+
+            if (!$found) {
+                $result[] = $entry;
+            }
+        }
+
+        return $result;
+    }
 }

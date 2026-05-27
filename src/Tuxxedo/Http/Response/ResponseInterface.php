@@ -19,7 +19,6 @@ use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\Response\Stream\StreamInterface;
 
 // @todo Implement caching withEtag, withCacheControl, withLastModified etc
-// @todo Implement withVary
 #[DefaultImplementation(class: Response::class)]
 interface ResponseInterface extends ResponseCodeInterface
 {
@@ -91,4 +90,14 @@ interface ResponseInterface extends ResponseCodeInterface
 
     #[\NoDiscard]
     public function withoutDownload(): static;
+
+    #[\NoDiscard]
+    public function withVary(
+        string ...$headers,
+    ): static;
+
+    #[\NoDiscard]
+    public function withoutVary(
+        string ...$headers,
+    ): static;
 }

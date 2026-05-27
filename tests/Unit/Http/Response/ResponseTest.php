@@ -1359,4 +1359,225 @@ class ResponseTest extends TestCase
         self::assertNotSame($response, $updated);
         self::assertCount(1, $response->headers);
     }
+
+    public function testWithVaryAddsHeaderWhenNotPresent(): void
+    {
+        $response = (new Response())->withVary('Accept');
+
+        $vary = $this->findHeader($response, 'Vary');
+
+        self::assertNotNull($vary);
+        self::assertSame('Accept', $vary->value);
+    }
+
+    public function testWithVaryWithMultipleHeaders(): void
+    {
+        $response = (new Response())->withVary('Accept', 'Accept-Encoding', 'Accept-Language');
+
+        $vary = $this->findHeader($response, 'Vary');
+
+        self::assertNotNull($vary);
+        self::assertSame('Accept, Accept-Encoding, Accept-Language', $vary->value);
+    }
+
+    public function testWithVaryMergesWithExistingHeader(): void
+    {
+        $response = (new Response())
+            ->withVary('Accept')
+            ->withVary('Accept-Encoding');
+
+        $vary = $this->findHeader($response, 'Vary');
+
+        self::assertNotNull($vary);
+        self::assertSame('Accept, Accept-Encoding', $vary->value);
+    }
+
+    public function testWithVaryDeduplicatesCaseInsensitively(): void
+    {
+        $response = (new Response())
+            ->withVary('Accept')
+            ->withVary('accept');
+
+        $vary = $this->findHeader($response, 'Vary');
+
+        self::assertNotNull($vary);
+        self::assertSame('Accept', $vary->value);
+    }
+
+    public function testWithVaryPreservesExistingOrderAndAppendsNew(): void
+    {
+        $response = (new Response())
+            ->withVary('Accept-Encoding')
+            ->withVary('Accept');
+
+        $vary = $this->findHeader($response, 'Vary');
+
+        self::assertNotNull($vary);
+        self::assertSame('Accept-Encoding, Accept', $vary->value);
+    }
+
+    public function testWithVaryWithZeroArgsIsNoOpAndPreservesExisting(): void
+    {
+        $original = (new Response())->withVary('Accept');
+        $updated = $original->withVary();
+
+        $vary = $this->findHeader($updated, 'Vary');
+
+        self::assertNotNull($vary);
+        self::assertSame('Accept', $vary->value);
+    }
+
+    public function testWithVaryWithZeroArgsOnResponseWithoutVaryAddsNothing(): void
+    {
+        $response = (new Response())->withVary();
+
+        self::assertNull($this->findHeader($response, 'Vary'));
+    }
+
+    public function testWithVaryReturnsNewInstance(): void
+    {
+        $response = new Response();
+        $updated = $response->withVary('Accept');
+
+        self::assertNotSame($response, $updated);
+        self::assertCount(0, $response->headers);
+    }
+
+    public function testWithVaryTrimsWhitespaceFromExistingEntries(): void
+    {
+        $response = (new Response())->withHeader(
+            new Header('Vary', 'Accept,  Accept-Encoding '),
+        );
+
+        $updated = $response->withVary('Accept-Language');
+
+        $vary = $this->findHeader($updated, 'Vary');
+
+        self::assertNotNull($vary);
+        self::assertSame('Accept, Accept-Encoding, Accept-Language', $vary->value);
+    }
+
+    public function testWithVarySkipsEmptyEntriesInExistingHeader(): void
+    {
+        $response = (new Response())->withHeader(
+            new Header('Vary', 'Accept,,Accept-Encoding'),
+        );
+
+        $updated = $response->withVary('Accept-Language');
+
+        $vary = $this->findHeader($updated, 'Vary');
+
+        self::assertNotNull($vary);
+        self::assertSame('Accept, Accept-Encoding, Accept-Language', $vary->value);
+    }
+
+    public function testWithVarySkipsNonVaryHeadersDuringParse(): void
+    {
+        $response = (new Response())
+            ->withHeader(new Header('Content-Type', 'text/plain'))
+            ->withHeader(new Header('Vary', 'Accept'));
+
+        $updated = $response->withVary('Accept-Encoding');
+
+        $vary = $this->findHeader($updated, 'Vary');
+
+        self::assertNotNull($vary);
+        self::assertSame('Accept, Accept-Encoding', $vary->value);
+    }
+
+    public function testWithoutVaryWithNoArgsRemovesEntireHeader(): void
+    {
+        $response = (new Response())->withVary('Accept', 'Accept-Encoding');
+
+        $updated = $response->withoutVary();
+
+        self::assertNull($this->findHeader($updated, 'Vary'));
+    }
+
+    public function testWithoutVaryWithSpecificEntryRemovesOnlyThatEntry(): void
+    {
+        $response = (new Response())->withVary('Accept', 'Accept-Encoding');
+
+        $updated = $response->withoutVary('Accept');
+
+        $vary = $this->findHeader($updated, 'Vary');
+
+        self::assertNotNull($vary);
+        self::assertSame('Accept-Encoding', $vary->value);
+    }
+
+    public function testWithoutVaryIsCaseInsensitive(): void
+    {
+        $response = (new Response())->withVary('Accept', 'Accept-Encoding');
+
+        $updated = $response->withoutVary('accept');
+
+        $vary = $this->findHeader($updated, 'Vary');
+
+        self::assertNotNull($vary);
+        self::assertSame('Accept-Encoding', $vary->value);
+    }
+
+    public function testWithoutVaryWithMultipleArgs(): void
+    {
+        $response = (new Response())->withVary('Accept', 'Accept-Encoding', 'Accept-Language');
+
+        $updated = $response->withoutVary('Accept', 'Accept-Language');
+
+        $vary = $this->findHeader($updated, 'Vary');
+
+        self::assertNotNull($vary);
+        self::assertSame('Accept-Encoding', $vary->value);
+    }
+
+    public function testWithoutVaryRemovingAllEntriesRemovesHeader(): void
+    {
+        $response = (new Response())->withVary('Accept');
+
+        $updated = $response->withoutVary('Accept');
+
+        self::assertNull($this->findHeader($updated, 'Vary'));
+    }
+
+    public function testWithoutVaryOnResponseWithoutVaryIsNoOp(): void
+    {
+        $response = new Response();
+        $updated = $response->withoutVary();
+
+        self::assertNull($this->findHeader($updated, 'Vary'));
+        self::assertCount(0, $updated->headers);
+    }
+
+    public function testWithoutVaryWithSpecificArgOnResponseWithoutVaryIsNoOp(): void
+    {
+        $response = new Response();
+        $updated = $response->withoutVary('Accept');
+
+        self::assertNull($this->findHeader($updated, 'Vary'));
+        self::assertCount(0, $updated->headers);
+    }
+
+    public function testWithoutVaryWithEntryNotInListIsNoOp(): void
+    {
+        $response = (new Response())->withVary('Accept');
+
+        $updated = $response->withoutVary('Accept-Language');
+
+        $vary = $this->findHeader($updated, 'Vary');
+
+        self::assertNotNull($vary);
+        self::assertSame('Accept', $vary->value);
+    }
+
+    public function testWithoutVaryReturnsNewInstance(): void
+    {
+        $response = (new Response())->withVary('Accept');
+        $updated = $response->withoutVary();
+
+        self::assertNotSame($response, $updated);
+
+        $vary = $this->findHeader($response, 'Vary');
+
+        self::assertNotNull($vary);
+    }
 }
