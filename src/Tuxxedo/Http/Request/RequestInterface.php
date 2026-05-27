@@ -22,6 +22,7 @@ use Tuxxedo\Http\Request\Context\ServerContextInterface;
 use Tuxxedo\Http\Request\Context\UploadedFilesContextInterface;
 use Tuxxedo\Router\DispatchableRouteInterface;
 
+// @todo Implement is(not?)Modified for caching
 #[DefaultImplementation(class: Request::class)]
 interface RequestInterface
 {

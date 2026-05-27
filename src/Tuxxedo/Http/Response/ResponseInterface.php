@@ -18,6 +18,8 @@ use Tuxxedo\Http\CookieInterface;
 use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\Response\Stream\StreamInterface;
 
+// @todo Implement caching withEtag, withCacheControl, withLastModified etc
+// @todo Implement withVary
 #[DefaultImplementation(class: Response::class)]
 interface ResponseInterface extends ResponseCodeInterface
 {
