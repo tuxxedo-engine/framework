@@ -256,4 +256,268 @@ class RequestTest extends TestCase
 
         self::assertSame($expected, $this->makeRequest(headers: $headers)->negotiate($supported));
     }
+
+    public function testIsNotModifiedReturnsFalseWithoutAnyConditionalHeaders(): void
+    {
+        $request = $this->makeRequest(
+            headers: new StubHeaderContext(),
+        );
+
+        self::assertFalse(
+            $request->isNotModified(
+                etag: 'abc123',
+                lastModified: new \DateTimeImmutable('2026-01-01 00:00:00', new \DateTimeZone('UTC')),
+            ),
+        );
+    }
+
+    public function testIsNotModifiedReturnsFalseWhenNullArgsProvided(): void
+    {
+        $request = $this->makeRequest(
+            headers: new StubHeaderContext(
+                [
+                    'If-None-Match' => '"abc123"',
+                ],
+            ),
+        );
+
+        self::assertFalse($request->isNotModified());
+    }
+
+    public function testIsNotModifiedReturnsTrueWhenIfNoneMatchMatchesExactly(): void
+    {
+        $request = $this->makeRequest(
+            headers: new StubHeaderContext(
+                [
+                    'If-None-Match' => '"abc123"',
+                ],
+            ),
+        );
+
+        self::assertTrue(
+            $request->isNotModified(
+                etag: 'abc123',
+            ),
+        );
+    }
+
+    public function testIsNotModifiedReturnsTrueWhenIfNoneMatchIsWildcard(): void
+    {
+        $request = $this->makeRequest(
+            headers: new StubHeaderContext(
+                [
+                    'If-None-Match' => '*',
+                ],
+            ),
+        );
+
+        self::assertTrue(
+            $request->isNotModified(
+                etag: 'anything',
+            ),
+        );
+    }
+
+    public function testIsNotModifiedReturnsTrueWhenEtagInMultiValueList(): void
+    {
+        $request = $this->makeRequest(
+            headers: new StubHeaderContext(
+                [
+                    'If-None-Match' => '"foo", "abc123", "bar"',
+                ],
+            ),
+        );
+
+        self::assertTrue(
+            $request->isNotModified(
+                etag: 'abc123',
+            ),
+        );
+    }
+
+    public function testIsNotModifiedReturnsTrueForWeakIfNoneMatchValue(): void
+    {
+        $request = $this->makeRequest(
+            headers: new StubHeaderContext(
+                [
+                    'If-None-Match' => 'W/"abc123"',
+                ],
+            ),
+        );
+
+        self::assertTrue(
+            $request->isNotModified(
+                etag: 'abc123',
+            ),
+        );
+    }
+
+    public function testIsNotModifiedReturnsFalseWhenEtagNotInList(): void
+    {
+        $request = $this->makeRequest(
+            headers: new StubHeaderContext(
+                [
+                    'If-None-Match' => '"foo", "bar"',
+                ],
+            ),
+        );
+
+        self::assertFalse(
+            $request->isNotModified(
+                etag: 'abc123',
+            ),
+        );
+    }
+
+    public function testIsNotModifiedReturnsFalseWhenIfNoneMatchEntryIsEmpty(): void
+    {
+        $request = $this->makeRequest(
+            headers: new StubHeaderContext(
+                [
+                    'If-None-Match' => ', , "xyz"',
+                ],
+            ),
+        );
+
+        self::assertFalse(
+            $request->isNotModified(
+                etag: 'abc123',
+            ),
+        );
+    }
+
+    public function testIsNotModifiedReturnsTrueWhenIfModifiedSinceIsAtOrAfterLastModified(): void
+    {
+        $request = $this->makeRequest(
+            headers: new StubHeaderContext(
+                [
+                    'If-Modified-Since' => 'Sat, 03 Jan 2026 12:00:00 GMT',
+                ],
+            ),
+        );
+
+        self::assertTrue(
+            $request->isNotModified(
+                lastModified: new \DateTimeImmutable('2026-01-01 12:00:00', new \DateTimeZone('UTC')),
+            ),
+        );
+    }
+
+    public function testIsNotModifiedReturnsTrueWhenIfModifiedSinceEqualsLastModified(): void
+    {
+        $request = $this->makeRequest(
+            headers: new StubHeaderContext(
+                [
+                    'If-Modified-Since' => 'Thu, 01 Jan 2026 12:00:00 GMT',
+                ],
+            ),
+        );
+
+        self::assertTrue(
+            $request->isNotModified(
+                lastModified: new \DateTimeImmutable('2026-01-01 12:00:00', new \DateTimeZone('UTC')),
+            ),
+        );
+    }
+
+    public function testIsNotModifiedReturnsFalseWhenIfModifiedSinceIsBeforeLastModified(): void
+    {
+        $request = $this->makeRequest(
+            headers: new StubHeaderContext(
+                [
+                    'If-Modified-Since' => 'Thu, 01 Jan 2026 00:00:00 GMT',
+                ],
+            ),
+        );
+
+        self::assertFalse(
+            $request->isNotModified(
+                lastModified: new \DateTimeImmutable('2026-01-02 00:00:00', new \DateTimeZone('UTC')),
+            ),
+        );
+    }
+
+    public function testIsNotModifiedReturnsFalseWhenIfModifiedSinceIsMalformed(): void
+    {
+        $request = $this->makeRequest(
+            headers: new StubHeaderContext(
+                [
+                    'If-Modified-Since' => 'not a real date',
+                ],
+            ),
+        );
+
+        self::assertFalse(
+            $request->isNotModified(
+                lastModified: new \DateTimeImmutable('2026-01-01', new \DateTimeZone('UTC')),
+            ),
+        );
+    }
+
+    public function testIsNotModifiedPrefersIfNoneMatchOverIfModifiedSince(): void
+    {
+        $request = $this->makeRequest(
+            headers: new StubHeaderContext(
+                [
+                    'If-None-Match' => '"different"',
+                    'If-Modified-Since' => 'Sat, 03 Jan 2026 12:00:00 GMT',
+                ],
+            ),
+        );
+
+        self::assertFalse(
+            $request->isNotModified(
+                etag: 'abc123',
+                lastModified: new \DateTimeImmutable('2026-01-01 12:00:00', new \DateTimeZone('UTC')),
+            ),
+        );
+    }
+
+    public function testIsNotModifiedFallsBackToLastModifiedWhenEtagAbsent(): void
+    {
+        $request = $this->makeRequest(
+            headers: new StubHeaderContext(
+                [
+                    'If-Modified-Since' => 'Sat, 03 Jan 2026 12:00:00 GMT',
+                ],
+            ),
+        );
+
+        self::assertTrue(
+            $request->isNotModified(
+                etag: 'abc123',
+                lastModified: new \DateTimeImmutable('2026-01-01 12:00:00', new \DateTimeZone('UTC')),
+            ),
+        );
+    }
+
+    public function testIsModifiedIsInverseOfIsNotModified(): void
+    {
+        $request = $this->makeRequest(
+            headers: new StubHeaderContext(
+                [
+                    'If-None-Match' => '"abc123"',
+                ],
+            ),
+        );
+
+        self::assertFalse(
+            $request->isModified(
+                etag: 'abc123',
+            ),
+        );
+    }
+
+    public function testIsModifiedReturnsTrueWhenNoConditionalHeadersPresent(): void
+    {
+        $request = $this->makeRequest(
+            headers: new StubHeaderContext(),
+        );
+
+        self::assertTrue(
+            $request->isModified(
+                etag: 'abc123',
+            ),
+        );
+    }
 }

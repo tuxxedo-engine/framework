@@ -16,9 +16,9 @@ namespace Tuxxedo\Http\Response;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Http\CookieInterface;
 use Tuxxedo\Http\HeaderInterface;
+use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Response\Stream\StreamInterface;
 
-// @todo Implement caching withEtag, withCacheControl, withLastModified etc
 #[DefaultImplementation(class: Response::class)]
 interface ResponseInterface extends ResponseCodeInterface
 {
@@ -99,5 +99,34 @@ interface ResponseInterface extends ResponseCodeInterface
     #[\NoDiscard]
     public function withoutVary(
         string ...$headers,
+    ): static;
+
+    #[\NoDiscard]
+    public function withEtag(
+        string $etag,
+        bool $weak = false,
+    ): static;
+
+    #[\NoDiscard]
+    public function withLastModified(
+        \DateTimeInterface $when,
+    ): static;
+
+    /**
+     * @throws HttpException
+     */
+    #[\NoDiscard]
+    public function withCacheControl(
+        ?int $maxAge = null,
+        ?int $sMaxAge = null,
+        bool $public = false,
+        bool $private = false,
+        bool $noCache = false,
+        bool $noStore = false,
+        bool $mustRevalidate = false,
+        bool $proxyRevalidate = false,
+        bool $immutable = false,
+        ?int $staleWhileRevalidate = null,
+        ?int $staleIfError = null,
     ): static;
 }

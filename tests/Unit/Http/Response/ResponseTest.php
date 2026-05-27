@@ -1580,4 +1580,337 @@ class ResponseTest extends TestCase
 
         self::assertNotNull($vary);
     }
+
+    public function testNotModifiedReturnsResponseWith304Status(): void
+    {
+        $response = Response::notModified();
+
+        self::assertSame(ResponseCode::NOT_MODIFIED, $response->responseCode);
+    }
+
+    public function testNotModifiedReturnsEmptyBody(): void
+    {
+        $response = Response::notModified();
+
+        self::assertSame('', $response->body);
+    }
+
+    public function testNotModifiedAcceptsHeaders(): void
+    {
+        $response = Response::notModified(
+            headers: [
+                new Header('X-Custom', 'value'),
+            ],
+        );
+
+        $custom = $this->findHeader($response, 'X-Custom');
+
+        self::assertNotNull($custom);
+        self::assertSame('value', $custom->value);
+    }
+
+    public function testWithEtagSetsStrongEtagHeaderByDefault(): void
+    {
+        $response = (new Response())->withEtag('abc123');
+
+        $etag = $this->findHeader($response, 'ETag');
+
+        self::assertNotNull($etag);
+        self::assertSame('"abc123"', $etag->value);
+    }
+
+    public function testWithEtagSetsWeakEtagWhenWeakIsTrue(): void
+    {
+        $response = (new Response())->withEtag(
+            etag: 'abc123',
+            weak: true,
+        );
+
+        $etag = $this->findHeader($response, 'ETag');
+
+        self::assertNotNull($etag);
+        self::assertSame('W/"abc123"', $etag->value);
+    }
+
+    public function testWithEtagReplacesExistingEtagHeader(): void
+    {
+        $response = (new Response())
+            ->withEtag('first')
+            ->withEtag('second');
+
+        $etags = \array_values(
+            \array_filter(
+                $response->headers,
+                static fn (HeaderInterface $header): bool => \strcasecmp($header->name, 'ETag') === 0,
+            ),
+        );
+
+        self::assertCount(1, $etags);
+        self::assertSame('"second"', $etags[0]->value);
+    }
+
+    public function testWithEtagReturnsNewInstance(): void
+    {
+        $response = new Response();
+        $updated = $response->withEtag('abc123');
+
+        self::assertNotSame($response, $updated);
+        self::assertCount(0, $response->headers);
+    }
+
+    public function testWithLastModifiedFormatsAsRfc7231(): void
+    {
+        $when = new \DateTimeImmutable('2026-01-15 10:30:00', new \DateTimeZone('UTC'));
+
+        $response = (new Response())->withLastModified($when);
+
+        $lastModified = $this->findHeader($response, 'Last-Modified');
+
+        self::assertNotNull($lastModified);
+        self::assertSame('Thu, 15 Jan 2026 10:30:00 GMT', $lastModified->value);
+    }
+
+    public function testWithLastModifiedConvertsToUtc(): void
+    {
+        $when = new \DateTimeImmutable('2026-01-15 12:30:00', new \DateTimeZone('America/New_York'));
+
+        $response = (new Response())->withLastModified($when);
+
+        $lastModified = $this->findHeader($response, 'Last-Modified');
+
+        self::assertNotNull($lastModified);
+        self::assertSame('Thu, 15 Jan 2026 17:30:00 GMT', $lastModified->value);
+    }
+
+    public function testWithLastModifiedAcceptsMutableDateTime(): void
+    {
+        $when = new \DateTime('2026-01-15 10:30:00', new \DateTimeZone('UTC'));
+
+        $response = (new Response())->withLastModified($when);
+        $when->setTimezone(new \DateTimeZone('America/New_York'));
+
+        $lastModified = $this->findHeader($response, 'Last-Modified');
+
+        self::assertNotNull($lastModified);
+        self::assertSame('Thu, 15 Jan 2026 10:30:00 GMT', $lastModified->value);
+    }
+
+    public function testWithLastModifiedReplacesExistingHeader(): void
+    {
+        $response = (new Response())
+            ->withLastModified(new \DateTimeImmutable('2026-01-01 00:00:00', new \DateTimeZone('UTC')))
+            ->withLastModified(new \DateTimeImmutable('2026-02-01 00:00:00', new \DateTimeZone('UTC')));
+
+        $entries = \array_values(
+            \array_filter(
+                $response->headers,
+                static fn (HeaderInterface $header): bool => \strcasecmp($header->name, 'Last-Modified') === 0,
+            ),
+        );
+
+        self::assertCount(1, $entries);
+        self::assertSame('Sun, 01 Feb 2026 00:00:00 GMT', $entries[0]->value);
+    }
+
+    public function testWithLastModifiedReturnsNewInstance(): void
+    {
+        $response = new Response();
+        $updated = $response->withLastModified(new \DateTimeImmutable('2026-01-15', new \DateTimeZone('UTC')));
+
+        self::assertNotSame($response, $updated);
+        self::assertCount(0, $response->headers);
+    }
+
+    public function testWithCacheControlMaxAge(): void
+    {
+        $response = (new Response())->withCacheControl(
+            maxAge: 3600,
+        );
+
+        $cc = $this->findHeader($response, 'Cache-Control');
+
+        self::assertNotNull($cc);
+        self::assertSame('max-age=3600', $cc->value);
+    }
+
+    public function testWithCacheControlSMaxAge(): void
+    {
+        $response = (new Response())->withCacheControl(
+            sMaxAge: 7200,
+        );
+
+        $cc = $this->findHeader($response, 'Cache-Control');
+
+        self::assertNotNull($cc);
+        self::assertSame('s-maxage=7200', $cc->value);
+    }
+
+    public function testWithCacheControlPublic(): void
+    {
+        $response = (new Response())->withCacheControl(
+            public: true,
+        );
+
+        $cc = $this->findHeader($response, 'Cache-Control');
+
+        self::assertNotNull($cc);
+        self::assertSame('public', $cc->value);
+    }
+
+    public function testWithCacheControlPrivate(): void
+    {
+        $response = (new Response())->withCacheControl(
+            private: true,
+        );
+
+        $cc = $this->findHeader($response, 'Cache-Control');
+
+        self::assertNotNull($cc);
+        self::assertSame('private', $cc->value);
+    }
+
+    public function testWithCacheControlNoCache(): void
+    {
+        $response = (new Response())->withCacheControl(
+            noCache: true,
+        );
+
+        $cc = $this->findHeader($response, 'Cache-Control');
+
+        self::assertNotNull($cc);
+        self::assertSame('no-cache', $cc->value);
+    }
+
+    public function testWithCacheControlNoStore(): void
+    {
+        $response = (new Response())->withCacheControl(
+            noStore: true,
+        );
+
+        $cc = $this->findHeader($response, 'Cache-Control');
+
+        self::assertNotNull($cc);
+        self::assertSame('no-store', $cc->value);
+    }
+
+    public function testWithCacheControlMustRevalidate(): void
+    {
+        $response = (new Response())->withCacheControl(
+            mustRevalidate: true,
+        );
+
+        $cc = $this->findHeader($response, 'Cache-Control');
+
+        self::assertNotNull($cc);
+        self::assertSame('must-revalidate', $cc->value);
+    }
+
+    public function testWithCacheControlProxyRevalidate(): void
+    {
+        $response = (new Response())->withCacheControl(
+            proxyRevalidate: true,
+        );
+
+        $cc = $this->findHeader($response, 'Cache-Control');
+
+        self::assertNotNull($cc);
+        self::assertSame('proxy-revalidate', $cc->value);
+    }
+
+    public function testWithCacheControlImmutable(): void
+    {
+        $response = (new Response())->withCacheControl(
+            immutable: true,
+        );
+
+        $cc = $this->findHeader($response, 'Cache-Control');
+
+        self::assertNotNull($cc);
+        self::assertSame('immutable', $cc->value);
+    }
+
+    public function testWithCacheControlStaleWhileRevalidate(): void
+    {
+        $response = (new Response())->withCacheControl(
+            staleWhileRevalidate: 60,
+        );
+
+        $cc = $this->findHeader($response, 'Cache-Control');
+
+        self::assertNotNull($cc);
+        self::assertSame('stale-while-revalidate=60', $cc->value);
+    }
+
+    public function testWithCacheControlStaleIfError(): void
+    {
+        $response = (new Response())->withCacheControl(
+            staleIfError: 120,
+        );
+
+        $cc = $this->findHeader($response, 'Cache-Control');
+
+        self::assertNotNull($cc);
+        self::assertSame('stale-if-error=120', $cc->value);
+    }
+
+    public function testWithCacheControlCombinesMultipleDirectivesInOrder(): void
+    {
+        $response = (new Response())->withCacheControl(
+            maxAge: 3600,
+            sMaxAge: 7200,
+            public: true,
+            mustRevalidate: true,
+            staleWhileRevalidate: 60,
+        );
+
+        $cc = $this->findHeader($response, 'Cache-Control');
+
+        self::assertNotNull($cc);
+        self::assertSame('public, must-revalidate, max-age=3600, s-maxage=7200, stale-while-revalidate=60', $cc->value);
+    }
+
+    public function testWithCacheControlWithNoDirectivesRemovesHeader(): void
+    {
+        $response = (new Response())
+            ->withCacheControl(maxAge: 3600)
+            ->withCacheControl();
+
+        self::assertNull($this->findHeader($response, 'Cache-Control'));
+    }
+
+    public function testWithCacheControlThrowsWhenPublicAndPrivateBothTrue(): void
+    {
+        self::expectException(HttpException::class);
+
+        (void) (new Response())->withCacheControl(
+            public: true,
+            private: true,
+        );
+    }
+
+    public function testWithCacheControlReplacesExistingHeader(): void
+    {
+        $response = (new Response())
+            ->withCacheControl(maxAge: 3600)
+            ->withCacheControl(noStore: true);
+
+        $entries = \array_values(
+            \array_filter(
+                $response->headers,
+                static fn (HeaderInterface $header): bool => \strcasecmp($header->name, 'Cache-Control') === 0,
+            ),
+        );
+
+        self::assertCount(1, $entries);
+        self::assertSame('no-store', $entries[0]->value);
+    }
+
+    public function testWithCacheControlReturnsNewInstance(): void
+    {
+        $response = new Response();
+        $updated = $response->withCacheControl(maxAge: 3600);
+
+        self::assertNotSame($response, $updated);
+        self::assertCount(0, $response->headers);
+    }
 }

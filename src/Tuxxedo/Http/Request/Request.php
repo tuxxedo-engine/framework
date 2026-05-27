@@ -139,4 +139,82 @@ class Request implements RequestInterface
             $parts[1] ?? '*',
         ];
     }
+
+    public function isModified(
+        ?string $etag = null,
+        ?\DateTimeInterface $lastModified = null,
+    ): bool {
+        return !$this->isNotModified(
+            etag: $etag,
+            lastModified: $lastModified,
+        );
+    }
+
+    public function isNotModified(
+        ?string $etag = null,
+        ?\DateTimeInterface $lastModified = null,
+    ): bool {
+        if ($etag !== null && $this->headers->has('If-None-Match')) {
+            return $this->matchesIfNoneMatch($etag);
+        }
+
+        if ($lastModified !== null && $this->headers->has('If-Modified-Since')) {
+            return $this->matchesIfModifiedSince($lastModified);
+        }
+
+        return false;
+    }
+
+    private function matchesIfNoneMatch(
+        string $etag,
+    ): bool {
+        $value = $this->headers->string('If-None-Match');
+
+        if (\trim($value) === '*') {
+            return true;
+        }
+
+        $target = $this->normalizeEtag($etag);
+
+        foreach (\explode(',', $value) as $candidate) {
+            $candidate = \trim($candidate);
+
+            if ($candidate === '') {
+                continue;
+            }
+
+            if ($this->normalizeEtag($candidate) === $target) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function matchesIfModifiedSince(
+        \DateTimeInterface $lastModified,
+    ): bool {
+        $value = $this->headers->string('If-Modified-Since');
+        $clientTime = \DateTimeImmutable::createFromFormat('D, d M Y H:i:s \G\M\T', $value);
+
+        if ($clientTime === false) {
+            return false;
+        }
+
+        return $lastModified->getTimestamp() <= $clientTime->getTimestamp();
+    }
+
+    private function normalizeEtag(
+        string $etag,
+    ): string {
+        if (\str_starts_with($etag, 'W/')) {
+            $etag = \substr($etag, 2);
+        }
+
+        if (\strlen($etag) >= 2 && $etag[0] === '"' && $etag[-1] === '"') {
+            $etag = \substr($etag, 1, -1);
+        }
+
+        return $etag;
+    }
 }

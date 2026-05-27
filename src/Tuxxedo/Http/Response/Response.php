@@ -270,6 +270,20 @@ class Response implements ResponseInterface, ResponsableInterface
     }
 
     /**
+     * @param HeaderInterface[] $headers
+     */
+    #[\NoDiscard]
+    public static function notModified(
+        array $headers = [],
+    ): static {
+        return new static(
+            headers: $headers,
+            responseCode: ResponseCode::NOT_MODIFIED,
+            body: '',
+        );
+    }
+
+    /**
      * @param \Closure(): \Generator<string>|\Generator<string>|resource|StreamInterface $stream
      * @param positive-int $chunkSize
      * @param HeaderInterface[] $headers
@@ -727,5 +741,114 @@ class Response implements ResponseInterface, ResponsableInterface
         }
 
         return $result;
+    }
+
+    #[\NoDiscard]
+    public function withEtag(
+        string $etag,
+        bool $weak = false,
+    ): static {
+        $value = '"' . $etag . '"';
+
+        if ($weak) {
+            $value = 'W/' . $value;
+        }
+
+        return $this->withHeader(
+            header: new Header('ETag', $value),
+            replace: true,
+        );
+    }
+
+    #[\NoDiscard]
+    public function withLastModified(
+        \DateTimeInterface $when,
+    ): static {
+        $utc = \DateTimeImmutable::createFromInterface($when)
+            ->setTimezone(new \DateTimeZone('UTC'));
+
+        return $this->withHeader(
+            header: new Header('Last-Modified', $utc->format('D, d M Y H:i:s \G\M\T')),
+            replace: true,
+        );
+    }
+
+    /**
+     * @throws HttpException
+     */
+    #[\NoDiscard]
+    public function withCacheControl(
+        ?int $maxAge = null,
+        ?int $sMaxAge = null,
+        bool $public = false,
+        bool $private = false,
+        bool $noCache = false,
+        bool $noStore = false,
+        bool $mustRevalidate = false,
+        bool $proxyRevalidate = false,
+        bool $immutable = false,
+        ?int $staleWhileRevalidate = null,
+        ?int $staleIfError = null,
+    ): static {
+        if ($public && $private) {
+            throw HttpException::fromInternalServerError();
+        }
+
+        $directives = [];
+
+        if ($public) {
+            $directives[] = 'public';
+        }
+
+        if ($private) {
+            $directives[] = 'private';
+        }
+
+        if ($noCache) {
+            $directives[] = 'no-cache';
+        }
+
+        if ($noStore) {
+            $directives[] = 'no-store';
+        }
+
+        if ($mustRevalidate) {
+            $directives[] = 'must-revalidate';
+        }
+
+        if ($proxyRevalidate) {
+            $directives[] = 'proxy-revalidate';
+        }
+
+        if ($immutable) {
+            $directives[] = 'immutable';
+        }
+
+        if ($maxAge !== null) {
+            $directives[] = 'max-age=' . $maxAge;
+        }
+
+        if ($sMaxAge !== null) {
+            $directives[] = 's-maxage=' . $sMaxAge;
+        }
+
+        if ($staleWhileRevalidate !== null) {
+            $directives[] = 'stale-while-revalidate=' . $staleWhileRevalidate;
+        }
+
+        if ($staleIfError !== null) {
+            $directives[] = 'stale-if-error=' . $staleIfError;
+        }
+
+        if (\sizeof($directives) === 0) {
+            return $this->withoutHeader(
+                name: 'Cache-Control',
+            );
+        }
+
+        return $this->withHeader(
+            header: new Header('Cache-Control', \implode(', ', $directives)),
+            replace: true,
+        );
     }
 }
