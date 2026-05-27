@@ -71,10 +71,10 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
 
         /** @var static */
         return (new static(
-            appName: $config->getString('app.name'),
-            appVersion: $config->getString('app.version'),
-            appProfile: $config->getEnum('app.profile', Profile::class),
-            appUrl: $config->getString('app.url'),
+            appName: $config->string('app.name'),
+            appVersion: $config->string('app.version'),
+            appProfile: $config->enum('app.profile', Profile::class),
+            appUrl: $config->string('app.url'),
         ))
             ->withContainer($container)
             ->withConfig($config);
@@ -88,10 +88,10 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
 
         /** @var static */
         return (new static(
-            appName: $config->getString('app.name'),
-            appVersion: $config->getString('app.version'),
-            appProfile: $config->getEnum('app.profile', Profile::class),
-            appUrl: $config->getString('app.url'),
+            appName: $config->string('app.name'),
+            appVersion: $config->string('app.version'),
+            appProfile: $config->enum('app.profile', Profile::class),
+            appUrl: $config->string('app.url'),
         ))
             ->withContainer($container)
             ->withConfig($config);

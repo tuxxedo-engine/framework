@@ -356,13 +356,13 @@ readonly class LumiController
         $defaultSelectedViewFile = $this->viewDirectory . '/hello_world_include.lumi';
 
         if ($request->get->has('file')) {
-            $selectedViewFile = $this->viewDirectory . '/' . $request->get->getString('file');
+            $selectedViewFile = $this->viewDirectory . '/' . $request->get->string('file');
         } else {
             $selectedViewFile = $defaultSelectedViewFile;
         }
 
         $viewSource = @\file_get_contents($selectedViewFile);
-        $selectedHighlightTheme = $request->get->getString('highlight');
+        $selectedHighlightTheme = $request->get->string('highlight');
 
         if ($viewSource === false) {
             throw HttpException::fromInternalServerError();
@@ -414,11 +414,11 @@ readonly class LumiController
         $buffer .= '<option value="light"' . ($selectedHighlightTheme === 'light' ? ' selected' : '') . '>Light</option>';
         $buffer .= '</select>';
         $buffer .= '<p>';
-        $buffer .= '<input type="checkbox" id="sccp"' . ($request->get->getBool('sccp') ? ' checked' : '') . ' onclick="formCheck();">';
+        $buffer .= '<input type="checkbox" id="sccp"' . ($request->get->bool('sccp') ? ' checked' : '') . ' onclick="formCheck();">';
         $buffer .= '<label for="sccp">SCCP Optimizer</label>';
         $buffer .= '</p>';
         $buffer .= '<p>';
-        $buffer .= '<input type="checkbox" id="dce"' . ($request->get->getBool('dce') ? ' checked' : '') . ' onclick="formCheck();">';
+        $buffer .= '<input type="checkbox" id="dce"' . ($request->get->bool('dce') ? ' checked' : '') . ' onclick="formCheck();">';
         $buffer .= '<label for="dce">DCE Optimizer</label>';
         $buffer .= '</p>';
         $buffer .= '</form>';
@@ -435,11 +435,11 @@ readonly class LumiController
 
         $optimizers = [];
 
-        if ($request->get->getBool('sccp')) {
+        if ($request->get->bool('sccp')) {
             $optimizers[] = new SccpOptimizer();
         }
 
-        if ($request->get->getBool('dce')) {
+        if ($request->get->bool('dce')) {
             $optimizers[] = new DceOptimizer();
         }
 
@@ -485,11 +485,11 @@ readonly class LumiController
         }
 
         if (isset($nodeStream) && !isset($exception)) {
-            if ($request->get->getBool('sccp')) {
+            if ($request->get->bool('sccp')) {
                 $nodeStream = $this->visualizeSccpPass($buffer, $nodeStream);
             }
 
-            if ($request->get->getBool('dce')) {
+            if ($request->get->bool('dce')) {
                 $nodeStream = $this->visualizeDcePass($buffer, $nodeStream);
             }
 

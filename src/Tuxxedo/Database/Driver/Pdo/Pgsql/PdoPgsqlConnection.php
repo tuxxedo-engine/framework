@@ -42,8 +42,8 @@ class PdoPgsqlConnection extends AbstractPdoConnection
     protected function getDsn(
         ConfigInterface $config,
     ): string {
-        if ($config->getString('dsn') !== '') {
-            return $config->getString('dsn');
+        if ($config->string('dsn') !== '') {
+            return $config->string('dsn');
         }
 
         $database = '';
@@ -52,41 +52,41 @@ class PdoPgsqlConnection extends AbstractPdoConnection
         $sslMode = '';
         $sslParams = '';
 
-        if ($config->getString('database') !== '') {
-            $database = ';dbname=' . $config->getString('database');
+        if ($config->string('database') !== '') {
+            $database = ';dbname=' . $config->string('database');
         }
 
         if ($config->isInt('port')) {
-            $port = ';port=' . $config->getInt('port');
+            $port = ';port=' . $config->int('port');
         }
 
         if ($config->isInt('options.timeout')) {
-            $timeout = ';connect_timeout=' . $config->getInt('options.timeout');
+            $timeout = ';connect_timeout=' . $config->int('options.timeout');
         }
 
-        if ($config->getBool('ssl.enabled')) {
-            $mode = $config->getString('ssl.mode');
+        if ($config->bool('ssl.enabled')) {
+            $mode = $config->string('ssl.mode');
 
             $sslMode = ';sslmode=' . ($mode !== '' ? $mode : 'require');
 
-            if ($config->getString('ssl.ca') !== '') {
-                $sslParams .= ';sslrootcert=' . $config->getString('ssl.ca');
+            if ($config->string('ssl.ca') !== '') {
+                $sslParams .= ';sslrootcert=' . $config->string('ssl.ca');
             }
 
-            if ($config->getString('ssl.cert') !== '') {
-                $sslParams .= ';sslcert=' . $config->getString('ssl.cert');
+            if ($config->string('ssl.cert') !== '') {
+                $sslParams .= ';sslcert=' . $config->string('ssl.cert');
             }
 
-            if ($config->getString('ssl.key') !== '') {
-                $sslParams .= ';sslkey=' . $config->getString('ssl.key');
+            if ($config->string('ssl.key') !== '') {
+                $sslParams .= ';sslkey=' . $config->string('ssl.key');
             }
-        } elseif ($config->getString('ssl.mode') !== '') {
-            $sslMode = ';sslmode=' . $config->getString('ssl.mode');
+        } elseif ($config->string('ssl.mode') !== '') {
+            $sslMode = ';sslmode=' . $config->string('ssl.mode');
         }
 
         return \sprintf(
             'pgsql:host=%s%s%s%s%s%s',
-            $config->getString('host'),
+            $config->string('host'),
             $port,
             $database,
             $timeout,
@@ -98,7 +98,7 @@ class PdoPgsqlConnection extends AbstractPdoConnection
     protected function postConnectHook(
         ConfigInterface $config,
     ): void {
-        $charset = $config->getString('options.charset');
+        $charset = $config->string('options.charset');
 
         if ($charset === '') {
             return;

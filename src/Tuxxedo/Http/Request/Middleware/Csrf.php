@@ -39,9 +39,9 @@ class Csrf implements MiddlewareInterface
             $method === Method::DELETE
         ) {
             $token = $request->post->has($this->csrf->fieldName)
-                ? $request->post->getString($this->csrf->fieldName)
+                ? $request->post->string($this->csrf->fieldName)
                 : ($request->headers->has('X-Csrf-Token')
-                    ? $request->headers->getString('X-Csrf-Token')
+                    ? $request->headers->string('X-Csrf-Token')
                     : '');
 
             if (!$this->csrf->validate($token)) {

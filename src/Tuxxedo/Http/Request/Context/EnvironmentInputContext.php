@@ -44,7 +44,7 @@ class EnvironmentInputContext implements InputContextInterface
         return \array_key_exists($name, $this->input());
     }
 
-    public function getRaw(
+    public function raw(
         string $name,
         mixed $default = null,
     ): mixed {
@@ -61,10 +61,10 @@ class EnvironmentInputContext implements InputContextInterface
             : $default;
     }
 
-    public function getRawArray(
+    public function rawArray(
         string $name,
-        mixed $default = null,
-    ): mixed {
+        array $default = [],
+    ): array {
         $input = $this->input();
 
         if (!\array_key_exists($name, $input)) {
@@ -73,12 +73,12 @@ class EnvironmentInputContext implements InputContextInterface
 
         $value = \filter_var($input[$name], \FILTER_UNSAFE_RAW, \FILTER_REQUIRE_ARRAY);
 
-        return $value !== false && $default !== false
+        return $value !== false
             ? $value
             : $default;
     }
 
-    public function getInt(
+    public function int(
         string $name,
         int $default = 0,
     ): int {
@@ -97,7 +97,7 @@ class EnvironmentInputContext implements InputContextInterface
         return $value;
     }
 
-    public function getBool(
+    public function bool(
         string $name,
         bool $default = false,
     ): bool {
@@ -116,7 +116,7 @@ class EnvironmentInputContext implements InputContextInterface
         return $value;
     }
 
-    public function getFloat(
+    public function float(
         string $name,
         float $default = 0.0,
         string $decimalPoint = '.',
@@ -151,7 +151,7 @@ class EnvironmentInputContext implements InputContextInterface
         return $value;
     }
 
-    public function getString(
+    public function string(
         string $name,
         string $default = '',
     ): string {
@@ -178,7 +178,7 @@ class EnvironmentInputContext implements InputContextInterface
      *
      * @throws HttpException
      */
-    public function getEnum(
+    public function enum(
         string $name,
         string $enum,
     ): object {
@@ -206,7 +206,7 @@ class EnvironmentInputContext implements InputContextInterface
         throw HttpException::fromInternalServerError();
     }
 
-    public function getArrayOfInt(
+    public function arrayOfInt(
         string $name,
     ): array {
         $input = $this->input();
@@ -224,7 +224,7 @@ class EnvironmentInputContext implements InputContextInterface
         return \array_filter($value, \is_int(...));
     }
 
-    public function getArrayOfBool(
+    public function arrayOfBool(
         string $name,
     ): array {
         $input = $this->input();
@@ -242,7 +242,7 @@ class EnvironmentInputContext implements InputContextInterface
         return \array_filter($value, \is_bool(...));
     }
 
-    public function getArrayOfFloat(
+    public function arrayOfFloat(
         string $name,
         string $decimalPoint = '.',
         string $thousandSeparator = ',',
@@ -282,7 +282,7 @@ class EnvironmentInputContext implements InputContextInterface
         return \array_filter($value, \is_float(...));
     }
 
-    public function getArrayOfString(
+    public function arrayOfString(
         string $name,
     ): array {
         $input = $this->input();
@@ -308,7 +308,7 @@ class EnvironmentInputContext implements InputContextInterface
      *
      * @throws HttpException
      */
-    public function getArrayOfEnum(
+    public function arrayOfEnum(
         string $name,
         string $enum,
     ): array {
@@ -356,13 +356,7 @@ class EnvironmentInputContext implements InputContextInterface
             throw HttpException::fromInternalServerError();
         }
 
-        $value = $this->getRawArray($name);
-
-        if (!\is_array($value)) {
-            throw HttpException::fromInternalServerError();
-        }
-
-        return $this->mapper->mapArrayTo($value, $className);
+        return $this->mapper->mapArrayTo($this->rawArray($name), $className);
     }
 
     public function mapToArrayOf(
@@ -373,13 +367,7 @@ class EnvironmentInputContext implements InputContextInterface
             throw HttpException::fromInternalServerError();
         }
 
-        $value = $this->getRawArray($name);
-
-        if (!\is_array($value)) {
-            throw HttpException::fromInternalServerError();
-        }
-
-        return $this->mapper->mapToArrayOf($value, $className);
+        return $this->mapper->mapToArrayOf($this->rawArray($name), $className);
     }
 
     public function jsonMapTo(
@@ -392,7 +380,7 @@ class EnvironmentInputContext implements InputContextInterface
         }
 
         $value = \json_decode(
-            json: $this->getString($name),
+            json: $this->string($name),
             associative: true,
             flags: $flags | \JSON_THROW_ON_ERROR,
         );
@@ -419,7 +407,7 @@ class EnvironmentInputContext implements InputContextInterface
         }
 
         $value = \json_decode(
-            json: $this->getString($name),
+            json: $this->string($name),
             associative: true,
             flags: $flags | \JSON_THROW_ON_ERROR,
         );

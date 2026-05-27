@@ -43,7 +43,7 @@ interface ConfigInterface
     /**
      * @throws ConfigException
      */
-    public function getInt(
+    public function int(
         string $path,
     ): int;
 
@@ -54,7 +54,7 @@ interface ConfigInterface
     /**
      * @throws ConfigException
      */
-    public function getBool(
+    public function bool(
         string $path,
     ): bool;
 
@@ -65,7 +65,7 @@ interface ConfigInterface
     /**
      * @throws ConfigException
      */
-    public function getFloat(
+    public function float(
         string $path,
     ): float;
 
@@ -76,7 +76,7 @@ interface ConfigInterface
     /**
      * @throws ConfigException
      */
-    public function getString(
+    public function string(
         string $path,
     ): string;
 
@@ -92,7 +92,7 @@ interface ConfigInterface
      *
      * @throws ConfigException
      */
-    public function getEnum(
+    public function enum(
         string $path,
         string $enum,
     ): object;

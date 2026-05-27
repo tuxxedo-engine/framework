@@ -60,7 +60,7 @@ interface SessionInterface
     /**
      * @throws SessionException
      */
-    public function getRaw(
+    public function raw(
         string $name,
         mixed $default = null,
     ): mixed;
@@ -68,7 +68,7 @@ interface SessionInterface
     /**
      * @throws SessionException
      */
-    public function getInt(
+    public function int(
         string $name,
         int $default = 0,
     ): int;
@@ -76,7 +76,7 @@ interface SessionInterface
     /**
      * @throws SessionException
      */
-    public function getBool(
+    public function bool(
         string $name,
         bool $default = false,
     ): bool;
@@ -84,7 +84,7 @@ interface SessionInterface
     /**
      * @throws SessionException
      */
-    public function getFloat(
+    public function float(
         string $name,
         float $default = 0.0,
     ): float;
@@ -92,7 +92,7 @@ interface SessionInterface
     /**
      * @throws SessionException
      */
-    public function getString(
+    public function string(
         string $name,
         string $default = '',
     ): string;
@@ -105,7 +105,7 @@ interface SessionInterface
      *
      * @throws SessionException
      */
-    public function getEnum(
+    public function enum(
         string $name,
         string $enum,
     ): object;

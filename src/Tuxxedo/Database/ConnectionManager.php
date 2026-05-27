@@ -101,9 +101,9 @@ class ConnectionManager implements ConnectionManagerInterface
 
         if ($config->path($prefix . '.class') !== '') {
             /** @var class-string<ConnectionInterface> $class */
-            $class = $config->getString($prefix . '.class');
+            $class = $config->string($prefix . '.class');
         } else {
-            $class = $config->getEnum($prefix . '.driver', DefaultDriver::class)->getDriverClass();
+            $class = $config->enum($prefix . '.driver', DefaultDriver::class)->getDriverClass();
         }
 
         $this->registerConnection(

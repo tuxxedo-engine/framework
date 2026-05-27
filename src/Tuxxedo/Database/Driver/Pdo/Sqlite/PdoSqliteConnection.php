@@ -42,13 +42,13 @@ class PdoSqliteConnection extends AbstractPdoConnection
     protected function getDsn(
         ConfigInterface $config,
     ): string {
-        if ($config->getString('dsn') !== '') {
-            return $config->getString('dsn');
+        if ($config->string('dsn') !== '') {
+            return $config->string('dsn');
         }
 
         return \sprintf(
             'sqlite:%s',
-            $config->getString('database'),
+            $config->string('database'),
         );
     }
 
@@ -56,7 +56,7 @@ class PdoSqliteConnection extends AbstractPdoConnection
         ConfigInterface $config,
     ): array {
         return [
-            \PDO::ATTR_TIMEOUT => $config->getInt('options.timeout'),
+            \PDO::ATTR_TIMEOUT => $config->int('options.timeout'),
         ];
     }
 }

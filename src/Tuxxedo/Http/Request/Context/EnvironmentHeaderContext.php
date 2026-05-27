@@ -140,7 +140,7 @@ class EnvironmentHeaderContext implements HeaderContextInterface
         );
     }
 
-    public function getInt(string $name): int
+    public function int(string $name): int
     {
         $this->lazyLoad();
 
@@ -151,7 +151,7 @@ class EnvironmentHeaderContext implements HeaderContextInterface
         return (int) $this->headers[$name];
     }
 
-    public function getBool(string $name): bool
+    public function bool(string $name): bool
     {
         $this->lazyLoad();
 
@@ -162,7 +162,7 @@ class EnvironmentHeaderContext implements HeaderContextInterface
         return (bool) $this->headers[$name];
     }
 
-    public function getFloat(string $name): float
+    public function float(string $name): float
     {
         $this->lazyLoad();
 
@@ -173,7 +173,7 @@ class EnvironmentHeaderContext implements HeaderContextInterface
         return (float) $this->headers[$name];
     }
 
-    public function getString(string $name): string
+    public function string(string $name): string
     {
         $this->lazyLoad();
 
@@ -192,7 +192,7 @@ class EnvironmentHeaderContext implements HeaderContextInterface
      *
      * @throws HttpException
      */
-    public function getEnum(string $name, string $enum): object
+    public function enum(string $name, string $enum): object
     {
         if (!\enum_exists($enum)) {
             // @codeCoverageIgnoreStart

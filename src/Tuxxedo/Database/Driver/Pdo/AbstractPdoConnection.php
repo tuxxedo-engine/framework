@@ -39,8 +39,8 @@ abstract class AbstractPdoConnection extends AbstractConnection
         private readonly ContainerInterface $container,
         ConfigInterface $config,
     ) {
-        $this->name = $config->getString('name');
-        $this->role = $config->getEnum('role', ConnectionRole::class);
+        $this->name = $config->string('name');
+        $this->role = $config->enum('role', ConnectionRole::class);
         $this->driver = static::getDriverName();
         $this->dialect = static::getDriverDialect();
         $this->statementParser = new StatementParser(
@@ -51,11 +51,11 @@ abstract class AbstractPdoConnection extends AbstractConnection
             try {
                 $this->pdo = new \PDO(
                     dsn: static::getDsn($config),
-                    username: $config->getString('username'),
-                    password: $config->getString('password'),
+                    username: $config->string('username'),
+                    password: $config->string('password'),
                     options: static::getPdoOptions($config) + [
                         \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-                        \PDO::ATTR_PERSISTENT => $config->getBool('options.persistent'),
+                        \PDO::ATTR_PERSISTENT => $config->bool('options.persistent'),
                     ],
                 );
 
@@ -65,7 +65,7 @@ abstract class AbstractPdoConnection extends AbstractConnection
             }
         };
 
-        if (!$config->getBool('options.lazy')) {
+        if (!$config->bool('options.lazy')) {
             $this->connect();
         }
     }

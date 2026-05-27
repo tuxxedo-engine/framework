@@ -34,8 +34,8 @@ readonly class SessionController
     public function index(RequestInterface $request): ResponseInterface
     {
         if ($request->server->method === Method::POST) {
-            $value = $request->post->getString('value');
-            $value = match ($request->post->getString('type')) {
+            $value = $request->post->string('value');
+            $value = match ($request->post->string('type')) {
                 'int' => \intval($value),
                 'bool' => \boolval($value),
                 'float' => \floatval($value),
@@ -43,7 +43,7 @@ readonly class SessionController
             };
 
             $this->session->set(
-                name: $request->post->getString('name'),
+                name: $request->post->string('name'),
                 value: $value,
             );
         }

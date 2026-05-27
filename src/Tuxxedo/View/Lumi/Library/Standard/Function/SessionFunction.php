@@ -38,6 +38,6 @@ class SessionFunction implements FunctionInterface
         /** @var string $name */
         $name = $arguments[0];
 
-        return $this->container->resolve(SessionInterface::class)->getRaw($name);
+        return $this->container->resolve(SessionInterface::class)->raw($name);
     }
 }

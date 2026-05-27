@@ -77,21 +77,21 @@ interface ParserStateInterface
     /**
      * @throws ParserException
      */
-    public function getString(
+    public function string(
         string $key,
     ): string;
 
     /**
      * @throws ParserException
      */
-    public function getInt(
+    public function int(
         string $key,
     ): int;
 
     /**
      * @throws ParserException
      */
-    public function getBool(
+    public function bool(
         string $key,
     ): bool;
 }

@@ -99,7 +99,7 @@ class CsrfSessionStorageHandlerTest extends TestCase
 
         self::assertSame(
             'token-xyz',
-            $session->getRaw('__tuxxedo_csrf_token'),
+            $session->raw('__tuxxedo_csrf_token'),
         );
     }
 
@@ -136,7 +136,7 @@ class CsrfSessionStorageHandlerTest extends TestCase
 
         self::assertSame(
             'token-abc',
-            $session->getRaw('my_csrf'),
+            $session->raw('my_csrf'),
         );
     }
 

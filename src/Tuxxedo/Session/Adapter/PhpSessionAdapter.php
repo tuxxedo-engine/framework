@@ -43,12 +43,12 @@ class PhpSessionAdapter implements SessionAdapterInterface
     ): static {
         return new static(
             startMode: $startMode,
-            lifetime: $config->getInt('session.lifetime'),
-            path: $config->getString('session.path'),
-            domain: $config->getString('session.domain'),
-            httpOnly: $config->getBool('session.httpOnly'),
-            secure: $config->getBool('session.secure'),
-            sameSite: $config->getEnum('session.sameSite', SameSite::class),
+            lifetime: $config->int('session.lifetime'),
+            path: $config->string('session.path'),
+            domain: $config->string('session.domain'),
+            httpOnly: $config->bool('session.httpOnly'),
+            secure: $config->bool('session.secure'),
+            sameSite: $config->enum('session.sameSite', SameSite::class),
         );
     }
 

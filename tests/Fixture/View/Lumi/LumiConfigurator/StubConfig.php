@@ -49,7 +49,7 @@ class StubConfig implements ConfigInterface
         return $this;
     }
 
-    public function getInt(
+    public function int(
         string $path,
     ): int {
         $value = $this->data[$path] ?? 0;
@@ -63,7 +63,7 @@ class StubConfig implements ConfigInterface
         return \is_int($this->data[$path] ?? null);
     }
 
-    public function getBool(
+    public function bool(
         string $path,
     ): bool {
         $value = $this->data[$path] ?? false;
@@ -77,7 +77,7 @@ class StubConfig implements ConfigInterface
         return \is_bool($this->data[$path] ?? null);
     }
 
-    public function getFloat(
+    public function float(
         string $path,
     ): float {
         $value = $this->data[$path] ?? 0.0;
@@ -91,7 +91,7 @@ class StubConfig implements ConfigInterface
         return \is_float($this->data[$path] ?? null);
     }
 
-    public function getString(
+    public function string(
         string $path,
     ): string {
         $value = $this->data[$path] ?? '';
@@ -111,7 +111,7 @@ class StubConfig implements ConfigInterface
      * @param class-string<TEnum> $enum
      * @return TEnum
      */
-    public function getEnum(
+    public function enum(
         string $path,
         string $enum,
     ): object {

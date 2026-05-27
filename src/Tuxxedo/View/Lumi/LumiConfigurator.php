@@ -99,24 +99,24 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
         if ($config->has($namespace . '.directory')) {
             $configurator->viewDirectory(
-                directory: $config->getString($namespace . '.directory'),
+                directory: $config->string($namespace . '.directory'),
             );
         }
 
         if ($config->has($namespace . '.cacheDirectory')) {
             $configurator->cacheDirectory(
-                directory: $config->getString($namespace . '.cacheDirectory'),
+                directory: $config->string($namespace . '.cacheDirectory'),
             );
         }
 
         if ($config->has($namespace . '.extension')) {
             $configurator->viewExtension(
-                extension: $config->getString($namespace . '.extension'),
+                extension: $config->string($namespace . '.extension'),
             );
         }
 
         if ($config->has($namespace . '.alwaysCompile')) {
-            if ($config->getBool($namespace . '.alwaysCompile')) {
+            if ($config->bool($namespace . '.alwaysCompile')) {
                 $configurator->enableAlwaysCompile();
             } else {
                 $configurator->disableAlwaysCompile();
@@ -124,7 +124,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
         }
 
         if ($config->has($namespace . '.disableErrorReporting')) {
-            if ($config->getBool($namespace . '.disableErrorReporting')) {
+            if ($config->bool($namespace . '.disableErrorReporting')) {
                 $configurator->disableErrorReporting();
             } else {
                 $configurator->enableErrorReporting();

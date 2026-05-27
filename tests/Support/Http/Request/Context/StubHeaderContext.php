@@ -85,31 +85,31 @@ class StubHeaderContext implements HeaderContextInterface
         return new WeightedHeader($name, $this->headers[$name]);
     }
 
-    public function getInt(
+    public function int(
         string $name,
     ): int {
         return 0;
     }
 
-    public function getBool(
+    public function bool(
         string $name,
     ): bool {
         return false;
     }
 
-    public function getFloat(
+    public function float(
         string $name,
     ): float {
         return 0.0;
     }
 
-    public function getString(
+    public function string(
         string $name,
     ): string {
         return $this->headers[$name] ?? '';
     }
 
-    public function getEnum(
+    public function enum(
         string $name,
         string $enum,
     ): object {

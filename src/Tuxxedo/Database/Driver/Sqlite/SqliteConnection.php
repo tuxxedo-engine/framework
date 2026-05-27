@@ -41,8 +41,8 @@ class SqliteConnection extends AbstractConnection
         private readonly ContainerInterface $container,
         ConfigInterface $config,
     ) {
-        $this->name = $config->getString('name');
-        $this->role = $config->getEnum('role', ConnectionRole::class);
+        $this->name = $config->string('name');
+        $this->role = $config->enum('role', ConnectionRole::class);
         $this->driver = DefaultDriver::SQLITE;
         $this->dialect = new SqliteDialect();
         $this->statementParser = new StatementParser(
@@ -52,11 +52,11 @@ class SqliteConnection extends AbstractConnection
         $this->connector = function () use ($config): void {
             try {
                 $this->sqlite = new \SQLite3(
-                    filename: $config->getString('database'),
+                    filename: $config->string('database'),
                     flags: $config->isInt('options.flags')
-                        ? $config->getInt('options.flags')
+                        ? $config->int('options.flags')
                         : \SQLITE3_OPEN_READWRITE | \SQLITE3_OPEN_CREATE,
-                    encryptionKey: $config->getString('password'),
+                    encryptionKey: $config->string('password'),
                 );
 
                 $this->sqlite->enableExceptions(true);
@@ -69,7 +69,7 @@ class SqliteConnection extends AbstractConnection
             }
         };
 
-        if (!$config->getBool('options.lazy')) {
+        if (!$config->bool('options.lazy')) {
             $this->connect();
         }
     }

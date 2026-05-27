@@ -78,41 +78,51 @@ class EnvironmentInputContextTest extends TestCase
         );
     }
 
-    public function testGetRawReturnsDefaultWhenMissing(): void
+    public function testRawReturnsDefaultWhenMissing(): void
     {
-        self::assertSame('fallback', $this->makeContext()->getRaw('missing', 'fallback'));
+        self::assertSame('fallback', $this->makeContext()->raw('missing', 'fallback'));
     }
 
-    public function testGetRawReturnsFilteredScalar(): void
+    public function testRawReturnsFilteredScalar(): void
     {
         $_GET['name'] = 'hello';
 
-        self::assertSame('hello', $this->makeContext()->getRaw('name'));
+        self::assertSame('hello', $this->makeContext()->raw('name'));
     }
 
-    public function testGetRawReturnsDefaultWhenValueIsArray(): void
+    public function testRawReturnsDefaultWhenValueIsArray(): void
     {
         $_GET['name'] = [
             'a',
             'b',
         ];
 
-        self::assertSame('fallback', $this->makeContext()->getRaw('name', 'fallback'));
+        self::assertSame('fallback', $this->makeContext()->raw('name', 'fallback'));
     }
 
-    public function testGetRawReturnsDefaultWhenDefaultIsFalse(): void
+    public function testRawReturnsDefaultWhenDefaultIsFalse(): void
     {
         $_GET['name'] = 'hello';
 
-        self::assertFalse($this->makeContext()->getRaw('name', false));
+        self::assertFalse($this->makeContext()->raw('name', false));
     }
 
-    public function testGetRawArrayReturnsDefaultWhenMissing(): void
+    public function testRawArrayReturnsDefaultWhenMissing(): void
     {
-        self::assertSame('fallback', $this->makeContext()->getRawArray('missing', 'fallback'));
+        self::assertSame(
+            [
+                'fallback',
+            ],
+            $this->makeContext()->rawArray(
+                'missing',
+                [
+                    'fallback',
+                ],
+            ),
+        );
     }
 
-    public function testGetRawArrayReturnsFilteredArray(): void
+    public function testRawArrayReturnsFilteredArray(): void
     {
         $_GET['names'] = [
             'a',
@@ -124,91 +134,91 @@ class EnvironmentInputContextTest extends TestCase
                 'a',
                 'b',
             ],
-            $this->makeContext()->getRawArray('names'),
+            $this->makeContext()->rawArray('names'),
         );
     }
 
-    public function testGetRawArrayReturnsDefaultWhenValueIsNotArray(): void
+    public function testRawArrayReturnsDefaultWhenValueIsNotArray(): void
     {
         $_GET['name'] = 'hello';
 
-        self::assertSame('fallback', $this->makeContext()->getRawArray('name', 'fallback'));
+        self::assertSame(
+            [
+                'fallback',
+            ],
+            $this->makeContext()->rawArray(
+                'name',
+                [
+                    'fallback',
+                ],
+            ),
+        );
     }
 
-    public function testGetRawArrayReturnsDefaultWhenDefaultIsFalse(): void
+    public function testIntReturnsDefaultWhenMissing(): void
     {
-        $_GET['names'] = [
-            'a',
-            'b',
-        ];
-
-        self::assertFalse($this->makeContext()->getRawArray('names', false));
+        self::assertSame(7, $this->makeContext()->int('missing', 7));
     }
 
-    public function testGetIntReturnsDefaultWhenMissing(): void
-    {
-        self::assertSame(7, $this->makeContext()->getInt('missing', 7));
-    }
-
-    public function testGetIntReturnsParsedInt(): void
+    public function testIntReturnsParsedInt(): void
     {
         $_GET['age'] = '42';
 
-        self::assertSame(42, $this->makeContext()->getInt('age'));
+        self::assertSame(42, $this->makeContext()->int('age'));
     }
 
-    public function testGetIntReturnsDefaultForNonIntString(): void
+    public function testIntReturnsDefaultForNonIntString(): void
     {
         $_GET['age'] = 'abc';
 
-        self::assertSame(7, $this->makeContext()->getInt('age', 7));
+        self::assertSame(7, $this->makeContext()->int('age', 7));
     }
 
-    public function testGetBoolReturnsDefaultWhenMissing(): void
+    public function testBoolReturnsDefaultWhenMissing(): void
     {
-        self::assertTrue($this->makeContext()->getBool('missing', true));
+        self::assertTrue($this->makeContext()->bool('missing', true));
     }
 
-    public function testGetBoolReturnsTrueForTruthyString(): void
+    public function testBoolReturnsTrueForTruthyString(): void
     {
         $_GET['flag'] = 'true';
 
-        self::assertTrue($this->makeContext()->getBool('flag'));
+        self::assertTrue($this->makeContext()->bool('flag'));
     }
 
-    public function testGetBoolReturnsFalseForFalsyString(): void
+    public function testBoolReturnsFalseForFalsyString(): void
     {
         $_GET['flag'] = 'false';
 
-        self::assertFalse($this->makeContext()->getBool('flag'));
+        self::assertFalse($this->makeContext()->bool('flag'));
     }
 
-    public function testGetBoolReturnsDefaultForNonBoolString(): void
+    public function testBoolReturnsDefaultForNonBoolString(): void
     {
         $_GET['flag'] = 'not-a-bool';
 
-        self::assertTrue($this->makeContext()->getBool('flag', true));
+        self::assertTrue($this->makeContext()->bool('flag', true));
     }
 
-    public function testGetFloatReturnsDefaultWhenMissing(): void
+    public function testFloatReturnsDefaultWhenMissing(): void
     {
-        self::assertSame(1.5, $this->makeContext()->getFloat('missing', 1.5));
+        self::assertSame(1.5, $this->makeContext()->float('missing', 1.5));
     }
 
-    public function testGetFloatReturnsParsedFloat(): void
+    public function testFloatReturnsParsedFloat(): void
     {
         $_GET['amount'] = '3.14';
 
-        self::assertSame(3.14, $this->makeContext()->getFloat('amount'));
+        self::assertSame(3.14, $this->makeContext()->float('amount'));
     }
 
-    public function testGetFloatRespectsDecimalAndThousandSeparator(): void
+    public function testFloatRespectsDecimalAndThousandSeparator(): void
     {
         $_GET['amount'] = '1.234,56';
 
         self::assertSame(
             1234.56,
-            $this->makeContext()->getFloat(
+            $this->makeContext()->float(
                 name: 'amount',
                 decimalPoint: ',',
                 thousandSeparator: '.',
@@ -216,52 +226,52 @@ class EnvironmentInputContextTest extends TestCase
         );
     }
 
-    public function testGetFloatReturnsDefaultForNonFloatString(): void
+    public function testFloatReturnsDefaultForNonFloatString(): void
     {
         $_GET['amount'] = 'abc';
 
-        self::assertSame(1.5, $this->makeContext()->getFloat('amount', 1.5));
+        self::assertSame(1.5, $this->makeContext()->float('amount', 1.5));
     }
 
-    public function testGetStringReturnsDefaultWhenMissing(): void
+    public function testStringReturnsDefaultWhenMissing(): void
     {
-        self::assertSame('fallback', $this->makeContext()->getString('missing', 'fallback'));
+        self::assertSame('fallback', $this->makeContext()->string('missing', 'fallback'));
     }
 
-    public function testGetStringReturnsFilteredString(): void
+    public function testStringReturnsFilteredString(): void
     {
         $_GET['name'] = 'hello';
 
-        self::assertSame('hello', $this->makeContext()->getString('name'));
+        self::assertSame('hello', $this->makeContext()->string('name'));
     }
 
-    public function testGetStringReturnsDefaultWhenValueIsArray(): void
+    public function testStringReturnsDefaultWhenValueIsArray(): void
     {
         $_GET['name'] = [
             'a',
         ];
 
-        self::assertSame('fallback', $this->makeContext()->getString('name', 'fallback'));
+        self::assertSame('fallback', $this->makeContext()->string('name', 'fallback'));
     }
 
-    public function testGetEnumReturnsMatchingCase(): void
+    public function testEnumReturnsMatchingCase(): void
     {
         $_GET['choice'] = 'foo';
 
         self::assertSame(
             InputContextEnum::FOO,
-            $this->makeContext()->getEnum('choice', InputContextEnum::class),
+            $this->makeContext()->enum('choice', InputContextEnum::class),
         );
     }
 
-    public function testGetEnumThrowsWhenKeyMissing(): void
+    public function testEnumThrowsWhenKeyMissing(): void
     {
         $this->expectException(HttpException::class);
 
-        $this->makeContext()->getEnum('missing', InputContextEnum::class);
+        $this->makeContext()->enum('missing', InputContextEnum::class);
     }
 
-    public function testGetEnumThrowsWhenValueIsArray(): void
+    public function testEnumThrowsWhenValueIsArray(): void
     {
         $_GET['choice'] = [
             'foo',
@@ -269,31 +279,31 @@ class EnvironmentInputContextTest extends TestCase
 
         $this->expectException(HttpException::class);
 
-        $this->makeContext()->getEnum('choice', InputContextEnum::class);
+        $this->makeContext()->enum('choice', InputContextEnum::class);
     }
 
-    public function testGetEnumThrowsWhenValueDoesNotMatchAnyCase(): void
+    public function testEnumThrowsWhenValueDoesNotMatchAnyCase(): void
     {
         $_GET['choice'] = 'unknown';
 
         $this->expectException(HttpException::class);
 
-        $this->makeContext()->getEnum('choice', InputContextEnum::class);
+        $this->makeContext()->enum('choice', InputContextEnum::class);
     }
 
-    public function testGetArrayOfIntReturnsEmptyArrayWhenMissing(): void
+    public function testArrayOfIntReturnsEmptyArrayWhenMissing(): void
     {
-        self::assertSame([], $this->makeContext()->getArrayOfInt('missing'));
+        self::assertSame([], $this->makeContext()->arrayOfInt('missing'));
     }
 
-    public function testGetArrayOfIntReturnsEmptyArrayWhenValueIsScalar(): void
+    public function testArrayOfIntReturnsEmptyArrayWhenValueIsScalar(): void
     {
         $_GET['ids'] = '1';
 
-        self::assertSame([], $this->makeContext()->getArrayOfInt('ids'));
+        self::assertSame([], $this->makeContext()->arrayOfInt('ids'));
     }
 
-    public function testGetArrayOfIntFiltersOutNonIntValues(): void
+    public function testArrayOfIntFiltersOutNonIntValues(): void
     {
         $_GET['ids'] = [
             '1',
@@ -306,23 +316,23 @@ class EnvironmentInputContextTest extends TestCase
                 0 => 1,
                 2 => 3,
             ],
-            $this->makeContext()->getArrayOfInt('ids'),
+            $this->makeContext()->arrayOfInt('ids'),
         );
     }
 
-    public function testGetArrayOfBoolReturnsEmptyArrayWhenMissing(): void
+    public function testArrayOfBoolReturnsEmptyArrayWhenMissing(): void
     {
-        self::assertSame([], $this->makeContext()->getArrayOfBool('missing'));
+        self::assertSame([], $this->makeContext()->arrayOfBool('missing'));
     }
 
-    public function testGetArrayOfBoolReturnsEmptyArrayWhenValueIsScalar(): void
+    public function testArrayOfBoolReturnsEmptyArrayWhenValueIsScalar(): void
     {
         $_GET['flags'] = 'true';
 
-        self::assertSame([], $this->makeContext()->getArrayOfBool('flags'));
+        self::assertSame([], $this->makeContext()->arrayOfBool('flags'));
     }
 
-    public function testGetArrayOfBoolFiltersOutNonBoolValues(): void
+    public function testArrayOfBoolFiltersOutNonBoolValues(): void
     {
         $_GET['flags'] = [
             'true',
@@ -335,23 +345,23 @@ class EnvironmentInputContextTest extends TestCase
                 0 => true,
                 2 => false,
             ],
-            $this->makeContext()->getArrayOfBool('flags'),
+            $this->makeContext()->arrayOfBool('flags'),
         );
     }
 
-    public function testGetArrayOfFloatReturnsEmptyArrayWhenMissing(): void
+    public function testArrayOfFloatReturnsEmptyArrayWhenMissing(): void
     {
-        self::assertSame([], $this->makeContext()->getArrayOfFloat('missing'));
+        self::assertSame([], $this->makeContext()->arrayOfFloat('missing'));
     }
 
-    public function testGetArrayOfFloatReturnsEmptyArrayWhenValueIsScalar(): void
+    public function testArrayOfFloatReturnsEmptyArrayWhenValueIsScalar(): void
     {
         $_GET['amounts'] = '1.5';
 
-        self::assertSame([], $this->makeContext()->getArrayOfFloat('amounts'));
+        self::assertSame([], $this->makeContext()->arrayOfFloat('amounts'));
     }
 
-    public function testGetArrayOfFloatFiltersOutNonFloatValues(): void
+    public function testArrayOfFloatFiltersOutNonFloatValues(): void
     {
         $_GET['amounts'] = [
             '1.5',
@@ -364,11 +374,11 @@ class EnvironmentInputContextTest extends TestCase
                 0 => 1.5,
                 2 => 2.5,
             ],
-            $this->makeContext()->getArrayOfFloat('amounts'),
+            $this->makeContext()->arrayOfFloat('amounts'),
         );
     }
 
-    public function testGetArrayOfFloatRespectsDecimalAndThousandSeparator(): void
+    public function testArrayOfFloatRespectsDecimalAndThousandSeparator(): void
     {
         $_GET['amounts'] = [
             '1.234,56',
@@ -380,7 +390,7 @@ class EnvironmentInputContextTest extends TestCase
                 0 => 1234.56,
                 1 => 7.5,
             ],
-            $this->makeContext()->getArrayOfFloat(
+            $this->makeContext()->arrayOfFloat(
                 name: 'amounts',
                 decimalPoint: ',',
                 thousandSeparator: '.',
@@ -388,19 +398,19 @@ class EnvironmentInputContextTest extends TestCase
         );
     }
 
-    public function testGetArrayOfStringReturnsEmptyArrayWhenMissing(): void
+    public function testArrayOfStringReturnsEmptyArrayWhenMissing(): void
     {
-        self::assertSame([], $this->makeContext()->getArrayOfString('missing'));
+        self::assertSame([], $this->makeContext()->arrayOfString('missing'));
     }
 
-    public function testGetArrayOfStringReturnsEmptyArrayWhenValueIsScalar(): void
+    public function testArrayOfStringReturnsEmptyArrayWhenValueIsScalar(): void
     {
         $_GET['names'] = 'foo';
 
-        self::assertSame([], $this->makeContext()->getArrayOfString('names'));
+        self::assertSame([], $this->makeContext()->arrayOfString('names'));
     }
 
-    public function testGetArrayOfStringFiltersOutNonStringValues(): void
+    public function testArrayOfStringFiltersOutNonStringValues(): void
     {
         $_GET['names'] = [
             'foo',
@@ -415,11 +425,11 @@ class EnvironmentInputContextTest extends TestCase
                 0 => 'foo',
                 2 => 'bar',
             ],
-            $this->makeContext()->getArrayOfString('names'),
+            $this->makeContext()->arrayOfString('names'),
         );
     }
 
-    public function testGetArrayOfEnumReturnsMatchingCases(): void
+    public function testArrayOfEnumReturnsMatchingCases(): void
     {
         $_GET['choices'] = [
             'foo',
@@ -431,27 +441,27 @@ class EnvironmentInputContextTest extends TestCase
                 InputContextEnum::FOO,
                 InputContextEnum::BAR,
             ],
-            $this->makeContext()->getArrayOfEnum('choices', InputContextEnum::class),
+            $this->makeContext()->arrayOfEnum('choices', InputContextEnum::class),
         );
     }
 
-    public function testGetArrayOfEnumThrowsWhenKeyMissing(): void
+    public function testArrayOfEnumThrowsWhenKeyMissing(): void
     {
         $this->expectException(HttpException::class);
 
-        $this->makeContext()->getArrayOfEnum('missing', InputContextEnum::class);
+        $this->makeContext()->arrayOfEnum('missing', InputContextEnum::class);
     }
 
-    public function testGetArrayOfEnumThrowsWhenValueIsNotArray(): void
+    public function testArrayOfEnumThrowsWhenValueIsNotArray(): void
     {
         $_GET['choices'] = 'foo';
 
         $this->expectException(HttpException::class);
 
-        $this->makeContext()->getArrayOfEnum('choices', InputContextEnum::class);
+        $this->makeContext()->arrayOfEnum('choices', InputContextEnum::class);
     }
 
-    public function testGetArrayOfEnumThrowsWhenValueDoesNotMatchAnyCase(): void
+    public function testArrayOfEnumThrowsWhenValueDoesNotMatchAnyCase(): void
     {
         $_GET['choices'] = [
             'foo',
@@ -460,10 +470,10 @@ class EnvironmentInputContextTest extends TestCase
 
         $this->expectException(HttpException::class);
 
-        $this->makeContext()->getArrayOfEnum('choices', InputContextEnum::class);
+        $this->makeContext()->arrayOfEnum('choices', InputContextEnum::class);
     }
 
-    public function testGetArrayOfEnumSkipsNonStringValues(): void
+    public function testArrayOfEnumSkipsNonStringValues(): void
     {
         $_GET['choices'] = [
             'foo',
@@ -478,7 +488,7 @@ class EnvironmentInputContextTest extends TestCase
                 InputContextEnum::FOO,
                 InputContextEnum::BAR,
             ],
-            $this->makeContext()->getArrayOfEnum('choices', InputContextEnum::class),
+            $this->makeContext()->arrayOfEnum('choices', InputContextEnum::class),
         );
     }
 
@@ -508,17 +518,6 @@ class EnvironmentInputContextTest extends TestCase
 
         $this->makeContext(
             inputContext: InputContext::COOKIE,
-        )->mapTo('user', BodyContextFixture::class);
-    }
-
-    public function testMapToThrowsWhenValueIsNotArray(): void
-    {
-        $_POST['user'] = 'not-an-array';
-
-        $this->expectException(HttpException::class);
-
-        $this->makeContext(
-            inputContext: InputContext::POST,
         )->mapTo('user', BodyContextFixture::class);
     }
 
@@ -557,17 +556,6 @@ class EnvironmentInputContextTest extends TestCase
 
         $this->makeContext(
             inputContext: InputContext::COOKIE,
-        )->mapToArrayOf('users', BodyContextFixture::class);
-    }
-
-    public function testMapToArrayOfThrowsWhenValueIsNotArray(): void
-    {
-        $_POST['users'] = 'not-an-array';
-
-        $this->expectException(HttpException::class);
-
-        $this->makeContext(
-            inputContext: InputContext::POST,
         )->mapToArrayOf('users', BodyContextFixture::class);
     }
 

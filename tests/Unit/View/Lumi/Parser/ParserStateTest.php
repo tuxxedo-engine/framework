@@ -177,24 +177,24 @@ class ParserStateTest extends TestCase
         );
     }
 
-    public function testGetStringReturnsValue(): void
+    public function testStringReturnsValue(): void
     {
         $this->state->set(
             key: 'name',
             value: 'engine',
         );
 
-        self::assertSame('engine', $this->state->getString('name'));
+        self::assertSame('engine', $this->state->string('name'));
     }
 
-    public function testGetStringThrowsOnMissingKey(): void
+    public function testStringThrowsOnMissingKey(): void
     {
         self::expectException(ParserException::class);
 
-        $this->state->getString('missing');
+        $this->state->string('missing');
     }
 
-    public function testGetStringThrowsOnNonStringType(): void
+    public function testStringThrowsOnNonStringType(): void
     {
         $this->state->set(
             key: 'count',
@@ -203,27 +203,27 @@ class ParserStateTest extends TestCase
 
         self::expectException(ParserException::class);
 
-        $this->state->getString('count');
+        $this->state->string('count');
     }
 
-    public function testGetIntReturnsValue(): void
+    public function testIntReturnsValue(): void
     {
         $this->state->set(
             key: 'count',
             value: 42,
         );
 
-        self::assertSame(42, $this->state->getInt('count'));
+        self::assertSame(42, $this->state->int('count'));
     }
 
-    public function testGetIntThrowsOnMissingKey(): void
+    public function testIntThrowsOnMissingKey(): void
     {
         self::expectException(ParserException::class);
 
-        $this->state->getInt('missing');
+        $this->state->int('missing');
     }
 
-    public function testGetIntThrowsOnNonIntType(): void
+    public function testIntThrowsOnNonIntType(): void
     {
         $this->state->set(
             key: 'name',
@@ -232,27 +232,27 @@ class ParserStateTest extends TestCase
 
         self::expectException(ParserException::class);
 
-        $this->state->getInt('name');
+        $this->state->int('name');
     }
 
-    public function testGetBoolReturnsValue(): void
+    public function testBoolReturnsValue(): void
     {
         $this->state->set(
             key: 'flag',
             value: true,
         );
 
-        self::assertTrue($this->state->getBool('flag'));
+        self::assertTrue($this->state->bool('flag'));
     }
 
-    public function testGetBoolThrowsOnMissingKey(): void
+    public function testBoolThrowsOnMissingKey(): void
     {
         self::expectException(ParserException::class);
 
-        $this->state->getBool('missing');
+        $this->state->bool('missing');
     }
 
-    public function testGetBoolThrowsOnNonBoolType(): void
+    public function testBoolThrowsOnNonBoolType(): void
     {
         $this->state->set(
             key: 'count',
@@ -261,7 +261,7 @@ class ParserStateTest extends TestCase
 
         self::expectException(ParserException::class);
 
-        $this->state->getBool('count');
+        $this->state->bool('count');
     }
 
     public function testIsCleanStateReturnsTrueOnFreshState(): void

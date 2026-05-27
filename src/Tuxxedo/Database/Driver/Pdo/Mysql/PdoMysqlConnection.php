@@ -43,25 +43,25 @@ class PdoMysqlConnection extends AbstractPdoConnection
     protected function getDsn(
         ConfigInterface $config,
     ): string {
-        if ($config->getString('dsn') !== '') {
-            return $config->getString('dsn');
+        if ($config->string('dsn') !== '') {
+            return $config->string('dsn');
         }
 
         $database = '';
         $charset = '';
 
-        if ($config->getString('database') !== '') {
-            $database = ';dbname=' . $config->getString('database');
+        if ($config->string('database') !== '') {
+            $database = ';dbname=' . $config->string('database');
         }
 
-        if ($config->getString('options.charset') !== '') {
-            $charset = ';charset=' . $config->getString('options.charset');
+        if ($config->string('options.charset') !== '') {
+            $charset = ';charset=' . $config->string('options.charset');
         }
 
-        if ($config->isString('unixSocket') && $config->getString('unixSocket') !== '') {
+        if ($config->isString('unixSocket') && $config->string('unixSocket') !== '') {
             return \sprintf(
                 'mysql:unix_socket=%s%s%s',
-                $config->getString('unixSocket'),
+                $config->string('unixSocket'),
                 $database,
                 $charset,
             );
@@ -70,12 +70,12 @@ class PdoMysqlConnection extends AbstractPdoConnection
         $port = '';
 
         if ($config->isInt('port')) {
-            $port = ';port=' . $config->getInt('port');
+            $port = ';port=' . $config->int('port');
         }
 
         return \sprintf(
             'mysql:host=%s%s%s%s',
-            $config->getString('host'),
+            $config->string('host'),
             $port,
             $database,
             $charset,
@@ -86,23 +86,23 @@ class PdoMysqlConnection extends AbstractPdoConnection
         ConfigInterface $config,
     ): array {
         $options = [
-            \PDO::ATTR_TIMEOUT => $config->getInt('options.timeout'),
+            \PDO::ATTR_TIMEOUT => $config->int('options.timeout'),
         ];
 
-        if ($config->getBool('ssl.enabled')) {
-            if ($config->has('ssl.ca') && $config->getString('ssl.ca') !== '') {
-                $options[Mysql::ATTR_SSL_CA] = $config->getString('ssl.ca');
+        if ($config->bool('ssl.enabled')) {
+            if ($config->has('ssl.ca') && $config->string('ssl.ca') !== '') {
+                $options[Mysql::ATTR_SSL_CA] = $config->string('ssl.ca');
             }
 
-            if ($config->has('ssl.cert') && $config->getString('ssl.cert') !== '') {
-                $options[Mysql::ATTR_SSL_CERT] = $config->getString('ssl.cert');
+            if ($config->has('ssl.cert') && $config->string('ssl.cert') !== '') {
+                $options[Mysql::ATTR_SSL_CERT] = $config->string('ssl.cert');
             }
 
-            if ($config->has('ssl.key') && $config->getString('ssl.key') !== '') {
-                $options[Mysql::ATTR_SSL_KEY] = $config->getString('ssl.key');
+            if ($config->has('ssl.key') && $config->string('ssl.key') !== '') {
+                $options[Mysql::ATTR_SSL_KEY] = $config->string('ssl.key');
             }
 
-            $options[Mysql::ATTR_SSL_VERIFY_SERVER_CERT] = $config->getBool('ssl.verifyPeer');
+            $options[Mysql::ATTR_SSL_VERIFY_SERVER_CERT] = $config->bool('ssl.verifyPeer');
         }
 
         return $options;

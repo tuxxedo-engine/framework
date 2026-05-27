@@ -65,14 +65,14 @@ class Session implements SessionInterface
         return $this->adapter->all();
     }
 
-    public function getRaw(
+    public function raw(
         string $name,
         mixed $default = null,
     ): mixed {
         return $this->adapter->getRaw($name, $default);
     }
 
-    public function getInt(
+    public function int(
         string $name,
         int $default = 0,
     ): int {
@@ -85,7 +85,7 @@ class Session implements SessionInterface
         return $value;
     }
 
-    public function getBool(
+    public function bool(
         string $name,
         bool $default = false,
     ): bool {
@@ -98,7 +98,7 @@ class Session implements SessionInterface
         return $value;
     }
 
-    public function getFloat(
+    public function float(
         string $name,
         float $default = 0.0,
     ): float {
@@ -111,7 +111,7 @@ class Session implements SessionInterface
         return $value;
     }
 
-    public function getString(
+    public function string(
         string $name,
         string $default = '',
     ): string {
@@ -132,7 +132,7 @@ class Session implements SessionInterface
      *
      * @throws SessionException
      */
-    public function getEnum(
+    public function enum(
         string $name,
         string $enum,
     ): object {
@@ -152,7 +152,7 @@ class Session implements SessionInterface
             );
         }
 
-        $value = $this->getString($name);
+        $value = $this->string($name);
 
         foreach ($enum::cases() as $case) {
             if (\strcasecmp($case->name, $value) === 0) {

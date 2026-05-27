@@ -254,103 +254,103 @@ class EnvironmentHeaderContextTest extends TestCase
         (new EnvironmentHeaderContext())->getWeighted('User-Agent');
     }
 
-    public function testGetIntReturnsIntValue(): void
+    public function testIntReturnsIntValue(): void
     {
         $_SERVER['HTTP_CONTENT_LENGTH'] = '1024';
 
-        self::assertSame(1024, (new EnvironmentHeaderContext())->getInt('Content-Length'));
+        self::assertSame(1024, (new EnvironmentHeaderContext())->int('Content-Length'));
     }
 
-    public function testGetIntThrowsWhenHeaderMissing(): void
+    public function testIntThrowsWhenHeaderMissing(): void
     {
         $this->expectException(HttpException::class);
 
-        (new EnvironmentHeaderContext())->getInt('Content-Length');
+        (new EnvironmentHeaderContext())->int('Content-Length');
     }
 
-    public function testGetBoolReturnsBoolValue(): void
+    public function testBoolReturnsBoolValue(): void
     {
         $_SERVER['HTTP_X_FLAG'] = '1';
 
-        self::assertTrue((new EnvironmentHeaderContext())->getBool('X-Flag'));
+        self::assertTrue((new EnvironmentHeaderContext())->bool('X-Flag'));
     }
 
-    public function testGetBoolReturnsFalseForEmptyValue(): void
+    public function testBoolReturnsFalseForEmptyValue(): void
     {
         $_SERVER['HTTP_X_FLAG'] = '';
 
-        self::assertFalse((new EnvironmentHeaderContext())->getBool('X-Flag'));
+        self::assertFalse((new EnvironmentHeaderContext())->bool('X-Flag'));
     }
 
-    public function testGetBoolThrowsWhenHeaderMissing(): void
+    public function testBoolThrowsWhenHeaderMissing(): void
     {
         $this->expectException(HttpException::class);
 
-        (new EnvironmentHeaderContext())->getBool('X-Flag');
+        (new EnvironmentHeaderContext())->bool('X-Flag');
     }
 
-    public function testGetFloatReturnsFloatValue(): void
+    public function testFloatReturnsFloatValue(): void
     {
         $_SERVER['HTTP_X_RATIO'] = '0.75';
 
-        self::assertSame(0.75, (new EnvironmentHeaderContext())->getFloat('X-Ratio'));
+        self::assertSame(0.75, (new EnvironmentHeaderContext())->float('X-Ratio'));
     }
 
-    public function testGetFloatThrowsWhenHeaderMissing(): void
+    public function testFloatThrowsWhenHeaderMissing(): void
     {
         $this->expectException(HttpException::class);
 
-        (new EnvironmentHeaderContext())->getFloat('X-Ratio');
+        (new EnvironmentHeaderContext())->float('X-Ratio');
     }
 
-    public function testGetStringReturnsStringValue(): void
+    public function testStringReturnsStringValue(): void
     {
         $_SERVER['HTTP_USER_AGENT'] = 'Mozilla';
 
-        self::assertSame('Mozilla', (new EnvironmentHeaderContext())->getString('User-Agent'));
+        self::assertSame('Mozilla', (new EnvironmentHeaderContext())->string('User-Agent'));
     }
 
-    public function testGetStringThrowsWhenHeaderMissing(): void
+    public function testStringThrowsWhenHeaderMissing(): void
     {
         $this->expectException(HttpException::class);
 
-        (new EnvironmentHeaderContext())->getString('User-Agent');
+        (new EnvironmentHeaderContext())->string('User-Agent');
     }
 
-    public function testGetEnumReturnsMatchingCase(): void
+    public function testEnumReturnsMatchingCase(): void
     {
         $_SERVER['HTTP_X_CHOICE'] = 'foo';
 
         self::assertSame(
             InputContextEnum::FOO,
-            (new EnvironmentHeaderContext())->getEnum('X-Choice', InputContextEnum::class),
+            (new EnvironmentHeaderContext())->enum('X-Choice', InputContextEnum::class),
         );
     }
 
-    public function testGetEnumMatchesCaseInsensitively(): void
+    public function testEnumMatchesCaseInsensitively(): void
     {
         $_SERVER['HTTP_X_CHOICE'] = 'BAR';
 
         self::assertSame(
             InputContextEnum::BAR,
-            (new EnvironmentHeaderContext())->getEnum('X-Choice', InputContextEnum::class),
+            (new EnvironmentHeaderContext())->enum('X-Choice', InputContextEnum::class),
         );
     }
 
-    public function testGetEnumThrowsWhenHeaderMissing(): void
+    public function testEnumThrowsWhenHeaderMissing(): void
     {
         $this->expectException(HttpException::class);
 
-        (new EnvironmentHeaderContext())->getEnum('X-Choice', InputContextEnum::class);
+        (new EnvironmentHeaderContext())->enum('X-Choice', InputContextEnum::class);
     }
 
-    public function testGetEnumThrowsWhenValueDoesNotMatchAnyCase(): void
+    public function testEnumThrowsWhenValueDoesNotMatchAnyCase(): void
     {
         $_SERVER['HTTP_X_CHOICE'] = 'unknown';
 
         $this->expectException(HttpException::class);
 
-        (new EnvironmentHeaderContext())->getEnum('X-Choice', InputContextEnum::class);
+        (new EnvironmentHeaderContext())->enum('X-Choice', InputContextEnum::class);
     }
 
     public function testHeaderNameIsNormalizedFromServerKey(): void

@@ -42,6 +42,6 @@ class PdoGenericConnection extends AbstractPdoConnection
     protected function getDsn(
         ConfigInterface $config,
     ): string {
-        return $config->getString('dsn');
+        return $config->string('dsn');
     }
 }

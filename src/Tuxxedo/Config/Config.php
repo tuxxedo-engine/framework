@@ -160,7 +160,7 @@ class Config implements ConfigInterface
         );
     }
 
-    public function getInt(
+    public function int(
         string $path,
     ): int {
         $value = $this->path($path);
@@ -186,7 +186,7 @@ class Config implements ConfigInterface
         }
     }
 
-    public function getBool(
+    public function bool(
         string $path,
     ): bool {
         $value = $this->path($path);
@@ -212,7 +212,7 @@ class Config implements ConfigInterface
         }
     }
 
-    public function getFloat(
+    public function float(
         string $path,
     ): float {
         $value = $this->path($path);
@@ -238,7 +238,7 @@ class Config implements ConfigInterface
         }
     }
 
-    public function getString(
+    public function string(
         string $path,
     ): string {
         $value = $this->path($path);
@@ -270,7 +270,7 @@ class Config implements ConfigInterface
      * @param class-string<TEnum> $enum
      * @return TEnum
      */
-    public function getEnum(
+    public function enum(
         string $path,
         string $enum,
     ): object {

@@ -41,7 +41,7 @@ readonly class CsrfController
         return Response::html(
             html: \sprintf(
                 '<p style="color: green"><strong>Success:</strong> CSRF token was valid. Message: %s </p><a href="/csrf/form">Back</a>',
-                \htmlspecialchars($request->post->getString('message'), \ENT_QUOTES, 'UTF-8'),
+                \htmlspecialchars($request->post->string('message'), \ENT_QUOTES, 'UTF-8'),
             ),
         );
     }

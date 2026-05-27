@@ -111,7 +111,7 @@ readonly class ModelController
     ): ViewInterface|ResponseInterface {
         if ($request->server->method === Method::POST) {
             $user = new User();
-            $user->name = $request->post->getString('name');
+            $user->name = $request->post->string('name');
 
             $user = $this->modelsManager->save($user);
 
@@ -139,7 +139,7 @@ readonly class ModelController
         $user = $this->modelsManager->fetchByIdentifier(User::class, $id);
 
         if ($request->server->method === Method::POST) {
-            $user->name = $request->post->getString('name');
+            $user->name = $request->post->string('name');
 
             (void) $this->modelsManager->save($user);
 

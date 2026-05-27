@@ -41,8 +41,8 @@ class MysqlConnection extends AbstractConnection
         private readonly ContainerInterface $container,
         ConfigInterface $config,
     ) {
-        $this->name = $config->getString('name');
-        $this->role = $config->getEnum('role', ConnectionRole::class);
+        $this->name = $config->string('name');
+        $this->role = $config->enum('role', ConnectionRole::class);
         $this->driver = DefaultDriver::MYSQL;
         $this->dialect = new MysqlDialect();
         $this->statementParser = new StatementParser(
@@ -61,7 +61,7 @@ class MysqlConnection extends AbstractConnection
             }
 
             if ($config->has('options.timeout')) {
-                $timeout = $config->getInt('options.timeout');
+                $timeout = $config->int('options.timeout');
 
                 $this->mysqli->options(\MYSQLI_OPT_CONNECT_TIMEOUT, $timeout);
                 $this->mysqli->options(\MYSQLI_OPT_READ_TIMEOUT, $timeout);
@@ -69,17 +69,17 @@ class MysqlConnection extends AbstractConnection
 
             if ($config->isString('unixSocket')) {
                 $this->mysqli->real_connect(
-                    socket: $config->getString('unixSocket'),
+                    socket: $config->string('unixSocket'),
                 );
             } else {
                 $flags = $config->isInt('options.flags')
-                    ? $config->getInt('options.flags')
+                    ? $config->int('options.flags')
                     : 0;
 
-                if ($config->getBool('ssl.enabled')) {
-                    $ca = $config->getString('ssl.ca');
-                    $cert = $config->getString('ssl.cert');
-                    $key = $config->getString('ssl.key');
+                if ($config->bool('ssl.enabled')) {
+                    $ca = $config->string('ssl.ca');
+                    $cert = $config->string('ssl.cert');
+                    $key = $config->string('ssl.key');
 
                     if (
                         $ca !== '' &&
@@ -91,23 +91,23 @@ class MysqlConnection extends AbstractConnection
 
                     $flags |= \MYSQLI_CLIENT_SSL;
 
-                    if (!$config->getBool('ssl.verifyPeer')) {
+                    if (!$config->bool('ssl.verifyPeer')) {
                         $flags |= \MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT;
                     }
                 }
 
                 try {
                     $this->mysqli->real_connect(
-                        hostname: $config->getBool('options.persistent')
-                            ? 'p:' . $config->getString('host')
-                            : $config->getString('host'),
-                        username: $config->getString('username'),
-                        password: $config->getString('password'),
+                        hostname: $config->bool('options.persistent')
+                            ? 'p:' . $config->string('host')
+                            : $config->string('host'),
+                        username: $config->string('username'),
+                        password: $config->string('password'),
                         database: $config->has('database')
-                            ? $config->getString('database')
+                            ? $config->string('database')
                             : null,
                         port: $config->has('port')
-                            ? $config->getInt('port')
+                            ? $config->int('port')
                             : null,
                         flags: $flags,
                     );
@@ -125,10 +125,10 @@ class MysqlConnection extends AbstractConnection
                 }
             }
 
-            $this->mysqli->set_charset($config->getString('options.charset'));
+            $this->mysqli->set_charset($config->string('options.charset'));
         };
 
-        if (!$config->getBool('options.lazy')) {
+        if (!$config->bool('options.lazy')) {
             $this->connect();
         }
     }

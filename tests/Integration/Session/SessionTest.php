@@ -49,7 +49,7 @@ class SessionTest extends TestCase
         $result = $session->set('foo', 'bar');
 
         self::assertSame($session, $result);
-        self::assertSame('bar', $session->getRaw('foo'));
+        self::assertSame('bar', $session->raw('foo'));
     }
 
     public function testHasReturnsTrueForExistingKey(): void
@@ -90,7 +90,7 @@ class SessionTest extends TestCase
         );
     }
 
-    public function testGetRawReturnsStoredValue(): void
+    public function testRawReturnsStoredValue(): void
     {
         $session = $this->makeSession();
         $session->set('payload', ['nested' => true]);
@@ -99,107 +99,107 @@ class SessionTest extends TestCase
             [
                 'nested' => true,
             ],
-            $session->getRaw('payload'),
+            $session->raw('payload'),
         );
     }
 
-    public function testGetRawReturnsDefaultForMissingKey(): void
+    public function testRawReturnsDefaultForMissingKey(): void
     {
         self::assertSame(
             'fallback',
-            $this->makeSession()->getRaw('missing', 'fallback'),
+            $this->makeSession()->raw('missing', 'fallback'),
         );
     }
 
-    public function testGetIntReturnsIntegerValue(): void
+    public function testIntReturnsIntegerValue(): void
     {
         $session = $this->makeSession();
         $session->set('count', 42);
 
-        self::assertSame(42, $session->getInt('count'));
+        self::assertSame(42, $session->int('count'));
     }
 
-    public function testGetIntReturnsDefaultForNonIntegerValue(): void
+    public function testIntReturnsDefaultForNonIntegerValue(): void
     {
         $session = $this->makeSession();
         $session->set('count', 'not an int');
 
-        self::assertSame(99, $session->getInt('count', 99));
+        self::assertSame(99, $session->int('count', 99));
     }
 
-    public function testGetBoolReturnsBooleanValue(): void
+    public function testBoolReturnsBooleanValue(): void
     {
         $session = $this->makeSession();
         $session->set('enabled', true);
 
-        self::assertTrue($session->getBool('enabled'));
+        self::assertTrue($session->bool('enabled'));
     }
 
-    public function testGetBoolReturnsDefaultForNonBooleanValue(): void
+    public function testBoolReturnsDefaultForNonBooleanValue(): void
     {
         $session = $this->makeSession();
         $session->set('enabled', 1);
 
-        self::assertTrue($session->getBool('enabled', true));
+        self::assertTrue($session->bool('enabled', true));
     }
 
-    public function testGetFloatReturnsFloatValue(): void
+    public function testFloatReturnsFloatValue(): void
     {
         $session = $this->makeSession();
         $session->set('ratio', 3.14);
 
-        self::assertSame(3.14, $session->getFloat('ratio'));
+        self::assertSame(3.14, $session->float('ratio'));
     }
 
-    public function testGetFloatReturnsDefaultForNonFloatValue(): void
+    public function testFloatReturnsDefaultForNonFloatValue(): void
     {
         $session = $this->makeSession();
         $session->set('ratio', 'three');
 
-        self::assertSame(1.5, $session->getFloat('ratio', 1.5));
+        self::assertSame(1.5, $session->float('ratio', 1.5));
     }
 
-    public function testGetStringReturnsStringValue(): void
+    public function testStringReturnsStringValue(): void
     {
         $session = $this->makeSession();
         $session->set('name', 'engine');
 
-        self::assertSame('engine', $session->getString('name'));
+        self::assertSame('engine', $session->string('name'));
     }
 
-    public function testGetStringReturnsDefaultForNonStringValue(): void
+    public function testStringReturnsDefaultForNonStringValue(): void
     {
         $session = $this->makeSession();
         $session->set('name', 42);
 
-        self::assertSame('fallback', $session->getString('name', 'fallback'));
+        self::assertSame('fallback', $session->string('name', 'fallback'));
     }
 
-    public function testGetEnumReturnsMatchingCase(): void
+    public function testEnumReturnsMatchingCase(): void
     {
         $session = $this->makeSession();
         $session->set('color', Color::GREEN);
 
         self::assertSame(
             Color::GREEN,
-            $session->getEnum('color', Color::class),
+            $session->enum('color', Color::class),
         );
     }
 
-    public function testGetEnumThrowsWhenKeyIsMissingFromSession(): void
+    public function testEnumThrowsWhenKeyIsMissingFromSession(): void
     {
         self::expectException(SessionException::class);
 
-        $this->makeSession()->getEnum('missing', Color::class);
+        $this->makeSession()->enum('missing', Color::class);
     }
 
-    public function testGetEnumThrowsWhenStoredValueDoesNotMatchAnyCase(): void
+    public function testEnumThrowsWhenStoredValueDoesNotMatchAnyCase(): void
     {
         $session = $this->makeSession();
         $session->set('color', 'PURPLE');
 
         self::expectException(SessionException::class);
 
-        $session->getEnum('color', Color::class);
+        $session->enum('color', Color::class);
     }
 }

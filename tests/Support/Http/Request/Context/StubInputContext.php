@@ -24,35 +24,35 @@ class StubInputContext implements InputContextInterface
         return false;
     }
 
-    public function getRaw(
+    public function raw(
         string $name,
         mixed $default = null,
     ): mixed {
         return $default;
     }
 
-    public function getRawArray(
+    public function rawArray(
         string $name,
-        mixed $default = null,
-    ): mixed {
+        array $default = [],
+    ): array {
         return $default;
     }
 
-    public function getInt(
+    public function int(
         string $name,
         int $default = 0,
     ): int {
         return $default;
     }
 
-    public function getBool(
+    public function bool(
         string $name,
         bool $default = false,
     ): bool {
         return $default;
     }
 
-    public function getFloat(
+    public function float(
         string $name,
         float $default = 0.0,
         string $decimalPoint = '.',
@@ -61,33 +61,33 @@ class StubInputContext implements InputContextInterface
         return $default;
     }
 
-    public function getString(
+    public function string(
         string $name,
         string $default = '',
     ): string {
         return $default;
     }
 
-    public function getEnum(
+    public function enum(
         string $name,
         string $enum,
     ): object {
         throw HttpException::fromInternalServerError();
     }
 
-    public function getArrayOfInt(
+    public function arrayOfInt(
         string $name,
     ): array {
         return [];
     }
 
-    public function getArrayOfBool(
+    public function arrayOfBool(
         string $name,
     ): array {
         return [];
     }
 
-    public function getArrayOfFloat(
+    public function arrayOfFloat(
         string $name,
         string $decimalPoint = '.',
         string $thousandSeparator = ',',
@@ -95,13 +95,13 @@ class StubInputContext implements InputContextInterface
         return [];
     }
 
-    public function getArrayOfString(
+    public function arrayOfString(
         string $name,
     ): array {
         return [];
     }
 
-    public function getArrayOfEnum(
+    public function arrayOfEnum(
         string $name,
         string $enum,
     ): array {

@@ -34,7 +34,7 @@ class CsrfSessionStorageHandler implements CsrfStorageHandlerInterface
             return null;
         }
 
-        $token = $this->session->getString($this->key);
+        $token = $this->session->string($this->key);
 
         return $token !== ''
             ? $token

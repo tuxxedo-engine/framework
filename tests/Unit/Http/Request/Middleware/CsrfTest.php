@@ -76,7 +76,7 @@ class CsrfTest extends TestCase
                 return \array_key_exists($name, $this->values);
             }
 
-            public function getString(
+            public function string(
                 string $name,
                 string $default = '',
             ): string {

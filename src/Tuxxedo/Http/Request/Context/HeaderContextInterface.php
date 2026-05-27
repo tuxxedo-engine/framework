@@ -53,28 +53,28 @@ interface HeaderContextInterface
     /**
      * @throws HttpException
      */
-    public function getInt(
+    public function int(
         string $name,
     ): int;
 
     /**
      * @throws HttpException
      */
-    public function getBool(
+    public function bool(
         string $name,
     ): bool;
 
     /**
      * @throws HttpException
      */
-    public function getFloat(
+    public function float(
         string $name,
     ): float;
 
     /**
      * @throws HttpException
      */
-    public function getString(
+    public function string(
         string $name,
     ): string;
 
@@ -86,7 +86,7 @@ interface HeaderContextInterface
      *
      * @throws HttpException
      */
-    public function getEnum(
+    public function enum(
         string $name,
         string $enum,
     ): object;

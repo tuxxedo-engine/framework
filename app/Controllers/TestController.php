@@ -73,7 +73,7 @@ readonly class TestController
         LoggerInterface $logger,
     ): ResponseInterface {
         if ($request->get->has('level')) {
-            $requestedLevel = $request->get->getString('level');
+            $requestedLevel = $request->get->string('level');
 
             foreach (LogLevel::cases() as $level) {
                 if (\strcasecmp($level->name, $requestedLevel) === 0) {
@@ -135,7 +135,7 @@ readonly class TestController
     #[Route\Get(uri: '/cookies')]
     public function cookies(RequestInterface $request): ResponseInterface
     {
-        $count = $request->cookies->has('count') ? $request->cookies->getInt('count') : 1;
+        $count = $request->cookies->has('count') ? $request->cookies->int('count') : 1;
 
         return Response::html(
             html: \sprintf(
@@ -200,11 +200,11 @@ readonly class TestController
     {
         return Response::json(
             json: [
-                'string' => $request->post->getString('test'),
-                'int' => $request->post->getInt('test'),
-                'bool' => $request->post->getBool('test'),
-                'floatDot' => $request->post->getFloat('test'),
-                'floatComma' => $request->post->getFloat('test', decimalPoint: ',', thousandSeparator: '.'),
+                'string' => $request->post->string('test'),
+                'int' => $request->post->int('test'),
+                'bool' => $request->post->bool('test'),
+                'floatDot' => $request->post->float('test'),
+                'floatComma' => $request->post->float('test', decimalPoint: ',', thousandSeparator: '.'),
             ],
         );
     }

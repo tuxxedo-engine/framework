@@ -43,8 +43,8 @@ class PgsqlConnection extends AbstractConnection
         private readonly ContainerInterface $container,
         ConfigInterface $config,
     ) {
-        $this->name = $config->getString('name');
-        $this->role = $config->getEnum('role', ConnectionRole::class);
+        $this->name = $config->string('name');
+        $this->role = $config->enum('role', ConnectionRole::class);
         $this->driver = DefaultDriver::PGSQL;
         $this->dialect = new PgsqlDialect(
             connection: fn (): Connection => $this->getDriverInstance(),
@@ -63,38 +63,38 @@ class PgsqlConnection extends AbstractConnection
                 $dsn = [];
 
                 if ($config->isString('unixSocket')) {
-                    $dsn[] = 'host=' . $quote($config->getString('unixSocket'));
+                    $dsn[] = 'host=' . $quote($config->string('unixSocket'));
                 } elseif ($config->isString('host')) {
-                    $dsn[] = 'host=' . $quote($config->getString('host'));
+                    $dsn[] = 'host=' . $quote($config->string('host'));
                 }
 
                 if ($config->has('port')) {
-                    $dsn[] = 'port=' . $quote((string) $config->getInt('port'));
+                    $dsn[] = 'port=' . $quote((string) $config->int('port'));
                 }
 
                 if ($config->has('database')) {
-                    $dsn[] = 'dbname=' . $quote($config->getString('database'));
+                    $dsn[] = 'dbname=' . $quote($config->string('database'));
                 }
 
                 if ($config->has('username')) {
-                    $dsn[] = 'user=' . $quote($config->getString('username'));
+                    $dsn[] = 'user=' . $quote($config->string('username'));
                 }
 
                 if ($config->has('password')) {
-                    $dsn[] = 'password=' . $quote($config->getString('password'));
+                    $dsn[] = 'password=' . $quote($config->string('password'));
                 }
 
                 if ($config->has('options.timeout')) {
-                    $dsn[] = 'connect_timeout=' . $quote((string) $config->getInt('options.timeout'));
+                    $dsn[] = 'connect_timeout=' . $quote((string) $config->int('options.timeout'));
                 }
 
-                if ($config->getBool('ssl.enabled')) {
+                if ($config->bool('ssl.enabled')) {
                     $sslMode = $config->has('ssl.mode')
-                        ? $config->getString('ssl.mode')
-                        : ($config->getBool('ssl.verifyHost')
+                        ? $config->string('ssl.mode')
+                        : ($config->bool('ssl.verifyHost')
                             ? 'verify-full'
                             : (
-                                $config->getBool('ssl.verifyPeer')
+                                $config->bool('ssl.verifyPeer')
                                     ? 'verify-ca'
                                     : 'require'
                             ));
@@ -102,21 +102,21 @@ class PgsqlConnection extends AbstractConnection
                     $dsn[] = 'sslmode=' . $quote($sslMode);
 
                     if ($config->has('ssl.ca')) {
-                        $value = $config->getString('ssl.ca');
+                        $value = $config->string('ssl.ca');
 
                         if ($value !== '') {
                             $dsn[] = 'sslrootcert=' . $quote($value);
                         }
                     }
                     if ($config->has('ssl.cert')) {
-                        $value = $config->getString('ssl.cert');
+                        $value = $config->string('ssl.cert');
 
                         if ($value !== '') {
                             $dsn[] = 'sslcert=' . $quote($value);
                         }
                     }
                     if ($config->has('ssl.key')) {
-                        $value = $config->getString('ssl.key');
+                        $value = $config->string('ssl.key');
 
                         if ($value !== '') {
                             $dsn[] = 'sslkey=' . $quote($value);
@@ -126,7 +126,7 @@ class PgsqlConnection extends AbstractConnection
                     $dsn[] = 'sslmode=' . $quote('disable');
                 }
 
-                $pgsql = $config->getBool('options.persistent')
+                $pgsql = $config->bool('options.persistent')
                     ? \pg_pconnect(\join(' ', $dsn))
                     : \pg_connect(\join(' ', $dsn));
 
@@ -137,7 +137,7 @@ class PgsqlConnection extends AbstractConnection
                 $this->pgsql = $pgsql;
 
                 if ($config->has('options.charset')) {
-                    $value = $config->getString('options.charset');
+                    $value = $config->string('options.charset');
 
                     if ($value !== '') {
                         $result = \pg_set_client_encoding($this->pgsql, $value);
@@ -150,7 +150,7 @@ class PgsqlConnection extends AbstractConnection
             }
         };
 
-        if (!$config->getBool('options.lazy')) {
+        if (!$config->bool('options.lazy')) {
             $this->connect();
         }
     }

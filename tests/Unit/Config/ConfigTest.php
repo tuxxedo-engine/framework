@@ -34,7 +34,7 @@ class ConfigTest extends TestCase
             ],
         );
 
-        self::assertSame($config->getString('tempDirectory'), '/tmp');
+        self::assertSame($config->string('tempDirectory'), '/tmp');
     }
 
     public function testCreateFromFile(): void
@@ -51,10 +51,10 @@ class ConfigTest extends TestCase
         self::assertFalse($config->isFloat('type.float'));
         self::assertFalse($config->isBool('type.bool'));
         self::assertFalse($config->isNull('type.null'));
-        self::assertSame($config->getString('types.string'), 'foo');
-        self::assertSame($config->getInt('types.int'), 42);
-        self::assertSame($config->getFloat('types.float'), 13.37);
-        self::assertSame($config->getBool('types.bool'), false);
+        self::assertSame($config->string('types.string'), 'foo');
+        self::assertSame($config->int('types.int'), 42);
+        self::assertSame($config->float('types.float'), 13.37);
+        self::assertSame($config->bool('types.bool'), false);
     }
 
     public function testCreateFromDirectory(): void
@@ -65,36 +65,36 @@ class ConfigTest extends TestCase
         self::assertFalse($config->has('credential.port'));
     }
 
-    public function testGetStringError(): void
+    public function testStringError(): void
     {
         $config = Config::createFromFile(new Container(), self::SINGLE_FILE);
 
         $this->expectException(ConfigException::class);
-        $config->getString('types.int');
+        $config->string('types.int');
     }
 
-    public function testGetIntError(): void
+    public function testIntError(): void
     {
         $config = Config::createFromFile(new Container(), self::SINGLE_FILE);
 
         $this->expectException(ConfigException::class);
-        $config->getInt('types.float');
+        $config->int('types.float');
     }
 
-    public function testGetFloatError(): void
+    public function testFloatError(): void
     {
         $config = Config::createFromFile(new Container(), self::SINGLE_FILE);
 
         $this->expectException(ConfigException::class);
-        $config->getFloat('types.bool');
+        $config->float('types.bool');
     }
 
-    public function testGetBoolError(): void
+    public function testBoolError(): void
     {
         $config = Config::createFromFile(new Container(), self::SINGLE_FILE);
 
         $this->expectException(ConfigException::class);
-        $config->getBool('types.null');
+        $config->bool('types.null');
     }
 
     public function testPath(): void
@@ -114,10 +114,10 @@ class ConfigTest extends TestCase
         $config = Config::createFromFile(new Container(), self::SINGLE_FILE);
 
         self::assertSame($config->path('enum.foo'), TestEnum::FOO);
-        self::assertSame($config->getEnum('enum.bar', TestEnum::class), TestEnum::BAR);
+        self::assertSame($config->enum('enum.bar', TestEnum::class), TestEnum::BAR);
 
         $this->expectException(ConfigException::class);
-        $config->getEnum('enum.baz', SecondTestEnum::class);
+        $config->enum('enum.baz', SecondTestEnum::class);
     }
 
     public function testSection(): void
@@ -142,12 +142,12 @@ class ConfigTest extends TestCase
         $config = Config::createFromFile(new Container(), self::CLOSURE_FILE);
 
         self::assertSame(
-            $config->getString('name'),
+            $config->string('name'),
             'KalleLoad',
         );
 
         self::assertSame(
-            $config->getString('version'),
+            $config->string('version'),
             '2.0.0',
         );
     }

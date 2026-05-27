@@ -22,22 +22,26 @@ interface InputContextInterface
         string $name,
     ): bool;
 
-    public function getRaw(
+    public function raw(
         string $name,
         mixed $default = null,
     ): mixed;
 
-    public function getRawArray(
+    /**
+     * @param mixed[] $default
+     * @return mixed[]
+     */
+    public function rawArray(
         string $name,
-        mixed $default = null,
-    ): mixed;
+        array $default = [],
+    ): array;
 
-    public function getInt(
+    public function int(
         string $name,
         int $default = 0,
     ): int;
 
-    public function getBool(
+    public function bool(
         string $name,
         bool $default = false,
     ): bool;
@@ -46,14 +50,14 @@ interface InputContextInterface
      * @param '.'|',' $decimalPoint
      * @param '.'|','|' ' $thousandSeparator
      */
-    public function getFloat(
+    public function float(
         string $name,
         float $default = 0.0,
         string $decimalPoint = '.',
         string $thousandSeparator = ',',
     ): float;
 
-    public function getString(
+    public function string(
         string $name,
         string $default = '',
     ): string;
@@ -66,7 +70,7 @@ interface InputContextInterface
      *
      * @throws HttpException
      */
-    public function getEnum(
+    public function enum(
         string $name,
         string $enum,
     ): object;
@@ -74,14 +78,14 @@ interface InputContextInterface
     /**
      * @return int[]
      */
-    public function getArrayOfInt(
+    public function arrayOfInt(
         string $name,
     ): array;
 
     /**
      * @return bool[]
      */
-    public function getArrayOfBool(
+    public function arrayOfBool(
         string $name,
     ): array;
 
@@ -90,7 +94,7 @@ interface InputContextInterface
      * @param '.'|','|' ' $thousandSeparator
      * @return float[]
      */
-    public function getArrayOfFloat(
+    public function arrayOfFloat(
         string $name,
         string $decimalPoint = '.',
         string $thousandSeparator = ',',
@@ -99,7 +103,7 @@ interface InputContextInterface
     /**
      * @return string[]
      */
-    public function getArrayOfString(
+    public function arrayOfString(
         string $name,
     ): array;
 
@@ -111,7 +115,7 @@ interface InputContextInterface
      *
      * @throws HttpException
      */
-    public function getArrayOfEnum(
+    public function arrayOfEnum(
         string $name,
         string $enum,
     ): array;
@@ -122,7 +126,6 @@ interface InputContextInterface
      * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
      * @return TClassName
      *
-     * @throws HttpException
      * @throws MapperException
      */
     public function mapTo(
@@ -136,7 +139,6 @@ interface InputContextInterface
      * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
      * @return TClassName[]
      *
-     * @throws HttpException
      * @throws MapperException
      */
     public function mapToArrayOf(

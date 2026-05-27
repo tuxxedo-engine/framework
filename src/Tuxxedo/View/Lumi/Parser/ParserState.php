@@ -119,7 +119,7 @@ class ParserState implements ParserStateInterface
         return $this;
     }
 
-    public function getString(
+    public function string(
         string $key,
     ): string {
         if (!$this->has($key)) {
@@ -141,7 +141,7 @@ class ParserState implements ParserStateInterface
         return $value;
     }
 
-    public function getInt(string $key): int
+    public function int(string $key): int
     {
         if (!$this->has($key)) {
             throw ParserException::fromMissingStateKey(
@@ -162,7 +162,7 @@ class ParserState implements ParserStateInterface
         return $value;
     }
 
-    public function getBool(string $key): bool
+    public function bool(string $key): bool
     {
         if (!$this->has($key)) {
             throw ParserException::fromMissingStateKey(
