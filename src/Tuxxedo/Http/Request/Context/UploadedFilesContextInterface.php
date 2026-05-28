@@ -16,6 +16,7 @@ namespace Tuxxedo\Http\Request\Context;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\UploadedFileInterface;
 
+// @todo This needs an arrayOf variant for <input type="file" name="images[]"> stle
 interface UploadedFilesContextInterface
 {
     public function has(
