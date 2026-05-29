@@ -81,11 +81,12 @@ class PhpSessionAdapter implements SessionAdapterInterface
                     'lifetime' => $this->lifetime,
                     'path' => $this->path,
                     'domain' => $this->domain,
-                    'httpOnly' => $this->httpOnly,
+                    'httponly' => $this->httpOnly,
                     'secure' => $this->secure,
-                    'sameSite' => $this->sameSite->value,
+                    'samesite' => $this->sameSite->value,
                 ],
             ) or throw SessionException::fromCannotStart();
+
             \session_start() or throw SessionException::fromCannotStart();
 
             $this->started = true;
