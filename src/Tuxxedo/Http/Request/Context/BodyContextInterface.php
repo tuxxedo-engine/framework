@@ -17,6 +17,8 @@ use Tuxxedo\Http\HttpException;
 use Tuxxedo\Mapper\MapperException;
 
 // @todo Implement isJson()
+// @todo Implement isForm()
+// @todo Implement isXml()
 interface BodyContextInterface
 {
     /**
