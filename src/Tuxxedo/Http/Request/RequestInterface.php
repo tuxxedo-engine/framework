@@ -22,12 +22,13 @@ use Tuxxedo\Http\Request\Context\ServerContextInterface;
 use Tuxxedo\Http\Request\Context\UploadedFilesContextInterface;
 use Tuxxedo\Router\DispatchableRouteInterface;
 
-// @todo Implement wantsJson()
-// @todo Implement wantsHtml()
-// @todo Implement wantsCsv()
-// @todo Implement wantsXml()
-// @todo Implement wantsText()
+// @todo Implement acceptsJson()
+// @todo Implement acceptsHtml()
+// @todo Implement acceptsCsv()
+// @todo Implement acceptsXml()
+// @todo Implement acceptsText()
 // @todo Implement accepts($mimeType)
+// @todo Implement acceptsAny($mimeType1, $mimeType2, $mimeTypeN, ...)
 #[DefaultImplementation(class: Request::class)]
 interface RequestInterface
 {

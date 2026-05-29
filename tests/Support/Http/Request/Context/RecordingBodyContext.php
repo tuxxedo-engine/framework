@@ -36,6 +36,7 @@ class RecordingBodyContext extends StubBodyContext
         public readonly ?object $jsonMapToReturn = null,
         public readonly array $jsonMapToArrayOfReturn = [],
     ) {
+        parent::__construct();
     }
 
     /**

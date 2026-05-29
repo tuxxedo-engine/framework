@@ -16,9 +16,6 @@ namespace Tuxxedo\Http\Request\Context;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Mapper\MapperException;
 
-// @todo Implement isJson()
-// @todo Implement isForm()
-// @todo Implement isXml()
 interface BodyContextInterface
 {
     /**
@@ -29,6 +26,14 @@ interface BodyContextInterface
     public function getStream();
 
     public function getRaw(): string;
+
+    public function isJson(): bool;
+
+    public function isXml(): bool;
+
+    public function isForm(): bool;
+
+    public function isText(): bool;
 
     /**
      * @throws \JsonException

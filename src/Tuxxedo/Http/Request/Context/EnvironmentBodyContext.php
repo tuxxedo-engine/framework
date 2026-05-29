@@ -22,6 +22,7 @@ class EnvironmentBodyContext implements BodyContextInterface
 {
     public function __construct(
         private string $streamInputSource = 'php://input',
+        private ?string $contentType = null,
         private MapperInterface $mapper = new Mapper(),
     ) {
     }
@@ -40,6 +41,76 @@ class EnvironmentBodyContext implements BodyContextInterface
     public function getRaw(): string
     {
         return \stream_get_contents($this->getStream());
+    }
+
+    public function isJson(): bool
+    {
+        $mediaType = $this->mediaType();
+
+        if ($mediaType === null) {
+            return false;
+        }
+
+        return $mediaType === 'application/json' || \str_ends_with($mediaType, '+json');
+    }
+
+    public function isXml(): bool
+    {
+        $mediaType = $this->mediaType();
+
+        if ($mediaType === null) {
+            return false;
+        }
+
+        return $mediaType === 'application/xml' ||
+            $mediaType === 'text/xml' ||
+            \str_ends_with($mediaType, '+xml');
+    }
+
+    public function isForm(): bool
+    {
+        $mediaType = $this->mediaType();
+
+        if ($mediaType === null) {
+            return false;
+        }
+
+        return $mediaType === 'application/x-www-form-urlencoded' ||
+            $mediaType === 'multipart/form-data';
+    }
+
+    public function isText(): bool
+    {
+        $mediaType = $this->mediaType();
+
+        if ($mediaType === null) {
+            return false;
+        }
+
+        return \str_starts_with($mediaType, 'text/');
+    }
+
+    private function mediaType(): ?string
+    {
+        $contentType = $this->contentType ?? ($_SERVER['CONTENT_TYPE'] ?? null);
+
+        if (!\is_string($contentType)) {
+            return null;
+        }
+
+        $semicolon = \strpos($contentType, ';');
+
+        if ($semicolon !== false) {
+            $contentType = \substr($contentType, 0, $semicolon);
+        }
+
+        $contentType = \strtolower(\trim($contentType));
+
+        if ($contentType === '') {
+            return null;
+        }
+
+        return $contentType;
     }
 
     public function getJson(
