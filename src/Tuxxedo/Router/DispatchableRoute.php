@@ -57,6 +57,7 @@ readonly class DispatchableRoute implements DispatchableRouteInterface
                             \array_key_exists($routeArgument->mappedName, $this->arguments)
                         ) {
                             $value = $this->arguments[$routeArgument->mappedName];
+
                             break;
                         }
                     }
