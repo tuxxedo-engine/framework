@@ -22,6 +22,14 @@ use Tuxxedo\Http\Request\Context\ServerContextInterface;
 use Tuxxedo\Http\Request\Context\UploadedFilesContextInterface;
 use Tuxxedo\Router\DispatchableRouteInterface;
 
+// @todo Implement wantsJson()
+// @todo Implement wantsHtml()
+// @todo Implement wantsCsv()
+// @todo Implement wantsXml()
+// @todo Implement wantsText()
+// @todo Implement expectsJson()
+// @todo Implement accepts($mimeType)
+// @todo Consider renaming negotiate() to prefers() with a variadic signature
 #[DefaultImplementation(class: Request::class)]
 interface RequestInterface
 {

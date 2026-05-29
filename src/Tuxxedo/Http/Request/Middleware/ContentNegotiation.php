@@ -17,6 +17,7 @@ use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
+// @todo Rename this to Accepts and make the argument variadic?
 #[\Attribute(flags: \Attribute::TARGET_CLASS | \Attribute::TARGET_METHOD)]
 class ContentNegotiation implements MiddlewareInterface
 {

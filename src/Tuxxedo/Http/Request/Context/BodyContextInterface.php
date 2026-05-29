@@ -16,6 +16,7 @@ namespace Tuxxedo\Http\Request\Context;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Mapper\MapperException;
 
+// @todo Implement isJson()
 interface BodyContextInterface
 {
     /**
