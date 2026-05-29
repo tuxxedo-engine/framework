@@ -257,6 +257,162 @@ class RequestTest extends TestCase
         self::assertSame($expected, $this->makeRequest(headers: $headers)->prefers(...$supported));
     }
 
+    private function makeRequestWithAcceptHeader(
+        ?string $acceptHeader,
+    ): Request {
+        $headers = $acceptHeader !== null
+            ? new StubHeaderContext(
+                [
+                    'Accept' => $acceptHeader,
+                ],
+            )
+            : new StubHeaderContext();
+
+        return $this->makeRequest(
+            headers: $headers,
+        );
+    }
+
+    public function testAcceptsReturnsTrueWhenNoAcceptHeaderPresent(): void
+    {
+        self::assertTrue(
+            $this->makeRequestWithAcceptHeader(null)->accepts('application/json'),
+        );
+    }
+
+    public function testAcceptsReturnsTrueForWildcardAcceptHeader(): void
+    {
+        self::assertTrue(
+            $this->makeRequestWithAcceptHeader('*/*')->accepts('application/json'),
+        );
+    }
+
+    public function testAcceptsReturnsTrueForExactMatch(): void
+    {
+        self::assertTrue(
+            $this->makeRequestWithAcceptHeader('application/json')->accepts('application/json'),
+        );
+    }
+
+    public function testAcceptsReturnsTrueForTypeWildcardMatch(): void
+    {
+        self::assertTrue(
+            $this->makeRequestWithAcceptHeader('application/*')->accepts('application/json'),
+        );
+    }
+
+    public function testAcceptsReturnsFalseForNonMatchingType(): void
+    {
+        self::assertFalse(
+            $this->makeRequestWithAcceptHeader('text/html')->accepts('application/json'),
+        );
+    }
+
+    public function testAcceptsReturnsFalseWhenWeightedZero(): void
+    {
+        self::assertFalse(
+            $this->makeRequestWithAcceptHeader('application/json;q=0')->accepts('application/json'),
+        );
+    }
+
+    public function testAcceptsAnyReturnsFalseForZeroArguments(): void
+    {
+        self::assertFalse(
+            $this->makeRequestWithAcceptHeader('*/*')->acceptsAny(),
+        );
+    }
+
+    public function testAcceptsAnyReturnsTrueWhenAnyMimeMatches(): void
+    {
+        self::assertTrue(
+            $this->makeRequestWithAcceptHeader('text/html')->acceptsAny('application/json', 'text/html'),
+        );
+    }
+
+    public function testAcceptsAnyReturnsFalseWhenNoMimesMatch(): void
+    {
+        self::assertFalse(
+            $this->makeRequestWithAcceptHeader('image/png')->acceptsAny('application/json', 'text/html'),
+        );
+    }
+
+    public function testAcceptsAnyReturnsTrueWhenNoAcceptHeaderPresent(): void
+    {
+        self::assertTrue(
+            $this->makeRequestWithAcceptHeader(null)->acceptsAny('application/json', 'text/html'),
+        );
+    }
+
+    public function testAcceptsJsonReturnsTrueForApplicationJson(): void
+    {
+        self::assertTrue(
+            $this->makeRequestWithAcceptHeader('application/json')->acceptsJson(),
+        );
+    }
+
+    public function testAcceptsJsonReturnsFalseForOtherType(): void
+    {
+        self::assertFalse(
+            $this->makeRequestWithAcceptHeader('text/html')->acceptsJson(),
+        );
+    }
+
+    public function testAcceptsHtmlReturnsTrueForTextHtml(): void
+    {
+        self::assertTrue(
+            $this->makeRequestWithAcceptHeader('text/html')->acceptsHtml(),
+        );
+    }
+
+    public function testAcceptsHtmlReturnsFalseForOtherType(): void
+    {
+        self::assertFalse(
+            $this->makeRequestWithAcceptHeader('application/json')->acceptsHtml(),
+        );
+    }
+
+    public function testAcceptsCsvReturnsTrueForTextCsv(): void
+    {
+        self::assertTrue(
+            $this->makeRequestWithAcceptHeader('text/csv')->acceptsCsv(),
+        );
+    }
+
+    public function testAcceptsCsvReturnsFalseForOtherType(): void
+    {
+        self::assertFalse(
+            $this->makeRequestWithAcceptHeader('application/json')->acceptsCsv(),
+        );
+    }
+
+    public function testAcceptsXmlReturnsTrueForApplicationXml(): void
+    {
+        self::assertTrue(
+            $this->makeRequestWithAcceptHeader('application/xml')->acceptsXml(),
+        );
+    }
+
+    public function testAcceptsXmlReturnsFalseForOtherType(): void
+    {
+        self::assertFalse(
+            $this->makeRequestWithAcceptHeader('text/html')->acceptsXml(),
+        );
+    }
+
+    public function testAcceptsTextReturnsTrueForTextPlain(): void
+    {
+        self::assertTrue(
+            $this->makeRequestWithAcceptHeader('text/plain')->acceptsText(),
+        );
+    }
+
+    public function testAcceptsTextReturnsFalseForOtherType(): void
+    {
+        self::assertFalse(
+            $this->makeRequestWithAcceptHeader('application/json')->acceptsText(),
+        );
+    }
+
     public function testIsNotModifiedReturnsFalseWithoutAnyConditionalHeaders(): void
     {
         $request = $this->makeRequest(

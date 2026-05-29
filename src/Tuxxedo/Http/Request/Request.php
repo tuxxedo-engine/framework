@@ -140,6 +140,47 @@ class Request implements RequestInterface
         ];
     }
 
+    public function accepts(
+        string $mimeType,
+    ): bool {
+        return $this->prefers($mimeType) !== null;
+    }
+
+    public function acceptsAny(
+        string ...$mimeTypes,
+    ): bool {
+        if (\sizeof($mimeTypes) === 0) {
+            return false;
+        }
+
+        return $this->prefers(...$mimeTypes) !== null;
+    }
+
+    public function acceptsJson(): bool
+    {
+        return $this->accepts('application/json');
+    }
+
+    public function acceptsHtml(): bool
+    {
+        return $this->accepts('text/html');
+    }
+
+    public function acceptsCsv(): bool
+    {
+        return $this->accepts('text/csv');
+    }
+
+    public function acceptsXml(): bool
+    {
+        return $this->accepts('application/xml');
+    }
+
+    public function acceptsText(): bool
+    {
+        return $this->accepts('text/plain');
+    }
+
     public function isModified(
         ?string $etag = null,
         ?\DateTimeInterface $lastModified = null,
