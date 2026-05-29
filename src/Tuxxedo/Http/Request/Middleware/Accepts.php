@@ -17,23 +17,29 @@ use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
-// @todo Rename this to Accepts and make the argument variadic?
 #[\Attribute(flags: \Attribute::TARGET_CLASS | \Attribute::TARGET_METHOD)]
-class ContentNegotiation implements MiddlewareInterface
+readonly class Accepts implements MiddlewareInterface
 {
     /**
-     * @param non-empty-array<string> $supported
+     * @var non-empty-list<string>
      */
+    private array $supported;
+
     public function __construct(
-        private readonly array $supported,
+        string ...$supported,
     ) {
+        if (\sizeof($supported) === 0) {
+            throw HttpException::fromInternalServerError();
+        }
+
+        $this->supported = \array_values($supported);
     }
 
     public function handle(
         RequestInterface $request,
         MiddlewareInterface $next,
     ): ResponseInterface {
-        $request->negotiate($this->supported) ?? throw HttpException::fromNotAcceptable();
+        $request->prefers(...$this->supported) ?? throw HttpException::fromNotAcceptable();
 
         return $next->handle($request, $next);
     }

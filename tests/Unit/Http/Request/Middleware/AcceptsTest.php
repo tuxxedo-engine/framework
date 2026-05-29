@@ -21,11 +21,11 @@ use Support\Http\Request\Context\StubServerContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Http\Request\Middleware\RecordingMiddleware;
 use Tuxxedo\Http\HttpException;
-use Tuxxedo\Http\Request\Middleware\ContentNegotiation;
+use Tuxxedo\Http\Request\Middleware\Accepts;
 use Tuxxedo\Http\Request\Request;
 use Tuxxedo\Http\Response\ResponseCode;
 
-class ContentNegotiationTest extends TestCase
+class AcceptsTest extends TestCase
 {
     /**
      * @param array<string, string> $headers
@@ -46,6 +46,13 @@ class ContentNegotiationTest extends TestCase
         );
     }
 
+    public function testConstructorThrowsWhenNoMimeTypesProvided(): void
+    {
+        $this->expectException(HttpException::class);
+
+        new Accepts();
+    }
+
     public function testHandleCallsNextWhenNegotiationMatches(): void
     {
         $next = new RecordingMiddleware();
@@ -55,11 +62,24 @@ class ContentNegotiationTest extends TestCase
             ],
         );
 
-        (new ContentNegotiation(
-            supported: [
-                'application/json',
+        (new Accepts('application/json'))->handle(
+            request: $request,
+            next: $next,
+        );
+
+        self::assertSame(1, $next->callCount);
+    }
+
+    public function testHandleMatchesFromMultipleSupportedMimes(): void
+    {
+        $next = new RecordingMiddleware();
+        $request = $this->makeRequest(
+            headers: [
+                'Accept' => 'application/json',
             ],
-        ))->handle(
+        );
+
+        (new Accepts('text/html', 'application/json'))->handle(
             request: $request,
             next: $next,
         );
@@ -76,11 +96,7 @@ class ContentNegotiationTest extends TestCase
             ],
         );
 
-        (new ContentNegotiation(
-            supported: [
-                'application/json',
-            ],
-        ))->handle(
+        (new Accepts('application/json'))->handle(
             request: $request,
             next: $next,
         );
@@ -93,11 +109,7 @@ class ContentNegotiationTest extends TestCase
         $next = new RecordingMiddleware();
         $request = $this->makeRequest();
 
-        (new ContentNegotiation(
-            supported: [
-                'text/html',
-            ],
-        ))->handle(
+        (new Accepts('text/html'))->handle(
             request: $request,
             next: $next,
         );
@@ -117,11 +129,7 @@ class ContentNegotiationTest extends TestCase
         $caught = null;
 
         try {
-            (new ContentNegotiation(
-                supported: [
-                    'application/json',
-                ],
-            ))->handle(
+            (new Accepts('application/json'))->handle(
                 request: $request,
                 next: $next,
             );

@@ -73,8 +73,8 @@ class Request implements RequestInterface
         };
     }
 
-    public function negotiate(
-        array $supported,
+    public function prefers(
+        string ...$supported,
     ): ?string {
         if (!$this->headers->has('Accept')) {
             return $supported[0] ?? null;

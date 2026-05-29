@@ -159,7 +159,7 @@ class RequestTest extends TestCase
     /**
      * @return \Generator<array{0: string|null, 1: non-empty-array<string>, 2: string|null}>
      */
-    public static function negotiateDataProvider(): \Generator
+    public static function prefersDataProvider(): \Generator
     {
         yield [
             null,
@@ -240,8 +240,8 @@ class RequestTest extends TestCase
     /**
      * @param non-empty-array<string> $supported
      */
-    #[DataProvider('negotiateDataProvider')]
-    public function testNegotiate(
+    #[DataProvider('prefersDataProvider')]
+    public function testPrefers(
         ?string $acceptHeader,
         array $supported,
         ?string $expected,
@@ -254,7 +254,7 @@ class RequestTest extends TestCase
             )
             : new StubHeaderContext();
 
-        self::assertSame($expected, $this->makeRequest(headers: $headers)->negotiate($supported));
+        self::assertSame($expected, $this->makeRequest(headers: $headers)->prefers(...$supported));
     }
 
     public function testIsNotModifiedReturnsFalseWithoutAnyConditionalHeaders(): void

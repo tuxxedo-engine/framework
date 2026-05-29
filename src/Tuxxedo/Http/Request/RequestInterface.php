@@ -27,9 +27,7 @@ use Tuxxedo\Router\DispatchableRouteInterface;
 // @todo Implement wantsCsv()
 // @todo Implement wantsXml()
 // @todo Implement wantsText()
-// @todo Implement expectsJson()
 // @todo Implement accepts($mimeType)
-// @todo Consider renaming negotiate() to prefers() with a variadic signature
 #[DefaultImplementation(class: Request::class)]
 interface RequestInterface
 {
@@ -74,11 +72,8 @@ interface RequestInterface
         InputContext $context,
     ): InputContextInterface;
 
-    /**
-     * @param non-empty-array<string> $supported
-     */
-    public function negotiate(
-        array $supported,
+    public function prefers(
+        string ...$supported,
     ): ?string;
 
     public function isModified(
