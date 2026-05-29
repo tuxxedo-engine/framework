@@ -21,7 +21,6 @@ use Tuxxedo\Http\Response\ResponseInterface;
 // @todo Implement RequestId for correlation IDs via X-Request-Id
 // @todo Implement MaintenanceMode for 503 with Retry-After
 // @todo Implement MethodOverride for _method/X-HTTP-Method-Override
-// @todo Implement MaxBodySize for 413 enforcement on Content-Length
 // @todo Implement AccessLog for request/response logging via LoggerInterface
 interface MiddlewareInterface
 {

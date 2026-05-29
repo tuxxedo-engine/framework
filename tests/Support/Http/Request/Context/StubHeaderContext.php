@@ -88,19 +88,31 @@ class StubHeaderContext implements HeaderContextInterface
     public function int(
         string $name,
     ): int {
-        return 0;
+        if (!\array_key_exists($name, $this->headers)) {
+            throw HttpException::fromInternalServerError();
+        }
+
+        return (int) $this->headers[$name];
     }
 
     public function bool(
         string $name,
     ): bool {
-        return false;
+        if (!\array_key_exists($name, $this->headers)) {
+            throw HttpException::fromInternalServerError();
+        }
+
+        return (bool) $this->headers[$name];
     }
 
     public function float(
         string $name,
     ): float {
-        return 0.0;
+        if (!\array_key_exists($name, $this->headers)) {
+            throw HttpException::fromInternalServerError();
+        }
+
+        return (float) $this->headers[$name];
     }
 
     public function string(
