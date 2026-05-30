@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
+// @todo Lazy Proxies via attribute or similar?
 interface ContainerInterface
 {
     /**
