@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
-// @todo Lazy Proxies via attribute or similar?
+// @todo Lazy Proxies via attribute or similar? #[Lazy] as a modifier attribute, e.g. public function show(#[Lazy] #[Model(key: 'id')] User $user): ResponseInterface
 interface ContainerInterface
 {
     /**
