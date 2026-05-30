@@ -15,4 +15,10 @@ namespace Tuxxedo\Model\Attribute\Relation;
 
 interface RelationInterface
 {
+    /**
+     * @var class-string
+     */
+    public string $related {
+        get;
+    }
 }

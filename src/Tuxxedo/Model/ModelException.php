@@ -240,4 +240,38 @@ class ModelException extends \Exception
             ),
         );
     }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromInvalidRelatedClass(
+        string $modelClass,
+        string $property,
+        string $relatedClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Relation on property "%s" references "%s" which does not exist or is not a non-abstract class',
+                $modelClass,
+                $property,
+                $relatedClass,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromPropertyMayOnlyHaveOneRelation(
+        string $modelClass,
+        string $property,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Property %1$s::\$%s has more than one relation attribute',
+                $modelClass,
+                $property,
+            ),
+        );
+    }
 }

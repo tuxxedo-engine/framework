@@ -43,4 +43,11 @@ interface ModelMetaDataInterface
     public array $identifiers {
         get;
     }
+
+    /**
+     * @var ModelRelationInterface[]
+     */
+    public array $relations {
+        get;
+    }
 }

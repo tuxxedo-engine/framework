@@ -30,9 +30,13 @@ use Tuxxedo\Model\MetaData\ModelMetaData;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelPrimaryKey;
 use Tuxxedo\Model\MetaData\ModelPrimaryKeyInterface;
+use Tuxxedo\Model\MetaData\ModelRelation;
+use Tuxxedo\Model\MetaData\ModelRelationInterface;
 use Tuxxedo\Model\ModelException;
 use Tuxxedo\Reflection\ClassReflector;
 
+// @todo Validate foreignKey/localKey/ownerKey actually reference columns on the related model (cross-class metadata lookup)
+// @todo HasMany and BelongsToMany is not properly validated
 class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
 {
     /**
@@ -100,7 +104,72 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             key: $primaryKey ?? $compositeKey,
             columns: $columns,
             identifiers: $identifiers,
+            relations: $this->getRelations($class),
         );
+    }
+
+    /**
+     * @return ModelRelationInterface[]
+     *
+     * @throws ModelException
+     */
+    private function getRelations(
+        ClassReflector $class,
+    ): array {
+        $relations = [];
+
+        foreach ($class->properties() as $property) {
+            $columnAttributes = \iterator_to_array($property->getAttributes(ColumnInterface::class));
+
+            if (\sizeof($columnAttributes) !== 0) {
+                continue;
+            }
+
+            $relationAttributes = \iterator_to_array($property->getAttributes(RelationInterface::class));
+            $relationAttributesCount = \sizeof($relationAttributes);
+
+            if ($relationAttributesCount === 0) {
+                continue;
+            }
+
+            if ($relationAttributesCount > 1) {
+                throw ModelException::fromPropertyMayOnlyHaveOneRelation(
+                    modelClass: $class->name,
+                    property: $property->name,
+                );
+            }
+
+            $attribute = $relationAttributes[0];
+            $relatedClass = $attribute->related;
+
+            try {
+                $relatedReflection = new \ReflectionClass($relatedClass);
+
+                if (
+                    $relatedReflection->isAbstract() ||
+                    $relatedReflection->isTrait() ||
+                    $relatedReflection->isInterface() ||
+                    $relatedReflection->isEnum()
+                ) {
+                    throw new \ReflectionException();
+                }
+            } catch (\ReflectionException) {
+                throw ModelException::fromInvalidRelatedClass(
+                    modelClass: $class->name,
+                    property: $property->name,
+                    relatedClass: $relatedClass,
+                );
+            }
+
+            $relations[] = new ModelRelation(
+                property: $property->name,
+                relatedClass: $relatedClass,
+                nullable: $property->isNullable(),
+                attribute: $attribute,
+            );
+        }
+
+        return $relations;
     }
 
     /**

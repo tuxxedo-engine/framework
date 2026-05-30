@@ -19,6 +19,7 @@ readonly class ModelMetaData implements ModelMetaDataInterface
      * @param class-string $model
      * @param non-empty-array<ModelColumnInterface> $columns
      * @param ModelIdentifierInterface[] $identifiers
+     * @param ModelRelationInterface[] $relations
      */
     public function __construct(
         public string $model,
@@ -26,6 +27,7 @@ readonly class ModelMetaData implements ModelMetaDataInterface
         public ModelPrimaryKeyInterface|ModelCompositeKeyInterface|null $key,
         public array $columns,
         public array $identifiers,
+        public array $relations = [],
     ) {
     }
 }
