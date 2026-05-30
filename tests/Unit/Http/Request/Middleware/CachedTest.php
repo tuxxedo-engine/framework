@@ -17,7 +17,6 @@ use PHPUnit\Framework\TestCase;
 use Support\Http\Request\Context\StubBodyContext;
 use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
-use Support\Http\Request\Context\StubServerContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Http\Request\Middleware\RecordingMiddleware;
 use Tuxxedo\Http\Header;
@@ -35,17 +34,14 @@ class CachedTest extends TestCase
         Method $method = Method::GET,
         ?StubHeaderContext $headers = null,
     ): Request {
-        $server = new StubServerContext();
-        $server->method = $method;
-
         return new Request(
-            server: $server,
             headers: $headers ?? new StubHeaderContext(),
             cookies: new StubInputContext(),
             get: new StubInputContext(),
             post: new StubInputContext(),
             files: new StubUploadedFilesContext(),
             body: new StubBodyContext(),
+            method: $method,
         );
     }
 
@@ -180,7 +176,7 @@ class CachedTest extends TestCase
     {
         $response = (new Cached(
             etag: static function (RequestInterface $request): string {
-                return 'method-' . $request->server->method->name;
+                return 'method-' . $request->method->name;
             },
         ))->handle(
             request: $this->makeRequest(),

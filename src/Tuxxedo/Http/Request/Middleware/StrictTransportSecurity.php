@@ -49,7 +49,7 @@ class StrictTransportSecurity implements MiddlewareInterface
     ): ResponseInterface {
         $response = $next->handle($request, $next);
 
-        if ($request->server->https) {
+        if ($request->https) {
             return $response->withHeader(
                 new Header(
                     name: 'Strict-Transport-Security',

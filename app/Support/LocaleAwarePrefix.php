@@ -28,7 +28,7 @@ class LocaleAwarePrefix implements PrefixDefaultsInterface
     public function getDefaultValue(string $argument): mixed
     {
         return match ($argument) {
-            'language' => \strtolower(\substr($this->request->server->preferredLanguage ?? 'en', 0, 2)),
+            'language' => \strtolower(\substr($this->request->headers->preferredLanguage ?? 'en', 0, 2)),
             default => null,
         };
     }

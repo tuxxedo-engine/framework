@@ -17,7 +17,6 @@ use PHPUnit\Framework\TestCase;
 use Support\Http\Request\Context\StubBodyContext;
 use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
-use Support\Http\Request\Context\StubServerContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Method;
@@ -534,18 +533,15 @@ class StaticRouterTest extends TestCase
             uri: '/users',
         );
 
-        $server = new StubServerContext();
-        $server->method = Method::GET;
-        $server->uri = '/users';
-
         $request = new Request(
-            server: $server,
             headers: new StubHeaderContext(),
             cookies: new StubInputContext(),
             get: new StubInputContext(),
             post: new StubInputContext(),
             files: new StubUploadedFilesContext(),
             body: new StubBodyContext(),
+            method: Method::GET,
+            uri: '/users',
         );
 
         $dispatchable = $this->makeRouter(

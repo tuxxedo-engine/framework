@@ -17,7 +17,6 @@ use PHPUnit\Framework\TestCase;
 use Support\Http\Request\Context\StubBodyContext;
 use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
-use Support\Http\Request\Context\StubServerContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Http\Request\Middleware\RecordingMiddleware;
 use Tuxxedo\Http\Request\Middleware\StrictTransportSecurity;
@@ -30,17 +29,14 @@ class StrictTransportSecurityTest extends TestCase
     private function makeRequest(
         bool $https,
     ): Request {
-        $server = new StubServerContext();
-        $server->https = $https;
-
         return new Request(
-            server: $server,
             headers: new StubHeaderContext(),
             cookies: new StubInputContext(),
             get: new StubInputContext(),
             post: new StubInputContext(),
             files: new StubUploadedFilesContext(),
             body: new StubBodyContext(),
+            https: $https,
         );
     }
 

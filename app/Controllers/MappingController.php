@@ -40,7 +40,7 @@ readonly class MappingController
     #[Route(uri: '/inputMap', method: [Method::GET, Method::POST])]
     public function inputMap(RequestInterface $request): ResponseInterface
     {
-        if ($request->server->method === Method::GET) {
+        if ($request->method === Method::GET) {
             return Response::html(
                 html: '<form action="/inputMap" method="post">' .
                 '<input type="text" name="struct[name]">' .

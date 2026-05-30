@@ -90,7 +90,7 @@ readonly class ModelController
     ): ViewInterface|ResponseInterface {
         $user = $this->modelsManager->fetchByIdentifier(User::class, $id);
 
-        if ($request->server->method === Method::POST) {
+        if ($request->method === Method::POST) {
             (void) $this->modelsManager->delete($user);
 
             return Response::redirectRoute('model.list');
@@ -109,7 +109,7 @@ readonly class ModelController
         RequestInterface $request,
         EventsManagerInterface $eventsManager,
     ): ViewInterface|ResponseInterface {
-        if ($request->server->method === Method::POST) {
+        if ($request->method === Method::POST) {
             $user = new User();
             $user->name = $request->post->string('name');
 
@@ -138,7 +138,7 @@ readonly class ModelController
     ): ViewInterface|ResponseInterface {
         $user = $this->modelsManager->fetchByIdentifier(User::class, $id);
 
-        if ($request->server->method === Method::POST) {
+        if ($request->method === Method::POST) {
             $user->name = $request->post->string('name');
 
             (void) $this->modelsManager->save($user);

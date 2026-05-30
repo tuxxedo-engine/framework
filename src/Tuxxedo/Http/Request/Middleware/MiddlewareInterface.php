@@ -22,6 +22,8 @@ use Tuxxedo\Http\Response\ResponseInterface;
 // @todo Implement MaintenanceMode for 503 with Retry-After
 // @todo Implement MethodOverride for _method/X-HTTP-Method-Override
 // @todo Implement AccessLog for request/response logging via LoggerInterface
+// @todo Implement Whitelist for restricting IPs/domains (webhook source verification)
+// @todo Implement Blacklist for blocking IPs/domains
 interface MiddlewareInterface
 {
     public function handle(

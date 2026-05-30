@@ -17,7 +17,6 @@ use PHPUnit\Framework\TestCase;
 use Support\Http\Request\Context\StubBodyContext;
 use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
-use Support\Http\Request\Context\StubServerContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Http\Request\Middleware\RecordingMiddleware;
 use Tuxxedo\Http\Request\Middleware\HttpsRequired;
@@ -28,16 +27,22 @@ use Tuxxedo\Http\Response\ResponseInterface;
 class HttpsRequiredTest extends TestCase
 {
     private function makeRequest(
-        StubServerContext $server,
+        ?string $fullUri = null,
+        bool $https = true,
+        ?string $host = null,
+        ?int $port = null,
     ): Request {
         return new Request(
-            server: $server,
             headers: new StubHeaderContext(),
             cookies: new StubInputContext(),
             get: new StubInputContext(),
             post: new StubInputContext(),
             files: new StubUploadedFilesContext(),
             body: new StubBodyContext(),
+            fullUri: $fullUri,
+            https: $https,
+            host: $host,
+            port: $port,
         );
     }
 
@@ -55,15 +60,10 @@ class HttpsRequiredTest extends TestCase
 
     public function testHandleCallsNextWhenRequestIsHttps(): void
     {
-        $server = new StubServerContext();
-        $server->https = true;
-
         $next = new RecordingMiddleware();
 
         (new HttpsRequired())->handle(
-            request: $this->makeRequest(
-                server: $server,
-            ),
+            request: $this->makeRequest(),
             next: $next,
         );
 
@@ -72,17 +72,14 @@ class HttpsRequiredTest extends TestCase
 
     public function testHandleRedirectsToHttpsWhenRequestIsNotHttps(): void
     {
-        $server = new StubServerContext();
-        $server->https = false;
-        $server->host = 'example.com';
-        $server->port = 80;
-        $server->fullUri = '/foo?bar=baz';
-
         $next = new RecordingMiddleware();
 
         $response = (new HttpsRequired())->handle(
             request: $this->makeRequest(
-                server: $server,
+                fullUri: '/foo?bar=baz',
+                https: false,
+                host: 'example.com',
+                port: 80,
             ),
             next: $next,
         );
@@ -93,12 +90,9 @@ class HttpsRequiredTest extends TestCase
 
     public function testHandleUsesMovedPermanentlyByDefault(): void
     {
-        $server = new StubServerContext();
-        $server->https = false;
-
         $response = (new HttpsRequired())->handle(
             request: $this->makeRequest(
-                server: $server,
+                https: false,
             ),
             next: new RecordingMiddleware(),
         );
@@ -108,14 +102,11 @@ class HttpsRequiredTest extends TestCase
 
     public function testHandlePropagatesCustomResponseCode(): void
     {
-        $server = new StubServerContext();
-        $server->https = false;
-
         $response = (new HttpsRequired(
             responseCode: ResponseCode::TEMPORARY_REDIRECT,
         ))->handle(
             request: $this->makeRequest(
-                server: $server,
+                https: false,
             ),
             next: new RecordingMiddleware(),
         );
@@ -125,15 +116,12 @@ class HttpsRequiredTest extends TestCase
 
     public function testHandleOmitsPortFromRedirectWhenPortIs80(): void
     {
-        $server = new StubServerContext();
-        $server->https = false;
-        $server->host = 'example.com';
-        $server->port = 80;
-        $server->fullUri = '/';
-
         $response = (new HttpsRequired())->handle(
             request: $this->makeRequest(
-                server: $server,
+                fullUri: '/',
+                https: false,
+                host: 'example.com',
+                port: 80,
             ),
             next: new RecordingMiddleware(),
         );
@@ -143,15 +131,12 @@ class HttpsRequiredTest extends TestCase
 
     public function testHandleOmitsPortFromRedirectWhenPortIs443(): void
     {
-        $server = new StubServerContext();
-        $server->https = false;
-        $server->host = 'example.com';
-        $server->port = 443;
-        $server->fullUri = '/';
-
         $response = (new HttpsRequired())->handle(
             request: $this->makeRequest(
-                server: $server,
+                fullUri: '/',
+                https: false,
+                host: 'example.com',
+                port: 443,
             ),
             next: new RecordingMiddleware(),
         );
@@ -161,15 +146,12 @@ class HttpsRequiredTest extends TestCase
 
     public function testHandleIncludesNonStandardPortInRedirect(): void
     {
-        $server = new StubServerContext();
-        $server->https = false;
-        $server->host = 'example.com';
-        $server->port = 8080;
-        $server->fullUri = '/';
-
         $response = (new HttpsRequired())->handle(
             request: $this->makeRequest(
-                server: $server,
+                fullUri: '/',
+                https: false,
+                host: 'example.com',
+                port: 8080,
             ),
             next: new RecordingMiddleware(),
         );

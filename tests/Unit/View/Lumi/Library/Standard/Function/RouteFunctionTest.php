@@ -17,7 +17,6 @@ use PHPUnit\Framework\TestCase;
 use Support\Http\Request\Context\StubBodyContext;
 use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
-use Support\Http\Request\Context\StubServerContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\View\Lumi\Runtime\StubRuntimeContext;
 use Tuxxedo\Container\Container;
@@ -53,7 +52,6 @@ class RouteFunctionTest extends TestCase
         string $uri,
     ): Container {
         $request = (new Request(
-            server: new StubServerContext(),
             headers: new StubHeaderContext(),
             cookies: new StubInputContext(),
             get: new StubInputContext(),

@@ -17,7 +17,6 @@ use PHPUnit\Framework\TestCase;
 use Support\Http\Request\Context\StubBodyContext;
 use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
-use Support\Http\Request\Context\StubServerContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Http\Request\Middleware\RecordingMiddleware;
 use Tuxxedo\Http\Request\Middleware\Guard;
@@ -32,7 +31,6 @@ class GuardTest extends TestCase
     private function makeRequest(): Request
     {
         return new Request(
-            server: new StubServerContext(),
             headers: new StubHeaderContext(),
             cookies: new StubInputContext(),
             get: new StubInputContext(),

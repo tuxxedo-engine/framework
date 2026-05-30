@@ -17,7 +17,6 @@ use PHPUnit\Framework\TestCase;
 use Support\Http\Request\Context\StubBodyContext;
 use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
-use Support\Http\Request\Context\StubServerContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\View\Lumi\Runtime\StubRuntimeContext;
 use Tuxxedo\Container\Container;
@@ -28,10 +27,7 @@ class RequestFunctionTest extends TestCase
 {
     public function testCallReturnsServerContext(): void
     {
-        $server = new StubServerContext();
-
         $request = new Request(
-            server: $server,
             headers: new StubHeaderContext(),
             cookies: new StubInputContext(),
             get: new StubInputContext(),
@@ -47,7 +43,7 @@ class RequestFunctionTest extends TestCase
         );
 
         self::assertSame(
-            $server,
+            $request,
             $function->call(
                 [],
                 static fn () => new StubRuntimeContext(),

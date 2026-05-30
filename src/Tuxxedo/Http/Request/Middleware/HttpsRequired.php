@@ -30,18 +30,18 @@ class HttpsRequired implements MiddlewareInterface
         RequestInterface $request,
         MiddlewareInterface $next,
     ): ResponseInterface {
-        if ($request->server->https) {
+        if ($request->https) {
             return $next->handle($request, $next);
         }
 
         return Response::redirect(
             uri: \sprintf(
                 'https://%s%s%s',
-                $request->server->host,
-                $request->server->port !== 80 && $request->server->port !== 443
-                    ? ':' . \strval($request->server->port)
+                $request->host,
+                $request->port !== 80 && $request->port !== 443
+                    ? ':' . \strval($request->port)
                     : '',
-                $request->server->fullUri,
+                $request->fullUri,
             ),
             responseCode: $this->responseCode,
         );

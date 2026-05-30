@@ -67,8 +67,8 @@ abstract class AbstractRouter implements RouterInterface
         RequestInterface $request,
     ): ?DispatchableRouteInterface {
         return $this->findByUri(
-            method: $request->server->method,
-            uri: $request->server->uri,
+            method: $request->method,
+            uri: $request->uri,
         );
     }
 

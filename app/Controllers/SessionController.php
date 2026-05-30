@@ -33,7 +33,7 @@ readonly class SessionController
     #[Route\Post]
     public function index(RequestInterface $request): ResponseInterface
     {
-        if ($request->server->method === Method::POST) {
+        if ($request->method === Method::POST) {
             $value = $request->post->string('value');
             $value = match ($request->post->string('type')) {
                 'int' => \intval($value),

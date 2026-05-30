@@ -17,7 +17,6 @@ use PHPUnit\Framework\TestCase;
 use Support\Http\Request\Context\StubBodyContext;
 use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
-use Support\Http\Request\Context\StubServerContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Http\Request\Middleware\RecordingMiddleware;
 use Tuxxedo\Http\HttpException;
@@ -51,7 +50,6 @@ class MaxBodySizeTest extends TestCase
         ?BodyContextInterface $body = null,
     ): Request {
         return new Request(
-            server: new StubServerContext(),
             headers: new StubHeaderContext(
                 headers: $headers,
             ),

@@ -30,7 +30,7 @@ class Csrf implements MiddlewareInterface
         RequestInterface $request,
         MiddlewareInterface $next,
     ): ResponseInterface {
-        $method = $request->server->method;
+        $method = $request->method;
 
         if (
             $method === Method::POST ||

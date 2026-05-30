@@ -18,14 +18,12 @@ use PHPUnit\Framework\TestCase;
 use Support\Http\Request\Context\StubBodyContext;
 use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
-use Support\Http\Request\Context\StubServerContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Http\Router\StubDispatchableRoute;
 use Tuxxedo\Http\InputContext;
 use Tuxxedo\Http\Request\Context\BodyContextInterface;
 use Tuxxedo\Http\Request\Context\HeaderContextInterface;
 use Tuxxedo\Http\Request\Context\InputContextInterface;
-use Tuxxedo\Http\Request\Context\ServerContextInterface;
 use Tuxxedo\Http\Request\Context\UploadedFilesContextInterface;
 use Tuxxedo\Http\Request\Request;
 use Tuxxedo\Router\DispatchableRouteInterface;
@@ -34,7 +32,6 @@ class RequestTest extends TestCase
 {
     private function makeRequest(
         ?DispatchableRouteInterface $route = null,
-        ?ServerContextInterface $server = null,
         ?HeaderContextInterface $headers = null,
         ?InputContextInterface $cookies = null,
         ?InputContextInterface $get = null,
@@ -44,7 +41,6 @@ class RequestTest extends TestCase
     ): Request {
         return new Request(
             route: $route,
-            server: $server ?? new StubServerContext(),
             headers: $headers ?? new StubHeaderContext(),
             cookies: $cookies ?? new StubInputContext(),
             get: $get ?? new StubInputContext(),
@@ -75,7 +71,10 @@ class RequestTest extends TestCase
     {
         $request = $this->makeRequest();
 
-        self::assertNotSame($request, $request->withRoute(new StubDispatchableRoute()));
+        self::assertNotSame(
+            $request,
+            $request->withRoute(new StubDispatchableRoute()),
+        );
     }
 
     public function testWithRouteSetsRouteOnNewInstance(): void
@@ -97,7 +96,6 @@ class RequestTest extends TestCase
 
     public function testWithRoutePreservesContexts(): void
     {
-        $server = new StubServerContext();
         $headers = new StubHeaderContext();
         $cookies = new StubInputContext();
         $get = new StubInputContext();
@@ -106,7 +104,6 @@ class RequestTest extends TestCase
         $body = new StubBodyContext();
 
         $new = $this->makeRequest(
-            server: $server,
             headers: $headers,
             cookies: $cookies,
             get: $get,
@@ -117,7 +114,6 @@ class RequestTest extends TestCase
             route: new StubDispatchableRoute(),
         );
 
-        self::assertSame($server, $new->server);
         self::assertSame($headers, $new->headers);
         self::assertSame($cookies, $new->cookies);
         self::assertSame($get, $new->get);
@@ -675,5 +671,194 @@ class RequestTest extends TestCase
                 etag: 'abc123',
             ),
         );
+    }
+
+    public function testConstructorAcceptsMethodAsString(): void
+    {
+        $request = new Request(
+            headers: new StubHeaderContext(),
+            cookies: new StubInputContext(),
+            get: new StubInputContext(),
+            post: new StubInputContext(),
+            files: new StubUploadedFilesContext(),
+            body: new StubBodyContext(),
+            method: 'POST',
+        );
+
+        self::assertSame(\Tuxxedo\Http\Method::POST, $request->method);
+    }
+
+    public function testConstructorPopulatesFullUriWithQueryStringWhenPresent(): void
+    {
+        $previous = $_SERVER;
+        $_SERVER['REQUEST_URI'] = '/articles';
+
+        try {
+            $request = new Request(
+                headers: new StubHeaderContext(),
+                cookies: new StubInputContext(),
+                get: new StubInputContext(),
+                post: new StubInputContext(),
+                files: new StubUploadedFilesContext(),
+                body: new StubBodyContext(),
+                queryString: 'id=42',
+            );
+
+            self::assertSame('/articles?id=42', $request->fullUri);
+        } finally {
+            $_SERVER = $previous;
+        }
+    }
+
+    public function testConstructorParsesProtocolVersionFromServerProtocol(): void
+    {
+        $previous = $_SERVER;
+        $_SERVER['SERVER_PROTOCOL'] = 'HTTP/2.0';
+
+        try {
+            $request = new Request(
+                headers: new StubHeaderContext(),
+                cookies: new StubInputContext(),
+                get: new StubInputContext(),
+                post: new StubInputContext(),
+                files: new StubUploadedFilesContext(),
+                body: new StubBodyContext(),
+            );
+
+            self::assertSame(\Tuxxedo\Http\HttpVersion::V2_0, $request->protocolVersion);
+        } finally {
+            $_SERVER = $previous;
+        }
+    }
+
+    public function testConstructorFallsBackToHttp11WhenServerProtocolIsUnparseable(): void
+    {
+        $previous = $_SERVER;
+        $_SERVER['SERVER_PROTOCOL'] = 'HTTP/9999';
+
+        try {
+            $request = new Request(
+                headers: new StubHeaderContext(),
+                cookies: new StubInputContext(),
+                get: new StubInputContext(),
+                post: new StubInputContext(),
+                files: new StubUploadedFilesContext(),
+                body: new StubBodyContext(),
+            );
+
+            self::assertSame(\Tuxxedo\Http\HttpVersion::V1_1, $request->protocolVersion);
+        } finally {
+            $_SERVER = $previous;
+        }
+    }
+
+    public function testConstructorReadsPortFromServerPortWhenPresent(): void
+    {
+        $previous = $_SERVER;
+        $_SERVER['SERVER_PORT'] = '8443';
+
+        try {
+            $request = new Request(
+                headers: new StubHeaderContext(),
+                cookies: new StubInputContext(),
+                get: new StubInputContext(),
+                post: new StubInputContext(),
+                files: new StubUploadedFilesContext(),
+                body: new StubBodyContext(),
+            );
+
+            self::assertSame(8443, $request->port);
+        } finally {
+            $_SERVER = $previous;
+        }
+    }
+
+    public function testWithMethodAcceptsMethodEnum(): void
+    {
+        $request = $this->makeRequest();
+        $updated = $request->withMethod(\Tuxxedo\Http\Method::POST);
+
+        self::assertNotSame($request, $updated);
+        self::assertSame(\Tuxxedo\Http\Method::POST, $updated->method);
+    }
+
+    public function testWithMethodAcceptsStringAndConverts(): void
+    {
+        $request = $this->makeRequest();
+        $updated = $request->withMethod('DELETE');
+
+        self::assertSame(\Tuxxedo\Http\Method::DELETE, $updated->method);
+    }
+
+    public function testWithUriReturnsNewInstanceWithUpdatedUri(): void
+    {
+        $request = $this->makeRequest();
+        $updated = $request->withUri('/rewritten');
+
+        self::assertNotSame($request, $updated);
+        self::assertSame('/rewritten', $updated->uri);
+    }
+
+    public function testWithFullUriReturnsNewInstanceWithUpdatedFullUri(): void
+    {
+        $request = $this->makeRequest();
+        $updated = $request->withFullUri('/rewritten?token=abc');
+
+        self::assertNotSame($request, $updated);
+        self::assertSame('/rewritten?token=abc', $updated->fullUri);
+    }
+
+    public function testWithQueryStringReturnsNewInstanceWithUpdatedQueryString(): void
+    {
+        $request = $this->makeRequest();
+        $updated = $request->withQueryString('foo=bar&baz=qux');
+
+        self::assertNotSame($request, $updated);
+        self::assertSame('foo=bar&baz=qux', $updated->queryString);
+    }
+
+    public function testWithProtocolVersionReturnsNewInstanceWithUpdatedProtocolVersion(): void
+    {
+        $request = $this->makeRequest();
+        $updated = $request->withProtocolVersion(\Tuxxedo\Http\HttpVersion::V2_0);
+
+        self::assertNotSame($request, $updated);
+        self::assertSame(\Tuxxedo\Http\HttpVersion::V2_0, $updated->protocolVersion);
+    }
+
+    public function testWithHttpsReturnsNewInstanceWithUpdatedHttps(): void
+    {
+        $request = $this->makeRequest();
+        $updated = $request->withHttps(true);
+
+        self::assertNotSame($request, $updated);
+        self::assertTrue($updated->https);
+    }
+
+    public function testWithHostReturnsNewInstanceWithUpdatedHost(): void
+    {
+        $request = $this->makeRequest();
+        $updated = $request->withHost('example.com');
+
+        self::assertNotSame($request, $updated);
+        self::assertSame('example.com', $updated->host);
+    }
+
+    public function testWithPortReturnsNewInstanceWithUpdatedPort(): void
+    {
+        $request = $this->makeRequest();
+        $updated = $request->withPort(8443);
+
+        self::assertNotSame($request, $updated);
+        self::assertSame(8443, $updated->port);
+    }
+
+    public function testWithIpAddressReturnsNewInstanceWithUpdatedIpAddress(): void
+    {
+        $request = $this->makeRequest();
+        $updated = $request->withIpAddress('203.0.113.42');
+
+        self::assertNotSame($request, $updated);
+        self::assertSame('203.0.113.42', $updated->ipAddress);
     }
 }

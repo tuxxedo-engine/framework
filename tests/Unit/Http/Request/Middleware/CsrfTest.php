@@ -18,7 +18,6 @@ use PHPUnit\Framework\TestCase;
 use Support\Http\Request\Context\StubBodyContext;
 use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
-use Support\Http\Request\Context\StubServerContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Http\Request\Middleware\RecordingMiddleware;
 use Support\Security\Csrf\StubCsrfManager;
@@ -39,11 +38,7 @@ class CsrfTest extends TestCase
         InputContextInterface $post = new StubInputContext(),
         array $headers = [],
     ): Request {
-        $server = new StubServerContext();
-        $server->method = $method;
-
         return new Request(
-            server: $server,
             headers: new StubHeaderContext(
                 headers: $headers,
             ),
@@ -52,6 +47,7 @@ class CsrfTest extends TestCase
             post: $post,
             files: new StubUploadedFilesContext(),
             body: new StubBodyContext(),
+            method: $method,
         );
     }
 

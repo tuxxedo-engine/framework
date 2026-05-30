@@ -13,16 +13,16 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request;
 
+use Tuxxedo\Http\HttpVersion;
 use Tuxxedo\Http\InputContext;
+use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Context\BodyContextInterface;
 use Tuxxedo\Http\Request\Context\EnvironmentBodyContext;
 use Tuxxedo\Http\Request\Context\EnvironmentHeaderContext;
 use Tuxxedo\Http\Request\Context\EnvironmentInputContext;
-use Tuxxedo\Http\Request\Context\EnvironmentServerContext;
 use Tuxxedo\Http\Request\Context\EnvironmentUploadedFilesContext;
 use Tuxxedo\Http\Request\Context\HeaderContextInterface;
 use Tuxxedo\Http\Request\Context\InputContextInterface;
-use Tuxxedo\Http\Request\Context\ServerContextInterface;
 use Tuxxedo\Http\Request\Context\UploadedFilesContextInterface;
 use Tuxxedo\Router\DispatchableRouteInterface;
 
@@ -30,9 +30,18 @@ class Request implements RequestInterface
 {
     public private(set) DispatchableRouteInterface $route;
 
+    public readonly Method $method;
+    public readonly string $queryString;
+    public readonly string $uri;
+    public readonly string $fullUri;
+    public readonly HttpVersion $protocolVersion;
+    public readonly bool $https;
+    public readonly string $host;
+    public readonly int $port;
+    public readonly string $ipAddress;
+
     public function __construct(
         ?DispatchableRouteInterface $route = null,
-        public readonly ServerContextInterface $server = new EnvironmentServerContext(),
         public readonly HeaderContextInterface $headers = new EnvironmentHeaderContext(),
         public readonly InputContextInterface $cookies = new EnvironmentInputContext(
             inputContext: InputContext::COOKIE,
@@ -45,10 +54,97 @@ class Request implements RequestInterface
         ),
         public readonly UploadedFilesContextInterface $files = new EnvironmentUploadedFilesContext(),
         public readonly BodyContextInterface $body = new EnvironmentBodyContext(),
+        Method|string|null $method = null,
+        ?string $uri = null,
+        ?string $fullUri = null,
+        ?string $queryString = null,
+        ?HttpVersion $protocolVersion = null,
+        ?bool $https = null,
+        ?string $host = null,
+        ?int $port = null,
+        ?string $ipAddress = null,
     ) {
         if ($route !== null) {
             $this->route = $route;
         }
+
+        if (\is_string($method)) {
+            $method = Method::from($method);
+        }
+
+        $this->method = $method ?? Method::GET;
+        $this->queryString = $queryString ?? self::detectQueryString();
+        $this->uri = $uri ?? self::detectUri();
+        $this->fullUri = $fullUri ?? self::detectFullUri($this->queryString);
+        $this->protocolVersion = $protocolVersion ?? self::detectProtocolVersion();
+        $this->https = $https ?? self::detectHttps();
+        $this->host = $host ?? self::detectHost();
+        $this->port = $port ?? self::detectPort();
+        $this->ipAddress = $ipAddress ?? self::detectIpAddress();
+    }
+
+    private static function detectUri(): string
+    {
+        /** @var string */
+        return $_SERVER['PATH_INFO'] ?? '/';
+    }
+
+    private static function detectFullUri(
+        string $queryString,
+    ): string {
+        /** @var string */
+        $uri = $_SERVER['REQUEST_URI'] ?? '/';
+
+        if ($queryString !== '') {
+            $uri .= '?' . $queryString;
+        }
+
+        return $uri;
+    }
+
+    private static function detectQueryString(): string
+    {
+        /** @var string */
+        return $_SERVER['QUERY_STRING'] ?? '';
+    }
+
+    private static function detectProtocolVersion(): HttpVersion
+    {
+        /** @var string|null $protocol */
+        $protocol = $_SERVER['SERVER_PROTOCOL'] ?? null;
+
+        return $protocol !== null
+            ? (HttpVersion::tryFrom($protocol) ?? HttpVersion::V1_1)
+            : HttpVersion::V1_1;
+    }
+
+    private static function detectHttps(): bool
+    {
+        return isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+    }
+
+    private static function detectHost(): string
+    {
+        /** @var string */
+        return $_SERVER['SERVER_NAME'] ?? 'localhost';
+    }
+
+    private static function detectPort(): int
+    {
+        /** @var string|null $port */
+        $port = $_SERVER['SERVER_PORT'] ?? null;
+
+        if ($port === null) {
+            return 80;
+        }
+
+        return (int) $port;
+    }
+
+    private static function detectIpAddress(): string
+    {
+        /** @var string */
+        return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
     }
 
     #[\NoDiscard]
@@ -59,6 +155,118 @@ class Request implements RequestInterface
             $this,
             [
                 'route' => $route,
+            ],
+        );
+    }
+
+    #[\NoDiscard]
+    public function withMethod(
+        Method|string $method,
+    ): static {
+        if (!$method instanceof Method) {
+            $method = Method::from($method);
+        }
+
+        return clone (
+            $this,
+            [
+                'method' => $method,
+            ],
+        );
+    }
+
+    #[\NoDiscard]
+    public function withUri(
+        string $uri,
+    ): static {
+        return clone (
+            $this,
+            [
+                'uri' => $uri,
+            ],
+        );
+    }
+
+    #[\NoDiscard]
+    public function withFullUri(
+        string $fullUri,
+    ): static {
+        return clone (
+            $this,
+            [
+                'fullUri' => $fullUri,
+            ],
+        );
+    }
+
+    #[\NoDiscard]
+    public function withQueryString(
+        string $queryString,
+    ): static {
+        return clone (
+            $this,
+            [
+                'queryString' => $queryString,
+            ],
+        );
+    }
+
+    #[\NoDiscard]
+    public function withProtocolVersion(
+        HttpVersion $protocolVersion,
+    ): static {
+        return clone (
+            $this,
+            [
+                'protocolVersion' => $protocolVersion,
+            ],
+        );
+    }
+
+    #[\NoDiscard]
+    public function withHttps(
+        bool $https,
+    ): static {
+        return clone (
+            $this,
+            [
+                'https' => $https,
+            ],
+        );
+    }
+
+    #[\NoDiscard]
+    public function withHost(
+        string $host,
+    ): static {
+        return clone (
+            $this,
+            [
+                'host' => $host,
+            ],
+        );
+    }
+
+    #[\NoDiscard]
+    public function withPort(
+        int $port,
+    ): static {
+        return clone (
+            $this,
+            [
+                'port' => $port,
+            ],
+        );
+    }
+
+    #[\NoDiscard]
+    public function withIpAddress(
+        string $ipAddress,
+    ): static {
+        return clone (
+            $this,
+            [
+                'ipAddress' => $ipAddress,
             ],
         );
     }

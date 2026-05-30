@@ -19,7 +19,6 @@ use Support\Http\Request\Context\RecordingInputContext;
 use Support\Http\Request\Context\StubBodyContext;
 use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
-use Support\Http\Request\Context\StubServerContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Reflection\StubParameterReflector;
 use Tuxxedo\Container\Container;
@@ -37,19 +36,16 @@ class MapToArrayOfTest extends TestCase
         Method $method = Method::GET,
     ): Container {
         $container = new Container();
-        $server = new StubServerContext();
-
-        $server->method = $method;
 
         $container->persistent(
             class: new Request(
-                server: $server,
                 headers: new StubHeaderContext(),
                 cookies: new StubInputContext(),
                 get: $get,
                 post: $post,
                 files: new StubUploadedFilesContext(),
                 body: new StubBodyContext(),
+                method: $method,
             ),
         );
 

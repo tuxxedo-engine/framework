@@ -14,21 +14,19 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Request;
 
 use Tuxxedo\Container\DefaultImplementation;
+use Tuxxedo\Http\HttpVersion;
 use Tuxxedo\Http\InputContext;
+use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Context\BodyContextInterface;
 use Tuxxedo\Http\Request\Context\HeaderContextInterface;
 use Tuxxedo\Http\Request\Context\InputContextInterface;
-use Tuxxedo\Http\Request\Context\ServerContextInterface;
 use Tuxxedo\Http\Request\Context\UploadedFilesContextInterface;
 use Tuxxedo\Router\DispatchableRouteInterface;
 
+// @todo Detect ipAddress type helper
 #[DefaultImplementation(class: Request::class)]
 interface RequestInterface
 {
-    public ServerContextInterface $server {
-        get;
-    }
-
     public HeaderContextInterface $headers {
         get;
     }
@@ -57,9 +55,90 @@ interface RequestInterface
         get;
     }
 
+    public Method $method {
+        get;
+    }
+
+    public string $queryString {
+        get;
+    }
+
+    public string $uri {
+        get;
+    }
+
+    public string $fullUri {
+        get;
+    }
+
+    public HttpVersion $protocolVersion {
+        get;
+    }
+
+    public bool $https {
+        get;
+    }
+
+    public string $host {
+        get;
+    }
+
+    public int $port {
+        get;
+    }
+
+    public string $ipAddress {
+        get;
+    }
+
     #[\NoDiscard]
     public function withRoute(
         DispatchableRouteInterface $route,
+    ): static;
+
+    #[\NoDiscard]
+    public function withMethod(
+        Method|string $method,
+    ): static;
+
+    #[\NoDiscard]
+    public function withUri(
+        string $uri,
+    ): static;
+
+    #[\NoDiscard]
+    public function withFullUri(
+        string $fullUri,
+    ): static;
+
+    #[\NoDiscard]
+    public function withQueryString(
+        string $queryString,
+    ): static;
+
+    #[\NoDiscard]
+    public function withProtocolVersion(
+        HttpVersion $protocolVersion,
+    ): static;
+
+    #[\NoDiscard]
+    public function withHttps(
+        bool $https,
+    ): static;
+
+    #[\NoDiscard]
+    public function withHost(
+        string $host,
+    ): static;
+
+    #[\NoDiscard]
+    public function withPort(
+        int $port,
+    ): static;
+
+    #[\NoDiscard]
+    public function withIpAddress(
+        string $ipAddress,
     ): static;
 
     public function input(

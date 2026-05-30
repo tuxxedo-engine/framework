@@ -36,7 +36,7 @@ readonly class Cached implements MiddlewareInterface
         RequestInterface $request,
         MiddlewareInterface $next,
     ): ResponseInterface {
-        $method = $request->server->method;
+        $method = $request->method;
 
         if ($method !== Method::GET && $method !== Method::HEAD) {
             return $next->handle($request, $next);

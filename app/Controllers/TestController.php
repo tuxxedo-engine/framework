@@ -119,14 +119,14 @@ readonly class TestController
     {
         return Response::json(
             json: [
-                'method' => $request->server->method->name,
-                'uri' => $request->server->uri,
-                'fullUri' => $request->server->fullUri,
-                'queryString' => $request->server->queryString,
-                'https' => $request->server->https,
-                'host' => $request->server->host,
-                'port' => $request->server->port,
-                'userAgent' => $request->server->userAgent,
+                'method' => $request->method->name,
+                'uri' => $request->uri,
+                'fullUri' => $request->fullUri,
+                'queryString' => $request->queryString,
+                'https' => $request->https,
+                'host' => $request->host,
+                'port' => $request->port,
+                'userAgent' => $request->headers->userAgent,
             ],
             prettyPrint: true,
         );
@@ -212,7 +212,7 @@ readonly class TestController
     #[Route(uri: '/fileUpload', method: [Method::GET, Method::POST])]
     public function fileUpload(RequestInterface $request): ResponseInterface
     {
-        if ($request->server->method === Method::GET) {
+        if ($request->method === Method::GET) {
             return Response::html(
                 html: '<form action="/fileUpload" method="post" enctype="multipart/form-data">' .
                       '<input type="file" name="uploadedFile">' .

@@ -19,6 +19,21 @@ use Tuxxedo\Http\WeightedHeaderInterface;
 
 interface HeaderContextInterface
 {
+    public ?string $preferredLanguage {
+        get;
+    }
+
+    /**
+     * @var string[]
+     */
+    public array $preferredLanguages {
+        get;
+    }
+
+    public string $userAgent {
+        get;
+    }
+
     /**
      * @return HeaderInterface[]
      */

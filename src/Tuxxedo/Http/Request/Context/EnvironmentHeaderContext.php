@@ -21,6 +21,39 @@ use Tuxxedo\Http\WeightedHeaderInterface;
 
 class EnvironmentHeaderContext implements HeaderContextInterface
 {
+    public ?string $preferredLanguage {
+        get {
+            return $this->preferredLanguages[0] ?? null;
+        }
+    }
+
+    public array $preferredLanguages {
+        get {
+            static $value = null;
+
+            if ($value === null) {
+                /** @var string $header */
+                $header = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
+
+                if ($header === '') {
+                    return [];
+                }
+
+                $value = (new WeightedHeader('Accept-Language', $header))->getWeightedOrder();
+            }
+
+            /** @var string[] */
+            return $value;
+        }
+    }
+
+    public string $userAgent {
+        get {
+            /** @var string */
+            return $_SERVER['HTTP_USER_AGENT'];
+        }
+    }
+
     /**
      * @var array<string, string>
      */

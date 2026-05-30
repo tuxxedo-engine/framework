@@ -46,7 +46,7 @@ class MapToArrayOf implements DependencyResolverInterface
         ParameterReflectorInterface $parameter,
     ): array {
         $request = $container->resolve(RequestInterface::class);
-        $context = $request->input($this->context ?? InputContext::fromMethod($request->server->method));
+        $context = $request->input($this->context ?? InputContext::fromMethod($request->method));
 
         try {
             return $context->mapToArrayOf(

@@ -18,7 +18,6 @@ use Support\Http\Kernel\StubDispatcher;
 use Support\Http\Request\Context\StubBodyContext;
 use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
-use Support\Http\Request\Context\StubServerContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Http\Response\StubResponseEmitter;
 use Tuxxedo\Config\Config;
@@ -59,18 +58,15 @@ class KernelTest extends TestCase
         Method $method = Method::GET,
         string $uri = '/test',
     ): Request {
-        $server = new StubServerContext();
-        $server->method = $method;
-        $server->uri = $uri;
-
         return new Request(
-            server: $server,
             headers: new StubHeaderContext(),
             cookies: new StubInputContext(),
             get: new StubInputContext(),
             post: new StubInputContext(),
             files: new StubUploadedFilesContext(),
             body: new StubBodyContext(),
+            method: $method,
+            uri: $uri,
         );
     }
 
