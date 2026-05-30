@@ -49,6 +49,7 @@ class RecordingInputContext extends StubInputContext
         public readonly ?object $jsonMapToReturn = null,
         public readonly array $jsonMapToArrayOfReturn = [],
     ) {
+        parent::__construct();
     }
 
     /**

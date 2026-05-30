@@ -64,6 +64,7 @@ class CsrfTest extends TestCase
             public function __construct(
                 private readonly array $values,
             ) {
+                parent::__construct();
             }
 
             public function has(
