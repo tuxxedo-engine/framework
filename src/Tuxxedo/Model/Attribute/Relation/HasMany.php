@@ -22,7 +22,7 @@ readonly class HasMany implements RelationInterface
     public function __construct(
         public string $related,
         public string $foreignKey,
-        public ?string $key = null,
+        public ?string $localKey = null,
     ) {
     }
 }
