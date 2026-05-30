@@ -18,17 +18,31 @@ use Tuxxedo\Http\Request\Context\InputContextInterface;
 
 class StubInputContext implements InputContextInterface
 {
+    /**
+     * @var array<string, string>
+     */
+    private array $values;
+
+    /**
+     * @param array<string, string> $values
+     */
+    public function __construct(
+        array $values = [],
+    ) {
+        $this->values = $values;
+    }
+
     public function has(
         string $name,
     ): bool {
-        return false;
+        return \array_key_exists($name, $this->values);
     }
 
     public function raw(
         string $name,
         mixed $default = null,
     ): mixed {
-        return $default;
+        return $this->values[$name] ?? $default;
     }
 
     public function rawArray(
@@ -42,14 +56,22 @@ class StubInputContext implements InputContextInterface
         string $name,
         int $default = 0,
     ): int {
-        return $default;
+        if (!\array_key_exists($name, $this->values)) {
+            return $default;
+        }
+
+        return (int) $this->values[$name];
     }
 
     public function bool(
         string $name,
         bool $default = false,
     ): bool {
-        return $default;
+        if (!\array_key_exists($name, $this->values)) {
+            return $default;
+        }
+
+        return (bool) $this->values[$name];
     }
 
     public function float(
@@ -58,14 +80,18 @@ class StubInputContext implements InputContextInterface
         string $decimalPoint = '.',
         string $thousandSeparator = ',',
     ): float {
-        return $default;
+        if (!\array_key_exists($name, $this->values)) {
+            return $default;
+        }
+
+        return (float) $this->values[$name];
     }
 
     public function string(
         string $name,
         string $default = '',
     ): string {
-        return $default;
+        return $this->values[$name] ?? $default;
     }
 
     public function enum(
