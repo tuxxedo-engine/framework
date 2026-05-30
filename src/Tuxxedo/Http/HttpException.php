@@ -19,6 +19,7 @@ use Tuxxedo\Http\Response\ResponseCodeInterface;
 use Tuxxedo\Http\Response\ResponseExceptionInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
+// @todo Restrict factories to 5xx tier — non-error codes don't belong as exceptions
 class HttpException extends \Exception implements ResponseCodeInterface, ResponseExceptionInterface
 {
     public readonly ResponseCode $responseCode;
