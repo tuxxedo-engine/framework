@@ -24,6 +24,7 @@ use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Url\UrlInterface;
 use Tuxxedo\Router\RouterInterface;
 
+// @todo Support LumiConfigurator here?
 interface ApplicationConfiguratorInterface
 {
     public string $appName {
