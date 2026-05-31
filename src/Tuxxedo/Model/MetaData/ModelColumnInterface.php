@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Tuxxedo\Model\MetaData;
 
 use Tuxxedo\Model\Attribute\ColumnInterface;
-use Tuxxedo\Model\Attribute\Relation\RelationInterface;
 
 interface ModelColumnInterface
 {
@@ -43,13 +42,6 @@ interface ModelColumnInterface
     }
 
     public ?ModelIdentifierInterface $identifier {
-        get;
-    }
-
-    /**
-     * @var RelationInterface[]
-     */
-    public array $relations {
         get;
     }
 }

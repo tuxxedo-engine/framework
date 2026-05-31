@@ -384,13 +384,6 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 $identifiers[$property->name] = $identifier;
             }
 
-            $relations = [];
-
-            // @todo ??? Validate relations
-            foreach ($property->getAttributes(RelationInterface::class) as $relation) {
-                $relations[] = $relation;
-            }
-
             $columns[] = new ModelColumn(
                 property: $property->name,
                 column: $propertyColumns[0]->name ?? $property->name,
@@ -401,7 +394,6 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                     ? $primaryKey
                     : null,
                 identifier: $identifiers[$property->name] ?? null,
-                relations: $relations,
             );
         }
 

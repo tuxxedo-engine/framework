@@ -19,10 +19,13 @@ use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Query\Builder\ExistsBuilderInterface;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
+use Tuxxedo\Model\Hydration\Hydrator;
+use Tuxxedo\Model\Hydration\HydratorInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelCompositeKeyInterface;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelPrimaryKeyInterface;
+use Tuxxedo\Model\MetaData\ModelRelationInterface;
 use Tuxxedo\Reflection\PropertyReflector;
 
 #[DefaultInitializer(
@@ -35,12 +38,17 @@ use Tuxxedo\Reflection\PropertyReflector;
 )]
 class ModelsManager implements ModelsManagerInterface
 {
+    public readonly HydratorInterface $hydrator;
+
     public function __construct(
         public readonly ConnectionInterface $connection,
         public readonly MetaDataInterface $metaData,
+        ?HydratorInterface $hydrator = null,
     ) {
+        $this->hydrator = $hydrator ?? new Hydrator($this);
     }
 
+    // @todo Cascade save to loaded relations (depends on dirty tracking)
     /**
      * @template TModel of object
      *
@@ -235,13 +243,20 @@ class ModelsManager implements ModelsManagerInterface
         string $class,
         ?\Closure $criteria = null,
     ): ?object {
-        $query = $this->connection->select($this->metaData->getModel($class)->table);
+        $metaData = $this->metaData->getModel($class);
+        $query = $this->connection->select($metaData->table);
 
         if ($criteria !== null) {
             $criteria($query);
         }
 
-        return $query->fetch($class);
+        $model = $query->fetch($class);
+
+        if ($model !== null) {
+            $this->hydrator->hydrateRelations($model, $metaData);
+        }
+
+        return $model;
     }
 
     /**
@@ -386,13 +401,18 @@ class ModelsManager implements ModelsManagerInterface
         string $class,
         ?\Closure $criteria = null,
     ): \Generator {
-        $query = $this->connection->select($this->metaData->getModel($class)->table);
+        $metaData = $this->metaData->getModel($class);
+        $query = $this->connection->select($metaData->table);
 
         if ($criteria !== null) {
             $criteria($query);
         }
 
-        yield from $query->fetchAll($class);
+        foreach ($query->fetchAll($class) as $model) {
+            $this->hydrator->hydrateRelations($model, $metaData);
+
+            yield $model;
+        }
     }
 
     /**
@@ -525,5 +545,67 @@ class ModelsManager implements ModelsManagerInterface
         }
 
         return $query->execute()->affectedRows > 0;
+    }
+
+    #[\NoDiscard]
+    public function isRelationLoaded(
+        object $model,
+        string $property,
+    ): bool {
+        $metaData = $this->metaData->getModel($model::class);
+        $this->findRelation($metaData, $property);
+
+        $reflectionProperty = PropertyReflector::createFromObject($model, $property);
+
+        if (!$reflectionProperty->reflector->isInitialized($model)) {
+            return false;
+        }
+
+        $value = $reflectionProperty->getValue($model);
+
+        if (!\is_object($value)) {
+            return true;
+        }
+
+        return !(new \ReflectionClass($value))->isUninitializedLazyObject($value);
+    }
+
+    #[\NoDiscard]
+    public function relation(
+        object $model,
+        string $property,
+    ): ?object {
+        $metaData = $this->metaData->getModel($model::class);
+        $this->findRelation($metaData, $property);
+
+        $value = PropertyReflector::createFromObject($model, $property)->getValue($model);
+
+        if (!\is_object($value)) {
+            return null;
+        }
+
+        $reflection = new \ReflectionClass($value);
+
+        if ($reflection->isUninitializedLazyObject($value)) {
+            return $reflection->initializeLazyObject($value);
+        }
+
+        return $value;
+    }
+
+    private function findRelation(
+        ModelMetaDataInterface $metaData,
+        string $property,
+    ): ModelRelationInterface {
+        foreach ($metaData->relations as $relation) {
+            if ($relation->property === $property) {
+                return $relation;
+            }
+        }
+
+        throw ModelException::fromRelationNotFoundOnModel(
+            modelClass: $metaData->model,
+            property: $property,
+        );
     }
 }

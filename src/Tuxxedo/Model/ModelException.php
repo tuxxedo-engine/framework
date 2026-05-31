@@ -66,7 +66,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Property %1$s::\$%s has more than one #[Column] attribute',
+                'Invalid model class "%1$s": Property %1$s::\$%2$s has more than one #[Column] attribute',
                 $modelClass,
                 $property,
             ),
@@ -96,7 +96,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Models may only define one #[PrimaryKey] (duplicate declared at %1$s::\$%s)',
+                'Invalid model class "%1$s": Models may only define one #[PrimaryKey] (duplicate declared at %1$s::\$%2$s)',
                 $modelClass,
                 $property,
             ),
@@ -268,7 +268,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Property %1$s::\$%s has more than one relation attribute',
+                'Invalid model class "%1$s": Property %1$s::\$%2$s has more than one relation attribute',
                 $modelClass,
                 $property,
             ),
@@ -294,6 +294,57 @@ class ModelException extends \Exception
                 $keyKind,
                 $keyValue,
                 $referencedClass,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromMissingForeignKeyValue(
+        string $modelClass,
+        string $property,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot hydrate relation "%s" on model "%s": the foreign key value is NULL but the relation property is not nullable',
+                $property,
+                $modelClass,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     * @param class-string $relatedClass
+     */
+    public static function fromMissingRelatedRecord(
+        string $modelClass,
+        string $property,
+        string $relatedClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot hydrate relation "%s" on model "%s": the related record in "%s" does not exist',
+                $property,
+                $modelClass,
+                $relatedClass,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromRelationNotFoundOnModel(
+        string $modelClass,
+        string $property,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot resolve relation "%s" on model "%s": unknown relation type',
+                $property,
+                $modelClass,
             ),
         );
     }

@@ -18,14 +18,16 @@ use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Query\Builder\ExistsBuilderInterface;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
+use Tuxxedo\Model\Hydration\HydratorInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 
-// @todo Support relations
+// @todo Support HasMany and BelongsToMany relations — Collection wrapper needed
 // @todo Support CreatedAt, UpdatedAt & DeletedAt contracts
 // @todo Support value hydration and serialization from complex types like Enums, Objects
 // @todo Implement a cache strategy
 // @todo Support readonly model objects
 // @todo Dirty models handling
+// @todo Support recursive save() through loaded relations (depends on dirty tracking)
 // @todo Consider findWhere and other shorthands?
 #[DefaultImplementation(class: ModelsManager::class, lifecycle: Lifecycle::PERSISTENT)]
 interface ModelsManagerInterface
@@ -35,6 +37,10 @@ interface ModelsManagerInterface
     }
 
     public MetaDataInterface $metaData {
+        get;
+    }
+
+    public HydratorInterface $hydrator {
         get;
     }
 
@@ -188,4 +194,22 @@ interface ModelsManagerInterface
     public function delete(
         object $model,
     ): bool;
+
+    /**
+     * @throws ModelException
+     */
+    #[\NoDiscard]
+    public function isRelationLoaded(
+        object $model,
+        string $property,
+    ): bool;
+
+    /**
+     * @throws ModelException
+     */
+    #[\NoDiscard]
+    public function relation(
+        object $model,
+        string $property,
+    ): ?object;
 }
