@@ -17,6 +17,9 @@ use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\CompositeKey;
 use Tuxxedo\Model\Attribute\Identifier;
 use Tuxxedo\Model\Attribute\PrimaryKey;
+use Tuxxedo\Model\Attribute\Relation\BelongsTo;
+use Tuxxedo\Model\Attribute\Relation\HasMany;
+use Tuxxedo\Model\Attribute\Relation\HasOne;
 use Tuxxedo\Model\Attribute\Relation\RelationInterface;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\Attribute\Unique;
@@ -35,7 +38,6 @@ use Tuxxedo\Model\MetaData\ModelRelationInterface;
 use Tuxxedo\Model\ModelException;
 use Tuxxedo\Reflection\ClassReflector;
 
-// @todo Validate foreignKey/localKey/ownerKey actually reference columns on the related model (cross-class metadata lookup)
 // @todo HasMany and BelongsToMany is not properly validated
 class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
 {
@@ -104,19 +106,25 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             key: $primaryKey ?? $compositeKey,
             columns: $columns,
             identifiers: $identifiers,
-            relations: $this->getRelations($class),
+            relations: $this->getRelations($class, $columns),
         );
     }
 
     /**
+     * @param non-empty-array<ModelColumnInterface> $columns
      * @return ModelRelationInterface[]
      *
      * @throws ModelException
      */
     private function getRelations(
         ClassReflector $class,
+        array $columns,
     ): array {
         $relations = [];
+        $sourceColumnNames = \array_map(
+            static fn (ModelColumnInterface $column): string => $column->column,
+            $columns,
+        );
 
         foreach ($class->properties() as $property) {
             $columnAttributes = \iterator_to_array($property->getAttributes(ColumnInterface::class));
@@ -161,6 +169,17 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 );
             }
 
+            $targetColumnNames = $this->getColumnNamesFromReflection($relatedReflection);
+
+            $this->validateRelationKeys(
+                modelClass: $class->name,
+                property: $property->name,
+                attribute: $attribute,
+                relatedClass: $relatedClass,
+                sourceColumnNames: $sourceColumnNames,
+                targetColumnNames: $targetColumnNames,
+            );
+
             $relations[] = new ModelRelation(
                 property: $property->name,
                 relatedClass: $relatedClass,
@@ -170,6 +189,94 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         }
 
         return $relations;
+    }
+
+    /**
+     * @param \ReflectionClass<object> $reflection
+     * @return string[]
+     */
+    private function getColumnNamesFromReflection(
+        \ReflectionClass $reflection,
+    ): array {
+        $names = [];
+
+        foreach ($reflection->getProperties() as $property) {
+            $columnAttributes = $property->getAttributes(ColumnInterface::class, \ReflectionAttribute::IS_INSTANCEOF);
+
+            if (\sizeof($columnAttributes) === 0) {
+                continue;
+            }
+
+            $columnAttribute = $columnAttributes[0]->newInstance();
+            $names[] = $columnAttribute->name ?? $property->getName();
+        }
+
+        return $names;
+    }
+
+    /**
+     * @param class-string $modelClass
+     * @param class-string $relatedClass
+     * @param string[] $sourceColumnNames
+     * @param string[] $targetColumnNames
+     *
+     * @throws ModelException
+     */
+    private function validateRelationKeys(
+        string $modelClass,
+        string $property,
+        RelationInterface $attribute,
+        string $relatedClass,
+        array $sourceColumnNames,
+        array $targetColumnNames,
+    ): void {
+        if ($attribute instanceof HasOne || $attribute instanceof HasMany) {
+            if (!\in_array($attribute->foreignKey, $targetColumnNames, true)) {
+                throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                    modelClass: $modelClass,
+                    property: $property,
+                    keyKind: 'foreignKey',
+                    keyValue: $attribute->foreignKey,
+                    referencedClass: $relatedClass,
+                );
+            }
+
+            if ($attribute->localKey !== null && !\in_array($attribute->localKey, $sourceColumnNames, true)) {
+                throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                    modelClass: $modelClass,
+                    property: $property,
+                    keyKind: 'localKey',
+                    keyValue: $attribute->localKey,
+                    referencedClass: $modelClass,
+                );
+            }
+
+            return;
+        }
+
+        if ($attribute instanceof BelongsTo) {
+            if (!\in_array($attribute->foreignKey, $sourceColumnNames, true)) {
+                throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                    modelClass: $modelClass,
+                    property: $property,
+                    keyKind: 'foreignKey',
+                    keyValue: $attribute->foreignKey,
+                    referencedClass: $modelClass,
+                );
+            }
+
+            if ($attribute->ownerKey !== null && !\in_array($attribute->ownerKey, $targetColumnNames, true)) {
+                throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                    modelClass: $modelClass,
+                    property: $property,
+                    keyKind: 'ownerKey',
+                    keyValue: $attribute->ownerKey,
+                    referencedClass: $relatedClass,
+                );
+            }
+
+            return;
+        }
     }
 
     /**

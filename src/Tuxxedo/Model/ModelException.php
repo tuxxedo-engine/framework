@@ -274,4 +274,27 @@ class ModelException extends \Exception
             ),
         );
     }
+
+    /**
+     * @param class-string $modelClass
+     * @param class-string $referencedClass
+     */
+    public static function fromRelationKeyReferencesUnknownColumn(
+        string $modelClass,
+        string $property,
+        string $keyKind,
+        string $keyValue,
+        string $referencedClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Relation on property "%s" references %s "%s" which does not exist as a column on "%s"',
+                $modelClass,
+                $property,
+                $keyKind,
+                $keyValue,
+                $referencedClass,
+            ),
+        );
+    }
 }
