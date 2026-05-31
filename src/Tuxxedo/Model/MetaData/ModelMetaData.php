@@ -27,6 +27,7 @@ readonly class ModelMetaData implements ModelMetaDataInterface
         public ModelPrimaryKeyInterface|ModelCompositeKeyInterface|null $key,
         public array $columns,
         public array $identifiers,
+        public bool $readonly,
         public array $relations = [],
     ) {
     }

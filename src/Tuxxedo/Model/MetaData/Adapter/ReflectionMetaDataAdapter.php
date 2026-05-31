@@ -100,12 +100,18 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             );
         }
 
+        $readonly = $class->reflector->isReadOnly() || \array_any(
+            $columns,
+            static fn (ModelColumnInterface $column): bool => $column->readonly,
+        );
+
         return new ModelMetaData(
             model: $model,
             table: $this->getTable($class),
             key: $primaryKey ?? $compositeKey,
             columns: $columns,
             identifiers: $identifiers,
+            readonly: $readonly,
             relations: $this->getRelations($class, $columns),
         );
     }
@@ -389,6 +395,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 column: $propertyColumns[0]->name ?? $property->name,
                 nullable: $property->isNullable(),
                 unique: $property->hasAttribute(Unique::class),
+                readonly: $property->reflector->isReadOnly(),
                 attribute: $propertyColumns[0],
                 primaryKey: $foundPrimaryKey !== null
                     ? $primaryKey

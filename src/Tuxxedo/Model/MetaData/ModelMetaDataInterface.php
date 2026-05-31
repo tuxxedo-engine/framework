@@ -50,4 +50,8 @@ interface ModelMetaDataInterface
     public array $relations {
         get;
     }
+
+    public bool $readonly {
+        get;
+    }
 }

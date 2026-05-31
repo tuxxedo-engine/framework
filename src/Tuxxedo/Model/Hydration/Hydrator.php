@@ -30,6 +30,7 @@ class Hydrator implements HydratorInterface
     ) {
     }
 
+    // @todo Verify readonly construction once column hydration migrates here
     /**
      * @template TModel of object
      *
@@ -98,9 +99,7 @@ class Hydrator implements HydratorInterface
 
         $relatedClass = new \ReflectionClass($relation->relatedClass);
         $proxy = $relatedClass->newLazyProxy(
-            function () use ($metaData, $relation, $sourceValue): object {
-                return $this->loadSingleRelation($metaData, $relation, $sourceValue);
-            },
+            fn (): object => $this->loadSingleRelation($metaData, $relation, $sourceValue),
         );
 
         PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $proxy);

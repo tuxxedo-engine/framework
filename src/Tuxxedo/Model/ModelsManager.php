@@ -60,11 +60,13 @@ class ModelsManager implements ModelsManagerInterface
         object $model,
     ): object {
         $metaData = $this->metaData->getModel($model::class);
-        $clone = clone $model;
+        $target = $metaData->readonly
+            ? $model
+            : clone $model;
 
         return $this->isNewModel($model, $metaData)
-            ? $this->insert($clone, $metaData)
-            : $this->update($clone, $metaData);
+            ? $this->insert($target, $metaData)
+            : $this->update($target, $metaData);
     }
 
     private function isNewModel(
@@ -164,6 +166,15 @@ class ModelsManager implements ModelsManagerInterface
             $id = $this->connection->lastInsertIdAsInt();
 
             if ($id !== null) {
+                if ($metaData->readonly) {
+                    return clone (
+                        $model,
+                        [
+                            $metaData->key->property => $id,
+                        ],
+                    );
+                }
+
                 PropertyReflector::createFromObject($model, $metaData->key->property)->setValue($model, $id);
             }
         }

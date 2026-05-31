@@ -27,6 +27,7 @@ use Tuxxedo\Model\MetaData\MetaDataInterface;
 // @todo Implement a cache strategy
 // @todo Support readonly model objects
 // @todo Dirty models handling
+// @todo Readonly support implications for cache strategy and dirty tracking writebacks
 // @todo Support recursive save() through loaded relations (depends on dirty tracking)
 // @todo Consider findWhere and other shorthands?
 #[DefaultImplementation(class: ModelsManager::class, lifecycle: Lifecycle::PERSISTENT)]

@@ -22,6 +22,7 @@ readonly class ModelColumn implements ModelColumnInterface
         public string $column,
         public bool $nullable,
         public bool $unique,
+        public bool $readonly,
         public ColumnInterface $attribute,
         public ?ModelPrimaryKeyInterface $primaryKey = null,
         public ?ModelIdentifierInterface $identifier = null,

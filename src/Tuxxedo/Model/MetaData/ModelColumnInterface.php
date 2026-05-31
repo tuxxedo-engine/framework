@@ -33,6 +33,10 @@ interface ModelColumnInterface
         get;
     }
 
+    public bool $readonly {
+        get;
+    }
+
     public ColumnInterface $attribute {
         get;
     }
