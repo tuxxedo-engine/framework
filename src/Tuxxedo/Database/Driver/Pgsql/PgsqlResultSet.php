@@ -17,8 +17,9 @@ use PgSql\Result;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\AbstractResultSet;
-use Tuxxedo\Database\Driver\HydratableInterface;
 use Tuxxedo\Database\Driver\ResultRowInterface;
+use Tuxxedo\Database\Hydrator\HydratableInterface;
+use Tuxxedo\Database\Hydrator\HydratorInterface;
 
 class PgsqlResultSet extends AbstractResultSet
 {
@@ -41,6 +42,7 @@ class PgsqlResultSet extends AbstractResultSet
      */
     public function fetchObject(
         string|\Closure $class = ResultRowInterface::class,
+        ?HydratorInterface $hydrator = null,
     ): object {
         if ($this->numRows === 0) {
             throw DatabaseException::fromEmptyResultSet();
@@ -52,7 +54,7 @@ class PgsqlResultSet extends AbstractResultSet
             throw DatabaseException::fromCannotFetch();
         }
 
-        return parent::hydrate($class, $row);
+        return parent::hydrate($class, $row, $hydrator);
     }
 
     public function fetchArray(): array

@@ -11,30 +11,25 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Model\Hydration;
+namespace Tuxxedo\Database\Hydrator;
 
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
-use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 
 #[DefaultImplementation(class: Hydrator::class, lifecycle: Lifecycle::PERSISTENT)]
 interface HydratorInterface
 {
     /**
-     * @template TModel of object
+     * @template TClassName of object
      *
-     * @param class-string<TModel> $className
-     * @param array<string, mixed> $row
-     * @return TModel
+     * @param class-string<TClassName> $className
+     * @param array<string, mixed> $values
+     * @return TClassName
+     *
+     * @throws HydrationException
      */
-    public function hydrateFromRow(
+    public function hydrate(
         string $className,
-        array $row,
-        ModelMetaDataInterface $metaData,
+        array $values,
     ): object;
-
-    public function hydrateRelations(
-        object $model,
-        ModelMetaDataInterface $metaData,
-    ): void;
 }

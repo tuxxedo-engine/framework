@@ -17,10 +17,11 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DefaultInitializer;
 use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Database\Driver\ConnectionInterface;
+use Tuxxedo\Database\Hydrator\HydratorInterface as DatabaseHydratorInterface;
 use Tuxxedo\Database\Query\Builder\ExistsBuilderInterface;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
-use Tuxxedo\Model\Hydration\Hydrator;
-use Tuxxedo\Model\Hydration\HydratorInterface;
+use Tuxxedo\Model\Hydrator\Hydrator;
+use Tuxxedo\Model\Hydrator\HydratorInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelCompositeKeyInterface;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
@@ -33,6 +34,7 @@ use Tuxxedo\Reflection\PropertyReflector;
         return new ModelsManager(
             connection: $container->resolve(ConnectionManagerInterface::class)->getDefaultConnection(),
             metaData: $container->resolve(MetaDataInterface::class),
+            databaseHydrator: $container->resolve(DatabaseHydratorInterface::class),
         );
     },
 )]
@@ -43,9 +45,10 @@ class ModelsManager implements ModelsManagerInterface
     public function __construct(
         public readonly ConnectionInterface $connection,
         public readonly MetaDataInterface $metaData,
-        ?HydratorInterface $hydrator = null,
+        DatabaseHydratorInterface $databaseHydrator,
+        ?HydratorInterface $modelHydrator = null,
     ) {
-        $this->hydrator = $hydrator ?? new Hydrator($this);
+        $this->hydrator = $modelHydrator ?? new Hydrator($this, $metaData, $databaseHydrator);
     }
 
     // @todo Cascade save to loaded relations (depends on dirty tracking)
@@ -261,13 +264,7 @@ class ModelsManager implements ModelsManagerInterface
             $criteria($query);
         }
 
-        $model = $query->limit(1)->fetch($class);
-
-        if ($model !== null) {
-            $this->hydrator->hydrateRelations($model, $metaData);
-        }
-
-        return $model;
+        return $query->limit(1)->fetch($class, $this->hydrator);
     }
 
     /**
@@ -419,11 +416,7 @@ class ModelsManager implements ModelsManagerInterface
             $criteria($query);
         }
 
-        foreach ($query->fetchAll($class) as $model) {
-            $this->hydrator->hydrateRelations($model, $metaData);
-
-            yield $model;
-        }
+        yield from $query->fetchAll($class, $this->hydrator);
     }
 
     /**

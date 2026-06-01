@@ -16,6 +16,7 @@ namespace Tuxxedo\Model\Attribute\Connection;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
 use Tuxxedo\Database\ConnectionManagerInterface;
+use Tuxxedo\Database\Hydrator\HydratorInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 use Tuxxedo\Model\ModelsManager;
 use Tuxxedo\Model\ModelsManagerInterface;
@@ -34,6 +35,7 @@ readonly class ModelDefaultReadConnection implements DependencyResolverInterface
         return new ModelsManager(
             connection: $container->resolve(ConnectionManagerInterface::class)->getReadConnection(),
             metaData: $container->resolve(MetaDataInterface::class),
+            databaseHydrator: $container->resolve(HydratorInterface::class),
         );
     }
 }

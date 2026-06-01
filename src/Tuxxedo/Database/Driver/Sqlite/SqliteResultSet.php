@@ -16,9 +16,10 @@ namespace Tuxxedo\Database\Driver\Sqlite;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\AbstractResultSet;
-use Tuxxedo\Database\Driver\HydratableInterface;
 use Tuxxedo\Database\Driver\ResultRow;
 use Tuxxedo\Database\Driver\ResultRowInterface;
+use Tuxxedo\Database\Hydrator\HydratableInterface;
+use Tuxxedo\Database\Hydrator\HydratorInterface;
 
 class SqliteResultSet extends AbstractResultSet
 {
@@ -26,7 +27,7 @@ class SqliteResultSet extends AbstractResultSet
     private bool $endedBuffering = false;
 
     /**
-     * @var array<int, mixed[]>
+     * @var array<int, array<string, mixed>>
      */
     private array $buffer = [];
 
@@ -57,7 +58,7 @@ class SqliteResultSet extends AbstractResultSet
     }
 
     /**
-     * @return mixed[]|null
+     * @return array<string, mixed>|null
      */
     private function fetchNext(): ?array
     {
@@ -71,6 +72,7 @@ class SqliteResultSet extends AbstractResultSet
             return null;
         }
 
+        /** @var array<string, mixed> $row */
         return $row;
     }
 
@@ -82,6 +84,7 @@ class SqliteResultSet extends AbstractResultSet
      */
     public function fetchObject(
         string|\Closure $class = ResultRowInterface::class,
+        ?HydratorInterface $hydrator = null,
     ): object {
         if ($this->result === null) {
             throw DatabaseException::fromEmptyResultSet();
@@ -92,7 +95,7 @@ class SqliteResultSet extends AbstractResultSet
                 throw DatabaseException::fromCannotFetch();
             }
 
-            return parent::hydrate($class, $this->buffer[$this->pointer++]);
+            return parent::hydrate($class, $this->buffer[$this->pointer++], $hydrator);
         }
 
         $this->endedBuffering = true;

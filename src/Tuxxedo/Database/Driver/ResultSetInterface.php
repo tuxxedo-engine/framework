@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Driver;
 
+use Tuxxedo\Database\Hydrator\HydratableInterface;
+use Tuxxedo\Database\Hydrator\HydratorInterface;
+
 /**
  * @extends \Iterator<array-key, ResultRowInterface>
  */
@@ -30,6 +33,7 @@ interface ResultSetInterface extends \Countable, \Iterator
      */
     public function fetchAll(
         string|\Closure $class = ResultRowInterface::class,
+        ?HydratorInterface $hydrator = null,
     ): \Generator;
 
     public function fetch(): ResultRowInterface;
@@ -42,6 +46,7 @@ interface ResultSetInterface extends \Countable, \Iterator
      */
     public function fetchObject(
         string|\Closure $class = ResultRowInterface::class,
+        ?HydratorInterface $hydrator = null,
     ): object;
 
     /**

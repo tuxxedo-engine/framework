@@ -14,7 +14,8 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Query\Builder;
 
 use Tuxxedo\Database\DatabaseException;
-use Tuxxedo\Database\Driver\HydratableInterface;
+use Tuxxedo\Database\Hydrator\HydratableInterface;
+use Tuxxedo\Database\Hydrator\HydratorInterface;
 use Tuxxedo\Database\SqlException;
 
 interface SelectBuilderInterface extends WhereBuilderInterface
@@ -111,6 +112,7 @@ interface SelectBuilderInterface extends WhereBuilderInterface
     #[\NoDiscard]
     public function fetch(
         string|\Closure $class,
+        ?HydratorInterface $hydrator = null,
     ): ?object;
 
     /**
@@ -125,5 +127,6 @@ interface SelectBuilderInterface extends WhereBuilderInterface
     #[\NoDiscard]
     public function fetchAll(
         string|\Closure $class,
+        ?HydratorInterface $hydrator = null,
     ): \Generator;
 }

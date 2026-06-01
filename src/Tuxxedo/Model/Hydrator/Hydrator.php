@@ -11,11 +11,13 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Model\Hydration;
+namespace Tuxxedo\Model\Hydrator;
 
+use Tuxxedo\Database\Hydrator\HydratorInterface as DatabaseHydratorInterface;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Relation\HasOne;
+use Tuxxedo\Model\MetaData\MetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelPrimaryKeyInterface;
 use Tuxxedo\Model\MetaData\ModelRelationInterface;
@@ -27,31 +29,40 @@ class Hydrator implements HydratorInterface
 {
     public function __construct(
         private readonly ModelsManagerInterface $modelsManager,
+        private readonly MetaDataInterface $metaData,
+        private readonly DatabaseHydratorInterface $hydrator,
     ) {
     }
 
-    // @todo Verify readonly construction once column hydration migrates here
     /**
-     * @template TModel of object
+     * @template TClassName of object
      *
-     * @param class-string<TModel> $className
-     * @param array<string, mixed> $row
-     * @return TModel
+     * @param class-string<TClassName> $className
+     * @param array<string, mixed> $values
+     * @return TClassName
      */
-    public function hydrateFromRow(
+    public function hydrate(
         string $className,
-        array $row,
-        ModelMetaDataInterface $metaData,
+        array $values,
     ): object {
-        // @todo Column hydration migrates here once complex-type/readonly support lands
-        $model = (new \ReflectionClass($className))->newInstanceWithoutConstructor();
+        $metaData = $this->metaData->getModel($className);
 
-        $this->hydrateRelations($model, $metaData);
+        $propertyValues = [];
+
+        foreach ($metaData->columns as $column) {
+            if (\array_key_exists($column->column, $values)) {
+                $propertyValues[$column->property] = $values[$column->column];
+            }
+        }
+
+        $model = $this->hydrator->hydrate($className, $propertyValues);
+
+        $this->attachRelations($model, $metaData);
 
         return $model;
     }
 
-    public function hydrateRelations(
+    private function attachRelations(
         object $model,
         ModelMetaDataInterface $metaData,
     ): void {

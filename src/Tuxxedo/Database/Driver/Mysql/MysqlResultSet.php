@@ -16,8 +16,9 @@ namespace Tuxxedo\Database\Driver\Mysql;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\AbstractResultSet;
-use Tuxxedo\Database\Driver\HydratableInterface;
 use Tuxxedo\Database\Driver\ResultRowInterface;
+use Tuxxedo\Database\Hydrator\HydratableInterface;
+use Tuxxedo\Database\Hydrator\HydratorInterface;
 
 class MysqlResultSet extends AbstractResultSet
 {
@@ -51,6 +52,7 @@ class MysqlResultSet extends AbstractResultSet
      */
     public function fetchObject(
         string|\Closure $class = ResultRowInterface::class,
+        ?HydratorInterface $hydrator = null,
     ): object {
         if ($this->result === null) {
             throw DatabaseException::fromEmptyResultSet();
@@ -62,7 +64,7 @@ class MysqlResultSet extends AbstractResultSet
             throw DatabaseException::fromCannotFetch();
         }
 
-        return parent::hydrate($class, $row);
+        return parent::hydrate($class, $row, $hydrator);
     }
 
     public function fetchArray(): array

@@ -14,7 +14,8 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver;
 
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Reflection\ClassReflector;
+use Tuxxedo\Database\Hydrator\HydratableInterface;
+use Tuxxedo\Database\Hydrator\HydratorInterface;
 
 abstract class AbstractResultSet implements ResultSetInterface
 {
@@ -30,9 +31,10 @@ abstract class AbstractResultSet implements ResultSetInterface
      */
     public function fetchAll(
         string|\Closure $class = ResultRowInterface::class,
+        ?HydratorInterface $hydrator = null,
     ): \Generator {
         for ($i = 0, $numRows = \sizeof($this); $i < $numRows; $i++) {
-            yield $this->fetchObject($class);
+            yield $this->fetchObject($class, $hydrator);
         }
     }
 
@@ -51,34 +53,16 @@ abstract class AbstractResultSet implements ResultSetInterface
     protected function hydrate(
         string|\Closure $class,
         array $properties,
+        ?HydratorInterface $hydrator = null,
     ): object {
-        if (!$class instanceof \Closure) {
-            if (\in_array(HydratableInterface::class, ($interfaces = \class_implements($class)) !== false ? $interfaces : [], true)) {
-                /** @var class-string<TClassName&HydratableInterface> $class */
-                $class = $this->container->resolveName($class);
-
-                $class = $class::create(...);
-            } else {
-                $class = function (array $properties) use ($class): object {
-                    $model = $this->container->resolve($class);
-                    $reflector = ClassReflector::createFromObject($model);
-
-                    foreach ($properties as $column => $value) {
-                        $reflector->property($column)->setValue($model, $value);
-                    }
-
-                    return $model;
-                };
-            }
+        if ($class instanceof \Closure) {
+            /** @var TClassName */
+            return $class($properties);
         }
 
-        /** @var \Closure(): TClassName $class */
-        /** @var TClassName */
-        return $this->container->call(
-            $class,
-            [
-                'properties' => $properties,
-            ],
-        );
+        $hydrator ??= $this->container->resolve(HydratorInterface::class);
+
+        /** @var array<string, mixed> $properties */
+        return $hydrator->hydrate($class, $properties);
     }
 }

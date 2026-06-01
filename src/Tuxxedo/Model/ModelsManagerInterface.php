@@ -18,7 +18,7 @@ use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Query\Builder\ExistsBuilderInterface;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
-use Tuxxedo\Model\Hydration\HydratorInterface;
+use Tuxxedo\Model\Hydrator\HydratorInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 
 // @todo Support HasMany and BelongsToMany relations — Collection wrapper needed

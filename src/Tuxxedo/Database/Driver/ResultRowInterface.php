@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver;
 
 use Tuxxedo\Container\DefaultImplementation;
+use Tuxxedo\Database\Hydrator\HydratableInterface;
 
 #[DefaultImplementation(class: ResultRow::class)]
 interface ResultRowInterface extends HydratableInterface

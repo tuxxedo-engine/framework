@@ -13,20 +13,22 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Driver;
 
-class ResultRow implements ResultRowInterface
+use Tuxxedo\Database\Hydrator\HydratableInterface;
+
+class ResultRow implements ResultRowInterface, HydratableInterface
 {
     /**
-     * @param mixed[] $properties
+     * @param array<string, mixed> $properties
      */
-    public function __construct(
+    final public function __construct(
         public readonly array $properties,
     ) {
     }
 
     public static function create(
         array $properties,
-    ): self {
-        return new self($properties);
+    ): static {
+        return new static($properties);
     }
 
     public function __get(string $property): mixed

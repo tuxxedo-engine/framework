@@ -11,14 +11,14 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Driver;
+namespace Tuxxedo\Database\Hydrator;
 
 interface HydratableInterface
 {
     /**
-     * @param mixed[] $properties
+     * @param array<string, mixed> $properties
      */
     public static function create(
         array $properties,
-    ): self;
+    ): static;
 }
