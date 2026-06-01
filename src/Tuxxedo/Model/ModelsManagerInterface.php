@@ -31,6 +31,7 @@ use Tuxxedo\Model\MetaData\MetaDataInterface;
 // @todo Support recursive save() through loaded relations (depends on dirty tracking)
 // @todo Consider findWhere and other shorthands?
 // @todo Support with or similar arguments for fetchers on relations to eagerly load them?
+// @todo Criteria parameters may need more narrowing to prevent injecting overrides into parts they shouldn't. It should be limited to where builders only
 #[DefaultImplementation(class: ModelsManager::class, lifecycle: Lifecycle::PERSISTENT)]
 interface ModelsManagerInterface
 {
