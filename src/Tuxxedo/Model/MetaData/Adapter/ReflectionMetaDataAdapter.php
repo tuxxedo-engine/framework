@@ -18,6 +18,7 @@ use Tuxxedo\Model\Attribute\CompositeKey;
 use Tuxxedo\Model\Attribute\Identifier;
 use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
+use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
 use Tuxxedo\Model\Attribute\Relation\HasMany;
 use Tuxxedo\Model\Attribute\Relation\HasOne;
 use Tuxxedo\Model\Attribute\Relation\RelationInterface;
@@ -38,7 +39,6 @@ use Tuxxedo\Model\MetaData\ModelRelationInterface;
 use Tuxxedo\Model\ModelException;
 use Tuxxedo\Reflection\ClassReflector;
 
-// @todo HasMany and BelongsToMany is not properly validated
 class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
 {
     /**
@@ -112,7 +112,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             columns: $columns,
             identifiers: $identifiers,
             readonly: $readonly,
-            relations: $this->getRelations($class, $columns),
+            relations: $this->getRelations($class, $columns, $primaryKey),
         );
     }
 
@@ -125,6 +125,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
     private function getRelations(
         ClassReflector $class,
         array $columns,
+        ?ModelPrimaryKeyInterface $sourcePrimaryKey,
     ): array {
         $relations = [];
         $sourceColumnNames = \array_map(
@@ -182,8 +183,10 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 property: $property->name,
                 attribute: $attribute,
                 relatedClass: $relatedClass,
+                relatedReflection: $relatedReflection,
                 sourceColumnNames: $sourceColumnNames,
                 targetColumnNames: $targetColumnNames,
+                sourcePrimaryKey: $sourcePrimaryKey,
             );
 
             $relations[] = new ModelRelation(
@@ -221,8 +224,24 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
     }
 
     /**
+     * @param \ReflectionClass<object> $reflection
+     */
+    private function hasPrimaryKeyFromReflection(
+        \ReflectionClass $reflection,
+    ): bool {
+        foreach ($reflection->getProperties() as $property) {
+            if (\sizeof($property->getAttributes(PrimaryKey::class)) !== 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @param class-string $modelClass
      * @param class-string $relatedClass
+     * @param \ReflectionClass<object> $relatedReflection
      * @param string[] $sourceColumnNames
      * @param string[] $targetColumnNames
      *
@@ -233,10 +252,36 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         string $property,
         RelationInterface $attribute,
         string $relatedClass,
+        \ReflectionClass $relatedReflection,
         array $sourceColumnNames,
         array $targetColumnNames,
+        ?ModelPrimaryKeyInterface $sourcePrimaryKey,
     ): void {
-        if ($attribute instanceof HasOne || $attribute instanceof HasMany) {
+        if ($attribute instanceof HasOne) {
+            if (!\in_array($attribute->foreignKey, $targetColumnNames, true)) {
+                throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                    modelClass: $modelClass,
+                    property: $property,
+                    keyKind: 'foreignKey',
+                    keyValue: $attribute->foreignKey,
+                    referencedClass: $relatedClass,
+                );
+            }
+
+            if ($attribute->localKey !== null && !\in_array($attribute->localKey, $sourceColumnNames, true)) {
+                throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                    modelClass: $modelClass,
+                    property: $property,
+                    keyKind: 'localKey',
+                    keyValue: $attribute->localKey,
+                    referencedClass: $modelClass,
+                );
+            }
+
+            return;
+        }
+
+        if ($attribute instanceof HasMany) {
             if (!\in_array($attribute->foreignKey, $targetColumnNames, true)) {
                 throw ModelException::fromRelationKeyReferencesUnknownColumn(
                     modelClass: $modelClass,
@@ -278,6 +323,26 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                     keyKind: 'ownerKey',
                     keyValue: $attribute->ownerKey,
                     referencedClass: $relatedClass,
+                );
+            }
+
+            return;
+        }
+
+        if ($attribute instanceof BelongsToMany) {
+            if ($sourcePrimaryKey === null) {
+                throw ModelException::fromRelationRequiresPrimaryKey(
+                    modelClass: $modelClass,
+                    property: $property,
+                    side: 'source',
+                );
+            }
+
+            if (!$this->hasPrimaryKeyFromReflection($relatedReflection)) {
+                throw ModelException::fromRelationRequiresPrimaryKey(
+                    modelClass: $modelClass,
+                    property: $property,
+                    side: 'target',
                 );
             }
 

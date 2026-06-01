@@ -348,4 +348,22 @@ class ModelException extends \Exception
             ),
         );
     }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromRelationRequiresPrimaryKey(
+        string $modelClass,
+        string $property,
+        string $side,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Relation on property "%s" requires the %s model to define a primary key',
+                $modelClass,
+                $property,
+                $side,
+            ),
+        );
+    }
 }
