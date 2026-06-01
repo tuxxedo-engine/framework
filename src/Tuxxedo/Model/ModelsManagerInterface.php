@@ -30,6 +30,7 @@ use Tuxxedo\Model\MetaData\MetaDataInterface;
 // @todo Readonly support implications for cache strategy and dirty tracking writebacks
 // @todo Support recursive save() through loaded relations (depends on dirty tracking)
 // @todo Consider findWhere and other shorthands?
+// @todo Support with or similar arguments for fetchers on relations to eagerly load them?
 #[DefaultImplementation(class: ModelsManager::class, lifecycle: Lifecycle::PERSISTENT)]
 interface ModelsManagerInterface
 {
