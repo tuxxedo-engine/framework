@@ -278,6 +278,14 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 );
             }
 
+            if ($attribute->localKey === null && $sourcePrimaryKey === null) {
+                throw ModelException::fromRelationRequiresPrimaryKey(
+                    modelClass: $modelClass,
+                    property: $property,
+                    side: 'source',
+                );
+            }
+
             return;
         }
 
@@ -302,6 +310,14 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 );
             }
 
+            if ($attribute->localKey === null && $sourcePrimaryKey === null) {
+                throw ModelException::fromRelationRequiresPrimaryKey(
+                    modelClass: $modelClass,
+                    property: $property,
+                    side: 'source',
+                );
+            }
+
             return;
         }
 
@@ -323,6 +339,14 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                     keyKind: 'ownerKey',
                     keyValue: $attribute->ownerKey,
                     referencedClass: $relatedClass,
+                );
+            }
+
+            if ($attribute->ownerKey === null && !$this->hasPrimaryKeyFromReflection($relatedReflection)) {
+                throw ModelException::fromRelationRequiresPrimaryKey(
+                    modelClass: $modelClass,
+                    property: $property,
+                    side: 'target',
                 );
             }
 

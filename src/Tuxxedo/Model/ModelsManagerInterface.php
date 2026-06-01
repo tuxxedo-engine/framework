@@ -25,7 +25,6 @@ use Tuxxedo\Model\MetaData\MetaDataInterface;
 // @todo Support CreatedAt, UpdatedAt & DeletedAt contracts
 // @todo Support value hydration and serialization from complex types like Enums, Objects
 // @todo Implement a cache strategy
-// @todo Support readonly model objects
 // @todo Dirty models handling
 // @todo Readonly support implications for cache strategy and dirty tracking writebacks
 // @todo Support recursive save() through loaded relations (depends on dirty tracking)
