@@ -261,7 +261,7 @@ class ModelsManager implements ModelsManagerInterface
             $criteria($query);
         }
 
-        $model = $query->fetch($class);
+        $model = $query->limit(1)->fetch($class);
 
         if ($model !== null) {
             $this->hydrator->hydrateRelations($model, $metaData);
