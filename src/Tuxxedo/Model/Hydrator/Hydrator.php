@@ -255,6 +255,15 @@ class Hydrator implements HydratorInterface
 
         if (\is_a($typeName, \BackedEnum::class, true)) {
             try {
+                if (!\is_int($value) && !\is_string($value)) {
+                    throw ModelException::fromInvalidEnumValue(
+                        modelClass: $className,
+                        property: $property,
+                        enumClass: $typeName,
+                        value: $value,
+                    );
+                }
+
                 return $typeName::from($value);
             } catch (\ValueError $e) {
                 throw ModelException::fromInvalidEnumValue(
