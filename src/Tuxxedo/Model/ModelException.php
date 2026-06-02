@@ -366,4 +366,27 @@ class ModelException extends \Exception
             ),
         );
     }
+
+    /**
+     * @param class-string $modelClass
+     * @param class-string<\UnitEnum> $enumClass
+     */
+    public static function fromInvalidEnumValue(
+        string $modelClass,
+        string $property,
+        string $enumClass,
+        mixed $value,
+        ?\Throwable $previous = null,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot hydrate property "%s" on model "%s": value of type "%s" does not match any case of enum "%s"',
+                $property,
+                $modelClass,
+                \get_debug_type($value),
+                $enumClass,
+            ),
+            previous: $previous,
+        );
+    }
 }

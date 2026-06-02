@@ -120,6 +120,8 @@ class ModelsManager implements ModelsManagerInterface
                 );
             }
 
+            $value = self::dehydrateScalar($value);
+
             if ($value !== null && !\is_scalar($value)) {
                 throw ModelException::fromPropertyValueMustBeScalar(
                     modelClass: $metaData->model,
@@ -132,6 +134,21 @@ class ModelsManager implements ModelsManagerInterface
         }
 
         return $map;
+    }
+
+    // @todo This should be moved to the Hydrator handlers
+    private static function dehydrateScalar(
+        mixed $value,
+    ): mixed {
+        if ($value instanceof \BackedEnum) {
+            return $value->value;
+        }
+
+        if ($value instanceof \UnitEnum) {
+            return $value->name;
+        }
+
+        return $value;
     }
 
     /**
@@ -214,6 +231,7 @@ class ModelsManager implements ModelsManagerInterface
 
         if ($metaData->key instanceof ModelPrimaryKeyInterface) {
             $value = PropertyReflector::createFromObject($model, $metaData->key->property)->getValue($model);
+            $value = self::dehydrateScalar($value);
 
             if (!\is_scalar($value)) {
                 throw ModelException::fromPropertyValueMustBeScalar(
@@ -227,6 +245,7 @@ class ModelsManager implements ModelsManagerInterface
         } elseif ($metaData->key instanceof ModelCompositeKeyInterface) {
             foreach (\array_combine($metaData->key->properties, $metaData->key->columns) as $property => $column) {
                 $value = PropertyReflector::createFromObject($model, $property)->getValue($model);
+                $value = self::dehydrateScalar($value);
 
                 if (!\is_scalar($value)) {
                     throw ModelException::fromPropertyValueMustBeScalar(
@@ -519,6 +538,7 @@ class ModelsManager implements ModelsManagerInterface
 
         if ($metaData->key instanceof ModelPrimaryKeyInterface) {
             $value = PropertyReflector::createFromObject($metaData->model, $metaData->key->property)->getValue($model);
+            $value = self::dehydrateScalar($value);
 
             if (!\is_scalar($value)) {
                 throw ModelException::fromPropertyValueMustBeScalar(
@@ -535,6 +555,7 @@ class ModelsManager implements ModelsManagerInterface
         } elseif ($metaData->key instanceof ModelCompositeKeyInterface) {
             foreach (\array_combine($metaData->key->properties, $metaData->key->columns) as $property => $column) {
                 $value = PropertyReflector::createFromObject($metaData->model, $property)->getValue($model);
+                $value = self::dehydrateScalar($value);
 
                 if (!\is_scalar($value)) {
                     throw ModelException::fromPropertyValueMustBeScalar(

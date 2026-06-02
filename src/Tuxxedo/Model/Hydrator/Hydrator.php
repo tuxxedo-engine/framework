@@ -51,7 +51,11 @@ class Hydrator implements HydratorInterface
 
         foreach ($metaData->columns as $column) {
             if (\array_key_exists($column->column, $values)) {
-                $propertyValues[$column->property] = $values[$column->column];
+                $propertyValues[$column->property] = $this->coerceValueForProperty(
+                    className: $className,
+                    property: $column->property,
+                    value: $values[$column->column],
+                );
             }
         }
 
@@ -224,5 +228,62 @@ class Hydrator implements HydratorInterface
             keyValue: $column,
             referencedClass: $metaData->model,
         );
+    }
+
+    // @todo DateTime coercion
+    // @todo JSON coercion
+    // @todo Support custom type coercion handlers
+    /**
+     * @param class-string $className
+     */
+    private function coerceValueForProperty(
+        string $className,
+        string $property,
+        mixed $value,
+    ): mixed {
+        if ($value === null) {
+            return null;
+        }
+
+        $type = (new \ReflectionProperty($className, $property))->getType();
+
+        if (!$type instanceof \ReflectionNamedType || $type->isBuiltin()) {
+            return $value;
+        }
+
+        $typeName = $type->getName();
+
+        if (\is_a($typeName, \BackedEnum::class, true)) {
+            try {
+                return $typeName::from($value);
+            } catch (\ValueError $e) {
+                throw ModelException::fromInvalidEnumValue(
+                    modelClass: $className,
+                    property: $property,
+                    enumClass: $typeName,
+                    value: $value,
+                    previous: $e,
+                );
+            }
+        }
+
+        if (\is_a($typeName, \UnitEnum::class, true)) {
+            if (\is_string($value)) {
+                foreach ($typeName::cases() as $case) {
+                    if (\strcasecmp($case->name, $value) === 0) {
+                        return $case;
+                    }
+                }
+            }
+
+            throw ModelException::fromInvalidEnumValue(
+                modelClass: $className,
+                property: $property,
+                enumClass: $typeName,
+                value: $value,
+            );
+        }
+
+        return $value;
     }
 }
