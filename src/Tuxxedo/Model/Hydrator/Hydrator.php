@@ -28,6 +28,7 @@ use Tuxxedo\Model\ModelsManagerInterface;
 use Tuxxedo\Model\Relation;
 use Tuxxedo\Reflection\PropertyReflector;
 
+// @todo Support property hooks for columns so they can do their own hydration behavior?
 class Hydrator implements HydratorInterface
 {
     public function __construct(
