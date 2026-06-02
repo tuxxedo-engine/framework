@@ -79,7 +79,7 @@ class Hydrator implements HydratorInterface
                 continue;
             }
 
-            // @todo HasMany and BelongsToMany — pending Collection wrapper design
+            // @todo HasMany and BelongsToMany — initialize Relation<T> in lazy or eager mode
         }
     }
 

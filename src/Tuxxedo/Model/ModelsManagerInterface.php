@@ -21,7 +21,11 @@ use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
 use Tuxxedo\Model\Hydrator\HydratorInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 
-// @todo Support HasMany and BelongsToMany relations — Collection wrapper needed
+// @todo Implement Relation<T> wrapper for HasMany and BelongsToMany
+// @todo Relation: page(limit:, offset:) immutable, raw pagination
+// @todo Relation: totalCount() — separate from Countable, respects filters, ignores pagination
+// @todo Relation: where() filter — narrowed where-builders (see criteria narrowing)
+// @todo Relation: eager-mode customization triggers lazy refetch
 // @todo Support CreatedAt, UpdatedAt & DeletedAt contracts
 // @todo Support value hydration and serialization from complex types like Enums, Objects
 // @todo Implement a cache strategy
