@@ -16,6 +16,8 @@ namespace Tuxxedo\Model\Hydrator;
 use Tuxxedo\Database\Hydrator\HydratorInterface as DatabaseHydratorInterface;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
+use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
+use Tuxxedo\Model\Attribute\Relation\HasMany;
 use Tuxxedo\Model\Attribute\Relation\HasOne;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
@@ -23,6 +25,7 @@ use Tuxxedo\Model\MetaData\ModelPrimaryKeyInterface;
 use Tuxxedo\Model\MetaData\ModelRelationInterface;
 use Tuxxedo\Model\ModelException;
 use Tuxxedo\Model\ModelsManagerInterface;
+use Tuxxedo\Model\Relation;
 use Tuxxedo\Reflection\PropertyReflector;
 
 class Hydrator implements HydratorInterface
@@ -79,7 +82,17 @@ class Hydrator implements HydratorInterface
                 continue;
             }
 
-            // @todo HasMany and BelongsToMany — initialize Relation<T> in lazy or eager mode
+            if ($attribute instanceof HasMany) {
+                $this->setupHasManyRelation($model, $metaData, $relation);
+
+                continue;
+            }
+
+            if ($attribute instanceof BelongsToMany) {
+                $this->setupBelongsToManyRelation($model, $metaData, $relation);
+
+                continue;
+            }
         }
     }
 
@@ -120,6 +133,117 @@ class Hydrator implements HydratorInterface
         PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $proxy);
     }
 
+    private function setupHasManyRelation(
+        object $model,
+        ModelMetaDataInterface $metaData,
+        ModelRelationInterface $relation,
+    ): void {
+        $sourceProperty = PropertyReflector::createFromObject($model, $this->resolveSourceProperty($metaData, $relation));
+        $sourceValue = $sourceProperty->getValue($model);
+
+        if ($sourceValue === null) {
+            PropertyReflector::createFromObject($model, $relation->property)->setValue(
+                $model,
+                Relation::createFromPrefetched([]),
+            );
+
+            return;
+        }
+
+        if (!\is_scalar($sourceValue)) {
+            throw ModelException::fromPropertyValueMustBeScalar(
+                modelClass: $metaData->model,
+                property: $sourceProperty->name,
+                actualType: \get_debug_type($sourceValue),
+            );
+        }
+
+        $targetColumn = $this->resolveTargetColumn($relation);
+        $relatedClass = $relation->relatedClass;
+        $manager = $this->modelsManager;
+        $targetTable = $manager->metaData->getModel($relatedClass)->table;
+
+        $relationInstance = Relation::createFromLoader(
+            loader: static fn (): iterable => $manager->findAll(
+                $relatedClass,
+                static function (SelectBuilderInterface $builder) use ($targetColumn, $sourceValue): void {
+                    $builder->where($targetColumn, $sourceValue);
+                },
+            ),
+            countLoader: static fn (): int => $manager->connection->count($targetTable)
+                ->where($targetColumn, $sourceValue)
+                ->count(),
+        );
+
+        PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $relationInstance);
+    }
+
+    private function setupBelongsToManyRelation(
+        object $model,
+        ModelMetaDataInterface $metaData,
+        ModelRelationInterface $relation,
+    ): void {
+        if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
+            throw ModelException::fromCantFetchWithoutPrimaryKey(
+                modelClass: $metaData->model,
+            );
+        }
+
+        $sourceProperty = PropertyReflector::createFromObject($model, $metaData->key->property);
+        $sourceValue = $sourceProperty->getValue($model);
+
+        if ($sourceValue === null) {
+            PropertyReflector::createFromObject($model, $relation->property)->setValue(
+                $model,
+                Relation::createFromPrefetched([]),
+            );
+
+            return;
+        }
+
+        if (!\is_scalar($sourceValue)) {
+            throw ModelException::fromPropertyValueMustBeScalar(
+                modelClass: $metaData->model,
+                property: $sourceProperty->name,
+                actualType: \get_debug_type($sourceValue),
+            );
+        }
+
+        /** @var BelongsToMany $attribute */
+        $attribute = $relation->attribute;
+        $relatedClass = $relation->relatedClass;
+        $manager = $this->modelsManager;
+        $targetMetaData = $manager->metaData->getModel($relatedClass);
+
+        if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
+            throw ModelException::fromCantFetchWithoutPrimaryKey(
+                modelClass: $relatedClass,
+            );
+        }
+
+        $targetTable = $targetMetaData->table;
+        $targetPrimaryKey = $targetMetaData->key->column;
+        $pivotTable = $attribute->table;
+        $pivotLocalKey = $attribute->localKey;
+        $pivotForeignKey = $attribute->foreignKey;
+
+        $relationInstance = Relation::createFromLoader(
+            loader: static fn (): iterable => $manager->findAll(
+                $relatedClass,
+                static function (SelectBuilderInterface $builder) use ($pivotTable, $pivotForeignKey, $pivotLocalKey, $targetTable, $targetPrimaryKey, $sourceValue): void {
+                    $builder
+                        ->innerJoin($pivotTable, $pivotTable . '.' . $pivotForeignKey, $targetTable . '.' . $targetPrimaryKey)
+                        ->where($pivotTable . '.' . $pivotLocalKey, $sourceValue);
+                },
+            ),
+            countLoader: static fn (): int => $manager->connection->count($pivotTable)
+                ->where($pivotLocalKey, $sourceValue)
+                ->count(),
+        );
+
+        PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $relationInstance);
+    }
+
     private function loadSingleRelation(
         ModelMetaDataInterface $sourceMetaData,
         ModelRelationInterface $relation,
@@ -155,7 +279,7 @@ class Hydrator implements HydratorInterface
             return $this->findPropertyByColumn($metaData, $attribute->foreignKey, $relation->property);
         }
 
-        if ($attribute instanceof HasOne) {
+        if ($attribute instanceof HasOne || $attribute instanceof HasMany) {
             $localKey = $attribute->localKey;
 
             if ($localKey === null) {
@@ -182,7 +306,7 @@ class Hydrator implements HydratorInterface
     ): string {
         $attribute = $relation->attribute;
 
-        if ($attribute instanceof HasOne) {
+        if ($attribute instanceof HasOne || $attribute instanceof HasMany) {
             return $attribute->foreignKey;
         }
 
