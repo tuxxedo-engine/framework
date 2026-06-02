@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\MetaData;
 
+// @todo Validate relational attributes that require Relation use it
+// @todo Validate relational attributes that require another model use it
 interface ModelMetaDataInterface
 {
     /**
