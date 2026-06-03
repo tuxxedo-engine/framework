@@ -389,4 +389,20 @@ class ModelException extends \Exception
             previous: $previous,
         );
     }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromPropertyIsNotAColumn(
+        string $modelClass,
+        string $property,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Property "%s" on model "%s" is not a column',
+                $property,
+                $modelClass,
+            ),
+        );
+    }
 }

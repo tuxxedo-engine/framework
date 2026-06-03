@@ -34,6 +34,7 @@ use Tuxxedo\Reflection\PropertyReflector;
         return new ModelsManager(
             connection: $container->resolve(ConnectionManagerInterface::class)->getDefaultConnection(),
             metaData: $container->resolve(MetaDataInterface::class),
+            dirtyTracker: $container->resolve(DirtyTrackerInterface::class),
             databaseHydrator: $container->resolve(DatabaseHydratorInterface::class),
         );
     },
@@ -45,6 +46,7 @@ class ModelsManager implements ModelsManagerInterface
     public function __construct(
         public readonly ConnectionInterface $connection,
         public readonly MetaDataInterface $metaData,
+        public readonly DirtyTrackerInterface $dirtyTracker,
         DatabaseHydratorInterface $databaseHydrator,
         ?HydratorInterface $modelHydrator = null,
     ) {
@@ -63,13 +65,16 @@ class ModelsManager implements ModelsManagerInterface
         object $model,
     ): object {
         $metaData = $this->metaData->getModel($model::class);
-        $target = $metaData->readonly
-            ? $model
-            : clone $model;
 
-        return $this->isNewModel($model, $metaData)
-            ? $this->insert($target, $metaData)
-            : $this->update($target, $metaData);
+        if ($this->isNewModel($model, $metaData)) {
+            $target = $metaData->readonly
+                ? $model
+                : clone $model;
+
+            return $this->insert($target, $metaData);
+        }
+
+        return $this->update($model, $metaData);
     }
 
     private function isNewModel(
@@ -179,6 +184,8 @@ class ModelsManager implements ModelsManagerInterface
 
         $query->execute();
 
+        $result = $model;
+
         if (
             $metaData->key instanceof ModelPrimaryKeyInterface &&
             $metaData->key->autoIncrement
@@ -187,19 +194,21 @@ class ModelsManager implements ModelsManagerInterface
 
             if ($id !== null) {
                 if ($metaData->readonly) {
-                    return clone (
+                    $result = clone (
                         $model,
                         [
                             $metaData->key->property => $id,
                         ],
                     );
+                } else {
+                    PropertyReflector::createFromObject($model, $metaData->key->property)->setValue($model, $id);
                 }
-
-                PropertyReflector::createFromObject($model, $metaData->key->property)->setValue($model, $id);
             }
         }
 
-        return $model;
+        $this->dirtyTracker->recordSnapshot($result, $metaData);
+
+        return $result;
     }
 
     /**
@@ -212,20 +221,50 @@ class ModelsManager implements ModelsManagerInterface
         object $model,
         ModelMetaDataInterface $metaData,
     ): object {
-        $skipColumns = [];
+        $dirty = $this->dirtyTracker->getDirtyColumns($model, $metaData);
 
         if ($metaData->key instanceof ModelPrimaryKeyInterface) {
-            $skipColumns[] = $metaData->key->column;
+            unset($dirty[$metaData->key->column]);
         } elseif ($metaData->key instanceof ModelCompositeKeyInterface) {
             foreach ($metaData->key->columns as $column) {
-                $skipColumns[] = $column;
+                unset($dirty[$column]);
             }
         }
 
-        $columns = $this->buildColumnMap($model, $metaData, $skipColumns);
+        if ($dirty === []) {
+            return $model;
+        }
+
+        foreach ($metaData->columns as $modelColumn) {
+            if (!\array_key_exists($modelColumn->column, $dirty)) {
+                continue;
+            }
+
+            $value = $dirty[$modelColumn->column];
+
+            if ($value === null && !$modelColumn->nullable) {
+                throw ModelException::fromNullValueOnNonNullableColumn(
+                    modelClass: $metaData->model,
+                    property: $modelColumn->property,
+                );
+            }
+
+            if ($value !== null && !\is_scalar($value)) {
+                throw ModelException::fromPropertyValueMustBeScalar(
+                    modelClass: $metaData->model,
+                    property: $modelColumn->property,
+                    actualType: \get_debug_type($value),
+                );
+            }
+        }
+
         $query = $this->connection->update($metaData->table);
 
-        foreach ($columns as $column => $value) {
+        /**
+         * @var string|int|float|bool|null $value
+         */
+        foreach ($dirty as $column => $value) {
+            // @todo Type might be mixed here, investigate
             $query->set($column, $value);
         }
 
@@ -260,6 +299,8 @@ class ModelsManager implements ModelsManagerInterface
         }
 
         $query->execute();
+
+        $this->dirtyTracker->recordSnapshot($model, $metaData);
 
         return $model;
     }

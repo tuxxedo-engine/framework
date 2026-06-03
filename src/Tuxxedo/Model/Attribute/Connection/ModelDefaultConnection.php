@@ -17,6 +17,7 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
 use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Database\Hydrator\HydratorInterface;
+use Tuxxedo\Model\DirtyTrackerInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 use Tuxxedo\Model\ModelsManager;
 use Tuxxedo\Model\ModelsManagerInterface;
@@ -35,6 +36,7 @@ readonly class ModelDefaultConnection implements DependencyResolverInterface
         return new ModelsManager(
             connection: $container->resolve(ConnectionManagerInterface::class)->getDefaultConnection(),
             metaData: $container->resolve(MetaDataInterface::class),
+            dirtyTracker: $container->resolve(DirtyTrackerInterface::class),
             databaseHydrator: $container->resolve(HydratorInterface::class),
         );
     }

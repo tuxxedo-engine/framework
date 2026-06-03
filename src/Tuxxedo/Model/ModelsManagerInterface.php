@@ -31,6 +31,7 @@ use Tuxxedo\Model\MetaData\MetaDataInterface;
 // @todo Support with or similar arguments for fetchers on relations to eagerly load them?
 // @todo Criteria parameters may need more narrowing to prevent injecting overrides into parts they shouldn't. It should be limited to where builders only
 // @todo Consider pagination
+// @todo Repository foundation
 #[DefaultImplementation(class: ModelsManager::class, lifecycle: Lifecycle::PERSISTENT)]
 interface ModelsManagerInterface
 {
@@ -39,6 +40,10 @@ interface ModelsManagerInterface
     }
 
     public MetaDataInterface $metaData {
+        get;
+    }
+
+    public DirtyTrackerInterface $dirtyTracker {
         get;
     }
 

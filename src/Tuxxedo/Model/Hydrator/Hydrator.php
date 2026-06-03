@@ -67,6 +67,8 @@ class Hydrator implements HydratorInterface
 
         $this->attachRelations($model, $metaData);
 
+        $this->modelsManager->dirtyTracker->recordSnapshot($model, $metaData);
+
         return $model;
     }
 
