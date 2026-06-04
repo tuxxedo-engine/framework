@@ -31,6 +31,9 @@ use Fixture\Container\DefaultServiceTwoInterface;
 use Fixture\Container\GlueService;
 use Fixture\Container\IntService;
 use Fixture\Container\IntersectionService;
+use Fixture\Container\LazyAttributeCtorService;
+use Fixture\Container\LazyAttributeScalarService;
+use Fixture\Container\LazyAttributeService;
 use Fixture\Container\LazyService;
 use Fixture\Container\NoTypeService;
 use Fixture\Container\OptionalService;
@@ -192,6 +195,35 @@ class ContainerTest extends TestCase
         $container->transient(LazyService::class);
 
         self::assertSame($container->resolve(LazyService::class)->name, 'baz');
+    }
+
+    public function testResolveWithLazyAttribute(): void
+    {
+        $container = new Container();
+        $service = $container->resolve(LazyAttributeService::class);
+
+        self::assertInstanceOf(LazyAttributeService::class, $service);
+        self::assertInstanceOf(ServiceOne::class, $service->dependency);
+        self::assertSame($service->dependency->foo(), 'bar');
+    }
+
+    public function testResolveWithLazyAttributeInvokesConstructorOnMaterialization(): void
+    {
+        $container = new Container();
+        $service = $container->resolve(LazyAttributeCtorService::class);
+
+        self::assertInstanceOf(LazyAttributeCtorService::class, $service);
+        self::assertInstanceOf(CtorNoArgsService::class, $service->dependency);
+        self::assertTrue($service->dependency->ready);
+    }
+
+    public function testResolveWithLazyAttributeOnScalarThrows(): void
+    {
+        $container = new Container();
+
+        self::expectException(ContainerException::class);
+
+        $container->resolve(LazyAttributeScalarService::class);
     }
 
     public function testResolveWithLazyAndPersistent(): void
