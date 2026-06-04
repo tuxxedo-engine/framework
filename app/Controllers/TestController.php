@@ -121,7 +121,7 @@ readonly class TestController
             json: [
                 'method' => $request->method->name,
                 'path' => $request->path,
-                'fullUri' => $request->fullUri,
+                'uri' => $request->uri,
                 'queryString' => $request->queryString,
                 'https' => $request->https,
                 'host' => $request->host,

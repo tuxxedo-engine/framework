@@ -41,7 +41,7 @@ class HttpsRequired implements MiddlewareInterface
                 $request->port !== 80 && $request->port !== 443
                     ? ':' . \strval($request->port)
                     : '',
-                $request->fullUri,
+                $request->uri,
             ),
             responseCode: $this->responseCode,
         );

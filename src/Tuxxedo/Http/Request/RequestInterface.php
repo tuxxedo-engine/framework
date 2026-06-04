@@ -24,8 +24,6 @@ use Tuxxedo\Http\Request\Context\UploadedFilesContextInterface;
 use Tuxxedo\Router\DispatchableRouteInterface;
 
 // @todo Detect ipAddress type helper
-// @todo Keep withUri() and withFullUri() consistent with each other (path + query coupling)
-// @todo Reconsider uri/fullUri naming vs path/requestUri convention
 #[DefaultImplementation(class: Request::class)]
 interface RequestInterface
 {
@@ -69,7 +67,7 @@ interface RequestInterface
         get;
     }
 
-    public string $fullUri {
+    public string $uri {
         get;
     }
 
@@ -109,8 +107,8 @@ interface RequestInterface
     ): static;
 
     #[\NoDiscard]
-    public function withFullUri(
-        string $fullUri,
+    public function withUri(
+        string $uri,
     ): static;
 
     #[\NoDiscard]

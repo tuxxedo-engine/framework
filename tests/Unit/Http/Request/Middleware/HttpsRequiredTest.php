@@ -27,7 +27,7 @@ use Tuxxedo\Http\Response\ResponseInterface;
 class HttpsRequiredTest extends TestCase
 {
     private function makeRequest(
-        ?string $fullUri = null,
+        ?string $uri = null,
         bool $https = true,
         ?string $host = null,
         ?int $port = null,
@@ -39,7 +39,7 @@ class HttpsRequiredTest extends TestCase
             post: new StubInputContext(),
             files: new StubUploadedFilesContext(),
             body: new StubBodyContext(),
-            fullUri: $fullUri,
+            uri: $uri,
             https: $https,
             host: $host,
             port: $port,
@@ -76,7 +76,7 @@ class HttpsRequiredTest extends TestCase
 
         $response = (new HttpsRequired())->handle(
             request: $this->makeRequest(
-                fullUri: '/foo?bar=baz',
+                uri: '/foo?bar=baz',
                 https: false,
                 host: 'example.com',
                 port: 80,
@@ -118,7 +118,7 @@ class HttpsRequiredTest extends TestCase
     {
         $response = (new HttpsRequired())->handle(
             request: $this->makeRequest(
-                fullUri: '/',
+                uri: '/',
                 https: false,
                 host: 'example.com',
                 port: 80,
@@ -133,7 +133,7 @@ class HttpsRequiredTest extends TestCase
     {
         $response = (new HttpsRequired())->handle(
             request: $this->makeRequest(
-                fullUri: '/',
+                uri: '/',
                 https: false,
                 host: 'example.com',
                 port: 443,
@@ -148,7 +148,7 @@ class HttpsRequiredTest extends TestCase
     {
         $response = (new HttpsRequired())->handle(
             request: $this->makeRequest(
-                fullUri: '/',
+                uri: '/',
                 https: false,
                 host: 'example.com',
                 port: 8080,

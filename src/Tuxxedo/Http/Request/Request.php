@@ -33,7 +33,7 @@ class Request implements RequestInterface
     public readonly Method $method;
     public readonly string $queryString;
     public readonly string $path;
-    public readonly string $fullUri;
+    public readonly string $uri;
     public readonly HttpVersion $protocolVersion;
     public readonly bool $https;
     public readonly string $host;
@@ -43,20 +43,20 @@ class Request implements RequestInterface
     public function __construct(
         ?DispatchableRouteInterface $route = null,
         public readonly HeaderContextInterface $headers = new EnvironmentHeaderContext(),
-        public readonly InputContextInterface         $cookies = new EnvironmentInputContext(
+        public readonly InputContextInterface $cookies = new EnvironmentInputContext(
             inputContext: InputContext::COOKIE,
         ),
-        public readonly InputContextInterface         $get = new EnvironmentInputContext(
+        public readonly InputContextInterface $get = new EnvironmentInputContext(
             inputContext: InputContext::GET,
         ),
-        public readonly InputContextInterface         $post = new EnvironmentInputContext(
+        public readonly InputContextInterface $post = new EnvironmentInputContext(
             inputContext: InputContext::POST,
         ),
         public readonly UploadedFilesContextInterface $files = new EnvironmentUploadedFilesContext(),
         public readonly BodyContextInterface $body = new EnvironmentBodyContext(),
         Method|string|null $method = null,
         ?string $path = null,
-        ?string $fullUri = null,
+        ?string $uri = null,
         ?string $queryString = null,
         ?HttpVersion $protocolVersion = null,
         ?bool $https = null,
@@ -75,7 +75,7 @@ class Request implements RequestInterface
         $this->method = $method ?? Method::GET;
         $this->queryString = $queryString ?? self::detectQueryString();
         $this->path = $path ?? self::detectPath();
-        $this->fullUri = $fullUri ?? self::detectFullUri($this->queryString);
+        $this->uri = $uri ?? self::detectUri($this->queryString);
         $this->protocolVersion = $protocolVersion ?? self::detectProtocolVersion();
         $this->https = $https ?? self::detectHttps();
         $this->host = $host ?? self::detectHost();
@@ -89,7 +89,7 @@ class Request implements RequestInterface
         return $_SERVER['PATH_INFO'] ?? '/';
     }
 
-    private static function detectFullUri(
+    private static function detectUri(
         string $queryString,
     ): string {
         /** @var string */
@@ -188,13 +188,13 @@ class Request implements RequestInterface
     }
 
     #[\NoDiscard]
-    public function withFullUri(
-        string $fullUri,
+    public function withUri(
+        string $uri,
     ): static {
         return clone (
             $this,
             [
-                'fullUri' => $fullUri,
+                'uri' => $uri,
             ],
         );
     }

@@ -690,7 +690,7 @@ class RequestTest extends TestCase
         self::assertSame(Method::POST, $request->method);
     }
 
-    public function testConstructorPopulatesFullUriWithQueryStringWhenPresent(): void
+    public function testConstructorPopulatesUriWithQueryStringWhenPresent(): void
     {
         $previous = $_SERVER;
         $_SERVER['REQUEST_URI'] = '/articles';
@@ -706,7 +706,7 @@ class RequestTest extends TestCase
                 queryString: 'id=42',
             );
 
-            self::assertSame('/articles?id=42', $request->fullUri);
+            self::assertSame('/articles?id=42', $request->uri);
         } finally {
             $_SERVER = $previous;
         }
@@ -801,13 +801,13 @@ class RequestTest extends TestCase
         self::assertSame('/rewritten', $updated->path);
     }
 
-    public function testWithFullUriReturnsNewInstanceWithUpdatedFullUri(): void
+    public function testWithUriReturnsNewInstanceWithUpdatedUri(): void
     {
         $request = $this->makeRequest();
-        $updated = $request->withFullUri('/rewritten?token=abc');
+        $updated = $request->withUri('/rewritten?token=abc');
 
         self::assertNotSame($request, $updated);
-        self::assertSame('/rewritten?token=abc', $updated->fullUri);
+        self::assertSame('/rewritten?token=abc', $updated->uri);
     }
 
     public function testWithQueryStringReturnsNewInstanceWithUpdatedQueryString(): void
