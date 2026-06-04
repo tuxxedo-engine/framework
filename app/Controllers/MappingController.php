@@ -37,7 +37,7 @@ readonly class MappingController
     ) {
     }
 
-    #[Route(uri: '/inputMap', method: [Method::GET, Method::POST])]
+    #[Route(path: '/inputMap', method: [Method::GET, Method::POST])]
     public function inputMap(RequestInterface $request): ResponseInterface
     {
         if ($request->method === Method::GET) {
@@ -62,7 +62,7 @@ readonly class MappingController
         );
     }
 
-    #[Route\Get(uri: '/map')]
+    #[Route\Get(path: '/map')]
     public function map(): ResponseInterface
     {
         return Response::capture(
@@ -98,7 +98,7 @@ readonly class MappingController
         );
     }
 
-    #[Route\Post(uri: '/mapTwo')]
+    #[Route\Post(path: '/mapTwo')]
     public function mapTwo(
         #[MapTo(
             name: 'struct',
@@ -118,7 +118,7 @@ readonly class MappingController
         );
     }
 
-    #[Route\Get(uri: '/inputMapTwo')]
+    #[Route\Get(path: '/inputMapTwo')]
     public function inputMapTwo(): ResponseInterface
     {
         return Response::html(
@@ -134,7 +134,7 @@ readonly class MappingController
     /**
      * @param array<object{name: string, age: int}> $one
      */
-    #[Route\Post(uri: '/mapThree')]
+    #[Route\Post(path: '/mapThree')]
     public function mapThree(
         #[MapToArrayOf(
             name: 'struct',
@@ -154,7 +154,7 @@ readonly class MappingController
         );
     }
 
-    #[Route\Get(uri: '/inputMapThree')]
+    #[Route\Get(path: '/inputMapThree')]
     public function inputMapThree(): ResponseInterface
     {
         return Response::html(
@@ -167,7 +167,7 @@ readonly class MappingController
         );
     }
 
-    #[Route\Post(uri: '/mapFour')]
+    #[Route\Post(path: '/mapFour')]
     public function mapFour(
         #[MapTo(name: 'struct', className: PersonOne::class)] object $one,
     ): ResponseInterface {
@@ -179,7 +179,7 @@ readonly class MappingController
         );
     }
 
-    #[Route\Get(uri: '/inputMapFour')]
+    #[Route\Get(path: '/inputMapFour')]
     public function inputMapFour(): ResponseInterface
     {
         return Response::html(
@@ -190,7 +190,7 @@ readonly class MappingController
         );
     }
 
-    #[Route\Post(uri: '/mapFive')]
+    #[Route\Post(path: '/mapFive')]
     public function mapFive(
         #[MapTo(name: 'struct')] PersonOne $one,
     ): ResponseInterface {
@@ -202,7 +202,7 @@ readonly class MappingController
         );
     }
 
-    #[Route\Get(uri: '/inputMapFive')]
+    #[Route\Get(path: '/inputMapFive')]
     public function inputMapFive(): ResponseInterface
     {
         return Response::html(
@@ -213,7 +213,7 @@ readonly class MappingController
         );
     }
 
-    #[Route\Post(uri: '/mapSixA')]
+    #[Route\Post(path: '/mapSixA')]
     public function mapSixA(
         #[JsonMapTo(name: 'struct')] PersonTwo $person,
     ): ResponseInterface {
@@ -228,7 +228,7 @@ readonly class MappingController
     /**
      * @param PersonTwo[] $people
      */
-    #[Route\Post(uri: '/mapSixB')]
+    #[Route\Post(path: '/mapSixB')]
     public function mapSixB(
         #[JsonMapToArrayOf(name: 'struct', className: PersonTwo::class)] array $people,
     ): ResponseInterface {
@@ -240,7 +240,7 @@ readonly class MappingController
         );
     }
 
-    #[Route\Get(uri: '/inputMapSix')]
+    #[Route\Get(path: '/inputMapSix')]
     public function inputMapSix(): ViewInterface
     {
         return new View('map_json_form');

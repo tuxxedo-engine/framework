@@ -25,47 +25,47 @@ use Tuxxedo\Router\Attribute\Route\Trace;
 
 class HttpMethodController
 {
-    #[Get(uri: '/get')]
+    #[Get(path: '/get')]
     public function getMethod(): void
     {
     }
 
-    #[Head(uri: '/head')]
+    #[Head(path: '/head')]
     public function headMethod(): void
     {
     }
 
-    #[Post(uri: '/post')]
+    #[Post(path: '/post')]
     public function postMethod(): void
     {
     }
 
-    #[Put(uri: '/put')]
+    #[Put(path: '/put')]
     public function putMethod(): void
     {
     }
 
-    #[Delete(uri: '/delete')]
+    #[Delete(path: '/delete')]
     public function deleteMethod(): void
     {
     }
 
-    #[Connect(uri: '/connect')]
+    #[Connect(path: '/connect')]
     public function connectMethod(): void
     {
     }
 
-    #[Options(uri: '/options')]
+    #[Options(path: '/options')]
     public function optionsMethod(): void
     {
     }
 
-    #[Trace(uri: '/trace')]
+    #[Trace(path: '/trace')]
     public function traceMethod(): void
     {
     }
 
-    #[Patch(uri: '/patch')]
+    #[Patch(path: '/patch')]
     public function patchMethod(): void
     {
     }

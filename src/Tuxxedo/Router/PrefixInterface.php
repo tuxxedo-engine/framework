@@ -15,7 +15,7 @@ namespace Tuxxedo\Router;
 
 interface PrefixInterface
 {
-    public string $uri {
+    public string $path {
         get;
     }
 }

@@ -24,7 +24,7 @@ use Tuxxedo\Router\RouteInterface;
 use Tuxxedo\Router\RouterInterface;
 
 #[Controller(
-    uri: '/list',
+    path: '/list',
     autoTrailingSlash: true,
 )]
 readonly class ListController
@@ -44,7 +44,9 @@ readonly class ListController
         $routes = [];
 
         foreach ($this->router->getRoutes() as $route) {
-            $method = $route->method === null ? 'any' : $route->method->name;
+            $method = $route->method === null
+                ? 'any'
+                : $route->method->name;
 
             $routes[$method] ??= [];
             $routes[$method][] = $route;
@@ -57,11 +59,11 @@ readonly class ListController
         $html .= '<thead>';
         $html .= '<tr style="background-color: #D0D0D0">';
         $html .= '<th><strong>Method</strong></th>';
-        $html .= '<th><strong>URI</strong></th>';
+        $html .= '<th><strong>Path</strong></th>';
         $html .= '<th><strong>Controller</strong></th>';
         $html .= '<th><strong>Action</strong></th>';
         $html .= '<th><strong>Priority</strong></th>';
-        $html .= '<th><strong>Regex URI</strong></th>';
+        $html .= '<th><strong>Regex path</strong></th>';
         $html .= '<th><strong>Argument count</strong></th>';
         $html .= '<th><strong>Prefixed argument count</strong></th>';
         $html .= '<th><strong>Middleware count</strong></th>';
@@ -72,15 +74,15 @@ readonly class ListController
         foreach ($routes as $method => $items) {
             /** @var RouteInterface $route */
             foreach ($items as $route) {
-                $uri = $this->escaper->html($route->uri);
-                $regexUri = '<em>None</em>';
+                $path = $this->escaper->html($route->path);
+                $regexPath = '<em>None</em>';
 
-                if ($route->regexUri === null && ($method === 'any' || $method === 'GET')) {
-                    $uri = '<a href="' . $uri . '">' . $uri . '</a>';
+                if ($route->regexPath === null && ($method === 'any' || $method === 'GET')) {
+                    $path = '<a href="' . $path . '">' . $path . '</a>';
                 }
 
-                if ($route->regexUri !== null) {
-                    $regexUri = $route->regexUri;
+                if ($route->regexPath !== null) {
+                    $regexPath = $route->regexPath;
                 }
 
                 $prefixedArgumentsCount = 0;
@@ -93,11 +95,11 @@ readonly class ListController
 
                 $html .= '<tr>';
                 $html .= '<td>' . $method . '</td>';
-                $html .= '<td>' . $uri . '</td>';
+                $html .= '<td>' . $path . '</td>';
                 $html .= '<td>' . $route->controller . '</td>';
                 $html .= '<td>' . $route->action . '</td>';
                 $html .= '<td>' . $route->priority->name . '</td>';
-                $html .= '<td>' . $regexUri . '</td>';
+                $html .= '<td>' . $regexPath . '</td>';
                 $html .= '<td>' . \sizeof($route->arguments) . '</td>';
                 $html .= '<td>' . $prefixedArgumentsCount . '</td>';
                 $html .= '<td>' . \sizeof($route->middleware) . '</td>';

@@ -20,7 +20,7 @@ class NoTypeController
     /**
      * @param mixed $value
      */
-    #[Get(uri: '/values/{value}')]
+    #[Get(path: '/values/{value}')]
     public function show(
         $value,
     ): void {

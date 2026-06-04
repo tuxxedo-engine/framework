@@ -16,10 +16,10 @@ namespace Fixture\Router\RouteDiscoverer\Discovery\AutoTrailing;
 use Tuxxedo\Router\Attribute\Controller;
 use Tuxxedo\Router\Attribute\Route\Get;
 
-#[Controller(uri: '/articles', autoIndex: false, autoTrailingSlash: true)]
+#[Controller(path: '/articles', autoIndex: false, autoTrailingSlash: true)]
 class AutoTrailingController
 {
-    #[Get(uri: '/list')]
+    #[Get(path: '/list')]
     public function list(): void
     {
     }

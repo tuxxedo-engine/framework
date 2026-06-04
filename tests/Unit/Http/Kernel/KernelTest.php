@@ -56,7 +56,7 @@ class KernelTest extends TestCase
 
     private function makeRequest(
         Method $method = Method::GET,
-        string $uri = '/test',
+        string $path = '/test',
     ): Request {
         return new Request(
             headers: new StubHeaderContext(),
@@ -66,19 +66,19 @@ class KernelTest extends TestCase
             files: new StubUploadedFilesContext(),
             body: new StubBodyContext(),
             method: $method,
-            uri: $uri,
+            path: $path,
         );
     }
 
     private function makeRouter(
         Method|null $method = Method::GET,
-        string $uri = '/test',
+        string $path = '/test',
     ): StaticRouter {
         return new StaticRouter(
             routes: [
                 new Route(
                     method: $method,
-                    uri: $uri,
+                    path: $path,
                     controller: self::class,
                     action: 'index',
                 ),

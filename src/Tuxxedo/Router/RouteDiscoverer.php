@@ -110,28 +110,28 @@ class RouteDiscoverer implements RouteDiscovererInterface
                     /** @var RouteAttr $route */
                     $route = $attribute->newInstance();
                     $prefix = null;
-                    $uri = $route->uri;
+                    $path = $route->path;
                     $indexAttribute = null;
 
-                    if ($controllerAttribute === null && $uri === null) {
+                    if ($controllerAttribute === null && $path === null) {
                         $this->handleError(
-                            static fn (): RouterException => RouterException::fromEmptyUri(
+                            static fn (): RouterException => RouterException::fromEmptyPath(
                                 className: $reflector->getName(),
                                 method: $method->getName(),
                             ),
                         );
 
                         return;
-                    } elseif ($uri === null) {
+                    } elseif ($path === null) {
                         if ($this->isIndexMethod($controllerAttribute, $method, $indexAttribute)) {
-                            $uri = $controllerAttribute->uri;
+                            $path = $controllerAttribute->path;
                         } else {
-                            $uri = $controllerAttribute->uri . $method->getName();
+                            $path = $controllerAttribute->path . $method->getName();
                         }
 
                         $prefix = $controllerAttribute->prefix;
                     } elseif ($controllerAttribute !== null) {
-                        $uri = $controllerAttribute->uri . $uri;
+                        $path = $controllerAttribute->path . $path;
                         $prefix = $controllerAttribute->prefix;
                     }
 
@@ -142,7 +142,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
                     if ($prefix !== null) {
                         /** @var PrefixInterface */
                         $prefix = $this->container->resolve($prefix);
-                        $uri = $prefix->uri . $uri;
+                        $path = $prefix->path . $path;
                     }
 
                     $effectiveRoute = ($indexAttribute?->name !== null && $route->name === null)
@@ -152,7 +152,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
                     yield from $this->emitRoutes(
                         route: $effectiveRoute,
                         prefix: $prefix,
-                        uri: $uri,
+                        path: $path,
                         middleware: $middleware,
                         reflector: $reflector,
                         method: $method,
@@ -163,7 +163,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
                         yield from $this->emitRoutes(
                             route: $route->withName($indexAttribute->name),
                             prefix: $prefix,
-                            uri: $uri,
+                            path: $path,
                             middleware: $middleware,
                             reflector: $reflector,
                             method: $method,
@@ -173,12 +173,12 @@ class RouteDiscoverer implements RouteDiscovererInterface
 
                     if (
                         ($route->trailingSlash || ($controllerAttribute !== null && $controllerAttribute->autoTrailingSlash)) &&
-                        !\str_ends_with($uri, '/')
+                        !\str_ends_with($path, '/')
                     ) {
                         yield from $this->emitRoutes(
-                            route: $route->withUri($uri . '/'),
+                            route: $route->withPath($path . '/'),
                             prefix: $prefix,
-                            uri: $uri . '/',
+                            path: $path . '/',
                             middleware: $middleware,
                             reflector: $reflector,
                             method: $method,
@@ -201,7 +201,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
     private function emitRoutes(
         RouteAttr $route,
         ?PrefixInterface $prefix,
-        string $uri,
+        string $path,
         array $middleware,
         \ReflectionClass $reflector,
         \ReflectionMethod $method,
@@ -223,11 +223,11 @@ class RouteDiscoverer implements RouteDiscovererInterface
             $namedRoutes[] = $route->name;
         }
 
-        $argumentNodes = $this->getUriArgumentNodes($uri, $prefix);
+        $argumentNodes = $this->getPathArgumentNodes($path, $prefix);
 
         if (\sizeof($argumentNodes) > 0) {
             yield from $this->discoverRoutesWithArguments(
-                uri: $uri,
+                path: $path,
                 middleware: $middleware,
                 nodes: $argumentNodes,
                 className: $reflector->getName(),
@@ -247,7 +247,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
 
                 yield new Route(
                     method: $requestMethod,
-                    uri: $uri,
+                    path: $path,
                     controller: $reflector->getName(),
                     action: $method->getName(),
                     name: $route->name,
@@ -258,7 +258,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
         } else {
             yield new Route(
                 method: null,
-                uri: $uri,
+                path: $path,
                 controller: $reflector->getName(),
                 action: $method->getName(),
                 name: $route->name,
@@ -363,8 +363,8 @@ class RouteDiscoverer implements RouteDiscovererInterface
     /**
      * @return ArgumentNode[]
      */
-    private function getUriArgumentNodes(
-        string $uri,
+    private function getPathArgumentNodes(
+        string $path,
         ?PrefixInterface $prefix,
     ): array {
         $nodes = [];
@@ -373,7 +373,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
         if ($prefix !== null) {
             $regex = \preg_match_all(
                 '/\{(\??)([a-zA-Z_][a-zA-Z0-9_]*)(?::([^}]+)|<([^>]+)>)?}/',
-                $prefix->uri,
+                $prefix->path,
                 $matches,
                 \PREG_SET_ORDER,
             );
@@ -387,7 +387,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
 
         $regex = \preg_match_all(
             '/\{(\??)([a-zA-Z_][a-zA-Z0-9_]*)(?::([^}]+)|<([^>]+)>)?}/',
-            $uri,
+            $path,
             $matches,
             \PREG_SET_ORDER,
         );
@@ -427,7 +427,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
      * @return \Generator<RouteInterface>
      */
     private function discoverRoutesWithArguments(
-        string $uri,
+        string $path,
         array $middleware,
         array $nodes,
         string $className,
@@ -480,26 +480,26 @@ class RouteDiscoverer implements RouteDiscovererInterface
 
                 yield new Route(
                     method: $requestMethod,
-                    uri: $uri,
+                    path: $path,
                     controller: $className,
                     action: $method->getName(),
                     name: $route->name,
                     middleware: $middleware,
                     priority: $route->priority,
-                    regexUri: $this->getRegexUri($uri),
+                    regexPath: $this->getRegexPath($path),
                     arguments: $arguments,
                 );
             }
         } else {
             yield new Route(
                 method: null,
-                uri: $uri,
+                path: $path,
                 controller: $className,
                 action: $method->getName(),
                 name: $route->name,
                 middleware: $middleware,
                 priority: $route->priority,
-                regexUri: $this->getRegexUri($uri),
+                regexPath: $this->getRegexPath($path),
                 arguments: $arguments,
             );
         }
@@ -534,7 +534,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
         return null;
     }
 
-    private function getRegexUri(string $uri): string
+    private function getRegexPath(string $path): string
     {
         return '#^' . \preg_replace_callback(
             '/(\/?)\{(\??)([a-zA-Z_][a-zA-Z0-9_]*)(?::([^}]+)|<([^>]+)>)?}/',
@@ -549,7 +549,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
                     ? '(?:' . $matches[1] . $segment . ')?'
                     : $matches[1] . $segment;
             },
-            $uri,
+            $path,
         ) . '$#';
     }
 

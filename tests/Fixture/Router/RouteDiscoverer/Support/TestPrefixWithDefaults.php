@@ -17,11 +17,11 @@ use Tuxxedo\Router\PrefixDefaultsInterface;
 
 readonly class TestPrefixWithDefaults implements PrefixDefaultsInterface
 {
-    public string $uri;
+    public string $path;
 
     public function __construct()
     {
-        $this->uri = '/{locale:[a-z]{2}}';
+        $this->path = '/{locale:[a-z]{2}}';
     }
 
     public function getDefaultValue(

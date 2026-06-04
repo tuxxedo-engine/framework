@@ -30,7 +30,7 @@ readonly class Route
      * @param class-string<PrefixInterface>|null $prefix
      */
     public function __construct(
-        public ?string $uri = null,
+        public ?string $path = null,
         array $method = [],
         public ?string $name = null,
         public bool $trailingSlash = false,
@@ -56,13 +56,13 @@ readonly class Route
         );
     }
 
-    public function withUri(
-        ?string $uri,
+    public function withPath(
+        ?string $path,
     ): static {
         return clone (
             $this,
             [
-                'uri' => $uri,
+                'path' => $path,
                 'name' => null,
             ],
         );

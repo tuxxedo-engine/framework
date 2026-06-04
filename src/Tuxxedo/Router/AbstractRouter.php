@@ -19,9 +19,9 @@ use Tuxxedo\Http\Request\RequestInterface;
 
 abstract class AbstractRouter implements RouterInterface
 {
-    public function findByUri(
+    public function findByPath(
         Method|string $method,
-        string $uri,
+        string        $path,
     ): ?DispatchableRouteInterface {
         $isMethodNotAllowed = false;
 
@@ -32,15 +32,15 @@ abstract class AbstractRouter implements RouterInterface
         foreach ($this->getRoutes() as $route) {
             $arguments = [];
 
-            if ($route->regexUri !== null) {
-                $regex = \preg_match_all($route->regexUri, $uri, $arguments, \PREG_SET_ORDER);
+            if ($route->regexPath !== null) {
+                $regex = \preg_match_all($route->regexPath, $path, $arguments, \PREG_SET_ORDER);
 
                 if ($regex === false || $regex === 0) {
                     continue;
                 }
 
                 $arguments = \array_filter($arguments[0], \is_string(...), \ARRAY_FILTER_USE_KEY);
-            } elseif ($route->uri !== $uri) {
+            } elseif ($route->path !== $path) {
                 continue;
             }
 
@@ -66,9 +66,9 @@ abstract class AbstractRouter implements RouterInterface
     public function findByRequest(
         RequestInterface $request,
     ): ?DispatchableRouteInterface {
-        return $this->findByUri(
+        return $this->findByPath(
             method: $request->method,
-            uri: $request->uri,
+            path: $request->path,
         );
     }
 

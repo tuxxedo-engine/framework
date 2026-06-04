@@ -17,7 +17,7 @@ use Tuxxedo\Router\Attribute\Route\Get;
 
 class MultiParamController
 {
-    #[Get(uri: '/users/{id}/{page}')]
+    #[Get(path: '/users/{id}/{page}')]
     public function show(
         int $id,
         int $page,

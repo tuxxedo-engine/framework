@@ -23,10 +23,10 @@ use Tuxxedo\Router\Attribute\Route;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewInterface;
 
-#[Controller(uri: '/csrf')]
+#[Controller(path: '/csrf')]
 readonly class CsrfController
 {
-    #[Route\Get(uri: '/form')]
+    #[Route\Get(path: '/form')]
     public function form(): ViewInterface
     {
         return new View(
@@ -34,7 +34,7 @@ readonly class CsrfController
         );
     }
 
-    #[Route\Post(uri: '/form')]
+    #[Route\Post(path: '/form')]
     #[Middleware(Csrf::class)]
     public function formPost(RequestInterface $request): ResponseInterface
     {
@@ -46,7 +46,7 @@ readonly class CsrfController
         );
     }
 
-    #[Route\Get(uri: '/tamper')]
+    #[Route\Get(path: '/tamper')]
     public function tamper(): ViewInterface
     {
         return new View(
@@ -54,7 +54,7 @@ readonly class CsrfController
         );
     }
 
-    #[Route\Post(uri: '/tamper')]
+    #[Route\Post(path: '/tamper')]
     #[Middleware(Csrf::class)]
     public function tamperPost(): ResponseInterface
     {
@@ -63,7 +63,7 @@ readonly class CsrfController
         );
     }
 
-    #[Route\Get(uri: '/ajax')]
+    #[Route\Get(path: '/ajax')]
     public function ajax(): ViewInterface
     {
         return new View(
@@ -71,7 +71,7 @@ readonly class CsrfController
         );
     }
 
-    #[Route\Post(uri: '/ajax')]
+    #[Route\Post(path: '/ajax')]
     #[Middleware(Csrf::class)]
     public function ajaxPost(): ResponseInterface
     {
@@ -83,7 +83,7 @@ readonly class CsrfController
         );
     }
 
-    #[Route\Get(uri: '/ajax-tamper')]
+    #[Route\Get(path: '/ajax-tamper')]
     public function ajaxTamper(): ViewInterface
     {
         return new View(
@@ -91,7 +91,7 @@ readonly class CsrfController
         );
     }
 
-    #[Route\Post(uri: '/ajax-tamper')]
+    #[Route\Post(path: '/ajax-tamper')]
     #[Middleware(Csrf::class)]
     public function ajaxTamperPost(): ResponseInterface
     {

@@ -27,9 +27,9 @@ interface RouterInterface
     /**
      * @throws HttpException
      */
-    public function findByUri(
+    public function findByPath(
         Method|string $method,
-        string $uri,
+        string $path,
     ): ?DispatchableRouteInterface;
 
     /**

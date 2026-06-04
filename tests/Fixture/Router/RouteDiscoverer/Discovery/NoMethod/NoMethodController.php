@@ -17,7 +17,7 @@ use Tuxxedo\Router\Attribute\Route;
 
 class NoMethodController
 {
-    #[Route(uri: '/any')]
+    #[Route(path: '/any')]
     public function any(): void
     {
     }

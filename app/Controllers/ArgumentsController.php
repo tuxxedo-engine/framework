@@ -22,10 +22,10 @@ use Tuxxedo\Router\Attribute\Argument;
 use Tuxxedo\Router\Attribute\Controller;
 use Tuxxedo\Router\Attribute\Route;
 
-#[Controller(uri: '/args/')]
+#[Controller(path: '/args/')]
 readonly class ArgumentsController
 {
-    #[Route\Get(uri: 'optional/{?name}', name: 'args.optional')]
+    #[Route\Get(path: 'optional/{?name}', name: 'args.optional')]
     public function show1(
         #[Argument(label: 'name')] bool $value = false,
     ): ResponseInterface {
@@ -34,7 +34,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: 'name/{name}', name: 'args.named')]
+    #[Route\Get(path: 'name/{name}', name: 'args.named')]
     public function show2(
         #[Argument(label: 'name')] string $value,
     ): ResponseInterface {
@@ -43,7 +43,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: 'regex/{name:\d+}')]
+    #[Route\Get(path: 'regex/{name:\d+}')]
     public function show3(
         #[Argument(label: 'name')] int $value,
     ): ResponseInterface {
@@ -52,7 +52,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: 'regex-optional/{?name:\d+}')]
+    #[Route\Get(path: 'regex-optional/{?name:\d+}')]
     public function show4(
         #[Argument(label: 'name')] ?int $value = null,
     ): ResponseInterface {
@@ -61,7 +61,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: 'explicit/{name<uuid>}')]
+    #[Route\Get(path: 'explicit/{name<uuid>}')]
     public function show5(
         #[Argument(label: 'name')] string $uuid,
     ): ResponseInterface {
@@ -70,7 +70,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: 'explicit-optional/{?name<uuid>}')]
+    #[Route\Get(path: 'explicit-optional/{?name<uuid>}')]
     public function show6(
         #[Argument(label: 'name')] ?string $uuid = null,
     ): ResponseInterface {
@@ -79,7 +79,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: 'optional-mixed/{?name}/{?age}')]
+    #[Route\Get(path: 'optional-mixed/{?name}/{?age}')]
     public function show7(
         #[Argument(label: 'name')] bool $value = false,
         #[Argument(label: 'age')] ?int $age = null,
@@ -89,7 +89,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: 'name-mixed/{name}/{country}')]
+    #[Route\Get(path: 'name-mixed/{name}/{country}')]
     public function show8(
         #[Argument(label: 'name')] string $value,
         #[Argument(label: 'country')] string $country
@@ -99,7 +99,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: 'regex-mixed/{name:\d+}/{active}')]
+    #[Route\Get(path: 'regex-mixed/{name:\d+}/{active}')]
     public function show9(
         #[Argument(label: 'name')] int $value,
         #[Argument(label: 'active')] bool $active,
@@ -109,7 +109,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: 'regex-optional-mixed/{?name:\d+}/{?score}')]
+    #[Route\Get(path: 'regex-optional-mixed/{?name:\d+}/{?score}')]
     public function show10(
         #[Argument(label: 'name')] ?int $value = null,
         #[Argument(label: 'score')] ?float $score = null,
@@ -119,7 +119,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: 'explicit-mixed/{name<uuid>}/{region}')]
+    #[Route\Get(path: 'explicit-mixed/{name<uuid>}/{region}')]
     public function show11(
         #[Argument(label: 'name')] string $uuid,
         #[Argument(label: 'region')] string $region,
@@ -129,7 +129,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: 'explicit-optional-mixed/{?name<uuid>}/{?timestamp:\d+}')]
+    #[Route\Get(path: 'explicit-optional-mixed/{?name<uuid>}/{?timestamp:\d+}')]
     public function show12(
         #[Argument(label: 'name')] ?string $uuid = null,
         #[Argument(label: 'timestamp')] ?int $timestamp = null,
@@ -139,7 +139,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: 'textual/{alpha<alpha>}/{slug<slug>}')]
+    #[Route\Get(path: 'textual/{alpha<alpha>}/{slug<slug>}')]
     public function show13(
         #[Argument] string $alpha,
         #[Argument] string $slug,
@@ -149,7 +149,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: 'primitive/{boolean<bool>}')]
+    #[Route\Get(path: 'primitive/{boolean<bool>}')]
     public function show14(
         #[Argument(label: 'boolean')] bool $value,
     ): ResponseInterface {
@@ -158,7 +158,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: 'locale/{country<country-code>}/{currency<currency-code>}/{language<language-code>}')]
+    #[Route\Get(path: 'locale/{country<country-code>}/{currency<currency-code>}/{language<language-code>}')]
     public function show15(
         #[Argument] string $country,
         #[Argument] string $currency,
@@ -169,7 +169,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: 'temporal/{date<date>}/{timestamp<timestamp>}')]
+    #[Route\Get(path: 'temporal/{date<date>}/{timestamp<timestamp>}')]
     public function show16(
         #[Argument] string $date,
         #[Argument] int $timestamp,
@@ -179,7 +179,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: 'encoding/{hex<hex>}')]
+    #[Route\Get(path: 'encoding/{hex<hex>}')]
     public function show17(
         #[Argument] string $hex,
     ): ResponseInterface {
@@ -188,7 +188,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: 'hash/{sha1<sha1>}/{sha256<sha256>}')]
+    #[Route\Get(path: 'hash/{sha1<sha1>}/{sha256<sha256>}')]
     public function show18(
         #[Argument] string $sha1,
         #[Argument] string $sha256,
@@ -198,7 +198,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: 'identifier/{id<numeric-id>}/{uuid<uuid>}/{uuidv4<uuid-v4>}')]
+    #[Route\Get(path: 'identifier/{id<numeric-id>}/{uuid<uuid>}/{uuidv4<uuid-v4>}')]
     public function show19(
         #[Argument] int $id,
         #[Argument] string $uuid,
@@ -209,7 +209,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: 'prefix/a/{page:\d+}', prefix: DefaultLanguagePrefix::class)]
+    #[Route\Get(path: 'prefix/a/{page:\d+}', prefix: DefaultLanguagePrefix::class)]
     public function show20(
         #[Argument] string $language,
         #[Argument] int $page,
@@ -219,7 +219,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: 'prefix/b/{page:\d+}', prefix: LocaleAwarePrefix::class)]
+    #[Route\Get(path: 'prefix/b/{page:\d+}', prefix: LocaleAwarePrefix::class)]
     public function show21(
         #[Argument] string $language,
         #[Argument] int $page,
@@ -229,7 +229,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: 'prefix/c/{page:\d+}', prefix: DefaultLanguagePrefix::class)]
+    #[Route\Get(path: 'prefix/c/{page:\d+}', prefix: DefaultLanguagePrefix::class)]
     public function show22(
         #[Argument] int $page,
         RequestInterface $request,
@@ -239,7 +239,7 @@ readonly class ArgumentsController
         );
     }
 
-    #[Route\Get(uri: 'prefix/d/{page:\d+}', prefix: LocaleAwarePrefix::class)]
+    #[Route\Get(path: 'prefix/d/{page:\d+}', prefix: LocaleAwarePrefix::class)]
     public function show23(
         #[Argument] int $page,
         RequestInterface $request,

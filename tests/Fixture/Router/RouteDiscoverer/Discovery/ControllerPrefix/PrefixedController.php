@@ -16,10 +16,10 @@ namespace Fixture\Router\RouteDiscoverer\Discovery\ControllerPrefix;
 use Tuxxedo\Router\Attribute\Controller;
 use Tuxxedo\Router\Attribute\Route\Get;
 
-#[Controller(uri: '/admin', autoIndex: false)]
+#[Controller(path: '/admin', autoIndex: false)]
 class PrefixedController
 {
-    #[Get(uri: '/users')]
+    #[Get(path: '/users')]
     public function users(): void
     {
     }

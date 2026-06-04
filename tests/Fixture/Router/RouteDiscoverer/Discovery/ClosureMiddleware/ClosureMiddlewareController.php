@@ -21,7 +21,7 @@ use Tuxxedo\Router\Attribute\Route\Get;
 
 class ClosureMiddlewareController
 {
-    #[Get(uri: '/closure')]
+    #[Get(path: '/closure')]
     #[Middleware(
         static function (ContainerInterface $container): MiddlewareInterface {
             return new TestMiddleware();

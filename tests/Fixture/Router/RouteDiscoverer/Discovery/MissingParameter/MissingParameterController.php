@@ -17,7 +17,7 @@ use Tuxxedo\Router\Attribute\Route\Get;
 
 class MissingParameterController
 {
-    #[Get(uri: '/users/{id}')]
+    #[Get(path: '/users/{id}')]
     public function show(): void
     {
     }

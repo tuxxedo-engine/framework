@@ -17,7 +17,7 @@ use Tuxxedo\Router\Attribute\Route\Get;
 
 class SimpleController
 {
-    #[Get(uri: '/home')]
+    #[Get(path: '/home')]
     public function home(): void
     {
     }

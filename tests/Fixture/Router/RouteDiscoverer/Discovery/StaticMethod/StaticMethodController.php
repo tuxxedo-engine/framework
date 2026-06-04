@@ -17,12 +17,12 @@ use Tuxxedo\Router\Attribute\Route\Get;
 
 class StaticMethodController
 {
-    #[Get(uri: '/static')]
+    #[Get(path: '/static')]
     public static function staticAction(): void
     {
     }
 
-    #[Get(uri: '/instance')]
+    #[Get(path: '/instance')]
     public function instanceAction(): void
     {
     }

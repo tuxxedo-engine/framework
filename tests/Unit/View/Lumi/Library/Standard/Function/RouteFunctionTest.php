@@ -31,14 +31,14 @@ class RouteFunctionTest extends TestCase
 {
     private function makeContainerWithNamedRoute(
         string $name,
-        string $uri,
+        string $path,
     ): Container {
         return (new Container())->persistent(
             class: new StaticRouter(
                 routes: [
                     new Route(
                         method: null,
-                        uri: $uri,
+                        path: $path,
                         controller: self::class,
                         action: 'index',
                         name: $name,
@@ -49,7 +49,7 @@ class RouteFunctionTest extends TestCase
     }
 
     private function makeContainerWithCurrentRoute(
-        string $uri,
+        string $path,
     ): Container {
         $request = (new Request(
             headers: new StubHeaderContext(),
@@ -62,7 +62,7 @@ class RouteFunctionTest extends TestCase
             new DispatchableRoute(
                 route: new Route(
                     method: null,
-                    uri: $uri,
+                    path: $path,
                     controller: self::class,
                     action: 'index',
                 ),

@@ -17,12 +17,12 @@ use Tuxxedo\Router\Attribute\Route\Get;
 
 class DuplicateController
 {
-    #[Get(uri: '/first', name: 'shared')]
+    #[Get(path: '/first', name: 'shared')]
     public function first(): void
     {
     }
 
-    #[Get(uri: '/second', name: 'shared')]
+    #[Get(path: '/second', name: 'shared')]
     public function second(): void
     {
     }

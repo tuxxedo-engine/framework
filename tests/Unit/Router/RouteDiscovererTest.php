@@ -140,13 +140,13 @@ class RouteDiscovererTest extends TestCase
 
         self::assertCount(1, $routes);
         self::assertSame(Method::GET, $routes[0]->method);
-        self::assertSame('/home', $routes[0]->uri);
+        self::assertSame('/home', $routes[0]->path);
         self::assertSame(self::FIXTURE_NAMESPACE_BASE . 'Simple\\SimpleController', $routes[0]->controller);
         self::assertSame('home', $routes[0]->action);
         self::assertNull($routes[0]->name);
         self::assertSame(RoutePriority::NORMAL, $routes[0]->priority);
         self::assertSame([], $routes[0]->arguments);
-        self::assertNull($routes[0]->regexUri);
+        self::assertNull($routes[0]->regexPath);
     }
 
     public function testDiscoversMultipleControllers(): void
@@ -155,19 +155,19 @@ class RouteDiscovererTest extends TestCase
             $this->createDiscoverer('Multiple'),
         );
 
-        $uris = \array_map(
-            static fn (RouteInterface $route): string => $route->uri,
+        $paths = \array_map(
+            static fn (RouteInterface $route): string => $route->path,
             $routes,
         );
 
-        \sort($uris);
+        \sort($paths);
 
         self::assertSame(
             [
                 '/alpha',
                 '/beta',
             ],
-            $uris,
+            $paths,
         );
     }
 
@@ -196,35 +196,35 @@ class RouteDiscovererTest extends TestCase
         self::assertCount(1, $second);
     }
 
-    public function testControllerUriIsPrependedWhenRouteUriIsProvided(): void
+    public function testControllerPathIsPrependedWhenRoutePathIsProvided(): void
     {
         $routes = $this->discoverAll(
             $this->createDiscoverer('ControllerPrefix'),
         );
 
         self::assertCount(1, $routes);
-        self::assertSame('/admin/users', $routes[0]->uri);
+        self::assertSame('/admin/users', $routes[0]->path);
     }
 
-    public function testAutoIndexUsesControllerUriDirectlyForIndexMethod(): void
+    public function testAutoIndexUsesControllerPathDirectlyForIndexMethod(): void
     {
         $routes = $this->discoverAll(
-            $this->createDiscoverer('ControllerOnlyUri'),
+            $this->createDiscoverer('ControllerOnlyPath'),
         );
 
-        $uris = \array_map(
-            static fn (RouteInterface $route): string => $route->uri,
+        $paths = \array_map(
+            static fn (RouteInterface $route): string => $route->path,
             $routes,
         );
 
-        \sort($uris);
+        \sort($paths);
 
         self::assertSame(
             [
                 '/users',
                 '/usersdetails',
             ],
-            $uris,
+            $paths,
         );
     }
 
@@ -250,22 +250,22 @@ class RouteDiscovererTest extends TestCase
             $this->createDiscoverer($scenario),
         );
 
-        $byUri = [];
+        $byPath = [];
 
         foreach ($routes as $route) {
-            $byUri[$route->uri] = $route->method;
+            $byPath[$route->path] = $route->method;
         }
 
-        self::assertSame(Method::GET, $byUri['/get']);
-        self::assertSame(Method::HEAD, $byUri['/head']);
-        self::assertSame(Method::POST, $byUri['/post']);
-        self::assertSame(Method::PUT, $byUri['/put']);
-        self::assertSame(Method::DELETE, $byUri['/delete']);
-        self::assertSame(Method::CONNECT, $byUri['/connect']);
-        self::assertSame(Method::OPTIONS, $byUri['/options']);
-        self::assertSame(Method::TRACE, $byUri['/trace']);
-        self::assertSame(Method::PATCH, $byUri['/patch']);
-        self::assertSameSize(Method::cases(), $byUri);
+        self::assertSame(Method::GET, $byPath['/get']);
+        self::assertSame(Method::HEAD, $byPath['/head']);
+        self::assertSame(Method::POST, $byPath['/post']);
+        self::assertSame(Method::PUT, $byPath['/put']);
+        self::assertSame(Method::DELETE, $byPath['/delete']);
+        self::assertSame(Method::CONNECT, $byPath['/connect']);
+        self::assertSame(Method::OPTIONS, $byPath['/options']);
+        self::assertSame(Method::TRACE, $byPath['/trace']);
+        self::assertSame(Method::PATCH, $byPath['/patch']);
+        self::assertSameSize(Method::cases(), $byPath);
     }
 
     public function testMultipleMethodsOnSingleRouteAttributeEmitOneRoutePerMethod(): void
@@ -282,8 +282,8 @@ class RouteDiscovererTest extends TestCase
         self::assertCount(2, $routes);
         self::assertContains(Method::GET, $methods);
         self::assertContains(Method::POST, $methods);
-        self::assertSame('/contact', $routes[0]->uri);
-        self::assertSame('/contact', $routes[1]->uri);
+        self::assertSame('/contact', $routes[0]->path);
+        self::assertSame('/contact', $routes[1]->path);
     }
 
     public function testRouteAttributeWithoutMethodEmitsRouteWithNullMethod(): void
@@ -294,7 +294,7 @@ class RouteDiscovererTest extends TestCase
 
         self::assertCount(1, $routes);
         self::assertNull($routes[0]->method);
-        self::assertSame('/any', $routes[0]->uri);
+        self::assertSame('/any', $routes[0]->path);
     }
 
     public function testRepeatedRouteAttributesEmitOneRoutePerOccurrence(): void
@@ -303,19 +303,19 @@ class RouteDiscovererTest extends TestCase
             $this->createDiscoverer('Repeated'),
         );
 
-        $uris = \array_map(
-            static fn (RouteInterface $route): string => $route->uri,
+        $paths = \array_map(
+            static fn (RouteInterface $route): string => $route->path,
             $routes,
         );
 
-        \sort($uris);
+        \sort($paths);
 
         self::assertSame(
             [
                 '/new',
                 '/old',
             ],
-            $uris,
+            $paths,
         );
     }
 
@@ -325,19 +325,19 @@ class RouteDiscovererTest extends TestCase
             $this->createDiscoverer('TrailingSlash'),
         );
 
-        $uris = \array_map(
-            static fn (RouteInterface $route): string => $route->uri,
+        $paths = \array_map(
+            static fn (RouteInterface $route): string => $route->path,
             $routes,
         );
 
-        \sort($uris);
+        \sort($paths);
 
         self::assertSame(
             [
                 '/page',
                 '/page/',
             ],
-            $uris,
+            $paths,
         );
     }
 
@@ -347,19 +347,19 @@ class RouteDiscovererTest extends TestCase
             $this->createDiscoverer('AutoTrailing'),
         );
 
-        $uris = \array_map(
-            static fn (RouteInterface $route): string => $route->uri,
+        $paths = \array_map(
+            static fn (RouteInterface $route): string => $route->path,
             $routes,
         );
 
-        \sort($uris);
+        \sort($paths);
 
         self::assertSame(
             [
                 '/articles/list',
                 '/articles/list/',
             ],
-            $uris,
+            $paths,
         );
     }
 
@@ -395,22 +395,22 @@ class RouteDiscovererTest extends TestCase
         );
     }
 
-    public function testEmptyUriWithoutControllerThrowsInStrictMode(): void
+    public function testEmptyPathWithoutControllerThrowsInStrictMode(): void
     {
         self::expectException(RouterException::class);
 
         $this->discoverAll(
             $this->createDiscoverer(
-                scenario: 'EmptyUri',
+                scenario: 'EmptyPath',
                 strictMode: true,
             ),
         );
     }
 
-    public function testEmptyUriWithoutControllerEndsDiscoveryInNonStrictMode(): void
+    public function testEmptyPathWithoutControllerEndsDiscoveryInNonStrictMode(): void
     {
         $routes = $this->discoverAll(
-            $this->createDiscoverer('EmptyUri'),
+            $this->createDiscoverer('EmptyPath'),
         );
 
         self::assertSame([], $routes);
@@ -436,7 +436,7 @@ class RouteDiscovererTest extends TestCase
 
         self::assertCount(1, $routes);
         self::assertSame('shared', $routes[0]->name);
-        self::assertSame('/first', $routes[0]->uri);
+        self::assertSame('/first', $routes[0]->path);
     }
 
     public function testTypedImplicitArgumentEmitsArgumentNodeWithRegexFromRegistry(): void
@@ -455,8 +455,8 @@ class RouteDiscovererTest extends TestCase
         self::assertNull($argument->node->constraint);
         self::assertFalse($argument->node->optional);
         self::assertSame('int', $argument->nativeType);
-        self::assertNotNull($routes[0]->regexUri);
-        self::assertStringContainsString('(?<id>', $routes[0]->regexUri);
+        self::assertNotNull($routes[0]->regexPath);
+        self::assertStringContainsString('(?<id>', $routes[0]->regexPath);
     }
 
     public function testTypedExplicitArgumentRecordsConstraintFromAngleBrackets(): void
@@ -487,8 +487,8 @@ class RouteDiscovererTest extends TestCase
 
         self::assertSame(ArgumentKind::REGEX, $argument->node->kind);
         self::assertSame('[a-z]+', $argument->node->constraint);
-        self::assertIsString($routes[0]->regexUri);
-        self::assertStringContainsString('(?<name>[a-z]+)', $routes[0]->regexUri);
+        self::assertIsString($routes[0]->regexPath);
+        self::assertStringContainsString('(?<name>[a-z]+)', $routes[0]->regexPath);
     }
 
     public function testOptionalArgumentWithDefaultEmitsOptionalRegex(): void
@@ -503,9 +503,9 @@ class RouteDiscovererTest extends TestCase
 
         self::assertTrue($argument->node->optional);
         self::assertSame(1, $argument->defaultValue);
-        self::assertIsString($routes[0]->regexUri);
-        self::assertStringContainsString('(?:/(?<id>', $routes[0]->regexUri);
-        self::assertStringContainsString(')?', $routes[0]->regexUri);
+        self::assertIsString($routes[0]->regexPath);
+        self::assertStringContainsString('(?:/(?<id>', $routes[0]->regexPath);
+        self::assertStringContainsString(')?', $routes[0]->regexPath);
     }
 
     public function testLabeledArgumentMapsParameterName(): void
@@ -621,7 +621,7 @@ class RouteDiscovererTest extends TestCase
         self::assertCount(2, $routes);
         self::assertContains(Method::GET, $methods);
         self::assertContains(Method::POST, $methods);
-        self::assertSame('/contact/{id}', $routes[0]->uri);
+        self::assertSame('/contact/{id}', $routes[0]->path);
     }
 
     public function testRouteWithArgumentAndNoMethodEmitsRouteWithNullMethod(): void
@@ -632,7 +632,7 @@ class RouteDiscovererTest extends TestCase
 
         self::assertCount(1, $routes);
         self::assertNull($routes[0]->method);
-        self::assertSame('/users/{id}', $routes[0]->uri);
+        self::assertSame('/users/{id}', $routes[0]->path);
     }
 
     public function testPrefixDefaultIsUsedWhenParameterExistsButHasNoDefaultValue(): void
@@ -689,7 +689,7 @@ class RouteDiscovererTest extends TestCase
         self::assertSame([], $routes);
     }
 
-    public function testMissingParameterForUriArgumentSkipsRoute(): void
+    public function testMissingParameterForPathArgumentSkipsRoute(): void
     {
         $routes = $this->discoverAll(
             $this->createDiscoverer('MissingParameter'),
@@ -705,7 +705,7 @@ class RouteDiscovererTest extends TestCase
         );
 
         self::assertCount(1, $routes);
-        self::assertSame('/{locale:[a-z]{2}}/home', $routes[0]->uri);
+        self::assertSame('/{locale:[a-z]{2}}/home', $routes[0]->path);
         self::assertCount(1, $routes[0]->arguments);
 
         $argument = $routes[0]->arguments[0];
@@ -715,14 +715,14 @@ class RouteDiscovererTest extends TestCase
         self::assertSame('en', $argument->defaultValue);
     }
 
-    public function testRoutePrefixOverridesUri(): void
+    public function testRoutePrefixOverridesPath(): void
     {
         $routes = $this->discoverAll(
             $this->createDiscoverer('RoutePrefix'),
         );
 
         self::assertCount(1, $routes);
-        self::assertSame('/api/users', $routes[0]->uri);
+        self::assertSame('/api/users', $routes[0]->path);
     }
 
     public function testAbstractClassThrowsInStrictMode(): void
@@ -827,8 +827,8 @@ class RouteDiscovererTest extends TestCase
             $this->createDiscoverer('StaticMethod'),
         );
 
-        $uris = \array_map(
-            static fn (RouteInterface $route): string => $route->uri,
+        $paths = \array_map(
+            static fn (RouteInterface $route): string => $route->path,
             $routes,
         );
 
@@ -836,7 +836,7 @@ class RouteDiscovererTest extends TestCase
             [
                 '/instance',
             ],
-            $uris,
+            $paths,
         );
     }
 
@@ -846,18 +846,18 @@ class RouteDiscovererTest extends TestCase
             $this->createDiscoverer('Middleware'),
         );
 
-        $byUri = [];
+        $byPath = [];
 
         foreach ($routes as $route) {
-            $byUri[$route->uri] = $route;
+            $byPath[$route->path] = $route;
         }
 
-        self::assertCount(2, $byUri['/protected']->middleware);
-        self::assertInstanceOf(TestMiddleware::class, ($byUri['/protected']->middleware[0])());
-        self::assertInstanceOf(AnotherMiddleware::class, ($byUri['/protected']->middleware[1])());
+        self::assertCount(2, $byPath['/protected']->middleware);
+        self::assertInstanceOf(TestMiddleware::class, ($byPath['/protected']->middleware[0])());
+        self::assertInstanceOf(AnotherMiddleware::class, ($byPath['/protected']->middleware[1])());
 
-        self::assertCount(1, $byUri['/open']->middleware);
-        self::assertInstanceOf(TestMiddleware::class, ($byUri['/open']->middleware[0])());
+        self::assertCount(1, $byPath['/open']->middleware);
+        self::assertInstanceOf(TestMiddleware::class, ($byPath['/open']->middleware[0])());
     }
 
     public function testClosureMiddlewareIsResolvedViaContainerInvocation(): void

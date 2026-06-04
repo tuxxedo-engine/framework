@@ -18,7 +18,7 @@ use Tuxxedo\Router\Attribute\Route\Get;
 
 class LabeledController
 {
-    #[Get(uri: '/users/{userId}')]
+    #[Get(path: '/users/{userId}')]
     public function show(
         #[Argument(label: 'userId')]
         int $id,

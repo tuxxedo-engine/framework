@@ -23,7 +23,7 @@ use Tuxxedo\View\View;
 use Tuxxedo\View\ViewInterface;
 
 #[Controller(
-    uri: '/language/',
+    path: '/language/',
     prefix: OptionalLanguagePrefix::class,
 )]
 readonly class PrefixController

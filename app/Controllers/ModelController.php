@@ -32,7 +32,7 @@ use Tuxxedo\Router\Attribute\Route;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewInterface;
 
-#[Controller(uri: '/model/')]
+#[Controller(path: '/model/')]
 #[OutputCapture]
 readonly class ModelController
 {
@@ -83,7 +83,7 @@ readonly class ModelController
     }
 
     #[Middleware(ValidUser::class)]
-    #[Route(uri: 'delete/{id<numeric-id>}', method: ['POST', 'GET'], name: 'model.delete')]
+    #[Route(path: 'delete/{id<numeric-id>}', method: ['POST', 'GET'], name: 'model.delete')]
     public function delete(
         RequestInterface $request,
         #[Argument] int $id,
@@ -131,7 +131,7 @@ readonly class ModelController
     }
 
     #[Middleware(ValidUser::class)]
-    #[Route(uri: 'update/{id<numeric-id>}', method: ['POST', 'GET'], name: 'model.update')]
+    #[Route(path: 'update/{id<numeric-id>}', method: ['POST', 'GET'], name: 'model.update')]
     public function update(
         RequestInterface $request,
         #[Argument] int $id,

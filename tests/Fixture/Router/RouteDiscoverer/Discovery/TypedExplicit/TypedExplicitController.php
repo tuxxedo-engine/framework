@@ -17,7 +17,7 @@ use Tuxxedo\Router\Attribute\Route\Get;
 
 class TypedExplicitController
 {
-    #[Get(uri: '/posts/{slug<slug>}')]
+    #[Get(path: '/posts/{slug<slug>}')]
     public function show(
         string $slug,
     ): void {

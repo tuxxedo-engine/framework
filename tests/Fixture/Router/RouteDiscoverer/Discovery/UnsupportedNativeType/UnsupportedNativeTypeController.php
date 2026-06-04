@@ -20,7 +20,7 @@ class UnsupportedNativeTypeController
     /**
      * @param mixed[] $value
      */
-    #[Get(uri: '/values/{value}')]
+    #[Get(path: '/values/{value}')]
     public function show(
         array $value,
     ): void {

@@ -36,7 +36,7 @@ readonly class TaggedController
      * @param LoggerInterface[] $tagged
      * @param CollectionInterface<int, LoggerInterface> $taggedCollection
      */
-    #[Route\Get(uri: '/tagged')]
+    #[Route\Get(path: '/tagged')]
     public function tagged(
         #[Tagged(LoggerInterface::class)] array $tagged,
         #[TaggedCollection(LoggerInterface::class)] CollectionInterface $taggedCollection,

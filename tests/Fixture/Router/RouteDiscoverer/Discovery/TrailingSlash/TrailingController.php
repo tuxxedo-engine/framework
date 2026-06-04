@@ -17,7 +17,7 @@ use Tuxxedo\Router\Attribute\Route\Get;
 
 class TrailingController
 {
-    #[Get(uri: '/page', trailingSlash: true)]
+    #[Get(path: '/page', trailingSlash: true)]
     public function page(): void
     {
     }

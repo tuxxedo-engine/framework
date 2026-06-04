@@ -17,5 +17,5 @@ use Tuxxedo\Router\PrefixInterface;
 
 class OptionalLanguagePrefix implements PrefixInterface
 {
-    public private(set) string $uri = '/{?language<language-code>}';
+    public private(set) string $path = '/{?language<language-code>}';
 }

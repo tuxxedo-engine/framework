@@ -18,7 +18,7 @@ use Tuxxedo\Router\Attribute\Route\Get;
 
 class PrefixDefaultController
 {
-    #[Get(uri: '/home', prefix: TestPrefixWithDefaults::class)]
+    #[Get(path: '/home', prefix: TestPrefixWithDefaults::class)]
     public function home(): void
     {
     }

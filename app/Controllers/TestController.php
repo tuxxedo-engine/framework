@@ -53,7 +53,7 @@ readonly class TestController
     ) {
     }
 
-    #[Route\Get(uri: '/log')]
+    #[Route\Get(path: '/log')]
     public function index(CustomLoggerInterface $logger): ResponseInterface
     {
         $logger->log('DI via action parameter');
@@ -67,7 +67,7 @@ readonly class TestController
         );
     }
 
-    #[Route\Get(uri: '/moreLogging')]
+    #[Route\Get(path: '/moreLogging')]
     public function moreLogging(
         RequestInterface $request,
         LoggerInterface $logger,
@@ -106,7 +106,7 @@ readonly class TestController
         );
     }
 
-    #[Route\Get(uri: '/info')]
+    #[Route\Get(path: '/info')]
     public function info(): ResponseInterface
     {
         return Response::capture(
@@ -114,13 +114,13 @@ readonly class TestController
         );
     }
 
-    #[Route\Get(uri: '/json')]
+    #[Route\Get(path: '/json')]
     public function json(RequestInterface $request): ResponseInterface
     {
         return Response::json(
             json: [
                 'method' => $request->method->name,
-                'uri' => $request->uri,
+                'path' => $request->path,
                 'fullUri' => $request->fullUri,
                 'queryString' => $request->queryString,
                 'https' => $request->https,
@@ -132,7 +132,7 @@ readonly class TestController
         );
     }
 
-    #[Route\Get(uri: '/cookies')]
+    #[Route\Get(path: '/cookies')]
     public function cookies(RequestInterface $request): ResponseInterface
     {
         $count = $request->cookies->has('count') ? $request->cookies->int('count') : 1;
@@ -152,7 +152,7 @@ readonly class TestController
         );
     }
 
-    #[Route\Get(uri: '/header')]
+    #[Route\Get(path: '/header')]
     public function header(RequestInterface $request): ResponseInterface
     {
         return Response::json(
@@ -164,7 +164,7 @@ readonly class TestController
         );
     }
 
-    #[Route\Get(uri: '/headers')]
+    #[Route\Get(path: '/headers')]
     public function headers(RequestInterface $request): ResponseInterface
     {
         return Response::json(
@@ -187,7 +187,7 @@ readonly class TestController
         );
     }
 
-    #[Route\Get(uri: '/form')]
+    #[Route\Get(path: '/form')]
     public function form(): ResponseInterface
     {
         return Response::html(
@@ -195,7 +195,7 @@ readonly class TestController
         );
     }
 
-    #[Route\Post(uri: '/input')]
+    #[Route\Post(path: '/input')]
     public function input(RequestInterface $request): ResponseInterface
     {
         return Response::json(
@@ -209,7 +209,7 @@ readonly class TestController
         );
     }
 
-    #[Route(uri: '/fileUpload', method: [Method::GET, Method::POST])]
+    #[Route(path: '/fileUpload', method: [Method::GET, Method::POST])]
     public function fileUpload(RequestInterface $request): ResponseInterface
     {
         if ($request->method === Method::GET) {
@@ -236,7 +236,7 @@ readonly class TestController
         );
     }
 
-    #[Route\Get(uri: '/jsonBody')]
+    #[Route\Get(path: '/jsonBody')]
     public function jsonBody(RequestInterface $request): ResponseInterface
     {
         return Response::json(
@@ -244,7 +244,7 @@ readonly class TestController
         );
     }
 
-    #[Route\Get(uri: '/phpinfo.php')]
+    #[Route\Get(path: '/phpinfo.php')]
     #[Middleware(OutputCapture::class)]
     public function phpInfo(): ResponseInterface
     {
@@ -253,13 +253,13 @@ readonly class TestController
         return new Response();
     }
 
-    #[Route\Get(uri: '/redirect')]
+    #[Route\Get(path: '/redirect')]
     public function redirect(): ResponseInterface
     {
         return Response::redirect('/');
     }
 
-    #[Route\Get(uri: '/version')]
+    #[Route\Get(path: '/version')]
     public function version(): ResponseInterface
     {
         $versionInfo = [];
@@ -281,7 +281,7 @@ readonly class TestController
         );
     }
 
-    #[Route\Get(uri: '/test-http-{code:\d+}', trailingSlash: true)]
+    #[Route\Get(path: '/test-http-{code:\d+}', trailingSlash: true)]
     public function error(
         #[Argument] int $code,
     ): never {
@@ -290,7 +290,7 @@ readonly class TestController
         );
     }
 
-    #[Route\Get(uri: '/app-test')]
+    #[Route\Get(path: '/app-test')]
     #[OutputCapture]
     public function appTest(
         #[AppName] string $appNameOne,

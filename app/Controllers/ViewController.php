@@ -20,7 +20,7 @@ use Tuxxedo\Version;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewInterface;
 
-#[Controller(uri: '/view/')]
+#[Controller(path: '/view/')]
 readonly class ViewController
 {
     public function __construct(

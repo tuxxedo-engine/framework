@@ -41,7 +41,7 @@ use Tuxxedo\View\View;
 use Tuxxedo\View\ViewException;
 use Tuxxedo\View\ViewRenderInterface;
 
-#[Controller(uri: '/lumi', autoTrailingSlash: true)]
+#[Controller(path: '/lumi', autoTrailingSlash: true)]
 readonly class LumiController
 {
     public function __construct(

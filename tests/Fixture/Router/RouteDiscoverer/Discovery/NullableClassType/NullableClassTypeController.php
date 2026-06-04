@@ -17,7 +17,7 @@ use Tuxxedo\Router\Attribute\Route\Get;
 
 class NullableClassTypeController
 {
-    #[Get(uri: '/items/{value}')]
+    #[Get(path: '/items/{value}')]
     public function show(
         ?\stdClass $value,
     ): void {

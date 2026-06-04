@@ -23,7 +23,7 @@ class RouteTest extends TestCase
     {
         $route = new Route(
             method: 'put',
-            uri: '/test',
+            path: '/test',
             controller: static::class,
             action: __FUNCTION__,
         );

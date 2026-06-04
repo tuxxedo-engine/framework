@@ -17,7 +17,7 @@ use Tuxxedo\Router\PrefixDefaultsInterface;
 
 class DefaultLanguagePrefix implements PrefixDefaultsInterface
 {
-    public private(set) string $uri = '/{?language<language-code>}';
+    public private(set) string $path = '/{?language<language-code>}';
 
     public function getDefaultValue(string $argument): mixed
     {

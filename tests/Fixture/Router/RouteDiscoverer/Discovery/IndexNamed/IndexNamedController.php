@@ -17,7 +17,7 @@ use Tuxxedo\Router\Attribute\Controller;
 use Tuxxedo\Router\Attribute\Index;
 use Tuxxedo\Router\Attribute\Route\Get;
 
-#[Controller(uri: '/dashboard', autoIndex: false)]
+#[Controller(path: '/dashboard', autoIndex: false)]
 class IndexNamedController
 {
     #[Get]

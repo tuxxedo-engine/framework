@@ -26,7 +26,7 @@ readonly class IndexController
     ) {
     }
 
-    #[Route\Get(uri: '/', name: 'index')]
+    #[Route\Get(path: '/', name: 'index')]
     public function hello(): ViewInterface
     {
         return new View(

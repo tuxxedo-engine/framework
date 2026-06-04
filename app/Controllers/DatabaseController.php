@@ -22,7 +22,7 @@ use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Router\Attribute\Controller;
 use Tuxxedo\Router\Attribute\Route;
 
-#[Controller(uri: '/db/')]
+#[Controller(path: '/db/')]
 readonly class DatabaseController
 {
     public function __construct(

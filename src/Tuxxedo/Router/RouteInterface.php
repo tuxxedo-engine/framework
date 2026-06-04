@@ -22,7 +22,7 @@ interface RouteInterface
         get;
     }
 
-    public string $uri {
+    public string $path {
         get;
     }
 
@@ -52,7 +52,7 @@ interface RouteInterface
         get;
     }
 
-    public ?string $regexUri {
+    public ?string $regexPath {
         get;
     }
 

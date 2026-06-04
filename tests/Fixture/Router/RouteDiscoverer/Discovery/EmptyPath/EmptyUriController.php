@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Fixture\Router\RouteDiscoverer\Discovery\EmptyUri;
+namespace Fixture\Router\RouteDiscoverer\Discovery\EmptyPath;
 
 use Tuxxedo\Router\Attribute\Route\Get;
 

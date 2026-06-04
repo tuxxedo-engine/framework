@@ -25,14 +25,14 @@ readonly class Head extends Route
      * @param class-string<PrefixInterface>|null $prefix
      */
     public function __construct(
-        ?string $uri = null,
+        ?string $path = null,
         ?string $name = null,
         bool $trailingSlash = false,
         ?string $prefix = null,
         RoutePriority $priority = RoutePriority::NORMAL,
     ) {
         parent::__construct(
-            uri: $uri,
+            path: $path,
             method: [
                 Method::HEAD,
             ],

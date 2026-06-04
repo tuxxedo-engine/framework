@@ -34,21 +34,21 @@ class StaticRouterTest extends TestCase
      */
     private function makeRoute(
         Method|string|null $method = null,
-        string $uri = '/test',
+        string $path = '/test',
         string $controller = self::class,
         string $action = 'index',
         ?string $name = null,
         RoutePriority $priority = RoutePriority::NORMAL,
-        ?string $regexUri = null,
+        ?string $regexPath = null,
     ): Route {
         return new Route(
             method: $method,
-            uri: $uri,
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             priority: $priority,
-            regexUri: $regexUri,
+            regexPath: $regexPath,
         );
     }
 
@@ -118,16 +118,16 @@ class StaticRouterTest extends TestCase
     public function testCreatePriorityBasedOrdersByPriority(): void
     {
         $cold = $this->makeRoute(
-            uri: '/cold',
+            path: '/cold',
             priority: RoutePriority::COLD,
         );
 
         $normal = $this->makeRoute(
-            uri: '/normal',
+            path: '/normal',
         );
 
         $hot = $this->makeRoute(
-            uri: '/hot',
+            path: '/hot',
             priority: RoutePriority::HOT,
         );
 
@@ -139,8 +139,8 @@ class StaticRouterTest extends TestCase
             ],
         );
 
-        $uris = \array_map(
-            static fn (RouteInterface $route): string => $route->uri,
+        $paths = \array_map(
+            static fn (RouteInterface $route): string => $route->path,
             \array_values(
                 \iterator_to_array(
                     $router->getRoutes(),
@@ -154,7 +154,7 @@ class StaticRouterTest extends TestCase
                 '/normal',
                 '/cold',
             ],
-            $uris,
+            $paths,
         );
     }
 
@@ -167,44 +167,44 @@ class StaticRouterTest extends TestCase
         self::assertInstanceOf(StaticRouter::class, $router);
     }
 
-    public function testFindByUriReturnsNullWhenNoRouteMatches(): void
+    public function testFindByPathReturnsNullWhenNoRouteMatches(): void
     {
         $router = $this->makeRouter(
             routes: [
                 $this->makeRoute(
                     method: Method::GET,
-                    uri: '/foo',
+                    path: '/foo',
                 ),
             ],
         );
 
         self::assertNull(
-            $router->findByUri(
+            $router->findByPath(
                 method: Method::GET,
-                uri: '/missing',
+                path: '/missing',
             ),
         );
     }
 
-    public function testFindByUriReturnsNullWhenRouterIsEmpty(): void
+    public function testFindByPathReturnsNullWhenRouterIsEmpty(): void
     {
         $router = $this->makeRouter(
             routes: [],
         );
 
         self::assertNull(
-            $router->findByUri(
+            $router->findByPath(
                 method: Method::GET,
-                uri: '/anything',
+                path: '/anything',
             ),
         );
     }
 
-    public function testFindByUriMatchesPlainUriExactly(): void
+    public function testFindByPathMatchesPlainPathExactly(): void
     {
         $route = $this->makeRoute(
             method: Method::GET,
-            uri: '/users',
+            path: '/users',
         );
 
         $router = $this->makeRouter(
@@ -213,9 +213,9 @@ class StaticRouterTest extends TestCase
             ],
         );
 
-        $dispatchable = $router->findByUri(
+        $dispatchable = $router->findByPath(
             method: Method::GET,
-            uri: '/users',
+            path: '/users',
         );
 
         self::assertInstanceOf(DispatchableRouteInterface::class, $dispatchable);
@@ -223,31 +223,31 @@ class StaticRouterTest extends TestCase
         self::assertSame([], $dispatchable->arguments);
     }
 
-    public function testFindByUriDoesNotPartialMatchPlainUri(): void
+    public function testFindByPathDoesNotPartialMatchPlainPath(): void
     {
         $router = $this->makeRouter(
             routes: [
                 $this->makeRoute(
                     method: Method::GET,
-                    uri: '/users',
+                    path: '/users',
                 ),
             ],
         );
 
         self::assertNull(
-            $router->findByUri(
+            $router->findByPath(
                 method: Method::GET,
-                uri: '/users/42',
+                path: '/users/42',
             ),
         );
     }
 
-    public function testFindByUriUsesRegexUriWhenProvided(): void
+    public function testFindByPathUsesRegexPathWhenProvided(): void
     {
         $route = $this->makeRoute(
             method: Method::GET,
-            uri: '/users/{id}',
-            regexUri: '#^/users/(?<id>\d+)$#',
+            path: '/users/{id}',
+            regexPath: '#^/users/(?<id>\d+)$#',
         );
 
         $router = $this->makeRouter(
@@ -256,9 +256,9 @@ class StaticRouterTest extends TestCase
             ],
         );
 
-        $dispatchable = $router->findByUri(
+        $dispatchable = $router->findByPath(
             method: Method::GET,
-            uri: '/users/42',
+            path: '/users/42',
         );
 
         self::assertInstanceOf(DispatchableRouteInterface::class, $dispatchable);
@@ -271,55 +271,55 @@ class StaticRouterTest extends TestCase
         );
     }
 
-    public function testFindByUriRegexFallsThroughOnNoMatch(): void
+    public function testFindByPathRegexFallsThroughOnNoMatch(): void
     {
         $router = $this->makeRouter(
             routes: [
                 $this->makeRoute(
                     method: Method::GET,
-                    uri: '/users/{id}',
-                    regexUri: '#^/users/(?<id>\d+)$#',
+                    path: '/users/{id}',
+                    regexPath: '#^/users/(?<id>\d+)$#',
                 ),
             ],
         );
 
         self::assertNull(
-            $router->findByUri(
+            $router->findByPath(
                 method: Method::GET,
-                uri: '/users/abc',
+                path: '/users/abc',
             ),
         );
     }
 
-    public function testFindByUriThrowsMethodNotAllowedWhenOnlyMethodMismatches(): void
+    public function testFindByPathThrowsMethodNotAllowedWhenOnlyMethodMismatches(): void
     {
         $router = $this->makeRouter(
             routes: [
                 $this->makeRoute(
                     method: Method::GET,
-                    uri: '/users',
+                    path: '/users',
                 ),
             ],
         );
 
         self::expectException(HttpException::class);
 
-        $router->findByUri(
+        $router->findByPath(
             method: Method::POST,
-            uri: '/users',
+            path: '/users',
         );
     }
 
-    public function testFindByUriPrefersMatchingRouteOverMethodMismatch(): void
+    public function testFindByPathPrefersMatchingRouteOverMethodMismatch(): void
     {
         $getRoute = $this->makeRoute(
             method: Method::GET,
-            uri: '/users',
+            path: '/users',
         );
 
         $postRoute = $this->makeRoute(
             method: Method::POST,
-            uri: '/users',
+            path: '/users',
         );
 
         $router = $this->makeRouter(
@@ -329,19 +329,19 @@ class StaticRouterTest extends TestCase
             ],
         );
 
-        $dispatchable = $router->findByUri(
+        $dispatchable = $router->findByPath(
             method: Method::POST,
-            uri: '/users',
+            path: '/users',
         );
 
         self::assertInstanceOf(DispatchableRouteInterface::class, $dispatchable);
         self::assertSame($postRoute, $dispatchable->route);
     }
 
-    public function testFindByUriMatchesRouteWithoutMethodRestriction(): void
+    public function testFindByPathMatchesRouteWithoutMethodRestriction(): void
     {
         $route = $this->makeRoute(
-            uri: '/any',
+            path: '/any',
         );
 
         $router = $this->makeRouter(
@@ -350,20 +350,20 @@ class StaticRouterTest extends TestCase
             ],
         );
 
-        $dispatchable = $router->findByUri(
+        $dispatchable = $router->findByPath(
             method: Method::DELETE,
-            uri: '/any',
+            path: '/any',
         );
 
         self::assertInstanceOf(DispatchableRouteInterface::class, $dispatchable);
         self::assertSame($route, $dispatchable->route);
     }
 
-    public function testFindByUriAcceptsMethodAsString(): void
+    public function testFindByPathAcceptsMethodAsString(): void
     {
         $route = $this->makeRoute(
             method: Method::POST,
-            uri: '/users',
+            path: '/users',
         );
 
         $router = $this->makeRouter(
@@ -372,26 +372,26 @@ class StaticRouterTest extends TestCase
             ],
         );
 
-        $dispatchable = $router->findByUri(
+        $dispatchable = $router->findByPath(
             method: 'POST',
-            uri: '/users',
+            path: '/users',
         );
 
         self::assertInstanceOf(DispatchableRouteInterface::class, $dispatchable);
         self::assertSame($route, $dispatchable->route);
     }
 
-    public function testFindByUriReturnsFirstMatchingRoute(): void
+    public function testFindByPathReturnsFirstMatchingRoute(): void
     {
         $first = $this->makeRoute(
             method: Method::GET,
-            uri: '/users',
+            path: '/users',
             action: 'first',
         );
 
         $second = $this->makeRoute(
             method: Method::GET,
-            uri: '/users',
+            path: '/users',
             action: 'second',
         );
 
@@ -402,9 +402,9 @@ class StaticRouterTest extends TestCase
             ],
         );
 
-        $dispatchable = $router->findByUri(
+        $dispatchable = $router->findByPath(
             method: Method::GET,
-            uri: '/users',
+            path: '/users',
         );
 
         self::assertNotNull($dispatchable);
@@ -417,7 +417,7 @@ class StaticRouterTest extends TestCase
             routes: [
                 $this->makeRoute(
                     method: Method::GET,
-                    uri: '/users',
+                    path: '/users',
                     name: 'users.index',
                 ),
             ],
@@ -434,7 +434,7 @@ class StaticRouterTest extends TestCase
     {
         $route = $this->makeRoute(
             method: Method::GET,
-            uri: '/users',
+            path: '/users',
             name: 'users.index',
         );
 
@@ -456,9 +456,9 @@ class StaticRouterTest extends TestCase
     {
         $route = $this->makeRoute(
             method: Method::GET,
-            uri: '/users/{id}',
+            path: '/users/{id}',
             name: 'users.show',
-            regexUri: '#^/users/(?<id>\d+)$#',
+            regexPath: '#^/users/(?<id>\d+)$#',
         );
 
         $router = $this->makeRouter(
@@ -489,7 +489,7 @@ class StaticRouterTest extends TestCase
             routes: [
                 $this->makeRoute(
                     method: Method::GET,
-                    uri: '/users',
+                    path: '/users',
                     name: 'users.index',
                 ),
             ],
@@ -507,7 +507,7 @@ class StaticRouterTest extends TestCase
     {
         $route = $this->makeRoute(
             method: Method::GET,
-            uri: '/users',
+            path: '/users',
             name: 'users.index',
         );
 
@@ -526,11 +526,11 @@ class StaticRouterTest extends TestCase
         self::assertSame($route, $dispatchable->route);
     }
 
-    public function testFindByRequestDelegatesToFindByUri(): void
+    public function testFindByRequestDelegatesToFindByPath(): void
     {
         $route = $this->makeRoute(
             method: Method::GET,
-            uri: '/users',
+            path: '/users',
         );
 
         $request = new Request(
@@ -541,7 +541,7 @@ class StaticRouterTest extends TestCase
             files: new StubUploadedFilesContext(),
             body: new StubBodyContext(),
             method: Method::GET,
-            uri: '/users',
+            path: '/users',
         );
 
         $dispatchable = $this->makeRouter(
@@ -558,7 +558,7 @@ class StaticRouterTest extends TestCase
     {
         $route = $this->makeRoute(
             method: Method::POST,
-            uri: '/users',
+            path: '/users',
             name: 'users.create',
         );
         $router = $this->makeRouter(

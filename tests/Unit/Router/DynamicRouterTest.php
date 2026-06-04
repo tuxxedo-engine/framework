@@ -114,22 +114,22 @@ class DynamicRouterTest extends TestCase
     {
         $router = $this->createFromDirectory('Multiple');
 
-        $uris = \array_map(
-            static fn (RouteInterface $route): string => $route->uri,
+        $paths = \array_map(
+            static fn (RouteInterface $route): string => $route->path,
             \iterator_to_array(
                 $router->getRoutes(),
                 preserve_keys: false,
             ),
         );
 
-        \sort($uris);
+        \sort($paths);
 
         self::assertSame(
             [
                 '/alpha',
                 '/beta',
             ],
-            $uris,
+            $paths,
         );
     }
 
@@ -146,17 +146,17 @@ class DynamicRouterTest extends TestCase
         );
     }
 
-    public function testFindByUriResolvesDiscoveredPlainRoute(): void
+    public function testFindByPathResolvesDiscoveredPlainRoute(): void
     {
         $router = $this->createFromDirectory('Simple');
 
-        $dispatchable = $router->findByUri(
+        $dispatchable = $router->findByPath(
             method: Method::GET,
-            uri: '/home',
+            path: '/home',
         );
 
         self::assertInstanceOf(DispatchableRouteInterface::class, $dispatchable);
-        self::assertSame('/home', $dispatchable->route->uri);
+        self::assertSame('/home', $dispatchable->route->path);
         self::assertSame(Method::GET, $dispatchable->route->method);
         self::assertSame(
             self::FIXTURE_NAMESPACE_BASE . 'Simple\\SimpleController',
@@ -165,13 +165,13 @@ class DynamicRouterTest extends TestCase
         self::assertSame('home', $dispatchable->route->action);
     }
 
-    public function testFindByUriResolvesDiscoveredRegexRouteAndExtractsArguments(): void
+    public function testFindByPathResolvesDiscoveredRegexRouteAndExtractsArguments(): void
     {
         $router = $this->createFromDirectory('TypedImplicit');
 
-        $dispatchable = $router->findByUri(
+        $dispatchable = $router->findByPath(
             method: Method::GET,
-            uri: '/users/42',
+            path: '/users/42',
         );
 
         self::assertInstanceOf(DispatchableRouteInterface::class, $dispatchable);
@@ -183,27 +183,27 @@ class DynamicRouterTest extends TestCase
         );
     }
 
-    public function testFindByUriReturnsNullWhenNoDiscoveredRouteMatches(): void
+    public function testFindByPathReturnsNullWhenNoDiscoveredRouteMatches(): void
     {
         $router = $this->createFromDirectory('Simple');
 
         self::assertNull(
-            $router->findByUri(
+            $router->findByPath(
                 method: Method::GET,
-                uri: '/nonexistent',
+                path: '/nonexistent',
             ),
         );
     }
 
-    public function testFindByUriThrowsMethodNotAllowedForKnownUriWithWrongMethod(): void
+    public function testFindByPathThrowsMethodNotAllowedForKnownPathWithWrongMethod(): void
     {
         $router = $this->createFromDirectory('Simple');
 
         self::expectException(HttpException::class);
 
-        $router->findByUri(
+        $router->findByPath(
             method: Method::POST,
-            uri: '/home',
+            path: '/home',
         );
     }
 

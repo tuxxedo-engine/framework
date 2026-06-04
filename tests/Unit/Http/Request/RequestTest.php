@@ -20,7 +20,9 @@ use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Http\Router\StubDispatchableRoute;
+use Tuxxedo\Http\HttpVersion;
 use Tuxxedo\Http\InputContext;
+use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Context\BodyContextInterface;
 use Tuxxedo\Http\Request\Context\HeaderContextInterface;
 use Tuxxedo\Http\Request\Context\InputContextInterface;
@@ -685,7 +687,7 @@ class RequestTest extends TestCase
             method: 'POST',
         );
 
-        self::assertSame(\Tuxxedo\Http\Method::POST, $request->method);
+        self::assertSame(Method::POST, $request->method);
     }
 
     public function testConstructorPopulatesFullUriWithQueryStringWhenPresent(): void
@@ -725,7 +727,7 @@ class RequestTest extends TestCase
                 body: new StubBodyContext(),
             );
 
-            self::assertSame(\Tuxxedo\Http\HttpVersion::V2_0, $request->protocolVersion);
+            self::assertSame(HttpVersion::V2_0, $request->protocolVersion);
         } finally {
             $_SERVER = $previous;
         }
@@ -746,7 +748,7 @@ class RequestTest extends TestCase
                 body: new StubBodyContext(),
             );
 
-            self::assertSame(\Tuxxedo\Http\HttpVersion::V1_1, $request->protocolVersion);
+            self::assertSame(HttpVersion::V1_1, $request->protocolVersion);
         } finally {
             $_SERVER = $previous;
         }
@@ -776,10 +778,10 @@ class RequestTest extends TestCase
     public function testWithMethodAcceptsMethodEnum(): void
     {
         $request = $this->makeRequest();
-        $updated = $request->withMethod(\Tuxxedo\Http\Method::POST);
+        $updated = $request->withMethod(Method::POST);
 
         self::assertNotSame($request, $updated);
-        self::assertSame(\Tuxxedo\Http\Method::POST, $updated->method);
+        self::assertSame(Method::POST, $updated->method);
     }
 
     public function testWithMethodAcceptsStringAndConverts(): void
@@ -787,16 +789,16 @@ class RequestTest extends TestCase
         $request = $this->makeRequest();
         $updated = $request->withMethod('DELETE');
 
-        self::assertSame(\Tuxxedo\Http\Method::DELETE, $updated->method);
+        self::assertSame(Method::DELETE, $updated->method);
     }
 
-    public function testWithUriReturnsNewInstanceWithUpdatedUri(): void
+    public function testWithPathReturnsNewInstanceWithUpdatedPath(): void
     {
         $request = $this->makeRequest();
-        $updated = $request->withUri('/rewritten');
+        $updated = $request->withPath('/rewritten');
 
         self::assertNotSame($request, $updated);
-        self::assertSame('/rewritten', $updated->uri);
+        self::assertSame('/rewritten', $updated->path);
     }
 
     public function testWithFullUriReturnsNewInstanceWithUpdatedFullUri(): void
@@ -820,10 +822,10 @@ class RequestTest extends TestCase
     public function testWithProtocolVersionReturnsNewInstanceWithUpdatedProtocolVersion(): void
     {
         $request = $this->makeRequest();
-        $updated = $request->withProtocolVersion(\Tuxxedo\Http\HttpVersion::V2_0);
+        $updated = $request->withProtocolVersion(HttpVersion::V2_0);
 
         self::assertNotSame($request, $updated);
-        self::assertSame(\Tuxxedo\Http\HttpVersion::V2_0, $updated->protocolVersion);
+        self::assertSame(HttpVersion::V2_0, $updated->protocolVersion);
     }
 
     public function testWithHttpsReturnsNewInstanceWithUpdatedHttps(): void

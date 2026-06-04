@@ -17,7 +17,7 @@ use Tuxxedo\Router\Attribute\Route\Post;
 
 class BetaController
 {
-    #[Post(uri: '/beta')]
+    #[Post(path: '/beta')]
     public function beta(): void
     {
     }

@@ -17,7 +17,7 @@ use Tuxxedo\Router\Attribute\Route\Get;
 
 class OptionalNoDefaultController
 {
-    #[Get(uri: '/page/{?id}')]
+    #[Get(path: '/page/{?id}')]
     public function show(
         int $id,
     ): void {

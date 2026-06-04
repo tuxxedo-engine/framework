@@ -11,12 +11,12 @@
 
 declare(strict_types=1);
 
-namespace Fixture\Router\RouteDiscoverer\Discovery\ControllerOnlyUri;
+namespace Fixture\Router\RouteDiscoverer\Discovery\ControllerOnlyPath;
 
 use Tuxxedo\Router\Attribute\Controller;
 use Tuxxedo\Router\Attribute\Route\Get;
 
-#[Controller(uri: '/users')]
+#[Controller(path: '/users')]
 class IndexController
 {
     #[Get]

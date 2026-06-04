@@ -27,7 +27,7 @@ readonly class DispatchableRoute implements DispatchableRouteInterface
     public function asUrl(): ?string
     {
         if ($this->route->arguments === []) {
-            return $this->route->uri;
+            return $this->route->path;
         }
 
         foreach ($this->route->arguments as $routeArgument) {
@@ -69,7 +69,7 @@ readonly class DispatchableRoute implements DispatchableRouteInterface
 
                 return '/' . $value;
             },
-            $this->route->uri,
+            $this->route->path,
         );
     }
 }

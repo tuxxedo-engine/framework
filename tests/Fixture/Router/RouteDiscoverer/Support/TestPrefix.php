@@ -17,10 +17,10 @@ use Tuxxedo\Router\PrefixInterface;
 
 readonly class TestPrefix implements PrefixInterface
 {
-    public string $uri;
+    public string $path;
 
     public function __construct()
     {
-        $this->uri = '/api';
+        $this->path = '/api';
     }
 }

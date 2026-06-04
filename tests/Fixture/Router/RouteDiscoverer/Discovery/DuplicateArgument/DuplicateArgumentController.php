@@ -17,7 +17,7 @@ use Tuxxedo\Router\Attribute\Route\Get;
 
 class DuplicateArgumentController
 {
-    #[Get(uri: '/items/{id}/{id}')]
+    #[Get(path: '/items/{id}/{id}')]
     public function show(
         int $id,
     ): void {

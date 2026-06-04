@@ -19,7 +19,7 @@ use Tuxxedo\Router\Attribute\Route;
 class DuplicateMethodController
 {
     #[Route(
-        uri: '/contact/{id}',
+        path: '/contact/{id}',
         method: [
             Method::GET,
             Method::GET,

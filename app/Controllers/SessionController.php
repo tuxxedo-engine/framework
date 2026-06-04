@@ -21,7 +21,7 @@ use Tuxxedo\Router\Attribute\Controller;
 use Tuxxedo\Router\Attribute\Route;
 use Tuxxedo\Session\SessionInterface;
 
-#[Controller(uri: '/session/')]
+#[Controller(path: '/session/')]
 readonly class SessionController
 {
     public function __construct(

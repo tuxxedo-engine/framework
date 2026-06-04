@@ -21,13 +21,13 @@ use Tuxxedo\Router\Attribute\Route\Get;
 #[Middleware(middleware: TestMiddleware::class)]
 class MiddlewareController
 {
-    #[Get(uri: '/protected')]
+    #[Get(path: '/protected')]
     #[Middleware(middleware: AnotherMiddleware::class)]
     public function protected(): void
     {
     }
 
-    #[Get(uri: '/open')]
+    #[Get(path: '/open')]
     public function open(): void
     {
     }

@@ -29,12 +29,12 @@ class DispatchableRouteTest extends TestCase
      * @param RouteArgumentInterface[] $arguments
      */
     private function makeRoute(
-        string $uri = '/home',
+        string $path = '/home',
         array $arguments = [],
     ): Route {
         return new Route(
             method: Method::GET,
-            uri: $uri,
+            path: $path,
             controller: static::class,
             action: 'index',
             arguments: $arguments,
@@ -104,7 +104,7 @@ class DispatchableRouteTest extends TestCase
         );
     }
 
-    public function testAsUrlReturnsUriDirectlyWhenRouteHasNoArguments(): void
+    public function testAsUrlReturnsPathDirectlyWhenRouteHasNoArguments(): void
     {
         $dispatchable = new DispatchableRoute(
             route: $this->makeRoute(),
@@ -116,7 +116,7 @@ class DispatchableRouteTest extends TestCase
     public function testAsUrlInterpolatesRequiredArgument(): void
     {
         $route = $this->makeRoute(
-            uri: '/users/{id}',
+            path: '/users/{id}',
             arguments: [
                 $this->makeArgument('id'),
             ],
@@ -135,7 +135,7 @@ class DispatchableRouteTest extends TestCase
     public function testAsUrlInterpolatesMultipleRequiredArguments(): void
     {
         $route = $this->makeRoute(
-            uri: '/users/{id}/posts/{slug}',
+            path: '/users/{id}/posts/{slug}',
             arguments: [
                 $this->makeArgument('id'),
                 $this->makeArgument('slug'),
@@ -156,7 +156,7 @@ class DispatchableRouteTest extends TestCase
     public function testAsUrlReturnsNullWhenRequiredArgumentMissing(): void
     {
         $route = $this->makeRoute(
-            uri: '/users/{id}',
+            path: '/users/{id}',
             arguments: [
                 $this->makeArgument('id'),
             ],
@@ -173,7 +173,7 @@ class DispatchableRouteTest extends TestCase
     public function testAsUrlOmitsOptionalArgumentWhenMissing(): void
     {
         $route = $this->makeRoute(
-            uri: '/posts/{?page}',
+            path: '/posts/{?page}',
             arguments: [
                 $this->makeArgument(
                     name: 'page',
@@ -193,7 +193,7 @@ class DispatchableRouteTest extends TestCase
     public function testAsUrlIncludesOptionalArgumentWhenProvided(): void
     {
         $route = $this->makeRoute(
-            uri: '/posts/{?page}',
+            path: '/posts/{?page}',
             arguments: [
                 $this->makeArgument(
                     name: 'page',
@@ -215,7 +215,7 @@ class DispatchableRouteTest extends TestCase
     public function testAsUrlResolvesArgumentViaMappedName(): void
     {
         $route = $this->makeRoute(
-            uri: '/users/{userId}',
+            path: '/users/{userId}',
             arguments: [
                 $this->makeArgument(
                     name: 'userId',
@@ -237,7 +237,7 @@ class DispatchableRouteTest extends TestCase
     public function testAsUrlReturnsNullWhenRequiredMappedArgumentMissing(): void
     {
         $route = $this->makeRoute(
-            uri: '/users/{userId}',
+            path: '/users/{userId}',
             arguments: [
                 $this->makeArgument(
                     name: 'userId',
@@ -257,7 +257,7 @@ class DispatchableRouteTest extends TestCase
     public function testAsUrlPrefersNodeNameOverMappedName(): void
     {
         $route = $this->makeRoute(
-            uri: '/users/{userId}',
+            path: '/users/{userId}',
             arguments: [
                 $this->makeArgument(
                     name: 'userId',

@@ -50,7 +50,7 @@ class DispatcherTest extends TestCase
         return new DispatchableRoute(
             route: new Route(
                 method: null,
-                uri: '/test',
+                path: '/test',
                 controller: DispatcherController::class,
                 action: $action,
             ),
@@ -110,7 +110,7 @@ class DispatcherTest extends TestCase
         $dispatchable = new DispatchableRoute(
             route: new Route(
                 method: null,
-                uri: '/users/{id}',
+                path: '/users/{id}',
                 controller: DispatcherController::class,
                 action: 'show',
                 arguments: [

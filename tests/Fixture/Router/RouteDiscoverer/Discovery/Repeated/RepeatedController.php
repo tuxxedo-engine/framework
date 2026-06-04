@@ -17,8 +17,8 @@ use Tuxxedo\Router\Attribute\Route\Get;
 
 class RepeatedController
 {
-    #[Get(uri: '/old')]
-    #[Get(uri: '/new')]
+    #[Get(path: '/old')]
+    #[Get(path: '/new')]
     public function legacy(): void
     {
     }

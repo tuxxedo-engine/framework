@@ -17,7 +17,7 @@ use Tuxxedo\Router\Attribute\Route\Get;
 
 class AlphaController
 {
-    #[Get(uri: '/alpha')]
+    #[Get(path: '/alpha')]
     public function alpha(): void
     {
     }

@@ -65,7 +65,7 @@ interface RequestInterface
         get;
     }
 
-    public string $uri {
+    public string $path {
         get;
     }
 
@@ -104,8 +104,8 @@ interface RequestInterface
     ): static;
 
     #[\NoDiscard]
-    public function withUri(
-        string $uri,
+    public function withPath(
+        string $path,
     ): static;
 
     #[\NoDiscard]

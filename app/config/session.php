@@ -35,7 +35,7 @@ return [
     /**
      * session.domain
      *
-     * Domain where the above URI exists for session availability for session cookies (Required by PhpSessionAdapter)
+     * Domain where the above URI path exists for session availability for session cookies (Required by PhpSessionAdapter)
      *
      * @type string
      */

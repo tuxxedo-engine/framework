@@ -22,7 +22,7 @@ readonly class Controller
      * @param class-string<PrefixInterface>|null $prefix
      */
     public function __construct(
-        public string $uri,
+        public string $path,
         public bool $autoIndex = true,
         public string $autoIndexMethodName = 'index',
         public bool $autoTrailingSlash = false,

@@ -17,7 +17,7 @@ use Tuxxedo\Router\Attribute\Route\Get;
 
 class RegexController
 {
-    #[Get(uri: '/files/{name:[a-z]+}')]
+    #[Get(path: '/files/{name:[a-z]+}')]
     public function show(
         string $name,
     ): void {

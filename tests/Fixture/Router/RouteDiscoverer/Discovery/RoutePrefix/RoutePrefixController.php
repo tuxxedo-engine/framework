@@ -18,7 +18,7 @@ use Tuxxedo\Router\Attribute\Route\Get;
 
 class RoutePrefixController
 {
-    #[Get(uri: '/users', prefix: TestPrefix::class)]
+    #[Get(path: '/users', prefix: TestPrefix::class)]
     public function users(): void
     {
     }

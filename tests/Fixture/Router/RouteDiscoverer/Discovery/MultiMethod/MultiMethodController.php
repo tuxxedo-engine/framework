@@ -19,7 +19,7 @@ use Tuxxedo\Router\Attribute\Route;
 class MultiMethodController
 {
     #[Route(
-        uri: '/contact',
+        path: '/contact',
         method: [
             Method::GET,
             Method::POST,

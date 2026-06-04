@@ -18,7 +18,7 @@ use Tuxxedo\Router\PrefixDefaultsInterface;
 
 class LocaleAwarePrefix implements PrefixDefaultsInterface
 {
-    public private(set) string $uri = '/{?language<language-code>}';
+    public private(set) string $path = '/{?language<language-code>}';
 
     public function __construct(
         private readonly RequestInterface $request,

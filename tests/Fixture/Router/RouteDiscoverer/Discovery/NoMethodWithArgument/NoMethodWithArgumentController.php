@@ -17,7 +17,7 @@ use Tuxxedo\Router\Attribute\Route;
 
 class NoMethodWithArgumentController
 {
-    #[Route(uri: '/users/{id}')]
+    #[Route(path: '/users/{id}')]
     public function show(
         int $id,
     ): void {

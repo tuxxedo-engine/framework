@@ -654,14 +654,14 @@ class ResponseTest extends TestCase
 
     private function makeContainerWithRoute(
         string $name,
-        string $uri = '/home',
+        string $path = '/home',
     ): Container {
         return (new Container())->persistent(
             class: new StaticRouter(
                 routes: [
                     new Route(
                         method: null,
-                        uri: $uri,
+                        path: $path,
                         controller: self::class,
                         action: 'index',
                         name: $name,

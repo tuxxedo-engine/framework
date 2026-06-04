@@ -27,13 +27,13 @@ readonly class Route implements RouteInterface
      */
     public function __construct(
         Method|string|null $method,
-        public string $uri,
+        public string $path,
         public string $controller,
         public string $action,
         public ?string $name = null,
         public array $middleware = [],
         public RoutePriority $priority = RoutePriority::NORMAL,
-        public ?string $regexUri = null,
+        public ?string $regexPath = null,
         public array $arguments = [],
     ) {
         if (\is_string($method)) {

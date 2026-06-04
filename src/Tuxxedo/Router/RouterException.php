@@ -39,13 +39,13 @@ class RouterException extends \Exception
         );
     }
 
-    public static function fromEmptyUri(
+    public static function fromEmptyPath(
         string $className,
         string $method,
     ): self {
         return new self(
             message: \sprintf(
-                '%s::%s() has an empty URI without an #[Controller] attribute',
+                '%s::%s() has an empty path without a #[Controller] attribute',
                 $className,
                 $method,
             ),
@@ -62,7 +62,7 @@ class RouterException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                '%s::%s() has URI with non-unique arguments: %s',
+                '%s::%s() has path with non-unique arguments: %s',
                 $className,
                 $method,
                 \join(', ', $names),
