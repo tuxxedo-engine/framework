@@ -13,7 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
-// @todo Lazy Proxies via attribute or similar? #[Lazy] as a modifier attribute, e.g. public function show(#[Lazy] #[Model(key: 'id')] User $user): ResponseInterface
+// @todo Migrate the #[Lazy] Resolver into the Container
+// @todo Lazy ghost via attribute or similar? #[Lazy] as a modifier attribute, e.g. public function show(#[Lazy] #[Model(key: 'id')] User $user): ResponseInterface
 interface ContainerInterface
 {
     /**

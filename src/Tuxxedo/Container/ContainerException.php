@@ -126,4 +126,15 @@ class ContainerException extends \Exception
             ),
         );
     }
+
+    public static function fromNonScalarLazyGhost(
+        string $parameter,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot resolve scalar parameter "%s" using #[Lazy], only objects are supported',
+                $parameter,
+            ),
+        );
+    }
 }

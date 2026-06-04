@@ -14,9 +14,11 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Middleware\LoggerMiddleware;
+use App\Service\Lazy\LazyServiceInterface;
 use App\Service\Logger\CustomLoggerInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\Resolver\Glue;
+use Tuxxedo\Container\Resolver\Lazy;
 use Tuxxedo\Http\Cookie;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HeaderInterface;
@@ -308,5 +310,13 @@ readonly class TestController
                 new Header('Content-Type', 'text/plain'),
             ],
         );
+    }
+
+    #[Route\Get(path: '/lazy-test')]
+    public function lazy(
+        CustomLoggerInterface $logger,
+        #[Lazy] LazyServiceInterface $lazyService,
+    ): ResponseInterface {
+        return Response::text($logger->all());
     }
 }
