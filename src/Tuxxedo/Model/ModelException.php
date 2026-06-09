@@ -405,4 +405,23 @@ class ModelException extends \Exception
             ),
         );
     }
+
+    /**
+     * @param class-string $modelClass
+     * @param class-string $relatedClass
+     */
+    public static function fromRelatedClassNotAModel(
+        string $modelClass,
+        string $property,
+        string $relatedClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Relation on property "%s" references "%s" which is not a model (missing #[Table] attribute)',
+                $modelClass,
+                $property,
+                $relatedClass,
+            ),
+        );
+    }
 }

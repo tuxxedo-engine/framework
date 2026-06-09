@@ -176,7 +176,21 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 );
             }
 
+            if (\sizeof($relatedReflection->getAttributes(Table::class)) === 0) {
+                throw ModelException::fromRelatedClassNotAModel(
+                    modelClass: $class->name,
+                    property: $property->name,
+                    relatedClass: $relatedClass,
+                );
+            }
+
             $targetColumnNames = $this->getColumnNamesFromReflection($relatedReflection);
+
+            if (\sizeof($targetColumnNames) === 0) {
+                throw ModelException::fromHasNoColumns(
+                    modelClass: $relatedClass,
+                );
+            }
 
             $this->validateRelationKeys(
                 modelClass: $class->name,
