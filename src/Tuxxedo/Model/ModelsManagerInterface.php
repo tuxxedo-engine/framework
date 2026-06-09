@@ -25,7 +25,6 @@ use Tuxxedo\Model\MetaData\MetaDataInterface;
 // @todo Support value hydration and serialization from complex types like Enums, Objects
 // @todo Implement a cache strategy
 // @todo Readonly support implications for cache strategy
-// @todo Support recursive save() through loaded relations (depends on dirty tracking)
 // @todo Consider findWhere and other shorthands?
 // @todo Support with or similar arguments for fetchers on relations to eagerly load them?
 // @todo Criteria parameters may need more narrowing to prevent injecting overrides into parts they shouldn't. It should be limited to where builders only

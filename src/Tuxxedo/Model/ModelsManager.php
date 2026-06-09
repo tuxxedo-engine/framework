@@ -20,6 +20,10 @@ use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Hydrator\HydratorInterface as DatabaseHydratorInterface;
 use Tuxxedo\Database\Query\Builder\ExistsBuilderInterface;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
+use Tuxxedo\Model\Attribute\Relation\BelongsTo;
+use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
+use Tuxxedo\Model\Attribute\Relation\HasMany;
+use Tuxxedo\Model\Attribute\Relation\HasOne;
 use Tuxxedo\Model\Hydrator\Hydrator;
 use Tuxxedo\Model\Hydrator\HydratorInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
@@ -43,6 +47,11 @@ class ModelsManager implements ModelsManagerInterface
 {
     public readonly HydratorInterface $hydrator;
 
+    /**
+     * @var \WeakMap<object, true>
+     */
+    private \WeakMap $saveInProgress;
+
     public function __construct(
         public readonly ConnectionInterface $connection,
         public readonly MetaDataInterface $metaData,
@@ -51,9 +60,9 @@ class ModelsManager implements ModelsManagerInterface
         ?HydratorInterface $modelHydrator = null,
     ) {
         $this->hydrator = $modelHydrator ?? new Hydrator($this, $metaData, $databaseHydrator);
+        $this->saveInProgress = new \WeakMap();
     }
 
-    // @todo Cascade save to loaded relations (depends on dirty tracking)
     /**
      * @template TModel of object
      *
@@ -64,17 +73,32 @@ class ModelsManager implements ModelsManagerInterface
     public function save(
         object $model,
     ): object {
-        $metaData = $this->metaData->getModel($model::class);
-
-        if ($this->isNewModel($model, $metaData)) {
-            $target = $metaData->readonly
-                ? $model
-                : clone $model;
-
-            return $this->insert($target, $metaData);
+        if (isset($this->saveInProgress[$model])) {
+            return $model;
         }
 
-        return $this->update($model, $metaData);
+        $this->saveInProgress[$model] = true;
+
+        try {
+            $metaData = $this->metaData->getModel($model::class);
+
+            if ($this->isNewModel($model, $metaData)) {
+                $target = $metaData->readonly
+                    ? $model
+                    : clone $model;
+
+                $result = $this->insert($target, $metaData);
+            } else {
+                $result = $this->update($model, $metaData);
+            }
+
+            // @todo Wrap cascade in savepoint for atomicity (depends on cascade caller semantics)
+            $this->cascadeRelations($result, $metaData);
+
+            return $result;
+        } finally {
+            unset($this->saveInProgress[$model]);
+        }
     }
 
     private function isNewModel(
@@ -303,6 +327,71 @@ class ModelsManager implements ModelsManagerInterface
         $this->dirtyTracker->recordSnapshot($model, $metaData);
 
         return $model;
+    }
+
+    // @todo DELETE cascade (separate concern, opposite walk order — children first)
+    // @todo Optional flag to force materialization during cascade for full graph save
+    private function cascadeRelations(
+        object $model,
+        ModelMetaDataInterface $metaData,
+    ): void {
+        foreach ($metaData->relations as $relation) {
+            $attribute = $relation->attribute;
+
+            if ($attribute instanceof HasOne || $attribute instanceof BelongsTo) {
+                $this->cascadeSingleObjectRelation($model, $relation);
+
+                continue;
+            }
+
+            if ($attribute instanceof HasMany) {
+                $this->cascadeCollectionRelation($model, $relation);
+
+                continue;
+            }
+
+            if ($attribute instanceof BelongsToMany) {
+                // @todo BelongsToMany pivot writes (depends on collection-mutation API)
+                $this->cascadeCollectionRelation($model, $relation);
+            }
+        }
+    }
+
+    private function cascadeSingleObjectRelation(
+        object $model,
+        ModelRelationInterface $relation,
+    ): void {
+        $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
+
+        if (!\is_object($value)) {
+            return;
+        }
+
+        if ((new \ReflectionClass($value))->isUninitializedLazyObject($value)) {
+            return;
+        }
+
+        $saved = $this->save($value);
+    }
+
+    private function cascadeCollectionRelation(
+        object $model,
+        ModelRelationInterface $relation,
+    ): void {
+        $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
+
+        if (!$value instanceof RelationInterface) {
+            return;
+        }
+
+        if (!$value->isMaterialized()) {
+            return;
+        }
+
+        // @todo New untracked children in *-to-many — pending Relation collection-mutation API
+        foreach ($value as $item) {
+            $saved = $this->save($item);
+        }
     }
 
     /**

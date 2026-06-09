@@ -90,6 +90,11 @@ class Relation implements RelationInterface
         return \count($this->materialize());
     }
 
+    public function isMaterialized(): bool
+    {
+        return $this->prefetched !== null || $this->cache !== null;
+    }
+
     private function computeTotalCount(): int
     {
         if ($this->prefetched !== null) {

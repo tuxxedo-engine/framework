@@ -24,4 +24,7 @@ interface RelationInterface extends \IteratorAggregate, \Countable
      * @return \Generator<array-key, TModel>
      */
     public function getIterator(): \Generator;
+
+    #[\NoDiscard]
+    public function isMaterialized(): bool;
 }
