@@ -219,4 +219,8 @@ interface ModelsManagerInterface
         object $model,
         string $property,
     ): ?object;
+
+    public function trackAsExisting(
+        object $model,
+    ): void;
 }

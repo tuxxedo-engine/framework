@@ -659,6 +659,15 @@ class ModelsManager implements ModelsManagerInterface
         return $value;
     }
 
+    public function trackAsExisting(
+        object $model,
+    ): void {
+        $this->dirtyTracker->recordSnapshot(
+            $model,
+            $this->metaData->getModel($model::class),
+        );
+    }
+
     private function findRelation(
         ModelMetaDataInterface $metaData,
         string $property,

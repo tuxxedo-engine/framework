@@ -17,7 +17,6 @@ use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 
-// @todo trackAsExisting() support for manual dirty tracking of custom created models
 #[DefaultImplementation(class: DirtyTracker::class, lifecycle: Lifecycle::PERSISTENT)]
 interface DirtyTrackerInterface
 {
