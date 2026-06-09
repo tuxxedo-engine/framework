@@ -259,6 +259,8 @@ class ModelsManager implements ModelsManagerInterface
             return $model;
         }
 
+        $query = $this->connection->update($metaData->table);
+
         foreach ($metaData->columns as $modelColumn) {
             if (!\array_key_exists($modelColumn->column, $dirty)) {
                 continue;
@@ -280,16 +282,8 @@ class ModelsManager implements ModelsManagerInterface
                     actualType: \get_debug_type($value),
                 );
             }
-        }
 
-        $query = $this->connection->update($metaData->table);
-
-        /**
-         * @var string|int|float|bool|null $value
-         */
-        foreach ($dirty as $column => $value) {
-            // @todo Type might be mixed here, investigate
-            $query->set($column, $value);
+            $query->set($modelColumn->column, $value);
         }
 
         if ($metaData->key instanceof ModelPrimaryKeyInterface) {
