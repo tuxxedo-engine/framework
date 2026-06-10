@@ -17,7 +17,6 @@ use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Database\Hydrator\HydratorInterface as DatabaseHydratorInterface;
 
-// @todo Should this be existing like this, #[Tagged] interaction with 2x persistent?
 #[DefaultImplementation(class: Hydrator::class, lifecycle: Lifecycle::PERSISTENT)]
 interface HydratorInterface extends DatabaseHydratorInterface
 {
