@@ -24,6 +24,7 @@ use Tuxxedo\Model\Attribute\Relation\HasOne;
 use Tuxxedo\Model\Attribute\Relation\RelationInterface;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\Attribute\Unique;
+use Tuxxedo\Model\CascadeAction;
 use Tuxxedo\Model\MetaData\ModelColumn;
 use Tuxxedo\Model\MetaData\ModelColumnInterface;
 use Tuxxedo\Model\MetaData\ModelCompositeKey;
@@ -203,6 +204,14 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 sourcePrimaryKey: $sourcePrimaryKey,
             );
 
+            $this->validateCascadeConfiguration(
+                modelClass: $class->name,
+                property: $property->name,
+                attribute: $attribute,
+                relatedClass: $relatedClass,
+                relatedReflection: $relatedReflection,
+            );
+
             $relations[] = new ModelRelation(
                 property: $property->name,
                 relatedClass: $relatedClass,
@@ -235,6 +244,103 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         }
 
         return $names;
+    }
+
+    /**
+     * @param \ReflectionClass<object> $reflection
+     */
+    private function isColumnNullableInReflection(
+        \ReflectionClass $reflection,
+        string $columnName,
+    ): bool {
+        foreach ($reflection->getProperties() as $property) {
+            $columnAttributes = $property->getAttributes(ColumnInterface::class, \ReflectionAttribute::IS_INSTANCEOF);
+
+            if (\sizeof($columnAttributes) === 0) {
+                continue;
+            }
+
+            $columnAttribute = $columnAttributes[0]->newInstance();
+            $name = $columnAttribute->name ?? $property->getName();
+
+            if ($name !== $columnName) {
+                continue;
+            }
+
+            return $property->getType()?->allowsNull() ?? false;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param class-string $modelClass
+     * @param class-string $relatedClass
+     * @param \ReflectionClass<object> $relatedReflection
+     *
+     * @throws ModelException
+     */
+    private function validateCascadeConfiguration(
+        string $modelClass,
+        string $property,
+        RelationInterface $attribute,
+        string $relatedClass,
+        \ReflectionClass $relatedReflection,
+    ): void {
+        $relationType = match (true) {
+            $attribute instanceof HasOne => 'HasOne',
+            $attribute instanceof HasMany => 'HasMany',
+            $attribute instanceof BelongsTo => 'BelongsTo',
+            $attribute instanceof BelongsToMany => 'BelongsToMany',
+            default => $attribute::class,
+        };
+
+        if (
+            $attribute->onSave === CascadeAction::RESTRICT ||
+            $attribute->onSave === CascadeAction::SET_NULL
+        ) {
+            throw ModelException::fromInvalidCascadeConfiguration(
+                modelClass: $modelClass,
+                property: $property,
+                relationType: $relationType,
+                side: 'onSave',
+                action: $attribute->onSave,
+            );
+        }
+
+        if (
+            (
+                $attribute instanceof BelongsTo ||
+                $attribute instanceof BelongsToMany
+            ) && (
+                $attribute->onDelete === CascadeAction::RESTRICT ||
+                $attribute->onDelete === CascadeAction::SET_NULL
+            )
+        ) {
+            throw ModelException::fromInvalidCascadeConfiguration(
+                modelClass: $modelClass,
+                property: $property,
+                relationType: $relationType,
+                side: 'onDelete',
+                action: $attribute->onDelete,
+            );
+        }
+
+        if (
+            (
+                $attribute instanceof HasOne ||
+                $attribute instanceof HasMany
+            ) &&
+            $attribute->onDelete === CascadeAction::SET_NULL &&
+            !$this->isColumnNullableInReflection($relatedReflection, $attribute->foreignKey)
+        ) {
+            throw ModelException::fromSetNullRequiresNullableColumn(
+                modelClass: $modelClass,
+                property: $property,
+                relatedClass: $relatedClass,
+                foreignKey: $attribute->foreignKey,
+            );
+        }
     }
 
     /**

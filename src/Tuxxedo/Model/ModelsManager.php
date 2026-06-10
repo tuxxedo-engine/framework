@@ -354,18 +354,8 @@ class ModelsManager implements ModelsManagerInterface
         ModelMetaDataInterface $metaData,
     ): void {
         foreach ($metaData->relations as $relation) {
-            $action = $relation->attribute->onSave;
-
-            if ($action === CascadeAction::NO_ACTION) {
+            if ($relation->attribute->onSave !== CascadeAction::CASCADE) {
                 continue;
-            }
-
-            if ($action === CascadeAction::RESTRICT || $action === CascadeAction::SET_NULL) {
-                throw ModelException::fromCascadeActionNotSupported(
-                    modelClass: $metaData->model,
-                    property: $relation->property,
-                    action: $action,
-                );
             }
 
             $attribute = $relation->attribute;
@@ -442,12 +432,16 @@ class ModelsManager implements ModelsManagerInterface
                 continue;
             }
 
-            if ($action === CascadeAction::RESTRICT || $action === CascadeAction::SET_NULL) {
-                throw ModelException::fromCascadeActionNotSupported(
-                    modelClass: $metaData->model,
-                    property: $relation->property,
-                    action: $action,
-                );
+            if ($action === CascadeAction::RESTRICT) {
+                $this->cascadeDeleteRestrictRelation($model, $relation);
+
+                continue;
+            }
+
+            if ($action === CascadeAction::SET_NULL) {
+                $this->cascadeDeleteSetNullRelation($model, $relation);
+
+                continue;
             }
 
             $attribute = $relation->attribute;
@@ -501,6 +495,107 @@ class ModelsManager implements ModelsManagerInterface
         foreach ($value as $item) {
             $deleted = $this->delete($item);
         }
+    }
+
+    private function cascadeDeleteRestrictRelation(
+        object $model,
+        ModelRelationInterface $relation,
+    ): void {
+        $attribute = $relation->attribute;
+        $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
+
+        if ($attribute instanceof HasOne) {
+            if ($value === null) {
+                return;
+            }
+
+            throw ModelException::fromRestrictedRelation(
+                modelClass: $model::class,
+                property: $relation->property,
+                relatedClass: $relation->relatedClass,
+            );
+        }
+
+        if ($attribute instanceof HasMany) {
+            if (!$value instanceof RelationInterface) {
+                return;
+            }
+
+            if ($value->totalCount === 0) {
+                return;
+            }
+
+            throw ModelException::fromRestrictedRelation(
+                modelClass: $model::class,
+                property: $relation->property,
+                relatedClass: $relation->relatedClass,
+            );
+        }
+    }
+
+    private function cascadeDeleteSetNullRelation(
+        object $model,
+        ModelRelationInterface $relation,
+    ): void {
+        $attribute = $relation->attribute;
+
+        if (
+            !$attribute instanceof HasOne &&
+            !$attribute instanceof HasMany
+        ) {
+            return;
+        }
+
+        $parentMetaData = $this->metaData->getModel($model::class);
+        $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
+        $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
+        $localKeyValue = self::dehydrateScalar($localKeyValue);
+
+        if (!\is_scalar($localKeyValue)) {
+            throw ModelException::fromPropertyValueMustBeScalar(
+                modelClass: $parentMetaData->model,
+                property: $localKeyProperty,
+                actualType: \get_debug_type($localKeyValue),
+            );
+        }
+
+        $relatedMetaData = $this->metaData->getModel($relation->relatedClass);
+
+        $this->connection
+            ->update($relatedMetaData->table)
+            ->set($attribute->foreignKey, null)
+            ->where($attribute->foreignKey, $localKeyValue)
+            ->execute();
+    }
+
+    private function resolveLocalKeyProperty(
+        ModelMetaDataInterface $metaData,
+        ModelRelationInterface $relation,
+        ?string $localKey,
+    ): string {
+        if ($localKey === null) {
+            if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
+                throw ModelException::fromCantFetchWithoutPrimaryKey(
+                    modelClass: $metaData->model,
+                );
+            }
+
+            return $metaData->key->property;
+        }
+
+        foreach ($metaData->columns as $column) {
+            if ($column->column === $localKey) {
+                return $column->property;
+            }
+        }
+
+        throw ModelException::fromRelationKeyReferencesUnknownColumn(
+            modelClass: $metaData->model,
+            property: $relation->property,
+            keyKind: 'localKey',
+            keyValue: $localKey,
+            referencedClass: $metaData->model,
+        );
     }
 
     /**

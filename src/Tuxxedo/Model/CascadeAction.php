@@ -13,8 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model;
 
-// @todo Implement RESTRICT — block save/delete if dependent rows exist
-// @todo Implement SET_NULL — null out child foreign keys (requires nullable FK on the relation column)
 // @todo Soft-delete cascade — define interaction with the DeletedAt contract once audit columns land
 enum CascadeAction
 {

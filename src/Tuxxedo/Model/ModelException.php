@@ -428,17 +428,62 @@ class ModelException extends \Exception
     /**
      * @param class-string $modelClass
      */
-    public static function fromCascadeActionNotSupported(
+    public static function fromInvalidCascadeConfiguration(
         string $modelClass,
         string $property,
+        string $relationType,
+        string $side,
         CascadeAction $action,
     ): self {
         return new self(
             message: \sprintf(
-                'Cannot perform action on model "%s": Cascade action "%s" on property "%s" is not yet supported',
+                'Invalid model class "%s": Cascade action "%s" on %s of %s relation %s::$%s is not a valid configuration',
                 $modelClass,
                 $action->name,
+                $side,
+                $relationType,
+                $modelClass,
                 $property,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     * @param class-string $relatedClass
+     */
+    public static function fromSetNullRequiresNullableColumn(
+        string $modelClass,
+        string $property,
+        string $relatedClass,
+        string $foreignKey,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Cascade action SET_NULL on property "%s" requires column "%s" on "%s" to be nullable',
+                $modelClass,
+                $property,
+                $foreignKey,
+                $relatedClass,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     * @param class-string $relatedClass
+     */
+    public static function fromRestrictedRelation(
+        string $modelClass,
+        string $property,
+        string $relatedClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot delete model "%s": Relation on property "%s" has dependent rows in "%s" and is marked RESTRICT',
+                $modelClass,
+                $property,
+                $relatedClass,
             ),
         );
     }
