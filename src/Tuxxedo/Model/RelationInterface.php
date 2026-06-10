@@ -20,6 +20,10 @@ namespace Tuxxedo\Model;
  */
 interface RelationInterface extends \IteratorAggregate, \Countable
 {
+    public int $totalCount {
+        get;
+    }
+
     /**
      * @return \Generator<array-key, TModel>
      */
