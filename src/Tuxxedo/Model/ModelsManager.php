@@ -755,7 +755,7 @@ class ModelsManager implements ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
-     * @return \Generator<TModel>
+     * @return \Generator<int, TModel>
      */
     #[\NoDiscard]
     public function findAll(

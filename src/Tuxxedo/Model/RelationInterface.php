@@ -16,16 +16,17 @@ namespace Tuxxedo\Model;
 /**
  * @template TModel of object
  *
- * @extends \IteratorAggregate<array-key, TModel>
+ * @extends \IteratorAggregate<int, TModel>
+ * @extends \ArrayAccess<int, TModel>
  */
-interface RelationInterface extends \IteratorAggregate, \Countable
+interface RelationInterface extends \IteratorAggregate, \Countable, \ArrayAccess
 {
     public int $totalCount {
         get;
     }
 
     /**
-     * @return \Generator<array-key, TModel>
+     * @return \Generator<int, TModel>
      */
     public function getIterator(): \Generator;
 

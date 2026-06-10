@@ -29,7 +29,7 @@ interface ResultSetInterface extends \Countable, \Iterator
      * @template TClassName of object
      *
      * @param class-string<TClassName>|class-string<TClassName&HydratableInterface>|\Closure(mixed[] $properties): TClassName $class
-     * @return \Generator<TClassName>
+     * @return \Generator<int, TClassName>
      */
     public function fetchAll(
         string|\Closure $class = ResultRowInterface::class,

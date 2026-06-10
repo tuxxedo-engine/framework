@@ -487,4 +487,11 @@ class ModelException extends \Exception
             ),
         );
     }
+
+    public static function fromImmutableRelation(): self
+    {
+        return new self(
+            message: 'Immutable relations cannot be modified',
+        );
+    }
 }

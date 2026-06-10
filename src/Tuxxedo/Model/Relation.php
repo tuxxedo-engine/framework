@@ -16,7 +16,6 @@ namespace Tuxxedo\Model;
 // @todo page(limit:, offset:) immutable, raw pagination — depends on generic Paginator
 // @todo where() filter — narrowed where-builders (see criteria narrowing TODO on ModelsManagerInterface)
 // @todo Eager-mode customization triggers lazy refetch (relevant once page()/where() land)
-// @todo Consider ArrayAccess for direct index lookup ($relation[$key])
 /**
  * @template TModel of object
  *
@@ -25,7 +24,7 @@ namespace Tuxxedo\Model;
 class Relation implements RelationInterface
 {
     /**
-     * @var array<array-key, TModel>|null
+     * @var array<int, TModel>|null
      */
     private ?array $cache = null;
 
@@ -38,9 +37,9 @@ class Relation implements RelationInterface
     }
 
     /**
-     * @param (\Closure(): iterable<TModel>)|null $loader
+     * @param (\Closure(): iterable<int, TModel>)|null $loader
      * @param (\Closure(): int)|null $countLoader
-     * @param array<array-key, TModel>|null $prefetched
+     * @param array<int, TModel>|null $prefetched
      */
     final private function __construct(
         private readonly ?\Closure $loader = null,
@@ -52,7 +51,7 @@ class Relation implements RelationInterface
     /**
      * @template TItem of object
      *
-     * @param \Closure(): iterable<TItem> $loader
+     * @param \Closure(): iterable<int, TItem> $loader
      * @param \Closure(): int $countLoader
      * @return self<TItem>
      */
@@ -69,7 +68,7 @@ class Relation implements RelationInterface
     /**
      * @template TItem of object
      *
-     * @param array<array-key, TItem> $values
+     * @param array<int, TItem> $values
      * @return self<TItem>
      */
     public static function createFromPrefetched(
@@ -78,6 +77,36 @@ class Relation implements RelationInterface
         return new self(
             prefetched: $values,
         );
+    }
+
+    public function offsetExists(mixed $offset): bool
+    {
+        return isset($this->materialize()[$offset]);
+    }
+
+    public function offsetGet(mixed $offset): mixed
+    {
+        return $this->materialize()[$offset];
+    }
+
+    /**
+     * @return never
+     *
+     * @throws ModelException
+     */
+    public function offsetSet(mixed $offset, mixed $value): void
+    {
+        throw ModelException::fromImmutableRelation();
+    }
+
+    /**
+     * @return never
+     *
+     * @throws ModelException
+     */
+    public function offsetUnset(mixed $offset): void
+    {
+        throw ModelException::fromImmutableRelation();
     }
 
     public function getIterator(): \Generator
@@ -109,7 +138,7 @@ class Relation implements RelationInterface
     }
 
     /**
-     * @return array<array-key, TModel>
+     * @return array<int, TModel>
      */
     private function materialize(): array
     {

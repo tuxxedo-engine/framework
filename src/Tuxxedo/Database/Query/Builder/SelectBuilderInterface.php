@@ -119,7 +119,7 @@ interface SelectBuilderInterface extends WhereBuilderInterface
      * @template TClassName of object
      *
      * @param class-string<TClassName>|class-string<TClassName&HydratableInterface>|\Closure(mixed[] $properties): TClassName $class
-     * @return \Generator<TClassName>
+     * @return \Generator<int, TClassName>
      *
      * @throws DatabaseException
      * @throws SqlException
