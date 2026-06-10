@@ -52,6 +52,11 @@ class ModelsManager implements ModelsManagerInterface
      */
     private \WeakMap $saveInProgress;
 
+    /**
+     * @var \WeakMap<object, true>
+     */
+    private \WeakMap $deleteInProgress;
+
     public function __construct(
         public readonly ConnectionInterface $connection,
         public readonly MetaDataInterface $metaData,
@@ -61,6 +66,7 @@ class ModelsManager implements ModelsManagerInterface
     ) {
         $this->hydrator = $modelHydrator ?? new Hydrator($this, $metaData, $databaseHydrator);
         $this->saveInProgress = new \WeakMap();
+        $this->deleteInProgress = new \WeakMap();
     }
 
     /**
@@ -80,25 +86,44 @@ class ModelsManager implements ModelsManagerInterface
         $this->saveInProgress[$model] = true;
 
         try {
-            $metaData = $this->metaData->getModel($model::class);
+            $result = $model;
 
-            if ($this->isNewModel($model, $metaData)) {
-                $target = $metaData->readonly
-                    ? $model
-                    : clone $model;
-
-                $result = $this->insert($target, $metaData);
-            } else {
-                $result = $this->update($model, $metaData);
-            }
-
-            // @todo Wrap cascade in savepoint for atomicity (depends on cascade caller semantics)
-            $this->cascadeRelations($result, $metaData);
+            $this->connection->nestedTransaction(
+                function () use ($model, &$result): void {
+                    $result = $this->doSave($model);
+                },
+            );
 
             return $result;
         } finally {
             unset($this->saveInProgress[$model]);
         }
+    }
+
+    /**
+     * @template TModel of object
+     *
+     * @param TModel $model
+     * @return TModel
+     */
+    private function doSave(
+        object $model,
+    ): object {
+        $metaData = $this->metaData->getModel($model::class);
+
+        if ($this->isNewModel($model, $metaData)) {
+            $target = $metaData->readonly
+                ? $model
+                : clone $model;
+
+            $result = $this->insert($target, $metaData);
+        } else {
+            $result = $this->update($model, $metaData);
+        }
+
+        $this->cascadeSaveRelations($result, $metaData);
+
+        return $result;
     }
 
     private function isNewModel(
@@ -323,35 +348,53 @@ class ModelsManager implements ModelsManagerInterface
         return $model;
     }
 
-    // @todo DELETE cascade (separate concern, opposite walk order — children first)
-    // @todo Optional flag to force materialization during cascade for full graph save
-    private function cascadeRelations(
+    // @todo Optional flag to force materialization during save cascade for full graph save
+    private function cascadeSaveRelations(
         object $model,
         ModelMetaDataInterface $metaData,
     ): void {
         foreach ($metaData->relations as $relation) {
+            $action = $relation->attribute->onSave;
+
+            if ($action === CascadeAction::NO_ACTION) {
+                continue;
+            }
+
+            if ($action === CascadeAction::RESTRICT || $action === CascadeAction::SET_NULL) {
+                throw ModelException::fromCascadeActionNotSupported(
+                    modelClass: $metaData->model,
+                    property: $relation->property,
+                    action: $action,
+                );
+            }
+
             $attribute = $relation->attribute;
 
             if ($attribute instanceof HasOne || $attribute instanceof BelongsTo) {
-                $this->cascadeSingleObjectRelation($model, $relation);
+                $this->cascadeSaveSingleObjectRelation($model, $relation);
 
                 continue;
             }
 
             if ($attribute instanceof HasMany) {
-                $this->cascadeCollectionRelation($model, $relation);
+                $this->cascadeSaveCollectionRelation($model, $relation);
 
                 continue;
             }
 
             if ($attribute instanceof BelongsToMany) {
-                // @todo BelongsToMany pivot writes (depends on collection-mutation API)
-                $this->cascadeCollectionRelation($model, $relation);
+                // @todo CRITICAL: BelongsToMany pivot writes missing — currently iterates and saves far-side
+                //       entities only. The pivot rows linking $model <-> $item are NOT written, so newly
+                //       added items in the collection have no DB link after save. Correct behavior:
+                //       save far-side entities (current) AND insert/update pivot rows for the link.
+                //       Blocked on the collection-mutation API (Relation needs to expose adds/removes so
+                //       we know what pivot writes to issue, not just iterate the current materialized set).
+                $this->cascadeSaveCollectionRelation($model, $relation);
             }
         }
     }
 
-    private function cascadeSingleObjectRelation(
+    private function cascadeSaveSingleObjectRelation(
         object $model,
         ModelRelationInterface $relation,
     ): void {
@@ -368,7 +411,7 @@ class ModelsManager implements ModelsManagerInterface
         $saved = $this->save($value);
     }
 
-    private function cascadeCollectionRelation(
+    private function cascadeSaveCollectionRelation(
         object $model,
         ModelRelationInterface $relation,
     ): void {
@@ -385,6 +428,78 @@ class ModelsManager implements ModelsManagerInterface
         // @todo New untracked children in *-to-many — pending Relation collection-mutation API
         foreach ($value as $item) {
             $saved = $this->save($item);
+        }
+    }
+
+    private function cascadeDeleteRelations(
+        object $model,
+        ModelMetaDataInterface $metaData,
+    ): void {
+        foreach ($metaData->relations as $relation) {
+            $action = $relation->attribute->onDelete;
+
+            if ($action === CascadeAction::NO_ACTION) {
+                continue;
+            }
+
+            if ($action === CascadeAction::RESTRICT || $action === CascadeAction::SET_NULL) {
+                throw ModelException::fromCascadeActionNotSupported(
+                    modelClass: $metaData->model,
+                    property: $relation->property,
+                    action: $action,
+                );
+            }
+
+            $attribute = $relation->attribute;
+
+            if ($attribute instanceof HasOne || $attribute instanceof BelongsTo) {
+                $this->cascadeDeleteSingleObjectRelation($model, $relation);
+
+                continue;
+            }
+
+            if ($attribute instanceof HasMany || $attribute instanceof BelongsToMany) {
+                // @todo CRITICAL: BelongsToMany cascade-delete currently deletes the FAR-SIDE entities
+                //       (Doctrine cascade=remove semantics). For most M:N use cases this is wrong and
+                //       data-destructive — deleting a User with onDelete: CASCADE on a Roles BelongsToMany
+                //       will delete every Role attached to that User, even though Roles are shared and
+                //       belong to other Users too. Correct default: delete only the pivot rows linking
+                //       $model <-> far-side, leave the far-side entities untouched. Deleting the far-side
+                //       should be a separate explicit opt-in (different enum case or attribute flag).
+                //       Blocked on the same pivot/collection-mutation API as the save-side pivot writes.
+                //       Until that lands, users opting into onDelete: CASCADE on BelongsToMany must
+                //       understand they're requesting Doctrine-semantics (far-side cascade), which is
+                //       likely not what they want for shared M:N relations.
+                $this->cascadeDeleteCollectionRelation($model, $relation);
+            }
+        }
+    }
+
+    private function cascadeDeleteSingleObjectRelation(
+        object $model,
+        ModelRelationInterface $relation,
+    ): void {
+        $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
+
+        if (!\is_object($value)) {
+            return;
+        }
+
+        $deleted = $this->delete($value);
+    }
+
+    private function cascadeDeleteCollectionRelation(
+        object $model,
+        ModelRelationInterface $relation,
+    ): void {
+        $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
+
+        if (!$value instanceof RelationInterface) {
+            return;
+        }
+
+        foreach ($value as $item) {
+            $deleted = $this->delete($item);
         }
     }
 
@@ -650,6 +765,30 @@ class ModelsManager implements ModelsManagerInterface
     public function delete(
         object $model,
     ): bool {
+        if (isset($this->deleteInProgress[$model])) {
+            return true;
+        }
+
+        $this->deleteInProgress[$model] = true;
+
+        try {
+            $result = false;
+
+            $this->connection->nestedTransaction(
+                function () use ($model, &$result): void {
+                    $result = $this->doDelete($model);
+                },
+            );
+
+            return $result;
+        } finally {
+            unset($this->deleteInProgress[$model]);
+        }
+    }
+
+    private function doDelete(
+        object $model,
+    ): bool {
         $metaData = $this->metaData->getModel($model::class);
 
         if ($metaData->key === null) {
@@ -657,6 +796,8 @@ class ModelsManager implements ModelsManagerInterface
                 modelClass: $metaData->model,
             );
         }
+
+        $this->cascadeDeleteRelations($model, $metaData);
 
         $query = $this->connection->delete($metaData->table);
 

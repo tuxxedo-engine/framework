@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\Attribute\Relation;
 
+use Tuxxedo\Model\CascadeAction;
+
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
 readonly class BelongsTo implements RelationInterface
 {
@@ -23,6 +25,8 @@ readonly class BelongsTo implements RelationInterface
         public string $related,
         public string $foreignKey,
         public ?string $ownerKey = null,
+        public CascadeAction $onSave = CascadeAction::NO_ACTION,
+        public CascadeAction $onDelete = CascadeAction::NO_ACTION,
     ) {
     }
 }

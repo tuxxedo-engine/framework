@@ -13,12 +13,22 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\Attribute\Relation;
 
+use Tuxxedo\Model\CascadeAction;
+
 interface RelationInterface
 {
     /**
      * @var class-string
      */
     public string $related {
+        get;
+    }
+
+    public CascadeAction $onSave {
+        get;
+    }
+
+    public CascadeAction $onDelete {
         get;
     }
 }

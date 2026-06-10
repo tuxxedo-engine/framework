@@ -101,6 +101,13 @@ interface ConnectionInterface
 
     public function inTransaction(): bool;
 
+    // @todo transaction()/nestedTransaction() should return the closure's return value (template TReturn)
+    //       instead of void. First surfaced during the Model cascade work — wrapping save()/delete()
+    //       in nestedTransaction() forced the ref-capture pattern (init $result outside, &$result in
+    //       the closure, return after) because the closure return value was thrown away. Doctrine
+    //       (wrapInTransaction) and Laravel (DB::transaction) both return-thru and it reads as one
+    //       line: `$result = $conn->nestedTransaction(fn () => $this->doSave($model))`. Change is
+    //       backward-compatible — existing void-returning closures just yield null.
     /**
      * @param \Closure(self $connection): void $transaction
      *

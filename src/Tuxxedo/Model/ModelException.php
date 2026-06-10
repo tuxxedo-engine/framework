@@ -424,4 +424,22 @@ class ModelException extends \Exception
             ),
         );
     }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromCascadeActionNotSupported(
+        string $modelClass,
+        string $property,
+        CascadeAction $action,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot perform action on model "%s": Cascade action "%s" on property "%s" is not yet supported',
+                $modelClass,
+                $action->name,
+                $property,
+            ),
+        );
+    }
 }
