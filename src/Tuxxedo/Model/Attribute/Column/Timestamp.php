@@ -17,6 +17,7 @@ use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Model\Attribute\ColumnFormatInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
+use Tuxxedo\Model\Hydrator\Coercer\TimestampCoercer;
 
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
 readonly class Timestamp implements ColumnInterface, ColumnFormatInterface
@@ -27,7 +28,7 @@ readonly class Timestamp implements ColumnInterface, ColumnFormatInterface
     public function __construct(
         public DateFormat|string $format = DateFormat::DEFAULT,
         public ?string $name = null,
-        public ?string $coercer = null,
+        public ?string $coercer = TimestampCoercer::class,
     ) {
     }
 

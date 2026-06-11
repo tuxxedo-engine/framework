@@ -61,9 +61,9 @@ class ModelsManager implements ModelsManagerInterface
     private \WeakMap $deleteInProgress;
 
     /**
-     * @var array<class-string<CoercerInterface>, CoercerInterface>
+     * @var \WeakMap<ColumnInterface, CoercerInterface>
      */
-    private array $coercerCache = [];
+    private \WeakMap $coercerCache;
 
     public function __construct(
         public readonly ContainerInterface $container,
@@ -76,6 +76,7 @@ class ModelsManager implements ModelsManagerInterface
         $this->hydrator = $modelHydrator ?? new Hydrator($this, $metaData, $databaseHydrator);
         $this->saveInProgress = new \WeakMap();
         $this->deleteInProgress = new \WeakMap();
+        $this->coercerCache = new \WeakMap();
     }
 
     /**
@@ -550,8 +551,8 @@ class ModelsManager implements ModelsManagerInterface
             return null;
         }
 
-        if (isset($this->coercerCache[$attribute->coercer])) {
-            return $this->coercerCache[$attribute->coercer];
+        if (isset($this->coercerCache[$attribute])) {
+            return $this->coercerCache[$attribute];
         }
 
         /** @var CoercerInterface $instance */
@@ -560,7 +561,7 @@ class ModelsManager implements ModelsManagerInterface
             $this->extractCoercerArguments($attribute),
         );
 
-        return $this->coercerCache[$attribute->coercer] = $instance;
+        return $this->coercerCache[$attribute] = $instance;
     }
 
     /**
