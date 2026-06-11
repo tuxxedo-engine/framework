@@ -531,4 +531,40 @@ class ModelException extends \Exception
             ),
         );
     }
+
+    /**
+     * @param class-string $coercerClass
+     */
+    public static function fromCoercionFailure(
+        string $coercerClass,
+        string $expectedType,
+        string $actualType,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Coercer "%s" cannot coerce value: expected type "%s", got "%s"',
+                $coercerClass,
+                $expectedType,
+                $actualType,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromInvalidCoercerClass(
+        string $modelClass,
+        string $property,
+        string $coercerClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Coercer "%s" on property "%s" does not exist or does not implement CoercerInterface',
+                $modelClass,
+                $coercerClass,
+                $property,
+            ),
+        );
+    }
 }

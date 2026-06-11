@@ -18,6 +18,8 @@ use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Query\Builder\ExistsBuilderInterface;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
+use Tuxxedo\Model\Attribute\ColumnInterface;
+use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 use Tuxxedo\Model\Hydrator\HydratorInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 
@@ -60,6 +62,10 @@ interface ModelsManagerInterface
         object $model,
         bool $forceMaterialize = false,
     ): object;
+
+    public function getCoercerFor(
+        ColumnInterface $attribute,
+    ): ?CoercerInterface;
 
     /**
      * @template TModel of object

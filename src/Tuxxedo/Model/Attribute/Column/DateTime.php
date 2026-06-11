@@ -16,13 +16,18 @@ namespace Tuxxedo\Model\Attribute\Column;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Model\Attribute\ColumnFormatInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
+use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
 readonly class DateTime implements ColumnInterface, ColumnFormatInterface
 {
+    /**
+     * @param class-string<CoercerInterface>|null $coercer
+     */
     public function __construct(
         public DateFormat|string $format = DateFormat::DEFAULT,
         public ?string $name = null,
+        public ?string $coercer = null,
     ) {
     }
 

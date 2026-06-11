@@ -34,6 +34,7 @@ readonly class ModelDefaultWriteConnection implements DependencyResolverInterfac
         ParameterReflectorInterface $parameter,
     ): ModelsManagerInterface {
         return new ModelsManager(
+            container: $container,
             connection: $container->resolve(ConnectionManagerInterface::class)->getWriteConnection(),
             metaData: $container->resolve(MetaDataInterface::class),
             dirtyTracker: $container->resolve(DirtyTrackerInterface::class),

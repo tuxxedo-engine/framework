@@ -16,14 +16,19 @@ namespace Tuxxedo\Model\Attribute\Column;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\ColumnPrecisionInterface;
+use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
 readonly class Decimal implements ColumnInterface, ColumnPrecisionInterface
 {
+    /**
+     * @param class-string<CoercerInterface>|null $coercer
+     */
     public function __construct(
         public int $precision,
         public int $scale,
         public ?string $name = null,
+        public ?string $coercer = null,
     ) {
     }
 

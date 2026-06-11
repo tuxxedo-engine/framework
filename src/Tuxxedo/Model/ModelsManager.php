@@ -20,10 +20,12 @@ use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Hydrator\HydratorInterface as DatabaseHydratorInterface;
 use Tuxxedo\Database\Query\Builder\ExistsBuilderInterface;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
+use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
 use Tuxxedo\Model\Attribute\Relation\HasMany;
 use Tuxxedo\Model\Attribute\Relation\HasOne;
+use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 use Tuxxedo\Model\Hydrator\Hydrator;
 use Tuxxedo\Model\Hydrator\HydratorInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
@@ -36,6 +38,7 @@ use Tuxxedo\Reflection\PropertyReflector;
 #[DefaultInitializer(
     static function (ContainerInterface $container): ModelsManagerInterface {
         return new ModelsManager(
+            container: $container,
             connection: $container->resolve(ConnectionManagerInterface::class)->getDefaultConnection(),
             metaData: $container->resolve(MetaDataInterface::class),
             dirtyTracker: $container->resolve(DirtyTrackerInterface::class),
@@ -57,7 +60,13 @@ class ModelsManager implements ModelsManagerInterface
      */
     private \WeakMap $deleteInProgress;
 
+    /**
+     * @var array<class-string<CoercerInterface>, CoercerInterface>
+     */
+    private array $coercerCache = [];
+
     public function __construct(
+        public readonly ContainerInterface $container,
         public readonly ConnectionInterface $connection,
         public readonly MetaDataInterface $metaData,
         public readonly DirtyTrackerInterface $dirtyTracker,
@@ -532,6 +541,48 @@ class ModelsManager implements ModelsManagerInterface
         }
 
         return $value;
+    }
+
+    public function getCoercerFor(
+        ColumnInterface $attribute,
+    ): ?CoercerInterface {
+        if ($attribute->coercer === null) {
+            return null;
+        }
+
+        if (isset($this->coercerCache[$attribute->coercer])) {
+            return $this->coercerCache[$attribute->coercer];
+        }
+
+        /** @var CoercerInterface $instance */
+        $instance = $this->container->resolve(
+            $attribute->coercer,
+            $this->extractCoercerArguments($attribute),
+        );
+
+        return $this->coercerCache[$attribute->coercer] = $instance;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function extractCoercerArguments(
+        ColumnInterface $attribute,
+    ): array {
+        $arguments = [];
+        $reflection = new \ReflectionObject($attribute);
+
+        foreach ($reflection->getProperties() as $property) {
+            $name = $property->getName();
+
+            if ($name === 'name' || $name === 'coercer') {
+                continue;
+            }
+
+            $arguments[$name] = $property->getValue($attribute);
+        }
+
+        return $arguments;
     }
 
     private function cascadeDeleteRelations(

@@ -25,6 +25,7 @@ use Tuxxedo\Model\Attribute\Relation\RelationInterface;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\Attribute\Unique;
 use Tuxxedo\Model\CascadeAction;
+use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 use Tuxxedo\Model\MetaData\ModelColumn;
 use Tuxxedo\Model\MetaData\ModelColumnInterface;
 use Tuxxedo\Model\MetaData\ModelCompositeKey;
@@ -252,6 +253,32 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         }
 
         return $names;
+    }
+
+    /**
+     * @param class-string $modelClass
+     *
+     * @throws ModelException
+     */
+    private function validateColumnCoercer(
+        string $modelClass,
+        string $property,
+        ColumnInterface $attribute,
+    ): void {
+        if ($attribute->coercer === null) {
+            return;
+        }
+
+        if (
+            !\class_exists($attribute->coercer) ||
+            !\is_a($attribute->coercer, CoercerInterface::class, true)
+        ) {
+            throw ModelException::fromInvalidCoercerClass(
+                modelClass: $modelClass,
+                property: $property,
+                coercerClass: $attribute->coercer,
+            );
+        }
     }
 
     /**
@@ -640,7 +667,12 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 $identifiers[$property->name] = $identifier;
             }
 
-            // @todo Add validateColumnCoercer alongside the other validations — check coercer class-string implements CoercerInterface, construct via Container::resolve() with the attribute's args, store the instance on ModelColumn
+            $this->validateColumnCoercer(
+                modelClass: $class->name,
+                property: $property->name,
+                attribute: $propertyColumns[0],
+            );
+
             $columns[] = new ModelColumn(
                 property: $property->name,
                 column: $propertyColumns[0]->name ?? $property->name,

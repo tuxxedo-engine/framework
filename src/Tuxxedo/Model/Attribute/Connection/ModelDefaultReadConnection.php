@@ -34,6 +34,7 @@ readonly class ModelDefaultReadConnection implements DependencyResolverInterface
         ParameterReflectorInterface $parameter,
     ): ModelsManagerInterface {
         return new ModelsManager(
+            container: $container,
             connection: $container->resolve(ConnectionManagerInterface::class)->getReadConnection(),
             metaData: $container->resolve(MetaDataInterface::class),
             dirtyTracker: $container->resolve(DirtyTrackerInterface::class),

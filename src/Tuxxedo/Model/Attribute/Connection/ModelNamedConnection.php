@@ -39,6 +39,7 @@ readonly class ModelNamedConnection implements DependencyResolverInterface
         ParameterReflectorInterface $parameter,
     ): ModelsManagerInterface {
         return new ModelsManager(
+            container: $container,
             connection: $container->resolve(ConnectionManagerInterface::class)->getNamedConnection($this->name),
             metaData: $container->resolve(MetaDataInterface::class),
             dirtyTracker: $container->resolve(DirtyTrackerInterface::class),

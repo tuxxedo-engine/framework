@@ -15,12 +15,18 @@ namespace Tuxxedo\Model\Attribute\Column;
 
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
+use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
+use Tuxxedo\Model\Hydrator\Coercer\JsonCoercer;
 
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
 readonly class Json implements ColumnInterface
 {
+    /**
+     * @param class-string<CoercerInterface>|null $coercer
+     */
     public function __construct(
         public ?string $name = null,
+        public ?string $coercer = JsonCoercer::class,
     ) {
     }
 

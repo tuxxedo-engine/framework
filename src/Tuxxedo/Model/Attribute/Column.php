@@ -14,12 +14,17 @@ declare(strict_types=1);
 namespace Tuxxedo\Model\Attribute;
 
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
+use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
 readonly class Column implements ColumnInterface
 {
+    /**
+     * @param class-string<CoercerInterface>|null $coercer
+     */
     public function __construct(
         public ?string $name = null,
+        public ?string $coercer = null,
     ) {
     }
 
