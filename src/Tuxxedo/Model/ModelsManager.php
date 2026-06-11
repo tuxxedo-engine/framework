@@ -452,19 +452,14 @@ class ModelsManager implements ModelsManagerInterface
                 continue;
             }
 
-            if ($attribute instanceof HasMany || $attribute instanceof BelongsToMany) {
-                // @todo CRITICAL: BelongsToMany cascade-delete currently deletes the FAR-SIDE entities
-                //       (Doctrine cascade=remove semantics). For most M:N use cases this is wrong and
-                //       data-destructive — deleting a User with onDelete: CASCADE on a Roles BelongsToMany
-                //       will delete every Role attached to that User, even though Roles are shared and
-                //       belong to other Users too. Correct default: delete only the pivot rows linking
-                //       $model <-> far-side, leave the far-side entities untouched. Deleting the far-side
-                //       should be a separate explicit opt-in (different enum case or attribute flag).
-                //       Blocked on the same pivot/collection-mutation API as the save-side pivot writes.
-                //       Until that lands, users opting into onDelete: CASCADE on BelongsToMany must
-                //       understand they're requesting Doctrine-semantics (far-side cascade), which is
-                //       likely not what they want for shared M:N relations.
+            if ($attribute instanceof HasMany) {
                 $this->cascadeDeleteCollectionRelation($model, $relation);
+
+                continue;
+            }
+
+            if ($attribute instanceof BelongsToMany) {
+                $this->cascadeDeleteBelongsToManyPivot($model, $relation);
             }
         }
     }
@@ -495,6 +490,41 @@ class ModelsManager implements ModelsManagerInterface
         foreach ($value as $item) {
             $deleted = $this->delete($item);
         }
+    }
+
+    private function cascadeDeleteBelongsToManyPivot(
+        object $model,
+        ModelRelationInterface $relation,
+    ): void {
+        $attribute = $relation->attribute;
+
+        if (!($attribute instanceof BelongsToMany)) {
+            return;
+        }
+
+        $parentMetaData = $this->metaData->getModel($model::class);
+
+        if (!$parentMetaData->key instanceof ModelPrimaryKeyInterface) {
+            throw ModelException::fromCantFetchWithoutPrimaryKey(
+                modelClass: $parentMetaData->model,
+            );
+        }
+
+        $localKeyValue = PropertyReflector::createFromObject($model, $parentMetaData->key->property)->getValue($model);
+        $localKeyValue = self::dehydrateScalar($localKeyValue);
+
+        if (!\is_scalar($localKeyValue)) {
+            throw ModelException::fromPropertyValueMustBeScalar(
+                modelClass: $parentMetaData->model,
+                property: $parentMetaData->key->property,
+                actualType: \get_debug_type($localKeyValue),
+            );
+        }
+
+        $this->connection
+            ->delete($attribute->table)
+            ->where($attribute->localKey, $localKeyValue)
+            ->execute();
     }
 
     private function cascadeDeleteRestrictRelation(
