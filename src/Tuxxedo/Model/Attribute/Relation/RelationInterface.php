@@ -15,6 +15,7 @@ namespace Tuxxedo\Model\Attribute\Relation;
 
 use Tuxxedo\Model\CascadeAction;
 
+// @todo HasOneThrough / HasManyThrough relations — reach a far model through an intermediate one (e.g., User → Owner through Car). New attribute classes implementing RelationInterface, plus hydration via the intermediate, cascade semantics consistent with HasOne / HasMany
 interface RelationInterface
 {
     /**
