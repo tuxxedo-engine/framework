@@ -16,7 +16,6 @@ namespace Tuxxedo\Event;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 
-// @todo Request deferred event queuing?
 #[DefaultImplementation(class: EventsManager::class, lifecycle: Lifecycle::PERSISTENT)]
 interface EventsManagerInterface
 {
