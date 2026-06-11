@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\MetaData;
 
-// @todo Trigger related model metadata cache during relation validation, circular refs need deferred handling
 interface ModelMetaDataInterface
 {
     /**
