@@ -15,10 +15,10 @@ namespace Tuxxedo\Model\Hydrator\Coercer;
 
 use Tuxxedo\Model\ModelException;
 
-abstract readonly class AbstractDateTimeFormatCoercer implements CoercerInterface
+abstract class AbstractDateTimeFormatCoercer implements CoercerInterface
 {
     public function __construct(
-        private string $formatString,
+        private readonly string $formatString,
     ) {
     }
 

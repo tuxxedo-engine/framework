@@ -18,7 +18,7 @@ use Tuxxedo\Model\ModelException;
 class JsonCoercer implements CoercerInterface
 {
     public function __construct(
-        public readonly int $flags = \JSON_THROW_ON_ERROR,
+        private readonly int $flags = \JSON_THROW_ON_ERROR,
     ) {
     }
 

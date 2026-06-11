@@ -15,10 +15,10 @@ namespace Tuxxedo\Model\Hydrator\Coercer;
 
 use Tuxxedo\Model\Attribute\Column\DateFormat;
 
-readonly class DateTimeCoercer extends AbstractDateTimeFormatCoercer
+class DateTimeCoercer extends AbstractDateTimeFormatCoercer
 {
     public function __construct(
-        public DateFormat $format = DateFormat::DEFAULT,
+        private readonly DateFormat $format = DateFormat::DEFAULT,
     ) {
         parent::__construct($format->value);
     }

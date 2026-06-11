@@ -16,7 +16,7 @@ namespace Tuxxedo\Model\Attribute;
 interface ColumnEnumInterface
 {
     /**
-     * @var class-string<\BackedEnum>
+     * @var class-string<\UnitEnum>
      */
     public string $enum {
         get;

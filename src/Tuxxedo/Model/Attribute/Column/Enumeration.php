@@ -17,19 +17,19 @@ use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Model\Attribute\ColumnEnumInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
+use Tuxxedo\Model\Hydrator\Coercer\EnumCoercer;
 
-// @todo Can't $enum be implicitly discovered via Reflection, like some container resolvers do?
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
 readonly class Enumeration implements ColumnInterface, ColumnEnumInterface
 {
     /**
-     * @param class-string<\BackedEnum> $enum
+     * @param class-string<\UnitEnum> $enum
      * @param class-string<CoercerInterface>|null $coercer
      */
     public function __construct(
         public string $enum,
         public ?string $name = null,
-        public ?string $coercer = null,
+        public ?string $coercer = EnumCoercer::class,
     ) {
     }
 
@@ -41,9 +41,15 @@ readonly class Enumeration implements ColumnInterface, ColumnEnumInterface
             \join(
                 ', ',
                 \array_map(
-                    static fn (\BackedEnum $case): string => \sprintf(
+                    static fn (\UnitEnum $case): string => \sprintf(
                         "'%s'",
-                        \str_replace("'", "''", (string) $case->value),
+                        \str_replace(
+                            "'",
+                            "''",
+                            $case instanceof \BackedEnum
+                                ? (string) $case->value
+                                : $case->name,
+                        ),
                     ),
                     $this->enum::cases(),
                 ),
