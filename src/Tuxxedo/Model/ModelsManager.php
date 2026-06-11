@@ -420,7 +420,6 @@ class ModelsManager implements ModelsManagerInterface
         $parentMetaData = $this->metaData->getModel($model::class);
         $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
         $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
-
         $relatedMetaData = $this->metaData->getModel($relation->relatedClass);
         $foreignKeyProperty = $this->findPropertyForColumn(
             metaData: $relatedMetaData,
@@ -466,7 +465,6 @@ class ModelsManager implements ModelsManagerInterface
 
         $parentMetaData = $this->metaData->getModel($model::class);
         $localKeyValue = $this->resolveOwnKeyValue($model, $parentMetaData);
-
         $relatedMetaData = $this->metaData->getModel($relation->relatedClass);
 
         foreach ($value->pendingRemoves as $item) {
@@ -555,6 +553,8 @@ class ModelsManager implements ModelsManagerInterface
 
             if ($attribute instanceof BelongsToMany) {
                 $this->cascadeDeleteBelongsToManyPivot($model, $relation);
+
+                continue;
             }
         }
     }

@@ -494,4 +494,41 @@ class ModelException extends \Exception
             message: 'Immutable relations cannot be modified',
         );
     }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromRelationPropertyTypeUnsupported(
+        string $modelClass,
+        string $property,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Relation on property "%s" must declare a single named class type',
+                $modelClass,
+                $property,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     * @param class-string $expectedType
+     */
+    public static function fromRelationPropertyTypeMismatch(
+        string $modelClass,
+        string $property,
+        string $declaredType,
+        string $expectedType,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Relation on property "%s" declares type "%s" but expected a type compatible with "%s"',
+                $modelClass,
+                $property,
+                $declaredType,
+                $expectedType,
+            ),
+        );
+    }
 }

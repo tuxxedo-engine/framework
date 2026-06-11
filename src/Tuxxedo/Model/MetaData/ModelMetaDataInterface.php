@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\MetaData;
 
-// @todo Validate relation property types — Relation for *-to-many, target class for *-to-one, parent-class typing open
 // @todo Trigger related model metadata cache during relation validation, circular refs need deferred handling
 interface ModelMetaDataInterface
 {

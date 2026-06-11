@@ -38,7 +38,9 @@ use Tuxxedo\Model\MetaData\ModelPrimaryKeyInterface;
 use Tuxxedo\Model\MetaData\ModelRelation;
 use Tuxxedo\Model\MetaData\ModelRelationInterface;
 use Tuxxedo\Model\ModelException;
+use Tuxxedo\Model\Relation;
 use Tuxxedo\Reflection\ClassReflector;
+use Tuxxedo\Reflection\PropertyReflectorInterface;
 
 class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
 {
@@ -212,6 +214,12 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 relatedReflection: $relatedReflection,
             );
 
+            $this->validateRelationPropertyType(
+                modelClass: $class->name,
+                property: $property,
+                attribute: $attribute,
+            );
+
             $relations[] = new ModelRelation(
                 property: $property->name,
                 relatedClass: $relatedClass,
@@ -339,6 +347,39 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 property: $property,
                 relatedClass: $relatedClass,
                 foreignKey: $attribute->foreignKey,
+            );
+        }
+    }
+
+    /**
+     * @param class-string $modelClass
+     *
+     * @throws ModelException
+     */
+    private function validateRelationPropertyType(
+        string $modelClass,
+        PropertyReflectorInterface $property,
+        RelationInterface $attribute,
+    ): void {
+        $declaredType = $property->getDefaultType();
+
+        if ($declaredType === null) {
+            throw ModelException::fromRelationPropertyTypeUnsupported(
+                modelClass: $modelClass,
+                property: $property->name,
+            );
+        }
+
+        $expectedType = $attribute instanceof HasMany || $attribute instanceof BelongsToMany
+            ? Relation::class
+            : $attribute->related;
+
+        if (!\is_a($expectedType, $declaredType, true)) {
+            throw ModelException::fromRelationPropertyTypeMismatch(
+                modelClass: $modelClass,
+                property: $property->name,
+                declaredType: $declaredType,
+                expectedType: $expectedType,
             );
         }
     }
