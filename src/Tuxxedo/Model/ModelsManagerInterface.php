@@ -24,7 +24,6 @@ use Tuxxedo\Model\Hydrator\HydratorInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 
 // @todo Support CreatedAt, UpdatedAt & DeletedAt contracts
-// @todo Support value hydration and serialization from complex types like Enums, Objects
 // @todo Implement a cache strategy
 // @todo Readonly support implications for cache strategy
 // @todo Consider findWhere and other shorthands?
