@@ -77,7 +77,7 @@ class EnumCoercer implements CoercerInterface
                 ),
                 actualType: \sprintf(
                     '"%s"',
-                    (string) $value,
+                    $value,
                 ),
             );
         }

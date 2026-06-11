@@ -180,35 +180,24 @@ class ModelsManager implements ModelsManagerInterface
                 );
             }
 
-            $value = self::dehydrateScalar($value);
+            if ($value !== null) {
+                $coercer = $this->getCoercerFor($column->attribute);
 
-            if ($value !== null && !\is_scalar($value)) {
-                throw ModelException::fromPropertyValueMustBeScalar(
-                    modelClass: $metaData->model,
-                    property: $column->property,
-                    actualType: \get_debug_type($value),
-                );
+                if ($coercer !== null) {
+                    $value = $coercer->dehydrate($value);
+                } elseif (!\is_scalar($value)) {
+                    throw ModelException::fromPropertyValueMustBeScalar(
+                        modelClass: $metaData->model,
+                        property: $column->property,
+                        actualType: \get_debug_type($value),
+                    );
+                }
             }
 
             $map[$column->column] = $value;
         }
 
         return $map;
-    }
-
-    // @todo Drop scalar dehydration fallback once coercer system lands and column attributes carry their coercer
-    private static function dehydrateScalar(
-        mixed $value,
-    ): mixed {
-        if ($value instanceof \BackedEnum) {
-            return $value->value;
-        }
-
-        if ($value instanceof \UnitEnum) {
-            return $value->name;
-        }
-
-        return $value;
     }
 
     /**
@@ -306,26 +295,20 @@ class ModelsManager implements ModelsManagerInterface
                 );
             }
 
-            if ($value !== null && !\is_scalar($value)) {
-                throw ModelException::fromPropertyValueMustBeScalar(
-                    modelClass: $metaData->model,
-                    property: $modelColumn->property,
-                    actualType: \get_debug_type($value),
-                );
-            }
+            $value = $this->dehydrateColumnValue($metaData, $modelColumn->property, $value);
 
             $query->set($modelColumn->column, $value);
         }
 
         if ($metaData->key instanceof ModelPrimaryKeyInterface) {
             $value = PropertyReflector::createFromObject($model, $metaData->key->property)->getValue($model);
-            $value = self::dehydrateScalar($value);
+            $value = $this->dehydrateColumnValue($metaData, $metaData->key->property, $value);
 
-            if (!\is_scalar($value)) {
+            if ($value === null) {
                 throw ModelException::fromPropertyValueMustBeScalar(
                     modelClass: $metaData->model,
                     property: $metaData->key->property,
-                    actualType: \get_debug_type($value),
+                    actualType: 'null',
                 );
             }
 
@@ -333,13 +316,13 @@ class ModelsManager implements ModelsManagerInterface
         } elseif ($metaData->key instanceof ModelCompositeKeyInterface) {
             foreach (\array_combine($metaData->key->properties, $metaData->key->columns) as $property => $column) {
                 $value = PropertyReflector::createFromObject($model, $property)->getValue($model);
-                $value = self::dehydrateScalar($value);
+                $value = $this->dehydrateColumnValue($metaData, $property, $value);
 
-                if (!\is_scalar($value)) {
+                if ($value === null) {
                     throw ModelException::fromPropertyValueMustBeScalar(
                         modelClass: $metaData->model,
                         property: $property,
-                        actualType: \get_debug_type($value),
+                        actualType: 'null',
                     );
                 }
 
@@ -531,12 +514,47 @@ class ModelsManager implements ModelsManagerInterface
         }
 
         $value = PropertyReflector::createFromObject($model, $metaData->key->property)->getValue($model);
-        $value = self::dehydrateScalar($value);
+        $value = $this->dehydrateColumnValue($metaData, $metaData->key->property, $value);
+
+        if ($value === null) {
+            throw ModelException::fromPropertyValueMustBeScalar(
+                modelClass: $metaData->model,
+                property: $metaData->key->property,
+                actualType: 'null',
+            );
+        }
+
+        return $value;
+    }
+
+    /**
+     * @throws ModelException
+     */
+    private function dehydrateColumnValue(
+        ModelMetaDataInterface $metaData,
+        string $property,
+        mixed $value,
+    ): string|int|float|bool|null {
+        if ($value === null) {
+            return null;
+        }
+
+        foreach ($metaData->columns as $column) {
+            if ($column->property === $property) {
+                $coercer = $this->getCoercerFor($column->attribute);
+
+                if ($coercer !== null) {
+                    return $coercer->dehydrate($value);
+                }
+
+                break;
+            }
+        }
 
         if (!\is_scalar($value)) {
             throw ModelException::fromPropertyValueMustBeScalar(
                 modelClass: $metaData->model,
-                property: $metaData->key->property,
+                property: $property,
                 actualType: \get_debug_type($value),
             );
         }
@@ -730,13 +748,13 @@ class ModelsManager implements ModelsManagerInterface
         $parentMetaData = $this->metaData->getModel($model::class);
         $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
         $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
-        $localKeyValue = self::dehydrateScalar($localKeyValue);
+        $localKeyValue = $this->dehydrateColumnValue($parentMetaData, $localKeyProperty, $localKeyValue);
 
-        if (!\is_scalar($localKeyValue)) {
+        if ($localKeyValue === null) {
             throw ModelException::fromPropertyValueMustBeScalar(
                 modelClass: $parentMetaData->model,
                 property: $localKeyProperty,
-                actualType: \get_debug_type($localKeyValue),
+                actualType: 'null',
             );
         }
 
@@ -1087,13 +1105,13 @@ class ModelsManager implements ModelsManagerInterface
 
         if ($metaData->key instanceof ModelPrimaryKeyInterface) {
             $value = PropertyReflector::createFromObject($metaData->model, $metaData->key->property)->getValue($model);
-            $value = self::dehydrateScalar($value);
+            $value = $this->dehydrateColumnValue($metaData, $metaData->key->property, $value);
 
-            if (!\is_scalar($value)) {
+            if ($value === null) {
                 throw ModelException::fromPropertyValueMustBeScalar(
                     modelClass: $metaData->model,
                     property: $metaData->key->property,
-                    actualType: \get_debug_type($value),
+                    actualType: 'null',
                 );
             }
 
@@ -1103,15 +1121,14 @@ class ModelsManager implements ModelsManagerInterface
             );
         } elseif ($metaData->key instanceof ModelCompositeKeyInterface) {
             foreach (\array_combine($metaData->key->properties, $metaData->key->columns) as $property => $column) {
-                $value = self::dehydrateScalar(
-                    PropertyReflector::createFromObject($metaData->model, $property)->getValue($model),
-                );
+                $value = PropertyReflector::createFromObject($metaData->model, $property)->getValue($model);
+                $value = $this->dehydrateColumnValue($metaData, $property, $value);
 
-                if (!\is_scalar($value)) {
+                if ($value === null) {
                     throw ModelException::fromPropertyValueMustBeScalar(
                         modelClass: $metaData->model,
                         property: $property,
-                        actualType: \get_debug_type($value),
+                        actualType: 'null',
                     );
                 }
 

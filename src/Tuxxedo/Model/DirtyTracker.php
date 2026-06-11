@@ -143,21 +143,10 @@ class DirtyTracker implements DirtyTrackerInterface
         return $values;
     }
 
-    // @todo Migrate dehydration to ModelColumn::$coercer once coercer system lands
     private function readValue(
         object $model,
         string $property,
     ): mixed {
-        $value = PropertyReflector::createFromObject($model, $property)->getValue($model);
-
-        if ($value instanceof \BackedEnum) {
-            return $value->value;
-        }
-
-        if ($value instanceof \UnitEnum) {
-            return $value->name;
-        }
-
-        return $value;
+        return PropertyReflector::createFromObject($model, $property)->getValue($model);
     }
 }

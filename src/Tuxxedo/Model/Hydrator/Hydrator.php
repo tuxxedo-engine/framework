@@ -48,24 +48,44 @@ class Hydrator implements HydratorInterface
         string $className,
         array $values,
     ): object {
+        $propertyValues = [];
         $metaData = $this->metaData->getModel($className);
 
-        $propertyValues = [];
-
         foreach ($metaData->columns as $column) {
-            if (\array_key_exists($column->column, $values)) {
-                $propertyValues[$column->property] = $this->coerceValueForProperty(
-                    className: $className,
-                    property: $column->property,
-                    value: $values[$column->column],
+            if (!\array_key_exists($column->column, $values)) {
+                continue;
+            }
+
+            $value = $values[$column->column];
+
+            if ($value === null) {
+                $propertyValues[$column->property] = null;
+
+                continue;
+            }
+
+            $coercer = $this->modelsManager->getCoercerFor($column->attribute);
+
+            if ($coercer === null) {
+                $propertyValues[$column->property] = $value;
+
+                continue;
+            }
+
+            if (!\is_scalar($value)) {
+                throw ModelException::fromCoercionFailure(
+                    coercerClass: $coercer::class,
+                    expectedType: 'int|string|float|bool',
+                    actualType: \get_debug_type($value),
                 );
             }
+
+            $propertyValues[$column->property] = $coercer->hydrate($value);
         }
 
         $model = $this->hydrator->hydrate($className, $propertyValues);
 
         $this->attachRelations($model, $metaData);
-
         $this->modelsManager->dirtyTracker->recordSnapshot($model, $metaData);
 
         return $model;
@@ -356,70 +376,4 @@ class Hydrator implements HydratorInterface
         );
     }
 
-    // @todo Coercer system: introduce Tuxxedo\Model\Hydrator\Coercer\CoercerInterface with hydrate(mixed): mixed and dehydrate(mixed): scalar|null
-    // @todo Coercer system: built-in coercers — JsonCoercer (flags arg), DateTimeCoercer/DateCoercer/TimeCoercer/TimestampCoercer (format arg), EnumCoercer (target enum)
-    // @todo Coercer system: shorthand attributes per format — DateTimeIso8601, DateTimeRfc3339, DateIso8601, etc. (extend base attribute with baked args, no new coercer)
-    // @todo Coercer system: drop the inline UnitEnum/DateTime/scalar branching in this file once per-column ModelColumn::$coercer is in place
-    /**
-     * @param class-string $className
-     */
-    private function coerceValueForProperty(
-        string $className,
-        string $property,
-        mixed $value,
-    ): mixed {
-        if ($value === null) {
-            return null;
-        }
-
-        $type = (new \ReflectionProperty($className, $property))->getType();
-
-        if (!$type instanceof \ReflectionNamedType || $type->isBuiltin()) {
-            return $value;
-        }
-
-        $typeName = $type->getName();
-
-        if (\is_a($typeName, \BackedEnum::class, true)) {
-            try {
-                if (!\is_int($value) && !\is_string($value)) {
-                    throw ModelException::fromInvalidEnumValue(
-                        modelClass: $className,
-                        property: $property,
-                        enumClass: $typeName,
-                        value: $value,
-                    );
-                }
-
-                return $typeName::from($value);
-            } catch (\ValueError $e) {
-                throw ModelException::fromInvalidEnumValue(
-                    modelClass: $className,
-                    property: $property,
-                    enumClass: $typeName,
-                    value: $value,
-                    previous: $e,
-                );
-            }
-        }
-
-        if (\is_a($typeName, \UnitEnum::class, true)) {
-            if (\is_string($value)) {
-                foreach ($typeName::cases() as $case) {
-                    if (\strcasecmp($case->name, $value) === 0) {
-                        return $case;
-                    }
-                }
-            }
-
-            throw ModelException::fromInvalidEnumValue(
-                modelClass: $className,
-                property: $property,
-                enumClass: $typeName,
-                value: $value,
-            );
-        }
-
-        return $value;
-    }
 }
