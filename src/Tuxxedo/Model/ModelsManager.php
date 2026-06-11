@@ -78,6 +78,7 @@ class ModelsManager implements ModelsManagerInterface
     #[\NoDiscard]
     public function save(
         object $model,
+        bool $forceMaterialize = false,
     ): object {
         if (isset($this->saveInProgress[$model])) {
             return $model;
@@ -89,8 +90,8 @@ class ModelsManager implements ModelsManagerInterface
             $result = $model;
 
             $this->connection->nestedTransaction(
-                function () use ($model, &$result): void {
-                    $result = $this->doSave($model);
+                function () use ($model, $forceMaterialize, &$result): void {
+                    $result = $this->doSave($model, $forceMaterialize);
                 },
             );
 
@@ -108,6 +109,7 @@ class ModelsManager implements ModelsManagerInterface
      */
     private function doSave(
         object $model,
+        bool $forceMaterialize,
     ): object {
         $metaData = $this->metaData->getModel($model::class);
 
@@ -121,7 +123,7 @@ class ModelsManager implements ModelsManagerInterface
             $result = $this->update($model, $metaData);
         }
 
-        $this->cascadeSaveRelations($result, $metaData);
+        $this->cascadeSaveRelations($result, $metaData, $forceMaterialize);
 
         return $result;
     }
@@ -348,10 +350,10 @@ class ModelsManager implements ModelsManagerInterface
         return $model;
     }
 
-    // @todo Optional flag to force materialization during save cascade for full graph save
     private function cascadeSaveRelations(
         object $model,
         ModelMetaDataInterface $metaData,
+        bool $forceMaterialize,
     ): void {
         foreach ($metaData->relations as $relation) {
             if ($relation->attribute->onSave !== CascadeAction::CASCADE) {
@@ -361,19 +363,19 @@ class ModelsManager implements ModelsManagerInterface
             $attribute = $relation->attribute;
 
             if ($attribute instanceof HasOne || $attribute instanceof BelongsTo) {
-                $this->cascadeSaveSingleObjectRelation($model, $relation);
+                $this->cascadeSaveSingleObjectRelation($model, $relation, $forceMaterialize);
 
                 continue;
             }
 
             if ($attribute instanceof HasMany) {
-                $this->cascadeSaveCollectionRelation($model, $relation);
+                $this->cascadeSaveCollectionRelation($model, $relation, $forceMaterialize);
 
                 continue;
             }
 
             if ($attribute instanceof BelongsToMany) {
-                $this->cascadeSaveBelongsToManyRelation($model, $relation);
+                $this->cascadeSaveBelongsToManyRelation($model, $relation, $forceMaterialize);
             }
         }
     }
@@ -381,6 +383,7 @@ class ModelsManager implements ModelsManagerInterface
     private function cascadeSaveSingleObjectRelation(
         object $model,
         ModelRelationInterface $relation,
+        bool $forceMaterialize,
     ): void {
         $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
 
@@ -388,16 +391,26 @@ class ModelsManager implements ModelsManagerInterface
             return;
         }
 
-        if ((new \ReflectionClass($value))->isUninitializedLazyObject($value)) {
-            return;
+        $reflection = new \ReflectionClass($value);
+
+        if ($reflection->isUninitializedLazyObject($value)) {
+            if (!$forceMaterialize) {
+                return;
+            }
+
+            $reflection->initializeLazyObject($value);
         }
 
-        (void) $this->save($value);
+        (void) $this->save(
+            model: $value,
+            forceMaterialize: $forceMaterialize,
+        );
     }
 
     private function cascadeSaveCollectionRelation(
         object $model,
         ModelRelationInterface $relation,
+        bool $forceMaterialize,
     ): void {
         $attribute = $relation->attribute;
 
@@ -413,7 +426,7 @@ class ModelsManager implements ModelsManagerInterface
 
         $hasPending = $value->pendingAdds !== [] || $value->pendingRemoves !== [];
 
-        if (!$value->isMaterialized() && !$hasPending) {
+        if (!$value->isMaterialized() && !$hasPending && !$forceMaterialize) {
             return;
         }
 
@@ -431,7 +444,10 @@ class ModelsManager implements ModelsManagerInterface
         foreach ($value as $item) {
             PropertyReflector::createFromObject($item, $foreignKeyProperty)->setValue($item, $localKeyValue);
 
-            (void) $this->save($item);
+            (void) $this->save(
+                model: $item,
+                forceMaterialize: $forceMaterialize,
+            );
         }
 
         if ($attribute->removeOrphan) {
@@ -446,6 +462,7 @@ class ModelsManager implements ModelsManagerInterface
     private function cascadeSaveBelongsToManyRelation(
         object $model,
         ModelRelationInterface $relation,
+        bool $forceMaterialize,
     ): void {
         $attribute = $relation->attribute;
 
@@ -459,8 +476,17 @@ class ModelsManager implements ModelsManagerInterface
             return;
         }
 
+        $hasPending = $value->pendingAdds !== [] || $value->pendingRemoves !== [];
+
+        if (!$value->isMaterialized() && !$hasPending && !$forceMaterialize) {
+            return;
+        }
+
         foreach ($value as $item) {
-            (void) $this->save($item);
+            (void) $this->save(
+                model: $item,
+                forceMaterialize: $forceMaterialize,
+            );
         }
 
         $parentMetaData = $this->metaData->getModel($model::class);

@@ -58,6 +58,7 @@ interface ModelsManagerInterface
     #[\NoDiscard]
     public function save(
         object $model,
+        bool $forceMaterialize = false,
     ): object;
 
     /**
