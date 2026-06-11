@@ -26,10 +26,40 @@ interface RelationInterface extends \IteratorAggregate, \Countable, \ArrayAccess
     }
 
     /**
+     * @var array<int, TModel>
+     */
+    public array $pendingAdds {
+        get;
+    }
+
+    /**
+     * @var array<int, TModel>
+     */
+    public array $pendingRemoves {
+        get;
+    }
+
+    /**
      * @return \Generator<int, TModel>
      */
     public function getIterator(): \Generator;
 
     #[\NoDiscard]
     public function isMaterialized(): bool;
+
+    /**
+     * @param TModel $item
+     */
+    public function add(
+        object $item,
+    ): void;
+
+    /**
+     * @param TModel $item
+     */
+    public function remove(
+        object $item,
+    ): void;
+
+    public function clearPending(): void;
 }

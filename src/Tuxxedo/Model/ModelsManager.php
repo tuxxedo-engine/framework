@@ -373,13 +373,7 @@ class ModelsManager implements ModelsManagerInterface
             }
 
             if ($attribute instanceof BelongsToMany) {
-                // @todo CRITICAL: BelongsToMany pivot writes missing — currently iterates and saves far-side
-                //       entities only. The pivot rows linking $model <-> $item are NOT written, so newly
-                //       added items in the collection have no DB link after save. Correct behavior:
-                //       save far-side entities (current) AND insert/update pivot rows for the link.
-                //       Blocked on the collection-mutation API (Relation needs to expose adds/removes so
-                //       we know what pivot writes to issue, not just iterate the current materialized set).
-                $this->cascadeSaveCollectionRelation($model, $relation);
+                $this->cascadeSaveBelongsToManyRelation($model, $relation);
             }
         }
     }
@@ -398,7 +392,7 @@ class ModelsManager implements ModelsManagerInterface
             return;
         }
 
-        $saved = $this->save($value);
+        (void) $this->save($value);
     }
 
     private function cascadeSaveCollectionRelation(
@@ -417,8 +411,80 @@ class ModelsManager implements ModelsManagerInterface
 
         // @todo New untracked children in *-to-many — pending Relation collection-mutation API
         foreach ($value as $item) {
-            $saved = $this->save($item);
+            (void) $this->save($item);
         }
+    }
+
+    private function cascadeSaveBelongsToManyRelation(
+        object $model,
+        ModelRelationInterface $relation,
+    ): void {
+        $attribute = $relation->attribute;
+
+        if (!$attribute instanceof BelongsToMany) {
+            return;
+        }
+
+        $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
+
+        if (!$value instanceof RelationInterface) {
+            return;
+        }
+
+        foreach ($value as $item) {
+            (void) $this->save($item);
+        }
+
+        $parentMetaData = $this->metaData->getModel($model::class);
+        $localKeyValue = $this->resolveOwnKeyValue($model, $parentMetaData);
+
+        $relatedMetaData = $this->metaData->getModel($relation->relatedClass);
+
+        foreach ($value->pendingRemoves as $item) {
+            $foreignKeyValue = $this->resolveOwnKeyValue($item, $relatedMetaData);
+
+            $this->connection
+                ->delete($attribute->table)
+                ->where($attribute->localKey, $localKeyValue)
+                ->where($attribute->foreignKey, $foreignKeyValue)
+                ->execute();
+        }
+
+        foreach ($value->pendingAdds as $item) {
+            $foreignKeyValue = $this->resolveOwnKeyValue($item, $relatedMetaData);
+
+            $this->connection
+                ->insert($attribute->table)
+                ->set($attribute->localKey, $localKeyValue)
+                ->set($attribute->foreignKey, $foreignKeyValue)
+                ->execute();
+        }
+
+        $value->clearPending();
+    }
+
+    private function resolveOwnKeyValue(
+        object $model,
+        ModelMetaDataInterface $metaData,
+    ): string|int|float|bool {
+        if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
+            throw ModelException::fromCantFetchWithoutPrimaryKey(
+                modelClass: $metaData->model,
+            );
+        }
+
+        $value = PropertyReflector::createFromObject($model, $metaData->key->property)->getValue($model);
+        $value = self::dehydrateScalar($value);
+
+        if (!\is_scalar($value)) {
+            throw ModelException::fromPropertyValueMustBeScalar(
+                modelClass: $metaData->model,
+                property: $metaData->key->property,
+                actualType: \get_debug_type($value),
+            );
+        }
+
+        return $value;
     }
 
     private function cascadeDeleteRelations(
@@ -474,7 +540,7 @@ class ModelsManager implements ModelsManagerInterface
             return;
         }
 
-        $deleted = $this->delete($value);
+        (void) $this->delete($value);
     }
 
     private function cascadeDeleteCollectionRelation(
@@ -488,7 +554,7 @@ class ModelsManager implements ModelsManagerInterface
         }
 
         foreach ($value as $item) {
-            $deleted = $this->delete($item);
+            (void) $this->delete($item);
         }
     }
 
@@ -498,28 +564,12 @@ class ModelsManager implements ModelsManagerInterface
     ): void {
         $attribute = $relation->attribute;
 
-        if (!($attribute instanceof BelongsToMany)) {
+        if (!$attribute instanceof BelongsToMany) {
             return;
         }
 
         $parentMetaData = $this->metaData->getModel($model::class);
-
-        if (!$parentMetaData->key instanceof ModelPrimaryKeyInterface) {
-            throw ModelException::fromCantFetchWithoutPrimaryKey(
-                modelClass: $parentMetaData->model,
-            );
-        }
-
-        $localKeyValue = PropertyReflector::createFromObject($model, $parentMetaData->key->property)->getValue($model);
-        $localKeyValue = self::dehydrateScalar($localKeyValue);
-
-        if (!\is_scalar($localKeyValue)) {
-            throw ModelException::fromPropertyValueMustBeScalar(
-                modelClass: $parentMetaData->model,
-                property: $parentMetaData->key->property,
-                actualType: \get_debug_type($localKeyValue),
-            );
-        }
+        $localKeyValue = $this->resolveOwnKeyValue($model, $parentMetaData);
 
         $this->connection
             ->delete($attribute->table)

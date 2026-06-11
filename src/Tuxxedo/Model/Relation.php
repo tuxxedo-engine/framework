@@ -37,6 +37,16 @@ class Relation implements RelationInterface
     }
 
     /**
+     * @var array<int, TModel>
+     */
+    public private(set) array $pendingAdds = [];
+
+    /**
+     * @var array<int, TModel>
+     */
+    public private(set) array $pendingRemoves = [];
+
+    /**
      * @param (\Closure(): iterable<int, TModel>)|null $loader
      * @param (\Closure(): int)|null $countLoader
      * @param array<int, TModel>|null $prefetched
@@ -109,6 +119,46 @@ class Relation implements RelationInterface
         throw ModelException::fromImmutableRelation();
     }
 
+    /**
+     * @param TModel $item
+     */
+    public function add(
+        object $item,
+    ): void {
+        foreach ($this->pendingRemoves as $index => $existing) {
+            if ($existing === $item) {
+                unset($this->pendingRemoves[$index]);
+
+                return;
+            }
+        }
+
+        $this->pendingAdds[] = $item;
+    }
+
+    /**
+     * @param TModel $item
+     */
+    public function remove(
+        object $item,
+    ): void {
+        foreach ($this->pendingAdds as $index => $existing) {
+            if ($existing === $item) {
+                unset($this->pendingAdds[$index]);
+
+                return;
+            }
+        }
+
+        $this->pendingRemoves[] = $item;
+    }
+
+    public function clearPending(): void
+    {
+        $this->pendingAdds = [];
+        $this->pendingRemoves = [];
+    }
+
     public function getIterator(): \Generator
     {
         yield from $this->materialize();
@@ -141,6 +191,36 @@ class Relation implements RelationInterface
      * @return array<int, TModel>
      */
     private function materialize(): array
+    {
+        $base = $this->loadBase();
+
+        if ($this->pendingAdds === [] && $this->pendingRemoves === []) {
+            return $base;
+        }
+
+        $overlay = $base;
+
+        foreach ($this->pendingRemoves as $itemToRemove) {
+            foreach ($overlay as $index => $existing) {
+                if ($existing === $itemToRemove) {
+                    unset($overlay[$index]);
+                }
+            }
+        }
+
+        $overlay = \array_values($overlay);
+
+        foreach ($this->pendingAdds as $itemToAdd) {
+            $overlay[] = $itemToAdd;
+        }
+
+        return $overlay;
+    }
+
+    /**
+     * @return array<int, TModel>
+     */
+    private function loadBase(): array
     {
         if ($this->prefetched !== null) {
             return $this->prefetched;
