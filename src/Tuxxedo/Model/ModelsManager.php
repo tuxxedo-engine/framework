@@ -186,7 +186,7 @@ class ModelsManager implements ModelsManagerInterface
         return $map;
     }
 
-    // @todo This should be moved to the Hydrator handlers
+    // @todo Drop scalar dehydration fallback once coercer system lands and column attributes carry their coercer
     private static function dehydrateScalar(
         mixed $value,
     ): mixed {
@@ -1051,8 +1051,9 @@ class ModelsManager implements ModelsManagerInterface
             );
         } elseif ($metaData->key instanceof ModelCompositeKeyInterface) {
             foreach (\array_combine($metaData->key->properties, $metaData->key->columns) as $property => $column) {
-                $value = PropertyReflector::createFromObject($metaData->model, $property)->getValue($model);
-                $value = self::dehydrateScalar($value);
+                $value = self::dehydrateScalar(
+                    PropertyReflector::createFromObject($metaData->model, $property)->getValue($model),
+                );
 
                 if (!\is_scalar($value)) {
                     throw ModelException::fromPropertyValueMustBeScalar(

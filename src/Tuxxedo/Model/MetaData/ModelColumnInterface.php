@@ -15,6 +15,7 @@ namespace Tuxxedo\Model\MetaData;
 
 use Tuxxedo\Model\Attribute\ColumnInterface;
 
+// @todo Surface ?CoercerInterface $coercer { get; } once coercer system lands — instance built once at metadata-build time via Container::resolve() with the attribute's args, stored on ModelColumn
 interface ModelColumnInterface
 {
     public string $property {

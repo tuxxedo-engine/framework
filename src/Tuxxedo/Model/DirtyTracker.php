@@ -143,7 +143,7 @@ class DirtyTracker implements DirtyTrackerInterface
         return $values;
     }
 
-    // @todo Consolidate dehydration with ModelsManager::dehydrateScalar once coercion handlers land
+    // @todo Migrate dehydration to ModelColumn::$coercer once coercer system lands
     private function readValue(
         object $model,
         string $property,

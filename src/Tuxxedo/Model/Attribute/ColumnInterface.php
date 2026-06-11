@@ -15,6 +15,7 @@ namespace Tuxxedo\Model\Attribute;
 
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 
+// @todo Add ?string $coercer arg (class-string<CoercerInterface>|null) to the contract. Concrete attributes default to their associated coercer class (JsonCoercer for #[Json], DateTimeCoercer for #[DateTime], etc.) or null where coercion doesn't apply (#[Varchar], #[Integer], etc.). coercer: null disables coercion entirely.
 interface ColumnInterface
 {
     public ?string $name {

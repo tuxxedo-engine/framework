@@ -640,6 +640,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 $identifiers[$property->name] = $identifier;
             }
 
+            // @todo Add validateColumnCoercer alongside the other validations — check coercer class-string implements CoercerInterface, construct via Container::resolve() with the attribute's args, store the instance on ModelColumn
             $columns[] = new ModelColumn(
                 property: $property->name,
                 column: $propertyColumns[0]->name ?? $property->name,

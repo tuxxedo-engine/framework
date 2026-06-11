@@ -28,7 +28,6 @@ use Tuxxedo\Model\ModelsManagerInterface;
 use Tuxxedo\Model\Relation;
 use Tuxxedo\Reflection\PropertyReflector;
 
-// @todo Support property hooks for columns so they can do their own hydration behavior?
 class Hydrator implements HydratorInterface
 {
     public function __construct(
@@ -357,9 +356,10 @@ class Hydrator implements HydratorInterface
         );
     }
 
-    // @todo DateTime coercion
-    // @todo JSON coercion
-    // @todo Support custom type coercion handlers
+    // @todo Coercer system: introduce Tuxxedo\Model\Hydrator\Coercer\CoercerInterface with hydrate(mixed): mixed and dehydrate(mixed): scalar|null
+    // @todo Coercer system: built-in coercers — JsonCoercer (flags arg), DateTimeCoercer/DateCoercer/TimeCoercer/TimestampCoercer (format arg), EnumCoercer (target enum)
+    // @todo Coercer system: shorthand attributes per format — DateTimeIso8601, DateTimeRfc3339, DateIso8601, etc. (extend base attribute with baked args, no new coercer)
+    // @todo Coercer system: drop the inline UnitEnum/DateTime/scalar branching in this file once per-column ModelColumn::$coercer is in place
     /**
      * @param class-string $className
      */
