@@ -375,5 +375,4 @@ class Hydrator implements HydratorInterface
             referencedClass: $metaData->model,
         );
     }
-
 }
