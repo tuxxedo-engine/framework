@@ -87,15 +87,9 @@ class ModelsManager implements ModelsManagerInterface
         $this->saveInProgress[$model] = true;
 
         try {
-            $result = $model;
-
-            $this->connection->nestedTransaction(
-                function () use ($model, $forceMaterialize, &$result): void {
-                    $result = $this->doSave($model, $forceMaterialize);
-                },
+            return $this->connection->nestedTransaction(
+                fn (): object => $this->doSave($model, $forceMaterialize),
             );
-
-            return $result;
         } finally {
             unset($this->saveInProgress[$model]);
         }
@@ -1016,15 +1010,9 @@ class ModelsManager implements ModelsManagerInterface
         $this->deleteInProgress[$model] = true;
 
         try {
-            $result = false;
-
-            $this->connection->nestedTransaction(
-                function () use ($model, &$result): void {
-                    $result = $this->doDelete($model);
-                },
+            return $this->connection->nestedTransaction(
+                fn (): bool => $this->doDelete($model),
             );
-
-            return $result;
         } finally {
             unset($this->deleteInProgress[$model]);
         }

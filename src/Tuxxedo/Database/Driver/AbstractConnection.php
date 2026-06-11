@@ -94,13 +94,15 @@ abstract class AbstractConnection implements ConnectionInterface
 
     public function transaction(
         \Closure $transaction,
-    ): void {
+    ): mixed {
         try {
             $this->begin();
 
-            $transaction($this);
+            $result = $transaction($this);
 
             $this->commit();
+
+            return $result;
         } catch (\Exception $exception) {
             $this->rollback();
 
@@ -110,19 +112,19 @@ abstract class AbstractConnection implements ConnectionInterface
 
     public function nestedTransaction(
         \Closure $transaction,
-    ): void {
+    ): mixed {
         if (!$this->inTransaction()) {
-            $this->transaction($transaction);
-
-            return;
+            return $this->transaction($transaction);
         }
 
         $savepoint = $this->savepoint();
 
         try {
-            $transaction($this);
+            $result = $transaction($this);
 
             $this->releaseSavepoint($savepoint);
+
+            return $result;
         } catch (\Exception $exception) {
             $this->rollbackToSavepoint($savepoint);
             $this->releaseSavepoint($savepoint);
