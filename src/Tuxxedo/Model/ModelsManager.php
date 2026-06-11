@@ -399,20 +399,49 @@ class ModelsManager implements ModelsManagerInterface
         object $model,
         ModelRelationInterface $relation,
     ): void {
+        $attribute = $relation->attribute;
+
+        if (!$attribute instanceof HasMany) {
+            return;
+        }
+
         $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
 
         if (!$value instanceof RelationInterface) {
             return;
         }
 
-        if (!$value->isMaterialized()) {
+        $hasPending = $value->pendingAdds !== [] || $value->pendingRemoves !== [];
+
+        if (!$value->isMaterialized() && !$hasPending) {
             return;
         }
 
-        // @todo New untracked children in *-to-many — pending Relation collection-mutation API
+        $parentMetaData = $this->metaData->getModel($model::class);
+        $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
+        $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
+
+        $relatedMetaData = $this->metaData->getModel($relation->relatedClass);
+        $foreignKeyProperty = $this->findPropertyForColumn(
+            metaData: $relatedMetaData,
+            relation: $relation,
+            columnName: $attribute->foreignKey,
+            keyKind: 'foreignKey',
+        );
+
         foreach ($value as $item) {
+            PropertyReflector::createFromObject($item, $foreignKeyProperty)->setValue($item, $localKeyValue);
+
             (void) $this->save($item);
         }
+
+        if ($attribute->removeOrphan) {
+            foreach ($value->pendingRemoves as $item) {
+                (void) $this->delete($item);
+            }
+        }
+
+        $value->clearPending();
     }
 
     private function cascadeSaveBelongsToManyRelation(
@@ -663,8 +692,22 @@ class ModelsManager implements ModelsManagerInterface
             return $metaData->key->property;
         }
 
+        return $this->findPropertyForColumn(
+            metaData: $metaData,
+            relation: $relation,
+            columnName: $localKey,
+            keyKind: 'localKey',
+        );
+    }
+
+    private function findPropertyForColumn(
+        ModelMetaDataInterface $metaData,
+        ModelRelationInterface $relation,
+        string $columnName,
+        string $keyKind,
+    ): string {
         foreach ($metaData->columns as $column) {
-            if ($column->column === $localKey) {
+            if ($column->column === $columnName) {
                 return $column->property;
             }
         }
@@ -672,8 +715,8 @@ class ModelsManager implements ModelsManagerInterface
         throw ModelException::fromRelationKeyReferencesUnknownColumn(
             modelClass: $metaData->model,
             property: $relation->property,
-            keyKind: 'localKey',
-            keyValue: $localKey,
+            keyKind: $keyKind,
+            keyValue: $columnName,
             referencedClass: $metaData->model,
         );
     }

@@ -27,6 +27,7 @@ readonly class HasMany implements RelationInterface
         public ?string $localKey = null,
         public CascadeAction $onSave = CascadeAction::NO_ACTION,
         public CascadeAction $onDelete = CascadeAction::NO_ACTION,
+        public bool $removeOrphan = false,
     ) {
     }
 }
