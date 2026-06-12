@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\MetaData;
 
+use Tuxxedo\Model\Behavior\BehaviorInterface;
+
 interface ModelMetaDataInterface
 {
     /**
@@ -51,7 +53,28 @@ interface ModelMetaDataInterface
         get;
     }
 
+    /**
+     * @var array<string, class-string<BehaviorInterface>>
+     */
+    public array $behaviors {
+        get;
+    }
+
     public bool $readonly {
         get;
     }
+
+    /**
+     * @template TBehavior of BehaviorInterface
+     *
+     * @param class-string<TBehavior> $behavior
+     * @return array<string, class-string<TBehavior&BehaviorInterface>>
+     */
+    public function behaviorsOf(
+        string $behavior,
+    ): array;
+
+    public function columnFor(
+        string $property,
+    ): ?ModelColumnInterface;
 }

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Model\Attribute;
 
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
+use Tuxxedo\Model\Behavior\BehaviorInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 
 interface ColumnInterface
@@ -26,6 +27,13 @@ interface ColumnInterface
      * @var class-string<CoercerInterface>|null
      */
     public ?string $coercer {
+        get;
+    }
+
+    /**
+     * @var class-string<BehaviorInterface>|null
+     */
+    public ?string $behavior {
         get;
     }
 

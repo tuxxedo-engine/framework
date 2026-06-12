@@ -20,11 +20,17 @@ use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Hydrator\HydratorInterface as DatabaseHydratorInterface;
 use Tuxxedo\Database\Query\Builder\ExistsBuilderInterface;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
+use Tuxxedo\Database\Query\Builder\WhereBuilderInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
 use Tuxxedo\Model\Attribute\Relation\HasMany;
 use Tuxxedo\Model\Attribute\Relation\HasOne;
+use Tuxxedo\Model\Behavior\BeforeDeleteBehaviorInterface;
+use Tuxxedo\Model\Behavior\BeforeInsertBehaviorInterface;
+use Tuxxedo\Model\Behavior\BeforeUpdateBehaviorInterface;
+use Tuxxedo\Model\Behavior\BehaviorInterface;
+use Tuxxedo\Model\Behavior\SoftDeleteBehaviorInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 use Tuxxedo\Model\Hydrator\Hydrator;
 use Tuxxedo\Model\Hydrator\HydratorInterface;
@@ -64,6 +70,11 @@ class ModelsManager implements ModelsManagerInterface
      * @var \WeakMap<ColumnInterface, CoercerInterface>
      */
     private \WeakMap $coercerCache;
+
+    /**
+     * @var array<class-string<BehaviorInterface>, BehaviorInterface>
+     */
+    private array $behaviorCache = [];
 
     public function __construct(
         public readonly ContainerInterface $container,
@@ -118,18 +129,52 @@ class ModelsManager implements ModelsManagerInterface
         $metaData = $this->metaData->getModel($model::class);
 
         if ($this->isNewModel($model, $metaData)) {
+            $this->dispatchBeforeInsert($model, $metaData);
+
             $target = $metaData->readonly
                 ? $model
                 : clone $model;
 
             $result = $this->insert($target, $metaData);
         } else {
+            $this->dispatchBeforeUpdate($model, $metaData);
+
             $result = $this->update($model, $metaData);
         }
 
         $this->cascadeSaveRelations($result, $metaData, $forceMaterialize);
 
         return $result;
+    }
+
+    private function dispatchBeforeInsert(
+        object $model,
+        ModelMetaDataInterface $metaData,
+    ): void {
+        foreach ($metaData->behaviorsOf(BeforeInsertBehaviorInterface::class) as $property => $behaviorClass) {
+            $column = $metaData->columnFor($property);
+
+            if ($column === null) {
+                continue;
+            }
+
+            $this->getBehaviorFor($behaviorClass)->beforeInsert($model, $column);
+        }
+    }
+
+    private function dispatchBeforeUpdate(
+        object $model,
+        ModelMetaDataInterface $metaData,
+    ): void {
+        foreach ($metaData->behaviorsOf(BeforeUpdateBehaviorInterface::class) as $property => $behaviorClass) {
+            $column = $metaData->columnFor($property);
+
+            if ($column === null) {
+                continue;
+            }
+
+            $this->getBehaviorFor($behaviorClass)->beforeUpdate($model, $column);
+        }
     }
 
     private function isNewModel(
@@ -583,11 +628,34 @@ class ModelsManager implements ModelsManagerInterface
     }
 
     /**
+     * @template TBehavior of BehaviorInterface
+     *
+     * @param class-string<TBehavior> $behaviorClass
+     * @return TBehavior
+     */
+    public function getBehaviorFor(
+        string $behaviorClass,
+    ): BehaviorInterface {
+        if (isset($this->behaviorCache[$behaviorClass])) {
+            /** @var TBehavior */
+            return $this->behaviorCache[$behaviorClass];
+        }
+
+        /** @var TBehavior $instance */
+        $instance = $this->container->resolve($behaviorClass);
+
+        $this->behaviorCache[$behaviorClass] = $instance;
+
+        return $instance;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function extractCoercerArguments(
         ColumnInterface $attribute,
     ): array {
+        // @todo This method needs to be redesigned entirely
         $arguments = [];
         $reflection = new \ReflectionObject($attribute);
 
@@ -822,12 +890,17 @@ class ModelsManager implements ModelsManagerInterface
     public function findFirst(
         string $class,
         ?\Closure $criteria = null,
+        bool $includeDeleted = false,
     ): ?object {
         $metaData = $this->metaData->getModel($class);
         $query = $this->connection->select($metaData->table);
 
         if ($criteria !== null) {
             $criteria($query);
+        }
+
+        if ($includeDeleted) {
+            $this->applySoftDeleteFilter($query, $metaData);
         }
 
         return $query->limit(1)->fetch($class, $this->hydrator);
@@ -846,8 +919,9 @@ class ModelsManager implements ModelsManagerInterface
     public function fetch(
         string $class,
         ?\Closure $criteria = null,
+        bool $includeDeleted = false,
     ): object {
-        return $this->findFirst($class, $criteria) ?? throw ModelException::fromModelNotFound(
+        return $this->findFirst($class, $criteria, $includeDeleted) ?? throw ModelException::fromModelNotFound(
             modelClass: $class,
         );
     }
@@ -863,6 +937,7 @@ class ModelsManager implements ModelsManagerInterface
         string $class,
         int|string $id,
         ?\Closure $criteria = null,
+        bool $includeDeleted = false,
     ): ?object {
         $metaData = $this->metaData->getModel($class);
 
@@ -881,6 +956,7 @@ class ModelsManager implements ModelsManagerInterface
 
                 $builder->where($metaData->key->column, $id);
             },
+            includeDeleted: $includeDeleted,
         );
     }
 
@@ -898,8 +974,9 @@ class ModelsManager implements ModelsManagerInterface
         string $class,
         int|string $id,
         ?\Closure $criteria = null,
+        bool $includeDeleted = false,
     ): object {
-        return $this->findByIdentifier($class, $id, $criteria) ?? throw ModelException::fromModelNotFound(
+        return $this->findByIdentifier($class, $id, $criteria, $includeDeleted) ?? throw ModelException::fromModelNotFound(
             modelClass: $class,
         );
     }
@@ -919,6 +996,7 @@ class ModelsManager implements ModelsManagerInterface
         string $class,
         array $keys,
         ?\Closure $criteria = null,
+        bool $includeDeleted = false,
     ): ?object {
         $metaData = $this->metaData->getModel($class);
 
@@ -939,6 +1017,7 @@ class ModelsManager implements ModelsManagerInterface
                     $builder->where($column, $value);
                 }
             },
+            includeDeleted: $includeDeleted,
         );
     }
 
@@ -957,8 +1036,9 @@ class ModelsManager implements ModelsManagerInterface
         string $class,
         array $keys,
         ?\Closure $criteria = null,
+        bool $includeDeleted = false,
     ): object {
-        return $this->findByCompositeKey($class, $keys, $criteria) ?? throw ModelException::fromModelNotFound(
+        return $this->findByCompositeKey($class, $keys, $criteria, $includeDeleted) ?? throw ModelException::fromModelNotFound(
             modelClass: $class,
         );
     }
@@ -974,12 +1054,17 @@ class ModelsManager implements ModelsManagerInterface
     public function findAll(
         string $class,
         ?\Closure $criteria = null,
+        bool $includeDeleted = false,
     ): \Generator {
         $metaData = $this->metaData->getModel($class);
         $query = $this->connection->select($metaData->table);
 
         if ($criteria !== null) {
             $criteria($query);
+        }
+
+        if ($includeDeleted) {
+            $this->applySoftDeleteFilter($query, $metaData);
         }
 
         yield from $query->fetchAll($class, $this->hydrator);
@@ -1012,7 +1097,7 @@ class ModelsManager implements ModelsManagerInterface
             );
         }
 
-        $fresh = $this->findByIdentifier($model::class, $value);
+        $fresh = $this->findByIdentifier($model::class, $value, includeDeleted: true);
 
         if ($fresh === null) {
             throw ModelException::fromModelNoLongerExists(
@@ -1031,10 +1116,16 @@ class ModelsManager implements ModelsManagerInterface
     public function exists(
         string $class,
         \Closure $criteria,
+        bool $includeDeleted = false,
     ): bool {
-        $query = $this->connection->exists($this->metaData->getModel($class)->table);
+        $metaData = $this->metaData->getModel($class);
+        $query = $this->connection->exists($metaData->table);
 
         $criteria($query);
+
+        if ($includeDeleted) {
+            $this->applySoftDeleteFilter($query, $metaData);
+        }
 
         return $query->exists();
     }
@@ -1048,6 +1139,7 @@ class ModelsManager implements ModelsManagerInterface
         string $class,
         int|string $id,
         ?\Closure $criteria = null,
+        bool $includeDeleted = false,
     ): bool {
         $metaData = $this->metaData->getModel($class);
 
@@ -1066,6 +1158,7 @@ class ModelsManager implements ModelsManagerInterface
 
                 $builder->where($metaData->key->column, $id);
             },
+            includeDeleted: $includeDeleted,
         );
     }
 
@@ -1088,6 +1181,25 @@ class ModelsManager implements ModelsManagerInterface
         }
     }
 
+    #[\NoDiscard]
+    public function forceDelete(
+        object $model,
+    ): bool {
+        if (isset($this->deleteInProgress[$model])) {
+            return true;
+        }
+
+        $this->deleteInProgress[$model] = true;
+
+        try {
+            return $this->connection->nestedTransaction(
+                fn (): bool => $this->doForceDelete($model),
+            );
+        } finally {
+            unset($this->deleteInProgress[$model]);
+        }
+    }
+
     private function doDelete(
         object $model,
     ): bool {
@@ -1099,10 +1211,90 @@ class ModelsManager implements ModelsManagerInterface
             );
         }
 
+        $this->dispatchBeforeDelete($model, $metaData);
+
         $this->cascadeDeleteRelations($model, $metaData);
 
+        if ($metaData->behaviorsOf(SoftDeleteBehaviorInterface::class) !== []) {
+            return $this->softDelete($model, $metaData);
+        }
+
+        return $this->hardDelete($model, $metaData);
+    }
+
+    private function doForceDelete(
+        object $model,
+    ): bool {
+        $metaData = $this->metaData->getModel($model::class);
+
+        if ($metaData->key === null) {
+            throw ModelException::fromNoPrimaryKeyOrCompositeKey(
+                modelClass: $metaData->model,
+            );
+        }
+
+        $this->dispatchBeforeDelete($model, $metaData);
+
+        $this->cascadeDeleteRelations($model, $metaData);
+
+        return $this->hardDelete($model, $metaData);
+    }
+
+    private function dispatchBeforeDelete(
+        object $model,
+        ModelMetaDataInterface $metaData,
+    ): void {
+        foreach ($metaData->behaviorsOf(BeforeDeleteBehaviorInterface::class) as $property => $behaviorClass) {
+            $column = $metaData->columnFor($property);
+
+            if ($column === null) {
+                continue;
+            }
+
+            $this->getBehaviorFor($behaviorClass)->beforeDelete($model, $column);
+        }
+    }
+
+    private function hardDelete(
+        object $model,
+        ModelMetaDataInterface $metaData,
+    ): bool {
         $query = $this->connection->delete($metaData->table);
 
+        $this->applyKeyWhere($query, $model, $metaData);
+
+        return $query->execute()->affectedRows > 0;
+    }
+
+    private function softDelete(
+        object $model,
+        ModelMetaDataInterface $metaData,
+    ): bool {
+        $query = $this->connection->update($metaData->table);
+
+        foreach ($metaData->behaviorsOf(BeforeDeleteBehaviorInterface::class) as $property => $behaviorClass) {
+            $column = $metaData->columnFor($property);
+
+            if ($column === null) {
+                continue;
+            }
+
+            $value = PropertyReflector::createFromObject($model, $property)->getValue($model);
+            $value = $this->dehydrateColumnValue($metaData, $property, $value);
+
+            $query->set($column->column, $value);
+        }
+
+        $this->applyKeyWhere($query, $model, $metaData);
+
+        return $query->execute()->affectedRows > 0;
+    }
+
+    private function applyKeyWhere(
+        WhereBuilderInterface $query,
+        object $model,
+        ModelMetaDataInterface $metaData,
+    ): void {
         if ($metaData->key instanceof ModelPrimaryKeyInterface) {
             $value = PropertyReflector::createFromObject($metaData->model, $metaData->key->property)->getValue($model);
             $value = $this->dehydrateColumnValue($metaData, $metaData->key->property, $value);
@@ -1119,7 +1311,11 @@ class ModelsManager implements ModelsManagerInterface
                 $metaData->key->column,
                 $value,
             );
-        } elseif ($metaData->key instanceof ModelCompositeKeyInterface) {
+
+            return;
+        }
+
+        if ($metaData->key instanceof ModelCompositeKeyInterface) {
             foreach (\array_combine($metaData->key->properties, $metaData->key->columns) as $property => $column) {
                 $value = PropertyReflector::createFromObject($metaData->model, $property)->getValue($model);
                 $value = $this->dehydrateColumnValue($metaData, $property, $value);
@@ -1135,8 +1331,26 @@ class ModelsManager implements ModelsManagerInterface
                 $query->where($column, $value);
             }
         }
+    }
 
-        return $query->execute()->affectedRows > 0;
+    private function applySoftDeleteFilter(
+        WhereBuilderInterface $query,
+        ModelMetaDataInterface $metaData,
+    ): void {
+        $softDeleteBehaviors = $metaData->behaviorsOf(SoftDeleteBehaviorInterface::class);
+
+        if ($softDeleteBehaviors === []) {
+            return;
+        }
+
+        $property = \array_key_first($softDeleteBehaviors);
+        $column = $metaData->columnFor($property);
+
+        if ($column === null) {
+            return;
+        }
+
+        $query->whereNull($column->column);
     }
 
     #[\NoDiscard]

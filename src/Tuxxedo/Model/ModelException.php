@@ -567,4 +567,39 @@ class ModelException extends \Exception
             ),
         );
     }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromInvalidBehaviorClass(
+        string $modelClass,
+        string $property,
+        string $behaviorClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Behavior "%s" on property "%s" does not exist or does not implement BehaviorInterface',
+                $modelClass,
+                $behaviorClass,
+                $property,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     * @param string[] $properties
+     */
+    public static function fromMultipleSoftDeleteColumns(
+        string $modelClass,
+        array $properties,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Multiple columns declare a SoftDeleteBehaviorInterface (%s); a model may only have one soft-delete tombstone',
+                $modelClass,
+                \join(', ', $properties),
+            ),
+        );
+    }
 }

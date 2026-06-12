@@ -16,6 +16,7 @@ namespace Tuxxedo\Model\Attribute\Column;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Model\Attribute\ColumnEnumInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
+use Tuxxedo\Model\Behavior\BehaviorInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 use Tuxxedo\Model\Hydrator\Coercer\EnumCoercer;
 
@@ -25,11 +26,13 @@ readonly class Enumeration implements ColumnInterface, ColumnEnumInterface
     /**
      * @param class-string<\UnitEnum> $enum
      * @param class-string<CoercerInterface>|null $coercer
+     * @param class-string<BehaviorInterface>|null $behavior
      */
     public function __construct(
         public string $enum,
         public ?string $name = null,
         public ?string $coercer = EnumCoercer::class,
+        public ?string $behavior = null,
     ) {
     }
 

@@ -15,6 +15,7 @@ namespace Tuxxedo\Model\Attribute\Column;
 
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
+use Tuxxedo\Model\Behavior\BehaviorInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 use Tuxxedo\Model\Hydrator\Coercer\JsonCoercer;
 
@@ -23,10 +24,12 @@ readonly class Json implements ColumnInterface
 {
     /**
      * @param class-string<CoercerInterface>|null $coercer
+     * @param class-string<BehaviorInterface>|null $behavior
      */
     public function __construct(
         public ?string $name = null,
         public ?string $coercer = JsonCoercer::class,
+        public ?string $behavior = null,
     ) {
     }
 

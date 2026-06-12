@@ -19,11 +19,11 @@ use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Query\Builder\ExistsBuilderInterface;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
+use Tuxxedo\Model\Behavior\BehaviorInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 use Tuxxedo\Model\Hydrator\HydratorInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 
-// @todo Support CreatedAt, UpdatedAt & DeletedAt contracts
 // @todo Implement a cache strategy
 // @todo Readonly support implications for cache strategy
 // @todo Consider findWhere and other shorthands?
@@ -67,6 +67,16 @@ interface ModelsManagerInterface
     ): ?CoercerInterface;
 
     /**
+     * @template TBehavior of BehaviorInterface
+     *
+     * @param class-string<TBehavior> $behaviorClass
+     * @return TBehavior
+     */
+    public function getBehaviorFor(
+        string $behaviorClass,
+    ): BehaviorInterface;
+
+    /**
      * @template TModel of object
      *
      * @param class-string<TModel> $class
@@ -77,6 +87,7 @@ interface ModelsManagerInterface
     public function findFirst(
         string $class,
         ?\Closure $criteria = null,
+        bool $includeDeleted = false,
     ): ?object;
 
     /**
@@ -92,6 +103,7 @@ interface ModelsManagerInterface
     public function fetch(
         string $class,
         ?\Closure $criteria = null,
+        bool $includeDeleted = false,
     ): object;
 
     /**
@@ -105,6 +117,7 @@ interface ModelsManagerInterface
         string $class,
         int|string $id,
         ?\Closure $criteria = null,
+        bool $includeDeleted = false,
     ): ?object;
 
     /**
@@ -121,6 +134,7 @@ interface ModelsManagerInterface
         string $class,
         int|string $id,
         ?\Closure $criteria = null,
+        bool $includeDeleted = false,
     ): object;
 
     /**
@@ -138,6 +152,7 @@ interface ModelsManagerInterface
         string $class,
         array $keys,
         ?\Closure $criteria = null,
+        bool $includeDeleted = false,
     ): ?object;
 
     /**
@@ -155,6 +170,7 @@ interface ModelsManagerInterface
         string $class,
         array $keys,
         ?\Closure $criteria = null,
+        bool $includeDeleted = false,
     ): object;
 
     /**
@@ -168,6 +184,7 @@ interface ModelsManagerInterface
     public function findAll(
         string $class,
         ?\Closure $criteria = null,
+        bool $includeDeleted = false,
     ): \Generator;
 
     /**
@@ -188,6 +205,7 @@ interface ModelsManagerInterface
     public function exists(
         string $class,
         \Closure $criteria,
+        bool $includeDeleted = false,
     ): bool;
 
     /**
@@ -199,10 +217,16 @@ interface ModelsManagerInterface
         string $class,
         int|string $id,
         ?\Closure $criteria = null,
+        bool $includeDeleted = false,
     ): bool;
 
     #[\NoDiscard]
     public function delete(
+        object $model,
+    ): bool;
+
+    #[\NoDiscard]
+    public function forceDelete(
         object $model,
     ): bool;
 

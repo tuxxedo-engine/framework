@@ -16,6 +16,7 @@ namespace Tuxxedo\Model\Attribute\Column;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\ColumnLengthInterface;
+use Tuxxedo\Model\Behavior\BehaviorInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
@@ -23,11 +24,13 @@ readonly class Char implements ColumnInterface, ColumnLengthInterface
 {
     /**
      * @param class-string<CoercerInterface>|null $coercer
+     * @param class-string<BehaviorInterface>|null $behavior
      */
     public function __construct(
         public int $length = 1,
         public ?string $name = null,
         public ?string $coercer = null,
+        public ?string $behavior = null,
     ) {
     }
 

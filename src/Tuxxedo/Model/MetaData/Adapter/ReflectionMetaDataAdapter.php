@@ -24,6 +24,8 @@ use Tuxxedo\Model\Attribute\Relation\HasOne;
 use Tuxxedo\Model\Attribute\Relation\RelationInterface;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\Attribute\Unique;
+use Tuxxedo\Model\Behavior\BehaviorInterface;
+use Tuxxedo\Model\Behavior\SoftDeleteBehaviorInterface;
 use Tuxxedo\Model\CascadeAction;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 use Tuxxedo\Model\MetaData\ModelColumn;
@@ -109,6 +111,8 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             static fn (ModelColumnInterface $column): bool => $column->readonly,
         );
 
+        $behaviors = $this->buildBehaviors($model, $columns);
+
         return new ModelMetaData(
             model: $model,
             table: $this->getTable($class),
@@ -117,7 +121,46 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             identifiers: $identifiers,
             readonly: $readonly,
             relations: $this->getRelations($class, $columns, $primaryKey),
+            behaviors: $behaviors,
         );
+    }
+
+    /**
+     * @param class-string $modelClass
+     * @param non-empty-array<ModelColumnInterface> $columns
+     * @return array<string, class-string<BehaviorInterface>>
+     *
+     * @throws ModelException
+     */
+    private function buildBehaviors(
+        string $modelClass,
+        array $columns,
+    ): array {
+        $behaviors = [];
+        $softDeleteProperties = [];
+
+        foreach ($columns as $column) {
+            $behaviorClass = $column->attribute->behavior;
+
+            if ($behaviorClass === null) {
+                continue;
+            }
+
+            $behaviors[$column->property] = $behaviorClass;
+
+            if (\is_a($behaviorClass, SoftDeleteBehaviorInterface::class, true)) {
+                $softDeleteProperties[] = $column->property;
+            }
+        }
+
+        if (\sizeof($softDeleteProperties) > 1) {
+            throw ModelException::fromMultipleSoftDeleteColumns(
+                modelClass: $modelClass,
+                properties: $softDeleteProperties,
+            );
+        }
+
+        return $behaviors;
     }
 
     /**
@@ -277,6 +320,32 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 modelClass: $modelClass,
                 property: $property,
                 coercerClass: $attribute->coercer,
+            );
+        }
+    }
+
+    /**
+     * @param class-string $modelClass
+     *
+     * @throws ModelException
+     */
+    private function validateColumnBehavior(
+        string $modelClass,
+        string $property,
+        ColumnInterface $attribute,
+    ): void {
+        if ($attribute->behavior === null) {
+            return;
+        }
+
+        if (
+            !\class_exists($attribute->behavior) ||
+            !\is_a($attribute->behavior, BehaviorInterface::class, true)
+        ) {
+            throw ModelException::fromInvalidBehaviorClass(
+                modelClass: $modelClass,
+                property: $property,
+                behaviorClass: $attribute->behavior,
             );
         }
     }
@@ -668,6 +737,12 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             }
 
             $this->validateColumnCoercer(
+                modelClass: $class->name,
+                property: $property->name,
+                attribute: $propertyColumns[0],
+            );
+
+            $this->validateColumnBehavior(
                 modelClass: $class->name,
                 property: $property->name,
                 attribute: $propertyColumns[0],
