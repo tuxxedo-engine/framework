@@ -23,6 +23,11 @@ use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 readonly class Decimal implements ColumnInterface, ColumnPrecisionInterface
 {
     /**
+     * @var array<string, mixed>
+     */
+    public array $coercerArguments;
+
+    /**
      * @param class-string<CoercerInterface>|null $coercer
      * @param class-string<BehaviorInterface>|null $behavior
      */
@@ -33,6 +38,7 @@ readonly class Decimal implements ColumnInterface, ColumnPrecisionInterface
         public ?string $coercer = null,
         public ?string $behavior = null,
     ) {
+        $this->coercerArguments = [];
     }
 
     public function getNativeType(

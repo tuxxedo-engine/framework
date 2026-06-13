@@ -24,6 +24,11 @@ use Tuxxedo\Model\Hydrator\Coercer\TimeCoercer;
 readonly class Time implements ColumnInterface, ColumnFormatInterface
 {
     /**
+     * @var array<string, mixed>
+     */
+    public array $coercerArguments;
+
+    /**
      * @param class-string<CoercerInterface>|null $coercer
      * @param class-string<BehaviorInterface>|null $behavior
      */
@@ -33,6 +38,9 @@ readonly class Time implements ColumnInterface, ColumnFormatInterface
         public ?string $coercer = TimeCoercer::class,
         public ?string $behavior = null,
     ) {
+        $this->coercerArguments = [
+            'format' => $this->format,
+        ];
     }
 
     public function getNativeType(

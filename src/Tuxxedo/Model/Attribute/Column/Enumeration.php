@@ -24,6 +24,11 @@ use Tuxxedo\Model\Hydrator\Coercer\EnumCoercer;
 readonly class Enumeration implements ColumnInterface, ColumnEnumInterface
 {
     /**
+     * @var array<string, mixed>
+     */
+    public array $coercerArguments;
+
+    /**
      * @param class-string<\UnitEnum> $enum
      * @param class-string<CoercerInterface>|null $coercer
      * @param class-string<BehaviorInterface>|null $behavior
@@ -34,6 +39,9 @@ readonly class Enumeration implements ColumnInterface, ColumnEnumInterface
         public ?string $coercer = EnumCoercer::class,
         public ?string $behavior = null,
     ) {
+        $this->coercerArguments = [
+            'enum' => $this->enum,
+        ];
     }
 
     public function getNativeType(

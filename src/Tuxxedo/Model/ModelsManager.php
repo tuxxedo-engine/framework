@@ -25,7 +25,9 @@ use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
 use Tuxxedo\Model\Attribute\Relation\HasMany;
+use Tuxxedo\Model\Attribute\Relation\HasManyThrough;
 use Tuxxedo\Model\Attribute\Relation\HasOne;
+use Tuxxedo\Model\Attribute\Relation\HasOneThrough;
 use Tuxxedo\Model\Behavior\BeforeDeleteBehaviorInterface;
 use Tuxxedo\Model\Behavior\BeforeInsertBehaviorInterface;
 use Tuxxedo\Model\Behavior\BeforeUpdateBehaviorInterface;
@@ -388,11 +390,27 @@ class ModelsManager implements ModelsManagerInterface
         bool $forceMaterialize,
     ): void {
         foreach ($metaData->relations as $relation) {
-            if ($relation->attribute->onSave !== CascadeAction::CASCADE) {
+            $attribute = $relation->attribute;
+
+            if ($attribute instanceof HasOneThrough || $attribute instanceof HasManyThrough) {
+                $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
+
+                if (
+                    $value instanceof RelationInterface &&
+                    (
+                        $value->pendingAdds !== [] ||
+                        $value->pendingRemoves !== []
+                    )
+                ) {
+                    throw ModelException::fromImmutableRelation();
+                }
+
                 continue;
             }
 
-            $attribute = $relation->attribute;
+            if ($attribute->onSave !== CascadeAction::CASCADE) {
+                continue;
+            }
 
             if ($attribute instanceof HasOne || $attribute instanceof BelongsTo) {
                 $this->cascadeSaveSingleObjectRelation($model, $relation, $forceMaterialize);
@@ -621,7 +639,7 @@ class ModelsManager implements ModelsManagerInterface
         /** @var CoercerInterface $instance */
         $instance = $this->container->resolve(
             $attribute->coercer,
-            $this->extractCoercerArguments($attribute),
+            $attribute->coercerArguments,
         );
 
         return $this->coercerCache[$attribute] = $instance;
@@ -647,29 +665,6 @@ class ModelsManager implements ModelsManagerInterface
         $this->behaviorCache[$behaviorClass] = $instance;
 
         return $instance;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function extractCoercerArguments(
-        ColumnInterface $attribute,
-    ): array {
-        // @todo This method needs to be redesigned entirely
-        $arguments = [];
-        $reflection = new \ReflectionObject($attribute);
-
-        foreach ($reflection->getProperties() as $property) {
-            $name = $property->getName();
-
-            if ($name === 'name' || $name === 'coercer') {
-                continue;
-            }
-
-            $arguments[$name] = $property->getValue($attribute);
-        }
-
-        return $arguments;
     }
 
     private function cascadeDeleteRelations(

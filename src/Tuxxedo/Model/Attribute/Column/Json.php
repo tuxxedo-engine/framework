@@ -23,6 +23,11 @@ use Tuxxedo\Model\Hydrator\Coercer\JsonCoercer;
 readonly class Json implements ColumnInterface
 {
     /**
+     * @var array<string, mixed>
+     */
+    public array $coercerArguments;
+
+    /**
      * @param class-string<CoercerInterface>|null $coercer
      * @param class-string<BehaviorInterface>|null $behavior
      */
@@ -31,6 +36,7 @@ readonly class Json implements ColumnInterface
         public ?string $coercer = JsonCoercer::class,
         public ?string $behavior = null,
     ) {
+        $this->coercerArguments = [];
     }
 
     public function getNativeType(

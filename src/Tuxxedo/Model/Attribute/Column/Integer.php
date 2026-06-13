@@ -22,6 +22,11 @@ use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 readonly class Integer implements ColumnInterface
 {
     /**
+     * @var array<string, mixed>
+     */
+    public array $coercerArguments;
+
+    /**
      * @param class-string<CoercerInterface>|null $coercer
      * @param class-string<BehaviorInterface>|null $behavior
      */
@@ -30,6 +35,7 @@ readonly class Integer implements ColumnInterface
         public ?string $coercer = null,
         public ?string $behavior = null,
     ) {
+        $this->coercerArguments = [];
     }
 
     public function getNativeType(

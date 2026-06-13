@@ -18,7 +18,9 @@ use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
 use Tuxxedo\Model\Attribute\Relation\HasMany;
+use Tuxxedo\Model\Attribute\Relation\HasManyThrough;
 use Tuxxedo\Model\Attribute\Relation\HasOne;
+use Tuxxedo\Model\Attribute\Relation\HasOneThrough;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelPrimaryKeyInterface;
@@ -28,6 +30,7 @@ use Tuxxedo\Model\ModelsManagerInterface;
 use Tuxxedo\Model\Relation;
 use Tuxxedo\Reflection\PropertyReflector;
 
+// @todo JOIN-mode hydration for HasOneThrough / HasManyThrough — current path runs two queries plus full through-row hydration to extract secondLocalKey; collapse into a single SELECT far.* INNER JOIN through ON ... WHERE through.firstKey = ? (LIMIT 1 for HasOneThrough). Cuts per-row through hydration cost and one round-trip per countLoader invocation
 class Hydrator implements HydratorInterface
 {
     public function __construct(
@@ -112,6 +115,18 @@ class Hydrator implements HydratorInterface
 
             if ($attribute instanceof BelongsToMany) {
                 $this->setupBelongsToManyRelation($model, $metaData, $relation);
+
+                continue;
+            }
+
+            if ($attribute instanceof HasOneThrough) {
+                $this->setupHasOneThroughRelation($model, $metaData, $relation);
+
+                continue;
+            }
+
+            if ($attribute instanceof HasManyThrough) {
+                $this->setupHasManyThroughRelation($model, $metaData, $relation);
 
                 continue;
             }
@@ -266,6 +281,218 @@ class Hydrator implements HydratorInterface
         PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $relationInstance);
     }
 
+    private function setupHasOneThroughRelation(
+        object $model,
+        ModelMetaDataInterface $metaData,
+        ModelRelationInterface $relation,
+    ): void {
+        $sourceProperty = PropertyReflector::createFromObject($model, $this->resolveSourceProperty($metaData, $relation));
+        $sourceValue = $sourceProperty->getValue($model);
+
+        if ($sourceValue === null) {
+            if (!$relation->nullable) {
+                throw ModelException::fromMissingForeignKeyValue(
+                    modelClass: $metaData->model,
+                    property: $relation->property,
+                );
+            }
+
+            PropertyReflector::createFromObject($model, $relation->property)->setValue($model, null);
+
+            return;
+        }
+
+        if (!\is_scalar($sourceValue)) {
+            throw ModelException::fromPropertyValueMustBeScalar(
+                modelClass: $metaData->model,
+                property: $sourceProperty->name,
+                actualType: \get_debug_type($sourceValue),
+            );
+        }
+
+        $relatedClass = new \ReflectionClass($relation->relatedClass);
+        $proxy = $relatedClass->newLazyProxy(
+            fn (): object => $this->loadHasOneThroughRelation($metaData, $relation, $sourceValue),
+        );
+
+        PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $proxy);
+    }
+
+    private function setupHasManyThroughRelation(
+        object $model,
+        ModelMetaDataInterface $metaData,
+        ModelRelationInterface $relation,
+    ): void {
+        $sourceProperty = PropertyReflector::createFromObject($model, $this->resolveSourceProperty($metaData, $relation));
+        $sourceValue = $sourceProperty->getValue($model);
+
+        if ($sourceValue === null) {
+            PropertyReflector::createFromObject($model, $relation->property)->setValue(
+                $model,
+                Relation::createFromPrefetched([]),
+            );
+
+            return;
+        }
+
+        if (!\is_scalar($sourceValue)) {
+            throw ModelException::fromPropertyValueMustBeScalar(
+                modelClass: $metaData->model,
+                property: $sourceProperty->name,
+                actualType: \get_debug_type($sourceValue),
+            );
+        }
+
+        /** @var HasManyThrough $attribute */
+        $attribute = $relation->attribute;
+        $manager = $this->modelsManager;
+        $throughClass = $attribute->through;
+        $throughFirstKey = $attribute->firstKey;
+        $throughSecondLocalKeyProperty = $this->resolveThroughSecondLocalKeyProperty($attribute);
+        $relatedClass = $relation->relatedClass;
+        $secondKey = $attribute->secondKey;
+        $targetTable = $manager->metaData->getModel($relatedClass)->table;
+
+        $relationInstance = Relation::createFromLoader(
+            loader: static function () use ($manager, $throughClass, $throughFirstKey, $throughSecondLocalKeyProperty, $relatedClass, $secondKey, $sourceValue): iterable {
+                $throughIds = self::collectThroughKeys($manager, $throughClass, $throughFirstKey, $throughSecondLocalKeyProperty, $sourceValue);
+
+                if (\sizeof($throughIds) === 0) {
+                    return [];
+                }
+
+                return $manager->findAll(
+                    $relatedClass,
+                    static function (SelectBuilderInterface $builder) use ($secondKey, $throughIds): void {
+                        $builder->whereIn($secondKey, $throughIds);
+                    },
+                );
+            },
+            countLoader: static function () use ($manager, $throughClass, $throughFirstKey, $throughSecondLocalKeyProperty, $targetTable, $secondKey, $sourceValue): int {
+                $throughIds = self::collectThroughKeys($manager, $throughClass, $throughFirstKey, $throughSecondLocalKeyProperty, $sourceValue);
+
+                if (\sizeof($throughIds) === 0) {
+                    return 0;
+                }
+
+                return $manager->connection->count($targetTable)
+                    ->whereIn($secondKey, $throughIds)
+                    ->count();
+            },
+        );
+
+        PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $relationInstance);
+    }
+
+    private function loadHasOneThroughRelation(
+        ModelMetaDataInterface $sourceMetaData,
+        ModelRelationInterface $relation,
+        string|int|float|bool $sourceValue,
+    ): object {
+        /** @var HasOneThrough $attribute */
+        $attribute = $relation->attribute;
+        $manager = $this->modelsManager;
+
+        $throughIds = self::collectThroughKeys(
+            $manager,
+            $attribute->through,
+            $attribute->firstKey,
+            $this->resolveThroughSecondLocalKeyProperty($attribute),
+            $sourceValue,
+        );
+
+        if (\sizeof($throughIds) === 0) {
+            throw ModelException::fromMissingRelatedRecord(
+                modelClass: $sourceMetaData->model,
+                property: $relation->property,
+                relatedClass: $relation->relatedClass,
+            );
+        }
+
+        $secondKey = $attribute->secondKey;
+
+        $result = $manager->findFirst(
+            $relation->relatedClass,
+            static function (SelectBuilderInterface $builder) use ($secondKey, $throughIds): void {
+                $builder->whereIn($secondKey, $throughIds);
+            },
+        );
+
+        if ($result === null) {
+            throw ModelException::fromMissingRelatedRecord(
+                modelClass: $sourceMetaData->model,
+                property: $relation->property,
+                relatedClass: $relation->relatedClass,
+            );
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param class-string $throughClass
+     * @return array<int, string|int|float|bool>
+     */
+    private static function collectThroughKeys(
+        ModelsManagerInterface $manager,
+        string $throughClass,
+        string $throughFirstKey,
+        string $throughSecondLocalKeyProperty,
+        string|int|float|bool $sourceValue,
+    ): array {
+        $ids = [];
+
+        foreach (
+            $manager->findAll(
+                $throughClass,
+                static function (SelectBuilderInterface $builder) use ($throughFirstKey, $sourceValue): void {
+                    $builder->where($throughFirstKey, $sourceValue);
+                },
+            ) as $through
+        ) {
+            $value = PropertyReflector::createFromObject($through, $throughSecondLocalKeyProperty)->getValue($through);
+
+            if (!\is_string($value) && !\is_int($value) && !\is_float($value) && !\is_bool($value)) {
+                continue;
+            }
+
+            $ids[] = $value;
+        }
+
+        return $ids;
+    }
+
+    private function resolveThroughSecondLocalKeyProperty(
+        HasOneThrough|HasManyThrough $attribute,
+    ): string {
+        $throughMetaData = $this->modelsManager->metaData->getModel($attribute->through);
+        $secondLocalKey = $attribute->secondLocalKey;
+
+        if ($secondLocalKey === null) {
+            if (!$throughMetaData->key instanceof ModelPrimaryKeyInterface) {
+                throw ModelException::fromCantFetchWithoutPrimaryKey(
+                    modelClass: $attribute->through,
+                );
+            }
+
+            return $throughMetaData->key->property;
+        }
+
+        foreach ($throughMetaData->columns as $column) {
+            if ($column->column === $secondLocalKey) {
+                return $column->property;
+            }
+        }
+
+        throw ModelException::fromRelationKeyReferencesUnknownColumn(
+            modelClass: $attribute->through,
+            property: $secondLocalKey,
+            keyKind: 'secondLocalKey',
+            keyValue: $secondLocalKey,
+            referencedClass: $attribute->through,
+        );
+    }
+
     private function loadSingleRelation(
         ModelMetaDataInterface $sourceMetaData,
         ModelRelationInterface $relation,
@@ -301,7 +528,12 @@ class Hydrator implements HydratorInterface
             return $this->findPropertyByColumn($metaData, $attribute->foreignKey, $relation->property);
         }
 
-        if ($attribute instanceof HasOne || $attribute instanceof HasMany) {
+        if (
+            $attribute instanceof HasOne ||
+            $attribute instanceof HasMany ||
+            $attribute instanceof HasOneThrough ||
+            $attribute instanceof HasManyThrough
+        ) {
             $localKey = $attribute->localKey;
 
             if ($localKey === null) {

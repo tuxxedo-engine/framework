@@ -24,6 +24,11 @@ use Tuxxedo\Model\Hydrator\Coercer\DateTimeCoercer;
 readonly class DateTime implements ColumnInterface, ColumnFormatInterface
 {
     /**
+     * @var array<string, mixed>
+     */
+    public array $coercerArguments;
+
+    /**
      * @param class-string<CoercerInterface>|null $coercer
      * @param class-string<BehaviorInterface>|null $behavior
      */
@@ -33,6 +38,9 @@ readonly class DateTime implements ColumnInterface, ColumnFormatInterface
         public ?string $coercer = DateTimeCoercer::class,
         public ?string $behavior = null,
     ) {
+        $this->coercerArguments = [
+            'format' => $this->format,
+        ];
     }
 
     public function getNativeType(

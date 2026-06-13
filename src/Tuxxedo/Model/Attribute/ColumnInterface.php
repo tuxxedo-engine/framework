@@ -37,6 +37,13 @@ interface ColumnInterface
         get;
     }
 
+    /**
+     * @var array<string, mixed>
+     */
+    public array $coercerArguments {
+        get;
+    }
+
     public function getNativeType(
         DialectInterface $dialect,
     ): ?string;

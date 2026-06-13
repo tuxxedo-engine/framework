@@ -427,6 +427,44 @@ class ModelException extends \Exception
 
     /**
      * @param class-string $modelClass
+     * @param class-string $throughClass
+     */
+    public static function fromInvalidThroughClass(
+        string $modelClass,
+        string $property,
+        string $throughClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Through relation on property "%s" references "%s" which does not exist or is not a non-abstract class',
+                $modelClass,
+                $property,
+                $throughClass,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     * @param class-string $throughClass
+     */
+    public static function fromThroughClassNotAModel(
+        string $modelClass,
+        string $property,
+        string $throughClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Through relation on property "%s" references "%s" which is not a model (missing #[Table] attribute)',
+                $modelClass,
+                $property,
+                $throughClass,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
      */
     public static function fromInvalidCascadeConfiguration(
         string $modelClass,
