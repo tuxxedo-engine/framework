@@ -26,6 +26,7 @@ use Tuxxedo\Model\Attribute\Relation\HasOneThrough;
 use Tuxxedo\Model\Attribute\Relation\RelationInterface;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\Attribute\Unique;
+use Tuxxedo\Model\Behavior\BeforeDeleteBehaviorInterface;
 use Tuxxedo\Model\Behavior\BehaviorInterface;
 use Tuxxedo\Model\Behavior\SoftDeleteBehaviorInterface;
 use Tuxxedo\Model\CascadeAction;
@@ -492,6 +493,83 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 relatedClass: $relatedClass,
                 foreignKey: $attribute->foreignKey,
             );
+        }
+
+        if ($attribute instanceof HasMany && $attribute->bulkDelete) {
+            $this->validateBulkDeleteCompatibility(
+                modelClass: $modelClass,
+                property: $property,
+                attribute: $attribute,
+                relatedClass: $relatedClass,
+                relatedReflection: $relatedReflection,
+            );
+        }
+    }
+
+    /**
+     * @param class-string $modelClass
+     * @param class-string $relatedClass
+     * @param \ReflectionClass<object> $relatedReflection
+     *
+     * @throws ModelException
+     */
+    private function validateBulkDeleteCompatibility(
+        string $modelClass,
+        string $property,
+        HasMany $attribute,
+        string $relatedClass,
+        \ReflectionClass $relatedReflection,
+    ): void {
+        if ($attribute->onDelete !== CascadeAction::CASCADE) {
+            throw ModelException::fromBulkDeleteRequiresCascade(
+                modelClass: $modelClass,
+                property: $property,
+            );
+        }
+
+        foreach ($relatedReflection->getProperties() as $childProperty) {
+            $columnAttributes = $childProperty->getAttributes(ColumnInterface::class, \ReflectionAttribute::IS_INSTANCEOF);
+
+            if (\sizeof($columnAttributes) === 0) {
+                continue;
+            }
+
+            $columnAttribute = $columnAttributes[0]->newInstance();
+            $behaviorClass = $columnAttribute->behavior;
+
+            if ($behaviorClass === null) {
+                continue;
+            }
+
+            if (\is_a($behaviorClass, BeforeDeleteBehaviorInterface::class, true)) {
+                throw ModelException::fromBulkDeleteIncompatibleWithChildBehavior(
+                    modelClass: $modelClass,
+                    property: $property,
+                    relatedClass: $relatedClass,
+                    childProperty: $childProperty->getName(),
+                    behaviorClass: $behaviorClass,
+                );
+            }
+        }
+
+        foreach ($relatedReflection->getProperties() as $childProperty) {
+            $relationAttributes = $childProperty->getAttributes(RelationInterface::class, \ReflectionAttribute::IS_INSTANCEOF);
+
+            if (\sizeof($relationAttributes) === 0) {
+                continue;
+            }
+
+            $relationAttribute = $relationAttributes[0]->newInstance();
+
+            if ($relationAttribute->onDelete !== CascadeAction::NO_ACTION) {
+                throw ModelException::fromBulkDeleteIncompatibleWithChildCascade(
+                    modelClass: $modelClass,
+                    property: $property,
+                    relatedClass: $relatedClass,
+                    childProperty: $childProperty->getName(),
+                    action: $relationAttribute->onDelete,
+                );
+            }
         }
     }
 

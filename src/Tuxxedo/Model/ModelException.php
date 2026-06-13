@@ -640,4 +640,67 @@ class ModelException extends \Exception
             ),
         );
     }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromBulkDeleteRequiresCascade(
+        string $modelClass,
+        string $property,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Relation on property "%s" sets bulkDelete: true but onDelete is not CASCADE',
+                $modelClass,
+                $property,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     * @param class-string $relatedClass
+     * @param class-string $behaviorClass
+     */
+    public static function fromBulkDeleteIncompatibleWithChildBehavior(
+        string $modelClass,
+        string $property,
+        string $relatedClass,
+        string $childProperty,
+        string $behaviorClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Relation on property "%s" sets bulkDelete: true but child "%s" declares BeforeDelete behavior "%s" on property "%s" — bulk DELETE skips per-row behavior dispatch',
+                $modelClass,
+                $property,
+                $relatedClass,
+                $behaviorClass,
+                $childProperty,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     * @param class-string $relatedClass
+     */
+    public static function fromBulkDeleteIncompatibleWithChildCascade(
+        string $modelClass,
+        string $property,
+        string $relatedClass,
+        string $childProperty,
+        CascadeAction $action,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Relation on property "%s" sets bulkDelete: true but child "%s" declares cascade onDelete "%s" on relation "%s" — bulk DELETE skips child cascade dispatch',
+                $modelClass,
+                $property,
+                $relatedClass,
+                $action->name,
+                $childProperty,
+            ),
+        );
+    }
 }

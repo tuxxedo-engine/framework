@@ -729,6 +729,14 @@ class ModelsManager implements ModelsManagerInterface
         object $model,
         ModelRelationInterface $relation,
     ): void {
+        $attribute = $relation->attribute;
+
+        if ($attribute instanceof HasMany && $attribute->bulkDelete) {
+            $this->cascadeBulkDeleteRelation($model, $relation, $attribute);
+
+            return;
+        }
+
         $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
 
         if (!$value instanceof RelationInterface) {
@@ -738,6 +746,35 @@ class ModelsManager implements ModelsManagerInterface
         foreach ($value as $item) {
             (void) $this->delete($item);
         }
+    }
+
+    private function cascadeBulkDeleteRelation(
+        object $model,
+        ModelRelationInterface $relation,
+        HasMany $attribute,
+    ): void {
+        $parentMetaData = $this->metaData->getModel($model::class);
+        $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
+        $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
+
+        if ($localKeyValue === null) {
+            return;
+        }
+
+        if (!\is_scalar($localKeyValue)) {
+            throw ModelException::fromPropertyValueMustBeScalar(
+                modelClass: $parentMetaData->model,
+                property: $localKeyProperty,
+                actualType: \get_debug_type($localKeyValue),
+            );
+        }
+
+        $childMetaData = $this->metaData->getModel($relation->relatedClass);
+
+        $this->connection
+            ->delete($childMetaData->table)
+            ->where($attribute->foreignKey, $localKeyValue)
+            ->execute();
     }
 
     private function cascadeDeleteBelongsToManyPivot(
