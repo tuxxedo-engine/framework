@@ -643,6 +643,33 @@ class ModelException extends \Exception
 
     /**
      * @param class-string $modelClass
+     * @param class-string $relatedClass
+     */
+    public static function fromSoftDeleteCascadeMismatch(
+        string $modelClass,
+        string $property,
+        string $relatedClass,
+        bool $parentHasSoftDelete,
+        bool $childHasSoftDelete,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Relation on property "%s" cascades to "%s", but soft-delete states differ (parent: %s, child: %s) — cascade would silently cross the soft/hard boundary',
+                $modelClass,
+                $property,
+                $relatedClass,
+                $parentHasSoftDelete
+                    ? 'soft-deletable'
+                    : 'not soft-deletable',
+                $childHasSoftDelete
+                    ? 'soft-deletable'
+                    : 'not soft-deletable',
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
      */
     public static function fromBulkDeleteRequiresCascade(
         string $modelClass,

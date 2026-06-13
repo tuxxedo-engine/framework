@@ -183,6 +183,12 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             $columns,
         );
 
+        $parentHasSoftDelete = \array_any(
+            $columns,
+            static fn (ModelColumnInterface $column): bool => $column->attribute->behavior !== null &&
+                \is_a($column->attribute->behavior, SoftDeleteBehaviorInterface::class, true),
+        );
+
         foreach ($class->properties() as $property) {
             $columnAttributes = \iterator_to_array($property->getAttributes(ColumnInterface::class));
 
@@ -303,6 +309,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 attribute: $attribute,
                 relatedClass: $relatedClass,
                 relatedReflection: $relatedReflection,
+                parentHasSoftDelete: $parentHasSoftDelete,
             );
 
             $this->validateRelationPropertyType(
@@ -437,6 +444,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         RelationInterface $attribute,
         string $relatedClass,
         \ReflectionClass $relatedReflection,
+        bool $parentHasSoftDelete,
     ): void {
         $relationType = match (true) {
             $attribute instanceof HasOne => 'HasOne',
@@ -504,6 +512,55 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 relatedReflection: $relatedReflection,
             );
         }
+
+        if (
+            (
+                $attribute instanceof HasOne ||
+                $attribute instanceof HasMany ||
+                $attribute instanceof BelongsTo
+            ) &&
+            $attribute->onDelete === CascadeAction::CASCADE
+        ) {
+            $childHasSoftDelete = $this->hasSoftDeleteBehaviorInReflection($relatedReflection);
+
+            if ($parentHasSoftDelete !== $childHasSoftDelete) {
+                throw ModelException::fromSoftDeleteCascadeMismatch(
+                    modelClass: $modelClass,
+                    property: $property,
+                    relatedClass: $relatedClass,
+                    parentHasSoftDelete: $parentHasSoftDelete,
+                    childHasSoftDelete: $childHasSoftDelete,
+                );
+            }
+        }
+    }
+
+    /**
+     * @param \ReflectionClass<object> $reflection
+     */
+    private function hasSoftDeleteBehaviorInReflection(
+        \ReflectionClass $reflection,
+    ): bool {
+        foreach ($reflection->getProperties() as $property) {
+            $columnAttributes = $property->getAttributes(ColumnInterface::class, \ReflectionAttribute::IS_INSTANCEOF);
+
+            if (\sizeof($columnAttributes) === 0) {
+                continue;
+            }
+
+            $columnAttribute = $columnAttributes[0]->newInstance();
+            $behaviorClass = $columnAttribute->behavior;
+
+            if ($behaviorClass === null) {
+                continue;
+            }
+
+            if (\is_a($behaviorClass, SoftDeleteBehaviorInterface::class, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

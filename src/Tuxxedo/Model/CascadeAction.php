@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model;
 
-// @todo Soft-delete cascade semantics — when a soft-deletable parent is deleted, cascade currently invokes children's normal delete() which may hard-delete non-soft-delete children; decide whether soft-delete should skip cascade or restrict it to soft-deletable children. Same question for forceDelete: cascade currently calls children's delete(), not forceDelete()
+// @todo forceDelete cascade direction — forceDelete on a soft-deletable parent runs cascade through children's delete(), which routes soft-deletable children to softDelete() and leaves tombstones with FKs pointing at a gone parent. Propagate forceDelete intent through the cascade so force-deleted parents force-delete their cascade chain
 enum CascadeAction
 {
     case NO_ACTION;
