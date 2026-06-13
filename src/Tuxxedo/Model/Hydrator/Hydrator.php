@@ -30,7 +30,8 @@ use Tuxxedo\Model\ModelsManagerInterface;
 use Tuxxedo\Model\Relation;
 use Tuxxedo\Reflection\PropertyReflector;
 
-// @todo JOIN-mode hydration for HasOneThrough / HasManyThrough — current path runs two queries plus full through-row hydration to extract secondLocalKey; collapse into a single SELECT far.* INNER JOIN through ON ... WHERE through.firstKey = ? (LIMIT 1 for HasOneThrough). Cuts per-row through hydration cost and one round-trip per countLoader invocation
+// @todo JOIN-mode hydration for HasOneThrough / HasManyThrough — current path runs two queries plus full through-row hydration to extract secondLocalKey; collapse into a single SELECT far.* INNER JOIN through ON through.secondLocalKey = far.secondKey WHERE through.firstKey = ? (LIMIT 1 for HasOneThrough). Use DISTINCT for HasManyThrough load + count to preserve current IN-clause dedupe semantics (HasOneThrough doesn't need it since LIMIT 1 caps the result). Required CountBuilder::distinct() now exists. Retire collectThroughKeys + resolveThroughSecondLocalKeyProperty when migrated; add resolveThroughSecondLocalKeyColumn helper for the JOIN column resolution. Cuts per-row through hydration cost and one round-trip per countLoader invocation
+// @todo Through hydration dedupe trade-off — JOIN + DISTINCT preserves "each far row at most once" semantics that current whereIn-based path provides. Once whereIn() learns subquery form, evaluate switching to WHERE secondKey IN (SELECT secondLocalKey FROM through WHERE firstKey = ?) which gives the same dedupe via IN semantics without needing DISTINCT — may be faster on some engines depending on optimizer
 class Hydrator implements HydratorInterface
 {
     public function __construct(

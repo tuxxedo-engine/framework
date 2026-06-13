@@ -22,6 +22,8 @@ interface CountBuilderInterface extends WhereBuilderInterface
         string $column = '*',
     ): static;
 
+    public function distinct(): static;
+
     /**
      * @throws DatabaseException
      * @throws SqlException

@@ -16,14 +16,21 @@ namespace Tuxxedo\Database\Query\Builder;
 class CountBuilder extends AbstractWhereBuilder implements CountBuilderInterface
 {
     private string $column = '*';
+    private bool $distinct = false;
 
     protected function generateSql(): string
     {
+        $countExpression = $this->column === '*'
+            ? '*'
+            : $this->connection->dialect->identifier($this->column);
+
+        if ($this->distinct) {
+            $countExpression = 'DISTINCT ' . $countExpression;
+        }
+
         return \sprintf(
             'SELECT COUNT(%s) FROM %s%s',
-            $this->column === '*'
-                ? '*'
-                : $this->connection->dialect->identifier($this->column),
+            $countExpression,
             $this->connection->dialect->identifier($this->table),
             $this->generateWhereSql(),
         );
@@ -33,6 +40,13 @@ class CountBuilder extends AbstractWhereBuilder implements CountBuilderInterface
         string $column = '*',
     ): static {
         $this->column = $column;
+
+        return $this;
+    }
+
+    public function distinct(): static
+    {
+        $this->distinct = true;
 
         return $this;
     }

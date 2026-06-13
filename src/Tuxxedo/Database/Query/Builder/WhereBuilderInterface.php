@@ -14,6 +14,9 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Query\Builder;
 
 // @todo Consider multi binding for one condition, e.g. where('a = :a AND b > :b', ['a' => ..., 'b' => ...])
+// @todo whereIn / whereNotIn / orWhereIn / orWhereNotIn subquery form — accept SelectBuilderInterface alongside the value array so callers can write `WHERE col IN (SELECT ... FROM ... WHERE ...)`. Would let Model's Through hydration use IN-dedupe semantics in a single round-trip without JOIN+DISTINCT, and lets callers compose subqueries without manually pre-running them
+// @todo whereExists / whereNotExists / orWhereExists / orWhereNotExists — correlated-subquery existence checks. Common ORM-level need for "find parents where any child matches X"; today the only path is JOIN-and-DISTINCT or two queries
+// @todo whereGroup with closure form — support nested AND/OR groupings, e.g. ->where('a', 1)->orWhereGroup(fn($q) => $q->where('b', 2)->where('c', 3)). Current flat where() chain can't express "a = 1 OR (b = 2 AND c = 3)"
 interface WhereBuilderInterface extends BuilderInterface
 {
     public function hasConstraints(): bool;
