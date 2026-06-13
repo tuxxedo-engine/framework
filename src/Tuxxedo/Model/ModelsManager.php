@@ -670,6 +670,7 @@ class ModelsManager implements ModelsManagerInterface
     private function cascadeDeleteRelations(
         object $model,
         ModelMetaDataInterface $metaData,
+        bool $force,
     ): void {
         foreach ($metaData->relations as $relation) {
             $action = $relation->attribute->onDelete;
@@ -693,13 +694,13 @@ class ModelsManager implements ModelsManagerInterface
             $attribute = $relation->attribute;
 
             if ($attribute instanceof HasOne || $attribute instanceof BelongsTo) {
-                $this->cascadeDeleteSingleObjectRelation($model, $relation);
+                $this->cascadeDeleteSingleObjectRelation($model, $relation, $force);
 
                 continue;
             }
 
             if ($attribute instanceof HasMany) {
-                $this->cascadeDeleteCollectionRelation($model, $relation);
+                $this->cascadeDeleteCollectionRelation($model, $relation, $force);
 
                 continue;
             }
@@ -715,10 +716,17 @@ class ModelsManager implements ModelsManagerInterface
     private function cascadeDeleteSingleObjectRelation(
         object $model,
         ModelRelationInterface $relation,
+        bool $force,
     ): void {
         $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
 
         if (!\is_object($value)) {
+            return;
+        }
+
+        if ($force) {
+            (void) $this->forceDelete($value);
+
             return;
         }
 
@@ -728,6 +736,7 @@ class ModelsManager implements ModelsManagerInterface
     private function cascadeDeleteCollectionRelation(
         object $model,
         ModelRelationInterface $relation,
+        bool $force,
     ): void {
         $attribute = $relation->attribute;
 
@@ -744,6 +753,12 @@ class ModelsManager implements ModelsManagerInterface
         }
 
         foreach ($value as $item) {
+            if ($force) {
+                (void) $this->forceDelete($item);
+
+                continue;
+            }
+
             (void) $this->delete($item);
         }
     }
@@ -1245,7 +1260,7 @@ class ModelsManager implements ModelsManagerInterface
 
         $this->dispatchBeforeDelete($model, $metaData);
 
-        $this->cascadeDeleteRelations($model, $metaData);
+        $this->cascadeDeleteRelations($model, $metaData, force: false);
 
         if ($metaData->behaviorsOf(SoftDeleteBehaviorInterface::class) !== []) {
             return $this->softDelete($model, $metaData);
@@ -1267,7 +1282,7 @@ class ModelsManager implements ModelsManagerInterface
 
         $this->dispatchBeforeDelete($model, $metaData);
 
-        $this->cascadeDeleteRelations($model, $metaData);
+        $this->cascadeDeleteRelations($model, $metaData, force: true);
 
         return $this->hardDelete($model, $metaData);
     }

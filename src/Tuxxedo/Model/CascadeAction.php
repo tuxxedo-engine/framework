@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model;
 
-// @todo forceDelete cascade direction — forceDelete on a soft-deletable parent runs cascade through children's delete(), which routes soft-deletable children to softDelete() and leaves tombstones with FKs pointing at a gone parent. Propagate forceDelete intent through the cascade so force-deleted parents force-delete their cascade chain
 enum CascadeAction
 {
     case NO_ACTION;
