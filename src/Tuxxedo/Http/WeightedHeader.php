@@ -47,9 +47,9 @@ readonly class WeightedHeader extends Header implements WeightedHeaderInterface
 
         \usort(
             $parsed,
-            static fn (array $a, array $b): int => ($b[1] <=> $a[1]) === 1
-                ? 1
-                : $a[2] <=> $b[2],
+            static fn (array $a, array $b): int => ($b[1] <=> $a[1]) !== 0
+                ? ($b[1] <=> $a[1])
+                : ($a[2] <=> $b[2]),
         );
 
         return \array_filter(
@@ -92,9 +92,9 @@ readonly class WeightedHeader extends Header implements WeightedHeaderInterface
 
         \usort(
             $parsed,
-            static fn (array $a, array $b): int => ($b[0]->weight <=> $a[0]->weight) === 1
-                ? 1
-                : $a[1] <=> $b[1],
+            static fn (array $a, array $b): int => ($b[0]->weight <=> $a[0]->weight) !== 0
+                ? ($b[0]->weight <=> $a[0]->weight)
+                : ($a[1] <=> $b[1]),
         );
 
         return \array_column($parsed, 0);

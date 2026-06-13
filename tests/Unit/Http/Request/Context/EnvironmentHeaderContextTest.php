@@ -362,4 +362,98 @@ class EnvironmentHeaderContextTest extends TestCase
         self::assertTrue($context->has('X-Custom-Header'));
         self::assertFalse($context->has('x-custom-header'));
     }
+
+    public function testPreferredLanguagesReturnsEmptyArrayWhenHeaderMissing(): void
+    {
+        self::assertSame(
+            [],
+            (new EnvironmentHeaderContext())->preferredLanguages,
+        );
+    }
+
+    public function testPreferredLanguagesReturnsEmptyArrayWhenHeaderEmpty(): void
+    {
+        $_SERVER['HTTP_ACCEPT_LANGUAGE'] = '';
+
+        self::assertSame(
+            [],
+            (new EnvironmentHeaderContext())->preferredLanguages,
+        );
+    }
+
+    public function testPreferredLanguagesReturnsSingleLanguageWhenOnePresent(): void
+    {
+        $_SERVER['HTTP_ACCEPT_LANGUAGE'] = 'da-DK';
+
+        self::assertSame(
+            [
+                'da-DK',
+            ],
+            (new EnvironmentHeaderContext())->preferredLanguages,
+        );
+    }
+
+    public function testPreferredLanguagesPreservesPositionOrderForEqualWeights(): void
+    {
+        $_SERVER['HTTP_ACCEPT_LANGUAGE'] = 'da, sv, nb';
+
+        self::assertSame(
+            [
+                'da',
+                'sv',
+                'nb',
+            ],
+            (new EnvironmentHeaderContext())->preferredLanguages,
+        );
+    }
+
+    public function testPreferredLanguagesOrdersByWeightDescending(): void
+    {
+        $_SERVER['HTTP_ACCEPT_LANGUAGE'] = 'da;q=0.5, sv;q=0.9, nb';
+
+        self::assertSame(
+            [
+                'nb',
+                'sv',
+                'da',
+            ],
+            (new EnvironmentHeaderContext())->preferredLanguages,
+        );
+    }
+
+    public function testPreferredLanguageReturnsNullWhenHeaderMissing(): void
+    {
+        self::assertNull(
+            (new EnvironmentHeaderContext())->preferredLanguage,
+        );
+    }
+
+    public function testPreferredLanguageReturnsNullWhenHeaderEmpty(): void
+    {
+        $_SERVER['HTTP_ACCEPT_LANGUAGE'] = '';
+
+        self::assertNull(
+            (new EnvironmentHeaderContext())->preferredLanguage,
+        );
+    }
+
+    public function testPreferredLanguageReturnsOnlyLanguageWhenOnePresent(): void
+    {
+        $_SERVER['HTTP_ACCEPT_LANGUAGE'] = 'da-DK';
+
+        self::assertSame(
+            'da-DK',
+            (new EnvironmentHeaderContext())->preferredLanguage,
+        );
+    }
+
+    public function testPreferredLanguageReturnsTopWeightedLanguage(): void
+    {
+        $_SERVER['HTTP_ACCEPT_LANGUAGE'] = 'da;q=0.5, sv;q=0.9, nb';
+
+        self::assertSame(
+            'nb',
+            (new EnvironmentHeaderContext())->preferredLanguage,
+        );
+    }
 }

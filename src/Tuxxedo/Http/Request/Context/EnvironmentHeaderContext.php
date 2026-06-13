@@ -27,11 +27,14 @@ class EnvironmentHeaderContext implements HeaderContextInterface
         }
     }
 
+    /**
+     * @var string[]|null
+     */
+    private ?array $preferredLanguagesCache = null;
+
     public array $preferredLanguages {
         get {
-            static $value = null;
-
-            if ($value === null) {
+            if ($this->preferredLanguagesCache === null) {
                 /** @var string $header */
                 $header = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
 
@@ -39,11 +42,10 @@ class EnvironmentHeaderContext implements HeaderContextInterface
                     return [];
                 }
 
-                $value = (new WeightedHeader('Accept-Language', $header))->getWeightedOrder();
+                $this->preferredLanguagesCache = (new WeightedHeader('Accept-Language', $header))->getWeightedOrder();
             }
 
-            /** @var string[] */
-            return $value;
+            return $this->preferredLanguagesCache;
         }
     }
 
