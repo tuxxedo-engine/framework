@@ -25,7 +25,6 @@ use Tuxxedo\Model\Hydrator\HydratorInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 
 // @todo Implement a cache strategy
-// @todo Readonly support implications for cache strategy
 // @todo Consider findWhere and other shorthands?
 // @todo Support with or similar arguments for fetchers on relations to eagerly load them?
 // @todo Criteria parameters may need more narrowing to prevent injecting overrides into parts they shouldn't. It should be limited to where builders only
