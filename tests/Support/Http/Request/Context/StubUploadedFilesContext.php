@@ -25,9 +25,15 @@ class StubUploadedFilesContext implements UploadedFilesContextInterface
         return false;
     }
 
-    public function get(
+    public function file(
         string $path,
     ): UploadedFileInterface {
+        throw HttpException::fromInternalServerError();
+    }
+
+    public function arrayOfFile(
+        string $path,
+    ): array {
         throw HttpException::fromInternalServerError();
     }
 }

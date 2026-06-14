@@ -223,7 +223,7 @@ readonly class TestController
             );
         }
 
-        $file = $request->files->get('uploadedFile');
+        $file = $request->files->file('uploadedFile');
 
         return Response::json(
             json: [

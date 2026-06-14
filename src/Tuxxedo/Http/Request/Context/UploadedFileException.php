@@ -50,4 +50,48 @@ class UploadedFileException extends \Exception
             message: 'Uploaded file could not be uploaded because an extension prevented it',
         );
     }
+
+    public static function fromSingleFileExpectedAtPath(
+        string $path,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Expected a single uploaded file at path "%s", but the path resolves to an array of files or a nested structure',
+                $path,
+            ),
+        );
+    }
+
+    public static function fromArrayExpectedAtPath(
+        string $path,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Expected an array of uploaded files at path "%s", but the path resolves to a single file',
+                $path,
+            ),
+        );
+    }
+
+    public static function fromListExpectedAtPath(
+        string $path,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Expected a list-keyed (numerically indexed) array of uploaded files at path "%s", but the path resolves to an associative-keyed array',
+                $path,
+            ),
+        );
+    }
+
+    public static function fromLeavesExpectedAtPath(
+        string $path,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Expected an array of file records at path "%s", but entries are nested structures rather than file records — the path is too shallow',
+                $path,
+            ),
+        );
+    }
 }

@@ -73,11 +73,11 @@ class EnvironmentUploadedFilesContextTest extends TestCase
         self::assertFalse((new EnvironmentUploadedFilesContext())->has('gallery.0'));
     }
 
-    public function testGetThrowsForMissingFile(): void
+    public function testFileThrowsForMissingFile(): void
     {
         $this->expectException(HttpException::class);
 
-        (new EnvironmentUploadedFilesContext())->get('avatar');
+        (new EnvironmentUploadedFilesContext())->file('avatar');
     }
 
     /**
@@ -125,7 +125,7 @@ class EnvironmentUploadedFilesContextTest extends TestCase
      * @param class-string<\Throwable> $exception
      */
     #[DataProvider('uploadErrorDataProvider')]
-    public function testGetThrowsForUploadError(
+    public function testFileThrowsForUploadError(
         int $errorCode,
         string $exception,
     ): void {
@@ -140,10 +140,10 @@ class EnvironmentUploadedFilesContextTest extends TestCase
 
         $this->expectException($exception);
 
-        (new EnvironmentUploadedFilesContext())->get('avatar');
+        (new EnvironmentUploadedFilesContext())->file('avatar');
     }
 
-    public function testGetReturnsUploadedFile(): void
+    public function testFileReturnsUploadedFile(): void
     {
         $_FILES['avatar'] = [
             'name' => 'photo.jpg',
@@ -154,7 +154,7 @@ class EnvironmentUploadedFilesContextTest extends TestCase
             'full_path' => 'photo.jpg',
         ];
 
-        $file = (new EnvironmentUploadedFilesContext())->get('avatar');
+        $file = (new EnvironmentUploadedFilesContext())->file('avatar');
 
         self::assertInstanceOf(UploadedFile::class, $file);
         self::assertSame('photo.jpg', $file->name);
@@ -163,7 +163,7 @@ class EnvironmentUploadedFilesContextTest extends TestCase
         self::assertSame('photo.jpg', $file->browserPath);
     }
 
-    public function testGetWithDotNotationPath(): void
+    public function testFileWithDotNotationPath(): void
     {
         $_FILES['gallery'] = [
             [
@@ -176,9 +176,304 @@ class EnvironmentUploadedFilesContextTest extends TestCase
             ],
         ];
 
-        $file = (new EnvironmentUploadedFilesContext())->get('gallery.0');
+        $file = (new EnvironmentUploadedFilesContext())->file('gallery.0');
 
         self::assertInstanceOf(UploadedFile::class, $file);
         self::assertSame('photo.jpg', $file->name);
+    }
+
+    public function testArrayOfFileReturnsAllFiles(): void
+    {
+        $_FILES['gallery'] = [
+            [
+                'name' => 'a.jpg',
+                'type' => 'image/jpeg',
+                'size' => 1024,
+                'error' => \UPLOAD_ERR_OK,
+                'tmp_name' => '/tmp/a',
+                'full_path' => 'a.jpg',
+            ],
+            [
+                'name' => 'b.jpg',
+                'type' => 'image/jpeg',
+                'size' => 2048,
+                'error' => \UPLOAD_ERR_OK,
+                'tmp_name' => '/tmp/b',
+                'full_path' => 'b.jpg',
+            ],
+        ];
+
+        $files = (new EnvironmentUploadedFilesContext())->arrayOfFile('gallery');
+
+        self::assertCount(2, $files);
+        self::assertSame('a.jpg', $files[0]->name);
+        self::assertSame('b.jpg', $files[1]->name);
+    }
+
+    public function testArrayOfFileUnzipsPhpParallelArrayShape(): void
+    {
+        $_FILES['images'] = [
+            'name' => [
+                'a.jpg',
+                'b.jpg',
+            ],
+            'type' => [
+                'image/jpeg',
+                'image/jpeg',
+            ],
+            'size' => [
+                1024,
+                2048,
+            ],
+            'error' => [
+                \UPLOAD_ERR_OK,
+                \UPLOAD_ERR_OK,
+            ],
+            'tmp_name' => [
+                '/tmp/a',
+                '/tmp/b',
+            ],
+            'full_path' => [
+                'a.jpg',
+                'b.jpg',
+            ],
+        ];
+
+        $files = (new EnvironmentUploadedFilesContext())->arrayOfFile('images');
+
+        self::assertCount(2, $files);
+        self::assertSame('a.jpg', $files[0]->name);
+        self::assertSame('b.jpg', $files[1]->name);
+    }
+
+    public function testArrayOfFileThrowsForMissingPath(): void
+    {
+        $this->expectException(HttpException::class);
+
+        (new EnvironmentUploadedFilesContext())->arrayOfFile('gallery');
+    }
+
+    public function testArrayOfFileThrowsWhenPathResolvesToSingleFile(): void
+    {
+        $_FILES['avatar'] = [
+            'name' => 'photo.jpg',
+            'type' => 'image/jpeg',
+            'size' => 1024,
+            'error' => \UPLOAD_ERR_OK,
+            'tmp_name' => '/tmp/test',
+            'full_path' => 'photo.jpg',
+        ];
+
+        $this->expectException(UploadedFileException::class);
+
+        (new EnvironmentUploadedFilesContext())->arrayOfFile('avatar');
+    }
+
+    public function testArrayOfFileThrowsForAssociativeKeyedMap(): void
+    {
+        $_FILES['user'] = [
+            'name' => [
+                'avatar' => 'a.jpg',
+            ],
+            'type' => [
+                'avatar' => 'image/jpeg',
+            ],
+            'size' => [
+                'avatar' => 1024,
+            ],
+            'error' => [
+                'avatar' => \UPLOAD_ERR_OK,
+            ],
+            'tmp_name' => [
+                'avatar' => '/tmp/a',
+            ],
+            'full_path' => [
+                'avatar' => 'a.jpg',
+            ],
+        ];
+
+        $this->expectException(UploadedFileException::class);
+
+        (new EnvironmentUploadedFilesContext())->arrayOfFile('user');
+    }
+
+    public function testArrayOfFileThrowsOnFirstUploadError(): void
+    {
+        $_FILES['gallery'] = [
+            [
+                'name' => 'a.jpg',
+                'type' => 'image/jpeg',
+                'size' => 1024,
+                'error' => \UPLOAD_ERR_OK,
+                'tmp_name' => '/tmp/a',
+                'full_path' => 'a.jpg',
+            ],
+            [
+                'name' => 'b.jpg',
+                'type' => 'image/jpeg',
+                'size' => 0,
+                'error' => \UPLOAD_ERR_PARTIAL,
+                'tmp_name' => '',
+                'full_path' => 'b.jpg',
+            ],
+        ];
+
+        $this->expectException(UploadedFileException::class);
+
+        (new EnvironmentUploadedFilesContext())->arrayOfFile('gallery');
+    }
+
+    public function testHasReturnsTrueForListOfLeaves(): void
+    {
+        $_FILES['gallery'] = [
+            [
+                'name' => 'a.jpg',
+                'type' => 'image/jpeg',
+                'size' => 1024,
+                'error' => \UPLOAD_ERR_OK,
+                'tmp_name' => '/tmp/a',
+                'full_path' => 'a.jpg',
+            ],
+            [
+                'name' => 'b.jpg',
+                'type' => 'image/jpeg',
+                'size' => 2048,
+                'error' => \UPLOAD_ERR_OK,
+                'tmp_name' => '/tmp/b',
+                'full_path' => 'b.jpg',
+            ],
+        ];
+
+        self::assertTrue((new EnvironmentUploadedFilesContext())->has('gallery'));
+    }
+
+    public function testHasReturnsFalseWhenListEntriesAreNotLeaves(): void
+    {
+        $_FILES['docs'] = [
+            [
+                'inner' => [
+                    'not-a-file-field' => 'value',
+                ],
+            ],
+        ];
+
+        self::assertFalse((new EnvironmentUploadedFilesContext())->has('docs'));
+    }
+
+    public function testFileThrowsWhenPathResolvesToArray(): void
+    {
+        $_FILES['gallery'] = [
+            [
+                'name' => 'a.jpg',
+                'type' => 'image/jpeg',
+                'size' => 1024,
+                'error' => \UPLOAD_ERR_OK,
+                'tmp_name' => '/tmp/a',
+                'full_path' => 'a.jpg',
+            ],
+        ];
+
+        $this->expectException(UploadedFileException::class);
+
+        (new EnvironmentUploadedFilesContext())->file('gallery');
+    }
+
+    public function testArrayOfFileThrowsWhenListEntriesAreNotLeaves(): void
+    {
+        $_FILES['docs'] = [
+            [
+                'inner' => [
+                    'not-a-file-field' => 'value',
+                ],
+            ],
+        ];
+
+        $this->expectException(UploadedFileException::class);
+
+        (new EnvironmentUploadedFilesContext())->arrayOfFile('docs');
+    }
+
+    public function testNormalizedTreeIsCachedAcrossCalls(): void
+    {
+        $_FILES['avatar'] = [
+            'name' => 'photo.jpg',
+            'type' => 'image/jpeg',
+            'size' => 1024,
+            'error' => \UPLOAD_ERR_OK,
+            'tmp_name' => '/tmp/test',
+            'full_path' => 'photo.jpg',
+        ];
+
+        $context = new EnvironmentUploadedFilesContext();
+
+        self::assertTrue($context->has('avatar'));
+
+        $_FILES = [];
+
+        self::assertTrue($context->has('avatar'));
+    }
+
+    public function testHasReturnsFalseForMalformedParallelArrayStructure(): void
+    {
+        $_FILES['x'] = [
+            'name' => [
+                'inner' => [
+                    'a.jpg',
+                ],
+            ],
+            'error' => [
+                'inner' => 0,
+            ],
+        ];
+
+        self::assertFalse((new EnvironmentUploadedFilesContext())->has('x'));
+    }
+
+    public function testArrayOfFileResolvesDeeplyNestedPhpInputShape(): void
+    {
+        $_FILES['media'] = [
+            'name' => [
+                'photos' => [
+                    'a.jpg',
+                    'b.jpg',
+                ],
+            ],
+            'type' => [
+                'photos' => [
+                    'image/jpeg',
+                    'image/jpeg',
+                ],
+            ],
+            'size' => [
+                'photos' => [
+                    1024,
+                    2048,
+                ],
+            ],
+            'error' => [
+                'photos' => [
+                    \UPLOAD_ERR_OK,
+                    \UPLOAD_ERR_OK,
+                ],
+            ],
+            'tmp_name' => [
+                'photos' => [
+                    '/tmp/a',
+                    '/tmp/b',
+                ],
+            ],
+            'full_path' => [
+                'photos' => [
+                    'a.jpg',
+                    'b.jpg',
+                ],
+            ],
+        ];
+
+        $files = (new EnvironmentUploadedFilesContext())->arrayOfFile('media.photos');
+
+        self::assertCount(2, $files);
+        self::assertSame('a.jpg', $files[0]->name);
+        self::assertSame('b.jpg', $files[1]->name);
     }
 }
