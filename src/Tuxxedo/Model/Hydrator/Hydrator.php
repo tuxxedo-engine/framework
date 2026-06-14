@@ -30,8 +30,6 @@ use Tuxxedo\Model\ModelsManagerInterface;
 use Tuxxedo\Model\Relation;
 use Tuxxedo\Reflection\PropertyReflector;
 
-// @todo JOIN-mode hydration for HasOneThrough / HasManyThrough — current path runs two queries plus full through-row hydration to extract secondLocalKey; collapse into a single SELECT far.* INNER JOIN through ON through.secondLocalKey = far.secondKey WHERE through.firstKey = ? (LIMIT 1 for HasOneThrough). Use DISTINCT for HasManyThrough load + count to preserve current IN-clause dedupe semantics (HasOneThrough doesn't need it since LIMIT 1 caps the result). Required CountBuilder::distinct() now exists. Retire collectThroughKeys + resolveThroughSecondLocalKeyProperty when migrated; add resolveThroughSecondLocalKeyColumn helper for the JOIN column resolution. Cuts per-row through hydration cost and one round-trip per countLoader invocation
-// @todo Through hydration dedupe trade-off — JOIN + DISTINCT preserves "each far row at most once" semantics that current whereIn-based path provides. Once whereIn() learns subquery form, evaluate switching to WHERE secondKey IN (SELECT secondLocalKey FROM through WHERE firstKey = ?) which gives the same dedupe via IN semantics without needing DISTINCT — may be faster on some engines depending on optimizer
 class Hydrator implements HydratorInterface
 {
     public function __construct(
@@ -347,39 +345,38 @@ class Hydrator implements HydratorInterface
         /** @var HasManyThrough $attribute */
         $attribute = $relation->attribute;
         $manager = $this->modelsManager;
-        $throughClass = $attribute->through;
-        $throughFirstKey = $attribute->firstKey;
-        $throughSecondLocalKeyProperty = $this->resolveThroughSecondLocalKeyProperty($attribute);
         $relatedClass = $relation->relatedClass;
+        $targetMetaData = $manager->metaData->getModel($relatedClass);
+
+        if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
+            throw ModelException::fromCantFetchWithoutPrimaryKey(
+                modelClass: $relatedClass,
+            );
+        }
+
+        $throughTable = $manager->metaData->getModel($attribute->through)->table;
+        $throughSecondLocalKey = $this->resolveThroughSecondLocalKeyColumn($attribute);
+        $targetTable = $targetMetaData->table;
+        $targetPrimaryKey = $targetMetaData->key->column;
         $secondKey = $attribute->secondKey;
-        $targetTable = $manager->metaData->getModel($relatedClass)->table;
+        $firstKey = $attribute->firstKey;
 
         $relationInstance = Relation::createFromLoader(
-            loader: static function () use ($manager, $throughClass, $throughFirstKey, $throughSecondLocalKeyProperty, $relatedClass, $secondKey, $sourceValue): iterable {
-                $throughIds = self::collectThroughKeys($manager, $throughClass, $throughFirstKey, $throughSecondLocalKeyProperty, $sourceValue);
-
-                if (\sizeof($throughIds) === 0) {
-                    return [];
-                }
-
-                return $manager->findAll(
-                    $relatedClass,
-                    static function (SelectBuilderInterface $builder) use ($secondKey, $throughIds): void {
-                        $builder->whereIn($secondKey, $throughIds);
-                    },
-                );
-            },
-            countLoader: static function () use ($manager, $throughClass, $throughFirstKey, $throughSecondLocalKeyProperty, $targetTable, $secondKey, $sourceValue): int {
-                $throughIds = self::collectThroughKeys($manager, $throughClass, $throughFirstKey, $throughSecondLocalKeyProperty, $sourceValue);
-
-                if (\sizeof($throughIds) === 0) {
-                    return 0;
-                }
-
-                return $manager->connection->count($targetTable)
-                    ->whereIn($secondKey, $throughIds)
-                    ->count();
-            },
+            loader: static fn (): iterable => $manager->findAll(
+                $relatedClass,
+                static function (SelectBuilderInterface $builder) use ($throughTable, $throughSecondLocalKey, $targetTable, $secondKey, $firstKey, $sourceValue): void {
+                    $builder
+                        ->distinct()
+                        ->innerJoin($throughTable, $throughTable . '.' . $throughSecondLocalKey, $targetTable . '.' . $secondKey)
+                        ->where($throughTable . '.' . $firstKey, $sourceValue);
+                },
+            ),
+            countLoader: static fn (): int => $manager->connection->count($targetTable)
+                ->column($targetTable . '.' . $targetPrimaryKey)
+                ->distinct()
+                ->innerJoin($throughTable, $throughTable . '.' . $throughSecondLocalKey, $targetTable . '.' . $secondKey)
+                ->where($throughTable . '.' . $firstKey, $sourceValue)
+                ->count(),
         );
 
         PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $relationInstance);
@@ -393,29 +390,18 @@ class Hydrator implements HydratorInterface
         /** @var HasOneThrough $attribute */
         $attribute = $relation->attribute;
         $manager = $this->modelsManager;
-
-        $throughIds = self::collectThroughKeys(
-            $manager,
-            $attribute->through,
-            $attribute->firstKey,
-            $this->resolveThroughSecondLocalKeyProperty($attribute),
-            $sourceValue,
-        );
-
-        if (\sizeof($throughIds) === 0) {
-            throw ModelException::fromMissingRelatedRecord(
-                modelClass: $sourceMetaData->model,
-                property: $relation->property,
-                relatedClass: $relation->relatedClass,
-            );
-        }
-
+        $throughTable = $manager->metaData->getModel($attribute->through)->table;
+        $throughSecondLocalKey = $this->resolveThroughSecondLocalKeyColumn($attribute);
+        $targetTable = $manager->metaData->getModel($relation->relatedClass)->table;
         $secondKey = $attribute->secondKey;
+        $firstKey = $attribute->firstKey;
 
         $result = $manager->findFirst(
             $relation->relatedClass,
-            static function (SelectBuilderInterface $builder) use ($secondKey, $throughIds): void {
-                $builder->whereIn($secondKey, $throughIds);
+            static function (SelectBuilderInterface $builder) use ($throughTable, $throughSecondLocalKey, $targetTable, $secondKey, $firstKey, $sourceValue): void {
+                $builder
+                    ->innerJoin($throughTable, $throughTable . '.' . $throughSecondLocalKey, $targetTable . '.' . $secondKey)
+                    ->where($throughTable . '.' . $firstKey, $sourceValue);
             },
         );
 
@@ -430,68 +416,22 @@ class Hydrator implements HydratorInterface
         return $result;
     }
 
-    /**
-     * @param class-string $throughClass
-     * @return array<int, string|int|float|bool>
-     */
-    private static function collectThroughKeys(
-        ModelsManagerInterface $manager,
-        string $throughClass,
-        string $throughFirstKey,
-        string $throughSecondLocalKeyProperty,
-        string|int|float|bool $sourceValue,
-    ): array {
-        $ids = [];
-
-        foreach (
-            $manager->findAll(
-                $throughClass,
-                static function (SelectBuilderInterface $builder) use ($throughFirstKey, $sourceValue): void {
-                    $builder->where($throughFirstKey, $sourceValue);
-                },
-            ) as $through
-        ) {
-            $value = PropertyReflector::createFromObject($through, $throughSecondLocalKeyProperty)->getValue($through);
-
-            if (!\is_string($value) && !\is_int($value) && !\is_float($value) && !\is_bool($value)) {
-                continue;
-            }
-
-            $ids[] = $value;
-        }
-
-        return $ids;
-    }
-
-    private function resolveThroughSecondLocalKeyProperty(
+    private function resolveThroughSecondLocalKeyColumn(
         HasOneThrough|HasManyThrough $attribute,
     ): string {
+        if ($attribute->secondLocalKey !== null) {
+            return $attribute->secondLocalKey;
+        }
+
         $throughMetaData = $this->modelsManager->metaData->getModel($attribute->through);
-        $secondLocalKey = $attribute->secondLocalKey;
 
-        if ($secondLocalKey === null) {
-            if (!$throughMetaData->key instanceof ModelPrimaryKeyInterface) {
-                throw ModelException::fromCantFetchWithoutPrimaryKey(
-                    modelClass: $attribute->through,
-                );
-            }
-
-            return $throughMetaData->key->property;
+        if (!$throughMetaData->key instanceof ModelPrimaryKeyInterface) {
+            throw ModelException::fromCantFetchWithoutPrimaryKey(
+                modelClass: $attribute->through,
+            );
         }
 
-        foreach ($throughMetaData->columns as $column) {
-            if ($column->column === $secondLocalKey) {
-                return $column->property;
-            }
-        }
-
-        throw ModelException::fromRelationKeyReferencesUnknownColumn(
-            modelClass: $attribute->through,
-            property: $secondLocalKey,
-            keyKind: 'secondLocalKey',
-            keyValue: $secondLocalKey,
-            referencedClass: $attribute->through,
-        );
+        return $throughMetaData->key->column;
     }
 
     private function loadSingleRelation(
