@@ -23,7 +23,6 @@ use Tuxxedo\Http\Request\Context\InputContextInterface;
 use Tuxxedo\Http\Request\Context\UploadedFilesContextInterface;
 use Tuxxedo\Router\DispatchableRouteInterface;
 
-// @todo Detect ipAddress type helper
 #[DefaultImplementation(class: Request::class)]
 interface RequestInterface
 {
