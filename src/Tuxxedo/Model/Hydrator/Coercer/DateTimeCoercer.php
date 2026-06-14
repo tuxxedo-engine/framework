@@ -18,8 +18,12 @@ use Tuxxedo\Model\Attribute\Column\DateFormat;
 class DateTimeCoercer extends AbstractDateTimeFormatCoercer
 {
     public function __construct(
-        private readonly DateFormat $format = DateFormat::DEFAULT,
+        DateFormat|string $format = DateFormat::DEFAULT,
     ) {
-        parent::__construct($format->value);
+        parent::__construct(
+            $format instanceof DateFormat
+                ? $format->value
+                : $format,
+        );
     }
 }

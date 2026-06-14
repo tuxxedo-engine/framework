@@ -20,7 +20,6 @@ use Tuxxedo\Model\Behavior\BehaviorInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 use Tuxxedo\Model\Hydrator\Coercer\DateCoercer;
 
-// @todo $format type mismatch across Date/DateTime/Time/Timestamp — attributes accept DateFormat|string (TimeFormat|string for Time) but the corresponding coercers (DateCoercer/DateTimeCoercer/TimeCoercer/TimestampCoercer) accept only the enum; the string side now flows through coercerArguments and breaks Container::resolve. Decide whether to drop |string from the attribute properties (and the CreatedAt/UpdatedAt/DeletedAt parent::__construct signatures) or wire strings end-to-end through the coercer hierarchy.
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
 readonly class Date implements ColumnInterface, ColumnFormatInterface
 {
