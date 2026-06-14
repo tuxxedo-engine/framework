@@ -248,9 +248,6 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 );
             }
 
-            $throughReflection = null;
-            $throughColumnNames = null;
-
             if ($attribute instanceof HasOneThrough || $attribute instanceof HasManyThrough) {
                 $throughClass = $attribute->through;
 
@@ -288,20 +285,30 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                         modelClass: $throughClass,
                     );
                 }
-            }
 
-            $this->validateRelationKeys(
-                modelClass: $class->name,
-                property: $property->name,
-                attribute: $attribute,
-                relatedClass: $relatedClass,
-                relatedReflection: $relatedReflection,
-                sourceColumnNames: $sourceColumnNames,
-                targetColumnNames: $targetColumnNames,
-                sourcePrimaryKey: $sourcePrimaryKey,
-                throughReflection: $throughReflection,
-                throughColumnNames: $throughColumnNames,
-            );
+                $this->validateThroughRelationKeys(
+                    modelClass: $class->name,
+                    property: $property->name,
+                    attribute: $attribute,
+                    relatedClass: $relatedClass,
+                    throughReflection: $throughReflection,
+                    sourceColumnNames: $sourceColumnNames,
+                    targetColumnNames: $targetColumnNames,
+                    throughColumnNames: $throughColumnNames,
+                    sourcePrimaryKey: $sourcePrimaryKey,
+                );
+            } else {
+                $this->validateRelationKeys(
+                    modelClass: $class->name,
+                    property: $property->name,
+                    attribute: $attribute,
+                    relatedClass: $relatedClass,
+                    relatedReflection: $relatedReflection,
+                    sourceColumnNames: $sourceColumnNames,
+                    targetColumnNames: $targetColumnNames,
+                    sourcePrimaryKey: $sourcePrimaryKey,
+                );
+            }
 
             $this->validateCascadeConfiguration(
                 modelClass: $class->name,
@@ -591,6 +598,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 continue;
             }
 
+            /** @var ColumnInterface $columnAttribute */
             $columnAttribute = $columnAttributes[0]->newInstance();
             $behaviorClass = $columnAttribute->behavior;
 
@@ -686,8 +694,6 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
      * @param \ReflectionClass<object> $relatedReflection
      * @param string[] $sourceColumnNames
      * @param string[] $targetColumnNames
-     * @param \ReflectionClass<object>|null $throughReflection
-     * @param string[]|null $throughColumnNames
      *
      * @throws ModelException
      */
@@ -700,8 +706,6 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         array $sourceColumnNames,
         array $targetColumnNames,
         ?ModelPrimaryKeyInterface $sourcePrimaryKey,
-        ?\ReflectionClass $throughReflection = null,
-        ?array $throughColumnNames = null,
     ): void {
         if ($attribute instanceof HasOne) {
             if (!\in_array($attribute->foreignKey, $targetColumnNames, true)) {
@@ -819,68 +823,83 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             return;
         }
 
-        if ($attribute instanceof HasOneThrough || $attribute instanceof HasManyThrough) {
-            // @todo Cleanup these @var rules, split method?
-            /** @var \ReflectionClass<object> $throughReflection */
-            /** @var string[] $throughColumnNames */
+    }
 
-            if (!\in_array($attribute->firstKey, $throughColumnNames, true)) {
-                throw ModelException::fromRelationKeyReferencesUnknownColumn(
-                    modelClass: $modelClass,
-                    property: $property,
-                    keyKind: 'firstKey',
-                    keyValue: $attribute->firstKey,
-                    referencedClass: $attribute->through,
-                );
-            }
+    /**
+     * @param class-string $modelClass
+     * @param class-string $relatedClass
+     * @param \ReflectionClass<object> $throughReflection
+     * @param string[] $sourceColumnNames
+     * @param string[] $targetColumnNames
+     * @param string[] $throughColumnNames
+     *
+     * @throws ModelException
+     */
+    private function validateThroughRelationKeys(
+        string $modelClass,
+        string $property,
+        HasOneThrough|HasManyThrough $attribute,
+        string $relatedClass,
+        \ReflectionClass $throughReflection,
+        array $sourceColumnNames,
+        array $targetColumnNames,
+        array $throughColumnNames,
+        ?ModelPrimaryKeyInterface $sourcePrimaryKey,
+    ): void {
+        if (!\in_array($attribute->firstKey, $throughColumnNames, true)) {
+            throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                modelClass: $modelClass,
+                property: $property,
+                keyKind: 'firstKey',
+                keyValue: $attribute->firstKey,
+                referencedClass: $attribute->through,
+            );
+        }
 
-            if (!\in_array($attribute->secondKey, $targetColumnNames, true)) {
-                throw ModelException::fromRelationKeyReferencesUnknownColumn(
-                    modelClass: $modelClass,
-                    property: $property,
-                    keyKind: 'secondKey',
-                    keyValue: $attribute->secondKey,
-                    referencedClass: $relatedClass,
-                );
-            }
+        if (!\in_array($attribute->secondKey, $targetColumnNames, true)) {
+            throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                modelClass: $modelClass,
+                property: $property,
+                keyKind: 'secondKey',
+                keyValue: $attribute->secondKey,
+                referencedClass: $relatedClass,
+            );
+        }
 
-            if ($attribute->localKey !== null && !\in_array($attribute->localKey, $sourceColumnNames, true)) {
-                throw ModelException::fromRelationKeyReferencesUnknownColumn(
-                    modelClass: $modelClass,
-                    property: $property,
-                    keyKind: 'localKey',
-                    keyValue: $attribute->localKey,
-                    referencedClass: $modelClass,
-                );
-            }
+        if ($attribute->localKey !== null && !\in_array($attribute->localKey, $sourceColumnNames, true)) {
+            throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                modelClass: $modelClass,
+                property: $property,
+                keyKind: 'localKey',
+                keyValue: $attribute->localKey,
+                referencedClass: $modelClass,
+            );
+        }
 
-            if ($attribute->localKey === null && $sourcePrimaryKey === null) {
-                throw ModelException::fromRelationRequiresPrimaryKey(
-                    modelClass: $modelClass,
-                    property: $property,
-                    side: 'source',
-                );
-            }
+        if ($attribute->localKey === null && $sourcePrimaryKey === null) {
+            throw ModelException::fromRelationRequiresPrimaryKey(
+                modelClass: $modelClass,
+                property: $property,
+                side: 'source',
+            );
+        }
 
-            if ($attribute->secondLocalKey !== null && !\in_array($attribute->secondLocalKey, $throughColumnNames, true)) {
-                throw ModelException::fromRelationKeyReferencesUnknownColumn(
-                    modelClass: $modelClass,
-                    property: $property,
-                    keyKind: 'secondLocalKey',
-                    keyValue: $attribute->secondLocalKey,
-                    referencedClass: $attribute->through,
-                );
-            }
+        if ($attribute->secondLocalKey !== null && !\in_array($attribute->secondLocalKey, $throughColumnNames, true)) {
+            throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                modelClass: $modelClass,
+                property: $property,
+                keyKind: 'secondLocalKey',
+                keyValue: $attribute->secondLocalKey,
+                referencedClass: $attribute->through,
+            );
+        }
 
-            if ($attribute->secondLocalKey === null && !$this->hasPrimaryKeyFromReflection($throughReflection)) {
-                throw ModelException::fromRelationRequiresPrimaryKey(
-                    modelClass: $modelClass,
-                    property: $property,
-                    side: 'through',
-                );
-            }
-
-            return;
+        if ($attribute->secondLocalKey === null && !$this->hasPrimaryKeyFromReflection($throughReflection)) {
+            throw ModelException::fromRelationRequiresPrimaryKey(
+                modelClass: $modelClass,
+                property: $property,
+                side: 'through',
+            );
         }
     }
 
