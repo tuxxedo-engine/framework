@@ -18,8 +18,6 @@ use Tuxxedo\Container\DefaultInitializer;
 use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Hydrator\HydratorInterface as DatabaseHydratorInterface;
-use Tuxxedo\Database\Query\Statement\ExistsStatementInterface;
-use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
@@ -930,7 +928,7 @@ class ModelsManager implements ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
-     * @param (\Closure(SelectStatementInterface $builder): void)|null $criteria
+     * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
      * @return TModel|null
      */
     #[\NoDiscard]
@@ -957,7 +955,7 @@ class ModelsManager implements ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
-     * @param (\Closure(SelectStatementInterface $builder): void)|null $criteria
+     * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
      * @return TModel
      *
      * @throws ModelException
@@ -976,7 +974,7 @@ class ModelsManager implements ModelsManagerInterface
     /**
      * @template TModel of object
      * @param class-string<TModel> $class
-     * @param (\Closure(SelectStatementInterface $builder): void)|null $criteria
+     * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
      * @return TModel|null
      */
     #[\NoDiscard]
@@ -996,12 +994,12 @@ class ModelsManager implements ModelsManagerInterface
 
         return $this->findFirst(
             class: $class,
-            criteria: static function (SelectStatementInterface $builder) use ($criteria, $metaData, $id): void {
+            criteria: static function (WhereStatementInterface $statement) use ($criteria, $metaData, $id): void {
                 if ($criteria !== null) {
-                    $criteria($builder);
+                    $criteria($statement);
                 }
 
-                $builder->where($metaData->key->column, $id);
+                $statement->where($metaData->key->column, $id);
             },
             includeDeleted: $includeDeleted,
         );
@@ -1011,7 +1009,7 @@ class ModelsManager implements ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
-     * @param (\Closure(SelectStatementInterface $builder): void)|null $criteria
+     * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
      * @return TModel
      *
      * @throws ModelException
@@ -1033,7 +1031,7 @@ class ModelsManager implements ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param array<string, int|string> $keys
-     * @param (\Closure(SelectStatementInterface $builder): void)|null $criteria
+     * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
      * @return TModel|null
      *
      * @throws ModelException
@@ -1055,13 +1053,13 @@ class ModelsManager implements ModelsManagerInterface
 
         return $this->findFirst(
             class: $class,
-            criteria: static function (SelectStatementInterface $builder) use ($criteria, $keys): void {
+            criteria: static function (WhereStatementInterface $statement) use ($criteria, $keys): void {
                 if ($criteria !== null) {
-                    $criteria($builder);
+                    $criteria($statement);
                 }
 
                 foreach ($keys as $column => $value) {
-                    $builder->where($column, $value);
+                    $statement->where($column, $value);
                 }
             },
             includeDeleted: $includeDeleted,
@@ -1073,7 +1071,7 @@ class ModelsManager implements ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param array<string, int|string> $keys
-     * @param (\Closure(SelectStatementInterface $builder): void)|null $criteria
+     * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
      * @return TModel
      *
      * @throws ModelException
@@ -1094,7 +1092,7 @@ class ModelsManager implements ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
-     * @param (\Closure(SelectStatementInterface $builder): void)|null $criteria
+     * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
      * @return \Generator<int, TModel>
      */
     #[\NoDiscard]
@@ -1157,7 +1155,7 @@ class ModelsManager implements ModelsManagerInterface
 
     /**
      * @param class-string $class
-     * @param \Closure(ExistsStatementInterface $builder): void $criteria
+     * @param \Closure(WhereStatementInterface $statement): void $criteria
      */
     #[\NoDiscard]
     public function exists(
@@ -1179,7 +1177,7 @@ class ModelsManager implements ModelsManagerInterface
 
     /**
      * @param class-string $class
-     * @param (\Closure(ExistsStatementInterface $builder): void) $criteria
+     * @param (\Closure(WhereStatementInterface $statement): void) $criteria
      */
     #[\NoDiscard]
     public function existsByIdentifier(
@@ -1198,12 +1196,12 @@ class ModelsManager implements ModelsManagerInterface
 
         return $this->exists(
             class: $class,
-            criteria: static function (ExistsStatementInterface $builder) use ($criteria, $metaData, $id): void {
+            criteria: static function (WhereStatementInterface $statement) use ($criteria, $metaData, $id): void {
                 if ($criteria !== null) {
-                    $criteria($builder);
+                    $criteria($statement);
                 }
 
-                $builder->where($metaData->key->column, $id);
+                $statement->where($metaData->key->column, $id);
             },
             includeDeleted: $includeDeleted,
         );
