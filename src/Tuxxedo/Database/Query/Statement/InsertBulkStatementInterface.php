@@ -11,11 +11,11 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Query\Builder;
+namespace Tuxxedo\Database\Query\Statement;
 
 use Tuxxedo\Database\SqlException;
 
-interface InsertBulkBuilderInterface extends BuilderInterface
+interface InsertBulkStatementInterface extends StatementInterface
 {
     /**
      * @param non-empty-array<string, string|int|float|bool|null> ...$rows

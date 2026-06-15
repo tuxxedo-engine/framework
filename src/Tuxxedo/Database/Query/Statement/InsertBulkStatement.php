@@ -11,11 +11,12 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Query\Builder;
+namespace Tuxxedo\Database\Query\Statement;
 
+use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\SqlException;
 
-class InsertBulkBuilder extends AbstractBuilder implements InsertBulkBuilderInterface
+class InsertBulkStatement extends AbstractStatement implements InsertBulkStatementInterface
 {
     /**
      * @var array<string, string>
@@ -32,10 +33,14 @@ class InsertBulkBuilder extends AbstractBuilder implements InsertBulkBuilderInte
      */
     private int $rowCount = 0;
 
-    protected function generateSql(): string
-    {
+    protected function generateSql(
+        DialectInterface $dialect,
+    ): string {
         $rowPlaceholders = [];
-        $columnList = \join(', ', $this->columns);
+        $quotedColumns = \array_map(
+            static fn (string $column): string => $dialect->identifier($column),
+            \array_values($this->columns),
+        );
 
         for ($i = 0; $i < $this->rowCount; $i++) {
             $slots = \array_map(
@@ -48,8 +53,8 @@ class InsertBulkBuilder extends AbstractBuilder implements InsertBulkBuilderInte
 
         return \sprintf(
             'INSERT INTO %s (%s) VALUES %s',
-            $this->connection->dialect->identifier($this->table),
-            $columnList,
+            $dialect->identifier($this->table),
+            \join(', ', $quotedColumns),
             \join(', ', $rowPlaceholders),
         );
     }
@@ -89,7 +94,7 @@ class InsertBulkBuilder extends AbstractBuilder implements InsertBulkBuilderInte
             foreach ($expectedColumns as $column) {
                 $paramKey = 'col_' . \sizeof($this->columns);
 
-                $this->columns[':' . $paramKey] = $this->connection->dialect->identifier($column);
+                $this->columns[':' . $paramKey] = $column;
                 $this->columnMap[$paramKey] = $column;
             }
         }

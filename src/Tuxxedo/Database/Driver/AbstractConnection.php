@@ -19,14 +19,14 @@ use Tuxxedo\Database\Query\Builder\CountBuilderInterface;
 use Tuxxedo\Database\Query\Builder\DeleteBuilder;
 use Tuxxedo\Database\Query\Builder\DeleteBuilderInterface;
 use Tuxxedo\Database\Query\Builder\ExistsBuilder;
-use Tuxxedo\Database\Query\Builder\InsertBulkBuilder;
-use Tuxxedo\Database\Query\Builder\InsertBulkBuilderInterface;
 use Tuxxedo\Database\Query\Builder\SelectBuilder;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
 use Tuxxedo\Database\Query\Builder\Table\DropTableBuilder;
 use Tuxxedo\Database\Query\Builder\Table\DropTableBuilderInterface;
 use Tuxxedo\Database\Query\Builder\UpdateBuilder;
 use Tuxxedo\Database\Query\Builder\UpdateBuilderInterface;
+use Tuxxedo\Database\Query\Statement\InsertBulkStatement;
+use Tuxxedo\Database\Query\Statement\InsertBulkStatementInterface;
 use Tuxxedo\Database\Query\Statement\InsertStatement;
 use Tuxxedo\Database\Query\Statement\InsertStatementInterface;
 
@@ -149,11 +149,10 @@ abstract class AbstractConnection implements ConnectionInterface
 
     public function insertBulk(
         string $table,
-    ): InsertBulkBuilderInterface {
-        return new InsertBulkBuilder(
-            connection: $this,
+    ): InsertBulkStatementInterface {
+        return new InsertBulkStatement(
             table: $table,
-            statementParser: $this->statementParser,
+            connection: $this,
         );
     }
 

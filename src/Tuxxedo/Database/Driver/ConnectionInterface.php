@@ -20,12 +20,12 @@ use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Query\Builder\CountBuilderInterface;
 use Tuxxedo\Database\Query\Builder\DeleteBuilderInterface;
 use Tuxxedo\Database\Query\Builder\ExistsBuilderInterface;
-use Tuxxedo\Database\Query\Builder\InsertBulkBuilderInterface;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
 use Tuxxedo\Database\Query\Builder\Table\DropTableBuilderInterface;
 use Tuxxedo\Database\Query\Builder\UpdateBuilderInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Parser\StatementParserInterface;
+use Tuxxedo\Database\Query\Statement\InsertBulkStatementInterface;
 use Tuxxedo\Database\Query\Statement\InsertStatementInterface;
 use Tuxxedo\Database\SqlException;
 
@@ -172,7 +172,7 @@ interface ConnectionInterface
 
     public function insertBulk(
         string $table,
-    ): InsertBulkBuilderInterface;
+    ): InsertBulkStatementInterface;
 
     public function update(
         string $table,

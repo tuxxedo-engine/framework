@@ -26,4 +26,14 @@ class Query
             connection: $connection,
         );
     }
+
+    public static function insertBulk(
+        string $table,
+        ?ConnectionInterface $connection = null,
+    ): InsertBulkStatement {
+        return new InsertBulkStatement(
+            table: $table,
+            connection: $connection,
+        );
+    }
 }
