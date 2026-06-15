@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Query\Builder;
+namespace Tuxxedo\Database\Query\Statement;
 
-interface InsertBuilderInterface extends BuilderInterface
+interface InsertStatementInterface extends StatementInterface
 {
     public function set(
         string $column,

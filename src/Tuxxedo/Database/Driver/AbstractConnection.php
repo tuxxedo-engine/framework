@@ -19,8 +19,6 @@ use Tuxxedo\Database\Query\Builder\CountBuilderInterface;
 use Tuxxedo\Database\Query\Builder\DeleteBuilder;
 use Tuxxedo\Database\Query\Builder\DeleteBuilderInterface;
 use Tuxxedo\Database\Query\Builder\ExistsBuilder;
-use Tuxxedo\Database\Query\Builder\InsertBuilder;
-use Tuxxedo\Database\Query\Builder\InsertBuilderInterface;
 use Tuxxedo\Database\Query\Builder\InsertBulkBuilder;
 use Tuxxedo\Database\Query\Builder\InsertBulkBuilderInterface;
 use Tuxxedo\Database\Query\Builder\SelectBuilder;
@@ -29,14 +27,11 @@ use Tuxxedo\Database\Query\Builder\Table\DropTableBuilder;
 use Tuxxedo\Database\Query\Builder\Table\DropTableBuilderInterface;
 use Tuxxedo\Database\Query\Builder\UpdateBuilder;
 use Tuxxedo\Database\Query\Builder\UpdateBuilderInterface;
-use Tuxxedo\Database\Query\Parser\StatementParserInterface;
+use Tuxxedo\Database\Query\Statement\InsertStatement;
+use Tuxxedo\Database\Query\Statement\InsertStatementInterface;
 
 abstract class AbstractConnection implements ConnectionInterface
 {
-    abstract protected StatementParserInterface $statementParser {
-        get;
-    }
-
     protected private(set) int $savepointCounter = 0;
 
     protected function generateSavepointName(): string
@@ -145,11 +140,10 @@ abstract class AbstractConnection implements ConnectionInterface
 
     public function insert(
         string $table,
-    ): InsertBuilderInterface {
-        return new InsertBuilder(
-            connection: $this,
+    ): InsertStatementInterface {
+        return new InsertStatement(
             table: $table,
-            statementParser: $this->statementParser,
+            connection: $this,
         );
     }
 

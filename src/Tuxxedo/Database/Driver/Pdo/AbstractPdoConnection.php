@@ -33,7 +33,7 @@ abstract class AbstractPdoConnection extends AbstractConnection
     protected private(set) \PDO $pdo;
     private readonly \Closure $connector;
 
-    protected readonly StatementParserInterface $statementParser;
+    public readonly StatementParserInterface $statementParser;
 
     final protected function __construct(
         private readonly ContainerInterface $container,

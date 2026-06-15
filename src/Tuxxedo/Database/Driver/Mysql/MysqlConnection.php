@@ -35,7 +35,7 @@ class MysqlConnection extends AbstractConnection
     private readonly \Closure $connector;
     private bool $inTransaction = false;
 
-    protected readonly StatementParserInterface $statementParser;
+    public readonly StatementParserInterface $statementParser;
 
     private function __construct(
         private readonly ContainerInterface $container,

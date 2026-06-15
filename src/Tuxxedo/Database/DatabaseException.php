@@ -126,4 +126,11 @@ class DatabaseException extends \Exception
             message: 'Cannot create savepoint: No transaction is currently active',
         );
     }
+
+    public static function fromNoConnectionAvailable(): self
+    {
+        return new self(
+            message: 'Cannot execute statement: No connection was provided at construction or execution time',
+        );
+    }
 }
