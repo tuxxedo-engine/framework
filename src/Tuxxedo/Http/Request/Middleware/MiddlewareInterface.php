@@ -19,7 +19,6 @@ use Tuxxedo\Http\Response\ResponseInterface;
 // @todo Implement TrustProxy for X-Forwarded-* parsing (likely needs Request::withServer())
 // @todo Implement RequestId for correlation IDs via X-Request-Id
 // @todo Implement MaintenanceMode for 503 with Retry-After
-// @todo Implement Whitelist for restricting IPs/domains (webhook source verification)
 interface MiddlewareInterface
 {
     public function handle(
