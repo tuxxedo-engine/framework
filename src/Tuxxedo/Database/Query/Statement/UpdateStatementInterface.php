@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Query\Builder;
+namespace Tuxxedo\Database\Query\Statement;
 
-interface UpdateBuilderInterface extends WhereBuilderInterface
+interface UpdateStatementInterface extends WhereStatementInterface
 {
     public function set(
         string $column,

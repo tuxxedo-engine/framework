@@ -18,7 +18,6 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
-use Tuxxedo\Database\Query\Builder\UpdateBuilderInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Parser\StatementParserInterface;
 use Tuxxedo\Database\Query\Statement\CountStatementInterface;
@@ -27,6 +26,7 @@ use Tuxxedo\Database\Query\Statement\ExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\InsertBulkStatementInterface;
 use Tuxxedo\Database\Query\Statement\InsertStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\DropTableStatementInterface;
+use Tuxxedo\Database\Query\Statement\UpdateStatementInterface;
 use Tuxxedo\Database\SqlException;
 
 interface ConnectionInterface
@@ -176,7 +176,7 @@ interface ConnectionInterface
 
     public function update(
         string $table,
-    ): UpdateBuilderInterface;
+    ): UpdateStatementInterface;
 
     public function delete(
         string $table,

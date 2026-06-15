@@ -16,8 +16,6 @@ namespace Tuxxedo\Database\Driver;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Query\Builder\SelectBuilder;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
-use Tuxxedo\Database\Query\Builder\UpdateBuilder;
-use Tuxxedo\Database\Query\Builder\UpdateBuilderInterface;
 use Tuxxedo\Database\Query\Statement\CountStatement;
 use Tuxxedo\Database\Query\Statement\CountStatementInterface;
 use Tuxxedo\Database\Query\Statement\DeleteStatement;
@@ -30,6 +28,7 @@ use Tuxxedo\Database\Query\Statement\InsertStatement;
 use Tuxxedo\Database\Query\Statement\InsertStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\DropTableStatement;
 use Tuxxedo\Database\Query\Statement\Table\DropTableStatementInterface;
+use Tuxxedo\Database\Query\Statement\UpdateStatement;
 
 abstract class AbstractConnection implements ConnectionInterface
 {
@@ -159,11 +158,10 @@ abstract class AbstractConnection implements ConnectionInterface
 
     public function update(
         string $table,
-    ): UpdateBuilderInterface {
-        return new UpdateBuilder(
+    ): UpdateStatement {
+        return new UpdateStatement(
             connection: $this,
             table: $table,
-            statementParser: $this->statementParser,
         );
     }
 

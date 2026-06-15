@@ -11,9 +11,11 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Query\Builder;
+namespace Tuxxedo\Database\Query\Statement;
 
-class UpdateBuilder extends AbstractWhereBuilder implements UpdateBuilderInterface
+use Tuxxedo\Database\Query\Dialect\DialectInterface;
+
+class UpdateStatement extends AbstractWhereStatement implements UpdateStatementInterface
 {
     /**
      * @var array<string, string>
@@ -25,31 +27,35 @@ class UpdateBuilder extends AbstractWhereBuilder implements UpdateBuilderInterfa
      */
     private array $expressions = [];
 
-    protected function generateSql(): string
-    {
+    protected function generateSql(
+        DialectInterface $dialect,
+    ): string {
         $clauses = [];
 
-        foreach ($this->columns as $parameterKey => $identifier) {
+        foreach ($this->columns as $parameterKey => $column) {
             $clauses[] = \sprintf(
                 '%s = :%s',
-                $identifier,
+                $dialect->identifier($column),
                 $parameterKey,
             );
         }
 
-        foreach ($this->expressions as $identifier => $expression) {
+        foreach ($this->expressions as $column => $fragment) {
+            $identifier = $dialect->identifier($column);
+
             $clauses[] = \sprintf(
-                '%s = %s',
+                '%s = %s %s',
                 $identifier,
-                $expression,
+                $identifier,
+                $fragment,
             );
         }
 
         return \sprintf(
             'UPDATE %s SET %s%s',
-            $this->connection->dialect->identifier($this->table),
+            $dialect->identifier($this->table),
             \join(', ', $clauses),
-            $this->generateWhereSql(),
+            $this->generateWhereSql($dialect),
         );
     }
 
@@ -59,7 +65,7 @@ class UpdateBuilder extends AbstractWhereBuilder implements UpdateBuilderInterfa
     ): static {
         $parameterKey = 'set_' . \sizeof($this->columns);
 
-        $this->columns[$parameterKey] = $this->connection->dialect->identifier($column);
+        $this->columns[$parameterKey] = $column;
         $this->parameters[$parameterKey] = $value;
 
         return $this;
@@ -69,11 +75,8 @@ class UpdateBuilder extends AbstractWhereBuilder implements UpdateBuilderInterfa
         string $column,
         int|float $amount = 1,
     ): static {
-        $identifier = $this->connection->dialect->identifier($column);
-
-        $this->expressions[$identifier] = \sprintf(
-            '%s + %s',
-            $identifier,
+        $this->expressions[$column] = \sprintf(
+            '+ %s',
             \is_int($amount)
                 ? (string) $amount
                 : \rtrim(\sprintf('%.10F', $amount), '0'),
@@ -86,11 +89,8 @@ class UpdateBuilder extends AbstractWhereBuilder implements UpdateBuilderInterfa
         string $column,
         int|float $amount = 1,
     ): static {
-        $identifier = $this->connection->dialect->identifier($column);
-
-        $this->expressions[$identifier] = \sprintf(
-            '%s - %s',
-            $identifier,
+        $this->expressions[$column] = \sprintf(
+            '- %s',
             \is_int($amount)
                 ? (string) $amount
                 : \rtrim(\sprintf('%.10F', $amount), '0'),

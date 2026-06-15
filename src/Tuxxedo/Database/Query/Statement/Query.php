@@ -77,4 +77,14 @@ class Query
             connection: $connection,
         );
     }
+
+    public static function update(
+        string $table,
+        ?ConnectionInterface $connection = null,
+    ): UpdateStatement {
+        return new UpdateStatement(
+            table: $table,
+            connection: $connection,
+        );
+    }
 }
