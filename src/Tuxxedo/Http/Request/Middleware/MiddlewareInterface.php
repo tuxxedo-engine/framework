@@ -17,7 +17,6 @@ use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
 // @todo Implement TrustProxy for X-Forwarded-* parsing (likely needs Request::withServer())
-// @todo Implement Cors for cross-origin requests with preflight handling
 // @todo Implement RequestId for correlation IDs via X-Request-Id
 // @todo Implement MaintenanceMode for 503 with Retry-After
 // @todo Implement AccessLog for request/response logging via LoggerInterface
