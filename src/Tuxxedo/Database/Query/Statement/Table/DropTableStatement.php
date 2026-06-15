@@ -11,20 +11,23 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Query\Builder\Table;
+namespace Tuxxedo\Database\Query\Statement\Table;
 
-class DropTableBuilder extends AbstractTableBuilder implements DropTableBuilderInterface
+use Tuxxedo\Database\Query\Dialect\DialectInterface;
+
+class DropTableStatement extends AbstractTableStatement implements DropTableStatementInterface
 {
     private bool $ifExists = false;
 
-    protected function generateSql(): string
-    {
+    protected function generateSql(
+        DialectInterface $dialect,
+    ): string {
         return \sprintf(
             'DROP TABLE %s%s',
             $this->ifExists
                 ? 'IF EXISTS '
                 : '',
-            $this->connection->dialect->identifier($this->table),
+            $dialect->identifier($this->table),
         );
     }
 

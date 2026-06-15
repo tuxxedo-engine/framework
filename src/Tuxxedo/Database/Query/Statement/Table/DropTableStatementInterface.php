@@ -11,11 +11,11 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Query\Builder\Table;
+namespace Tuxxedo\Database\Query\Statement\Table;
 
-use Tuxxedo\Database\Query\Builder\BuilderInterface;
+use Tuxxedo\Database\Query\Statement\StatementInterface;
 
-interface DropTableBuilderInterface extends BuilderInterface
+interface DropTableStatementInterface extends StatementInterface
 {
     public function ifExists(): static;
 }

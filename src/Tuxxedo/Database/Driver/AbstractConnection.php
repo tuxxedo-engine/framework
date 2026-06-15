@@ -21,14 +21,14 @@ use Tuxxedo\Database\Query\Builder\DeleteBuilderInterface;
 use Tuxxedo\Database\Query\Builder\ExistsBuilder;
 use Tuxxedo\Database\Query\Builder\SelectBuilder;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
-use Tuxxedo\Database\Query\Builder\Table\DropTableBuilder;
-use Tuxxedo\Database\Query\Builder\Table\DropTableBuilderInterface;
 use Tuxxedo\Database\Query\Builder\UpdateBuilder;
 use Tuxxedo\Database\Query\Builder\UpdateBuilderInterface;
 use Tuxxedo\Database\Query\Statement\InsertBulkStatement;
 use Tuxxedo\Database\Query\Statement\InsertBulkStatementInterface;
 use Tuxxedo\Database\Query\Statement\InsertStatement;
 use Tuxxedo\Database\Query\Statement\InsertStatementInterface;
+use Tuxxedo\Database\Query\Statement\Table\DropTableStatement;
+use Tuxxedo\Database\Query\Statement\Table\DropTableStatementInterface;
 
 abstract class AbstractConnection implements ConnectionInterface
 {
@@ -198,10 +198,10 @@ abstract class AbstractConnection implements ConnectionInterface
 
     public function dropTable(
         string $table,
-    ): DropTableBuilderInterface {
-        return new DropTableBuilder(
-            connection: $this,
+    ): DropTableStatementInterface {
+        return new DropTableStatement(
             table: $table,
+            connection: $this,
         );
     }
 }

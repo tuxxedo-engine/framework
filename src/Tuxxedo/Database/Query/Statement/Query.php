@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Query\Statement;
 
 use Tuxxedo\Database\Driver\ConnectionInterface;
+use Tuxxedo\Database\Query\Statement\Table\DropTableStatement;
 
 class Query
 {
@@ -32,6 +33,16 @@ class Query
         ?ConnectionInterface $connection = null,
     ): InsertBulkStatement {
         return new InsertBulkStatement(
+            table: $table,
+            connection: $connection,
+        );
+    }
+
+    public static function dropTable(
+        string $table,
+        ?ConnectionInterface $connection = null,
+    ): DropTableStatement {
+        return new DropTableStatement(
             table: $table,
             connection: $connection,
         );
