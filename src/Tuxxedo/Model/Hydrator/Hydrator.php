@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Model\Hydrator;
 
 use Tuxxedo\Database\Hydrator\HydratorInterface as DatabaseHydratorInterface;
-use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
+use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
 use Tuxxedo\Model\Attribute\Relation\HasMany;
@@ -202,7 +202,7 @@ class Hydrator implements HydratorInterface
         $relationInstance = Relation::createFromLoader(
             loader: static fn (): iterable => $manager->findAll(
                 $relatedClass,
-                static function (SelectBuilderInterface $builder) use ($targetColumn, $sourceValue): void {
+                static function (SelectStatementInterface $builder) use ($targetColumn, $sourceValue): void {
                     $builder->where($targetColumn, $sourceValue);
                 },
             ),
@@ -266,7 +266,7 @@ class Hydrator implements HydratorInterface
         $relationInstance = Relation::createFromLoader(
             loader: static fn (): iterable => $manager->findAll(
                 $relatedClass,
-                static function (SelectBuilderInterface $builder) use ($pivotTable, $pivotForeignKey, $pivotLocalKey, $targetTable, $targetPrimaryKey, $sourceValue): void {
+                static function (SelectStatementInterface $builder) use ($pivotTable, $pivotForeignKey, $pivotLocalKey, $targetTable, $targetPrimaryKey, $sourceValue): void {
                     $builder
                         ->innerJoin($pivotTable, $pivotTable . '.' . $pivotForeignKey, $targetTable . '.' . $targetPrimaryKey)
                         ->where($pivotTable . '.' . $pivotLocalKey, $sourceValue);
@@ -364,7 +364,7 @@ class Hydrator implements HydratorInterface
         $relationInstance = Relation::createFromLoader(
             loader: static fn (): iterable => $manager->findAll(
                 $relatedClass,
-                static function (SelectBuilderInterface $builder) use ($throughTable, $throughSecondLocalKey, $targetTable, $secondKey, $firstKey, $sourceValue): void {
+                static function (SelectStatementInterface $builder) use ($throughTable, $throughSecondLocalKey, $targetTable, $secondKey, $firstKey, $sourceValue): void {
                     $builder
                         ->distinct()
                         ->innerJoin($throughTable, $throughTable . '.' . $throughSecondLocalKey, $targetTable . '.' . $secondKey)
@@ -398,7 +398,7 @@ class Hydrator implements HydratorInterface
 
         $result = $manager->findFirst(
             $relation->relatedClass,
-            static function (SelectBuilderInterface $builder) use ($throughTable, $throughSecondLocalKey, $targetTable, $secondKey, $firstKey, $sourceValue): void {
+            static function (SelectStatementInterface $builder) use ($throughTable, $throughSecondLocalKey, $targetTable, $secondKey, $firstKey, $sourceValue): void {
                 $builder
                     ->innerJoin($throughTable, $throughTable . '.' . $throughSecondLocalKey, $targetTable . '.' . $secondKey)
                     ->where($throughTable . '.' . $firstKey, $sourceValue);
@@ -443,7 +443,7 @@ class Hydrator implements HydratorInterface
 
         $result = $this->modelsManager->findFirst(
             $relation->relatedClass,
-            static function (SelectBuilderInterface $builder) use ($targetColumn, $sourceValue): void {
+            static function (SelectStatementInterface $builder) use ($targetColumn, $sourceValue): void {
                 $builder->where($targetColumn, $sourceValue);
             },
         );

@@ -18,9 +18,8 @@ use Tuxxedo\Container\DefaultInitializer;
 use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Hydrator\HydratorInterface as DatabaseHydratorInterface;
-use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
-use Tuxxedo\Database\Query\Builder\WhereBuilderInterface;
 use Tuxxedo\Database\Query\Statement\ExistsStatementInterface;
+use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
@@ -931,7 +930,7 @@ class ModelsManager implements ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
-     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @param (\Closure(SelectStatementInterface $builder): void)|null $criteria
      * @return TModel|null
      */
     #[\NoDiscard]
@@ -958,7 +957,7 @@ class ModelsManager implements ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
-     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @param (\Closure(SelectStatementInterface $builder): void)|null $criteria
      * @return TModel
      *
      * @throws ModelException
@@ -977,7 +976,7 @@ class ModelsManager implements ModelsManagerInterface
     /**
      * @template TModel of object
      * @param class-string<TModel> $class
-     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @param (\Closure(SelectStatementInterface $builder): void)|null $criteria
      * @return TModel|null
      */
     #[\NoDiscard]
@@ -997,7 +996,7 @@ class ModelsManager implements ModelsManagerInterface
 
         return $this->findFirst(
             class: $class,
-            criteria: static function (SelectBuilderInterface $builder) use ($criteria, $metaData, $id): void {
+            criteria: static function (SelectStatementInterface $builder) use ($criteria, $metaData, $id): void {
                 if ($criteria !== null) {
                     $criteria($builder);
                 }
@@ -1012,7 +1011,7 @@ class ModelsManager implements ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
-     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @param (\Closure(SelectStatementInterface $builder): void)|null $criteria
      * @return TModel
      *
      * @throws ModelException
@@ -1034,7 +1033,7 @@ class ModelsManager implements ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param array<string, int|string> $keys
-     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @param (\Closure(SelectStatementInterface $builder): void)|null $criteria
      * @return TModel|null
      *
      * @throws ModelException
@@ -1056,7 +1055,7 @@ class ModelsManager implements ModelsManagerInterface
 
         return $this->findFirst(
             class: $class,
-            criteria: static function (SelectBuilderInterface $builder) use ($criteria, $keys): void {
+            criteria: static function (SelectStatementInterface $builder) use ($criteria, $keys): void {
                 if ($criteria !== null) {
                     $criteria($builder);
                 }
@@ -1074,7 +1073,7 @@ class ModelsManager implements ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param array<string, int|string> $keys
-     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @param (\Closure(SelectStatementInterface $builder): void)|null $criteria
      * @return TModel
      *
      * @throws ModelException
@@ -1095,7 +1094,7 @@ class ModelsManager implements ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
-     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @param (\Closure(SelectStatementInterface $builder): void)|null $criteria
      * @return \Generator<int, TModel>
      */
     #[\NoDiscard]
@@ -1339,7 +1338,7 @@ class ModelsManager implements ModelsManagerInterface
     }
 
     private function applyKeyWhere(
-        WhereBuilderInterface|WhereStatementInterface $query,
+        WhereStatementInterface $query,
         object $model,
         ModelMetaDataInterface $metaData,
     ): void {
@@ -1382,7 +1381,7 @@ class ModelsManager implements ModelsManagerInterface
     }
 
     private function applySoftDeleteFilter(
-        WhereBuilderInterface|WhereStatementInterface $query,
+        WhereStatementInterface $query,
         ModelMetaDataInterface $metaData,
     ): void {
         $softDeleteBehaviors = $metaData->behaviorsOf(SoftDeleteBehaviorInterface::class);

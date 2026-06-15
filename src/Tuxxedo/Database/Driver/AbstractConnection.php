@@ -14,8 +14,6 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver;
 
 use Tuxxedo\Database\DatabaseException;
-use Tuxxedo\Database\Query\Builder\SelectBuilder;
-use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
 use Tuxxedo\Database\Query\Statement\CountStatement;
 use Tuxxedo\Database\Query\Statement\CountStatementInterface;
 use Tuxxedo\Database\Query\Statement\DeleteStatement;
@@ -26,6 +24,8 @@ use Tuxxedo\Database\Query\Statement\InsertBulkStatement;
 use Tuxxedo\Database\Query\Statement\InsertBulkStatementInterface;
 use Tuxxedo\Database\Query\Statement\InsertStatement;
 use Tuxxedo\Database\Query\Statement\InsertStatementInterface;
+use Tuxxedo\Database\Query\Statement\SelectStatement;
+use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\DropTableStatement;
 use Tuxxedo\Database\Query\Statement\Table\DropTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\UpdateStatement;
@@ -130,11 +130,10 @@ abstract class AbstractConnection implements ConnectionInterface
 
     public function select(
         string $table,
-    ): SelectBuilderInterface {
-        return new SelectBuilder(
-            connection: $this,
+    ): SelectStatementInterface {
+        return new SelectStatement(
             table: $table,
-            statementParser: $this->statementParser,
+            connection: $this,
         );
     }
 

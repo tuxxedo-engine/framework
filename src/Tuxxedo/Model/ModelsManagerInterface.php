@@ -16,8 +16,8 @@ namespace Tuxxedo\Model;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Database\Driver\ConnectionInterface;
-use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
 use Tuxxedo\Database\Query\Statement\ExistsStatementInterface;
+use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Behavior\BehaviorInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
@@ -79,7 +79,7 @@ interface ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
-     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @param (\Closure(SelectStatementInterface $builder): void)|null $criteria
      * @return TModel|null
      */
     #[\NoDiscard]
@@ -93,7 +93,7 @@ interface ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
-     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @param (\Closure(SelectStatementInterface $builder): void)|null $criteria
      * @return TModel
      *
      * @throws ModelException
@@ -108,7 +108,7 @@ interface ModelsManagerInterface
     /**
      * @template TModel of object
      * @param class-string<TModel> $class
-     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @param (\Closure(SelectStatementInterface $builder): void)|null $criteria
      * @return TModel|null
      */
     #[\NoDiscard]
@@ -123,7 +123,7 @@ interface ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
-     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @param (\Closure(SelectStatementInterface $builder): void)|null $criteria
      * @return TModel
      *
      * @throws ModelException
@@ -141,7 +141,7 @@ interface ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param array<string, int|string> $keys
-     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @param (\Closure(SelectStatementInterface $builder): void)|null $criteria
      * @return TModel|null
      *
      * @throws ModelException
@@ -159,7 +159,7 @@ interface ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param array<string, int|string> $keys
-     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @param (\Closure(SelectStatementInterface $builder): void)|null $criteria
      * @return TModel
      *
      * @throws ModelException
@@ -176,7 +176,7 @@ interface ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
-     * @param (\Closure(SelectBuilderInterface $builder): void)|null $criteria
+     * @param (\Closure(SelectStatementInterface $builder): void)|null $criteria
      * @return \Generator<int, TModel>
      */
     #[\NoDiscard]

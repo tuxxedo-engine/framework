@@ -11,10 +11,10 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Query\Builder;
+namespace Tuxxedo\Database\Query\Statement\Order;
 
-enum ConditionConjunction
+enum OrderDirection: string
 {
-    case AND;
-    case OR;
+    case ASC = 'ASC';
+    case DESC = 'DESC';
 }

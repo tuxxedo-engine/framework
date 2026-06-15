@@ -11,14 +11,18 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Query\Builder;
+namespace Tuxxedo\Database\Query\Statement;
 
-use Tuxxedo\Database\DatabaseException;
-use Tuxxedo\Database\Hydrator\HydratableInterface;
+use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Hydrator\HydratorInterface;
-use Tuxxedo\Database\SqlException;
+use Tuxxedo\Database\Query\Dialect\DialectInterface;
+use Tuxxedo\Database\Query\Statement\Condition\Condition;
+use Tuxxedo\Database\Query\Statement\Condition\ConditionConjunction;
+use Tuxxedo\Database\Query\Statement\Condition\ConditionInterface;
+use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
+use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 
-class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterface
+class SelectStatement extends AbstractWhereStatement implements SelectStatementInterface
 {
     private bool $distinct = false;
 
@@ -45,10 +49,18 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
     private ?int $limit = null;
     private ?int $offset = null;
 
-    protected function generateSql(): string
-    {
-        $columns = \sizeof($this->columns) > 0
-            ? \join(', ', $this->columns)
+    protected function generateSql(
+        DialectInterface $dialect,
+    ): string {
+        $renderedColumns = \array_map(
+            static fn (string $column): string => $column === '*' || (\str_contains($column, '(') && \str_contains($column, ')'))
+                ? $column
+                : $dialect->qualifiedIdentifier($column),
+            $this->columns,
+        );
+
+        $columns = \sizeof($renderedColumns) > 0
+            ? \join(', ', $renderedColumns)
             : '*';
 
         $sql = \sprintf(
@@ -57,14 +69,19 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
                 ? 'DISTINCT '
                 : '',
             $columns,
-            $this->connection->dialect->identifier($this->table),
-            $this->generateWhereSql(),
+            $dialect->identifier($this->table),
+            $this->generateWhereSql($dialect),
         );
 
         if (\sizeof($this->groupBy) > 0) {
+            $renderedGroupBy = \array_map(
+                static fn (string $column): string => $dialect->identifier($column),
+                $this->groupBy,
+            );
+
             $sql .= \sprintf(
                 ' GROUP BY %s',
-                \join(', ', $this->groupBy),
+                \join(', ', $renderedGroupBy),
             );
         }
 
@@ -81,7 +98,7 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
                     $sql .= \sprintf(
                         ' %s %s %s',
                         $keyword,
-                        $condition->identifier,
+                        $dialect->qualifiedIdentifier($condition->identifier),
                         $condition->operator->value,
                     );
                 } elseif (
@@ -91,7 +108,7 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
                     $sql .= \sprintf(
                         ' %s %s %s (%s)',
                         $keyword,
-                        $condition->identifier,
+                        $dialect->qualifiedIdentifier($condition->identifier),
                         $condition->operator->value,
                         $condition->parameter,
                     );
@@ -99,7 +116,7 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
                     $sql .= \sprintf(
                         ' %s %s %s %s',
                         $keyword,
-                        $condition->identifier,
+                        $dialect->qualifiedIdentifier($condition->identifier),
                         $condition->operator->value,
                         $condition->parameter,
                     );
@@ -109,7 +126,7 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
 
         if (\sizeof($this->orderBy) > 0) {
             $clauses = \array_map(
-                static fn (string $identifier, OrderDirection $direction): string => $identifier . ' ' . $direction->name,
+                static fn (string $column, OrderDirection $direction): string => $dialect->identifier($column) . ' ' . $direction->name,
                 \array_keys($this->orderBy),
                 \array_values($this->orderBy),
             );
@@ -141,9 +158,7 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
         string ...$columns,
     ): static {
         foreach ($columns as $column) {
-            $this->columns[] = $column === '*' || (\str_contains($column, '(') && \str_contains($column, ')'))
-                ? $column
-                : $this->connection->dialect->qualifiedIdentifier($column);
+            $this->columns[] = $column;
         }
 
         return $this;
@@ -164,7 +179,7 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
             $direction = OrderDirection::from($direction);
         }
 
-        $this->orderBy[$this->connection->dialect->identifier($column)] = $direction;
+        $this->orderBy[$column] = $direction;
 
         return $this;
     }
@@ -173,7 +188,7 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
         string ...$columns,
     ): static {
         foreach ($columns as $column) {
-            $this->groupBy[] = $this->connection->dialect->identifier($column);
+            $this->groupBy[] = $column;
         }
 
         return $this;
@@ -193,7 +208,7 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
         $this->parameters[$parameterKey] = $value;
         $this->havingConditions[] = new Condition(
             conjunction: ConditionConjunction::AND,
-            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            identifier: $column,
             operator: $operator,
             parameter: ':' . $parameterKey,
         );
@@ -215,7 +230,7 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
         $this->parameters[$parameterKey] = $value;
         $this->havingConditions[] = new Condition(
             conjunction: ConditionConjunction::OR,
-            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            identifier: $column,
             operator: $operator,
             parameter: ':' . $parameterKey,
         );
@@ -232,7 +247,7 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
         $this->parameters[$parameterKey] = $values;
         $this->havingConditions[] = new Condition(
             conjunction: ConditionConjunction::AND,
-            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            identifier: $column,
             operator: ConditionOperator::IN,
             parameter: ':' . $parameterKey . '[]',
         );
@@ -249,7 +264,7 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
         $this->parameters[$parameterKey] = $values;
         $this->havingConditions[] = new Condition(
             conjunction: ConditionConjunction::AND,
-            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            identifier: $column,
             operator: ConditionOperator::NOT_IN,
             parameter: ':' . $parameterKey . '[]',
         );
@@ -262,7 +277,7 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
     ): static {
         $this->havingConditions[] = new Condition(
             conjunction: ConditionConjunction::AND,
-            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            identifier: $column,
             operator: ConditionOperator::IS_NULL,
         );
 
@@ -274,7 +289,7 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
     ): static {
         $this->havingConditions[] = new Condition(
             conjunction: ConditionConjunction::AND,
-            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            identifier: $column,
             operator: ConditionOperator::IS_NOT_NULL,
         );
 
@@ -290,7 +305,7 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
         $this->parameters[$parameterKey] = $values;
         $this->havingConditions[] = new Condition(
             conjunction: ConditionConjunction::OR,
-            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            identifier: $column,
             operator: ConditionOperator::IN,
             parameter: ':' . $parameterKey . '[]',
         );
@@ -307,7 +322,7 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
         $this->parameters[$parameterKey] = $values;
         $this->havingConditions[] = new Condition(
             conjunction: ConditionConjunction::OR,
-            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            identifier: $column,
             operator: ConditionOperator::NOT_IN,
             parameter: ':' . $parameterKey . '[]',
         );
@@ -320,7 +335,7 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
     ): static {
         $this->havingConditions[] = new Condition(
             conjunction: ConditionConjunction::OR,
-            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            identifier: $column,
             operator: ConditionOperator::IS_NULL,
         );
 
@@ -332,7 +347,7 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
     ): static {
         $this->havingConditions[] = new Condition(
             conjunction: ConditionConjunction::OR,
-            identifier: $this->connection->dialect->qualifiedIdentifier($column),
+            identifier: $column,
             operator: ConditionOperator::IS_NOT_NULL,
         );
 
@@ -349,21 +364,12 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
         return $this;
     }
 
-    /**
-     * @template TClassName of object
-     *
-     * @param class-string<TClassName>|class-string<TClassName&HydratableInterface>|\Closure(mixed[] $properties): TClassName $class
-     * @return TClassName|null
-     *
-     * @throws DatabaseException
-     * @throws SqlException
-     */
-    #[\NoDiscard]
     public function fetch(
         string|\Closure $class,
         ?HydratorInterface $hydrator = null,
+        ?ConnectionInterface $connection = null,
     ): ?object {
-        $result = $this->execute();
+        $result = $this->execute($connection);
 
         if ($result->count() > 0) {
             return $result->fetchObject($class, $hydrator);
@@ -372,20 +378,11 @@ class SelectBuilder extends AbstractWhereBuilder implements SelectBuilderInterfa
         return null;
     }
 
-    /**
-     * @template TClassName of object
-     *
-     * @param class-string<TClassName>|class-string<TClassName&HydratableInterface>|\Closure(mixed[] $properties): TClassName $class
-     * @return \Generator<int, TClassName>
-     *
-     * @throws DatabaseException
-     * @throws SqlException
-     */
-    #[\NoDiscard]
     public function fetchAll(
         string|\Closure $class,
         ?HydratorInterface $hydrator = null,
+        ?ConnectionInterface $connection = null,
     ): \Generator {
-        yield from $this->execute()->fetchAll($class, $hydrator);
+        yield from $this->execute($connection)->fetchAll($class, $hydrator);
     }
 }

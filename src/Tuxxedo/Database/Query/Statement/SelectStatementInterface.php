@@ -11,14 +11,17 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Query\Builder;
+namespace Tuxxedo\Database\Query\Statement;
 
 use Tuxxedo\Database\DatabaseException;
+use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Hydrator\HydratableInterface;
 use Tuxxedo\Database\Hydrator\HydratorInterface;
+use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
+use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\SqlException;
 
-interface SelectBuilderInterface extends WhereBuilderInterface
+interface SelectStatementInterface extends WhereStatementInterface
 {
     public function select(
         string ...$columns,
@@ -113,6 +116,7 @@ interface SelectBuilderInterface extends WhereBuilderInterface
     public function fetch(
         string|\Closure $class,
         ?HydratorInterface $hydrator = null,
+        ?ConnectionInterface $connection = null,
     ): ?object;
 
     /**
@@ -128,5 +132,6 @@ interface SelectBuilderInterface extends WhereBuilderInterface
     public function fetchAll(
         string|\Closure $class,
         ?HydratorInterface $hydrator = null,
+        ?ConnectionInterface $connection = null,
     ): \Generator;
 }

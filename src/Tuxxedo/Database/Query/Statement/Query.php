@@ -88,4 +88,14 @@ class Query
             connection: $connection,
         );
     }
+
+    public static function select(
+        string $table,
+        ?ConnectionInterface $connection = null,
+    ): SelectStatementInterface {
+        return new SelectStatement(
+            table: $table,
+            connection: $connection,
+        );
+    }
 }
