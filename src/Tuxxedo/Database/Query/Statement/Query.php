@@ -15,13 +15,14 @@ namespace Tuxxedo\Database\Query\Statement;
 
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Query\Statement\Table\DropTableStatement;
+use Tuxxedo\Database\Query\Statement\Table\DropTableStatementInterface;
 
 class Query
 {
     public static function insert(
         string $table,
         ?ConnectionInterface $connection = null,
-    ): InsertStatement {
+    ): InsertStatementInterface {
         return new InsertStatement(
             table: $table,
             connection: $connection,
@@ -31,7 +32,7 @@ class Query
     public static function insertBulk(
         string $table,
         ?ConnectionInterface $connection = null,
-    ): InsertBulkStatement {
+    ): InsertBulkStatementInterface {
         return new InsertBulkStatement(
             table: $table,
             connection: $connection,
@@ -41,7 +42,7 @@ class Query
     public static function dropTable(
         string $table,
         ?ConnectionInterface $connection = null,
-    ): DropTableStatement {
+    ): DropTableStatementInterface {
         return new DropTableStatement(
             table: $table,
             connection: $connection,
@@ -51,7 +52,7 @@ class Query
     public static function count(
         string $table,
         ?ConnectionInterface $connection = null,
-    ): CountStatement {
+    ): CountStatementInterface {
         return new CountStatement(
             table: $table,
             connection: $connection,
@@ -61,7 +62,7 @@ class Query
     public static function delete(
         string $table,
         ?ConnectionInterface $connection = null,
-    ): DeleteStatement {
+    ): DeleteStatementInterface {
         return new DeleteStatement(
             table: $table,
             connection: $connection,
@@ -71,7 +72,7 @@ class Query
     public static function exists(
         string $table,
         ?ConnectionInterface $connection = null,
-    ): ExistsStatement {
+    ): ExistsStatementInterface {
         return new ExistsStatement(
             table: $table,
             connection: $connection,
@@ -81,7 +82,7 @@ class Query
     public static function update(
         string $table,
         ?ConnectionInterface $connection = null,
-    ): UpdateStatement {
+    ): UpdateStatementInterface {
         return new UpdateStatement(
             table: $table,
             connection: $connection,
