@@ -11,18 +11,21 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Query\Builder;
+namespace Tuxxedo\Database\Query\Statement;
 
-class DeleteBuilder extends AbstractWhereBuilder implements DeleteBuilderInterface
+use Tuxxedo\Database\Query\Dialect\DialectInterface;
+
+class DeleteStatement extends AbstractWhereStatement implements DeleteStatementInterface
 {
     private ?int $limit = null;
 
-    protected function generateSql(): string
-    {
+    protected function generateSql(
+        DialectInterface $dialect,
+    ): string {
         $sql = \sprintf(
             'DELETE FROM %s%s',
-            $this->connection->dialect->identifier($this->table),
-            $this->generateWhereSql(),
+            $dialect->identifier($this->table),
+            $this->generateWhereSql($dialect),
         );
 
         if ($this->limit !== null) {

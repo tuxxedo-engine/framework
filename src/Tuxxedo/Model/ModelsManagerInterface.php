@@ -16,8 +16,8 @@ namespace Tuxxedo\Model;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Database\Driver\ConnectionInterface;
-use Tuxxedo\Database\Query\Builder\ExistsBuilderInterface;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
+use Tuxxedo\Database\Query\Statement\ExistsStatementInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Behavior\BehaviorInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
@@ -198,7 +198,7 @@ interface ModelsManagerInterface
 
     /**
      * @param class-string $class
-     * @param \Closure(ExistsBuilderInterface $builder): void $criteria
+     * @param \Closure(ExistsStatementInterface $builder): void $criteria
      */
     #[\NoDiscard]
     public function exists(
@@ -209,7 +209,7 @@ interface ModelsManagerInterface
 
     /**
      * @param class-string $class
-     * @param (\Closure(ExistsBuilderInterface $builder): void) $criteria
+     * @param (\Closure(ExistsStatementInterface $builder): void) $criteria
      */
     #[\NoDiscard]
     public function existsByIdentifier(

@@ -57,4 +57,24 @@ class Query
             connection: $connection,
         );
     }
+
+    public static function delete(
+        string $table,
+        ?ConnectionInterface $connection = null,
+    ): DeleteStatement {
+        return new DeleteStatement(
+            table: $table,
+            connection: $connection,
+        );
+    }
+
+    public static function exists(
+        string $table,
+        ?ConnectionInterface $connection = null,
+    ): ExistsStatement {
+        return new ExistsStatement(
+            table: $table,
+            connection: $connection,
+        );
+    }
 }

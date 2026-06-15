@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Query\Builder;
+namespace Tuxxedo\Database\Query\Statement;
 
-interface DeleteBuilderInterface extends WhereBuilderInterface
+interface DeleteStatementInterface extends WhereStatementInterface
 {
     public function limit(
         int $limit,

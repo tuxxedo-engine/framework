@@ -18,9 +18,10 @@ use Tuxxedo\Container\DefaultInitializer;
 use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Hydrator\HydratorInterface as DatabaseHydratorInterface;
-use Tuxxedo\Database\Query\Builder\ExistsBuilderInterface;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
 use Tuxxedo\Database\Query\Builder\WhereBuilderInterface;
+use Tuxxedo\Database\Query\Statement\ExistsStatementInterface;
+use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
@@ -1157,7 +1158,7 @@ class ModelsManager implements ModelsManagerInterface
 
     /**
      * @param class-string $class
-     * @param \Closure(ExistsBuilderInterface $builder): void $criteria
+     * @param \Closure(ExistsStatementInterface $builder): void $criteria
      */
     #[\NoDiscard]
     public function exists(
@@ -1179,7 +1180,7 @@ class ModelsManager implements ModelsManagerInterface
 
     /**
      * @param class-string $class
-     * @param (\Closure(ExistsBuilderInterface $builder): void) $criteria
+     * @param (\Closure(ExistsStatementInterface $builder): void) $criteria
      */
     #[\NoDiscard]
     public function existsByIdentifier(
@@ -1198,7 +1199,7 @@ class ModelsManager implements ModelsManagerInterface
 
         return $this->exists(
             class: $class,
-            criteria: static function (ExistsBuilderInterface $builder) use ($criteria, $metaData, $id): void {
+            criteria: static function (ExistsStatementInterface $builder) use ($criteria, $metaData, $id): void {
                 if ($criteria !== null) {
                     $criteria($builder);
                 }
@@ -1338,7 +1339,7 @@ class ModelsManager implements ModelsManagerInterface
     }
 
     private function applyKeyWhere(
-        WhereBuilderInterface $query,
+        WhereBuilderInterface|WhereStatementInterface $query,
         object $model,
         ModelMetaDataInterface $metaData,
     ): void {
@@ -1381,7 +1382,7 @@ class ModelsManager implements ModelsManagerInterface
     }
 
     private function applySoftDeleteFilter(
-        WhereBuilderInterface $query,
+        WhereBuilderInterface|WhereStatementInterface $query,
         ModelMetaDataInterface $metaData,
     ): void {
         $softDeleteBehaviors = $metaData->behaviorsOf(SoftDeleteBehaviorInterface::class);
