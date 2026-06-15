@@ -11,18 +11,22 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Query\Builder;
+namespace Tuxxedo\Database\Query\Statement;
 
-class CountBuilder extends AbstractWhereBuilder implements CountBuilderInterface
+use Tuxxedo\Database\Driver\ConnectionInterface;
+use Tuxxedo\Database\Query\Dialect\DialectInterface;
+
+class CountStatement extends AbstractWhereStatement implements CountStatementInterface
 {
     private string $column = '*';
     private bool $distinct = false;
 
-    protected function generateSql(): string
-    {
+    protected function generateSql(
+        DialectInterface $dialect,
+    ): string {
         $countExpression = $this->column === '*'
             ? '*'
-            : $this->connection->dialect->identifier($this->column);
+            : $dialect->identifier($this->column);
 
         if ($this->distinct) {
             $countExpression = 'DISTINCT ' . $countExpression;
@@ -31,8 +35,8 @@ class CountBuilder extends AbstractWhereBuilder implements CountBuilderInterface
         return \sprintf(
             'SELECT COUNT(%s) FROM %s%s',
             $countExpression,
-            $this->connection->dialect->identifier($this->table),
-            $this->generateWhereSql(),
+            $dialect->identifier($this->table),
+            $this->generateWhereSql($dialect),
         );
     }
 
@@ -51,9 +55,10 @@ class CountBuilder extends AbstractWhereBuilder implements CountBuilderInterface
         return $this;
     }
 
-    public function count(): int
-    {
+    public function count(
+        ?ConnectionInterface $connection = null,
+    ): int {
         /** @var int */
-        return $this->execute()->fetchRow()[0];
+        return $this->execute($connection)->fetchRow()[0];
     }
 }

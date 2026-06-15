@@ -47,4 +47,14 @@ class Query
             connection: $connection,
         );
     }
+
+    public static function count(
+        string $table,
+        ?ConnectionInterface $connection = null,
+    ): CountStatement {
+        return new CountStatement(
+            table: $table,
+            connection: $connection,
+        );
+    }
 }

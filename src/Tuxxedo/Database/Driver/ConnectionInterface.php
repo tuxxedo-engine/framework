@@ -17,13 +17,13 @@ use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
-use Tuxxedo\Database\Query\Builder\CountBuilderInterface;
 use Tuxxedo\Database\Query\Builder\DeleteBuilderInterface;
 use Tuxxedo\Database\Query\Builder\ExistsBuilderInterface;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
 use Tuxxedo\Database\Query\Builder\UpdateBuilderInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Parser\StatementParserInterface;
+use Tuxxedo\Database\Query\Statement\CountStatementInterface;
 use Tuxxedo\Database\Query\Statement\InsertBulkStatementInterface;
 use Tuxxedo\Database\Query\Statement\InsertStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\DropTableStatementInterface;
@@ -188,7 +188,7 @@ interface ConnectionInterface
 
     public function count(
         string $table,
-    ): CountBuilderInterface;
+    ): CountStatementInterface;
 
     // @todo createTable builder
     // @todo alterTable builder

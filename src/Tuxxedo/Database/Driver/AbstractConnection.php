@@ -14,8 +14,6 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver;
 
 use Tuxxedo\Database\DatabaseException;
-use Tuxxedo\Database\Query\Builder\CountBuilder;
-use Tuxxedo\Database\Query\Builder\CountBuilderInterface;
 use Tuxxedo\Database\Query\Builder\DeleteBuilder;
 use Tuxxedo\Database\Query\Builder\DeleteBuilderInterface;
 use Tuxxedo\Database\Query\Builder\ExistsBuilder;
@@ -23,6 +21,8 @@ use Tuxxedo\Database\Query\Builder\SelectBuilder;
 use Tuxxedo\Database\Query\Builder\SelectBuilderInterface;
 use Tuxxedo\Database\Query\Builder\UpdateBuilder;
 use Tuxxedo\Database\Query\Builder\UpdateBuilderInterface;
+use Tuxxedo\Database\Query\Statement\CountStatement;
+use Tuxxedo\Database\Query\Statement\CountStatementInterface;
 use Tuxxedo\Database\Query\Statement\InsertBulkStatement;
 use Tuxxedo\Database\Query\Statement\InsertBulkStatementInterface;
 use Tuxxedo\Database\Query\Statement\InsertStatement;
@@ -188,11 +188,10 @@ abstract class AbstractConnection implements ConnectionInterface
 
     public function count(
         string $table,
-    ): CountBuilderInterface {
-        return new CountBuilder(
-            connection: $this,
+    ): CountStatementInterface {
+        return new CountStatement(
             table: $table,
-            statementParser: $this->statementParser,
+            connection: $this,
         );
     }
 

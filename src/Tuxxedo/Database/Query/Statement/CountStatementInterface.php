@@ -11,12 +11,13 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Query\Builder;
+namespace Tuxxedo\Database\Query\Statement;
 
 use Tuxxedo\Database\DatabaseException;
+use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\SqlException;
 
-interface CountBuilderInterface extends WhereBuilderInterface
+interface CountStatementInterface extends WhereStatementInterface
 {
     public function column(
         string $column = '*',
@@ -28,5 +29,7 @@ interface CountBuilderInterface extends WhereBuilderInterface
      * @throws DatabaseException
      * @throws SqlException
      */
-    public function count(): int;
+    public function count(
+        ?ConnectionInterface $connection = null,
+    ): int;
 }
