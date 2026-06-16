@@ -24,8 +24,6 @@ use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Router\RouterInterface;
 
 // @todo Support #[Model(key: '???')] for loading in models on DI, key is useful for routes
-// @todo Support beforeRouting middleware?
-// @todo Support afterRouting middleware?
 #[DefaultImplementation(class: Kernel::class, lifecycle: Lifecycle::PERSISTENT)]
 interface KernelInterface
 {
