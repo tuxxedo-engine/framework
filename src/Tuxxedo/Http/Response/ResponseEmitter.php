@@ -32,6 +32,7 @@ class ResponseEmitter implements ResponseEmitterInterface
         $maxLength = null;
 
         if (!$this->sent && $sendHeaders) {
+            // @todo Investigate whether this needs to be moved down to after regular headers
             \http_response_code(
                 response_code: $response->responseCode->getStatusCode(),
             );
@@ -49,6 +50,7 @@ class ResponseEmitter implements ResponseEmitterInterface
                     );
 
                     continue;
+                    // @todo This may not work with different casing, maybe we need an is()?
                 } elseif ($header->name === 'Content-Length') {
                     $maxLength = (int) $header->value;
                 }
