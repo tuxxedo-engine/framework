@@ -15,7 +15,6 @@ namespace Tuxxedo\Http\Response\Stream;
 
 use Tuxxedo\Http\Response\PrefersHeadersInterface;
 
-// @todo Consider a serializer or similar argument for generator based streams for selective restructuring
 interface StreamInterface extends PrefersHeadersInterface
 {
     public bool $autoFlush {
