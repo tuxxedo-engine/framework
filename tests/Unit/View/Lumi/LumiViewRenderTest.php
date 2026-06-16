@@ -58,6 +58,7 @@ class LumiViewRenderTest extends TestCase
     private function createTempDirectory(
         string $prefix,
     ): string {
+        // @todo Rewrite this entire block to use tempnam()
         $base = \str_replace('\\', '/', \sys_get_temp_dir());
         $path = $base . '/tuxxedo_lumi_render_' . $prefix . '_' . \uniqid('', true);
 
