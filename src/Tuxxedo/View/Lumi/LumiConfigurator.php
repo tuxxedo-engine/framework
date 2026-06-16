@@ -45,7 +45,6 @@ use Tuxxedo\View\Lumi\Runtime\Runtime;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
 use Tuxxedo\View\ViewRenderInterface;
 
-// @todo Should this be able to produce a LumiEngine so Lumi can be reused outside of views?
 class LumiConfigurator implements LumiConfiguratorInterface
 {
     public private(set) string $viewDirectory = '';
