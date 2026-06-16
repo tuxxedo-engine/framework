@@ -16,7 +16,6 @@ namespace Tuxxedo\Http\Request\Middleware;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
-// @todo Implement TrustProxy for X-Forwarded-* parsing (likely needs Request::withServer())
 // @todo Implement RequestId for correlation IDs via X-Request-Id
 interface MiddlewareInterface
 {

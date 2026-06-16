@@ -72,7 +72,7 @@ class Request implements RequestInterface
             $method = Method::from($method);
         }
 
-        $this->method = $method ?? Method::GET;
+        $this->method = $method ?? self::detectMethod();
         $this->queryString = $queryString ?? self::detectQueryString();
         $this->path = $path ?? self::detectPath();
         $this->uri = $uri ?? self::detectUri($this->queryString);
@@ -81,6 +81,14 @@ class Request implements RequestInterface
         $this->host = $host ?? self::detectHost();
         $this->port = $port ?? self::detectPort();
         $this->ipAddress = $ipAddress ?? self::detectIpAddress();
+    }
+
+    private static function detectMethod(): Method
+    {
+        /** @var string|null $method */
+        $method = $_SERVER['REQUEST_METHOD'] ?? null;
+
+        return Method::from($method ?? '');
     }
 
     private static function detectPath(): string
