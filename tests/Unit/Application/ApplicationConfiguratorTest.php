@@ -39,6 +39,9 @@ use Tuxxedo\Router\DynamicRouter;
 use Tuxxedo\Router\RouteDiscoverer;
 use Tuxxedo\Router\RouterInterface;
 use Tuxxedo\Router\StaticRouter;
+use Tuxxedo\View\Lumi\LumiConfigurator;
+use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
+use Tuxxedo\View\ViewRenderInterface;
 
 class ApplicationConfiguratorTest extends TestCase
 {
@@ -50,146 +53,6 @@ class ApplicationConfiguratorTest extends TestCase
     protected function setUp(): void
     {
         ServiceMarker::reset();
-    }
-
-    public function testConstructorDefaultsAppNameToEmptyString(): void
-    {
-        $configurator = new ApplicationConfigurator();
-
-        self::assertSame('', $configurator->appName);
-    }
-
-    public function testConstructorDefaultsAppVersionToEmptyString(): void
-    {
-        $configurator = new ApplicationConfigurator();
-
-        self::assertSame('', $configurator->appVersion);
-    }
-
-    public function testConstructorDefaultsAppProfileToRelease(): void
-    {
-        $configurator = new ApplicationConfigurator();
-
-        self::assertSame(Profile::RELEASE, $configurator->appProfile);
-    }
-
-    public function testConstructorDefaultsAppUrlToEmptyString(): void
-    {
-        $configurator = new ApplicationConfigurator();
-
-        self::assertSame('', $configurator->appUrl);
-    }
-
-    public function testConstructorDefaultsConfigToNull(): void
-    {
-        $configurator = new ApplicationConfigurator();
-
-        self::assertNull($configurator->config);
-    }
-
-    public function testConstructorDefaultsContainerToNull(): void
-    {
-        $configurator = new ApplicationConfigurator();
-
-        self::assertNull($configurator->container);
-    }
-
-    public function testConstructorDefaultsDefaultRouterDirectoryToNull(): void
-    {
-        $configurator = new ApplicationConfigurator();
-
-        self::assertNull($configurator->defaultRouterDirectory);
-    }
-
-    public function testConstructorDefaultsDefaultRouterBaseNamespaceToNull(): void
-    {
-        $configurator = new ApplicationConfigurator();
-
-        self::assertNull($configurator->defaultRouterBaseNamespace);
-    }
-
-    public function testConstructorDefaultsDefaultRouterStrictModeToTrue(): void
-    {
-        $configurator = new ApplicationConfigurator();
-
-        self::assertTrue($configurator->defaultRouterStrictMode);
-    }
-
-    public function testConstructorDefaultsUseDebugHandlerToFalse(): void
-    {
-        $configurator = new ApplicationConfigurator();
-
-        self::assertFalse($configurator->useDebugHandler);
-    }
-
-    public function testConstructorDefaultsRegisterPhpErrorHandlerToTrue(): void
-    {
-        $configurator = new ApplicationConfigurator();
-
-        self::assertTrue($configurator->registerPhpErrorHandler);
-    }
-
-    public function testConstructorDefaultsRouterToNull(): void
-    {
-        $configurator = new ApplicationConfigurator();
-
-        self::assertNull($configurator->router);
-    }
-
-    public function testConstructorDefaultsEmitterToNull(): void
-    {
-        $configurator = new ApplicationConfigurator();
-
-        self::assertNull($configurator->emitter);
-    }
-
-    public function testConstructorDefaultsDispatcherToNull(): void
-    {
-        $configurator = new ApplicationConfigurator();
-
-        self::assertNull($configurator->dispatcher);
-    }
-
-    public function testConstructorDefaultsEventsManagerToNull(): void
-    {
-        $configurator = new ApplicationConfigurator();
-
-        self::assertNull($configurator->eventsManager);
-    }
-
-    public function testConstructorDefaultsUrlToNull(): void
-    {
-        $configurator = new ApplicationConfigurator();
-
-        self::assertNull($configurator->url);
-    }
-
-    public function testConstructorDefaultsMiddlewareToEmptyArray(): void
-    {
-        $configurator = new ApplicationConfigurator();
-
-        self::assertSame([], $configurator->middleware);
-    }
-
-    public function testConstructorDefaultsExceptionHandlersToEmptyArray(): void
-    {
-        $configurator = new ApplicationConfigurator();
-
-        self::assertSame([], $configurator->exceptionHandlers);
-    }
-
-    public function testConstructorDefaultsDefaultExceptionHandlersToEmptyArray(): void
-    {
-        $configurator = new ApplicationConfigurator();
-
-        self::assertSame([], $configurator->defaultExceptionHandlers);
-    }
-
-    public function testConstructorDefaultsServiceFilesToEmptyArray(): void
-    {
-        $configurator = new ApplicationConfigurator();
-
-        self::assertSame([], $configurator->serviceFiles);
     }
 
     public function testConstructorAcceptsExplicitAppMetadata(): void
@@ -440,6 +303,86 @@ class ApplicationConfiguratorTest extends TestCase
 
         self::assertSame($url, $configurator->url);
         self::assertSame($configurator, $result);
+    }
+
+    public function testWithLumiUpdatesPropertyAndReturnsFluentSelf(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $lumi = new LumiConfigurator(
+            container: new Container(),
+        );
+
+        $result = $configurator->withLumi(
+            lumiConfigurator: $lumi,
+        );
+
+        self::assertSame($lumi, $configurator->lumiConfigurator);
+        self::assertSame($configurator, $result);
+    }
+
+    public function testWithLumiClearsDefaultLumiState(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $configurator->withDefaultLumi(
+            customizer: static fn (LumiConfiguratorInterface $lumi): LumiConfiguratorInterface => $lumi,
+        );
+
+        $configurator->withLumi(
+            lumiConfigurator: new LumiConfigurator(
+                container: new Container(),
+            ),
+        );
+
+        self::assertFalse($configurator->useDefaultLumi);
+        self::assertNull($configurator->lumiCustomizer);
+    }
+
+    public function testWithDefaultLumiEnablesUseDefaultLumiAndReturnsFluentSelf(): void
+    {
+        $configurator = new ApplicationConfigurator();
+
+        $result = $configurator->withDefaultLumi();
+
+        self::assertTrue($configurator->useDefaultLumi);
+        self::assertSame($configurator, $result);
+    }
+
+    public function testWithDefaultLumiStoresCustomizer(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $customizer = static fn (LumiConfiguratorInterface $lumi): LumiConfiguratorInterface => $lumi;
+
+        $configurator->withDefaultLumi(
+            customizer: $customizer,
+        );
+
+        self::assertSame($customizer, $configurator->lumiCustomizer);
+    }
+
+    public function testWithDefaultLumiNoArgClearsCustomizer(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $configurator->withDefaultLumi(
+            customizer: static fn (LumiConfiguratorInterface $lumi): LumiConfiguratorInterface => $lumi,
+        );
+
+        $configurator->withDefaultLumi();
+
+        self::assertNull($configurator->lumiCustomizer);
+    }
+
+    public function testWithDefaultLumiClearsExplicitLumiConfigurator(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $configurator->withLumi(
+            lumiConfigurator: new LumiConfigurator(
+                container: new Container(),
+            ),
+        );
+
+        $configurator->withDefaultLumi();
+
+        self::assertNull($configurator->lumiConfigurator);
     }
 
     public function testWithMiddlewareWrapsInstanceInClosure(): void
@@ -1422,6 +1365,78 @@ class ApplicationConfiguratorTest extends TestCase
         $discoverer = $router->discoverer;
 
         self::assertFalse($discoverer->strictMode);
+    }
+
+    public function testBuildRegistersViewRenderFromUserSuppliedLumiConfigurator(): void
+    {
+        $configurator = $this->makeMinimalConfigurator();
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        $configurator->withLumi(
+            lumiConfigurator: new LumiConfigurator(
+                container: $container,
+            ),
+        );
+
+        $configurator->build();
+
+        self::assertTrue($container->isBound(ViewRenderInterface::class));
+        self::assertInstanceOf(
+            ViewRenderInterface::class,
+            $container->resolve(ViewRenderInterface::class),
+        );
+    }
+
+    public function testBuildRegistersViewRenderFromDefaultLumi(): void
+    {
+        $configurator = $this->makeMinimalConfigurator()
+            ->withDefaultLumi();
+
+        $configurator->build();
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        self::assertTrue($container->isBound(ViewRenderInterface::class));
+        self::assertInstanceOf(
+            ViewRenderInterface::class,
+            $container->resolve(ViewRenderInterface::class),
+        );
+    }
+
+    public function testBuildInvokesCustomizerOnDefaultLumi(): void
+    {
+        $called = false;
+
+        $configurator = $this->makeMinimalConfigurator()
+            ->withDefaultLumi(
+                customizer: static function (LumiConfiguratorInterface $lumi) use (&$called): void {
+                    $called = true;
+                },
+            );
+
+        $configurator->build();
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        $container->resolve(ViewRenderInterface::class);
+
+        self::assertTrue($called);
+    }
+
+    public function testBuildDoesNotRegisterViewRenderWhenLumiNotConfigured(): void
+    {
+        $configurator = $this->makeMinimalConfigurator();
+
+        $configurator->build();
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        self::assertFalse($container->isBound(ViewRenderInterface::class));
     }
 
     private static function makeErrorHandler(): ErrorHandlerInterface

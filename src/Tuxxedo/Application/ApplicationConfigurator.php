@@ -33,6 +33,9 @@ use Tuxxedo\Http\Url\UrlInterface;
 use Tuxxedo\Router\DynamicRouter;
 use Tuxxedo\Router\RouterInterface;
 use Tuxxedo\Router\StaticRouter;
+use Tuxxedo\View\Lumi\LumiConfigurator;
+use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
+use Tuxxedo\View\ViewRenderInterface;
 
 // @todo Implement a dotenv loader here
 class ApplicationConfigurator implements ApplicationConfiguratorInterface
@@ -49,6 +52,9 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
     public private(set) ?DispatcherInterface $dispatcher = null;
     public private(set) ?EventsManagerInterface $eventsManager = null;
     public private(set) ?UrlInterface $url = null;
+    public private(set) ?LumiConfiguratorInterface $lumiConfigurator = null;
+    public private(set) bool $useDefaultLumi = false;
+    public private(set) ?\Closure $lumiCustomizer = null;
 
     public private(set) array $middleware = [];
     public private(set) array $exceptionHandlers = [];
@@ -200,6 +206,29 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         return $this;
     }
 
+    public function withLumi(
+        LumiConfiguratorInterface $lumiConfigurator,
+    ): self {
+        $this->lumiConfigurator = $lumiConfigurator;
+        $this->useDefaultLumi = false;
+        $this->lumiCustomizer = null;
+
+        return $this;
+    }
+
+    /**
+     * @param ?\Closure(LumiConfiguratorInterface $configurator): mixed $customizer
+     */
+    public function withDefaultLumi(
+        ?\Closure $customizer = null,
+    ): self {
+        $this->useDefaultLumi = true;
+        $this->lumiCustomizer = $customizer;
+        $this->lumiConfigurator = null;
+
+        return $this;
+    }
+
     public function withoutMiddleware(): self
     {
         $this->middleware = [];
@@ -332,6 +361,30 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
                 static fn (): RouterInterface => new StaticRouter(
                     routes: [],
                 ),
+            );
+        }
+
+        if ($this->lumiConfigurator !== null) {
+            $lumiConfigurator = $this->lumiConfigurator;
+
+            $container->persistentLazy(
+                ViewRenderInterface::class,
+                static fn (): ViewRenderInterface => $lumiConfigurator->build(),
+            );
+        } elseif ($this->useDefaultLumi) {
+            $customizer = $this->lumiCustomizer;
+
+            $container->persistentLazy(
+                ViewRenderInterface::class,
+                static function (ContainerInterface $container) use ($customizer): ViewRenderInterface {
+                    $lumi = LumiConfigurator::fromConfig($container);
+
+                    if ($customizer !== null) {
+                        $customizer($lumi);
+                    }
+
+                    return $lumi->build();
+                },
             );
         }
 

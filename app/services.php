@@ -17,29 +17,13 @@ use Tuxxedo\Database\ConnectionManager;
 use Tuxxedo\Event\EventsManagerInterface;
 use Tuxxedo\Logger\LoggerInterface;
 use Tuxxedo\Logger\StreamLogger;
-use Tuxxedo\View\Lumi\LumiConfigurator;
-use Tuxxedo\View\Lumi\LumiViewRender;
-use Tuxxedo\View\ViewRenderInterface;
 
 return static function (
     ContainerInterface $container,
     EventsManagerInterface $eventsManager,
 ): void {
+    // @todo Migrate to ApplicationConfigurator
     $container->persistent(ConnectionManager::class);
-
-    $container->persistentLazy(
-        LumiViewRender::class,
-        static function (ContainerInterface $container): ViewRenderInterface {
-            return LumiConfigurator::fromConfig($container)
-                ->allowFunction('php_sapi_name')
-                ->allowFunction('php_uname')
-                ->allowFunction('printf')
-                ->allowFunction('acos')
-                ->allowFunction('strval')
-                ->disableErrorReporting()
-                ->build();
-        },
-    );
 
     $container->persistentLazy(
         StreamLogger::class,

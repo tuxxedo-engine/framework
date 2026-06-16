@@ -16,6 +16,7 @@ use Tuxxedo\Application\ApplicationConfigurator;
 use Tuxxedo\Application\Profile;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
+use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -23,6 +24,15 @@ $appDirectory = __DIR__ . '/../app';
 
 $builder = ApplicationConfigurator::createFromConfigDirectory($appDirectory . '/config')
     ->withDefaultRouter($appDirectory . '/Controllers')
+    ->withDefaultLumi(
+        static fn (LumiConfiguratorInterface $lumi): LumiConfiguratorInterface => $lumi
+            ->allowFunction('php_sapi_name')
+            ->allowFunction('php_uname')
+            ->allowFunction('printf')
+            ->allowFunction('acos')
+            ->allowFunction('strval')
+            ->disableErrorReporting(),
+    )
     ->withServiceFile($appDirectory . '/services.php')
     ->withExceptionHandler(
         HttpException::class,

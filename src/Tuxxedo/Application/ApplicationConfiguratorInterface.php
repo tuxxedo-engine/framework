@@ -23,8 +23,8 @@ use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Url\UrlInterface;
 use Tuxxedo\Router\RouterInterface;
+use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
 
-// @todo Support LumiConfigurator here?
 interface ApplicationConfiguratorInterface
 {
     public string $appName {
@@ -88,6 +88,10 @@ interface ApplicationConfiguratorInterface
     }
 
     public ?UrlInterface $url {
+        get;
+    }
+
+    public ?LumiConfiguratorInterface $lumiConfigurator {
         get;
     }
 
@@ -167,6 +171,17 @@ interface ApplicationConfiguratorInterface
 
     public function withUrl(
         UrlInterface $url,
+    ): self;
+
+    public function withLumi(
+        LumiConfiguratorInterface $lumiConfigurator,
+    ): self;
+
+    /**
+     * @param ?\Closure(LumiConfiguratorInterface $configurator): mixed $customizer
+     */
+    public function withDefaultLumi(
+        ?\Closure $customizer = null,
     ): self;
 
     public function withoutMiddleware(): self;
