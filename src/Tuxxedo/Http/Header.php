@@ -21,6 +21,12 @@ readonly class Header implements HeaderInterface
     ) {
     }
 
+    public function is(
+        string $name,
+    ): bool {
+        return \strcasecmp($this->name, $name) === 0;
+    }
+
     public function withValue(
         string $value,
     ): static {

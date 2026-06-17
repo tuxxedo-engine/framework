@@ -45,8 +45,7 @@ class ResponseEmitter implements ResponseEmitterInterface
                     );
 
                     continue;
-                    // @todo This may not work with different casing, maybe we need an is()?
-                } elseif ($header->name === 'Content-Length') {
+                } elseif ($header->is('Content-Length')) {
                     $maxLength = (int) $header->value;
                 }
 

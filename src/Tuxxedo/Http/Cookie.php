@@ -26,6 +26,12 @@ readonly class Cookie implements CookieInterface
     ) {
     }
 
+    public function is(
+        string $name,
+    ): bool {
+        return \strcasecmp($this->name, $name) === 0;
+    }
+
     public function withValue(
         string $value,
     ): static {

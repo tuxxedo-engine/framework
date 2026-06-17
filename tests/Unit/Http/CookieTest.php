@@ -49,6 +49,18 @@ class CookieTest extends TestCase
         self::assertFalse($cookie->httpOnly);
     }
 
+    public function testIs(): void
+    {
+        $cookie = new Cookie(
+            name: 'abc',
+            value: 'def',
+            expires: 1800,
+        );
+
+        self::assertTrue($cookie->is('ABC'));
+        self::assertFalse($cookie->name === 'ABC');
+    }
+
     public function testWithValue(): void
     {
         $cookie = new Cookie('session', 'abc123', 0);

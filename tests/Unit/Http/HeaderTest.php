@@ -26,6 +26,14 @@ class HeaderTest extends TestCase
         self::assertSame('application/json', $header->value);
     }
 
+    public function testIs(): void
+    {
+        $header = new Header('Content-Length', '1000');
+
+        self::assertTrue($header->is('content-length'));
+        self::assertTrue($header->is('Content-Length'));
+    }
+
     public function testWithValueReturnsNewInstance(): void
     {
         $header = new Header('Content-Type', 'application/json');

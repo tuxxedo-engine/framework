@@ -258,6 +258,22 @@ class ResponseEmitterTest extends TestCase
         self::assertSame('hello', \ob_get_clean());
     }
 
+    public function testEmitTruncatesStringBodyToContentLengthWithMixedHeaderName(): void
+    {
+        \ob_start();
+
+        (new ResponseEmitter())->emit(
+            response: new Response(
+                body: 'hello world',
+                headers: [
+                    new Header('cOnTeNt-LeNgTh', '5'),
+                ],
+            ),
+        );
+
+        self::assertSame('hello', \ob_get_clean());
+    }
+
     public function testEmitTruncatesStreamBodyToContentLength(): void
     {
         \ob_start();

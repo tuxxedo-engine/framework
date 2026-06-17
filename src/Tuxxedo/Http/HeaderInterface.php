@@ -23,6 +23,10 @@ interface HeaderInterface
         get;
     }
 
+    public function is(
+        string $name,
+    ): bool;
+
     public function withValue(
         string $value,
     ): static;
