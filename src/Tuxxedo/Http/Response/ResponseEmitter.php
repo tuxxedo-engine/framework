@@ -32,11 +32,6 @@ class ResponseEmitter implements ResponseEmitterInterface
         $maxLength = null;
 
         if (!$this->sent && $sendHeaders) {
-            // @todo Investigate whether this needs to be moved down to after regular headers
-            \http_response_code(
-                response_code: $response->responseCode->getStatusCode(),
-            );
-
             foreach ($response->headers as $header) {
                 if ($header instanceof CookieInterface) {
                     \setcookie(
@@ -63,6 +58,17 @@ class ResponseEmitter implements ResponseEmitterInterface
                     ),
                 );
             }
+
+            // @todo Consider whether Responses should have the ability to define their own protocol version
+            \header(
+                \sprintf(
+                    'HTTP/1.1 %d %s',
+                    $response->responseCode->getStatusCode(),
+                    $response->responseCode->getStatusText(),
+                ),
+                true,
+                $response->responseCode->getStatusCode(),
+            );
 
             $this->sent = true;
         }
