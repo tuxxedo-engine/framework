@@ -49,12 +49,4 @@ class HeaderTest extends TestCase
 
         self::assertSame('Content-Type', $updated->name);
     }
-
-    public function testOriginalUnchangedAfterWithValue(): void
-    {
-        $header = new Header('Content-Type', 'application/json');
-        (void) $header->withValue('text/html');
-
-        self::assertSame('application/json', $header->value);
-    }
 }

@@ -453,7 +453,6 @@ class Response implements ResponseInterface, ResponsableInterface
         return $this->getHeaderIndex($this->headers, $name) !== null;
     }
 
-    #[\NoDiscard]
     public function withHeader(
         HeaderInterface $header,
         bool $replace = false,
@@ -473,7 +472,6 @@ class Response implements ResponseInterface, ResponsableInterface
         );
     }
 
-    #[\NoDiscard]
     public function withHeaders(
         array $headers,
         bool $replace = false,
@@ -491,7 +489,6 @@ class Response implements ResponseInterface, ResponsableInterface
         );
     }
 
-    #[\NoDiscard]
     public function withoutHeader(
         string $name,
     ): static {
@@ -516,7 +513,6 @@ class Response implements ResponseInterface, ResponsableInterface
         return $this->getHeaderIndex($this->headers, $name, onlyCookies: true) !== null;
     }
 
-    #[\NoDiscard]
     public function withCookie(
         CookieInterface $cookie,
         bool $replace = false,
@@ -536,7 +532,6 @@ class Response implements ResponseInterface, ResponsableInterface
         );
     }
 
-    #[\NoDiscard]
     public function withCookies(
         array $cookies,
         bool $replace = false,
@@ -554,7 +549,6 @@ class Response implements ResponseInterface, ResponsableInterface
         );
     }
 
-    #[\NoDiscard]
     public function withoutCookie(
         string $name,
     ): static {
@@ -573,7 +567,6 @@ class Response implements ResponseInterface, ResponsableInterface
         );
     }
 
-    #[\NoDiscard]
     public function withResponseCode(
         ResponseCode|int $responseCode,
     ): static {
@@ -587,7 +580,6 @@ class Response implements ResponseInterface, ResponsableInterface
         );
     }
 
-    #[\NoDiscard]
     public function withBody(
         StreamInterface|string $body,
     ): static {
@@ -599,7 +591,6 @@ class Response implements ResponseInterface, ResponsableInterface
         );
     }
 
-    #[\NoDiscard]
     public function withDownload(
         string $filename,
     ): static {
@@ -622,7 +613,6 @@ class Response implements ResponseInterface, ResponsableInterface
         );
     }
 
-    #[\NoDiscard]
     public function withoutDownload(): static
     {
         return $this->withoutHeader(
@@ -630,7 +620,6 @@ class Response implements ResponseInterface, ResponsableInterface
         );
     }
 
-    #[\NoDiscard]
     public function withVary(
         string ...$headers,
     ): static {
@@ -646,7 +635,6 @@ class Response implements ResponseInterface, ResponsableInterface
         );
     }
 
-    #[\NoDiscard]
     public function withoutVary(
         string ...$headers,
     ): static {
@@ -742,7 +730,6 @@ class Response implements ResponseInterface, ResponsableInterface
         return $result;
     }
 
-    #[\NoDiscard]
     public function withEtag(
         string $etag,
         bool $weak = false,
@@ -759,7 +746,6 @@ class Response implements ResponseInterface, ResponsableInterface
         );
     }
 
-    #[\NoDiscard]
     public function withLastModified(
         \DateTimeInterface $when,
     ): static {
@@ -775,7 +761,6 @@ class Response implements ResponseInterface, ResponsableInterface
     /**
      * @throws HttpException
      */
-    #[\NoDiscard]
     public function withCacheControl(
         ?int $maxAge = null,
         ?int $sMaxAge = null,

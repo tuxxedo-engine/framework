@@ -1940,7 +1940,7 @@ class ResponseTest extends TestCase
     {
         self::expectException(HttpException::class);
 
-        (void) (new Response())->withCacheControl(
+        (new Response())->withCacheControl(
             public: true,
             private: true,
         );

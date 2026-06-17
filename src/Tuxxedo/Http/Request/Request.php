@@ -155,7 +155,6 @@ class Request implements RequestInterface
         return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
     }
 
-    #[\NoDiscard]
     public function withRoute(
         DispatchableRouteInterface $route,
     ): static {
@@ -167,7 +166,6 @@ class Request implements RequestInterface
         );
     }
 
-    #[\NoDiscard]
     public function withMethod(
         Method|string $method,
     ): static {
@@ -183,7 +181,6 @@ class Request implements RequestInterface
         );
     }
 
-    #[\NoDiscard]
     public function withPath(
         string $path,
     ): static {
@@ -195,7 +192,6 @@ class Request implements RequestInterface
         );
     }
 
-    #[\NoDiscard]
     public function withUri(
         string $uri,
     ): static {
@@ -207,7 +203,6 @@ class Request implements RequestInterface
         );
     }
 
-    #[\NoDiscard]
     public function withQueryString(
         string $queryString,
     ): static {
@@ -219,7 +214,6 @@ class Request implements RequestInterface
         );
     }
 
-    #[\NoDiscard]
     public function withProtocolVersion(
         HttpVersion $protocolVersion,
     ): static {
@@ -231,7 +225,6 @@ class Request implements RequestInterface
         );
     }
 
-    #[\NoDiscard]
     public function withHttps(
         bool $https,
     ): static {
@@ -243,7 +236,6 @@ class Request implements RequestInterface
         );
     }
 
-    #[\NoDiscard]
     public function withHost(
         string $host,
     ): static {
@@ -255,7 +247,6 @@ class Request implements RequestInterface
         );
     }
 
-    #[\NoDiscard]
     public function withPort(
         int $port,
     ): static {
@@ -267,7 +258,6 @@ class Request implements RequestInterface
         );
     }
 
-    #[\NoDiscard]
     public function withIpAddress(
         string $ipAddress,
     ): static {

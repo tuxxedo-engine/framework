@@ -56,7 +56,6 @@ class Stream implements StreamInterface
     /**
      * @param \Closure(): \Generator<mixed>|\Generator<mixed> $generator
      */
-    #[\NoDiscard]
     public static function fromJson(
         \Closure|\Generator $generator,
         JsonStreamFormat $format = JsonStreamFormat::JSONL,

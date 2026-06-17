@@ -21,7 +21,6 @@ readonly class Header implements HeaderInterface
     ) {
     }
 
-    #[\NoDiscard]
     public function withValue(
         string $value,
     ): static {

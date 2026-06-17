@@ -90,52 +90,42 @@ interface RequestInterface
         get;
     }
 
-    #[\NoDiscard]
     public function withRoute(
         DispatchableRouteInterface $route,
     ): static;
 
-    #[\NoDiscard]
     public function withMethod(
         Method|string $method,
     ): static;
 
-    #[\NoDiscard]
     public function withPath(
         string $path,
     ): static;
 
-    #[\NoDiscard]
     public function withUri(
         string $uri,
     ): static;
 
-    #[\NoDiscard]
     public function withQueryString(
         string $queryString,
     ): static;
 
-    #[\NoDiscard]
     public function withProtocolVersion(
         HttpVersion $protocolVersion,
     ): static;
 
-    #[\NoDiscard]
     public function withHttps(
         bool $https,
     ): static;
 
-    #[\NoDiscard]
     public function withHost(
         string $host,
     ): static;
 
-    #[\NoDiscard]
     public function withPort(
         int $port,
     ): static;
 
-    #[\NoDiscard]
     public function withIpAddress(
         string $ipAddress,
     ): static;

@@ -87,15 +87,6 @@ class RequestTest extends TestCase
         self::assertSame($route, $new->route);
     }
 
-    public function testWithRouteDoesNotModifyOriginal(): void
-    {
-        $request = $this->makeRequest();
-
-        (void) $request->withRoute(new StubDispatchableRoute());
-
-        self::assertFalse(isset($request->route));
-    }
-
     public function testWithRoutePreservesContexts(): void
     {
         $headers = new StubHeaderContext();

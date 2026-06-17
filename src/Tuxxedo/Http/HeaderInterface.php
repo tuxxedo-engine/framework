@@ -23,7 +23,6 @@ interface HeaderInterface
         get;
     }
 
-    #[\NoDiscard]
     public function withValue(
         string $value,
     ): static;
