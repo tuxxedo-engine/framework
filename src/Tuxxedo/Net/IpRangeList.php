@@ -126,6 +126,7 @@ readonly class IpRangeList implements IpRangeListInterface
         ];
     }
 
+    // @todo This is ugly, refactor it for readability
     private function isPositiveInteger(
         string $value,
     ): bool {
