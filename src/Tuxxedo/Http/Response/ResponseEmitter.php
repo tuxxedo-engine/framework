@@ -19,7 +19,7 @@ use Tuxxedo\Http\Response\Stream\StreamInterface;
 // @todo HeaderEmitter for responseCode, cookie and header?
 class ResponseEmitter implements ResponseEmitterInterface
 {
-    private bool $sent = false;
+    public private(set) bool $sent = false;
 
     public function emit(
         ResponseInterface|ResponseExceptionInterface $response,
@@ -122,10 +122,5 @@ class ResponseEmitter implements ResponseEmitterInterface
                 echo $response->body;
             }
         }
-    }
-
-    public function isSent(): bool
-    {
-        return $this->sent;
     }
 }

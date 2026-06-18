@@ -15,10 +15,12 @@ namespace Tuxxedo\Http\Response;
 
 interface ResponseEmitterInterface
 {
+    public bool $sent {
+        get;
+    }
+
     public function emit(
         ResponseInterface|ResponseExceptionInterface $response,
         bool $sendHeaders = true,
     ): void;
-
-    public function isSent(): bool;
 }

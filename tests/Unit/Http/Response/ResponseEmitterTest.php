@@ -26,10 +26,10 @@ class ResponseEmitterTest extends TestCase
 {
     public function testIsSentReturnsFalseInitially(): void
     {
-        self::assertFalse((new ResponseEmitter())->isSent());
+        self::assertFalse((new ResponseEmitter())->sent);
     }
 
-    public function testEmitSetsIsSent(): void
+    public function testEmitSetsSent(): void
     {
         $emitter = new ResponseEmitter();
 
@@ -37,21 +37,23 @@ class ResponseEmitterTest extends TestCase
         $emitter->emit(response: new Response());
         \ob_end_clean();
 
-        self::assertTrue($emitter->isSent());
+        self::assertTrue($emitter->sent);
     }
 
-    public function testEmitWithSendHeadersFalseDoesNotSetIsSent(): void
+    public function testEmitWithSendHeadersFalseDoesNotSetSent(): void
     {
         $emitter = new ResponseEmitter();
 
         \ob_start();
         $emitter->emit(
-            response: new Response(body: 'hello'),
+            response: new Response(
+                body: 'hello',
+            ),
             sendHeaders: false,
         );
         \ob_end_clean();
 
-        self::assertFalse($emitter->isSent());
+        self::assertFalse($emitter->sent);
     }
 
     public function testEmitOutputsStringBody(): void
@@ -59,7 +61,9 @@ class ResponseEmitterTest extends TestCase
         \ob_start();
 
         (new ResponseEmitter())->emit(
-            response: new Response(body: 'hello world'),
+            response: new Response(
+                body: 'hello world',
+            ),
             sendHeaders: false,
         );
 
@@ -100,12 +104,13 @@ class ResponseEmitterTest extends TestCase
 
         \ob_start();
         $emitter->emit(
-            response: new Response(body: 'second'),
-            sendHeaders: true,
+            response: new Response(
+                body: 'second',
+            ),
         );
 
         self::assertSame('second', \ob_get_clean());
-        self::assertTrue($emitter->isSent());
+        self::assertTrue($emitter->sent);
     }
 
     public function testEmitWithPlainHeaderSendsHeaders(): void
@@ -122,7 +127,7 @@ class ResponseEmitterTest extends TestCase
         );
         \ob_end_clean();
 
-        self::assertTrue($emitter->isSent());
+        self::assertTrue($emitter->sent);
     }
 
     public function testEmitWithCookieHeader(): void
@@ -143,7 +148,7 @@ class ResponseEmitterTest extends TestCase
         );
         \ob_end_clean();
 
-        self::assertTrue($emitter->isSent());
+        self::assertTrue($emitter->sent);
     }
 
     public function testEmitOutputsStreamBody(): void
@@ -235,7 +240,9 @@ class ResponseEmitterTest extends TestCase
         \ob_start();
 
         (new ResponseEmitter())->emit(
-            response: new Response(body: new Stream($proxy)),
+            response: new Response(
+                body: new Stream($proxy),
+            ),
             sendHeaders: false,
         );
 

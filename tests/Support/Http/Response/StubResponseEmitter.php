@@ -20,7 +20,7 @@ use Tuxxedo\Http\Response\ResponseInterface;
 class StubResponseEmitter implements ResponseEmitterInterface
 {
     public ?ResponseInterface $lastResponse = null;
-    private bool $sent = false;
+    public private(set) bool $sent = false;
 
     public function emit(
         ResponseInterface|ResponseExceptionInterface $response,
@@ -32,10 +32,5 @@ class StubResponseEmitter implements ResponseEmitterInterface
 
         $this->lastResponse = $response;
         $this->sent = true;
-    }
-
-    public function isSent(): bool
-    {
-        return $this->sent;
     }
 }
