@@ -34,7 +34,7 @@ class StubConnectionManager implements ConnectionManagerInterface
     }
 
     public function registerConnectionFromConfig(
-        string|ConfigInterface $configOrPath,
+        ConfigInterface|string $configOrPath,
     ): self {
         return $this;
     }

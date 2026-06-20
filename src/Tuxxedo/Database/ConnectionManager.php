@@ -89,7 +89,7 @@ class ConnectionManager implements ConnectionManagerInterface
     }
 
     public function registerConnectionFromConfig(
-        string|ConfigInterface $configOrPath,
+        ConfigInterface|string $configOrPath,
     ): self {
         if (\is_string($configOrPath)) {
             $prefix = $configOrPath;

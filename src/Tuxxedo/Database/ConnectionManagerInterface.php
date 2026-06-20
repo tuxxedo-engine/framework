@@ -36,7 +36,7 @@ interface ConnectionManagerInterface
      * @throws DatabaseException
      */
     public function registerConnectionFromConfig(
-        string|ConfigInterface $configOrPath,
+        ConfigInterface|string $configOrPath,
     ): self;
 
     /**

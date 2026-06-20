@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Model\Hydrator;
 
 use Tuxxedo\Database\Hydrator\HydratorInterface as DatabaseHydratorInterface;
+use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
@@ -199,16 +200,31 @@ class Hydrator implements HydratorInterface
         $manager = $this->modelsManager;
         $targetTable = $manager->metaData->getModel($relatedClass)->table;
 
-        $relationInstance = Relation::createFromLoader(
-            loader: static fn (): iterable => $manager->findAll(
+        $relationInstance = Relation::createFromBuilder(
+            loaderBuilder: static fn (array $criteria, ?int $limit, ?int $offset): iterable => $manager->findAll(
                 $relatedClass,
-                static function (WhereStatementInterface $statement) use ($targetColumn, $sourceValue): void {
+                static function (WhereStatementInterface $statement) use ($targetColumn, $sourceValue, $criteria, $limit, $offset): void {
                     $statement->where($targetColumn, $sourceValue);
+
+                    foreach ($criteria as $extra) {
+                        $extra($statement);
+                    }
+
+                    if ($limit !== null && $statement instanceof SelectStatementInterface) {
+                        $statement->limit($limit, $offset);
+                    }
                 },
             ),
-            countLoader: static fn (): int => $manager->connection->count($targetTable)
-                ->where($targetColumn, $sourceValue)
-                ->count(),
+            countBuilder: static function (array $criteria) use ($manager, $targetTable, $targetColumn, $sourceValue): int {
+                $statement = $manager->connection->count($targetTable)
+                    ->where($targetColumn, $sourceValue);
+
+                foreach ($criteria as $extra) {
+                    $extra($statement);
+                }
+
+                return $statement->count();
+            },
         );
 
         PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $relationInstance);
@@ -263,18 +279,34 @@ class Hydrator implements HydratorInterface
         $pivotLocalKey = $attribute->localKey;
         $pivotForeignKey = $attribute->foreignKey;
 
-        $relationInstance = Relation::createFromLoader(
-            loader: static fn (): iterable => $manager->findAll(
+        $relationInstance = Relation::createFromBuilder(
+            loaderBuilder: static fn (array $criteria, ?int $limit, ?int $offset): iterable => $manager->findAll(
                 $relatedClass,
-                static function (WhereStatementInterface $statement) use ($pivotTable, $pivotForeignKey, $pivotLocalKey, $targetTable, $targetPrimaryKey, $sourceValue): void {
+                static function (WhereStatementInterface $statement) use ($pivotTable, $pivotForeignKey, $pivotLocalKey, $targetTable, $targetPrimaryKey, $sourceValue, $criteria, $limit, $offset): void {
                     $statement
                         ->innerJoin($pivotTable, $pivotTable . '.' . $pivotForeignKey, $targetTable . '.' . $targetPrimaryKey)
                         ->where($pivotTable . '.' . $pivotLocalKey, $sourceValue);
+
+                    foreach ($criteria as $extra) {
+                        $extra($statement);
+                    }
+
+                    if ($limit !== null && $statement instanceof SelectStatementInterface) {
+                        $statement->limit($limit, $offset);
+                    }
                 },
             ),
-            countLoader: static fn (): int => $manager->connection->count($pivotTable)
-                ->where($pivotLocalKey, $sourceValue)
-                ->count(),
+            countBuilder: static function (array $criteria) use ($manager, $pivotTable, $pivotForeignKey, $pivotLocalKey, $targetTable, $targetPrimaryKey, $sourceValue): int {
+                $statement = $manager->connection->count($targetTable)
+                    ->innerJoin($pivotTable, $pivotTable . '.' . $pivotForeignKey, $targetTable . '.' . $targetPrimaryKey)
+                    ->where($pivotTable . '.' . $pivotLocalKey, $sourceValue);
+
+                foreach ($criteria as $extra) {
+                    $extra($statement);
+                }
+
+                return $statement->count();
+            },
         );
 
         PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $relationInstance);
@@ -362,18 +394,36 @@ class Hydrator implements HydratorInterface
         $firstKey = $attribute->firstKey;
 
         // @todo HasManyThrough loader bypasses ModelsManager::findAll() because distinct() lives on SelectStatement and the criteria closure is narrowed to WhereStatementInterface. Soft-delete filtering on the Through-far model is therefore not applied here — revisit once findAll exposes a shape-modifier hook or once the soft-delete filter moves into the Statement layer.
-        $relationInstance = Relation::createFromLoader(
-            loader: static fn (): iterable => $manager->connection->select($targetTable)
-                ->distinct()
-                ->innerJoin($throughTable, $throughTable . '.' . $throughSecondLocalKey, $targetTable . '.' . $secondKey)
-                ->where($throughTable . '.' . $firstKey, $sourceValue)
-                ->fetchAll($relatedClass, $manager->hydrator),
-            countLoader: static fn (): int => $manager->connection->count($targetTable)
-                ->column($targetTable . '.' . $targetPrimaryKey)
-                ->distinct()
-                ->innerJoin($throughTable, $throughTable . '.' . $throughSecondLocalKey, $targetTable . '.' . $secondKey)
-                ->where($throughTable . '.' . $firstKey, $sourceValue)
-                ->count(),
+        $relationInstance = Relation::createFromBuilder(
+            loaderBuilder: static function (array $criteria, ?int $limit, ?int $offset) use ($manager, $targetTable, $throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue, $relatedClass): iterable {
+                $statement = $manager->connection->select($targetTable)
+                    ->distinct()
+                    ->innerJoin($throughTable, $throughTable . '.' . $throughSecondLocalKey, $targetTable . '.' . $secondKey)
+                    ->where($throughTable . '.' . $firstKey, $sourceValue);
+
+                foreach ($criteria as $extra) {
+                    $extra($statement);
+                }
+
+                if ($limit !== null) {
+                    $statement->limit($limit, $offset);
+                }
+
+                return $statement->fetchAll($relatedClass, $manager->hydrator);
+            },
+            countBuilder: static function (array $criteria) use ($manager, $targetTable, $targetPrimaryKey, $throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue): int {
+                $statement = $manager->connection->count($targetTable)
+                    ->column($targetTable . '.' . $targetPrimaryKey)
+                    ->distinct()
+                    ->innerJoin($throughTable, $throughTable . '.' . $throughSecondLocalKey, $targetTable . '.' . $secondKey)
+                    ->where($throughTable . '.' . $firstKey, $sourceValue);
+
+                foreach ($criteria as $extra) {
+                    $extra($statement);
+                }
+
+                return $statement->count();
+            },
         );
 
         PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $relationInstance);
