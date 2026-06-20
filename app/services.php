@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 use App\Subscribers\UserSubscriber;
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Database\ConnectionManager;
 use Tuxxedo\Event\EventsManagerInterface;
 use Tuxxedo\Logger\LoggerInterface;
 use Tuxxedo\Logger\StreamLogger;
@@ -22,9 +21,6 @@ return static function (
     ContainerInterface $container,
     EventsManagerInterface $eventsManager,
 ): void {
-    // @todo Migrate to ApplicationConfigurator
-    $container->persistent(ConnectionManager::class);
-
     $container->persistentLazy(
         StreamLogger::class,
         static fn (): LoggerInterface => StreamLogger::createFromFile(

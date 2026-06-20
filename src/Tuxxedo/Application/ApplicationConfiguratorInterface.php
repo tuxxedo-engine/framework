@@ -15,6 +15,7 @@ namespace Tuxxedo\Application;
 
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Event\EventsManagerInterface;
 use Tuxxedo\Http\Kernel\DispatcherInterface;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
@@ -92,6 +93,10 @@ interface ApplicationConfiguratorInterface
     }
 
     public ?LumiConfiguratorInterface $lumiConfigurator {
+        get;
+    }
+
+    public ?ConnectionManagerInterface $connectionManager {
         get;
     }
 
@@ -181,6 +186,17 @@ interface ApplicationConfiguratorInterface
      * @param ?\Closure(LumiConfiguratorInterface $configurator): mixed $customizer
      */
     public function withDefaultLumi(
+        ?\Closure $customizer = null,
+    ): self;
+
+    public function withConnectionManager(
+        ConnectionManagerInterface $connectionManager,
+    ): self;
+
+    /**
+     * @param ?\Closure(ConnectionManagerInterface $manager): mixed $customizer
+     */
+    public function withDefaultConnectionManager(
         ?\Closure $customizer = null,
     ): self;
 

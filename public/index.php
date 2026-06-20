@@ -33,6 +33,7 @@ $builder = ApplicationConfigurator::createFromConfigDirectory($appDirectory . '/
             ->allowFunction('strval')
             ->disableErrorReporting(),
     )
+    ->withDefaultConnectionManager()
     ->withServiceFile($appDirectory . '/services.php')
     ->withExceptionHandler(
         HttpException::class,

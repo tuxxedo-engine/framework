@@ -17,6 +17,8 @@ use Tuxxedo\Config\Config;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Database\ConnectionManager;
+use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Debug\DebugErrorHandler;
 use Tuxxedo\Event\EventsManager;
 use Tuxxedo\Event\EventsManagerInterface;
@@ -55,6 +57,9 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
     public private(set) ?LumiConfiguratorInterface $lumiConfigurator = null;
     public private(set) bool $useDefaultLumi = false;
     public private(set) ?\Closure $lumiCustomizer = null;
+    public private(set) ?ConnectionManagerInterface $connectionManager = null;
+    public private(set) bool $useDefaultConnectionManager = false;
+    public private(set) ?\Closure $connectionManagerCustomizer = null;
 
     public private(set) array $middleware = [];
     public private(set) array $exceptionHandlers = [];
@@ -229,6 +234,29 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         return $this;
     }
 
+    public function withConnectionManager(
+        ConnectionManagerInterface $connectionManager,
+    ): self {
+        $this->connectionManager = $connectionManager;
+        $this->useDefaultConnectionManager = false;
+        $this->connectionManagerCustomizer = null;
+
+        return $this;
+    }
+
+    /**
+     * @param ?\Closure(ConnectionManagerInterface $manager): mixed $customizer
+     */
+    public function withDefaultConnectionManager(
+        ?\Closure $customizer = null,
+    ): self {
+        $this->useDefaultConnectionManager = true;
+        $this->connectionManagerCustomizer = $customizer;
+        $this->connectionManager = null;
+
+        return $this;
+    }
+
     public function withoutMiddleware(): self
     {
         $this->middleware = [];
@@ -384,6 +412,33 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
                     }
 
                     return $lumi->build();
+                },
+            );
+        }
+
+        if ($this->connectionManager !== null) {
+            $connectionManager = $this->connectionManager;
+
+            $container->persistentLazy(
+                ConnectionManagerInterface::class,
+                static fn (): ConnectionManagerInterface => $connectionManager,
+            );
+        } elseif ($this->useDefaultConnectionManager) {
+            $customizer = $this->connectionManagerCustomizer;
+
+            $container->persistentLazy(
+                ConnectionManagerInterface::class,
+                static function (ContainerInterface $container) use ($customizer): ConnectionManagerInterface {
+                    $manager = ConnectionManager::createFromConfig(
+                        container: $container,
+                        path: 'database.manager',
+                    );
+
+                    if ($customizer !== null) {
+                        $customizer($manager);
+                    }
+
+                    return $manager;
                 },
             );
         }

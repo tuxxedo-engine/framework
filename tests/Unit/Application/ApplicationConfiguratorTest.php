@@ -15,6 +15,7 @@ namespace Unit\Application;
 
 use Fixture\Application\ApplicationConfigurator\ServiceMarker;
 use PHPUnit\Framework\TestCase;
+use Support\Database\StubConnectionManager;
 use Support\Http\Kernel\StubDispatcher;
 use Support\Http\Request\Middleware\RecordingMiddleware;
 use Support\Http\Response\StubResponseEmitter;
@@ -23,6 +24,7 @@ use Tuxxedo\Application\Profile;
 use Tuxxedo\Config\Config;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Event\EventsManager;
 use Tuxxedo\Event\EventsManagerInterface;
 use Tuxxedo\Http\Kernel\DispatcherInterface;
@@ -383,6 +385,80 @@ class ApplicationConfiguratorTest extends TestCase
         $configurator->withDefaultLumi();
 
         self::assertNull($configurator->lumiConfigurator);
+    }
+
+    public function testWithConnectionManagerUpdatesPropertyAndReturnsFluentSelf(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $manager = new StubConnectionManager();
+
+        $result = $configurator->withConnectionManager(
+            connectionManager: $manager,
+        );
+
+        self::assertSame($manager, $configurator->connectionManager);
+        self::assertSame($configurator, $result);
+    }
+
+    public function testWithConnectionManagerClearsDefaultConnectionManagerState(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $configurator->withDefaultConnectionManager(
+            customizer: static fn (ConnectionManagerInterface $manager): ConnectionManagerInterface => $manager,
+        );
+
+        $configurator->withConnectionManager(
+            connectionManager: new StubConnectionManager(),
+        );
+
+        self::assertFalse($configurator->useDefaultConnectionManager);
+        self::assertNull($configurator->connectionManagerCustomizer);
+    }
+
+    public function testWithDefaultConnectionManagerEnablesUseDefaultConnectionManagerAndReturnsFluentSelf(): void
+    {
+        $configurator = new ApplicationConfigurator();
+
+        $result = $configurator->withDefaultConnectionManager();
+
+        self::assertTrue($configurator->useDefaultConnectionManager);
+        self::assertSame($configurator, $result);
+    }
+
+    public function testWithDefaultConnectionManagerStoresCustomizer(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $customizer = static fn (ConnectionManagerInterface $manager): ConnectionManagerInterface => $manager;
+
+        $configurator->withDefaultConnectionManager(
+            customizer: $customizer,
+        );
+
+        self::assertSame($customizer, $configurator->connectionManagerCustomizer);
+    }
+
+    public function testWithDefaultConnectionManagerNoArgClearsCustomizer(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $configurator->withDefaultConnectionManager(
+            customizer: static fn (ConnectionManagerInterface $manager): ConnectionManagerInterface => $manager,
+        );
+
+        $configurator->withDefaultConnectionManager();
+
+        self::assertNull($configurator->connectionManagerCustomizer);
+    }
+
+    public function testWithDefaultConnectionManagerClearsExplicitConnectionManager(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $configurator->withConnectionManager(
+            connectionManager: new StubConnectionManager(),
+        );
+
+        $configurator->withDefaultConnectionManager();
+
+        self::assertNull($configurator->connectionManager);
     }
 
     public function testWithMiddlewareWrapsInstanceInClosure(): void
@@ -1437,6 +1513,77 @@ class ApplicationConfiguratorTest extends TestCase
         $container = $configurator->container;
 
         self::assertFalse($container->isBound(ViewRenderInterface::class));
+    }
+
+    public function testBuildRegistersConnectionManagerFromUserSuppliedInstance(): void
+    {
+        $manager = new StubConnectionManager();
+
+        $configurator = $this->makeMinimalConfigurator()
+            ->withConnectionManager(
+                connectionManager: $manager,
+            );
+
+        $configurator->build();
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        self::assertTrue($container->isBound(ConnectionManagerInterface::class));
+        self::assertSame(
+            $manager,
+            $container->resolve(ConnectionManagerInterface::class),
+        );
+    }
+
+    public function testBuildRegistersConnectionManagerFromDefault(): void
+    {
+        $configurator = $this->makeMinimalConfigurator()
+            ->withDefaultConnectionManager();
+
+        $configurator->build();
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        self::assertTrue($container->isBound(ConnectionManagerInterface::class));
+        self::assertInstanceOf(
+            ConnectionManagerInterface::class,
+            $container->resolve(ConnectionManagerInterface::class),
+        );
+    }
+
+    public function testBuildInvokesCustomizerOnDefaultConnectionManager(): void
+    {
+        $called = false;
+
+        $configurator = $this->makeMinimalConfigurator()
+            ->withDefaultConnectionManager(
+                customizer: static function (ConnectionManagerInterface $manager) use (&$called): void {
+                    $called = true;
+                },
+            );
+
+        $configurator->build();
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        $container->resolve(ConnectionManagerInterface::class);
+
+        self::assertTrue($called);
+    }
+
+    public function testBuildDoesNotRegisterConnectionManagerWhenNotConfigured(): void
+    {
+        $configurator = $this->makeMinimalConfigurator();
+
+        $configurator->build();
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        self::assertFalse($container->isBound(ConnectionManagerInterface::class));
     }
 
     private static function makeErrorHandler(): ErrorHandlerInterface
