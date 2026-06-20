@@ -537,6 +537,18 @@ class Hydrator implements HydratorInterface
                 continue;
             }
 
+            if ($attribute instanceof BelongsToMany) {
+                $this->eagerLoadBelongsToMany($parents, $metaData, $relation);
+
+                continue;
+            }
+
+            if ($attribute instanceof HasManyThrough) {
+                $this->eagerLoadHasManyThrough($parents, $metaData, $relation);
+
+                continue;
+            }
+
             throw ModelException::fromEagerLoadingNotYetSupported(
                 attributeClass: $attribute::class,
             );
@@ -679,6 +691,388 @@ class Hydrator implements HydratorInterface
             countBuilder: static function (array $criteria) use ($manager, $targetTable, $targetColumn, $sourceValue): int {
                 $statement = $manager->connection->count($targetTable)
                     ->where($targetColumn, $sourceValue);
+
+                foreach ($criteria as $extra) {
+                    $extra($statement);
+                }
+
+                return $statement->count();
+            },
+        );
+    }
+
+    /**
+     * @param object[] $parents
+     */
+    private function eagerLoadBelongsToMany(
+        array $parents,
+        ModelMetaDataInterface $metaData,
+        ModelRelationInterface $relation,
+    ): void {
+        /** @var BelongsToMany $attribute */
+        $attribute = $relation->attribute;
+
+        if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
+            throw ModelException::fromCantFetchWithoutPrimaryKey(
+                modelClass: $metaData->model,
+            );
+        }
+
+        /** @var class-string $relatedClass */
+        $relatedClass = $relation->relatedClass;
+        $manager = $this->modelsManager;
+        $targetMetaData = $manager->metaData->getModel($relatedClass);
+
+        if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
+            throw ModelException::fromCantFetchWithoutPrimaryKey(
+                modelClass: $relatedClass,
+            );
+        }
+
+        $sourcePropertyName = $metaData->key->property;
+        $targetTable = $targetMetaData->table;
+        $targetPrimaryKey = $targetMetaData->key->column;
+        $targetPrimaryProperty = $targetMetaData->key->property;
+        $pivotTable = $attribute->table;
+        $pivotLocalKey = $attribute->localKey;
+        $pivotForeignKey = $attribute->foreignKey;
+
+        /** @var array<int|string, int|string> $sourceValues */
+        $sourceValues = [];
+
+        foreach ($parents as $parent) {
+            $value = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+
+            if ($value === null) {
+                continue;
+            }
+
+            if (!\is_int($value) && !\is_string($value)) {
+                throw ModelException::fromPropertyValueMustBeScalar(
+                    modelClass: $metaData->model,
+                    property: $sourcePropertyName,
+                    actualType: \get_debug_type($value),
+                );
+            }
+
+            $sourceValues[$value] = $value;
+        }
+
+        /** @var array<int|string, list<int|string>> $pivotPairs */
+        $pivotPairs = [];
+        /** @var array<int|string, object> $targetsByPk */
+        $targetsByPk = [];
+
+        if (\sizeof($sourceValues) > 0) {
+            $pivotResult = $manager->connection
+                ->select($pivotTable)
+                ->select($pivotLocalKey, $pivotForeignKey)
+                ->whereIn($pivotLocalKey, \array_values($sourceValues))
+                ->execute();
+
+            /** @var array<int|string, int|string> $foreignKeys */
+            $foreignKeys = [];
+
+            foreach ($pivotResult as $row) {
+                $local = $row->properties[$pivotLocalKey] ?? null;
+                $foreign = $row->properties[$pivotForeignKey] ?? null;
+
+                if (!\is_int($local) && !\is_string($local)) {
+                    continue;
+                }
+
+                if (!\is_int($foreign) && !\is_string($foreign)) {
+                    continue;
+                }
+
+                $pivotPairs[$local][] = $foreign;
+                $foreignKeys[$foreign] = $foreign;
+            }
+
+            if (\sizeof($foreignKeys) > 0) {
+                $targetRows = $manager->connection
+                    ->select($targetTable)
+                    ->whereIn($targetPrimaryKey, \array_values($foreignKeys))
+                    ->fetchAll($relatedClass, $manager->hydrator);
+
+                foreach ($targetRows as $row) {
+                    $pkValue = PropertyReflector::createFromObject($row, $targetPrimaryProperty)->getValue($row);
+
+                    if (!\is_int($pkValue) && !\is_string($pkValue)) {
+                        continue;
+                    }
+
+                    $targetsByPk[$pkValue] = $row;
+                }
+            }
+        }
+
+        foreach ($parents as $parent) {
+            $sourceValue = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+            /** @var list<object> $prefetched */
+            $prefetched = [];
+
+            if (\is_int($sourceValue) || \is_string($sourceValue)) {
+                foreach ($pivotPairs[$sourceValue] ?? [] as $fk) {
+                    if (isset($targetsByPk[$fk])) {
+                        $prefetched[] = $targetsByPk[$fk];
+                    }
+                }
+            }
+
+            $relationInstance = $this->buildBelongsToManyEagerRelation(
+                manager: $manager,
+                relatedClass: $relatedClass,
+                targetTable: $targetTable,
+                targetPrimaryKey: $targetPrimaryKey,
+                pivotTable: $pivotTable,
+                pivotLocalKey: $pivotLocalKey,
+                pivotForeignKey: $pivotForeignKey,
+                sourceValue: $sourceValue,
+                prefetched: $prefetched,
+            );
+
+            PropertyReflector::createFromObject($parent, $relation->property)->setValue($parent, $relationInstance);
+        }
+    }
+
+    /**
+     * @param class-string $relatedClass
+     * @param list<object> $prefetched
+     * @return Relation<object>
+     */
+    private function buildBelongsToManyEagerRelation(
+        ModelsManagerInterface $manager,
+        string $relatedClass,
+        string $targetTable,
+        string $targetPrimaryKey,
+        string $pivotTable,
+        string $pivotLocalKey,
+        string $pivotForeignKey,
+        mixed $sourceValue,
+        array $prefetched,
+    ): Relation {
+        if (!\is_int($sourceValue) && !\is_string($sourceValue)) {
+            return Relation::createFromPrefetched(
+                values: $prefetched,
+            );
+        }
+
+        return Relation::createFromPrefetchedWithBuilder(
+            prefetched: $prefetched,
+            loaderBuilder: static fn (array $criteria, ?int $limit, ?int $offset): iterable => $manager->findAll(
+                $relatedClass,
+                static function (WhereStatementInterface $statement) use ($pivotTable, $pivotForeignKey, $pivotLocalKey, $targetTable, $targetPrimaryKey, $sourceValue, $criteria, $limit, $offset): void {
+                    $statement
+                        ->innerJoin($pivotTable, $pivotTable . '.' . $pivotForeignKey, $targetTable . '.' . $targetPrimaryKey)
+                        ->where($pivotTable . '.' . $pivotLocalKey, $sourceValue);
+
+                    foreach ($criteria as $extra) {
+                        $extra($statement);
+                    }
+
+                    if ($limit !== null && $statement instanceof SelectStatementInterface) {
+                        $statement->limit($limit, $offset);
+                    }
+                },
+            ),
+            countBuilder: static function (array $criteria) use ($manager, $pivotTable, $pivotForeignKey, $pivotLocalKey, $targetTable, $targetPrimaryKey, $sourceValue): int {
+                $statement = $manager->connection->count($targetTable)
+                    ->innerJoin($pivotTable, $pivotTable . '.' . $pivotForeignKey, $targetTable . '.' . $targetPrimaryKey)
+                    ->where($pivotTable . '.' . $pivotLocalKey, $sourceValue);
+
+                foreach ($criteria as $extra) {
+                    $extra($statement);
+                }
+
+                return $statement->count();
+            },
+        );
+    }
+
+    /**
+     * @param object[] $parents
+     */
+    private function eagerLoadHasManyThrough(
+        array $parents,
+        ModelMetaDataInterface $metaData,
+        ModelRelationInterface $relation,
+    ): void {
+        /** @var HasManyThrough $attribute */
+        $attribute = $relation->attribute;
+        $sourcePropertyName = $this->resolveSourceProperty($metaData, $relation);
+
+        /** @var class-string $relatedClass */
+        $relatedClass = $relation->relatedClass;
+        $manager = $this->modelsManager;
+        $targetMetaData = $manager->metaData->getModel($relatedClass);
+        $throughTable = $manager->metaData->getModel($attribute->through)->table;
+        $throughSecondLocalKey = $this->resolveThroughSecondLocalKeyColumn($attribute);
+        $targetTable = $targetMetaData->table;
+        $secondKey = $attribute->secondKey;
+        $firstKey = $attribute->firstKey;
+
+        if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
+            throw ModelException::fromCantFetchWithoutPrimaryKey(
+                modelClass: $relatedClass,
+            );
+        }
+
+        $targetPrimaryKey = $targetMetaData->key->column;
+        $targetForeignProperty = $this->findPropertyByColumn(
+            metaData: $targetMetaData,
+            column: $secondKey,
+            relationProperty: $relation->property,
+        );
+
+        /** @var array<int|string, int|string> $sourceValues */
+        $sourceValues = [];
+
+        foreach ($parents as $parent) {
+            $value = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+
+            if ($value === null) {
+                continue;
+            }
+
+            if (!\is_int($value) && !\is_string($value)) {
+                throw ModelException::fromPropertyValueMustBeScalar(
+                    modelClass: $metaData->model,
+                    property: $sourcePropertyName,
+                    actualType: \get_debug_type($value),
+                );
+            }
+
+            $sourceValues[$value] = $value;
+        }
+
+        /** @var array<int|string, list<int|string>> $throughPairs */
+        $throughPairs = [];
+        /** @var array<int|string, list<object>> $targetsByFk */
+        $targetsByFk = [];
+
+        if (\sizeof($sourceValues) > 0) {
+            $throughResult = $manager->connection
+                ->select($throughTable)
+                ->select($firstKey, $throughSecondLocalKey)
+                ->distinct()
+                ->whereIn($firstKey, \array_values($sourceValues))
+                ->execute();
+
+            /** @var array<int|string, int|string> $targetForeignValues */
+            $targetForeignValues = [];
+
+            foreach ($throughResult as $row) {
+                $first = $row->properties[$firstKey] ?? null;
+                $second = $row->properties[$throughSecondLocalKey] ?? null;
+
+                if (!\is_int($first) && !\is_string($first)) {
+                    continue;
+                }
+
+                if (!\is_int($second) && !\is_string($second)) {
+                    continue;
+                }
+
+                $throughPairs[$first][] = $second;
+                $targetForeignValues[$second] = $second;
+            }
+
+            if (\sizeof($targetForeignValues) > 0) {
+                $targetRows = $manager->connection
+                    ->select($targetTable)
+                    ->whereIn($secondKey, \array_values($targetForeignValues))
+                    ->fetchAll($relatedClass, $manager->hydrator);
+
+                foreach ($targetRows as $row) {
+                    $fk = PropertyReflector::createFromObject($row, $targetForeignProperty)->getValue($row);
+
+                    if (!\is_int($fk) && !\is_string($fk)) {
+                        continue;
+                    }
+
+                    $targetsByFk[$fk][] = $row;
+                }
+            }
+        }
+
+        foreach ($parents as $parent) {
+            $sourceValue = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+            /** @var list<object> $prefetched */
+            $prefetched = [];
+
+            if (\is_int($sourceValue) || \is_string($sourceValue)) {
+                foreach ($throughPairs[$sourceValue] ?? [] as $secondValue) {
+                    foreach ($targetsByFk[$secondValue] ?? [] as $targetRow) {
+                        $prefetched[] = $targetRow;
+                    }
+                }
+            }
+
+            $relationInstance = $this->buildHasManyThroughEagerRelation(
+                manager: $manager,
+                relatedClass: $relatedClass,
+                targetTable: $targetTable,
+                targetPrimaryKey: $targetPrimaryKey,
+                throughTable: $throughTable,
+                throughSecondLocalKey: $throughSecondLocalKey,
+                secondKey: $secondKey,
+                firstKey: $firstKey,
+                sourceValue: $sourceValue,
+                prefetched: $prefetched,
+            );
+
+            PropertyReflector::createFromObject($parent, $relation->property)->setValue($parent, $relationInstance);
+        }
+    }
+
+    /**
+     * @param class-string $relatedClass
+     * @param list<object> $prefetched
+     * @return Relation<object>
+     */
+    private function buildHasManyThroughEagerRelation(
+        ModelsManagerInterface $manager,
+        string $relatedClass,
+        string $targetTable,
+        string $targetPrimaryKey,
+        string $throughTable,
+        string $throughSecondLocalKey,
+        string $secondKey,
+        string $firstKey,
+        mixed $sourceValue,
+        array $prefetched,
+    ): Relation {
+        if (!\is_int($sourceValue) && !\is_string($sourceValue)) {
+            return Relation::createFromPrefetched(
+                values: $prefetched,
+            );
+        }
+
+        return Relation::createFromPrefetchedWithBuilder(
+            prefetched: $prefetched,
+            loaderBuilder: static function (array $criteria, ?int $limit, ?int $offset) use ($manager, $targetTable, $throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue, $relatedClass): iterable {
+                $statement = $manager->connection->select($targetTable)
+                    ->distinct()
+                    ->innerJoin($throughTable, $throughTable . '.' . $throughSecondLocalKey, $targetTable . '.' . $secondKey)
+                    ->where($throughTable . '.' . $firstKey, $sourceValue);
+
+                foreach ($criteria as $extra) {
+                    $extra($statement);
+                }
+
+                if ($limit !== null) {
+                    $statement->limit($limit, $offset);
+                }
+
+                return $statement->fetchAll($relatedClass, $manager->hydrator);
+            },
+            countBuilder: static function (array $criteria) use ($manager, $targetTable, $targetPrimaryKey, $throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue): int {
+                $statement = $manager->connection->count($targetTable)
+                    ->column($targetTable . '.' . $targetPrimaryKey)
+                    ->distinct()
+                    ->innerJoin($throughTable, $throughTable . '.' . $throughSecondLocalKey, $targetTable . '.' . $secondKey)
+                    ->where($throughTable . '.' . $firstKey, $sourceValue);
 
                 foreach ($criteria as $extra) {
                     $extra($statement);
