@@ -16,8 +16,20 @@ namespace Tuxxedo\Model\Hydrator;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Database\Hydrator\HydratorInterface as DatabaseHydratorInterface;
+use Tuxxedo\Model\ModelException;
+use Tuxxedo\Model\Relation;
 
 #[DefaultImplementation(class: Hydrator::class, lifecycle: Lifecycle::PERSISTENT)]
 interface HydratorInterface extends DatabaseHydratorInterface
 {
+    /**
+     * @param object[] $parents
+     * @param array<string, ?\Closure(Relation<object>): Relation<object>> $with
+     *
+     * @throws ModelException
+     */
+    public function eagerLoad(
+        array $parents,
+        array $with,
+    ): void;
 }

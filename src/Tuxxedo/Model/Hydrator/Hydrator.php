@@ -506,6 +506,189 @@ class Hydrator implements HydratorInterface
         return $result;
     }
 
+    /**
+     * @param object[] $parents
+     * @param array<string, ?\Closure(Relation<object>): Relation<object>> $with
+     */
+    public function eagerLoad(
+        array $parents,
+        array $with,
+    ): void {
+        if (\sizeof($parents) === 0 || \sizeof($with) === 0) {
+            return;
+        }
+
+        $firstParent = $parents[\array_key_first($parents)];
+        $metaData = $this->modelsManager->metaData->getModel($firstParent::class);
+
+        foreach ($with as $relationName => $constraint) {
+            if ($constraint !== null) {
+                throw ModelException::fromEagerLoadingConstraintsNotYetSupported(
+                    relationName: $relationName,
+                );
+            }
+
+            $relation = $this->findRelationByName($metaData, $relationName);
+            $attribute = $relation->attribute;
+
+            if ($attribute instanceof HasMany) {
+                $this->eagerLoadHasMany($parents, $metaData, $relation);
+
+                continue;
+            }
+
+            throw ModelException::fromEagerLoadingNotYetSupported(
+                attributeClass: $attribute::class,
+            );
+        }
+    }
+
+    private function findRelationByName(
+        ModelMetaDataInterface $metaData,
+        string $relationName,
+    ): ModelRelationInterface {
+        foreach ($metaData->relations as $relation) {
+            if ($relation->property === $relationName) {
+                return $relation;
+            }
+        }
+
+        throw ModelException::fromUnknownEagerLoadRelation(
+            modelClass: $metaData->model,
+            relationName: $relationName,
+        );
+    }
+
+    /**
+     * @param object[] $parents
+     */
+    private function eagerLoadHasMany(
+        array $parents,
+        ModelMetaDataInterface $metaData,
+        ModelRelationInterface $relation,
+    ): void {
+        $sourcePropertyName = $this->resolveSourceProperty($metaData, $relation);
+        $targetColumn = $this->resolveTargetColumn($relation);
+
+        /** @var class-string $relatedClass */
+        $relatedClass = $relation->relatedClass;
+        $manager = $this->modelsManager;
+        $targetMetaData = $manager->metaData->getModel($relatedClass);
+        $targetTable = $targetMetaData->table;
+
+        $targetForeignProperty = $this->findPropertyByColumn(
+            metaData: $targetMetaData,
+            column: $targetColumn,
+            relationProperty: $relation->property,
+        );
+
+        /** @var array<int|string, int|string> $sourceValues */
+        $sourceValues = [];
+
+        foreach ($parents as $parent) {
+            $value = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+
+            if ($value === null) {
+                continue;
+            }
+
+            if (!\is_int($value) && !\is_string($value)) {
+                throw ModelException::fromPropertyValueMustBeScalar(
+                    modelClass: $metaData->model,
+                    property: $sourcePropertyName,
+                    actualType: \get_debug_type($value),
+                );
+            }
+
+            $sourceValues[$value] = $value;
+        }
+
+        /** @var array<int|string, list<object>> $grouped */
+        $grouped = [];
+
+        if (\sizeof($sourceValues) > 0) {
+            $batchRows = $manager->connection->select($targetTable)
+                ->whereIn($targetColumn, \array_values($sourceValues))
+                ->fetchAll($relatedClass, $manager->hydrator);
+
+            foreach ($batchRows as $row) {
+                $fkValue = PropertyReflector::createFromObject($row, $targetForeignProperty)->getValue($row);
+
+                if (!\is_int($fkValue) && !\is_string($fkValue)) {
+                    continue;
+                }
+
+                $grouped[$fkValue][] = $row;
+            }
+        }
+
+        foreach ($parents as $parent) {
+            $sourceValue = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+            $prefetched = \is_int($sourceValue) || \is_string($sourceValue)
+                ? ($grouped[$sourceValue] ?? [])
+                : [];
+
+            $relationInstance = $this->buildHasManyEagerRelation(
+                manager: $manager,
+                relatedClass: $relatedClass,
+                targetTable: $targetTable,
+                targetColumn: $targetColumn,
+                sourceValue: $sourceValue,
+                prefetched: $prefetched,
+            );
+
+            PropertyReflector::createFromObject($parent, $relation->property)->setValue($parent, $relationInstance);
+        }
+    }
+
+    /**
+     * @param class-string $relatedClass
+     * @param list<object> $prefetched
+     * @return Relation<object>
+     */
+    private function buildHasManyEagerRelation(
+        ModelsManagerInterface $manager,
+        string $relatedClass,
+        string $targetTable,
+        string $targetColumn,
+        mixed $sourceValue,
+        array $prefetched,
+    ): Relation {
+        if (!\is_int($sourceValue) && !\is_string($sourceValue)) {
+            return Relation::createFromPrefetched(
+                values: $prefetched,
+            );
+        }
+
+        return Relation::createFromPrefetchedWithBuilder(
+            prefetched: $prefetched,
+            loaderBuilder: static fn (array $criteria, ?int $limit, ?int $offset): iterable => $manager->findAll(
+                $relatedClass,
+                static function (WhereStatementInterface $statement) use ($targetColumn, $sourceValue, $criteria, $limit, $offset): void {
+                    $statement->where($targetColumn, $sourceValue);
+
+                    foreach ($criteria as $extra) {
+                        $extra($statement);
+                    }
+
+                    if ($limit !== null && $statement instanceof SelectStatementInterface) {
+                        $statement->limit($limit, $offset);
+                    }
+                },
+            ),
+            countBuilder: static function (array $criteria) use ($manager, $targetTable, $targetColumn, $sourceValue): int {
+                $statement = $manager->connection->count($targetTable)
+                    ->where($targetColumn, $sourceValue);
+
+                foreach ($criteria as $extra) {
+                    $extra($statement);
+                }
+
+                return $statement->count();
+            },
+        );
+    }
+
     private function resolveSourceProperty(
         ModelMetaDataInterface $metaData,
         ModelRelationInterface $relation,

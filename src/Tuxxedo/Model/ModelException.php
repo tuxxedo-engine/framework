@@ -534,6 +534,47 @@ class ModelException extends \Exception
     }
 
     /**
+     * @param class-string $attributeClass
+     */
+    public static function fromEagerLoadingNotYetSupported(
+        string $attributeClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Eager loading is not yet supported for relations of type "%s"',
+                $attributeClass,
+            ),
+        );
+    }
+
+    public static function fromEagerLoadingConstraintsNotYetSupported(
+        string $relationName,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Eager loading constraint closures are not yet supported (relation "%s")',
+                $relationName,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromUnknownEagerLoadRelation(
+        string $modelClass,
+        string $relationName,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Model "%s" has no relation named "%s"',
+                $modelClass,
+                $relationName,
+            ),
+        );
+    }
+
+    /**
      * @param class-string $modelClass
      */
     public static function fromRelationPropertyTypeUnsupported(

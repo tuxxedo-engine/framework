@@ -929,13 +929,17 @@ class ModelsManager implements ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
+     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @return TModel|null
+     *
+     * @throws ModelException
      */
     #[\NoDiscard]
     public function findFirst(
         string $class,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
+        ?array $with = null,
     ): ?object {
         $metaData = $this->metaData->getModel($class);
         $query = $this->connection->select($metaData->table);
@@ -948,7 +952,22 @@ class ModelsManager implements ModelsManagerInterface
             $this->applySoftDeleteFilter($query, $metaData);
         }
 
-        return $query->limit(1)->fetch($class, $this->hydrator);
+        $result = $query->limit(1)->fetch($class, $this->hydrator);
+
+        if ($result === null) {
+            return null;
+        }
+
+        if ($with !== null && \sizeof($with) > 0) {
+            $this->hydrator->eagerLoad(
+                parents: [
+                    $result,
+                ],
+                with: $with,
+            );
+        }
+
+        return $result;
     }
 
     /**
@@ -956,6 +975,7 @@ class ModelsManager implements ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
+     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @return TModel
      *
      * @throws ModelException
@@ -965,8 +985,9 @@ class ModelsManager implements ModelsManagerInterface
         string $class,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
+        ?array $with = null,
     ): object {
-        return $this->findFirst($class, $criteria, $includeDeleted) ?? throw ModelException::fromModelNotFound(
+        return $this->findFirst($class, $criteria, $includeDeleted, $with) ?? throw ModelException::fromModelNotFound(
             modelClass: $class,
         );
     }
@@ -975,7 +996,10 @@ class ModelsManager implements ModelsManagerInterface
      * @template TModel of object
      * @param class-string<TModel> $class
      * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
+     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @return TModel|null
+     *
+     * @throws ModelException
      */
     #[\NoDiscard]
     public function findByIdentifier(
@@ -983,6 +1007,7 @@ class ModelsManager implements ModelsManagerInterface
         int|string $id,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
+        ?array $with = null,
     ): ?object {
         $metaData = $this->metaData->getModel($class);
 
@@ -1002,6 +1027,7 @@ class ModelsManager implements ModelsManagerInterface
                 $statement->where($metaData->key->column, $id);
             },
             includeDeleted: $includeDeleted,
+            with: $with,
         );
     }
 
@@ -1010,6 +1036,7 @@ class ModelsManager implements ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
+     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @return TModel
      *
      * @throws ModelException
@@ -1020,8 +1047,9 @@ class ModelsManager implements ModelsManagerInterface
         int|string $id,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
+        ?array $with = null,
     ): object {
-        return $this->findByIdentifier($class, $id, $criteria, $includeDeleted) ?? throw ModelException::fromModelNotFound(
+        return $this->findByIdentifier($class, $id, $criteria, $includeDeleted, $with) ?? throw ModelException::fromModelNotFound(
             modelClass: $class,
         );
     }
@@ -1032,6 +1060,7 @@ class ModelsManager implements ModelsManagerInterface
      * @param class-string<TModel> $class
      * @param array<string, int|string> $keys
      * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
+     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @return TModel|null
      *
      * @throws ModelException
@@ -1042,6 +1071,7 @@ class ModelsManager implements ModelsManagerInterface
         array $keys,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
+        ?array $with = null,
     ): ?object {
         $metaData = $this->metaData->getModel($class);
 
@@ -1063,6 +1093,7 @@ class ModelsManager implements ModelsManagerInterface
                 }
             },
             includeDeleted: $includeDeleted,
+            with: $with,
         );
     }
 
@@ -1072,6 +1103,7 @@ class ModelsManager implements ModelsManagerInterface
      * @param class-string<TModel> $class
      * @param array<string, int|string> $keys
      * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
+     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @return TModel
      *
      * @throws ModelException
@@ -1082,8 +1114,9 @@ class ModelsManager implements ModelsManagerInterface
         array $keys,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
+        ?array $with = null,
     ): object {
-        return $this->findByCompositeKey($class, $keys, $criteria, $includeDeleted) ?? throw ModelException::fromModelNotFound(
+        return $this->findByCompositeKey($class, $keys, $criteria, $includeDeleted, $with) ?? throw ModelException::fromModelNotFound(
             modelClass: $class,
         );
     }
@@ -1093,13 +1126,17 @@ class ModelsManager implements ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
+     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @return \Generator<int, TModel>
+     *
+     * @throws ModelException
      */
     #[\NoDiscard]
     public function findAll(
         string $class,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
+        ?array $with = null,
     ): \Generator {
         $metaData = $this->metaData->getModel($class);
         $query = $this->connection->select($metaData->table);
@@ -1112,7 +1149,25 @@ class ModelsManager implements ModelsManagerInterface
             $this->applySoftDeleteFilter($query, $metaData);
         }
 
-        yield from $query->fetchAll($class, $this->hydrator);
+        if ($with === null || \sizeof($with) === 0) {
+            yield from $query->fetchAll($class, $this->hydrator);
+
+            return;
+        }
+
+        $parents = \iterator_to_array(
+            $query->fetchAll($class, $this->hydrator),
+            preserve_keys: false,
+        );
+
+        if (\sizeof($parents) > 0) {
+            $this->hydrator->eagerLoad(
+                parents: $parents,
+                with: $with,
+            );
+        }
+
+        yield from $parents;
     }
 
     /**

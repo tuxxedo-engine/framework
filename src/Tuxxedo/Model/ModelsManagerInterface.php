@@ -25,7 +25,6 @@ use Tuxxedo\Model\MetaData\MetaDataInterface;
 
 // @todo Implement a cache strategy
 // @todo Consider findWhere and other shorthands?
-// @todo Support with or similar arguments for fetchers on relations to eagerly load them?
 // @todo Consider pagination
 // @todo Repository foundation
 #[DefaultImplementation(class: ModelsManager::class, lifecycle: Lifecycle::PERSISTENT)]
@@ -78,13 +77,17 @@ interface ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
+     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @return TModel|null
+     *
+     * @throws ModelException
      */
     #[\NoDiscard]
     public function findFirst(
         string $class,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
+        ?array $with = null,
     ): ?object;
 
     /**
@@ -92,6 +95,7 @@ interface ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
+     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @return TModel
      *
      * @throws ModelException
@@ -101,13 +105,17 @@ interface ModelsManagerInterface
         string $class,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
+        ?array $with = null,
     ): object;
 
     /**
      * @template TModel of object
      * @param class-string<TModel> $class
      * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
+     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @return TModel|null
+     *
+     * @throws ModelException
      */
     #[\NoDiscard]
     public function findByIdentifier(
@@ -115,6 +123,7 @@ interface ModelsManagerInterface
         int|string $id,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
+        ?array $with = null,
     ): ?object;
 
     /**
@@ -122,6 +131,7 @@ interface ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
+     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @return TModel
      *
      * @throws ModelException
@@ -132,6 +142,7 @@ interface ModelsManagerInterface
         int|string $id,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
+        ?array $with = null,
     ): object;
 
     /**
@@ -140,6 +151,7 @@ interface ModelsManagerInterface
      * @param class-string<TModel> $class
      * @param array<string, int|string> $keys
      * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
+     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @return TModel|null
      *
      * @throws ModelException
@@ -150,6 +162,7 @@ interface ModelsManagerInterface
         array $keys,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
+        ?array $with = null,
     ): ?object;
 
     /**
@@ -158,6 +171,7 @@ interface ModelsManagerInterface
      * @param class-string<TModel> $class
      * @param array<string, int|string> $keys
      * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
+     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @return TModel
      *
      * @throws ModelException
@@ -168,6 +182,7 @@ interface ModelsManagerInterface
         array $keys,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
+        ?array $with = null,
     ): object;
 
     /**
@@ -175,13 +190,17 @@ interface ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
+     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @return \Generator<int, TModel>
+     *
+     * @throws ModelException
      */
     #[\NoDiscard]
     public function findAll(
         string $class,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
+        ?array $with = null,
     ): \Generator;
 
     /**

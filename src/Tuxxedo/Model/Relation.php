@@ -98,6 +98,26 @@ class Relation implements RelationInterface
         );
     }
 
+    /**
+     * @template TItem of object
+     *
+     * @param array<int, TItem> $prefetched
+     * @param \Closure(list<\Closure(WhereStatementInterface): void>, ?int, ?int): iterable<int, TItem> $loaderBuilder
+     * @param \Closure(list<\Closure(WhereStatementInterface): void>): int $countBuilder
+     * @return self<TItem>
+     */
+    public static function createFromPrefetchedWithBuilder(
+        array $prefetched,
+        \Closure $loaderBuilder,
+        \Closure $countBuilder,
+    ): self {
+        return new self(
+            loaderBuilder: $loaderBuilder,
+            countBuilder: $countBuilder,
+            prefetched: $prefetched,
+        );
+    }
+
     public function offsetExists(mixed $offset): bool
     {
         return isset($this->materialize()[$offset]);
