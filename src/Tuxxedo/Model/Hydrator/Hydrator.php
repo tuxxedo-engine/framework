@@ -549,6 +549,24 @@ class Hydrator implements HydratorInterface
                 continue;
             }
 
+            if ($attribute instanceof HasOne) {
+                $this->eagerLoadHasOne($parents, $metaData, $relation);
+
+                continue;
+            }
+
+            if ($attribute instanceof BelongsTo) {
+                $this->eagerLoadBelongsTo($parents, $metaData, $relation);
+
+                continue;
+            }
+
+            if ($attribute instanceof HasOneThrough) {
+                $this->eagerLoadHasOneThrough($parents, $metaData, $relation);
+
+                continue;
+            }
+
             throw ModelException::fromEagerLoadingNotYetSupported(
                 attributeClass: $attribute::class,
             );
@@ -1081,6 +1099,317 @@ class Hydrator implements HydratorInterface
                 return $statement->count();
             },
         );
+    }
+
+    /**
+     * @param object[] $parents
+     */
+    private function eagerLoadHasOne(
+        array $parents,
+        ModelMetaDataInterface $metaData,
+        ModelRelationInterface $relation,
+    ): void {
+        $sourcePropertyName = $this->resolveSourceProperty($metaData, $relation);
+        $targetColumn = $this->resolveTargetColumn($relation);
+
+        /** @var class-string $relatedClass */
+        $relatedClass = $relation->relatedClass;
+        $manager = $this->modelsManager;
+        $targetMetaData = $manager->metaData->getModel($relatedClass);
+        $targetTable = $targetMetaData->table;
+
+        $targetForeignProperty = $this->findPropertyByColumn(
+            metaData: $targetMetaData,
+            column: $targetColumn,
+            relationProperty: $relation->property,
+        );
+
+        /** @var array<int|string, int|string> $sourceValues */
+        $sourceValues = [];
+
+        foreach ($parents as $parent) {
+            $value = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+
+            if ($value === null) {
+                continue;
+            }
+
+            if (!\is_int($value) && !\is_string($value)) {
+                throw ModelException::fromPropertyValueMustBeScalar(
+                    modelClass: $metaData->model,
+                    property: $sourcePropertyName,
+                    actualType: \get_debug_type($value),
+                );
+            }
+
+            $sourceValues[$value] = $value;
+        }
+
+        /** @var array<int|string, object> $targetsByFk */
+        $targetsByFk = [];
+
+        if (\sizeof($sourceValues) > 0) {
+            $targetRows = $manager->connection
+                ->select($targetTable)
+                ->whereIn($targetColumn, \array_values($sourceValues))
+                ->fetchAll($relatedClass, $manager->hydrator);
+
+            foreach ($targetRows as $row) {
+                $fk = PropertyReflector::createFromObject($row, $targetForeignProperty)->getValue($row);
+
+                if (!\is_int($fk) && !\is_string($fk)) {
+                    continue;
+                }
+
+                $targetsByFk[$fk] = $row;
+            }
+        }
+
+        foreach ($parents as $parent) {
+            $sourceValue = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+            $this->assignSingleRowEager(
+                parent: $parent,
+                metaData: $metaData,
+                relation: $relation,
+                sourceValue: $sourceValue,
+                target: \is_int($sourceValue) || \is_string($sourceValue)
+                    ? ($targetsByFk[$sourceValue] ?? null)
+                    : null,
+            );
+        }
+    }
+
+    /**
+     * @param object[] $parents
+     */
+    private function eagerLoadBelongsTo(
+        array $parents,
+        ModelMetaDataInterface $metaData,
+        ModelRelationInterface $relation,
+    ): void {
+        $sourcePropertyName = $this->resolveSourceProperty($metaData, $relation);
+        $targetColumn = $this->resolveTargetColumn($relation);
+
+        /** @var class-string $relatedClass */
+        $relatedClass = $relation->relatedClass;
+        $manager = $this->modelsManager;
+        $targetMetaData = $manager->metaData->getModel($relatedClass);
+        $targetTable = $targetMetaData->table;
+
+        $targetForeignProperty = $this->findPropertyByColumn(
+            metaData: $targetMetaData,
+            column: $targetColumn,
+            relationProperty: $relation->property,
+        );
+
+        /** @var array<int|string, int|string> $sourceValues */
+        $sourceValues = [];
+
+        foreach ($parents as $parent) {
+            $value = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+
+            if ($value === null) {
+                continue;
+            }
+
+            if (!\is_int($value) && !\is_string($value)) {
+                throw ModelException::fromPropertyValueMustBeScalar(
+                    modelClass: $metaData->model,
+                    property: $sourcePropertyName,
+                    actualType: \get_debug_type($value),
+                );
+            }
+
+            $sourceValues[$value] = $value;
+        }
+
+        /** @var array<int|string, object> $targetsByOwnerKey */
+        $targetsByOwnerKey = [];
+
+        if (\sizeof($sourceValues) > 0) {
+            $targetRows = $manager->connection
+                ->select($targetTable)
+                ->whereIn($targetColumn, \array_values($sourceValues))
+                ->fetchAll($relatedClass, $manager->hydrator);
+
+            foreach ($targetRows as $row) {
+                $ownerValue = PropertyReflector::createFromObject($row, $targetForeignProperty)->getValue($row);
+
+                if (!\is_int($ownerValue) && !\is_string($ownerValue)) {
+                    continue;
+                }
+
+                $targetsByOwnerKey[$ownerValue] = $row;
+            }
+        }
+
+        foreach ($parents as $parent) {
+            $sourceValue = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+            $this->assignSingleRowEager(
+                parent: $parent,
+                metaData: $metaData,
+                relation: $relation,
+                sourceValue: $sourceValue,
+                target: \is_int($sourceValue) || \is_string($sourceValue)
+                    ? ($targetsByOwnerKey[$sourceValue] ?? null)
+                    : null,
+            );
+        }
+    }
+
+    /**
+     * @param object[] $parents
+     */
+    private function eagerLoadHasOneThrough(
+        array $parents,
+        ModelMetaDataInterface $metaData,
+        ModelRelationInterface $relation,
+    ): void {
+        /** @var HasOneThrough $attribute */
+        $attribute = $relation->attribute;
+        $sourcePropertyName = $this->resolveSourceProperty($metaData, $relation);
+
+        /** @var class-string $relatedClass */
+        $relatedClass = $relation->relatedClass;
+        $manager = $this->modelsManager;
+        $targetMetaData = $manager->metaData->getModel($relatedClass);
+        $throughTable = $manager->metaData->getModel($attribute->through)->table;
+        $throughSecondLocalKey = $this->resolveThroughSecondLocalKeyColumn($attribute);
+        $targetTable = $targetMetaData->table;
+        $secondKey = $attribute->secondKey;
+        $firstKey = $attribute->firstKey;
+
+        $targetForeignProperty = $this->findPropertyByColumn(
+            metaData: $targetMetaData,
+            column: $secondKey,
+            relationProperty: $relation->property,
+        );
+
+        /** @var array<int|string, int|string> $sourceValues */
+        $sourceValues = [];
+
+        foreach ($parents as $parent) {
+            $value = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+
+            if ($value === null) {
+                continue;
+            }
+
+            if (!\is_int($value) && !\is_string($value)) {
+                throw ModelException::fromPropertyValueMustBeScalar(
+                    modelClass: $metaData->model,
+                    property: $sourcePropertyName,
+                    actualType: \get_debug_type($value),
+                );
+            }
+
+            $sourceValues[$value] = $value;
+        }
+
+        /** @var array<int|string, int|string> $firstToSecond */
+        $firstToSecond = [];
+
+        /** @var array<int|string, object> $targetsByFk */
+        $targetsByFk = [];
+
+        if (\sizeof($sourceValues) > 0) {
+            $throughResult = $manager->connection
+                ->select($throughTable)
+                ->select($firstKey, $throughSecondLocalKey)
+                ->distinct()
+                ->whereIn($firstKey, \array_values($sourceValues))
+                ->execute();
+
+            /** @var array<int|string, int|string> $targetForeignValues */
+            $targetForeignValues = [];
+
+            foreach ($throughResult as $row) {
+                $first = $row->properties[$firstKey] ?? null;
+                $second = $row->properties[$throughSecondLocalKey] ?? null;
+
+                if (!\is_int($first) && !\is_string($first)) {
+                    continue;
+                }
+
+                if (!\is_int($second) && !\is_string($second)) {
+                    continue;
+                }
+
+                $firstToSecond[$first] = $second;
+                $targetForeignValues[$second] = $second;
+            }
+
+            if (\sizeof($targetForeignValues) > 0) {
+                $targetRows = $manager->connection
+                    ->select($targetTable)
+                    ->whereIn($secondKey, \array_values($targetForeignValues))
+                    ->fetchAll($relatedClass, $manager->hydrator);
+
+                foreach ($targetRows as $row) {
+                    $fk = PropertyReflector::createFromObject($row, $targetForeignProperty)->getValue($row);
+
+                    if (!\is_int($fk) && !\is_string($fk)) {
+                        continue;
+                    }
+
+                    $targetsByFk[$fk] = $row;
+                }
+            }
+        }
+
+        foreach ($parents as $parent) {
+            $sourceValue = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+            $target = null;
+
+            if (\is_int($sourceValue) || \is_string($sourceValue)) {
+                $secondValue = $firstToSecond[$sourceValue] ?? null;
+
+                if ($secondValue !== null) {
+                    $target = $targetsByFk[$secondValue] ?? null;
+                }
+            }
+
+            $this->assignSingleRowEager(
+                parent: $parent,
+                metaData: $metaData,
+                relation: $relation,
+                sourceValue: $sourceValue,
+                target: $target,
+            );
+        }
+    }
+
+    private function assignSingleRowEager(
+        object $parent,
+        ModelMetaDataInterface $metaData,
+        ModelRelationInterface $relation,
+        mixed $sourceValue,
+        ?object $target,
+    ): void {
+        $reflector = PropertyReflector::createFromObject($parent, $relation->property);
+
+        if ($sourceValue === null) {
+            if (!$relation->nullable) {
+                throw ModelException::fromMissingForeignKeyValue(
+                    modelClass: $metaData->model,
+                    property: $relation->property,
+                );
+            }
+
+            $reflector->setValue($parent, null);
+
+            return;
+        }
+
+        if ($target === null) {
+            throw ModelException::fromMissingRelatedRecord(
+                modelClass: $metaData->model,
+                property: $relation->property,
+                relatedClass: $relation->relatedClass,
+            );
+        }
+
+        $reflector->setValue($parent, $target);
     }
 
     private function resolveSourceProperty(
