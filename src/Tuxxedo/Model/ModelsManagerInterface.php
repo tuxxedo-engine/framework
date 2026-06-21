@@ -27,7 +27,6 @@ use Tuxxedo\Model\MetaData\MetaDataInterface;
 
 // @todo Consider findWhere and other shorthands?
 // @todo Consider pagination
-// @todo Repository foundation
 #[DefaultImplementation(class: ModelsManager::class, lifecycle: Lifecycle::PERSISTENT)]
 interface ModelsManagerInterface
 {

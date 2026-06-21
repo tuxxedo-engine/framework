@@ -15,6 +15,7 @@ namespace App\Controllers;
 
 use App\Middleware\ValidUser;
 use App\Models\User;
+use App\Repositories\UserRepositoryInterface;
 use App\Subscribers\Events\UserCreatedEvent;
 use Tuxxedo\Event\EventsManagerInterface;
 use Tuxxedo\Http\Header;
@@ -156,12 +157,13 @@ readonly class ModelController
 
     #[Index(name: 'model.index')]
     #[Route\Get(name: 'model.list')]
-    public function list(): ViewInterface
-    {
+    public function list(
+        UserRepositoryInterface $userRepository,
+    ): ViewInterface {
         return new View(
             'model/list',
             [
-                'users' => $this->modelsManager->findAll(User::class),
+                'users' => $userRepository->findAll(),
             ],
         );
     }
