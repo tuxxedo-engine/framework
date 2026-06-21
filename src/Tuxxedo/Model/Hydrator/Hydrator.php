@@ -519,53 +519,138 @@ class Hydrator implements HydratorInterface
         }
 
         $firstParent = $parents[\array_key_first($parents)];
+        $tree = $this->parseWithTree(
+            with: $with,
+            modelClass: $firstParent::class,
+        );
+
+        $this->eagerLoadTree($parents, $tree);
+    }
+
+    /**
+     * @param object[] $parents
+     * @param array<string, EagerLoadNode> $tree
+     */
+    private function eagerLoadTree(
+        array $parents,
+        array $tree,
+    ): void {
+        if (\sizeof($parents) === 0 || \sizeof($tree) === 0) {
+            return;
+        }
+
+        $firstParent = $parents[\array_key_first($parents)];
         $metaData = $this->modelsManager->metaData->getModel($firstParent::class);
 
-        foreach ($with as $relationName => $constraint) {
+        foreach ($tree as $relationName => $node) {
             $relation = $this->findRelationByName($metaData, $relationName);
             $attribute = $relation->attribute;
-            $shaped = $this->shapeConstraint($constraint);
+            $shaped = $this->shapeConstraint($node->constraint);
 
             if ($attribute instanceof HasMany) {
                 $this->eagerLoadHasMany($parents, $metaData, $relation, $shaped);
-
-                continue;
-            }
-
-            if ($attribute instanceof BelongsToMany) {
+            } elseif ($attribute instanceof BelongsToMany) {
                 $this->eagerLoadBelongsToMany($parents, $metaData, $relation, $shaped);
-
-                continue;
-            }
-
-            if ($attribute instanceof HasManyThrough) {
+            } elseif ($attribute instanceof HasManyThrough) {
                 $this->eagerLoadHasManyThrough($parents, $metaData, $relation, $shaped);
-
-                continue;
-            }
-
-            if ($attribute instanceof HasOne) {
+            } elseif ($attribute instanceof HasOne) {
                 $this->eagerLoadHasOne($parents, $metaData, $relation, $shaped);
-
-                continue;
-            }
-
-            if ($attribute instanceof BelongsTo) {
+            } elseif ($attribute instanceof BelongsTo) {
                 $this->eagerLoadBelongsTo($parents, $metaData, $relation, $shaped);
-
-                continue;
-            }
-
-            if ($attribute instanceof HasOneThrough) {
+            } elseif ($attribute instanceof HasOneThrough) {
                 $this->eagerLoadHasOneThrough($parents, $metaData, $relation, $shaped);
+            } else {
+                throw ModelException::fromEagerLoadingNotYetSupported(
+                    attributeClass: $attribute::class,
+                );
+            }
+
+            if (\sizeof($node->children) > 0) {
+                $children = $this->collectLoadedChildren($parents, $relation);
+
+                if (\sizeof($children) > 0) {
+                    $this->eagerLoadTree($children, $node->children);
+                }
+            }
+        }
+    }
+
+    /**
+     * @param array<string, ?\Closure(Relation<object>): Relation<object>> $with
+     * @param class-string $modelClass
+     * @return array<string, EagerLoadNode>
+     */
+    private function parseWithTree(
+        array $with,
+        string $modelClass,
+    ): array {
+        /** @var array<string, EagerLoadNode> $tree */
+        $tree = [];
+
+        foreach ($with as $path => $constraint) {
+            $segments = \explode('.', $path);
+
+            foreach ($segments as $segment) {
+                if ($segment === '') {
+                    throw ModelException::fromInvalidEagerLoadPath(
+                        modelClass: $modelClass,
+                        path: $path,
+                    );
+                }
+            }
+
+            $cursor = &$tree;
+            $leaf = null;
+
+            foreach ($segments as $segment) {
+                if (!isset($cursor[$segment])) {
+                    $cursor[$segment] = new EagerLoadNode();
+                }
+
+                $leaf = $cursor[$segment];
+                $cursor = &$leaf->children;
+            }
+
+            /** @var EagerLoadNode $leaf */
+            $leaf->constraint = $constraint;
+        }
+
+        return $tree;
+    }
+
+    /**
+     * @param object[] $parents
+     * @return list<object>
+     */
+    private function collectLoadedChildren(
+        array $parents,
+        ModelRelationInterface $relation,
+    ): array {
+        $children = [];
+
+        foreach ($parents as $parent) {
+            $value = PropertyReflector::createFromObject($parent, $relation->property)->getValue($parent);
+
+            if ($value === null) {
+                continue;
+            }
+
+            if ($value instanceof Relation) {
+                foreach ($value as $child) {
+                    $children[] = $child;
+                }
 
                 continue;
             }
 
-            throw ModelException::fromEagerLoadingNotYetSupported(
-                attributeClass: $attribute::class,
-            );
+            if (!\is_object($value)) {
+                continue;
+            }
+
+            $children[] = $value;
         }
+
+        return $children;
     }
 
     /**

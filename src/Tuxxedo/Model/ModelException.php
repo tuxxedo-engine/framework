@@ -550,6 +550,22 @@ class ModelException extends \Exception
     /**
      * @param class-string $modelClass
      */
+    public static function fromInvalidEagerLoadPath(
+        string $modelClass,
+        string $path,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid eager-load path "%s" for model "%s"',
+                $path,
+                $modelClass,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
     public static function fromUnknownEagerLoadRelation(
         string $modelClass,
         string $relationName,
