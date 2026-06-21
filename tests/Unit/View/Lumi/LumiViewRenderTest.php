@@ -58,15 +58,19 @@ class LumiViewRenderTest extends TestCase
     private function createTempDirectory(
         string $prefix,
     ): string {
-        // @todo Rewrite this entire block to use tempnam()
-        $base = \str_replace('\\', '/', \sys_get_temp_dir());
-        $path = $base . '/tuxxedo_lumi_render_' . $prefix . '_' . \uniqid('', true);
+        $path = \tempnam(\sys_get_temp_dir(), 'tuxxedo_lumi_render_' . $prefix . '_');
 
+        if ($path === false) {
+            throw new \RuntimeException('Failed to allocate a temporary path');
+        }
+
+        \unlink($path);
         \mkdir($path, 0755, true);
 
-        $this->tempPaths[] = $path;
+        $normalized = \str_replace('\\', '/', $path);
+        $this->tempPaths[] = $normalized;
 
-        return $path;
+        return $normalized;
     }
 
     private function removeRecursive(
