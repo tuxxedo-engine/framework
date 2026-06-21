@@ -18,7 +18,6 @@ use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 
 // @todo Layer a generic Paginator on top of page() — page() is the raw SQL-layer primitive; Paginator would compose it with totalCount to expose typed page-aware iteration
-// @todo Chain methods on a builder-less prefetched Relation store the criteria stack but cannot apply it (no builder to refetch from). The empty-prefetched case Hydrator uses today is unaffected. A hybrid Relation (prefetched + builder) drops the prefetched on chain and refetches via the builder, courtesy of Part E. Revisit the builder-less case if filtering prefetched-only results becomes a real need — would need an in-memory predicate evaluator mirroring WhereStatementInterface semantics.
 /**
  * @template TModel of object
  *
