@@ -204,14 +204,14 @@ class Hydrator implements HydratorInterface
         $relationInstance = Relation::createFromBuilder(
             loaderBuilder: static fn (array $criteria, ?int $limit, ?int $offset): iterable => $manager->findAll(
                 $relatedClass,
-                static function (WhereStatementInterface $statement) use ($targetColumn, $sourceValue, $criteria, $limit, $offset): void {
+                static function (SelectStatementInterface $statement) use ($targetColumn, $sourceValue, $criteria, $limit, $offset): void {
                     $statement->where($targetColumn, $sourceValue);
 
                     foreach ($criteria as $extra) {
                         $extra($statement);
                     }
 
-                    if ($limit !== null && $statement instanceof SelectStatementInterface) {
+                    if ($limit !== null) {
                         $statement->limit($limit, $offset);
                     }
                 },
@@ -283,7 +283,7 @@ class Hydrator implements HydratorInterface
         $relationInstance = Relation::createFromBuilder(
             loaderBuilder: static fn (array $criteria, ?int $limit, ?int $offset): iterable => $manager->findAll(
                 $relatedClass,
-                static function (WhereStatementInterface $statement) use ($pivotTable, $pivotForeignKey, $pivotLocalKey, $targetTable, $targetPrimaryKey, $sourceValue, $criteria, $limit, $offset): void {
+                static function (SelectStatementInterface $statement) use ($pivotTable, $pivotForeignKey, $pivotLocalKey, $targetTable, $targetPrimaryKey, $sourceValue, $criteria, $limit, $offset): void {
                     $statement
                         ->innerJoin($pivotTable, $pivotTable . '.' . $pivotForeignKey, $targetTable . '.' . $targetPrimaryKey)
                         ->where($pivotTable . '.' . $pivotLocalKey, $sourceValue);
@@ -292,7 +292,7 @@ class Hydrator implements HydratorInterface
                         $extra($statement);
                     }
 
-                    if ($limit !== null && $statement instanceof SelectStatementInterface) {
+                    if ($limit !== null) {
                         $statement->limit($limit, $offset);
                     }
                 },
@@ -838,14 +838,14 @@ class Hydrator implements HydratorInterface
             prefetched: $prefetched,
             loaderBuilder: static fn (array $criteria, ?int $limit, ?int $offset): iterable => $manager->findAll(
                 $relatedClass,
-                static function (WhereStatementInterface $statement) use ($targetColumn, $sourceValue, $criteria, $limit, $offset): void {
+                static function (SelectStatementInterface $statement) use ($targetColumn, $sourceValue, $criteria, $limit, $offset): void {
                     $statement->where($targetColumn, $sourceValue);
 
                     foreach ($criteria as $extra) {
                         $extra($statement);
                     }
 
-                    if ($limit !== null && $statement instanceof SelectStatementInterface) {
+                    if ($limit !== null) {
                         $statement->limit($limit, $offset);
                     }
                 },
@@ -1037,7 +1037,7 @@ class Hydrator implements HydratorInterface
             prefetched: $prefetched,
             loaderBuilder: static fn (array $criteria, ?int $limit, ?int $offset): iterable => $manager->findAll(
                 $relatedClass,
-                static function (WhereStatementInterface $statement) use ($pivotTable, $pivotForeignKey, $pivotLocalKey, $targetTable, $targetPrimaryKey, $sourceValue, $criteria, $limit, $offset): void {
+                static function (SelectStatementInterface $statement) use ($pivotTable, $pivotForeignKey, $pivotLocalKey, $targetTable, $targetPrimaryKey, $sourceValue, $criteria, $limit, $offset): void {
                     $statement
                         ->innerJoin($pivotTable, $pivotTable . '.' . $pivotForeignKey, $targetTable . '.' . $targetPrimaryKey)
                         ->where($pivotTable . '.' . $pivotLocalKey, $sourceValue);
@@ -1046,7 +1046,7 @@ class Hydrator implements HydratorInterface
                         $extra($statement);
                     }
 
-                    if ($limit !== null && $statement instanceof SelectStatementInterface) {
+                    if ($limit !== null) {
                         $statement->limit($limit, $offset);
                     }
                 },

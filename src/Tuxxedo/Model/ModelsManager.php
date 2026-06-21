@@ -951,7 +951,7 @@ class ModelsManager implements ModelsManagerInterface
             $criteria($query);
         }
 
-        if ($includeDeleted) {
+        if (!$includeDeleted) {
             $this->applySoftDeleteFilter($query, $metaData);
         }
 
@@ -1148,7 +1148,7 @@ class ModelsManager implements ModelsManagerInterface
             $criteria($query);
         }
 
-        if ($includeDeleted) {
+        if (!$includeDeleted) {
             $this->applySoftDeleteFilter($query, $metaData);
         }
 
@@ -1226,7 +1226,7 @@ class ModelsManager implements ModelsManagerInterface
 
         $criteria($query);
 
-        if ($includeDeleted) {
+        if (!$includeDeleted) {
             $this->applySoftDeleteFilter($query, $metaData);
         }
 
@@ -1282,7 +1282,7 @@ class ModelsManager implements ModelsManagerInterface
 
         $criteria($query);
 
-        if ($includeDeleted) {
+        if (!$includeDeleted) {
             $this->applySoftDeleteFilter($query, $metaData);
         }
 
@@ -1460,7 +1460,6 @@ class ModelsManager implements ModelsManagerInterface
         }
     }
 
-    // @todo Soft-delete inversion bug? applySoftDeleteFilter adds `WHERE <deleted-column> IS NULL` (excludes deleted rows), but is invoked via `if ($includeDeleted)` in findFirst/findAll/exists/count. Either the parameter name is misleading (should be excludeDeleted) or the conditional is wrong. Framework-wide audit required before fixing.
     private function applySoftDeleteFilter(
         WhereStatementInterface $query,
         ModelMetaDataInterface $metaData,
