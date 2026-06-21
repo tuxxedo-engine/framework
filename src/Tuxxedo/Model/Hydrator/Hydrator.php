@@ -522,47 +522,42 @@ class Hydrator implements HydratorInterface
         $metaData = $this->modelsManager->metaData->getModel($firstParent::class);
 
         foreach ($with as $relationName => $constraint) {
-            if ($constraint !== null) {
-                throw ModelException::fromEagerLoadingConstraintsNotYetSupported(
-                    relationName: $relationName,
-                );
-            }
-
             $relation = $this->findRelationByName($metaData, $relationName);
             $attribute = $relation->attribute;
+            $shaped = $this->shapeConstraint($constraint);
 
             if ($attribute instanceof HasMany) {
-                $this->eagerLoadHasMany($parents, $metaData, $relation);
+                $this->eagerLoadHasMany($parents, $metaData, $relation, $shaped);
 
                 continue;
             }
 
             if ($attribute instanceof BelongsToMany) {
-                $this->eagerLoadBelongsToMany($parents, $metaData, $relation);
+                $this->eagerLoadBelongsToMany($parents, $metaData, $relation, $shaped);
 
                 continue;
             }
 
             if ($attribute instanceof HasManyThrough) {
-                $this->eagerLoadHasManyThrough($parents, $metaData, $relation);
+                $this->eagerLoadHasManyThrough($parents, $metaData, $relation, $shaped);
 
                 continue;
             }
 
             if ($attribute instanceof HasOne) {
-                $this->eagerLoadHasOne($parents, $metaData, $relation);
+                $this->eagerLoadHasOne($parents, $metaData, $relation, $shaped);
 
                 continue;
             }
 
             if ($attribute instanceof BelongsTo) {
-                $this->eagerLoadBelongsTo($parents, $metaData, $relation);
+                $this->eagerLoadBelongsTo($parents, $metaData, $relation, $shaped);
 
                 continue;
             }
 
             if ($attribute instanceof HasOneThrough) {
-                $this->eagerLoadHasOneThrough($parents, $metaData, $relation);
+                $this->eagerLoadHasOneThrough($parents, $metaData, $relation, $shaped);
 
                 continue;
             }
@@ -571,6 +566,59 @@ class Hydrator implements HydratorInterface
                 attributeClass: $attribute::class,
             );
         }
+    }
+
+    /**
+     * @param ?\Closure(Relation<object>): Relation<object> $constraint
+     * @return Relation<object>|null
+     */
+    private function shapeConstraint(
+        ?\Closure $constraint,
+    ): ?Relation {
+        if ($constraint === null) {
+            return null;
+        }
+
+        $scratch = Relation::createFromBuilder(
+            loaderBuilder: static fn (array $criteria, ?int $limit, ?int $offset): iterable => [],
+            countBuilder: static fn (array $criteria): int => 0,
+        );
+
+        return $constraint($scratch);
+    }
+
+    /**
+     * @param Relation<object>|null $shaped
+     */
+    private function applyConstraintToBatch(
+        WhereStatementInterface $statement,
+        ?Relation $shaped,
+    ): void {
+        if ($shaped === null) {
+            return;
+        }
+
+        foreach ($shaped->criteriaStack as $criterion) {
+            $criterion($statement);
+        }
+    }
+
+    /**
+     * @template TItem of object
+     *
+     * @param list<TItem> $rows
+     * @param Relation<object>|null $shaped
+     * @return list<TItem>
+     */
+    private function sliceForConstraint(
+        array $rows,
+        ?Relation $shaped,
+    ): array {
+        if ($shaped === null || $shaped->limit === null) {
+            return $rows;
+        }
+
+        return \array_slice($rows, $shaped->offset ?? 0, $shaped->limit);
     }
 
     private function findRelationByName(
@@ -591,11 +639,13 @@ class Hydrator implements HydratorInterface
 
     /**
      * @param object[] $parents
+     * @param Relation<object>|null $shaped
      */
     private function eagerLoadHasMany(
         array $parents,
         ModelMetaDataInterface $metaData,
         ModelRelationInterface $relation,
+        ?Relation $shaped = null,
     ): void {
         $sourcePropertyName = $this->resolveSourceProperty($metaData, $relation);
         $targetColumn = $this->resolveTargetColumn($relation);
@@ -637,9 +687,12 @@ class Hydrator implements HydratorInterface
         $grouped = [];
 
         if (\sizeof($sourceValues) > 0) {
-            $batchRows = $manager->connection->select($targetTable)
-                ->whereIn($targetColumn, \array_values($sourceValues))
-                ->fetchAll($relatedClass, $manager->hydrator);
+            $batchQuery = $manager->connection->select($targetTable)
+                ->whereIn($targetColumn, \array_values($sourceValues));
+
+            $this->applyConstraintToBatch($batchQuery, $shaped);
+
+            $batchRows = $batchQuery->fetchAll($relatedClass, $manager->hydrator);
 
             foreach ($batchRows as $row) {
                 $fkValue = PropertyReflector::createFromObject($row, $targetForeignProperty)->getValue($row);
@@ -657,6 +710,7 @@ class Hydrator implements HydratorInterface
             $prefetched = \is_int($sourceValue) || \is_string($sourceValue)
                 ? ($grouped[$sourceValue] ?? [])
                 : [];
+            $prefetched = $this->sliceForConstraint($prefetched, $shaped);
 
             $relationInstance = $this->buildHasManyEagerRelation(
                 manager: $manager,
@@ -665,6 +719,7 @@ class Hydrator implements HydratorInterface
                 targetColumn: $targetColumn,
                 sourceValue: $sourceValue,
                 prefetched: $prefetched,
+                shaped: $shaped,
             );
 
             PropertyReflector::createFromObject($parent, $relation->property)->setValue($parent, $relationInstance);
@@ -674,6 +729,7 @@ class Hydrator implements HydratorInterface
     /**
      * @param class-string $relatedClass
      * @param list<object> $prefetched
+     * @param Relation<object>|null $shaped
      * @return Relation<object>
      */
     private function buildHasManyEagerRelation(
@@ -683,6 +739,7 @@ class Hydrator implements HydratorInterface
         string $targetColumn,
         mixed $sourceValue,
         array $prefetched,
+        ?Relation $shaped = null,
     ): Relation {
         if (!\is_int($sourceValue) && !\is_string($sourceValue)) {
             return Relation::createFromPrefetched(
@@ -716,16 +773,21 @@ class Hydrator implements HydratorInterface
 
                 return $statement->count();
             },
+            initialCriteriaStack: $shaped->criteriaStack ?? [],
+            initialLimit: $shaped?->limit,
+            initialOffset: $shaped?->offset,
         );
     }
 
     /**
      * @param object[] $parents
+     * @param Relation<object>|null $shaped
      */
     private function eagerLoadBelongsToMany(
         array $parents,
         ModelMetaDataInterface $metaData,
         ModelRelationInterface $relation,
+        ?Relation $shaped = null,
     ): void {
         /** @var BelongsToMany $attribute */
         $attribute = $relation->attribute;
@@ -808,10 +870,13 @@ class Hydrator implements HydratorInterface
             }
 
             if (\sizeof($foreignKeys) > 0) {
-                $targetRows = $manager->connection
+                $targetQuery = $manager->connection
                     ->select($targetTable)
-                    ->whereIn($targetPrimaryKey, \array_values($foreignKeys))
-                    ->fetchAll($relatedClass, $manager->hydrator);
+                    ->whereIn($targetPrimaryKey, \array_values($foreignKeys));
+
+                $this->applyConstraintToBatch($targetQuery, $shaped);
+
+                $targetRows = $targetQuery->fetchAll($relatedClass, $manager->hydrator);
 
                 foreach ($targetRows as $row) {
                     $pkValue = PropertyReflector::createFromObject($row, $targetPrimaryProperty)->getValue($row);
@@ -838,6 +903,8 @@ class Hydrator implements HydratorInterface
                 }
             }
 
+            $prefetched = $this->sliceForConstraint($prefetched, $shaped);
+
             $relationInstance = $this->buildBelongsToManyEagerRelation(
                 manager: $manager,
                 relatedClass: $relatedClass,
@@ -848,6 +915,7 @@ class Hydrator implements HydratorInterface
                 pivotForeignKey: $pivotForeignKey,
                 sourceValue: $sourceValue,
                 prefetched: $prefetched,
+                shaped: $shaped,
             );
 
             PropertyReflector::createFromObject($parent, $relation->property)->setValue($parent, $relationInstance);
@@ -857,6 +925,7 @@ class Hydrator implements HydratorInterface
     /**
      * @param class-string $relatedClass
      * @param list<object> $prefetched
+     * @param Relation<object>|null $shaped
      * @return Relation<object>
      */
     private function buildBelongsToManyEagerRelation(
@@ -869,6 +938,7 @@ class Hydrator implements HydratorInterface
         string $pivotForeignKey,
         mixed $sourceValue,
         array $prefetched,
+        ?Relation $shaped = null,
     ): Relation {
         if (!\is_int($sourceValue) && !\is_string($sourceValue)) {
             return Relation::createFromPrefetched(
@@ -905,16 +975,21 @@ class Hydrator implements HydratorInterface
 
                 return $statement->count();
             },
+            initialCriteriaStack: $shaped->criteriaStack ?? [],
+            initialLimit: $shaped?->limit,
+            initialOffset: $shaped?->offset,
         );
     }
 
     /**
      * @param object[] $parents
+     * @param Relation<object>|null $shaped
      */
     private function eagerLoadHasManyThrough(
         array $parents,
         ModelMetaDataInterface $metaData,
         ModelRelationInterface $relation,
+        ?Relation $shaped = null,
     ): void {
         /** @var HasManyThrough $attribute */
         $attribute = $relation->attribute;
@@ -997,10 +1072,13 @@ class Hydrator implements HydratorInterface
             }
 
             if (\sizeof($targetForeignValues) > 0) {
-                $targetRows = $manager->connection
+                $targetQuery = $manager->connection
                     ->select($targetTable)
-                    ->whereIn($secondKey, \array_values($targetForeignValues))
-                    ->fetchAll($relatedClass, $manager->hydrator);
+                    ->whereIn($secondKey, \array_values($targetForeignValues));
+
+                $this->applyConstraintToBatch($targetQuery, $shaped);
+
+                $targetRows = $targetQuery->fetchAll($relatedClass, $manager->hydrator);
 
                 foreach ($targetRows as $row) {
                     $fk = PropertyReflector::createFromObject($row, $targetForeignProperty)->getValue($row);
@@ -1027,6 +1105,8 @@ class Hydrator implements HydratorInterface
                 }
             }
 
+            $prefetched = $this->sliceForConstraint($prefetched, $shaped);
+
             $relationInstance = $this->buildHasManyThroughEagerRelation(
                 manager: $manager,
                 relatedClass: $relatedClass,
@@ -1038,6 +1118,7 @@ class Hydrator implements HydratorInterface
                 firstKey: $firstKey,
                 sourceValue: $sourceValue,
                 prefetched: $prefetched,
+                shaped: $shaped,
             );
 
             PropertyReflector::createFromObject($parent, $relation->property)->setValue($parent, $relationInstance);
@@ -1047,6 +1128,7 @@ class Hydrator implements HydratorInterface
     /**
      * @param class-string $relatedClass
      * @param list<object> $prefetched
+     * @param Relation<object>|null $shaped
      * @return Relation<object>
      */
     private function buildHasManyThroughEagerRelation(
@@ -1060,6 +1142,7 @@ class Hydrator implements HydratorInterface
         string $firstKey,
         mixed $sourceValue,
         array $prefetched,
+        ?Relation $shaped = null,
     ): Relation {
         if (!\is_int($sourceValue) && !\is_string($sourceValue)) {
             return Relation::createFromPrefetched(
@@ -1098,16 +1181,21 @@ class Hydrator implements HydratorInterface
 
                 return $statement->count();
             },
+            initialCriteriaStack: $shaped->criteriaStack ?? [],
+            initialLimit: $shaped?->limit,
+            initialOffset: $shaped?->offset,
         );
     }
 
     /**
      * @param object[] $parents
+     * @param Relation<object>|null $shaped
      */
     private function eagerLoadHasOne(
         array $parents,
         ModelMetaDataInterface $metaData,
         ModelRelationInterface $relation,
+        ?Relation $shaped = null,
     ): void {
         $sourcePropertyName = $this->resolveSourceProperty($metaData, $relation);
         $targetColumn = $this->resolveTargetColumn($relation);
@@ -1149,10 +1237,13 @@ class Hydrator implements HydratorInterface
         $targetsByFk = [];
 
         if (\sizeof($sourceValues) > 0) {
-            $targetRows = $manager->connection
+            $targetQuery = $manager->connection
                 ->select($targetTable)
-                ->whereIn($targetColumn, \array_values($sourceValues))
-                ->fetchAll($relatedClass, $manager->hydrator);
+                ->whereIn($targetColumn, \array_values($sourceValues));
+
+            $this->applyConstraintToBatch($targetQuery, $shaped);
+
+            $targetRows = $targetQuery->fetchAll($relatedClass, $manager->hydrator);
 
             foreach ($targetRows as $row) {
                 $fk = PropertyReflector::createFromObject($row, $targetForeignProperty)->getValue($row);
@@ -1181,11 +1272,13 @@ class Hydrator implements HydratorInterface
 
     /**
      * @param object[] $parents
+     * @param Relation<object>|null $shaped
      */
     private function eagerLoadBelongsTo(
         array $parents,
         ModelMetaDataInterface $metaData,
         ModelRelationInterface $relation,
+        ?Relation $shaped = null,
     ): void {
         $sourcePropertyName = $this->resolveSourceProperty($metaData, $relation);
         $targetColumn = $this->resolveTargetColumn($relation);
@@ -1227,10 +1320,13 @@ class Hydrator implements HydratorInterface
         $targetsByOwnerKey = [];
 
         if (\sizeof($sourceValues) > 0) {
-            $targetRows = $manager->connection
+            $targetQuery = $manager->connection
                 ->select($targetTable)
-                ->whereIn($targetColumn, \array_values($sourceValues))
-                ->fetchAll($relatedClass, $manager->hydrator);
+                ->whereIn($targetColumn, \array_values($sourceValues));
+
+            $this->applyConstraintToBatch($targetQuery, $shaped);
+
+            $targetRows = $targetQuery->fetchAll($relatedClass, $manager->hydrator);
 
             foreach ($targetRows as $row) {
                 $ownerValue = PropertyReflector::createFromObject($row, $targetForeignProperty)->getValue($row);
@@ -1259,11 +1355,13 @@ class Hydrator implements HydratorInterface
 
     /**
      * @param object[] $parents
+     * @param Relation<object>|null $shaped
      */
     private function eagerLoadHasOneThrough(
         array $parents,
         ModelMetaDataInterface $metaData,
         ModelRelationInterface $relation,
+        ?Relation $shaped = null,
     ): void {
         /** @var HasOneThrough $attribute */
         $attribute = $relation->attribute;
@@ -1340,10 +1438,13 @@ class Hydrator implements HydratorInterface
             }
 
             if (\sizeof($targetForeignValues) > 0) {
-                $targetRows = $manager->connection
+                $targetQuery = $manager->connection
                     ->select($targetTable)
-                    ->whereIn($secondKey, \array_values($targetForeignValues))
-                    ->fetchAll($relatedClass, $manager->hydrator);
+                    ->whereIn($secondKey, \array_values($targetForeignValues));
+
+                $this->applyConstraintToBatch($targetQuery, $shaped);
+
+                $targetRows = $targetQuery->fetchAll($relatedClass, $manager->hydrator);
 
                 foreach ($targetRows as $row) {
                     $fk = PropertyReflector::createFromObject($row, $targetForeignProperty)->getValue($row);

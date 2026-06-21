@@ -61,9 +61,9 @@ class Relation implements RelationInterface
         private readonly ?\Closure $loaderBuilder = null,
         private readonly ?\Closure $countBuilder = null,
         private readonly ?array $prefetched = null,
-        private readonly array $criteriaStack = [],
-        private readonly ?int $limit = null,
-        private readonly ?int $offset = null,
+        public readonly array $criteriaStack = [],
+        public readonly ?int $limit = null,
+        public readonly ?int $offset = null,
     ) {
     }
 
@@ -104,17 +104,24 @@ class Relation implements RelationInterface
      * @param array<int, TItem> $prefetched
      * @param \Closure(list<\Closure(WhereStatementInterface): void>, ?int, ?int): iterable<int, TItem> $loaderBuilder
      * @param \Closure(list<\Closure(WhereStatementInterface): void>): int $countBuilder
+     * @param list<\Closure(WhereStatementInterface): void> $initialCriteriaStack
      * @return self<TItem>
      */
     public static function createFromPrefetchedWithBuilder(
         array $prefetched,
         \Closure $loaderBuilder,
         \Closure $countBuilder,
+        array $initialCriteriaStack = [],
+        ?int $initialLimit = null,
+        ?int $initialOffset = null,
     ): self {
         return new self(
             loaderBuilder: $loaderBuilder,
             countBuilder: $countBuilder,
             prefetched: $prefetched,
+            criteriaStack: $initialCriteriaStack,
+            limit: $initialLimit,
+            offset: $initialOffset,
         );
     }
 

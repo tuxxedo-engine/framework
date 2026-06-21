@@ -547,17 +547,6 @@ class ModelException extends \Exception
         );
     }
 
-    public static function fromEagerLoadingConstraintsNotYetSupported(
-        string $relationName,
-    ): self {
-        return new self(
-            message: \sprintf(
-                'Eager loading constraint closures are not yet supported (relation "%s")',
-                $relationName,
-            ),
-        );
-    }
-
     /**
      * @param class-string $modelClass
      */
