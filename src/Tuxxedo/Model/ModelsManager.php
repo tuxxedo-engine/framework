@@ -1336,6 +1336,12 @@ class ModelsManager implements ModelsManagerInterface
 
                 return $statement->count();
             },
+            eagerLoader: static function (array $parents, array $with) use ($manager): void {
+                $manager->hydrator->eagerLoad(
+                    parents: $parents,
+                    with: $with,
+                );
+            },
         );
     }
 
