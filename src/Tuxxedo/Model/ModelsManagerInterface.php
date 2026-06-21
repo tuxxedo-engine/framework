@@ -23,7 +23,6 @@ use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 use Tuxxedo\Model\Hydrator\HydratorInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 
-// @todo Implement a cache strategy
 // @todo Consider findWhere and other shorthands?
 // @todo Consider pagination
 // @todo Repository foundation
