@@ -16,7 +16,9 @@ namespace Tuxxedo\Model;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Database\Driver\ConnectionInterface;
-use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
+use Tuxxedo\Database\Query\Statement\CountStatementInterface;
+use Tuxxedo\Database\Query\Statement\ExistsStatementInterface;
+use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Behavior\BehaviorInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
@@ -75,7 +77,7 @@ interface ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
-     * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
+     * @param (\Closure(SelectStatementInterface $statement): void)|null $criteria
      * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @return TModel|null
      *
@@ -93,7 +95,7 @@ interface ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
-     * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
+     * @param (\Closure(SelectStatementInterface $statement): void)|null $criteria
      * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @return TModel
      *
@@ -110,7 +112,7 @@ interface ModelsManagerInterface
     /**
      * @template TModel of object
      * @param class-string<TModel> $class
-     * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
+     * @param (\Closure(SelectStatementInterface $statement): void)|null $criteria
      * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @return TModel|null
      *
@@ -129,7 +131,7 @@ interface ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
-     * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
+     * @param (\Closure(SelectStatementInterface $statement): void)|null $criteria
      * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @return TModel
      *
@@ -149,7 +151,7 @@ interface ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param array<string, int|string> $keys
-     * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
+     * @param (\Closure(SelectStatementInterface $statement): void)|null $criteria
      * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @return TModel|null
      *
@@ -169,7 +171,7 @@ interface ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param array<string, int|string> $keys
-     * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
+     * @param (\Closure(SelectStatementInterface $statement): void)|null $criteria
      * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @return TModel
      *
@@ -188,7 +190,7 @@ interface ModelsManagerInterface
      * @template TModel of object
      *
      * @param class-string<TModel> $class
-     * @param (\Closure(WhereStatementInterface $statement): void)|null $criteria
+     * @param (\Closure(SelectStatementInterface $statement): void)|null $criteria
      * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @return \Generator<int, TModel>
      *
@@ -214,7 +216,7 @@ interface ModelsManagerInterface
 
     /**
      * @param class-string $class
-     * @param \Closure(WhereStatementInterface $statement): void $criteria
+     * @param \Closure(ExistsStatementInterface $statement): void $criteria
      */
     #[\NoDiscard]
     public function exists(
@@ -225,7 +227,7 @@ interface ModelsManagerInterface
 
     /**
      * @param class-string $class
-     * @param (\Closure(WhereStatementInterface $statement): void) $criteria
+     * @param (\Closure(ExistsStatementInterface $statement): void) $criteria
      */
     #[\NoDiscard]
     public function existsByIdentifier(
@@ -234,6 +236,19 @@ interface ModelsManagerInterface
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
     ): bool;
+
+    /**
+     * @param class-string $class
+     * @param \Closure(CountStatementInterface $statement): void $criteria
+     *
+     * @throws ModelException
+     */
+    #[\NoDiscard]
+    public function count(
+        string $class,
+        \Closure $criteria,
+        bool $includeDeleted = false,
+    ): int;
 
     #[\NoDiscard]
     public function delete(

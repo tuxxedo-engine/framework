@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Model\Hydrator;
 
 use Tuxxedo\Database\Hydrator\HydratorInterface as DatabaseHydratorInterface;
+use Tuxxedo\Database\Query\Statement\CountStatementInterface;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
@@ -393,37 +394,38 @@ class Hydrator implements HydratorInterface
         $secondKey = $attribute->secondKey;
         $firstKey = $attribute->firstKey;
 
-        // @todo HasManyThrough loader bypasses ModelsManager::findAll() because distinct() lives on SelectStatement and the criteria closure is narrowed to WhereStatementInterface. Soft-delete filtering on the Through-far model is therefore not applied here — revisit once findAll exposes a shape-modifier hook or once the soft-delete filter moves into the Statement layer.
         $relationInstance = Relation::createFromBuilder(
-            loaderBuilder: static function (array $criteria, ?int $limit, ?int $offset) use ($manager, $targetTable, $throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue, $relatedClass): iterable {
-                $statement = $manager->connection->select($targetTable)
-                    ->distinct()
-                    ->innerJoin($throughTable, $throughTable . '.' . $throughSecondLocalKey, $targetTable . '.' . $secondKey)
-                    ->where($throughTable . '.' . $firstKey, $sourceValue);
+            loaderBuilder: static fn (array $criteria, ?int $limit, ?int $offset): iterable => $manager->findAll(
+                $relatedClass,
+                static function (SelectStatementInterface $statement) use ($throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue, $criteria, $limit, $offset, $targetTable): void {
+                    $statement
+                        ->distinct()
+                        ->innerJoin($throughTable, $throughTable . '.' . $throughSecondLocalKey, $targetTable . '.' . $secondKey)
+                        ->where($throughTable . '.' . $firstKey, $sourceValue);
 
-                foreach ($criteria as $extra) {
-                    $extra($statement);
-                }
+                    foreach ($criteria as $extra) {
+                        $extra($statement);
+                    }
 
-                if ($limit !== null) {
-                    $statement->limit($limit, $offset);
-                }
+                    if ($limit !== null) {
+                        $statement->limit($limit, $offset);
+                    }
+                },
+            ),
+            countBuilder: static fn (array $criteria): int => $manager->count(
+                $relatedClass,
+                static function (CountStatementInterface $statement) use ($throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue, $criteria, $targetTable, $targetPrimaryKey): void {
+                    $statement
+                        ->column($targetTable . '.' . $targetPrimaryKey)
+                        ->distinct()
+                        ->innerJoin($throughTable, $throughTable . '.' . $throughSecondLocalKey, $targetTable . '.' . $secondKey)
+                        ->where($throughTable . '.' . $firstKey, $sourceValue);
 
-                return $statement->fetchAll($relatedClass, $manager->hydrator);
-            },
-            countBuilder: static function (array $criteria) use ($manager, $targetTable, $targetPrimaryKey, $throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue): int {
-                $statement = $manager->connection->count($targetTable)
-                    ->column($targetTable . '.' . $targetPrimaryKey)
-                    ->distinct()
-                    ->innerJoin($throughTable, $throughTable . '.' . $throughSecondLocalKey, $targetTable . '.' . $secondKey)
-                    ->where($throughTable . '.' . $firstKey, $sourceValue);
-
-                foreach ($criteria as $extra) {
-                    $extra($statement);
-                }
-
-                return $statement->count();
-            },
+                    foreach ($criteria as $extra) {
+                        $extra($statement);
+                    }
+                },
+            ),
         );
 
         PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $relationInstance);
