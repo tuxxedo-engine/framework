@@ -39,6 +39,9 @@ class Relation implements RelationInterface
         }
     }
 
+    /**
+     * @var int<0, max>
+     */
     public int $count {
         get {
             return \count($this->materialize());

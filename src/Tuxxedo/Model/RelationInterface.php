@@ -25,6 +25,9 @@ interface RelationInterface extends \IteratorAggregate, \Countable, \ArrayAccess
         get;
     }
 
+    /**
+     * @var int<0, max>
+     */
     public int $count {
         get;
     }
