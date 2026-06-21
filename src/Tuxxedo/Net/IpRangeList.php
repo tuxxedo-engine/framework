@@ -106,7 +106,7 @@ readonly class IpRangeList implements IpRangeListInterface
             );
         }
 
-        if (!$this->isPositiveInteger($parts[1])) {
+        if (\preg_match('/^[0-9]+$/', $parts[1]) !== 1) {
             throw NetException::fromNonNumericCidrPrefix(
                 cidr: $cidr,
             );
@@ -126,12 +126,6 @@ readonly class IpRangeList implements IpRangeListInterface
         ];
     }
 
-    // @todo This is ugly, refactor it for readability
-    private function isPositiveInteger(
-        string $value,
-    ): bool {
-        return $value !== '' && \strspn($value, '0123456789') === \strlen($value);
-    }
 
     /**
      * @return list<array{packed: string, prefix: int}>
