@@ -25,6 +25,10 @@ interface RelationInterface extends \IteratorAggregate, \Countable, \ArrayAccess
         get;
     }
 
+    public int $count {
+        get;
+    }
+
     /**
      * @var array<int, TModel>
      */
