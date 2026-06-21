@@ -26,6 +26,6 @@ readonly class UserRepository implements UserRepositoryInterface
 
     public function findAll(): \Generator
     {
-        yield from $this->modelsManager->findAll(User::class);
+        yield from $this->modelsManager->query(User::class);
     }
 }

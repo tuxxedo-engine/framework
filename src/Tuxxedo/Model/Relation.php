@@ -13,40 +13,17 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model;
 
-use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
-use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 
-// @todo Layer a generic Paginator on top of page() — page() is the raw SQL-layer primitive; Paginator would compose it with totalCount to expose typed page-aware iteration
 /**
  * @template TModel of object
  *
+ * @extends AbstractQueryable<TModel>
  * @implements RelationInterface<TModel>
  */
-class Relation implements RelationInterface
+// @todo Layer a generic Paginator on top of page() — page() is the raw SQL-layer primitive; Paginator would compose it with totalCount to expose typed page-aware iteration
+class Relation extends AbstractQueryable implements RelationInterface
 {
-    /**
-     * @var array<int, TModel>|null
-     */
-    private ?array $cache = null;
-
-    private ?int $cachedTotalCount = null;
-
-    public int $totalCount {
-        get {
-            return $this->cachedTotalCount ??= $this->computeTotalCount();
-        }
-    }
-
-    /**
-     * @var int<0, max>
-     */
-    public int $count {
-        get {
-            return \count($this->materialize());
-        }
-    }
-
     /**
      * @var array<int, TModel>
      */
@@ -64,13 +41,20 @@ class Relation implements RelationInterface
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
      */
     final private function __construct(
-        private readonly ?\Closure $loaderBuilder = null,
-        private readonly ?\Closure $countBuilder = null,
+        ?\Closure $loaderBuilder = null,
+        ?\Closure $countBuilder = null,
         private readonly ?array $prefetched = null,
-        public readonly array $criteriaStack = [],
-        public readonly ?int $limit = null,
-        public readonly ?int $offset = null,
+        array $criteriaStack = [],
+        ?int $limit = null,
+        ?int $offset = null,
     ) {
+        parent::__construct(
+            loaderBuilder: $loaderBuilder,
+            countBuilder: $countBuilder,
+            criteriaStack: $criteriaStack,
+            limit: $limit,
+            offset: $offset,
+        );
     }
 
     /**
@@ -131,34 +115,25 @@ class Relation implements RelationInterface
         );
     }
 
-    public function offsetExists(mixed $offset): bool
-    {
-        return isset($this->materialize()[$offset]);
-    }
-
-    public function offsetGet(mixed $offset): mixed
-    {
-        return $this->materialize()[$offset];
-    }
-
     /**
-     * @return never
-     *
-     * @throws ModelException
+     * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
+     * @return static
      */
-    public function offsetSet(mixed $offset, mixed $value): void
-    {
-        throw ModelException::fromImmutableRelation();
-    }
-
-    /**
-     * @return never
-     *
-     * @throws ModelException
-     */
-    public function offsetUnset(mixed $offset): void
-    {
-        throw ModelException::fromImmutableRelation();
+    protected function cloneWith(
+        array $criteriaStack,
+        ?int $limit,
+        ?int $offset,
+    ): static {
+        return new static(
+            loaderBuilder: $this->loaderBuilder,
+            countBuilder: $this->countBuilder,
+            prefetched: $this->loaderBuilder !== null
+                ? null
+                : $this->prefetched,
+            criteriaStack: $criteriaStack,
+            limit: $limit,
+            offset: $offset,
+        );
     }
 
     /**
@@ -202,276 +177,6 @@ class Relation implements RelationInterface
     }
 
     /**
-     * @param string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
-     * @return self<TModel>
-     */
-    #[\NoDiscard]
-    public function where(
-        string $column,
-        string|int|float|bool|null|array $value,
-        ConditionOperator|string $operator = ConditionOperator::EQUALS,
-    ): self {
-        return $this->extend(
-            criterion: static function (WhereStatementInterface $statement) use ($column, $value, $operator): void {
-                $statement->where($column, $value, $operator);
-            },
-        );
-    }
-
-    /**
-     * @param string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
-     * @return self<TModel>
-     */
-    #[\NoDiscard]
-    public function orWhere(
-        string $column,
-        string|int|float|bool|null|array $value,
-        ConditionOperator|string $operator = ConditionOperator::EQUALS,
-    ): self {
-        return $this->extend(
-            criterion: static function (WhereStatementInterface $statement) use ($column, $value, $operator): void {
-                $statement->orWhere($column, $value, $operator);
-            },
-        );
-    }
-
-    /**
-     * @return self<TModel>
-     */
-    #[\NoDiscard]
-    public function whereNull(
-        string $column,
-    ): self {
-        return $this->extend(
-            criterion: static function (WhereStatementInterface $statement) use ($column): void {
-                $statement->whereNull($column);
-            },
-        );
-    }
-
-    /**
-     * @return self<TModel>
-     */
-    #[\NoDiscard]
-    public function whereNotNull(
-        string $column,
-    ): self {
-        return $this->extend(
-            criterion: static function (WhereStatementInterface $statement) use ($column): void {
-                $statement->whereNotNull($column);
-            },
-        );
-    }
-
-    /**
-     * @return self<TModel>
-     */
-    #[\NoDiscard]
-    public function orWhereNull(
-        string $column,
-    ): self {
-        return $this->extend(
-            criterion: static function (WhereStatementInterface $statement) use ($column): void {
-                $statement->orWhereNull($column);
-            },
-        );
-    }
-
-    /**
-     * @return self<TModel>
-     */
-    #[\NoDiscard]
-    public function orWhereNotNull(
-        string $column,
-    ): self {
-        return $this->extend(
-            criterion: static function (WhereStatementInterface $statement) use ($column): void {
-                $statement->orWhereNotNull($column);
-            },
-        );
-    }
-
-    /**
-     * @param non-empty-array<string|int|float|bool|null> $values
-     * @return self<TModel>
-     */
-    #[\NoDiscard]
-    public function whereIn(
-        string $column,
-        array $values,
-    ): self {
-        return $this->extend(
-            criterion: static function (WhereStatementInterface $statement) use ($column, $values): void {
-                $statement->whereIn($column, $values);
-            },
-        );
-    }
-
-    /**
-     * @param non-empty-array<string|int|float|bool|null> $values
-     * @return self<TModel>
-     */
-    #[\NoDiscard]
-    public function whereNotIn(
-        string $column,
-        array $values,
-    ): self {
-        return $this->extend(
-            criterion: static function (WhereStatementInterface $statement) use ($column, $values): void {
-                $statement->whereNotIn($column, $values);
-            },
-        );
-    }
-
-    /**
-     * @return self<TModel>
-     */
-    #[\NoDiscard]
-    public function whereBetween(
-        string $column,
-        string|int|float|bool $from,
-        string|int|float|bool $to,
-    ): self {
-        return $this->extend(
-            criterion: static function (WhereStatementInterface $statement) use ($column, $from, $to): void {
-                $statement->whereBetween($column, $from, $to);
-            },
-        );
-    }
-
-    /**
-     * @return self<TModel>
-     */
-    #[\NoDiscard]
-    public function whereNotBetween(
-        string $column,
-        string|int|float|bool $from,
-        string|int|float|bool $to,
-    ): self {
-        return $this->extend(
-            criterion: static function (WhereStatementInterface $statement) use ($column, $from, $to): void {
-                $statement->whereNotBetween($column, $from, $to);
-            },
-        );
-    }
-
-    /**
-     * @return self<TModel>
-     */
-    #[\NoDiscard]
-    public function innerJoin(
-        string $table,
-        string $first,
-        string $second,
-        JoinOperator|string $operator = JoinOperator::EQUALS,
-    ): self {
-        return $this->extend(
-            criterion: static function (WhereStatementInterface $statement) use ($table, $first, $second, $operator): void {
-                $statement->innerJoin($table, $first, $second, $operator);
-            },
-        );
-    }
-
-    /**
-     * @return self<TModel>
-     */
-    #[\NoDiscard]
-    public function leftJoin(
-        string $table,
-        string $first,
-        string $second,
-        JoinOperator|string $operator = JoinOperator::EQUALS,
-    ): self {
-        return $this->extend(
-            criterion: static function (WhereStatementInterface $statement) use ($table, $first, $second, $operator): void {
-                $statement->leftJoin($table, $first, $second, $operator);
-            },
-        );
-    }
-
-    /**
-     * @return self<TModel>
-     */
-    #[\NoDiscard]
-    public function rightJoin(
-        string $table,
-        string $first,
-        string $second,
-        JoinOperator|string $operator = JoinOperator::EQUALS,
-    ): self {
-        return $this->extend(
-            criterion: static function (WhereStatementInterface $statement) use ($table, $first, $second, $operator): void {
-                $statement->rightJoin($table, $first, $second, $operator);
-            },
-        );
-    }
-
-    /**
-     * @return self<TModel>
-     */
-    #[\NoDiscard]
-    public function crossJoin(
-        string $table,
-    ): self {
-        return $this->extend(
-            criterion: static function (WhereStatementInterface $statement) use ($table): void {
-                $statement->crossJoin($table);
-            },
-        );
-    }
-
-    /**
-     * @return self<TModel>
-     */
-    #[\NoDiscard]
-    public function page(
-        int $limit,
-        ?int $offset = null,
-    ): self {
-        return new self(
-            loaderBuilder: $this->loaderBuilder,
-            countBuilder: $this->countBuilder,
-            prefetched: $this->loaderBuilder !== null
-                ? null
-                : $this->prefetched,
-            criteriaStack: $this->criteriaStack,
-            limit: $limit,
-            offset: $offset,
-        );
-    }
-
-    /**
-     * @param \Closure(WhereStatementInterface): void $criterion
-     * @return self<TModel>
-     */
-    private function extend(
-        \Closure $criterion,
-    ): self {
-        $stack = $this->criteriaStack;
-        $stack[] = $criterion;
-
-        return new self(
-            loaderBuilder: $this->loaderBuilder,
-            countBuilder: $this->countBuilder,
-            prefetched: $this->loaderBuilder !== null
-                ? null
-                : $this->prefetched,
-            criteriaStack: $stack,
-            limit: $this->limit,
-            offset: $this->offset,
-        );
-    }
-
-    /**
-     * @return \Generator<int, TModel>
-     */
-    #[\NoDiscard]
-    public function fetchAll(): \Generator
-    {
-        yield from $this->materialize();
-    }
-
-    /**
      * @return TModel|null
      */
     #[\NoDiscard]
@@ -480,9 +185,7 @@ class Relation implements RelationInterface
         if (
             $this->pendingAdds !== [] ||
             $this->pendingRemoves !== [] ||
-            $this->cache !== null ||
-            $this->prefetched !== null ||
-            $this->loaderBuilder === null
+            $this->prefetched !== null
         ) {
             foreach ($this->materialize() as $item) {
                 return $item;
@@ -491,47 +194,27 @@ class Relation implements RelationInterface
             return null;
         }
 
-        $loaded = ($this->loaderBuilder)($this->criteriaStack, 1, $this->offset);
-
-        foreach ($loaded as $item) {
-            return $item;
-        }
-
-        return null;
-    }
-
-    public function getIterator(): \Generator
-    {
-        return $this->fetchAll();
-    }
-
-    public function count(): int
-    {
-        return $this->count;
+        return parent::first();
     }
 
     public function isMaterialized(): bool
     {
-        return $this->prefetched !== null || $this->cache !== null;
+        return parent::isMaterialized() || $this->prefetched !== null;
     }
 
-    private function computeTotalCount(): int
+    protected function computeTotalCount(): int
     {
         if ($this->prefetched !== null) {
             return \count($this->prefetched);
         }
 
-        if ($this->countBuilder !== null) {
-            return ($this->countBuilder)($this->criteriaStack);
-        }
-
-        return \count($this->materialize());
+        return parent::computeTotalCount();
     }
 
     /**
      * @return array<int, TModel>
      */
-    private function materialize(): array
+    protected function materialize(): array
     {
         $base = $this->loadBase();
 
@@ -561,24 +244,12 @@ class Relation implements RelationInterface
     /**
      * @return array<int, TModel>
      */
-    private function loadBase(): array
+    protected function loadBase(): array
     {
         if ($this->prefetched !== null) {
             return $this->prefetched;
         }
 
-        if ($this->cache !== null) {
-            return $this->cache;
-        }
-
-        if ($this->loaderBuilder === null) {
-            return [];
-        }
-
-        $loaded = ($this->loaderBuilder)($this->criteriaStack, $this->limit, $this->offset);
-
-        return $this->cache = \is_array($loaded)
-            ? $loaded
-            : \iterator_to_array($loaded);
+        return parent::loadBase();
     }
 }

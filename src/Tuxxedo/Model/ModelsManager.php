@@ -1289,6 +1289,56 @@ class ModelsManager implements ModelsManagerInterface
         return $query->count();
     }
 
+    /**
+     * @template TModel of object
+     *
+     * @param class-string<TModel> $class
+     * @return Query<TModel>
+     *
+     * @throws ModelException
+     */
+    #[\NoDiscard]
+    public function query(
+        string $class,
+        bool $includeDeleted = false,
+    ): Query {
+        $metaData = $this->metaData->getModel($class);
+        $manager = $this;
+
+        return Query::createFromBuilder(
+            loaderBuilder: static function (array $criteria, ?int $limit, ?int $offset) use ($manager, $class, $metaData, $includeDeleted): iterable {
+                $statement = $manager->connection->select($metaData->table);
+
+                foreach ($criteria as $extra) {
+                    $extra($statement);
+                }
+
+                if (!$includeDeleted) {
+                    $manager->applySoftDeleteFilter($statement, $metaData);
+                }
+
+                if ($limit !== null) {
+                    $statement->limit($limit, $offset);
+                }
+
+                return $statement->fetchAll($class, $manager->hydrator);
+            },
+            countBuilder: static function (array $criteria) use ($manager, $metaData, $includeDeleted): int {
+                $statement = $manager->connection->count($metaData->table);
+
+                foreach ($criteria as $extra) {
+                    $extra($statement);
+                }
+
+                if (!$includeDeleted) {
+                    $manager->applySoftDeleteFilter($statement, $metaData);
+                }
+
+                return $statement->count();
+            },
+        );
+    }
+
     #[\NoDiscard]
     public function delete(
         object $model,

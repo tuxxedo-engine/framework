@@ -1,0 +1,437 @@
+<?php
+
+/**
+ * Tuxxedo Engine
+ *
+ * This file is part of the Tuxxedo Engine framework and is licensed under
+ * the MIT license.
+ *
+ * Copyright (C) 2026 Kalle Sommer Nielsen <kalle@php.net>
+ */
+
+declare(strict_types=1);
+
+namespace Tuxxedo\Model;
+
+use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
+use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
+use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
+
+/**
+ * @template TModel of object
+ *
+ * @implements QueryableInterface<TModel>
+ */
+abstract class AbstractQueryable implements QueryableInterface
+{
+    /**
+     * @var array<int, TModel>|null
+     */
+    private ?array $cache = null;
+
+    private ?int $cachedTotalCount = null;
+
+    public int $totalCount {
+        get {
+            return $this->cachedTotalCount ??= $this->computeTotalCount();
+        }
+    }
+
+    /**
+     * @var int<0, max>
+     */
+    public int $count {
+        get {
+            return \count($this->materialize());
+        }
+    }
+
+    /**
+     * @param (\Closure(list<\Closure(WhereStatementInterface): void>, ?int, ?int): iterable<int, TModel>)|null $loaderBuilder
+     * @param (\Closure(list<\Closure(WhereStatementInterface): void>): int)|null $countBuilder
+     * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
+     */
+    protected function __construct(
+        protected readonly ?\Closure $loaderBuilder = null,
+        protected readonly ?\Closure $countBuilder = null,
+        public readonly array $criteriaStack = [],
+        public readonly ?int $limit = null,
+        public readonly ?int $offset = null,
+    ) {
+    }
+
+    /**
+     * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
+     * @return static
+     */
+    abstract protected function cloneWith(
+        array $criteriaStack,
+        ?int $limit,
+        ?int $offset,
+    ): static;
+
+    public function offsetExists(mixed $offset): bool
+    {
+        return isset($this->materialize()[$offset]);
+    }
+
+    public function offsetGet(mixed $offset): mixed
+    {
+        return $this->materialize()[$offset];
+    }
+
+    /**
+     * @return never
+     *
+     * @throws ModelException
+     */
+    public function offsetSet(mixed $offset, mixed $value): void
+    {
+        throw ModelException::fromImmutableRelation();
+    }
+
+    /**
+     * @return never
+     *
+     * @throws ModelException
+     */
+    public function offsetUnset(mixed $offset): void
+    {
+        throw ModelException::fromImmutableRelation();
+    }
+
+    /**
+     * @param string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
+     * @return static
+     */
+    #[\NoDiscard]
+    public function where(
+        string $column,
+        string|int|float|bool|null|array $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $value, $operator): void {
+                $statement->where($column, $value, $operator);
+            },
+        );
+    }
+
+    /**
+     * @param string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
+     * @return static
+     */
+    #[\NoDiscard]
+    public function orWhere(
+        string $column,
+        string|int|float|bool|null|array $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $value, $operator): void {
+                $statement->orWhere($column, $value, $operator);
+            },
+        );
+    }
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
+    public function whereNull(
+        string $column,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column): void {
+                $statement->whereNull($column);
+            },
+        );
+    }
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
+    public function whereNotNull(
+        string $column,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column): void {
+                $statement->whereNotNull($column);
+            },
+        );
+    }
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
+    public function orWhereNull(
+        string $column,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column): void {
+                $statement->orWhereNull($column);
+            },
+        );
+    }
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
+    public function orWhereNotNull(
+        string $column,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column): void {
+                $statement->orWhereNotNull($column);
+            },
+        );
+    }
+
+    /**
+     * @param non-empty-array<string|int|float|bool|null> $values
+     * @return static
+     */
+    #[\NoDiscard]
+    public function whereIn(
+        string $column,
+        array $values,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $values): void {
+                $statement->whereIn($column, $values);
+            },
+        );
+    }
+
+    /**
+     * @param non-empty-array<string|int|float|bool|null> $values
+     * @return static
+     */
+    #[\NoDiscard]
+    public function whereNotIn(
+        string $column,
+        array $values,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $values): void {
+                $statement->whereNotIn($column, $values);
+            },
+        );
+    }
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
+    public function whereBetween(
+        string $column,
+        string|int|float|bool $from,
+        string|int|float|bool $to,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $from, $to): void {
+                $statement->whereBetween($column, $from, $to);
+            },
+        );
+    }
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
+    public function whereNotBetween(
+        string $column,
+        string|int|float|bool $from,
+        string|int|float|bool $to,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $from, $to): void {
+                $statement->whereNotBetween($column, $from, $to);
+            },
+        );
+    }
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
+    public function innerJoin(
+        string $table,
+        string $first,
+        string $second,
+        JoinOperator|string $operator = JoinOperator::EQUALS,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($table, $first, $second, $operator): void {
+                $statement->innerJoin($table, $first, $second, $operator);
+            },
+        );
+    }
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
+    public function leftJoin(
+        string $table,
+        string $first,
+        string $second,
+        JoinOperator|string $operator = JoinOperator::EQUALS,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($table, $first, $second, $operator): void {
+                $statement->leftJoin($table, $first, $second, $operator);
+            },
+        );
+    }
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
+    public function rightJoin(
+        string $table,
+        string $first,
+        string $second,
+        JoinOperator|string $operator = JoinOperator::EQUALS,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($table, $first, $second, $operator): void {
+                $statement->rightJoin($table, $first, $second, $operator);
+            },
+        );
+    }
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
+    public function crossJoin(
+        string $table,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($table): void {
+                $statement->crossJoin($table);
+            },
+        );
+    }
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
+    public function page(
+        int $limit,
+        ?int $offset = null,
+    ): static {
+        return $this->cloneWith(
+            criteriaStack: $this->criteriaStack,
+            limit: $limit,
+            offset: $offset,
+        );
+    }
+
+    /**
+     * @return \Generator<int, TModel>
+     */
+    #[\NoDiscard]
+    public function fetchAll(): \Generator
+    {
+        yield from $this->materialize();
+    }
+
+    /**
+     * @return TModel|null
+     */
+    #[\NoDiscard]
+    public function first(): ?object
+    {
+        if ($this->cache === null && $this->loaderBuilder !== null) {
+            $loaded = ($this->loaderBuilder)($this->criteriaStack, 1, $this->offset);
+
+            foreach ($loaded as $item) {
+                return $item;
+            }
+
+            return null;
+        }
+
+        foreach ($this->materialize() as $item) {
+            return $item;
+        }
+
+        return null;
+    }
+
+    public function getIterator(): \Generator
+    {
+        return $this->fetchAll();
+    }
+
+    public function count(): int
+    {
+        return $this->count;
+    }
+
+    public function isMaterialized(): bool
+    {
+        return $this->cache !== null;
+    }
+
+    protected function computeTotalCount(): int
+    {
+        if ($this->countBuilder !== null) {
+            return ($this->countBuilder)($this->criteriaStack);
+        }
+
+        return \count($this->materialize());
+    }
+
+    /**
+     * @return array<int, TModel>
+     */
+    protected function materialize(): array
+    {
+        return $this->loadBase();
+    }
+
+    /**
+     * @return array<int, TModel>
+     */
+    protected function loadBase(): array
+    {
+        if ($this->cache !== null) {
+            return $this->cache;
+        }
+
+        if ($this->loaderBuilder === null) {
+            return [];
+        }
+
+        $loaded = ($this->loaderBuilder)($this->criteriaStack, $this->limit, $this->offset);
+
+        return $this->cache = \is_array($loaded)
+            ? $loaded
+            : \iterator_to_array($loaded);
+    }
+
+    /**
+     * @param \Closure(WhereStatementInterface): void $criterion
+     * @return static
+     */
+    private function extend(
+        \Closure $criterion,
+    ): static {
+        $stack = $this->criteriaStack;
+        $stack[] = $criterion;
+
+        return $this->cloneWith(
+            criteriaStack: $stack,
+            limit: $this->limit,
+            offset: $this->offset,
+        );
+    }
+}

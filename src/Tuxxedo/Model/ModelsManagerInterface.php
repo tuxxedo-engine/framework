@@ -25,7 +25,6 @@ use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 use Tuxxedo\Model\Hydrator\HydratorInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 
-// @todo Consider findWhere and other shorthands?
 // @todo Consider pagination
 #[DefaultImplementation(class: ModelsManager::class, lifecycle: Lifecycle::PERSISTENT)]
 interface ModelsManagerInterface
@@ -248,6 +247,20 @@ interface ModelsManagerInterface
         \Closure $criteria,
         bool $includeDeleted = false,
     ): int;
+
+    /**
+     * @template TModel of object
+     *
+     * @param class-string<TModel> $class
+     * @return Query<TModel>
+     *
+     * @throws ModelException
+     */
+    #[\NoDiscard]
+    public function query(
+        string $class,
+        bool $includeDeleted = false,
+    ): Query;
 
     #[\NoDiscard]
     public function delete(

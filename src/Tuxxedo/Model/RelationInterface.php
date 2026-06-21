@@ -13,25 +13,14 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model;
 
+// @todo Add orderBy chain method so the criteria stack can express ordering; mirrors the matching TODO on QueryableInterface
 /**
  * @template TModel of object
  *
- * @extends \IteratorAggregate<int, TModel>
- * @extends \ArrayAccess<int, TModel>
+ * @extends QueryableInterface<TModel>
  */
-interface RelationInterface extends \IteratorAggregate, \Countable, \ArrayAccess
+interface RelationInterface extends QueryableInterface
 {
-    public int $totalCount {
-        get;
-    }
-
-    /**
-     * @var int<0, max>
-     */
-    public int $count {
-        get;
-    }
-
     /**
      * @var array<int, TModel>
      */
@@ -45,14 +34,6 @@ interface RelationInterface extends \IteratorAggregate, \Countable, \ArrayAccess
     public array $pendingRemoves {
         get;
     }
-
-    /**
-     * @return \Generator<int, TModel>
-     */
-    public function getIterator(): \Generator;
-
-    #[\NoDiscard]
-    public function isMaterialized(): bool;
 
     /**
      * @param TModel $item
