@@ -21,6 +21,7 @@ use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\SqlException;
 
+// @todo havingBetween / havingNotBetween / orHavingBetween / orHavingNotBetween — HAVING parity with WHERE's between methods; the rest of the HAVING surface already mirrors WHERE
 interface SelectStatementInterface extends WhereStatementInterface
 {
     public function select(

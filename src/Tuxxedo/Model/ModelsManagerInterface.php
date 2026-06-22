@@ -25,7 +25,7 @@ use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 use Tuxxedo\Model\Hydrator\HydratorInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 
-// @todo Consider pagination
+// @todo Pagination — layer a generic Paginator type on top of Relation/Query's page() primitive (composing it with totalCount to expose typed page-aware iteration) and surface it through ModelsManager fetchers as a typed paginated alternative to raw findAll/query
 #[DefaultImplementation(class: ModelsManager::class, lifecycle: Lifecycle::PERSISTENT)]
 interface ModelsManagerInterface
 {

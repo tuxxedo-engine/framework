@@ -21,7 +21,6 @@ use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
  * @extends AbstractQueryable<TModel>
  * @implements RelationInterface<TModel>
  */
-// @todo Layer a generic Paginator on top of page() — page() is the raw SQL-layer primitive; Paginator would compose it with totalCount to expose typed page-aware iteration
 class Relation extends AbstractQueryable implements RelationInterface
 {
     /**
