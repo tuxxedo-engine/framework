@@ -16,6 +16,9 @@ namespace Tuxxedo\Database\Query\Statement;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Hydrator\HydratorInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
+use Tuxxedo\Database\Query\Statement\Condition\BetweenCondition;
+use Tuxxedo\Database\Query\Statement\Condition\BetweenConditionInterface;
+use Tuxxedo\Database\Query\Statement\Condition\BetweenOperator;
 use Tuxxedo\Database\Query\Statement\Condition\Condition;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionConjunction;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionInterface;
@@ -42,7 +45,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
     private array $groupBy = [];
 
     /**
-     * @var ConditionInterface[]
+     * @var ConditionInterface[]|BetweenCondition[]
      */
     private array $havingConditions = [];
 
@@ -90,6 +93,19 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
                 $keyword = $index === 0
                     ? 'HAVING' :
                     $condition->conjunction->name;
+
+                if ($condition instanceof BetweenConditionInterface) {
+                    $sql .= \sprintf(
+                        ' %s %s %s %s AND %s',
+                        $keyword,
+                        $dialect->qualifiedIdentifier($condition->identifier),
+                        $condition->operator->value,
+                        $condition->from,
+                        $condition->to,
+                    );
+
+                    continue;
+                }
 
                 if (
                     $condition->operator === ConditionOperator::IS_NULL ||
@@ -349,6 +365,86 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
             conjunction: ConditionConjunction::OR,
             identifier: $column,
             operator: ConditionOperator::IS_NOT_NULL,
+        );
+
+        return $this;
+    }
+
+    public function havingBetween(
+        string $column,
+        string|int|float|bool $from,
+        string|int|float|bool $to,
+    ): static {
+        $parameterKey = 'having_between_' . \sizeof($this->havingConditions);
+
+        $this->parameters[$parameterKey . '_from'] = $from;
+        $this->parameters[$parameterKey . '_to'] = $to;
+        $this->havingConditions[] = new BetweenCondition(
+            conjunction: ConditionConjunction::AND,
+            identifier: $column,
+            operator: BetweenOperator::BETWEEN,
+            from: ':' . $parameterKey . '_from',
+            to: ':' . $parameterKey . '_to',
+        );
+
+        return $this;
+    }
+
+    public function havingNotBetween(
+        string $column,
+        string|int|float|bool $from,
+        string|int|float|bool $to,
+    ): static {
+        $parameterKey = 'having_between_' . \sizeof($this->havingConditions);
+
+        $this->parameters[$parameterKey . '_from'] = $from;
+        $this->parameters[$parameterKey . '_to'] = $to;
+        $this->havingConditions[] = new BetweenCondition(
+            conjunction: ConditionConjunction::AND,
+            identifier: $column,
+            operator: BetweenOperator::NOT_BETWEEN,
+            from: ':' . $parameterKey . '_from',
+            to: ':' . $parameterKey . '_to',
+        );
+
+        return $this;
+    }
+
+    public function orHavingBetween(
+        string $column,
+        string|int|float|bool $from,
+        string|int|float|bool $to,
+    ): static {
+        $parameterKey = 'having_between_' . \sizeof($this->havingConditions);
+
+        $this->parameters[$parameterKey . '_from'] = $from;
+        $this->parameters[$parameterKey . '_to'] = $to;
+        $this->havingConditions[] = new BetweenCondition(
+            conjunction: ConditionConjunction::OR,
+            identifier: $column,
+            operator: BetweenOperator::BETWEEN,
+            from: ':' . $parameterKey . '_from',
+            to: ':' . $parameterKey . '_to',
+        );
+
+        return $this;
+    }
+
+    public function orHavingNotBetween(
+        string $column,
+        string|int|float|bool $from,
+        string|int|float|bool $to,
+    ): static {
+        $parameterKey = 'having_between_' . \sizeof($this->havingConditions);
+
+        $this->parameters[$parameterKey . '_from'] = $from;
+        $this->parameters[$parameterKey . '_to'] = $to;
+        $this->havingConditions[] = new BetweenCondition(
+            conjunction: ConditionConjunction::OR,
+            identifier: $column,
+            operator: BetweenOperator::NOT_BETWEEN,
+            from: ':' . $parameterKey . '_from',
+            to: ':' . $parameterKey . '_to',
         );
 
         return $this;
