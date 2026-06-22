@@ -16,16 +16,18 @@ namespace Tuxxedo\Model;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
+use Tuxxedo\Pagination\PagedInterface;
 
 // @todo whereHas / whereDoesntHave - model-aware chain method that filters parents by relation existence, e.g. $userQuery->whereHas('posts', fn ($q) => $q->where('published', true)) → WHERE EXISTS (SELECT 1 FROM posts WHERE posts.user_id = users.id AND posts.published = ?). Blocked on the whereExists + whereColumn primitives in WhereStatementInterface. Implementation also needs access to the manager's metadata to resolve relation property names to their FK columns
 // @todo withCount - adds a correlated COUNT subquery as a synthetic column on each fetched row: ->withCount('posts') populates a $postsCount property. Needs a "subquery in SELECT list" mechanism on SelectStatement (separate from WHERE-side subqueries) plus relation metadata lookup
 /**
  * @template TModel of object
  *
+ * @extends PagedInterface<TModel>
  * @extends \IteratorAggregate<int, TModel>
  * @extends \ArrayAccess<int, TModel>
  */
-interface QueryableInterface extends \IteratorAggregate, \Countable, \ArrayAccess
+interface QueryableInterface extends PagedInterface, \IteratorAggregate, \Countable, \ArrayAccess
 {
     public int $totalCount {
         get;

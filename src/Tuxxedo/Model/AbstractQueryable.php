@@ -471,6 +471,16 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
+     * @return iterable<int, TModel>
+     */
+    public function slice(
+        int $limit,
+        int $offset,
+    ): iterable {
+        return $this->page($limit, $offset);
+    }
+
+    /**
      * @return \Generator<int, TModel>
      */
     #[\NoDiscard]
