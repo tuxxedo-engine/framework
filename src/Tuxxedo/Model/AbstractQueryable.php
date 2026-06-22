@@ -327,6 +327,66 @@ abstract class AbstractQueryable implements QueryableInterface
      * @return static
      */
     #[\NoDiscard]
+    public function whereLike(
+        string $column,
+        string $pattern,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $pattern): void {
+                $statement->whereLike($column, $pattern);
+            },
+        );
+    }
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
+    public function whereNotLike(
+        string $column,
+        string $pattern,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $pattern): void {
+                $statement->whereNotLike($column, $pattern);
+            },
+        );
+    }
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
+    public function orWhereLike(
+        string $column,
+        string $pattern,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $pattern): void {
+                $statement->orWhereLike($column, $pattern);
+            },
+        );
+    }
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
+    public function orWhereNotLike(
+        string $column,
+        string $pattern,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $pattern): void {
+                $statement->orWhereNotLike($column, $pattern);
+            },
+        );
+    }
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
     public function innerJoin(
         string $table,
         string $first,

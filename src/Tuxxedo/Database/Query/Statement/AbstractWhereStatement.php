@@ -479,4 +479,72 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
 
         return $this;
     }
+
+    public function whereLike(
+        string $column,
+        string $pattern,
+    ): static {
+        $parameterKey = 'where_' . \sizeof($this->conditions);
+
+        $this->parameters[$parameterKey] = $pattern;
+        $this->conditions[] = new Condition(
+            conjunction: ConditionConjunction::AND,
+            identifier: $column,
+            operator: ConditionOperator::LIKE,
+            parameter: ':' . $parameterKey,
+        );
+
+        return $this;
+    }
+
+    public function whereNotLike(
+        string $column,
+        string $pattern,
+    ): static {
+        $parameterKey = 'where_' . \sizeof($this->conditions);
+
+        $this->parameters[$parameterKey] = $pattern;
+        $this->conditions[] = new Condition(
+            conjunction: ConditionConjunction::AND,
+            identifier: $column,
+            operator: ConditionOperator::NOT_LIKE,
+            parameter: ':' . $parameterKey,
+        );
+
+        return $this;
+    }
+
+    public function orWhereLike(
+        string $column,
+        string $pattern,
+    ): static {
+        $parameterKey = 'where_' . \sizeof($this->conditions);
+
+        $this->parameters[$parameterKey] = $pattern;
+        $this->conditions[] = new Condition(
+            conjunction: ConditionConjunction::OR,
+            identifier: $column,
+            operator: ConditionOperator::LIKE,
+            parameter: ':' . $parameterKey,
+        );
+
+        return $this;
+    }
+
+    public function orWhereNotLike(
+        string $column,
+        string $pattern,
+    ): static {
+        $parameterKey = 'where_' . \sizeof($this->conditions);
+
+        $this->parameters[$parameterKey] = $pattern;
+        $this->conditions[] = new Condition(
+            conjunction: ConditionConjunction::OR,
+            identifier: $column,
+            operator: ConditionOperator::NOT_LIKE,
+            parameter: ':' . $parameterKey,
+        );
+
+        return $this;
+    }
 }

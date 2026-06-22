@@ -182,6 +182,42 @@ interface QueryableInterface extends \IteratorAggregate, \Countable, \ArrayAcces
      * @return static
      */
     #[\NoDiscard]
+    public function whereLike(
+        string $column,
+        string $pattern,
+    ): static;
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
+    public function whereNotLike(
+        string $column,
+        string $pattern,
+    ): static;
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
+    public function orWhereLike(
+        string $column,
+        string $pattern,
+    ): static;
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
+    public function orWhereNotLike(
+        string $column,
+        string $pattern,
+    ): static;
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
     public function innerJoin(
         string $table,
         string $first,
