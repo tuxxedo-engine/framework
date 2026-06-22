@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model;
 
+use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 
 /**
@@ -34,16 +35,18 @@ class Relation extends AbstractQueryable implements RelationInterface
     public private(set) array $pendingRemoves = [];
 
     /**
-     * @param (\Closure(list<\Closure(WhereStatementInterface): void>, ?int, ?int): iterable<int, TModel>)|null $loaderBuilder
+     * @param (\Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string, direction: OrderDirection}>, ?int, ?int): iterable<int, TModel>)|null $loaderBuilder
      * @param (\Closure(list<\Closure(WhereStatementInterface): void>): int)|null $countBuilder
      * @param array<int, TModel>|null $prefetched
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
+     * @param list<array{column: string, direction: OrderDirection}> $orderBy
      */
     final private function __construct(
         ?\Closure $loaderBuilder = null,
         ?\Closure $countBuilder = null,
         private readonly ?array $prefetched = null,
         array $criteriaStack = [],
+        array $orderBy = [],
         ?int $limit = null,
         ?int $offset = null,
     ) {
@@ -51,6 +54,7 @@ class Relation extends AbstractQueryable implements RelationInterface
             loaderBuilder: $loaderBuilder,
             countBuilder: $countBuilder,
             criteriaStack: $criteriaStack,
+            orderBy: $orderBy,
             limit: $limit,
             offset: $offset,
         );
@@ -59,7 +63,7 @@ class Relation extends AbstractQueryable implements RelationInterface
     /**
      * @template TItem of object
      *
-     * @param \Closure(list<\Closure(WhereStatementInterface): void>, ?int, ?int): iterable<int, TItem> $loaderBuilder
+     * @param \Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string, direction: OrderDirection}>, ?int, ?int): iterable<int, TItem> $loaderBuilder
      * @param \Closure(list<\Closure(WhereStatementInterface): void>): int $countBuilder
      * @return self<TItem>
      */
@@ -91,9 +95,10 @@ class Relation extends AbstractQueryable implements RelationInterface
      * @template TItem of object
      *
      * @param array<int, TItem> $prefetched
-     * @param \Closure(list<\Closure(WhereStatementInterface): void>, ?int, ?int): iterable<int, TItem> $loaderBuilder
+     * @param \Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string, direction: OrderDirection}>, ?int, ?int): iterable<int, TItem> $loaderBuilder
      * @param \Closure(list<\Closure(WhereStatementInterface): void>): int $countBuilder
      * @param list<\Closure(WhereStatementInterface): void> $initialCriteriaStack
+     * @param list<array{column: string, direction: OrderDirection}> $initialOrderBy
      * @return self<TItem>
      */
     public static function createFromPrefetchedWithBuilder(
@@ -101,6 +106,7 @@ class Relation extends AbstractQueryable implements RelationInterface
         \Closure $loaderBuilder,
         \Closure $countBuilder,
         array $initialCriteriaStack = [],
+        array $initialOrderBy = [],
         ?int $initialLimit = null,
         ?int $initialOffset = null,
     ): self {
@@ -109,6 +115,7 @@ class Relation extends AbstractQueryable implements RelationInterface
             countBuilder: $countBuilder,
             prefetched: $prefetched,
             criteriaStack: $initialCriteriaStack,
+            orderBy: $initialOrderBy,
             limit: $initialLimit,
             offset: $initialOffset,
         );
@@ -116,10 +123,12 @@ class Relation extends AbstractQueryable implements RelationInterface
 
     /**
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
+     * @param list<array{column: string, direction: OrderDirection}> $orderBy
      * @return static
      */
     protected function cloneWith(
         array $criteriaStack,
+        array $orderBy,
         ?int $limit,
         ?int $offset,
     ): static {
@@ -130,6 +139,7 @@ class Relation extends AbstractQueryable implements RelationInterface
                 ? null
                 : $this->prefetched,
             criteriaStack: $criteriaStack,
+            orderBy: $orderBy,
             limit: $limit,
             offset: $offset,
         );

@@ -1306,7 +1306,7 @@ class ModelsManager implements ModelsManagerInterface
         $manager = $this;
 
         return Query::createFromBuilder(
-            loaderBuilder: static function (array $criteria, ?int $limit, ?int $offset) use ($manager, $class, $metaData, $includeDeleted): iterable {
+            loaderBuilder: static function (array $criteria, array $orderBy, ?int $limit, ?int $offset) use ($manager, $class, $metaData, $includeDeleted): iterable {
                 $statement = $manager->connection->select($metaData->table);
 
                 foreach ($criteria as $extra) {
@@ -1315,6 +1315,10 @@ class ModelsManager implements ModelsManagerInterface
 
                 if (!$includeDeleted) {
                     $manager->applySoftDeleteFilter($statement, $metaData);
+                }
+
+                foreach ($orderBy as $spec) {
+                    $statement->orderBy($spec['column'], $spec['direction']);
                 }
 
                 if ($limit !== null) {

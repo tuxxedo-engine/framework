@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model;
 
+use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 
 /**
@@ -33,9 +34,10 @@ class Query extends AbstractQueryable
     private readonly ?\Closure $eagerLoader;
 
     /**
-     * @param (\Closure(list<\Closure(WhereStatementInterface): void>, ?int, ?int): iterable<int, TModel>)|null $loaderBuilder
+     * @param (\Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string, direction: OrderDirection}>, ?int, ?int): iterable<int, TModel>)|null $loaderBuilder
      * @param (\Closure(list<\Closure(WhereStatementInterface): void>): int)|null $countBuilder
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
+     * @param list<array{column: string, direction: OrderDirection}> $orderBy
      * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @param (\Closure(list<object>, array<string, ?\Closure(Relation<object>): Relation<object>>): void)|null $eagerLoader
      */
@@ -43,6 +45,7 @@ class Query extends AbstractQueryable
         ?\Closure $loaderBuilder = null,
         ?\Closure $countBuilder = null,
         array $criteriaStack = [],
+        array $orderBy = [],
         ?int $limit = null,
         ?int $offset = null,
         ?array $with = null,
@@ -52,6 +55,7 @@ class Query extends AbstractQueryable
             loaderBuilder: $loaderBuilder,
             countBuilder: $countBuilder,
             criteriaStack: $criteriaStack,
+            orderBy: $orderBy,
             limit: $limit,
             offset: $offset,
         );
@@ -63,7 +67,7 @@ class Query extends AbstractQueryable
     /**
      * @template TItem of object
      *
-     * @param \Closure(list<\Closure(WhereStatementInterface): void>, ?int, ?int): iterable<int, TItem> $loaderBuilder
+     * @param \Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string, direction: OrderDirection}>, ?int, ?int): iterable<int, TItem> $loaderBuilder
      * @param \Closure(list<\Closure(WhereStatementInterface): void>): int $countBuilder
      * @param (\Closure(list<object>, array<string, ?\Closure(Relation<object>): Relation<object>>): void)|null $eagerLoader
      * @return self<TItem>
@@ -92,6 +96,7 @@ class Query extends AbstractQueryable
             loaderBuilder: $this->loaderBuilder,
             countBuilder: $this->countBuilder,
             criteriaStack: $this->criteriaStack,
+            orderBy: $this->orderBy,
             limit: $this->limit,
             offset: $this->offset,
             with: $this->with === null
@@ -103,10 +108,12 @@ class Query extends AbstractQueryable
 
     /**
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
+     * @param list<array{column: string, direction: OrderDirection}> $orderBy
      * @return static
      */
     protected function cloneWith(
         array $criteriaStack,
+        array $orderBy,
         ?int $limit,
         ?int $offset,
     ): static {
@@ -114,6 +121,7 @@ class Query extends AbstractQueryable
             loaderBuilder: $this->loaderBuilder,
             countBuilder: $this->countBuilder,
             criteriaStack: $criteriaStack,
+            orderBy: $orderBy,
             limit: $limit,
             offset: $offset,
             with: $this->with,

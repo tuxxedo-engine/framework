@@ -202,13 +202,17 @@ class Hydrator implements HydratorInterface
         $targetTable = $manager->metaData->getModel($relatedClass)->table;
 
         $relationInstance = Relation::createFromBuilder(
-            loaderBuilder: static fn (array $criteria, ?int $limit, ?int $offset): iterable => $manager->findAll(
+            loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
                 $relatedClass,
-                static function (SelectStatementInterface $statement) use ($targetColumn, $sourceValue, $criteria, $limit, $offset): void {
+                static function (SelectStatementInterface $statement) use ($targetColumn, $sourceValue, $criteria, $orderBy, $limit, $offset): void {
                     $statement->where($targetColumn, $sourceValue);
 
                     foreach ($criteria as $extra) {
                         $extra($statement);
+                    }
+
+                    foreach ($orderBy as $spec) {
+                        $statement->orderBy($spec['column'], $spec['direction']);
                     }
 
                     if ($limit !== null) {
@@ -281,15 +285,19 @@ class Hydrator implements HydratorInterface
         $pivotForeignKey = $attribute->foreignKey;
 
         $relationInstance = Relation::createFromBuilder(
-            loaderBuilder: static fn (array $criteria, ?int $limit, ?int $offset): iterable => $manager->findAll(
+            loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
                 $relatedClass,
-                static function (SelectStatementInterface $statement) use ($pivotTable, $pivotForeignKey, $pivotLocalKey, $targetTable, $targetPrimaryKey, $sourceValue, $criteria, $limit, $offset): void {
+                static function (SelectStatementInterface $statement) use ($pivotTable, $pivotForeignKey, $pivotLocalKey, $targetTable, $targetPrimaryKey, $sourceValue, $criteria, $orderBy, $limit, $offset): void {
                     $statement
                         ->innerJoin($pivotTable, $pivotTable . '.' . $pivotForeignKey, $targetTable . '.' . $targetPrimaryKey)
                         ->where($pivotTable . '.' . $pivotLocalKey, $sourceValue);
 
                     foreach ($criteria as $extra) {
                         $extra($statement);
+                    }
+
+                    foreach ($orderBy as $spec) {
+                        $statement->orderBy($spec['column'], $spec['direction']);
                     }
 
                     if ($limit !== null) {
@@ -395,9 +403,9 @@ class Hydrator implements HydratorInterface
         $firstKey = $attribute->firstKey;
 
         $relationInstance = Relation::createFromBuilder(
-            loaderBuilder: static fn (array $criteria, ?int $limit, ?int $offset): iterable => $manager->findAll(
+            loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
                 $relatedClass,
-                static function (SelectStatementInterface $statement) use ($throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue, $criteria, $limit, $offset, $targetTable): void {
+                static function (SelectStatementInterface $statement) use ($throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue, $criteria, $orderBy, $limit, $offset, $targetTable): void {
                     $statement
                         ->distinct()
                         ->innerJoin($throughTable, $throughTable . '.' . $throughSecondLocalKey, $targetTable . '.' . $secondKey)
@@ -405,6 +413,10 @@ class Hydrator implements HydratorInterface
 
                     foreach ($criteria as $extra) {
                         $extra($statement);
+                    }
+
+                    foreach ($orderBy as $spec) {
+                        $statement->orderBy($spec['column'], $spec['direction']);
                     }
 
                     if ($limit !== null) {
@@ -667,7 +679,7 @@ class Hydrator implements HydratorInterface
         }
 
         $scratch = Relation::createFromBuilder(
-            loaderBuilder: static fn (array $criteria, ?int $limit, ?int $offset): iterable => [],
+            loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => [],
             countBuilder: static fn (array $criteria): int => 0,
         );
 
@@ -836,13 +848,17 @@ class Hydrator implements HydratorInterface
 
         return Relation::createFromPrefetchedWithBuilder(
             prefetched: $prefetched,
-            loaderBuilder: static fn (array $criteria, ?int $limit, ?int $offset): iterable => $manager->findAll(
+            loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
                 $relatedClass,
-                static function (SelectStatementInterface $statement) use ($targetColumn, $sourceValue, $criteria, $limit, $offset): void {
+                static function (SelectStatementInterface $statement) use ($targetColumn, $sourceValue, $criteria, $orderBy, $limit, $offset): void {
                     $statement->where($targetColumn, $sourceValue);
 
                     foreach ($criteria as $extra) {
                         $extra($statement);
+                    }
+
+                    foreach ($orderBy as $spec) {
+                        $statement->orderBy($spec['column'], $spec['direction']);
                     }
 
                     if ($limit !== null) {
@@ -861,6 +877,7 @@ class Hydrator implements HydratorInterface
                 return $statement->count();
             },
             initialCriteriaStack: $shaped->criteriaStack ?? [],
+            initialOrderBy: $shaped->orderBy ?? [],
             initialLimit: $shaped?->limit,
             initialOffset: $shaped?->offset,
         );
@@ -1035,15 +1052,19 @@ class Hydrator implements HydratorInterface
 
         return Relation::createFromPrefetchedWithBuilder(
             prefetched: $prefetched,
-            loaderBuilder: static fn (array $criteria, ?int $limit, ?int $offset): iterable => $manager->findAll(
+            loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
                 $relatedClass,
-                static function (SelectStatementInterface $statement) use ($pivotTable, $pivotForeignKey, $pivotLocalKey, $targetTable, $targetPrimaryKey, $sourceValue, $criteria, $limit, $offset): void {
+                static function (SelectStatementInterface $statement) use ($pivotTable, $pivotForeignKey, $pivotLocalKey, $targetTable, $targetPrimaryKey, $sourceValue, $criteria, $orderBy, $limit, $offset): void {
                     $statement
                         ->innerJoin($pivotTable, $pivotTable . '.' . $pivotForeignKey, $targetTable . '.' . $targetPrimaryKey)
                         ->where($pivotTable . '.' . $pivotLocalKey, $sourceValue);
 
                     foreach ($criteria as $extra) {
                         $extra($statement);
+                    }
+
+                    foreach ($orderBy as $spec) {
+                        $statement->orderBy($spec['column'], $spec['direction']);
                     }
 
                     if ($limit !== null) {
@@ -1063,6 +1084,7 @@ class Hydrator implements HydratorInterface
                 return $statement->count();
             },
             initialCriteriaStack: $shaped->criteriaStack ?? [],
+            initialOrderBy: $shaped->orderBy ?? [],
             initialLimit: $shaped?->limit,
             initialOffset: $shaped?->offset,
         );
@@ -1239,7 +1261,7 @@ class Hydrator implements HydratorInterface
 
         return Relation::createFromPrefetchedWithBuilder(
             prefetched: $prefetched,
-            loaderBuilder: static function (array $criteria, ?int $limit, ?int $offset) use ($manager, $targetTable, $throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue, $relatedClass): iterable {
+            loaderBuilder: static function (array $criteria, array $orderBy, ?int $limit, ?int $offset) use ($manager, $targetTable, $throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue, $relatedClass): iterable {
                 $statement = $manager->connection->select($targetTable)
                     ->distinct()
                     ->innerJoin($throughTable, $throughTable . '.' . $throughSecondLocalKey, $targetTable . '.' . $secondKey)
@@ -1247,6 +1269,10 @@ class Hydrator implements HydratorInterface
 
                 foreach ($criteria as $extra) {
                     $extra($statement);
+                }
+
+                foreach ($orderBy as $spec) {
+                    $statement->orderBy($spec['column'], $spec['direction']);
                 }
 
                 if ($limit !== null) {
@@ -1269,6 +1295,7 @@ class Hydrator implements HydratorInterface
                 return $statement->count();
             },
             initialCriteriaStack: $shaped->criteriaStack ?? [],
+            initialOrderBy: $shaped->orderBy ?? [],
             initialLimit: $shaped?->limit,
             initialOffset: $shaped?->offset,
         );

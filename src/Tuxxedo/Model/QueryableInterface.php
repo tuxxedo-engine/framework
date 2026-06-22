@@ -15,6 +15,7 @@ namespace Tuxxedo\Model;
 
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
+use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 
 /**
  * @template TModel of object
@@ -22,7 +23,6 @@ use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
  * @extends \IteratorAggregate<int, TModel>
  * @extends \ArrayAccess<int, TModel>
  */
-// @todo Add orderBy chain method so both Query and Relation can express sorting as part of their criteria stack; mirrors the matching TODO on RelationInterface
 interface QueryableInterface extends \IteratorAggregate, \Countable, \ArrayAccess
 {
     public int $totalCount {
@@ -177,6 +177,15 @@ interface QueryableInterface extends \IteratorAggregate, \Countable, \ArrayAcces
     #[\NoDiscard]
     public function crossJoin(
         string $table,
+    ): static;
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
+    public function orderBy(
+        string $column,
+        OrderDirection|string $direction = OrderDirection::ASC,
     ): static;
 
     /**

@@ -15,6 +15,7 @@ namespace Tuxxedo\Model;
 
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
+use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 
 /**
@@ -47,14 +48,16 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
-     * @param (\Closure(list<\Closure(WhereStatementInterface): void>, ?int, ?int): iterable<int, TModel>)|null $loaderBuilder
+     * @param (\Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string, direction: OrderDirection}>, ?int, ?int): iterable<int, TModel>)|null $loaderBuilder
      * @param (\Closure(list<\Closure(WhereStatementInterface): void>): int)|null $countBuilder
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
+     * @param list<array{column: string, direction: OrderDirection}> $orderBy
      */
     protected function __construct(
         protected readonly ?\Closure $loaderBuilder = null,
         protected readonly ?\Closure $countBuilder = null,
         public readonly array $criteriaStack = [],
+        public readonly array $orderBy = [],
         public readonly ?int $limit = null,
         public readonly ?int $offset = null,
     ) {
@@ -62,10 +65,12 @@ abstract class AbstractQueryable implements QueryableInterface
 
     /**
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
+     * @param list<array{column: string, direction: OrderDirection}> $orderBy
      * @return static
      */
     abstract protected function cloneWith(
         array $criteriaStack,
+        array $orderBy,
         ?int $limit,
         ?int $offset,
     ): static;
@@ -323,12 +328,39 @@ abstract class AbstractQueryable implements QueryableInterface
      * @return static
      */
     #[\NoDiscard]
+    public function orderBy(
+        string $column,
+        OrderDirection|string $direction = OrderDirection::ASC,
+    ): static {
+        if (\is_string($direction)) {
+            $direction = OrderDirection::from($direction);
+        }
+
+        $orderBy = $this->orderBy;
+        $orderBy[] = [
+            'column' => $column,
+            'direction' => $direction,
+        ];
+
+        return $this->cloneWith(
+            criteriaStack: $this->criteriaStack,
+            orderBy: $orderBy,
+            limit: $this->limit,
+            offset: $this->offset,
+        );
+    }
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
     public function page(
         int $limit,
         ?int $offset = null,
     ): static {
         return $this->cloneWith(
             criteriaStack: $this->criteriaStack,
+            orderBy: $this->orderBy,
             limit: $limit,
             offset: $offset,
         );
@@ -350,7 +382,7 @@ abstract class AbstractQueryable implements QueryableInterface
     public function first(): ?object
     {
         if ($this->cache === null && $this->loaderBuilder !== null) {
-            $loaded = ($this->loaderBuilder)($this->criteriaStack, 1, $this->offset);
+            $loaded = ($this->loaderBuilder)($this->criteriaStack, $this->orderBy, 1, $this->offset);
 
             foreach ($loaded as $item) {
                 return $item;
@@ -411,7 +443,7 @@ abstract class AbstractQueryable implements QueryableInterface
             return [];
         }
 
-        $loaded = ($this->loaderBuilder)($this->criteriaStack, $this->limit, $this->offset);
+        $loaded = ($this->loaderBuilder)($this->criteriaStack, $this->orderBy, $this->limit, $this->offset);
 
         return $this->cache = \is_array($loaded)
             ? $loaded
@@ -430,6 +462,7 @@ abstract class AbstractQueryable implements QueryableInterface
 
         return $this->cloneWith(
             criteriaStack: $stack,
+            orderBy: $this->orderBy,
             limit: $this->limit,
             offset: $this->offset,
         );

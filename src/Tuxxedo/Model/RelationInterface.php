@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model;
 
-// @todo Add orderBy chain method so the criteria stack can express ordering; mirrors the matching TODO on QueryableInterface
 /**
  * @template TModel of object
  *
