@@ -25,6 +25,7 @@ use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Model\ModelsManagerInterface;
+use Tuxxedo\Pagination\Paginator;
 use Tuxxedo\Router\Attribute\Argument;
 use Tuxxedo\Router\Attribute\Controller;
 use Tuxxedo\Router\Attribute\Index;
@@ -157,13 +158,21 @@ readonly class ModelController
 
     #[Index(name: 'model.index')]
     #[Route\Get(name: 'model.list')]
+    #[Route\Get(path: 'page/{page<numeric-id>}', name: 'model.list.page')]
     public function list(
         UserRepositoryInterface $userRepository,
+        #[Argument] int $page = 1,
     ): ViewInterface {
+        $paginator = new Paginator(
+            paged: $userRepository->findAllPaged(),
+            page: $page,
+            perPage: 5,
+        );
+
         return new View(
             'model/list',
             [
-                'users' => $userRepository->findAll(),
+                'paginator' => $paginator,
             ],
         );
     }

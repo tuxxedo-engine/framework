@@ -14,7 +14,7 @@
             </tr>
         </thead>
         <tbody>
-            {% for user in users %}
+            {% for user in paginator %}
                 <tr>
                     <td>{{ user.id }}</td>
                     <td>{{ user.name }}</td>
@@ -28,4 +28,16 @@
             {% endfor %}
         </tbody>
     </table>
+
+    <nav>
+        {% if paginator.hasPreviousPage %}
+            <a href="{! route('model.list.page', ['page': paginator.previousPage]) | escape_attr !}">Previous</a>
+        {% endif %}
+
+        <span>Page {{ paginator.page }} of {{ paginator.totalPages }} ({{ paginator.totalCount }} total)</span>
+
+        {% if paginator.hasNextPage %}
+            <a href="{! route('model.list.page', ['page': paginator.nextPage]) | escape_attr !}">Next</a>
+        {% endif %}
+    </nav>
 {% endblock %}

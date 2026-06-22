@@ -16,6 +16,7 @@ namespace App\Repositories;
 use App\Models\User;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
+use Tuxxedo\Pagination\PagedInterface;
 
 #[DefaultImplementation(class: UserRepository::class, lifecycle: Lifecycle::PERSISTENT)]
 interface UserRepositoryInterface
@@ -24,4 +25,9 @@ interface UserRepositoryInterface
      * @return \Generator<int, User>
      */
     public function findAll(): \Generator;
+
+    /**
+     * @return PagedInterface<User>
+     */
+    public function findAllPaged(): PagedInterface;
 }

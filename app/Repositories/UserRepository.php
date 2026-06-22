@@ -16,6 +16,7 @@ namespace App\Repositories;
 use App\Models\User;
 use Tuxxedo\Model\Attribute\Connection\ModelDefaultConnection;
 use Tuxxedo\Model\ModelsManagerInterface;
+use Tuxxedo\Pagination\PagedInterface;
 
 readonly class UserRepository implements UserRepositoryInterface
 {
@@ -27,5 +28,10 @@ readonly class UserRepository implements UserRepositoryInterface
     public function findAll(): \Generator
     {
         yield from $this->modelsManager->query(User::class);
+    }
+
+    public function findAllPaged(): PagedInterface
+    {
+        return $this->modelsManager->query(User::class);
     }
 }
