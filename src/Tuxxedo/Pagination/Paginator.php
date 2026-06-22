@@ -18,6 +18,7 @@ namespace Tuxxedo\Pagination;
  *
  * @implements \IteratorAggregate<int, TItem>
  */
+// @todo pageRange(int $window = 5): list<int> - sliding-window helper returning page numbers around the current page, edge-shifted to keep the window full near boundaries, empty list when totalPages is 0. Math primitive only; no ellipsis, URL or theme rendering (those are UI concerns that belong outside the Paginator)
 class Paginator implements \IteratorAggregate
 {
     /**
