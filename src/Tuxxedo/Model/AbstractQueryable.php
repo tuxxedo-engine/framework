@@ -66,7 +66,6 @@ abstract class AbstractQueryable implements QueryableInterface
     /**
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
      * @param list<array{column: string, direction: OrderDirection}> $orderBy
-     * @return static
      */
     abstract protected function cloneWith(
         array $criteriaStack,
@@ -107,7 +106,6 @@ abstract class AbstractQueryable implements QueryableInterface
 
     /**
      * @param string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
-     * @return static
      */
     #[\NoDiscard]
     public function where(
@@ -124,7 +122,6 @@ abstract class AbstractQueryable implements QueryableInterface
 
     /**
      * @param string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
-     * @return static
      */
     #[\NoDiscard]
     public function orWhere(
@@ -139,9 +136,6 @@ abstract class AbstractQueryable implements QueryableInterface
         );
     }
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function whereNull(
         string $column,
@@ -153,9 +147,6 @@ abstract class AbstractQueryable implements QueryableInterface
         );
     }
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function whereNotNull(
         string $column,
@@ -167,9 +158,6 @@ abstract class AbstractQueryable implements QueryableInterface
         );
     }
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function orWhereNull(
         string $column,
@@ -181,9 +169,6 @@ abstract class AbstractQueryable implements QueryableInterface
         );
     }
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function orWhereNotNull(
         string $column,
@@ -197,7 +182,6 @@ abstract class AbstractQueryable implements QueryableInterface
 
     /**
      * @param non-empty-array<string|int|float|bool|null> $values
-     * @return static
      */
     #[\NoDiscard]
     public function whereIn(
@@ -213,7 +197,6 @@ abstract class AbstractQueryable implements QueryableInterface
 
     /**
      * @param non-empty-array<string|int|float|bool|null> $values
-     * @return static
      */
     #[\NoDiscard]
     public function whereNotIn(
@@ -229,7 +212,6 @@ abstract class AbstractQueryable implements QueryableInterface
 
     /**
      * @param non-empty-array<string|int|float|bool|null> $values
-     * @return static
      */
     #[\NoDiscard]
     public function orWhereIn(
@@ -245,7 +227,6 @@ abstract class AbstractQueryable implements QueryableInterface
 
     /**
      * @param non-empty-array<string|int|float|bool|null> $values
-     * @return static
      */
     #[\NoDiscard]
     public function orWhereNotIn(
@@ -259,9 +240,6 @@ abstract class AbstractQueryable implements QueryableInterface
         );
     }
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function whereBetween(
         string $column,
@@ -275,9 +253,6 @@ abstract class AbstractQueryable implements QueryableInterface
         );
     }
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function whereNotBetween(
         string $column,
@@ -291,9 +266,6 @@ abstract class AbstractQueryable implements QueryableInterface
         );
     }
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function orWhereBetween(
         string $column,
@@ -307,9 +279,6 @@ abstract class AbstractQueryable implements QueryableInterface
         );
     }
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function orWhereNotBetween(
         string $column,
@@ -323,9 +292,47 @@ abstract class AbstractQueryable implements QueryableInterface
         );
     }
 
+    #[\NoDiscard]
+    public function whereColumn(
+        string $column,
+        string $other,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $other, $operator): void {
+                $statement->whereColumn($column, $other, $operator);
+            },
+        );
+    }
+
+    #[\NoDiscard]
+    public function orWhereColumn(
+        string $column,
+        string $other,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $other, $operator): void {
+                $statement->orWhereColumn($column, $other, $operator);
+            },
+        );
+    }
+
     /**
-     * @return static
+     * @param array<string, string|int|float|bool|null> $bindings
      */
+    #[\NoDiscard]
+    public function whereRaw(
+        string $sql,
+        array $bindings = [],
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($sql, $bindings): void {
+                $statement->whereRaw($sql, $bindings);
+            },
+        );
+    }
+
     #[\NoDiscard]
     public function whereLike(
         string $column,
@@ -338,9 +345,6 @@ abstract class AbstractQueryable implements QueryableInterface
         );
     }
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function whereNotLike(
         string $column,
@@ -353,9 +357,6 @@ abstract class AbstractQueryable implements QueryableInterface
         );
     }
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function orWhereLike(
         string $column,
@@ -368,9 +369,6 @@ abstract class AbstractQueryable implements QueryableInterface
         );
     }
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function orWhereNotLike(
         string $column,
@@ -383,9 +381,6 @@ abstract class AbstractQueryable implements QueryableInterface
         );
     }
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function innerJoin(
         string $table,
@@ -400,9 +395,6 @@ abstract class AbstractQueryable implements QueryableInterface
         );
     }
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function leftJoin(
         string $table,
@@ -417,9 +409,6 @@ abstract class AbstractQueryable implements QueryableInterface
         );
     }
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function rightJoin(
         string $table,
@@ -434,9 +423,6 @@ abstract class AbstractQueryable implements QueryableInterface
         );
     }
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function crossJoin(
         string $table,
@@ -448,9 +434,6 @@ abstract class AbstractQueryable implements QueryableInterface
         );
     }
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function orderBy(
         string $column,
@@ -474,9 +457,6 @@ abstract class AbstractQueryable implements QueryableInterface
         );
     }
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function page(
         int $limit,
@@ -576,7 +556,6 @@ abstract class AbstractQueryable implements QueryableInterface
 
     /**
      * @param \Closure(WhereStatementInterface): void $criterion
-     * @return static
      */
     private function extend(
         \Closure $criterion,

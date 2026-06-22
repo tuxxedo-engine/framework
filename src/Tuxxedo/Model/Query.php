@@ -86,7 +86,6 @@ class Query extends AbstractQueryable
 
     /**
      * @param array<string, ?\Closure(Relation<object>): Relation<object>> $with
-     * @return static
      */
     #[\NoDiscard]
     public function with(
@@ -109,7 +108,6 @@ class Query extends AbstractQueryable
     /**
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
      * @param list<array{column: string, direction: OrderDirection}> $orderBy
-     * @return static
      */
     protected function cloneWith(
         array $criteriaStack,

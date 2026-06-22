@@ -17,10 +17,14 @@ use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Statement\Condition\BetweenCondition;
 use Tuxxedo\Database\Query\Statement\Condition\BetweenConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\BetweenOperator;
+use Tuxxedo\Database\Query\Statement\Condition\ColumnCondition;
+use Tuxxedo\Database\Query\Statement\Condition\ColumnConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\Condition;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionConjunction;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
+use Tuxxedo\Database\Query\Statement\Condition\RawCondition;
+use Tuxxedo\Database\Query\Statement\Condition\RawConditionInterface;
 use Tuxxedo\Database\Query\Statement\Join\Join;
 use Tuxxedo\Database\Query\Statement\Join\JoinInterface;
 use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
@@ -29,7 +33,7 @@ use Tuxxedo\Database\Query\Statement\Join\JoinType;
 abstract class AbstractWhereStatement extends AbstractStatement implements WhereStatementInterface
 {
     /**
-     * @var ConditionInterface[]|BetweenCondition[]
+     * @var ConditionInterface[]|BetweenCondition[]|ColumnCondition[]|RawCondition[]
      */
     protected array $conditions = [];
 
@@ -84,6 +88,28 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
                     $condition->operator->value,
                     $condition->from,
                     $condition->to,
+                );
+
+                continue;
+            }
+
+            if ($condition instanceof ColumnConditionInterface) {
+                $sql .= \sprintf(
+                    ' %s %s %s %s',
+                    $keyword,
+                    $dialect->qualifiedIdentifier($condition->identifier),
+                    $condition->operator->value,
+                    $dialect->qualifiedIdentifier($condition->other),
+                );
+
+                continue;
+            }
+
+            if ($condition instanceof RawConditionInterface) {
+                $sql .= \sprintf(
+                    ' %s %s',
+                    $keyword,
+                    $condition->sql,
                 );
 
                 continue;
@@ -543,6 +569,73 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
             identifier: $column,
             operator: ConditionOperator::NOT_LIKE,
             parameter: ':' . $parameterKey,
+        );
+
+        return $this;
+    }
+
+    public function whereColumn(
+        string $column,
+        string $other,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static {
+        if (\is_string($operator)) {
+            $operator = ConditionOperator::from($operator);
+        }
+
+        $this->conditions[] = new ColumnCondition(
+            conjunction: ConditionConjunction::AND,
+            identifier: $column,
+            operator: $operator,
+            other: $other,
+        );
+
+        return $this;
+    }
+
+    public function orWhereColumn(
+        string $column,
+        string $other,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static {
+        if (\is_string($operator)) {
+            $operator = ConditionOperator::from($operator);
+        }
+
+        $this->conditions[] = new ColumnCondition(
+            conjunction: ConditionConjunction::OR,
+            identifier: $column,
+            operator: $operator,
+            other: $other,
+        );
+
+        return $this;
+    }
+
+    /**
+     * @param array<string, string|int|float|bool|null> $bindings
+     */
+    public function whereRaw(
+        string $sql,
+        array $bindings = [],
+    ): static {
+        $prefix = 'raw_' . \sizeof($this->conditions) . '_';
+
+        $rewritten = \preg_replace_callback(
+            '/(?<!:):([a-zA-Z_][a-zA-Z0-9_]*)/',
+            static fn (array $matches): string => isset($bindings[$matches[1]])
+                ? ':' . $prefix . $matches[1]
+                : $matches[0],
+            $sql,
+        );
+
+        foreach ($bindings as $key => $value) {
+            $this->parameters[$prefix . $key] = $value;
+        }
+
+        $this->conditions[] = new RawCondition(
+            conjunction: ConditionConjunction::AND,
+            sql: $rewritten ?? $sql,
         );
 
         return $this;

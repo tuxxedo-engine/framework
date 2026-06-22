@@ -46,7 +46,6 @@ interface QueryableInterface extends \IteratorAggregate, \Countable, \ArrayAcces
 
     /**
      * @param string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
-     * @return static
      */
     #[\NoDiscard]
     public function where(
@@ -57,7 +56,6 @@ interface QueryableInterface extends \IteratorAggregate, \Countable, \ArrayAcces
 
     /**
      * @param string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
-     * @return static
      */
     #[\NoDiscard]
     public function orWhere(
@@ -66,33 +64,21 @@ interface QueryableInterface extends \IteratorAggregate, \Countable, \ArrayAcces
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static;
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function whereNull(
         string $column,
     ): static;
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function whereNotNull(
         string $column,
     ): static;
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function orWhereNull(
         string $column,
     ): static;
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function orWhereNotNull(
         string $column,
@@ -100,7 +86,6 @@ interface QueryableInterface extends \IteratorAggregate, \Countable, \ArrayAcces
 
     /**
      * @param non-empty-array<string|int|float|bool|null> $values
-     * @return static
      */
     #[\NoDiscard]
     public function whereIn(
@@ -110,7 +95,6 @@ interface QueryableInterface extends \IteratorAggregate, \Countable, \ArrayAcces
 
     /**
      * @param non-empty-array<string|int|float|bool|null> $values
-     * @return static
      */
     #[\NoDiscard]
     public function whereNotIn(
@@ -120,7 +104,6 @@ interface QueryableInterface extends \IteratorAggregate, \Countable, \ArrayAcces
 
     /**
      * @param non-empty-array<string|int|float|bool|null> $values
-     * @return static
      */
     #[\NoDiscard]
     public function orWhereIn(
@@ -130,7 +113,6 @@ interface QueryableInterface extends \IteratorAggregate, \Countable, \ArrayAcces
 
     /**
      * @param non-empty-array<string|int|float|bool|null> $values
-     * @return static
      */
     #[\NoDiscard]
     public function orWhereNotIn(
@@ -138,9 +120,6 @@ interface QueryableInterface extends \IteratorAggregate, \Countable, \ArrayAcces
         array $values,
     ): static;
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function whereBetween(
         string $column,
@@ -148,9 +127,6 @@ interface QueryableInterface extends \IteratorAggregate, \Countable, \ArrayAcces
         string|int|float|bool $to,
     ): static;
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function whereNotBetween(
         string $column,
@@ -158,9 +134,6 @@ interface QueryableInterface extends \IteratorAggregate, \Countable, \ArrayAcces
         string|int|float|bool $to,
     ): static;
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function orWhereBetween(
         string $column,
@@ -168,9 +141,6 @@ interface QueryableInterface extends \IteratorAggregate, \Countable, \ArrayAcces
         string|int|float|bool $to,
     ): static;
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function orWhereNotBetween(
         string $column,
@@ -178,45 +148,53 @@ interface QueryableInterface extends \IteratorAggregate, \Countable, \ArrayAcces
         string|int|float|bool $to,
     ): static;
 
+    #[\NoDiscard]
+    public function whereColumn(
+        string $column,
+        string $other,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static;
+
+    #[\NoDiscard]
+    public function orWhereColumn(
+        string $column,
+        string $other,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static;
+
     /**
-     * @return static
+     * @param array<string, string|int|float|bool|null> $bindings
      */
+    #[\NoDiscard]
+    public function whereRaw(
+        string $sql,
+        array $bindings = [],
+    ): static;
+
     #[\NoDiscard]
     public function whereLike(
         string $column,
         string $pattern,
     ): static;
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function whereNotLike(
         string $column,
         string $pattern,
     ): static;
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function orWhereLike(
         string $column,
         string $pattern,
     ): static;
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function orWhereNotLike(
         string $column,
         string $pattern,
     ): static;
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function innerJoin(
         string $table,
@@ -225,9 +203,6 @@ interface QueryableInterface extends \IteratorAggregate, \Countable, \ArrayAcces
         JoinOperator|string $operator = JoinOperator::EQUALS,
     ): static;
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function leftJoin(
         string $table,
@@ -236,9 +211,6 @@ interface QueryableInterface extends \IteratorAggregate, \Countable, \ArrayAcces
         JoinOperator|string $operator = JoinOperator::EQUALS,
     ): static;
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function rightJoin(
         string $table,
@@ -247,26 +219,17 @@ interface QueryableInterface extends \IteratorAggregate, \Countable, \ArrayAcces
         JoinOperator|string $operator = JoinOperator::EQUALS,
     ): static;
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function crossJoin(
         string $table,
     ): static;
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function orderBy(
         string $column,
         OrderDirection|string $direction = OrderDirection::ASC,
     ): static;
 
-    /**
-     * @return static
-     */
     #[\NoDiscard]
     public function page(
         int $limit,

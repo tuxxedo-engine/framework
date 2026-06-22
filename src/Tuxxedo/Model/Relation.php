@@ -124,7 +124,6 @@ class Relation extends AbstractQueryable implements RelationInterface
     /**
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
      * @param list<array{column: string, direction: OrderDirection}> $orderBy
-     * @return static
      */
     protected function cloneWith(
         array $criteriaStack,
