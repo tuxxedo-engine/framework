@@ -228,6 +228,38 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
+     * @param non-empty-array<string|int|float|bool|null> $values
+     * @return static
+     */
+    #[\NoDiscard]
+    public function orWhereIn(
+        string $column,
+        array $values,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $values): void {
+                $statement->orWhereIn($column, $values);
+            },
+        );
+    }
+
+    /**
+     * @param non-empty-array<string|int|float|bool|null> $values
+     * @return static
+     */
+    #[\NoDiscard]
+    public function orWhereNotIn(
+        string $column,
+        array $values,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $values): void {
+                $statement->orWhereNotIn($column, $values);
+            },
+        );
+    }
+
+    /**
      * @return static
      */
     #[\NoDiscard]
@@ -255,6 +287,38 @@ abstract class AbstractQueryable implements QueryableInterface
         return $this->extend(
             criterion: static function (WhereStatementInterface $statement) use ($column, $from, $to): void {
                 $statement->whereNotBetween($column, $from, $to);
+            },
+        );
+    }
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
+    public function orWhereBetween(
+        string $column,
+        string|int|float|bool $from,
+        string|int|float|bool $to,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $from, $to): void {
+                $statement->orWhereBetween($column, $from, $to);
+            },
+        );
+    }
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
+    public function orWhereNotBetween(
+        string $column,
+        string|int|float|bool $from,
+        string|int|float|bool $to,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $from, $to): void {
+                $statement->orWhereNotBetween($column, $from, $to);
             },
         );
     }

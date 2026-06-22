@@ -119,6 +119,26 @@ interface QueryableInterface extends \IteratorAggregate, \Countable, \ArrayAcces
     ): static;
 
     /**
+     * @param non-empty-array<string|int|float|bool|null> $values
+     * @return static
+     */
+    #[\NoDiscard]
+    public function orWhereIn(
+        string $column,
+        array $values,
+    ): static;
+
+    /**
+     * @param non-empty-array<string|int|float|bool|null> $values
+     * @return static
+     */
+    #[\NoDiscard]
+    public function orWhereNotIn(
+        string $column,
+        array $values,
+    ): static;
+
+    /**
      * @return static
      */
     #[\NoDiscard]
@@ -133,6 +153,26 @@ interface QueryableInterface extends \IteratorAggregate, \Countable, \ArrayAcces
      */
     #[\NoDiscard]
     public function whereNotBetween(
+        string $column,
+        string|int|float|bool $from,
+        string|int|float|bool $to,
+    ): static;
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
+    public function orWhereBetween(
+        string $column,
+        string|int|float|bool $from,
+        string|int|float|bool $to,
+    ): static;
+
+    /**
+     * @return static
+     */
+    #[\NoDiscard]
+    public function orWhereNotBetween(
         string $column,
         string|int|float|bool $from,
         string|int|float|bool $to,

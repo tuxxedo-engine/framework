@@ -283,6 +283,46 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         return $this;
     }
 
+    /**
+     * @param non-empty-array<string|int|float|bool|null> $values
+     */
+    public function orWhereIn(
+        string $column,
+        array $values,
+    ): static {
+        $parameterKey = 'where_' . \sizeof($this->conditions);
+
+        $this->parameters[$parameterKey] = $values;
+        $this->conditions[] = new Condition(
+            conjunction: ConditionConjunction::OR,
+            identifier: $column,
+            operator: ConditionOperator::IN,
+            parameter: ':' . $parameterKey . '[]',
+        );
+
+        return $this;
+    }
+
+    /**
+     * @param non-empty-array<string|int|float|bool|null> $values
+     */
+    public function orWhereNotIn(
+        string $column,
+        array $values,
+    ): static {
+        $parameterKey = 'where_' . \sizeof($this->conditions);
+
+        $this->parameters[$parameterKey] = $values;
+        $this->conditions[] = new Condition(
+            conjunction: ConditionConjunction::OR,
+            identifier: $column,
+            operator: ConditionOperator::NOT_IN,
+            parameter: ':' . $parameterKey . '[]',
+        );
+
+        return $this;
+    }
+
     public function innerJoin(
         string $table,
         string $first,
@@ -391,6 +431,46 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         $this->parameters[$parameterKey . '_to'] = $to;
         $this->conditions[] = new BetweenCondition(
             conjunction: ConditionConjunction::AND,
+            identifier: $column,
+            operator: BetweenOperator::NOT_BETWEEN,
+            from: ':' . $parameterKey . '_from',
+            to: ':' . $parameterKey . '_to',
+        );
+
+        return $this;
+    }
+
+    public function orWhereBetween(
+        string $column,
+        string|int|float|bool $from,
+        string|int|float|bool $to,
+    ): static {
+        $parameterKey = 'between_' . \sizeof($this->conditions);
+
+        $this->parameters[$parameterKey . '_from'] = $from;
+        $this->parameters[$parameterKey . '_to'] = $to;
+        $this->conditions[] = new BetweenCondition(
+            conjunction: ConditionConjunction::OR,
+            identifier: $column,
+            operator: BetweenOperator::BETWEEN,
+            from: ':' . $parameterKey . '_from',
+            to: ':' . $parameterKey . '_to',
+        );
+
+        return $this;
+    }
+
+    public function orWhereNotBetween(
+        string $column,
+        string|int|float|bool $from,
+        string|int|float|bool $to,
+    ): static {
+        $parameterKey = 'between_' . \sizeof($this->conditions);
+
+        $this->parameters[$parameterKey . '_from'] = $from;
+        $this->parameters[$parameterKey . '_to'] = $to;
+        $this->conditions[] = new BetweenCondition(
+            conjunction: ConditionConjunction::OR,
             identifier: $column,
             operator: BetweenOperator::NOT_BETWEEN,
             from: ':' . $parameterKey . '_from',

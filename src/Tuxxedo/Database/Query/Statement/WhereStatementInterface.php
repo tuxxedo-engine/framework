@@ -20,13 +20,10 @@ use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
 // @todo whereIn / whereNotIn / orWhereIn / orWhereNotIn subquery form — accept SelectBuilderInterface alongside the value array so callers can write `WHERE col IN (SELECT ... FROM ... WHERE ...)`. Would let Model's Through hydration use IN-dedupe semantics in a single round-trip without JOIN+DISTINCT, and lets callers compose subqueries without manually pre-running them
 // @todo whereExists / whereNotExists / orWhereExists / orWhereNotExists — correlated-subquery existence checks. Common ORM-level need for "find parents where any child matches X"; today the only path is JOIN-and-DISTINCT or two queries
 // @todo whereGroup with closure form — support nested AND/OR groupings, e.g. ->where('a', 1)->orWhereGroup(fn($q) => $q->where('b', 2)->where('c', 3)). Current flat where() chain can't express "a = 1 OR (b = 2 AND c = 3)"
-// @todo orWhereIn / orWhereNotIn — OR variants of the array form (separate from the subquery widening above); current chain forces orWhere(col, [...], 'IN') which works but reads worse. Prerequisite for the subquery-widening TODO to cover the OR side cleanly
-// @todo orWhereBetween / orWhereNotBetween — OR variants of the between methods for completeness with the rest of the chain
 // @todo whereLike / orWhereLike / whereNotLike / orWhereNotLike — dedicated LIKE-pattern matching; today users fall through to where(col, '%foo%', 'LIKE') which works but loses readability and forecloses dialect-specific behavior (Postgres ILIKE, MySQL COLLATE)
 // @todo whereColumn / orWhereColumn — compare two columns directly (WHERE a.x = b.y) instead of column-vs-value. Needed for self-joins, cross-table correlations without JOIN, and especially correlated subqueries when paired with whereExists. Hydrator's HasManyThrough could drop its JOIN+DISTINCT once whereColumn + whereExists exist
 // @todo whereNot / orWhereNot (closure form) — negated grouping mirror of whereGroup, e.g. ->whereNot(fn($q) => $q->where('a', 1)->where('b', 2)) → WHERE NOT (a = ? AND b = ?). Shares the sub-builder mechanism whereGroup needs
 // @todo Subquery-as-RHS for any comparison operator — broader form of the whereIn subquery TODO above: where('cnt', '>', SelectStatement) → WHERE cnt > (SELECT ...). Reuses the same subquery+parameter-merging infrastructure
-// @todo fullOuterJoin — round out the join family (inner/left/right/cross already present); SQLite doesn't support, MySQL has it since 8.0+, Postgres always has
 interface WhereStatementInterface extends StatementInterface
 {
     public function hasConstraints(): bool;
@@ -83,6 +80,22 @@ interface WhereStatementInterface extends StatementInterface
         array $values,
     ): static;
 
+    /**
+     * @param non-empty-array<string|int|float|bool|null> $values
+     */
+    public function orWhereIn(
+        string $column,
+        array $values,
+    ): static;
+
+    /**
+     * @param non-empty-array<string|int|float|bool|null> $values
+     */
+    public function orWhereNotIn(
+        string $column,
+        array $values,
+    ): static;
+
     public function innerJoin(
         string $table,
         string $first,
@@ -115,6 +128,18 @@ interface WhereStatementInterface extends StatementInterface
     ): static;
 
     public function whereNotBetween(
+        string $column,
+        string|int|float|bool $from,
+        string|int|float|bool $to,
+    ): static;
+
+    public function orWhereBetween(
+        string $column,
+        string|int|float|bool $from,
+        string|int|float|bool $to,
+    ): static;
+
+    public function orWhereNotBetween(
         string $column,
         string|int|float|bool $from,
         string|int|float|bool $to,
