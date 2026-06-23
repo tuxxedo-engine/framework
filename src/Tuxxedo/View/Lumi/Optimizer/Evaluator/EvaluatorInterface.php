@@ -23,7 +23,6 @@ use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
-// @todo This depends on the Reducer and the Reducer depends on this, resolved this circular dependency
 interface EvaluatorInterface
 {
     public function castValue(
@@ -131,5 +130,172 @@ interface EvaluatorInterface
     public function dereferenceIdentifier(
         ScopeInterface $scope,
         IdentifierNode $node,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceConcat(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceAdd(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceSubtract(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceMultiply(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceDivide(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceModulus(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceEqual(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceNotEqual(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceGreater(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceLess(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceGreaterEqual(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceLessEqual(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceAnd(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceOr(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceXor(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceExponentiate(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceBitwiseAnd(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceBitwiseOr(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceBitwiseXor(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceBitwiseShiftLeft(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceBitwiseShiftRight(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceNullCoalesce(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceNot(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $expression,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceNegate(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $expression,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceBitwiseNot(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $expression,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceIncrementPre(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $expression,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceIncrementPost(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $expression,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceDecrementPre(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $expression,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceDecrementPost(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $expression,
     ): ?ExpressionNodeInterface;
 }

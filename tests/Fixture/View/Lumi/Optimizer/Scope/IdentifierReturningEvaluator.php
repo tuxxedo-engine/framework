@@ -23,7 +23,6 @@ class IdentifierReturningEvaluator extends Evaluator
     public function __construct(
         public readonly IdentifierNode $alwaysReturn,
     ) {
-        parent::__construct();
     }
 
     public function dereference(
