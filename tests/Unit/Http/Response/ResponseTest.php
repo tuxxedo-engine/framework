@@ -19,6 +19,7 @@ use Tuxxedo\Http\Cookie;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
+use Tuxxedo\Http\HttpVersion;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseCode;
 use Tuxxedo\Http\Response\Stream\JsonStreamFormat;
@@ -309,6 +310,19 @@ class ResponseTest extends TestCase
         $response = Response::stream($stream);
 
         self::assertSame($stream, $response->body);
+    }
+
+    public function testWithHttpVersion(): void
+    {
+        $response = new Response(
+            httpVersion: HttpVersion::V2_0,
+        );
+
+        self::assertSame(HttpVersion::V2_0, $response->httpVersion);
+
+        $response = $response->withHttpVersion(HttpVersion::V3_0);
+
+        self::assertSame(HttpVersion::V3_0, $response->httpVersion);
     }
 
     public function testHasHeaderReturnsTrueWhenHeaderPresent(): void

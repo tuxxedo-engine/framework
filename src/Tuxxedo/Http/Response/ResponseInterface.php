@@ -17,11 +17,16 @@ use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Http\CookieInterface;
 use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
+use Tuxxedo\Http\HttpVersion;
 use Tuxxedo\Http\Response\Stream\StreamInterface;
 
 #[DefaultImplementation(class: Response::class)]
 interface ResponseInterface extends ResponseCodeInterface
 {
+    public HttpVersion $httpVersion {
+        get;
+    }
+
     /**
      * @var HeaderInterface[]
      */
@@ -32,6 +37,10 @@ interface ResponseInterface extends ResponseCodeInterface
     public StreamInterface|string $body {
         get;
     }
+
+    public function withHttpVersion(
+        HttpVersion $httpVersion,
+    ): static;
 
     public function hasHeader(
         string $name,

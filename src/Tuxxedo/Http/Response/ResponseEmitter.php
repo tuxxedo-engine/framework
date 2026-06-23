@@ -58,10 +58,10 @@ class ResponseEmitter implements ResponseEmitterInterface
                 );
             }
 
-            // @todo Consider whether Responses should have the ability to define their own protocol version
             \header(
                 \sprintf(
-                    'HTTP/1.1 %d %s',
+                    '%s %d %s',
+                    $response->httpVersion->value,
                     $response->responseCode->getStatusCode(),
                     $response->responseCode->getStatusText(),
                 ),

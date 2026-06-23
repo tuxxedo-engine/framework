@@ -18,6 +18,7 @@ use Tuxxedo\Http\CookieInterface;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
+use Tuxxedo\Http\HttpVersion;
 use Tuxxedo\Http\Response\Stream\JsonStreamFormat;
 use Tuxxedo\Http\Response\Stream\SseEventInterface;
 use Tuxxedo\Http\Response\Stream\Stream;
@@ -41,6 +42,7 @@ class Response implements ResponseInterface, ResponsableInterface
         public readonly StreamInterface|string $body = '',
         public readonly array $headers = [],
         ResponseCode|int $responseCode = ResponseCode::OK,
+        public private(set) HttpVersion $httpVersion = HttpVersion::V1_1,
     ) {
         if (!$responseCode instanceof ResponseCode) {
             $responseCode = ResponseCode::from($responseCode);
@@ -445,6 +447,14 @@ class Response implements ResponseInterface, ResponsableInterface
         }
 
         return $newHeaders;
+    }
+
+    public function withHttpVersion(
+        HttpVersion $httpVersion,
+    ): static {
+        $this->httpVersion = $httpVersion;
+
+        return $this;
     }
 
     public function hasHeader(
