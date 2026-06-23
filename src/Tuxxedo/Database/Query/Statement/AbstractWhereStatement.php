@@ -23,6 +23,8 @@ use Tuxxedo\Database\Query\Statement\Condition\Condition;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionConjunction;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
+use Tuxxedo\Database\Query\Statement\Condition\GroupCondition;
+use Tuxxedo\Database\Query\Statement\Condition\GroupConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\RawCondition;
 use Tuxxedo\Database\Query\Statement\Condition\RawConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\SubqueryCondition;
@@ -36,7 +38,7 @@ use Tuxxedo\Database\SqlException;
 abstract class AbstractWhereStatement extends AbstractStatement implements WhereStatementInterface
 {
     /**
-     * @var list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition>
+     * @var list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|GroupCondition>
      */
     protected array $conditions = [];
 
@@ -44,6 +46,8 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
      * @var JoinInterface[]
      */
     protected array $joins = [];
+
+    private int $subqueryCounter = 0;
 
     protected function generateWhereSql(
         DialectInterface $dialect,
@@ -78,97 +82,107 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
             );
         }
 
-        foreach ($this->conditions as $index => $condition) {
-            $keyword = $index === 0
-                ? 'WHERE' :
-                $condition->conjunction->name;
+        if (\sizeof($this->conditions) > 0) {
+            $this->subqueryCounter = 0;
+            $sql .= ' WHERE' . $this->renderConditions($this->conditions, $dialect);
+        }
 
-            if ($condition instanceof BetweenConditionInterface) {
-                $sql .= \sprintf(
-                    ' %s %s %s %s AND %s',
-                    $keyword,
-                    $dialect->qualifiedIdentifier($condition->identifier),
-                    $condition->operator->value,
-                    $condition->from,
-                    $condition->to,
-                );
+        return $sql;
+    }
 
-                continue;
+    /**
+     * @param list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|GroupCondition> $conditions
+     */
+    private function renderConditions(
+        array $conditions,
+        DialectInterface $dialect,
+    ): string {
+        $sql = '';
+
+        foreach ($conditions as $index => $condition) {
+            if ($index > 0) {
+                $sql .= ' ' . $condition->conjunction->name;
             }
 
-            if ($condition instanceof ColumnConditionInterface) {
-                $sql .= \sprintf(
-                    ' %s %s %s %s',
-                    $keyword,
-                    $dialect->qualifiedIdentifier($condition->identifier),
-                    $condition->operator->value,
-                    $dialect->qualifiedIdentifier($condition->other),
-                );
+            $sql .= $this->renderConditionBody($condition, $dialect);
+        }
 
-                continue;
-            }
+        return $sql;
+    }
 
-            if ($condition instanceof RawConditionInterface) {
-                $sql .= \sprintf(
-                    ' %s %s',
-                    $keyword,
-                    $condition->sql,
-                );
+    private function renderConditionBody(
+        ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|GroupCondition $condition,
+        DialectInterface $dialect,
+    ): string {
+        if ($condition instanceof BetweenConditionInterface) {
+            return \sprintf(
+                ' %s %s %s AND %s',
+                $dialect->qualifiedIdentifier($condition->identifier),
+                $condition->operator->value,
+                $condition->from,
+                $condition->to,
+            );
+        }
 
-                continue;
-            }
+        if ($condition instanceof ColumnConditionInterface) {
+            return \sprintf(
+                ' %s %s %s',
+                $dialect->qualifiedIdentifier($condition->identifier),
+                $condition->operator->value,
+                $dialect->qualifiedIdentifier($condition->other),
+            );
+        }
 
-            if ($condition instanceof SubqueryConditionInterface) {
-                $sql .= \sprintf(
-                    ' %s %s %s (%s)',
-                    $keyword,
-                    $dialect->qualifiedIdentifier($condition->identifier),
-                    $condition->operator->value,
-                    $this->renderSubquery($condition->subquery, $index, $dialect),
-                );
+        if ($condition instanceof RawConditionInterface) {
+            return ' ' . $condition->sql;
+        }
 
-                continue;
-            }
+        if ($condition instanceof SubqueryConditionInterface) {
+            return \sprintf(
+                ' %s %s (%s)',
+                $dialect->qualifiedIdentifier($condition->identifier),
+                $condition->operator->value,
+                $this->renderSubquery(
+                    $condition->subquery,
+                    $this->subqueryCounter++,
+                    $dialect,
+                ),
+            );
+        }
 
-            if (
-                $condition->operator === ConditionOperator::IS_NULL ||
-                $condition->operator === ConditionOperator::IS_NOT_NULL
-            ) {
-                $sql .= \sprintf(
-                    ' %s %s %s',
-                    $keyword,
-                    $dialect->qualifiedIdentifier($condition->identifier),
-                    $condition->operator->value,
-                );
+        if ($condition instanceof GroupConditionInterface) {
+            return ($condition->negated ? ' NOT (' : ' (') . \ltrim($this->renderConditions($condition->conditions, $dialect)) . ')';
+        }
 
-                continue;
-            }
+        if (
+            $condition->operator === ConditionOperator::IS_NULL ||
+            $condition->operator === ConditionOperator::IS_NOT_NULL
+        ) {
+            return \sprintf(
+                ' %s %s',
+                $dialect->qualifiedIdentifier($condition->identifier),
+                $condition->operator->value,
+            );
+        }
 
-            if (
-                $condition->operator === ConditionOperator::IN ||
-                $condition->operator === ConditionOperator::NOT_IN
-            ) {
-                $sql .= \sprintf(
-                    ' %s %s %s (%s)',
-                    $keyword,
-                    $dialect->qualifiedIdentifier($condition->identifier),
-                    $condition->operator->value,
-                    $condition->parameter,
-                );
-
-                continue;
-            }
-
-            $sql .= \sprintf(
-                ' %s %s %s %s',
-                $keyword,
+        if (
+            $condition->operator === ConditionOperator::IN ||
+            $condition->operator === ConditionOperator::NOT_IN
+        ) {
+            return \sprintf(
+                ' %s %s (%s)',
                 $dialect->qualifiedIdentifier($condition->identifier),
                 $condition->operator->value,
                 $condition->parameter,
             );
         }
 
-        return $sql;
+        return \sprintf(
+            ' %s %s %s',
+            $dialect->qualifiedIdentifier($condition->identifier),
+            $condition->operator->value,
+            $condition->parameter,
+        );
     }
 
     public function hasConstraints(): bool
@@ -739,6 +753,85 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         $this->conditions[] = new RawCondition(
             conjunction: ConditionConjunction::AND,
             sql: $rewritten ?? $sql,
+        );
+
+        return $this;
+    }
+
+    /**
+     * @param \Closure(WhereStatementInterface): void $callback
+     */
+    public function whereGroup(
+        \Closure $callback,
+    ): static {
+        return $this->buildGroup(
+            callback: $callback,
+            conjunction: ConditionConjunction::AND,
+            negated: false,
+        );
+    }
+
+    /**
+     * @param \Closure(WhereStatementInterface): void $callback
+     */
+    public function orWhereGroup(
+        \Closure $callback,
+    ): static {
+        return $this->buildGroup(
+            callback: $callback,
+            conjunction: ConditionConjunction::OR,
+            negated: false,
+        );
+    }
+
+    /**
+     * @param \Closure(WhereStatementInterface): void $callback
+     */
+    public function whereNot(
+        \Closure $callback,
+    ): static {
+        return $this->buildGroup(
+            callback: $callback,
+            conjunction: ConditionConjunction::AND,
+            negated: true,
+        );
+    }
+
+    /**
+     * @param \Closure(WhereStatementInterface): void $callback
+     */
+    public function orWhereNot(
+        \Closure $callback,
+    ): static {
+        return $this->buildGroup(
+            callback: $callback,
+            conjunction: ConditionConjunction::OR,
+            negated: true,
+        );
+    }
+
+    /**
+     * @param \Closure(WhereStatementInterface): void $callback
+     */
+    private function buildGroup(
+        \Closure $callback,
+        ConditionConjunction $conjunction,
+        bool $negated,
+    ): static {
+        $before = \sizeof($this->conditions);
+
+        $callback($this);
+
+        if (\sizeof($this->conditions) === $before) {
+            return $this;
+        }
+
+        $added = \array_slice($this->conditions, $before);
+        $this->conditions = \array_slice($this->conditions, 0, $before);
+        $this->conditions[] = new GroupCondition(
+            conjunction: $conjunction,
+            negated: $negated,
+            conditions: $added,
         );
 
         return $this;

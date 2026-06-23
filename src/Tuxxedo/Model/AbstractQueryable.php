@@ -491,6 +491,62 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
+     * @param \Closure(WhereStatementInterface): void $callback
+     */
+    #[\NoDiscard]
+    public function whereGroup(
+        \Closure $callback,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($callback): void {
+                $statement->whereGroup($callback);
+            },
+        );
+    }
+
+    /**
+     * @param \Closure(WhereStatementInterface): void $callback
+     */
+    #[\NoDiscard]
+    public function orWhereGroup(
+        \Closure $callback,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($callback): void {
+                $statement->orWhereGroup($callback);
+            },
+        );
+    }
+
+    /**
+     * @param \Closure(WhereStatementInterface): void $callback
+     */
+    #[\NoDiscard]
+    public function whereNot(
+        \Closure $callback,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($callback): void {
+                $statement->whereNot($callback);
+            },
+        );
+    }
+
+    /**
+     * @param \Closure(WhereStatementInterface): void $callback
+     */
+    #[\NoDiscard]
+    public function orWhereNot(
+        \Closure $callback,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($callback): void {
+                $statement->orWhereNot($callback);
+            },
+        );
+    }
+
+    /**
      * @return TModel|null
      */
     #[\NoDiscard]

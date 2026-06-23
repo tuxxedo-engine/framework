@@ -17,6 +17,7 @@ use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
+use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 use Tuxxedo\Pagination\PagedInterface;
 
 // @todo whereHas / whereDoesntHave - model-aware chain method that filters parents by relation existence, e.g. $userQuery->whereHas('posts', fn ($q) => $q->where('published', true)) → WHERE EXISTS (SELECT 1 FROM posts WHERE posts.user_id = users.id AND posts.published = ?). Blocked on the whereExists + whereColumn primitives in WhereStatementInterface. Implementation also needs access to the manager's metadata to resolve relation property names to their FK columns
@@ -239,6 +240,42 @@ interface QueryableInterface extends PagedInterface, \IteratorAggregate, \Counta
     public function page(
         int $limit,
         ?int $offset = null,
+    ): static;
+
+    /**
+     * @param \Closure(WhereStatementInterface): void $callback
+     * @return static
+     */
+    #[\NoDiscard]
+    public function whereGroup(
+        \Closure $callback,
+    ): static;
+
+    /**
+     * @param \Closure(WhereStatementInterface): void $callback
+     * @return static
+     */
+    #[\NoDiscard]
+    public function orWhereGroup(
+        \Closure $callback,
+    ): static;
+
+    /**
+     * @param \Closure(WhereStatementInterface): void $callback
+     * @return static
+     */
+    #[\NoDiscard]
+    public function whereNot(
+        \Closure $callback,
+    ): static;
+
+    /**
+     * @param \Closure(WhereStatementInterface): void $callback
+     * @return static
+     */
+    #[\NoDiscard]
+    public function orWhereNot(
+        \Closure $callback,
     ): static;
 
     /**

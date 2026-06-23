@@ -17,8 +17,6 @@ use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
 
 // @todo whereExists / whereNotExists / orWhereExists / orWhereNotExists — correlated-subquery existence checks. Common ORM-level need for "find parents where any child matches X"; today the only path is JOIN-and-DISTINCT or two queries
-// @todo whereGroup with closure form — support nested AND/OR groupings, e.g. ->where('a', 1)->orWhereGroup(fn($q) => $q->where('b', 2)->where('c', 3)). Current flat where() chain can't express "a = 1 OR (b = 2 AND c = 3)"
-// @todo whereNot / orWhereNot (closure form) — negated grouping mirror of whereGroup, e.g. ->whereNot(fn($q) => $q->where('a', 1)->where('b', 2)) → WHERE NOT (a = ? AND b = ?). Shares the sub-builder mechanism whereGroup needs
 // @todo Subquery-as-RHS for any comparison operator — broader form of the whereIn subquery TODO above: where('cnt', '>', SelectStatement) → WHERE cnt > (SELECT ...). Reuses the same subquery+parameter-merging infrastructure
 interface WhereStatementInterface extends StatementInterface
 {
@@ -179,5 +177,33 @@ interface WhereStatementInterface extends StatementInterface
     public function orWhereNotLike(
         string $column,
         string $pattern,
+    ): static;
+
+    /**
+     * @param \Closure(WhereStatementInterface): void $callback
+     */
+    public function whereGroup(
+        \Closure $callback,
+    ): static;
+
+    /**
+     * @param \Closure(WhereStatementInterface): void $callback
+     */
+    public function orWhereGroup(
+        \Closure $callback,
+    ): static;
+
+    /**
+     * @param \Closure(WhereStatementInterface): void $callback
+     */
+    public function whereNot(
+        \Closure $callback,
+    ): static;
+
+    /**
+     * @param \Closure(WhereStatementInterface): void $callback
+     */
+    public function orWhereNot(
+        \Closure $callback,
     ): static;
 }
