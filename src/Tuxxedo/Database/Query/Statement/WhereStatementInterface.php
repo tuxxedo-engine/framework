@@ -16,7 +16,6 @@ namespace Tuxxedo\Database\Query\Statement;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
 
-// @todo whereIn / whereNotIn / orWhereIn / orWhereNotIn subquery form — accept SelectBuilderInterface alongside the value array so callers can write `WHERE col IN (SELECT ... FROM ... WHERE ...)`. Would let Model's Through hydration use IN-dedupe semantics in a single round-trip without JOIN+DISTINCT, and lets callers compose subqueries without manually pre-running them
 // @todo whereExists / whereNotExists / orWhereExists / orWhereNotExists — correlated-subquery existence checks. Common ORM-level need for "find parents where any child matches X"; today the only path is JOIN-and-DISTINCT or two queries
 // @todo whereGroup with closure form — support nested AND/OR groupings, e.g. ->where('a', 1)->orWhereGroup(fn($q) => $q->where('b', 2)->where('c', 3)). Current flat where() chain can't express "a = 1 OR (b = 2 AND c = 3)"
 // @todo whereNot / orWhereNot (closure form) — negated grouping mirror of whereGroup, e.g. ->whereNot(fn($q) => $q->where('a', 1)->where('b', 2)) → WHERE NOT (a = ? AND b = ?). Shares the sub-builder mechanism whereGroup needs
@@ -62,35 +61,35 @@ interface WhereStatementInterface extends StatementInterface
     ): static;
 
     /**
-     * @param non-empty-array<string|int|float|bool|null> $values
+     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
      */
     public function whereIn(
         string $column,
-        array $values,
+        SelectStatementInterface|array $values,
     ): static;
 
     /**
-     * @param non-empty-array<string|int|float|bool|null> $values
+     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
      */
     public function whereNotIn(
         string $column,
-        array $values,
+        SelectStatementInterface|array $values,
     ): static;
 
     /**
-     * @param non-empty-array<string|int|float|bool|null> $values
+     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
      */
     public function orWhereIn(
         string $column,
-        array $values,
+        SelectStatementInterface|array $values,
     ): static;
 
     /**
-     * @param non-empty-array<string|int|float|bool|null> $values
+     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
      */
     public function orWhereNotIn(
         string $column,
-        array $values,
+        SelectStatementInterface|array $values,
     ): static;
 
     public function innerJoin(

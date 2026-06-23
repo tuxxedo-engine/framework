@@ -26,7 +26,6 @@ use Tuxxedo\Model\Hydrator\HydratorInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 
 // @todo firstOrCreate / updateOrCreate / upsert - atomic find-or-create convenience methods. Naive findFirst->save composition has a race condition; proper implementation needs dialect-specific SQL (MySQL ON DUPLICATE KEY UPDATE, Postgres ON CONFLICT, SQLite INSERT OR REPLACE)
-// @todo chunkById - cursor-pagination fetcher by primary key for very large tables. findAll() already streams via \Generator (memory-bounded by row size); chunkById is the perf optimisation for stable iteration across long-running processes and avoiding the OFFSET deep-page performance cliff
 #[DefaultImplementation(class: ModelsManager::class, lifecycle: Lifecycle::PERSISTENT)]
 interface ModelsManagerInterface
 {

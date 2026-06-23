@@ -16,6 +16,7 @@ namespace Tuxxedo\Model;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
+use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 
 /**
@@ -181,12 +182,12 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
-     * @param non-empty-array<string|int|float|bool|null> $values
+     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
      */
     #[\NoDiscard]
     public function whereIn(
         string $column,
-        array $values,
+        SelectStatementInterface|array $values,
     ): static {
         return $this->extend(
             criterion: static function (WhereStatementInterface $statement) use ($column, $values): void {
@@ -196,12 +197,12 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
-     * @param non-empty-array<string|int|float|bool|null> $values
+     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
      */
     #[\NoDiscard]
     public function whereNotIn(
         string $column,
-        array $values,
+        SelectStatementInterface|array $values,
     ): static {
         return $this->extend(
             criterion: static function (WhereStatementInterface $statement) use ($column, $values): void {
@@ -211,12 +212,12 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
-     * @param non-empty-array<string|int|float|bool|null> $values
+     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
      */
     #[\NoDiscard]
     public function orWhereIn(
         string $column,
-        array $values,
+        SelectStatementInterface|array $values,
     ): static {
         return $this->extend(
             criterion: static function (WhereStatementInterface $statement) use ($column, $values): void {
@@ -226,12 +227,12 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
-     * @param non-empty-array<string|int|float|bool|null> $values
+     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
      */
     #[\NoDiscard]
     public function orWhereNotIn(
         string $column,
-        array $values,
+        SelectStatementInterface|array $values,
     ): static {
         return $this->extend(
             criterion: static function (WhereStatementInterface $statement) use ($column, $values): void {

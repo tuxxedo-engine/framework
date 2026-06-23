@@ -71,4 +71,15 @@ class SqlException extends \Exception
             ),
         );
     }
+
+    public static function fromSubqueryStatementMustExtendAbstractStatement(
+        string $actualType,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Subquery statements must extend AbstractStatement, got `%s`',
+                $actualType,
+            ),
+        );
+    }
 }

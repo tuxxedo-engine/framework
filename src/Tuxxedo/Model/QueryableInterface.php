@@ -16,6 +16,7 @@ namespace Tuxxedo\Model;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
+use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Pagination\PagedInterface;
 
 // @todo whereHas / whereDoesntHave - model-aware chain method that filters parents by relation existence, e.g. $userQuery->whereHas('posts', fn ($q) => $q->where('published', true)) → WHERE EXISTS (SELECT 1 FROM posts WHERE posts.user_id = users.id AND posts.published = ?). Blocked on the whereExists + whereColumn primitives in WhereStatementInterface. Implementation also needs access to the manager's metadata to resolve relation property names to their FK columns
@@ -89,39 +90,39 @@ interface QueryableInterface extends PagedInterface, \IteratorAggregate, \Counta
     ): static;
 
     /**
-     * @param non-empty-array<string|int|float|bool|null> $values
+     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
      */
     #[\NoDiscard]
     public function whereIn(
         string $column,
-        array $values,
+        SelectStatementInterface|array $values,
     ): static;
 
     /**
-     * @param non-empty-array<string|int|float|bool|null> $values
+     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
      */
     #[\NoDiscard]
     public function whereNotIn(
         string $column,
-        array $values,
+        SelectStatementInterface|array $values,
     ): static;
 
     /**
-     * @param non-empty-array<string|int|float|bool|null> $values
+     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
      */
     #[\NoDiscard]
     public function orWhereIn(
         string $column,
-        array $values,
+        SelectStatementInterface|array $values,
     ): static;
 
     /**
-     * @param non-empty-array<string|int|float|bool|null> $values
+     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
      */
     #[\NoDiscard]
     public function orWhereNotIn(
         string $column,
-        array $values,
+        SelectStatementInterface|array $values,
     ): static;
 
     #[\NoDiscard]

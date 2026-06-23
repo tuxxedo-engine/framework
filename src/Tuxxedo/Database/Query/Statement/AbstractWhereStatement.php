@@ -25,15 +25,18 @@ use Tuxxedo\Database\Query\Statement\Condition\ConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Condition\RawCondition;
 use Tuxxedo\Database\Query\Statement\Condition\RawConditionInterface;
+use Tuxxedo\Database\Query\Statement\Condition\SubqueryCondition;
+use Tuxxedo\Database\Query\Statement\Condition\SubqueryConditionInterface;
 use Tuxxedo\Database\Query\Statement\Join\Join;
 use Tuxxedo\Database\Query\Statement\Join\JoinInterface;
 use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
 use Tuxxedo\Database\Query\Statement\Join\JoinType;
+use Tuxxedo\Database\SqlException;
 
 abstract class AbstractWhereStatement extends AbstractStatement implements WhereStatementInterface
 {
     /**
-     * @var ConditionInterface[]|BetweenCondition[]|ColumnCondition[]|RawCondition[]
+     * @var list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition>
      */
     protected array $conditions = [];
 
@@ -110,6 +113,18 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
                     ' %s %s',
                     $keyword,
                     $condition->sql,
+                );
+
+                continue;
+            }
+
+            if ($condition instanceof SubqueryConditionInterface) {
+                $sql .= \sprintf(
+                    ' %s %s %s (%s)',
+                    $keyword,
+                    $dialect->qualifiedIdentifier($condition->identifier),
+                    $condition->operator->value,
+                    $this->renderSubquery($condition->subquery, $index, $dialect),
                 );
 
                 continue;
@@ -270,12 +285,23 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     /**
-     * @param non-empty-array<string|int|float|bool|null> $values
+     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
      */
     public function whereIn(
         string $column,
-        array $values,
+        SelectStatementInterface|array $values,
     ): static {
+        if ($values instanceof SelectStatementInterface) {
+            $this->conditions[] = $this->buildSubqueryCondition(
+                column: $column,
+                operator: ConditionOperator::IN,
+                conjunction: ConditionConjunction::AND,
+                values: $values,
+            );
+
+            return $this;
+        }
+
         $parameterKey = 'where_' . \sizeof($this->conditions);
 
         $this->parameters[$parameterKey] = $values;
@@ -290,12 +316,23 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     /**
-     * @param non-empty-array<string|int|float|bool|null> $values
+     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
      */
     public function whereNotIn(
         string $column,
-        array $values,
+        SelectStatementInterface|array $values,
     ): static {
+        if ($values instanceof SelectStatementInterface) {
+            $this->conditions[] = $this->buildSubqueryCondition(
+                column: $column,
+                operator: ConditionOperator::NOT_IN,
+                conjunction: ConditionConjunction::AND,
+                values: $values,
+            );
+
+            return $this;
+        }
+
         $parameterKey = 'where_' . \sizeof($this->conditions);
 
         $this->parameters[$parameterKey] = $values;
@@ -310,12 +347,23 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     /**
-     * @param non-empty-array<string|int|float|bool|null> $values
+     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
      */
     public function orWhereIn(
         string $column,
-        array $values,
+        SelectStatementInterface|array $values,
     ): static {
+        if ($values instanceof SelectStatementInterface) {
+            $this->conditions[] = $this->buildSubqueryCondition(
+                column: $column,
+                operator: ConditionOperator::IN,
+                conjunction: ConditionConjunction::OR,
+                values: $values,
+            );
+
+            return $this;
+        }
+
         $parameterKey = 'where_' . \sizeof($this->conditions);
 
         $this->parameters[$parameterKey] = $values;
@@ -330,12 +378,23 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     /**
-     * @param non-empty-array<string|int|float|bool|null> $values
+     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
      */
     public function orWhereNotIn(
         string $column,
-        array $values,
+        SelectStatementInterface|array $values,
     ): static {
+        if ($values instanceof SelectStatementInterface) {
+            $this->conditions[] = $this->buildSubqueryCondition(
+                column: $column,
+                operator: ConditionOperator::NOT_IN,
+                conjunction: ConditionConjunction::OR,
+                values: $values,
+            );
+
+            return $this;
+        }
+
         $parameterKey = 'where_' . \sizeof($this->conditions);
 
         $this->parameters[$parameterKey] = $values;
@@ -347,6 +406,50 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         );
 
         return $this;
+    }
+
+    /**
+     * @throws SqlException
+     */
+    private function buildSubqueryCondition(
+        string $column,
+        ConditionOperator $operator,
+        ConditionConjunction $conjunction,
+        SelectStatementInterface $values,
+    ): SubqueryCondition {
+        if (!$values instanceof AbstractStatement) {
+            throw SqlException::fromSubqueryStatementMustExtendAbstractStatement(
+                actualType: \get_debug_type($values),
+            );
+        }
+
+        return new SubqueryCondition(
+            conjunction: $conjunction,
+            identifier: $column,
+            operator: $operator,
+            subquery: $values,
+        );
+    }
+
+    private function renderSubquery(
+        AbstractStatement $subquery,
+        int $index,
+        DialectInterface $dialect,
+    ): string {
+        $sql = $subquery->generateSql($dialect);
+        $prefix = 'subq_' . $index . '_';
+
+        foreach ($subquery->parameters as $key => $value) {
+            $stringKey = (string) $key;
+            $this->parameters[$prefix . $stringKey] = $value;
+            $sql = \preg_replace(
+                pattern: '/:' . \preg_quote($stringKey, '/') . '\b/',
+                replacement: ':' . $prefix . $stringKey,
+                subject: $sql,
+            ) ?? $sql;
+        }
+
+        return $sql;
     }
 
     public function innerJoin(

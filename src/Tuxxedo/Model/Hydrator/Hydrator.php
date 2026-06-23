@@ -32,6 +32,7 @@ use Tuxxedo\Model\ModelsManagerInterface;
 use Tuxxedo\Model\Relation;
 use Tuxxedo\Reflection\PropertyReflector;
 
+// @todo HasManyThrough loaders (setupHasManyThroughRelation + buildHasManyThroughEagerRelation) currently use JOIN + DISTINCT to dedupe rows. Now that whereIn supports SelectStatementInterface as a subquery, both load and count builders should be rewritten to use `WHERE target.pk IN (SELECT through.secondKey FROM through WHERE through.firstKey = ?)` instead. Cleaner semantics (no row multiplication, no DISTINCT needed), one fewer joined table on the wire
 class Hydrator implements HydratorInterface
 {
     public function __construct(
