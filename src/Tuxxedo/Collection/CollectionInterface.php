@@ -20,7 +20,6 @@ namespace Tuxxedo\Collection;
  * @extends \Iterator<TKey, TValue>
  * @extends \ArrayAccess<TKey, TValue>
  */
-// @todo Support mapping?
 interface CollectionInterface extends \Countable, \Iterator, \ArrayAccess
 {
     /**
