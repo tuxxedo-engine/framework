@@ -307,6 +307,229 @@ class PaginatorTest extends TestCase
         self::assertSame($paged, $paginator->paged);
     }
 
+    public function testPageRangeIsEmptyForEmptySource(): void
+    {
+        $paginator = new Paginator(
+            paged: new ArrayPaged(
+                items: [],
+            ),
+            page: 1,
+            perPage: 5,
+        );
+
+        self::assertSame(
+            [],
+            $paginator->pageRange(),
+        );
+    }
+
+    public function testPageRangeReturnsAllPagesWhenWindowExceedsTotal(): void
+    {
+        $paginator = new Paginator(
+            paged: new ArrayPaged(
+                items: $this->makeItems(count: 8),
+            ),
+            page: 1,
+            perPage: 3,
+        );
+
+        self::assertSame(
+            [
+                1,
+                2,
+                3,
+            ],
+            $paginator->pageRange(window: 10),
+        );
+    }
+
+    public function testPageRangeCentersWindowOnMiddlePage(): void
+    {
+        $paginator = new Paginator(
+            paged: new ArrayPaged(
+                items: $this->makeItems(count: 100),
+            ),
+            page: 18,
+            perPage: 5,
+        );
+
+        self::assertSame(
+            [
+                16,
+                17,
+                18,
+                19,
+                20,
+            ],
+            $paginator->pageRange(window: 5),
+        );
+    }
+
+    public function testPageRangeShiftsRightNearStart(): void
+    {
+        $paginator = new Paginator(
+            paged: new ArrayPaged(
+                items: $this->makeItems(count: 100),
+            ),
+            page: 1,
+            perPage: 5,
+        );
+
+        self::assertSame(
+            [
+                1,
+                2,
+                3,
+                4,
+                5,
+            ],
+            $paginator->pageRange(window: 5),
+        );
+    }
+
+    public function testPageRangeShiftsRightNearStartWithPageTwo(): void
+    {
+        $paginator = new Paginator(
+            paged: new ArrayPaged(
+                items: $this->makeItems(count: 100),
+            ),
+            page: 2,
+            perPage: 5,
+        );
+
+        self::assertSame(
+            [
+                1,
+                2,
+                3,
+                4,
+                5,
+            ],
+            $paginator->pageRange(window: 5),
+        );
+    }
+
+    public function testPageRangeShiftsLeftNearEnd(): void
+    {
+        $paginator = new Paginator(
+            paged: new ArrayPaged(
+                items: $this->makeItems(count: 100),
+            ),
+            page: 20,
+            perPage: 5,
+        );
+
+        self::assertSame(
+            [
+                16,
+                17,
+                18,
+                19,
+                20,
+            ],
+            $paginator->pageRange(window: 5),
+        );
+    }
+
+    public function testPageRangeShiftsLeftNearEndWithPenultimatePage(): void
+    {
+        $paginator = new Paginator(
+            paged: new ArrayPaged(
+                items: $this->makeItems(count: 100),
+            ),
+            page: 19,
+            perPage: 5,
+        );
+
+        self::assertSame(
+            [
+                16,
+                17,
+                18,
+                19,
+                20,
+            ],
+            $paginator->pageRange(window: 5),
+        );
+    }
+
+    public function testPageRangeWithDefaultWindow(): void
+    {
+        $paginator = new Paginator(
+            paged: new ArrayPaged(
+                items: $this->makeItems(count: 100),
+            ),
+            page: 10,
+            perPage: 5,
+        );
+
+        self::assertSame(
+            [
+                8,
+                9,
+                10,
+                11,
+                12,
+            ],
+            $paginator->pageRange(),
+        );
+    }
+
+    public function testPageRangeClampsZeroWindowToOne(): void
+    {
+        $paginator = new Paginator(
+            paged: new ArrayPaged(
+                items: $this->makeItems(count: 100),
+            ),
+            page: 10,
+            perPage: 5,
+        );
+
+        self::assertSame(
+            [
+                10,
+            ],
+            $paginator->pageRange(window: 0),
+        );
+    }
+
+    public function testPageRangeClampsNegativeWindowToOne(): void
+    {
+        $paginator = new Paginator(
+            paged: new ArrayPaged(
+                items: $this->makeItems(count: 100),
+            ),
+            page: 10,
+            perPage: 5,
+        );
+
+        self::assertSame(
+            [10],
+            $paginator->pageRange(window: -5),
+        );
+    }
+
+    public function testPageRangeWithEvenWindowBiasesLeft(): void
+    {
+        $paginator = new Paginator(
+            paged: new ArrayPaged(
+                items: $this->makeItems(count: 100),
+            ),
+            page: 18,
+            perPage: 5,
+        );
+
+        self::assertSame(
+            [
+                16,
+                17,
+                18,
+                19,
+            ],
+            $paginator->pageRange(window: 4),
+        );
+    }
+
     /**
      * @return list<TestItem>
      */
