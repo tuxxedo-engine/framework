@@ -140,9 +140,13 @@ class RouteDiscoverer implements RouteDiscovererInterface
                     }
 
                     if ($prefix !== null) {
-                        /** @var PrefixInterface */
-                        $prefix = $this->container->resolve($prefix);
-                        $path = $prefix->path . $path;
+                        if (\is_a($prefix, PrefixInterface::class, true)) {
+                            $prefix = $this->container->resolve($prefix);
+                            $path = $prefix->path . $path;
+                        } else {
+                            $prefix = new Prefix($prefix);
+                            $path = $prefix->path . $path;
+                        }
                     }
 
                     $effectiveRoute = ($indexAttribute?->name !== null && $route->name === null)

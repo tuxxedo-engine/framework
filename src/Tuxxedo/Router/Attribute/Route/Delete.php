@@ -22,7 +22,7 @@ use Tuxxedo\Router\RoutePriority;
 readonly class Delete extends Route
 {
     /**
-     * @param class-string<PrefixInterface>|null $prefix
+     * @param class-string<PrefixInterface>|string|null $prefix
      */
     public function __construct(
         ?string $path = null,

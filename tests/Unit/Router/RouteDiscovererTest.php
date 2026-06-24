@@ -725,6 +725,16 @@ class RouteDiscovererTest extends TestCase
         self::assertSame('/api/users', $routes[0]->path);
     }
 
+    public function testRoutePrefixOverridesPathStringForm(): void
+    {
+        $routes = $this->discoverAll(
+            $this->createDiscoverer('RouteStringPrefix'),
+        );
+
+        self::assertCount(1, $routes);
+        self::assertSame('/api/users', $routes[0]->path);
+    }
+
     public function testAbstractClassThrowsInStrictMode(): void
     {
         self::expectException(RouterException::class);

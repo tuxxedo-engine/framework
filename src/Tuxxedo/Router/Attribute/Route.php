@@ -27,7 +27,7 @@ readonly class Route
 
     /**
      * @param Method[]|string[] $method
-     * @param class-string<PrefixInterface>|null $prefix
+     * @param class-string<PrefixInterface>|string|null $prefix
      */
     public function __construct(
         public ?string $path = null,

@@ -15,12 +15,11 @@ namespace Tuxxedo\Router\Attribute;
 
 use Tuxxedo\Router\PrefixInterface;
 
-// @todo Consider a path-string union for $prefix, so the router can dynamically make a simple prefix without a class
 #[\Attribute(flags: \Attribute::TARGET_CLASS)]
 readonly class Controller
 {
     /**
-     * @param class-string<PrefixInterface>|null $prefix
+     * @param class-string<PrefixInterface>|string|null $prefix
      */
     public function __construct(
         public string $path,
