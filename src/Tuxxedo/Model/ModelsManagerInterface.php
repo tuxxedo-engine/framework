@@ -25,7 +25,6 @@ use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 use Tuxxedo\Model\Hydrator\HydratorInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 
-// @todo firstOrCreate / updateOrCreate / upsert - atomic find-or-create convenience methods. Naive findFirst->save composition has a race condition; proper implementation needs dialect-specific SQL (MySQL ON DUPLICATE KEY UPDATE, Postgres ON CONFLICT, SQLite INSERT OR REPLACE)
 #[DefaultImplementation(class: ModelsManager::class, lifecycle: Lifecycle::PERSISTENT)]
 interface ModelsManagerInterface
 {
