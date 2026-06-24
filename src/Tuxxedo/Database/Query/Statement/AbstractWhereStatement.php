@@ -201,15 +201,26 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     /**
-     * @param string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
+     * @param SelectStatementInterface|string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
      */
     public function where(
         string $column,
-        string|int|float|bool|null|array $value,
+        SelectStatementInterface|string|int|float|bool|null|array $value,
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static {
         if (\is_string($operator)) {
             $operator = ConditionOperator::from($operator);
+        }
+
+        if ($value instanceof SelectStatementInterface) {
+            $this->conditions[] = $this->buildSubqueryCondition(
+                column: $column,
+                operator: $operator,
+                conjunction: ConditionConjunction::AND,
+                values: $value,
+            );
+
+            return $this;
         }
 
         $parameterKey = 'where_' . \sizeof($this->conditions);
@@ -226,15 +237,26 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     /**
-     * @param string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
+     * @param SelectStatementInterface|string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
      */
     public function orWhere(
         string $column,
-        string|int|float|bool|null|array $value,
+        SelectStatementInterface|string|int|float|bool|null|array $value,
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static {
         if (\is_string($operator)) {
             $operator = ConditionOperator::from($operator);
+        }
+
+        if ($value instanceof SelectStatementInterface) {
+            $this->conditions[] = $this->buildSubqueryCondition(
+                column: $column,
+                operator: $operator,
+                conjunction: ConditionConjunction::OR,
+                values: $value,
+            );
+
+            return $this;
         }
 
         $parameterKey = 'where_' . \sizeof($this->conditions);

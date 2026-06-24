@@ -51,22 +51,22 @@ interface QueryableInterface extends PagedInterface, \IteratorAggregate, \Counta
     public function isMaterialized(): bool;
 
     /**
-     * @param string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
+     * @param SelectStatementInterface|string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
      */
     #[\NoDiscard]
     public function where(
         string $column,
-        string|int|float|bool|null|array $value,
+        SelectStatementInterface|string|int|float|bool|null|array $value,
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static;
 
     /**
-     * @param string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
+     * @param SelectStatementInterface|string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
      */
     #[\NoDiscard]
     public function orWhere(
         string $column,
-        string|int|float|bool|null|array $value,
+        SelectStatementInterface|string|int|float|bool|null|array $value,
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static;
 

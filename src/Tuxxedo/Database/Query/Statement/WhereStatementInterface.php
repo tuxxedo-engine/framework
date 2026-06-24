@@ -17,7 +17,6 @@ use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
 
 // @todo whereExists / whereNotExists / orWhereExists / orWhereNotExists — correlated-subquery existence checks. Common ORM-level need for "find parents where any child matches X"; today the only path is JOIN-and-DISTINCT or two queries
-// @todo Subquery-as-RHS for any comparison operator — broader form of the whereIn subquery TODO above: where('cnt', '>', SelectStatement) → WHERE cnt > (SELECT ...). Reuses the same subquery+parameter-merging infrastructure
 interface WhereStatementInterface extends StatementInterface
 {
     public function hasConstraints(): bool;
@@ -25,20 +24,20 @@ interface WhereStatementInterface extends StatementInterface
     public function hasJoinConstraints(): bool;
 
     /**
-     * @param string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
+     * @param SelectStatementInterface|string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
      */
     public function where(
         string $column,
-        string|int|float|bool|null|array $value,
+        SelectStatementInterface|string|int|float|bool|null|array $value,
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static;
 
     /**
-     * @param string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
+     * @param SelectStatementInterface|string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
      */
     public function orWhere(
         string $column,
-        string|int|float|bool|null|array $value,
+        SelectStatementInterface|string|int|float|bool|null|array $value,
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static;
 
