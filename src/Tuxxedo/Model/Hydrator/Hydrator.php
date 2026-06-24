@@ -32,7 +32,6 @@ use Tuxxedo\Model\ModelsManagerInterface;
 use Tuxxedo\Model\Relation;
 use Tuxxedo\Reflection\PropertyReflector;
 
-// @todo HasManyThrough loaders (setupHasManyThroughRelation + buildHasManyThroughEagerRelation) currently use JOIN + DISTINCT to dedupe rows. Now that whereIn supports SelectStatementInterface as a subquery, both load and count builders should be rewritten to use `WHERE target.pk IN (SELECT through.secondKey FROM through WHERE through.firstKey = ?)` instead. Cleaner semantics (no row multiplication, no DISTINCT needed), one fewer joined table on the wire
 class Hydrator implements HydratorInterface
 {
     public function __construct(
@@ -406,11 +405,13 @@ class Hydrator implements HydratorInterface
         $relationInstance = Relation::createFromBuilder(
             loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
                 $relatedClass,
-                static function (SelectStatementInterface $statement) use ($throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue, $criteria, $orderBy, $limit, $offset, $targetTable): void {
-                    $statement
-                        ->distinct()
-                        ->innerJoin($throughTable, $throughTable . '.' . $throughSecondLocalKey, $targetTable . '.' . $secondKey)
-                        ->where($throughTable . '.' . $firstKey, $sourceValue);
+                static function (SelectStatementInterface $statement) use ($manager, $throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue, $criteria, $orderBy, $limit, $offset): void {
+                    $statement->whereIn(
+                        column: $secondKey,
+                        values: $manager->connection->select($throughTable)
+                            ->select($throughSecondLocalKey)
+                            ->where($firstKey, $sourceValue),
+                    );
 
                     foreach ($criteria as $extra) {
                         $extra($statement);
@@ -427,12 +428,13 @@ class Hydrator implements HydratorInterface
             ),
             countBuilder: static fn (array $criteria): int => $manager->count(
                 $relatedClass,
-                static function (CountStatementInterface $statement) use ($throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue, $criteria, $targetTable, $targetPrimaryKey): void {
-                    $statement
-                        ->column($targetTable . '.' . $targetPrimaryKey)
-                        ->distinct()
-                        ->innerJoin($throughTable, $throughTable . '.' . $throughSecondLocalKey, $targetTable . '.' . $secondKey)
-                        ->where($throughTable . '.' . $firstKey, $sourceValue);
+                static function (CountStatementInterface $statement) use ($manager, $throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue, $criteria): void {
+                    $statement->whereIn(
+                        column: $secondKey,
+                        values: $manager->connection->select($throughTable)
+                            ->select($throughSecondLocalKey)
+                            ->where($firstKey, $sourceValue),
+                    );
 
                     foreach ($criteria as $extra) {
                         $extra($statement);
@@ -1264,9 +1266,12 @@ class Hydrator implements HydratorInterface
             prefetched: $prefetched,
             loaderBuilder: static function (array $criteria, array $orderBy, ?int $limit, ?int $offset) use ($manager, $targetTable, $throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue, $relatedClass): iterable {
                 $statement = $manager->connection->select($targetTable)
-                    ->distinct()
-                    ->innerJoin($throughTable, $throughTable . '.' . $throughSecondLocalKey, $targetTable . '.' . $secondKey)
-                    ->where($throughTable . '.' . $firstKey, $sourceValue);
+                    ->whereIn(
+                        column: $secondKey,
+                        values: $manager->connection->select($throughTable)
+                            ->select($throughSecondLocalKey)
+                            ->where($firstKey, $sourceValue),
+                    );
 
                 foreach ($criteria as $extra) {
                     $extra($statement);
@@ -1282,12 +1287,14 @@ class Hydrator implements HydratorInterface
 
                 return $statement->fetchAll($relatedClass, $manager->hydrator);
             },
-            countBuilder: static function (array $criteria) use ($manager, $targetTable, $targetPrimaryKey, $throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue): int {
+            countBuilder: static function (array $criteria) use ($manager, $targetTable, $throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue): int {
                 $statement = $manager->connection->count($targetTable)
-                    ->column($targetTable . '.' . $targetPrimaryKey)
-                    ->distinct()
-                    ->innerJoin($throughTable, $throughTable . '.' . $throughSecondLocalKey, $targetTable . '.' . $secondKey)
-                    ->where($throughTable . '.' . $firstKey, $sourceValue);
+                    ->whereIn(
+                        column: $secondKey,
+                        values: $manager->connection->select($throughTable)
+                            ->select($throughSecondLocalKey)
+                            ->where($firstKey, $sourceValue),
+                    );
 
                 foreach ($criteria as $extra) {
                     $extra($statement);
