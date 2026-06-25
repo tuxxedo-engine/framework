@@ -23,6 +23,7 @@ use Tuxxedo\Http\Request\Context\InputContextInterface;
 use Tuxxedo\Http\Request\Context\UploadedFilesContextInterface;
 use Tuxxedo\Router\DispatchableRouteInterface;
 
+// @todo Add helpers for is<Method>() style shorthands
 #[DefaultImplementation(class: Request::class)]
 interface RequestInterface
 {
