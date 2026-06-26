@@ -23,7 +23,6 @@ use Tuxxedo\Http\Request\Context\InputContextInterface;
 use Tuxxedo\Http\Request\Context\UploadedFilesContextInterface;
 use Tuxxedo\Router\DispatchableRouteInterface;
 
-// @todo Add helpers for is<Method>() style shorthands
 #[DefaultImplementation(class: Request::class)]
 interface RequestInterface
 {
@@ -166,4 +165,22 @@ interface RequestInterface
         ?string $etag = null,
         ?\DateTimeInterface $lastModified = null,
     ): bool;
+
+    public function isGet(): bool;
+
+    public function isHead(): bool;
+
+    public function isPost(): bool;
+
+    public function isPut(): bool;
+
+    public function isDelete(): bool;
+
+    public function isConnect(): bool;
+
+    public function isOptions(): bool;
+
+    public function isTrace(): bool;
+
+    public function isPatch(): bool;
 }

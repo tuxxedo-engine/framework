@@ -19,7 +19,6 @@ use App\Repositories\UserRepositoryInterface;
 use App\Subscribers\Events\UserCreatedEvent;
 use Tuxxedo\Event\EventsManagerInterface;
 use Tuxxedo\Http\Header;
-use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Middleware\OutputCapture;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
@@ -92,7 +91,7 @@ readonly class ModelController
     ): ViewInterface|ResponseInterface {
         $user = $this->modelsManager->fetchByIdentifier(User::class, $id);
 
-        if ($request->method === Method::POST) {
+        if ($request->isPost()) {
             (void) $this->modelsManager->delete($user);
 
             return Response::redirectRoute('model.list');
@@ -111,7 +110,7 @@ readonly class ModelController
         RequestInterface $request,
         EventsManagerInterface $eventsManager,
     ): ViewInterface|ResponseInterface {
-        if ($request->method === Method::POST) {
+        if ($request->isPost()) {
             $user = new User();
             $user->name = $request->post->string('name');
 
@@ -140,7 +139,7 @@ readonly class ModelController
     ): ViewInterface|ResponseInterface {
         $user = $this->modelsManager->fetchByIdentifier(User::class, $id);
 
-        if ($request->method === Method::POST) {
+        if ($request->isPost()) {
             $user->name = $request->post->string('name');
 
             (void) $this->modelsManager->save($user);

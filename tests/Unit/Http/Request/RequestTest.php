@@ -28,6 +28,7 @@ use Tuxxedo\Http\Request\Context\HeaderContextInterface;
 use Tuxxedo\Http\Request\Context\InputContextInterface;
 use Tuxxedo\Http\Request\Context\UploadedFilesContextInterface;
 use Tuxxedo\Http\Request\Request;
+use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Router\DispatchableRouteInterface;
 
 class RequestTest extends TestCase
@@ -40,6 +41,7 @@ class RequestTest extends TestCase
         ?InputContextInterface $post = null,
         ?UploadedFilesContextInterface $files = null,
         ?BodyContextInterface $body = null,
+        ?Method $method = null,
     ): Request {
         return new Request(
             route: $route,
@@ -49,6 +51,7 @@ class RequestTest extends TestCase
             post: $post ?? new StubInputContext(),
             files: $files ?? new StubUploadedFilesContext(),
             body: $body ?? new StubBodyContext(),
+            method: $method,
         );
     }
 
@@ -853,5 +856,71 @@ class RequestTest extends TestCase
 
         self::assertNotSame($request, $updated);
         self::assertSame('203.0.113.42', $updated->ipAddress);
+    }
+
+    /**
+     * @return \Generator<array{0: Method, 1: \Closure(RequestInterface): bool}>
+     */
+    public static function isMethodDataProvider(): \Generator
+    {
+        yield [
+            Method::GET,
+            static fn (RequestInterface $request): bool => $request->isGet(),
+        ];
+
+        yield [
+            Method::HEAD,
+            static fn (RequestInterface $request): bool => $request->isHead(),
+        ];
+
+        yield [
+            Method::POST,
+            static fn (RequestInterface $request): bool => $request->isPost(),
+        ];
+
+        yield [
+            Method::PUT,
+            static fn (RequestInterface $request): bool => $request->isPut(),
+        ];
+
+        yield [
+            Method::DELETE,
+            static fn (RequestInterface $request): bool => $request->isDelete(),
+        ];
+
+        yield [
+            Method::CONNECT,
+            static fn (RequestInterface $request): bool => $request->isConnect(),
+        ];
+
+        yield [
+            Method::OPTIONS,
+            static fn (RequestInterface $request): bool => $request->isOptions(),
+        ];
+
+        yield [
+            Method::TRACE,
+            static fn (RequestInterface $request): bool => $request->isTrace(),
+        ];
+
+        yield [
+            Method::PATCH,
+            static fn (RequestInterface $request): bool => $request->isPatch(),
+        ];
+    }
+
+    /**
+     * @param \Closure(RequestInterface): bool $testable
+     */
+    #[DataProvider('isMethodDataProvider')]
+    public function testIsMethods(
+        Method $method,
+        \Closure $testable,
+    ): void {
+        $request = $this->makeRequest(
+            method: $method,
+        );
+
+        self::assertTrue($testable($request));
     }
 }

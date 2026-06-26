@@ -464,4 +464,49 @@ class Request implements RequestInterface
 
         return $etag;
     }
+
+    public function isGet(): bool
+    {
+        return $this->method === Method::GET;
+    }
+
+    public function isHead(): bool
+    {
+        return $this->method === Method::HEAD;
+    }
+
+    public function isPost(): bool
+    {
+        return $this->method === Method::POST;
+    }
+
+    public function isPut(): bool
+    {
+        return $this->method === Method::PUT;
+    }
+
+    public function isDelete(): bool
+    {
+        return $this->method === Method::DELETE;
+    }
+
+    public function isConnect(): bool
+    {
+        return $this->method === Method::CONNECT;
+    }
+
+    public function isOptions(): bool
+    {
+        return $this->method === Method::OPTIONS;
+    }
+
+    public function isTrace(): bool
+    {
+        return $this->method === Method::TRACE;
+    }
+
+    public function isPatch(): bool
+    {
+        return $this->method === Method::PATCH;
+    }
 }
