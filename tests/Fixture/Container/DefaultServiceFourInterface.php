@@ -17,7 +17,7 @@ use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\DefaultLifecycle;
 use Tuxxedo\Container\Lifecycle;
 
-#[DefaultImplementation(class: DefaultServiceTwo::class, lifecycle: Lifecycle::PERSISTENT)]
+#[DefaultImplementation(class: DefaultServiceTwo::class, lifecycle: Lifecycle::SINGLETON)]
 #[DefaultLifecycle(Lifecycle::TRANSIENT)]
 interface DefaultServiceFourInterface
 {

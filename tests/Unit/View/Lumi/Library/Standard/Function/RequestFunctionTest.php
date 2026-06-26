@@ -37,7 +37,7 @@ class RequestFunctionTest extends TestCase
         );
 
         $function = new RequestFunction(
-            container: (new Container())->persistent(
+            container: (new Container())->singleton(
                 class: $request,
             ),
         );

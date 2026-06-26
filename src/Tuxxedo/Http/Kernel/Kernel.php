@@ -157,7 +157,7 @@ class Kernel implements KernelInterface
 
             $request = $request->withRoute($dispatchableRoute);
 
-            $this->container->persistent($request);
+            $this->container->singleton($request);
 
             $this->emitter->emit(
                 response: $this->pipeline(

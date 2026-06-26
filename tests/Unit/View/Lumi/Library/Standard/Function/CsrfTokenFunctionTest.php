@@ -25,7 +25,7 @@ class CsrfTokenFunctionTest extends TestCase
     private function makeContainerWithCsrfManager(
         ?string $storedToken = null,
     ): Container {
-        return (new Container())->persistent(
+        return (new Container())->singleton(
             class: new CsrfManager(
                 storage: new StubCsrfStorageHandler(
                     token: $storedToken,

@@ -223,7 +223,7 @@ class EventsManagerTest extends TestCase
     public function testSubscriberRegisteredByClassStringIsResolvedFromContainer(): void
     {
         $subscriber = new RecordingSubscriber();
-        $container = (new Container())->persistent(
+        $container = (new Container())->singleton(
             class: $subscriber,
         );
 
@@ -321,7 +321,7 @@ class EventsManagerTest extends TestCase
             value: 'injected',
         );
 
-        $container = (new Container())->persistent(
+        $container = (new Container())->singleton(
             class: $dependency,
         );
 

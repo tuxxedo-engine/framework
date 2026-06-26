@@ -26,7 +26,7 @@ class CsrfFieldFunctionTest extends TestCase
         ?string $storedToken = null,
         string $fieldName = '__csrf_token',
     ): Container {
-        return (new Container())->persistent(
+        return (new Container())->singleton(
             class: new CsrfManager(
                 storage: new StubCsrfStorageHandler(
                     token: $storedToken,

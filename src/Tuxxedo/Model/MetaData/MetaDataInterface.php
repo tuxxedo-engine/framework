@@ -17,7 +17,7 @@ use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Model\ModelException;
 
-#[DefaultImplementation(class: MetaData::class, lifecycle: Lifecycle::PERSISTENT)]
+#[DefaultImplementation(class: MetaData::class, lifecycle: Lifecycle::SINGLETON)]
 interface MetaDataInterface
 {
     /**

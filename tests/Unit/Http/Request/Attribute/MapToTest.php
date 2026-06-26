@@ -37,7 +37,7 @@ class MapToTest extends TestCase
     ): Container {
         $container = new Container();
 
-        $container->persistent(
+        $container->singleton(
             class: new Request(
                 headers: new StubHeaderContext(),
                 cookies: new StubInputContext(),

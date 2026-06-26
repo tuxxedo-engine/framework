@@ -228,7 +228,7 @@ class KernelTest extends TestCase
 
         $container = new Container();
 
-        $container->persistent(
+        $container->singleton(
             class: $this->makeRequest(),
         );
 

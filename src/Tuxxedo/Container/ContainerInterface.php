@@ -46,7 +46,7 @@ interface ContainerInterface
      *
      * @throws ContainerException
      */
-    public function persistent(
+    public function singleton(
         string|object $class,
         bool $bindInterfaces = true,
         bool $bindParent = false,
@@ -60,7 +60,7 @@ interface ContainerInterface
      *
      * @throws ContainerException
      */
-    public function persistentLazy(
+    public function singletonLazy(
         string $class,
         \Closure $initializer,
         bool $bindInterfaces = true,
@@ -145,7 +145,7 @@ interface ContainerInterface
     /**
      * @param class-string $className
      */
-    public function isPersistent(
+    public function isSingleton(
         string $className,
     ): bool;
 

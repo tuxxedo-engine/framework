@@ -18,7 +18,7 @@ use Tuxxedo\Container\DefaultLifecycle;
 use Tuxxedo\Container\Lifecycle;
 
 #[DefaultImplementation(class: DefaultServiceOne::class)]
-#[DefaultLifecycle(lifecycle: Lifecycle::PERSISTENT)]
+#[DefaultLifecycle(lifecycle: Lifecycle::SINGLETON)]
 interface DefaultServiceThreeInterface
 {
     public int $a {

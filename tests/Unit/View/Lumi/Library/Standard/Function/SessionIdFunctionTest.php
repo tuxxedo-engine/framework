@@ -26,7 +26,7 @@ class SessionIdFunctionTest extends TestCase
     private function makeContainerWithSession(
         StubSessionAdapter $adapter,
     ): Container {
-        return (new Container())->persistent(
+        return (new Container())->singleton(
             class: new Session(
                 adapter: $adapter,
             ),

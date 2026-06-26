@@ -351,16 +351,16 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
     {
         $container = $this->container ?? new Container();
 
-        $container->persistent($container);
-        $container->persistent($this->config ?? Config::class);
-        $container->persistent($this->emitter ?? ResponseEmitter::class);
-        $container->persistent($this->dispatcher ?? Dispatcher::class);
-        $container->persistent($this->eventsManager ?? EventsManager::class);
+        $container->singleton($container);
+        $container->singleton($this->config ?? Config::class);
+        $container->singleton($this->emitter ?? ResponseEmitter::class);
+        $container->singleton($this->dispatcher ?? Dispatcher::class);
+        $container->singleton($this->eventsManager ?? EventsManager::class);
 
         if ($this->url !== null) {
-            $container->persistent($this->url);
+            $container->singleton($this->url);
         } else {
-            $container->persistentLazy(
+            $container->singletonLazy(
                 UrlInterface::class,
                 fn (): UrlInterface => new Url(
                     base: $this->appUrl,
@@ -369,12 +369,12 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         }
 
         if ($this->router !== null) {
-            $container->persistent($this->router);
+            $container->singleton($this->router);
         } elseif (
             $this->defaultRouterDirectory !== null &&
             $this->defaultRouterBaseNamespace !== null
         ) {
-            $container->persistentLazy(
+            $container->singletonLazy(
                 RouterInterface::class,
                 fn (ContainerInterface $container): RouterInterface => DynamicRouter::createFromDirectory(
                     container: $container,
@@ -384,7 +384,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
                 ),
             );
         } else {
-            $container->persistentLazy(
+            $container->singletonLazy(
                 RouterInterface::class,
                 static fn (): RouterInterface => new StaticRouter(
                     routes: [],
@@ -395,14 +395,14 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         if ($this->lumiConfigurator !== null) {
             $lumiConfigurator = $this->lumiConfigurator;
 
-            $container->persistentLazy(
+            $container->singletonLazy(
                 ViewRenderInterface::class,
                 static fn (): ViewRenderInterface => $lumiConfigurator->build(),
             );
         } elseif ($this->useDefaultLumi) {
             $customizer = $this->lumiCustomizer;
 
-            $container->persistentLazy(
+            $container->singletonLazy(
                 ViewRenderInterface::class,
                 static function (ContainerInterface $container) use ($customizer): ViewRenderInterface {
                     $lumi = LumiConfigurator::fromConfig($container);
@@ -419,14 +419,14 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         if ($this->connectionManager !== null) {
             $connectionManager = $this->connectionManager;
 
-            $container->persistentLazy(
+            $container->singletonLazy(
                 ConnectionManagerInterface::class,
                 static fn (): ConnectionManagerInterface => $connectionManager,
             );
         } elseif ($this->useDefaultConnectionManager) {
             $customizer = $this->connectionManagerCustomizer;
 
-            $container->persistentLazy(
+            $container->singletonLazy(
                 ConnectionManagerInterface::class,
                 static function (ContainerInterface $container) use ($customizer): ConnectionManagerInterface {
                     $manager = ConnectionManager::createFromConfig(
@@ -443,7 +443,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
             );
         }
 
-        $container->persistentLazy(
+        $container->singletonLazy(
             KernelInterface::class,
             fn (ContainerInterface $container): KernelInterface => $container->resolve(
                 Kernel::class,

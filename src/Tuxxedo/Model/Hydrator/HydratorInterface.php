@@ -19,7 +19,7 @@ use Tuxxedo\Database\Hydrator\HydratorInterface as DatabaseHydratorInterface;
 use Tuxxedo\Model\ModelException;
 use Tuxxedo\Model\Relation;
 
-#[DefaultImplementation(class: Hydrator::class, lifecycle: Lifecycle::PERSISTENT)]
+#[DefaultImplementation(class: Hydrator::class, lifecycle: Lifecycle::SINGLETON)]
 interface HydratorInterface extends DatabaseHydratorInterface
 {
     /**

@@ -29,7 +29,7 @@ readonly class TaggedController
     public function __construct(
         ContainerInterface $container,
     ) {
-        $container->persistent(CustomLoggerInterface::class);
+        $container->singleton(CustomLoggerInterface::class);
     }
 
     /**

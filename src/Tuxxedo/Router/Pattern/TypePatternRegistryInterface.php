@@ -16,7 +16,7 @@ namespace Tuxxedo\Router\Pattern;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 
-#[DefaultImplementation(class: TypePatternRegistry::class, lifecycle: Lifecycle::PERSISTENT)]
+#[DefaultImplementation(class: TypePatternRegistry::class, lifecycle: Lifecycle::SINGLETON)]
 interface TypePatternRegistryInterface
 {
     public function has(string $name): bool;

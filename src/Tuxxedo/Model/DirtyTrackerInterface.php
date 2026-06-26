@@ -17,7 +17,7 @@ use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 
-#[DefaultImplementation(class: DirtyTracker::class, lifecycle: Lifecycle::PERSISTENT)]
+#[DefaultImplementation(class: DirtyTracker::class, lifecycle: Lifecycle::SINGLETON)]
 interface DirtyTrackerInterface
 {
     public function recordSnapshot(

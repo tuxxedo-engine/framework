@@ -16,7 +16,7 @@ namespace Tuxxedo\Mapper;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 
-#[DefaultImplementation(class: Mapper::class, lifecycle: Lifecycle::PERSISTENT)]
+#[DefaultImplementation(class: Mapper::class, lifecycle: Lifecycle::SINGLETON)]
 interface MapperInterface
 {
     /**

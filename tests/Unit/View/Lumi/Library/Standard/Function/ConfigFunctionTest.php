@@ -35,7 +35,7 @@ class ConfigFunctionTest extends TestCase
     ): ConfigFunction {
         $container = new Container();
 
-        $container->persistent(
+        $container->singleton(
             class: new Kernel(
                 container: $container,
                 config: new Config(

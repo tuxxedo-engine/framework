@@ -17,7 +17,7 @@ use App\Service\Logger\CustomLoggerInterface;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 
-#[DefaultImplementation(class: LazyService::class, lifecycle: Lifecycle::PERSISTENT)]
+#[DefaultImplementation(class: LazyService::class, lifecycle: Lifecycle::SINGLETON)]
 interface LazyServiceInterface
 {
     public CustomLoggerInterface $logger {

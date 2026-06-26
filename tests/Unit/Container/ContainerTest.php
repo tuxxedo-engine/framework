@@ -38,7 +38,6 @@ use Fixture\Container\LazyService;
 use Fixture\Container\NoTypeService;
 use Fixture\Container\OptionalService;
 use Fixture\Container\OptionalWithNullService;
-use Fixture\Container\PersistentService;
 use Fixture\Container\RebindA;
 use Fixture\Container\RebindB;
 use Fixture\Container\RebindC;
@@ -47,6 +46,7 @@ use Fixture\Container\ServiceInterface;
 use Fixture\Container\ServiceOne;
 use Fixture\Container\ServiceOneInterface;
 use Fixture\Container\ServiceTwo;
+use Fixture\Container\SingletonService;
 use Fixture\Container\StringService;
 use Fixture\Container\TaggedServiceInterface;
 use Fixture\Container\TaggedServiceOne;
@@ -90,18 +90,18 @@ class ContainerTest extends TestCase
         self::assertFalse($container->isAliasOf(ServiceOne::class, ServiceOneInterface::class));
     }
 
-    public function testPersistentServiceByResolve(): void
+    public function testSingletonServiceByResolve(): void
     {
         $container = new Container();
-        $container->persistent(PersistentService::class);
+        $container->singleton(SingletonService::class);
 
-        $service1 = $container->resolve(PersistentService::class);
+        $service1 = $container->resolve(SingletonService::class);
 
-        self::assertInstanceOf(PersistentService::class, $service1);
-        self::assertTrue($container->isBound(PersistentService::class));
-        self::assertTrue($container->isPersistent(PersistentService::class));
+        self::assertInstanceOf(SingletonService::class, $service1);
+        self::assertTrue($container->isBound(SingletonService::class));
+        self::assertTrue($container->isSingleton(SingletonService::class));
 
-        $service2 = $container->resolve(PersistentService::class);
+        $service2 = $container->resolve(SingletonService::class);
 
         self::assertSame($service1, $service2);
         self::assertSame(\spl_object_id($service1), \spl_object_id($service2));
@@ -226,16 +226,16 @@ class ContainerTest extends TestCase
         $container->resolve(LazyAttributeScalarService::class);
     }
 
-    public function testResolveWithLazyAndPersistent(): void
+    public function testResolveWithLazyAndSingleton(): void
     {
         $container = new Container();
 
-        $container->persistentLazy(
-            class: PersistentService::class,
-            initializer: static fn (): PersistentService => new PersistentService(),
+        $container->singletonLazy(
+            class: SingletonService::class,
+            initializer: static fn (): SingletonService => new SingletonService(),
         );
 
-        self::assertInstanceOf(PersistentService::class, $container->resolve(PersistentService::class));
+        self::assertInstanceOf(SingletonService::class, $container->resolve(SingletonService::class));
     }
 
     public function testResolveWithLazyWithNoAliasing(): void
@@ -243,26 +243,26 @@ class ContainerTest extends TestCase
         $container = new Container();
 
         $container->transientLazy(
-            class: PersistentService::class,
-            initializer: static fn (): PersistentService => new PersistentService(),
+            class: SingletonService::class,
+            initializer: static fn (): SingletonService => new SingletonService(),
             bindInterfaces: false,
         );
 
-        self::assertInstanceOf(PersistentService::class, $container->resolve(PersistentService::class));
+        self::assertInstanceOf(SingletonService::class, $container->resolve(SingletonService::class));
     }
 
     public function testRebindAffectsSubsequentResolution(): void
     {
         $container = new Container();
 
-        $container->persistent(RebindA::class);
+        $container->singleton(RebindA::class);
         self::assertTrue($container->isBound(RebindA::class));
 
         $first = $container->resolve(RebindC::class);
 
         self::assertInstanceOf(RebindA::class, $first->subService);
 
-        $container->persistent(RebindB::class);
+        $container->singleton(RebindB::class);
         self::assertTrue($container->isBound(RebindB::class));
 
         $second = $container->resolve(RebindC::class);
@@ -639,7 +639,7 @@ class ContainerTest extends TestCase
         $service2 = $container->resolve($interfaceName);
 
         self::assertSame($service1, $service2);
-        self::assertTrue($container->isPersistent($interfaceName));
+        self::assertTrue($container->isSingleton($interfaceName));
         self::assertFalse($container->isTransient($interfaceName));
     }
 
@@ -647,8 +647,8 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
-        $container->persistent(TaggedServiceOne::class);
-        $container->persistent(TaggedServiceTwo::class);
+        $container->singleton(TaggedServiceOne::class);
+        $container->singleton(TaggedServiceTwo::class);
 
         $services = $container->resolveTagged(TaggedServiceInterface::class);
 
@@ -661,8 +661,8 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
-        $container->persistent(TaggedServiceOne::class);
-        $container->persistent(TaggedServiceTwo::class);
+        $container->singleton(TaggedServiceOne::class);
+        $container->singleton(TaggedServiceTwo::class);
 
         $services = \array_filter(
             $container->resolveTagged(TaggedServiceInterface::class),
@@ -676,8 +676,8 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
-        $container->persistent(TaggedServiceOne::class);
-        $container->persistent(TaggedServiceTwo::class);
+        $container->singleton(TaggedServiceOne::class);
+        $container->singleton(TaggedServiceTwo::class);
 
         $services = $container->resolve(TaggedServicesArrayConsumer::class)->services;
 
@@ -697,8 +697,8 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
-        $container->persistent(TaggedServiceOne::class);
-        $container->persistent(TaggedServiceTwo::class);
+        $container->singleton(TaggedServiceOne::class);
+        $container->singleton(TaggedServiceTwo::class);
 
         $service = $container->resolve(GlueService::class);
 

@@ -16,7 +16,7 @@ namespace Tuxxedo\Event;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 
-#[DefaultImplementation(class: EventsManager::class, lifecycle: Lifecycle::PERSISTENT)]
+#[DefaultImplementation(class: EventsManager::class, lifecycle: Lifecycle::SINGLETON)]
 interface EventsManagerInterface
 {
     /**

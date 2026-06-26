@@ -16,7 +16,7 @@ namespace Fixture\Container;
 use Tuxxedo\Container\DefaultLifecycle;
 use Tuxxedo\Container\Lifecycle;
 
-#[DefaultLifecycle(lifecycle: Lifecycle::PERSISTENT)]
-class PersistentService
+#[DefaultLifecycle(lifecycle: Lifecycle::SINGLETON)]
+class SingletonService
 {
 }

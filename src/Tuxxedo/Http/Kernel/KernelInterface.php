@@ -23,7 +23,7 @@ use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Router\RouterInterface;
 
-#[DefaultImplementation(class: Kernel::class, lifecycle: Lifecycle::PERSISTENT)]
+#[DefaultImplementation(class: Kernel::class, lifecycle: Lifecycle::SINGLETON)]
 interface KernelInterface
 {
     public ConfigInterface $config {

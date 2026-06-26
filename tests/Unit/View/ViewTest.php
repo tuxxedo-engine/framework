@@ -68,7 +68,7 @@ class ViewTest extends TestCase
         );
 
         $container = new Container();
-        $container->persistent($renderer);
+        $container->singleton($renderer);
         $container->alias(ViewRenderInterface::class, $renderer::class);
 
         $view = new View(
@@ -86,7 +86,7 @@ class ViewTest extends TestCase
         $renderer = new RecordingViewRender();
 
         $container = new Container();
-        $container->persistent($renderer);
+        $container->singleton($renderer);
         $container->alias(ViewRenderInterface::class, $renderer::class);
 
         $view = new View(
@@ -104,7 +104,7 @@ class ViewTest extends TestCase
         $renderer = new RecordingViewRender();
 
         $container = new Container();
-        $container->persistent($renderer);
+        $container->singleton($renderer);
         $container->alias(ViewRenderInterface::class, $renderer::class);
 
         $view = new View(

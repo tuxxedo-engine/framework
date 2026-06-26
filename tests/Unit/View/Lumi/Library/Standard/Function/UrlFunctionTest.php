@@ -25,7 +25,7 @@ class UrlFunctionTest extends TestCase
         string $base,
     ): UrlFunction {
         return new UrlFunction(
-            container: (new Container())->persistent(
+            container: (new Container())->singleton(
                 class: new Url($base),
             ),
         );

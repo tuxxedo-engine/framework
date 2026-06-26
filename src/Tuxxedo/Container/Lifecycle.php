@@ -16,5 +16,5 @@ namespace Tuxxedo\Container;
 enum Lifecycle
 {
     case TRANSIENT;
-    case PERSISTENT;
+    case SINGLETON;
 }

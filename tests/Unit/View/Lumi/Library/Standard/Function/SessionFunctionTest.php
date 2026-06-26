@@ -30,7 +30,7 @@ class SessionFunctionTest extends TestCase
         array $data = [],
         SessionStartMode $startMode = SessionStartMode::LAZY,
     ): Container {
-        return (new Container())->persistent(
+        return (new Container())->singleton(
             class: new Session(
                 adapter: new StubSessionAdapter(
                     startMode: $startMode,

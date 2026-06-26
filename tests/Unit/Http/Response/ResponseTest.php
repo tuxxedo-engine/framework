@@ -670,7 +670,7 @@ class ResponseTest extends TestCase
         string $name,
         string $path = '/home',
     ): Container {
-        return (new Container())->persistent(
+        return (new Container())->singleton(
             class: new StaticRouter(
                 routes: [
                     new Route(

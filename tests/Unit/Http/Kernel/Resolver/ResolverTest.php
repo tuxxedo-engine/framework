@@ -42,7 +42,7 @@ class ResolverTest extends TestCase
     ): Container {
         $container = new Container();
 
-        $container->persistent(
+        $container->singleton(
             class: new Kernel(
                 container: $container,
                 config: $config,

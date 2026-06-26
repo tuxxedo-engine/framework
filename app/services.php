@@ -21,7 +21,7 @@ return static function (
     ContainerInterface $container,
     EventsManagerInterface $eventsManager,
 ): void {
-    $container->persistentLazy(
+    $container->singletonLazy(
         StreamLogger::class,
         static fn (): LoggerInterface => StreamLogger::createFromFile(
             file: __DIR__ . '/file.log',

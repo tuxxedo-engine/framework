@@ -16,7 +16,7 @@ namespace Tuxxedo\Database\Hydrator;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 
-#[DefaultImplementation(class: Hydrator::class, lifecycle: Lifecycle::PERSISTENT)]
+#[DefaultImplementation(class: Hydrator::class, lifecycle: Lifecycle::SINGLETON)]
 interface HydratorInterface
 {
     /**

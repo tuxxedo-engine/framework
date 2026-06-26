@@ -18,7 +18,7 @@ use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 
-#[DefaultImplementation(class: ConnectionManager::class, lifecycle: Lifecycle::PERSISTENT)]
+#[DefaultImplementation(class: ConnectionManager::class, lifecycle: Lifecycle::SINGLETON)]
 interface ConnectionManagerInterface
 {
     /**

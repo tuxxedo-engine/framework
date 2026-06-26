@@ -25,7 +25,7 @@ class Container implements ContainerInterface
     /**
      * @var array<class-string, object|null>
      */
-    private array $persistentDependencies = [];
+    private array $singletonDependencies = [];
 
     /**
      * @var array<class-string, class-string>
@@ -62,10 +62,10 @@ class Container implements ContainerInterface
         $this->registry[$className] = $lifecycle;
 
         if (
-            $lifecycle === Lifecycle::PERSISTENT &&
-            !isset($this->persistentDependencies[$className])
+            $lifecycle === Lifecycle::SINGLETON &&
+            !isset($this->singletonDependencies[$className])
         ) {
-            $this->persistentDependencies[$className] = \is_object($class) ? $class : null;
+            $this->singletonDependencies[$className] = \is_object($class) ? $class : null;
         }
 
         if ($bindInterfaces) {
@@ -143,14 +143,14 @@ class Container implements ContainerInterface
      *
      * @throws ContainerException
      */
-    public function persistent(
+    public function singleton(
         string|object $class,
         bool $bindInterfaces = true,
         bool $bindParent = false,
     ): static {
         return $this->register(
             class: $class,
-            lifecycle: Lifecycle::PERSISTENT,
+            lifecycle: Lifecycle::SINGLETON,
             bindInterfaces: $bindInterfaces,
             bindParent: $bindParent,
         );
@@ -164,7 +164,7 @@ class Container implements ContainerInterface
      *
      * @throws ContainerException
      */
-    public function persistentLazy(
+    public function singletonLazy(
         string $class,
         \Closure $initializer,
         bool $bindInterfaces = true,
@@ -173,7 +173,7 @@ class Container implements ContainerInterface
         return $this->register(
             class: $class,
             initializer: $initializer,
-            lifecycle: Lifecycle::PERSISTENT,
+            lifecycle: Lifecycle::SINGLETON,
             bindInterfaces: $bindInterfaces,
             bindParent: $bindParent,
         );
@@ -216,11 +216,11 @@ class Container implements ContainerInterface
         $lifecycle = $this->registry[$className] ?? Lifecycle::TRANSIENT;
 
         if (
-            $lifecycle === Lifecycle::PERSISTENT &&
-            isset($this->persistentDependencies[$className])
+            $lifecycle === Lifecycle::SINGLETON &&
+            isset($this->singletonDependencies[$className])
         ) {
             /** @var TClassName */
-            return $this->persistentDependencies[$className];
+            return $this->singletonDependencies[$className];
         }
 
         if (isset($this->resolving[$className])) {
@@ -239,10 +239,10 @@ class Container implements ContainerInterface
                 /** @var TClassName $instance */
                 $instance = ($this->initializers[$className])($this, $arguments);
 
-                if ($lifecycle === Lifecycle::PERSISTENT) {
+                if ($lifecycle === Lifecycle::SINGLETON) {
                     unset($this->initializers[$className]);
 
-                    $this->persistentDependencies[$className] = $instance;
+                    $this->singletonDependencies[$className] = $instance;
                 }
 
                 return $instance;
@@ -291,10 +291,10 @@ class Container implements ContainerInterface
             }
 
             if (
-                $lifecycle === Lifecycle::PERSISTENT &&
-                \array_key_exists($className, $this->persistentDependencies)
+                $lifecycle === Lifecycle::SINGLETON &&
+                \array_key_exists($className, $this->singletonDependencies)
             ) {
-                $this->persistentDependencies[$className] = $instance;
+                $this->singletonDependencies[$className] = $instance;
             }
 
             /** @var TClassName */
@@ -383,13 +383,13 @@ class Container implements ContainerInterface
             $this->registry[$className] === Lifecycle::TRANSIENT;
     }
 
-    public function isPersistent(
+    public function isSingleton(
         string $className,
     ): bool {
         $className = $this->resolveAlias($className);
 
         return \array_key_exists($className, $this->registry) &&
-            $this->registry[$className] === Lifecycle::PERSISTENT;
+            $this->registry[$className] === Lifecycle::SINGLETON;
     }
 
     public function isAlias(

@@ -16,7 +16,7 @@ namespace Tuxxedo\Security\Csrf;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 
-#[DefaultImplementation(class: CsrfManager::class, lifecycle: Lifecycle::PERSISTENT)]
+#[DefaultImplementation(class: CsrfManager::class, lifecycle: Lifecycle::SINGLETON)]
 interface CsrfManagerInterface
 {
     public string $fieldName {

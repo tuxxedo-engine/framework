@@ -33,7 +33,7 @@ class RouteFunctionTest extends TestCase
         string $name,
         string $path,
     ): Container {
-        return (new Container())->persistent(
+        return (new Container())->singleton(
             class: new StaticRouter(
                 routes: [
                     new Route(
@@ -69,7 +69,7 @@ class RouteFunctionTest extends TestCase
             ),
         );
 
-        return (new Container())->persistent(
+        return (new Container())->singleton(
             class: $request,
         );
     }

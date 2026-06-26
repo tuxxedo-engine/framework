@@ -18,7 +18,7 @@ use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Logger\AbstractLogger;
 use Tuxxedo\Logger\LogLevel;
 
-#[DefaultLifecycle(lifecycle: Lifecycle::PERSISTENT)]
+#[DefaultLifecycle(lifecycle: Lifecycle::SINGLETON)]
 class CustomLogger extends AbstractLogger implements CustomLoggerInterface
 {
     /**

@@ -25,7 +25,7 @@ class CsrfFieldNameFunctionTest extends TestCase
     private function makeContainerWithCsrfManager(
         string $fieldName = '__csrf_token',
     ): Container {
-        return (new Container())->persistent(
+        return (new Container())->singleton(
             class: new CsrfManager(
                 storage: new StubCsrfStorageHandler(),
                 fieldName: $fieldName,

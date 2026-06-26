@@ -18,7 +18,7 @@ use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Pagination\PagedInterface;
 
-#[DefaultImplementation(class: UserRepository::class, lifecycle: Lifecycle::PERSISTENT)]
+#[DefaultImplementation(class: UserRepository::class, lifecycle: Lifecycle::SINGLETON)]
 interface UserRepositoryInterface
 {
     /**

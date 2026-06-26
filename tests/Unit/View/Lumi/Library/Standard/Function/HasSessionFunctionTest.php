@@ -29,7 +29,7 @@ class HasSessionFunctionTest extends TestCase
     private function makeContainerWithSession(
         array $data = [],
     ): Container {
-        return (new Container())->persistent(
+        return (new Container())->singleton(
             class: new Session(
                 adapter: new StubSessionAdapter(
                     startMode: SessionStartMode::LAZY,

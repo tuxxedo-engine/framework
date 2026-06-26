@@ -117,7 +117,7 @@ class LumiConfiguratorTest extends TestCase
         $container = new Container();
         $config = new StubConfig($data);
 
-        $container->persistent($config);
+        $container->singleton($config);
         $container->alias(ConfigInterface::class, StubConfig::class);
 
         return $container;
