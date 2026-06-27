@@ -16,7 +16,6 @@ namespace Tuxxedo\Http\Response;
 use Tuxxedo\Http\CookieInterface;
 use Tuxxedo\Http\Response\Stream\StreamInterface;
 
-// @todo HeaderEmitter for responseCode, cookie and header?
 class ResponseEmitter implements ResponseEmitterInterface
 {
     public private(set) bool $sent = false;
