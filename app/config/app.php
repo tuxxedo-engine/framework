@@ -11,49 +11,13 @@
 
 declare(strict_types=1);
 
+use Tuxxedo\Application\Config\AppConfig;
+use Tuxxedo\Application\Config\AppConfigInterface;
 use Tuxxedo\Application\Profile;
 
-return [
-    /**
-     * app.name
-     *
-     * This can be used to identify an application's name
-     *
-     * @type string
-     * @required
-     */
-    'name' => 'Tuxxedo Engine Demo',
-
-    /**
-     * app.version
-     *
-     * This can be used to identify an application's version
-     *
-     * @type string
-     * @required
-     */
-    'version' => 'v0.1.0',
-
-    /**
-     * app.profile
-     *
-     * This can be used to identify the profile an application is in
-     *
-     * @type Profile
-     * @required
-     */
-    'profile' => Profile::DEBUG,
-
-    /**
-     * app.url
-     *
-     * This can be used to set a base url for where an application is
-     * deployed
-     *
-     * This should always contain a trailing slash
-     *
-     * @type string
-     * @required
-     */
-    'url' => 'http://localhost:13099/',
-];
+return static fn (): AppConfigInterface => new AppConfig(
+    name: 'Tuxxedo Engine Demo',
+    version: 'v0.1.0',
+    profile: Profile::DEBUG,
+    url: 'http://localhost:13099/',
+);

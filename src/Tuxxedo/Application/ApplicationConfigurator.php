@@ -13,9 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Application;
 
+use Tuxxedo\Application\Config\AppConfigInterface;
 use Tuxxedo\Config\Config;
+use Tuxxedo\Config\ConfigException;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\Container;
+use Tuxxedo\Container\ContainerException;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionManager;
 use Tuxxedo\Database\ConnectionManagerInterface;
@@ -80,12 +83,13 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
     ): static {
         $container ??= new Container();
         $config = Config::createFromFile($container, $file);
+        $appConfig = self::resolveAppConfig($container);
 
         return new static(
-            appName: $config->string('app.name'),
-            appVersion: $config->string('app.version'),
-            appProfile: $config->enum('app.profile', Profile::class),
-            appUrl: $config->string('app.url'),
+            appName: $appConfig->name,
+            appVersion: $appConfig->version,
+            appProfile: $appConfig->profile,
+            appUrl: $appConfig->url,
             container: $container,
             config: $config,
         );
@@ -97,15 +101,28 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
     ): static {
         $container ??= new Container();
         $config = Config::createFromDirectory($container, $directory);
+        $appConfig = self::resolveAppConfig($container);
 
         return new static(
-            appName: $config->string('app.name'),
-            appVersion: $config->string('app.version'),
-            appProfile: $config->enum('app.profile', Profile::class),
-            appUrl: $config->string('app.url'),
+            appName: $appConfig->name,
+            appVersion: $appConfig->version,
+            appProfile: $appConfig->profile,
+            appUrl: $appConfig->url,
             container: $container,
             config: $config,
         );
+    }
+
+    private static function resolveAppConfig(
+        ContainerInterface $container,
+    ): AppConfigInterface {
+        try {
+            return $container->resolve(AppConfigInterface::class);
+        } catch (ContainerException $exception) {
+            throw ConfigException::fromMissingAppConfig(
+                previous: $exception,
+            );
+        }
     }
 
     public function withAppName(

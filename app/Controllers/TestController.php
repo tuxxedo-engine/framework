@@ -16,6 +16,7 @@ namespace App\Controllers;
 use App\Middleware\LoggerMiddleware;
 use App\Service\Lazy\LazyServiceInterface;
 use App\Service\Logger\CustomLoggerInterface;
+use Tuxxedo\Application\Config\AppConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\Resolver\Glue;
 use Tuxxedo\Container\Resolver\Lazy;
@@ -302,8 +303,9 @@ readonly class TestController
                 return $container->resolve(KernelInterface::class)->appName;
             },
         )] string $appNameThree,
+        AppConfigInterface $appConfig,
     ): ResponseInterface {
-        \var_dump($appNameOne, $appNameTwo, $appNameThree);
+        \var_dump($appNameOne, $appNameTwo, $appNameThree, $appConfig->name);
 
         return Response::empty(
             headers: [

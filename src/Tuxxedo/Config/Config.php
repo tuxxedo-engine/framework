@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Tuxxedo\Config;
 
 use Tuxxedo\Collection\FileCollection;
+use Tuxxedo\Config\Attribute\ConfigKey;
+use Tuxxedo\Config\Attribute\ConfigNamespace;
 use Tuxxedo\Container\ContainerInterface;
 
 class Config implements ConfigInterface
@@ -26,53 +28,33 @@ class Config implements ConfigInterface
     ) {
     }
 
-    /**
-     * @return array<mixed>
-     */
-    protected static function isolatedInclude(
-        ContainerInterface $container,
-        string $configFileName,
-    ): array {
-        $config = (static function (string $configFileName): mixed {
-            return require $configFileName;
-        })($configFileName);
-
-        if ($config instanceof \Closure) {
-            /** @var \Closure(): mixed $config */
-            return (array) $container->call($config);
-        }
-
-        return (array) $config;
-    }
-
     public static function createFromDirectory(
         ContainerInterface $container,
         string $directory,
     ): static {
         $directives = [];
+        $typedConfigs = [];
+        $deferredArrayClosures = [];
 
         foreach (FileCollection::fromRecursiveFileType($directory, '.php') as $configFile) {
             $index = \str_replace($directory . '/', '', \substr($configFile, 0, -4));
 
-            if (\str_contains($index, '/')) {
-                $parts = \explode('/', $index);
-                $leaf = \array_pop($parts);
-                $ref = &$directives;
-
-                foreach ($parts as $part) {
-                    /** @var array<mixed> $ref */
-                    $ref[$part] ??= [];
-                    $ref = &$ref[$part];
-                }
-
-                /** @var array<mixed> $ref */
-                $ref[$leaf] = static::isolatedInclude($container, $configFile);
-
-                unset($ref);
-            } else {
-                $directives[$index] = static::isolatedInclude($container, $configFile);
-            }
+            static::processFileEntry(
+                container: $container,
+                file: $configFile,
+                derivedKey: $index,
+                directives: $directives,
+                typedConfigs: $typedConfigs,
+                deferredArrayClosures: $deferredArrayClosures,
+            );
         }
+
+        static::finalizeLoader(
+            container: $container,
+            directives: $directives,
+            typedConfigs: $typedConfigs,
+            deferredArrayClosures: $deferredArrayClosures,
+        );
 
         return new static(
             directives: $directives,
@@ -83,11 +65,248 @@ class Config implements ConfigInterface
         ContainerInterface $container,
         string $file,
     ): static {
-        return new static(
-            directives: [
-                ...static::isolatedInclude($container, $file),
-            ],
+        $directives = [];
+        $typedConfigs = [];
+        $deferredArrayClosures = [];
+
+        static::processFileEntry(
+            container: $container,
+            file: $file,
+            derivedKey: null,
+            directives: $directives,
+            typedConfigs: $typedConfigs,
+            deferredArrayClosures: $deferredArrayClosures,
         );
+
+        static::finalizeLoader(
+            container: $container,
+            directives: $directives,
+            typedConfigs: $typedConfigs,
+            deferredArrayClosures: $deferredArrayClosures,
+        );
+
+        return new static(
+            directives: $directives,
+        );
+    }
+
+    /**
+     * @param array<mixed> $directives
+     * @param array<class-string, string> $typedConfigs
+     * @param list<array{closure: \Closure, derivedKey: ?string}> $deferredArrayClosures
+     */
+    protected static function processFileEntry(
+        ContainerInterface $container,
+        string $file,
+        ?string $derivedKey,
+        array &$directives,
+        array &$typedConfigs,
+        array &$deferredArrayClosures,
+    ): void {
+        $entry = (static function (string $configFileName): mixed {
+            return require $configFileName;
+        })($file);
+
+        if ($entry instanceof \Closure) {
+            $returnType = self::reflectClosureReturnType($entry);
+
+            if ($returnType !== null) {
+                if (!\interface_exists($returnType) && !\class_exists($returnType)) {
+                    throw ConfigException::fromInvalidTypedConfigReturnType(
+                        file: $file,
+                        returnType: $returnType,
+                    );
+                }
+
+                if (\array_key_exists($returnType, $typedConfigs)) {
+                    throw ConfigException::fromDuplicateConfigNamespace(
+                        namespace: $returnType,
+                    );
+                }
+
+                $container->singletonLazy($returnType, $entry);
+
+                $typedConfigs[$returnType] = $file;
+
+                return;
+            }
+
+            $deferredArrayClosures[] = [
+                'closure' => $entry,
+                'derivedKey' => $derivedKey,
+            ];
+
+            return;
+        }
+
+        if (!\is_array($entry)) {
+            $entry = (array) $entry;
+        }
+
+        self::storeAtDerivedKey(
+            directives: $directives,
+            entry: $entry,
+            derivedKey: $derivedKey,
+        );
+    }
+
+    private static function reflectClosureReturnType(
+        \Closure $closure,
+    ): ?string {
+        $reflection = new \ReflectionFunction($closure);
+        $returnType = $reflection->getReturnType();
+
+        if (!$returnType instanceof \ReflectionNamedType) {
+            return null;
+        }
+
+        if ($returnType->isBuiltin()) {
+            return null;
+        }
+
+        return $returnType->getName();
+    }
+
+    /**
+     * @param array<mixed> $directives
+     * @param array<mixed> $entry
+     */
+    private static function storeAtDerivedKey(
+        array &$directives,
+        array $entry,
+        ?string $derivedKey,
+    ): void {
+        if ($derivedKey === null) {
+            foreach ($entry as $key => $value) {
+                $directives[$key] = $value;
+            }
+
+            return;
+        }
+
+        if (\str_contains($derivedKey, '/')) {
+            $parts = \explode('/', $derivedKey);
+            $leaf = \array_pop($parts);
+            $ref = &$directives;
+
+            foreach ($parts as $part) {
+                /** @var array<mixed> $ref */
+                $ref[$part] ??= [];
+                $ref = &$ref[$part];
+            }
+
+            /** @var array<mixed> $ref */
+            $ref[$leaf] = $entry;
+
+            unset($ref);
+
+            return;
+        }
+
+        $directives[$derivedKey] = $entry;
+    }
+
+    /**
+     * @param array<mixed> $directives
+     * @param array<class-string, string> $typedConfigs
+     * @param list<array{closure: \Closure, derivedKey: ?string}> $deferredArrayClosures
+     */
+    protected static function finalizeLoader(
+        ContainerInterface $container,
+        array &$directives,
+        array $typedConfigs,
+        array $deferredArrayClosures,
+    ): void {
+        foreach (\array_keys($typedConfigs) as $interfaceName) {
+            self::flattenTypedConfig(
+                container: $container,
+                directives: $directives,
+                interfaceName: $interfaceName,
+            );
+        }
+
+        foreach ($deferredArrayClosures as $deferred) {
+            /** @var \Closure(): mixed $closure */
+            $closure = $deferred['closure'];
+            $result = $container->call($closure);
+
+            if (!\is_array($result)) {
+                $result = (array) $result;
+            }
+
+            self::storeAtDerivedKey(
+                directives: $directives,
+                entry: $result,
+                derivedKey: $deferred['derivedKey'],
+            );
+        }
+    }
+
+    /**
+     * @param array<mixed> $directives
+     * @param class-string $interfaceName
+     */
+    private static function flattenTypedConfig(
+        ContainerInterface $container,
+        array &$directives,
+        string $interfaceName,
+    ): void {
+        $object = $container->resolve($interfaceName);
+        $class = new \ReflectionClass($object);
+        $namespace = self::readConfigNamespace($class);
+
+        if ($namespace === null) {
+            return;
+        }
+
+        if (\array_key_exists($namespace, $directives)) {
+            throw ConfigException::fromDuplicateConfigNamespace(
+                namespace: $namespace,
+            );
+        }
+
+        $values = [];
+
+        foreach ($class->getProperties(\ReflectionProperty::IS_PUBLIC) as $property) {
+            $leafKey = self::readConfigKey($property) ?? $property->getName();
+
+            if (\array_key_exists($leafKey, $values)) {
+                throw ConfigException::fromDuplicateConfigKey(
+                    path: $namespace . '.' . $leafKey,
+                );
+            }
+
+            $values[$leafKey] = $property->getValue($object);
+        }
+
+        $directives[$namespace] = $values;
+    }
+
+    /**
+     * @param \ReflectionClass<object> $class
+     */
+    private static function readConfigNamespace(
+        \ReflectionClass $class,
+    ): ?string {
+        $attributes = $class->getAttributes(ConfigNamespace::class);
+
+        if (\sizeof($attributes) === 0) {
+            return null;
+        }
+
+        return $attributes[0]->newInstance()->namespace;
+    }
+
+    private static function readConfigKey(
+        \ReflectionProperty $property,
+    ): ?string {
+        $attributes = $property->getAttributes(ConfigKey::class);
+
+        if (\sizeof($attributes) === 0) {
+            return null;
+        }
+
+        return $attributes[0]->newInstance()->name;
     }
 
     public function has(
