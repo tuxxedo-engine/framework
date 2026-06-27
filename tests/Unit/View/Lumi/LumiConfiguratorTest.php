@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Unit\View\Lumi;
 
-use Fixture\View\Lumi\LumiConfigurator\StubConfig;
 use Fixture\View\Lumi\LumiConfigurator\StubFilterProvider;
 use Fixture\View\Lumi\LumiConfigurator\StubFunctionProvider;
 use Fixture\View\Lumi\LumiConfigurator\StubLibraryDiscovery;
@@ -22,8 +21,8 @@ use Fixture\View\Lumi\RecordingOptimizer;
 use Fixture\View\Lumi\Runtime\RecordingFilter;
 use Fixture\View\Lumi\Runtime\RecordingFunction;
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\Container;
+use Tuxxedo\View\Lumi\Config\LumiConfig;
 use Tuxxedo\View\Lumi\Library\Directive\DefaultDirectives;
 use Tuxxedo\View\Lumi\Library\Function\PhpFunction;
 use Tuxxedo\View\Lumi\LumiConfigurator;
@@ -109,16 +108,23 @@ class LumiConfiguratorTest extends TestCase
         self::assertTrue($configurator->viewDisableErrorReporting);
     }
 
-    /**
-     * @param array<string, mixed> $data
-     */
-    private function makeContainerWithConfig(array $data): Container
-    {
+    private function makeContainerWithConfig(
+        string $directory = '',
+        string $cacheDirectory = '',
+        string $extension = '',
+        bool $alwaysCompile = false,
+        bool $disableErrorReporting = true,
+    ): Container {
         $container = new Container();
-        $config = new StubConfig($data);
+        $config = new LumiConfig(
+            directory: $directory,
+            cacheDirectory: $cacheDirectory,
+            extension: $extension,
+            alwaysCompile: $alwaysCompile,
+            disableErrorReporting: $disableErrorReporting,
+        );
 
         $container->singleton($config);
-        $container->alias(ConfigInterface::class, StubConfig::class);
 
         return $container;
     }
@@ -126,9 +132,7 @@ class LumiConfiguratorTest extends TestCase
     public function testFromConfigSetsViewDirectoryWhenKeyPresent(): void
     {
         $container = $this->makeContainerWithConfig(
-            [
-                'view.directory' => '/tmp/views',
-            ],
+            directory: '/tmp/views',
         );
 
         $configurator = LumiConfigurator::fromConfig($container);
@@ -139,9 +143,7 @@ class LumiConfiguratorTest extends TestCase
     public function testFromConfigSetsCacheDirectoryWhenKeyPresent(): void
     {
         $container = $this->makeContainerWithConfig(
-            [
-                'view.cacheDirectory' => '/tmp/cache',
-            ],
+            cacheDirectory: '/tmp/cache',
         );
 
         $configurator = LumiConfigurator::fromConfig($container);
@@ -152,9 +154,7 @@ class LumiConfiguratorTest extends TestCase
     public function testFromConfigSetsViewExtensionWhenKeyPresent(): void
     {
         $container = $this->makeContainerWithConfig(
-            [
-                'view.extension' => 'lumi',
-            ],
+            extension: 'lumi',
         );
 
         $configurator = LumiConfigurator::fromConfig($container);
@@ -165,9 +165,7 @@ class LumiConfiguratorTest extends TestCase
     public function testFromConfigEnablesAlwaysCompileWhenTrue(): void
     {
         $container = $this->makeContainerWithConfig(
-            [
-                'view.alwaysCompile' => true,
-            ],
+            alwaysCompile: true,
         );
 
         $configurator = LumiConfigurator::fromConfig($container);
@@ -178,9 +176,7 @@ class LumiConfiguratorTest extends TestCase
     public function testFromConfigDisablesAlwaysCompileWhenFalse(): void
     {
         $container = $this->makeContainerWithConfig(
-            [
-                'view.alwaysCompile' => false,
-            ],
+            alwaysCompile: false,
         );
 
         $configurator = LumiConfigurator::fromConfig($container);
@@ -191,9 +187,7 @@ class LumiConfiguratorTest extends TestCase
     public function testFromConfigDisablesErrorReportingWhenTrue(): void
     {
         $container = $this->makeContainerWithConfig(
-            [
-                'view.disableErrorReporting' => true,
-            ],
+            disableErrorReporting: true,
         );
 
         $configurator = LumiConfigurator::fromConfig($container);
@@ -204,9 +198,7 @@ class LumiConfiguratorTest extends TestCase
     public function testFromConfigEnablesErrorReportingWhenFalse(): void
     {
         $container = $this->makeContainerWithConfig(
-            [
-                'view.disableErrorReporting' => false,
-            ],
+            disableErrorReporting: false,
         );
 
         $configurator = LumiConfigurator::fromConfig($container);
@@ -216,7 +208,7 @@ class LumiConfiguratorTest extends TestCase
 
     public function testFromConfigSkipsKeysNotPresent(): void
     {
-        $container = $this->makeContainerWithConfig([]);
+        $container = $this->makeContainerWithConfig();
         $configurator = LumiConfigurator::fromConfig($container);
 
         self::assertSame('', $configurator->viewDirectory);
@@ -225,25 +217,9 @@ class LumiConfiguratorTest extends TestCase
         self::assertFalse($configurator->viewAlwaysCompile);
     }
 
-    public function testFromConfigRespectsCustomNamespace(): void
-    {
-        $container = $this->makeContainerWithConfig(
-            [
-                'lumi.directory' => '/custom/views',
-            ],
-        );
-
-        $configurator = LumiConfigurator::fromConfig(
-            container: $container,
-            namespace: 'lumi',
-        );
-
-        self::assertSame('/custom/views', $configurator->viewDirectory);
-    }
-
     public function testFromConfigReturnsStaticInstance(): void
     {
-        $container = $this->makeContainerWithConfig([]);
+        $container = $this->makeContainerWithConfig();
         $configurator = LumiConfigurator::fromConfig($container);
 
         self::assertInstanceOf(LumiConfigurator::class, $configurator);

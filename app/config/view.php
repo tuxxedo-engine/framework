@@ -11,49 +11,13 @@
 
 declare(strict_types=1);
 
-return [
-    /**
-     * view.directory
-     *
-     * Directory path for Tuxxedo Engine Lumi views
-     *
-     * @type string
-     */
-    'directory' => __DIR__ . '/../views',
+use Tuxxedo\View\Lumi\Config\LumiConfig;
+use Tuxxedo\View\Lumi\Config\LumiConfigInterface;
 
-    /**
-     * view.cacheDirectory
-     *
-     * Cache directory path for compiled Tuxxedo Engine Lumi views
-     *
-     * @type string
-     */
-    'cacheDirectory' => __DIR__ . '/../views/cache',
-
-    /**
-     * view.extension
-     *
-     * File extension for Tuxxedo Engine Lumi views
-     *
-     * @type string
-     */
-    'extension' => '.lumi',
-
-    /**
-     * view.alwaysCompile
-     *
-     * Whether to always compile Tuxxedo Engine Lumi views
-     *
-     * @type bool
-     */
-    'alwaysCompile' => true,
-
-    /**
-     * view.disableErrorReporting
-     *
-     * Whether to disable PHP's error reporting while rendering Tuxxedo Engine Lumi views
-     *
-     * @type bool
-     */
-    'disableErrorReporting' => true,
-];
+return static fn (): LumiConfigInterface => new LumiConfig(
+    directory: __DIR__ . '/../views',
+    cacheDirectory: __DIR__ . '/../views/cache',
+    extension: '.lumi',
+    alwaysCompile: true,
+    disableErrorReporting: true,
+);

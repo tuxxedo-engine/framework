@@ -11,11 +11,13 @@
 
 declare(strict_types=1);
 
+use Tuxxedo\Application\Config\AppConfig;
+use Tuxxedo\Application\Config\AppConfigInterface;
 use Tuxxedo\Application\Profile;
 
-return [
-    'name' => 'TuxxedoDirApp',
-    'version' => '4.5.6',
-    'profile' => Profile::DEBUG,
-    'url' => 'https://example.dir/',
-];
+return static fn (): AppConfigInterface => new AppConfig(
+    name: 'TuxxedoDirApp',
+    version: '4.5.6',
+    profile: Profile::DEBUG,
+    url: 'https://example.dir/',
+);

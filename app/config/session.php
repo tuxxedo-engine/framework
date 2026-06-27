@@ -12,59 +12,14 @@
 declare(strict_types=1);
 
 use Tuxxedo\Http\SameSite;
+use Tuxxedo\Session\Config\SessionConfig;
+use Tuxxedo\Session\Config\SessionConfigInterface;
 
-return [
-    /**
-     * session.lifetime
-     *
-     * Lifetime of a session in seconds (Required by PhpSessionAdapter)
-     *
-     * @type int
-     */
-    'lifetime' => 3600,
-
-    /**
-     * session.path
-     *
-     * URI path for session availability for session cookies (Required by PhpSessionAdapter)
-     *
-     * @type string
-     */
-    'path' => '/',
-
-    /**
-     * session.domain
-     *
-     * Domain where the above URI path exists for session availability for session cookies (Required by PhpSessionAdapter)
-     *
-     * @type string
-     */
-    'domain' => '',
-
-    /**
-     * session.httpOnly
-     *
-     * HttpOnly security property for session cookies (Required by PhpSessionAdapter)
-     *
-     * @type bool
-     */
-    'httpOnly' => true,
-
-    /**
-     * session.secure
-     *
-     * Whether HTTPS is required for the session (Required by PhpSessionAdapter)
-     *
-     * @type bool
-     */
-    'secure' => false,
-
-    /**
-     * session.sameSite
-     *
-     * SameSite security property for session cookies (Required by PhpSessionAdapter)
-     *
-     * @type SameSite
-     */
-    'sameSite' => SameSite::STRICT,
-];
+return static fn (): SessionConfigInterface => new SessionConfig(
+    lifetime: 3600,
+    path: '/',
+    domain: '',
+    httpOnly: true,
+    secure: false,
+    sameSite: SameSite::STRICT,
+);

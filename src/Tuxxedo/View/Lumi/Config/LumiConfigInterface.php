@@ -11,28 +11,31 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Application\Config;
+namespace Tuxxedo\View\Lumi\Config;
 
-use Tuxxedo\Application\Profile;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 
-#[DefaultImplementation(class: AppConfig::class, lifecycle: Lifecycle::SINGLETON)]
-interface AppConfigInterface
+#[DefaultImplementation(class: LumiConfig::class, lifecycle: Lifecycle::SINGLETON)]
+interface LumiConfigInterface
 {
-    public string $name {
+    public string $directory {
         get;
     }
 
-    public string $version {
+    public string $cacheDirectory {
         get;
     }
 
-    public Profile $profile {
+    public string $extension {
         get;
     }
 
-    public string $url {
+    public bool $alwaysCompile {
+        get;
+    }
+
+    public bool $disableErrorReporting {
         get;
     }
 }

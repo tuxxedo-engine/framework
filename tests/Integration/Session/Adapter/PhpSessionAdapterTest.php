@@ -16,9 +16,10 @@ namespace Integration\Session\Adapter;
 use PHPUnit\Framework\Attributes\PreserveGlobalState;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Config\Config;
 use Tuxxedo\Http\SameSite;
 use Tuxxedo\Session\Adapter\PhpSessionAdapter;
+use Tuxxedo\Session\Config\SessionConfig;
+use Tuxxedo\Session\Config\SessionConfigInterface;
 use Tuxxedo\Session\SessionException;
 use Tuxxedo\Session\SessionStartMode;
 
@@ -26,19 +27,15 @@ use Tuxxedo\Session\SessionStartMode;
 #[PreserveGlobalState(false)]
 class PhpSessionAdapterTest extends TestCase
 {
-    private function makeConfig(): Config
+    private function makeConfig(): SessionConfigInterface
     {
-        return new Config(
-            directives: [
-                'session' => [
-                    'lifetime' => 3600,
-                    'path' => '/',
-                    'domain' => '',
-                    'httpOnly' => true,
-                    'secure' => false,
-                    'sameSite' => SameSite::STRICT,
-                ],
-            ],
+        return new SessionConfig(
+            lifetime: 3600,
+            path: '/',
+            domain: '',
+            httpOnly: true,
+            secure: false,
+            sameSite: SameSite::STRICT,
         );
     }
 

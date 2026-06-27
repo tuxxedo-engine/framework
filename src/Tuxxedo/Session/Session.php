@@ -15,14 +15,14 @@ namespace Tuxxedo\Session;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DefaultInitializer;
-use Tuxxedo\Http\Kernel\KernelInterface;
+use Tuxxedo\Session\Config\SessionConfigInterface;
 
 #[DefaultInitializer(
     static function (ContainerInterface $container): SessionInterface {
         return new Session(
             adapter: Adapter\PhpSessionAdapter::createFromConfig(
                 startMode: SessionStartMode::LAZY,
-                config: $container->resolve(KernelInterface::class)->config,
+                config: $container->resolve(SessionConfigInterface::class),
             ),
         );
     },

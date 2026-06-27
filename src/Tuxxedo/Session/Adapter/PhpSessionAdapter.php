@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Session\Adapter;
 
-use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Http\SameSite;
+use Tuxxedo\Session\Config\SessionConfigInterface;
 use Tuxxedo\Session\SessionAdapterInterface;
 use Tuxxedo\Session\SessionException;
 use Tuxxedo\Session\SessionStartMode;
@@ -39,16 +39,16 @@ class PhpSessionAdapter implements SessionAdapterInterface
 
     public static function createFromConfig(
         SessionStartMode $startMode,
-        ConfigInterface $config,
+        SessionConfigInterface $config,
     ): static {
         return new static(
             startMode: $startMode,
-            lifetime: $config->int('session.lifetime'),
-            path: $config->string('session.path'),
-            domain: $config->string('session.domain'),
-            httpOnly: $config->bool('session.httpOnly'),
-            secure: $config->bool('session.secure'),
-            sameSite: $config->enum('session.sameSite', SameSite::class),
+            lifetime: $config->lifetime,
+            path: $config->path,
+            domain: $config->domain,
+            httpOnly: $config->httpOnly,
+            secure: $config->secure,
+            sameSite: $config->sameSite,
         );
     }
 

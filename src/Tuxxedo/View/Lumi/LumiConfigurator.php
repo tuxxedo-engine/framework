@@ -13,12 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi;
 
-use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Reflection\MethodReflector;
 use Tuxxedo\View\Lumi\Compiler\Compiler;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Compiler\CompilerState;
+use Tuxxedo\View\Lumi\Config\LumiConfigInterface;
 use Tuxxedo\View\Lumi\Highlight\HighlighterInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
 use Tuxxedo\View\Lumi\Library\Attribute\LumiFilter;
@@ -92,43 +92,38 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
     public static function fromConfig(
         ContainerInterface $container,
-        string $namespace = 'view',
     ): static {
         $configurator = new static($container);
-        $config = $container->resolve(ConfigInterface::class);
+        $config = $container->resolve(LumiConfigInterface::class);
 
-        if ($config->has($namespace . '.directory')) {
+        if ($config->directory !== '') {
             $configurator->viewDirectory(
-                directory: $config->string($namespace . '.directory'),
+                directory: $config->directory,
             );
         }
 
-        if ($config->has($namespace . '.cacheDirectory')) {
+        if ($config->cacheDirectory !== '') {
             $configurator->cacheDirectory(
-                directory: $config->string($namespace . '.cacheDirectory'),
+                directory: $config->cacheDirectory,
             );
         }
 
-        if ($config->has($namespace . '.extension')) {
+        if ($config->extension !== '') {
             $configurator->viewExtension(
-                extension: $config->string($namespace . '.extension'),
+                extension: $config->extension,
             );
         }
 
-        if ($config->has($namespace . '.alwaysCompile')) {
-            if ($config->bool($namespace . '.alwaysCompile')) {
-                $configurator->enableAlwaysCompile();
-            } else {
-                $configurator->disableAlwaysCompile();
-            }
+        if ($config->alwaysCompile) {
+            $configurator->enableAlwaysCompile();
+        } else {
+            $configurator->disableAlwaysCompile();
         }
 
-        if ($config->has($namespace . '.disableErrorReporting')) {
-            if ($config->bool($namespace . '.disableErrorReporting')) {
-                $configurator->disableErrorReporting();
-            } else {
-                $configurator->enableErrorReporting();
-            }
+        if ($config->disableErrorReporting) {
+            $configurator->disableErrorReporting();
+        } else {
+            $configurator->enableErrorReporting();
         }
 
         return $configurator;
