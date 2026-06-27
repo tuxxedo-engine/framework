@@ -25,7 +25,6 @@ use Tuxxedo\Http\Response\Stream\Stream;
 use Tuxxedo\Http\Response\Stream\StreamInterface;
 use Tuxxedo\Router\RouterInterface;
 
-// @todo Static file response factory?
 class Response implements ResponseInterface, ResponsableInterface
 {
     /**
