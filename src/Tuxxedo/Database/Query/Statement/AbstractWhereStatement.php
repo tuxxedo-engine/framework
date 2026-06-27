@@ -23,6 +23,8 @@ use Tuxxedo\Database\Query\Statement\Condition\Condition;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionConjunction;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
+use Tuxxedo\Database\Query\Statement\Condition\ExistsCondition;
+use Tuxxedo\Database\Query\Statement\Condition\ExistsConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\GroupCondition;
 use Tuxxedo\Database\Query\Statement\Condition\GroupConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\RawCondition;
@@ -38,7 +40,7 @@ use Tuxxedo\Database\SqlException;
 abstract class AbstractWhereStatement extends AbstractStatement implements WhereStatementInterface
 {
     /**
-     * @var list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|GroupCondition>
+     * @var list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|ExistsCondition|GroupCondition>
      */
     protected array $conditions = [];
 
@@ -91,7 +93,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     /**
-     * @param list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|GroupCondition> $conditions
+     * @param list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|ExistsCondition|GroupCondition> $conditions
      */
     private function renderConditions(
         array $conditions,
@@ -111,7 +113,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     private function renderConditionBody(
-        ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|GroupCondition $condition,
+        ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|ExistsCondition|GroupCondition $condition,
         DialectInterface $dialect,
     ): string {
         if ($condition instanceof BetweenConditionInterface) {
@@ -148,6 +150,16 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
                     $dialect,
                 ),
             );
+        }
+
+        if ($condition instanceof ExistsConditionInterface) {
+            return ($condition->negated ? ' NOT EXISTS (' : ' EXISTS (') .
+                $this->renderSubquery(
+                    $condition->subquery,
+                    $this->subqueryCounter++,
+                    $dialect,
+                ) .
+                ')';
         }
 
         if ($condition instanceof GroupConditionInterface) {
@@ -209,7 +221,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static {
         if (\is_string($operator)) {
-            $operator = ConditionOperator::from($operator);
+            $operator = ConditionOperator::fromInput($operator);
         }
 
         if ($value instanceof SelectStatementInterface) {
@@ -245,7 +257,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static {
         if (\is_string($operator)) {
-            $operator = ConditionOperator::from($operator);
+            $operator = ConditionOperator::fromInput($operator);
         }
 
         if ($value instanceof SelectStatementInterface) {
@@ -495,7 +507,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         JoinOperator|string $operator = JoinOperator::EQUALS,
     ): static {
         if (\is_string($operator)) {
-            $operator = JoinOperator::from($operator);
+            $operator = JoinOperator::fromInput($operator);
         }
 
         $this->joins[] = new Join(
@@ -516,7 +528,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         JoinOperator|string $operator = JoinOperator::EQUALS,
     ): static {
         if (\is_string($operator)) {
-            $operator = JoinOperator::from($operator);
+            $operator = JoinOperator::fromInput($operator);
         }
 
         $this->joins[] = new Join(
@@ -537,7 +549,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         JoinOperator|string $operator = JoinOperator::EQUALS,
     ): static {
         if (\is_string($operator)) {
-            $operator = JoinOperator::from($operator);
+            $operator = JoinOperator::fromInput($operator);
         }
 
         $this->joins[] = new Join(
@@ -719,7 +731,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static {
         if (\is_string($operator)) {
-            $operator = ConditionOperator::from($operator);
+            $operator = ConditionOperator::fromInput($operator);
         }
 
         $this->conditions[] = new ColumnCondition(
@@ -738,7 +750,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static {
         if (\is_string($operator)) {
-            $operator = ConditionOperator::from($operator);
+            $operator = ConditionOperator::fromInput($operator);
         }
 
         $this->conditions[] = new ColumnCondition(
@@ -778,6 +790,75 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         );
 
         return $this;
+    }
+
+    public function whereExists(
+        SelectStatementInterface $subquery,
+    ): static {
+        $this->conditions[] = $this->buildExists(
+            subquery: $subquery,
+            conjunction: ConditionConjunction::AND,
+            negated: false,
+        );
+
+        return $this;
+    }
+
+    public function whereNotExists(
+        SelectStatementInterface $subquery,
+    ): static {
+        $this->conditions[] = $this->buildExists(
+            subquery: $subquery,
+            conjunction: ConditionConjunction::AND,
+            negated: true,
+        );
+
+        return $this;
+    }
+
+    public function orWhereExists(
+        SelectStatementInterface $subquery,
+    ): static {
+        $this->conditions[] = $this->buildExists(
+            subquery: $subquery,
+            conjunction: ConditionConjunction::OR,
+            negated: false,
+        );
+
+        return $this;
+    }
+
+    public function orWhereNotExists(
+        SelectStatementInterface $subquery,
+    ): static {
+        $this->conditions[] = $this->buildExists(
+            subquery: $subquery,
+            conjunction: ConditionConjunction::OR,
+            negated: true,
+        );
+
+        return $this;
+    }
+
+    /**
+     * @throws SqlException
+     */
+    private function buildExists(
+        SelectStatementInterface $subquery,
+        ConditionConjunction $conjunction,
+        bool $negated,
+    ): ExistsCondition {
+        if (!$subquery instanceof AbstractStatement) {
+            throw SqlException::fromSubqueryStatementMustExtendAbstractStatement(
+                actualType: \get_debug_type($subquery),
+            );
+        }
+
+        return new ExistsCondition(
+            conjunction: $conjunction,
+            negated: $negated,
+            subquery: $subquery,
+        );
     }
 
     /**

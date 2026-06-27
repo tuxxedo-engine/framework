@@ -216,7 +216,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static {
         if (\is_string($operator)) {
-            $operator = ConditionOperator::from($operator);
+            $operator = ConditionOperator::fromInput($operator);
         }
 
         $parameterKey = 'having_' . \sizeof($this->havingConditions);
@@ -238,7 +238,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static {
         if (\is_string($operator)) {
-            $operator = ConditionOperator::from($operator);
+            $operator = ConditionOperator::fromInput($operator);
         }
 
         $parameterKey = 'having_' . \sizeof($this->havingConditions);

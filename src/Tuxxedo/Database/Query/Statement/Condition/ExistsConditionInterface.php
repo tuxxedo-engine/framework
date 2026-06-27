@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Statement\Condition;
 
-interface GroupConditionInterface
+use Tuxxedo\Database\Query\Statement\AbstractStatement;
+
+interface ExistsConditionInterface
 {
     public ConditionConjunction $conjunction {
         get;
@@ -23,10 +25,7 @@ interface GroupConditionInterface
         get;
     }
 
-    /**
-     * @var list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|ExistsCondition|GroupCondition>
-     */
-    public array $conditions {
+    public AbstractStatement $subquery {
         get;
     }
 }

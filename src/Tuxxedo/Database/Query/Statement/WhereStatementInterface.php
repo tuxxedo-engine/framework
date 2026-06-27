@@ -16,8 +16,6 @@ namespace Tuxxedo\Database\Query\Statement;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
 
-// @todo Do a pass and check Enum operators, when their string form is used, the code should replace spaces with underscores for DX
-// @todo whereExists / whereNotExists / orWhereExists / orWhereNotExists — correlated-subquery existence checks. Common ORM-level need for "find parents where any child matches X"; today the only path is JOIN-and-DISTINCT or two queries
 interface WhereStatementInterface extends StatementInterface
 {
     public function hasConstraints(): bool;
@@ -177,6 +175,22 @@ interface WhereStatementInterface extends StatementInterface
     public function orWhereNotLike(
         string $column,
         string $pattern,
+    ): static;
+
+    public function whereExists(
+        SelectStatementInterface $subquery,
+    ): static;
+
+    public function whereNotExists(
+        SelectStatementInterface $subquery,
+    ): static;
+
+    public function orWhereExists(
+        SelectStatementInterface $subquery,
+    ): static;
+
+    public function orWhereNotExists(
+        SelectStatementInterface $subquery,
     ): static;
 
     /**

@@ -13,15 +13,14 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Statement\Condition;
 
-readonly class GroupCondition implements GroupConditionInterface
+use Tuxxedo\Database\Query\Statement\AbstractStatement;
+
+readonly class ExistsCondition implements ExistsConditionInterface
 {
-    /**
-     * @param list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|ExistsCondition|GroupCondition> $conditions
-     */
     public function __construct(
         public ConditionConjunction $conjunction,
         public bool $negated,
-        public array $conditions,
+        public AbstractStatement $subquery,
     ) {
     }
 }

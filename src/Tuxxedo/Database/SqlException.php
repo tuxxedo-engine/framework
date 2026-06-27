@@ -82,4 +82,17 @@ class SqlException extends \Exception
             ),
         );
     }
+
+    public static function fromUnknownOperator(
+        string $value,
+        string $enum,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unknown operator `%s` for enum `%s`',
+                $value,
+                $enum,
+            ),
+        );
+    }
 }

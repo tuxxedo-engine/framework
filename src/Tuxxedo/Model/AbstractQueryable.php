@@ -490,6 +490,50 @@ abstract class AbstractQueryable implements QueryableInterface
         yield from $this->materialize();
     }
 
+    #[\NoDiscard]
+    public function whereExists(
+        SelectStatementInterface $subquery,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($subquery): void {
+                $statement->whereExists($subquery);
+            },
+        );
+    }
+
+    #[\NoDiscard]
+    public function whereNotExists(
+        SelectStatementInterface $subquery,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($subquery): void {
+                $statement->whereNotExists($subquery);
+            },
+        );
+    }
+
+    #[\NoDiscard]
+    public function orWhereExists(
+        SelectStatementInterface $subquery,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($subquery): void {
+                $statement->orWhereExists($subquery);
+            },
+        );
+    }
+
+    #[\NoDiscard]
+    public function orWhereNotExists(
+        SelectStatementInterface $subquery,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($subquery): void {
+                $statement->orWhereNotExists($subquery);
+            },
+        );
+    }
+
     /**
      * @param \Closure(WhereStatementInterface): void $callback
      */

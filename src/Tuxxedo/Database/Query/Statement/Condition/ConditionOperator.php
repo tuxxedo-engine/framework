@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Statement\Condition;
 
+use Tuxxedo\Database\SqlException;
+
 enum ConditionOperator: string
 {
     case EQUALS = '=';
@@ -27,4 +29,20 @@ enum ConditionOperator: string
     case NOT_IN = 'NOT IN';
     case IS_NULL = 'IS NULL';
     case IS_NOT_NULL  = 'IS NOT NULL';
+
+    public static function fromInput(string $value): self
+    {
+        $normalized = \str_replace('_', ' ', $value);
+
+        foreach (self::cases() as $case) {
+            if (\strcasecmp($case->value, $normalized) === 0) {
+                return $case;
+            }
+        }
+
+        throw SqlException::fromUnknownOperator(
+            value: $value,
+            enum: self::class,
+        );
+    }
 }
