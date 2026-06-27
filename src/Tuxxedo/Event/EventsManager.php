@@ -53,7 +53,10 @@ class EventsManager implements EventsManagerInterface
 
     private function discoverListeners(): void
     {
+        $didDiscoverNewListeners = false;
+
         foreach ($this->subscribers as [$subscriber, $priority]) {
+            $didDiscoverNewListeners = true;
             $subscriber = $subscriber();
 
             foreach (ClassReflector::createFromObject($subscriber)->methodsWithAttribute(Listener::class) as $method) {
@@ -84,11 +87,13 @@ class EventsManager implements EventsManagerInterface
             }
         }
 
-        foreach (\array_keys($this->listeners) as $eventType) {
-            \uasort(
-                $this->listeners[$eventType],
-                static fn (DispatchableListenerInterface $a, DispatchableListenerInterface $b): int => $a->priority->value <=> $b->priority->value,
-            );
+        if ($didDiscoverNewListeners) {
+            foreach (\array_keys($this->listeners) as $eventType) {
+                \uasort(
+                    $this->listeners[$eventType],
+                    static fn (DispatchableListenerInterface $a, DispatchableListenerInterface $b): int => $a->priority->value <=> $b->priority->value,
+                );
+            }
         }
 
         $this->subscribers = [];
