@@ -20,7 +20,6 @@ use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 use Tuxxedo\Pagination\PagedInterface;
 
-// @todo withCount - adds a correlated COUNT subquery as a synthetic column on each fetched row: ->withCount('posts') populates a $postsCount property. Needs a "subquery in SELECT list" mechanism on SelectStatement (separate from WHERE-side subqueries) plus relation metadata lookup
 /**
  * @template TModel of object
  *
