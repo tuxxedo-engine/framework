@@ -18,6 +18,15 @@ use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
+use Tuxxedo\Model\Attribute\Relation\BelongsTo;
+use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
+use Tuxxedo\Model\Attribute\Relation\HasMany;
+use Tuxxedo\Model\Attribute\Relation\HasManyThrough;
+use Tuxxedo\Model\Attribute\Relation\HasOne;
+use Tuxxedo\Model\Attribute\Relation\HasOneThrough;
+use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
+use Tuxxedo\Model\MetaData\ModelPrimaryKeyInterface;
+use Tuxxedo\Model\MetaData\ModelRelationInterface;
 
 /**
  * @template TModel of object
@@ -53,6 +62,7 @@ abstract class AbstractQueryable implements QueryableInterface
      * @param (\Closure(list<\Closure(WhereStatementInterface): void>): int)|null $countBuilder
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
      * @param list<array{column: string, direction: OrderDirection}> $orderBy
+     * @param ?class-string<TModel> $modelClass
      */
     protected function __construct(
         protected readonly ?\Closure $loaderBuilder = null,
@@ -61,6 +71,8 @@ abstract class AbstractQueryable implements QueryableInterface
         public readonly array $orderBy = [],
         public readonly ?int $limit = null,
         public readonly ?int $offset = null,
+        protected readonly ?ModelsManagerInterface $manager = null,
+        protected readonly ?string $modelClass = null,
     ) {
     }
 
@@ -535,6 +547,34 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
+     * @param ?\Closure(SelectStatementInterface): void $callback
+     */
+    #[\NoDiscard]
+    public function whereHas(
+        string $relationName,
+        ?\Closure $callback = null,
+        bool $includeDeleted = false,
+    ): static {
+        return $this->whereExists(
+            $this->buildRelationExistsSubquery($relationName, $callback, $includeDeleted),
+        );
+    }
+
+    /**
+     * @param ?\Closure(SelectStatementInterface): void $callback
+     */
+    #[\NoDiscard]
+    public function whereDoesntHave(
+        string $relationName,
+        ?\Closure $callback = null,
+        bool $includeDeleted = false,
+    ): static {
+        return $this->whereNotExists(
+            $this->buildRelationExistsSubquery($relationName, $callback, $includeDeleted),
+        );
+    }
+
+    /**
      * @param \Closure(WhereStatementInterface): void $callback
      */
     #[\NoDiscard]
@@ -680,5 +720,180 @@ abstract class AbstractQueryable implements QueryableInterface
             limit: $this->limit,
             offset: $this->offset,
         );
+    }
+
+    /**
+     * @param ?\Closure(SelectStatementInterface): void $callback
+     */
+    private function buildRelationExistsSubquery(
+        string $relationName,
+        ?\Closure $callback,
+        bool $includeDeleted,
+    ): SelectStatementInterface {
+        if ($this->manager === null || $this->modelClass === null) {
+            throw ModelException::fromChainMethodRequiresModelContext(
+                method: 'whereHas',
+            );
+        }
+
+        $manager = $this->manager;
+        $parentMetaData = $manager->metaData->getModel($this->modelClass);
+        $relation = $this->resolveRelation($parentMetaData, $relationName);
+        $targetMetaData = $manager->metaData->getModel($relation->relatedClass);
+        $attribute = $relation->attribute;
+
+        if ($attribute instanceof HasMany || $attribute instanceof HasOne) {
+            $subquery = $this->buildHasExistsSubquery(
+                manager: $manager,
+                parentMetaData: $parentMetaData,
+                targetMetaData: $targetMetaData,
+                attribute: $attribute,
+            );
+        } elseif ($attribute instanceof BelongsTo) {
+            $subquery = $this->buildBelongsToExistsSubquery(
+                manager: $manager,
+                parentMetaData: $parentMetaData,
+                targetMetaData: $targetMetaData,
+                attribute: $attribute,
+            );
+        } elseif ($attribute instanceof BelongsToMany) {
+            $subquery = $this->buildBelongsToManyExistsSubquery(
+                manager: $manager,
+                parentMetaData: $parentMetaData,
+                targetMetaData: $targetMetaData,
+                attribute: $attribute,
+            );
+        } elseif ($attribute instanceof HasManyThrough || $attribute instanceof HasOneThrough) {
+            $subquery = $this->buildHasThroughExistsSubquery(
+                manager: $manager,
+                parentMetaData: $parentMetaData,
+                targetMetaData: $targetMetaData,
+                attribute: $attribute,
+                includeDeleted: $includeDeleted,
+            );
+        } else {
+            throw ModelException::fromRelationNotFoundOnModel(
+                modelClass: $parentMetaData->model,
+                property: $relationName,
+            );
+        }
+
+        if (!$includeDeleted) {
+            $manager->applySoftDeleteFilter($subquery, $targetMetaData);
+        }
+
+        if ($callback !== null) {
+            $callback($subquery);
+        }
+
+        return $subquery;
+    }
+
+    private function resolveRelation(
+        ModelMetaDataInterface $metaData,
+        string $relationName,
+    ): ModelRelationInterface {
+        foreach ($metaData->relations as $relation) {
+            if ($relation->property === $relationName) {
+                return $relation;
+            }
+        }
+
+        throw ModelException::fromRelationNotFoundOnModel(
+            modelClass: $metaData->model,
+            property: $relationName,
+        );
+    }
+
+    private function buildHasExistsSubquery(
+        ModelsManagerInterface $manager,
+        ModelMetaDataInterface $parentMetaData,
+        ModelMetaDataInterface $targetMetaData,
+        HasMany|HasOne $attribute,
+    ): SelectStatementInterface {
+        $localKey = $attribute->localKey ?? $this->requirePrimaryKeyColumn($parentMetaData);
+
+        return $manager->connection->select($targetMetaData->table)
+            ->whereColumn(
+                column: $targetMetaData->table . '.' . $attribute->foreignKey,
+                other: $parentMetaData->table . '.' . $localKey,
+            );
+    }
+
+    private function buildBelongsToExistsSubquery(
+        ModelsManagerInterface $manager,
+        ModelMetaDataInterface $parentMetaData,
+        ModelMetaDataInterface $targetMetaData,
+        BelongsTo $attribute,
+    ): SelectStatementInterface {
+        $ownerKey = $attribute->ownerKey ?? $this->requirePrimaryKeyColumn($targetMetaData);
+
+        return $manager->connection->select($targetMetaData->table)
+            ->whereColumn(
+                column: $targetMetaData->table . '.' . $ownerKey,
+                other: $parentMetaData->table . '.' . $attribute->foreignKey,
+            );
+    }
+
+    private function buildBelongsToManyExistsSubquery(
+        ModelsManagerInterface $manager,
+        ModelMetaDataInterface $parentMetaData,
+        ModelMetaDataInterface $targetMetaData,
+        BelongsToMany $attribute,
+    ): SelectStatementInterface {
+        $parentPk = $this->requirePrimaryKeyColumn($parentMetaData);
+        $targetPk = $this->requirePrimaryKeyColumn($targetMetaData);
+
+        return $manager->connection->select($targetMetaData->table)
+            ->innerJoin(
+                table: $attribute->table,
+                first: $attribute->table . '.' . $attribute->foreignKey,
+                second: $targetMetaData->table . '.' . $targetPk,
+            )
+            ->whereColumn(
+                column: $attribute->table . '.' . $attribute->localKey,
+                other: $parentMetaData->table . '.' . $parentPk,
+            );
+    }
+
+    private function buildHasThroughExistsSubquery(
+        ModelsManagerInterface $manager,
+        ModelMetaDataInterface $parentMetaData,
+        ModelMetaDataInterface $targetMetaData,
+        HasManyThrough|HasOneThrough $attribute,
+        bool $includeDeleted,
+    ): SelectStatementInterface {
+        $throughMetaData = $manager->metaData->getModel($attribute->through);
+        $localKey = $attribute->localKey ?? $this->requirePrimaryKeyColumn($parentMetaData);
+        $secondLocalKey = $attribute->secondLocalKey ?? $this->requirePrimaryKeyColumn($throughMetaData);
+
+        $subquery = $manager->connection->select($targetMetaData->table)
+            ->innerJoin(
+                table: $throughMetaData->table,
+                first: $targetMetaData->table . '.' . $attribute->secondKey,
+                second: $throughMetaData->table . '.' . $secondLocalKey,
+            )
+            ->whereColumn(
+                column: $throughMetaData->table . '.' . $attribute->firstKey,
+                other: $parentMetaData->table . '.' . $localKey,
+            );
+
+        if (!$includeDeleted) {
+            $manager->applySoftDeleteFilter($subquery, $throughMetaData);
+        }
+
+        return $subquery;
+    }
+
+    private function requirePrimaryKeyColumn(
+        ModelMetaDataInterface $metaData,
+    ): string {
+        if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
+            throw ModelException::fromCantFetchWithoutPrimaryKey(
+                modelClass: $metaData->model,
+            );
+        }
+
+        return $metaData->key->column;
     }
 }

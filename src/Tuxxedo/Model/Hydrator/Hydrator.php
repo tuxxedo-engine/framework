@@ -178,11 +178,16 @@ class Hydrator implements HydratorInterface
     ): void {
         $sourceProperty = PropertyReflector::createFromObject($model, $this->resolveSourceProperty($metaData, $relation));
         $sourceValue = $sourceProperty->getValue($model);
+        $relatedClass = $relation->relatedClass;
 
         if ($sourceValue === null) {
             PropertyReflector::createFromObject($model, $relation->property)->setValue(
                 $model,
-                Relation::createFromPrefetched([]),
+                Relation::createFromPrefetched(
+                    values: [],
+                    manager: $this->modelsManager,
+                    modelClass: $relatedClass,
+                ),
             );
 
             return;
@@ -197,7 +202,6 @@ class Hydrator implements HydratorInterface
         }
 
         $targetColumn = $this->resolveTargetColumn($relation);
-        $relatedClass = $relation->relatedClass;
         $manager = $this->modelsManager;
         $targetTable = $manager->metaData->getModel($relatedClass)->table;
 
@@ -230,6 +234,8 @@ class Hydrator implements HydratorInterface
 
                 return $statement->count();
             },
+            manager: $manager,
+            modelClass: $relatedClass,
         );
 
         PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $relationInstance);
@@ -248,11 +254,16 @@ class Hydrator implements HydratorInterface
 
         $sourceProperty = PropertyReflector::createFromObject($model, $metaData->key->property);
         $sourceValue = $sourceProperty->getValue($model);
+        $relatedClass = $relation->relatedClass;
 
         if ($sourceValue === null) {
             PropertyReflector::createFromObject($model, $relation->property)->setValue(
                 $model,
-                Relation::createFromPrefetched([]),
+                Relation::createFromPrefetched(
+                    values: [],
+                    manager: $this->modelsManager,
+                    modelClass: $relatedClass,
+                ),
             );
 
             return;
@@ -268,7 +279,6 @@ class Hydrator implements HydratorInterface
 
         /** @var BelongsToMany $attribute */
         $attribute = $relation->attribute;
-        $relatedClass = $relation->relatedClass;
         $manager = $this->modelsManager;
         $targetMetaData = $manager->metaData->getModel($relatedClass);
 
@@ -316,6 +326,8 @@ class Hydrator implements HydratorInterface
 
                 return $statement->count();
             },
+            manager: $manager,
+            modelClass: $relatedClass,
         );
 
         PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $relationInstance);
@@ -365,11 +377,16 @@ class Hydrator implements HydratorInterface
     ): void {
         $sourceProperty = PropertyReflector::createFromObject($model, $this->resolveSourceProperty($metaData, $relation));
         $sourceValue = $sourceProperty->getValue($model);
+        $relatedClass = $relation->relatedClass;
 
         if ($sourceValue === null) {
             PropertyReflector::createFromObject($model, $relation->property)->setValue(
                 $model,
-                Relation::createFromPrefetched([]),
+                Relation::createFromPrefetched(
+                    values: [],
+                    manager: $this->modelsManager,
+                    modelClass: $relatedClass,
+                ),
             );
 
             return;
@@ -386,7 +403,6 @@ class Hydrator implements HydratorInterface
         /** @var HasManyThrough $attribute */
         $attribute = $relation->attribute;
         $manager = $this->modelsManager;
-        $relatedClass = $relation->relatedClass;
         $targetMetaData = $manager->metaData->getModel($relatedClass);
 
         if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
@@ -441,6 +457,8 @@ class Hydrator implements HydratorInterface
                     }
                 },
             ),
+            manager: $manager,
+            modelClass: $relatedClass,
         );
 
         PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $relationInstance);
@@ -562,7 +580,7 @@ class Hydrator implements HydratorInterface
         foreach ($tree as $relationName => $node) {
             $relation = $this->findRelationByName($metaData, $relationName);
             $attribute = $relation->attribute;
-            $shaped = $this->shapeConstraint($node->constraint);
+            $shaped = $this->shapeConstraint($node->constraint, $relation->relatedClass);
 
             if ($attribute instanceof HasMany) {
                 $this->eagerLoadHasMany($parents, $metaData, $relation, $shaped);
@@ -672,10 +690,12 @@ class Hydrator implements HydratorInterface
 
     /**
      * @param ?\Closure(Relation<object>): Relation<object> $constraint
+     * @param class-string $relatedClass
      * @return Relation<object>|null
      */
     private function shapeConstraint(
         ?\Closure $constraint,
+        string $relatedClass,
     ): ?Relation {
         if ($constraint === null) {
             return null;
@@ -684,6 +704,8 @@ class Hydrator implements HydratorInterface
         $scratch = Relation::createFromBuilder(
             loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => [],
             countBuilder: static fn (array $criteria): int => 0,
+            manager: $this->modelsManager,
+            modelClass: $relatedClass,
         );
 
         return $constraint($scratch);
@@ -846,6 +868,8 @@ class Hydrator implements HydratorInterface
         if (!\is_int($sourceValue) && !\is_string($sourceValue)) {
             return Relation::createFromPrefetched(
                 values: $prefetched,
+                manager: $manager,
+                modelClass: $relatedClass,
             );
         }
 
@@ -883,6 +907,8 @@ class Hydrator implements HydratorInterface
             initialOrderBy: $shaped->orderBy ?? [],
             initialLimit: $shaped?->limit,
             initialOffset: $shaped?->offset,
+            manager: $manager,
+            modelClass: $relatedClass,
         );
     }
 
@@ -1050,6 +1076,8 @@ class Hydrator implements HydratorInterface
         if (!\is_int($sourceValue) && !\is_string($sourceValue)) {
             return Relation::createFromPrefetched(
                 values: $prefetched,
+                manager: $manager,
+                modelClass: $relatedClass,
             );
         }
 
@@ -1090,6 +1118,8 @@ class Hydrator implements HydratorInterface
             initialOrderBy: $shaped->orderBy ?? [],
             initialLimit: $shaped?->limit,
             initialOffset: $shaped?->offset,
+            manager: $manager,
+            modelClass: $relatedClass,
         );
     }
 
@@ -1259,6 +1289,8 @@ class Hydrator implements HydratorInterface
         if (!\is_int($sourceValue) && !\is_string($sourceValue)) {
             return Relation::createFromPrefetched(
                 values: $prefetched,
+                manager: $manager,
+                modelClass: $relatedClass,
             );
         }
 
@@ -1306,6 +1338,8 @@ class Hydrator implements HydratorInterface
             initialOrderBy: $shaped->orderBy ?? [],
             initialLimit: $shaped?->limit,
             initialOffset: $shaped?->offset,
+            manager: $manager,
+            modelClass: $relatedClass,
         );
     }
 

@@ -533,6 +533,17 @@ class ModelException extends \Exception
         );
     }
 
+    public static function fromChainMethodRequiresModelContext(
+        string $method,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Chain method "%s" requires model context',
+                $method,
+            ),
+        );
+    }
+
     /**
      * @param class-string $attributeClass
      */

@@ -1346,6 +1346,8 @@ class ModelsManager implements ModelsManagerInterface
                     with: $with,
                 );
             },
+            manager: $this,
+            modelClass: $class,
         );
     }
 
@@ -1520,7 +1522,7 @@ class ModelsManager implements ModelsManagerInterface
         }
     }
 
-    private function applySoftDeleteFilter(
+    public function applySoftDeleteFilter(
         WhereStatementInterface $query,
         ModelMetaDataInterface $metaData,
     ): void {
@@ -1537,7 +1539,7 @@ class ModelsManager implements ModelsManagerInterface
             return;
         }
 
-        $query->whereNull($column->column);
+        $query->whereNull($metaData->table . '.' . $column->column);
     }
 
     #[\NoDiscard]

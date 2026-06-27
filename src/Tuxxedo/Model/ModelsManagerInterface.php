@@ -19,11 +19,13 @@ use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Query\Statement\CountStatementInterface;
 use Tuxxedo\Database\Query\Statement\ExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
+use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Behavior\BehaviorInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 use Tuxxedo\Model\Hydrator\HydratorInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
+use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 
 #[DefaultImplementation(class: ModelsManager::class, lifecycle: Lifecycle::SINGLETON)]
 interface ModelsManagerInterface
@@ -291,5 +293,10 @@ interface ModelsManagerInterface
 
     public function trackAsExisting(
         object $model,
+    ): void;
+
+    public function applySoftDeleteFilter(
+        WhereStatementInterface $query,
+        ModelMetaDataInterface $metaData,
     ): void;
 }

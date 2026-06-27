@@ -40,6 +40,7 @@ class Relation extends AbstractQueryable implements RelationInterface
      * @param array<int, TModel>|null $prefetched
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
      * @param list<array{column: string, direction: OrderDirection}> $orderBy
+     * @param ?class-string<TModel> $modelClass
      */
     final private function __construct(
         ?\Closure $loaderBuilder = null,
@@ -49,6 +50,8 @@ class Relation extends AbstractQueryable implements RelationInterface
         array $orderBy = [],
         ?int $limit = null,
         ?int $offset = null,
+        ?ModelsManagerInterface $manager = null,
+        ?string $modelClass = null,
     ) {
         parent::__construct(
             loaderBuilder: $loaderBuilder,
@@ -57,6 +60,8 @@ class Relation extends AbstractQueryable implements RelationInterface
             orderBy: $orderBy,
             limit: $limit,
             offset: $offset,
+            manager: $manager,
+            modelClass: $modelClass,
         );
     }
 
@@ -65,15 +70,20 @@ class Relation extends AbstractQueryable implements RelationInterface
      *
      * @param \Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string, direction: OrderDirection}>, ?int, ?int): iterable<int, TItem> $loaderBuilder
      * @param \Closure(list<\Closure(WhereStatementInterface): void>): int $countBuilder
+     * @param ?class-string<TItem> $modelClass
      * @return self<TItem>
      */
     public static function createFromBuilder(
         \Closure $loaderBuilder,
         \Closure $countBuilder,
+        ?ModelsManagerInterface $manager = null,
+        ?string $modelClass = null,
     ): self {
         return new self(
             loaderBuilder: $loaderBuilder,
             countBuilder: $countBuilder,
+            manager: $manager,
+            modelClass: $modelClass,
         );
     }
 
@@ -81,13 +91,18 @@ class Relation extends AbstractQueryable implements RelationInterface
      * @template TItem of object
      *
      * @param array<int, TItem> $values
+     * @param ?class-string<TItem> $modelClass
      * @return self<TItem>
      */
     public static function createFromPrefetched(
         array $values,
+        ?ModelsManagerInterface $manager = null,
+        ?string $modelClass = null,
     ): self {
         return new self(
             prefetched: $values,
+            manager: $manager,
+            modelClass: $modelClass,
         );
     }
 
@@ -99,6 +114,7 @@ class Relation extends AbstractQueryable implements RelationInterface
      * @param \Closure(list<\Closure(WhereStatementInterface): void>): int $countBuilder
      * @param list<\Closure(WhereStatementInterface): void> $initialCriteriaStack
      * @param list<array{column: string, direction: OrderDirection}> $initialOrderBy
+     * @param ?class-string<TItem> $modelClass
      * @return self<TItem>
      */
     public static function createFromPrefetchedWithBuilder(
@@ -109,6 +125,8 @@ class Relation extends AbstractQueryable implements RelationInterface
         array $initialOrderBy = [],
         ?int $initialLimit = null,
         ?int $initialOffset = null,
+        ?ModelsManagerInterface $manager = null,
+        ?string $modelClass = null,
     ): self {
         return new self(
             loaderBuilder: $loaderBuilder,
@@ -118,6 +136,8 @@ class Relation extends AbstractQueryable implements RelationInterface
             orderBy: $initialOrderBy,
             limit: $initialLimit,
             offset: $initialOffset,
+            manager: $manager,
+            modelClass: $modelClass,
         );
     }
 
@@ -141,6 +161,8 @@ class Relation extends AbstractQueryable implements RelationInterface
             orderBy: $orderBy,
             limit: $limit,
             offset: $offset,
+            manager: $this->manager,
+            modelClass: $this->modelClass,
         );
     }
 

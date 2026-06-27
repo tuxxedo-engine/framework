@@ -40,6 +40,7 @@ class Query extends AbstractQueryable
      * @param list<array{column: string, direction: OrderDirection}> $orderBy
      * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @param (\Closure(list<object>, array<string, ?\Closure(Relation<object>): Relation<object>>): void)|null $eagerLoader
+     * @param ?class-string<TModel> $modelClass
      */
     final private function __construct(
         ?\Closure $loaderBuilder = null,
@@ -50,6 +51,8 @@ class Query extends AbstractQueryable
         ?int $offset = null,
         ?array $with = null,
         ?\Closure $eagerLoader = null,
+        ?ModelsManagerInterface $manager = null,
+        ?string $modelClass = null,
     ) {
         parent::__construct(
             loaderBuilder: $loaderBuilder,
@@ -58,6 +61,8 @@ class Query extends AbstractQueryable
             orderBy: $orderBy,
             limit: $limit,
             offset: $offset,
+            manager: $manager,
+            modelClass: $modelClass,
         );
 
         $this->with = $with;
@@ -70,17 +75,22 @@ class Query extends AbstractQueryable
      * @param \Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string, direction: OrderDirection}>, ?int, ?int): iterable<int, TItem> $loaderBuilder
      * @param \Closure(list<\Closure(WhereStatementInterface): void>): int $countBuilder
      * @param (\Closure(list<object>, array<string, ?\Closure(Relation<object>): Relation<object>>): void)|null $eagerLoader
+     * @param ?class-string<TItem> $modelClass
      * @return self<TItem>
      */
     public static function createFromBuilder(
         \Closure $loaderBuilder,
         \Closure $countBuilder,
         ?\Closure $eagerLoader = null,
+        ?ModelsManagerInterface $manager = null,
+        ?string $modelClass = null,
     ): self {
         return new self(
             loaderBuilder: $loaderBuilder,
             countBuilder: $countBuilder,
             eagerLoader: $eagerLoader,
+            manager: $manager,
+            modelClass: $modelClass,
         );
     }
 
@@ -102,6 +112,8 @@ class Query extends AbstractQueryable
                 ? $with
                 : \array_merge($this->with, $with),
             eagerLoader: $this->eagerLoader,
+            manager: $this->manager,
+            modelClass: $this->modelClass,
         );
     }
 
@@ -124,6 +136,8 @@ class Query extends AbstractQueryable
             offset: $offset,
             with: $this->with,
             eagerLoader: $this->eagerLoader,
+            manager: $this->manager,
+            modelClass: $this->modelClass,
         );
     }
 

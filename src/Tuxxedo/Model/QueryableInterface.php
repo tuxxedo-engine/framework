@@ -20,7 +20,6 @@ use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 use Tuxxedo\Pagination\PagedInterface;
 
-// @todo whereHas / whereDoesntHave - model-aware chain method that filters parents by relation existence, e.g. $userQuery->whereHas('posts', fn ($q) => $q->where('published', true)) → WHERE EXISTS (SELECT 1 FROM posts WHERE posts.user_id = users.id AND posts.published = ?). Blocked on the whereExists + whereColumn primitives in WhereStatementInterface. Implementation also needs access to the manager's metadata to resolve relation property names to their FK columns
 // @todo withCount - adds a correlated COUNT subquery as a synthetic column on each fetched row: ->withCount('posts') populates a $postsCount property. Needs a "subquery in SELECT list" mechanism on SelectStatement (separate from WHERE-side subqueries) plus relation metadata lookup
 /**
  * @template TModel of object
@@ -240,6 +239,46 @@ interface QueryableInterface extends PagedInterface, \IteratorAggregate, \Counta
     public function page(
         int $limit,
         ?int $offset = null,
+    ): static;
+
+    #[\NoDiscard]
+    public function whereExists(
+        SelectStatementInterface $subquery,
+    ): static;
+
+    #[\NoDiscard]
+    public function whereNotExists(
+        SelectStatementInterface $subquery,
+    ): static;
+
+    #[\NoDiscard]
+    public function orWhereExists(
+        SelectStatementInterface $subquery,
+    ): static;
+
+    #[\NoDiscard]
+    public function orWhereNotExists(
+        SelectStatementInterface $subquery,
+    ): static;
+
+    /**
+     * @param ?\Closure(SelectStatementInterface): void $callback
+     */
+    #[\NoDiscard]
+    public function whereHas(
+        string $relationName,
+        ?\Closure $callback = null,
+        bool $includeDeleted = false,
+    ): static;
+
+    /**
+     * @param ?\Closure(SelectStatementInterface): void $callback
+     */
+    #[\NoDiscard]
+    public function whereDoesntHave(
+        string $relationName,
+        ?\Closure $callback = null,
+        bool $includeDeleted = false,
     ): static;
 
     /**
