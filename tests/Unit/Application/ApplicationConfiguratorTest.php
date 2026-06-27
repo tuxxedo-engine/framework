@@ -152,30 +152,6 @@ class ApplicationConfiguratorTest extends TestCase
         self::assertSame($configurator, $result);
     }
 
-    public function testWithConfigUpdatesPropertyAndReturnsFluentSelf(): void
-    {
-        $configurator = new ApplicationConfigurator();
-        $config = new Config();
-        $result = $configurator->withConfig(
-            config: $config,
-        );
-
-        self::assertSame($config, $configurator->config);
-        self::assertSame($configurator, $result);
-    }
-
-    public function testWithContainerUpdatesPropertyAndReturnsFluentSelf(): void
-    {
-        $configurator = new ApplicationConfigurator();
-        $container = new Container();
-        $result = $configurator->withContainer(
-            container: $container,
-        );
-
-        self::assertSame($container, $configurator->container);
-        self::assertSame($configurator, $result);
-    }
-
     public function testWithDefaultRouterStoresDirectoryAndBaseNamespace(): void
     {
         $configurator = new ApplicationConfigurator();
@@ -815,13 +791,9 @@ class ApplicationConfiguratorTest extends TestCase
             appVersion: '0.1.0',
             appProfile: Profile::RELEASE,
             appUrl: 'https://minimal.test/',
+            container: new Container(),
+            config: new Config(),
         ))
-            ->withContainer(
-                container: new Container(),
-            )
-            ->withConfig(
-                config: new Config(),
-            )
             ->withEmitter(
                 emitter: new StubResponseEmitter(),
             )
@@ -859,12 +831,6 @@ class ApplicationConfiguratorTest extends TestCase
     {
         $emitter = new StubResponseEmitter();
         $configurator = (new ApplicationConfigurator())
-            ->withContainer(
-                container: new Container(),
-            )
-            ->withConfig(
-                config: new Config(),
-            )
             ->withEmitter(
                 emitter: $emitter,
             )
@@ -891,10 +857,12 @@ class ApplicationConfiguratorTest extends TestCase
         );
 
         $configurator = (new ApplicationConfigurator())
-            ->withContainer(container: new Container())
-            ->withConfig(config: new Config())
-            ->withEmitter(emitter: new StubResponseEmitter())
-            ->withDispatcher(dispatcher: $dispatcher)
+            ->withEmitter(
+                emitter: new StubResponseEmitter(),
+            )
+            ->withDispatcher(
+                dispatcher: $dispatcher,
+            )
             ->withRouter(
                 router: new StaticRouter(
                     routes: [],
@@ -913,12 +881,6 @@ class ApplicationConfiguratorTest extends TestCase
         );
 
         $configurator = (new ApplicationConfigurator())
-            ->withContainer(
-                container: new Container(),
-            )
-            ->withConfig(
-                config: new Config(),
-            )
             ->withEmitter(
                 emitter: new StubResponseEmitter(),
             )
@@ -939,13 +901,9 @@ class ApplicationConfiguratorTest extends TestCase
     public function testBuildPropagatesExplicitConfigToKernel(): void
     {
         $config = new Config();
-        $configurator = (new ApplicationConfigurator())
-            ->withContainer(
-                container: new Container(),
-            )
-            ->withConfig(
-                config: $config,
-            )
+        $configurator = (new ApplicationConfigurator(
+            config: $config,
+        ))
             ->withEmitter(
                 emitter: new StubResponseEmitter(),
             )
@@ -968,13 +926,9 @@ class ApplicationConfiguratorTest extends TestCase
     public function testBuildReusesProvidedContainer(): void
     {
         $container = new Container();
-        $configurator = (new ApplicationConfigurator())
-            ->withContainer(
-                container: $container,
-            )
-            ->withConfig(
-                config: new Config(),
-            )
+        $configurator = (new ApplicationConfigurator(
+            container: $container,
+        ))
             ->withEmitter(
                 emitter: new StubResponseEmitter(),
             )
@@ -997,9 +951,6 @@ class ApplicationConfiguratorTest extends TestCase
     public function testBuildCreatesContainerWhenNoneProvided(): void
     {
         $configurator = (new ApplicationConfigurator())
-            ->withConfig(
-                config: new Config(),
-            )
             ->withEmitter(
                 emitter: new StubResponseEmitter(),
             )
@@ -1022,13 +973,9 @@ class ApplicationConfiguratorTest extends TestCase
     public function testBuildBindsContainerToItself(): void
     {
         $container = new Container();
-        $configurator = (new ApplicationConfigurator())
-            ->withContainer(
-                container: $container,
-            )
-            ->withConfig(
-                config: new Config(),
-            )
+        $configurator = (new ApplicationConfigurator(
+            container: $container,
+        ))
             ->withEmitter(
                 emitter: new StubResponseEmitter(),
             )
@@ -1250,12 +1197,6 @@ class ApplicationConfiguratorTest extends TestCase
     public function testBuildResolvesDefaultEmitterFromContainerWhenNoneProvided(): void
     {
         $configurator = (new ApplicationConfigurator())
-            ->withContainer(
-                container: new Container(),
-            )
-            ->withConfig(
-                config: new Config(),
-            )
             ->withDispatcher(
                 dispatcher: new StubDispatcher(
                     result: new Response(),
@@ -1275,12 +1216,6 @@ class ApplicationConfiguratorTest extends TestCase
     public function testBuildResolvesDefaultDispatcherFromContainerWhenNoneProvided(): void
     {
         $configurator = (new ApplicationConfigurator())
-            ->withContainer(
-                container: new Container(),
-            )
-            ->withConfig(
-                config: new Config(),
-            )
             ->withEmitter(
                 emitter: new StubResponseEmitter(),
             )
@@ -1298,12 +1233,6 @@ class ApplicationConfiguratorTest extends TestCase
     public function testBuildResolvesDefaultStaticRouterWhenNoRouterOrDirectoryProvided(): void
     {
         $configurator = (new ApplicationConfigurator())
-            ->withContainer(
-                container: new Container(),
-            )
-            ->withConfig(
-                config: new Config(),
-            )
             ->withEmitter(
                 emitter: new StubResponseEmitter(),
             )
@@ -1321,12 +1250,6 @@ class ApplicationConfiguratorTest extends TestCase
     public function testBuildResolvesDynamicRouterWhenDefaultRouterDirectoryProvided(): void
     {
         $configurator = (new ApplicationConfigurator())
-            ->withContainer(
-                container: new Container(),
-            )
-            ->withConfig(
-                config: new Config(),
-            )
             ->withEmitter(
                 emitter: new StubResponseEmitter(),
             )
@@ -1346,13 +1269,10 @@ class ApplicationConfiguratorTest extends TestCase
 
     public function testBuildPropagatesDefaultRouterDirectoryToDiscoverer(): void
     {
-        $configurator = (new ApplicationConfigurator())
-            ->withContainer(
-                container: new Container(),
-            )
-            ->withConfig(
-                config: new Config(),
-            )
+        $configurator = (new ApplicationConfigurator(
+            container: new Container(),
+            config: new Config(),
+        ))
             ->withEmitter(
                 emitter: new StubResponseEmitter(),
             )
@@ -1379,13 +1299,10 @@ class ApplicationConfiguratorTest extends TestCase
 
     public function testBuildPropagatesDefaultRouterBaseNamespaceToDiscoverer(): void
     {
-        $configurator = (new ApplicationConfigurator())
-            ->withContainer(
-                container: new Container(),
-            )
-            ->withConfig(
-                config: new Config(),
-            )
+        $configurator = (new ApplicationConfigurator(
+            container: new Container(),
+            config: new Config(),
+        ))
             ->withEmitter(
                 emitter: new StubResponseEmitter(),
             )
@@ -1412,13 +1329,10 @@ class ApplicationConfiguratorTest extends TestCase
 
     public function testBuildPropagatesDefaultRouterStrictModeToDiscoverer(): void
     {
-        $configurator = (new ApplicationConfigurator())
-            ->withContainer(
-                container: new Container(),
-            )
-            ->withConfig(
-                config: new Config(),
-            )
+        $configurator = (new ApplicationConfigurator(
+            container: new Container(),
+            config: new Config(),
+        ))
             ->withEmitter(
                 emitter: new StubResponseEmitter(),
             )

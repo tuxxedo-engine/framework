@@ -144,14 +144,6 @@ interface ApplicationConfiguratorInterface
         string $url,
     ): self;
 
-    public function withConfig(
-        ConfigInterface $config,
-    ): self;
-
-    public function withContainer(
-        ContainerInterface $container,
-    ): self;
-
     public function withDefaultRouter(
         string $directory,
         string $baseNamespace = '\App\Controllers\\',

@@ -42,8 +42,6 @@ use Tuxxedo\View\ViewRenderInterface;
 // @todo Implement a dotenv loader here
 class ApplicationConfigurator implements ApplicationConfiguratorInterface
 {
-    public private(set) ?ConfigInterface $config = null;
-    public private(set) ?ContainerInterface $container = null;
     public private(set) ?string $defaultRouterDirectory = null;
     public private(set) ?string $defaultRouterBaseNamespace = null;
     public private(set) bool $defaultRouterStrictMode = true;
@@ -71,41 +69,43 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         public private(set) string $appVersion = '',
         public private(set) Profile $appProfile = Profile::RELEASE,
         public private(set) string $appUrl = '',
+        public private(set) ?ConfigInterface $config = null,
+        public private(set) ?ContainerInterface $container = null,
     ) {
     }
 
     public static function createFromConfigFile(
         string $file,
+        ?ContainerInterface $container = null,
     ): static {
-        $container = new Container();
+        $container ??= new Container();
         $config = Config::createFromFile($container, $file);
 
-        /** @var static */
-        return (new static(
+        return new static(
             appName: $config->string('app.name'),
             appVersion: $config->string('app.version'),
             appProfile: $config->enum('app.profile', Profile::class),
             appUrl: $config->string('app.url'),
-        ))
-            ->withContainer($container)
-            ->withConfig($config);
+            container: $container,
+            config: $config,
+        );
     }
 
     public static function createFromConfigDirectory(
         string $directory,
+        ?ContainerInterface $container = null,
     ): static {
-        $container = new Container();
+        $container ??= new Container();
         $config = Config::createFromDirectory($container, $directory);
 
-        /** @var static */
-        return (new static(
+        return new static(
             appName: $config->string('app.name'),
             appVersion: $config->string('app.version'),
             appProfile: $config->enum('app.profile', Profile::class),
             appUrl: $config->string('app.url'),
-        ))
-            ->withContainer($container)
-            ->withConfig($config);
+            container: $container,
+            config: $config,
+        );
     }
 
     public function withAppName(
@@ -136,22 +136,6 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         string $url,
     ): self {
         $this->appUrl = $url;
-
-        return $this;
-    }
-
-    public function withConfig(
-        ConfigInterface $config,
-    ): self {
-        $this->config = $config;
-
-        return $this;
-    }
-
-    public function withContainer(
-        ContainerInterface $container,
-    ): self {
-        $this->container = $container;
 
         return $this;
     }
