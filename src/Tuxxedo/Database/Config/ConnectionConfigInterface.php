@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Config;
 
 use Tuxxedo\Database\ConnectionRole;
+use Tuxxedo\Database\Driver\ConnectionInterface;
 
 interface ConnectionConfigInterface
 {
@@ -22,6 +23,13 @@ interface ConnectionConfigInterface
     }
 
     public ConnectionRole $role {
+        get;
+    }
+
+    /**
+     * @var class-string<ConnectionInterface>
+     */
+    public string $driverClass {
         get;
     }
 }

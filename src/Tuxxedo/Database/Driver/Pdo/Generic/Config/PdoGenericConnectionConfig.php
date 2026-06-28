@@ -14,17 +14,20 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver\Pdo\Generic\Config;
 
 use Tuxxedo\Database\ConnectionRole;
+use Tuxxedo\Database\Driver\Pdo\Generic\PdoGenericConnection;
 
-readonly class PdoGenericConnectionConfig implements PdoGenericConnectionConfigInterface
+class PdoGenericConnectionConfig implements PdoGenericConnectionConfigInterface
 {
+    public private(set) string $driverClass = PdoGenericConnection::class;
+
     public function __construct(
-        public string $name = '',
-        public ConnectionRole $role = ConnectionRole::DEFAULT,
-        public string $dsn = '',
-        public string $username = '',
-        #[\SensitiveParameter] public string $password = '',
-        public bool $persistent = false,
-        public bool $lazy = true,
+        public readonly string $name = '',
+        public readonly ConnectionRole $role = ConnectionRole::DEFAULT,
+        public readonly string $dsn = '',
+        public readonly string $username = '',
+        #[\SensitiveParameter] public readonly string $password = '',
+        public readonly bool $persistent = false,
+        public readonly bool $lazy = true,
     ) {
     }
 }

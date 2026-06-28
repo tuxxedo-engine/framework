@@ -14,29 +14,32 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver\Pgsql\Config;
 
 use Tuxxedo\Database\ConnectionRole;
+use Tuxxedo\Database\Driver\Pgsql\PgsqlConnection;
 
-readonly class PgsqlConnectionConfig implements PgsqlConnectionConfigInterface
+class PgsqlConnectionConfig implements PgsqlConnectionConfigInterface
 {
+    public private(set) string $driverClass = PgsqlConnection::class;
+
     public function __construct(
-        public string $name = '',
-        public ConnectionRole $role = ConnectionRole::DEFAULT,
-        public string $host = 'localhost',
-        public ?int $port = null,
-        public ?string $unixSocket = null,
-        public string $username = '',
-        #[\SensitiveParameter] public string $password = '',
-        public string $database = '',
-        public string $charset = 'UTF8',
-        public bool $persistent = false,
-        public bool $lazy = true,
-        public ?int $timeout = null,
-        public bool $sslEnabled = false,
-        public string $sslMode = '',
-        public string $sslCa = '',
-        public string $sslCert = '',
-        public string $sslKey = '',
-        public bool $sslVerifyPeer = true,
-        public bool $sslVerifyHost = true,
+        public readonly string $name = '',
+        public readonly ConnectionRole $role = ConnectionRole::DEFAULT,
+        public readonly string $host = 'localhost',
+        public readonly ?int $port = null,
+        public readonly ?string $unixSocket = null,
+        public readonly string $username = '',
+        #[\SensitiveParameter] public readonly string $password = '',
+        public readonly string $database = '',
+        public readonly string $charset = 'UTF8',
+        public readonly bool $persistent = false,
+        public readonly bool $lazy = true,
+        public readonly ?int $timeout = null,
+        public readonly bool $sslEnabled = false,
+        public readonly string $sslMode = '',
+        public readonly string $sslCa = '',
+        public readonly string $sslCert = '',
+        public readonly string $sslKey = '',
+        public readonly bool $sslVerifyPeer = true,
+        public readonly bool $sslVerifyHost = true,
     ) {
     }
 }

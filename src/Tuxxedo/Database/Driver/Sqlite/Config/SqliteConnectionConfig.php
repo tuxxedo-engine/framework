@@ -14,16 +14,19 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver\Sqlite\Config;
 
 use Tuxxedo\Database\ConnectionRole;
+use Tuxxedo\Database\Driver\Sqlite\SqliteConnection;
 
-readonly class SqliteConnectionConfig implements SqliteConnectionConfigInterface
+class SqliteConnectionConfig implements SqliteConnectionConfigInterface
 {
+    public private(set) string $driverClass = SqliteConnection::class;
+
     public function __construct(
-        public string $name = '',
-        public ConnectionRole $role = ConnectionRole::DEFAULT,
-        public string $database = '',
-        #[\SensitiveParameter] public string $encryptionKey = '',
-        public ?int $flags = null,
-        public bool $lazy = true,
+        public readonly string $name = '',
+        public readonly ConnectionRole $role = ConnectionRole::DEFAULT,
+        public readonly string $database = '',
+        #[\SensitiveParameter] public readonly string $encryptionKey = '',
+        public readonly ?int $flags = null,
+        public readonly bool $lazy = true,
     ) {
     }
 }

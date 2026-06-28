@@ -240,12 +240,6 @@ class Config implements ConfigInterface
             return;
         }
 
-        if (\array_key_exists($namespace, $directives)) {
-            throw ConfigException::fromDuplicateConfigNamespace(
-                namespace: $namespace,
-            );
-        }
-
         $values = [];
 
         foreach ($class->getProperties(\ReflectionProperty::IS_PUBLIC) as $property) {
@@ -260,7 +254,33 @@ class Config implements ConfigInterface
             $values[$leafKey] = $property->getValue($object);
         }
 
-        $directives[$namespace] = $values;
+        $parts = \explode('.', $namespace);
+        $leaf = \array_pop($parts);
+        $ref = &$directives;
+
+        foreach ($parts as $part) {
+            /** @var array<mixed> $ref */
+            if (\array_key_exists($part, $ref) && !\is_array($ref[$part])) {
+                throw ConfigException::fromDuplicateConfigNamespace(
+                    namespace: $namespace,
+                );
+            }
+
+            /** @var array<mixed> $ref */
+            $ref[$part] ??= [];
+            $ref = &$ref[$part];
+        }
+
+        /** @var array<mixed> $ref */
+        if (\array_key_exists($leaf, $ref)) {
+            throw ConfigException::fromDuplicateConfigNamespace(
+                namespace: $namespace,
+            );
+        }
+
+        $ref[$leaf] = $values;
+
+        unset($ref);
     }
 
     /**

@@ -14,17 +14,20 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver\Pdo\Sqlite\Config;
 
 use Tuxxedo\Database\ConnectionRole;
+use Tuxxedo\Database\Driver\Pdo\Sqlite\PdoSqliteConnection;
 
-readonly class PdoSqliteConnectionConfig implements PdoSqliteConnectionConfigInterface
+class PdoSqliteConnectionConfig implements PdoSqliteConnectionConfigInterface
 {
+    public private(set) string $driverClass = PdoSqliteConnection::class;
+
     public function __construct(
-        public string $name = '',
-        public ConnectionRole $role = ConnectionRole::DEFAULT,
-        public string $dsn = '',
-        public string $database = '',
-        public bool $persistent = false,
-        public bool $lazy = true,
-        public ?int $timeout = null,
+        public readonly string $name = '',
+        public readonly ConnectionRole $role = ConnectionRole::DEFAULT,
+        public readonly string $dsn = '',
+        public readonly string $database = '',
+        public readonly bool $persistent = false,
+        public readonly bool $lazy = true,
+        public readonly ?int $timeout = null,
     ) {
     }
 }

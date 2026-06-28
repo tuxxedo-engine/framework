@@ -14,27 +14,30 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver\Pdo\Pgsql\Config;
 
 use Tuxxedo\Database\ConnectionRole;
+use Tuxxedo\Database\Driver\Pdo\Pgsql\PdoPgsqlConnection;
 
-readonly class PdoPgsqlConnectionConfig implements PdoPgsqlConnectionConfigInterface
+class PdoPgsqlConnectionConfig implements PdoPgsqlConnectionConfigInterface
 {
+    public private(set) string $driverClass = PdoPgsqlConnection::class;
+
     public function __construct(
-        public string $name = '',
-        public ConnectionRole $role = ConnectionRole::DEFAULT,
-        public string $dsn = '',
-        public string $host = 'localhost',
-        public ?int $port = null,
-        public string $username = '',
-        #[\SensitiveParameter] public string $password = '',
-        public string $database = '',
-        public string $charset = 'UTF8',
-        public bool $persistent = false,
-        public bool $lazy = true,
-        public ?int $timeout = null,
-        public bool $sslEnabled = false,
-        public string $sslMode = '',
-        public string $sslCa = '',
-        public string $sslCert = '',
-        public string $sslKey = '',
+        public readonly string $name = '',
+        public readonly ConnectionRole $role = ConnectionRole::DEFAULT,
+        public readonly string $dsn = '',
+        public readonly string $host = 'localhost',
+        public readonly ?int $port = null,
+        public readonly string $username = '',
+        #[\SensitiveParameter] public readonly string $password = '',
+        public readonly string $database = '',
+        public readonly string $charset = 'UTF8',
+        public readonly bool $persistent = false,
+        public readonly bool $lazy = true,
+        public readonly ?int $timeout = null,
+        public readonly bool $sslEnabled = false,
+        public readonly string $sslMode = '',
+        public readonly string $sslCa = '',
+        public readonly string $sslCert = '',
+        public readonly string $sslKey = '',
     ) {
     }
 }

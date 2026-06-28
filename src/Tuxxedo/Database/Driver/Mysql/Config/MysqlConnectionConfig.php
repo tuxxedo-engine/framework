@@ -14,28 +14,31 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver\Mysql\Config;
 
 use Tuxxedo\Database\ConnectionRole;
+use Tuxxedo\Database\Driver\Mysql\MysqlConnection;
 
-readonly class MysqlConnectionConfig implements MysqlConnectionConfigInterface
+class MysqlConnectionConfig implements MysqlConnectionConfigInterface
 {
+    public private(set) string $driverClass = MysqlConnection::class;
+
     public function __construct(
-        public string $name = '',
-        public ConnectionRole $role = ConnectionRole::DEFAULT,
-        public string $host = 'localhost',
-        public ?int $port = null,
-        public ?string $unixSocket = null,
-        public string $username = '',
-        #[\SensitiveParameter] public string $password = '',
-        public ?string $database = null,
-        public string $charset = 'utf8mb4',
-        public bool $persistent = false,
-        public bool $lazy = true,
-        public ?int $timeout = null,
-        public ?int $flags = null,
-        public bool $sslEnabled = false,
-        public string $sslCa = '',
-        public string $sslCert = '',
-        public string $sslKey = '',
-        public bool $sslVerifyPeer = true,
+        public readonly string $name = '',
+        public readonly ConnectionRole $role = ConnectionRole::DEFAULT,
+        public readonly string $host = 'localhost',
+        public readonly ?int $port = null,
+        public readonly ?string $unixSocket = null,
+        public readonly string $username = '',
+        #[\SensitiveParameter] public readonly string $password = '',
+        public readonly ?string $database = null,
+        public readonly string $charset = 'utf8mb4',
+        public readonly bool $persistent = false,
+        public readonly bool $lazy = true,
+        public readonly ?int $timeout = null,
+        public readonly ?int $flags = null,
+        public readonly bool $sslEnabled = false,
+        public readonly string $sslCa = '',
+        public readonly string $sslCert = '',
+        public readonly string $sslKey = '',
+        public readonly bool $sslVerifyPeer = true,
     ) {
     }
 }
