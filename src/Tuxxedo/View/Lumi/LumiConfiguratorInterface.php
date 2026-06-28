@@ -26,7 +26,6 @@ use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
-use Tuxxedo\View\ViewRenderInterface;
 
 interface LumiConfiguratorInterface
 {
@@ -237,5 +236,5 @@ interface LumiConfiguratorInterface
 
     public function validate(): bool;
 
-    public function build(): ViewRenderInterface;
+    public function build(): LumiViewRenderInterface;
 }

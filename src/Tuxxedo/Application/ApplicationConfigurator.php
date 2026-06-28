@@ -41,6 +41,7 @@ use Tuxxedo\Router\RouterInterface;
 use Tuxxedo\Router\StaticRouter;
 use Tuxxedo\View\Lumi\LumiConfigurator;
 use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
+use Tuxxedo\View\Lumi\LumiViewRenderInterface;
 use Tuxxedo\View\ViewRenderInterface;
 
 // @todo Implement a dotenv loader here
@@ -398,15 +399,20 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
             $lumiConfigurator = $this->lumiConfigurator;
 
             $container->singletonLazy(
+                LumiViewRenderInterface::class,
+                static fn (): LumiViewRenderInterface => $lumiConfigurator->build(),
+            );
+
+            $container->alias(
                 ViewRenderInterface::class,
-                static fn (): ViewRenderInterface => $lumiConfigurator->build(),
+                LumiViewRenderInterface::class,
             );
         } elseif ($this->useDefaultLumi) {
             $customizer = $this->lumiCustomizer;
 
             $container->singletonLazy(
-                ViewRenderInterface::class,
-                static function (ContainerInterface $container) use ($customizer): ViewRenderInterface {
+                LumiViewRenderInterface::class,
+                static function (ContainerInterface $container) use ($customizer): LumiViewRenderInterface {
                     $lumi = LumiConfigurator::fromConfig($container);
 
                     if ($customizer !== null) {
@@ -415,6 +421,11 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
 
                     return $lumi->build();
                 },
+            );
+
+            $container->alias(
+                ViewRenderInterface::class,
+                LumiViewRenderInterface::class,
             );
         }
 

@@ -43,7 +43,6 @@ use Tuxxedo\View\Lumi\Runtime\Loader;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\Runtime;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
-use Tuxxedo\View\ViewRenderInterface;
 
 class LumiConfigurator implements LumiConfiguratorInterface
 {
@@ -570,7 +569,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
         return $customFilters;
     }
 
-    public function build(): ViewRenderInterface
+    public function build(): LumiViewRenderInterface
     {
         if ($this->compiler === null) {
             if ($this->defaultDirectives !== DefaultDirectives::defaults()) {
