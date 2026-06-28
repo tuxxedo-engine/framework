@@ -22,78 +22,10 @@ interface ConfigInterface
         string $path,
     ): bool;
 
-    public function isNull(
-        string $path,
-    ): bool;
-
     /**
      * @throws ConfigException
      */
     public function path(
         string $path,
     ): mixed;
-
-    /**
-     * @throws ConfigException
-     */
-    public function section(
-        string $path,
-    ): self;
-
-    /**
-     * @throws ConfigException
-     */
-    public function int(
-        string $path,
-    ): int;
-
-    public function isInt(
-        string $path,
-    ): bool;
-
-    /**
-     * @throws ConfigException
-     */
-    public function bool(
-        string $path,
-    ): bool;
-
-    public function isBool(
-        string $path,
-    ): bool;
-
-    /**
-     * @throws ConfigException
-     */
-    public function float(
-        string $path,
-    ): float;
-
-    public function isFloat(
-        string $path,
-    ): bool;
-
-    /**
-     * @throws ConfigException
-     */
-    public function string(
-        string $path,
-    ): string;
-
-    public function isString(
-        string $path,
-    ): bool;
-
-    /**
-     * @template TEnum of \UnitEnum
-     *
-     * @param class-string<TEnum> $enum
-     * @return TEnum
-     *
-     * @throws ConfigException
-     */
-    public function enum(
-        string $path,
-        string $enum,
-    ): object;
 }

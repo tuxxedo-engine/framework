@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Support\Database;
 
-use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
@@ -30,12 +29,6 @@ class StubConnectionManager implements ConnectionManagerInterface
     ): self {
         $this->connections[] = $connection;
 
-        return $this;
-    }
-
-    public function registerConnectionFromConfig(
-        ConfigInterface|string $configOrPath,
-    ): self {
         return $this;
     }
 

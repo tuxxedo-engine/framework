@@ -26,32 +26,6 @@ class ConfigException extends \Exception
         );
     }
 
-    public static function fromInvalidSection(
-        string $directive,
-    ): self {
-        return new self(
-            message: \sprintf(
-                'Invalid section for directive "%s", the value must be an array',
-                $directive,
-            ),
-        );
-    }
-
-    public static function fromUnexpectedDirectiveType(
-        string $directive,
-        string $actualType,
-        string $expectedType,
-    ): self {
-        return new self(
-            message: \sprintf(
-                'Unexpected type for configuration directive "%s", got type "%s" but expected "%s"',
-                $directive,
-                $actualType,
-                $expectedType,
-            ),
-        );
-    }
-
     public static function fromInvalidConfigKey(
         string $key,
     ): self {
