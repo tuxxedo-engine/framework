@@ -108,6 +108,8 @@ class Config implements ConfigInterface
         })($file);
 
         if ($entry instanceof \Closure) {
+            /** @var \Closure(): object $entry */
+
             $returnType = self::reflectClosureReturnType($entry);
 
             if ($returnType !== null) {
@@ -126,7 +128,10 @@ class Config implements ConfigInterface
                     );
                 }
 
-                $container->singletonLazy($returnType, $entry);
+                $container->singletonLazy(
+                    $returnType,
+                    static fn (ContainerInterface $container, array $arguments): object => $container->call($entry),
+                );
 
                 $typedConfigs[$returnType] = $file;
 

@@ -24,6 +24,7 @@ use Tuxxedo\Database\Config\ConnectionManagerConfigInterface;
 use Tuxxedo\Database\ConnectionManager;
 use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Debug\DebugErrorHandler;
+use Tuxxedo\Env\EnvInterface;
 use Tuxxedo\Event\EventsManager;
 use Tuxxedo\Event\EventsManagerInterface;
 use Tuxxedo\Http\Kernel\Dispatcher;
@@ -44,7 +45,6 @@ use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
 use Tuxxedo\View\Lumi\LumiViewRenderInterface;
 use Tuxxedo\View\ViewRenderInterface;
 
-// @todo Implement a dotenv loader here
 class ApplicationConfigurator implements ApplicationConfiguratorInterface
 {
     public private(set) ?string $defaultRouterDirectory = null;
@@ -82,8 +82,14 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
     public static function createFromConfigFile(
         string $file,
         ?ContainerInterface $container = null,
+        ?EnvInterface $env = null,
     ): static {
         $container ??= new Container();
+
+        if ($env !== null) {
+            $container->singleton($env);
+        }
+
         $config = Config::createFromFile($container, $file);
         $appConfig = self::resolveAppConfig($container);
 
@@ -100,8 +106,14 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
     public static function createFromConfigDirectory(
         string $directory,
         ?ContainerInterface $container = null,
+        ?EnvInterface $env = null,
     ): static {
         $container ??= new Container();
+
+        if ($env !== null) {
+            $container->singleton($env);
+        }
+
         $config = Config::createFromDirectory($container, $directory);
         $appConfig = self::resolveAppConfig($container);
 

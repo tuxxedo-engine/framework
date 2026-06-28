@@ -25,7 +25,7 @@ use Tuxxedo\Reflection\ParameterReflectorInterface;
 class Config implements DependencyResolverInterface
 {
     public function __construct(
-        protected readonly string $path,
+        private readonly string $path,
     ) {
     }
 

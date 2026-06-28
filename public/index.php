@@ -14,6 +14,9 @@ declare(strict_types=1);
 use App\Support\HttpErrorHandler;
 use Tuxxedo\Application\ApplicationConfigurator;
 use Tuxxedo\Application\Profile;
+use Tuxxedo\Env\Env;
+use Tuxxedo\Env\Source\DotEnvSource;
+use Tuxxedo\Env\Source\ProcessEnvSource;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
 use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
@@ -21,8 +24,25 @@ use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $appDirectory = __DIR__ . '/../app';
+$envFile = $appDirectory . '/.env.dev';
 
-$builder = ApplicationConfigurator::createFromConfigDirectory($appDirectory . '/config')
+if (\is_file($envFile)) {
+    $env = new Env(
+        new DotEnvSource(
+            file: $envFile,
+        ),
+        new ProcessEnvSource(),
+    );
+} else {
+    $env = new Env(
+        new ProcessEnvSource(),
+    );
+}
+
+$builder = ApplicationConfigurator::createFromConfigDirectory(
+    directory: $appDirectory . '/config',
+    env: $env,
+)
     ->withDefaultRouter($appDirectory . '/Controllers')
     ->withDefaultLumi(
         static fn (LumiConfiguratorInterface $lumi): LumiConfiguratorInterface => $lumi

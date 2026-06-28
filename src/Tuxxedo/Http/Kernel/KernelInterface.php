@@ -23,6 +23,7 @@ use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Router\RouterInterface;
 
+// @todo Look through enum() functions to ensure they support BackedEnums and UnitEnums where reasonable like dotenv. Extend Reflection code?
 #[DefaultImplementation(class: Kernel::class, lifecycle: Lifecycle::SINGLETON)]
 interface KernelInterface
 {

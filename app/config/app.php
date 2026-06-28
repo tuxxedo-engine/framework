@@ -14,10 +14,11 @@ declare(strict_types=1);
 use Tuxxedo\Application\Config\AppConfig;
 use Tuxxedo\Application\Config\AppConfigInterface;
 use Tuxxedo\Application\Profile;
+use Tuxxedo\Env\EnvInterface;
 
-return static fn (): AppConfigInterface => new AppConfig(
-    name: 'Tuxxedo Engine Demo',
-    version: 'v0.1.0',
-    profile: Profile::DEBUG,
-    url: 'http://localhost:13099/',
+return static fn (EnvInterface $env): AppConfigInterface => new AppConfig(
+    name: $env->string('APP_NAME'),
+    version: $env->string('APP_VERSION'),
+    profile: $env->enum('APP_PROFILE', Profile::class),
+    url: $env->string('APP_URL'),
 );
