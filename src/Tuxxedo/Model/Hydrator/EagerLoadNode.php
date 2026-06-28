@@ -15,10 +15,7 @@ namespace Tuxxedo\Model\Hydrator;
 
 use Tuxxedo\Model\Relation;
 
-/**
- * @internal
- */
-final class EagerLoadNode
+class EagerLoadNode
 {
     /**
      * @var array<string, self>
