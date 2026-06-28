@@ -17,7 +17,6 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\AbstractConnection;
-use Tuxxedo\Database\Driver\DefaultDriver;
 use Tuxxedo\Database\Driver\Mysql\Config\MysqlConnectionConfigInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Dialect\MysqlDialect;
@@ -28,7 +27,6 @@ class MysqlConnection extends AbstractConnection
 {
     public readonly string $name;
     public readonly ConnectionRole $role;
-    public readonly DefaultDriver $driver;
     public readonly DialectInterface $dialect;
 
     private \mysqli $mysqli;
@@ -43,7 +41,6 @@ class MysqlConnection extends AbstractConnection
     ) {
         $this->name = $config->name;
         $this->role = $config->role;
-        $this->driver = DefaultDriver::MYSQL;
         $this->dialect = new MysqlDialect();
         $this->statementParser = new StatementParser(
             dialect: $this->dialect,

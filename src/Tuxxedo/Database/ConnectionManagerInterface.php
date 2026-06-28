@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database;
 
-use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Database\Driver\ConnectionInterface;
@@ -30,13 +29,6 @@ interface ConnectionManagerInterface
 
     public function registerConnection(
         ConnectionInterface $connection,
-    ): self;
-
-    /**
-     * @throws DatabaseException
-     */
-    public function registerConnectionFromConfig(
-        ConfigInterface|string $configOrPath,
     ): self;
 
     /**

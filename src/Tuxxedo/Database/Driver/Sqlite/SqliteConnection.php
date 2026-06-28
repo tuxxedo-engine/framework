@@ -17,7 +17,6 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\AbstractConnection;
-use Tuxxedo\Database\Driver\DefaultDriver;
 use Tuxxedo\Database\Driver\Sqlite\Config\SqliteConnectionConfigInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Dialect\SqliteDialect;
@@ -28,7 +27,6 @@ class SqliteConnection extends AbstractConnection
 {
     public readonly string $name;
     public readonly ConnectionRole $role;
-    public readonly DefaultDriver $driver;
     public readonly DialectInterface $dialect;
 
     private \SQLite3 $sqlite;
@@ -43,7 +41,6 @@ class SqliteConnection extends AbstractConnection
     ) {
         $this->name = $config->name;
         $this->role = $config->role;
-        $this->driver = DefaultDriver::SQLITE;
         $this->dialect = new SqliteDialect();
         $this->statementParser = new StatementParser(
             dialect: $this->dialect,

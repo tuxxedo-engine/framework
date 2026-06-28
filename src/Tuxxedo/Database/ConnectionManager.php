@@ -13,16 +13,16 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database;
 
-use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DefaultInitializer;
+use Tuxxedo\Database\Config\ConnectionManagerConfigInterface;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 
 #[DefaultInitializer(
     static function (ContainerInterface $container): ConnectionManagerInterface {
         return ConnectionManager::createFromConfig(
-            config: $container->resolve(ConfigInterface::class),
-            path: 'database.manager',
+            container: $container,
+            config: $container->resolve(ConnectionManagerConfigInterface::class),
         );
     },
 )]
@@ -33,29 +33,29 @@ class ConnectionManager implements ConnectionManagerInterface
      */
     public private(set) array $connections = [];
 
+    /**
+     * @var array<string, ConnectionInterface>
+     */
+    private array $connectionsByName = [];
+
     private ConnectionInterface $defaultConnection;
     private ConnectionInterface $readConnection;
     private ConnectionInterface $writeConnection;
 
-    final public function __construct(
-    ) {
+    final public function __construct()
+    {
     }
 
     public static function createFromConfig(
-        ConfigInterface $config,
-        string $path,
+        ContainerInterface $container,
+        ConnectionManagerConfigInterface $config,
     ): self {
         $manager = new static();
 
-        if (
-            $config->has($path . '.connections') &&
-            \is_array($config->path($path . '.connections'))
-        ) {
-            foreach (\array_keys($config->path($path . '.connections')) as $index) {
-                $manager->registerConnectionFromConfig(
-                    configOrPath: $path . '.connections.' . $index,
-                );
-            }
+        foreach ($config->connections as $connectionConfig) {
+            $manager->registerConnection(
+                connection: ($connectionConfig->driverClass)::create($container, $connectionConfig),
+            );
         }
 
         return $manager;
@@ -77,19 +77,13 @@ class ConnectionManager implements ConnectionManagerInterface
         ConnectionInterface $connection,
     ): self {
         $this->connections[] = $connection;
+        $this->connectionsByName[$connection->name] = $connection;
 
         if ($connection->role !== ConnectionRole::NONE) {
             $this->updateDefaults($connection);
         }
 
         return $this;
-    }
-
-    // @todo Replace with typed-config dispatch
-    public function registerConnectionFromConfig(
-        ConfigInterface|string $configOrPath,
-    ): self {
-        throw DatabaseException::fromConfigDispatchNotYetImplemented();
     }
 
     public function getDefaultConnection(): ConnectionInterface
@@ -110,13 +104,7 @@ class ConnectionManager implements ConnectionManagerInterface
     public function getNamedConnection(
         string $name,
     ): ConnectionInterface {
-        foreach ($this->connections as $connection) {
-            if ($connection->name === $name) {
-                return $connection;
-            }
-        }
-
-        throw DatabaseException::fromUnknownNamedConnection(
+        return $this->connectionsByName[$name] ?? throw DatabaseException::fromUnknownNamedConnection(
             name: $name,
         );
     }

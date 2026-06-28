@@ -15,7 +15,6 @@ namespace Tuxxedo\Database\Driver\Pdo\Mysql;
 
 use Pdo\Mysql;
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Database\Driver\DefaultDriver;
 use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
 use Tuxxedo\Database\Driver\Pdo\Config\PdoConnectionConfigInterface;
 use Tuxxedo\Database\Driver\Pdo\Mysql\Config\PdoMysqlConnectionConfigInterface;
@@ -29,11 +28,6 @@ class PdoMysqlConnection extends AbstractPdoConnection
         PdoMysqlConnectionConfigInterface $config,
     ): self {
         return new self($container, $config);
-    }
-
-    protected function getDriverName(): DefaultDriver
-    {
-        return DefaultDriver::PDO_MYSQL;
     }
 
     protected function getDriverDialect(): DialectInterface

@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver\Pdo\Generic;
 
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Database\Driver\DefaultDriver;
 use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
 use Tuxxedo\Database\Driver\Pdo\Config\PdoConnectionConfigInterface;
 use Tuxxedo\Database\Driver\Pdo\Generic\Config\PdoGenericConnectionConfigInterface;
@@ -28,11 +27,6 @@ class PdoGenericConnection extends AbstractPdoConnection
         PdoGenericConnectionConfigInterface $config,
     ): self {
         return new self($container, $config);
-    }
-
-    protected function getDriverName(): DefaultDriver
-    {
-        return DefaultDriver::PDO;
     }
 
     protected function getDriverDialect(): DialectInterface

@@ -17,7 +17,6 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\AbstractConnection;
-use Tuxxedo\Database\Driver\DefaultDriver;
 use Tuxxedo\Database\Driver\Pdo\Config\PdoConnectionConfigInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Parser\StatementParser;
@@ -27,7 +26,6 @@ abstract class AbstractPdoConnection extends AbstractConnection
 {
     public readonly string $name;
     public readonly ConnectionRole $role;
-    public readonly DefaultDriver|string $driver;
     public readonly DialectInterface $dialect;
 
     protected private(set) \PDO $pdo;
@@ -41,7 +39,6 @@ abstract class AbstractPdoConnection extends AbstractConnection
     ) {
         $this->name = $config->name;
         $this->role = $config->role;
-        $this->driver = static::getDriverName();
         $this->dialect = static::getDriverDialect();
         $this->statementParser = new StatementParser(
             dialect: $this->dialect,
@@ -83,8 +80,6 @@ abstract class AbstractPdoConnection extends AbstractConnection
     ): array {
         return [];
     }
-
-    abstract protected function getDriverName(): DefaultDriver|string;
 
     abstract protected function getDriverDialect(): DialectInterface;
 

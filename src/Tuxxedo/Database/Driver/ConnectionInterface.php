@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Driver;
 
+use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Database\Config\ConnectionConfigInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
@@ -27,6 +29,9 @@ use Tuxxedo\Database\Query\Statement\Table\DropTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\UpdateStatementInterface;
 use Tuxxedo\Database\SqlException;
 
+/**
+ * @method static self create(ContainerInterface $container, ConnectionConfigInterface $config)
+ */
 interface ConnectionInterface
 {
     public string $name {
@@ -34,10 +39,6 @@ interface ConnectionInterface
     }
 
     public ConnectionRole $role {
-        get;
-    }
-
-    public DefaultDriver|string $driver {
         get;
     }
 

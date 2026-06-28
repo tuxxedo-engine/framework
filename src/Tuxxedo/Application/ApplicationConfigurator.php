@@ -20,6 +20,7 @@ use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Container\ContainerException;
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Database\Config\ConnectionManagerConfigInterface;
 use Tuxxedo\Database\ConnectionManager;
 use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Debug\DebugErrorHandler;
@@ -431,8 +432,8 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
                 ConnectionManagerInterface::class,
                 static function (ContainerInterface $container) use ($customizer): ConnectionManagerInterface {
                     $manager = ConnectionManager::createFromConfig(
-                        config: $container->resolve(ConfigInterface::class),
-                        path: 'database.manager',
+                        container: $container,
+                        config: $container->resolve(ConnectionManagerConfigInterface::class),
                     );
 
                     if ($customizer !== null) {

@@ -19,7 +19,6 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\AbstractConnection;
-use Tuxxedo\Database\Driver\DefaultDriver;
 use Tuxxedo\Database\Driver\Pgsql\Config\PgsqlConnectionConfigInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Dialect\PgsqlDialect;
@@ -30,7 +29,6 @@ class PgsqlConnection extends AbstractConnection
 {
     public readonly string $name;
     public readonly ConnectionRole $role;
-    public readonly DefaultDriver $driver;
     public readonly DialectInterface $dialect;
 
     private Connection $pgsql;
@@ -45,7 +43,6 @@ class PgsqlConnection extends AbstractConnection
     ) {
         $this->name = $config->name;
         $this->role = $config->role;
-        $this->driver = DefaultDriver::PGSQL;
         $this->dialect = new PgsqlDialect(
             connection: fn (): Connection => $this->getDriverInstance(),
         );
