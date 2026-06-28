@@ -15,24 +15,12 @@ namespace Tuxxedo\Database\Driver\Pdo\Sqlite\Config;
 
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
-use Tuxxedo\Database\Config\ConnectionConfigInterface;
+use Tuxxedo\Database\Driver\Pdo\Config\PdoConnectionConfigInterface;
 
 #[DefaultImplementation(class: PdoSqliteConnectionConfig::class, lifecycle: Lifecycle::SINGLETON)]
-interface PdoSqliteConnectionConfigInterface extends ConnectionConfigInterface
+interface PdoSqliteConnectionConfigInterface extends PdoConnectionConfigInterface
 {
-    public string $dsn {
-        get;
-    }
-
     public string $database {
-        get;
-    }
-
-    public bool $persistent {
-        get;
-    }
-
-    public bool $lazy {
         get;
     }
 

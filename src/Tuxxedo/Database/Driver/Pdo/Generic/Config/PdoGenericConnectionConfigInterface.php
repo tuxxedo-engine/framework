@@ -15,28 +15,9 @@ namespace Tuxxedo\Database\Driver\Pdo\Generic\Config;
 
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
-use Tuxxedo\Database\Config\ConnectionConfigInterface;
+use Tuxxedo\Database\Driver\Pdo\Config\PdoConnectionConfigInterface;
 
 #[DefaultImplementation(class: PdoGenericConnectionConfig::class, lifecycle: Lifecycle::SINGLETON)]
-interface PdoGenericConnectionConfigInterface extends ConnectionConfigInterface
+interface PdoGenericConnectionConfigInterface extends PdoConnectionConfigInterface
 {
-    public string $dsn {
-        get;
-    }
-
-    public string $username {
-        get;
-    }
-
-    public string $password {
-        get;
-    }
-
-    public bool $persistent {
-        get;
-    }
-
-    public bool $lazy {
-        get;
-    }
 }

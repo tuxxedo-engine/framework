@@ -13,10 +13,11 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Driver\Pdo\Sqlite;
 
-use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\Driver\DefaultDriver;
 use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
+use Tuxxedo\Database\Driver\Pdo\Config\PdoConnectionConfigInterface;
+use Tuxxedo\Database\Driver\Pdo\Sqlite\Config\PdoSqliteConnectionConfigInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Dialect\SqliteDialect;
 
@@ -24,7 +25,7 @@ class PdoSqliteConnection extends AbstractPdoConnection
 {
     public static function create(
         ContainerInterface $container,
-        ConfigInterface $config,
+        PdoSqliteConnectionConfigInterface $config,
     ): self {
         return new self($container, $config);
     }
@@ -40,23 +41,31 @@ class PdoSqliteConnection extends AbstractPdoConnection
     }
 
     protected function getDsn(
-        ConfigInterface $config,
+        PdoConnectionConfigInterface $config,
     ): string {
-        if ($config->string('dsn') !== '') {
-            return $config->string('dsn');
+        /** @var PdoSqliteConnectionConfigInterface $config */
+
+        if ($config->dsn !== '') {
+            return $config->dsn;
         }
 
         return \sprintf(
             'sqlite:%s',
-            $config->string('database'),
+            $config->database,
         );
     }
 
     protected function getPdoOptions(
-        ConfigInterface $config,
+        PdoConnectionConfigInterface $config,
     ): array {
+        /** @var PdoSqliteConnectionConfigInterface $config */
+
+        if ($config->timeout === null) {
+            return [];
+        }
+
         return [
-            \PDO::ATTR_TIMEOUT => $config->int('options.timeout'),
+            \PDO::ATTR_TIMEOUT => $config->timeout,
         ];
     }
 }

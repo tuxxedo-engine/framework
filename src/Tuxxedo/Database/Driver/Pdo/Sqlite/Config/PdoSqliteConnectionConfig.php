@@ -24,6 +24,8 @@ class PdoSqliteConnectionConfig implements PdoSqliteConnectionConfigInterface
         public readonly string $name = '',
         public readonly ConnectionRole $role = ConnectionRole::DEFAULT,
         public readonly string $dsn = '',
+        public readonly string $username = '',
+        #[\SensitiveParameter] public readonly string $password = '',
         public readonly string $database = '',
         public readonly bool $persistent = false,
         public readonly bool $lazy = true,

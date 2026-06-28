@@ -14,10 +14,11 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver\Pdo\Mysql;
 
 use Pdo\Mysql;
-use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\Driver\DefaultDriver;
 use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
+use Tuxxedo\Database\Driver\Pdo\Config\PdoConnectionConfigInterface;
+use Tuxxedo\Database\Driver\Pdo\Mysql\Config\PdoMysqlConnectionConfigInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Dialect\MysqlDialect;
 
@@ -25,7 +26,7 @@ class PdoMysqlConnection extends AbstractPdoConnection
 {
     public static function create(
         ContainerInterface $container,
-        ConfigInterface $config,
+        PdoMysqlConnectionConfigInterface $config,
     ): self {
         return new self($container, $config);
     }
@@ -41,27 +42,29 @@ class PdoMysqlConnection extends AbstractPdoConnection
     }
 
     protected function getDsn(
-        ConfigInterface $config,
+        PdoConnectionConfigInterface $config,
     ): string {
-        if ($config->string('dsn') !== '') {
-            return $config->string('dsn');
+        /** @var PdoMysqlConnectionConfigInterface $config */
+
+        if ($config->dsn !== '') {
+            return $config->dsn;
         }
 
         $database = '';
         $charset = '';
 
-        if ($config->string('database') !== '') {
-            $database = ';dbname=' . $config->string('database');
+        if ($config->database !== '') {
+            $database = ';dbname=' . $config->database;
         }
 
-        if ($config->string('options.charset') !== '') {
-            $charset = ';charset=' . $config->string('options.charset');
+        if ($config->charset !== '') {
+            $charset = ';charset=' . $config->charset;
         }
 
-        if ($config->isString('unixSocket') && $config->string('unixSocket') !== '') {
+        if ($config->unixSocket !== null && $config->unixSocket !== '') {
             return \sprintf(
                 'mysql:unix_socket=%s%s%s',
-                $config->string('unixSocket'),
+                $config->unixSocket,
                 $database,
                 $charset,
             );
@@ -69,13 +72,13 @@ class PdoMysqlConnection extends AbstractPdoConnection
 
         $port = '';
 
-        if ($config->isInt('port')) {
-            $port = ';port=' . $config->int('port');
+        if ($config->port !== null) {
+            $port = ';port=' . $config->port;
         }
 
         return \sprintf(
             'mysql:host=%s%s%s%s',
-            $config->string('host'),
+            $config->host,
             $port,
             $database,
             $charset,
@@ -83,26 +86,30 @@ class PdoMysqlConnection extends AbstractPdoConnection
     }
 
     protected function getPdoOptions(
-        ConfigInterface $config,
+        PdoConnectionConfigInterface $config,
     ): array {
-        $options = [
-            \PDO::ATTR_TIMEOUT => $config->int('options.timeout'),
-        ];
+        /** @var PdoMysqlConnectionConfigInterface $config */
 
-        if ($config->bool('ssl.enabled')) {
-            if ($config->has('ssl.ca') && $config->string('ssl.ca') !== '') {
-                $options[Mysql::ATTR_SSL_CA] = $config->string('ssl.ca');
+        $options = [];
+
+        if ($config->timeout !== null) {
+            $options[\PDO::ATTR_TIMEOUT] = $config->timeout;
+        }
+
+        if ($config->sslEnabled) {
+            if ($config->sslCa !== '') {
+                $options[Mysql::ATTR_SSL_CA] = $config->sslCa;
             }
 
-            if ($config->has('ssl.cert') && $config->string('ssl.cert') !== '') {
-                $options[Mysql::ATTR_SSL_CERT] = $config->string('ssl.cert');
+            if ($config->sslCert !== '') {
+                $options[Mysql::ATTR_SSL_CERT] = $config->sslCert;
             }
 
-            if ($config->has('ssl.key') && $config->string('ssl.key') !== '') {
-                $options[Mysql::ATTR_SSL_KEY] = $config->string('ssl.key');
+            if ($config->sslKey !== '') {
+                $options[Mysql::ATTR_SSL_KEY] = $config->sslKey;
             }
 
-            $options[Mysql::ATTR_SSL_VERIFY_SERVER_CERT] = $config->bool('ssl.verifyPeer');
+            $options[Mysql::ATTR_SSL_VERIFY_SERVER_CERT] = $config->sslVerifyPeer;
         }
 
         return $options;

@@ -15,15 +15,11 @@ namespace Tuxxedo\Database\Driver\Pdo\Mysql\Config;
 
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
-use Tuxxedo\Database\Config\ConnectionConfigInterface;
+use Tuxxedo\Database\Driver\Pdo\Config\PdoConnectionConfigInterface;
 
 #[DefaultImplementation(class: PdoMysqlConnectionConfig::class, lifecycle: Lifecycle::SINGLETON)]
-interface PdoMysqlConnectionConfigInterface extends ConnectionConfigInterface
+interface PdoMysqlConnectionConfigInterface extends PdoConnectionConfigInterface
 {
-    public string $dsn {
-        get;
-    }
-
     public string $host {
         get;
     }
@@ -36,27 +32,11 @@ interface PdoMysqlConnectionConfigInterface extends ConnectionConfigInterface
         get;
     }
 
-    public string $username {
-        get;
-    }
-
-    public string $password {
-        get;
-    }
-
     public string $database {
         get;
     }
 
     public string $charset {
-        get;
-    }
-
-    public bool $persistent {
-        get;
-    }
-
-    public bool $lazy {
         get;
     }
 

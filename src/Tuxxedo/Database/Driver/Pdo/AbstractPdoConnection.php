@@ -13,12 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Driver\Pdo;
 
-use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\AbstractConnection;
 use Tuxxedo\Database\Driver\DefaultDriver;
+use Tuxxedo\Database\Driver\Pdo\Config\PdoConnectionConfigInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Parser\StatementParser;
 use Tuxxedo\Database\Query\Parser\StatementParserInterface;
@@ -37,10 +37,10 @@ abstract class AbstractPdoConnection extends AbstractConnection
 
     final protected function __construct(
         private readonly ContainerInterface $container,
-        ConfigInterface $config,
+        PdoConnectionConfigInterface $config,
     ) {
-        $this->name = $config->string('name');
-        $this->role = $config->enum('role', ConnectionRole::class);
+        $this->name = $config->name;
+        $this->role = $config->role;
         $this->driver = static::getDriverName();
         $this->dialect = static::getDriverDialect();
         $this->statementParser = new StatementParser(
@@ -51,11 +51,11 @@ abstract class AbstractPdoConnection extends AbstractConnection
             try {
                 $this->pdo = new \PDO(
                     dsn: static::getDsn($config),
-                    username: $config->string('username'),
-                    password: $config->string('password'),
+                    username: $config->username,
+                    password: $config->password,
                     options: static::getPdoOptions($config) + [
                         \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-                        \PDO::ATTR_PERSISTENT => $config->bool('options.persistent'),
+                        \PDO::ATTR_PERSISTENT => $config->persistent,
                     ],
                 );
 
@@ -65,13 +65,13 @@ abstract class AbstractPdoConnection extends AbstractConnection
             }
         };
 
-        if (!$config->bool('options.lazy')) {
+        if (!$config->lazy) {
             $this->connect();
         }
     }
 
     protected function postConnectHook(
-        ConfigInterface $config,
+        PdoConnectionConfigInterface $config,
     ): void {
     }
 
@@ -79,7 +79,7 @@ abstract class AbstractPdoConnection extends AbstractConnection
      * @return array<\PDO::ATTR_*|\PDO::*_ATTR_*, mixed>
      */
     protected function getPdoOptions(
-        ConfigInterface $config,
+        PdoConnectionConfigInterface $config,
     ): array {
         return [];
     }
@@ -89,7 +89,7 @@ abstract class AbstractPdoConnection extends AbstractConnection
     abstract protected function getDriverDialect(): DialectInterface;
 
     abstract protected function getDsn(
-        ConfigInterface $config,
+        PdoConnectionConfigInterface $config,
     ): string;
 
     /**

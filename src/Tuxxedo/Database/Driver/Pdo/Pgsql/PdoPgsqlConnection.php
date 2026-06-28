@@ -13,10 +13,11 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Driver\Pdo\Pgsql;
 
-use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\Driver\DefaultDriver;
 use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
+use Tuxxedo\Database\Driver\Pdo\Config\PdoConnectionConfigInterface;
+use Tuxxedo\Database\Driver\Pdo\Pgsql\Config\PdoPgsqlConnectionConfigInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Dialect\PgsqlDialect;
 
@@ -24,7 +25,7 @@ class PdoPgsqlConnection extends AbstractPdoConnection
 {
     public static function create(
         ContainerInterface $container,
-        ConfigInterface $config,
+        PdoPgsqlConnectionConfigInterface $config,
     ): self {
         return new self($container, $config);
     }
@@ -40,10 +41,12 @@ class PdoPgsqlConnection extends AbstractPdoConnection
     }
 
     protected function getDsn(
-        ConfigInterface $config,
+        PdoConnectionConfigInterface $config,
     ): string {
-        if ($config->string('dsn') !== '') {
-            return $config->string('dsn');
+        /** @var PdoPgsqlConnectionConfigInterface $config */
+
+        if ($config->dsn !== '') {
+            return $config->dsn;
         }
 
         $database = '';
@@ -52,41 +55,39 @@ class PdoPgsqlConnection extends AbstractPdoConnection
         $sslMode = '';
         $sslParams = '';
 
-        if ($config->string('database') !== '') {
-            $database = ';dbname=' . $config->string('database');
+        if ($config->database !== '') {
+            $database = ';dbname=' . $config->database;
         }
 
-        if ($config->isInt('port')) {
-            $port = ';port=' . $config->int('port');
+        if ($config->port !== null) {
+            $port = ';port=' . $config->port;
         }
 
-        if ($config->isInt('options.timeout')) {
-            $timeout = ';connect_timeout=' . $config->int('options.timeout');
+        if ($config->timeout !== null) {
+            $timeout = ';connect_timeout=' . $config->timeout;
         }
 
-        if ($config->bool('ssl.enabled')) {
-            $mode = $config->string('ssl.mode');
+        if ($config->sslEnabled) {
+            $sslMode = ';sslmode=' . ($config->sslMode !== '' ? $config->sslMode : 'require');
 
-            $sslMode = ';sslmode=' . ($mode !== '' ? $mode : 'require');
-
-            if ($config->string('ssl.ca') !== '') {
-                $sslParams .= ';sslrootcert=' . $config->string('ssl.ca');
+            if ($config->sslCa !== '') {
+                $sslParams .= ';sslrootcert=' . $config->sslCa;
             }
 
-            if ($config->string('ssl.cert') !== '') {
-                $sslParams .= ';sslcert=' . $config->string('ssl.cert');
+            if ($config->sslCert !== '') {
+                $sslParams .= ';sslcert=' . $config->sslCert;
             }
 
-            if ($config->string('ssl.key') !== '') {
-                $sslParams .= ';sslkey=' . $config->string('ssl.key');
+            if ($config->sslKey !== '') {
+                $sslParams .= ';sslkey=' . $config->sslKey;
             }
-        } elseif ($config->string('ssl.mode') !== '') {
-            $sslMode = ';sslmode=' . $config->string('ssl.mode');
+        } elseif ($config->sslMode !== '') {
+            $sslMode = ';sslmode=' . $config->sslMode;
         }
 
         return \sprintf(
             'pgsql:host=%s%s%s%s%s%s',
-            $config->string('host'),
+            $config->host,
             $port,
             $database,
             $timeout,
@@ -96,18 +97,18 @@ class PdoPgsqlConnection extends AbstractPdoConnection
     }
 
     protected function postConnectHook(
-        ConfigInterface $config,
+        PdoConnectionConfigInterface $config,
     ): void {
-        $charset = $config->string('options.charset');
+        /** @var PdoPgsqlConnectionConfigInterface $config */
 
-        if ($charset === '') {
+        if ($config->charset === '') {
             return;
         }
 
         $this->pdo->exec(
             \sprintf(
                 'SET client_encoding TO \'%s\'',
-                \addcslashes($charset, "\\'"),
+                \addcslashes($config->charset, "\\'"),
             ),
         );
     }
