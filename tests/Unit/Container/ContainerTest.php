@@ -67,6 +67,11 @@ use Tuxxedo\Container\ContainerException;
 
 class ContainerTest extends TestCase
 {
+    private const string CALL_FILE_RETURNS_STRING = __DIR__ . '/../../Fixture/Container/CallFile/returns-string.php';
+    private const string CALL_FILE_RETURNS_CLOSURE_STRING = __DIR__ . '/../../Fixture/Container/CallFile/returns-closure-string.php';
+    private const string CALL_FILE_RETURNS_CLOSURE_SERVICE = __DIR__ . '/../../Fixture/Container/CallFile/returns-closure-service.php';
+    private const string CALL_FILE_RETURNS_CLOSURE_WITH_DEP = __DIR__ . '/../../Fixture/Container/CallFile/returns-closure-with-dep.php';
+
     public function testBasicResolve(): void
     {
         $container = new Container();
@@ -779,5 +784,49 @@ class ContainerTest extends TestCase
 
         self::assertInstanceOf(ServiceOne::class, $service);
         self::assertSame($service->foo(), 'bar');
+    }
+
+    public function testCallFileReturnsRawValueDirectlyWhenFileReturnsNonClosure(): void
+    {
+        $container = new Container();
+
+        self::assertSame('hello', $container->callFile(self::CALL_FILE_RETURNS_STRING));
+    }
+
+    public function testCallFileInvokesClosureViaCallWhenFileReturnsClosure(): void
+    {
+        $container = new Container();
+
+        self::assertSame('world', $container->callFile(self::CALL_FILE_RETURNS_CLOSURE_STRING));
+    }
+
+    public function testCallFileResolvesClosureDependenciesViaContainer(): void
+    {
+        $container = new Container();
+
+        self::assertSame('bar', $container->callFile(self::CALL_FILE_RETURNS_CLOSURE_WITH_DEP));
+    }
+
+    public function testCallFileReturnsObjectWhenExpectedTypeMatches(): void
+    {
+        $container = new Container();
+        $service = $container->callFile(self::CALL_FILE_RETURNS_CLOSURE_SERVICE, ServiceOne::class);
+
+        self::assertInstanceOf(ServiceOne::class, $service);
+        self::assertSame('bar', $service->foo());
+    }
+
+    public function testCallFileThrowsWhenExpectedTypeDoesNotMatch(): void
+    {
+        $container = new Container();
+
+        self::expectException(ContainerException::class);
+        self::expectExceptionMessage(\sprintf(
+            'File "%s" returned type "string" but expected "%s"',
+            self::CALL_FILE_RETURNS_CLOSURE_STRING,
+            ServiceOne::class,
+        ));
+
+        $container->callFile(self::CALL_FILE_RETURNS_CLOSURE_STRING, ServiceOne::class);
     }
 }

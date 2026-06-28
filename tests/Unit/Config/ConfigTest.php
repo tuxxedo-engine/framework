@@ -120,23 +120,6 @@ class ConfigTest extends TestCase
         $config->enum('enum.baz', SecondTestEnum::class);
     }
 
-    public function testSection(): void
-    {
-        $config = Config::createFromDirectory(new Container(), self::DIRECTORY);
-        $dirs = $config->section('other.dirs');
-
-        self::assertTrue($dirs->has('temp'));
-        self::assertTrue($dirs->has('uploads'));
-
-        self::assertSame(
-            $config->section('contact')->path('smtp.server'),
-            'localhost',
-        );
-
-        $this->expectException(ConfigException::class);
-        $config->section('credentials.port');
-    }
-
     public function testContainerResolvedFile(): void
     {
         $config = Config::createFromFile(new Container(), self::CLOSURE_FILE);

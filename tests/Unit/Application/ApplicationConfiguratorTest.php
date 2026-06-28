@@ -22,6 +22,7 @@ use Support\Http\Response\StubResponseEmitter;
 use Tuxxedo\Application\ApplicationConfigurator;
 use Tuxxedo\Application\Profile;
 use Tuxxedo\Config\Config;
+use Tuxxedo\Config\ConfigException;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionManagerInterface;
@@ -51,6 +52,7 @@ class ApplicationConfiguratorTest extends TestCase
     private const string CONFIG_DIRECTORY = __DIR__ . '/../../Fixture/Application/ApplicationConfigurator/directory';
     private const string SERVICE_FILE = __DIR__ . '/../../Fixture/Application/ApplicationConfigurator/service.php';
     private const string SERVICE_NON_CLOSURE_FILE = __DIR__ . '/../../Fixture/Application/ApplicationConfigurator/service-non-closure.php';
+    private const string NO_APP_CONFIG_FILE = __DIR__ . '/../../Fixture/Application/ApplicationConfigurator/no-app-config.php';
 
     protected function setUp(): void
     {
@@ -106,6 +108,14 @@ class ApplicationConfiguratorTest extends TestCase
 
         self::assertInstanceOf(Container::class, $configurator->container);
         self::assertInstanceOf(Config::class, $configurator->config);
+    }
+
+    public function testCreateFromConfigFileThrowsConfigExceptionWhenAppConfigIsMissing(): void
+    {
+        self::expectException(ConfigException::class);
+        self::expectExceptionMessage('Missing app configuration');
+
+        ApplicationConfigurator::createFromConfigFile(self::NO_APP_CONFIG_FILE);
     }
 
     public function testWithAppNameUpdatesPropertyAndReturnsFluentSelf(): void

@@ -489,12 +489,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
 
         if (\sizeof($this->serviceFiles) > 0) {
             foreach ($this->serviceFiles as $serviceFile) {
-                $provider = (static fn (string $file): mixed => require $file)($serviceFile);
-
-                if ($provider instanceof \Closure) {
-                    /** @var \Closure(): void $provider */
-                    $container->call($provider);
-                }
+                $container->callFile($serviceFile);
             }
         }
 

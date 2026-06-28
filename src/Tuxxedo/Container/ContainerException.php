@@ -137,4 +137,19 @@ class ContainerException extends \Exception
             ),
         );
     }
+
+    public static function fromCallFileTypeMismatch(
+        string $path,
+        string $expectedType,
+        string $actualType,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'File "%s" returned type "%s" but expected "%s"',
+                $path,
+                $actualType,
+                $expectedType,
+            ),
+        );
+    }
 }

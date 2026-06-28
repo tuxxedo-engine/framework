@@ -366,6 +366,29 @@ class Container implements ContainerInterface
         return $callable(...$callArguments);
     }
 
+    public function callFile(
+        string $path,
+        ?string $expectedType = null,
+    ): mixed {
+        $entry = (static function (string $file): mixed {
+            return require $file;
+        })($path);
+
+        if ($entry instanceof \Closure) {
+            $entry = $this->call($entry);
+        }
+
+        if ($expectedType !== null && !$entry instanceof $expectedType) {
+            throw ContainerException::fromCallFileTypeMismatch(
+                path: $path,
+                expectedType: $expectedType,
+                actualType: \get_debug_type($entry),
+            );
+        }
+
+        return $entry;
+    }
+
     public function isBound(
         string $className,
     ): bool {

@@ -36,7 +36,7 @@ class Config implements ConfigInterface
         $typedConfigs = [];
         $deferredArrayClosures = [];
 
-        foreach (FileCollection::fromRecursiveFileType($directory, '.php') as $configFile) {
+        foreach (FileCollection::fromFileType($directory, '.php') as $configFile) {
             $index = \str_replace($directory . '/', '', \substr($configFile, 0, -4));
 
             static::processFileEntry(
@@ -180,25 +180,6 @@ class Config implements ConfigInterface
             foreach ($entry as $key => $value) {
                 $directives[$key] = $value;
             }
-
-            return;
-        }
-
-        if (\str_contains($derivedKey, '/')) {
-            $parts = \explode('/', $derivedKey);
-            $leaf = \array_pop($parts);
-            $ref = &$directives;
-
-            foreach ($parts as $part) {
-                /** @var array<mixed> $ref */
-                $ref[$part] ??= [];
-                $ref = &$ref[$part];
-            }
-
-            /** @var array<mixed> $ref */
-            $ref[$leaf] = $entry;
-
-            unset($ref);
 
             return;
         }

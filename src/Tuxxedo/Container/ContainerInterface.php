@@ -129,6 +129,19 @@ interface ContainerInterface
     ): mixed;
 
     /**
+     * @template TExpected of object
+     *
+     * @param class-string<TExpected>|null $expectedType
+     * @return ($expectedType is null ? mixed : TExpected)
+     *
+     * @throws ContainerException
+     */
+    public function callFile(
+        string $path,
+        ?string $expectedType = null,
+    ): mixed;
+
+    /**
      * @param class-string $className
      */
     public function isBound(
