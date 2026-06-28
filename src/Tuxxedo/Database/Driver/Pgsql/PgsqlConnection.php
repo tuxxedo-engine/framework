@@ -15,12 +15,12 @@ namespace Tuxxedo\Database\Driver\Pgsql;
 
 use PgSql\Connection;
 use PgSql\Result;
-use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\AbstractConnection;
 use Tuxxedo\Database\Driver\DefaultDriver;
+use Tuxxedo\Database\Driver\Pgsql\Config\PgsqlConnectionConfigInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Dialect\PgsqlDialect;
 use Tuxxedo\Database\Query\Parser\StatementParser;
@@ -41,10 +41,10 @@ class PgsqlConnection extends AbstractConnection
 
     private function __construct(
         private readonly ContainerInterface $container,
-        ConfigInterface $config,
+        PgsqlConnectionConfigInterface $config,
     ) {
-        $this->name = $config->string('name');
-        $this->role = $config->enum('role', ConnectionRole::class);
+        $this->name = $config->name;
+        $this->role = $config->role;
         $this->driver = DefaultDriver::PGSQL;
         $this->dialect = new PgsqlDialect(
             connection: fn (): Connection => $this->getDriverInstance(),
@@ -62,71 +62,61 @@ class PgsqlConnection extends AbstractConnection
 
                 $dsn = [];
 
-                if ($config->isString('unixSocket')) {
-                    $dsn[] = 'host=' . $quote($config->string('unixSocket'));
-                } elseif ($config->isString('host')) {
-                    $dsn[] = 'host=' . $quote($config->string('host'));
+                if ($config->unixSocket !== null) {
+                    $dsn[] = 'host=' . $quote($config->unixSocket);
+                } elseif ($config->host !== '') {
+                    $dsn[] = 'host=' . $quote($config->host);
                 }
 
-                if ($config->has('port')) {
-                    $dsn[] = 'port=' . $quote((string) $config->int('port'));
+                if ($config->port !== null) {
+                    $dsn[] = 'port=' . $quote((string) $config->port);
                 }
 
-                if ($config->has('database')) {
-                    $dsn[] = 'dbname=' . $quote($config->string('database'));
+                if ($config->database !== '') {
+                    $dsn[] = 'dbname=' . $quote($config->database);
                 }
 
-                if ($config->has('username')) {
-                    $dsn[] = 'user=' . $quote($config->string('username'));
+                if ($config->username !== '') {
+                    $dsn[] = 'user=' . $quote($config->username);
                 }
 
-                if ($config->has('password')) {
-                    $dsn[] = 'password=' . $quote($config->string('password'));
+                if ($config->password !== '') {
+                    $dsn[] = 'password=' . $quote($config->password);
                 }
 
-                if ($config->has('options.timeout')) {
-                    $dsn[] = 'connect_timeout=' . $quote((string) $config->int('options.timeout'));
+                if ($config->timeout !== null) {
+                    $dsn[] = 'connect_timeout=' . $quote((string) $config->timeout);
                 }
 
-                if ($config->bool('ssl.enabled')) {
-                    $sslMode = $config->has('ssl.mode')
-                        ? $config->string('ssl.mode')
-                        : ($config->bool('ssl.verifyHost')
+                if ($config->sslEnabled) {
+                    $sslMode = $config->sslMode !== ''
+                        ? $config->sslMode
+                        : ($config->sslVerifyHost
                             ? 'verify-full'
                             : (
-                                $config->bool('ssl.verifyPeer')
+                                $config->sslVerifyPeer
                                     ? 'verify-ca'
                                     : 'require'
                             ));
 
                     $dsn[] = 'sslmode=' . $quote($sslMode);
 
-                    if ($config->has('ssl.ca')) {
-                        $value = $config->string('ssl.ca');
-
-                        if ($value !== '') {
-                            $dsn[] = 'sslrootcert=' . $quote($value);
-                        }
+                    if ($config->sslCa !== '') {
+                        $dsn[] = 'sslrootcert=' . $quote($config->sslCa);
                     }
-                    if ($config->has('ssl.cert')) {
-                        $value = $config->string('ssl.cert');
 
-                        if ($value !== '') {
-                            $dsn[] = 'sslcert=' . $quote($value);
-                        }
+                    if ($config->sslCert !== '') {
+                        $dsn[] = 'sslcert=' . $quote($config->sslCert);
                     }
-                    if ($config->has('ssl.key')) {
-                        $value = $config->string('ssl.key');
 
-                        if ($value !== '') {
-                            $dsn[] = 'sslkey=' . $quote($value);
-                        }
+                    if ($config->sslKey !== '') {
+                        $dsn[] = 'sslkey=' . $quote($config->sslKey);
                     }
                 } else {
                     $dsn[] = 'sslmode=' . $quote('disable');
                 }
 
-                $pgsql = $config->bool('options.persistent')
+                $pgsql = $config->persistent
                     ? \pg_pconnect(\join(' ', $dsn))
                     : \pg_connect(\join(' ', $dsn));
 
@@ -136,28 +126,24 @@ class PgsqlConnection extends AbstractConnection
 
                 $this->pgsql = $pgsql;
 
-                if ($config->has('options.charset')) {
-                    $value = $config->string('options.charset');
+                if ($config->charset !== '') {
+                    $result = \pg_set_client_encoding($this->pgsql, $config->charset);
 
-                    if ($value !== '') {
-                        $result = \pg_set_client_encoding($this->pgsql, $value);
-
-                        if ($result !== 0) {
-                            $this->throwFromLastError($this->pgsql);
-                        }
+                    if ($result !== 0) {
+                        $this->throwFromLastError($this->pgsql);
                     }
                 }
             }
         };
 
-        if (!$config->bool('options.lazy')) {
+        if (!$config->lazy) {
             $this->connect();
         }
     }
 
     public static function create(
         ContainerInterface $container,
-        ConfigInterface $config,
+        PgsqlConnectionConfigInterface $config,
     ): self {
         return new self($container, $config);
     }

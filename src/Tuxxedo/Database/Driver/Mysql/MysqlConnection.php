@@ -13,12 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Driver\Mysql;
 
-use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\AbstractConnection;
 use Tuxxedo\Database\Driver\DefaultDriver;
+use Tuxxedo\Database\Driver\Mysql\Config\MysqlConnectionConfigInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Dialect\MysqlDialect;
 use Tuxxedo\Database\Query\Parser\StatementParser;
@@ -39,10 +39,10 @@ class MysqlConnection extends AbstractConnection
 
     private function __construct(
         private readonly ContainerInterface $container,
-        ConfigInterface $config,
+        MysqlConnectionConfigInterface $config,
     ) {
-        $this->name = $config->string('name');
-        $this->role = $config->enum('role', ConnectionRole::class);
+        $this->name = $config->name;
+        $this->role = $config->role;
         $this->driver = DefaultDriver::MYSQL;
         $this->dialect = new MysqlDialect();
         $this->statementParser = new StatementParser(
@@ -60,55 +60,43 @@ class MysqlConnection extends AbstractConnection
                 $this->mysqli = $mysqli;
             }
 
-            if ($config->has('options.timeout')) {
-                $timeout = $config->int('options.timeout');
-
-                $this->mysqli->options(\MYSQLI_OPT_CONNECT_TIMEOUT, $timeout);
-                $this->mysqli->options(\MYSQLI_OPT_READ_TIMEOUT, $timeout);
+            if ($config->timeout !== null) {
+                $this->mysqli->options(\MYSQLI_OPT_CONNECT_TIMEOUT, $config->timeout);
+                $this->mysqli->options(\MYSQLI_OPT_READ_TIMEOUT, $config->timeout);
             }
 
-            if ($config->isString('unixSocket')) {
+            if ($config->unixSocket !== null) {
                 $this->mysqli->real_connect(
-                    socket: $config->string('unixSocket'),
+                    socket: $config->unixSocket,
                 );
             } else {
-                $flags = $config->isInt('options.flags')
-                    ? $config->int('options.flags')
-                    : 0;
+                $flags = $config->flags ?? 0;
 
-                if ($config->bool('ssl.enabled')) {
-                    $ca = $config->string('ssl.ca');
-                    $cert = $config->string('ssl.cert');
-                    $key = $config->string('ssl.key');
-
+                if ($config->sslEnabled) {
                     if (
-                        $ca !== '' &&
-                        $cert !== '' &&
-                        $key !== ''
+                        $config->sslCa !== '' &&
+                        $config->sslCert !== '' &&
+                        $config->sslKey !== ''
                     ) {
-                        $this->mysqli->ssl_set($key, $cert, $ca, null, null);
+                        $this->mysqli->ssl_set($config->sslKey, $config->sslCert, $config->sslCa, null, null);
                     }
 
                     $flags |= \MYSQLI_CLIENT_SSL;
 
-                    if (!$config->bool('ssl.verifyPeer')) {
+                    if (!$config->sslVerifyPeer) {
                         $flags |= \MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT;
                     }
                 }
 
                 try {
                     $this->mysqli->real_connect(
-                        hostname: $config->bool('options.persistent')
-                            ? 'p:' . $config->string('host')
-                            : $config->string('host'),
-                        username: $config->string('username'),
-                        password: $config->string('password'),
-                        database: $config->has('database')
-                            ? $config->string('database')
-                            : null,
-                        port: $config->has('port')
-                            ? $config->int('port')
-                            : null,
+                        hostname: $config->persistent
+                            ? 'p:' . $config->host
+                            : $config->host,
+                        username: $config->username,
+                        password: $config->password,
+                        database: $config->database,
+                        port: $config->port,
                         flags: $flags,
                     );
                 } finally {
@@ -125,17 +113,17 @@ class MysqlConnection extends AbstractConnection
                 }
             }
 
-            $this->mysqli->set_charset($config->string('options.charset'));
+            $this->mysqli->set_charset($config->charset);
         };
 
-        if (!$config->bool('options.lazy')) {
+        if (!$config->lazy) {
             $this->connect();
         }
     }
 
     public static function create(
         ContainerInterface $container,
-        ConfigInterface $config,
+        MysqlConnectionConfigInterface $config,
     ): self {
         return new self($container, $config);
     }
