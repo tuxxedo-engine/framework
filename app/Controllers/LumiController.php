@@ -17,7 +17,7 @@ use Tuxxedo\Collection\CollectionInterface;
 use Tuxxedo\Collection\FileCollection;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\HttpException;
-use Tuxxedo\Http\Kernel\Resolver\ConfigValue;
+use Tuxxedo\Http\Kernel\Resolver\Config;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
@@ -45,8 +45,8 @@ use Tuxxedo\View\ViewRenderInterface;
 readonly class LumiController
 {
     public function __construct(
-        #[ConfigValue('view.directory')] private string $viewDirectory,
-        #[ConfigValue('view.cacheDirectory')] private string $viewCacheDirectory,
+        #[Config('view.directory')] private string $viewDirectory,
+        #[Config('view.cacheDirectory')] private string $viewCacheDirectory,
         private ContainerInterface $container,
         private ViewController $viewController,
         private LumiViewRenderInterface $viewRender,

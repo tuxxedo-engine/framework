@@ -26,7 +26,7 @@ use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Kernel\KernelInterface;
 use Tuxxedo\Http\Kernel\Resolver\AppName;
-use Tuxxedo\Http\Kernel\Resolver\ConfigValue;
+use Tuxxedo\Http\Kernel\Resolver\Config;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\Middleware\OutputCapture;
@@ -297,7 +297,7 @@ readonly class TestController
     #[OutputCapture]
     public function appTest(
         #[AppName] string $appNameOne,
-        #[ConfigValue('app.name')] string $appNameTwo,
+        #[Config('app.name')] string $appNameTwo,
         #[Glue(
             static function (ContainerInterface $container): string {
                 return $container->resolve(KernelInterface::class)->appName;

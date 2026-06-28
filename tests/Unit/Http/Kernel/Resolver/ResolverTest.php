@@ -26,7 +26,7 @@ use Tuxxedo\Http\Kernel\Resolver\AppName;
 use Tuxxedo\Http\Kernel\Resolver\AppProfile;
 use Tuxxedo\Http\Kernel\Resolver\AppUrl;
 use Tuxxedo\Http\Kernel\Resolver\AppVersion;
-use Tuxxedo\Http\Kernel\Resolver\ConfigValue;
+use Tuxxedo\Http\Kernel\Resolver\Config as ConfigAttr;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Reflection\ParameterReflectorInterface;
 use Tuxxedo\Router\StaticRouter;
@@ -172,6 +172,6 @@ class ResolverTest extends TestCase
             config: $config,
         );
 
-        self::assertSame('Tuxxedo Engine', (new ConfigValue('app.name'))->resolve($container, $this->parameter()));
+        self::assertSame('Tuxxedo Engine', (new ConfigAttr('app.name'))->resolve($container, $this->parameter()));
     }
 }

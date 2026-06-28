@@ -22,7 +22,7 @@ use Tuxxedo\Reflection\ParameterReflectorInterface;
  * @implements DependencyResolverInterface<mixed>
  */
 #[\Attribute(flags: \Attribute::TARGET_PARAMETER)]
-class ConfigValue implements DependencyResolverInterface
+class Config implements DependencyResolverInterface
 {
     public function __construct(
         protected readonly string $path,
