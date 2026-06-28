@@ -112,10 +112,12 @@ class Config implements ConfigInterface
 
             if ($returnType !== null) {
                 if (!\interface_exists($returnType) && !\class_exists($returnType)) {
+                    // @codeCoverageIgnoreStart
                     throw ConfigException::fromInvalidTypedConfigReturnType(
                         file: $file,
                         returnType: $returnType,
                     );
+                    // @codeCoverageIgnoreEnd
                 }
 
                 if (\array_key_exists($returnType, $typedConfigs)) {

@@ -11,11 +11,9 @@
 
 declare(strict_types=1);
 
-use Fixture\Config\AppInfoRegistry;
+use Fixture\Config\Typed\KeyOverrideConfig;
+use Fixture\Config\Typed\KeyOverrideConfigInterface;
 
-return static function (AppInfoRegistry $registry): array {
-    return [
-        'name' => $registry->appName,
-        'version' => $registry->appVersion,
-    ];
-};
+return static fn (): KeyOverrideConfigInterface => new KeyOverrideConfig(
+    sourceProperty: 'aliased',
+);

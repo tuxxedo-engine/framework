@@ -12,6 +12,5 @@
 declare(strict_types=1);
 
 return [
-    'temp' => '/tmp',
-    'uploads' => '/tmp/uploads',
+    'inner' => 'scalar-value',
 ];

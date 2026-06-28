@@ -68,6 +68,9 @@ class ConfigException extends \Exception
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromInvalidTypedConfigReturnType(
         string $file,
         string $returnType,

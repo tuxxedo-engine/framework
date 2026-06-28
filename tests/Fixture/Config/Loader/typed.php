@@ -11,11 +11,10 @@
 
 declare(strict_types=1);
 
-namespace Fixture\Config;
+use Fixture\Config\Typed\SimpleConfig;
+use Fixture\Config\Typed\SimpleConfigInterface;
 
-enum SecondTestEnum
-{
-    case ABRA;
-    case KADABRA;
-    case ALAKAZAM;
-}
+return static fn (): SimpleConfigInterface => new SimpleConfig(
+    name: 'fixture',
+    count: 7,
+);

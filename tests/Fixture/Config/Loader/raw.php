@@ -11,10 +11,10 @@
 
 declare(strict_types=1);
 
-namespace Fixture\Config;
-
-class AppInfoRegistry
-{
-    public private(set) string $appName = 'KalleLoad';
-    public private(set) string $appVersion = '2.0.0';
-}
+return [
+    'first' => 'one',
+    'second' => 'two',
+    'nested' => [
+        'leaf' => 'deep',
+    ],
+];

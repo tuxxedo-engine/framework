@@ -11,7 +11,8 @@
 
 declare(strict_types=1);
 
-return [
-    'username' => 'root',
-    'port' => 13099,
-];
+return static function () {
+    return [
+        'untyped' => 'closure',
+    ];
+};

@@ -12,8 +12,5 @@
 declare(strict_types=1);
 
 return [
-    'email' => 'hello@example.com',
-    'smtp' => [
-        'server' => 'localhost',
-    ],
+    'name' => 'pre-existing',
 ];

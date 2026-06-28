@@ -11,11 +11,10 @@
 
 declare(strict_types=1);
 
-namespace Fixture\Config;
+use Fixture\Config\Typed\SimpleConfig;
+use Fixture\Config\Typed\SimpleConfigInterface;
 
-enum TestEnum
-{
-    case FOO;
-    case BAR;
-    case BAZ;
-}
+return static fn (): SimpleConfigInterface => new SimpleConfig(
+    name: 'directory',
+    count: 3,
+);
