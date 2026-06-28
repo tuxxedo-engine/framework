@@ -56,6 +56,13 @@ class DatabaseException extends \Exception
         );
     }
 
+    public static function fromConfigDispatchNotYetImplemented(): self
+    {
+        return new self(
+            message: 'Connection dispatch from raw configuration is not yet implemented for the typed-config layer; use ConnectionManagerConfig with typed connection configs and resolve via the container',
+        );
+    }
+
     public static function fromCannotInitializeNativeDriver(): self
     {
         return new self(

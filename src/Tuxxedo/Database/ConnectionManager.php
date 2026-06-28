@@ -17,12 +17,11 @@ use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DefaultInitializer;
 use Tuxxedo\Database\Driver\ConnectionInterface;
-use Tuxxedo\Database\Driver\DefaultDriver;
 
 #[DefaultInitializer(
     static function (ContainerInterface $container): ConnectionManagerInterface {
         return ConnectionManager::createFromConfig(
-            container: $container,
+            config: $container->resolve(ConfigInterface::class),
             path: 'database.manager',
         );
     },
@@ -39,16 +38,14 @@ class ConnectionManager implements ConnectionManagerInterface
     private ConnectionInterface $writeConnection;
 
     final public function __construct(
-        private readonly ContainerInterface $container,
     ) {
     }
 
     public static function createFromConfig(
-        ContainerInterface $container,
+        ConfigInterface $config,
         string $path,
     ): self {
-        $manager = new static($container);
-        $config = $container->resolve(ConfigInterface::class);
+        $manager = new static();
 
         if (
             $config->has($path . '.connections') &&
@@ -88,32 +85,11 @@ class ConnectionManager implements ConnectionManagerInterface
         return $this;
     }
 
+    // @todo Replace with typed-config dispatch
     public function registerConnectionFromConfig(
         ConfigInterface|string $configOrPath,
     ): self {
-        if (\is_string($configOrPath)) {
-            $prefix = $configOrPath;
-            $config = $this->container->resolve(ConfigInterface::class);
-        } else {
-            $prefix = '';
-            $config = $configOrPath;
-        }
-
-        if ($config->path($prefix . '.class') !== '') {
-            /** @var class-string<ConnectionInterface> $class */
-            $class = $config->string($prefix . '.class');
-        } else {
-            $class = $config->enum($prefix . '.driver', DefaultDriver::class)->getDriverClass();
-        }
-
-        $this->registerConnection(
-            connection: $class::create(
-                container: $this->container,
-                config: $config->section($prefix),
-            ),
-        );
-
-        return $this;
+        throw DatabaseException::fromConfigDispatchNotYetImplemented();
     }
 
     public function getDefaultConnection(): ConnectionInterface

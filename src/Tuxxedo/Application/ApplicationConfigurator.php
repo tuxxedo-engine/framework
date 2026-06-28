@@ -431,7 +431,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
                 ConnectionManagerInterface::class,
                 static function (ContainerInterface $container) use ($customizer): ConnectionManagerInterface {
                     $manager = ConnectionManager::createFromConfig(
-                        container: $container,
+                        config: $container->resolve(ConfigInterface::class),
                         path: 'database.manager',
                     );
 

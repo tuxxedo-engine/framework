@@ -13,12 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Driver\Sqlite;
 
-use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\AbstractConnection;
 use Tuxxedo\Database\Driver\DefaultDriver;
+use Tuxxedo\Database\Driver\Sqlite\Config\SqliteConnectionConfigInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Dialect\SqliteDialect;
 use Tuxxedo\Database\Query\Parser\StatementParser;
@@ -39,10 +39,10 @@ class SqliteConnection extends AbstractConnection
 
     private function __construct(
         private readonly ContainerInterface $container,
-        ConfigInterface $config,
+        SqliteConnectionConfigInterface $config,
     ) {
-        $this->name = $config->string('name');
-        $this->role = $config->enum('role', ConnectionRole::class);
+        $this->name = $config->name;
+        $this->role = $config->role;
         $this->driver = DefaultDriver::SQLITE;
         $this->dialect = new SqliteDialect();
         $this->statementParser = new StatementParser(
@@ -52,11 +52,9 @@ class SqliteConnection extends AbstractConnection
         $this->connector = function () use ($config): void {
             try {
                 $this->sqlite = new \SQLite3(
-                    filename: $config->string('database'),
-                    flags: $config->isInt('options.flags')
-                        ? $config->int('options.flags')
-                        : \SQLITE3_OPEN_READWRITE | \SQLITE3_OPEN_CREATE,
-                    encryptionKey: $config->string('password'),
+                    filename: $config->database,
+                    flags: $config->flags ?? (\SQLITE3_OPEN_READWRITE | \SQLITE3_OPEN_CREATE),
+                    encryptionKey: $config->encryptionKey,
                 );
 
                 $this->sqlite->enableExceptions(true);
@@ -69,14 +67,14 @@ class SqliteConnection extends AbstractConnection
             }
         };
 
-        if (!$config->bool('options.lazy')) {
+        if (!$config->lazy) {
             $this->connect();
         }
     }
 
     public static function create(
         ContainerInterface $container,
-        ConfigInterface $config,
+        SqliteConnectionConfigInterface $config,
     ): self {
         return new self($container, $config);
     }
