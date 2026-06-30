@@ -25,12 +25,14 @@ use Tuxxedo\Database\Query\Statement\ExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\InsertBulkStatementInterface;
 use Tuxxedo\Database\Query\Statement\InsertStatementInterface;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
+use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\DropTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\UpdateStatementInterface;
 use Tuxxedo\Database\SqlException;
 
 /**
  * @method static self create(ContainerInterface $container, ConnectionConfigInterface $config)
+ * @todo Get rid of the above @method tag
  */
 interface ConnectionInterface
 {
@@ -184,8 +186,11 @@ interface ConnectionInterface
         string $table,
     ): CountStatementInterface;
 
-    // @todo createTable builder
-    // @todo alterTable builder
+    public function createTable(
+        string $table,
+    ): CreateTableStatementInterface;
+
+    // @todo alterTable — deferred, needs data-loss design for type changes
 
     public function dropTable(
         string $table,

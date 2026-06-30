@@ -95,4 +95,15 @@ class SqlException extends \Exception
             ),
         );
     }
+
+    public static function fromCreateTableWithoutColumns(
+        string $table,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot compile CREATE TABLE for `%s`: no columns have been declared',
+                $table,
+            ),
+        );
+    }
 }

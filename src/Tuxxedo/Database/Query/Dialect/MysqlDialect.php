@@ -13,9 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Dialect;
 
-use Tuxxedo\Model\Attribute\Column\Boolean;
-use Tuxxedo\Model\Attribute\Column\Json;
-use Tuxxedo\Model\Attribute\ColumnInterface;
+use Tuxxedo\Database\Query\Statement\Table\Column\BooleanColumn;
+use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
+use Tuxxedo\Database\Query\Statement\Table\Column\EnumerationColumn;
+use Tuxxedo\Database\Query\Statement\Table\Column\JsonColumn;
 
 class MysqlDialect implements DialectInterface
 {
@@ -50,12 +51,31 @@ class MysqlDialect implements DialectInterface
     }
 
     public function nativeColumnType(
-        ColumnInterface $columnClass,
+        ColumnInterface $column,
     ): ?string {
-        return match ($columnClass::class) {
-            Boolean::class => 'TINYINT(1)',
-            Json::class => 'JSON',
-            default => null,
-        };
+        if ($column instanceof BooleanColumn) {
+            return 'TINYINT(1)';
+        }
+
+        if ($column instanceof JsonColumn) {
+            return 'JSON';
+        }
+
+        if ($column instanceof EnumerationColumn) {
+            return \sprintf(
+                'ENUM(%s)',
+                \join(', ', \array_map(
+                    static fn (string $value): string => "'" . \str_replace("'", "''", $value) . "'",
+                    $column->values,
+                )),
+            );
+        }
+
+        return null;
+    }
+
+    public function autoIncrementClause(): string
+    {
+        return 'AUTO_INCREMENT PRIMARY KEY';
     }
 }

@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Dialect;
 
+use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
 use Tuxxedo\Database\SqlException;
-use Tuxxedo\Model\Attribute\ColumnInterface;
 
 interface DialectInterface
 {
@@ -41,6 +41,8 @@ interface DialectInterface
     ): string;
 
     public function nativeColumnType(
-        ColumnInterface $columnClass,
+        ColumnInterface $column,
     ): ?string;
+
+    public function autoIncrementClause(): string;
 }

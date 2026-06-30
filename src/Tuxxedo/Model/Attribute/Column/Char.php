@@ -13,7 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\Attribute\Column;
 
-use Tuxxedo\Database\Query\Dialect\DialectInterface;
+use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface as TableColumnInterface;
+use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\ColumnLengthInterface;
 use Tuxxedo\Model\Behavior\BehaviorInterface;
@@ -40,12 +41,13 @@ readonly class Char implements ColumnInterface, ColumnLengthInterface
         $this->coercerArguments = [];
     }
 
-    public function getNativeType(
-        DialectInterface $dialect,
-    ): string {
-        return $dialect->nativeColumnType($this) ?? \sprintf(
-            'CHAR(%d)',
-            $this->length,
+    public function toColumnType(
+        CreateTableStatementInterface $statement,
+        string $propertyName,
+    ): TableColumnInterface {
+        return $statement->char(
+            name: $this->name ?? $propertyName,
+            length: $this->length,
         );
     }
 }

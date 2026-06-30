@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Tuxxedo\Model\Attribute\Column;
 
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
+use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface as TableColumnInterface;
+use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
 use Tuxxedo\Model\Attribute\ColumnFormatInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Behavior\BehaviorInterface;
@@ -43,17 +45,20 @@ readonly class Timestamp implements ColumnInterface, ColumnFormatInterface
         ];
     }
 
-    public function getNativeType(
-        DialectInterface $dialect,
-    ): string {
-        return $dialect->nativeColumnType($this) ?? 'TIMESTAMP';
-    }
-
     public function getFormat(
         DialectInterface $dialect,
     ): string {
         return $this->format instanceof DateFormat
                 ? $this->format->value
                 : $this->format;
+    }
+
+    public function toColumnType(
+        CreateTableStatementInterface $statement,
+        string $propertyName,
+    ): TableColumnInterface {
+        return $statement->timestamp(
+            name: $this->name ?? $propertyName,
+        );
     }
 }

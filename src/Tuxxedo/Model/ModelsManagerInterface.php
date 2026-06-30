@@ -27,6 +27,7 @@ use Tuxxedo\Model\Hydrator\HydratorInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 
+// @todo createTable(class-string $modelClass): CreateTableStatementInterface — introspects #[Table] + #[Column\*] attributes and builds a CreateTableStatement via toColumnType on each column attribute
 #[DefaultImplementation(class: ModelsManager::class, lifecycle: Lifecycle::SINGLETON)]
 interface ModelsManagerInterface
 {

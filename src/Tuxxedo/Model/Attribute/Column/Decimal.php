@@ -13,7 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\Attribute\Column;
 
-use Tuxxedo\Database\Query\Dialect\DialectInterface;
+use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface as TableColumnInterface;
+use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\ColumnPrecisionInterface;
 use Tuxxedo\Model\Behavior\BehaviorInterface;
@@ -41,13 +42,14 @@ readonly class Decimal implements ColumnInterface, ColumnPrecisionInterface
         $this->coercerArguments = [];
     }
 
-    public function getNativeType(
-        DialectInterface $dialect,
-    ): string {
-        return $dialect->nativeColumnType($this) ?? \sprintf(
-            'DECIMAL(%d, %d)',
-            $this->precision,
-            $this->scale,
+    public function toColumnType(
+        CreateTableStatementInterface $statement,
+        string $propertyName,
+    ): TableColumnInterface {
+        return $statement->decimal(
+            name: $this->name ?? $propertyName,
+            precision: $this->precision,
+            scale: $this->scale,
         );
     }
 }

@@ -14,13 +14,13 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Query\Dialect;
 
 use PgSql\Connection;
+use Tuxxedo\Database\Query\Statement\Table\Column\BlobColumn;
+use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
+use Tuxxedo\Database\Query\Statement\Table\Column\DateTimeColumn;
+use Tuxxedo\Database\Query\Statement\Table\Column\DoubleColumn;
+use Tuxxedo\Database\Query\Statement\Table\Column\JsonColumn;
+use Tuxxedo\Database\Query\Statement\Table\Column\TinyIntegerColumn;
 use Tuxxedo\Database\SqlException;
-use Tuxxedo\Model\Attribute\Column\Blob;
-use Tuxxedo\Model\Attribute\Column\DateTime;
-use Tuxxedo\Model\Attribute\Column\Double;
-use Tuxxedo\Model\Attribute\Column\Json;
-use Tuxxedo\Model\Attribute\Column\TinyInteger;
-use Tuxxedo\Model\Attribute\ColumnInterface;
 
 class PgsqlDialect implements DialectInterface
 {
@@ -77,15 +77,33 @@ class PgsqlDialect implements DialectInterface
     }
 
     public function nativeColumnType(
-        ColumnInterface $columnClass,
+        ColumnInterface $column,
     ): ?string {
-        return match ($columnClass::class) {
-            Blob::class => 'BYTEA',
-            DateTime::class => 'TIMESTAMP',
-            Double::class => 'DOUBLE PRECISION',
-            Json::class => 'JSON',
-            TinyInteger::class => 'SMALLINT',
-            default => null,
-        };
+        if ($column instanceof BlobColumn) {
+            return 'BYTEA';
+        }
+
+        if ($column instanceof DateTimeColumn) {
+            return 'TIMESTAMP';
+        }
+
+        if ($column instanceof DoubleColumn) {
+            return 'DOUBLE PRECISION';
+        }
+
+        if ($column instanceof JsonColumn) {
+            return 'JSONB';
+        }
+
+        if ($column instanceof TinyIntegerColumn) {
+            return 'SMALLINT';
+        }
+
+        return null;
+    }
+
+    public function autoIncrementClause(): string
+    {
+        return 'GENERATED ALWAYS AS IDENTITY PRIMARY KEY';
     }
 }

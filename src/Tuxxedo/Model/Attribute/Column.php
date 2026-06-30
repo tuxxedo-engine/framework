@@ -13,9 +13,11 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\Attribute;
 
-use Tuxxedo\Database\Query\Dialect\DialectInterface;
+use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface as TableColumnInterface;
+use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
 use Tuxxedo\Model\Behavior\BehaviorInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
+use Tuxxedo\Model\ModelException;
 
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
 readonly class Column implements ColumnInterface
@@ -37,9 +39,12 @@ readonly class Column implements ColumnInterface
         $this->coercerArguments = [];
     }
 
-    public function getNativeType(
-        DialectInterface $dialect,
-    ): null {
-        return null;
+    public function toColumnType(
+        CreateTableStatementInterface $statement,
+        string $propertyName,
+    ): TableColumnInterface {
+        throw ModelException::fromUntypedColumnAttribute(
+            propertyName: $propertyName,
+        );
     }
 }

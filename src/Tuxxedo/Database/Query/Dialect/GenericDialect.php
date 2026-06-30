@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Dialect;
 
-use Tuxxedo\Model\Attribute\ColumnInterface;
+use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
 
 class GenericDialect implements DialectInterface
 {
@@ -47,8 +47,13 @@ class GenericDialect implements DialectInterface
     }
 
     public function nativeColumnType(
-        ColumnInterface $columnClass,
+        ColumnInterface $column,
     ): ?string {
         return null;
+    }
+
+    public function autoIncrementClause(): string
+    {
+        return 'GENERATED ALWAYS AS IDENTITY PRIMARY KEY';
     }
 }

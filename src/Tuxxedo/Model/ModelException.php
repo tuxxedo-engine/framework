@@ -15,6 +15,17 @@ namespace Tuxxedo\Model;
 
 class ModelException extends \Exception
 {
+    public static function fromUntypedColumnAttribute(
+        string $propertyName,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Untyped #[Column] attribute on property "%s" cannot produce a SQL column type; use a typed subclass such as #[Column\\Integer] or #[Column\\Varchar]',
+                $propertyName,
+            ),
+        );
+    }
+
     /**
      * @param class-string $modelClass
      */

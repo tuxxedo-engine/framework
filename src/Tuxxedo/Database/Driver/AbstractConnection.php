@@ -26,6 +26,8 @@ use Tuxxedo\Database\Query\Statement\InsertStatement;
 use Tuxxedo\Database\Query\Statement\InsertStatementInterface;
 use Tuxxedo\Database\Query\Statement\SelectStatement;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
+use Tuxxedo\Database\Query\Statement\Table\CreateTableStatement;
+use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\DropTableStatement;
 use Tuxxedo\Database\Query\Statement\Table\DropTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\UpdateStatement;
@@ -186,6 +188,15 @@ abstract class AbstractConnection implements ConnectionInterface
         string $table,
     ): CountStatementInterface {
         return new CountStatement(
+            table: $table,
+            connection: $this,
+        );
+    }
+
+    public function createTable(
+        string $table,
+    ): CreateTableStatementInterface {
+        return new CreateTableStatement(
             table: $table,
             connection: $this,
         );

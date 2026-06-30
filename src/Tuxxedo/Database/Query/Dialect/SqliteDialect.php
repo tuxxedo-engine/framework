@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Dialect;
 
-use Tuxxedo\Model\Attribute\Column\Boolean;
-use Tuxxedo\Model\Attribute\ColumnInterface;
+use Tuxxedo\Database\Query\Statement\Table\Column\BooleanColumn;
+use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
 
 class SqliteDialect implements DialectInterface
 {
@@ -49,11 +49,17 @@ class SqliteDialect implements DialectInterface
     }
 
     public function nativeColumnType(
-        ColumnInterface $columnClass,
+        ColumnInterface $column,
     ): ?string {
-        return match ($columnClass::class) {
-            Boolean::class => 'INTEGER',
-            default => null,
-        };
+        if ($column instanceof BooleanColumn) {
+            return 'INTEGER';
+        }
+
+        return null;
+    }
+
+    public function autoIncrementClause(): string
+    {
+        return 'PRIMARY KEY AUTOINCREMENT';
     }
 }
