@@ -33,6 +33,7 @@ use Tuxxedo\Database\SqlException;
 /**
  * @method static self create(ContainerInterface $container, ConnectionConfigInterface $config)
  * @todo Get rid of the above @method tag
+ * @todo Consider a method to be able to switch database on an existing connection (expose the dbname by a prop?)
  */
 interface ConnectionInterface
 {
