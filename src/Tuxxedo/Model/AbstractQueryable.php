@@ -53,7 +53,7 @@ abstract class AbstractQueryable implements QueryableInterface
      */
     public int $count {
         get {
-            return \count($this->materialize());
+            return \sizeof($this->materialize());
         }
     }
 
@@ -674,7 +674,7 @@ abstract class AbstractQueryable implements QueryableInterface
             return ($this->countBuilder)($this->criteriaStack);
         }
 
-        return \count($this->materialize());
+        return \sizeof($this->materialize());
     }
 
     /**

@@ -235,7 +235,7 @@ class Relation extends AbstractQueryable implements RelationInterface
     protected function computeTotalCount(): int
     {
         if ($this->prefetched !== null) {
-            return \count($this->prefetched);
+            return \sizeof($this->prefetched);
         }
 
         return parent::computeTotalCount();

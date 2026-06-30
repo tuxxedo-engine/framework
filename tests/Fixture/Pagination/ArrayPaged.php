@@ -32,7 +32,7 @@ class ArrayPaged implements PagedInterface
      */
     public int $totalCount {
         get {
-            return \count($this->items);
+            return \sizeof($this->items);
         }
     }
 
