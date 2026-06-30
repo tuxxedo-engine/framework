@@ -44,7 +44,7 @@ abstract class AbstractColumn implements ColumnInterface
         }
 
         if ($this->default !== null) {
-            $parts[] = 'DEFAULT ' . $this->renderDefaultValue();
+            $parts[] = 'DEFAULT ' . $this->renderDefaultValue($this->default);
         }
 
         if ($this->autoIncrement) {
@@ -60,21 +60,19 @@ abstract class AbstractColumn implements ColumnInterface
         return \join(' ', $parts);
     }
 
-    private function renderDefaultValue(): string
-    {
-        if (\is_bool($this->default)) {
-            return $this->default
+    private function renderDefaultValue(
+        string|int|float|bool $default,
+    ): string {
+        if (\is_bool($default)) {
+            return $default
                 ? 'TRUE'
                 : 'FALSE';
         }
 
-        if (\is_int($this->default) || \is_float($this->default)) {
-            return (string) $this->default;
+        if (\is_int($default) || \is_float($default)) {
+            return (string) $default;
         }
 
-        /** @var string $value */
-        $value = $this->default;
-
-        return "'" . \str_replace("'", "''", $value) . "'";
+        return "'" . \str_replace("'", "''", $default) . "'";
     }
 }
