@@ -41,13 +41,7 @@ class LumiViewRender implements LumiViewRenderInterface
                 require $__lumiViewFileName;
                 \error_reporting($__lumiErrorReporting);
 
-                $buffer = \ob_get_clean();
-
-                if ($buffer === false) {
-                    throw ViewException::fromUnableToCaptureBuffer(); // @codeCoverageIgnore
-                }
-
-                return $buffer;
+                return \ob_get_clean();
             };
         } else {
             $this->renderFrame = function (string $__lumiViewFileName, array $__lumiVariables): string {
@@ -55,13 +49,7 @@ class LumiViewRender implements LumiViewRenderInterface
 
                 require $__lumiViewFileName;
 
-                $buffer = \ob_get_clean();
-
-                if ($buffer === false) {
-                    throw ViewException::fromUnableToCaptureBuffer(); // @codeCoverageIgnore
-                }
-
-                return $buffer;
+                return \ob_get_clean();
             };
         }
     }

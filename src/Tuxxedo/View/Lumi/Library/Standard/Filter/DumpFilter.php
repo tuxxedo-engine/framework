@@ -31,6 +31,6 @@ class DumpFilter implements FilterInterface
         \ob_start();
         \var_dump($value);
 
-        return \rtrim(!\is_bool($dump = \ob_get_clean()) ? $dump : '');
+        return \rtrim(\ob_get_clean());
     }
 }

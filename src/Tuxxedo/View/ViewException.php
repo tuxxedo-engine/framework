@@ -40,16 +40,6 @@ class ViewException extends \Exception
         );
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
-    public static function fromUnableToCaptureBuffer(): self
-    {
-        return new self(
-            message: 'Unable to render view: Cannot capture output buffer',
-        );
-    }
-
     public static function fromUnableToDetermineViewName(
         string $view,
     ): self {

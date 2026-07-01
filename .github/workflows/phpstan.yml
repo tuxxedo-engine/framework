@@ -19,4 +19,4 @@ jobs:
         with:
           php_version: '8.5'
           php_extensions: filter mbstring mysqli pdo pdo_mysql pdo_pgsql pdo_sqlite pgsql session sqlite3
-          version: 2.2.1
+          version: 2.x

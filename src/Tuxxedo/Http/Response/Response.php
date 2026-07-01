@@ -111,8 +111,6 @@ class Response implements ResponseInterface, ResponsableInterface
 
     /**
      * @param HeaderInterface[] $headers
-     *
-     * @throws HttpException
      */
     #[\NoDiscard]
     public static function capture(
@@ -123,16 +121,10 @@ class Response implements ResponseInterface, ResponsableInterface
         \ob_start();
         $callback();
 
-        $contents = \ob_get_clean();
-
-        if (\is_bool($contents)) {
-            throw HttpException::fromInternalServerError(); // @codeCoverageIgnore
-        }
-
         return new static(
             headers: $headers,
             responseCode: $responseCode,
-            body: $contents,
+            body: \ob_get_clean(),
         );
     }
 
