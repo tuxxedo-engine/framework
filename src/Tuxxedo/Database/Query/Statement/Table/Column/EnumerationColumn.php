@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Statement\Table\Column;
 
+use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 
-// @todo Support native enums
 class EnumerationColumn extends AbstractColumn
 {
     /**
@@ -24,15 +24,26 @@ class EnumerationColumn extends AbstractColumn
     public readonly array $values;
 
     /**
-     * @param list<string> $values
+     * @param list<string>|class-string<\UnitEnum> $values
+     *
+     * @throws DatabaseException
      */
     public function __construct(
         string $name,
-        array $values,
+        array|string $values,
         bool $nullable = false,
         bool $unique = false,
         string|null $default = null,
     ) {
+        if (\is_string($values)) {
+            $values = \array_map(
+                static fn (\UnitEnum $case): string => $case instanceof \BackedEnum
+                    ? (string) $case->value
+                    : $case->name,
+                $values::cases(),
+            );
+        }
+
         $this->values = $values;
 
         parent::__construct(

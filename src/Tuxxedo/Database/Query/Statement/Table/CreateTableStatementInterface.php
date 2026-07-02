@@ -84,11 +84,11 @@ interface CreateTableStatementInterface extends StatementInterface
     ): ColumnInterface;
 
     /**
-     * @param list<string> $values
+     * @param list<string>|class-string<\UnitEnum> $values
      */
     public function enumeration(
         string $name,
-        array $values,
+        array|string $values,
         bool $nullable = false,
         bool $unique = false,
         string|null $default = null,

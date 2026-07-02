@@ -177,9 +177,12 @@ class CreateTableStatement extends AbstractTableStatement implements CreateTable
         );
     }
 
+    /**
+     * @param list<string>|class-string<\UnitEnum> $values
+     */
     public function enumeration(
         string $name,
-        array $values,
+        array|string $values,
         bool $nullable = false,
         bool $unique = false,
         string|null $default = null,
