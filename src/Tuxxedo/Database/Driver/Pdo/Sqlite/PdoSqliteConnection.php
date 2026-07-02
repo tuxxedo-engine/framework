@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver\Pdo\Sqlite;
 
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Database\Config\ConnectionConfigInterface;
 use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
 use Tuxxedo\Database\Driver\Pdo\Config\PdoConnectionConfigInterface;
 use Tuxxedo\Database\Driver\Pdo\Sqlite\Config\PdoSqliteConnectionConfigInterface;
@@ -24,8 +25,10 @@ class PdoSqliteConnection extends AbstractPdoConnection
 {
     public static function create(
         ContainerInterface $container,
-        PdoSqliteConnectionConfigInterface $config,
+        ConnectionConfigInterface $config,
     ): self {
+        /** @var PdoSqliteConnectionConfigInterface $config */
+
         return new self($container, $config);
     }
 

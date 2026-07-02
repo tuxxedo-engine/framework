@@ -16,6 +16,7 @@ namespace Tuxxedo\Database\Driver\Pgsql;
 use PgSql\Connection;
 use PgSql\Result;
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Database\Config\ConnectionConfigInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\AbstractConnection;
@@ -140,8 +141,10 @@ class PgsqlConnection extends AbstractConnection
 
     public static function create(
         ContainerInterface $container,
-        PgsqlConnectionConfigInterface $config,
+        ConnectionConfigInterface $config,
     ): self {
+        /** @var PgsqlConnectionConfigInterface $config */
+
         return new self($container, $config);
     }
 

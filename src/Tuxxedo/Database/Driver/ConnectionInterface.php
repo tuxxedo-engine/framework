@@ -31,12 +31,15 @@ use Tuxxedo\Database\Query\Statement\UpdateStatementInterface;
 use Tuxxedo\Database\SqlException;
 
 /**
- * @method static self create(ContainerInterface $container, ConnectionConfigInterface $config)
- * @todo Get rid of the above @method tag
- * @todo Consider a method to be able to switch database on an existing connection (expose the dbname by a prop?)
+ * @todo Consider a method to be able to switch database & get the current database on an existing connection
  */
 interface ConnectionInterface
 {
+    public static function create(
+        ContainerInterface $container,
+        ConnectionConfigInterface $config,
+    ): self;
+
     public string $name {
         get;
     }
@@ -191,7 +194,7 @@ interface ConnectionInterface
         string $table,
     ): CreateTableStatementInterface;
 
-    // @todo alterTable — deferred, needs data-loss design for type changes
+    // @todo Support alterTable
 
     public function dropTable(
         string $table,

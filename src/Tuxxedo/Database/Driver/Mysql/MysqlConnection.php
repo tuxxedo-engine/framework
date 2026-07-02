@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver\Mysql;
 
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Database\Config\ConnectionConfigInterface;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\AbstractConnection;
@@ -120,8 +121,10 @@ class MysqlConnection extends AbstractConnection
 
     public static function create(
         ContainerInterface $container,
-        MysqlConnectionConfigInterface $config,
+        ConnectionConfigInterface $config,
     ): self {
+        /** @var MysqlConnectionConfigInterface $config */
+
         return new self($container, $config);
     }
 

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver\Pdo\Pgsql;
 
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Database\Config\ConnectionConfigInterface;
 use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
 use Tuxxedo\Database\Driver\Pdo\Config\PdoConnectionConfigInterface;
 use Tuxxedo\Database\Driver\Pdo\Pgsql\Config\PdoPgsqlConnectionConfigInterface;
@@ -24,8 +25,10 @@ class PdoPgsqlConnection extends AbstractPdoConnection
 {
     public static function create(
         ContainerInterface $container,
-        PdoPgsqlConnectionConfigInterface $config,
+        ConnectionConfigInterface $config,
     ): self {
+        /** @var PdoPgsqlConnectionConfigInterface $config */
+
         return new self($container, $config);
     }
 

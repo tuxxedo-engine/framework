@@ -15,6 +15,7 @@ namespace Tuxxedo\Database\Driver\Pdo\Mysql;
 
 use Pdo\Mysql;
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Database\Config\ConnectionConfigInterface;
 use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
 use Tuxxedo\Database\Driver\Pdo\Config\PdoConnectionConfigInterface;
 use Tuxxedo\Database\Driver\Pdo\Mysql\Config\PdoMysqlConnectionConfigInterface;
@@ -25,8 +26,10 @@ class PdoMysqlConnection extends AbstractPdoConnection
 {
     public static function create(
         ContainerInterface $container,
-        PdoMysqlConnectionConfigInterface $config,
+        ConnectionConfigInterface $config,
     ): self {
+        /** @var PdoMysqlConnectionConfigInterface $config */
+
         return new self($container, $config);
     }
 
