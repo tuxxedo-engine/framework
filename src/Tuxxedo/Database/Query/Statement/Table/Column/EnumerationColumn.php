@@ -25,8 +25,6 @@ class EnumerationColumn extends AbstractColumn
 
     /**
      * @param list<string>|class-string<\UnitEnum> $values
-     *
-     * @throws DatabaseException
      */
     public function __construct(
         string $name,
