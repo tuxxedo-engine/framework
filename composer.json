@@ -28,11 +28,13 @@
   "suggest": {
     "ext-fileinfo": "For better file type detection in uploaded files",
     "ext-mysqli": "For database connections to mysql",
+    "ext-openssl": "For JWT support",
     "ext-pdo": "For database connections using PDO",
     "ext-pdo-mysql": "For database connections to mysql using PDO",
     "ext-pdo-pgsql": "For database connections to postgres using PDO",
     "ext-pdo-sqlite": "For database connections to sqlite using PDO",
     "ext-pgsql": "For database connections to postgres",
+    "ext-sodium": "For JWT support",
     "ext-sqlite3": "For database connections to sqlite"
   },
   "autoload": {
