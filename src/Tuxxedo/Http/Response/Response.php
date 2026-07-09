@@ -124,7 +124,7 @@ class Response implements ResponseInterface, ResponsableInterface
         return new static(
             headers: $headers,
             responseCode: $responseCode,
-            body: \ob_get_clean(),
+            body: !\is_bool($body = \ob_get_clean()) ? $body : '',
         );
     }
 

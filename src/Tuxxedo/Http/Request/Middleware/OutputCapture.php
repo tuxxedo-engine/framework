@@ -26,7 +26,7 @@ class OutputCapture implements MiddlewareInterface
         \ob_start();
 
         return $next->handle($request, $next)->withBody(
-            body: \ob_get_clean(),
+            body: !\is_bool($body = \ob_get_clean()) ? $body : '',
         );
     }
 }
