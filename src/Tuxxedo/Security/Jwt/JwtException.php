@@ -134,6 +134,7 @@ class JwtException extends \Exception
         );
     }
 
+    // @codeCoverageIgnoreStart
     public static function fromSigningFailed(
         string $algorithm,
     ): self {
@@ -155,6 +156,7 @@ class JwtException extends \Exception
             ),
         );
     }
+    // @codeCoverageIgnoreEnd
 
     public static function fromInvalidSignatureLength(
         string $algorithm,

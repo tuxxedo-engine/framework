@@ -33,9 +33,11 @@ class OpensslSignature
         );
 
         if ($ok === false || !\is_string($signature)) {
+            // @codeCoverageIgnoreStart
             throw JwtException::fromSigningFailed(
                 algorithm: $algorithmIdentifier,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         return $signature;
@@ -59,9 +61,11 @@ class OpensslSignature
         );
 
         if ($result === -1) {
+            // @codeCoverageIgnoreStart
             throw JwtException::fromVerificationError(
                 algorithm: $algorithmIdentifier,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         return $result === 1;
