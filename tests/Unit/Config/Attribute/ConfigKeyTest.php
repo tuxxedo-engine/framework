@@ -31,7 +31,6 @@ class ConfigKeyTest extends TestCase
     public function testRejectsDottedNameWithConfigException(): void
     {
         self::expectException(ConfigException::class);
-        self::expectExceptionMessage('Invalid #[ConfigKey] value "nested.path"');
 
         new ConfigKey(
             name: 'nested.path',

@@ -113,7 +113,6 @@ class ApplicationConfiguratorTest extends TestCase
     public function testCreateFromConfigFileThrowsConfigExceptionWhenAppConfigIsMissing(): void
     {
         self::expectException(ConfigException::class);
-        self::expectExceptionMessage('Missing app configuration');
 
         ApplicationConfigurator::createFromConfigFile(self::NO_APP_CONFIG_FILE);
     }

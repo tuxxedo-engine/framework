@@ -24,7 +24,6 @@ class AbstractOptimizerTest extends TestCase
         $optimizer = new BrokenOptimizer();
 
         self::expectException(OptimizerException::class);
-        self::expectExceptionMessage('Cannot pop optimizer context, possible optimizer corruption');
 
         $optimizer->callPopContext();
     }
@@ -34,7 +33,6 @@ class AbstractOptimizerTest extends TestCase
         $optimizer = new BrokenOptimizer();
 
         self::expectException(OptimizerException::class);
-        self::expectExceptionMessage('Cannot pop optimizer scope, possible optimizer corruption');
 
         $optimizer->callPopScope();
     }

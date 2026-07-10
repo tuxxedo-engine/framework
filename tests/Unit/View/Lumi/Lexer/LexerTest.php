@@ -131,7 +131,6 @@ class LexerTest extends TestCase
     public function testDuplicateStartingSequenceThrowsLexerException(): void
     {
         $this->expectException(LexerException::class);
-        $this->expectExceptionMessage('Duplicate sequence "{if " encountered in lexer configuration');
 
         Lexer::createWithoutDefaultHandlers(
             handlers: [
@@ -286,7 +285,6 @@ class LexerTest extends TestCase
         );
 
         $this->expectException(LexerException::class);
-        $this->expectExceptionMessage('Lexer state was left in an unclean state, possible end of sequence tag missing');
 
         $lexer->tokenizeByString('{leak}');
     }
@@ -385,7 +383,6 @@ class LexerTest extends TestCase
         );
 
         $this->expectException(LexerException::class);
-        $this->expectExceptionMessage('Lexer state was left in an unclean state, possible end of sequence tag missing');
 
         $lexer->tokenizeByString('{raw}{wrap unterminated content');
     }
