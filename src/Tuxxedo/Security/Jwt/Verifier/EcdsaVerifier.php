@@ -20,6 +20,7 @@ use Tuxxedo\Security\Jwt\Key\EcdsaPrivateKey;
 use Tuxxedo\Security\Jwt\Key\EcdsaPublicKey;
 use Tuxxedo\Security\Jwt\OpensslSignature;
 
+// @todo Narrow union to public-only or derive public from private at construction; openssl_verify silently rejects private-key handles on some OpenSSL builds
 class EcdsaVerifier implements VerifierInterface
 {
     private readonly int $opensslAlgorithm;
