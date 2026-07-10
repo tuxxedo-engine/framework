@@ -747,6 +747,24 @@ class Response implements ResponseInterface, ResponsableInterface
         );
     }
 
+    public function withAcceptQuery(
+        string ...$mediaTypes,
+    ): static {
+        if (\sizeof($mediaTypes) === 0) {
+            return clone $this;
+        }
+
+        $quoted = \array_map(
+            static fn (string $mediaType): string => '"' . $mediaType . '"',
+            $mediaTypes,
+        );
+
+        return $this->withHeader(
+            header: new Header('Accept-Query', \join(', ', $quoted)),
+            replace: true,
+        );
+    }
+
     public function withLastModified(
         \DateTimeInterface $when,
     ): static {

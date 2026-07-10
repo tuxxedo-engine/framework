@@ -224,6 +224,15 @@ class HttpException extends \Exception implements ResponseCodeInterface, Respons
         );
     }
 
+    public static function fromUnprocessableContent(
+        ?\Throwable $exception = null,
+    ): self {
+        return new self(
+            responseCode: ResponseCode::UNPROCESSABLE_ENTITY,
+            previous: $exception,
+        );
+    }
+
     public static function fromLocked(
         ?\Throwable $exception = null,
     ): self {

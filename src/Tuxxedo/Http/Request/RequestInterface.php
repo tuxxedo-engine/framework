@@ -183,4 +183,6 @@ interface RequestInterface
     public function isTrace(): bool;
 
     public function isPatch(): bool;
+
+    public function isQuery(): bool;
 }

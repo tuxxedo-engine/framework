@@ -24,6 +24,7 @@ enum Method
     case OPTIONS;
     case TRACE;
     case PATCH;
+    case QUERY;
 
     public static function from(string $name): static
     {

@@ -17,6 +17,7 @@ use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\RequestInterface;
 
+// @todo Emit Allow header on 405 responses (RFC 9110 §15.5.6); include QUERY when a route registers it
 interface RouterInterface
 {
     /**

@@ -159,6 +159,11 @@ class HttpExceptionTest extends TestCase
         ];
 
         yield [
+            ResponseCode::UNPROCESSABLE_ENTITY,
+            HttpException::fromUnprocessableContent(...),
+        ];
+
+        yield [
             ResponseCode::LOCKED,
             HttpException::fromLocked(...),
         ];

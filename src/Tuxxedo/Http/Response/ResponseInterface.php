@@ -111,6 +111,10 @@ interface ResponseInterface extends ResponseCodeInterface
         bool $weak = false,
     ): static;
 
+    public function withAcceptQuery(
+        string ...$mediaTypes,
+    ): static;
+
     public function withLastModified(
         \DateTimeInterface $when,
     ): static;

@@ -48,6 +48,7 @@ readonly class Cors implements MiddlewareInterface
             Method::PUT,
             Method::PATCH,
             Method::DELETE,
+            Method::QUERY,
         ],
         array $allowedHeaders = [
             'Content-Type',

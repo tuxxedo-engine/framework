@@ -73,6 +73,11 @@ class Request implements RequestInterface
         }
 
         $this->method = $method ?? self::detectMethod();
+
+        if ($this->method === Method::QUERY) {
+            $this->hydrateQueryBody();
+        }
+
         $this->queryString = $queryString ?? self::detectQueryString();
         $this->path = $path ?? self::detectPath();
         $this->uri = $uri ?? self::detectUri($this->queryString);
@@ -89,6 +94,27 @@ class Request implements RequestInterface
         $method = $_SERVER['REQUEST_METHOD'] ?? null;
 
         return Method::from($method ?? '');
+    }
+
+    private function hydrateQueryBody(): void
+    {
+        /** @var string $contentType */
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
+
+        if (!\str_starts_with(\strtolower($contentType), 'application/x-www-form-urlencoded')) {
+            return;
+        }
+
+        $raw = @\file_get_contents('php://input');
+
+        if ($raw === false || $raw === '') {
+            return;
+        }
+
+        $parsed = [];
+        \parse_str($raw, $parsed);
+
+        $_POST = $parsed;
     }
 
     private static function detectPath(): string
@@ -508,5 +534,10 @@ class Request implements RequestInterface
     public function isPatch(): bool
     {
         return $this->method === Method::PATCH;
+    }
+
+    public function isQuery(): bool
+    {
+        return $this->method === Method::QUERY;
     }
 }
