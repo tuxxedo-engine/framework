@@ -1,6 +1,6 @@
 name: PHPStan
 
-on: [ push ]
+on: [ push, pull_request ]
 
 jobs:
   build-test:
@@ -12,11 +12,11 @@ jobs:
       - uses: php-actions/composer@v6
         with:
           php_version: '8.5'
-          php_extensions: filter mbstring mysqli pdo pdo_mysql pdo_pgsql pdo_sqlite pgsql session sqlite3
+          php_extensions: filter mbstring mysqli openssl pdo pdo_mysql pdo_pgsql pdo_sqlite pgsql session sodium sqlite3
           version: 2.x
 
       - uses: php-actions/phpstan@v3
         with:
           php_version: '8.5'
-          php_extensions: filter mbstring mysqli pdo pdo_mysql pdo_pgsql pdo_sqlite pgsql session sqlite3
+          php_extensions: filter mbstring mysqli openssl pdo pdo_mysql pdo_pgsql pdo_sqlite pgsql session sodium sqlite3
           version: 2.x
