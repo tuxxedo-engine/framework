@@ -35,9 +35,11 @@ class DotEnvSource implements EnvSourceInterface
         $contents = @\file_get_contents($file);
 
         if ($contents === false) {
+            // @codeCoverageIgnoreStart
             throw EnvException::fromMissingFile(
                 file: $file,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         $this->values = (new DotEnvParser())->parse(

@@ -34,6 +34,8 @@ class StubParameterReflector implements ParameterReflectorInterface
      */
     public function __construct(
         private readonly ?string $defaultType = null,
+        private readonly ?string $builtinType = null,
+        private readonly bool $nullable = false,
     ) {
     }
 
@@ -44,12 +46,12 @@ class StubParameterReflector implements ParameterReflectorInterface
 
     public function getBuiltinType(): ?string
     {
-        return null;
+        return $this->builtinType;
     }
 
     public function isNullable(): bool
     {
-        return false;
+        return $this->nullable;
     }
 
     public function hasAttribute(
