@@ -315,7 +315,7 @@ class CorsTest extends TestCase
         );
 
         self::assertSame(
-            'GET, HEAD, POST, PUT, PATCH, DELETE',
+            'GET, HEAD, POST, PUT, PATCH, DELETE, QUERY',
             $this->findHeader(
                 response: $response,
                 name: 'Access-Control-Allow-Methods',

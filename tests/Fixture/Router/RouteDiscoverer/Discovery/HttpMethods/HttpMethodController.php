@@ -21,6 +21,7 @@ use Tuxxedo\Router\Attribute\Route\Options;
 use Tuxxedo\Router\Attribute\Route\Patch;
 use Tuxxedo\Router\Attribute\Route\Post;
 use Tuxxedo\Router\Attribute\Route\Put;
+use Tuxxedo\Router\Attribute\Route\Query;
 use Tuxxedo\Router\Attribute\Route\Trace;
 
 class HttpMethodController
@@ -67,6 +68,11 @@ class HttpMethodController
 
     #[Patch(path: '/patch')]
     public function patchMethod(): void
+    {
+    }
+
+    #[Query(path: '/query')]
+    public function queryMethod(): void
     {
     }
 }

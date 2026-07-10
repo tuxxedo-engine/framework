@@ -265,6 +265,7 @@ class RouteDiscovererTest extends TestCase
         self::assertSame(Method::OPTIONS, $byPath['/options']);
         self::assertSame(Method::TRACE, $byPath['/trace']);
         self::assertSame(Method::PATCH, $byPath['/patch']);
+        self::assertSame(Method::QUERY, $byPath['/query']);
         self::assertSameSize(Method::cases(), $byPath);
     }
 

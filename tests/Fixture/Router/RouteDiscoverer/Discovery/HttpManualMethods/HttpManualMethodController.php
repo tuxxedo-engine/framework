@@ -62,4 +62,9 @@ class HttpManualMethodController
     public function patchMethod(): void
     {
     }
+
+    #[Route(path: '/query', method: ['QUERY', Method::QUERY])]
+    public function queryMethod(): void
+    {
+    }
 }
