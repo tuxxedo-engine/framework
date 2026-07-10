@@ -33,6 +33,36 @@ use Tuxxedo\Router\DispatchableRouteInterface;
 
 class RequestTest extends TestCase
 {
+    /**
+     * @var array<string, mixed>
+     */
+    private array $originalPost;
+
+    /**
+     * @var array<string, mixed>
+     */
+    private array $originalServer;
+
+    protected function setUp(): void
+    {
+        /** @var array<string, mixed> $post */
+        $post = $_POST;
+
+        /** @var array<string, mixed> $server */
+        $server = $_SERVER;
+
+        $this->originalPost = $post;
+        $this->originalServer = $server;
+
+        $_POST = [];
+    }
+
+    protected function tearDown(): void
+    {
+        $_POST = $this->originalPost;
+        $_SERVER = $this->originalServer;
+    }
+
     private function makeRequest(
         ?DispatchableRouteInterface $route = null,
         ?HeaderContextInterface $headers = null,
@@ -684,6 +714,136 @@ class RequestTest extends TestCase
         self::assertSame(Method::POST, $request->method);
     }
 
+    public function testHydrateQueryBodyDoesNotTouchPostForNonQueryMethod(): void
+    {
+        $_POST = [
+            'existing' => 'value',
+        ];
+
+        new Request(
+            headers: new StubHeaderContext(),
+            cookies: new StubInputContext(),
+            get: new StubInputContext(),
+            post: new StubInputContext(),
+            files: new StubUploadedFilesContext(),
+            body: new StubBodyContext(),
+            method: Method::POST,
+        );
+
+        self::assertSame(
+            [
+                'existing' => 'value',
+            ],
+            $_POST,
+        );
+    }
+
+    public function testHydrateQueryBodyDoesNotTouchPostWhenContentTypeIsMissing(): void
+    {
+        $_POST = [
+            'existing' => 'value',
+        ];
+
+        unset($_SERVER['CONTENT_TYPE'], $_SERVER['HTTP_CONTENT_TYPE']);
+
+        new Request(
+            headers: new StubHeaderContext(),
+            cookies: new StubInputContext(),
+            get: new StubInputContext(),
+            post: new StubInputContext(),
+            files: new StubUploadedFilesContext(),
+            body: new StubBodyContext(),
+            method: Method::QUERY,
+        );
+
+        self::assertSame(
+            [
+                'existing' => 'value',
+            ],
+            $_POST,
+        );
+    }
+
+    public function testHydrateQueryBodyDoesNotTouchPostForNonFormContentType(): void
+    {
+        $_POST = [
+            'existing' => 'value',
+        ];
+
+        $_SERVER['CONTENT_TYPE'] = 'application/json';
+
+        new Request(
+            headers: new StubHeaderContext(),
+            cookies: new StubInputContext(),
+            get: new StubInputContext(),
+            post: new StubInputContext(),
+            files: new StubUploadedFilesContext(),
+            body: new StubBodyContext(),
+            method: Method::QUERY,
+        );
+
+        self::assertSame(
+            [
+                'existing' => 'value',
+            ],
+            $_POST,
+        );
+    }
+
+    public function testHydrateQueryBodyDoesNotTouchPostWhenBodyIsEmpty(): void
+    {
+        $_POST = [
+            'existing' => 'value',
+        ];
+
+        $_SERVER['CONTENT_TYPE'] = 'application/x-www-form-urlencoded';
+
+        new Request(
+            headers: new StubHeaderContext(),
+            cookies: new StubInputContext(),
+            get: new StubInputContext(),
+            post: new StubInputContext(),
+            files: new StubUploadedFilesContext(),
+            body: new StubBodyContext(),
+            method: Method::QUERY,
+        );
+
+        self::assertSame(
+            [
+                'existing' => 'value',
+            ],
+            $_POST,
+        );
+    }
+
+    public function testHydrateQueryBodyAcceptsHttpContentTypeFallback(): void
+    {
+        $_POST = [
+            'existing' => 'value',
+        ];
+
+        unset($_SERVER['CONTENT_TYPE']);
+
+        $_SERVER['HTTP_CONTENT_TYPE'] = 'application/json';
+
+        new Request(
+            headers: new StubHeaderContext(),
+            cookies: new StubInputContext(),
+            get: new StubInputContext(),
+            post: new StubInputContext(),
+            files: new StubUploadedFilesContext(),
+            body: new StubBodyContext(),
+            method: Method::QUERY,
+        );
+
+        self::assertSame(
+            [
+                'existing' => 'value',
+            ],
+            $_POST,
+        );
+    }
+
     public function testConstructorPopulatesUriWithQueryStringWhenPresent(): void
     {
         $previous = $_SERVER;
@@ -906,6 +1066,11 @@ class RequestTest extends TestCase
         yield [
             Method::PATCH,
             static fn (RequestInterface $request): bool => $request->isPatch(),
+        ];
+
+        yield [
+            Method::QUERY,
+            static fn (RequestInterface $request): bool => $request->isQuery(),
         ];
     }
 

@@ -1730,6 +1730,72 @@ class ResponseTest extends TestCase
         self::assertCount(0, $response->headers);
     }
 
+    public function testWithAcceptQueryQuotesSingleMediaType(): void
+    {
+        $response = (new Response())->withAcceptQuery('application/json');
+
+        $header = $this->findHeader($response, 'Accept-Query');
+
+        self::assertNotNull($header);
+        self::assertSame('"application/json"', $header->value);
+    }
+
+    public function testWithAcceptQueryJoinsMultipleMediaTypes(): void
+    {
+        $response = (new Response())->withAcceptQuery('application/json', 'application/sql');
+
+        $header = $this->findHeader($response, 'Accept-Query');
+
+        self::assertNotNull($header);
+        self::assertSame('"application/json", "application/sql"', $header->value);
+    }
+
+    public function testWithAcceptQueryPreservesArgumentOrder(): void
+    {
+        $response = (new Response())->withAcceptQuery('application/sql', 'application/json');
+
+        $header = $this->findHeader($response, 'Accept-Query');
+
+        self::assertNotNull($header);
+        self::assertSame('"application/sql", "application/json"', $header->value);
+    }
+
+    public function testWithAcceptQueryReplacesExistingHeader(): void
+    {
+        $response = (new Response())
+            ->withAcceptQuery('application/json')
+            ->withAcceptQuery('application/sql');
+
+        $headers = \iterator_to_array(
+            (function () use ($response): \Generator {
+                foreach ($response->headers as $header) {
+                    if (\strcasecmp($header->name, 'Accept-Query') === 0) {
+                        yield $header;
+                    }
+                }
+            })(),
+        );
+
+        self::assertCount(1, $headers);
+        self::assertSame('"application/sql"', $headers[0]->value);
+    }
+
+    public function testWithAcceptQueryWithZeroArgsIsNoOp(): void
+    {
+        $response = (new Response())->withAcceptQuery();
+
+        self::assertNull($this->findHeader($response, 'Accept-Query'));
+    }
+
+    public function testWithAcceptQueryReturnsNewInstance(): void
+    {
+        $response = new Response();
+        $updated = $response->withAcceptQuery('application/json');
+
+        self::assertNotSame($response, $updated);
+        self::assertCount(0, $response->headers);
+    }
+
     public function testWithLastModifiedFormatsAsRfc7231(): void
     {
         $when = new \DateTimeImmutable('2026-01-15 10:30:00', new \DateTimeZone('UTC'));
