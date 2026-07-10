@@ -16,6 +16,7 @@ namespace Unit\Application;
 use Fixture\Application\ApplicationConfigurator\ServiceMarker;
 use PHPUnit\Framework\TestCase;
 use Support\Database\StubConnectionManager;
+use Support\Env\Source\StubEnvSource;
 use Support\Http\Kernel\StubDispatcher;
 use Support\Http\Request\Middleware\RecordingMiddleware;
 use Support\Http\Response\StubResponseEmitter;
@@ -26,6 +27,8 @@ use Tuxxedo\Config\ConfigException;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionManagerInterface;
+use Tuxxedo\Env\Env;
+use Tuxxedo\Env\EnvInterface;
 use Tuxxedo\Event\EventsManager;
 use Tuxxedo\Event\EventsManagerInterface;
 use Tuxxedo\Http\Kernel\DispatcherInterface;
@@ -92,6 +95,21 @@ class ApplicationConfiguratorTest extends TestCase
         self::assertInstanceOf(Config::class, $configurator->config);
     }
 
+    public function testCreateFromConfigFileRegistersEnv(): void
+    {
+        $configurator = ApplicationConfigurator::createFromConfigFile(
+            file: self::CONFIG_FILE,
+            env: new Env(
+                new StubEnvSource([]),
+            ),
+        );
+
+        /** @var ContainerInterface $container */
+        $container = $configurator->container;
+
+        self::assertTrue($container->isBound(EnvInterface::class));
+    }
+
     public function testCreateFromConfigDirectoryPopulatesAppMetadataFromConfig(): void
     {
         $configurator = ApplicationConfigurator::createFromConfigDirectory(self::CONFIG_DIRECTORY);
@@ -108,6 +126,22 @@ class ApplicationConfiguratorTest extends TestCase
 
         self::assertInstanceOf(Container::class, $configurator->container);
         self::assertInstanceOf(Config::class, $configurator->config);
+    }
+
+
+    public function testCreateFromConfigDirectoryRegistersEnv(): void
+    {
+        $configurator = ApplicationConfigurator::createFromConfigDirectory(
+            directory: self::CONFIG_DIRECTORY,
+            env: new Env(
+                new StubEnvSource([]),
+            ),
+        );
+
+        /** @var ContainerInterface $container */
+        $container = $configurator->container;
+
+        self::assertTrue($container->isBound(EnvInterface::class));
     }
 
     public function testCreateFromConfigFileThrowsConfigExceptionWhenAppConfigIsMissing(): void
