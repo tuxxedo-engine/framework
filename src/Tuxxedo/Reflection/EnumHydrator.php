@@ -79,8 +79,8 @@ class EnumHydrator
     ): ?\BackedEnum {
         $backingType = (new \ReflectionEnum($enumClass))->getBackingType();
 
-        if (!$backingType instanceof \ReflectionNamedType) {
-            return null;
+        if ($backingType === null) {
+            return null; // @codeCoverageIgnore
         }
 
         if (
