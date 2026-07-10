@@ -17,6 +17,7 @@ use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\InputContext;
 use Tuxxedo\Mapper\Mapper;
 use Tuxxedo\Mapper\MapperInterface;
+use Tuxxedo\Reflection\EnumHydrator;
 
 class EnvironmentInputContext implements InputContextInterface
 {
@@ -197,13 +198,16 @@ class EnvironmentInputContext implements InputContextInterface
             throw HttpException::fromInternalServerError();
         }
 
-        foreach ($enum::cases() as $case) {
-            if (\mb_strtolower($case->name) === \mb_strtolower($value)) {
-                return $case;
-            }
+        $case = EnumHydrator::hydrateCaseInsensitive(
+            enumClass: $enum,
+            value: $value,
+        );
+
+        if ($case === null) {
+            throw HttpException::fromInternalServerError();
         }
 
-        throw HttpException::fromInternalServerError();
+        return $case;
     }
 
     public function arrayOfInt(
@@ -327,22 +331,19 @@ class EnvironmentInputContext implements InputContextInterface
             throw HttpException::fromInternalServerError();
         }
 
-        $cases = [];
-
-        foreach ($enum::cases() as $case) {
-            $cases[\mb_strtolower($case->name)] = $case;
-        }
-
         $enums = [];
 
         foreach (\array_filter($values, \is_string(...)) as $value) {
-            $value = \mb_strtolower($value);
+            $case = EnumHydrator::hydrateCaseInsensitive(
+                enumClass: $enum,
+                value: $value,
+            );
 
-            if (!\array_key_exists($value, $cases)) {
+            if ($case === null) {
                 throw HttpException::fromInternalServerError();
             }
 
-            $enums[] = $cases[$value];
+            $enums[] = $case;
         }
 
         return $enums;

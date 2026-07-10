@@ -23,7 +23,6 @@ use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Router\RouterInterface;
 
-// @todo Look through enum() functions to ensure they support BackedEnums and UnitEnums where reasonable like dotenv. Extend Reflection code?
 // @todo Consider a JWT Resolver
 // @todo Consider a JWT Middleware
 #[DefaultImplementation(class: Kernel::class, lifecycle: Lifecycle::SINGLETON)]

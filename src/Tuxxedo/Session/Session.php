@@ -15,6 +15,7 @@ namespace Tuxxedo\Session;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DefaultInitializer;
+use Tuxxedo\Reflection\EnumHydrator;
 use Tuxxedo\Session\Config\SessionConfigInterface;
 
 #[DefaultInitializer(
@@ -152,17 +153,18 @@ class Session implements SessionInterface
             );
         }
 
-        $value = $this->string($name);
+        $case = EnumHydrator::hydrateCaseInsensitive(
+            enumClass: $enum,
+            value: $this->string($name),
+        );
 
-        foreach ($enum::cases() as $case) {
-            if (\strcasecmp($case->name, $value) === 0) {
-                return $case;
-            }
+        if ($case === null) {
+            throw SessionException::fromInvalidEnum(
+                name: $name,
+                enum: $enum,
+            );
         }
 
-        throw SessionException::fromInvalidEnum(
-            name: $name,
-            enum: $enum,
-        );
+        return $case;
     }
 }

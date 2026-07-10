@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Env;
 
 use Tuxxedo\Env\Source\EnvSourceInterface;
+use Tuxxedo\Reflection\EnumHydrator;
 
 class Env implements EnvInterface
 {
@@ -218,46 +219,20 @@ class Env implements EnvInterface
             value: $value,
         );
 
-        if (\is_subclass_of($enum, \BackedEnum::class)) {
-            $backingType = (new \ReflectionEnum($enum))->getBackingType();
-
-            if (
-                $backingType instanceof \ReflectionNamedType &&
-                $backingType->getName() === 'int' &&
-                \preg_match('/\A-?\d+\z/', $stringValue) === 1
-            ) {
-                $case = $enum::tryFrom((int) $stringValue);
-            } elseif (
-                $backingType instanceof \ReflectionNamedType &&
-                $backingType->getName() === 'string'
-            ) {
-                $case = $enum::tryFrom($stringValue);
-            } else {
-                $case = null;
-            }
-
-            if ($case === null) {
-                throw EnvException::fromInvalidEnum(
-                    key: $key,
-                    enum: $enum,
-                    value: $stringValue,
-                );
-            }
-
-            return $case;
-        }
-
-        foreach ($enum::cases() as $case) {
-            if ($case->name === $stringValue) {
-                return $case;
-            }
-        }
-
-        throw EnvException::fromInvalidEnum(
-            key: $key,
-            enum: $enum,
+        $case = EnumHydrator::hydrate(
+            enumClass: $enum,
             value: $stringValue,
         );
+
+        if ($case === null) {
+            throw EnvException::fromInvalidEnum(
+                key: $key,
+                enum: $enum,
+                value: $stringValue,
+            );
+        }
+
+        return $case;
     }
 
     private function lookup(

@@ -18,6 +18,7 @@ use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\WeightedHeader;
 use Tuxxedo\Http\WeightedHeaderInterface;
+use Tuxxedo\Reflection\EnumHydrator;
 
 class EnvironmentHeaderContext implements HeaderContextInterface
 {
@@ -241,12 +242,15 @@ class EnvironmentHeaderContext implements HeaderContextInterface
             throw HttpException::fromInternalServerError();
         }
 
-        foreach ($enum::cases() as $case) {
-            if (\strcasecmp($case->name, $this->headers[$name]) === 0) {
-                return $case;
-            }
+        $case = EnumHydrator::hydrateCaseInsensitive(
+            enumClass: $enum,
+            value: $this->headers[$name],
+        );
+
+        if ($case === null) {
+            throw HttpException::fromInternalServerError();
         }
 
-        throw HttpException::fromInternalServerError();
+        return $case;
     }
 }
