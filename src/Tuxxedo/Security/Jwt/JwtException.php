@@ -306,4 +306,11 @@ class JwtException extends \Exception
             message: 'JWT decode requires at least one SignedWith constraint; use parse() for unverified access',
         );
     }
+
+    public static function fromMissingToken(): self
+    {
+        return new self(
+            message: 'No JWT is available on the current request',
+        );
+    }
 }
