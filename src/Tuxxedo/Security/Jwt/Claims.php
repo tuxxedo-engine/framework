@@ -130,7 +130,7 @@ class Claims implements ClaimsInterface
         );
 
         if ($result === false) {
-            return null;
+            return null; // @codeCoverageIgnore
         }
 
         return $result;

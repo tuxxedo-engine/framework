@@ -81,9 +81,8 @@ class SignedWith implements ConstraintInterface
     private function resolveKey(
         TokenInterface $token,
     ): KeyInterface {
-        if ($this->key instanceof KeyInterface) {
-            return $this->key;
-        }
+        /** @var KeySetInterface $keySet */
+        $keySet = $this->key;
 
         $keyId = $token->header->keyId;
 
@@ -93,7 +92,7 @@ class SignedWith implements ConstraintInterface
             );
         }
 
-        $resolved = $this->key->find(
+        $resolved = $keySet->find(
             keyId: $keyId,
         );
 
