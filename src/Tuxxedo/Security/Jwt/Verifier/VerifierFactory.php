@@ -58,7 +58,7 @@ class VerifierFactory
     ): HmacVerifier {
         if (!$key instanceof SymmetricKey) {
             throw JwtException::fromIncompatibleKey(
-                algorithm: $algorithm->name,
+                algorithm: $algorithm->identifier(),
                 expected: SymmetricKey::class,
                 given: $key::class,
             );
@@ -79,7 +79,7 @@ class VerifierFactory
     ): RsaVerifier {
         if (!$key instanceof RsaPublicKey) {
             throw JwtException::fromIncompatibleKey(
-                algorithm: $algorithm->name,
+                algorithm: $algorithm->identifier(),
                 expected: RsaPublicKey::class,
                 given: $key::class,
             );
@@ -100,7 +100,7 @@ class VerifierFactory
     ): EcdsaVerifier {
         if (!$key instanceof EcdsaPublicKey) {
             throw JwtException::fromIncompatibleKey(
-                algorithm: $algorithm->name,
+                algorithm: $algorithm->identifier(),
                 expected: EcdsaPublicKey::class,
                 given: $key::class,
             );
@@ -120,7 +120,7 @@ class VerifierFactory
     ): EdDsaVerifier {
         if (!$key instanceof EdDsaPublicKey) {
             throw JwtException::fromIncompatibleKey(
-                algorithm: Algorithm::EDDSA->name,
+                algorithm: Algorithm::EDDSA->identifier(),
                 expected: EdDsaPublicKey::class,
                 given: $key::class,
             );

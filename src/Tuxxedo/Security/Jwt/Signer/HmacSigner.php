@@ -34,7 +34,7 @@ class HmacSigner implements SignerInterface
             Algorithm::HS512 => 'sha512',
             default => throw JwtException::fromUnexpectedAlgorithm(
                 context: self::class,
-                algorithm: $algorithm->name,
+                algorithm: $algorithm->identifier(),
             ),
         };
     }

@@ -48,11 +48,11 @@ class EcdsaSigner implements SignerInterface
             ],
             default => throw JwtException::fromUnexpectedAlgorithm(
                 context: self::class,
-                algorithm: $algorithm->name,
+                algorithm: $algorithm->identifier(),
             ),
         };
 
-        $this->algorithmIdentifier = $algorithm->name;
+        $this->algorithmIdentifier = $algorithm->identifier();
         $this->codec = new EcdsaSignatureCodec(
             algorithmIdentifier: $this->algorithmIdentifier,
             componentLength: $this->componentLength,

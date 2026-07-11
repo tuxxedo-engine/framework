@@ -58,7 +58,7 @@ class SignerFactory
     ): HmacSigner {
         if (!$key instanceof SymmetricKey) {
             throw JwtException::fromIncompatibleKey(
-                algorithm: $algorithm->name,
+                algorithm: $algorithm->identifier(),
                 expected: SymmetricKey::class,
                 given: $key::class,
             );
@@ -79,7 +79,7 @@ class SignerFactory
     ): RsaSigner {
         if (!$key instanceof RsaPrivateKey) {
             throw JwtException::fromIncompatibleKey(
-                algorithm: $algorithm->name,
+                algorithm: $algorithm->identifier(),
                 expected: RsaPrivateKey::class,
                 given: $key::class,
             );
@@ -100,7 +100,7 @@ class SignerFactory
     ): EcdsaSigner {
         if (!$key instanceof EcdsaPrivateKey) {
             throw JwtException::fromIncompatibleKey(
-                algorithm: $algorithm->name,
+                algorithm: $algorithm->identifier(),
                 expected: EcdsaPrivateKey::class,
                 given: $key::class,
             );
@@ -120,7 +120,7 @@ class SignerFactory
     ): EdDsaSigner {
         if (!$key instanceof EdDsaPrivateKey) {
             throw JwtException::fromIncompatibleKey(
-                algorithm: Algorithm::EDDSA->name,
+                algorithm: Algorithm::EDDSA->identifier(),
                 expected: EdDsaPrivateKey::class,
                 given: $key::class,
             );

@@ -80,4 +80,39 @@ class AlgorithmTest extends TestCase
             ),
         );
     }
+
+    public function testIdentifierReturnsCanonicalMixedCaseForEdDsa(): void
+    {
+        self::assertSame(
+            'EdDSA',
+            Algorithm::EDDSA->identifier(),
+        );
+    }
+
+    public function testIdentifierReturnsEnumNameForJoseFamilies(): void
+    {
+        self::assertSame(
+            'HS256',
+            Algorithm::HS256->identifier(),
+        );
+
+        self::assertSame(
+            'RS384',
+            Algorithm::RS384->identifier(),
+        );
+
+        self::assertSame(
+            'ES512',
+            Algorithm::ES512->identifier(),
+        );
+    }
+
+    public function testIsMatchesUppercaseEdDsaForCompatibility(): void
+    {
+        self::assertTrue(
+            Algorithm::EDDSA->is(
+                identifier: 'EDDSA',
+            ),
+        );
+    }
 }

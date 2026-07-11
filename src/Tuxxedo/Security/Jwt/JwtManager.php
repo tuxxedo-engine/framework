@@ -35,7 +35,7 @@ class JwtManager implements JwtManagerInterface
         }
 
         $headerData = \array_merge($headerData, $extraHeader);
-        $headerData['alg'] = $algorithm->name;
+        $headerData['alg'] = $algorithm->identifier();
 
         $encodedHeader = $this->base64UrlEncode(
             bytes: $this->jsonEncode($headerData),

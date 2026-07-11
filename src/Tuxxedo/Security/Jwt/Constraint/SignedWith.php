@@ -45,7 +45,7 @@ class SignedWith implements ConstraintInterface
     ): void {
         if (!$this->algorithm->is($token->header->algorithm)) {
             throw JwtException::fromAlgorithmMismatch(
-                expected: $this->algorithm->name,
+                expected: $this->algorithm->identifier(),
                 given: $token->header->algorithm,
             );
         }

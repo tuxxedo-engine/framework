@@ -31,6 +31,7 @@ use Tuxxedo\Security\Jwt\Key\EdDsaPublicKey;
 use Tuxxedo\Security\Jwt\Key\RsaPrivateKey;
 use Tuxxedo\Security\Jwt\Key\RsaPublicKey;
 use Tuxxedo\Security\Jwt\Key\SymmetricKey;
+use Tuxxedo\Security\Jwt\Signer\EdDsaSigner;
 
 class JwtManagerTest extends TestCase
 {
@@ -713,6 +714,78 @@ class JwtManagerTest extends TestCase
         self::assertSame(
             $issuedAt,
             $token->claims->issuedAt->getTimestamp(),
+        );
+    }
+
+    public function testEncodeEmitsCanonicalEdDsaSpellingInHeader(): void
+    {
+        $token = $this->manager()->encode(
+            claims: [
+                'sub' => 'user-1',
+            ],
+            algorithm: Algorithm::EDDSA,
+            key: new EdDsaPrivateKey(
+                bytes: JwtKeyFixtures::eddsaPrivateBytes(),
+            ),
+        );
+
+        self::assertSame(
+            'EdDSA',
+            $token->header->algorithm,
+        );
+    }
+
+    public function testDecodeAcceptsLegacyUppercaseEddsaHeader(): void
+    {
+        $legacyHeaderJson = '{"typ":"JWT","alg":"EDDSA"}';
+        $legacyClaimsJson = '{"sub":"user-1"}';
+
+        $encodedHeader = \rtrim(
+            \strtr(\base64_encode($legacyHeaderJson), '+/', '-_'),
+            '=',
+        );
+
+        $encodedClaims = \rtrim(
+            \strtr(\base64_encode($legacyClaimsJson), '+/', '-_'),
+            '=',
+        );
+
+        $signingInput = $encodedHeader . '.' . $encodedClaims;
+
+        $signer = new EdDsaSigner(
+            key: new EdDsaPrivateKey(
+                bytes: JwtKeyFixtures::eddsaPrivateBytes(),
+            ),
+        );
+
+        $encodedSignature = \rtrim(
+            \strtr(
+                \base64_encode(
+                    $signer->sign(
+                        payload: $signingInput,
+                    ),
+                ),
+                '+/',
+                '-_',
+            ),
+            '=',
+        );
+
+        $legacyCompact = $signingInput . '.' . $encodedSignature;
+
+        $decoded = $this->manager()->decode(
+            $legacyCompact,
+            new SignedWith(
+                algorithm: Algorithm::EDDSA,
+                key: new EdDsaPublicKey(
+                    bytes: JwtKeyFixtures::eddsaPublicBytes(),
+                ),
+            ),
+        );
+
+        self::assertSame(
+            'EDDSA',
+            $decoded->header->algorithm,
         );
     }
 }

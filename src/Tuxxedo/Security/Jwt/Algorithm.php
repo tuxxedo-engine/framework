@@ -26,9 +26,17 @@ enum Algorithm
     case ES512;
     case EDDSA;
 
+    public function identifier(): string
+    {
+        return match ($this) {
+            self::EDDSA => 'EdDSA',
+            default => $this->name,
+        };
+    }
+
     public function is(
         string $identifier,
     ): bool {
-        return \strcasecmp($this->name, $identifier) === 0;
+        return \strcasecmp($this->identifier(), $identifier) === 0;
     }
 }

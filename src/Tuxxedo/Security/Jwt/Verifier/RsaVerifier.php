@@ -36,11 +36,11 @@ class RsaVerifier implements VerifierInterface
             Algorithm::RS512 => \OPENSSL_ALGO_SHA512,
             default => throw JwtException::fromUnexpectedAlgorithm(
                 context: self::class,
-                algorithm: $algorithm->name,
+                algorithm: $algorithm->identifier(),
             ),
         };
 
-        $this->algorithmIdentifier = $algorithm->name;
+        $this->algorithmIdentifier = $algorithm->identifier();
     }
 
     public function verify(
