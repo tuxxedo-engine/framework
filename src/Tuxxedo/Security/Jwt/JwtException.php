@@ -313,4 +313,122 @@ class JwtException extends \Exception
             message: 'No JWT is available on the current request',
         );
     }
+
+    public static function fromInvalidObjectIdentifier(
+        string $oid,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid ASN.1 object identifier: "%s"',
+                $oid,
+            ),
+        );
+    }
+
+    public static function fromDerLengthOverflow(
+        int $length,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'ASN.1 DER length %d exceeds the 4-byte encoding limit',
+                $length,
+            ),
+        );
+    }
+
+    public static function fromInvalidDerContextTag(
+        int $tag,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'ASN.1 DER context tag %d is outside the supported single-byte range (0-30)',
+                $tag,
+            ),
+        );
+    }
+
+    public static function fromMissingJwkField(
+        string $field,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'JWK is missing required field "%s"',
+                $field,
+            ),
+        );
+    }
+
+    public static function fromInvalidJwkField(
+        string $field,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'JWK field "%s" is not a valid base64url-encoded string',
+                $field,
+            ),
+        );
+    }
+
+    public static function fromUnsupportedCurve(
+        string $crv,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'JWK curve "%s" is not supported',
+                $crv,
+            ),
+        );
+    }
+
+    public static function fromInvalidEcCoordinate(
+        string $field,
+        int $expected,
+        int $given,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'JWK EC coordinate "%s" has invalid length: expected %d bytes, got %d',
+                $field,
+                $expected,
+                $given,
+            ),
+        );
+    }
+
+    public static function fromUnsupportedKeyType(
+        string $kty,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'JWK key type "%s" is not supported',
+                $kty,
+            ),
+        );
+    }
+
+    public static function fromInvalidOkpKeyLength(
+        string $field,
+        int $expected,
+        int $given,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'JWK OKP key material "%s" has invalid length: expected %d bytes, got %d',
+                $field,
+                $expected,
+                $given,
+            ),
+        );
+    }
+
+    public static function fromMalformedJwks(
+        string $reason,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'JWKS is malformed: %s',
+                $reason,
+            ),
+        );
+    }
 }

@@ -1,0 +1,7 @@
+{
+    "kty": "EC",
+    "crv": "P-256",
+    "kid": "ecdsa-p256-other-2026",
+    "x": "CGti0NzHGWLlb9Yt2SxwI42gUSTG8Kv9Bj8P7AQBVGY",
+    "y": "MUhaGBeS9hvNpOlttB9O9a0pIw1lpCWcVwLfwSmNJ-I"
+}

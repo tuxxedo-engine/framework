@@ -1,0 +1,6 @@
+{
+    "kty": "RSA",
+    "kid": "rsa-other-2026",
+    "n": "trUYVHwoUDsPnJsbNwXfBExzb2yjryn7RIMATu1vxy4wev9hHTGqFzbY-yVVay_x4CCZ0mU4yOcJuxRIP8waeLBsYodS9crghrC-8Z1z_KRxm64dhxWP9eLgb5PkIIw5dcPe0Ge6k1QGBeDhixjxeJeZAmZonlNcXZBEyykrRcD-3dwAskNof4j5EuUyIZAf-UQR5Vf2GaF1IaxEeWWRVCYzwPXtxmLefAg-6KX9wATFvP5MUx4mxW7iDVkQrAlkVsUmMlka0MfXdtcYE4DzhCnNl16r9ufofhcPPlABeR0mXmQuTl19C9aWmuh9_ad6NF4JigaLb8CvHy7vUc8Yjw",
+    "e": "AQAB"
+}

@@ -1,0 +1,8 @@
+{
+    "kty": "EC",
+    "crv": "P-384",
+    "kid": "ecdsa-p384-2026",
+    "x": "Fm53Z_UjCAg0Nx1O-L0lZKmjrzgUsM5QzxqTXYYbJe-myO1jPxDqVVsHPZZzC696",
+    "y": "66M2bAjzOvBBQZiwt_9eCmukui24xKRNqYwaCxrx_zNxJJebEUsk6Iu8nH5ykGiN",
+    "d": "VKQhvU6-biaraf1VvgqvKRxeYZZjhP2kHJRqFmT-ytAAqS-WocgQaNc75IJTDr5Z"
+}

@@ -1,0 +1,7 @@
+{
+    "kty": "EC",
+    "crv": "P-521",
+    "kid": "ecdsa-p521-2026",
+    "x": "AJ1pxHue0CP8wy7s2WQgRJ7TRqXriNMZPSzt15Qow1GGuFq4GOqNHPMOSQCkmZs1GdkrK41n7P_hQzCiw19VvoMD",
+    "y": "APOUeDJxkiApHAYJQaMxuUFuHCpUzr_3qiCULI9nc1RGaprf3VLrdaqsl_-9TQg4mIQF76_hIzLJASD5szVREpHv"
+}

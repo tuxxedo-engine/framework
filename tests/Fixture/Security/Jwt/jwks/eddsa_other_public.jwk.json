@@ -1,0 +1,6 @@
+{
+    "kty": "OKP",
+    "crv": "Ed25519",
+    "kid": "eddsa-other-2026",
+    "x": "vVCLj2_P758k9bqZFSx6aurl79lrwBtx7f_Rq_afiiU"
+}

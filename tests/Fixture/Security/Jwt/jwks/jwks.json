@@ -1,0 +1,42 @@
+{
+    "keys": [
+        {
+            "kty": "oct",
+            "kid": "hmac-2026",
+            "k": "EIo3ir_pVcxLxcIXfV_k-2u4WpgqDIwxdm7aoEOQuec"
+        },
+        {
+            "kty": "RSA",
+            "kid": "rsa-2026",
+            "n": "3FTN7QXfDYpNnuKOhMWx32giK6M4Q4yABeccaDX5XjU7RaFEy-chwxyI0DFPd6jBHkk5HMLSpJJmZq4cVG5XkBHvKMfjYKvQEiCrvZB49CS0_4iX-LGXMMqBwD_JdqyeVCwFQNmatB2tMLfNBHh2xb_dMUXMFIqiO8y3iICq7lPcyjvTd-YPat6tOTYgbaEGzjQmweU3b5BL0BCP8J0n-MywZR_0XCZg7fc6PPlSWnhWQf-dOJn6kHt-evAAuca0hbRTD4wL6yHmHvl7HCteHHzjq5-si62wkC3EuDSM6KtYTxJp1UebQE1Xov78x8YwJSNj7QTH7VLYknL2YaTwZw",
+            "e": "AQAB"
+        },
+        {
+            "kty": "EC",
+            "crv": "P-256",
+            "kid": "ecdsa-p256-2026",
+            "x": "UpXQYMuaOTz9wf_NSiZ-n5sXa26ycUj9_jU3yJ9ZXjI",
+            "y": "Pt0I0UFGrUsKdu_gHVym5XRrQQA4f1FVcEvBNIFrmPc"
+        },
+        {
+            "kty": "EC",
+            "crv": "P-384",
+            "kid": "ecdsa-p384-2026",
+            "x": "Fm53Z_UjCAg0Nx1O-L0lZKmjrzgUsM5QzxqTXYYbJe-myO1jPxDqVVsHPZZzC696",
+            "y": "66M2bAjzOvBBQZiwt_9eCmukui24xKRNqYwaCxrx_zNxJJebEUsk6Iu8nH5ykGiN"
+        },
+        {
+            "kty": "EC",
+            "crv": "P-521",
+            "kid": "ecdsa-p521-2026",
+            "x": "AJ1pxHue0CP8wy7s2WQgRJ7TRqXriNMZPSzt15Qow1GGuFq4GOqNHPMOSQCkmZs1GdkrK41n7P_hQzCiw19VvoMD",
+            "y": "APOUeDJxkiApHAYJQaMxuUFuHCpUzr_3qiCULI9nc1RGaprf3VLrdaqsl_-9TQg4mIQF76_hIzLJASD5szVREpHv"
+        },
+        {
+            "kty": "OKP",
+            "crv": "Ed25519",
+            "kid": "eddsa-2026",
+            "x": "EA2pXGwLYHJBZuuP5wtjWlvG9iTVRZTYziqJy2RRfs0"
+        }
+    ]
+}
