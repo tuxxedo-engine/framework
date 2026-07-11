@@ -134,18 +134,15 @@ class VerifierFactoryTest extends TestCase
         );
     }
 
-    public function testCreateRsaAcceptsRsaPrivateKey(): void
+    public function testCreateRsaThrowsForRsaPrivateKey(): void
     {
-        $verifier = VerifierFactory::createRsa(
+        $this->expectException(JwtException::class);
+
+        VerifierFactory::createRsa(
             algorithm: Algorithm::RS256,
             key: new RsaPrivateKey(
                 key: JwtKeyFixtures::rsaPrivatePem(),
             ),
-        );
-
-        self::assertInstanceOf(
-            RsaVerifier::class,
-            $verifier,
         );
     }
 
@@ -176,18 +173,15 @@ class VerifierFactoryTest extends TestCase
         );
     }
 
-    public function testCreateEcdsaAcceptsEcdsaPrivateKey(): void
+    public function testCreateEcdsaThrowsForEcdsaPrivateKey(): void
     {
-        $verifier = VerifierFactory::createEcdsa(
+        $this->expectException(JwtException::class);
+
+        VerifierFactory::createEcdsa(
             algorithm: Algorithm::ES256,
             key: new EcdsaPrivateKey(
                 key: JwtKeyFixtures::ecdsaP256PrivatePem(),
             ),
-        );
-
-        self::assertInstanceOf(
-            EcdsaVerifier::class,
-            $verifier,
         );
     }
 
@@ -217,17 +211,14 @@ class VerifierFactoryTest extends TestCase
         );
     }
 
-    public function testCreateEdDsaAcceptsEdDsaPrivateKey(): void
+    public function testCreateEdDsaThrowsForEdDsaPrivateKey(): void
     {
-        $verifier = VerifierFactory::createEdDsa(
+        $this->expectException(JwtException::class);
+
+        VerifierFactory::createEdDsa(
             key: new EdDsaPrivateKey(
                 bytes: JwtKeyFixtures::eddsaPrivateBytes(),
             ),
-        );
-
-        self::assertInstanceOf(
-            EdDsaVerifier::class,
-            $verifier,
         );
     }
 

@@ -32,4 +32,18 @@ class EdDsaPrivateKey implements KeyInterface
             );
         }
     }
+
+    /**
+     * @throws JwtException
+     */
+    public function toPublic(): EdDsaPublicKey
+    {
+        /** @var non-empty-string $publicBytes */
+        $publicBytes = \sodium_crypto_sign_publickey_from_secretkey($this->bytes);
+
+        return new EdDsaPublicKey(
+            bytes: $publicBytes,
+            keyId: $this->keyId,
+        );
+    }
 }

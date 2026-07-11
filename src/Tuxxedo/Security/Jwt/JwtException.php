@@ -106,6 +106,20 @@ class JwtException extends \Exception
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
+    public static function fromPublicKeyDerivationFailed(
+        string $type,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Failed to derive %s public key from private key',
+                $type,
+            ),
+        );
+    }
+
     public static function fromIncompatibleKey(
         string $algorithm,
         string $expected,

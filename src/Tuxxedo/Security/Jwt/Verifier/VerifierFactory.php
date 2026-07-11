@@ -15,12 +15,9 @@ namespace Tuxxedo\Security\Jwt\Verifier;
 
 use Tuxxedo\Security\Jwt\Algorithm;
 use Tuxxedo\Security\Jwt\JwtException;
-use Tuxxedo\Security\Jwt\Key\EcdsaPrivateKey;
 use Tuxxedo\Security\Jwt\Key\EcdsaPublicKey;
-use Tuxxedo\Security\Jwt\Key\EdDsaPrivateKey;
 use Tuxxedo\Security\Jwt\Key\EdDsaPublicKey;
 use Tuxxedo\Security\Jwt\Key\KeyInterface;
-use Tuxxedo\Security\Jwt\Key\RsaPrivateKey;
 use Tuxxedo\Security\Jwt\Key\RsaPublicKey;
 use Tuxxedo\Security\Jwt\Key\SymmetricKey;
 
@@ -80,10 +77,10 @@ class VerifierFactory
         Algorithm $algorithm,
         KeyInterface $key,
     ): RsaVerifier {
-        if (!$key instanceof RsaPublicKey && !$key instanceof RsaPrivateKey) {
+        if (!$key instanceof RsaPublicKey) {
             throw JwtException::fromIncompatibleKey(
                 algorithm: $algorithm->name,
-                expected: RsaPublicKey::class . '|' . RsaPrivateKey::class,
+                expected: RsaPublicKey::class,
                 given: $key::class,
             );
         }
@@ -101,10 +98,10 @@ class VerifierFactory
         Algorithm $algorithm,
         KeyInterface $key,
     ): EcdsaVerifier {
-        if (!$key instanceof EcdsaPublicKey && !$key instanceof EcdsaPrivateKey) {
+        if (!$key instanceof EcdsaPublicKey) {
             throw JwtException::fromIncompatibleKey(
                 algorithm: $algorithm->name,
-                expected: EcdsaPublicKey::class . '|' . EcdsaPrivateKey::class,
+                expected: EcdsaPublicKey::class,
                 given: $key::class,
             );
         }
@@ -121,10 +118,10 @@ class VerifierFactory
     public static function createEdDsa(
         KeyInterface $key,
     ): EdDsaVerifier {
-        if (!$key instanceof EdDsaPublicKey && !$key instanceof EdDsaPrivateKey) {
+        if (!$key instanceof EdDsaPublicKey) {
             throw JwtException::fromIncompatibleKey(
                 algorithm: Algorithm::EDDSA->name,
-                expected: EdDsaPublicKey::class . '|' . EdDsaPrivateKey::class,
+                expected: EdDsaPublicKey::class,
                 given: $key::class,
             );
         }

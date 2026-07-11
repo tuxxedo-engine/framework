@@ -15,8 +15,12 @@ namespace Unit\Security\Jwt\Key;
 
 use PHPUnit\Framework\TestCase;
 use Support\Security\Jwt\JwtKeyFixtures;
+use Tuxxedo\Security\Jwt\Algorithm;
 use Tuxxedo\Security\Jwt\JwtException;
 use Tuxxedo\Security\Jwt\Key\EcdsaPrivateKey;
+use Tuxxedo\Security\Jwt\Key\EcdsaPublicKey;
+use Tuxxedo\Security\Jwt\Signer\EcdsaSigner;
+use Tuxxedo\Security\Jwt\Verifier\EcdsaVerifier;
 
 class EcdsaPrivateKeyTest extends TestCase
 {
@@ -72,6 +76,59 @@ class EcdsaPrivateKeyTest extends TestCase
 
         new EcdsaPrivateKey(
             key: 'not a pem',
+        );
+    }
+
+    public function testToPublicYieldsEcdsaPublicKey(): void
+    {
+        $private = new EcdsaPrivateKey(
+            key: JwtKeyFixtures::ecdsaP256PrivatePem(),
+        );
+
+        self::assertInstanceOf(
+            EcdsaPublicKey::class,
+            $private->toPublic(),
+        );
+    }
+
+    public function testToPublicPreservesKeyId(): void
+    {
+        $private = new EcdsaPrivateKey(
+            key: JwtKeyFixtures::ecdsaP256PrivatePem(),
+            keyId: 'ec-priv-p256',
+        );
+
+        self::assertSame(
+            'ec-priv-p256',
+            $private->toPublic()->keyId,
+        );
+    }
+
+    public function testToPublicYieldsKeyThatVerifiesRoundTripSignature(): void
+    {
+        $private = new EcdsaPrivateKey(
+            key: JwtKeyFixtures::ecdsaP256PrivatePem(),
+        );
+
+        $signer = new EcdsaSigner(
+            algorithm: Algorithm::ES256,
+            key: $private,
+        );
+
+        $signature = $signer->sign(
+            payload: 'round-trip payload',
+        );
+
+        $verifier = new EcdsaVerifier(
+            algorithm: Algorithm::ES256,
+            key: $private->toPublic(),
+        );
+
+        self::assertTrue(
+            $verifier->verify(
+                payload: 'round-trip payload',
+                signature: $signature,
+            ),
         );
     }
 }

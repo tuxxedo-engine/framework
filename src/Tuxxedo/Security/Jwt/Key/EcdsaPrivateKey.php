@@ -41,4 +41,25 @@ class EcdsaPrivateKey implements KeyInterface
 
         $this->handle = $key;
     }
+
+    /**
+     * @throws JwtException
+     */
+    public function toPublic(): EcdsaPublicKey
+    {
+        $details = \openssl_pkey_get_details($this->handle);
+
+        if ($details === false || !isset($details['key']) || !\is_string($details['key'])) {
+            // @codeCoverageIgnoreStart
+            throw JwtException::fromPublicKeyDerivationFailed(
+                type: 'ECDSA',
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        return new EcdsaPublicKey(
+            key: $details['key'],
+            keyId: $this->keyId,
+        );
+    }
 }

@@ -54,26 +54,6 @@ class EdDsaVerifierTest extends TestCase
         );
     }
 
-    public function testVerifyAcceptsRoundtripSignatureWithPrivateKey(): void
-    {
-        $payload = 'the payload';
-
-        $verifier = new EdDsaVerifier(
-            key: new EdDsaPrivateKey(
-                bytes: JwtKeyFixtures::eddsaPrivateBytes(),
-            ),
-        );
-
-        self::assertTrue(
-            $verifier->verify(
-                payload: $payload,
-                signature: $this->sign(
-                    payload: $payload,
-                ),
-            ),
-        );
-    }
-
     public function testVerifyReturnsFalseForEmptySignature(): void
     {
         $verifier = new EdDsaVerifier(

@@ -15,11 +15,9 @@ namespace Tuxxedo\Security\Jwt\Verifier;
 
 use Tuxxedo\Security\Jwt\Algorithm;
 use Tuxxedo\Security\Jwt\JwtException;
-use Tuxxedo\Security\Jwt\Key\RsaPrivateKey;
 use Tuxxedo\Security\Jwt\Key\RsaPublicKey;
 use Tuxxedo\Security\Jwt\OpensslSignature;
 
-// @todo Narrow union to public-only or derive public from private at construction; openssl_verify silently rejects private-key handles on some OpenSSL builds
 class RsaVerifier implements VerifierInterface
 {
     private readonly int $opensslAlgorithm;
@@ -30,7 +28,7 @@ class RsaVerifier implements VerifierInterface
      */
     public function __construct(
         Algorithm $algorithm,
-        private readonly RsaPublicKey|RsaPrivateKey $key,
+        private readonly RsaPublicKey $key,
     ) {
         $this->opensslAlgorithm = match ($algorithm) {
             Algorithm::RS256 => \OPENSSL_ALGO_SHA256,

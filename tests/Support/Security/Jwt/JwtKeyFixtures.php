@@ -198,7 +198,10 @@ class JwtKeyFixtures
 
         if ($contents === false || $contents === '') {
             throw new \RuntimeException(
-                \sprintf('JWT fixture missing, unreadable, or empty: %s', $path),
+                \sprintf(
+                    'JWT fixture missing, unreadable, or empty: %s',
+                    $path,
+                ),
             );
         }
 

@@ -41,4 +41,25 @@ class RsaPrivateKey implements KeyInterface
 
         $this->handle = $key;
     }
+
+    /**
+     * @throws JwtException
+     */
+    public function toPublic(): RsaPublicKey
+    {
+        $details = \openssl_pkey_get_details($this->handle);
+
+        if ($details === false || !isset($details['key']) || !\is_string($details['key'])) {
+            // @codeCoverageIgnoreStart
+            throw JwtException::fromPublicKeyDerivationFailed(
+                type: 'RSA',
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        return new RsaPublicKey(
+            key: $details['key'],
+            keyId: $this->keyId,
+        );
+    }
 }

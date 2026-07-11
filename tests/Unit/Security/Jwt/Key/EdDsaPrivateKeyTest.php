@@ -17,6 +17,9 @@ use PHPUnit\Framework\TestCase;
 use Support\Security\Jwt\JwtKeyFixtures;
 use Tuxxedo\Security\Jwt\JwtException;
 use Tuxxedo\Security\Jwt\Key\EdDsaPrivateKey;
+use Tuxxedo\Security\Jwt\Key\EdDsaPublicKey;
+use Tuxxedo\Security\Jwt\Signer\EdDsaSigner;
+use Tuxxedo\Security\Jwt\Verifier\EdDsaVerifier;
 
 class EdDsaPrivateKeyTest extends TestCase
 {
@@ -71,6 +74,69 @@ class EdDsaPrivateKeyTest extends TestCase
 
         new EdDsaPrivateKey(
             bytes: JwtKeyFixtures::eddsaPublicBytes(),
+        );
+    }
+
+    public function testToPublicYieldsEdDsaPublicKey(): void
+    {
+        $private = new EdDsaPrivateKey(
+            bytes: JwtKeyFixtures::eddsaPrivateBytes(),
+        );
+
+        self::assertInstanceOf(
+            EdDsaPublicKey::class,
+            $private->toPublic(),
+        );
+    }
+
+    public function testToPublicPreservesKeyId(): void
+    {
+        $private = new EdDsaPrivateKey(
+            bytes: JwtKeyFixtures::eddsaPrivateBytes(),
+            keyId: 'ed25519-priv',
+        );
+
+        self::assertSame(
+            'ed25519-priv',
+            $private->toPublic()->keyId,
+        );
+    }
+
+    public function testToPublicMatchesCanonicalPublicBytes(): void
+    {
+        $private = new EdDsaPrivateKey(
+            bytes: JwtKeyFixtures::eddsaPrivateBytes(),
+        );
+
+        self::assertSame(
+            JwtKeyFixtures::eddsaPublicBytes(),
+            $private->toPublic()->bytes,
+        );
+    }
+
+    public function testToPublicYieldsKeyThatVerifiesRoundTripSignature(): void
+    {
+        $private = new EdDsaPrivateKey(
+            bytes: JwtKeyFixtures::eddsaPrivateBytes(),
+        );
+
+        $signer = new EdDsaSigner(
+            key: $private,
+        );
+
+        $signature = $signer->sign(
+            payload: 'round-trip payload',
+        );
+
+        $verifier = new EdDsaVerifier(
+            key: $private->toPublic(),
+        );
+
+        self::assertTrue(
+            $verifier->verify(
+                payload: 'round-trip payload',
+                signature: $signature,
+            ),
         );
     }
 }

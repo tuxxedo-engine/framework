@@ -19,6 +19,10 @@ use Tuxxedo\Security\Jwt\Algorithm;
 use Tuxxedo\Security\Jwt\Constraint\SignedWith;
 use Tuxxedo\Security\Jwt\JwtException;
 use Tuxxedo\Security\Jwt\JwtManager;
+use Tuxxedo\Security\Jwt\Key\EcdsaPrivateKey;
+use Tuxxedo\Security\Jwt\Key\EcdsaPublicKey;
+use Tuxxedo\Security\Jwt\Key\EdDsaPrivateKey;
+use Tuxxedo\Security\Jwt\Key\EdDsaPublicKey;
 use Tuxxedo\Security\Jwt\Key\KeySet;
 use Tuxxedo\Security\Jwt\Key\RsaPrivateKey;
 use Tuxxedo\Security\Jwt\Key\RsaPublicKey;
@@ -146,6 +150,58 @@ class SignedWithTest extends TestCase
             algorithm: Algorithm::RS256,
             key: new RsaPublicKey(
                 key: JwtKeyFixtures::rsaOtherPublicPem(),
+            ),
+        );
+
+        $this->expectException(JwtException::class);
+
+        $constraint->check(
+            token: $token,
+        );
+    }
+
+    public function testCheckThrowsWhenPublicKeyIsWrongForEcdsa(): void
+    {
+        $token = $this->manager()->encode(
+            claims: [
+                'sub' => 'user-1',
+            ],
+            algorithm: Algorithm::ES256,
+            key: new EcdsaPrivateKey(
+                key: JwtKeyFixtures::ecdsaP256PrivatePem(),
+            ),
+        );
+
+        $constraint = new SignedWith(
+            algorithm: Algorithm::ES256,
+            key: new EcdsaPublicKey(
+                key: JwtKeyFixtures::ecdsaP256OtherPublicPem(),
+            ),
+        );
+
+        $this->expectException(JwtException::class);
+
+        $constraint->check(
+            token: $token,
+        );
+    }
+
+    public function testCheckThrowsWhenPublicKeyIsWrongForEdDsa(): void
+    {
+        $token = $this->manager()->encode(
+            claims: [
+                'sub' => 'user-1',
+            ],
+            algorithm: Algorithm::EDDSA,
+            key: new EdDsaPrivateKey(
+                bytes: JwtKeyFixtures::eddsaPrivateBytes(),
+            ),
+        );
+
+        $constraint = new SignedWith(
+            algorithm: Algorithm::EDDSA,
+            key: new EdDsaPublicKey(
+                bytes: JwtKeyFixtures::eddsaOtherPublicBytes(),
             ),
         );
 
