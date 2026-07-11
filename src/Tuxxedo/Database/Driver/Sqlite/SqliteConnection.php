@@ -57,11 +57,13 @@ class SqliteConnection extends AbstractConnection
 
                 $this->sqlite->enableExceptions(true);
                 $this->sqlite->enableExtendedResultCodes(true);
-            } catch (\Exception $exception) {
+            } catch (\Exception $exception) { // @codeCoverageIgnore
+                // @codeCoverageIgnoreStart
                 throw DatabaseException::fromCannotConnect(
                     code: $exception->getCode(),
                     error: $exception->getMessage(),
                 );
+                // @codeCoverageIgnoreEnd
             }
         };
 
@@ -86,6 +88,9 @@ class SqliteConnection extends AbstractConnection
         }
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function throwFromSqliteException(
         \SQLite3Exception $exception,
     ): never {
@@ -96,6 +101,9 @@ class SqliteConnection extends AbstractConnection
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function throwFromLastError(
         \SQLite3 $sqlite,
     ): never {
@@ -143,8 +151,8 @@ class SqliteConnection extends AbstractConnection
             $this->sqlite->query('SELECT 1');
 
             return true;
-        } catch (\Exception) {
-            return false;
+        } catch (\Exception) { // @codeCoverageIgnore
+            return false; // @codeCoverageIgnore
         }
     }
 
@@ -186,12 +194,12 @@ class SqliteConnection extends AbstractConnection
 
         try {
             if ($this->sqlite->exec('BEGIN IMMEDIATE') === false) {
-                $this->throwFromLastError($this->sqlite);
+                $this->throwFromLastError($this->sqlite); // @codeCoverageIgnore
             }
 
             $this->inTransaction = true;
-        } catch (\SQLite3Exception $exception) {
-            $this->throwFromSqliteException($exception);
+        } catch (\SQLite3Exception $exception) { // @codeCoverageIgnore
+            $this->throwFromSqliteException($exception); // @codeCoverageIgnore
         }
     }
 
@@ -207,8 +215,8 @@ class SqliteConnection extends AbstractConnection
             if ($this->sqlite->exec('COMMIT') === false) {
                 $this->throwFromLastError($this->sqlite);
             }
-        } catch (\SQLite3Exception $exception) {
-            $this->throwFromSqliteException($exception);
+        } catch (\SQLite3Exception $exception) { // @codeCoverageIgnore
+            $this->throwFromSqliteException($exception); // @codeCoverageIgnore
         } finally {
             $this->inTransaction = false;
         }
@@ -226,8 +234,8 @@ class SqliteConnection extends AbstractConnection
             if ($this->sqlite->exec('ROLLBACK') === false) {
                 $this->throwFromLastError($this->sqlite);
             }
-        } catch (\SQLite3Exception $exception) {
-            $this->throwFromSqliteException($exception);
+        } catch (\SQLite3Exception $exception) { // @codeCoverageIgnore
+            $this->throwFromSqliteException($exception); // @codeCoverageIgnore
         } finally {
             $this->inTransaction = false;
         }
@@ -251,10 +259,14 @@ class SqliteConnection extends AbstractConnection
             $parameters = $parsedStatement->parameters;
         }
 
-        $statement = $this->sqlite->prepare($sql);
+        try {
+            $statement = $this->sqlite->prepare($sql);
+        } catch (\SQLite3Exception $exception) {
+            $this->throwFromSqliteException($exception);
+        }
 
         if ($statement === false) {
-            $this->throwFromLastError($this->sqlite);
+            $this->throwFromLastError($this->sqlite); // @codeCoverageIgnore
         }
 
         foreach ($parameters as $index => $value) {
@@ -276,7 +288,7 @@ class SqliteConnection extends AbstractConnection
             );
 
             if (!$bound) {
-                $this->throwFromLastError($this->sqlite);
+                $this->throwFromLastError($this->sqlite); // @codeCoverageIgnore
             }
         }
 
@@ -287,7 +299,7 @@ class SqliteConnection extends AbstractConnection
         }
 
         if ($result === false) {
-            $this->throwFromLastError($this->sqlite);
+            $this->throwFromLastError($this->sqlite); // @codeCoverageIgnore
         }
 
         return new SqliteResultSet(

@@ -89,6 +89,7 @@ abstract class AbstractConnection implements ConnectionInterface
         );
     }
 
+    // @todo Catch \Throwable instead of \Exception; \Error bypasses rollback and leaves the connection stuck in-transaction
     public function transaction(
         \Closure $transaction,
     ): mixed {

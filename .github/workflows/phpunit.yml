@@ -15,7 +15,7 @@ jobs:
         with:
           php-version: '8.5'
           coverage: xdebug
-          extensions: fileinfo
+          extensions: filter, mbstring, mysqli, openssl, pdo, pdo_mysql, pdo_pgsql, pdo_sqlite, pgsql, session, sodium, sqlite3, fileinfo
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress

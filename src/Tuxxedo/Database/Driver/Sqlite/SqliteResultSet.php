@@ -21,6 +21,7 @@ use Tuxxedo\Database\Driver\ResultRowInterface;
 use Tuxxedo\Database\Hydrator\HydratableInterface;
 use Tuxxedo\Database\Hydrator\HydratorInterface;
 
+// @todo Check if $resultSet->result should still be null
 class SqliteResultSet extends AbstractResultSet
 {
     private int $pointer = 0;
@@ -103,6 +104,7 @@ class SqliteResultSet extends AbstractResultSet
         throw DatabaseException::fromCannotFetch();
     }
 
+    // @todo Duplicate of fetchAssoc; decide semantic split (mysqli-style BOTH keys) or remove
     public function fetchArray(): array
     {
         if ($this->result === null) {
