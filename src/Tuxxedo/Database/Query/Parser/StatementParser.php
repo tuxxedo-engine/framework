@@ -91,6 +91,7 @@ class StatementParser implements StatementParserInterface
                 continue;
             }
 
+            // @todo Handle PostgreSQL `::` cast syntax; currently `a::b` parses the second colon as the start of placeholder `:b`
             if (
                 $byte === ':' &&
                 $position + 1 < $length
