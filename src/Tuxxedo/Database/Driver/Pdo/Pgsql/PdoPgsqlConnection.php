@@ -123,4 +123,13 @@ class PdoPgsqlConnection extends AbstractPdoConnection
             self::throwFromPdoException($exception);
         }
     }
+
+    /**
+     * @return array<\PDO::ATTR_*|\PDO::*_ATTR_*, mixed>
+     */
+    protected function getPdoOptions(
+        PdoConnectionConfigInterface $config,
+    ): array {
+        return [];
+    }
 }

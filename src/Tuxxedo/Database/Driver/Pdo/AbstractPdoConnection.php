@@ -75,11 +75,9 @@ abstract class AbstractPdoConnection extends AbstractConnection
     /**
      * @return array<\PDO::ATTR_*|\PDO::*_ATTR_*, mixed>
      */
-    protected function getPdoOptions(
+    abstract protected function getPdoOptions(
         PdoConnectionConfigInterface $config,
-    ): array {
-        return [];
-    }
+    ): array;
 
     abstract protected function getDriverDialect(): DialectInterface;
 
