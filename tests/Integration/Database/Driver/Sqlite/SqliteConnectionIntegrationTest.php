@@ -114,4 +114,105 @@ class SqliteConnectionIntegrationTest extends AbstractConnectionIntegrationTestC
             native: true,
         );
     }
+
+    public function testNativeQueryBindsScalarNamedParameter(): void
+    {
+        $this->createUsersSchema();
+
+        $this->connection->query(
+            sql: "INSERT INTO users (name) VALUES ('Alice')",
+            native: true,
+        );
+
+        $this->connection->query(
+            sql: "INSERT INTO users (name) VALUES ('Bob')",
+            native: true,
+        );
+
+        $result = $this->connection->query(
+            sql: 'SELECT COUNT(*) AS c FROM users WHERE name = :name',
+            parameters: [
+                ':name' => 'Alice',
+            ],
+            native: true,
+        );
+
+        $row = $result->fetchAssoc();
+
+        self::assertEquals(
+            1,
+            $row['c'],
+        );
+    }
+
+    public function testNonNativeQueryRunsThroughStatementParserAndBindsPositionally(): void
+    {
+        $this->createUsersSchema();
+
+        $this->connection->query(
+            sql: "INSERT INTO users (name) VALUES ('Alice')",
+            native: true,
+        );
+
+        $this->connection->query(
+            sql: "INSERT INTO users (name) VALUES ('Bob')",
+            native: true,
+        );
+
+        $this->connection->query(
+            sql: "INSERT INTO users (name) VALUES ('Charlie')",
+            native: true,
+        );
+
+        $result = $this->connection->query(
+            sql: 'SELECT COUNT(*) AS c FROM users WHERE name = :name',
+            parameters: [
+                'name' => 'Alice',
+            ],
+        );
+
+        $row = $result->fetchAssoc();
+
+        self::assertEquals(
+            1,
+            $row['c'],
+        );
+    }
+
+    public function testNonNativeQueryWithArrayPlaceholderRoundTrips(): void
+    {
+        $this->createUsersSchema();
+
+        $this->connection->query(
+            sql: "INSERT INTO users (name) VALUES ('Alice')",
+            native: true,
+        );
+
+        $this->connection->query(
+            sql: "INSERT INTO users (name) VALUES ('Bob')",
+            native: true,
+        );
+
+        $this->connection->query(
+            sql: "INSERT INTO users (name) VALUES ('Charlie')",
+            native: true,
+        );
+
+        $result = $this->connection->query(
+            sql: 'SELECT COUNT(*) AS c FROM users WHERE name IN (:names[])',
+            parameters: [
+                'names' => [
+                    'Alice',
+                    'Charlie',
+                ],
+            ],
+        );
+
+        $row = $result->fetchAssoc();
+
+        self::assertEquals(
+            2,
+            $row['c'],
+        );
+    }
 }

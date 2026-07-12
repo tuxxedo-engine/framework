@@ -130,6 +130,36 @@ abstract class AbstractResultSetIntegrationTestCase extends TestCase
         );
     }
 
+    public function testResultRowMagicGetterExposesColumnValues(): void
+    {
+        $row = $this->selectAllUsers()->fetchObject();
+
+        self::assertInstanceOf(
+            ResultRow::class,
+            $row,
+        );
+
+        self::assertSame(
+            'Alice',
+            $row->__get(
+                property: 'name',
+            ),
+        );
+
+        self::assertSame(
+            'alice@example.test',
+            $row->__get(
+                property: 'email',
+            ),
+        );
+
+        self::assertNull(
+            $row->__get(
+                property: 'nonexistent_column',
+            ),
+        );
+    }
+
     public function testFetchObjectWithClosureAppliesClosure(): void
     {
         $row = $this->selectAllUsers()->fetchObject(
