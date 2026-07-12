@@ -793,4 +793,122 @@ abstract class AbstractConnectionIntegrationTestCase extends TestCase
 
         (void) $this->connection->savepoint();
     }
+
+    public function testTransactionClosureRollsBackOnError(): void
+    {
+        $this->createUsersSchema();
+
+        $caught = null;
+
+        try {
+            $this->connection->transaction(
+                transaction: function ($connection): void {
+                    $connection->insert(
+                        table: 'users',
+                    )
+                        ->set(
+                            column: 'name',
+                            value: 'Alice',
+                        )
+                        ->execute();
+
+                    throw new \Error(
+                        message: 'unrecoverable closure error',
+                    );
+                },
+            );
+        } catch (\Error $error) {
+            $caught = $error;
+        }
+
+        self::assertInstanceOf(
+            \Error::class,
+            $caught,
+        );
+
+        self::assertSame(
+            'unrecoverable closure error',
+            $caught->getMessage(),
+        );
+
+        self::assertFalse(
+            $this->connection->inTransaction(),
+        );
+
+        $count = $this->connection->query(
+            sql: 'SELECT COUNT(*) AS c FROM users',
+            native: true,
+        )->fetchAssoc();
+
+        self::assertEquals(
+            0,
+            $count['c'],
+        );
+    }
+
+    public function testNestedTransactionClosureRollsBackOnErrorButKeepsOuter(): void
+    {
+        $this->createUsersSchema();
+
+        $this->connection->begin();
+
+        $this->connection->insert(
+            table: 'users',
+        )
+            ->set(
+                column: 'name',
+                value: 'outer',
+            )
+            ->execute();
+
+        $caught = null;
+
+        try {
+            $this->connection->nestedTransaction(
+                transaction: function ($connection): void {
+                    $connection->insert(
+                        table: 'users',
+                    )
+                        ->set(
+                            column: 'name',
+                            value: 'inner',
+                        )
+                        ->execute();
+
+                    throw new \Error(
+                        message: 'inner error',
+                    );
+                },
+            );
+        } catch (\Error $error) {
+            $caught = $error;
+        }
+
+        self::assertInstanceOf(
+            \Error::class,
+            $caught,
+        );
+
+        self::assertTrue(
+            $this->connection->inTransaction(),
+        );
+
+        $this->connection->commit();
+
+        $rows = $this->connection->query(
+            sql: 'SELECT name FROM users',
+            native: true,
+        );
+
+        $names = [];
+
+        foreach ($rows as $row) {
+            $names[] = $row->properties['name'];
+        }
+
+        self::assertSame(
+            ['outer'],
+            $names,
+        );
+    }
 }

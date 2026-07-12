@@ -89,7 +89,6 @@ abstract class AbstractConnection implements ConnectionInterface
         );
     }
 
-    // @todo Catch \Throwable instead of \Exception; \Error bypasses rollback and leaves the connection stuck in-transaction
     public function transaction(
         \Closure $transaction,
     ): mixed {
@@ -101,7 +100,7 @@ abstract class AbstractConnection implements ConnectionInterface
             $this->commit();
 
             return $result;
-        } catch (\Exception $exception) {
+        } catch (\Throwable $exception) {
             $this->rollback();
 
             throw $exception;
@@ -123,7 +122,7 @@ abstract class AbstractConnection implements ConnectionInterface
             $this->releaseSavepoint($savepoint);
 
             return $result;
-        } catch (\Exception $exception) {
+        } catch (\Throwable $exception) {
             $this->rollbackToSavepoint($savepoint);
             $this->releaseSavepoint($savepoint);
 
