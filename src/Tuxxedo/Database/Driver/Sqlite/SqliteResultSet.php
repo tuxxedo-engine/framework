@@ -104,26 +104,6 @@ class SqliteResultSet extends AbstractResultSet
         throw DatabaseException::fromCannotFetch();
     }
 
-    // @todo Duplicate of fetchAssoc; decide semantic split (mysqli-style BOTH keys) or remove
-    public function fetchArray(): array
-    {
-        if ($this->result === null) {
-            throw DatabaseException::fromEmptyResultSet();
-        }
-
-        if ($this->endedBuffering || $this->increaseBuffer()) {
-            if (!\array_key_exists($this->pointer, $this->buffer)) {
-                throw DatabaseException::fromCannotFetch();
-            }
-
-            return $this->buffer[$this->pointer++];
-        }
-
-        $this->endedBuffering = true;
-
-        throw DatabaseException::fromCannotFetch();
-    }
-
     public function fetchAssoc(): array
     {
         if ($this->result === null) {

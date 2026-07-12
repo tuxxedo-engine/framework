@@ -85,21 +85,6 @@ abstract class AbstractResultSetIntegrationTestCase extends TestCase
         );
     }
 
-    public function testFetchArrayReturnsAssocArrayCurrently(): void
-    {
-        $row = $this->selectAllUsers()->fetchArray();
-
-        self::assertArrayHasKey(
-            'name',
-            $row,
-        );
-
-        self::assertSame(
-            'Alice',
-            $row['name'],
-        );
-    }
-
     public function testFetchRowReturnsNumericallyIndexedArray(): void
     {
         $row = $this->selectAllUsers()->fetchRow();

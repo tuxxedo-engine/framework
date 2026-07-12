@@ -67,21 +67,6 @@ class MysqlResultSet extends AbstractResultSet
         return parent::hydrate($class, $row, $hydrator);
     }
 
-    public function fetchArray(): array
-    {
-        if ($this->result === null) {
-            throw DatabaseException::fromEmptyResultSet();
-        }
-
-        $row = $this->result->fetch_array();
-
-        if (!\is_array($row)) {
-            throw DatabaseException::fromCannotFetch();
-        }
-
-        return $row;
-    }
-
     public function fetchAssoc(): array
     {
         if ($this->result === null) {

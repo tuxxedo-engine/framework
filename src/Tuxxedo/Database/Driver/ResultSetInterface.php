@@ -52,11 +52,6 @@ interface ResultSetInterface extends \Countable, \Iterator
     /**
      * @return mixed[]
      */
-    public function fetchArray(): array;
-
-    /**
-     * @return mixed[]
-     */
     public function fetchAssoc(): array;
 
     /**

@@ -57,21 +57,6 @@ class PgsqlResultSet extends AbstractResultSet
         return parent::hydrate($class, $row, $hydrator);
     }
 
-    public function fetchArray(): array
-    {
-        if ($this->numRows === 0) {
-            throw DatabaseException::fromEmptyResultSet();
-        }
-
-        $row = \pg_fetch_array($this->result);
-
-        if (!\is_array($row)) {
-            throw DatabaseException::fromCannotFetch();
-        }
-
-        return $row;
-    }
-
     public function fetchAssoc(): array
     {
         if ($this->numRows === 0) {
