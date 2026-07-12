@@ -74,8 +74,6 @@ abstract class AbstractPdoConnection extends AbstractConnection
 
     /**
      * @return array<\PDO::ATTR_*|\PDO::*_ATTR_*, mixed>
-     *
-     * @codeCoverageIgnore
      */
     protected function getPdoOptions(
         PdoConnectionConfigInterface $config,
