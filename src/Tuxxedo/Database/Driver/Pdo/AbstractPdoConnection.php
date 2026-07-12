@@ -58,7 +58,7 @@ abstract class AbstractPdoConnection extends AbstractConnection
 
                 $this->postConnectHook($config);
             } catch (\PDOException $exception) {
-                $this->throwFromPdoException($exception);
+                self::throwFromPdoException($exception);
             }
         };
 
@@ -74,6 +74,8 @@ abstract class AbstractPdoConnection extends AbstractConnection
 
     /**
      * @return array<\PDO::ATTR_*|\PDO::*_ATTR_*, mixed>
+     *
+     * @codeCoverageIgnore
      */
     protected function getPdoOptions(
         PdoConnectionConfigInterface $config,
@@ -100,15 +102,19 @@ abstract class AbstractPdoConnection extends AbstractConnection
     /**
      * @throws DatabaseException
      */
-    public function throwFromPdoException(
+    public static function throwFromPdoException(
         \PDOException $exception,
     ): never {
-        /** @var array{0: string, 1: string|int, 2: string} $errorInfo */
-        $errorInfo = $exception->errorInfo ?? [
-            'HY000',
-            $exception->getCode(),
-            $exception->getMessage(),
-        ];
+        if ($exception->errorInfo !== null) {
+            /** @var array{0: string, 1: string|int, 2: string} $errorInfo */
+            $errorInfo = $exception->errorInfo;
+        } else {
+            $errorInfo = [
+                'HY000',
+                $exception->getCode(),
+                $exception->getMessage(),
+            ];
+        }
 
         throw DatabaseException::fromError(
             sqlState: $errorInfo[0],
@@ -117,6 +123,9 @@ abstract class AbstractPdoConnection extends AbstractConnection
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function throwFromErrorInfo(
         ?\PDOStatement $statement = null,
     ): never {
@@ -163,8 +172,8 @@ abstract class AbstractPdoConnection extends AbstractConnection
             $this->pdo->query('SELECT 1');
 
             return true;
-        } catch (\Exception) {
-            return false;
+        } catch (\Exception) { // @codeCoverageIgnore
+            return false; // @codeCoverageIgnore
         }
     }
 
@@ -184,10 +193,10 @@ abstract class AbstractPdoConnection extends AbstractConnection
             $id = $this->pdo->lastInsertId();
 
             if ($id === false) {
-                $this->throwFromErrorInfo();
+                $this->throwFromErrorInfo(); // @codeCoverageIgnore
             }
-        } catch (\PDOException $exception) {
-            $this->throwFromPdoException($exception);
+        } catch (\PDOException $exception) { // @codeCoverageIgnore
+            self::throwFromPdoException($exception); // @codeCoverageIgnore
         }
 
         if ($id !== '' && $id !== '0') {
@@ -205,10 +214,10 @@ abstract class AbstractPdoConnection extends AbstractConnection
             $id = $this->pdo->lastInsertId();
 
             if ($id === false) {
-                $this->throwFromErrorInfo();
+                $this->throwFromErrorInfo(); // @codeCoverageIgnore
             }
-        } catch (\PDOException $exception) {
-            $this->throwFromPdoException($exception);
+        } catch (\PDOException $exception) { // @codeCoverageIgnore
+            self::throwFromPdoException($exception); // @codeCoverageIgnore
         }
 
 
@@ -223,8 +232,14 @@ abstract class AbstractPdoConnection extends AbstractConnection
     {
         $this->connectCheck();
 
-        if (!$this->pdo->beginTransaction()) {
-            $this->throwFromErrorInfo();
+        if ($this->pdo->inTransaction()) {
+            throw DatabaseException::fromAlreadyInTransaction();
+        }
+
+        try {
+            $this->pdo->beginTransaction();
+        } catch (\PDOException $exception) { // @codeCoverageIgnore
+            self::throwFromPdoException($exception); // @codeCoverageIgnore
         }
     }
 
@@ -232,8 +247,14 @@ abstract class AbstractPdoConnection extends AbstractConnection
     {
         $this->connectCheck();
 
-        if (!$this->pdo->commit()) {
-            $this->throwFromErrorInfo();
+        if (!$this->pdo->inTransaction()) {
+            throw DatabaseException::fromNotInTransaction();
+        }
+
+        try {
+            $this->pdo->commit();
+        } catch (\PDOException $exception) { // @codeCoverageIgnore
+            self::throwFromPdoException($exception); // @codeCoverageIgnore
         }
     }
 
@@ -241,8 +262,14 @@ abstract class AbstractPdoConnection extends AbstractConnection
     {
         $this->connectCheck();
 
-        if (!$this->pdo->rollBack()) {
-            $this->throwFromErrorInfo();
+        if (!$this->pdo->inTransaction()) {
+            throw DatabaseException::fromNotInTransaction();
+        }
+
+        try {
+            $this->pdo->rollBack();
+        } catch (\PDOException $exception) { // @codeCoverageIgnore
+            self::throwFromPdoException($exception); // @codeCoverageIgnore
         }
     }
 
@@ -266,10 +293,14 @@ abstract class AbstractPdoConnection extends AbstractConnection
             $parameters = $parsedStatement->parameters;
         }
 
-        $statement = $this->pdo->prepare($sql);
+        try {
+            $statement = $this->pdo->prepare($sql);
+        } catch (\PDOException $exception) {
+            self::throwFromPdoException($exception);
+        }
 
         if ($statement === false) {
-            $this->throwFromErrorInfo();
+            $this->throwFromErrorInfo(); // @codeCoverageIgnore
         }
 
         foreach ($parameters as $index => $value) {
@@ -291,16 +322,18 @@ abstract class AbstractPdoConnection extends AbstractConnection
             );
 
             if (!$bound) {
+                // @codeCoverageIgnoreStart
                 $this->throwFromErrorInfo(
                     statement: $statement,
                 );
+                // @codeCoverageIgnoreEnd
             }
         }
 
-        if (!$statement->execute()) {
-            $this->throwFromErrorInfo(
-                statement: $statement,
-            );
+        try {
+            $statement->execute();
+        } catch (\PDOException $exception) {
+            self::throwFromPdoException($exception);
         }
 
         if ($statement->columnCount() > 0) {

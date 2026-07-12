@@ -15,6 +15,7 @@ namespace Tuxxedo\Database\Driver\Pdo\Pgsql;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\Config\ConnectionConfigInterface;
+use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
 use Tuxxedo\Database\Driver\Pdo\Config\PdoConnectionConfigInterface;
 use Tuxxedo\Database\Driver\Pdo\Pgsql\Config\PdoPgsqlConnectionConfigInterface;
@@ -93,6 +94,9 @@ class PdoPgsqlConnection extends AbstractPdoConnection
         );
     }
 
+    /**
+     * @throws DatabaseException
+     */
     protected function postConnectHook(
         PdoConnectionConfigInterface $config,
     ): void {
@@ -102,11 +106,21 @@ class PdoPgsqlConnection extends AbstractPdoConnection
             return;
         }
 
-        $this->pdo->exec(
-            \sprintf(
-                'SET client_encoding TO \'%s\'',
-                \addcslashes($config->charset, "\\'"),
-            ),
-        );
+        if (\preg_match('/\A[A-Za-z0-9_-]+\z/', $config->charset) !== 1) {
+            throw DatabaseException::fromInvalidCharset(
+                charset: $config->charset,
+            );
+        }
+
+        try {
+            $this->pdo->exec(
+                \sprintf(
+                    'SET client_encoding TO \'%s\'',
+                    $config->charset,
+                ),
+            );
+        } catch (\PDOException $exception) {
+            self::throwFromPdoException($exception);
+        }
     }
 }

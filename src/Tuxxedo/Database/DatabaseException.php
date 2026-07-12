@@ -133,4 +133,15 @@ class DatabaseException extends \Exception
             message: 'Cannot execute statement: No connection was provided at construction or execution time',
         );
     }
+
+    public static function fromInvalidCharset(
+        string $charset,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid charset name "%s": must match [A-Za-z0-9_-]+',
+                $charset,
+            ),
+        );
+    }
 }

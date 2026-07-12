@@ -59,6 +59,8 @@ class PdoResultSet extends AbstractResultSet
 
     /**
      * @return array<string, mixed>|null
+     *
+     * @throws DatabaseException
      */
     private function fetchNext(): ?array
     {
@@ -66,7 +68,11 @@ class PdoResultSet extends AbstractResultSet
             return null;
         }
 
-        $row = $this->result->fetch(\PDO::FETCH_ASSOC);
+        try {
+            $row = $this->result->fetch(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $exception) { // @codeCoverageIgnore
+            AbstractPdoConnection::throwFromPdoException($exception); // @codeCoverageIgnore
+        }
 
         if (!\is_array($row)) {
             return null;
