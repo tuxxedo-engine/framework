@@ -21,7 +21,6 @@ use Tuxxedo\Database\Driver\ResultRowInterface;
 use Tuxxedo\Database\Hydrator\HydratableInterface;
 use Tuxxedo\Database\Hydrator\HydratorInterface;
 
-// @todo Check if $resultSet->result should still be null
 class SqliteResultSet extends AbstractResultSet
 {
     private int $pointer = 0;
@@ -34,7 +33,7 @@ class SqliteResultSet extends AbstractResultSet
 
     public function __construct(
         protected ContainerInterface $container,
-        private ?\SQLite3Result $result,
+        private \SQLite3Result $result,
         public readonly int $affectedRows = 0,
     ) {
     }
@@ -63,10 +62,6 @@ class SqliteResultSet extends AbstractResultSet
      */
     private function fetchNext(): ?array
     {
-        if ($this->result === null) {
-            return null;
-        }
-
         $row = $this->result->fetchArray(\SQLITE3_ASSOC);
 
         if (!\is_array($row)) {
@@ -87,10 +82,6 @@ class SqliteResultSet extends AbstractResultSet
         string|\Closure $class = ResultRowInterface::class,
         ?HydratorInterface $hydrator = null,
     ): object {
-        if ($this->result === null) {
-            throw DatabaseException::fromEmptyResultSet();
-        }
-
         if ($this->endedBuffering || $this->increaseBuffer()) {
             if (!\array_key_exists($this->pointer, $this->buffer)) {
                 throw DatabaseException::fromCannotFetch();
@@ -106,10 +97,6 @@ class SqliteResultSet extends AbstractResultSet
 
     public function fetchAssoc(): array
     {
-        if ($this->result === null) {
-            throw DatabaseException::fromEmptyResultSet();
-        }
-
         if ($this->endedBuffering || $this->increaseBuffer()) {
             if (!\array_key_exists($this->pointer, $this->buffer)) {
                 throw DatabaseException::fromCannotFetch();
@@ -125,10 +112,6 @@ class SqliteResultSet extends AbstractResultSet
 
     public function fetchRow(): array
     {
-        if ($this->result === null) {
-            throw DatabaseException::fromEmptyResultSet();
-        }
-
         if ($this->endedBuffering || $this->increaseBuffer()) {
             if (!\array_key_exists($this->pointer, $this->buffer)) {
                 throw DatabaseException::fromCannotFetch();
