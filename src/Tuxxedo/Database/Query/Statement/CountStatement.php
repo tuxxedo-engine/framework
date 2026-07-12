@@ -58,7 +58,9 @@ class CountStatement extends AbstractWhereStatement implements CountStatementInt
     public function count(
         ?ConnectionInterface $connection = null,
     ): int {
-        /** @var int */
-        return $this->execute($connection)->fetchRow()[0];
+        /** @var int|string $value */
+        $value = $this->execute($connection)->fetchRow()[0];
+
+        return (int) $value;
     }
 }

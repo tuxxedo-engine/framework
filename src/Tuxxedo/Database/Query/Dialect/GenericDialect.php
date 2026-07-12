@@ -52,6 +52,7 @@ class GenericDialect implements DialectInterface
         return null;
     }
 
+    // @todo Reconsider - SQLite rejects this syntax; want one clause that works out-of-the-box across all drivers
     public function autoIncrementClause(): string
     {
         return 'GENERATED ALWAYS AS IDENTITY PRIMARY KEY';

@@ -911,4 +911,204 @@ abstract class AbstractConnectionIntegrationTestCase extends TestCase
             $names,
         );
     }
+
+    public function testInsertBulkWritesMultipleRows(): void
+    {
+        $this->createUsersSchema();
+
+        $this->connection->insertBulk(
+            table: 'users',
+        )
+            ->values(
+                [
+                    'name' => 'Alice',
+                    'email' => 'alice@example.test',
+                ],
+                [
+                    'name' => 'Bob',
+                    'email' => 'bob@example.test',
+                ],
+                [
+                    'name' => 'Charlie',
+                    'email' => null,
+                ],
+            )
+            ->execute();
+
+        $count = $this->connection->query(
+            sql: 'SELECT COUNT(*) AS c FROM users',
+            native: true,
+        )->fetchAssoc();
+
+        self::assertEquals(
+            3,
+            $count['c'],
+        );
+    }
+
+    public function testExistsReturnsTrueForMatchingRow(): void
+    {
+        $this->createUsersSchema();
+
+        $this->connection->insert(
+            table: 'users',
+        )
+            ->set(
+                column: 'name',
+                value: 'Alice',
+            )
+            ->execute();
+
+        $exists = $this->connection->exists(
+            table: 'users',
+        )
+            ->where(
+                column: 'name',
+                value: 'Alice',
+            )
+            ->exists();
+
+        self::assertTrue(
+            $exists,
+        );
+    }
+
+    public function testExistsReturnsFalseForMissingRow(): void
+    {
+        $this->createUsersSchema();
+
+        $exists = $this->connection->exists(
+            table: 'users',
+        )
+            ->where(
+                column: 'name',
+                value: 'nobody',
+            )
+            ->exists();
+
+        self::assertFalse(
+            $exists,
+        );
+    }
+
+    public function testCountReturnsRowCount(): void
+    {
+        $this->createUsersSchema();
+
+        foreach (['Alice', 'Bob', 'Charlie'] as $name) {
+            $this->connection->insert(
+                table: 'users',
+            )
+                ->set(
+                    column: 'name',
+                    value: $name,
+                )
+                ->execute();
+        }
+
+        $total = $this->connection->count(
+            table: 'users',
+        )->count();
+
+        self::assertSame(
+            3,
+            $total,
+        );
+    }
+
+    public function testCountWithWhereReturnsFilteredCount(): void
+    {
+        $this->createUsersSchema();
+
+        foreach (['Alice', 'Bob', 'Bob'] as $name) {
+            $this->connection->insert(
+                table: 'users',
+            )
+                ->set(
+                    column: 'name',
+                    value: $name,
+                )
+                ->execute();
+        }
+
+        $bobs = $this->connection->count(
+            table: 'users',
+        )
+            ->where(
+                column: 'name',
+                value: 'Bob',
+            )
+            ->count();
+
+        self::assertSame(
+            2,
+            $bobs,
+        );
+    }
+
+    public function testCreateTableViaBuilderCreatesUsableTable(): void
+    {
+        $table = $this->connection->createTable(
+            table: 'widgets',
+        );
+
+        $table->integer(
+            name: 'id',
+            primaryKey: true,
+        );
+
+        $table->text(
+            name: 'label',
+        );
+
+        $table->execute();
+
+        $this->connection->insert(
+            table: 'widgets',
+        )
+            ->set(
+                column: 'id',
+                value: 1,
+            )
+            ->set(
+                column: 'label',
+                value: 'first',
+            )
+            ->execute();
+
+        $count = $this->connection->query(
+            sql: 'SELECT COUNT(*) AS c FROM widgets',
+            native: true,
+        )->fetchAssoc();
+
+        self::assertEquals(
+            1,
+            $count['c'],
+        );
+    }
+
+    public function testDropTableRemovesTable(): void
+    {
+        $table = $this->connection->createTable(
+            table: 'widgets',
+        );
+
+        $table->integer(
+            name: 'id',
+            primaryKey: true,
+        );
+
+        $table->execute();
+
+        $this->connection->dropTable(
+            table: 'widgets',
+        )->execute();
+
+        $this->expectException(DatabaseException::class);
+
+        $this->connection->query(
+            sql: 'SELECT COUNT(*) FROM widgets',
+            native: true,
+        );
+    }
 }
