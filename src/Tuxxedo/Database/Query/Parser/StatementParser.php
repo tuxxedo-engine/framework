@@ -91,7 +91,62 @@ class StatementParser implements StatementParserInterface
                 continue;
             }
 
-            // @todo Handle PostgreSQL `::` cast syntax; currently `a::b` parses the second colon as the start of placeholder `:b`
+            if (
+                $byte === ':' &&
+                $position + 1 < $length &&
+                $sql[$position + 1] === ':'
+            ) {
+                $buffer .= '::';
+                $position += 2;
+
+                continue;
+            }
+
+            if (
+                $byte === '-' &&
+                $position + 1 < $length &&
+                $sql[$position + 1] === '-'
+            ) {
+                while ($position < $length) {
+                    $current = $sql[$position];
+                    $buffer .= $current;
+                    $position++;
+
+                    if ($current === "\n") {
+                        break;
+                    }
+                }
+
+                continue;
+            }
+
+            if (
+                $byte === '/' &&
+                $position + 1 < $length &&
+                $sql[$position + 1] === '*'
+            ) {
+                $buffer .= '/*';
+                $position += 2;
+
+                while ($position < $length) {
+                    if (
+                        $position + 1 < $length &&
+                        $sql[$position] === '*' &&
+                        $sql[$position + 1] === '/'
+                    ) {
+                        $buffer .= '*/';
+                        $position += 2;
+
+                        break;
+                    }
+
+                    $buffer .= $sql[$position];
+                    $position++;
+                }
+
+                continue;
+            }
+
             if (
                 $byte === ':' &&
                 $position + 1 < $length

@@ -639,6 +639,140 @@ class StatementParserTest extends TestCase
         );
     }
 
+    public function testDoubleColonCastLeavesBothColonsLiteral(): void
+    {
+        $result = $this->makeParser()->parse(
+            sql: 'SELECT a::text FROM t',
+        );
+
+        self::assertSame(
+            'SELECT a::text FROM t',
+            $result->sql,
+        );
+
+        self::assertSame(
+            [],
+            $result->parameters,
+        );
+    }
+
+    public function testDoubleColonCastFollowedByPlaceholderStillReplacesPlaceholder(): void
+    {
+        $result = $this->makeParser()->parse(
+            sql: 'SELECT a::text WHERE x = :x',
+            parameters: [
+                'x' => 1,
+            ],
+        );
+
+        self::assertSame(
+            'SELECT a::text WHERE x = $1',
+            $result->sql,
+        );
+
+        self::assertSame(
+            [
+                1,
+            ],
+            $result->parameters,
+        );
+    }
+
+    public function testLineCommentContentIsPreservedAndPlaceholderInsideIgnored(): void
+    {
+        $result = $this->makeParser()->parse(
+            sql: "-- :ignored\nSELECT :real",
+            parameters: [
+                'real' => 7,
+            ],
+        );
+
+        self::assertSame(
+            "-- :ignored\nSELECT \$1",
+            $result->sql,
+        );
+
+        self::assertSame(
+            [
+                7,
+            ],
+            $result->parameters,
+        );
+    }
+
+    public function testLineCommentAtEndOfInputWithoutNewline(): void
+    {
+        $result = $this->makeParser()->parse(
+            sql: 'SELECT 1 -- trailing :ignored',
+        );
+
+        self::assertSame(
+            'SELECT 1 -- trailing :ignored',
+            $result->sql,
+        );
+
+        self::assertSame(
+            [],
+            $result->parameters,
+        );
+    }
+
+    public function testBlockCommentContentIsPreservedAndPlaceholderInsideIgnored(): void
+    {
+        $result = $this->makeParser()->parse(
+            sql: 'SELECT /* :ignored */ :real',
+            parameters: [
+                'real' => 42,
+            ],
+        );
+
+        self::assertSame(
+            'SELECT /* :ignored */ $1',
+            $result->sql,
+        );
+
+        self::assertSame(
+            [
+                42,
+            ],
+            $result->parameters,
+        );
+    }
+
+    public function testBlockCommentSpansMultipleLines(): void
+    {
+        $result = $this->makeParser()->parse(
+            sql: "SELECT /* line one\nline two :ignored\nline three */ id FROM t",
+        );
+
+        self::assertSame(
+            "SELECT /* line one\nline two :ignored\nline three */ id FROM t",
+            $result->sql,
+        );
+
+        self::assertSame(
+            [],
+            $result->parameters,
+        );
+    }
+
+    public function testUnterminatedBlockCommentConsumesRestOfInput(): void
+    {
+        $result = $this->makeParser()->parse(
+            sql: 'SELECT /* never closed :ignored',
+        );
+
+        self::assertSame(
+            'SELECT /* never closed :ignored',
+            $result->sql,
+        );
+
+        self::assertSame(
+            [],
+            $result->parameters,
+        );
+    }
+
     public function testRealisticSelectWithWhereInArray(): void
     {
         $result = $this->makeParser()->parse(
