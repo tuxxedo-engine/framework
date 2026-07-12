@@ -214,6 +214,32 @@ abstract class AbstractResultSetIntegrationTestCase extends TestCase
         $result->fetchAssoc();
     }
 
+    public function testFetchObjectAfterLastRowThrowsFromCannotFetch(): void
+    {
+        $result = $this->selectAllUsers();
+
+        $result->fetchObject();
+        $result->fetchObject();
+        $result->fetchObject();
+
+        $this->expectException(DatabaseException::class);
+
+        $result->fetchObject();
+    }
+
+    public function testFetchRowAfterLastRowThrowsFromCannotFetch(): void
+    {
+        $result = $this->selectAllUsers();
+
+        $result->fetchRow();
+        $result->fetchRow();
+        $result->fetchRow();
+
+        $this->expectException(DatabaseException::class);
+
+        $result->fetchRow();
+    }
+
     public function testFetchAssocOnEmptyResultSetThrowsFromCannotFetch(): void
     {
         $result = $this->selectNoUsers();
@@ -227,13 +253,13 @@ abstract class AbstractResultSetIntegrationTestCase extends TestCase
     {
         $names = [];
 
+        /** @var ResultRowInterface $row */
         foreach ($this->selectAllUsers()->fetchAll() as $row) {
             self::assertInstanceOf(
                 ResultRowInterface::class,
                 $row,
             );
 
-            /** @var ResultRowInterface $row */
             $names[] = $row->properties['name'];
         }
 
@@ -251,6 +277,7 @@ abstract class AbstractResultSetIntegrationTestCase extends TestCase
     {
         $users = [];
 
+        /** @var HydratableTestUser $user */
         foreach (
             $this->selectAllUsers()->fetchAll(
                 class: HydratableTestUser::class,
@@ -261,7 +288,6 @@ abstract class AbstractResultSetIntegrationTestCase extends TestCase
                 $user,
             );
 
-            /** @var HydratableTestUser $user */
             $users[] = $user->name;
         }
 
@@ -380,6 +406,82 @@ abstract class AbstractResultSetIntegrationTestCase extends TestCase
         self::assertSame(
             1,
             $result->affectedRows,
+        );
+    }
+
+    public function testRepeatedFetchesAfterExhaustionKeepThrowing(): void
+    {
+        $result = $this->selectAllUsers();
+
+        $result->fetchAssoc();
+        $result->fetchAssoc();
+        $result->fetchAssoc();
+
+        $firstException = null;
+
+        try {
+            $result->fetchAssoc();
+        } catch (DatabaseException $exception) {
+            $firstException = $exception;
+        }
+
+        self::assertInstanceOf(
+            DatabaseException::class,
+            $firstException,
+        );
+
+        $secondException = null;
+
+        try {
+            $result->fetchAssoc();
+        } catch (DatabaseException $exception) {
+            $secondException = $exception;
+        }
+
+        self::assertInstanceOf(
+            DatabaseException::class,
+            $secondException,
+        );
+
+        $objectException = null;
+
+        try {
+            $result->fetchObject();
+        } catch (DatabaseException $exception) {
+            $objectException = $exception;
+        }
+
+        self::assertInstanceOf(
+            DatabaseException::class,
+            $objectException,
+        );
+
+        $rowException = null;
+
+        try {
+            $result->fetchRow();
+        } catch (DatabaseException $exception) {
+            $rowException = $exception;
+        }
+
+        self::assertInstanceOf(
+            DatabaseException::class,
+            $rowException,
+        );
+    }
+
+    public function testCountAfterExhaustionShortCircuits(): void
+    {
+        $result = $this->selectAllUsers();
+
+        self::assertCount(
+            3,
+            $result,
+        );
+
+        self::assertCount(
+            3,
+            $result,
         );
     }
 }

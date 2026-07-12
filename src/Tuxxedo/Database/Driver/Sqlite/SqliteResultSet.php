@@ -90,8 +90,6 @@ class SqliteResultSet extends AbstractResultSet
             return parent::hydrate($class, $this->buffer[$this->pointer++], $hydrator);
         }
 
-        $this->endedBuffering = true;
-
         throw DatabaseException::fromCannotFetch();
     }
 
@@ -105,8 +103,6 @@ class SqliteResultSet extends AbstractResultSet
             return $this->buffer[$this->pointer++];
         }
 
-        $this->endedBuffering = true;
-
         throw DatabaseException::fromCannotFetch();
     }
 
@@ -119,8 +115,6 @@ class SqliteResultSet extends AbstractResultSet
 
             return \array_values($this->buffer[$this->pointer++]);
         }
-
-        $this->endedBuffering = true;
 
         throw DatabaseException::fromCannotFetch();
     }
