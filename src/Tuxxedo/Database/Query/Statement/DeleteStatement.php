@@ -38,6 +38,7 @@ class DeleteStatement extends AbstractWhereStatement implements DeleteStatementI
         return $sql;
     }
 
+    // @todo DELETE ... LIMIT requires SQLITE_ENABLE_UPDATE_DELETE_LIMIT (non-default build); integration coverage blocked until MySQL/PGSQL drivers land
     public function limit(
         int $limit,
     ): static {

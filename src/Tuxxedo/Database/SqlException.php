@@ -65,9 +65,26 @@ class SqlException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Bulk insertions must be the same sized array, expected %d but got %d',
+                'Bulk insertion column count mismatch: expected %d but got %d',
                 $expectedRows,
                 $rows,
+            ),
+        );
+    }
+
+    /**
+     * @param list<string> $columns
+     * @param list<string> $expectedColumns
+     */
+    public static function fromUnexpectedInsertBulkColumns(
+        array $columns,
+        array $expectedColumns,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Bulk insertion column shape mismatch: expected [%s] but got [%s]',
+                \join(', ', $expectedColumns),
+                \join(', ', $columns),
             ),
         );
     }

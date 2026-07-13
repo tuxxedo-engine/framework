@@ -71,7 +71,7 @@ class InsertBulkStatement extends AbstractStatement implements InsertBulkStateme
         $expectedSize = \sizeof($expectedColumns);
 
         if (\sizeof($this->columns) > 0) {
-            $expectedColumns = \array_keys($this->columnMap);
+            $expectedColumns = \array_values($this->columnMap);
             $expectedSize = \sizeof($expectedColumns);
         }
 
@@ -79,13 +79,17 @@ class InsertBulkStatement extends AbstractStatement implements InsertBulkStateme
             $actualColumns = \array_keys($row);
             $rowSize = \sizeof($row);
 
-            if (
-                $rowSize !== $expectedSize ||
-                $actualColumns !== $expectedColumns
-            ) {
+            if ($rowSize !== $expectedSize) {
                 throw SqlException::fromUnexpectedInsertBulkSize(
                     rows: $rowSize,
                     expectedRows: $expectedSize,
+                );
+            }
+
+            if ($actualColumns !== $expectedColumns) {
+                throw SqlException::fromUnexpectedInsertBulkColumns(
+                    columns: $actualColumns,
+                    expectedColumns: $expectedColumns,
                 );
             }
         }
