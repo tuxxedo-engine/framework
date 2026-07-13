@@ -15,6 +15,7 @@ namespace Integration\Database\Driver\Sqlite;
 
 use Integration\Database\AbstractConnectionIntegrationTestCase;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
+use Support\Database\SqliteConnectionFactory;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
@@ -28,18 +29,8 @@ class SqliteConnectionIntegrationTest extends AbstractConnectionIntegrationTestC
     protected function createConnection(
         ConnectionRole $role = ConnectionRole::DEFAULT,
     ): ConnectionInterface {
-        $container = new Container();
-        $container->singleton(
-            class: $container,
-        );
-
-        return SqliteConnection::create(
-            container: $container,
-            config: new SqliteConnectionConfig(
-                name: 'test',
-                role: $role,
-                database: ':memory:',
-            ),
+        return SqliteConnectionFactory::create(
+            role: $role,
         );
     }
 

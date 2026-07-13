@@ -15,28 +15,15 @@ namespace Integration\Database\Driver\Sqlite;
 
 use Integration\Database\AbstractResultSetIntegrationTestCase;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
-use Tuxxedo\Container\Container;
+use Support\Database\SqliteConnectionFactory;
 use Tuxxedo\Database\Driver\ConnectionInterface;
-use Tuxxedo\Database\Driver\Sqlite\Config\SqliteConnectionConfig;
-use Tuxxedo\Database\Driver\Sqlite\SqliteConnection;
 
 #[RequiresPhpExtension('sqlite3')]
 class SqliteResultSetIntegrationTest extends AbstractResultSetIntegrationTestCase
 {
     protected function createConnection(): ConnectionInterface
     {
-        $container = new Container();
-        $container->singleton(
-            class: $container,
-        );
-
-        return SqliteConnection::create(
-            container: $container,
-            config: new SqliteConnectionConfig(
-                name: 'test',
-                database: ':memory:',
-            ),
-        );
+        return SqliteConnectionFactory::create();
     }
 
     protected function createUsersSchemaWithSampleRows(): void

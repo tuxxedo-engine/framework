@@ -15,6 +15,7 @@ namespace Integration\Database\Driver\Pdo\Sqlite;
 
 use Integration\Database\AbstractConnectionIntegrationTestCase;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
+use Support\Database\PdoSqliteConnectionFactory;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
@@ -28,18 +29,8 @@ class PdoSqliteConnectionIntegrationTest extends AbstractConnectionIntegrationTe
     protected function createConnection(
         ConnectionRole $role = ConnectionRole::DEFAULT,
     ): ConnectionInterface {
-        $container = new Container();
-        $container->singleton(
-            class: $container,
-        );
-
-        return PdoSqliteConnection::create(
-            container: $container,
-            config: new PdoSqliteConnectionConfig(
-                name: 'test',
-                role: $role,
-                database: ':memory:',
-            ),
+        return PdoSqliteConnectionFactory::create(
+            role: $role,
         );
     }
 

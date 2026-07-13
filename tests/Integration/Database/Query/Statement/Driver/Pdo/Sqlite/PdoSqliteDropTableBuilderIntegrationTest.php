@@ -15,27 +15,14 @@ namespace Integration\Database\Query\Statement\Driver\Pdo\Sqlite;
 
 use Integration\Database\Query\Statement\AbstractDropTableBuilderIntegrationTestCase;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
-use Tuxxedo\Container\Container;
+use Support\Database\PdoSqliteConnectionFactory;
 use Tuxxedo\Database\Driver\ConnectionInterface;
-use Tuxxedo\Database\Driver\Pdo\Sqlite\Config\PdoSqliteConnectionConfig;
-use Tuxxedo\Database\Driver\Pdo\Sqlite\PdoSqliteConnection;
 
 #[RequiresPhpExtension('pdo_sqlite')]
 class PdoSqliteDropTableBuilderIntegrationTest extends AbstractDropTableBuilderIntegrationTestCase
 {
     protected function createConnection(): ConnectionInterface
     {
-        $container = new Container();
-        $container->singleton(
-            class: $container,
-        );
-
-        return PdoSqliteConnection::create(
-            container: $container,
-            config: new PdoSqliteConnectionConfig(
-                name: 'test',
-                database: ':memory:',
-            ),
-        );
+        return PdoSqliteConnectionFactory::create();
     }
 }

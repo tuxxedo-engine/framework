@@ -15,29 +15,16 @@ namespace Integration\Database\Driver\Pdo\Sqlite;
 
 use Integration\Database\AbstractResultSetIntegrationTestCase;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
-use Tuxxedo\Container\Container;
+use Support\Database\PdoSqliteConnectionFactory;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
-use Tuxxedo\Database\Driver\Pdo\Sqlite\Config\PdoSqliteConnectionConfig;
-use Tuxxedo\Database\Driver\Pdo\Sqlite\PdoSqliteConnection;
 
 #[RequiresPhpExtension('pdo_sqlite')]
 class PdoSqliteResultSetIntegrationTest extends AbstractResultSetIntegrationTestCase
 {
     protected function createConnection(): ConnectionInterface
     {
-        $container = new Container();
-        $container->singleton(
-            class: $container,
-        );
-
-        return PdoSqliteConnection::create(
-            container: $container,
-            config: new PdoSqliteConnectionConfig(
-                name: 'test',
-                database: ':memory:',
-            ),
-        );
+        return PdoSqliteConnectionFactory::create();
     }
 
     protected function createUsersSchemaWithSampleRows(): void
