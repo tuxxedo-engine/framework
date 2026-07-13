@@ -163,13 +163,14 @@ abstract class AbstractResultSetIntegrationTestCase extends TestCase
     public function testFetchObjectWithClosureAppliesClosure(): void
     {
         $row = $this->selectAllUsers()->fetchObject(
-            class: static function (array $properties): object {
+            class: static function (array $properties): \stdClass {
                 /** @var string $name */
                 $name = $properties['name'];
 
-                return (object) [
-                    'boxedName' => '[' . $name . ']',
-                ];
+                $dto = new \stdClass();
+                $dto->boxedName = '[' . $name . ']';
+
+                return $dto;
             },
         );
 

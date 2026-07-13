@@ -59,4 +59,30 @@ abstract class AbstractBuilderIntegrationTestCase extends TestCase
             native: true,
         );
     }
+
+    protected function createPostsSchema(): void
+    {
+        $this->connection->query(
+            sql: 'CREATE TABLE posts (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, title TEXT NOT NULL)',
+            native: true,
+        );
+    }
+
+    protected function seedPosts(): void
+    {
+        $this->connection->query(
+            sql: "INSERT INTO posts (user_id, title) VALUES (1, 'Post by Alice')",
+            native: true,
+        );
+
+        $this->connection->query(
+            sql: "INSERT INTO posts (user_id, title) VALUES (2, 'Post by Bob')",
+            native: true,
+        );
+
+        $this->connection->query(
+            sql: "INSERT INTO posts (user_id, title) VALUES (2, 'Another Bob post')",
+            native: true,
+        );
+    }
 }
