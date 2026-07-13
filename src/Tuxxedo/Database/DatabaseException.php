@@ -56,6 +56,9 @@ class DatabaseException extends \Exception
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromCannotInitializeNativeDriver(): self
     {
         return new self(
@@ -63,6 +66,9 @@ class DatabaseException extends \Exception
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromCannotConnect(
         string|int $code,
         string $error,

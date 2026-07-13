@@ -119,7 +119,12 @@ class PgsqlConnection extends AbstractConnection
                     : \pg_connect(\join(' ', $dsn));
 
                 if ($pgsql === false) {
-                    throw DatabaseException::fromCannotConnect(code: 0, error: 'Connection error');
+                    // @codeCoverageIgnoreStart
+                    throw DatabaseException::fromCannotConnect(
+                        code: 0,
+                        error: 'Connection error',
+                    );
+                    // @codeCoverageIgnoreEnd
                 }
 
                 $this->pgsql = $pgsql;

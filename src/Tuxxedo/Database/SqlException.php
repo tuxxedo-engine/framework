@@ -89,6 +89,9 @@ class SqlException extends \Exception
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromSubqueryStatementMustExtendAbstractStatement(
         string $actualType,
     ): self {

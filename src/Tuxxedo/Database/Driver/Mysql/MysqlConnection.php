@@ -52,7 +52,9 @@ class MysqlConnection extends AbstractConnection
                 $mysqli = \mysqli_init();
 
                 if ($mysqli === false) {
+                    // @codeCoverageIgnoreStart
                     throw DatabaseException::fromCannotInitializeNativeDriver();
+                    // @codeCoverageIgnoreEnd
                 }
 
                 $this->mysqli = $mysqli;
@@ -99,6 +101,7 @@ class MysqlConnection extends AbstractConnection
                     );
                 } finally {
                     if ($this->mysqli->connect_errno !== 0) {
+                        // @codeCoverageIgnoreStart
                         $exception = DatabaseException::fromCannotConnect(
                             code: $this->mysqli->connect_errno,
                             error: $this->mysqli->connect_error ?? 'Connection error',
@@ -107,6 +110,7 @@ class MysqlConnection extends AbstractConnection
                         unset($this->mysqli);
 
                         throw $exception;
+                        // @codeCoverageIgnoreEnd
                     }
                 }
             }
