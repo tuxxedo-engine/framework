@@ -13,8 +13,26 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Statement\Order;
 
+use Tuxxedo\Database\SqlException;
+
 enum OrderDirection: string
 {
     case ASC = 'ASC';
     case DESC = 'DESC';
+
+    public static function fromInput(string $value): self
+    {
+        $normalized = \str_replace('_', ' ', $value);
+
+        foreach (self::cases() as $case) {
+            if (\strcasecmp($case->value, $normalized) === 0) {
+                return $case;
+            }
+        }
+
+        throw SqlException::fromUnknownOperator(
+            value: $value,
+            enum: self::class,
+        );
+    }
 }

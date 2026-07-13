@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Statement;
 
+use Tuxxedo\Database\Query\Statement\Condition\BetweenOperator;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
 
@@ -117,6 +118,7 @@ interface WhereStatementInterface extends StatementInterface
         string $column,
         string|int|float|bool $from,
         string|int|float|bool $to,
+        BetweenOperator|string $operator = BetweenOperator::BETWEEN,
     ): static;
 
     public function whereNotBetween(
@@ -129,6 +131,7 @@ interface WhereStatementInterface extends StatementInterface
         string $column,
         string|int|float|bool $from,
         string|int|float|bool $to,
+        BetweenOperator|string $operator = BetweenOperator::BETWEEN,
     ): static;
 
     public function orWhereNotBetween(

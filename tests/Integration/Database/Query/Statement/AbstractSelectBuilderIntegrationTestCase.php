@@ -940,4 +940,224 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
             $users,
         );
     }
+
+    public function testOrderByAscendingViaStringInput(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        $names = [];
+
+        foreach (
+            $this->connection->select(
+                table: 'users',
+            )
+                ->orderBy(
+                    column: 'name',
+                    direction: 'asc',
+                )
+                ->execute() as $row
+        ) {
+            $names[] = $row->properties['name'];
+        }
+
+        self::assertSame(
+            [
+                'Alice',
+                'Bob',
+                'Charlie',
+            ],
+            $names,
+        );
+    }
+
+    public function testOrderByUnknownStringDirectionThrows(): void
+    {
+        $this->createUsersSchema();
+
+        $this->expectException(\Tuxxedo\Database\SqlException::class);
+
+        $this->connection->select(
+            table: 'users',
+        )->orderBy(
+            column: 'name',
+            direction: 'sideways',
+        );
+    }
+
+    public function testOrHavingWithStringOperator(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        $result = $this->connection->select(
+            table: 'users',
+        )
+            ->select('name')
+            ->groupBy('name')
+            ->having(
+                column: 'name',
+                value: 'nobody',
+            )
+            ->orHaving(
+                column: 'name',
+                value: 'Alice',
+                operator: '!=',
+            )
+            ->execute();
+
+        self::assertCount(
+            2,
+            $result,
+        );
+    }
+
+    public function testHavingBetweenWithStringOperator(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        $result = $this->connection->select(
+            table: 'users',
+        )
+            ->select('id')
+            ->groupBy('id')
+            ->havingBetween(
+                column: 'id',
+                from: 100,
+                to: 200,
+                operator: 'NOT_BETWEEN',
+            )
+            ->execute();
+
+        self::assertCount(
+            3,
+            $result,
+        );
+    }
+
+    public function testOrHavingBetweenWithStringOperator(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        $result = $this->connection->select(
+            table: 'users',
+        )
+            ->select('id')
+            ->groupBy('id')
+            ->having(
+                column: 'id',
+                value: 999,
+            )
+            ->orHavingBetween(
+                column: 'id',
+                from: 100,
+                to: 200,
+                operator: 'NOT_BETWEEN',
+            )
+            ->execute();
+
+        self::assertCount(
+            3,
+            $result,
+        );
+    }
+
+    public function testInnerJoinWithStringOperator(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        $result = $this->connection->select(
+            table: 'users',
+        )
+            ->innerJoin(
+                table: 'posts',
+                first: 'users.id',
+                second: 'posts.user_id',
+                operator: '=',
+            )
+            ->execute();
+
+        self::assertCount(
+            3,
+            $result,
+        );
+    }
+
+    public function testLeftJoinWithStringOperator(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        $result = $this->connection->select(
+            table: 'users',
+        )
+            ->leftJoin(
+                table: 'posts',
+                first: 'users.id',
+                second: 'posts.user_id',
+                operator: '=',
+            )
+            ->execute();
+
+        self::assertCount(
+            4,
+            $result,
+        );
+    }
+
+    public function testRightJoinWithStringOperator(): void
+    {
+        $this->createUsersSchema();
+        $this->createPostsSchema();
+
+        $this->connection->query(
+            sql: "INSERT INTO users (name, email) VALUES ('Alice', 'a@example.test')",
+            native: true,
+        );
+
+        $this->connection->query(
+            sql: "INSERT INTO posts (user_id, title) VALUES (1, 'Post 1')",
+            native: true,
+        );
+
+        $result = $this->connection->select(
+            table: 'users',
+        )
+            ->rightJoin(
+                table: 'posts',
+                first: 'users.id',
+                second: 'posts.user_id',
+                operator: '=',
+            )
+            ->execute();
+
+        self::assertCount(
+            1,
+            $result,
+        );
+    }
+
+    public function testUnknownJoinStringOperatorThrows(): void
+    {
+        $this->createUsersSchema();
+        $this->createPostsSchema();
+
+        $this->expectException(\Tuxxedo\Database\SqlException::class);
+
+        $this->connection->select(
+            table: 'users',
+        )->innerJoin(
+            table: 'posts',
+            first: 'users.id',
+            second: 'posts.user_id',
+            operator: 'nonsense',
+        );
+    }
 }

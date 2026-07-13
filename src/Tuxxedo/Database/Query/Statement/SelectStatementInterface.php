@@ -17,6 +17,7 @@ use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Hydrator\HydratableInterface;
 use Tuxxedo\Database\Hydrator\HydratorInterface;
+use Tuxxedo\Database\Query\Statement\Condition\BetweenOperator;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\SqlException;
@@ -102,6 +103,7 @@ interface SelectStatementInterface extends WhereStatementInterface
         string $column,
         string|int|float|bool $from,
         string|int|float|bool $to,
+        BetweenOperator|string $operator = BetweenOperator::BETWEEN,
     ): static;
 
     public function havingNotBetween(
@@ -114,6 +116,7 @@ interface SelectStatementInterface extends WhereStatementInterface
         string $column,
         string|int|float|bool $from,
         string|int|float|bool $to,
+        BetweenOperator|string $operator = BetweenOperator::BETWEEN,
     ): static;
 
     public function orHavingNotBetween(

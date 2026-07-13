@@ -1013,4 +1013,136 @@ abstract class AbstractWhereClauseBuilderIntegrationTestCase extends AbstractBui
             $matched,
         );
     }
+
+    public function testOrWhereWithStringOperator(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        $matched = $this->runWhereMatch(
+            configureBuilder: static function (WhereStatementInterface $q): void {
+                $q->where(
+                    column: 'name',
+                    value: 'nobody',
+                )
+                    ->orWhere(
+                        column: 'id',
+                        value: 1,
+                        operator: '>=',
+                    );
+            },
+        );
+
+        self::assertTrue(
+            $matched,
+        );
+    }
+
+    public function testWhereColumnWithStringOperator(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        $matched = $this->runWhereMatch(
+            configureBuilder: static function (WhereStatementInterface $q): void {
+                $q->whereColumn(
+                    column: 'name',
+                    other: 'name',
+                    operator: '=',
+                );
+            },
+        );
+
+        self::assertTrue(
+            $matched,
+        );
+    }
+
+    public function testOrWhereColumnWithStringOperator(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        $matched = $this->runWhereMatch(
+            configureBuilder: static function (WhereStatementInterface $q): void {
+                $q->where(
+                    column: 'name',
+                    value: 'nobody',
+                )
+                    ->orWhereColumn(
+                        column: 'name',
+                        other: 'name',
+                        operator: '=',
+                    );
+            },
+        );
+
+        self::assertTrue(
+            $matched,
+        );
+    }
+
+    public function testWhereBetweenWithStringOperator(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        $matched = $this->runWhereMatch(
+            configureBuilder: static function (WhereStatementInterface $q): void {
+                $q->whereBetween(
+                    column: 'id',
+                    from: 100,
+                    to: 200,
+                    operator: 'NOT_BETWEEN',
+                );
+            },
+        );
+
+        self::assertTrue(
+            $matched,
+        );
+    }
+
+    public function testOrWhereBetweenWithStringOperator(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        $matched = $this->runWhereMatch(
+            configureBuilder: static function (WhereStatementInterface $q): void {
+                $q->where(
+                    column: 'name',
+                    value: 'nobody',
+                )
+                    ->orWhereBetween(
+                        column: 'id',
+                        from: 100,
+                        to: 200,
+                        operator: 'NOT_BETWEEN',
+                    );
+            },
+        );
+
+        self::assertTrue(
+            $matched,
+        );
+    }
+
+    public function testUnknownBetweenStringOperatorThrows(): void
+    {
+        $this->createUsersSchema();
+
+        $this->expectException(SqlException::class);
+
+        $this->runWhereMatch(
+            configureBuilder: static function (WhereStatementInterface $q): void {
+                $q->whereBetween(
+                    column: 'id',
+                    from: 1,
+                    to: 5,
+                    operator: 'nonsense',
+                );
+            },
+        );
+    }
 }

@@ -192,7 +192,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
         OrderDirection|string $direction = OrderDirection::ASC,
     ): static {
         if (\is_string($direction)) {
-            $direction = OrderDirection::from($direction);
+            $direction = OrderDirection::fromInput($direction);
         }
 
         $this->orderBy[$column] = $direction;
@@ -374,7 +374,12 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
         string $column,
         string|int|float|bool $from,
         string|int|float|bool $to,
+        BetweenOperator|string $operator = BetweenOperator::BETWEEN,
     ): static {
+        if (\is_string($operator)) {
+            $operator = BetweenOperator::fromInput($operator);
+        }
+
         $parameterKey = 'having_between_' . \sizeof($this->havingConditions);
 
         $this->parameters[$parameterKey . '_from'] = $from;
@@ -382,7 +387,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
         $this->havingConditions[] = new BetweenCondition(
             conjunction: ConditionConjunction::AND,
             identifier: $column,
-            operator: BetweenOperator::BETWEEN,
+            operator: $operator,
             from: ':' . $parameterKey . '_from',
             to: ':' . $parameterKey . '_to',
         );
@@ -395,26 +400,24 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
         string|int|float|bool $from,
         string|int|float|bool $to,
     ): static {
-        $parameterKey = 'having_between_' . \sizeof($this->havingConditions);
-
-        $this->parameters[$parameterKey . '_from'] = $from;
-        $this->parameters[$parameterKey . '_to'] = $to;
-        $this->havingConditions[] = new BetweenCondition(
-            conjunction: ConditionConjunction::AND,
-            identifier: $column,
+        return $this->havingBetween(
+            column: $column,
+            from: $from,
+            to: $to,
             operator: BetweenOperator::NOT_BETWEEN,
-            from: ':' . $parameterKey . '_from',
-            to: ':' . $parameterKey . '_to',
         );
-
-        return $this;
     }
 
     public function orHavingBetween(
         string $column,
         string|int|float|bool $from,
         string|int|float|bool $to,
+        BetweenOperator|string $operator = BetweenOperator::BETWEEN,
     ): static {
+        if (\is_string($operator)) {
+            $operator = BetweenOperator::fromInput($operator);
+        }
+
         $parameterKey = 'having_between_' . \sizeof($this->havingConditions);
 
         $this->parameters[$parameterKey . '_from'] = $from;
@@ -422,7 +425,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
         $this->havingConditions[] = new BetweenCondition(
             conjunction: ConditionConjunction::OR,
             identifier: $column,
-            operator: BetweenOperator::BETWEEN,
+            operator: $operator,
             from: ':' . $parameterKey . '_from',
             to: ':' . $parameterKey . '_to',
         );
@@ -435,19 +438,12 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
         string|int|float|bool $from,
         string|int|float|bool $to,
     ): static {
-        $parameterKey = 'having_between_' . \sizeof($this->havingConditions);
-
-        $this->parameters[$parameterKey . '_from'] = $from;
-        $this->parameters[$parameterKey . '_to'] = $to;
-        $this->havingConditions[] = new BetweenCondition(
-            conjunction: ConditionConjunction::OR,
-            identifier: $column,
+        return $this->orHavingBetween(
+            column: $column,
+            from: $from,
+            to: $to,
             operator: BetweenOperator::NOT_BETWEEN,
-            from: ':' . $parameterKey . '_from',
-            to: ':' . $parameterKey . '_to',
         );
-
-        return $this;
     }
 
     public function limit(

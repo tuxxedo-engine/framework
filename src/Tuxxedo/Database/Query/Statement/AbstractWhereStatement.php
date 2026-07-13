@@ -466,9 +466,11 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         SelectStatementInterface $values,
     ): SubqueryCondition {
         if (!$values instanceof AbstractStatement) {
+            // @codeCoverageIgnoreStart
             throw SqlException::fromSubqueryStatementMustExtendAbstractStatement(
                 actualType: \get_debug_type($values),
             );
+            // @codeCoverageIgnoreEnd
         }
 
         return new SubqueryCondition(
@@ -581,7 +583,12 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         string $column,
         string|int|float|bool $from,
         string|int|float|bool $to,
+        BetweenOperator|string $operator = BetweenOperator::BETWEEN,
     ): static {
+        if (\is_string($operator)) {
+            $operator = BetweenOperator::fromInput($operator);
+        }
+
         $parameterKey = 'between_' . \sizeof($this->conditions);
 
         $this->parameters[$parameterKey . '_from'] = $from;
@@ -589,7 +596,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         $this->conditions[] = new BetweenCondition(
             conjunction: ConditionConjunction::AND,
             identifier: $column,
-            operator: BetweenOperator::BETWEEN,
+            operator: $operator,
             from: ':' . $parameterKey . '_from',
             to: ':' . $parameterKey . '_to',
         );
@@ -602,26 +609,24 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         string|int|float|bool $from,
         string|int|float|bool $to,
     ): static {
-        $parameterKey = 'between_' . \sizeof($this->conditions);
-
-        $this->parameters[$parameterKey . '_from'] = $from;
-        $this->parameters[$parameterKey . '_to'] = $to;
-        $this->conditions[] = new BetweenCondition(
-            conjunction: ConditionConjunction::AND,
-            identifier: $column,
+        return $this->whereBetween(
+            column: $column,
+            from: $from,
+            to: $to,
             operator: BetweenOperator::NOT_BETWEEN,
-            from: ':' . $parameterKey . '_from',
-            to: ':' . $parameterKey . '_to',
         );
-
-        return $this;
     }
 
     public function orWhereBetween(
         string $column,
         string|int|float|bool $from,
         string|int|float|bool $to,
+        BetweenOperator|string $operator = BetweenOperator::BETWEEN,
     ): static {
+        if (\is_string($operator)) {
+            $operator = BetweenOperator::fromInput($operator);
+        }
+
         $parameterKey = 'between_' . \sizeof($this->conditions);
 
         $this->parameters[$parameterKey . '_from'] = $from;
@@ -629,7 +634,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         $this->conditions[] = new BetweenCondition(
             conjunction: ConditionConjunction::OR,
             identifier: $column,
-            operator: BetweenOperator::BETWEEN,
+            operator: $operator,
             from: ':' . $parameterKey . '_from',
             to: ':' . $parameterKey . '_to',
         );
@@ -642,19 +647,12 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         string|int|float|bool $from,
         string|int|float|bool $to,
     ): static {
-        $parameterKey = 'between_' . \sizeof($this->conditions);
-
-        $this->parameters[$parameterKey . '_from'] = $from;
-        $this->parameters[$parameterKey . '_to'] = $to;
-        $this->conditions[] = new BetweenCondition(
-            conjunction: ConditionConjunction::OR,
-            identifier: $column,
+        return $this->orWhereBetween(
+            column: $column,
+            from: $from,
+            to: $to,
             operator: BetweenOperator::NOT_BETWEEN,
-            from: ':' . $parameterKey . '_from',
-            to: ':' . $parameterKey . '_to',
         );
-
-        return $this;
     }
 
     public function whereLike(
@@ -849,9 +847,11 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         bool $negated,
     ): ExistsCondition {
         if (!$subquery instanceof AbstractStatement) {
+            // @codeCoverageIgnoreStart
             throw SqlException::fromSubqueryStatementMustExtendAbstractStatement(
                 actualType: \get_debug_type($subquery),
             );
+            // @codeCoverageIgnoreEnd
         }
 
         return new ExistsCondition(
