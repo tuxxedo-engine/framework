@@ -36,9 +36,8 @@ class Hydrator implements HydratorInterface
         string $className,
         array $values,
     ): object {
-        $className = $this->container->resolveName($className);
-
         try {
+            $className = $this->container->resolveName($className);
             $reflection = new \ReflectionClass($className);
 
             if (
