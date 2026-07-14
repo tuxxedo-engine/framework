@@ -152,6 +152,23 @@ class MysqlConnection extends AbstractConnection
         );
     }
 
+    /**
+     * @throws DatabaseException
+     */
+    private function throwFromMysqliException(
+        \mysqli_sql_exception $exception,
+    ): never {
+        $sqlState = $exception->getSqlState();
+
+        throw DatabaseException::fromError(
+            sqlState: $sqlState !== ''
+                ? $sqlState
+                : 'HY000',
+            code: $exception->getCode(),
+            error: $exception->getMessage(),
+        );
+    }
+
     public function getDriverInstance(): \mysqli
     {
         $this->connectCheck();
@@ -162,7 +179,13 @@ class MysqlConnection extends AbstractConnection
     public function connect(
         bool $reconnect = false,
     ): void {
-        if ($reconnect || !isset($this->mysqli)) {
+        if ($reconnect && isset($this->mysqli)) {
+            $this->mysqli->close();
+
+            unset($this->mysqli);
+        }
+
+        if (!isset($this->mysqli)) {
             ($this->connector)();
         }
     }
@@ -247,10 +270,14 @@ class MysqlConnection extends AbstractConnection
     {
         $this->connectCheck();
 
-        if (!$this->mysqli->begin_transaction(\MYSQLI_TRANS_START_READ_WRITE)) {
-            $this->inTransaction = false;
+        if ($this->inTransaction) {
+            throw DatabaseException::fromAlreadyInTransaction();
+        }
 
-            $this->throwFromLastError($this->mysqli);
+        try {
+            $this->mysqli->begin_transaction(\MYSQLI_TRANS_START_READ_WRITE);
+        } catch (\mysqli_sql_exception $exception) {
+            $this->throwFromMysqliException($exception);
         }
 
         $this->inTransaction = true;
@@ -260,10 +287,14 @@ class MysqlConnection extends AbstractConnection
     {
         $this->connectCheck();
 
-        if (!$this->mysqli->commit()) {
-            $this->inTransaction = false;
+        if (!$this->inTransaction) {
+            throw DatabaseException::fromNotInTransaction();
+        }
 
-            $this->throwFromLastError($this->mysqli);
+        try {
+            $this->mysqli->commit();
+        } catch (\mysqli_sql_exception $exception) {
+            $this->throwFromMysqliException($exception);
         }
 
         $this->inTransaction = false;
@@ -273,10 +304,14 @@ class MysqlConnection extends AbstractConnection
     {
         $this->connectCheck();
 
-        if (!$this->mysqli->rollback()) {
-            $this->inTransaction = false;
+        if (!$this->inTransaction) {
+            throw DatabaseException::fromNotInTransaction();
+        }
 
-            $this->throwFromLastError($this->mysqli);
+        try {
+            $this->mysqli->rollback();
+        } catch (\mysqli_sql_exception $exception) {
+            $this->throwFromMysqliException($exception);
         }
 
         $this->inTransaction = false;
@@ -318,28 +353,39 @@ class MysqlConnection extends AbstractConnection
             $bindingValues[] = $value;
         }
 
-        $statement = $this->mysqli->prepare($sql);
+        try {
+            if ($bindingTypes === '') {
+                $directResult = $this->mysqli->query($sql);
 
-        if ($statement === false) {
-            $this->throwFromLastError($this->mysqli);
-        }
-
-        if ($bindingTypes !== '') {
-            $statement->bind_param($bindingTypes, ...$bindingValues);
-        }
-
-        if (!$statement->execute() || ($result = $statement->get_result()) === false) {
-            if ($statement->errno !== 0) {
-                $this->throwFromLastError($statement);
+                return new MysqlResultSet(
+                    container: $this->container,
+                    result: $directResult instanceof \mysqli_result
+                        ? $directResult
+                        : null,
+                    affectedRows: (int) $this->mysqli->affected_rows,
+                );
             }
 
-            $result = null;
-        }
+            $statement = $this->mysqli->prepare($sql);
 
-        return new MysqlResultSet(
-            container: $this->container,
-            result: $result,
-            affectedRows: (int) $statement->affected_rows,
-        );
+            if ($statement === false) {
+                $this->throwFromLastError($this->mysqli); // @codeCoverageIgnore
+            }
+
+            $statement->bind_param($bindingTypes, ...$bindingValues);
+            $statement->execute();
+
+            $result = $statement->get_result();
+
+            return new MysqlResultSet(
+                container: $this->container,
+                result: $result instanceof \mysqli_result
+                    ? $result
+                    : null,
+                affectedRows: (int) $statement->affected_rows,
+            );
+        } catch (\mysqli_sql_exception $exception) {
+            $this->throwFromMysqliException($exception);
+        }
     }
 }
