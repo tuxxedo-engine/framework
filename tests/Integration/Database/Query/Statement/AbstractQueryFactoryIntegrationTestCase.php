@@ -67,7 +67,7 @@ abstract class AbstractQueryFactoryIntegrationTestCase extends AbstractBuilderIn
     public function testDropTableViaStaticFactory(): void
     {
         $this->connection->query(
-            sql: 'CREATE TABLE widgets (id INTEGER PRIMARY KEY)',
+            sql: $this->schemaProvider()->widgetsSchemaSql(),
             native: true,
         );
 
@@ -233,7 +233,7 @@ abstract class AbstractQueryFactoryIntegrationTestCase extends AbstractBuilderIn
     public function testTableStatementCompileReturnsParserResult(): void
     {
         $this->connection->query(
-            sql: 'CREATE TABLE widgets (id INTEGER PRIMARY KEY)',
+            sql: $this->schemaProvider()->widgetsSchemaSql(),
             native: true,
         );
 

@@ -20,7 +20,7 @@ abstract class AbstractDropTableBuilderIntegrationTestCase extends AbstractBuild
     private function createWidgetsTable(): void
     {
         $this->connection->query(
-            sql: 'CREATE TABLE widgets (id INTEGER PRIMARY KEY)',
+            sql: $this->schemaProvider()->widgetsSchemaSql(),
             native: true,
         );
     }

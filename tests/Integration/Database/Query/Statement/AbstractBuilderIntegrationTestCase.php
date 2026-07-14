@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Integration\Database\Query\Statement;
 
 use PHPUnit\Framework\TestCase;
+use Support\Database\SchemaProvider;
+use Support\Database\SqliteSchemaProvider;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 
 abstract class AbstractBuilderIntegrationTestCase extends TestCase
@@ -34,10 +36,15 @@ abstract class AbstractBuilderIntegrationTestCase extends TestCase
 
     abstract protected function createConnection(): ConnectionInterface;
 
+    protected function schemaProvider(): SchemaProvider
+    {
+        return new SqliteSchemaProvider();
+    }
+
     protected function createUsersSchema(): void
     {
         $this->connection->query(
-            sql: 'CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT)',
+            sql: $this->schemaProvider()->usersSchemaSql(),
             native: true,
         );
     }
@@ -63,7 +70,7 @@ abstract class AbstractBuilderIntegrationTestCase extends TestCase
     protected function createPostsSchema(): void
     {
         $this->connection->query(
-            sql: 'CREATE TABLE posts (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, title TEXT NOT NULL)',
+            sql: $this->schemaProvider()->postsSchemaSql(),
             native: true,
         );
     }

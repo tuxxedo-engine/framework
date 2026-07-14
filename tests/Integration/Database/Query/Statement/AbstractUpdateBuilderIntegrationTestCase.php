@@ -37,7 +37,7 @@ abstract class AbstractUpdateBuilderIntegrationTestCase extends AbstractWhereCla
     private function createCountersSchema(): void
     {
         $this->connection->query(
-            sql: 'CREATE TABLE counters (id INTEGER PRIMARY KEY AUTOINCREMENT, num INTEGER NOT NULL, ratio REAL NOT NULL)',
+            sql: $this->schemaProvider()->countersSchemaSql(),
             native: true,
         );
 

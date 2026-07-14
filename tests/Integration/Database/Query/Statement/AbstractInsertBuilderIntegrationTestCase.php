@@ -18,7 +18,7 @@ abstract class AbstractInsertBuilderIntegrationTestCase extends AbstractBuilderI
     private function createTypesSchema(): void
     {
         $this->connection->query(
-            sql: 'CREATE TABLE types (id INTEGER PRIMARY KEY AUTOINCREMENT, num INTEGER, ratio REAL, flag INTEGER)',
+            sql: $this->schemaProvider()->typesSchemaSql(),
             native: true,
         );
     }
