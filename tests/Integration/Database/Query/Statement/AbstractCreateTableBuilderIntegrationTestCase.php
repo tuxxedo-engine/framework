@@ -406,9 +406,14 @@ abstract class AbstractCreateTableBuilderIntegrationTestCase extends AbstractBui
             native: true,
         )->fetchAssoc();
 
+        /** @var string $payload */
+        $payload = $row['payload'];
+
         self::assertSame(
-            '{"key":"value"}',
-            $row['payload'],
+            [
+                'key' => 'value',
+            ],
+            \json_decode($payload, associative: true),
         );
     }
 
@@ -483,7 +488,7 @@ abstract class AbstractCreateTableBuilderIntegrationTestCase extends AbstractBui
         );
 
         $table->time(
-            name: 'when',
+            name: 'clock',
         );
 
         $table->execute();
@@ -492,19 +497,19 @@ abstract class AbstractCreateTableBuilderIntegrationTestCase extends AbstractBui
             table: 'widgets',
         )
             ->set(
-                column: 'when',
+                column: 'clock',
                 value: '12:34:56',
             )
             ->execute();
 
         $row = $this->connection->query(
-            sql: 'SELECT "when" FROM widgets',
+            sql: 'SELECT clock FROM widgets',
             native: true,
         )->fetchAssoc();
 
         self::assertSame(
             '12:34:56',
-            $row['when'],
+            $row['clock'],
         );
     }
 

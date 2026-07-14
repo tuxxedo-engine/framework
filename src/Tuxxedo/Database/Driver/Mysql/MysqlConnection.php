@@ -345,10 +345,16 @@ class MysqlConnection extends AbstractConnection
                 continue;
             }
 
+            if (\is_bool($value)) {
+                $bindingTypes .= 'i';
+                $bindingValues[] = (int) $value;
+
+                continue;
+            }
+
             $bindingTypes .= match (true) {
                 \is_int($value) => 'i',
-                \is_float($value) => 'f',
-                \is_bool($value) => 'b',
+                \is_float($value) => 'd',
                 default => 's',
             };
 
