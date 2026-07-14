@@ -34,14 +34,6 @@ class PdoSqliteConnectionIntegrationTest extends AbstractConnectionIntegrationTe
         );
     }
 
-    protected function createUsersSchema(): void
-    {
-        $this->connection->query(
-            sql: 'CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT)',
-            native: true,
-        );
-    }
-
     public function testConfigWithExplicitDsnBypassesDatabaseFieldConstruction(): void
     {
         $container = new Container();

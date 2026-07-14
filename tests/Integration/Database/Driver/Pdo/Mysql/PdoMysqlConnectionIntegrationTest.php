@@ -11,36 +11,128 @@
 
 declare(strict_types=1);
 
-namespace Integration\Database\Driver\Sqlite;
+namespace Integration\Database\Driver\Pdo\Mysql;
 
 use Integration\Database\AbstractConnectionIntegrationTestCase;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
-use Support\Database\SqliteConnectionFactory;
+use Support\Database\DatabaseServerProbe;
+use Support\Database\MysqlSchemaProvider;
+use Support\Database\MysqlTestEnv;
+use Support\Database\PdoMysqlConnectionFactory;
+use Support\Database\RealDatabaseIntegrationSetup;
+use Support\Database\SchemaProvider;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
-use Tuxxedo\Database\Driver\Sqlite\Config\SqliteConnectionConfig;
-use Tuxxedo\Database\Driver\Sqlite\SqliteConnection;
+use Tuxxedo\Database\Driver\Pdo\Mysql\Config\PdoMysqlConnectionConfig;
+use Tuxxedo\Database\Driver\Pdo\Mysql\PdoMysqlConnection;
 
-#[RequiresPhpExtension('sqlite3')]
-class SqliteConnectionIntegrationTest extends AbstractConnectionIntegrationTestCase
+#[RequiresPhpExtension('pdo_mysql')]
+class PdoMysqlConnectionIntegrationTest extends AbstractConnectionIntegrationTestCase
 {
+    use RealDatabaseIntegrationSetup;
+
+    protected function realDatabaseSkipReason(): ?string
+    {
+        return DatabaseServerProbe::mysqlUnavailableReason();
+    }
+
     protected function createConnection(
         ConnectionRole $role = ConnectionRole::DEFAULT,
     ): ConnectionInterface {
-        return SqliteConnectionFactory::create(
+        return PdoMysqlConnectionFactory::create(
             role: $role,
         );
     }
 
+    protected function schemaProvider(): SchemaProvider
+    {
+        return new MysqlSchemaProvider();
+    }
+
+    public function testConfigWithExplicitDsnBypassesHostFieldConstruction(): void
+    {
+        $container = new Container();
+        $container->singleton(
+            class: $container,
+        );
+
+        $port = MysqlTestEnv::port();
+        $dsn = \sprintf(
+            'mysql:host=%s%s;dbname=%s;charset=%s',
+            MysqlTestEnv::host(),
+            $port !== null
+                ? ';port=' . $port
+                : '',
+            MysqlTestEnv::databaseName(),
+            MysqlTestEnv::charset(),
+        );
+
+        $connection = PdoMysqlConnection::create(
+            container: $container,
+            config: new PdoMysqlConnectionConfig(
+                name: 'explicit-dsn',
+                dsn: $dsn,
+                username: MysqlTestEnv::username(),
+                password: MysqlTestEnv::password(),
+            ),
+        );
+
+        $connection->connect();
+
+        self::assertTrue(
+            $connection->isConnected(),
+        );
+
+        $connection->close();
+    }
+
+    public function testConfigWithTimeoutPassesPdoAttrTimeoutOption(): void
+    {
+        $container = new Container();
+        $container->singleton(
+            class: $container,
+        );
+
+        $connection = PdoMysqlConnection::create(
+            container: $container,
+            config: new PdoMysqlConnectionConfig(
+                name: 'with-timeout',
+                host: MysqlTestEnv::host(),
+                port: MysqlTestEnv::port(),
+                username: MysqlTestEnv::username(),
+                password: MysqlTestEnv::password(),
+                database: MysqlTestEnv::databaseName(),
+                timeout: 5,
+            ),
+        );
+
+        $connection->connect();
+
+        self::assertTrue(
+            $connection->isConnected(),
+        );
+
+        $connection->close();
+    }
+
     public function testConfigWithLazyFalseConnectsEagerly(): void
     {
-        $connection = SqliteConnection::create(
-            container: new Container(),
-            config: new SqliteConnectionConfig(
+        $container = new Container();
+        $container->singleton(
+            class: $container,
+        );
+
+        $connection = PdoMysqlConnection::create(
+            container: $container,
+            config: new PdoMysqlConnectionConfig(
                 name: 'eager',
-                database: ':memory:',
+                host: MysqlTestEnv::host(),
+                port: MysqlTestEnv::port(),
+                username: MysqlTestEnv::username(),
+                password: MysqlTestEnv::password(),
+                database: MysqlTestEnv::databaseName(),
                 lazy: false,
             ),
         );
@@ -52,12 +144,44 @@ class SqliteConnectionIntegrationTest extends AbstractConnectionIntegrationTestC
         $connection->close();
     }
 
+    public function testConnectingWithInvalidDsnThrowsDatabaseException(): void
+    {
+        $container = new Container();
+        $container->singleton(
+            class: $container,
+        );
+
+        $connection = PdoMysqlConnection::create(
+            container: $container,
+            config: new PdoMysqlConnectionConfig(
+                name: 'invalid',
+                dsn: 'invalidscheme:test',
+            ),
+        );
+
+        $this->expectException(DatabaseException::class);
+
+        $connection->connect();
+    }
+
     public function testQueryWithMalformedSqlThrowsDatabaseException(): void
     {
         $this->expectException(DatabaseException::class);
 
         $this->connection->query(
             sql: 'THIS IS NOT VALID SQL',
+            native: true,
+        );
+    }
+
+    public function testExecuteConstraintViolationThrowsDatabaseException(): void
+    {
+        $this->createUsersSchema();
+
+        $this->expectException(DatabaseException::class);
+
+        $this->connection->query(
+            sql: 'INSERT INTO users (id, name) VALUES (1, NULL)',
             native: true,
         );
     }
@@ -83,18 +207,6 @@ class SqliteConnectionIntegrationTest extends AbstractConnectionIntegrationTestC
         self::assertEquals(
             0,
             $row['c'],
-        );
-    }
-
-    public function testExecuteConstraintViolationThrowsDatabaseException(): void
-    {
-        $this->createUsersSchema();
-
-        $this->expectException(DatabaseException::class);
-
-        $this->connection->query(
-            sql: 'INSERT INTO users (id, name) VALUES (1, NULL)',
-            native: true,
         );
     }
 

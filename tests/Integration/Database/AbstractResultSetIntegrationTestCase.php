@@ -15,6 +15,8 @@ namespace Integration\Database;
 
 use Fixture\Database\HydratableTestUser;
 use PHPUnit\Framework\TestCase;
+use Support\Database\SchemaProvider;
+use Support\Database\SqliteSchemaProvider;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Driver\ResultRow;
@@ -42,7 +44,33 @@ abstract class AbstractResultSetIntegrationTestCase extends TestCase
 
     abstract protected function createConnection(): ConnectionInterface;
 
-    abstract protected function createUsersSchemaWithSampleRows(): void;
+    protected function schemaProvider(): SchemaProvider
+    {
+        return new SqliteSchemaProvider();
+    }
+
+    protected function createUsersSchemaWithSampleRows(): void
+    {
+        $this->connection->query(
+            sql: $this->schemaProvider()->usersSchemaSql(),
+            native: true,
+        );
+
+        $this->connection->query(
+            sql: "INSERT INTO users (name, email) VALUES ('Alice', 'alice@example.test')",
+            native: true,
+        );
+
+        $this->connection->query(
+            sql: "INSERT INTO users (name, email) VALUES ('Bob', 'bob@example.test')",
+            native: true,
+        );
+
+        $this->connection->query(
+            sql: "INSERT INTO users (name, email) VALUES ('Charlie', NULL)",
+            native: true,
+        );
+    }
 
     protected function selectAllUsers(): ResultSetInterface
     {

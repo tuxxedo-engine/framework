@@ -25,27 +25,4 @@ class SqliteResultSetIntegrationTest extends AbstractResultSetIntegrationTestCas
     {
         return SqliteConnectionFactory::create();
     }
-
-    protected function createUsersSchemaWithSampleRows(): void
-    {
-        $this->connection->query(
-            sql: 'CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT)',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: "INSERT INTO users (name, email) VALUES ('Alice', 'alice@example.test')",
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: "INSERT INTO users (name, email) VALUES ('Bob', 'bob@example.test')",
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: "INSERT INTO users (name, email) VALUES ('Charlie', NULL)",
-            native: true,
-        );
-    }
 }

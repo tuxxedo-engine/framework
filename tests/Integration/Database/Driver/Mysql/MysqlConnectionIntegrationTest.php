@@ -17,7 +17,9 @@ use Integration\Database\AbstractConnectionIntegrationTestCase;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use Support\Database\DatabaseServerProbe;
 use Support\Database\MysqlConnectionFactory;
+use Support\Database\MysqlSchemaProvider;
 use Support\Database\RealDatabaseIntegrationSetup;
+use Support\Database\SchemaProvider;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 
@@ -39,11 +41,8 @@ class MysqlConnectionIntegrationTest extends AbstractConnectionIntegrationTestCa
         );
     }
 
-    protected function createUsersSchema(): void
+    protected function schemaProvider(): SchemaProvider
     {
-        $this->connection->query(
-            sql: 'CREATE TABLE users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255) NOT NULL, email VARCHAR(255) NULL)',
-            native: true,
-        );
+        return new MysqlSchemaProvider();
     }
 }

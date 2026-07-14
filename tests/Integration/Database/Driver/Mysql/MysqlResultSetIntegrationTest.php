@@ -11,20 +11,36 @@
 
 declare(strict_types=1);
 
-namespace Integration\Database\Driver\Pdo\Sqlite;
+namespace Integration\Database\Driver\Mysql;
 
 use Integration\Database\AbstractResultSetIntegrationTestCase;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
-use Support\Database\PdoSqliteConnectionFactory;
+use Support\Database\DatabaseServerProbe;
+use Support\Database\MysqlConnectionFactory;
+use Support\Database\MysqlSchemaProvider;
+use Support\Database\RealDatabaseIntegrationSetup;
+use Support\Database\SchemaProvider;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 
-#[RequiresPhpExtension('pdo_sqlite')]
-class PdoSqliteResultSetIntegrationTest extends AbstractResultSetIntegrationTestCase
+#[RequiresPhpExtension('mysqli')]
+class MysqlResultSetIntegrationTest extends AbstractResultSetIntegrationTestCase
 {
+    use RealDatabaseIntegrationSetup;
+
+    protected function realDatabaseSkipReason(): ?string
+    {
+        return DatabaseServerProbe::mysqlUnavailableReason();
+    }
+
     protected function createConnection(): ConnectionInterface
     {
-        return PdoSqliteConnectionFactory::create();
+        return MysqlConnectionFactory::create();
+    }
+
+    protected function schemaProvider(): SchemaProvider
+    {
+        return new MysqlSchemaProvider();
     }
 
     public function testFetchAssocOnDmlResultSetThrowsFromEmptyResultSet(): void

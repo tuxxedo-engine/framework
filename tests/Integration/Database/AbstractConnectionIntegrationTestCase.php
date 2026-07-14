@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Integration\Database;
 
 use PHPUnit\Framework\TestCase;
+use Support\Database\SchemaProvider;
+use Support\Database\SqliteSchemaProvider;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
@@ -254,7 +256,18 @@ abstract class AbstractConnectionIntegrationTestCase extends TestCase
         );
     }
 
-    abstract protected function createUsersSchema(): void;
+    protected function schemaProvider(): SchemaProvider
+    {
+        return new SqliteSchemaProvider();
+    }
+
+    protected function createUsersSchema(): void
+    {
+        $this->connection->query(
+            sql: $this->schemaProvider()->usersSchemaSql(),
+            native: true,
+        );
+    }
 
     public function testQueryExecutesRawDdlAndAllowsSubsequentQueries(): void
     {

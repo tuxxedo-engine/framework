@@ -60,6 +60,8 @@ class MysqlConnection extends AbstractConnection
                 $this->mysqli = $mysqli;
             }
 
+            $this->mysqli->options(\MYSQLI_OPT_INT_AND_FLOAT_NATIVE, 1);
+
             if ($config->timeout !== null) {
                 $this->mysqli->options(\MYSQLI_OPT_CONNECT_TIMEOUT, $config->timeout);
                 $this->mysqli->options(\MYSQLI_OPT_READ_TIMEOUT, $config->timeout);
