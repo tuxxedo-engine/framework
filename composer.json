@@ -23,7 +23,12 @@
     "phpunit/phpunit": "13.1.* || 13.2.*",
     "phpstan/phpstan-strict-rules": "^2.0",
     "phpstan/extension-installer": "^1.4",
-    "friendsofphp/php-cs-fixer": "^3.75"
+    "friendsofphp/php-cs-fixer": "^3.75",
+    "brianium/paratest": "^7.7"
+  },
+  "scripts": {
+    "test": "vendor/bin/phpunit",
+    "test:parallel": "vendor/bin/paratest --processes=auto"
   },
   "suggest": {
     "ext-fileinfo": "For better file type detection in uploaded files",

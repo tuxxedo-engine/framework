@@ -4,6 +4,6 @@
 /app/*.log
 /test-coverage
 /vendor
-/.phpunit.result.cache
+/.phpunit.cache
 /.php-cs-fixer.cache
 /phpunit.xml

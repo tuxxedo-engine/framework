@@ -1,57 +1,50 @@
-<phpunit
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.3/phpunit.xsd"
-        bootstrap="tests/bootstrap.php"
-        colors="true"
->
-    <testsuites>
-        <testsuite name="Integration">
-            <directory>tests/Integration</directory>
-        </testsuite>
-        <testsuite name="Unit">
-            <directory>tests/Unit</directory>
-        </testsuite>
-    </testsuites>
-
-    <source>
-        <include>
-            <directory>src</directory>
-        </include>
-    </source>
-
-    <php>
-        <env name="TUXXEDO_WORKER_ID" value="0" />
-
-        <env name="TUXXEDO_TEST_MYSQL_HOST" value="" />
-        <env name="TUXXEDO_TEST_MYSQL_PORT" value="" />
-        <env name="TUXXEDO_TEST_MYSQL_SOCKET" value="" />
-        <env name="TUXXEDO_TEST_MYSQL_USER" value="" />
-        <env name="TUXXEDO_TEST_MYSQL_PASS" value="" />
-        <env name="TUXXEDO_TEST_MYSQL_ADMIN_DATABASE" value="mysql" />
-        <env name="TUXXEDO_TEST_MYSQL_DATABASE_PREFIX" value="tuxxedo_test" />
-        <env name="TUXXEDO_TEST_MYSQL_CHARSET" value="utf8mb4" />
-        <env name="TUXXEDO_TEST_MYSQL_TIMEOUT" value="" />
-        <env name="TUXXEDO_TEST_MYSQL_SSL_ENABLED" value="false" />
-        <env name="TUXXEDO_TEST_MYSQL_SSL_CA" value="" />
-        <env name="TUXXEDO_TEST_MYSQL_SSL_CERT" value="" />
-        <env name="TUXXEDO_TEST_MYSQL_SSL_KEY" value="" />
-        <env name="TUXXEDO_TEST_MYSQL_SSL_VERIFY_PEER" value="true" />
-
-        <env name="TUXXEDO_TEST_PGSQL_HOST" value="" />
-        <env name="TUXXEDO_TEST_PGSQL_PORT" value="" />
-        <env name="TUXXEDO_TEST_PGSQL_SOCKET" value="" />
-        <env name="TUXXEDO_TEST_PGSQL_USER" value="" />
-        <env name="TUXXEDO_TEST_PGSQL_PASS" value="" />
-        <env name="TUXXEDO_TEST_PGSQL_ADMIN_DATABASE" value="postgres" />
-        <env name="TUXXEDO_TEST_PGSQL_DATABASE_PREFIX" value="tuxxedo_test" />
-        <env name="TUXXEDO_TEST_PGSQL_CHARSET" value="UTF8" />
-        <env name="TUXXEDO_TEST_PGSQL_TIMEOUT" value="" />
-        <env name="TUXXEDO_TEST_PGSQL_SSL_ENABLED" value="false" />
-        <env name="TUXXEDO_TEST_PGSQL_SSL_MODE" value="" />
-        <env name="TUXXEDO_TEST_PGSQL_SSL_CA" value="" />
-        <env name="TUXXEDO_TEST_PGSQL_SSL_CERT" value="" />
-        <env name="TUXXEDO_TEST_PGSQL_SSL_KEY" value="" />
-        <env name="TUXXEDO_TEST_PGSQL_SSL_VERIFY_PEER" value="true" />
-        <env name="TUXXEDO_TEST_PGSQL_SSL_VERIFY_HOST" value="true" />
-    </php>
+<?xml version="1.0"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/13.2/phpunit.xsd" bootstrap="tests/bootstrap.php" cacheDirectory=".phpunit.cache" colors="true">
+  <testsuites>
+    <testsuite name="Integration">
+      <directory>tests/Integration</directory>
+    </testsuite>
+    <testsuite name="Unit">
+      <directory>tests/Unit</directory>
+    </testsuite>
+  </testsuites>
+  <source>
+    <include>
+      <directory>src</directory>
+    </include>
+  </source>
+  <coverage/>
+  <php>
+    <env name="TUXXEDO_WORKER_ID" value="0"/>
+    <env name="TUXXEDO_TEST_MYSQL_HOST" value=""/>
+    <env name="TUXXEDO_TEST_MYSQL_PORT" value=""/>
+    <env name="TUXXEDO_TEST_MYSQL_SOCKET" value=""/>
+    <env name="TUXXEDO_TEST_MYSQL_USER" value=""/>
+    <env name="TUXXEDO_TEST_MYSQL_PASS" value=""/>
+    <env name="TUXXEDO_TEST_MYSQL_ADMIN_DATABASE" value="mysql"/>
+    <env name="TUXXEDO_TEST_MYSQL_DATABASE_PREFIX" value="tuxxedo_test"/>
+    <env name="TUXXEDO_TEST_MYSQL_CHARSET" value="utf8mb4"/>
+    <env name="TUXXEDO_TEST_MYSQL_TIMEOUT" value=""/>
+    <env name="TUXXEDO_TEST_MYSQL_SSL_ENABLED" value="false"/>
+    <env name="TUXXEDO_TEST_MYSQL_SSL_CA" value=""/>
+    <env name="TUXXEDO_TEST_MYSQL_SSL_CERT" value=""/>
+    <env name="TUXXEDO_TEST_MYSQL_SSL_KEY" value=""/>
+    <env name="TUXXEDO_TEST_MYSQL_SSL_VERIFY_PEER" value="true"/>
+    <env name="TUXXEDO_TEST_PGSQL_HOST" value=""/>
+    <env name="TUXXEDO_TEST_PGSQL_PORT" value=""/>
+    <env name="TUXXEDO_TEST_PGSQL_SOCKET" value=""/>
+    <env name="TUXXEDO_TEST_PGSQL_USER" value=""/>
+    <env name="TUXXEDO_TEST_PGSQL_PASS" value=""/>
+    <env name="TUXXEDO_TEST_PGSQL_ADMIN_DATABASE" value="postgres"/>
+    <env name="TUXXEDO_TEST_PGSQL_DATABASE_PREFIX" value="tuxxedo_test"/>
+    <env name="TUXXEDO_TEST_PGSQL_CHARSET" value="UTF8"/>
+    <env name="TUXXEDO_TEST_PGSQL_TIMEOUT" value=""/>
+    <env name="TUXXEDO_TEST_PGSQL_SSL_ENABLED" value="false"/>
+    <env name="TUXXEDO_TEST_PGSQL_SSL_MODE" value=""/>
+    <env name="TUXXEDO_TEST_PGSQL_SSL_CA" value=""/>
+    <env name="TUXXEDO_TEST_PGSQL_SSL_CERT" value=""/>
+    <env name="TUXXEDO_TEST_PGSQL_SSL_KEY" value=""/>
+    <env name="TUXXEDO_TEST_PGSQL_SSL_VERIFY_PEER" value="true"/>
+    <env name="TUXXEDO_TEST_PGSQL_SSL_VERIFY_HOST" value="true"/>
+  </php>
 </phpunit>

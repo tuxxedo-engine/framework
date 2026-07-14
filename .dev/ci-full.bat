@@ -1,3 +1,3 @@
 @ECHO OFF
 CALL ci
-CALL phpunit-coverage
+CALL phpunit-coverage-parallel
