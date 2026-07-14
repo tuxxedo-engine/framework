@@ -31,7 +31,7 @@ abstract class AbstractConnectionIntegrationTestCase extends TestCase
 
     protected function tearDown(): void
     {
-        if ($this->connection->isConnected()) {
+        if (isset($this->connection) && $this->connection->isConnected()) {
             $this->connection->close();
         }
     }
