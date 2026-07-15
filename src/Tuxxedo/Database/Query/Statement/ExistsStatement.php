@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Statement;
 
+use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 
@@ -31,6 +32,14 @@ class ExistsStatement extends AbstractWhereStatement implements ExistsStatementI
     public function exists(
         ?ConnectionInterface $connection = null,
     ): bool {
-        return (bool) $this->execute($connection)->fetchRow()[0];
+        $resolvedConnection = $connection ?? $this->connection;
+
+        if ($resolvedConnection === null) {
+            throw DatabaseException::fromNoConnectionAvailable();
+        }
+
+        return $resolvedConnection->dialect->interpretBoolean(
+            $this->execute($resolvedConnection)->fetchRow()[0],
+        );
     }
 }

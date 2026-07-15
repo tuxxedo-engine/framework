@@ -18,9 +18,17 @@ class DatabaseServerProbe
     private static bool $mysqlProbed = false;
     private static ?string $mysqlReason = null;
 
+    private static bool $pgsqlProbed = false;
+    private static ?string $pgsqlReason = null;
+
     public static function isMysqlAvailable(): bool
     {
         return self::mysqlUnavailableReason() === null;
+    }
+
+    public static function isPgsqlAvailable(): bool
+    {
+        return self::pgsqlUnavailableReason() === null;
     }
 
     public static function mysqlUnavailableReason(): ?string
@@ -81,5 +89,70 @@ class DatabaseServerProbe
                 $exception->getMessage(),
             );
         }
+    }
+
+    public static function pgsqlUnavailableReason(): ?string
+    {
+        if (self::$pgsqlProbed) {
+            return self::$pgsqlReason;
+        }
+
+        self::$pgsqlProbed = true;
+
+        $host = \getenv('TUXXEDO_TEST_PGSQL_HOST');
+
+        if ($host === false || $host === '') {
+            return self::$pgsqlReason = 'TUXXEDO_TEST_PGSQL_HOST is not set';
+        }
+
+        if (!\extension_loaded('pgsql')) {
+            return self::$pgsqlReason = 'pgsql extension is not loaded';
+        }
+
+        $port = \getenv('TUXXEDO_TEST_PGSQL_PORT');
+        $user = \getenv('TUXXEDO_TEST_PGSQL_USER');
+        $pass = \getenv('TUXXEDO_TEST_PGSQL_PASS');
+        $adminDb = \getenv('TUXXEDO_TEST_PGSQL_ADMIN_DATABASE');
+
+        $dsn = [
+            'host=' . self::pgsqlQuote($host),
+            'sslmode=' . self::pgsqlQuote('disable'),
+        ];
+
+        if ($port !== false && $port !== '') {
+            $dsn[] = 'port=' . self::pgsqlQuote($port);
+        }
+
+        if ($user !== false && $user !== '') {
+            $dsn[] = 'user=' . self::pgsqlQuote($user);
+        }
+
+        if ($pass !== false && $pass !== '') {
+            $dsn[] = 'password=' . self::pgsqlQuote($pass);
+        }
+
+        $dsn[] = 'dbname=' . self::pgsqlQuote(
+            $adminDb === false || $adminDb === ''
+                ? 'postgres'
+                : $adminDb,
+        );
+
+        $dsn[] = 'connect_timeout=' . self::pgsqlQuote('3');
+
+        $connection = @\pg_connect(\join(' ', $dsn));
+
+        if ($connection === false) {
+            return self::$pgsqlReason = 'PgSQL connect probe failed';
+        }
+
+        \pg_close($connection);
+
+        return self::$pgsqlReason = null;
+    }
+
+    private static function pgsqlQuote(
+        string $value,
+    ): string {
+        return "'" . \addcslashes($value, "\\'") . "'";
     }
 }

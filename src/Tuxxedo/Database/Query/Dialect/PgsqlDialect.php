@@ -106,4 +106,14 @@ class PgsqlDialect implements DialectInterface
     {
         return 'GENERATED ALWAYS AS IDENTITY PRIMARY KEY';
     }
+
+    public function interpretBoolean(
+        mixed $value,
+    ): bool {
+        if (\is_string($value)) {
+            return $value === 't' || $value === '1';
+        }
+
+        return (bool) $value;
+    }
 }

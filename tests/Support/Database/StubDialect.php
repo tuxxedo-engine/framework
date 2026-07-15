@@ -65,4 +65,14 @@ class StubDialect implements DialectInterface
     {
         return '';
     }
+
+    public function interpretBoolean(
+        mixed $value,
+    ): bool {
+        if (\is_string($value)) {
+            return $value === '1';
+        }
+
+        return (bool) $value;
+    }
 }

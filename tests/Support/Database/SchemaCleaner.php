@@ -15,6 +15,7 @@ namespace Support\Database;
 
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Query\Dialect\MysqlDialect;
+use Tuxxedo\Database\Query\Dialect\PgsqlDialect;
 use Tuxxedo\Database\Query\Dialect\SqliteDialect;
 
 class SchemaCleaner
@@ -32,7 +33,12 @@ class SchemaCleaner
             return;
         }
 
-        // @todo PGSQL branch: query pg_catalog.pg_tables WHERE schemaname = current_schema(), DROP TABLE IF EXISTS ... CASCADE
+        if ($connection->dialect instanceof PgsqlDialect) {
+            self::dropAllPgsqlTables($connection);
+
+            return;
+        }
+
         throw new \LogicException(
             \sprintf(
                 'SchemaCleaner does not yet support dialect %s',
@@ -70,6 +76,28 @@ class SchemaCleaner
         } finally {
             $connection->query(
                 sql: 'SET FOREIGN_KEY_CHECKS = 1',
+                native: true,
+            );
+        }
+    }
+
+    private static function dropAllPgsqlTables(
+        ConnectionInterface $connection,
+    ): void {
+        $rows = $connection->query(
+            sql: 'SELECT tablename AS name FROM pg_catalog.pg_tables WHERE schemaname = current_schema()',
+            native: true,
+        );
+
+        foreach ($rows as $row) {
+            /** @var string $tableName */
+            $tableName = $row->properties['name'];
+
+            $connection->query(
+                sql: \sprintf(
+                    'DROP TABLE IF EXISTS "%s" CASCADE',
+                    \str_replace('"', '""', $tableName),
+                ),
                 native: true,
             );
         }

@@ -62,4 +62,14 @@ class SqliteDialect implements DialectInterface
     {
         return 'PRIMARY KEY AUTOINCREMENT';
     }
+
+    public function interpretBoolean(
+        mixed $value,
+    ): bool {
+        if (\is_string($value)) {
+            return $value === '1';
+        }
+
+        return (bool) $value;
+    }
 }

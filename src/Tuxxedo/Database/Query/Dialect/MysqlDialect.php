@@ -78,4 +78,14 @@ class MysqlDialect implements DialectInterface
     {
         return 'AUTO_INCREMENT PRIMARY KEY';
     }
+
+    public function interpretBoolean(
+        mixed $value,
+    ): bool {
+        if (\is_string($value)) {
+            return $value === '1';
+        }
+
+        return (bool) $value;
+    }
 }

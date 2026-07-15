@@ -45,4 +45,8 @@ interface DialectInterface
     ): ?string;
 
     public function autoIncrementClause(): string;
+
+    public function interpretBoolean(
+        mixed $value,
+    ): bool;
 }

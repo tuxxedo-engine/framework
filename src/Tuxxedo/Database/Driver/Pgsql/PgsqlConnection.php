@@ -115,8 +115,8 @@ class PgsqlConnection extends AbstractConnection
                 }
 
                 $pgsql = $config->persistent
-                    ? \pg_pconnect(\join(' ', $dsn))
-                    : \pg_connect(\join(' ', $dsn));
+                    ? @\pg_pconnect(\join(' ', $dsn))
+                    : @\pg_connect(\join(' ', $dsn));
 
                 if ($pgsql === false) {
                     // @codeCoverageIgnoreStart
@@ -130,7 +130,7 @@ class PgsqlConnection extends AbstractConnection
                 $this->pgsql = $pgsql;
 
                 if ($config->charset !== '') {
-                    $result = \pg_set_client_encoding($this->pgsql, $config->charset);
+                    $result = @\pg_set_client_encoding($this->pgsql, $config->charset);
 
                     if ($result !== 0) {
                         $this->throwFromLastError($this->pgsql);
@@ -197,7 +197,13 @@ class PgsqlConnection extends AbstractConnection
     public function connect(
         bool $reconnect = false,
     ): void {
-        if ($reconnect || !isset($this->pgsql)) {
+        if ($reconnect && isset($this->pgsql)) {
+            \pg_close($this->pgsql);
+
+            unset($this->pgsql);
+        }
+
+        if (!isset($this->pgsql)) {
             ($this->connector)();
         }
     }
@@ -221,7 +227,7 @@ class PgsqlConnection extends AbstractConnection
         try {
             $this->connectCheck();
 
-            return \pg_query($this->pgsql, 'SELECT 1') !== false;
+            return @\pg_query($this->pgsql, 'SELECT 1') !== false;
         } catch (\Exception) {
             return false;
         }
@@ -246,23 +252,27 @@ class PgsqlConnection extends AbstractConnection
     {
         $this->connectCheck();
 
-        $result = \pg_query(
+        $result = @\pg_query(
             $this->pgsql,
             'SELECT lastval()',
         );
 
-        if ($result === false) {
-            $this->throwFromLastError($this->pgsql);
+        if (!$result instanceof Result) {
+            if (\str_contains(\pg_last_error($this->pgsql), 'lastval is not yet defined')) {
+                return null;
+            }
+
+            $this->throwFromLastError($this->pgsql); // @codeCoverageIgnore
         }
 
         $id = \pg_fetch_result($result, 0, 0);
 
         if ($id === false) {
-            $this->throwFromResult($result);
+            $this->throwFromResult($result); // @codeCoverageIgnore
         }
 
         if ($id !== '' && $id !== '0') {
-            return (string) $id;
+            return $id;
         }
 
         return null;
@@ -284,7 +294,7 @@ class PgsqlConnection extends AbstractConnection
             throw DatabaseException::fromAlreadyInTransaction();
         }
 
-        if (\pg_query($this->pgsql, 'BEGIN') === false) {
+        if (@\pg_query($this->pgsql, 'BEGIN') === false) {
             $this->throwFromLastError($this->pgsql);
         }
 
@@ -299,7 +309,7 @@ class PgsqlConnection extends AbstractConnection
             throw DatabaseException::fromNotInTransaction();
         }
 
-        if (\pg_query($this->pgsql, 'COMMIT') === false) {
+        if (@\pg_query($this->pgsql, 'COMMIT') === false) {
             $this->inTransaction = false;
 
             $this->throwFromLastError($this->pgsql);
@@ -316,7 +326,7 @@ class PgsqlConnection extends AbstractConnection
             throw DatabaseException::fromNotInTransaction();
         }
 
-        if (\pg_query($this->pgsql, 'ROLLBACK') === false) {
+        if (@\pg_query($this->pgsql, 'ROLLBACK') === false) {
             $this->inTransaction = false;
 
             $this->throwFromLastError($this->pgsql);
@@ -361,7 +371,7 @@ class PgsqlConnection extends AbstractConnection
             } ;
         }
 
-        $result = \pg_query_params(
+        $result = @\pg_query_params(
             $this->pgsql,
             $sql,
             $params,

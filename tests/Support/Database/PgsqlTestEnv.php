@@ -1,0 +1,130 @@
+<?php
+
+/**
+ * Tuxxedo Engine
+ *
+ * This file is part of the Tuxxedo Engine framework and is licensed under
+ * the MIT license.
+ *
+ * Copyright (C) 2026 Kalle Sommer Nielsen <kalle@php.net>
+ */
+
+declare(strict_types=1);
+
+namespace Support\Database;
+
+class PgsqlTestEnv
+{
+    public static function host(): string
+    {
+        return self::stringOrDefault(
+            name: 'TUXXEDO_TEST_PGSQL_HOST',
+            default: 'localhost',
+        );
+    }
+
+    public static function port(): ?int
+    {
+        return self::nullableInt(
+            name: 'TUXXEDO_TEST_PGSQL_PORT',
+        );
+    }
+
+    public static function socket(): ?string
+    {
+        return self::nullableString(
+            name: 'TUXXEDO_TEST_PGSQL_SOCKET',
+        );
+    }
+
+    public static function username(): string
+    {
+        return self::stringOrDefault(
+            name: 'TUXXEDO_TEST_PGSQL_USER',
+            default: '',
+        );
+    }
+
+    public static function password(): string
+    {
+        $value = \getenv('TUXXEDO_TEST_PGSQL_PASS');
+
+        return $value === false
+            ? ''
+            : $value;
+    }
+
+    public static function charset(): string
+    {
+        return self::stringOrDefault(
+            name: 'TUXXEDO_TEST_PGSQL_CHARSET',
+            default: 'UTF8',
+        );
+    }
+
+    public static function timeout(): ?int
+    {
+        return self::nullableInt(
+            name: 'TUXXEDO_TEST_PGSQL_TIMEOUT',
+        );
+    }
+
+    public static function adminDatabase(): string
+    {
+        return self::stringOrDefault(
+            name: 'TUXXEDO_TEST_PGSQL_ADMIN_DATABASE',
+            default: 'postgres',
+        );
+    }
+
+    public static function databaseName(): string
+    {
+        return \sprintf(
+            '%s_%s',
+            self::stringOrDefault(
+                name: 'TUXXEDO_TEST_PGSQL_DATABASE_PREFIX',
+                default: 'tuxxedo_test',
+            ),
+            self::workerId(),
+        );
+    }
+
+    public static function workerId(): string
+    {
+        return self::stringOrDefault(
+            name: 'TUXXEDO_WORKER_ID',
+            default: '0',
+        );
+    }
+
+    private static function stringOrDefault(
+        string $name,
+        string $default,
+    ): string {
+        $value = \getenv($name);
+
+        return $value === false || $value === ''
+            ? $default
+            : $value;
+    }
+
+    private static function nullableString(
+        string $name,
+    ): ?string {
+        $value = \getenv($name);
+
+        return $value === false || $value === ''
+            ? null
+            : $value;
+    }
+
+    private static function nullableInt(
+        string $name,
+    ): ?int {
+        $value = \getenv($name);
+
+        return $value === false || $value === ''
+            ? null
+            : (int) $value;
+    }
+}
