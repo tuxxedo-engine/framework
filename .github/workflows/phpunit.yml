@@ -50,7 +50,7 @@ jobs:
         run: vendor/bin/paratest --processes=auto --coverage-clover=coverage.xml
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-report
           path: coverage.xml
