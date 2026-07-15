@@ -79,6 +79,12 @@ class PdoResultSet extends AbstractResultSet
         }
 
         /** @var array<string, mixed> $row */
+        foreach ($row as $column => $value) {
+            if (\is_resource($value)) {
+                $row[$column] = \stream_get_contents($value);
+            }
+        }
+
         return $row;
     }
 

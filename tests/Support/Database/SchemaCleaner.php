@@ -84,6 +84,13 @@ class SchemaCleaner
     private static function dropAllPgsqlTables(
         ConnectionInterface $connection,
     ): void {
+        if ($connection->inTransaction()) {
+            try {
+                $connection->rollback();
+            } catch (\Throwable) {
+            }
+        }
+
         $rows = $connection->query(
             sql: 'SELECT tablename AS name FROM pg_catalog.pg_tables WHERE schemaname = current_schema()',
             native: true,

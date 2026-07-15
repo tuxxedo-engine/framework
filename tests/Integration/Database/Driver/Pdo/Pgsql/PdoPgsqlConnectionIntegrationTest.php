@@ -11,20 +11,20 @@
 
 declare(strict_types=1);
 
-namespace Integration\Database\Driver\Pgsql;
+namespace Integration\Database\Driver\Pdo\Pgsql;
 
 use Integration\Database\AbstractConnectionIntegrationTestCase;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use Support\Database\DatabaseServerProbe;
-use Support\Database\PgsqlConnectionFactory;
+use Support\Database\PdoPgsqlConnectionFactory;
 use Support\Database\PgsqlSchemaProvider;
 use Support\Database\RealDatabaseIntegrationSetup;
 use Support\Database\SchemaProvider;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 
-#[RequiresPhpExtension('pgsql')]
-class PgsqlConnectionIntegrationTest extends AbstractConnectionIntegrationTestCase
+#[RequiresPhpExtension('pdo_pgsql')]
+class PdoPgsqlConnectionIntegrationTest extends AbstractConnectionIntegrationTestCase
 {
     use RealDatabaseIntegrationSetup;
 
@@ -36,7 +36,7 @@ class PgsqlConnectionIntegrationTest extends AbstractConnectionIntegrationTestCa
     protected function createConnection(
         ConnectionRole $role = ConnectionRole::DEFAULT,
     ): ConnectionInterface {
-        return PgsqlConnectionFactory::create(
+        return PdoPgsqlConnectionFactory::create(
             role: $role,
         );
     }

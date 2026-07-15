@@ -363,12 +363,10 @@ class PgsqlConnection extends AbstractConnection
             $params[] = match (true) {
                 \is_int($value) => (string) $value,
                 \is_float($value) => (string) $value,
-                \is_bool($value) => $value
-                    ? 't'
-                    : 'f',
+                \is_bool($value) => (string) (int) $value,
                 \is_null($value) => null,
                 default => $value,
-            } ;
+            };
         }
 
         $result = @\pg_query_params(

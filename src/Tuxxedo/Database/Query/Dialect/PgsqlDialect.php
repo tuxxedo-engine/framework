@@ -34,12 +34,17 @@ class PgsqlDialect implements DialectInterface
      */
     public function __construct(
         private readonly \Closure|null $connection = null,
+        private readonly bool $usePositionalPlaceholders = false,
     ) {
     }
 
     public function placeholder(
         int $position,
     ): string {
+        if ($this->usePositionalPlaceholders) {
+            return '?';
+        }
+
         return '$' . $position;
     }
 

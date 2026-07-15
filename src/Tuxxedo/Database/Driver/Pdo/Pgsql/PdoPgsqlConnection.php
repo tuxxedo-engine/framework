@@ -35,7 +35,9 @@ class PdoPgsqlConnection extends AbstractPdoConnection
 
     protected function getDriverDialect(): DialectInterface
     {
-        return new PgsqlDialect();
+        return new PgsqlDialect(
+            usePositionalPlaceholders: true,
+        );
     }
 
     protected function getDsn(
@@ -131,5 +133,27 @@ class PdoPgsqlConnection extends AbstractPdoConnection
         PdoConnectionConfigInterface $config,
     ): array {
         return [];
+    }
+
+    public function lastInsertIdAsString(): ?string
+    {
+        try {
+            return parent::lastInsertIdAsString();
+        } catch (DatabaseException $exception) {
+            if (\str_contains($exception->getMessage(), 'lastval is not yet defined')) {
+                return null;
+            }
+
+            throw $exception;
+        }
+    }
+
+    public function lastInsertIdAsInt(): ?int
+    {
+        $id = $this->lastInsertIdAsString();
+
+        return $id !== null
+            ? (int) $id
+            : null;
     }
 }

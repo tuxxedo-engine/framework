@@ -304,6 +304,10 @@ abstract class AbstractPdoConnection extends AbstractConnection
                 continue;
             }
 
+            if (\is_bool($value)) {
+                $value = (int) $value;
+            }
+
             $bound = $statement->bindValue(
                 param: !$native
                     ? $index + 1
@@ -311,7 +315,6 @@ abstract class AbstractPdoConnection extends AbstractConnection
                 value: $value,
                 type: match (true) {
                     \is_int($value) => \PDO::PARAM_INT,
-                    \is_bool($value) => \PDO::PARAM_BOOL,
                     \is_null($value) => \PDO::PARAM_NULL,
                     default => \PDO::PARAM_STR,
                 },

@@ -26,12 +26,18 @@ class PgsqlResultSet extends AbstractResultSet
     private int $pointer = 0;
     private int $numRows;
 
+    /**
+     * @var array<int, string>
+     */
+    private array $columnTypes;
+
     public function __construct(
         protected ContainerInterface $container,
         private Result $result,
         public readonly int $affectedRows = 0,
     ) {
         $this->numRows = \pg_num_rows($this->result);
+        $this->columnTypes = $this->buildColumnTypeMap();
     }
 
     /**
@@ -51,10 +57,10 @@ class PgsqlResultSet extends AbstractResultSet
         $row = \pg_fetch_assoc($this->result);
 
         if (!\is_array($row)) {
-            throw DatabaseException::fromCannotFetch();
+            throw DatabaseException::fromCannotFetch(); // @codeCoverageIgnore
         }
 
-        return parent::hydrate($class, $row, $hydrator);
+        return parent::hydrate($class, $this->coerceRow($row), $hydrator);
     }
 
     public function fetchAssoc(): array
@@ -66,10 +72,10 @@ class PgsqlResultSet extends AbstractResultSet
         $row = \pg_fetch_assoc($this->result);
 
         if (!\is_array($row)) {
-            throw DatabaseException::fromCannotFetch();
+            throw DatabaseException::fromCannotFetch(); // @codeCoverageIgnore
         }
 
-        return $row;
+        return $this->coerceRow($row);
     }
 
     public function fetchRow(): array
@@ -81,10 +87,10 @@ class PgsqlResultSet extends AbstractResultSet
         $row = \pg_fetch_row($this->result);
 
         if (!\is_array($row)) {
-            throw DatabaseException::fromCannotFetch();
+            throw DatabaseException::fromCannotFetch(); // @codeCoverageIgnore
         }
 
-        return \array_values($row);
+        return \array_values($this->coerceRow($row));
     }
 
     public function count(): int
@@ -120,5 +126,61 @@ class PgsqlResultSet extends AbstractResultSet
     public function valid(): bool
     {
         return $this->numRows > 0 && $this->pointer < $this->numRows;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function buildColumnTypeMap(): array
+    {
+        $types = [];
+        $columnCount = \pg_num_fields($this->result);
+
+        for ($i = 0; $i < $columnCount; $i++) {
+            $types[$i] = \pg_field_type($this->result, $i);
+        }
+
+        return $types;
+    }
+
+    /**
+     * @template TKey of array-key
+     *
+     * @param array<TKey, string|null> $row
+     * @return array<TKey, mixed>
+     */
+    private function coerceRow(
+        array $row,
+    ): array {
+        $coerced = [];
+        $index = 0;
+
+        foreach ($row as $key => $value) {
+            $coerced[$key] = $this->coerceValue(
+                value: $value,
+                type: $this->columnTypes[$index] ?? '',
+            );
+
+            $index++;
+        }
+
+        return $coerced;
+    }
+
+    private function coerceValue(
+        ?string $value,
+        string $type,
+    ): mixed {
+        if ($value === null) {
+            return null;
+        }
+
+        return match ($type) {
+            'int2', 'int4', 'int8' => (int) $value,
+            'float4', 'float8', 'numeric' => (float) $value,
+            'bool' => $value === 't',
+            'bytea' => \pg_unescape_bytea($value),
+            default => $value,
+        };
     }
 }
