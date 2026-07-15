@@ -26,19 +26,6 @@ abstract class AbstractWhereClauseBuilderIntegrationTestCase extends AbstractBui
         \Closure $configureBuilder,
     ): bool;
 
-    // @todo Explore rewriting these subquery tests (e.g. derived-table wrapper `WHERE id IN (SELECT * FROM (subquery) AS t)`) so MySQL DELETE/UPDATE can exercise them too and this skip hook can be removed; low priority
-    protected function supportsSelfReferentialSubqueryInWhere(): bool
-    {
-        return true;
-    }
-
-    protected function skipUnlessSelfReferentialSubqueryInWhere(): void
-    {
-        if (!$this->supportsSelfReferentialSubqueryInWhere()) {
-            self::markTestSkipped('Driver disallows self-referential subqueries in WHERE clauses of DELETE/UPDATE');
-        }
-    }
-
     public function testWhereMatchesRow(): void
     {
         $this->createUsersSchema();
@@ -730,18 +717,19 @@ abstract class AbstractWhereClauseBuilderIntegrationTestCase extends AbstractBui
 
     public function testWhereSubqueryUsingSelectStatement(): void
     {
-        $this->skipUnlessSelfReferentialSubqueryInWhere();
-
         $this->createUsersSchema();
         $this->seedUsers();
 
+        $this->createPostsSchema();
+        $this->seedPosts();
+
         $subquery = $this->connection->select(
-            table: 'users',
+            table: 'posts',
         )
-            ->select('id')
+            ->select('user_id')
             ->where(
-                column: 'name',
-                value: 'Alice',
+                column: 'title',
+                value: 'Post by Alice',
             );
 
         $matched = $this->runWhereMatch(
@@ -760,20 +748,21 @@ abstract class AbstractWhereClauseBuilderIntegrationTestCase extends AbstractBui
 
     public function testWhereInSubqueryUsingSelectStatement(): void
     {
-        $this->skipUnlessSelfReferentialSubqueryInWhere();
-
         $this->createUsersSchema();
         $this->seedUsers();
 
+        $this->createPostsSchema();
+        $this->seedPosts();
+
         $subquery = $this->connection->select(
-            table: 'users',
+            table: 'posts',
         )
-            ->select('id')
+            ->select('user_id')
             ->whereIn(
-                column: 'name',
+                column: 'title',
                 values: [
-                    'Alice',
-                    'Bob',
+                    'Post by Alice',
+                    'Post by Bob',
                 ],
             );
 
@@ -793,18 +782,19 @@ abstract class AbstractWhereClauseBuilderIntegrationTestCase extends AbstractBui
 
     public function testWhereNotInSubqueryUsingSelectStatement(): void
     {
-        $this->skipUnlessSelfReferentialSubqueryInWhere();
-
         $this->createUsersSchema();
         $this->seedUsers();
 
+        $this->createPostsSchema();
+        $this->seedPosts();
+
         $subquery = $this->connection->select(
-            table: 'users',
+            table: 'posts',
         )
-            ->select('id')
+            ->select('user_id')
             ->where(
-                column: 'name',
-                value: 'Alice',
+                column: 'title',
+                value: 'Post by Alice',
             );
 
         $matched = $this->runWhereMatch(
@@ -823,18 +813,19 @@ abstract class AbstractWhereClauseBuilderIntegrationTestCase extends AbstractBui
 
     public function testOrWhereSubqueryUsingSelectStatement(): void
     {
-        $this->skipUnlessSelfReferentialSubqueryInWhere();
-
         $this->createUsersSchema();
         $this->seedUsers();
 
+        $this->createPostsSchema();
+        $this->seedPosts();
+
         $subquery = $this->connection->select(
-            table: 'users',
+            table: 'posts',
         )
-            ->select('id')
+            ->select('user_id')
             ->where(
-                column: 'name',
-                value: 'Alice',
+                column: 'title',
+                value: 'Post by Alice',
             );
 
         $matched = $this->runWhereMatch(
@@ -857,18 +848,19 @@ abstract class AbstractWhereClauseBuilderIntegrationTestCase extends AbstractBui
 
     public function testOrWhereInSubqueryUsingSelectStatement(): void
     {
-        $this->skipUnlessSelfReferentialSubqueryInWhere();
-
         $this->createUsersSchema();
         $this->seedUsers();
 
+        $this->createPostsSchema();
+        $this->seedPosts();
+
         $subquery = $this->connection->select(
-            table: 'users',
+            table: 'posts',
         )
-            ->select('id')
+            ->select('user_id')
             ->where(
-                column: 'name',
-                value: 'Alice',
+                column: 'title',
+                value: 'Post by Alice',
             );
 
         $matched = $this->runWhereMatch(
@@ -891,18 +883,19 @@ abstract class AbstractWhereClauseBuilderIntegrationTestCase extends AbstractBui
 
     public function testOrWhereNotInSubqueryUsingSelectStatement(): void
     {
-        $this->skipUnlessSelfReferentialSubqueryInWhere();
-
         $this->createUsersSchema();
         $this->seedUsers();
 
+        $this->createPostsSchema();
+        $this->seedPosts();
+
         $subquery = $this->connection->select(
-            table: 'users',
+            table: 'posts',
         )
-            ->select('id')
+            ->select('user_id')
             ->where(
-                column: 'name',
-                value: 'Alice',
+                column: 'title',
+                value: 'Post by Alice',
             );
 
         $matched = $this->runWhereMatch(
@@ -925,18 +918,19 @@ abstract class AbstractWhereClauseBuilderIntegrationTestCase extends AbstractBui
 
     public function testWhereExistsSubquery(): void
     {
-        $this->skipUnlessSelfReferentialSubqueryInWhere();
-
         $this->createUsersSchema();
         $this->seedUsers();
 
+        $this->createPostsSchema();
+        $this->seedPosts();
+
         $subquery = $this->connection->select(
-            table: 'users',
+            table: 'posts',
         )
-            ->select('id')
+            ->select('user_id')
             ->where(
-                column: 'name',
-                value: 'Alice',
+                column: 'title',
+                value: 'Post by Alice',
             );
 
         $matched = $this->runWhereMatch(
@@ -954,18 +948,19 @@ abstract class AbstractWhereClauseBuilderIntegrationTestCase extends AbstractBui
 
     public function testWhereNotExistsSubquery(): void
     {
-        $this->skipUnlessSelfReferentialSubqueryInWhere();
-
         $this->createUsersSchema();
         $this->seedUsers();
 
+        $this->createPostsSchema();
+        $this->seedPosts();
+
         $subquery = $this->connection->select(
-            table: 'users',
+            table: 'posts',
         )
-            ->select('id')
+            ->select('user_id')
             ->where(
-                column: 'name',
-                value: 'nobody',
+                column: 'title',
+                value: 'nonexistent',
             );
 
         $matched = $this->runWhereMatch(
@@ -983,18 +978,19 @@ abstract class AbstractWhereClauseBuilderIntegrationTestCase extends AbstractBui
 
     public function testOrWhereExistsSubquery(): void
     {
-        $this->skipUnlessSelfReferentialSubqueryInWhere();
-
         $this->createUsersSchema();
         $this->seedUsers();
 
+        $this->createPostsSchema();
+        $this->seedPosts();
+
         $subquery = $this->connection->select(
-            table: 'users',
+            table: 'posts',
         )
-            ->select('id')
+            ->select('user_id')
             ->where(
-                column: 'name',
-                value: 'Alice',
+                column: 'title',
+                value: 'Post by Alice',
             );
 
         $matched = $this->runWhereMatch(
@@ -1016,18 +1012,19 @@ abstract class AbstractWhereClauseBuilderIntegrationTestCase extends AbstractBui
 
     public function testOrWhereNotExistsSubquery(): void
     {
-        $this->skipUnlessSelfReferentialSubqueryInWhere();
-
         $this->createUsersSchema();
         $this->seedUsers();
 
+        $this->createPostsSchema();
+        $this->seedPosts();
+
         $subquery = $this->connection->select(
-            table: 'users',
+            table: 'posts',
         )
-            ->select('id')
+            ->select('user_id')
             ->where(
-                column: 'name',
-                value: 'nobody',
+                column: 'title',
+                value: 'nonexistent',
             );
 
         $matched = $this->runWhereMatch(

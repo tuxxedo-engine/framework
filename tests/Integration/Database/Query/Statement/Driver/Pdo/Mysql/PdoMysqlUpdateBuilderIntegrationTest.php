@@ -41,9 +41,4 @@ class PdoMysqlUpdateBuilderIntegrationTest extends AbstractUpdateBuilderIntegrat
     {
         return new MysqlSchemaProvider();
     }
-
-    protected function supportsSelfReferentialSubqueryInWhere(): bool
-    {
-        return false;
-    }
 }

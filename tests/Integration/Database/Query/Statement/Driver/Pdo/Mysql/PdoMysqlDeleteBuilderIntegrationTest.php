@@ -41,9 +41,4 @@ class PdoMysqlDeleteBuilderIntegrationTest extends AbstractDeleteBuilderIntegrat
     {
         return new MysqlSchemaProvider();
     }
-
-    protected function supportsSelfReferentialSubqueryInWhere(): bool
-    {
-        return false;
-    }
 }

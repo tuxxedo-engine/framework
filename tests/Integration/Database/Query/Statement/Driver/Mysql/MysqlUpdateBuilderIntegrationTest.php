@@ -41,9 +41,4 @@ class MysqlUpdateBuilderIntegrationTest extends AbstractUpdateBuilderIntegration
     {
         return new MysqlSchemaProvider();
     }
-
-    protected function supportsSelfReferentialSubqueryInWhere(): bool
-    {
-        return false;
-    }
 }
