@@ -222,4 +222,176 @@ abstract class AbstractInsertBuilderIntegrationTestCase extends AbstractBuilderI
             $id,
         );
     }
+
+    public function testInsertZeroIntValueRoundTripsAsNativeInt(): void
+    {
+        $this->createTypesSchema();
+
+        $this->connection->insert(
+            table: 'types',
+        )
+            ->set(
+                column: 'num',
+                value: 0,
+            )
+            ->execute();
+
+        $row = $this->connection->query(
+            sql: 'SELECT num FROM types',
+            native: true,
+        )->fetchAssoc();
+
+        self::assertSame(
+            0,
+            $row['num'],
+        );
+    }
+
+    public function testInsertNegativeIntValueRoundTripsAsNativeInt(): void
+    {
+        $this->createTypesSchema();
+
+        $this->connection->insert(
+            table: 'types',
+        )
+            ->set(
+                column: 'num',
+                value: -42,
+            )
+            ->execute();
+
+        $row = $this->connection->query(
+            sql: 'SELECT num FROM types',
+            native: true,
+        )->fetchAssoc();
+
+        self::assertSame(
+            -42,
+            $row['num'],
+        );
+    }
+
+    public function testInsertMaxSignedInt32ValueRoundTrips(): void
+    {
+        $this->createTypesSchema();
+
+        $this->connection->insert(
+            table: 'types',
+        )
+            ->set(
+                column: 'num',
+                value: 2147483647,
+            )
+            ->execute();
+
+        $row = $this->connection->query(
+            sql: 'SELECT num FROM types',
+            native: true,
+        )->fetchAssoc();
+
+        self::assertSame(
+            2147483647,
+            $row['num'],
+        );
+    }
+
+    public function testInsertNegativeFloatValueRoundTripsAsNativeFloat(): void
+    {
+        $this->createTypesSchema();
+
+        $this->connection->insert(
+            table: 'types',
+        )
+            ->set(
+                column: 'ratio',
+                value: -3.5,
+            )
+            ->execute();
+
+        $row = $this->connection->query(
+            sql: 'SELECT ratio FROM types',
+            native: true,
+        )->fetchAssoc();
+
+        self::assertSame(
+            -3.5,
+            $row['ratio'],
+        );
+    }
+
+    public function testInsertFalseBoolValueRoundTripsAsZero(): void
+    {
+        $this->createTypesSchema();
+
+        $this->connection->insert(
+            table: 'types',
+        )
+            ->set(
+                column: 'flag',
+                value: false,
+            )
+            ->execute();
+
+        $row = $this->connection->query(
+            sql: 'SELECT flag FROM types',
+            native: true,
+        )->fetchAssoc();
+
+        self::assertSame(
+            0,
+            $row['flag'],
+        );
+    }
+
+    public function testInsertEmptyStringInNullableVarcharColumnRoundTripsDistinctFromNull(): void
+    {
+        $this->createUsersSchema();
+
+        $this->connection->insert(
+            table: 'users',
+        )
+            ->set(
+                column: 'name',
+                value: 'Alice',
+            )
+            ->set(
+                column: 'email',
+                value: '',
+            )
+            ->execute();
+
+        $row = $this->connection->query(
+            sql: 'SELECT email FROM users',
+            native: true,
+        )->fetchAssoc();
+
+        self::assertSame(
+            '',
+            $row['email'],
+        );
+    }
+
+    public function testInsertUtf8MultiByteStringRoundTrips(): void
+    {
+        $this->createUsersSchema();
+
+        $this->connection->insert(
+            table: 'users',
+        )
+            ->set(
+                column: 'name',
+                value: 'Zoë 你好',
+            )
+            ->execute();
+
+        $row = $this->connection->query(
+            sql: 'SELECT name FROM users',
+            native: true,
+        )->fetchAssoc();
+
+        self::assertSame(
+            'Zoë 你好',
+            $row['name'],
+        );
+    }
 }
