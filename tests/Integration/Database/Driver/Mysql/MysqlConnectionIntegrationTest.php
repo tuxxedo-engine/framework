@@ -18,10 +18,15 @@ use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use Support\Database\DatabaseServerProbe;
 use Support\Database\MysqlConnectionFactory;
 use Support\Database\MysqlSchemaProvider;
+use Support\Database\MysqlTestEnv;
 use Support\Database\RealDatabaseIntegrationSetup;
 use Support\Database\SchemaProvider;
+use Tuxxedo\Container\Container;
 use Tuxxedo\Database\ConnectionRole;
+use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
+use Tuxxedo\Database\Driver\Mysql\Config\MysqlConnectionConfig;
+use Tuxxedo\Database\Driver\Mysql\MysqlConnection;
 
 #[RequiresPhpExtension('mysqli')]
 class MysqlConnectionIntegrationTest extends AbstractConnectionIntegrationTestCase
@@ -44,5 +49,140 @@ class MysqlConnectionIntegrationTest extends AbstractConnectionIntegrationTestCa
     protected function schemaProvider(): SchemaProvider
     {
         return new MysqlSchemaProvider();
+    }
+
+    public function testConfigWithLazyFalseConnectsEagerly(): void
+    {
+        $container = new Container();
+        $container->singleton(
+            class: $container,
+        );
+
+        $connection = MysqlConnection::create(
+            container: $container,
+            config: new MysqlConnectionConfig(
+                name: 'eager',
+                host: MysqlTestEnv::host(),
+                port: MysqlTestEnv::port(),
+                username: MysqlTestEnv::username(),
+                password: MysqlTestEnv::password(),
+                database: MysqlTestEnv::databaseName(),
+                lazy: false,
+            ),
+        );
+
+        self::assertTrue(
+            $connection->isConnected(),
+        );
+
+        $connection->close();
+    }
+
+    public function testConfigWithTimeoutSetsMysqliOptions(): void
+    {
+        $container = new Container();
+        $container->singleton(
+            class: $container,
+        );
+
+        $connection = MysqlConnection::create(
+            container: $container,
+            config: new MysqlConnectionConfig(
+                name: 'with-timeout',
+                host: MysqlTestEnv::host(),
+                port: MysqlTestEnv::port(),
+                username: MysqlTestEnv::username(),
+                password: MysqlTestEnv::password(),
+                database: MysqlTestEnv::databaseName(),
+                timeout: 5,
+            ),
+        );
+
+        $connection->connect();
+
+        self::assertTrue(
+            $connection->isConnected(),
+        );
+
+        $connection->close();
+    }
+
+    public function testConfigWithPersistentPrependsPPrefixToHost(): void
+    {
+        $container = new Container();
+        $container->singleton(
+            class: $container,
+        );
+
+        $connection = MysqlConnection::create(
+            container: $container,
+            config: new MysqlConnectionConfig(
+                name: 'persistent',
+                host: MysqlTestEnv::host(),
+                port: MysqlTestEnv::port(),
+                username: MysqlTestEnv::username(),
+                password: MysqlTestEnv::password(),
+                database: MysqlTestEnv::databaseName(),
+                persistent: true,
+            ),
+        );
+
+        $connection->connect();
+
+        self::assertTrue(
+            $connection->isConnected(),
+        );
+
+        $connection->close();
+    }
+
+    public function testPingReturnsFalseWhenConnectCheckFails(): void
+    {
+        $container = new Container();
+        $container->singleton(
+            class: $container,
+        );
+
+        $connection = MysqlConnection::create(
+            container: $container,
+            config: new MysqlConnectionConfig(
+                name: 'unreachable',
+                host: '127.0.0.1',
+                port: 1,
+                username: 'nobody',
+                password: 'nopass',
+                database: 'nowhere',
+                timeout: 1,
+            ),
+        );
+
+        self::assertFalse(
+            $connection->ping(),
+        );
+    }
+
+    public function testConnectWithBadHostThrowsDatabaseException(): void
+    {
+        $container = new Container();
+        $container->singleton(
+            class: $container,
+        );
+
+        $connection = MysqlConnection::create(
+            container: $container,
+            config: new MysqlConnectionConfig(
+                name: 'unreachable',
+                host: '127.0.0.1',
+                port: 1,
+                username: 'nobody',
+                password: 'nopass',
+                database: 'nowhere',
+                timeout: 1,
+            ),
+        );
+
+        $this->expectException(DatabaseException::class);
+
+        $connection->connect();
     }
 }

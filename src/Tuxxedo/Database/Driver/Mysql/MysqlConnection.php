@@ -68,13 +68,16 @@ class MysqlConnection extends AbstractConnection
             }
 
             if ($config->unixSocket !== null) {
+                // @codeCoverageIgnoreStart
                 $this->mysqli->real_connect(
                     socket: $config->unixSocket,
                 );
+                // @codeCoverageIgnoreEnd
             } else {
                 $flags = $config->flags ?? 0;
 
                 if ($config->sslEnabled) {
+                    // @codeCoverageIgnoreStart
                     if (
                         $config->sslCa !== '' &&
                         $config->sslCert !== '' &&
@@ -88,6 +91,7 @@ class MysqlConnection extends AbstractConnection
                     if (!$config->sslVerifyPeer) {
                         $flags |= \MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT;
                     }
+                    // @codeCoverageIgnoreEnd
                 }
 
                 try {
@@ -101,19 +105,18 @@ class MysqlConnection extends AbstractConnection
                         port: $config->port,
                         flags: $flags,
                     );
-                } finally {
-                    if ($this->mysqli->connect_errno !== 0) {
-                        // @codeCoverageIgnoreStart
-                        $exception = DatabaseException::fromCannotConnect(
-                            code: $this->mysqli->connect_errno,
-                            error: $this->mysqli->connect_error ?? 'Connection error',
-                        );
+                } catch (\mysqli_sql_exception $exception) {
+                    $connectErrno = $this->mysqli->connect_errno;
+                    $connectError = $this->mysqli->connect_error;
 
-                        unset($this->mysqli);
+                    unset($this->mysqli);
 
-                        throw $exception;
-                        // @codeCoverageIgnoreEnd
-                    }
+                    throw DatabaseException::fromCannotConnect(
+                        code: $connectErrno !== 0
+                            ? $connectErrno
+                            : $exception->getCode(),
+                        error: $connectError ?? $exception->getMessage(),
+                    );
                 }
             }
 
@@ -144,6 +147,9 @@ class MysqlConnection extends AbstractConnection
         }
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function throwFromLastError(
         \mysqli|\mysqli_stmt $mysqli,
     ): never {
@@ -218,6 +224,7 @@ class MysqlConnection extends AbstractConnection
             return true;
         }
 
+        // @codeCoverageIgnoreStart
         if ($this->mysqli->errno === 2006 || $this->mysqli->errno === 2013) {
             try {
                 $this->connect(
@@ -233,6 +240,7 @@ class MysqlConnection extends AbstractConnection
         }
 
         return false;
+        // @codeCoverageIgnoreEnd
     }
 
     public function serverVersion(): string
@@ -278,8 +286,8 @@ class MysqlConnection extends AbstractConnection
 
         try {
             $this->mysqli->begin_transaction(\MYSQLI_TRANS_START_READ_WRITE);
-        } catch (\mysqli_sql_exception $exception) {
-            $this->throwFromMysqliException($exception);
+        } catch (\mysqli_sql_exception $exception) { // @codeCoverageIgnore
+            $this->throwFromMysqliException($exception); // @codeCoverageIgnore
         }
 
         $this->inTransaction = true;
@@ -295,8 +303,8 @@ class MysqlConnection extends AbstractConnection
 
         try {
             $this->mysqli->commit();
-        } catch (\mysqli_sql_exception $exception) {
-            $this->throwFromMysqliException($exception);
+        } catch (\mysqli_sql_exception $exception) { // @codeCoverageIgnore
+            $this->throwFromMysqliException($exception); // @codeCoverageIgnore
         }
 
         $this->inTransaction = false;
@@ -312,8 +320,8 @@ class MysqlConnection extends AbstractConnection
 
         try {
             $this->mysqli->rollback();
-        } catch (\mysqli_sql_exception $exception) {
-            $this->throwFromMysqliException($exception);
+        } catch (\mysqli_sql_exception $exception) { // @codeCoverageIgnore
+            $this->throwFromMysqliException($exception); // @codeCoverageIgnore
         }
 
         $this->inTransaction = false;

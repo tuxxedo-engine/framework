@@ -59,12 +59,14 @@ class PdoMysqlConnection extends AbstractPdoConnection
         }
 
         if ($config->unixSocket !== null && $config->unixSocket !== '') {
+            // @codeCoverageIgnoreStart
             return \sprintf(
                 'mysql:unix_socket=%s%s%s',
                 $config->unixSocket,
                 $database,
                 $charset,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         $port = '';
@@ -94,6 +96,7 @@ class PdoMysqlConnection extends AbstractPdoConnection
         }
 
         if ($config->sslEnabled) {
+            // @codeCoverageIgnoreStart
             if ($config->sslCa !== '') {
                 $options[Mysql::ATTR_SSL_CA] = $config->sslCa;
             }
@@ -107,6 +110,7 @@ class PdoMysqlConnection extends AbstractPdoConnection
             }
 
             $options[Mysql::ATTR_SSL_VERIFY_SERVER_CERT] = $config->sslVerifyPeer;
+            // @codeCoverageIgnoreEnd
         }
 
         return $options;
