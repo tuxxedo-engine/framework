@@ -6,6 +6,32 @@ jobs:
   phpunit:
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.4
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_ROOT_HOST: '%'
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+      # @todo PGSQL service will land here when the pgsql driver phase resumes
+
+    env:
+      TUXXEDO_TEST_MYSQL_HOST: '127.0.0.1'
+      TUXXEDO_TEST_MYSQL_PORT: '3306'
+      TUXXEDO_TEST_MYSQL_USER: 'root'
+      TUXXEDO_TEST_MYSQL_PASS: ''
+      TUXXEDO_TEST_MYSQL_ADMIN_DATABASE: 'mysql'
+      TUXXEDO_TEST_MYSQL_DATABASE_PREFIX: 'tuxxedo_test'
+      TUXXEDO_TEST_MYSQL_CHARSET: 'utf8mb4'
+      TUXXEDO_TEST_MYSQL_TIMEOUT: '5'
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
