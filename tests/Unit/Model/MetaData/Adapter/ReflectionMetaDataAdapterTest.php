@@ -15,6 +15,7 @@ namespace Unit\Model\MetaData\Adapter;
 
 use Fixture\Model\Category;
 use Fixture\Model\Comment;
+use Fixture\Model\Country;
 use Fixture\Model\Post;
 use Fixture\Model\PostStatus;
 use Fixture\Model\Profile;
@@ -27,7 +28,9 @@ use Tuxxedo\Model\Attribute\Column\DeletedAt;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
 use Tuxxedo\Model\Attribute\Relation\HasMany;
+use Tuxxedo\Model\Attribute\Relation\HasManyThrough;
 use Tuxxedo\Model\Attribute\Relation\HasOne;
+use Tuxxedo\Model\Attribute\Relation\HasOneThrough;
 use Tuxxedo\Model\Behavior\CreatedAtBehavior;
 use Tuxxedo\Model\Behavior\DeletedAtBehavior;
 use Tuxxedo\Model\Behavior\UpdatedAtBehavior;
@@ -219,6 +222,73 @@ class ReflectionMetaDataAdapterTest extends TestCase
         self::assertSame(
             Role::class,
             $relationsByProperty['roles']->relatedClass,
+        );
+
+        self::assertArrayHasKey(
+            'country',
+            $relationsByProperty,
+        );
+
+        self::assertInstanceOf(
+            BelongsTo::class,
+            $relationsByProperty['country']->attribute,
+        );
+
+        self::assertSame(
+            Country::class,
+            $relationsByProperty['country']->relatedClass,
+        );
+    }
+
+    public function testUserCountryIdSnakeCaseColumnMapping(): void
+    {
+        $meta = $this->adapter->getModel(User::class);
+        $columnsByProperty = self::indexColumnsByProperty($meta->columns);
+
+        self::assertArrayHasKey(
+            'countryId',
+            $columnsByProperty,
+        );
+
+        self::assertSame(
+            'country_id',
+            $columnsByProperty['countryId']->column,
+        );
+    }
+
+    public function testCountryHasManyThroughAndHasOneThroughRelationsWired(): void
+    {
+        $meta = $this->adapter->getModel(Country::class);
+        $relationsByProperty = self::indexRelationsByProperty($meta->relations);
+
+        self::assertArrayHasKey(
+            'users',
+            $relationsByProperty,
+        );
+
+        self::assertInstanceOf(
+            HasMany::class,
+            $relationsByProperty['users']->attribute,
+        );
+
+        self::assertArrayHasKey(
+            'posts',
+            $relationsByProperty,
+        );
+
+        self::assertInstanceOf(
+            HasManyThrough::class,
+            $relationsByProperty['posts']->attribute,
+        );
+
+        self::assertArrayHasKey(
+            'firstPost',
+            $relationsByProperty,
+        );
+
+        self::assertInstanceOf(
+            HasOneThrough::class,
+            $relationsByProperty['firstPost']->attribute,
         );
     }
 

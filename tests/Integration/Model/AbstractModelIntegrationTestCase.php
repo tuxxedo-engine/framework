@@ -40,6 +40,7 @@ abstract class AbstractModelIntegrationTestCase extends TestCase
 
     protected function createAllFixtureTables(): void
     {
+        $this->createCountriesTable();
         $this->createUsersTable();
         $this->createProfilesTable();
         $this->createPostsTable();
@@ -49,6 +50,18 @@ abstract class AbstractModelIntegrationTestCase extends TestCase
         $this->createCategoriesTable();
         $this->createPostTagPivot();
         $this->createUserRolePivot();
+    }
+
+    protected function createCountriesTable(): void
+    {
+        $this->connection->query(
+            sql: 'CREATE TABLE countries (' .
+                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
+                'name TEXT NOT NULL, ' .
+                'code TEXT NOT NULL DEFAULT \'\'' .
+                ')',
+            native: true,
+        );
     }
 
     protected function createUsersTable(): void
@@ -61,6 +74,7 @@ abstract class AbstractModelIntegrationTestCase extends TestCase
                 'isActive INTEGER NOT NULL DEFAULT 1, ' .
                 'postCount INTEGER NOT NULL DEFAULT 0, ' .
                 'score REAL NOT NULL DEFAULT 0, ' .
+                'country_id INTEGER NULL, ' .
                 'lastLoginAt TEXT NULL, ' .
                 'createdAt TEXT NULL, ' .
                 'updatedAt TEXT NULL' .

@@ -21,6 +21,7 @@ use Tuxxedo\Model\Attribute\Column\Timestamp;
 use Tuxxedo\Model\Attribute\Column\UpdatedAt;
 use Tuxxedo\Model\Attribute\Column\Varchar;
 use Tuxxedo\Model\Attribute\PrimaryKey;
+use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
 use Tuxxedo\Model\Attribute\Relation\HasMany;
 use Tuxxedo\Model\Attribute\Relation\HasOne;
@@ -49,6 +50,9 @@ class User
     #[Double]
     public float $score = 0.0;
 
+    #[Integer(name: 'country_id')]
+    public ?int $countryId = null;
+
     #[Timestamp]
     public ?\DateTimeImmutable $lastLoginAt = null;
 
@@ -57,6 +61,9 @@ class User
 
     #[UpdatedAt]
     public ?\DateTimeImmutable $updatedAt = null;
+
+    #[BelongsTo(related: Country::class, foreignKey: 'country_id')]
+    public ?Country $country = null;
 
     #[HasOne(related: Profile::class, foreignKey: 'user_id')]
     public ?Profile $profile = null;

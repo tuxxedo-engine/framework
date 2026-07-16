@@ -64,7 +64,9 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
 
         $columns = \sizeof($renderedColumns) > 0
             ? \join(', ', $renderedColumns)
-            : '*';
+            : (\sizeof($this->joins) > 0
+                ? $dialect->identifier($this->table) . '.*'
+                : '*');
 
         $sql = \sprintf(
             'SELECT %s%s FROM %s%s',
