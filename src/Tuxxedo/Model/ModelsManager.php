@@ -409,6 +409,10 @@ class ModelsManager implements ModelsManagerInterface
                 continue;
             }
 
+            if ($attribute instanceof BelongsToMany) {
+                $this->flushBelongsToManyPivotChanges($model, $relation);
+            }
+
             if ($attribute->onSave !== CascadeAction::CASCADE) {
                 continue;
             }
@@ -538,6 +542,27 @@ class ModelsManager implements ModelsManagerInterface
                 model: $item,
                 forceMaterialize: $forceMaterialize,
             );
+        }
+    }
+
+    private function flushBelongsToManyPivotChanges(
+        object $model,
+        ModelRelationInterface $relation,
+    ): void {
+        $attribute = $relation->attribute;
+
+        if (!$attribute instanceof BelongsToMany) {
+            return;
+        }
+
+        $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
+
+        if (!$value instanceof RelationInterface) {
+            return;
+        }
+
+        if ($value->pendingAdds === [] && $value->pendingRemoves === []) {
+            return;
         }
 
         $parentMetaData = $this->metaData->getModel($model::class);
