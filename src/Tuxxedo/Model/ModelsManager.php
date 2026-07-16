@@ -456,6 +456,23 @@ class ModelsManager implements ModelsManagerInterface
             $reflection->initializeLazyObject($value);
         }
 
+        $attribute = $relation->attribute;
+
+        if ($attribute instanceof HasOne) {
+            $parentMetaData = $this->metaData->getModel($model::class);
+            $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
+            $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
+            $relatedMetaData = $this->metaData->getModel($relation->relatedClass);
+            $foreignKeyProperty = $this->findPropertyForColumn(
+                metaData: $relatedMetaData,
+                relation: $relation,
+                columnName: $attribute->foreignKey,
+                keyKind: 'foreignKey',
+            );
+
+            PropertyReflector::createFromObject($value, $foreignKeyProperty)->setValue($value, $localKeyValue);
+        }
+
         (void) $this->save(
             model: $value,
             forceMaterialize: $forceMaterialize,
@@ -744,6 +761,41 @@ class ModelsManager implements ModelsManagerInterface
         ModelRelationInterface $relation,
         bool $force,
     ): void {
+        $attribute = $relation->attribute;
+
+        if ($attribute instanceof HasOne) {
+            $parentMetaData = $this->metaData->getModel($model::class);
+            $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
+            $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
+            $localKeyValue = $this->dehydrateColumnValue($parentMetaData, $localKeyProperty, $localKeyValue);
+
+            if (!\is_scalar($localKeyValue)) {
+                return;
+            }
+
+            $foreignKey = $attribute->foreignKey;
+            $child = $this->findFirst(
+                $relation->relatedClass,
+                static function (SelectStatementInterface $statement) use ($foreignKey, $localKeyValue): void {
+                    $statement->where($foreignKey, $localKeyValue);
+                },
+            );
+
+            if ($child === null) {
+                return;
+            }
+
+            if ($force) {
+                (void) $this->forceDelete($child);
+
+                return;
+            }
+
+            (void) $this->delete($child);
+
+            return;
+        }
+
         $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
 
         if (!\is_object($value)) {
