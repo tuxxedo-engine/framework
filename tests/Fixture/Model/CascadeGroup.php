@@ -41,6 +41,13 @@ class CascadeGroup
     )]
     public ?CascadeHasOneChild $hasOneChild = null;
 
+    #[HasOne(
+        related: CascadeHasOneRestrictChild::class,
+        foreignKey: 'group_id',
+        onDelete: CascadeAction::RESTRICT,
+    )]
+    public ?CascadeHasOneRestrictChild $hasOneRestrictChild = null;
+
     /**
      * @var Relation<CascadeChild>|null
      */

@@ -56,6 +56,15 @@ class CascadeActionIntegrationTest extends AbstractModelIntegrationTestCase
         );
 
         $this->connection->query(
+            sql: 'CREATE TABLE cascade_hasone_restrict_children (' .
+                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
+                'group_id INTEGER NOT NULL, ' .
+                'label TEXT NOT NULL DEFAULT \'\'' .
+                ')',
+            native: true,
+        );
+
+        $this->connection->query(
             sql: 'CREATE TABLE cascade_tags (' .
                 'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
                 'name TEXT NOT NULL DEFAULT \'\'' .
@@ -379,6 +388,49 @@ class CascadeActionIntegrationTest extends AbstractModelIntegrationTestCase
             $this->countRowsIn(
                 table: 'cascade_group_tag',
                 where: 'group_id = 9 AND tag_id = 90',
+            ),
+        );
+    }
+
+    public function testHasOneRestrictThrowsWhenChildPresent(): void
+    {
+        $this->seedGroup(id: 100);
+
+        $this->connection->query(
+            sql: "INSERT INTO cascade_hasone_restrict_children (id, group_id, label) VALUES (100, 100, 'blocker')",
+            native: true,
+        );
+
+        $group = $this->modelsManager->fetchByIdentifier(
+            class: CascadeGroup::class,
+            id: 100,
+        );
+
+        $this->expectException(ModelException::class);
+
+        (void) $this->modelsManager->delete($group);
+    }
+
+    public function testHasOneRestrictAllowsDeleteWhenNoChildExists(): void
+    {
+        $this->seedGroup(id: 101);
+
+        $group = $this->modelsManager->fetchByIdentifier(
+            class: CascadeGroup::class,
+            id: 101,
+        );
+
+        $deleted = $this->modelsManager->delete($group);
+
+        self::assertTrue(
+            $deleted,
+        );
+
+        self::assertEquals(
+            0,
+            $this->countRowsIn(
+                table: 'cascade_groups',
+                where: 'id = 101',
             ),
         );
     }

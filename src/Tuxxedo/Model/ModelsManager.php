@@ -891,10 +891,24 @@ class ModelsManager implements ModelsManagerInterface
         ModelRelationInterface $relation,
     ): void {
         $attribute = $relation->attribute;
-        $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
 
         if ($attribute instanceof HasOne) {
-            if ($value === null) {
+            $parentMetaData = $this->metaData->getModel($model::class);
+            $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
+            $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
+            $localKeyValue = $this->dehydrateColumnValue($parentMetaData, $localKeyProperty, $localKeyValue);
+
+            if (!\is_scalar($localKeyValue)) {
+                return;
+            }
+
+            $relatedMetaData = $this->metaData->getModel($relation->relatedClass);
+
+            $count = $this->connection->count($relatedMetaData->table)
+                ->where($attribute->foreignKey, $localKeyValue)
+                ->count();
+
+            if ($count === 0) {
                 return;
             }
 
@@ -906,6 +920,8 @@ class ModelsManager implements ModelsManagerInterface
         }
 
         if ($attribute instanceof HasMany) {
+            $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
+
             if (!$value instanceof RelationInterface) {
                 return;
             }
