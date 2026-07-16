@@ -190,17 +190,14 @@ class ModelsManager implements ModelsManagerInterface
             );
         }
 
-        if ($metaData->key instanceof ModelPrimaryKeyInterface) {
+        if (
+            $metaData->key instanceof ModelPrimaryKeyInterface &&
+            $metaData->key->autoIncrement
+        ) {
             return PropertyReflector::createFromObject($model, $metaData->key->property)->getValue($model) === null;
         }
 
-        foreach ($metaData->key->properties as $property) {
-            if (PropertyReflector::createFromObject($model, $property)->getValue($model) !== null) {
-                return false;
-            }
-        }
-
-        return true;
+        return !$this->dirtyTracker->hasSnapshot($model);
     }
 
     /**
