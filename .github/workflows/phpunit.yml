@@ -20,7 +20,18 @@ jobs:
           --health-timeout=5s
           --health-retries=10
 
-      # @todo PGSQL service will land here when the pgsql driver phase resumes
+      postgres:
+        image: postgres:16
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: 'postgres'
+          POSTGRES_PASSWORD: '12345'
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
 
     env:
       TUXXEDO_TEST_MYSQL_HOST: '127.0.0.1'
@@ -31,6 +42,14 @@ jobs:
       TUXXEDO_TEST_MYSQL_DATABASE_PREFIX: 'tuxxedo_test'
       TUXXEDO_TEST_MYSQL_CHARSET: 'utf8mb4'
       TUXXEDO_TEST_MYSQL_TIMEOUT: '5'
+      TUXXEDO_TEST_PGSQL_HOST: '127.0.0.1'
+      TUXXEDO_TEST_PGSQL_PORT: '5432'
+      TUXXEDO_TEST_PGSQL_USER: 'postgres'
+      TUXXEDO_TEST_PGSQL_PASS: '12345'
+      TUXXEDO_TEST_PGSQL_ADMIN_DATABASE: 'postgres'
+      TUXXEDO_TEST_PGSQL_DATABASE_PREFIX: 'tuxxedo_test'
+      TUXXEDO_TEST_PGSQL_CHARSET: 'UTF8'
+      TUXXEDO_TEST_PGSQL_TIMEOUT: '5'
 
     steps:
       - name: Checkout code
