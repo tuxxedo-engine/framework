@@ -16,6 +16,7 @@ namespace Integration\Database\Query\Statement\Driver\Mysql;
 use Integration\Database\Query\Statement\AbstractDeleteBuilderIntegrationTestCase;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use Support\Database\DatabaseServerProbe;
+use Support\Database\DmlLimitDeleteBuilderTests;
 use Support\Database\MysqlConnectionFactory;
 use Support\Database\MysqlSchemaProvider;
 use Support\Database\RealDatabaseIntegrationSetup;
@@ -25,6 +26,7 @@ use Tuxxedo\Database\Driver\ConnectionInterface;
 #[RequiresPhpExtension('mysqli')]
 class MysqlDeleteBuilderIntegrationTest extends AbstractDeleteBuilderIntegrationTestCase
 {
+    use DmlLimitDeleteBuilderTests;
     use RealDatabaseIntegrationSetup;
 
     protected function realDatabaseSkipReason(): ?string

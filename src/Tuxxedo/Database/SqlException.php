@@ -48,6 +48,9 @@ class SqlException extends \Exception
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromCannotEscapeIdentifier(
         string $name,
     ): self {

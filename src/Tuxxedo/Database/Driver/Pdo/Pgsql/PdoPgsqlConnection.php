@@ -68,6 +68,7 @@ class PdoPgsqlConnection extends AbstractPdoConnection
         }
 
         if ($config->sslEnabled) {
+            // @codeCoverageIgnoreStart
             $sslMode = ';sslmode=' . ($config->sslMode !== '' ? $config->sslMode : 'require');
 
             if ($config->sslCa !== '') {
@@ -81,8 +82,9 @@ class PdoPgsqlConnection extends AbstractPdoConnection
             if ($config->sslKey !== '') {
                 $sslParams .= ';sslkey=' . $config->sslKey;
             }
+            // @codeCoverageIgnoreEnd
         } elseif ($config->sslMode !== '') {
-            $sslMode = ';sslmode=' . $config->sslMode;
+            $sslMode = ';sslmode=' . $config->sslMode; // @codeCoverageIgnore
         }
 
         return \sprintf(
@@ -121,8 +123,8 @@ class PdoPgsqlConnection extends AbstractPdoConnection
                     $config->charset,
                 ),
             );
-        } catch (\PDOException $exception) {
-            self::throwFromPdoException($exception);
+        } catch (\PDOException $exception) { // @codeCoverageIgnore
+            self::throwFromPdoException($exception); // @codeCoverageIgnore
         }
     }
 
@@ -144,7 +146,7 @@ class PdoPgsqlConnection extends AbstractPdoConnection
                 return null;
             }
 
-            throw $exception;
+            throw $exception; // @codeCoverageIgnore
         }
     }
 

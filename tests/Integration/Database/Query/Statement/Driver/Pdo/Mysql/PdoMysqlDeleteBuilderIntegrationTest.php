@@ -16,6 +16,7 @@ namespace Integration\Database\Query\Statement\Driver\Pdo\Mysql;
 use Integration\Database\Query\Statement\AbstractDeleteBuilderIntegrationTestCase;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use Support\Database\DatabaseServerProbe;
+use Support\Database\DmlLimitDeleteBuilderTests;
 use Support\Database\MysqlSchemaProvider;
 use Support\Database\PdoMysqlConnectionFactory;
 use Support\Database\RealDatabaseIntegrationSetup;
@@ -25,6 +26,7 @@ use Tuxxedo\Database\Driver\ConnectionInterface;
 #[RequiresPhpExtension('pdo_mysql')]
 class PdoMysqlDeleteBuilderIntegrationTest extends AbstractDeleteBuilderIntegrationTestCase
 {
+    use DmlLimitDeleteBuilderTests;
     use RealDatabaseIntegrationSetup;
 
     protected function realDatabaseSkipReason(): ?string

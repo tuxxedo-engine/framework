@@ -18,10 +18,15 @@ use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use Support\Database\DatabaseServerProbe;
 use Support\Database\PgsqlConnectionFactory;
 use Support\Database\PgsqlSchemaProvider;
+use Support\Database\PgsqlTestEnv;
 use Support\Database\RealDatabaseIntegrationSetup;
 use Support\Database\SchemaProvider;
+use Tuxxedo\Container\Container;
 use Tuxxedo\Database\ConnectionRole;
+use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
+use Tuxxedo\Database\Driver\Pgsql\Config\PgsqlConnectionConfig;
+use Tuxxedo\Database\Driver\Pgsql\PgsqlConnection;
 
 #[RequiresPhpExtension('pgsql')]
 class PgsqlConnectionIntegrationTest extends AbstractConnectionIntegrationTestCase
@@ -44,5 +49,140 @@ class PgsqlConnectionIntegrationTest extends AbstractConnectionIntegrationTestCa
     protected function schemaProvider(): SchemaProvider
     {
         return new PgsqlSchemaProvider();
+    }
+
+    public function testConfigWithLazyFalseConnectsEagerly(): void
+    {
+        $container = new Container();
+        $container->singleton(
+            class: $container,
+        );
+
+        $connection = PgsqlConnection::create(
+            container: $container,
+            config: new PgsqlConnectionConfig(
+                name: 'eager',
+                host: PgsqlTestEnv::host(),
+                port: PgsqlTestEnv::port(),
+                username: PgsqlTestEnv::username(),
+                password: PgsqlTestEnv::password(),
+                database: PgsqlTestEnv::databaseName(),
+                lazy: false,
+            ),
+        );
+
+        self::assertTrue(
+            $connection->isConnected(),
+        );
+
+        $connection->close();
+    }
+
+    public function testConfigWithTimeoutIncludesConnectTimeoutInDsn(): void
+    {
+        $container = new Container();
+        $container->singleton(
+            class: $container,
+        );
+
+        $connection = PgsqlConnection::create(
+            container: $container,
+            config: new PgsqlConnectionConfig(
+                name: 'with-timeout',
+                host: PgsqlTestEnv::host(),
+                port: PgsqlTestEnv::port(),
+                username: PgsqlTestEnv::username(),
+                password: PgsqlTestEnv::password(),
+                database: PgsqlTestEnv::databaseName(),
+                timeout: 5,
+            ),
+        );
+
+        $connection->connect();
+
+        self::assertTrue(
+            $connection->isConnected(),
+        );
+
+        $connection->close();
+    }
+
+    public function testConfigWithPersistentUsesPconnect(): void
+    {
+        $container = new Container();
+        $container->singleton(
+            class: $container,
+        );
+
+        $connection = PgsqlConnection::create(
+            container: $container,
+            config: new PgsqlConnectionConfig(
+                name: 'persistent',
+                host: PgsqlTestEnv::host(),
+                port: PgsqlTestEnv::port(),
+                username: PgsqlTestEnv::username(),
+                password: PgsqlTestEnv::password(),
+                database: PgsqlTestEnv::databaseName(),
+                persistent: true,
+            ),
+        );
+
+        $connection->connect();
+
+        self::assertTrue(
+            $connection->isConnected(),
+        );
+
+        $connection->close();
+    }
+
+    public function testPingReturnsFalseWhenConnectCheckFails(): void
+    {
+        $container = new Container();
+        $container->singleton(
+            class: $container,
+        );
+
+        $connection = PgsqlConnection::create(
+            container: $container,
+            config: new PgsqlConnectionConfig(
+                name: 'unreachable',
+                host: '127.0.0.1',
+                port: 1,
+                username: 'nobody',
+                password: 'nopass',
+                database: 'nowhere',
+                timeout: 1,
+            ),
+        );
+
+        self::assertFalse(
+            $connection->ping(),
+        );
+    }
+
+    public function testConnectWithBadHostThrowsDatabaseException(): void
+    {
+        $container = new Container();
+        $container->singleton(
+            class: $container,
+        );
+
+        $connection = PgsqlConnection::create(
+            container: $container,
+            config: new PgsqlConnectionConfig(
+                name: 'unreachable',
+                host: '127.0.0.1',
+                port: 1,
+                username: 'nobody',
+                password: 'nopass',
+                database: 'nowhere',
+                timeout: 1,
+            ),
+        );
+
+        $this->expectException(DatabaseException::class);
+
+        $connection->connect();
     }
 }

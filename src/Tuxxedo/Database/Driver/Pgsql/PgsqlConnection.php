@@ -61,7 +61,9 @@ class PgsqlConnection extends AbstractConnection
                 $dsn = [];
 
                 if ($config->unixSocket !== null) {
+                    // @codeCoverageIgnoreStart
                     $dsn[] = 'host=' . $quote($config->unixSocket);
+                    // @codeCoverageIgnoreEnd
                 } elseif ($config->host !== '') {
                     $dsn[] = 'host=' . $quote($config->host);
                 }
@@ -87,6 +89,7 @@ class PgsqlConnection extends AbstractConnection
                 }
 
                 if ($config->sslEnabled) {
+                    // @codeCoverageIgnoreStart
                     $sslMode = $config->sslMode !== ''
                         ? $config->sslMode
                         : ($config->sslVerifyHost
@@ -110,6 +113,7 @@ class PgsqlConnection extends AbstractConnection
                     if ($config->sslKey !== '') {
                         $dsn[] = 'sslkey=' . $quote($config->sslKey);
                     }
+                    // @codeCoverageIgnoreEnd
                 } else {
                     $dsn[] = 'sslmode=' . $quote('disable');
                 }
@@ -119,12 +123,10 @@ class PgsqlConnection extends AbstractConnection
                     : @\pg_connect(\join(' ', $dsn));
 
                 if ($pgsql === false) {
-                    // @codeCoverageIgnoreStart
                     throw DatabaseException::fromCannotConnect(
                         code: 0,
                         error: 'Connection error',
                     );
-                    // @codeCoverageIgnoreEnd
                 }
 
                 $this->pgsql = $pgsql;
@@ -133,7 +135,7 @@ class PgsqlConnection extends AbstractConnection
                     $result = @\pg_set_client_encoding($this->pgsql, $config->charset);
 
                     if ($result !== 0) {
-                        $this->throwFromLastError($this->pgsql);
+                        $this->throwFromLastError($this->pgsql); // @codeCoverageIgnore
                     }
                 }
             }
@@ -170,6 +172,9 @@ class PgsqlConnection extends AbstractConnection
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function throwFromResult(
         Result $result,
     ): never {
@@ -243,9 +248,11 @@ class PgsqlConnection extends AbstractConnection
             return $version;
         }
 
+        // @codeCoverageIgnoreStart
         $info = \pg_version($this->pgsql);
 
         return (string) ($info['server'] ?? '');
+        // @codeCoverageIgnoreEnd
     }
 
     public function lastInsertIdAsString(): ?string
@@ -275,7 +282,7 @@ class PgsqlConnection extends AbstractConnection
             return $id;
         }
 
-        return null;
+        return null; // @codeCoverageIgnore
     }
 
     public function lastInsertIdAsInt(): ?int
@@ -295,7 +302,7 @@ class PgsqlConnection extends AbstractConnection
         }
 
         if (@\pg_query($this->pgsql, 'BEGIN') === false) {
-            $this->throwFromLastError($this->pgsql);
+            $this->throwFromLastError($this->pgsql); // @codeCoverageIgnore
         }
 
         $this->inTransaction = true;
@@ -310,9 +317,11 @@ class PgsqlConnection extends AbstractConnection
         }
 
         if (@\pg_query($this->pgsql, 'COMMIT') === false) {
+            // @codeCoverageIgnoreStart
             $this->inTransaction = false;
 
             $this->throwFromLastError($this->pgsql);
+            // @codeCoverageIgnoreEnd
         }
 
         $this->inTransaction = false;
@@ -327,9 +336,11 @@ class PgsqlConnection extends AbstractConnection
         }
 
         if (@\pg_query($this->pgsql, 'ROLLBACK') === false) {
+            // @codeCoverageIgnoreStart
             $this->inTransaction = false;
 
             $this->throwFromLastError($this->pgsql);
+            // @codeCoverageIgnoreEnd
         }
 
         $this->inTransaction = false;

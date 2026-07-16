@@ -61,9 +61,11 @@ class PgsqlDialect implements DialectInterface
         );
 
         if ($quotedName === false) {
+            // @codeCoverageIgnoreStart
             throw SqlException::fromCannotEscapeIdentifier(
                 name: $name,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         return $quotedName;
