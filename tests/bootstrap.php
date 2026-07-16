@@ -168,7 +168,7 @@ if (DatabaseServerProbe::isPgsqlAvailable()) {
     } else {
         $escapedName = \str_replace('"', '""', $pgsqlDatabaseName);
 
-        if (@\pg_query($pgsqlAdmin, \sprintf('DROP DATABASE IF EXISTS "%s"', $escapedName)) === false) {
+        if (@\pg_query($pgsqlAdmin, \sprintf('DROP DATABASE IF EXISTS "%s" WITH (FORCE)', $escapedName)) === false) {
             \fwrite(
                 \STDERR,
                 \sprintf(
@@ -209,7 +209,7 @@ if (DatabaseServerProbe::isPgsqlAvailable()) {
                 @\pg_query(
                     $shutdownAdmin,
                     \sprintf(
-                        'DROP DATABASE IF EXISTS "%s"',
+                        'DROP DATABASE IF EXISTS "%s" WITH (FORCE)',
                         \str_replace('"', '""', $pgsqlDatabaseName),
                     ),
                 );
