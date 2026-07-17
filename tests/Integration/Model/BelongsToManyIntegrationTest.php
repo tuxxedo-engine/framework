@@ -24,6 +24,7 @@ class BelongsToManyIntegrationTest extends AbstractModelIntegrationTestCase
         parent::setUp();
 
         $this->createUsersTable();
+        $this->createProfilesTable();
         $this->createRolesTable();
         $this->createUserRolePivot();
 

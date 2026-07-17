@@ -25,6 +25,7 @@ class HasManyIntegrationTest extends AbstractModelIntegrationTestCase
         parent::setUp();
 
         $this->createUsersTable();
+        $this->createProfilesTable();
         $this->createPostsTable();
 
         $this->connection->query(

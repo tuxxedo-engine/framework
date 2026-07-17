@@ -25,6 +25,7 @@ class BehaviorIntegrationTest extends AbstractModelIntegrationTestCase
         parent::setUp();
 
         $this->createUsersTable();
+        $this->createProfilesTable();
         $this->createCommentsTable();
 
         $this->connection->query(

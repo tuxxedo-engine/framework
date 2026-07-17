@@ -57,6 +57,8 @@ use Tuxxedo\Reflection\PropertyReflector;
 )]
 class ModelsManager implements ModelsManagerInterface
 {
+    public const int DEFAULT_EAGER_CHUNK_SIZE = 100;
+
     public readonly HydratorInterface $hydrator;
 
     /**
@@ -1027,6 +1029,35 @@ class ModelsManager implements ModelsManagerInterface
      *
      * @throws ModelException
      */
+    /**
+     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $explicitWith
+     * @return array<string, ?\Closure(Relation<object>): Relation<object>>
+     */
+    public function mergeAutoEagerWith(
+        ModelMetaDataInterface $metaData,
+        ?array $explicitWith,
+    ): array {
+        $merged = $explicitWith ?? [];
+
+        foreach ($metaData->relations as $relation) {
+            if (!$relation->attribute instanceof HasOne) {
+                continue;
+            }
+
+            if (!$relation->nullable) {
+                continue;
+            }
+
+            if (\array_key_exists($relation->property, $merged)) {
+                continue;
+            }
+
+            $merged[$relation->property] = static fn (Relation $r): Relation => $r;
+        }
+
+        return $merged;
+    }
+
     #[\NoDiscard]
     public function findFirst(
         string $class,
@@ -1051,12 +1082,14 @@ class ModelsManager implements ModelsManagerInterface
             return null;
         }
 
-        if ($with !== null && \sizeof($with) > 0) {
+        $effectiveWith = $this->mergeAutoEagerWith($metaData, $with);
+
+        if (\sizeof($effectiveWith) > 0) {
             $this->hydrator->eagerLoad(
                 parents: [
                     $result,
                 ],
-                with: $with,
+                with: $effectiveWith,
             );
         }
 
@@ -1230,6 +1263,7 @@ class ModelsManager implements ModelsManagerInterface
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
         ?array $with = null,
+        int $chunkSize = self::DEFAULT_EAGER_CHUNK_SIZE,
     ): \Generator {
         $metaData = $this->metaData->getModel($class);
         $query = $this->connection->select($metaData->table);
@@ -1242,25 +1276,45 @@ class ModelsManager implements ModelsManagerInterface
             $this->applySoftDeleteFilter($query, $metaData);
         }
 
-        if ($with === null || \sizeof($with) === 0) {
+        $effectiveWith = $this->mergeAutoEagerWith($metaData, $with);
+
+        if (\sizeof($effectiveWith) === 0) {
             yield from $query->fetchAll($class, $this->hydrator);
 
             return;
         }
 
-        $parents = \iterator_to_array(
-            $query->fetchAll($class, $this->hydrator),
-            preserve_keys: false,
-        );
+        $buffer = [];
 
-        if (\sizeof($parents) > 0) {
+        foreach ($query->fetchAll($class, $this->hydrator) as $model) {
+            $buffer[] = $model;
+
+            if (\sizeof($buffer) < $chunkSize) {
+                continue;
+            }
+
             $this->hydrator->eagerLoad(
-                parents: $parents,
-                with: $with,
+                parents: $buffer,
+                with: $effectiveWith,
             );
+
+            foreach ($buffer as $item) {
+                yield $item;
+            }
+
+            $buffer = [];
         }
 
-        yield from $parents;
+        if (\sizeof($buffer) > 0) {
+            $this->hydrator->eagerLoad(
+                parents: $buffer,
+                with: $effectiveWith,
+            );
+
+            foreach ($buffer as $item) {
+                yield $item;
+            }
+        }
     }
 
     /**
@@ -1438,6 +1492,7 @@ class ModelsManager implements ModelsManagerInterface
             },
             manager: $this,
             modelClass: $class,
+            with: $this->mergeAutoEagerWith($metaData, null),
         );
     }
 

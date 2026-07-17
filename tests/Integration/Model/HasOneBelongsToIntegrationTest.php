@@ -137,4 +137,21 @@ class HasOneBelongsToIntegrationTest extends AbstractModelIntegrationTestCase
             $reloaded->name,
         );
     }
+
+    public function testFetchByIdentifierYieldsNullHasOneWhenChildDoesNotExist(): void
+    {
+        $this->connection->query(
+            sql: "INSERT INTO users (id, name, email, isActive, postCount, score) VALUES (2, 'Bob', 'bob@example.test', 1, 0, 0.0)",
+            native: true,
+        );
+
+        $user = $this->modelsManager->fetchByIdentifier(
+            class: User::class,
+            id: 2,
+        );
+
+        self::assertNull(
+            $user->profile,
+        );
+    }
 }

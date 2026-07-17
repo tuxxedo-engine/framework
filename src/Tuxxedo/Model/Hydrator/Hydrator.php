@@ -1659,6 +1659,12 @@ class Hydrator implements HydratorInterface
         }
 
         if ($target === null) {
+            if ($relation->nullable) {
+                $reflector->setValue($parent, null);
+
+                return;
+            }
+
             throw ModelException::fromMissingRelatedRecord(
                 modelClass: $metaData->model,
                 property: $relation->property,

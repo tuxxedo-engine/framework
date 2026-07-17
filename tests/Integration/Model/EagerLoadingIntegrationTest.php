@@ -531,4 +531,36 @@ class EagerLoadingIntegrationTest extends AbstractModelIntegrationTestCase
             $nemoPosts->count(),
         );
     }
+
+    public function testEagerLoadNullableHasOneForParentWithoutChildYieldsNull(): void
+    {
+        $this->connection->query(
+            sql: "INSERT INTO users (id, name, email, isActive, postCount, score, country_id) VALUES (77, 'Orphan', 'orphan@example.test', 1, 0, 0.0, 1)",
+            native: true,
+        );
+
+        $users = $this->fetchUsersWith(
+            [
+                'profile' => static fn (Relation $relation): Relation => $relation,
+            ],
+        );
+
+        $orphan = null;
+
+        foreach ($users as $user) {
+            if ($user->id === 77) {
+                $orphan = $user;
+
+                break;
+            }
+        }
+
+        self::assertNotNull(
+            $orphan,
+        );
+
+        self::assertNull(
+            $orphan->profile,
+        );
+    }
 }

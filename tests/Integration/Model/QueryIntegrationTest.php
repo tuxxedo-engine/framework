@@ -24,6 +24,7 @@ class QueryIntegrationTest extends AbstractModelIntegrationTestCase
         parent::setUp();
 
         $this->createUsersTable();
+        $this->createProfilesTable();
         $this->seedUsers();
     }
 

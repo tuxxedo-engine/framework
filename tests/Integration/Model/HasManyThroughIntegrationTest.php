@@ -25,6 +25,7 @@ class HasManyThroughIntegrationTest extends AbstractModelIntegrationTestCase
 
         $this->createCountriesTable();
         $this->createUsersTable();
+        $this->createProfilesTable();
         $this->createPostsTable();
 
         $this->connection->query(

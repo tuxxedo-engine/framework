@@ -202,6 +202,7 @@ interface ModelsManagerInterface
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
         ?array $with = null,
+        int $chunkSize = ModelsManager::DEFAULT_EAGER_CHUNK_SIZE,
     ): \Generator;
 
     /**

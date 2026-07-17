@@ -75,6 +75,7 @@ class Query extends AbstractQueryable
      * @param \Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string, direction: OrderDirection}>, ?int, ?int): iterable<int, TItem> $loaderBuilder
      * @param \Closure(list<\Closure(WhereStatementInterface): void>): int $countBuilder
      * @param (\Closure(list<object>, array<string, ?\Closure(Relation<object>): Relation<object>>): void)|null $eagerLoader
+     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
      * @param ?class-string<TItem> $modelClass
      * @return self<TItem>
      */
@@ -84,10 +85,12 @@ class Query extends AbstractQueryable
         ?\Closure $eagerLoader = null,
         ?ModelsManagerInterface $manager = null,
         ?string $modelClass = null,
+        ?array $with = null,
     ): self {
         return new self(
             loaderBuilder: $loaderBuilder,
             countBuilder: $countBuilder,
+            with: $with,
             eagerLoader: $eagerLoader,
             manager: $manager,
             modelClass: $modelClass,
