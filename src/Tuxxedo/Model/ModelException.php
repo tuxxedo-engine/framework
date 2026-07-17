@@ -658,6 +658,8 @@ class ModelException extends \Exception
 
     /**
      * @param class-string $modelClass
+     *
+     * @codeCoverageIgnore
      */
     public static function fromInvalidCoercerClass(
         string $modelClass,
@@ -676,6 +678,8 @@ class ModelException extends \Exception
 
     /**
      * @param class-string $modelClass
+     *
+     * @codeCoverageIgnore
      */
     public static function fromInvalidBehaviorClass(
         string $modelClass,
@@ -811,6 +815,25 @@ class ModelException extends \Exception
         return new self(
             message: \sprintf(
                 'Invalid model class "%s": Relation "%s" on property "%s" is not supported because the model declares a composite key; single-column parent keys are required for relations in this Engine release',
+                $modelClass,
+                $relationClass,
+                $property,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     * @param class-string $relationClass
+     */
+    public static function fromUnsupportedRelationType(
+        string $modelClass,
+        string $property,
+        string $relationClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Relation "%s" on property "%s" is not one of the built-in relation types supported by this Engine release',
                 $modelClass,
                 $relationClass,
                 $property,

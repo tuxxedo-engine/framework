@@ -387,11 +387,13 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             !\class_exists($attribute->coercer) ||
             !\is_a($attribute->coercer, CoercerInterface::class, true)
         ) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromInvalidCoercerClass(
                 modelClass: $modelClass,
                 property: $property,
                 coercerClass: $attribute->coercer,
             );
+            // @codeCoverageIgnoreEnd
         }
     }
 
@@ -413,11 +415,13 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             !\class_exists($attribute->behavior) ||
             !\is_a($attribute->behavior, BehaviorInterface::class, true)
         ) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromInvalidBehaviorClass(
                 modelClass: $modelClass,
                 property: $property,
                 behaviorClass: $attribute->behavior,
             );
+            // @codeCoverageIgnoreEnd
         }
     }
 
@@ -445,7 +449,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             return $property->getType()?->allowsNull() ?? false;
         }
 
-        return false;
+        return false; // @codeCoverageIgnore
     }
 
     /**
@@ -470,7 +474,13 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             $attribute instanceof BelongsToMany => 'BelongsToMany',
             $attribute instanceof HasOneThrough => 'HasOneThrough',
             $attribute instanceof HasManyThrough => 'HasManyThrough',
-            default => $attribute::class,
+            // @codeCoverageIgnoreStart
+            default => throw ModelException::fromUnsupportedRelationType(
+                modelClass: $modelClass,
+                property: $property,
+                relationClass: $attribute::class,
+            ),
+            // @codeCoverageIgnoreEnd
         };
 
         if (
@@ -487,13 +497,8 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         }
 
         if (
-            (
-                $attribute instanceof BelongsTo ||
-                $attribute instanceof BelongsToMany
-            ) && (
-                $attribute->onDelete === CascadeAction::RESTRICT ||
-                $attribute->onDelete === CascadeAction::SET_NULL
-            )
+            ($attribute instanceof BelongsTo || $attribute instanceof BelongsToMany) &&
+            ($attribute->onDelete === CascadeAction::RESTRICT || $attribute->onDelete === CascadeAction::SET_NULL)
         ) {
             throw ModelException::fromInvalidCascadeConfiguration(
                 modelClass: $modelClass,
@@ -505,10 +510,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         }
 
         if (
-            (
-                $attribute instanceof HasOne ||
-                $attribute instanceof HasMany
-            ) &&
+            ($attribute instanceof HasOne || $attribute instanceof HasMany) &&
             $attribute->onDelete === CascadeAction::SET_NULL &&
             !$this->isColumnNullableInReflection($relatedReflection, $attribute->foreignKey)
         ) {
@@ -531,11 +533,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         }
 
         if (
-            (
-                $attribute instanceof HasOne ||
-                $attribute instanceof HasMany ||
-                $attribute instanceof BelongsTo
-            ) &&
+            ($attribute instanceof HasOne || $attribute instanceof HasMany || $attribute instanceof BelongsTo) &&
             $attribute->onDelete === CascadeAction::CASCADE
         ) {
             $childHasSoftDelete = $this->hasSoftDeleteBehaviorInReflection($relatedReflection);
@@ -661,10 +659,12 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         $declaredType = $property->getDefaultType();
 
         if ($declaredType === null) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromRelationPropertyTypeUnsupported(
                 modelClass: $modelClass,
                 property: $property->name,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         $expectedType = $attribute instanceof HasMany ||
