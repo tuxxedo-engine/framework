@@ -123,7 +123,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             columns: $columns,
             identifiers: $identifiers,
             readonly: $readonly,
-            relations: $this->getRelations($class, $columns, $primaryKey),
+            relations: $this->getRelations($class, $columns, $primaryKey, $compositeKey),
             behaviors: $behaviors,
         );
     }
@@ -176,6 +176,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         ClassReflector $class,
         array $columns,
         ?ModelPrimaryKeyInterface $sourcePrimaryKey,
+        ?ModelCompositeKeyInterface $sourceCompositeKey,
     ): array {
         $relations = [];
         $sourceColumnNames = \array_map(
@@ -211,6 +212,15 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             }
 
             $attribute = $relationAttributes[0];
+
+            if ($sourceCompositeKey !== null) {
+                throw ModelException::fromCompositeKeyRelationsUnsupported(
+                    modelClass: $class->name,
+                    property: $property->name,
+                    relationClass: $attribute::class,
+                );
+            }
+
             $relatedClass = $attribute->related;
 
             try {

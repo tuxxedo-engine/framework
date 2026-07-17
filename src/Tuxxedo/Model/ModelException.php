@@ -798,4 +798,23 @@ class ModelException extends \Exception
             ),
         );
     }
+
+    /**
+     * @param class-string $modelClass
+     * @param class-string $relationClass
+     */
+    public static function fromCompositeKeyRelationsUnsupported(
+        string $modelClass,
+        string $property,
+        string $relationClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Relation "%s" on property "%s" is not supported because the model declares a composite key; single-column parent keys are required for relations in this Engine release',
+                $modelClass,
+                $relationClass,
+                $property,
+            ),
+        );
+    }
 }

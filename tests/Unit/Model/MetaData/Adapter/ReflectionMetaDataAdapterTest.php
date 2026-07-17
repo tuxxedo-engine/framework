@@ -15,6 +15,7 @@ namespace Unit\Model\MetaData\Adapter;
 
 use Fixture\Model\Category;
 use Fixture\Model\Comment;
+use Fixture\Model\CompositeKeyWithRelation;
 use Fixture\Model\Country;
 use Fixture\Model\Post;
 use Fixture\Model\PostStatus;
@@ -576,5 +577,19 @@ class ReflectionMetaDataAdapterTest extends TestCase
         }
 
         return $indexed;
+    }
+
+    public function testCompositeKeyModelWithRelationIsRejectedAtMetadataBuild(): void
+    {
+        try {
+            $this->adapter->getModel(CompositeKeyWithRelation::class);
+
+            self::fail('Expected ModelException was not thrown');
+        } catch (ModelException $exception) {
+            self::assertStringContainsString(
+                'composite key',
+                $exception->getMessage(),
+            );
+        }
     }
 }
