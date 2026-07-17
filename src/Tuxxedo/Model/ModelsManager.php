@@ -142,14 +142,40 @@ class ModelsManager implements ModelsManagerInterface
 
             $result = $this->insert($target, $metaData);
         } else {
-            $this->dispatchBeforeUpdate($model, $metaData);
+            $dirty = $this->getDirtyColumnsExcludingKeys($model, $metaData);
 
-            $result = $this->update($model, $metaData);
+            if ($dirty === []) {
+                $result = $model;
+            } else {
+                $this->dispatchBeforeUpdate($model, $metaData);
+
+                $result = $this->update($model, $metaData);
+            }
         }
 
         $this->cascadeSaveRelations($result, $metaData, $forceMaterialize);
 
         return $result;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function getDirtyColumnsExcludingKeys(
+        object $model,
+        ModelMetaDataInterface $metaData,
+    ): array {
+        $dirty = $this->dirtyTracker->getDirtyColumns($model, $metaData);
+
+        if ($metaData->key instanceof ModelPrimaryKeyInterface) {
+            unset($dirty[$metaData->key->column]);
+        } elseif ($metaData->key instanceof ModelCompositeKeyInterface) {
+            foreach ($metaData->key->columns as $column) {
+                unset($dirty[$column]);
+            }
+        }
+
+        return $dirty;
     }
 
     private function dispatchBeforeInsert(
@@ -312,15 +338,7 @@ class ModelsManager implements ModelsManagerInterface
         object $model,
         ModelMetaDataInterface $metaData,
     ): object {
-        $dirty = $this->dirtyTracker->getDirtyColumns($model, $metaData);
-
-        if ($metaData->key instanceof ModelPrimaryKeyInterface) {
-            unset($dirty[$metaData->key->column]);
-        } elseif ($metaData->key instanceof ModelCompositeKeyInterface) {
-            foreach ($metaData->key->columns as $column) {
-                unset($dirty[$column]);
-            }
-        }
+        $dirty = $this->getDirtyColumnsExcludingKeys($model, $metaData);
 
         if ($dirty === []) {
             return $model;

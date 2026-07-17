@@ -106,6 +106,36 @@ class BehaviorIntegrationTest extends AbstractModelIntegrationTestCase
         );
     }
 
+    public function testSaveUnchangedExistingUserDoesNotBumpUpdatedAt(): void
+    {
+        $user = new User();
+        $user->name = 'Dave';
+        $user->email = 'dave@example.test';
+
+        $saved = $this->modelsManager->save($user);
+
+        self::assertInstanceOf(
+            \DateTimeImmutable::class,
+            $saved->updatedAt,
+        );
+
+        $originalTimestamp = $saved->updatedAt->getTimestamp();
+
+        \usleep(microseconds: 1_100_000);
+
+        (void) $this->modelsManager->save($saved);
+
+        self::assertInstanceOf(
+            \DateTimeImmutable::class,
+            $saved->updatedAt,
+        );
+
+        self::assertSame(
+            $originalTimestamp,
+            $saved->updatedAt->getTimestamp(),
+        );
+    }
+
     public function testSoftDeleteSetsDeletedAtWithoutRemovingRow(): void
     {
         $this->connection->query(
