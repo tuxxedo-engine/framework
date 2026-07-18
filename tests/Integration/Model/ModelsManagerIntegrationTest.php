@@ -25,7 +25,6 @@ use Fixture\Model\Setting;
 use Fixture\Model\StrictOwner;
 use Fixture\Model\StrictProfile;
 use Fixture\Model\User;
-use PHPUnit\Framework\Attributes\DataProvider;
 use Tuxxedo\Database\Query\Statement\CountStatementInterface;
 use Tuxxedo\Database\Query\Statement\ExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
