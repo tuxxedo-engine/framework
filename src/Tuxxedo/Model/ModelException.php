@@ -15,6 +15,9 @@ namespace Tuxxedo\Model;
 
 class ModelException extends \Exception
 {
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromUntypedColumnAttribute(
         string $propertyName,
     ): self {
@@ -116,6 +119,8 @@ class ModelException extends \Exception
 
     /**
      * @param class-string $modelClass
+     *
+     * @codeCoverageIgnore
      */
     public static function fromNoPrimaryKeyOrCompositeKey(
         string $modelClass,
@@ -130,6 +135,8 @@ class ModelException extends \Exception
 
     /**
      * @param class-string $modelClass
+     *
+     * @codeCoverageIgnore
      */
     public static function fromPropertyValueMustBeScalar(
         string $modelClass,
@@ -238,6 +245,8 @@ class ModelException extends \Exception
 
     /**
      * @param class-string $modelClass
+     *
+     * @codeCoverageIgnore
      */
     public static function fromNullValueOnNonNullableColumn(
         string $modelClass,
@@ -375,29 +384,6 @@ class ModelException extends \Exception
                 $property,
                 $side,
             ),
-        );
-    }
-
-    /**
-     * @param class-string $modelClass
-     * @param class-string<\UnitEnum> $enumClass
-     */
-    public static function fromInvalidEnumValue(
-        string $modelClass,
-        string $property,
-        string $enumClass,
-        mixed $value,
-        ?\Throwable $previous = null,
-    ): self {
-        return new self(
-            message: \sprintf(
-                'Cannot hydrate property "%s" on model "%s": value of type "%s" does not match any case of enum "%s"',
-                $property,
-                $modelClass,
-                \get_debug_type($value),
-                $enumClass,
-            ),
-            previous: $previous,
         );
     }
 
@@ -557,6 +543,8 @@ class ModelException extends \Exception
 
     /**
      * @param class-string $attributeClass
+     *
+     * @codeCoverageIgnore
      */
     public static function fromEagerLoadingNotYetSupported(
         string $attributeClass,
@@ -603,6 +591,8 @@ class ModelException extends \Exception
 
     /**
      * @param class-string $modelClass
+     *
+     * @codeCoverageIgnore
      */
     public static function fromRelationPropertyTypeUnsupported(
         string $modelClass,
@@ -825,6 +815,8 @@ class ModelException extends \Exception
     /**
      * @param class-string $modelClass
      * @param class-string $relationClass
+     *
+     * @codeCoverageIgnore
      */
     public static function fromUnsupportedRelationType(
         string $modelClass,

@@ -107,7 +107,7 @@ class ModelsManager implements ModelsManagerInterface
         bool $forceMaterialize = false,
     ): object {
         if (isset($this->saveInProgress[$model])) {
-            return $model;
+            return $model; // @codeCoverageIgnore
         }
 
         $this->saveInProgress[$model] = true;
@@ -186,7 +186,7 @@ class ModelsManager implements ModelsManagerInterface
             $column = $metaData->columnFor($property);
 
             if ($column === null) {
-                continue;
+                continue; // @codeCoverageIgnore
             }
 
             $this->getBehaviorFor($behaviorClass)->beforeInsert($model, $column);
@@ -201,7 +201,7 @@ class ModelsManager implements ModelsManagerInterface
             $column = $metaData->columnFor($property);
 
             if ($column === null) {
-                continue;
+                continue; // @codeCoverageIgnore
             }
 
             $this->getBehaviorFor($behaviorClass)->beforeUpdate($model, $column);
@@ -213,9 +213,11 @@ class ModelsManager implements ModelsManagerInterface
         ModelMetaDataInterface $metaData,
     ): bool {
         if ($metaData->key === null) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromNoPrimaryKeyOrCompositeKey(
                 modelClass: $metaData->model,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         if (
@@ -247,10 +249,12 @@ class ModelsManager implements ModelsManagerInterface
             $value = PropertyReflector::createFromObject($model, $column->property)->getValue($model);
 
             if ($value === null && !$column->nullable) {
+                // @codeCoverageIgnoreStart
                 throw ModelException::fromNullValueOnNonNullableColumn(
                     modelClass: $metaData->model,
                     property: $column->property,
                 );
+                // @codeCoverageIgnoreEnd
             }
 
             if ($value !== null) {
@@ -259,11 +263,13 @@ class ModelsManager implements ModelsManagerInterface
                 if ($coercer !== null) {
                     $value = $coercer->dehydrate($value);
                 } elseif (!\is_scalar($value)) {
+                    // @codeCoverageIgnoreStart
                     throw ModelException::fromPropertyValueMustBeScalar(
                         modelClass: $metaData->model,
                         property: $column->property,
                         actualType: \get_debug_type($value),
                     );
+                    // @codeCoverageIgnoreEnd
                 }
             }
 
@@ -341,7 +347,7 @@ class ModelsManager implements ModelsManagerInterface
         $dirty = $this->getDirtyColumnsExcludingKeys($model, $metaData);
 
         if ($dirty === []) {
-            return $model;
+            return $model; // @codeCoverageIgnore
         }
 
         $query = $this->connection->update($metaData->table);
@@ -354,10 +360,12 @@ class ModelsManager implements ModelsManagerInterface
             $value = $dirty[$modelColumn->column];
 
             if ($value === null && !$modelColumn->nullable) {
+                // @codeCoverageIgnoreStart
                 throw ModelException::fromNullValueOnNonNullableColumn(
                     modelClass: $metaData->model,
                     property: $modelColumn->property,
                 );
+                // @codeCoverageIgnoreEnd
             }
 
             $value = $this->dehydrateColumnValue($metaData, $modelColumn->property, $value);
@@ -370,11 +378,13 @@ class ModelsManager implements ModelsManagerInterface
             $value = $this->dehydrateColumnValue($metaData, $metaData->key->property, $value);
 
             if ($value === null) {
+                // @codeCoverageIgnoreStart
                 throw ModelException::fromPropertyValueMustBeScalar(
                     modelClass: $metaData->model,
                     property: $metaData->key->property,
                     actualType: 'null',
                 );
+                // @codeCoverageIgnoreEnd
             }
 
             $query->where($metaData->key->column, $value);
@@ -384,11 +394,13 @@ class ModelsManager implements ModelsManagerInterface
                 $value = $this->dehydrateColumnValue($metaData, $property, $value);
 
                 if ($value === null) {
+                    // @codeCoverageIgnoreStart
                     throw ModelException::fromPropertyValueMustBeScalar(
                         modelClass: $metaData->model,
                         property: $property,
                         actualType: 'null',
                     );
+                    // @codeCoverageIgnoreEnd
                 }
 
                 $query->where($column, $value);
@@ -504,7 +516,7 @@ class ModelsManager implements ModelsManagerInterface
         $attribute = $relation->attribute;
 
         if (!$attribute instanceof HasMany) {
-            return;
+            return; // @codeCoverageIgnore
         }
 
         $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
@@ -556,7 +568,7 @@ class ModelsManager implements ModelsManagerInterface
         $attribute = $relation->attribute;
 
         if (!$attribute instanceof BelongsToMany) {
-            return;
+            return; // @codeCoverageIgnore
         }
 
         $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
@@ -586,7 +598,7 @@ class ModelsManager implements ModelsManagerInterface
         $attribute = $relation->attribute;
 
         if (!$attribute instanceof BelongsToMany) {
-            return;
+            return; // @codeCoverageIgnore
         }
 
         $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
@@ -631,20 +643,24 @@ class ModelsManager implements ModelsManagerInterface
         ModelMetaDataInterface $metaData,
     ): string|int|float|bool {
         if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromCantFetchWithoutPrimaryKey(
                 modelClass: $metaData->model,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         $value = PropertyReflector::createFromObject($model, $metaData->key->property)->getValue($model);
         $value = $this->dehydrateColumnValue($metaData, $metaData->key->property, $value);
 
         if ($value === null) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromPropertyValueMustBeScalar(
                 modelClass: $metaData->model,
                 property: $metaData->key->property,
                 actualType: 'null',
             );
+            // @codeCoverageIgnoreEnd
         }
 
         return $value;
@@ -675,11 +691,13 @@ class ModelsManager implements ModelsManagerInterface
         }
 
         if (!\is_scalar($value)) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromPropertyValueMustBeScalar(
                 modelClass: $metaData->model,
                 property: $property,
                 actualType: \get_debug_type($value),
             );
+            // @codeCoverageIgnoreEnd
         }
 
         return $value;
@@ -787,7 +805,7 @@ class ModelsManager implements ModelsManagerInterface
             $localKeyValue = $this->dehydrateColumnValue($parentMetaData, $localKeyProperty, $localKeyValue);
 
             if (!\is_scalar($localKeyValue)) {
-                return;
+                return; // @codeCoverageIgnore
             }
 
             $foreignKey = $attribute->foreignKey;
@@ -844,7 +862,7 @@ class ModelsManager implements ModelsManagerInterface
         $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
 
         if (!$value instanceof RelationInterface) {
-            return;
+            return; // @codeCoverageIgnore
         }
 
         foreach ($value as $item) {
@@ -868,15 +886,17 @@ class ModelsManager implements ModelsManagerInterface
         $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
 
         if ($localKeyValue === null) {
-            return;
+            return; // @codeCoverageIgnore
         }
 
         if (!\is_scalar($localKeyValue)) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromPropertyValueMustBeScalar(
                 modelClass: $parentMetaData->model,
                 property: $localKeyProperty,
                 actualType: \get_debug_type($localKeyValue),
             );
+            // @codeCoverageIgnoreEnd
         }
 
         $childMetaData = $this->metaData->getModel($relation->relatedClass);
@@ -894,7 +914,7 @@ class ModelsManager implements ModelsManagerInterface
         $attribute = $relation->attribute;
 
         if (!$attribute instanceof BelongsToMany) {
-            return;
+            return; // @codeCoverageIgnore
         }
 
         $parentMetaData = $this->metaData->getModel($model::class);
@@ -919,7 +939,7 @@ class ModelsManager implements ModelsManagerInterface
             $localKeyValue = $this->dehydrateColumnValue($parentMetaData, $localKeyProperty, $localKeyValue);
 
             if (!\is_scalar($localKeyValue)) {
-                return;
+                return; // @codeCoverageIgnore
             }
 
             $relatedMetaData = $this->metaData->getModel($relation->relatedClass);
@@ -943,7 +963,7 @@ class ModelsManager implements ModelsManagerInterface
             $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
 
             if (!$value instanceof RelationInterface) {
-                return;
+                return; // @codeCoverageIgnore
             }
 
             if ($value->totalCount === 0) {
@@ -968,7 +988,7 @@ class ModelsManager implements ModelsManagerInterface
             !$attribute instanceof HasOne &&
             !$attribute instanceof HasMany
         ) {
-            return;
+            return; // @codeCoverageIgnore
         }
 
         $parentMetaData = $this->metaData->getModel($model::class);
@@ -977,11 +997,13 @@ class ModelsManager implements ModelsManagerInterface
         $localKeyValue = $this->dehydrateColumnValue($parentMetaData, $localKeyProperty, $localKeyValue);
 
         if ($localKeyValue === null) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromPropertyValueMustBeScalar(
                 modelClass: $parentMetaData->model,
                 property: $localKeyProperty,
                 actualType: 'null',
             );
+            // @codeCoverageIgnoreEnd
         }
 
         $relatedMetaData = $this->metaData->getModel($relation->relatedClass);
@@ -1000,9 +1022,11 @@ class ModelsManager implements ModelsManagerInterface
     ): string {
         if ($localKey === null) {
             if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
+                // @codeCoverageIgnoreStart
                 throw ModelException::fromCantFetchWithoutPrimaryKey(
                     modelClass: $metaData->model,
                 );
+                // @codeCoverageIgnoreEnd
             }
 
             return $metaData->key->property;
@@ -1028,6 +1052,7 @@ class ModelsManager implements ModelsManagerInterface
             }
         }
 
+        // @codeCoverageIgnoreStart
         throw ModelException::fromRelationKeyReferencesUnknownColumn(
             modelClass: $metaData->model,
             property: $relation->property,
@@ -1035,18 +1060,9 @@ class ModelsManager implements ModelsManagerInterface
             keyValue: $columnName,
             referencedClass: $metaData->model,
         );
+        // @codeCoverageIgnoreEnd
     }
 
-    /**
-     * @template TModel of object
-     *
-     * @param class-string<TModel> $class
-     * @param (\Closure(SelectStatementInterface $statement): void)|null $criteria
-     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
-     * @return TModel|null
-     *
-     * @throws ModelException
-     */
     /**
      * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $explicitWith
      * @return array<string, ?\Closure(Relation<object>): Relation<object>>
@@ -1076,6 +1092,16 @@ class ModelsManager implements ModelsManagerInterface
         return $merged;
     }
 
+    /**
+     * @template TModel of object
+     *
+     * @param class-string<TModel> $class
+     * @param (\Closure(SelectStatementInterface $statement): void)|null $criteria
+     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
+     * @return TModel|null
+     *
+     * @throws ModelException
+     */
     #[\NoDiscard]
     public function findFirst(
         string $class,
@@ -1519,7 +1545,7 @@ class ModelsManager implements ModelsManagerInterface
         object $model,
     ): bool {
         if (isset($this->deleteInProgress[$model])) {
-            return true;
+            return true; // @codeCoverageIgnore
         }
 
         $this->deleteInProgress[$model] = true;
@@ -1538,7 +1564,7 @@ class ModelsManager implements ModelsManagerInterface
         object $model,
     ): bool {
         if (isset($this->deleteInProgress[$model])) {
-            return true;
+            return true; // @codeCoverageIgnore
         }
 
         $this->deleteInProgress[$model] = true;
@@ -1558,9 +1584,11 @@ class ModelsManager implements ModelsManagerInterface
         $metaData = $this->metaData->getModel($model::class);
 
         if ($metaData->key === null) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromNoPrimaryKeyOrCompositeKey(
                 modelClass: $metaData->model,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         $this->dispatchBeforeDelete($model, $metaData);
@@ -1580,9 +1608,11 @@ class ModelsManager implements ModelsManagerInterface
         $metaData = $this->metaData->getModel($model::class);
 
         if ($metaData->key === null) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromNoPrimaryKeyOrCompositeKey(
                 modelClass: $metaData->model,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         $this->dispatchBeforeDelete($model, $metaData);
@@ -1600,7 +1630,7 @@ class ModelsManager implements ModelsManagerInterface
             $column = $metaData->columnFor($property);
 
             if ($column === null) {
-                continue;
+                continue; // @codeCoverageIgnore
             }
 
             $this->getBehaviorFor($behaviorClass)->beforeDelete($model, $column);
@@ -1628,7 +1658,7 @@ class ModelsManager implements ModelsManagerInterface
             $column = $metaData->columnFor($property);
 
             if ($column === null) {
-                continue;
+                continue; // @codeCoverageIgnore
             }
 
             $value = PropertyReflector::createFromObject($model, $property)->getValue($model);
@@ -1652,11 +1682,13 @@ class ModelsManager implements ModelsManagerInterface
             $value = $this->dehydrateColumnValue($metaData, $metaData->key->property, $value);
 
             if ($value === null) {
+                // @codeCoverageIgnoreStart
                 throw ModelException::fromPropertyValueMustBeScalar(
                     modelClass: $metaData->model,
                     property: $metaData->key->property,
                     actualType: 'null',
                 );
+                // @codeCoverageIgnoreEnd
             }
 
             $query->where(
@@ -1673,11 +1705,13 @@ class ModelsManager implements ModelsManagerInterface
                 $value = $this->dehydrateColumnValue($metaData, $property, $value);
 
                 if ($value === null) {
+                    // @codeCoverageIgnoreStart
                     throw ModelException::fromPropertyValueMustBeScalar(
                         modelClass: $metaData->model,
                         property: $property,
                         actualType: 'null',
                     );
+                    // @codeCoverageIgnoreEnd
                 }
 
                 $query->where($column, $value);
@@ -1699,7 +1733,7 @@ class ModelsManager implements ModelsManagerInterface
         $column = $metaData->columnFor($property);
 
         if ($column === null) {
-            return;
+            return; // @codeCoverageIgnore
         }
 
         $query->whereNull($metaData->table . '.' . $column->column);

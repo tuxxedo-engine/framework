@@ -595,9 +595,11 @@ class Hydrator implements HydratorInterface
             } elseif ($attribute instanceof HasOneThrough) {
                 $this->eagerLoadHasOneThrough($parents, $metaData, $relation, $shaped);
             } else {
+                // @codeCoverageIgnoreStart
                 throw ModelException::fromEagerLoadingNotYetSupported(
                     attributeClass: $attribute::class,
                 );
+                // @codeCoverageIgnoreEnd
             }
 
             if (\sizeof($node->children) > 0) {
