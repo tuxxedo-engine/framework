@@ -84,4 +84,44 @@ class RelationTest extends TestCase
             $relation->totalCount,
         );
     }
+
+    public function testOrderByAcceptsStringDirection(): void
+    {
+        $relation = Relation::createFromPrefetched(
+            values: [],
+        );
+
+        $ordered = $relation->orderBy(
+            column: 'id',
+            direction: 'ASC',
+        );
+
+        self::assertNotSame(
+            $relation,
+            $ordered,
+        );
+    }
+
+    public function testLoadBaseHandlesLoaderBuilderReturningArray(): void
+    {
+        $items = [
+            new Post(),
+            new Post(),
+        ];
+
+        $relation = Relation::createFromBuilder(
+            loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $items,
+            countBuilder: static fn (array $criteria): int => \sizeof($items),
+        );
+
+        $materialized = \iterator_to_array(
+            $relation->fetchAll(),
+            preserve_keys: false,
+        );
+
+        self::assertCount(
+            2,
+            $materialized,
+        );
+    }
 }

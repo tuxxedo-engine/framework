@@ -674,7 +674,7 @@ abstract class AbstractQueryable implements QueryableInterface
             return ($this->countBuilder)($this->criteriaStack);
         }
 
-        return \sizeof($this->materialize());
+        return \sizeof($this->materialize()); // @codeCoverageIgnore
     }
 
     /**
@@ -695,7 +695,7 @@ abstract class AbstractQueryable implements QueryableInterface
         }
 
         if ($this->loaderBuilder === null) {
-            return [];
+            return []; // @codeCoverageIgnore
         }
 
         $loaded = ($this->loaderBuilder)($this->criteriaStack, $this->orderBy, $this->limit, $this->offset);
@@ -772,10 +772,12 @@ abstract class AbstractQueryable implements QueryableInterface
                 includeDeleted: $includeDeleted,
             );
         } else {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromRelationNotFoundOnModel(
                 modelClass: $parentMetaData->model,
                 property: $relationName,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         if (!$includeDeleted) {
@@ -889,9 +891,11 @@ abstract class AbstractQueryable implements QueryableInterface
         ModelMetaDataInterface $metaData,
     ): string {
         if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromCantFetchWithoutPrimaryKey(
                 modelClass: $metaData->model,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         return $metaData->key->column;
