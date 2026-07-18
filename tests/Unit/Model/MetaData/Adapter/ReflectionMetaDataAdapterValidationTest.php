@@ -27,6 +27,7 @@ use Fixture\Model\Broken\BulkDeleteRequiresCascade;
 use Fixture\Model\Broken\CascadeBareTarget;
 use Fixture\Model\Broken\CompositeKeyUnknownColumn;
 use Fixture\Model\Broken\DuplicatePrimaryKey;
+use Fixture\Model\Broken\HardParentSoftChildCascadeMismatch;
 use Fixture\Model\Broken\HasManyForeignKeyUnknown;
 use Fixture\Model\Broken\HasManyLocalKeyUnknown;
 use Fixture\Model\Broken\HasManyNoPrimaryKey;
@@ -213,6 +214,14 @@ class ReflectionMetaDataAdapterValidationTest extends TestCase
     {
         $this->assertRejectsModelWithMessage(
             modelClass: SoftDeleteCascadeMismatch::class,
+            needle: 'soft-delete',
+        );
+    }
+
+    public function testRejectsHardParentSoftChildCascadeMismatch(): void
+    {
+        $this->assertRejectsModelWithMessage(
+            modelClass: HardParentSoftChildCascadeMismatch::class,
             needle: 'soft-delete',
         );
     }

@@ -25,6 +25,7 @@ use Fixture\Model\Setting;
 use Fixture\Model\StrictOwner;
 use Fixture\Model\StrictProfile;
 use Fixture\Model\User;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tuxxedo\Database\Query\Statement\CountStatementInterface;
 use Tuxxedo\Database\Query\Statement\ExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
@@ -1315,6 +1316,51 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
         self::assertSame(
             'A',
             $rows[0]->name,
+        );
+    }
+
+    /**
+     * @return \Generator<array{0: string}>
+     */
+    public static function malformedEagerLoadPathDataProvider(): \Generator
+    {
+        yield [
+            '',
+        ];
+
+        yield [
+            '.posts',
+        ];
+
+        yield [
+            'posts.',
+        ];
+
+        yield [
+            'posts..comments',
+        ];
+    }
+
+    #[DataProvider('malformedEagerLoadPathDataProvider')]
+    public function testFetchByIdentifierRejectsMalformedEagerLoadPath(
+        string $path,
+    ): void {
+        $this->seedCountry(
+            id: 1,
+        );
+
+        $this->seedUser(
+            id: 2000,
+        );
+
+        $this->expectException(ModelException::class);
+
+        (void) $this->modelsManager->fetchByIdentifier(
+            class: User::class,
+            id: 2000,
+            with: [
+                $path => static fn (Relation $r): Relation => $r,
+            ],
         );
     }
 }

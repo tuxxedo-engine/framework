@@ -24,12 +24,12 @@ use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 class Query extends AbstractQueryable
 {
     /**
-     * @var array<string, ?\Closure(Relation<object>): Relation<object>>|null
+     * @var array<string, (\Closure(Relation<object>): Relation<object>)|null>|null
      */
     private readonly ?array $with;
 
     /**
-     * @var (\Closure(list<object>, array<string, ?\Closure(Relation<object>): Relation<object>>): void)|null
+     * @var (\Closure(list<object>, array<string, (\Closure(Relation<object>): Relation<object>)|null>): void)|null
      */
     private readonly ?\Closure $eagerLoader;
 
@@ -38,8 +38,8 @@ class Query extends AbstractQueryable
      * @param (\Closure(list<\Closure(WhereStatementInterface): void>): int)|null $countBuilder
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
      * @param list<array{column: string, direction: OrderDirection}> $orderBy
-     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
-     * @param (\Closure(list<object>, array<string, ?\Closure(Relation<object>): Relation<object>>): void)|null $eagerLoader
+     * @param array<string, (\Closure(Relation<object>): Relation<object>)|null>|null $with
+     * @param (\Closure(list<object>, array<string, (\Closure(Relation<object>): Relation<object>)|null>): void)|null $eagerLoader
      * @param ?class-string<TModel> $modelClass
      */
     final private function __construct(
@@ -74,8 +74,8 @@ class Query extends AbstractQueryable
      *
      * @param \Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string, direction: OrderDirection}>, ?int, ?int): iterable<int, TItem> $loaderBuilder
      * @param \Closure(list<\Closure(WhereStatementInterface): void>): int $countBuilder
-     * @param (\Closure(list<object>, array<string, ?\Closure(Relation<object>): Relation<object>>): void)|null $eagerLoader
-     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
+     * @param (\Closure(list<object>, array<string, (\Closure(Relation<object>): Relation<object>)|null>): void)|null $eagerLoader
+     * @param array<string, (\Closure(Relation<object>): Relation<object>)|null>|null $with
      * @param ?class-string<TItem> $modelClass
      * @return self<TItem>
      */
@@ -98,7 +98,7 @@ class Query extends AbstractQueryable
     }
 
     /**
-     * @param array<string, ?\Closure(Relation<object>): Relation<object>> $with
+     * @param array<string, (\Closure(Relation<object>): Relation<object>)|null> $with
      */
     #[\NoDiscard]
     public function with(

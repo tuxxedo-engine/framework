@@ -547,7 +547,7 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
-     * @param ?\Closure(SelectStatementInterface): void $callback
+     * @param (\Closure(SelectStatementInterface): void)|null $callback
      */
     #[\NoDiscard]
     public function whereHas(
@@ -561,7 +561,7 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
-     * @param ?\Closure(SelectStatementInterface): void $callback
+     * @param (\Closure(SelectStatementInterface): void)|null $callback
      */
     #[\NoDiscard]
     public function whereDoesntHave(
@@ -723,7 +723,7 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
-     * @param ?\Closure(SelectStatementInterface): void $callback
+     * @param (\Closure(SelectStatementInterface): void)|null $callback
      */
     private function buildRelationExistsSubquery(
         string $relationName,

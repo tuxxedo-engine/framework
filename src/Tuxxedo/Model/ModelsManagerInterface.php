@@ -78,7 +78,7 @@ interface ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param (\Closure(SelectStatementInterface $statement): void)|null $criteria
-     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
+     * @param array<string, (\Closure(Relation<object>): Relation<object>)|null>|null $with
      * @return TModel|null
      *
      * @throws ModelException
@@ -96,7 +96,7 @@ interface ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param (\Closure(SelectStatementInterface $statement): void)|null $criteria
-     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
+     * @param array<string, (\Closure(Relation<object>): Relation<object>)|null>|null $with
      * @return TModel
      *
      * @throws ModelException
@@ -113,7 +113,7 @@ interface ModelsManagerInterface
      * @template TModel of object
      * @param class-string<TModel> $class
      * @param (\Closure(SelectStatementInterface $statement): void)|null $criteria
-     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
+     * @param array<string, (\Closure(Relation<object>): Relation<object>)|null>|null $with
      * @return TModel|null
      *
      * @throws ModelException
@@ -132,7 +132,7 @@ interface ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param (\Closure(SelectStatementInterface $statement): void)|null $criteria
-     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
+     * @param array<string, (\Closure(Relation<object>): Relation<object>)|null>|null $with
      * @return TModel
      *
      * @throws ModelException
@@ -152,7 +152,7 @@ interface ModelsManagerInterface
      * @param class-string<TModel> $class
      * @param array<string, int|string> $keys
      * @param (\Closure(SelectStatementInterface $statement): void)|null $criteria
-     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
+     * @param array<string, (\Closure(Relation<object>): Relation<object>)|null>|null $with
      * @return TModel|null
      *
      * @throws ModelException
@@ -172,7 +172,7 @@ interface ModelsManagerInterface
      * @param class-string<TModel> $class
      * @param array<string, int|string> $keys
      * @param (\Closure(SelectStatementInterface $statement): void)|null $criteria
-     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
+     * @param array<string, (\Closure(Relation<object>): Relation<object>)|null>|null $with
      * @return TModel
      *
      * @throws ModelException
@@ -191,7 +191,7 @@ interface ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param (\Closure(SelectStatementInterface $statement): void)|null $criteria
-     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
+     * @param array<string, (\Closure(Relation<object>): Relation<object>)|null>|null $with
      * @return \Generator<int, TModel>
      *
      * @throws ModelException

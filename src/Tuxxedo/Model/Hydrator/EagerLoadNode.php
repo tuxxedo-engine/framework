@@ -23,7 +23,7 @@ class EagerLoadNode
     public array $children = [];
 
     /**
-     * @var ?\Closure(Relation<object>): Relation<object>
+     * @var (\Closure(Relation<object>): Relation<object>)|null
      */
     public ?\Closure $constraint = null;
 }

@@ -24,7 +24,7 @@ interface HydratorInterface extends DatabaseHydratorInterface
 {
     /**
      * @param object[] $parents
-     * @param array<string, ?\Closure(Relation<object>): Relation<object>> $with
+     * @param array<string, (\Closure(Relation<object>): Relation<object>)|null> $with
      *
      * @throws ModelException
      */

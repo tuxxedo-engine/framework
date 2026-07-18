@@ -261,7 +261,7 @@ interface QueryableInterface extends PagedInterface, \IteratorAggregate, \Counta
     ): static;
 
     /**
-     * @param ?\Closure(SelectStatementInterface): void $callback
+     * @param (\Closure(SelectStatementInterface): void)|null $callback
      */
     #[\NoDiscard]
     public function whereHas(
@@ -271,7 +271,7 @@ interface QueryableInterface extends PagedInterface, \IteratorAggregate, \Counta
     ): static;
 
     /**
-     * @param ?\Closure(SelectStatementInterface): void $callback
+     * @param (\Closure(SelectStatementInterface): void)|null $callback
      */
     #[\NoDiscard]
     public function whereDoesntHave(

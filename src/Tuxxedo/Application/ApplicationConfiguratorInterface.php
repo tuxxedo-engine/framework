@@ -175,7 +175,7 @@ interface ApplicationConfiguratorInterface
     ): self;
 
     /**
-     * @param ?\Closure(LumiConfiguratorInterface $configurator): mixed $customizer
+     * @param (\Closure(LumiConfiguratorInterface $configurator): mixed)|null $customizer
      */
     public function withDefaultLumi(
         ?\Closure $customizer = null,
@@ -186,7 +186,7 @@ interface ApplicationConfiguratorInterface
     ): self;
 
     /**
-     * @param ?\Closure(ConnectionManagerInterface $manager): mixed $customizer
+     * @param (\Closure(ConnectionManagerInterface $manager): mixed)|null $customizer
      */
     public function withDefaultConnectionManager(
         ?\Closure $customizer = null,

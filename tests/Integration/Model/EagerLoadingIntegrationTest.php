@@ -119,7 +119,7 @@ class EagerLoadingIntegrationTest extends AbstractModelIntegrationTestCase
     }
 
     /**
-     * @param array<string, ?\Closure(Relation<object>): Relation<object>> $with
+     * @param array<string, (\Closure(Relation<object>): Relation<object>)|null> $with
      * @return list<User>
      */
     private function fetchUsersWith(array $with): array

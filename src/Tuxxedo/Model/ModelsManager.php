@@ -1064,8 +1064,8 @@ class ModelsManager implements ModelsManagerInterface
     }
 
     /**
-     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $explicitWith
-     * @return array<string, ?\Closure(Relation<object>): Relation<object>>
+     * @param array<string, (\Closure(Relation<object>): Relation<object>)|null>|null $explicitWith
+     * @return array<string, (\Closure(Relation<object>): Relation<object>)|null>
      */
     public function mergeAutoEagerWith(
         ModelMetaDataInterface $metaData,
@@ -1097,7 +1097,7 @@ class ModelsManager implements ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param (\Closure(SelectStatementInterface $statement): void)|null $criteria
-     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
+     * @param array<string, (\Closure(Relation<object>): Relation<object>)|null>|null $with
      * @return TModel|null
      *
      * @throws ModelException
@@ -1145,7 +1145,7 @@ class ModelsManager implements ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param (\Closure(SelectStatementInterface $statement): void)|null $criteria
-     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
+     * @param array<string, (\Closure(Relation<object>): Relation<object>)|null>|null $with
      * @return TModel
      *
      * @throws ModelException
@@ -1166,7 +1166,7 @@ class ModelsManager implements ModelsManagerInterface
      * @template TModel of object
      * @param class-string<TModel> $class
      * @param (\Closure(SelectStatementInterface $statement): void)|null $criteria
-     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
+     * @param array<string, (\Closure(Relation<object>): Relation<object>)|null>|null $with
      * @return TModel|null
      *
      * @throws ModelException
@@ -1206,7 +1206,7 @@ class ModelsManager implements ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param (\Closure(SelectStatementInterface $statement): void)|null $criteria
-     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
+     * @param array<string, (\Closure(Relation<object>): Relation<object>)|null>|null $with
      * @return TModel
      *
      * @throws ModelException
@@ -1230,7 +1230,7 @@ class ModelsManager implements ModelsManagerInterface
      * @param class-string<TModel> $class
      * @param array<string, int|string> $keys
      * @param (\Closure(SelectStatementInterface $statement): void)|null $criteria
-     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
+     * @param array<string, (\Closure(Relation<object>): Relation<object>)|null>|null $with
      * @return TModel|null
      *
      * @throws ModelException
@@ -1273,7 +1273,7 @@ class ModelsManager implements ModelsManagerInterface
      * @param class-string<TModel> $class
      * @param array<string, int|string> $keys
      * @param (\Closure(SelectStatementInterface $statement): void)|null $criteria
-     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
+     * @param array<string, (\Closure(Relation<object>): Relation<object>)|null>|null $with
      * @return TModel
      *
      * @throws ModelException
@@ -1296,7 +1296,7 @@ class ModelsManager implements ModelsManagerInterface
      *
      * @param class-string<TModel> $class
      * @param (\Closure(SelectStatementInterface $statement): void)|null $criteria
-     * @param array<string, ?\Closure(Relation<object>): Relation<object>>|null $with
+     * @param array<string, (\Closure(Relation<object>): Relation<object>)|null>|null $with
      * @return \Generator<int, TModel>
      *
      * @throws ModelException

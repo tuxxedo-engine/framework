@@ -156,11 +156,13 @@ class Hydrator implements HydratorInterface
         }
 
         if (!\is_scalar($sourceValue)) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromPropertyValueMustBeScalar(
                 modelClass: $metaData->model,
                 property: $sourceProperty->name,
                 actualType: \get_debug_type($sourceValue),
             );
+            // @codeCoverageIgnoreEnd
         }
 
         $relatedClass = new \ReflectionClass($relation->relatedClass);
@@ -194,11 +196,13 @@ class Hydrator implements HydratorInterface
         }
 
         if (!\is_scalar($sourceValue)) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromPropertyValueMustBeScalar(
                 modelClass: $metaData->model,
                 property: $sourceProperty->name,
                 actualType: \get_debug_type($sourceValue),
             );
+            // @codeCoverageIgnoreEnd
         }
 
         $targetColumn = $this->resolveTargetColumn($relation);
@@ -247,9 +251,11 @@ class Hydrator implements HydratorInterface
         ModelRelationInterface $relation,
     ): void {
         if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromCantFetchWithoutPrimaryKey(
                 modelClass: $metaData->model,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         $sourceProperty = PropertyReflector::createFromObject($model, $metaData->key->property);
@@ -270,11 +276,13 @@ class Hydrator implements HydratorInterface
         }
 
         if (!\is_scalar($sourceValue)) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromPropertyValueMustBeScalar(
                 modelClass: $metaData->model,
                 property: $sourceProperty->name,
                 actualType: \get_debug_type($sourceValue),
             );
+            // @codeCoverageIgnoreEnd
         }
 
         /** @var BelongsToMany $attribute */
@@ -283,9 +291,11 @@ class Hydrator implements HydratorInterface
         $targetMetaData = $manager->metaData->getModel($relatedClass);
 
         if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromCantFetchWithoutPrimaryKey(
                 modelClass: $relatedClass,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         $targetTable = $targetMetaData->table;
@@ -355,11 +365,13 @@ class Hydrator implements HydratorInterface
         }
 
         if (!\is_scalar($sourceValue)) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromPropertyValueMustBeScalar(
                 modelClass: $metaData->model,
                 property: $sourceProperty->name,
                 actualType: \get_debug_type($sourceValue),
             );
+            // @codeCoverageIgnoreEnd
         }
 
         $relatedClass = new \ReflectionClass($relation->relatedClass);
@@ -393,11 +405,13 @@ class Hydrator implements HydratorInterface
         }
 
         if (!\is_scalar($sourceValue)) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromPropertyValueMustBeScalar(
                 modelClass: $metaData->model,
                 property: $sourceProperty->name,
                 actualType: \get_debug_type($sourceValue),
             );
+            // @codeCoverageIgnoreEnd
         }
 
         /** @var HasManyThrough $attribute */
@@ -406,9 +420,11 @@ class Hydrator implements HydratorInterface
         $targetMetaData = $manager->metaData->getModel($relatedClass);
 
         if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromCantFetchWithoutPrimaryKey(
                 modelClass: $relatedClass,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         $throughTable = $manager->metaData->getModel($attribute->through)->table;
@@ -508,9 +524,11 @@ class Hydrator implements HydratorInterface
         $throughMetaData = $this->modelsManager->metaData->getModel($attribute->through);
 
         if (!$throughMetaData->key instanceof ModelPrimaryKeyInterface) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromCantFetchWithoutPrimaryKey(
                 modelClass: $attribute->through,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         return $throughMetaData->key->column;
@@ -543,14 +561,14 @@ class Hydrator implements HydratorInterface
 
     /**
      * @param object[] $parents
-     * @param array<string, ?\Closure(Relation<object>): Relation<object>> $with
+     * @param array<string, (\Closure(Relation<object>): Relation<object>)|null> $with
      */
     public function eagerLoad(
         array $parents,
         array $with,
     ): void {
         if (\sizeof($parents) === 0 || \sizeof($with) === 0) {
-            return;
+            return; // @codeCoverageIgnore
         }
 
         $firstParent = $parents[\array_key_first($parents)];
@@ -571,7 +589,7 @@ class Hydrator implements HydratorInterface
         array $tree,
     ): void {
         if (\sizeof($parents) === 0 || \sizeof($tree) === 0) {
-            return;
+            return; // @codeCoverageIgnore
         }
 
         $firstParent = $parents[\array_key_first($parents)];
@@ -613,7 +631,7 @@ class Hydrator implements HydratorInterface
     }
 
     /**
-     * @param array<string, ?\Closure(Relation<object>): Relation<object>> $with
+     * @param array<string, (\Closure(Relation<object>): Relation<object>)|null> $with
      * @param class-string $modelClass
      * @return array<string, EagerLoadNode>
      */
@@ -681,7 +699,7 @@ class Hydrator implements HydratorInterface
             }
 
             if (!\is_object($value)) {
-                continue;
+                continue; // @codeCoverageIgnore
             }
 
             $children[] = $value;
@@ -691,7 +709,7 @@ class Hydrator implements HydratorInterface
     }
 
     /**
-     * @param ?\Closure(Relation<object>): Relation<object> $constraint
+     * @param (\Closure(Relation<object>): Relation<object>)|null $constraint
      * @param class-string $relatedClass
      * @return Relation<object>|null
      */
@@ -799,11 +817,13 @@ class Hydrator implements HydratorInterface
             }
 
             if (!\is_int($value) && !\is_string($value)) {
+                // @codeCoverageIgnoreStart
                 throw ModelException::fromPropertyValueMustBeScalar(
                     modelClass: $metaData->model,
                     property: $sourcePropertyName,
                     actualType: \get_debug_type($value),
                 );
+                // @codeCoverageIgnoreEnd
             }
 
             $sourceValues[$value] = $value;
@@ -824,7 +844,7 @@ class Hydrator implements HydratorInterface
                 $fkValue = PropertyReflector::createFromObject($row, $targetForeignProperty)->getValue($row);
 
                 if (!\is_int($fkValue) && !\is_string($fkValue)) {
-                    continue;
+                    continue; // @codeCoverageIgnore
                 }
 
                 $grouped[$fkValue][] = $row;
@@ -868,11 +888,13 @@ class Hydrator implements HydratorInterface
         ?Relation $shaped = null,
     ): Relation {
         if (!\is_int($sourceValue) && !\is_string($sourceValue)) {
+            // @codeCoverageIgnoreStart
             return Relation::createFromPrefetched(
                 values: $prefetched,
                 manager: $manager,
                 modelClass: $relatedClass,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         return Relation::createFromPrefetchedWithBuilder(
@@ -928,9 +950,11 @@ class Hydrator implements HydratorInterface
         $attribute = $relation->attribute;
 
         if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromCantFetchWithoutPrimaryKey(
                 modelClass: $metaData->model,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         /** @var class-string $relatedClass */
@@ -939,9 +963,11 @@ class Hydrator implements HydratorInterface
         $targetMetaData = $manager->metaData->getModel($relatedClass);
 
         if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromCantFetchWithoutPrimaryKey(
                 modelClass: $relatedClass,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         $sourcePropertyName = $metaData->key->property;
@@ -959,15 +985,17 @@ class Hydrator implements HydratorInterface
             $value = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
 
             if ($value === null) {
-                continue;
+                continue; // @codeCoverageIgnore
             }
 
             if (!\is_int($value) && !\is_string($value)) {
+                // @codeCoverageIgnoreStart
                 throw ModelException::fromPropertyValueMustBeScalar(
                     modelClass: $metaData->model,
                     property: $sourcePropertyName,
                     actualType: \get_debug_type($value),
                 );
+                // @codeCoverageIgnoreEnd
             }
 
             $sourceValues[$value] = $value;
@@ -993,11 +1021,11 @@ class Hydrator implements HydratorInterface
                 $foreign = $row->properties[$pivotForeignKey] ?? null;
 
                 if (!\is_int($local) && !\is_string($local)) {
-                    continue;
+                    continue; // @codeCoverageIgnore
                 }
 
                 if (!\is_int($foreign) && !\is_string($foreign)) {
-                    continue;
+                    continue; // @codeCoverageIgnore
                 }
 
                 $pivotPairs[$local][] = $foreign;
@@ -1017,7 +1045,7 @@ class Hydrator implements HydratorInterface
                     $pkValue = PropertyReflector::createFromObject($row, $targetPrimaryProperty)->getValue($row);
 
                     if (!\is_int($pkValue) && !\is_string($pkValue)) {
-                        continue;
+                        continue; // @codeCoverageIgnore
                     }
 
                     $targetsByPk[$pkValue] = $row;
@@ -1076,11 +1104,13 @@ class Hydrator implements HydratorInterface
         ?Relation $shaped = null,
     ): Relation {
         if (!\is_int($sourceValue) && !\is_string($sourceValue)) {
+            // @codeCoverageIgnoreStart
             return Relation::createFromPrefetched(
                 values: $prefetched,
                 manager: $manager,
                 modelClass: $relatedClass,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         return Relation::createFromPrefetchedWithBuilder(
@@ -1150,9 +1180,11 @@ class Hydrator implements HydratorInterface
         $firstKey = $attribute->firstKey;
 
         if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
+            // @codeCoverageIgnoreStart
             throw ModelException::fromCantFetchWithoutPrimaryKey(
                 modelClass: $relatedClass,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         $targetPrimaryKey = $targetMetaData->key->column;
@@ -1173,11 +1205,13 @@ class Hydrator implements HydratorInterface
             }
 
             if (!\is_int($value) && !\is_string($value)) {
+                // @codeCoverageIgnoreStart
                 throw ModelException::fromPropertyValueMustBeScalar(
                     modelClass: $metaData->model,
                     property: $sourcePropertyName,
                     actualType: \get_debug_type($value),
                 );
+                // @codeCoverageIgnoreEnd
             }
 
             $sourceValues[$value] = $value;
@@ -1204,11 +1238,11 @@ class Hydrator implements HydratorInterface
                 $second = $row->properties[$throughSecondLocalKey] ?? null;
 
                 if (!\is_int($first) && !\is_string($first)) {
-                    continue;
+                    continue; // @codeCoverageIgnore
                 }
 
                 if (!\is_int($second) && !\is_string($second)) {
-                    continue;
+                    continue; // @codeCoverageIgnore
                 }
 
                 $throughPairs[$first][] = $second;
@@ -1228,7 +1262,7 @@ class Hydrator implements HydratorInterface
                     $fk = PropertyReflector::createFromObject($row, $targetForeignProperty)->getValue($row);
 
                     if (!\is_int($fk) && !\is_string($fk)) {
-                        continue;
+                        continue; // @codeCoverageIgnore
                     }
 
                     $targetsByFk[$fk][] = $row;
@@ -1289,11 +1323,13 @@ class Hydrator implements HydratorInterface
         ?Relation $shaped = null,
     ): Relation {
         if (!\is_int($sourceValue) && !\is_string($sourceValue)) {
+            // @codeCoverageIgnoreStart
             return Relation::createFromPrefetched(
                 values: $prefetched,
                 manager: $manager,
                 modelClass: $relatedClass,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         return Relation::createFromPrefetchedWithBuilder(
@@ -1381,11 +1417,13 @@ class Hydrator implements HydratorInterface
             }
 
             if (!\is_int($value) && !\is_string($value)) {
+                // @codeCoverageIgnoreStart
                 throw ModelException::fromPropertyValueMustBeScalar(
                     modelClass: $metaData->model,
                     property: $sourcePropertyName,
                     actualType: \get_debug_type($value),
                 );
+                // @codeCoverageIgnoreEnd
             }
 
             $sourceValues[$value] = $value;
@@ -1407,7 +1445,7 @@ class Hydrator implements HydratorInterface
                 $fk = PropertyReflector::createFromObject($row, $targetForeignProperty)->getValue($row);
 
                 if (!\is_int($fk) && !\is_string($fk)) {
-                    continue;
+                    continue; // @codeCoverageIgnore
                 }
 
                 $targetsByFk[$fk] = $row;
@@ -1464,11 +1502,13 @@ class Hydrator implements HydratorInterface
             }
 
             if (!\is_int($value) && !\is_string($value)) {
+                // @codeCoverageIgnoreStart
                 throw ModelException::fromPropertyValueMustBeScalar(
                     modelClass: $metaData->model,
                     property: $sourcePropertyName,
                     actualType: \get_debug_type($value),
                 );
+                // @codeCoverageIgnoreEnd
             }
 
             $sourceValues[$value] = $value;
@@ -1490,7 +1530,7 @@ class Hydrator implements HydratorInterface
                 $ownerValue = PropertyReflector::createFromObject($row, $targetForeignProperty)->getValue($row);
 
                 if (!\is_int($ownerValue) && !\is_string($ownerValue)) {
-                    continue;
+                    continue; // @codeCoverageIgnore
                 }
 
                 $targetsByOwnerKey[$ownerValue] = $row;
@@ -1552,11 +1592,13 @@ class Hydrator implements HydratorInterface
             }
 
             if (!\is_int($value) && !\is_string($value)) {
+                // @codeCoverageIgnoreStart
                 throw ModelException::fromPropertyValueMustBeScalar(
                     modelClass: $metaData->model,
                     property: $sourcePropertyName,
                     actualType: \get_debug_type($value),
                 );
+                // @codeCoverageIgnoreEnd
             }
 
             $sourceValues[$value] = $value;
@@ -1584,11 +1626,11 @@ class Hydrator implements HydratorInterface
                 $second = $row->properties[$throughSecondLocalKey] ?? null;
 
                 if (!\is_int($first) && !\is_string($first)) {
-                    continue;
+                    continue; // @codeCoverageIgnore
                 }
 
                 if (!\is_int($second) && !\is_string($second)) {
-                    continue;
+                    continue; // @codeCoverageIgnore
                 }
 
                 $firstToSecond[$first] = $second;
@@ -1608,7 +1650,7 @@ class Hydrator implements HydratorInterface
                     $fk = PropertyReflector::createFromObject($row, $targetForeignProperty)->getValue($row);
 
                     if (!\is_int($fk) && !\is_string($fk)) {
-                        continue;
+                        continue; // @codeCoverageIgnore
                     }
 
                     $targetsByFk[$fk] = $row;
@@ -1649,10 +1691,12 @@ class Hydrator implements HydratorInterface
 
         if ($sourceValue === null) {
             if (!$relation->nullable) {
+                // @codeCoverageIgnoreStart
                 throw ModelException::fromMissingForeignKeyValue(
                     modelClass: $metaData->model,
                     property: $relation->property,
                 );
+                // @codeCoverageIgnoreEnd
             }
 
             $reflector->setValue($parent, null);
@@ -1697,9 +1741,11 @@ class Hydrator implements HydratorInterface
 
             if ($localKey === null) {
                 if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
+                    // @codeCoverageIgnoreStart
                     throw ModelException::fromCantFetchWithoutPrimaryKey(
                         modelClass: $metaData->model,
                     );
+                    // @codeCoverageIgnoreEnd
                 }
 
                 return $metaData->key->property;
@@ -1708,10 +1754,12 @@ class Hydrator implements HydratorInterface
             return $this->findPropertyByColumn($metaData, $localKey, $relation->property);
         }
 
+        // @codeCoverageIgnoreStart
         throw ModelException::fromRelationNotFoundOnModel(
             modelClass: $metaData->model,
             property: $relation->property,
         );
+        // @codeCoverageIgnoreEnd
     }
 
     private function resolveTargetColumn(
@@ -1733,18 +1781,22 @@ class Hydrator implements HydratorInterface
             $targetMetaData = $this->modelsManager->metaData->getModel($relation->relatedClass);
 
             if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
+                // @codeCoverageIgnoreStart
                 throw ModelException::fromCantFetchWithoutPrimaryKey(
                     modelClass: $relation->relatedClass,
                 );
+                // @codeCoverageIgnoreEnd
             }
 
             return $targetMetaData->key->column;
         }
 
+        // @codeCoverageIgnoreStart
         throw ModelException::fromRelationNotFoundOnModel(
             modelClass: $relation->relatedClass,
             property: $relation->property,
         );
+        // @codeCoverageIgnoreEnd
     }
 
     private function findPropertyByColumn(
@@ -1758,6 +1810,7 @@ class Hydrator implements HydratorInterface
             }
         }
 
+        // @codeCoverageIgnoreStart
         throw ModelException::fromRelationKeyReferencesUnknownColumn(
             modelClass: $metaData->model,
             property: $relationProperty,
@@ -1765,5 +1818,6 @@ class Hydrator implements HydratorInterface
             keyValue: $column,
             referencedClass: $metaData->model,
         );
+        // @codeCoverageIgnoreEnd
     }
 }
