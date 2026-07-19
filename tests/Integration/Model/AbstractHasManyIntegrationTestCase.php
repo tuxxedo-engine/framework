@@ -18,7 +18,7 @@ use Fixture\Model\User;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Model\Relation;
 
-class HasManyIntegrationTest extends AbstractModelIntegrationTestCase
+abstract class AbstractHasManyIntegrationTestCase extends AbstractModelIntegrationTestCase
 {
     protected function setUp(): void
     {
@@ -28,30 +28,79 @@ class HasManyIntegrationTest extends AbstractModelIntegrationTestCase
         $this->createProfilesTable();
         $this->createPostsTable();
 
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score) VALUES (1, 'Alice', 'alice@example.test', 1, 0, 0.0)",
-            native: true,
+        $this->seedUser(
+            id: 1,
+            name: 'Alice',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score) VALUES (2, 'Bob', 'bob@example.test', 1, 0, 0.0)",
-            native: true,
+        $this->seedUser(
+            id: 2,
+            name: 'Bob',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO posts (id, user_id, title, body, status, viewCount, rating) VALUES (10, 1, 'Alice first', '', 'published', 100, '4.50')",
-            native: true,
+        $this->seedPost(
+            id: 10,
+            userId: 1,
+            title: 'Alice first',
+            status: 'published',
+            viewCount: 100,
+            rating: '4.50',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO posts (id, user_id, title, body, status, viewCount, rating) VALUES (11, 1, 'Alice second', '', 'draft', 50, '3.00')",
-            native: true,
+        $this->seedPost(
+            id: 11,
+            userId: 1,
+            title: 'Alice second',
+            status: 'draft',
+            viewCount: 50,
+            rating: '3.00',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO posts (id, user_id, title, body, status, viewCount, rating) VALUES (12, 1, 'Alice third', '', 'published', 200, '5.00')",
-            native: true,
+        $this->seedPost(
+            id: 12,
+            userId: 1,
+            title: 'Alice third',
+            status: 'published',
+            viewCount: 200,
+            rating: '5.00',
         );
+    }
+
+    private function seedUser(
+        int $id,
+        string $name,
+    ): void {
+        $this->connection->insert(
+            table: 'users',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'name', value: $name)
+            ->set(column: 'email', value: \strtolower($name) . '@example.test')
+            ->set(column: 'isActive', value: 1)
+            ->set(column: 'postCount', value: 0)
+            ->set(column: 'score', value: 0.0)
+            ->execute();
+    }
+
+    private function seedPost(
+        int $id,
+        int $userId,
+        string $title,
+        string $status,
+        int $viewCount,
+        string $rating,
+    ): void {
+        $this->connection->insert(
+            table: 'posts',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'user_id', value: $userId)
+            ->set(column: 'title', value: $title)
+            ->set(column: 'body', value: '')
+            ->set(column: 'status', value: $status)
+            ->set(column: 'viewCount', value: $viewCount)
+            ->set(column: 'rating', value: $rating)
+            ->execute();
     }
 
     /**
@@ -177,7 +226,7 @@ class HasManyIntegrationTest extends AbstractModelIntegrationTestCase
         $newPost->title = 'Alice new';
         $newPost->body = '';
 
-        $posts->add(item: $newPost);
+        $posts->add($newPost);
 
         self::assertContains(
             $newPost,
@@ -192,8 +241,8 @@ class HasManyIntegrationTest extends AbstractModelIntegrationTestCase
         $newPost = new Post();
         $newPost->title = 'ephemeral';
 
-        $posts->add(item: $newPost);
-        $posts->remove(item: $newPost);
+        $posts->add($newPost);
+        $posts->remove($newPost);
 
         self::assertNotContains(
             $newPost,
@@ -211,7 +260,7 @@ class HasManyIntegrationTest extends AbstractModelIntegrationTestCase
         $posts = $this->alicePosts();
 
         $newPost = new Post();
-        $posts->add(item: $newPost);
+        $posts->add($newPost);
 
         $posts->clearPending();
 
@@ -229,7 +278,7 @@ class HasManyIntegrationTest extends AbstractModelIntegrationTestCase
     public function testEagerLoadingViaQueryWithPrefetchesPosts(): void
     {
         $users = \iterator_to_array(
-            $this->modelsManager->query(class: User::class)
+            $this->modelsManager->query(User::class)
                 ->with(
                     with: [
                         'posts' => static fn (Relation $relation): Relation => $relation,

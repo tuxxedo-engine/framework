@@ -13,29 +13,57 @@ declare(strict_types=1);
 
 namespace Integration\Model;
 
-use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
+use Support\Database\SchemaCleaner;
+use Support\Model\ModelSchemaProvider;
 use Support\Model\ModelsManagerFactory;
+use Support\Model\SqliteModelSchemaProvider;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Model\ModelsManagerInterface;
 
-#[RequiresPhpExtension('sqlite3')]
 abstract class AbstractModelIntegrationTestCase extends TestCase
 {
     protected ModelsManagerInterface $modelsManager;
     protected ConnectionInterface $connection;
+    protected ModelSchemaProvider $schemaProvider;
 
     protected function setUp(): void
     {
-        $this->modelsManager = ModelsManagerFactory::create();
+        $skipReason = $this->realDatabaseSkipReason();
+
+        if ($skipReason !== null) {
+            self::markTestSkipped($skipReason);
+        }
+
+        $this->schemaProvider = $this->schemaProvider();
+        $this->modelsManager = $this->createModelsManager();
         $this->connection = $this->modelsManager->connection;
     }
 
     protected function tearDown(): void
     {
         if (isset($this->connection) && $this->connection->isConnected()) {
+            SchemaCleaner::dropAllTables(
+                connection: $this->connection,
+            );
+
             $this->connection->close();
         }
+    }
+
+    protected function createModelsManager(): ModelsManagerInterface
+    {
+        return ModelsManagerFactory::create();
+    }
+
+    protected function schemaProvider(): ModelSchemaProvider
+    {
+        return new SqliteModelSchemaProvider();
+    }
+
+    protected function realDatabaseSkipReason(): ?string
+    {
+        return null;
     }
 
     protected function createAllFixtureTables(): void
@@ -54,142 +82,174 @@ abstract class AbstractModelIntegrationTestCase extends TestCase
 
     protected function createCountriesTable(): void
     {
-        $this->connection->query(
-            sql: 'CREATE TABLE countries (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'name TEXT NOT NULL, ' .
-                'code TEXT NOT NULL DEFAULT \'\'' .
-                ')',
-            native: true,
-        );
+        $this->executeSchema($this->schemaProvider->countriesSchemaSql());
     }
 
     protected function createUsersTable(): void
     {
-        $this->connection->query(
-            sql: 'CREATE TABLE users (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'name TEXT NOT NULL, ' .
-                'email TEXT NOT NULL, ' .
-                'isActive INTEGER NOT NULL DEFAULT 1, ' .
-                'postCount INTEGER NOT NULL DEFAULT 0, ' .
-                'score REAL NOT NULL DEFAULT 0, ' .
-                'country_id INTEGER NULL, ' .
-                'lastLoginAt TEXT NULL, ' .
-                'createdAt TEXT NULL, ' .
-                'updatedAt TEXT NULL' .
-                ')',
-            native: true,
-        );
+        $this->executeSchema($this->schemaProvider->usersSchemaSql());
     }
 
     protected function createProfilesTable(): void
     {
-        $this->connection->query(
-            sql: 'CREATE TABLE profiles (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'user_id INTEGER NOT NULL, ' .
-                'bio TEXT NOT NULL DEFAULT \'\', ' .
-                'avatar BLOB NULL, ' .
-                'settings TEXT NULL, ' .
-                'birthDate TEXT NULL' .
-                ')',
-            native: true,
-        );
+        $this->executeSchema($this->schemaProvider->profilesSchemaSql());
     }
 
     protected function createPostsTable(): void
     {
-        $this->connection->query(
-            sql: 'CREATE TABLE posts (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'user_id INTEGER NOT NULL, ' .
-                'title TEXT NOT NULL, ' .
-                'body TEXT NOT NULL DEFAULT \'\', ' .
-                'status TEXT NOT NULL DEFAULT \'draft\', ' .
-                'publishedAt TEXT NULL, ' .
-                'viewCount INTEGER NOT NULL DEFAULT 0, ' .
-                'rating TEXT NOT NULL DEFAULT \'0.00\'' .
-                ')',
-            native: true,
-        );
+        $this->executeSchema($this->schemaProvider->postsSchemaSql());
     }
 
     protected function createCommentsTable(): void
     {
-        $this->connection->query(
-            sql: 'CREATE TABLE comments (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'post_id INTEGER NOT NULL, ' .
-                'user_id INTEGER NOT NULL, ' .
-                'body TEXT NOT NULL DEFAULT \'\', ' .
-                'createdAt TEXT NULL, ' .
-                'deletedAt TEXT NULL' .
-                ')',
-            native: true,
-        );
+        $this->executeSchema($this->schemaProvider->commentsSchemaSql());
     }
 
     protected function createTagsTable(): void
     {
-        $this->connection->query(
-            sql: 'CREATE TABLE tags (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'slug TEXT NOT NULL, ' .
-                'name TEXT NOT NULL, ' .
-                'category TEXT NOT NULL DEFAULT \'\'' .
-                ')',
-            native: true,
-        );
+        $this->executeSchema($this->schemaProvider->tagsSchemaSql());
     }
 
     protected function createRolesTable(): void
     {
-        $this->connection->query(
-            sql: 'CREATE TABLE roles (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                '"key" TEXT NOT NULL, ' .
-                'label TEXT NOT NULL, ' .
-                'sortOrder INTEGER NOT NULL DEFAULT 0, ' .
-                'startsAt TEXT NULL' .
-                ')',
-            native: true,
-        );
+        $this->executeSchema($this->schemaProvider->rolesSchemaSql());
     }
 
     protected function createCategoriesTable(): void
     {
-        $this->connection->query(
-            sql: 'CREATE TABLE categories (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'parent_id INTEGER NULL, ' .
-                'name TEXT NOT NULL, ' .
-                'depth INTEGER NOT NULL DEFAULT 0' .
-                ')',
-            native: true,
-        );
+        $this->executeSchema($this->schemaProvider->categoriesSchemaSql());
     }
 
     protected function createPostTagPivot(): void
     {
-        $this->connection->query(
-            sql: 'CREATE TABLE post_tag (' .
-                'post_id INTEGER NOT NULL, ' .
-                'tag_id INTEGER NOT NULL, ' .
-                'PRIMARY KEY (post_id, tag_id)' .
-                ')',
-            native: true,
-        );
+        $this->executeSchema($this->schemaProvider->postTagPivotSchemaSql());
     }
 
     protected function createUserRolePivot(): void
     {
+        $this->executeSchema($this->schemaProvider->userRolePivotSchemaSql());
+    }
+
+    protected function createSentinelsTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->sentinelsSchemaSql());
+    }
+
+    protected function createCascadeGroupsTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->cascadeGroupsSchemaSql());
+    }
+
+    protected function createCascadeChildrenTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->cascadeChildrenSchemaSql());
+    }
+
+    protected function createCascadeHasOneChildrenTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->cascadeHasOneChildrenSchemaSql());
+    }
+
+    protected function createCascadeHasOneRestrictChildrenTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->cascadeHasOneRestrictChildrenSchemaSql());
+    }
+
+    protected function createCascadeTagsTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->cascadeTagsSchemaSql());
+    }
+
+    protected function createCascadeGroupTagPivot(): void
+    {
+        $this->executeSchema($this->schemaProvider->cascadeGroupTagPivotSchemaSql());
+    }
+
+    protected function createReadonlyRecordsTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->readonlyRecordsSchemaSql());
+    }
+
+    protected function createSettingsTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->settingsSchemaSql());
+    }
+
+    protected function createBulkParentsTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->bulkParentsSchemaSql());
+    }
+
+    protected function createBulkChildrenTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->bulkChildrenSchemaSql());
+    }
+
+    protected function createOrphanParentsTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->orphanParentsSchemaSql());
+    }
+
+    protected function createOrphanChildrenTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->orphanChildrenSchemaSql());
+    }
+
+    protected function createCascadeBelongsToParentsTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->cascadeBelongsToParentsSchemaSql());
+    }
+
+    protected function createCascadeBelongsToChildrenTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->cascadeBelongsToChildrenSchemaSql());
+    }
+
+    protected function createStrictOwnersTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->strictOwnersSchemaSql());
+    }
+
+    protected function createStrictProfilesTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->strictProfilesSchemaSql());
+    }
+
+    protected function createStrictChildrenTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->strictChildrenSchemaSql());
+    }
+
+    protected function createRegionsTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->regionsSchemaSql());
+    }
+
+    protected function createBranchesTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->branchesSchemaSql());
+    }
+
+    protected function createWarehousesTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->warehousesSchemaSql());
+    }
+
+    protected function createNullableThroughOwnersTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->nullableThroughOwnersSchemaSql());
+    }
+
+    protected function createStrictThroughOwnersTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->strictThroughOwnersSchemaSql());
+    }
+
+    private function executeSchema(
+        string $sql,
+    ): void {
         $this->connection->query(
-            sql: 'CREATE TABLE user_role (' .
-                'user_id INTEGER NOT NULL, ' .
-                'role_id INTEGER NOT NULL, ' .
-                'PRIMARY KEY (user_id, role_id)' .
-                ')',
+            sql: $sql,
             native: true,
         );
     }

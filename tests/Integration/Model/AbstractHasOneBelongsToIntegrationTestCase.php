@@ -16,7 +16,7 @@ namespace Integration\Model;
 use Fixture\Model\Profile;
 use Fixture\Model\User;
 
-class HasOneBelongsToIntegrationTest extends AbstractModelIntegrationTestCase
+abstract class AbstractHasOneBelongsToIntegrationTestCase extends AbstractModelIntegrationTestCase
 {
     protected function setUp(): void
     {
@@ -28,15 +28,24 @@ class HasOneBelongsToIntegrationTest extends AbstractModelIntegrationTestCase
 
     private function seedUserWithProfile(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score) VALUES (1, 'Alice', 'alice@example.test', 1, 0, 0.0)",
-            native: true,
-        );
+        $this->connection->insert(
+            table: 'users',
+        )
+            ->set(column: 'id', value: 1)
+            ->set(column: 'name', value: 'Alice')
+            ->set(column: 'email', value: 'alice@example.test')
+            ->set(column: 'isActive', value: 1)
+            ->set(column: 'postCount', value: 0)
+            ->set(column: 'score', value: 0.0)
+            ->execute();
 
-        $this->connection->query(
-            sql: "INSERT INTO profiles (id, user_id, bio) VALUES (10, 1, 'Alice bio')",
-            native: true,
-        );
+        $this->connection->insert(
+            table: 'profiles',
+        )
+            ->set(column: 'id', value: 10)
+            ->set(column: 'user_id', value: 1)
+            ->set(column: 'bio', value: 'Alice bio')
+            ->execute();
     }
 
     public function testHasOneLoadsProfileOnLazyPropertyAccess(): void
@@ -140,10 +149,16 @@ class HasOneBelongsToIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testFetchByIdentifierYieldsNullHasOneWhenChildDoesNotExist(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score) VALUES (2, 'Bob', 'bob@example.test', 1, 0, 0.0)",
-            native: true,
-        );
+        $this->connection->insert(
+            table: 'users',
+        )
+            ->set(column: 'id', value: 2)
+            ->set(column: 'name', value: 'Bob')
+            ->set(column: 'email', value: 'bob@example.test')
+            ->set(column: 'isActive', value: 1)
+            ->set(column: 'postCount', value: 0)
+            ->set(column: 'score', value: 0.0)
+            ->execute();
 
         $user = $this->modelsManager->fetchByIdentifier(
             class: User::class,

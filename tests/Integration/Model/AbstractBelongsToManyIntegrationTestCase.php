@@ -17,7 +17,7 @@ use Fixture\Model\Role;
 use Fixture\Model\User;
 use Tuxxedo\Model\Relation;
 
-class BelongsToManyIntegrationTest extends AbstractModelIntegrationTestCase
+abstract class AbstractBelongsToManyIntegrationTestCase extends AbstractModelIntegrationTestCase
 {
     protected function setUp(): void
     {
@@ -28,40 +28,90 @@ class BelongsToManyIntegrationTest extends AbstractModelIntegrationTestCase
         $this->createRolesTable();
         $this->createUserRolePivot();
 
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score) VALUES (1, 'Alice', 'alice@example.test', 1, 0, 0.0)",
-            native: true,
+        $this->seedUser(
+            id: 1,
+            name: 'Alice',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score) VALUES (2, 'Bob', 'bob@example.test', 1, 0, 0.0)",
-            native: true,
+        $this->seedUser(
+            id: 2,
+            name: 'Bob',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO roles (id, \"key\", label, sortOrder) VALUES (10, 'ADMIN', 'Administrator', 1)",
-            native: true,
+        $this->seedRole(
+            id: 10,
+            key: 'ADMIN',
+            label: 'Administrator',
+            sortOrder: 1,
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO roles (id, \"key\", label, sortOrder) VALUES (11, 'EDITOR', 'Editor', 2)",
-            native: true,
+        $this->seedRole(
+            id: 11,
+            key: 'EDITOR',
+            label: 'Editor',
+            sortOrder: 2,
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO roles (id, \"key\", label, sortOrder) VALUES (12, 'VIEWER', 'Viewer', 3)",
-            native: true,
+        $this->seedRole(
+            id: 12,
+            key: 'VIEWER',
+            label: 'Viewer',
+            sortOrder: 3,
         );
 
-        $this->connection->query(
-            sql: 'INSERT INTO user_role (user_id, role_id) VALUES (1, 10)',
-            native: true,
+        $this->seedUserRole(
+            userId: 1,
+            roleId: 10,
         );
 
-        $this->connection->query(
-            sql: 'INSERT INTO user_role (user_id, role_id) VALUES (1, 11)',
-            native: true,
+        $this->seedUserRole(
+            userId: 1,
+            roleId: 11,
         );
+    }
+
+    private function seedUser(
+        int $id,
+        string $name,
+    ): void {
+        $this->connection->insert(
+            table: 'users',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'name', value: $name)
+            ->set(column: 'email', value: \strtolower($name) . '@example.test')
+            ->set(column: 'isActive', value: 1)
+            ->set(column: 'postCount', value: 0)
+            ->set(column: 'score', value: 0.0)
+            ->execute();
+    }
+
+    private function seedRole(
+        int $id,
+        string $key,
+        string $label,
+        int $sortOrder,
+    ): void {
+        $this->connection->insert(
+            table: 'roles',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'key', value: $key)
+            ->set(column: 'label', value: $label)
+            ->set(column: 'sortOrder', value: $sortOrder)
+            ->execute();
+    }
+
+    private function seedUserRole(
+        int $userId,
+        int $roleId,
+    ): void {
+        $this->connection->insert(
+            table: 'user_role',
+        )
+            ->set(column: 'user_id', value: $userId)
+            ->set(column: 'role_id', value: $roleId)
+            ->execute();
     }
 
     /**
@@ -178,7 +228,7 @@ class BelongsToManyIntegrationTest extends AbstractModelIntegrationTestCase
             id: 12,
         );
 
-        $roles->add(item: $viewer);
+        $roles->add($viewer);
 
         self::assertContains(
             $viewer,
@@ -195,7 +245,7 @@ class BelongsToManyIntegrationTest extends AbstractModelIntegrationTestCase
             id: 10,
         );
 
-        $roles->remove(item: $admin);
+        $roles->remove($admin);
 
         self::assertContains(
             $admin,
@@ -212,8 +262,8 @@ class BelongsToManyIntegrationTest extends AbstractModelIntegrationTestCase
             id: 12,
         );
 
-        $roles->add(item: $viewer);
-        $roles->remove(item: $viewer);
+        $roles->add($viewer);
+        $roles->remove($viewer);
 
         self::assertNotContains(
             $viewer,
@@ -243,18 +293,19 @@ class BelongsToManyIntegrationTest extends AbstractModelIntegrationTestCase
             $user->roles,
         );
 
-        $user->roles->add(item: $viewer);
+        $user->roles->add($viewer);
 
-        (void) $this->modelsManager->save(model: $user);
+        (void) $this->modelsManager->save($user);
 
-        $row = $this->connection->query(
-            sql: 'SELECT COUNT(*) AS c FROM user_role WHERE user_id = 1',
-            native: true,
-        )->fetchAssoc();
+        $count = $this->connection->count(
+            table: 'user_role',
+        )
+            ->where(column: 'user_id', value: 1)
+            ->count();
 
-        self::assertEquals(
+        self::assertSame(
             3,
-            $row['c'],
+            $count,
         );
     }
 
@@ -275,18 +326,20 @@ class BelongsToManyIntegrationTest extends AbstractModelIntegrationTestCase
             $user->roles,
         );
 
-        $user->roles->remove(item: $editor);
+        $user->roles->remove($editor);
 
-        (void) $this->modelsManager->save(model: $user);
+        (void) $this->modelsManager->save($user);
 
-        $row = $this->connection->query(
-            sql: 'SELECT COUNT(*) AS c FROM user_role WHERE user_id = 1 AND role_id = 11',
-            native: true,
-        )->fetchAssoc();
+        $count = $this->connection->count(
+            table: 'user_role',
+        )
+            ->where(column: 'user_id', value: 1)
+            ->where(column: 'role_id', value: 11)
+            ->count();
 
-        self::assertEquals(
+        self::assertSame(
             0,
-            $row['c'],
+            $count,
         );
     }
 }

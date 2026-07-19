@@ -16,37 +16,41 @@ namespace Integration\Model;
 use Fixture\Model\Setting;
 use Tuxxedo\Model\ModelException;
 
-class ModelsManagerLifecycleIntegrationTest extends AbstractModelIntegrationTestCase
+abstract class AbstractModelsManagerLifecycleIntegrationTestCase extends AbstractModelIntegrationTestCase
 {
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->connection->query(
-            sql: 'CREATE TABLE settings (' .
-                'scope TEXT NOT NULL, ' .
-                'name TEXT NOT NULL, ' .
-                'value TEXT NOT NULL DEFAULT \'\', ' .
-                'PRIMARY KEY (scope, name)' .
-                ')',
-            native: true,
-        );
+        $this->createSettingsTable();
     }
 
-    private function seedSetting(string $scope, string $name, string $value): void
-    {
-        $this->connection->query(
-            sql: "INSERT INTO settings (scope, name, value) VALUES ('" . $scope . "', '" . $name . "', '" . $value . "')",
-            native: true,
-        );
+    private function seedSetting(
+        string $scope,
+        string $name,
+        string $value,
+    ): void {
+        $this->connection->insert(
+            table: 'settings',
+        )
+            ->set(column: 'scope', value: $scope)
+            ->set(column: 'name', value: $name)
+            ->set(column: 'value', value: $value)
+            ->execute();
     }
 
-    private function readSettingValue(string $scope, string $name): mixed
-    {
-        $result = $this->connection->query(
-            sql: "SELECT value FROM settings WHERE scope = '" . $scope . "' AND name = '" . $name . "'",
-            native: true,
-        );
+    private function readSettingValue(
+        string $scope,
+        string $name,
+    ): mixed {
+        $result = $this->connection->select(
+            table: 'settings',
+        )
+            ->select('value')
+            ->where(column: 'scope', value: $scope)
+            ->where(column: 'name', value: $name)
+            ->limit(1)
+            ->execute();
 
         if (\count($result) === 0) {
             return null;
@@ -66,13 +70,20 @@ class ModelsManagerLifecycleIntegrationTest extends AbstractModelIntegrationTest
 
         self::assertSame(
             'dark',
-            $this->readSettingValue(scope: 'ui', name: 'theme'),
+            $this->readSettingValue(
+                scope: 'ui',
+                name: 'theme',
+            ),
         );
     }
 
     public function testFindByCompositeKeyReturnsMatchingRow(): void
     {
-        $this->seedSetting(scope: 'audio', name: 'volume', value: '42');
+        $this->seedSetting(
+            scope: 'audio',
+            name: 'volume',
+            value: '42',
+        );
 
         $setting = $this->modelsManager->findByCompositeKey(
             class: Setting::class,
@@ -123,7 +134,11 @@ class ModelsManagerLifecycleIntegrationTest extends AbstractModelIntegrationTest
 
     public function testCompositeKeyUpdatePersistsMutatedColumn(): void
     {
-        $this->seedSetting(scope: 'ui', name: 'lang', value: 'en');
+        $this->seedSetting(
+            scope: 'ui',
+            name: 'lang',
+            value: 'en',
+        );
 
         $setting = $this->modelsManager->fetchByCompositeKey(
             class: Setting::class,
@@ -139,13 +154,20 @@ class ModelsManagerLifecycleIntegrationTest extends AbstractModelIntegrationTest
 
         self::assertSame(
             'sv',
-            $this->readSettingValue(scope: 'ui', name: 'lang'),
+            $this->readSettingValue(
+                scope: 'ui',
+                name: 'lang',
+            ),
         );
     }
 
     public function testCompositeKeyDeleteRemovesRow(): void
     {
-        $this->seedSetting(scope: 'ephemeral', name: 'token', value: 'abc');
+        $this->seedSetting(
+            scope: 'ephemeral',
+            name: 'token',
+            value: 'abc',
+        );
 
         $setting = $this->modelsManager->fetchByCompositeKey(
             class: Setting::class,
@@ -158,13 +180,20 @@ class ModelsManagerLifecycleIntegrationTest extends AbstractModelIntegrationTest
         (void) $this->modelsManager->delete($setting);
 
         self::assertNull(
-            $this->readSettingValue(scope: 'ephemeral', name: 'token'),
+            $this->readSettingValue(
+                scope: 'ephemeral',
+                name: 'token',
+            ),
         );
     }
 
     public function testSaveWithoutDirtyColumnsDoesNotFireUpdate(): void
     {
-        $this->seedSetting(scope: 'ui', name: 'motion', value: 'original');
+        $this->seedSetting(
+            scope: 'ui',
+            name: 'motion',
+            value: 'original',
+        );
 
         $setting = $this->modelsManager->fetchByCompositeKey(
             class: Setting::class,
@@ -174,17 +203,22 @@ class ModelsManagerLifecycleIntegrationTest extends AbstractModelIntegrationTest
             ],
         );
 
-        $this->connection->query(
-            sql: "UPDATE settings SET value = 'external' WHERE scope = 'ui' AND name = 'motion'",
-            native: true,
-        );
+        $this->connection->update(
+            table: 'settings',
+        )
+            ->set(column: 'value', value: 'external')
+            ->where(column: 'scope', value: 'ui')
+            ->where(column: 'name', value: 'motion')
+            ->execute();
 
         (void) $this->modelsManager->save($setting);
 
         self::assertSame(
             'external',
-            $this->readSettingValue(scope: 'ui', name: 'motion'),
+            $this->readSettingValue(
+                scope: 'ui',
+                name: 'motion',
+            ),
         );
     }
-
 }
