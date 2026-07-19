@@ -22,7 +22,7 @@ use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 use Tuxxedo\Model\ModelException;
 use Tuxxedo\Model\Relation;
 
-class AbstractQueryableIntegrationTest extends AbstractModelIntegrationTestCase
+abstract class AbstractQueryableIntegrationTestCase extends AbstractModelIntegrationTestCase
 {
     protected function setUp(): void
     {
@@ -36,55 +36,173 @@ class AbstractQueryableIntegrationTest extends AbstractModelIntegrationTestCase
         $this->createTagsTable();
         $this->createPostTagPivot();
 
-        $this->connection->query(
-            sql: "INSERT INTO countries (id, name, code) VALUES (1, 'Sweden', 'SE')",
-            native: true,
+        $this->seedCountry(
+            id: 1,
+            name: 'Sweden',
+            code: 'SE',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score, country_id) VALUES (1, 'Alice', 'alice@example.test', 1, 0, 0.0, 1)",
-            native: true,
+        $this->seedUser(
+            id: 1,
+            name: 'Alice',
+            countryId: 1,
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score, country_id) VALUES (2, 'Bob', 'bob@example.test', 1, 0, 0.0, 1)",
-            native: true,
+        $this->seedUser(
+            id: 2,
+            name: 'Bob',
+            countryId: 1,
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO posts (id, user_id, title, body, status, publishedAt, viewCount, rating) VALUES (10, 1, 'First',  '', 'published', '2026-01-01', 100, '4.50')",
-            native: true,
+        $this->seedPost(
+            id: 10,
+            title: 'First',
+            status: 'published',
+            publishedAt: '2026-01-01',
+            viewCount: 100,
+            rating: '4.50',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO posts (id, user_id, title, body, status, publishedAt, viewCount, rating) VALUES (11, 1, 'Second', '', 'draft',      NULL,         50,  '3.00')",
-            native: true,
+        $this->seedPost(
+            id: 11,
+            title: 'Second',
+            status: 'draft',
+            publishedAt: null,
+            viewCount: 50,
+            rating: '3.00',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO posts (id, user_id, title, body, status, publishedAt, viewCount, rating) VALUES (12, 1, 'Third',  '', 'published', '2026-01-05', 200, '5.00')",
-            native: true,
+        $this->seedPost(
+            id: 12,
+            title: 'Third',
+            status: 'published',
+            publishedAt: '2026-01-05',
+            viewCount: 200,
+            rating: '5.00',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO posts (id, user_id, title, body, status, publishedAt, viewCount, rating) VALUES (13, 1, 'Fourth', '', 'archived',  '2026-01-03', 10,  '2.00')",
-            native: true,
+        $this->seedPost(
+            id: 13,
+            title: 'Fourth',
+            status: 'archived',
+            publishedAt: '2026-01-03',
+            viewCount: 10,
+            rating: '2.00',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO comments (id, post_id, user_id, body) VALUES (100, 10, 2, 'nice')",
-            native: true,
+        $this->seedComment(
+            id: 100,
+            postId: 10,
+            userId: 2,
+            body: 'nice',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO tags (id, slug, name) VALUES (200, 'php', 'PHP')",
-            native: true,
+        $this->seedTag(
+            id: 200,
+            slug: 'php',
+            name: 'PHP',
         );
 
-        $this->connection->query(
-            sql: 'INSERT INTO post_tag (post_id, tag_id) VALUES (10, 200)',
-            native: true,
+        $this->seedPostTag(
+            postId: 10,
+            tagId: 200,
         );
+    }
+
+    private function seedCountry(
+        int $id,
+        string $name,
+        string $code,
+    ): void {
+        $this->connection->insert(
+            table: 'countries',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'name', value: $name)
+            ->set(column: 'code', value: $code)
+            ->execute();
+    }
+
+    private function seedUser(
+        int $id,
+        string $name,
+        int $countryId,
+    ): void {
+        $this->connection->insert(
+            table: 'users',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'name', value: $name)
+            ->set(column: 'email', value: \strtolower($name) . '@example.test')
+            ->set(column: 'isActive', value: 1)
+            ->set(column: 'postCount', value: 0)
+            ->set(column: 'score', value: 0.0)
+            ->set(column: 'country_id', value: $countryId)
+            ->execute();
+    }
+
+    private function seedPost(
+        int $id,
+        string $title,
+        string $status,
+        ?string $publishedAt,
+        int $viewCount,
+        string $rating,
+    ): void {
+        $this->connection->insert(
+            table: 'posts',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'user_id', value: 1)
+            ->set(column: 'title', value: $title)
+            ->set(column: 'body', value: '')
+            ->set(column: 'status', value: $status)
+            ->set(column: 'publishedAt', value: $publishedAt)
+            ->set(column: 'viewCount', value: $viewCount)
+            ->set(column: 'rating', value: $rating)
+            ->execute();
+    }
+
+    private function seedComment(
+        int $id,
+        int $postId,
+        int $userId,
+        string $body,
+    ): void {
+        $this->connection->insert(
+            table: 'comments',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'post_id', value: $postId)
+            ->set(column: 'user_id', value: $userId)
+            ->set(column: 'body', value: $body)
+            ->execute();
+    }
+
+    private function seedTag(
+        int $id,
+        string $slug,
+        string $name,
+    ): void {
+        $this->connection->insert(
+            table: 'tags',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'slug', value: $slug)
+            ->set(column: 'name', value: $name)
+            ->execute();
+    }
+
+    private function seedPostTag(
+        int $postId,
+        int $tagId,
+    ): void {
+        $this->connection->insert(
+            table: 'post_tag',
+        )
+            ->set(column: 'post_id', value: $postId)
+            ->set(column: 'tag_id', value: $tagId)
+            ->execute();
     }
 
     /**
@@ -434,7 +552,7 @@ class AbstractQueryableIntegrationTest extends AbstractModelIntegrationTestCase
     public function testWhereRawEmitsCustomFragment(): void
     {
         $filtered = $this->alicePosts()->whereRaw(
-            sql: 'viewCount >= 100',
+            sql: 'user_id = 1 AND id > 11',
         );
 
         self::assertSame(
@@ -716,7 +834,7 @@ class AbstractQueryableIntegrationTest extends AbstractModelIntegrationTestCase
         return $this->connection->select(
             table: 'users',
         )
-            ->select('1')
+            ->select('id')
             ->where(
                 column: 'users.id',
                 value: $userId,
@@ -868,7 +986,7 @@ class AbstractQueryableIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testWhereHasHasManyThroughRelationBuildsSubquery(): void
     {
-        $filtered = $this->modelsManager->query(class: Country::class)
+        $filtered = $this->modelsManager->query(Country::class)
             ->whereHas(
                 relationName: 'posts',
             );
@@ -891,7 +1009,7 @@ class AbstractQueryableIntegrationTest extends AbstractModelIntegrationTestCase
     public function testWhereHasThrowsWhenRelationLacksModelContext(): void
     {
         $orphan = Relation::createFromPrefetched(
-            values: [],
+            [],
         );
 
         $this->expectException(ModelException::class);

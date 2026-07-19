@@ -18,7 +18,7 @@ use Fixture\Model\Sentinel;
 use Fixture\Model\User;
 use Tuxxedo\Model\ModelException;
 
-class BehaviorIntegrationTest extends AbstractModelIntegrationTestCase
+abstract class AbstractBehaviorIntegrationTestCase extends AbstractModelIntegrationTestCase
 {
     protected function setUp(): void
     {
@@ -27,14 +27,60 @@ class BehaviorIntegrationTest extends AbstractModelIntegrationTestCase
         $this->createUsersTable();
         $this->createProfilesTable();
         $this->createCommentsTable();
+        $this->createSentinelsTable();
+    }
 
-        $this->connection->query(
-            sql: 'CREATE TABLE sentinels (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'state TEXT NOT NULL DEFAULT \'\'' .
-                ')',
-            native: true,
-        );
+    private function seedComment(
+        int $id,
+        string $body,
+        string $createdAt,
+        ?string $deletedAt,
+    ): void {
+        $this->connection->insert(
+            table: 'comments',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'post_id', value: 100)
+            ->set(column: 'user_id', value: 200)
+            ->set(column: 'body', value: $body)
+            ->set(column: 'createdAt', value: $createdAt)
+            ->set(column: 'deletedAt', value: $deletedAt)
+            ->execute();
+    }
+
+    private function countComments(
+        string $whereColumn,
+        int|string $whereValue,
+    ): int {
+        return $this->connection->count(
+            table: 'comments',
+        )
+            ->where(column: $whereColumn, value: $whereValue)
+            ->count();
+    }
+
+    private function fetchSentinelState(
+        int $id,
+    ): ?string {
+        $result = $this->connection->select(
+            table: 'sentinels',
+        )
+            ->select('state')
+            ->where(column: 'id', value: $id)
+            ->limit(1)
+            ->execute();
+
+        if (\count($result) === 0) {
+            return null;
+        }
+
+        $row = $result->fetchAssoc();
+
+        $state = $row['state'] ?? null;
+
+        return \is_string($state)
+            ? $state
+            : null;
     }
 
     public function testCreatedAtPopulatedOnInsert(): void
@@ -138,9 +184,11 @@ class BehaviorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testSoftDeleteSetsDeletedAtWithoutRemovingRow(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO comments (id, post_id, user_id, body, createdAt, deletedAt) VALUES (1, 100, 200, 'hello', '2026-01-01', NULL)",
-            native: true,
+        $this->seedComment(
+            id: 1,
+            body: 'hello',
+            createdAt: '2026-01-01',
+            deletedAt: null,
         );
 
         $comment = $this->modelsManager->fetchByIdentifier(
@@ -150,22 +198,24 @@ class BehaviorIntegrationTest extends AbstractModelIntegrationTestCase
 
         (void) $this->modelsManager->delete($comment);
 
-        $row = $this->connection->query(
-            sql: 'SELECT COUNT(*) AS c FROM comments WHERE id = 1 AND deletedAt IS NOT NULL',
-            native: true,
-        )->fetchAssoc();
-
-        self::assertEquals(
+        self::assertSame(
             1,
-            $row['c'] ?? 0,
+            $this->connection->count(
+                table: 'comments',
+            )
+                ->where(column: 'id', value: 1)
+                ->whereNotNull(column: 'deletedAt')
+                ->count(),
         );
     }
 
     public function testFindByIdentifierExcludesSoftDeletedByDefault(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO comments (id, post_id, user_id, body, createdAt, deletedAt) VALUES (2, 100, 200, 'gone', '2026-01-01', '2026-01-02')",
-            native: true,
+        $this->seedComment(
+            id: 2,
+            body: 'gone',
+            createdAt: '2026-01-01',
+            deletedAt: '2026-01-02',
         );
 
         $result = $this->modelsManager->findByIdentifier(
@@ -180,9 +230,11 @@ class BehaviorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testFindByIdentifierWithIncludeDeletedReturnsSoftDeleted(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO comments (id, post_id, user_id, body, createdAt, deletedAt) VALUES (3, 100, 200, 'gone', '2026-01-01', '2026-01-02')",
-            native: true,
+        $this->seedComment(
+            id: 3,
+            body: 'gone',
+            createdAt: '2026-01-01',
+            deletedAt: '2026-01-02',
         );
 
         $result = $this->modelsManager->findByIdentifier(
@@ -199,18 +251,22 @@ class BehaviorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testFindAllExcludesSoftDeletedRows(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO comments (id, post_id, user_id, body, createdAt, deletedAt) VALUES (4, 100, 200, 'alive', '2026-01-01', NULL)",
-            native: true,
+        $this->seedComment(
+            id: 4,
+            body: 'alive',
+            createdAt: '2026-01-01',
+            deletedAt: null,
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO comments (id, post_id, user_id, body, createdAt, deletedAt) VALUES (5, 100, 200, 'dead', '2026-01-01', '2026-01-02')",
-            native: true,
+        $this->seedComment(
+            id: 5,
+            body: 'dead',
+            createdAt: '2026-01-01',
+            deletedAt: '2026-01-02',
         );
 
         $comments = \iterator_to_array(
-            $this->modelsManager->findAll(class: Comment::class),
+            $this->modelsManager->findAll(Comment::class),
         );
 
         self::assertCount(
@@ -221,9 +277,11 @@ class BehaviorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testForceDeleteRemovesRowIgnoringSoftDelete(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO comments (id, post_id, user_id, body, createdAt, deletedAt) VALUES (6, 100, 200, 'nuke', '2026-01-01', NULL)",
-            native: true,
+        $this->seedComment(
+            id: 6,
+            body: 'nuke',
+            createdAt: '2026-01-01',
+            deletedAt: null,
         );
 
         $comment = $this->modelsManager->fetchByIdentifier(
@@ -233,22 +291,22 @@ class BehaviorIntegrationTest extends AbstractModelIntegrationTestCase
 
         (void) $this->modelsManager->forceDelete($comment);
 
-        $row = $this->connection->query(
-            sql: 'SELECT COUNT(*) AS c FROM comments WHERE id = 6',
-            native: true,
-        )->fetchAssoc();
-
-        self::assertEquals(
+        self::assertSame(
             0,
-            $row['c'] ?? 0,
+            $this->countComments(
+                whereColumn: 'id',
+                whereValue: 6,
+            ),
         );
     }
 
     public function testFetchByIdentifierThrowsForSoftDeletedByDefault(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO comments (id, post_id, user_id, body, createdAt, deletedAt) VALUES (7, 100, 200, 'ghost', '2026-01-01', '2026-01-02')",
-            native: true,
+        $this->seedComment(
+            id: 7,
+            body: 'ghost',
+            createdAt: '2026-01-01',
+            deletedAt: '2026-01-02',
         );
 
         $this->expectException(ModelException::class);
@@ -271,14 +329,11 @@ class BehaviorIntegrationTest extends AbstractModelIntegrationTestCase
             $saved->state,
         );
 
-        $row = $this->connection->query(
-            sql: 'SELECT state FROM sentinels WHERE id = ' . (int) $saved->id,
-            native: true,
-        )->fetchAssoc();
-
         self::assertSame(
             'inserted',
-            $row['state'] ?? null,
+            $this->fetchSentinelState(
+                id: (int) $saved->id,
+            ),
         );
     }
 
@@ -296,14 +351,11 @@ class BehaviorIntegrationTest extends AbstractModelIntegrationTestCase
             $saved->state,
         );
 
-        $row = $this->connection->query(
-            sql: 'SELECT state FROM sentinels WHERE id = ' . (int) $saved->id,
-            native: true,
-        )->fetchAssoc();
-
         self::assertSame(
             'updated',
-            $row['state'] ?? null,
+            $this->fetchSentinelState(
+                id: (int) $saved->id,
+            ),
         );
     }
 }

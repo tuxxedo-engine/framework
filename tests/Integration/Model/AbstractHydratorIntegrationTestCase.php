@@ -32,193 +32,177 @@ use Fixture\Model\Warehouse;
 use Tuxxedo\Model\ModelException;
 use Tuxxedo\Model\Relation;
 
-class HydratorIntegrationTest extends AbstractModelIntegrationTestCase
+abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrationTestCase
 {
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->createAllFixtureTables();
-
-        $this->connection->query(
-            sql: 'CREATE TABLE strict_owners (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'name TEXT NOT NULL DEFAULT \'\'' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE strict_profiles (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'owner_id INTEGER NOT NULL, ' .
-                'handle TEXT NOT NULL DEFAULT \'\'' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE strict_children (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'owner_id INTEGER NULL, ' .
-                'label TEXT NOT NULL DEFAULT \'\'' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE regions (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'name TEXT NOT NULL DEFAULT \'\'' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE branches (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'region_id INTEGER NOT NULL, ' .
-                'warehouse_id INTEGER NOT NULL' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE warehouses (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'name TEXT NOT NULL DEFAULT \'\'' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE bulk_parents (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'name TEXT NOT NULL DEFAULT \'\'' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE bulk_children (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'parent_id INTEGER NOT NULL, ' .
-                'label TEXT NOT NULL DEFAULT \'\'' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE nullable_through_owners (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'nullable_ref_id INTEGER NULL' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE strict_through_owners (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'nullable_ref_id INTEGER NULL' .
-                ')',
-            native: true,
-        );
+        $this->createStrictOwnersTable();
+        $this->createStrictProfilesTable();
+        $this->createStrictChildrenTable();
+        $this->createRegionsTable();
+        $this->createBranchesTable();
+        $this->createWarehousesTable();
+        $this->createBulkParentsTable();
+        $this->createBulkChildrenTable();
+        $this->createNullableThroughOwnersTable();
+        $this->createStrictThroughOwnersTable();
     }
 
     private function seedRegionGraph(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO regions (id, name) VALUES (1, 'Nordic')",
-            native: true,
-        );
+        $this->seedRegion(id: 1, name: 'Nordic');
+        $this->seedWarehouse(id: 100, name: 'Depot A');
+        $this->seedWarehouse(id: 101, name: 'Depot B');
+        $this->seedBranch(id: 10, regionId: 1, warehouseId: 100);
+        $this->seedBranch(id: 11, regionId: 1, warehouseId: 101);
+    }
 
-        $this->connection->query(
-            sql: "INSERT INTO warehouses (id, name) VALUES (100, 'Depot A')",
-            native: true,
-        );
+    private function seedRegion(int $id, string $name): void
+    {
+        $this->connection->insert(table: 'regions')
+            ->set(column: 'id', value: $id)
+            ->set(column: 'name', value: $name)
+            ->execute();
+    }
 
-        $this->connection->query(
-            sql: "INSERT INTO warehouses (id, name) VALUES (101, 'Depot B')",
-            native: true,
-        );
+    private function seedWarehouse(int $id, string $name): void
+    {
+        $this->connection->insert(table: 'warehouses')
+            ->set(column: 'id', value: $id)
+            ->set(column: 'name', value: $name)
+            ->execute();
+    }
 
-        $this->connection->query(
-            sql: 'INSERT INTO branches (id, region_id, warehouse_id) VALUES (10, 1, 100)',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'INSERT INTO branches (id, region_id, warehouse_id) VALUES (11, 1, 101)',
-            native: true,
-        );
+    private function seedBranch(int $id, int $regionId, int $warehouseId): void
+    {
+        $this->connection->insert(table: 'branches')
+            ->set(column: 'id', value: $id)
+            ->set(column: 'region_id', value: $regionId)
+            ->set(column: 'warehouse_id', value: $warehouseId)
+            ->execute();
     }
 
     private function seedBaseGraph(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO countries (id, name, code) VALUES (1, 'Sweden', 'SE')",
-            native: true,
-        );
+        $this->seedCountry(id: 1, name: 'Sweden', code: 'SE');
+        $this->seedUserGraph(id: 1, name: 'Alice', countryId: 1);
+        $this->seedUserGraph(id: 2, name: 'Bob', countryId: 1);
+        $this->seedPostGraph(id: 10, userId: 1, title: 'Alice one', status: 'published');
+        $this->seedPostGraph(id: 11, userId: 1, title: 'Alice two', status: 'draft');
+        $this->seedPostGraph(id: 12, userId: 1, title: 'Alice three', status: 'published');
+        $this->seedPostGraph(id: 13, userId: 2, title: 'Bob one', status: 'published');
+        $this->seedRole(id: 200, key: 'ADMIN', label: 'Administrator', sortOrder: 1);
+        $this->seedRole(id: 201, key: 'EDITOR', label: 'Editor', sortOrder: 2);
+        $this->seedRole(id: 202, key: 'VIEWER', label: 'Viewer', sortOrder: 3);
+        $this->seedUserRole(userId: 1, roleId: 200);
+        $this->seedUserRole(userId: 1, roleId: 201);
+        $this->seedUserRole(userId: 1, roleId: 202);
+    }
 
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score, country_id) VALUES (1, 'Alice', 'alice@example.test', 1, 0, 0.0, 1)",
-            native: true,
-        );
+    private function seedCountry(int $id, string $name, string $code): void
+    {
+        $this->connection->insert(table: 'countries')
+            ->set(column: 'id', value: $id)
+            ->set(column: 'name', value: $name)
+            ->set(column: 'code', value: $code)
+            ->execute();
+    }
 
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score, country_id) VALUES (2, 'Bob', 'bob@example.test', 1, 0, 0.0, 1)",
-            native: true,
-        );
+    private function seedUserGraph(int $id, string $name, ?int $countryId): void
+    {
+        $this->connection->insert(table: 'users')
+            ->set(column: 'id', value: $id)
+            ->set(column: 'name', value: $name)
+            ->set(column: 'email', value: \strtolower($name) . '@example.test')
+            ->set(column: 'isActive', value: 1)
+            ->set(column: 'postCount', value: 0)
+            ->set(column: 'score', value: 0.0)
+            ->set(column: 'country_id', value: $countryId)
+            ->execute();
+    }
 
-        $this->connection->query(
-            sql: "INSERT INTO posts (id, user_id, title, body, status, viewCount, rating) VALUES (10, 1, 'Alice one', '', 'published', 0, '0.00')",
-            native: true,
-        );
+    private function seedPostGraph(int $id, int $userId, string $title, string $status): void
+    {
+        $this->connection->insert(table: 'posts')
+            ->set(column: 'id', value: $id)
+            ->set(column: 'user_id', value: $userId)
+            ->set(column: 'title', value: $title)
+            ->set(column: 'body', value: '')
+            ->set(column: 'status', value: $status)
+            ->set(column: 'viewCount', value: 0)
+            ->set(column: 'rating', value: '0.00')
+            ->execute();
+    }
 
-        $this->connection->query(
-            sql: "INSERT INTO posts (id, user_id, title, body, status, viewCount, rating) VALUES (11, 1, 'Alice two', '', 'draft', 0, '0.00')",
-            native: true,
-        );
+    private function seedRole(int $id, string $key, string $label, int $sortOrder): void
+    {
+        $this->connection->insert(table: 'roles')
+            ->set(column: 'id', value: $id)
+            ->set(column: 'key', value: $key)
+            ->set(column: 'label', value: $label)
+            ->set(column: 'sortOrder', value: $sortOrder)
+            ->execute();
+    }
 
-        $this->connection->query(
-            sql: "INSERT INTO posts (id, user_id, title, body, status, viewCount, rating) VALUES (12, 1, 'Alice three', '', 'published', 0, '0.00')",
-            native: true,
-        );
+    private function seedUserRole(int $userId, int $roleId): void
+    {
+        $this->connection->insert(table: 'user_role')
+            ->set(column: 'user_id', value: $userId)
+            ->set(column: 'role_id', value: $roleId)
+            ->execute();
+    }
 
-        $this->connection->query(
-            sql: "INSERT INTO posts (id, user_id, title, body, status, viewCount, rating) VALUES (13, 2, 'Bob one', '', 'published', 0, '0.00')",
-            native: true,
-        );
+    private function seedStrictOwner(int $id, string $name): void
+    {
+        $this->connection->insert(table: 'strict_owners')
+            ->set(column: 'id', value: $id)
+            ->set(column: 'name', value: $name)
+            ->execute();
+    }
 
-        $this->connection->query(
-            sql: "INSERT INTO roles (id, \"key\", label, sortOrder) VALUES (200, 'ADMIN', 'Administrator', 1)",
-            native: true,
-        );
+    private function seedStrictChild(int $id, ?int $ownerId, string $label): void
+    {
+        $this->connection->insert(table: 'strict_children')
+            ->set(column: 'id', value: $id)
+            ->set(column: 'owner_id', value: $ownerId)
+            ->set(column: 'label', value: $label)
+            ->execute();
+    }
 
-        $this->connection->query(
-            sql: "INSERT INTO roles (id, \"key\", label, sortOrder) VALUES (201, 'EDITOR', 'Editor', 2)",
-            native: true,
-        );
+    private function seedBulkParent(int $id, string $name): void
+    {
+        $this->connection->insert(table: 'bulk_parents')
+            ->set(column: 'id', value: $id)
+            ->set(column: 'name', value: $name)
+            ->execute();
+    }
 
-        $this->connection->query(
-            sql: "INSERT INTO roles (id, \"key\", label, sortOrder) VALUES (202, 'VIEWER', 'Viewer', 3)",
-            native: true,
-        );
+    private function seedBulkChild(int $id, int $parentId, string $label): void
+    {
+        $this->connection->insert(table: 'bulk_children')
+            ->set(column: 'id', value: $id)
+            ->set(column: 'parent_id', value: $parentId)
+            ->set(column: 'label', value: $label)
+            ->execute();
+    }
 
-        $this->connection->query(
-            sql: 'INSERT INTO user_role (user_id, role_id) VALUES (1, 200)',
-            native: true,
-        );
+    private function seedNullableThroughOwner(int $id, ?int $nullableRefId): void
+    {
+        $this->connection->insert(table: 'nullable_through_owners')
+            ->set(column: 'id', value: $id)
+            ->set(column: 'nullable_ref_id', value: $nullableRefId)
+            ->execute();
+    }
 
-        $this->connection->query(
-            sql: 'INSERT INTO user_role (user_id, role_id) VALUES (1, 201)',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'INSERT INTO user_role (user_id, role_id) VALUES (1, 202)',
-            native: true,
-        );
+    private function seedStrictThroughOwner(int $id, ?int $nullableRefId): void
+    {
+        $this->connection->insert(table: 'strict_through_owners')
+            ->set(column: 'id', value: $id)
+            ->set(column: 'nullable_ref_id', value: $nullableRefId)
+            ->execute();
     }
 
     public function testHydrateUserBasicScalarColumns(): void
@@ -705,10 +689,7 @@ class HydratorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testHydratorThrowsWhenNonNullableBelongsToForeignKeyIsNull(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO strict_children (id, owner_id, label) VALUES (1, NULL, 'orphan')",
-            native: true,
-        );
+        $this->seedStrictChild(id: 1, ownerId: null, label: 'orphan');
 
         $this->expectException(ModelException::class);
 
@@ -720,10 +701,7 @@ class HydratorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testHydratorLazyProxyThrowsWhenBelongsToTargetRowIsMissing(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO strict_children (id, owner_id, label) VALUES (2, 999, 'dangling')",
-            native: true,
-        );
+        $this->seedStrictChild(id: 2, ownerId: 999, label: 'dangling');
 
         $child = $this->modelsManager->fetchByIdentifier(
             class: StrictChild::class,
@@ -739,10 +717,7 @@ class HydratorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testHydratorLazyProxyThrowsWhenNonNullableHasOneTargetRowIsMissing(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO strict_owners (id, name) VALUES (10, 'lonely')",
-            native: true,
-        );
+        $this->seedStrictOwner(id: 10, name: 'lonely');
 
         $owner = $this->modelsManager->fetchByIdentifier(
             class: StrictOwner::class,
@@ -758,15 +733,9 @@ class HydratorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testHydratorHasOneThroughThrowsWhenTargetRowIsMissing(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO countries (id, name, code) VALUES (100, 'Empty', 'EM')",
-            native: true,
-        );
+        $this->seedCountry(id: 100, name: 'Empty', code: 'EM');
 
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score, country_id) VALUES (500, 'Dana', 'dana@example.test', 1, 0, 0.0, 100)",
-            native: true,
-        );
+        $this->seedUserGraph(id: 500, name: 'Dana', countryId: 100);
 
         $country = $this->modelsManager->fetchByIdentifier(
             class: Country::class,
@@ -1026,20 +995,11 @@ class HydratorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testEagerLoadNestedPathSkipsParentsWithNullBelongsToChild(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO countries (id, name, code) VALUES (1, 'Sweden', 'SE')",
-            native: true,
-        );
+        $this->seedCountry(id: 1, name: 'Sweden', code: 'SE');
 
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score, country_id) VALUES (1, 'Alice', 'alice@example.test', 1, 0, 0.0, 1)",
-            native: true,
-        );
+        $this->seedUserGraph(id: 1, name: 'Alice', countryId: 1);
 
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score, country_id) VALUES (2, 'Orphan', 'orphan@example.test', 1, 0, 0.0, NULL)",
-            native: true,
-        );
+        $this->seedUserGraph(id: 2, name: 'Orphan', countryId: null);
 
         $rows = \iterator_to_array(
             $this->modelsManager->findAll(
@@ -1063,20 +1023,11 @@ class HydratorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testEagerLoadHasManyLeavesEmptyRelationForParentWithNullSource(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO countries (id, name, code) VALUES (1, 'Sweden', 'SE')",
-            native: true,
-        );
+        $this->seedCountry(id: 1, name: 'Sweden', code: 'SE');
 
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score, country_id) VALUES (1, 'Alice', 'alice@example.test', 1, 0, 0.0, 1)",
-            native: true,
-        );
+        $this->seedUserGraph(id: 1, name: 'Alice', countryId: 1);
 
-        $this->connection->query(
-            sql: "INSERT INTO posts (id, user_id, title, body, status, viewCount, rating) VALUES (10, 1, 'Alice one', '', 'published', 0, '0.00')",
-            native: true,
-        );
+        $this->seedPostGraph(id: 10, userId: 1, title: 'Alice one', status: 'published');
 
         $countries = \iterator_to_array(
             $this->modelsManager->findAll(
@@ -1101,20 +1052,11 @@ class HydratorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testEagerLoadBelongsToAssignsNullOnParentsMissingSource(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO countries (id, name, code) VALUES (1, 'Sweden', 'SE')",
-            native: true,
-        );
+        $this->seedCountry(id: 1, name: 'Sweden', code: 'SE');
 
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score, country_id) VALUES (1, 'Alice', 'alice@example.test', 1, 0, 0.0, 1)",
-            native: true,
-        );
+        $this->seedUserGraph(id: 1, name: 'Alice', countryId: 1);
 
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score, country_id) VALUES (2, 'Orphan', 'orphan@example.test', 1, 0, 0.0, NULL)",
-            native: true,
-        );
+        $this->seedUserGraph(id: 2, name: 'Orphan', countryId: null);
 
         $rows = \iterator_to_array(
             $this->modelsManager->findAll(
@@ -1138,10 +1080,7 @@ class HydratorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testEagerLoadBelongsToThrowsWhenNonNullableTargetIsMissing(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO strict_children (id, owner_id, label) VALUES (5, 999, 'dangling')",
-            native: true,
-        );
+        $this->seedStrictChild(id: 5, ownerId: 999, label: 'dangling');
 
         $this->expectException(ModelException::class);
 
@@ -1160,15 +1099,9 @@ class HydratorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testEagerLoadHasOneThroughSkipsUnmatchedSecondKey(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO regions (id, name) VALUES (1, 'Nordic')",
-            native: true,
-        );
+        $this->seedRegion(id: 1, name: 'Nordic');
 
-        $this->connection->query(
-            sql: 'INSERT INTO branches (id, region_id, warehouse_id) VALUES (10, 1, 999)',
-            native: true,
-        );
+        $this->seedBranch(id: 10, regionId: 1, warehouseId: 999);
 
         $rows = \iterator_to_array(
             $this->modelsManager->findAll(
@@ -1187,15 +1120,9 @@ class HydratorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testHydratorResolvesExplicitLocalKeyOnHasManyRelation(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO bulk_parents (id, name) VALUES (1, 'parent')",
-            native: true,
-        );
+        $this->seedBulkParent(id: 1, name: 'parent');
 
-        $this->connection->query(
-            sql: "INSERT INTO bulk_children (id, parent_id, label) VALUES (10, 1, 'child')",
-            native: true,
-        );
+        $this->seedBulkChild(id: 10, parentId: 1, label: 'child');
 
         $parent = $this->modelsManager->fetchByIdentifier(
             class: BulkParent::class,
@@ -1215,15 +1142,9 @@ class HydratorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testHydratorResolvesExplicitOwnerKeyOnBelongsToRelation(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO strict_owners (id, name) VALUES (1, 'owner')",
-            native: true,
-        );
+        $this->seedStrictOwner(id: 1, name: 'owner');
 
-        $this->connection->query(
-            sql: "INSERT INTO strict_children (id, owner_id, label) VALUES (1, 1, 'child')",
-            native: true,
-        );
+        $this->seedStrictChild(id: 1, ownerId: 1, label: 'child');
 
         $child = $this->modelsManager->fetchByIdentifier(
             class: StrictChild::class,
@@ -1404,10 +1325,7 @@ class HydratorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testNullableHasOneThroughSetsPropertyToNullWhenLocalKeyIsNull(): void
     {
-        $this->connection->query(
-            sql: 'INSERT INTO nullable_through_owners (id, nullable_ref_id) VALUES (1, NULL)',
-            native: true,
-        );
+        $this->seedNullableThroughOwner(id: 1, nullableRefId: null);
 
         $owner = $this->modelsManager->fetchByIdentifier(
             class: NullableThroughOwner::class,
@@ -1421,10 +1339,7 @@ class HydratorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testHasManyThroughReturnsEmptyRelationWhenLocalKeyIsNull(): void
     {
-        $this->connection->query(
-            sql: 'INSERT INTO nullable_through_owners (id, nullable_ref_id) VALUES (2, NULL)',
-            native: true,
-        );
+        $this->seedNullableThroughOwner(id: 2, nullableRefId: null);
 
         $owner = $this->modelsManager->fetchByIdentifier(
             class: NullableThroughOwner::class,
@@ -1444,10 +1359,7 @@ class HydratorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testNonNullableHasOneThroughThrowsWhenLocalKeyIsNull(): void
     {
-        $this->connection->query(
-            sql: 'INSERT INTO strict_through_owners (id, nullable_ref_id) VALUES (3, NULL)',
-            native: true,
-        );
+        $this->seedStrictThroughOwner(id: 3, nullableRefId: null);
 
         $this->expectException(ModelException::class);
 
@@ -1459,15 +1371,9 @@ class HydratorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testEagerLoadRejectsUnknownRelationName(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO countries (id, name, code) VALUES (1, 'Sweden', 'SE')",
-            native: true,
-        );
+        $this->seedCountry(id: 1, name: 'Sweden', code: 'SE');
 
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score, country_id) VALUES (1, 'Alice', 'alice@example.test', 1, 0, 0.0, 1)",
-            native: true,
-        );
+        $this->seedUserGraph(id: 1, name: 'Alice', countryId: 1);
 
         $this->expectException(ModelException::class);
 
@@ -1482,10 +1388,7 @@ class HydratorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testEagerLoadBelongsToThrowsWhenNonNullableForeignKeyIsNull(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO strict_children (id, owner_id, label) VALUES (6, NULL, 'orphan')",
-            native: true,
-        );
+        $this->seedStrictChild(id: 6, ownerId: null, label: 'orphan');
 
         $this->expectException(ModelException::class);
 
@@ -1504,10 +1407,7 @@ class HydratorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testEagerLoadHasOneThroughSkipsParentsWithNullLocalKey(): void
     {
-        $this->connection->query(
-            sql: 'INSERT INTO nullable_through_owners (id, nullable_ref_id) VALUES (4, NULL)',
-            native: true,
-        );
+        $this->seedNullableThroughOwner(id: 4, nullableRefId: null);
 
         $rows = \iterator_to_array(
             $this->modelsManager->findAll(
@@ -1531,10 +1431,7 @@ class HydratorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testEagerLoadHasManyThroughSkipsParentsWithNullLocalKey(): void
     {
-        $this->connection->query(
-            sql: 'INSERT INTO nullable_through_owners (id, nullable_ref_id) VALUES (5, NULL)',
-            native: true,
-        );
+        $this->seedNullableThroughOwner(id: 5, nullableRefId: null);
 
         $rows = \iterator_to_array(
             $this->modelsManager->findAll(
@@ -1564,10 +1461,7 @@ class HydratorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testEagerLoadHasOneSkipsParentsWithNullLocalKey(): void
     {
-        $this->connection->query(
-            sql: 'INSERT INTO nullable_through_owners (id, nullable_ref_id) VALUES (6, NULL)',
-            native: true,
-        );
+        $this->seedNullableThroughOwner(id: 6, nullableRefId: null);
 
         $rows = \iterator_to_array(
             $this->modelsManager->findAll(
@@ -1591,10 +1485,7 @@ class HydratorIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testEagerLoadHasManySkipsParentsWithNullLocalKey(): void
     {
-        $this->connection->query(
-            sql: 'INSERT INTO nullable_through_owners (id, nullable_ref_id) VALUES (7, NULL)',
-            native: true,
-        );
+        $this->seedNullableThroughOwner(id: 7, nullableRefId: null);
 
         $rows = \iterator_to_array(
             $this->modelsManager->findAll(

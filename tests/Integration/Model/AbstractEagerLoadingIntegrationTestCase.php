@@ -19,7 +19,7 @@ use Fixture\Model\Profile;
 use Fixture\Model\User;
 use Tuxxedo\Model\Relation;
 
-class EagerLoadingIntegrationTest extends AbstractModelIntegrationTestCase
+abstract class AbstractEagerLoadingIntegrationTestCase extends AbstractModelIntegrationTestCase
 {
     protected function setUp(): void
     {
@@ -32,90 +32,203 @@ class EagerLoadingIntegrationTest extends AbstractModelIntegrationTestCase
         $this->createRolesTable();
         $this->createUserRolePivot();
 
-        $this->connection->query(
-            sql: "INSERT INTO countries (id, name, code) VALUES (1, 'Sweden', 'SE')",
-            native: true,
+        $this->seedCountry(
+            id: 1,
+            name: 'Sweden',
+            code: 'SE',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO countries (id, name, code) VALUES (2, 'Denmark', 'DK')",
-            native: true,
+        $this->seedCountry(
+            id: 2,
+            name: 'Denmark',
+            code: 'DK',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score, country_id) VALUES (1, 'Alice', 'alice@example.test', 1, 0, 0.0, 1)",
-            native: true,
+        $this->seedUser(
+            id: 1,
+            name: 'Alice',
+            countryId: 1,
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score, country_id) VALUES (2, 'Bob', 'bob@example.test', 1, 0, 0.0, 1)",
-            native: true,
+        $this->seedUser(
+            id: 2,
+            name: 'Bob',
+            countryId: 1,
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score, country_id) VALUES (3, 'Carla', 'carla@example.test', 1, 0, 0.0, 2)",
-            native: true,
+        $this->seedUser(
+            id: 3,
+            name: 'Carla',
+            countryId: 2,
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO profiles (id, user_id, bio) VALUES (10, 1, 'Alice bio')",
-            native: true,
+        $this->seedProfile(
+            id: 10,
+            userId: 1,
+            bio: 'Alice bio',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO profiles (id, user_id, bio) VALUES (11, 2, 'Bob bio')",
-            native: true,
+        $this->seedProfile(
+            id: 11,
+            userId: 2,
+            bio: 'Bob bio',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO profiles (id, user_id, bio) VALUES (12, 3, 'Carla bio')",
-            native: true,
+        $this->seedProfile(
+            id: 12,
+            userId: 3,
+            bio: 'Carla bio',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO posts (id, user_id, title, body, status, viewCount, rating) VALUES (100, 1, 'Alice one', '', 'published', 0, '0.00')",
-            native: true,
+        $this->seedPost(
+            id: 100,
+            userId: 1,
+            title: 'Alice one',
+            status: 'published',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO posts (id, user_id, title, body, status, viewCount, rating) VALUES (101, 1, 'Alice two', '', 'draft', 0, '0.00')",
-            native: true,
+        $this->seedPost(
+            id: 101,
+            userId: 1,
+            title: 'Alice two',
+            status: 'draft',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO posts (id, user_id, title, body, status, viewCount, rating) VALUES (102, 2, 'Bob one', '', 'published', 0, '0.00')",
-            native: true,
+        $this->seedPost(
+            id: 102,
+            userId: 2,
+            title: 'Bob one',
+            status: 'published',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO posts (id, user_id, title, body, status, viewCount, rating) VALUES (103, 3, 'Carla one', '', 'published', 0, '0.00')",
-            native: true,
+        $this->seedPost(
+            id: 103,
+            userId: 3,
+            title: 'Carla one',
+            status: 'published',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO roles (id, \"key\", label, sortOrder) VALUES (200, 'ADMIN', 'Administrator', 1)",
-            native: true,
+        $this->seedRole(
+            id: 200,
+            key: 'ADMIN',
+            label: 'Administrator',
+            sortOrder: 1,
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO roles (id, \"key\", label, sortOrder) VALUES (201, 'EDITOR', 'Editor', 2)",
-            native: true,
+        $this->seedRole(
+            id: 201,
+            key: 'EDITOR',
+            label: 'Editor',
+            sortOrder: 2,
         );
 
-        $this->connection->query(
-            sql: 'INSERT INTO user_role (user_id, role_id) VALUES (1, 200)',
-            native: true,
+        $this->seedUserRole(
+            userId: 1,
+            roleId: 200,
         );
 
-        $this->connection->query(
-            sql: 'INSERT INTO user_role (user_id, role_id) VALUES (1, 201)',
-            native: true,
+        $this->seedUserRole(
+            userId: 1,
+            roleId: 201,
         );
 
-        $this->connection->query(
-            sql: 'INSERT INTO user_role (user_id, role_id) VALUES (2, 201)',
-            native: true,
+        $this->seedUserRole(
+            userId: 2,
+            roleId: 201,
         );
+    }
+
+    private function seedCountry(
+        int $id,
+        string $name,
+        string $code,
+    ): void {
+        $this->connection->insert(
+            table: 'countries',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'name', value: $name)
+            ->set(column: 'code', value: $code)
+            ->execute();
+    }
+
+    private function seedUser(
+        int $id,
+        string $name,
+        ?int $countryId = null,
+    ): void {
+        $this->connection->insert(
+            table: 'users',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'name', value: $name)
+            ->set(column: 'email', value: \strtolower($name) . '@example.test')
+            ->set(column: 'isActive', value: 1)
+            ->set(column: 'postCount', value: 0)
+            ->set(column: 'score', value: 0.0)
+            ->set(column: 'country_id', value: $countryId)
+            ->execute();
+    }
+
+    private function seedProfile(
+        int $id,
+        int $userId,
+        string $bio,
+    ): void {
+        $this->connection->insert(
+            table: 'profiles',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'user_id', value: $userId)
+            ->set(column: 'bio', value: $bio)
+            ->execute();
+    }
+
+    private function seedPost(
+        int $id,
+        int $userId,
+        string $title,
+        string $status,
+    ): void {
+        $this->connection->insert(
+            table: 'posts',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'user_id', value: $userId)
+            ->set(column: 'title', value: $title)
+            ->set(column: 'body', value: '')
+            ->set(column: 'status', value: $status)
+            ->set(column: 'viewCount', value: 0)
+            ->set(column: 'rating', value: '0.00')
+            ->execute();
+    }
+
+    private function seedRole(
+        int $id,
+        string $key,
+        string $label,
+        int $sortOrder,
+    ): void {
+        $this->connection->insert(
+            table: 'roles',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'key', value: $key)
+            ->set(column: 'label', value: $label)
+            ->set(column: 'sortOrder', value: $sortOrder)
+            ->execute();
+    }
+
+    private function seedUserRole(
+        int $userId,
+        int $roleId,
+    ): void {
+        $this->connection->insert(
+            table: 'user_role',
+        )
+            ->set(column: 'user_id', value: $userId)
+            ->set(column: 'role_id', value: $roleId)
+            ->execute();
     }
 
     /**
@@ -126,7 +239,7 @@ class EagerLoadingIntegrationTest extends AbstractModelIntegrationTestCase
     {
         return \array_values(
             \iterator_to_array(
-                $this->modelsManager->query(class: User::class)
+                $this->modelsManager->query(User::class)
                     ->orderBy(column: 'id')
                     ->with(with: $with)
                     ->fetchAll(),
@@ -359,7 +472,7 @@ class EagerLoadingIntegrationTest extends AbstractModelIntegrationTestCase
     {
         $countries = \array_values(
             \iterator_to_array(
-                $this->modelsManager->query(class: Country::class)
+                $this->modelsManager->query(Country::class)
                     ->orderBy(column: 'id')
                     ->with(
                         with: [
@@ -407,7 +520,7 @@ class EagerLoadingIntegrationTest extends AbstractModelIntegrationTestCase
     {
         $countries = \array_values(
             \iterator_to_array(
-                $this->modelsManager->query(class: Country::class)
+                $this->modelsManager->query(Country::class)
                     ->orderBy(column: 'id')
                     ->with(
                         with: [
@@ -469,7 +582,7 @@ class EagerLoadingIntegrationTest extends AbstractModelIntegrationTestCase
     {
         $users = \array_values(
             \iterator_to_array(
-                $this->modelsManager->query(class: User::class)
+                $this->modelsManager->query(User::class)
                     ->where(column: 'name', value: 'Nobody')
                     ->with(
                         with: [
@@ -490,9 +603,10 @@ class EagerLoadingIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testEagerLoadHasManyForParentWithNoChildrenYieldsEmptyMaterializedRelation(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score, country_id) VALUES (99, 'Nemo', 'nemo@example.test', 1, 0, 0.0, 1)",
-            native: true,
+        $this->seedUser(
+            id: 99,
+            name: 'Nemo',
+            countryId: 1,
         );
 
         $users = $this->fetchUsersWith(
@@ -534,9 +648,10 @@ class EagerLoadingIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testEagerLoadNullableHasOneForParentWithoutChildYieldsNull(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score, country_id) VALUES (77, 'Orphan', 'orphan@example.test', 1, 0, 0.0, 1)",
-            native: true,
+        $this->seedUser(
+            id: 77,
+            name: 'Orphan',
+            countryId: 1,
         );
 
         $users = $this->fetchUsersWith(

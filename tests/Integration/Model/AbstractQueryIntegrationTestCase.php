@@ -17,7 +17,7 @@ use Fixture\Model\User;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Model\ModelException;
 
-class QueryIntegrationTest extends AbstractModelIntegrationTestCase
+abstract class AbstractQueryIntegrationTestCase extends AbstractModelIntegrationTestCase
 {
     protected function setUp(): void
     {
@@ -30,20 +30,48 @@ class QueryIntegrationTest extends AbstractModelIntegrationTestCase
 
     private function seedUsers(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score) VALUES (1, 'Alice', 'alice@example.test', 1, 5, 12.5)",
-            native: true,
+        $this->seedUser(
+            id: 1,
+            name: 'Alice',
+            isActive: 1,
+            postCount: 5,
+            score: 12.5,
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score) VALUES (2, 'Bob', 'bob@example.test', 1, 2, 3.0)",
-            native: true,
+        $this->seedUser(
+            id: 2,
+            name: 'Bob',
+            isActive: 1,
+            postCount: 2,
+            score: 3.0,
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, isActive, postCount, score) VALUES (3, 'Charlie', 'charlie@example.test', 0, 0, 0.0)",
-            native: true,
+        $this->seedUser(
+            id: 3,
+            name: 'Charlie',
+            isActive: 0,
+            postCount: 0,
+            score: 0.0,
         );
+    }
+
+    private function seedUser(
+        int $id,
+        string $name,
+        int $isActive,
+        int $postCount,
+        float $score,
+    ): void {
+        $this->connection->insert(
+            table: 'users',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'name', value: $name)
+            ->set(column: 'email', value: \strtolower($name) . '@example.test')
+            ->set(column: 'isActive', value: $isActive)
+            ->set(column: 'postCount', value: $postCount)
+            ->set(column: 'score', value: $score)
+            ->execute();
     }
 
     public function testFindByIdentifierReturnsHydratedModel(): void
@@ -147,7 +175,7 @@ class QueryIntegrationTest extends AbstractModelIntegrationTestCase
     public function testFindAllYieldsAllRows(): void
     {
         $users = \iterator_to_array(
-            $this->modelsManager->findAll(class: User::class),
+            $this->modelsManager->findAll(User::class),
         );
 
         self::assertCount(
@@ -250,7 +278,7 @@ class QueryIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testQueryBuilderFirstMatchesWhere(): void
     {
-        $user = $this->modelsManager->query(class: User::class)
+        $user = $this->modelsManager->query(User::class)
             ->where(
                 column: 'name',
                 value: 'Alice',
@@ -270,7 +298,7 @@ class QueryIntegrationTest extends AbstractModelIntegrationTestCase
     public function testQueryBuilderChainedWhereReturnsFilteredResults(): void
     {
         $users = \iterator_to_array(
-            $this->modelsManager->query(class: User::class)
+            $this->modelsManager->query(User::class)
                 ->where(
                     column: 'isActive',
                     value: 1,
@@ -298,7 +326,7 @@ class QueryIntegrationTest extends AbstractModelIntegrationTestCase
     public function testQueryBuilderOrderByAscending(): void
     {
         $users = \iterator_to_array(
-            $this->modelsManager->query(class: User::class)
+            $this->modelsManager->query(User::class)
                 ->orderBy(column: 'postCount')
                 ->fetchAll(),
         );
@@ -320,7 +348,7 @@ class QueryIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testQueryBuilderCountReflectsCriteria(): void
     {
-        $count = $this->modelsManager->query(class: User::class)
+        $count = $this->modelsManager->query(User::class)
             ->where(
                 column: 'isActive',
                 value: 1,
@@ -335,7 +363,7 @@ class QueryIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testQueryBuilderIsImmutable(): void
     {
-        $base = $this->modelsManager->query(class: User::class);
+        $base = $this->modelsManager->query(User::class);
 
         $filtered = $base->where(
             column: 'name',
@@ -361,7 +389,7 @@ class QueryIntegrationTest extends AbstractModelIntegrationTestCase
     public function testQueryBuilderWhereInFiltersMultipleIdentifiers(): void
     {
         $users = \iterator_to_array(
-            $this->modelsManager->query(class: User::class)
+            $this->modelsManager->query(User::class)
                 ->whereIn(
                     column: 'id',
                     values: [

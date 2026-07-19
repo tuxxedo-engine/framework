@@ -33,188 +33,252 @@ use Tuxxedo\Model\ModelException;
 use Tuxxedo\Model\Query;
 use Tuxxedo\Model\Relation;
 
-class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
+abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelIntegrationTestCase
 {
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->createAllFixtureTables();
-
-        $this->connection->query(
-            sql: 'CREATE TABLE readonly_records (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'name TEXT NOT NULL' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE settings (' .
-                'scope TEXT NOT NULL, ' .
-                'name TEXT NOT NULL, ' .
-                'value TEXT NOT NULL DEFAULT \'\', ' .
-                'PRIMARY KEY (scope, name)' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE bulk_parents (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'name TEXT NOT NULL DEFAULT \'\'' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE bulk_children (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'parent_id INTEGER NOT NULL, ' .
-                'label TEXT NOT NULL DEFAULT \'\'' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE orphan_parents (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'name TEXT NOT NULL DEFAULT \'\'' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE orphan_children (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'parent_id INTEGER NULL, ' .
-                'label TEXT NOT NULL DEFAULT \'\'' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE cascade_bt_parents (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'name TEXT NOT NULL DEFAULT \'\'' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE cascade_bt_children (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'parent_id INTEGER NULL, ' .
-                'label TEXT NOT NULL DEFAULT \'\'' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE cascade_groups (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'name TEXT NOT NULL DEFAULT \'\'' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE cascade_children (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'auto_group_id INTEGER NULL, ' .
-                'restrict_group_id INTEGER NULL, ' .
-                'nullable_group_id INTEGER NULL, ' .
-                'noaction_group_id INTEGER NULL, ' .
-                'label TEXT NOT NULL DEFAULT \'\'' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE cascade_hasone_children (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'group_id INTEGER NOT NULL, ' .
-                'label TEXT NOT NULL DEFAULT \'\'' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE cascade_hasone_restrict_children (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'group_id INTEGER NOT NULL, ' .
-                'label TEXT NOT NULL DEFAULT \'\'' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE cascade_tags (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'name TEXT NOT NULL DEFAULT \'\'' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE cascade_group_tag (' .
-                'group_id INTEGER NOT NULL, ' .
-                'tag_id INTEGER NOT NULL, ' .
-                'PRIMARY KEY (group_id, tag_id)' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE strict_owners (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'name TEXT NOT NULL DEFAULT \'\'' .
-                ')',
-            native: true,
-        );
-
-        $this->connection->query(
-            sql: 'CREATE TABLE strict_profiles (' .
-                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
-                'owner_id INTEGER NOT NULL, ' .
-                'handle TEXT NOT NULL DEFAULT \'\'' .
-                ')',
-            native: true,
-        );
+        $this->createReadonlyRecordsTable();
+        $this->createSettingsTable();
+        $this->createBulkParentsTable();
+        $this->createBulkChildrenTable();
+        $this->createOrphanParentsTable();
+        $this->createOrphanChildrenTable();
+        $this->createCascadeBelongsToParentsTable();
+        $this->createCascadeBelongsToChildrenTable();
+        $this->createCascadeGroupsTable();
+        $this->createCascadeChildrenTable();
+        $this->createCascadeHasOneChildrenTable();
+        $this->createCascadeHasOneRestrictChildrenTable();
+        $this->createCascadeTagsTable();
+        $this->createCascadeGroupTagPivot();
+        $this->createStrictOwnersTable();
+        $this->createStrictProfilesTable();
     }
 
-    private function seedCountry(int $id, string $name = 'Sweden'): void
-    {
-        $this->connection->query(
-            sql: 'INSERT INTO countries (id, name, code) VALUES (' . $id . ", '" . $name . "', 'SE')",
-            native: true,
-        );
+    private function seedCountry(
+        int $id,
+        string $name = 'Sweden',
+    ): void {
+        $this->connection->insert(
+            table: 'countries',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'name', value: $name)
+            ->set(column: 'code', value: 'SE')
+            ->execute();
     }
 
-    private function seedUser(int $id, string $name = 'Alice', int $countryId = 1): void
-    {
-        $this->connection->query(
-            sql: 'INSERT INTO users (id, name, email, country_id) VALUES (' . $id . ", '" . $name . "', '" . $name . "@example.test', " . $countryId . ')',
-            native: true,
-        );
+    private function seedUser(
+        int $id,
+        string $name = 'Alice',
+        ?int $countryId = 1,
+    ): void {
+        $this->connection->insert(
+            table: 'users',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'name', value: $name)
+            ->set(column: 'email', value: $name . '@example.test')
+            ->set(column: 'country_id', value: $countryId)
+            ->execute();
     }
 
-    private function seedPost(int $id, int $userId, string $title = 'Post'): void
-    {
-        $this->connection->query(
-            sql: 'INSERT INTO posts (id, user_id, title) VALUES (' . $id . ', ' . $userId . ", '" . $title . "')",
-            native: true,
-        );
+    private function seedPost(
+        int $id,
+        int $userId,
+        string $title = 'Post',
+    ): void {
+        $this->connection->insert(
+            table: 'posts',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'user_id', value: $userId)
+            ->set(column: 'title', value: $title)
+            ->set(column: 'body', value: '')
+            ->execute();
     }
 
-    private function countRowsIn(string $table, string $where = '1=1'): mixed
-    {
-        $row = $this->connection->query(
-            sql: 'SELECT COUNT(*) AS c FROM ' . $table . ' WHERE ' . $where,
-            native: true,
-        )->fetchAssoc();
+    private function seedStrictOwner(
+        int $id,
+        string $name,
+    ): void {
+        $this->connection->insert(
+            table: 'strict_owners',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'name', value: $name)
+            ->execute();
+    }
 
-        return $row['c'] ?? 0;
+    private function seedStrictProfile(
+        int $id,
+        int $ownerId,
+        string $handle,
+    ): void {
+        $this->connection->insert(
+            table: 'strict_profiles',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'owner_id', value: $ownerId)
+            ->set(column: 'handle', value: $handle)
+            ->execute();
+    }
+
+    private function seedCascadeGroup(
+        int $id,
+        string $name,
+    ): void {
+        $this->connection->insert(
+            table: 'cascade_groups',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'name', value: $name)
+            ->execute();
+    }
+
+    private function seedCascadeChild(
+        int $id,
+        int $autoGroupId,
+        string $label,
+    ): void {
+        $this->connection->insert(
+            table: 'cascade_children',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'auto_group_id', value: $autoGroupId)
+            ->set(column: 'label', value: $label)
+            ->execute();
+    }
+
+    private function seedCascadeHasOneChild(
+        int $id,
+        int $groupId,
+        string $label,
+    ): void {
+        $this->connection->insert(
+            table: 'cascade_hasone_children',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'group_id', value: $groupId)
+            ->set(column: 'label', value: $label)
+            ->execute();
+    }
+
+    private function seedCascadeTag(
+        int $id,
+        string $name,
+    ): void {
+        $this->connection->insert(
+            table: 'cascade_tags',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'name', value: $name)
+            ->execute();
+    }
+
+    private function seedCascadeGroupTag(
+        int $groupId,
+        int $tagId,
+    ): void {
+        $this->connection->insert(
+            table: 'cascade_group_tag',
+        )
+            ->set(column: 'group_id', value: $groupId)
+            ->set(column: 'tag_id', value: $tagId)
+            ->execute();
+    }
+
+    private function seedBulkChild(
+        int $parentId,
+        string $label,
+    ): void {
+        $this->connection->insert(
+            table: 'bulk_children',
+        )
+            ->set(column: 'parent_id', value: $parentId)
+            ->set(column: 'label', value: $label)
+            ->execute();
+    }
+
+    private function seedOrphanChild(
+        int $id,
+        int $parentId,
+        string $label,
+    ): void {
+        $this->connection->insert(
+            table: 'orphan_children',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'parent_id', value: $parentId)
+            ->set(column: 'label', value: $label)
+            ->execute();
+    }
+
+    private function seedCascadeBtParent(
+        int $id,
+        string $name,
+    ): void {
+        $this->connection->insert(
+            table: 'cascade_bt_parents',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'name', value: $name)
+            ->execute();
+    }
+
+    private function seedCascadeBtChild(
+        int $id,
+        ?int $parentId,
+        string $label,
+    ): void {
+        $this->connection->insert(
+            table: 'cascade_bt_children',
+        )
+            ->set(column: 'id', value: $id)
+            ->set(column: 'parent_id', value: $parentId)
+            ->set(column: 'label', value: $label)
+            ->execute();
+    }
+
+    private function seedProfile(
+        int $userId,
+        string $bio,
+    ): void {
+        $this->connection->insert(
+            table: 'profiles',
+        )
+            ->set(column: 'user_id', value: $userId)
+            ->set(column: 'bio', value: $bio)
+            ->execute();
+    }
+
+    private function seedSetting(
+        string $scope,
+        string $name,
+        string $value,
+    ): void {
+        $this->connection->insert(
+            table: 'settings',
+        )
+            ->set(column: 'scope', value: $scope)
+            ->set(column: 'name', value: $name)
+            ->set(column: 'value', value: $value)
+            ->execute();
+    }
+
+    private function countRowsWhere(
+        string $table,
+        string $column,
+        int|string $value,
+    ): int {
+        return $this->connection->count(
+            table: $table,
+        )
+            ->where(column: $column, value: $value)
+            ->count();
     }
 
     public function testReadonlyModelInsertUsesCloneWithChangesForAutoIncrementKey(): void
@@ -264,8 +328,14 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testFindByIdentifierRunsCallerProvidedCriteria(): void
     {
-        $this->seedCountry(id: 1);
-        $this->seedUser(id: 100, name: 'Alice');
+        $this->seedCountry(
+            id: 1,
+        );
+
+        $this->seedUser(
+            id: 100,
+            name: 'Alice',
+        );
 
         $result = $this->modelsManager->findByIdentifier(
             class: User::class,
@@ -286,9 +356,10 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testFindByCompositeKeyRunsCallerProvidedCriteria(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO settings (scope, name, value) VALUES ('ui', 'lang', 'en')",
-            native: true,
+        $this->seedSetting(
+            scope: 'ui',
+            name: 'lang',
+            value: 'en',
         );
 
         $result = $this->modelsManager->findByCompositeKey(
@@ -390,10 +461,12 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
             id: 10,
         );
 
-        $this->connection->query(
-            sql: "UPDATE users SET name = 'External' WHERE id = 10",
-            native: true,
-        );
+        $this->connection->update(
+            table: 'users',
+        )
+            ->set(column: 'name', value: 'External')
+            ->where(column: 'id', value: 10)
+            ->execute();
 
         $refreshed = $this->modelsManager->refresh($user);
 
@@ -438,10 +511,11 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
             id: 20,
         );
 
-        $this->connection->query(
-            sql: 'DELETE FROM users WHERE id = 20',
-            native: true,
-        );
+        $this->connection->delete(
+            table: 'users',
+        )
+            ->where(column: 'id', value: 20)
+            ->execute();
 
         $this->expectException(ModelException::class);
 
@@ -464,9 +538,7 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
             name: 'D',
         );
 
-        $query = $this->modelsManager->query(
-            class: User::class,
-        );
+        $query = $this->modelsManager->query(User::class);
 
         self::assertInstanceOf(
             Query::class,
@@ -564,9 +636,10 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
             id: 1,
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, country_id) VALUES (70, 'orphan', 'orphan@example.test', NULL)",
-            native: true,
+        $this->seedUser(
+            id: 70,
+            name: 'orphan',
+            countryId: null,
         );
 
         $user = $this->modelsManager->fetchByIdentifier(
@@ -614,9 +687,10 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
             id: 1,
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, country_id) VALUES (81, 'null-country', 'null@example.test', NULL)",
-            native: true,
+        $this->seedUser(
+            id: 81,
+            name: 'null-country',
+            countryId: null,
         );
 
         $user = $this->modelsManager->fetchByIdentifier(
@@ -656,9 +730,9 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
         $user->email = 'seed@example.test';
         $user->countryId = 1;
 
-        $this->connection->query(
-            sql: "INSERT INTO users (id, name, email, country_id) VALUES (90, 'seeded', 'seed@example.test', 1)",
-            native: true,
+        $this->seedUser(
+            id: 90,
+            name: 'seeded',
         );
 
         $this->modelsManager->trackAsExisting($user);
@@ -667,10 +741,15 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
 
         (void) $this->modelsManager->save($user);
 
-        $row = $this->connection->query(
-            sql: 'SELECT name FROM users WHERE id = 90',
-            native: true,
-        )->fetchAssoc();
+        $result = $this->connection->select(
+            table: 'users',
+        )
+            ->select('name')
+            ->where(column: 'id', value: 90)
+            ->limit(1)
+            ->execute();
+
+        $row = $result->fetchAssoc();
 
         self::assertSame(
             'renamed',
@@ -680,14 +759,15 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testHasManyCascadeForceDeleteBypassesSoftDelete(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO cascade_groups (id, name) VALUES (200, 'group')",
-            native: true,
+        $this->seedCascadeGroup(
+            id: 200,
+            name: 'group',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO cascade_children (id, auto_group_id, label) VALUES (300, 200, 'child')",
-            native: true,
+        $this->seedCascadeChild(
+            id: 300,
+            autoGroupId: 200,
+            label: 'child',
         );
 
         $group = $this->modelsManager->fetchByIdentifier(
@@ -701,25 +781,27 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
             $deleted,
         );
 
-        self::assertEquals(
+        self::assertSame(
             0,
-            $this->countRowsIn(
+            $this->countRowsWhere(
                 table: 'cascade_children',
-                where: 'auto_group_id = 200',
+                column: 'auto_group_id',
+                value: 200,
             ),
         );
     }
 
     public function testHasOneCascadeForceDelete(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO cascade_groups (id, name) VALUES (210, 'group')",
-            native: true,
+        $this->seedCascadeGroup(
+            id: 210,
+            name: 'group',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO cascade_hasone_children (id, group_id, label) VALUES (310, 210, 'child')",
-            native: true,
+        $this->seedCascadeHasOneChild(
+            id: 310,
+            groupId: 210,
+            label: 'child',
         );
 
         $group = $this->modelsManager->fetchByIdentifier(
@@ -729,11 +811,12 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
 
         (void) $this->modelsManager->forceDelete($group);
 
-        self::assertEquals(
+        self::assertSame(
             0,
-            $this->countRowsIn(
+            $this->countRowsWhere(
                 table: 'cascade_hasone_children',
-                where: 'group_id = 210',
+                column: 'group_id',
+                value: 210,
             ),
         );
     }
@@ -749,23 +832,24 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
             $saved->id,
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO bulk_children (parent_id, label) VALUES (" . $saved->id . ", 'a')",
-            native: true,
+        $this->seedBulkChild(
+            parentId: $saved->id,
+            label: 'a',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO bulk_children (parent_id, label) VALUES (" . $saved->id . ", 'b')",
-            native: true,
+        $this->seedBulkChild(
+            parentId: $saved->id,
+            label: 'b',
         );
 
         (void) $this->modelsManager->delete($saved);
 
-        self::assertEquals(
+        self::assertSame(
             0,
-            $this->countRowsIn(
+            $this->countRowsWhere(
                 table: 'bulk_children',
-                where: 'parent_id = ' . $saved->id,
+                column: 'parent_id',
+                value: $saved->id,
             ),
         );
     }
@@ -781,9 +865,10 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
             $saved->id,
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO orphan_children (id, parent_id, label) VALUES (500, " . $saved->id . ", 'to-remove')",
-            native: true,
+        $this->seedOrphanChild(
+            id: 500,
+            parentId: $saved->id,
+            label: 'to-remove',
         );
 
         $fetched = $this->modelsManager->fetchByIdentifier(
@@ -809,25 +894,27 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
 
         (void) $this->modelsManager->save($fetched);
 
-        self::assertEquals(
+        self::assertSame(
             0,
-            $this->countRowsIn(
+            $this->countRowsWhere(
                 table: 'orphan_children',
-                where: 'id = 500',
+                column: 'id',
+                value: 500,
             ),
         );
     }
 
     public function testBelongsToCascadeOnDeleteRemovesParent(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO cascade_bt_parents (id, name) VALUES (700, 'parent')",
-            native: true,
+        $this->seedCascadeBtParent(
+            id: 700,
+            name: 'parent',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO cascade_bt_children (id, parent_id, label) VALUES (800, 700, 'child')",
-            native: true,
+        $this->seedCascadeBtChild(
+            id: 800,
+            parentId: 700,
+            label: 'child',
         );
 
         $child = $this->modelsManager->fetchByIdentifier(
@@ -837,11 +924,12 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
 
         (void) $this->modelsManager->delete($child);
 
-        self::assertEquals(
+        self::assertSame(
             0,
-            $this->countRowsIn(
+            $this->countRowsWhere(
                 table: 'cascade_bt_parents',
-                where: 'id = 700',
+                column: 'id',
+                value: 700,
             ),
         );
     }
@@ -1012,14 +1100,15 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testMergeAutoEagerWithSkipsNonNullableHasOne(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO strict_owners (id, name) VALUES (1, 'anna')",
-            native: true,
+        $this->seedStrictOwner(
+            id: 1,
+            name: 'anna',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO strict_profiles (id, owner_id, handle) VALUES (1, 1, 'anna-handle')",
-            native: true,
+        $this->seedStrictProfile(
+            id: 1,
+            ownerId: 1,
+            handle: 'anna-handle',
         );
 
         $owner = $this->modelsManager->fetchByIdentifier(
@@ -1043,14 +1132,15 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testCascadeSaveSkipsHasOneRelationLeftAsUninitializedLazy(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO strict_owners (id, name) VALUES (500, 'lazy')",
-            native: true,
+        $this->seedStrictOwner(
+            id: 500,
+            name: 'lazy',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO strict_profiles (id, owner_id, handle) VALUES (600, 500, 'lazy-handle')",
-            native: true,
+        $this->seedStrictProfile(
+            id: 600,
+            ownerId: 500,
+            handle: 'lazy-handle',
         );
 
         $owner = $this->modelsManager->fetchByIdentifier(
@@ -1070,14 +1160,15 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testCascadeSaveForceMaterializesUninitializedLazyHasOne(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO strict_owners (id, name) VALUES (510, 'force')",
-            native: true,
+        $this->seedStrictOwner(
+            id: 510,
+            name: 'force',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO strict_profiles (id, owner_id, handle) VALUES (610, 510, 'force-handle')",
-            native: true,
+        $this->seedStrictProfile(
+            id: 610,
+            ownerId: 510,
+            handle: 'force-handle',
         );
 
         $owner = $this->modelsManager->fetchByIdentifier(
@@ -1097,19 +1188,19 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testCascadeSaveForceMaterializesBelongsToManyRelationForeach(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO cascade_groups (id, name) VALUES (1200, 'g')",
-            native: true,
+        $this->seedCascadeGroup(
+            id: 1200,
+            name: 'g',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO cascade_tags (id, name) VALUES (1300, 'red')",
-            native: true,
+        $this->seedCascadeTag(
+            id: 1300,
+            name: 'red',
         );
 
-        $this->connection->query(
-            sql: 'INSERT INTO cascade_group_tag (group_id, tag_id) VALUES (1200, 1300)',
-            native: true,
+        $this->seedCascadeGroupTag(
+            groupId: 1200,
+            tagId: 1300,
         );
 
         $group = $this->modelsManager->fetchByIdentifier(
@@ -1122,12 +1213,14 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
             forceMaterialize: true,
         );
 
-        self::assertEquals(
+        self::assertSame(
             1,
-            $this->countRowsIn(
+            $this->connection->count(
                 table: 'cascade_group_tag',
-                where: 'group_id = 1200 AND tag_id = 1300',
-            ),
+            )
+                ->where(column: 'group_id', value: 1200)
+                ->where(column: 'tag_id', value: 1300)
+                ->count(),
         );
     }
 
@@ -1163,9 +1256,10 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testCascadeDeleteSkipsBelongsToWhenValueIsNull(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO cascade_bt_children (id, parent_id, label) VALUES (900, NULL, 'orphan')",
-            native: true,
+        $this->seedCascadeBtChild(
+            id: 900,
+            parentId: null,
+            label: 'orphan',
         );
 
         $child = $this->modelsManager->fetchByIdentifier(
@@ -1182,14 +1276,15 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
 
     public function testCascadeForceDeleteRoutesBelongsToParentThroughForceDelete(): void
     {
-        $this->connection->query(
-            sql: "INSERT INTO cascade_bt_parents (id, name) VALUES (901, 'force-parent')",
-            native: true,
+        $this->seedCascadeBtParent(
+            id: 901,
+            name: 'force-parent',
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO cascade_bt_children (id, parent_id, label) VALUES (902, 901, 'force-child')",
-            native: true,
+        $this->seedCascadeBtChild(
+            id: 902,
+            parentId: 901,
+            label: 'force-child',
         );
 
         $child = $this->modelsManager->fetchByIdentifier(
@@ -1199,11 +1294,12 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
 
         (void) $this->modelsManager->forceDelete($child);
 
-        self::assertEquals(
+        self::assertSame(
             0,
-            $this->countRowsIn(
+            $this->countRowsWhere(
                 table: 'cascade_bt_parents',
-                where: 'id = 901',
+                column: 'id',
+                value: 901,
             ),
         );
     }
@@ -1218,9 +1314,9 @@ class ModelsManagerIntegrationTest extends AbstractModelIntegrationTestCase
             id: 1600,
         );
 
-        $this->connection->query(
-            sql: "INSERT INTO profiles (user_id, bio) VALUES (1600, 'x')",
-            native: true,
+        $this->seedProfile(
+            userId: 1600,
+            bio: 'x',
         );
 
         $user = $this->modelsManager->fetchByIdentifier(
