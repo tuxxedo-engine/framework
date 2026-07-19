@@ -14,14 +14,12 @@ declare(strict_types=1);
 namespace Fixture\Model\Broken;
 
 use Tuxxedo\Model\Attribute\Column\Integer;
-use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Table;
 
 #[Table(name: 'bare_property_skipped')]
 class BarePropertySkipped
 {
-    #[PrimaryKey]
-    #[Integer]
+    #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
     public int $unattributed = 0;

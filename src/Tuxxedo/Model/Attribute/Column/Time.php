@@ -39,6 +39,10 @@ readonly class Time implements ColumnInterface, ColumnFormatInterface
         public ?string $name = null,
         public ?string $coercer = TimeCoercer::class,
         public ?string $behavior = null,
+        public bool $nullable = false,
+        public bool $primaryKey = false,
+        public bool $unique = false,
+        public ?string $default = null,
     ) {
         $this->coercerArguments = [
             'format' => $this->format,
@@ -59,6 +63,10 @@ readonly class Time implements ColumnInterface, ColumnFormatInterface
     ): TableColumnInterface {
         return $statement->time(
             name: $this->name ?? $propertyName,
+            nullable: $this->nullable,
+            primaryKey: $this->primaryKey,
+            unique: $this->unique,
+            default: $this->default,
         );
     }
 }

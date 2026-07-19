@@ -16,14 +16,12 @@ namespace Fixture\Model\Broken;
 use Tuxxedo\Model\Attribute\Column\Integer;
 use Tuxxedo\Model\Attribute\Column\Varchar;
 use Tuxxedo\Model\Attribute\Identifier;
-use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Table;
 
 #[Table(name: 'identifier_with_explicit_column')]
 class IdentifierWithExplicitColumn
 {
-    #[PrimaryKey]
-    #[Integer]
+    #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
     #[Varchar(length: 255)]

@@ -14,11 +14,9 @@ declare(strict_types=1);
 namespace Fixture\Model\Broken;
 
 use Tuxxedo\Model\Attribute\Column\Integer;
-use Tuxxedo\Model\Attribute\PrimaryKey;
 
 class NoTable
 {
-    #[PrimaryKey]
-    #[Integer]
+    #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 }

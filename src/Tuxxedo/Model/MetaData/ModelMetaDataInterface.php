@@ -65,6 +65,20 @@ interface ModelMetaDataInterface
     }
 
     /**
+     * @var list<list<string>>
+     */
+    public array $uniques {
+        get;
+    }
+
+    /**
+     * @var list<list<string>>
+     */
+    public array $indexes {
+        get;
+    }
+
+    /**
      * @template TBehavior of BehaviorInterface
      *
      * @param class-string<TBehavior> $behavior

@@ -37,6 +37,10 @@ readonly class Char implements ColumnInterface, ColumnLengthInterface
         public ?string $name = null,
         public ?string $coercer = null,
         public ?string $behavior = null,
+        public bool $nullable = false,
+        public bool $primaryKey = false,
+        public bool $unique = false,
+        public ?string $default = null,
     ) {
         $this->coercerArguments = [];
     }
@@ -48,6 +52,10 @@ readonly class Char implements ColumnInterface, ColumnLengthInterface
         return $statement->char(
             name: $this->name ?? $propertyName,
             length: $this->length,
+            nullable: $this->nullable,
+            primaryKey: $this->primaryKey,
+            unique: $this->unique,
+            default: $this->default,
         );
     }
 }

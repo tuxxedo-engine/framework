@@ -27,12 +27,18 @@ readonly class CreatedAt extends DateTime
         DateFormat|string $format = DateFormat::DEFAULT,
         ?string $name = null,
         ?string $coercer = DateTimeCoercer::class,
+        bool $nullable = true,
+        bool $unique = false,
+        ?string $default = null,
     ) {
         parent::__construct(
             format: $format,
             name: $name,
             coercer: $coercer,
             behavior: CreatedAtBehavior::class,
+            nullable: $nullable,
+            unique: $unique,
+            default: $default,
         );
     }
 }

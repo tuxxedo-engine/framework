@@ -15,7 +15,6 @@ namespace Fixture\Model;
 
 use Tuxxedo\Model\Attribute\Column\Integer;
 use Tuxxedo\Model\Attribute\Column\Varchar;
-use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Relation\HasOne;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\CascadeAction;
@@ -23,8 +22,7 @@ use Tuxxedo\Model\CascadeAction;
 #[Table(name: 'strict_owners')]
 class StrictOwner
 {
-    #[PrimaryKey]
-    #[Integer]
+    #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
     #[Varchar(length: 255)]

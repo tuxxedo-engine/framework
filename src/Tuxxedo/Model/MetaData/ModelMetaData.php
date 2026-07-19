@@ -23,6 +23,8 @@ readonly class ModelMetaData implements ModelMetaDataInterface
      * @param ModelIdentifierInterface[] $identifiers
      * @param ModelRelationInterface[] $relations
      * @param array<string, class-string<BehaviorInterface>> $behaviors
+     * @param list<list<string>> $uniques
+     * @param list<list<string>> $indexes
      */
     public function __construct(
         public string $model,
@@ -33,6 +35,8 @@ readonly class ModelMetaData implements ModelMetaDataInterface
         public bool $readonly,
         public array $relations = [],
         public array $behaviors = [],
+        public array $uniques = [],
+        public array $indexes = [],
     ) {
     }
 

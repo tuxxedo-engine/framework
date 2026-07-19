@@ -15,6 +15,7 @@ namespace Integration\Database\Query\Statement;
 
 use Fixture\Database\Status;
 use Tuxxedo\Database\DatabaseException;
+use Tuxxedo\Database\Query\Statement\Table\ForeignKeyAction;
 use Tuxxedo\Database\SqlException;
 
 abstract class AbstractCreateTableBuilderIntegrationTestCase extends AbstractBuilderIntegrationTestCase
@@ -990,6 +991,300 @@ abstract class AbstractCreateTableBuilderIntegrationTestCase extends AbstractBui
         self::assertEquals(
             0,
             $count['c'],
+        );
+    }
+
+    public function testCreateTableWithCompositePrimaryKey(): void
+    {
+        $table = $this->connection->createTable(
+            table: 'widgets',
+        );
+
+        $table->varchar(
+            name: 'scope',
+            length: 32,
+        );
+
+        $table->varchar(
+            name: 'name',
+            length: 32,
+        );
+
+        $table->primaryKey('scope', 'name');
+
+        $table->execute();
+
+        $this->connection->insert(
+            table: 'widgets',
+        )
+            ->set(
+                column: 'scope',
+                value: 'a',
+            )
+            ->set(
+                column: 'name',
+                value: 'x',
+            )
+            ->execute();
+
+        $this->expectException(DatabaseException::class);
+
+        $this->connection->insert(
+            table: 'widgets',
+        )
+            ->set(
+                column: 'scope',
+                value: 'a',
+            )
+            ->set(
+                column: 'name',
+                value: 'x',
+            )
+            ->execute();
+    }
+
+    public function testCreateTableWithMultiColumnUniqueConstraintEnforcesUniqueness(): void
+    {
+        $table = $this->connection->createTable(
+            table: 'widgets',
+        );
+
+        $table->integer(
+            name: 'id',
+            primaryKey: true,
+            autoIncrement: true,
+        );
+
+        $table->integer(
+            name: 'a',
+        );
+
+        $table->integer(
+            name: 'b',
+        );
+
+        $table->unique('a', 'b');
+
+        $table->execute();
+
+        $this->connection->insert(
+            table: 'widgets',
+        )
+            ->set(
+                column: 'a',
+                value: 1,
+            )
+            ->set(
+                column: 'b',
+                value: 2,
+            )
+            ->execute();
+
+        $this->connection->insert(
+            table: 'widgets',
+        )
+            ->set(
+                column: 'a',
+                value: 1,
+            )
+            ->set(
+                column: 'b',
+                value: 3,
+            )
+            ->execute();
+
+        $this->expectException(DatabaseException::class);
+
+        $this->connection->insert(
+            table: 'widgets',
+        )
+            ->set(
+                column: 'a',
+                value: 1,
+            )
+            ->set(
+                column: 'b',
+                value: 2,
+            )
+            ->execute();
+    }
+
+    public function testCreateTableWithIndexCreatesLookupIndex(): void
+    {
+        $table = $this->connection->createTable(
+            table: 'widgets',
+        );
+
+        $table->integer(
+            name: 'id',
+            primaryKey: true,
+            autoIncrement: true,
+        );
+
+        $table->varchar(
+            name: 'label',
+            length: 32,
+        );
+
+        $table->index('label');
+
+        $table->execute();
+
+        $this->connection->insert(
+            table: 'widgets',
+        )
+            ->set(
+                column: 'label',
+                value: 'alpha',
+            )
+            ->execute();
+
+        $this->connection->insert(
+            table: 'widgets',
+        )
+            ->set(
+                column: 'label',
+                value: 'beta',
+            )
+            ->execute();
+
+        $row = $this->connection->query(
+            sql: "SELECT label FROM widgets WHERE label = 'alpha'",
+            native: true,
+        )->fetchAssoc();
+
+        self::assertSame(
+            'alpha',
+            $row['label'],
+        );
+    }
+
+    public function testCreateTableWithMultiColumnIndexCreatesLookupIndex(): void
+    {
+        $table = $this->connection->createTable(
+            table: 'widgets',
+        );
+
+        $table->integer(
+            name: 'id',
+            primaryKey: true,
+            autoIncrement: true,
+        );
+
+        $table->varchar(
+            name: 'category',
+            length: 32,
+        );
+
+        $table->varchar(
+            name: 'label',
+            length: 32,
+        );
+
+        $table->index('category', 'label');
+
+        $table->execute();
+
+        $this->connection->insert(
+            table: 'widgets',
+        )
+            ->set(
+                column: 'category',
+                value: 'x',
+            )
+            ->set(
+                column: 'label',
+                value: 'alpha',
+            )
+            ->execute();
+
+        $row = $this->connection->query(
+            sql: "SELECT category, label FROM widgets WHERE category = 'x' AND label = 'alpha'",
+            native: true,
+        )->fetchAssoc();
+
+        self::assertSame(
+            'x',
+            $row['category'],
+        );
+    }
+
+    public function testCreateTableWithForeignKeyAcceptsValidReference(): void
+    {
+        $parent = $this->connection->createTable(
+            table: 'parents',
+        );
+
+        $parent->integer(
+            name: 'id',
+            primaryKey: true,
+            autoIncrement: true,
+        );
+
+        $parent->varchar(
+            name: 'name',
+            length: 32,
+        );
+
+        $parent->execute();
+
+        $child = $this->connection->createTable(
+            table: 'children',
+        );
+
+        $child->integer(
+            name: 'id',
+            primaryKey: true,
+            autoIncrement: true,
+        );
+
+        $child->integer(
+            name: 'parent_id',
+        );
+
+        $child->foreignKey(
+            columns: [
+                'parent_id',
+            ],
+            referencedTable: 'parents',
+            referencedColumns: [
+                'id',
+            ],
+            onDelete: ForeignKeyAction::CASCADE,
+        );
+
+        $child->execute();
+
+        $this->connection->insert(
+            table: 'parents',
+        )
+            ->set(
+                column: 'name',
+                value: 'root',
+            )
+            ->execute();
+
+        $parentId = $this->connection->lastInsertIdAsInt();
+
+        self::assertNotNull($parentId);
+
+        $this->connection->insert(
+            table: 'children',
+        )
+            ->set(
+                column: 'parent_id',
+                value: $parentId,
+            )
+            ->execute();
+
+        $row = $this->connection->query(
+            sql: 'SELECT parent_id FROM children',
+            native: true,
+        )->fetchAssoc();
+
+        self::assertEquals(
+            $parentId,
+            $row['parent_id'],
         );
     }
 

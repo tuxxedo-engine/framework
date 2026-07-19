@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Fixture\Model\Broken;
 
 use Tuxxedo\Model\Attribute\Column\Integer;
-use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\CascadeAction;
@@ -22,8 +21,7 @@ use Tuxxedo\Model\CascadeAction;
 #[Table(name: 'invalid_cascade_delete')]
 class InvalidCascadeDelete
 {
-    #[PrimaryKey]
-    #[Integer]
+    #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
     #[Integer(name: 'target_id')]

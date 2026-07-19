@@ -15,15 +15,13 @@ namespace Fixture\Model\Broken;
 
 use Fixture\Model\PostStatus;
 use Tuxxedo\Model\Attribute\Column\Integer;
-use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Relation\HasOne;
 use Tuxxedo\Model\Attribute\Table;
 
 #[Table(name: 'invalid_related_class')]
 class InvalidRelatedClass
 {
-    #[PrimaryKey]
-    #[Integer]
+    #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
     #[HasOne(related: PostStatus::class, foreignKey: 'owner_id')]

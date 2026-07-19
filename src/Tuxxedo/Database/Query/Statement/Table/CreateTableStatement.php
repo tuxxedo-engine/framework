@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Statement\Table;
 
+use Tuxxedo\Database\DatabaseException;
+use Tuxxedo\Database\Driver\ConnectionInterface;
+use Tuxxedo\Database\Driver\ResultSetInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\BigIntegerColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\BlobColumn;
@@ -41,6 +44,26 @@ class CreateTableStatement extends AbstractTableStatement implements CreateTable
      * @var list<ColumnInterface>
      */
     private array $columns = [];
+
+    /**
+     * @var list<array{columns: list<string>, referencedTable: string, referencedColumns: list<string>, onDelete: ForeignKeyAction|null, onUpdate: ForeignKeyAction|null}>
+     */
+    private array $foreignKeys = [];
+
+    /**
+     * @var list<string>
+     */
+    private array $primaryKeyColumns = [];
+
+    /**
+     * @var list<list<string>>
+     */
+    private array $uniqueConstraints = [];
+
+    /**
+     * @var list<list<string>>
+     */
+    private array $indexes = [];
 
     private bool $ifNotExists = false;
 
@@ -332,6 +355,48 @@ class CreateTableStatement extends AbstractTableStatement implements CreateTable
         );
     }
 
+    public function foreignKey(
+        array $columns,
+        string $referencedTable,
+        array $referencedColumns,
+        ?ForeignKeyAction $onDelete = null,
+        ?ForeignKeyAction $onUpdate = null,
+    ): static {
+        $this->foreignKeys[] = [
+            'columns' => $columns,
+            'referencedTable' => $referencedTable,
+            'referencedColumns' => $referencedColumns,
+            'onDelete' => $onDelete,
+            'onUpdate' => $onUpdate,
+        ];
+
+        return $this;
+    }
+
+    public function primaryKey(
+        string ...$columns,
+    ): static {
+        $this->primaryKeyColumns = \array_values($columns);
+
+        return $this;
+    }
+
+    public function unique(
+        string ...$columns,
+    ): static {
+        $this->uniqueConstraints[] = \array_values($columns);
+
+        return $this;
+    }
+
+    public function index(
+        string ...$columns,
+    ): static {
+        $this->indexes[] = \array_values($columns);
+
+        return $this;
+    }
+
     protected function generateSql(
         DialectInterface $dialect,
     ): string {
@@ -347,6 +412,63 @@ class CreateTableStatement extends AbstractTableStatement implements CreateTable
             $definitions[] = $column->toSql($dialect);
         }
 
+        if (\sizeof($this->primaryKeyColumns) > 0) {
+            $definitions[] = \sprintf(
+                'PRIMARY KEY (%s)',
+                \join(
+                    ', ',
+                    \array_map(
+                        static fn (string $c): string => $dialect->identifier($c),
+                        $this->primaryKeyColumns,
+                    ),
+                ),
+            );
+        }
+
+        foreach ($this->uniqueConstraints as $uniqueColumns) {
+            $definitions[] = \sprintf(
+                'UNIQUE (%s)',
+                \join(
+                    ', ',
+                    \array_map(
+                        static fn (string $c): string => $dialect->identifier($c),
+                        $uniqueColumns,
+                    ),
+                ),
+            );
+        }
+
+        foreach ($this->foreignKeys as $foreignKey) {
+            $clause = \sprintf(
+                'FOREIGN KEY (%s) REFERENCES %s (%s)',
+                \join(
+                    ', ',
+                    \array_map(
+                        static fn (string $c): string => $dialect->identifier($c),
+                        $foreignKey['columns'],
+                    ),
+                ),
+                $dialect->identifier($foreignKey['referencedTable']),
+                \join(
+                    ', ',
+                    \array_map(
+                        static fn (string $c): string => $dialect->identifier($c),
+                        $foreignKey['referencedColumns'],
+                    ),
+                ),
+            );
+
+            if ($foreignKey['onDelete'] !== null) {
+                $clause .= ' ON DELETE ' . $foreignKey['onDelete']->value;
+            }
+
+            if ($foreignKey['onUpdate'] !== null) {
+                $clause .= ' ON UPDATE ' . $foreignKey['onUpdate']->value;
+            }
+
+            $definitions[] = $clause;
+        }
+
         return \sprintf(
             'CREATE TABLE %s%s (%s)',
             $this->ifNotExists
@@ -354,6 +476,56 @@ class CreateTableStatement extends AbstractTableStatement implements CreateTable
                 : '',
             $dialect->identifier($this->table),
             \join(', ', $definitions),
+        );
+    }
+
+    public function execute(
+        ?ConnectionInterface $connection = null,
+    ): ResultSetInterface {
+        $resolvedConnection = $connection ?? $this->connection;
+
+        if ($resolvedConnection === null) {
+            throw DatabaseException::fromNoConnectionAvailable();
+        }
+
+        $result = $resolvedConnection->query(
+            sql: $this->generateSql($resolvedConnection->dialect),
+            native: true,
+        );
+
+        foreach ($this->indexes as $indexColumns) {
+            $resolvedConnection->query(
+                sql: $this->generateIndexSql(
+                    dialect: $resolvedConnection->dialect,
+                    columns: $indexColumns,
+                ),
+                native: true,
+            );
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param list<string> $columns
+     */
+    private function generateIndexSql(
+        DialectInterface $dialect,
+        array $columns,
+    ): string {
+        $indexName = $this->table . '_' . \join('_', $columns) . '_idx';
+
+        return \sprintf(
+            'CREATE INDEX %s ON %s (%s)',
+            $dialect->identifier($indexName),
+            $dialect->identifier($this->table),
+            \join(
+                ', ',
+                \array_map(
+                    static fn (string $c): string => $dialect->identifier($c),
+                    $columns,
+                ),
+            ),
         );
     }
 }

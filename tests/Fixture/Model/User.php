@@ -20,7 +20,6 @@ use Tuxxedo\Model\Attribute\Column\Integer;
 use Tuxxedo\Model\Attribute\Column\Timestamp;
 use Tuxxedo\Model\Attribute\Column\UpdatedAt;
 use Tuxxedo\Model\Attribute\Column\Varchar;
-use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
 use Tuxxedo\Model\Attribute\Relation\HasMany;
@@ -31,8 +30,7 @@ use Tuxxedo\Model\Relation;
 #[Table(name: 'users')]
 class User
 {
-    #[PrimaryKey]
-    #[Integer]
+    #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
     #[Varchar(length: 255)]
@@ -53,7 +51,7 @@ class User
     #[Integer(name: 'country_id')]
     public ?int $countryId = null;
 
-    #[Timestamp]
+    #[Timestamp(nullable: true)]
     public ?\DateTimeImmutable $lastLoginAt = null;
 
     #[CreatedAt]

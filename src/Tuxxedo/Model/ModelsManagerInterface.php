@@ -19,6 +19,7 @@ use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Query\Statement\CountStatementInterface;
 use Tuxxedo\Database\Query\Statement\ExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
+use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Behavior\BehaviorInterface;
@@ -27,7 +28,6 @@ use Tuxxedo\Model\Hydrator\HydratorInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 
-// @todo createTable(class-string $modelClass): CreateTableStatementInterface - introspects #[Table] + #[Column\*] attributes and builds a CreateTableStatement via toColumnType on each column attribute
 #[DefaultImplementation(class: ModelsManager::class, lifecycle: Lifecycle::SINGLETON)]
 interface ModelsManagerInterface
 {
@@ -58,6 +58,14 @@ interface ModelsManagerInterface
         object $model,
         bool $forceMaterialize = false,
     ): object;
+
+    /**
+     * @param class-string $modelClass
+     */
+    #[\NoDiscard]
+    public function createTable(
+        string $modelClass,
+    ): CreateTableStatementInterface;
 
     public function getCoercerFor(
         ColumnInterface $attribute,

@@ -38,6 +38,10 @@ readonly class Decimal implements ColumnInterface, ColumnPrecisionInterface
         public ?string $name = null,
         public ?string $coercer = null,
         public ?string $behavior = null,
+        public bool $nullable = false,
+        public bool $primaryKey = false,
+        public bool $unique = false,
+        public int|float|null $default = null,
     ) {
         $this->coercerArguments = [];
     }
@@ -50,6 +54,10 @@ readonly class Decimal implements ColumnInterface, ColumnPrecisionInterface
             name: $this->name ?? $propertyName,
             precision: $this->precision,
             scale: $this->scale,
+            nullable: $this->nullable,
+            primaryKey: $this->primaryKey,
+            unique: $this->unique,
+            default: $this->default,
         );
     }
 }

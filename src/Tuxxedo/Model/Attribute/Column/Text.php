@@ -35,6 +35,7 @@ readonly class Text implements ColumnInterface
         public ?string $name = null,
         public ?string $coercer = null,
         public ?string $behavior = null,
+        public bool $nullable = false,
     ) {
         $this->coercerArguments = [];
     }
@@ -45,6 +46,7 @@ readonly class Text implements ColumnInterface
     ): TableColumnInterface {
         return $statement->text(
             name: $this->name ?? $propertyName,
+            nullable: $this->nullable,
         );
     }
 }

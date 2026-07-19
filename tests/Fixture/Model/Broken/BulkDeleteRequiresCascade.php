@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Fixture\Model\Broken;
 
 use Tuxxedo\Model\Attribute\Column\Integer;
-use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Relation\HasMany;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\Relation;
@@ -22,8 +21,7 @@ use Tuxxedo\Model\Relation;
 #[Table(name: 'bulk_delete_requires_cascade')]
 class BulkDeleteRequiresCascade
 {
-    #[PrimaryKey]
-    #[Integer]
+    #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
     /**

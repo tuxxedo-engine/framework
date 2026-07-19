@@ -15,7 +15,6 @@ namespace Fixture\Model\Broken;
 
 use Tuxxedo\Model\Attribute\Column\DeletedAt;
 use Tuxxedo\Model\Attribute\Column\Integer;
-use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Relation\HasOne;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\CascadeAction;
@@ -23,8 +22,7 @@ use Tuxxedo\Model\CascadeAction;
 #[Table(name: 'both_soft_delete_has_one')]
 class BothSoftDeleteHasOne
 {
-    #[PrimaryKey]
-    #[Integer]
+    #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
     #[DeletedAt]

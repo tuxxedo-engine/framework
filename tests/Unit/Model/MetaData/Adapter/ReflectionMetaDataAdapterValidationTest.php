@@ -118,7 +118,7 @@ class ReflectionMetaDataAdapterValidationTest extends TestCase
     {
         $this->assertRejectsModelWithMessage(
             modelClass: DuplicatePrimaryKey::class,
-            needle: '#[PrimaryKey]',
+            needle: 'one primary-key column',
         );
     }
 

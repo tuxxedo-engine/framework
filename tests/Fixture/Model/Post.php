@@ -20,7 +20,6 @@ use Tuxxedo\Model\Attribute\Column\Enumeration;
 use Tuxxedo\Model\Attribute\Column\Integer;
 use Tuxxedo\Model\Attribute\Column\Text;
 use Tuxxedo\Model\Attribute\Column\Varchar;
-use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
 use Tuxxedo\Model\Attribute\Relation\HasMany;
@@ -30,8 +29,7 @@ use Tuxxedo\Model\Relation;
 #[Table(name: 'posts')]
 class Post
 {
-    #[PrimaryKey]
-    #[Integer]
+    #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
     #[Integer(name: 'user_id')]

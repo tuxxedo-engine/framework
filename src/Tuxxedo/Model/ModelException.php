@@ -90,13 +90,15 @@ class ModelException extends \Exception
     /**
      * @param class-string $modelClass
      */
-    public static function fromModelMayOnlyHaveOneKey(
+    public static function fromDuplicatePrimaryKey(
         string $modelClass,
+        string $property,
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Model defines both a #[PrimaryKey] and #[CompositeKey] but these are mutually exclusive',
+                'Invalid model class "%1$s": Models may only define one primary-key column (duplicate declared at %1$s::\$%2$s)',
                 $modelClass,
+                $property,
             ),
         );
     }
@@ -104,13 +106,13 @@ class ModelException extends \Exception
     /**
      * @param class-string $modelClass
      */
-    public static function fromDuplicatePrimaryKey(
+    public static function fromContradictoryPrimaryKey(
         string $modelClass,
         string $property,
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%1$s": Models may only define one #[PrimaryKey] (duplicate declared at %1$s::\$%2$s)',
+                'Invalid model class "%1$s": Column %1$s::\$%2$s declares primaryKey: true but the class also declares #[CompositeKey] — these are mutually exclusive',
                 $modelClass,
                 $property,
             ),

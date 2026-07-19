@@ -15,14 +15,12 @@ namespace App\Models;
 
 use Tuxxedo\Model\Attribute\Column\Integer;
 use Tuxxedo\Model\Attribute\Column\Varchar;
-use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Table;
 
 #[Table('users')]
 class User
 {
-    #[PrimaryKey(autoIncrement: true)]
-    #[Integer]
+    #[Integer(primaryKey: true, autoIncrement: true)]
     public int $id;
 
     #[Varchar]

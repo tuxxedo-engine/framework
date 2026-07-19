@@ -14,15 +14,13 @@ declare(strict_types=1);
 namespace Fixture\Model;
 
 use Tuxxedo\Model\Attribute\Column\Integer;
-use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Relation\HasOneThrough;
 use Tuxxedo\Model\Attribute\Table;
 
 #[Table(name: 'strict_through_owners')]
 class StrictThroughOwner
 {
-    #[PrimaryKey]
-    #[Integer]
+    #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
     #[Integer(name: 'nullable_ref_id')]

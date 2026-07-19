@@ -14,17 +14,15 @@ declare(strict_types=1);
 namespace Fixture\Model;
 
 use Tuxxedo\Model\Attribute\Column\Integer;
+use Tuxxedo\Model\Attribute\Column\Varchar;
 use Tuxxedo\Model\Attribute\Table;
 
-#[Table(name: 'branches')]
-class Branch
+#[Table(name: 'column_level_unique')]
+class ColumnLevelUnique
 {
     #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
-    #[Integer(name: 'region_id')]
-    public int $regionId = 0;
-
-    #[Integer(name: 'warehouse_id')]
-    public int $warehouseId = 0;
+    #[Varchar(length: 128, unique: true)]
+    public string $email = '';
 }

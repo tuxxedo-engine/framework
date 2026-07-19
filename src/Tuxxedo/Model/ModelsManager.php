@@ -21,6 +21,7 @@ use Tuxxedo\Database\Hydrator\HydratorInterface as DatabaseHydratorInterface;
 use Tuxxedo\Database\Query\Statement\CountStatementInterface;
 use Tuxxedo\Database\Query\Statement\ExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
+use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
@@ -119,6 +120,79 @@ class ModelsManager implements ModelsManagerInterface
         } finally {
             unset($this->saveInProgress[$model]);
         }
+    }
+
+    #[\NoDiscard]
+    public function createTable(
+        string $modelClass,
+    ): CreateTableStatementInterface {
+        $metaData = $this->metaData->getModel($modelClass);
+        $statement = $this->connection->createTable(
+            table: $metaData->table,
+        );
+
+        foreach ($metaData->columns as $column) {
+            $column->attribute->toColumnType(
+                statement: $statement,
+                propertyName: $column->property,
+            );
+        }
+
+        if ($metaData->key instanceof ModelCompositeKeyInterface) {
+            $statement->primaryKey(...$metaData->key->columns);
+        }
+
+        foreach ($metaData->uniques as $uniqueColumns) {
+            $statement->unique(...$uniqueColumns);
+        }
+
+        foreach ($metaData->indexes as $indexColumns) {
+            $statement->index(...$indexColumns);
+        }
+
+        foreach ($metaData->identifiers as $identifier) {
+            $alreadyUnique = false;
+
+            foreach ($metaData->columns as $column) {
+                if ($column->column === $identifier->column && $column->unique) {
+                    $alreadyUnique = true;
+
+                    break;
+                }
+            }
+
+            if (!$alreadyUnique) {
+                $statement->unique($identifier->column);
+            }
+        }
+
+        foreach ($metaData->relations as $relation) {
+            $attribute = $relation->attribute;
+
+            if (!$attribute instanceof BelongsTo) {
+                continue;
+            }
+
+            $targetMetaData = $this->metaData->getModel($relation->relatedClass);
+
+            if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
+                continue;
+            }
+
+            $referencedColumn = $attribute->ownerKey ?? $targetMetaData->key->column;
+
+            $statement->foreignKey(
+                columns: [
+                    $attribute->foreignKey,
+                ],
+                referencedTable: $targetMetaData->table,
+                referencedColumns: [
+                    $referencedColumn,
+                ],
+            );
+        }
+
+        return $statement;
     }
 
     /**

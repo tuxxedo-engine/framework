@@ -15,7 +15,6 @@ namespace Fixture\Model;
 
 use Tuxxedo\Model\Attribute\Column\Integer;
 use Tuxxedo\Model\Attribute\Column\Varchar;
-use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Relation\HasManyThrough;
 use Tuxxedo\Model\Attribute\Relation\HasOneThrough;
 use Tuxxedo\Model\Attribute\Table;
@@ -24,8 +23,7 @@ use Tuxxedo\Model\Relation;
 #[Table(name: 'regions')]
 class Region
 {
-    #[PrimaryKey]
-    #[Integer]
+    #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
     #[Varchar(length: 255)]

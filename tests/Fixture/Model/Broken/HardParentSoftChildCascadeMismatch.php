@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Fixture\Model\Broken;
 
 use Tuxxedo\Model\Attribute\Column\Integer;
-use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Relation\HasOne;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\CascadeAction;
@@ -22,8 +21,7 @@ use Tuxxedo\Model\CascadeAction;
 #[Table(name: 'hard_parent_soft_child_cascade_mismatch')]
 class HardParentSoftChildCascadeMismatch
 {
-    #[PrimaryKey]
-    #[Integer]
+    #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
     #[HasOne(

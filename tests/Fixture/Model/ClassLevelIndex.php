@@ -14,17 +14,21 @@ declare(strict_types=1);
 namespace Fixture\Model;
 
 use Tuxxedo\Model\Attribute\Column\Integer;
+use Tuxxedo\Model\Attribute\Column\Varchar;
+use Tuxxedo\Model\Attribute\Index;
 use Tuxxedo\Model\Attribute\Table;
 
-#[Table(name: 'branches')]
-class Branch
+#[Table(name: 'class_level_index')]
+#[Index('status')]
+#[Index('status', 'created_at')]
+class ClassLevelIndex
 {
     #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
-    #[Integer(name: 'region_id')]
-    public int $regionId = 0;
+    #[Varchar(length: 32)]
+    public string $status = '';
 
-    #[Integer(name: 'warehouse_id')]
-    public int $warehouseId = 0;
+    #[Varchar(name: 'created_at', length: 32)]
+    public string $createdAt = '';
 }

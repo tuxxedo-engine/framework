@@ -35,6 +35,10 @@ readonly class Double implements ColumnInterface
         public ?string $name = null,
         public ?string $coercer = null,
         public ?string $behavior = null,
+        public bool $nullable = false,
+        public bool $primaryKey = false,
+        public bool $unique = false,
+        public int|float|null $default = null,
     ) {
         $this->coercerArguments = [];
     }
@@ -45,6 +49,10 @@ readonly class Double implements ColumnInterface
     ): TableColumnInterface {
         return $statement->double(
             name: $this->name ?? $propertyName,
+            nullable: $this->nullable,
+            primaryKey: $this->primaryKey,
+            unique: $this->unique,
+            default: $this->default,
         );
     }
 }

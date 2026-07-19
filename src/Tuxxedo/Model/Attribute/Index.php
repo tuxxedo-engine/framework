@@ -13,12 +13,17 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\Attribute;
 
-#[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
-readonly class PrimaryKey
+#[\Attribute(flags: \Attribute::TARGET_CLASS | \Attribute::IS_REPEATABLE)]
+readonly class Index
 {
+    /**
+     * @var list<string>
+     */
+    public array $columns;
+
     public function __construct(
-        public ?string $column = null,
-        public bool $autoIncrement = true,
+        string ...$columns,
     ) {
+        $this->columns = \array_values($columns);
     }
 }

@@ -15,14 +15,12 @@ namespace Fixture\Model;
 
 use Tuxxedo\Model\Attribute\Column\Integer;
 use Tuxxedo\Model\Attribute\Column\Varchar;
-use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Table;
 
 #[Table(name: 'cascade_tags')]
 class CascadeTag
 {
-    #[PrimaryKey]
-    #[Integer]
+    #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
     #[Varchar(length: 255)]

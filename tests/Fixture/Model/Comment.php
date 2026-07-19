@@ -17,15 +17,13 @@ use Tuxxedo\Model\Attribute\Column\CreatedAt;
 use Tuxxedo\Model\Attribute\Column\DeletedAt;
 use Tuxxedo\Model\Attribute\Column\Integer;
 use Tuxxedo\Model\Attribute\Column\Text;
-use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Table;
 
 #[Table(name: 'comments')]
 class Comment
 {
-    #[PrimaryKey]
-    #[Integer]
+    #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
     #[Integer(name: 'post_id')]

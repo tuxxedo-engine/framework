@@ -13,7 +13,17 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\Attribute;
 
-#[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
+#[\Attribute(flags: \Attribute::TARGET_CLASS | \Attribute::IS_REPEATABLE)]
 readonly class Unique
 {
+    /**
+     * @var list<string>
+     */
+    public array $columns;
+
+    public function __construct(
+        string ...$columns,
+    ) {
+        $this->columns = \array_values($columns);
+    }
 }

@@ -161,4 +161,28 @@ interface CreateTableStatementInterface extends StatementInterface
         string $sql,
         bool $nullable = false,
     ): ColumnInterface;
+
+    /**
+     * @param list<string> $columns
+     * @param list<string> $referencedColumns
+     */
+    public function foreignKey(
+        array $columns,
+        string $referencedTable,
+        array $referencedColumns,
+        ?ForeignKeyAction $onDelete = null,
+        ?ForeignKeyAction $onUpdate = null,
+    ): static;
+
+    public function primaryKey(
+        string ...$columns,
+    ): static;
+
+    public function unique(
+        string ...$columns,
+    ): static;
+
+    public function index(
+        string ...$columns,
+    ): static;
 }

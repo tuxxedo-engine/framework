@@ -39,6 +39,9 @@ readonly class Enumeration implements ColumnInterface, ColumnEnumInterface
         public ?string $name = null,
         public ?string $coercer = EnumCoercer::class,
         public ?string $behavior = null,
+        public bool $nullable = false,
+        public bool $unique = false,
+        public ?string $default = null,
     ) {
         $this->coercerArguments = [
             'enum' => $this->enum,
@@ -57,6 +60,9 @@ readonly class Enumeration implements ColumnInterface, ColumnEnumInterface
                     : $case->name,
                 $this->enum::cases(),
             ),
+            nullable: $this->nullable,
+            unique: $this->unique,
+            default: $this->default,
         );
     }
 }

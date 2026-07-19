@@ -18,7 +18,6 @@ use Tuxxedo\Model\Attribute\Column\Integer;
 use Tuxxedo\Model\Attribute\Column\Time;
 use Tuxxedo\Model\Attribute\Column\TinyInteger;
 use Tuxxedo\Model\Attribute\Column\Varchar;
-use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\Relation;
@@ -26,8 +25,7 @@ use Tuxxedo\Model\Relation;
 #[Table(name: 'roles')]
 class Role
 {
-    #[PrimaryKey]
-    #[Integer]
+    #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
     #[Char(length: 20)]

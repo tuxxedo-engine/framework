@@ -16,15 +16,13 @@ namespace Fixture\Model\Broken;
 use Tuxxedo\Model\Attribute\Column\Integer;
 use Tuxxedo\Model\Attribute\Column\Varchar;
 use Tuxxedo\Model\Attribute\CompositeKey;
-use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Table;
 
 #[Table(name: 'both_key_types')]
 #[CompositeKey('scope', 'name')]
 class BothKeyTypes
 {
-    #[PrimaryKey]
-    #[Integer]
+    #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
     #[Varchar(length: 64)]

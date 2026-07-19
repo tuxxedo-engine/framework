@@ -14,6 +14,9 @@ declare(strict_types=1);
 namespace Unit\Model\MetaData\Adapter;
 
 use Fixture\Model\Category;
+use Fixture\Model\ClassLevelIndex;
+use Fixture\Model\ClassLevelUnique;
+use Fixture\Model\ColumnLevelUnique;
 use Fixture\Model\Comment;
 use Fixture\Model\CompositeKeyWithRelation;
 use Fixture\Model\Country;
@@ -591,5 +594,75 @@ class ReflectionMetaDataAdapterTest extends TestCase
                 $exception->getMessage(),
             );
         }
+    }
+
+    public function testColumnLevelUniqueFlagPropagatesToColumnMetaData(): void
+    {
+        $meta = $this->adapter->getModel(ColumnLevelUnique::class);
+        $columnsByProperty = self::indexColumnsByProperty($meta->columns);
+
+        self::assertArrayHasKey(
+            'email',
+            $columnsByProperty,
+        );
+
+        self::assertTrue(
+            $columnsByProperty['email']->unique,
+        );
+
+        self::assertFalse(
+            $columnsByProperty['id']->unique,
+        );
+    }
+
+    public function testClassLevelUniqueAttributesPopulateUniquesList(): void
+    {
+        $meta = $this->adapter->getModel(ClassLevelUnique::class);
+
+        self::assertSame(
+            [
+                [
+                    'tenant_id',
+                    'slug',
+                ],
+                [
+                    'external_ref',
+                ],
+            ],
+            $meta->uniques,
+        );
+    }
+
+    public function testClassLevelIndexAttributesPopulateIndexesList(): void
+    {
+        $meta = $this->adapter->getModel(ClassLevelIndex::class);
+
+        self::assertSame(
+            [
+                [
+                    'status',
+                ],
+                [
+                    'status',
+                    'created_at',
+                ],
+            ],
+            $meta->indexes,
+        );
+    }
+
+    public function testUniquesAndIndexesDefaultToEmptyWhenNoClassLevelAttributes(): void
+    {
+        $meta = $this->adapter->getModel(User::class);
+
+        self::assertSame(
+            [],
+            $meta->uniques,
+        );
+
+        self::assertSame(
+            [],
+            $meta->indexes,
+        );
     }
 }

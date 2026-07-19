@@ -16,7 +16,7 @@ namespace Tuxxedo\Model\MetaData\Adapter;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\CompositeKey;
 use Tuxxedo\Model\Attribute\Identifier;
-use Tuxxedo\Model\Attribute\PrimaryKey;
+use Tuxxedo\Model\Attribute\Index;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
 use Tuxxedo\Model\Attribute\Relation\HasMany;
@@ -104,8 +104,9 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         }
 
         if ($primaryKey !== null && $compositeKey !== null) {
-            throw ModelException::fromModelMayOnlyHaveOneKey(
+            throw ModelException::fromContradictoryPrimaryKey(
                 modelClass: $class->name,
+                property: $primaryKey->property,
             );
         }
 
@@ -125,6 +126,8 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             readonly: $readonly,
             relations: $this->getRelations($class, $columns, $primaryKey, $compositeKey),
             behaviors: $behaviors,
+            uniques: $this->getUniques($class),
+            indexes: $this->getIndexes($class),
         );
     }
 
@@ -690,8 +693,12 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         \ReflectionClass $reflection,
     ): bool {
         foreach ($reflection->getProperties() as $property) {
-            if (\sizeof($property->getAttributes(PrimaryKey::class)) !== 0) {
-                return true;
+            foreach ($property->getAttributes(ColumnInterface::class, \ReflectionAttribute::IS_INSTANCEOF) as $columnAttribute) {
+                $instance = $columnAttribute->newInstance();
+
+                if (\property_exists($instance, 'primaryKey') && $instance->primaryKey === true) {
+                    return true;
+                }
             }
         }
 
@@ -974,7 +981,6 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         $columns = [];
 
         foreach ($class->properties() as $property) {
-            $foundPrimaryKey = null;
             $propertyColumns = \iterator_to_array($property->getAttributes(ColumnInterface::class));
             $propertyColumnsCount = \sizeof($propertyColumns);
 
@@ -989,7 +995,15 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 );
             }
 
-            if ($property->hasAttribute(PrimaryKey::class)) {
+            $columnAttribute = $propertyColumns[0];
+            $columnName = $columnAttribute->name ?? $property->name;
+            $columnPrimaryKey = \property_exists($columnAttribute, 'primaryKey') && $columnAttribute->primaryKey === true;
+            $columnAutoIncrement = \property_exists($columnAttribute, 'autoIncrement') && $columnAttribute->autoIncrement === true;
+            $columnUnique = \property_exists($columnAttribute, 'unique') && $columnAttribute->unique === true;
+
+            $localPrimaryKey = null;
+
+            if ($columnPrimaryKey) {
                 if ($primaryKey !== null) {
                     throw ModelException::fromDuplicatePrimaryKey(
                         modelClass: $class->name,
@@ -997,13 +1011,13 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                     );
                 }
 
-                $foundPrimaryKey = $property->getAttribute(PrimaryKey::class);
-
-                $primaryKey = new ModelPrimaryKey(
+                $localPrimaryKey = new ModelPrimaryKey(
                     property: $property->name,
-                    column: $foundPrimaryKey->column ?? $property->name,
-                    autoIncrement: $foundPrimaryKey->autoIncrement,
+                    column: $columnName,
+                    autoIncrement: $columnAutoIncrement,
                 );
+
+                $primaryKey = $localPrimaryKey;
             }
 
             if ($property->hasAttribute(Identifier::class)) {
@@ -1021,25 +1035,23 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             $this->validateColumnCoercer(
                 modelClass: $class->name,
                 property: $property->name,
-                attribute: $propertyColumns[0],
+                attribute: $columnAttribute,
             );
 
             $this->validateColumnBehavior(
                 modelClass: $class->name,
                 property: $property->name,
-                attribute: $propertyColumns[0],
+                attribute: $columnAttribute,
             );
 
             $columns[] = new ModelColumn(
                 property: $property->name,
-                column: $propertyColumns[0]->name ?? $property->name,
+                column: $columnName,
                 nullable: $property->isNullable(),
-                unique: $property->hasAttribute(Unique::class),
+                unique: $columnUnique,
                 readonly: $property->reflector->isReadOnly(),
-                attribute: $propertyColumns[0],
-                primaryKey: $foundPrimaryKey !== null
-                    ? $primaryKey
-                    : null,
+                attribute: $columnAttribute,
+                primaryKey: $localPrimaryKey,
                 identifier: $identifiers[$property->name] ?? null,
             );
         }
@@ -1053,5 +1065,37 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         $identifiers = \array_values($identifiers);
 
         return $columns;
+    }
+
+    /**
+     * @return list<list<string>>
+     */
+    private function getUniques(
+        ClassReflector $class,
+    ): array {
+        $uniques = [];
+
+        foreach ($class->reflector->getAttributes(Unique::class) as $attribute) {
+            $instance = $attribute->newInstance();
+            $uniques[] = $instance->columns;
+        }
+
+        return $uniques;
+    }
+
+    /**
+     * @return list<list<string>>
+     */
+    private function getIndexes(
+        ClassReflector $class,
+    ): array {
+        $indexes = [];
+
+        foreach ($class->reflector->getAttributes(Index::class) as $attribute) {
+            $instance = $attribute->newInstance();
+            $indexes[] = $instance->columns;
+        }
+
+        return $indexes;
     }
 }

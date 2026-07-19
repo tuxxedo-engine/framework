@@ -14,17 +14,24 @@ declare(strict_types=1);
 namespace Fixture\Model;
 
 use Tuxxedo\Model\Attribute\Column\Integer;
+use Tuxxedo\Model\Attribute\Column\Varchar;
 use Tuxxedo\Model\Attribute\Table;
+use Tuxxedo\Model\Attribute\Unique;
 
-#[Table(name: 'branches')]
-class Branch
+#[Table(name: 'class_level_unique')]
+#[Unique('tenant_id', 'slug')]
+#[Unique('external_ref')]
+class ClassLevelUnique
 {
     #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
-    #[Integer(name: 'region_id')]
-    public int $regionId = 0;
+    #[Integer(name: 'tenant_id')]
+    public int $tenantId = 0;
 
-    #[Integer(name: 'warehouse_id')]
-    public int $warehouseId = 0;
+    #[Varchar(length: 64)]
+    public string $slug = '';
+
+    #[Varchar(name: 'external_ref', length: 64)]
+    public string $externalRef = '';
 }

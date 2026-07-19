@@ -18,15 +18,13 @@ use Tuxxedo\Model\Attribute\Column\Date;
 use Tuxxedo\Model\Attribute\Column\Integer;
 use Tuxxedo\Model\Attribute\Column\Json;
 use Tuxxedo\Model\Attribute\Column\Text;
-use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Table;
 
 #[Table(name: 'profiles')]
 class Profile
 {
-    #[PrimaryKey]
-    #[Integer]
+    #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
     #[Integer(name: 'user_id')]

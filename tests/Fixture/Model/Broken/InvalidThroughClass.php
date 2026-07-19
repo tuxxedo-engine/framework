@@ -15,7 +15,6 @@ namespace Fixture\Model\Broken;
 
 use Fixture\Model\PostStatus;
 use Tuxxedo\Model\Attribute\Column\Integer;
-use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Relation\HasManyThrough;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\Relation;
@@ -23,8 +22,7 @@ use Tuxxedo\Model\Relation;
 #[Table(name: 'invalid_through_class')]
 class InvalidThroughClass
 {
-    #[PrimaryKey]
-    #[Integer]
+    #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
     /**

@@ -36,6 +36,7 @@ readonly class Json implements ColumnInterface
         public ?string $name = null,
         public ?string $coercer = JsonCoercer::class,
         public ?string $behavior = null,
+        public bool $nullable = false,
     ) {
         $this->coercerArguments = [];
     }
@@ -46,6 +47,7 @@ readonly class Json implements ColumnInterface
     ): TableColumnInterface {
         return $statement->json(
             name: $this->name ?? $propertyName,
+            nullable: $this->nullable,
         );
     }
 }

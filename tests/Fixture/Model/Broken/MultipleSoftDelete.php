@@ -15,14 +15,12 @@ namespace Fixture\Model\Broken;
 
 use Tuxxedo\Model\Attribute\Column\DeletedAt;
 use Tuxxedo\Model\Attribute\Column\Integer;
-use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Table;
 
 #[Table(name: 'multiple_soft_delete')]
 class MultipleSoftDelete
 {
-    #[PrimaryKey]
-    #[Integer]
+    #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
     #[DeletedAt]

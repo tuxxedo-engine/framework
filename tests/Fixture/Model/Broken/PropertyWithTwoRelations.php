@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Fixture\Model\Broken;
 
 use Tuxxedo\Model\Attribute\Column\Integer;
-use Tuxxedo\Model\Attribute\PrimaryKey;
 use Tuxxedo\Model\Attribute\Relation\HasMany;
 use Tuxxedo\Model\Attribute\Relation\HasOne;
 use Tuxxedo\Model\Attribute\Table;
@@ -22,8 +21,7 @@ use Tuxxedo\Model\Attribute\Table;
 #[Table(name: 'property_with_two_relations')]
 class PropertyWithTwoRelations
 {
-    #[PrimaryKey]
-    #[Integer]
+    #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
     #[HasOne(related: ValidTarget::class, foreignKey: 'owner_id')]

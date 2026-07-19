@@ -35,6 +35,11 @@ readonly class TinyInteger implements ColumnInterface
         public ?string $name = null,
         public ?string $coercer = null,
         public ?string $behavior = null,
+        public bool $nullable = false,
+        public bool $primaryKey = false,
+        public bool $autoIncrement = false,
+        public bool $unique = false,
+        public ?int $default = null,
     ) {
         $this->coercerArguments = [];
     }
@@ -45,6 +50,11 @@ readonly class TinyInteger implements ColumnInterface
     ): TableColumnInterface {
         return $statement->tinyInteger(
             name: $this->name ?? $propertyName,
+            nullable: $this->nullable,
+            primaryKey: $this->primaryKey,
+            autoIncrement: $this->autoIncrement,
+            unique: $this->unique,
+            default: $this->default,
         );
     }
 }

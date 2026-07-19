@@ -35,6 +35,8 @@ readonly class Boolean implements ColumnInterface
         public ?string $name = null,
         public ?string $coercer = null,
         public ?string $behavior = null,
+        public bool $nullable = false,
+        public ?bool $default = null,
     ) {
         $this->coercerArguments = [];
     }
@@ -45,6 +47,8 @@ readonly class Boolean implements ColumnInterface
     ): TableColumnInterface {
         return $statement->boolean(
             name: $this->name ?? $propertyName,
+            nullable: $this->nullable,
+            default: $this->default,
         );
     }
 }
