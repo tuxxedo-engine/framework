@@ -15,6 +15,9 @@ namespace Unit\Model\Attribute;
 
 use Fixture\Model\CustomTinyColumn;
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Database\Query\Statement\Table\CreateTableStatement;
+use Tuxxedo\Model\Attribute\Column;
+use Tuxxedo\Model\ModelException;
 
 class ColumnTest extends TestCase
 {
@@ -47,5 +50,30 @@ class ColumnTest extends TestCase
             [],
             $column->coercerArguments,
         );
+    }
+
+    public function testBareColumnAttributeRefusesToProduceASqlType(): void
+    {
+        $column = new Column(name: 'orphan');
+        $statement = new CreateTableStatement(table: 'widgets');
+
+        try {
+            $column->toColumnType(
+                statement: $statement,
+                propertyName: 'orphan',
+            );
+
+            self::fail('Expected ModelException was not thrown');
+        } catch (ModelException $exception) {
+            self::assertStringContainsString(
+                'Untyped #[Column]',
+                $exception->getMessage(),
+            );
+
+            self::assertStringContainsString(
+                'orphan',
+                $exception->getMessage(),
+            );
+        }
     }
 }

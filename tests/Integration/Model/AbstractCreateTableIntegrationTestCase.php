@@ -14,9 +14,11 @@ declare(strict_types=1);
 namespace Integration\Model;
 
 use Fixture\Model\AllColumnTypes;
+use Fixture\Model\BelongsToCompositeTarget;
 use Fixture\Model\ClassLevelIndex;
 use Fixture\Model\ClassLevelUnique;
 use Fixture\Model\Country;
+use Fixture\Model\IdentifierAlreadyUnique;
 use Fixture\Model\PostStatus;
 use Fixture\Model\Setting;
 use Fixture\Model\Tag;
@@ -129,6 +131,52 @@ abstract class AbstractCreateTableIntegrationTestCase extends AbstractModelInteg
             ->fetchAssoc();
 
         self::assertSame('active', $row['status']);
+    }
+
+    public function testCreateTableSkipsIdentifierUniqueWhenColumnIsAlreadyUnique(): void
+    {
+        $this->modelsManager
+            ->createTable(IdentifierAlreadyUnique::class)
+            ->execute();
+
+        $this->connection->insert(
+            table: 'identifier_already_unique',
+        )
+            ->set(column: 'slug', value: 'php')
+            ->set(column: 'label', value: 'PHP')
+            ->execute();
+
+        $this->expectException(DatabaseException::class);
+
+        $this->connection->insert(
+            table: 'identifier_already_unique',
+        )
+            ->set(column: 'slug', value: 'php')
+            ->set(column: 'label', value: 'PHP Redux')
+            ->execute();
+    }
+
+    public function testCreateTableSkipsForeignKeyWhenBelongsToTargetHasCompositeKey(): void
+    {
+        $this->modelsManager
+            ->createTable(Setting::class)
+            ->execute();
+
+        $this->modelsManager
+            ->createTable(BelongsToCompositeTarget::class)
+            ->execute();
+
+        $this->connection->insert(
+            table: 'belongs_to_composite_target',
+        )
+            ->set(column: 'target_ref', value: 'orphan')
+            ->execute();
+
+        $count = $this->connection->count(
+            table: 'belongs_to_composite_target',
+        )->count();
+
+        self::assertSame(1, $count);
     }
 
     public function testCreateTableWithIdentifierPromotesColumnToUnique(): void

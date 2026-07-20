@@ -485,7 +485,7 @@ class CreateTableStatement extends AbstractTableStatement implements CreateTable
         $resolvedConnection = $connection ?? $this->connection;
 
         if ($resolvedConnection === null) {
-            throw DatabaseException::fromNoConnectionAvailable();
+            throw DatabaseException::fromNoConnectionAvailable(); // @codeCoverageIgnore
         }
 
         $result = $resolvedConnection->query(

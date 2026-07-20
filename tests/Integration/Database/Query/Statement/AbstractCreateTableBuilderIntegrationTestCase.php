@@ -1288,6 +1288,85 @@ abstract class AbstractCreateTableBuilderIntegrationTestCase extends AbstractBui
         );
     }
 
+    public function testCreateTableWithForeignKeyOnUpdateAction(): void
+    {
+        $parent = $this->connection->createTable(
+            table: 'parents',
+        );
+
+        $parent->integer(
+            name: 'id',
+            primaryKey: true,
+            autoIncrement: true,
+        );
+
+        $parent->varchar(
+            name: 'name',
+            length: 32,
+        );
+
+        $parent->execute();
+
+        $child = $this->connection->createTable(
+            table: 'children',
+        );
+
+        $child->integer(
+            name: 'id',
+            primaryKey: true,
+            autoIncrement: true,
+        );
+
+        $child->integer(
+            name: 'parent_id',
+        );
+
+        $child->foreignKey(
+            columns: [
+                'parent_id',
+            ],
+            referencedTable: 'parents',
+            referencedColumns: [
+                'id',
+            ],
+            onUpdate: ForeignKeyAction::CASCADE,
+        );
+
+        $child->execute();
+
+        $this->connection->insert(
+            table: 'parents',
+        )
+            ->set(
+                column: 'name',
+                value: 'root',
+            )
+            ->execute();
+
+        $parentId = $this->connection->lastInsertIdAsInt();
+
+        self::assertNotNull($parentId);
+
+        $this->connection->insert(
+            table: 'children',
+        )
+            ->set(
+                column: 'parent_id',
+                value: $parentId,
+            )
+            ->execute();
+
+        $row = $this->connection->query(
+            sql: 'SELECT parent_id FROM children',
+            native: true,
+        )->fetchAssoc();
+
+        self::assertEquals(
+            $parentId,
+            $row['parent_id'],
+        );
+    }
+
     public function testCreateTableWithoutColumnsThrows(): void
     {
         $this->expectException(SqlException::class);

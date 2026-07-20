@@ -456,4 +456,14 @@ class EnvironmentHeaderContextTest extends TestCase
             (new EnvironmentHeaderContext())->preferredLanguage,
         );
     }
+
+    public function testUserAgentReturnsHttpUserAgentServerValue(): void
+    {
+        $_SERVER['HTTP_USER_AGENT'] = 'Mozilla/5.0 (X11; Linux x86_64) TuxedoTest/1.0';
+
+        self::assertSame(
+            'Mozilla/5.0 (X11; Linux x86_64) TuxedoTest/1.0',
+            (new EnvironmentHeaderContext())->userAgent,
+        );
+    }
 }
