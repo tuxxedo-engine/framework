@@ -50,6 +50,7 @@ jobs:
       TUXXEDO_TEST_PGSQL_DATABASE_PREFIX: 'tuxxedo_test'
       TUXXEDO_TEST_PGSQL_CHARSET: 'UTF8'
       TUXXEDO_TEST_PGSQL_TIMEOUT: '5'
+      TUXXEDO_TEST_SKIP_BOOTSTRAP_DB: '1'
 
     steps:
       - name: Checkout code
@@ -64,6 +65,9 @@ jobs:
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
+
+      - name: Provision test databases
+        run: php tests/provision_databases.php "$(nproc)"
 
       - name: Run PHPUnit with coverage
         run: vendor/bin/paratest --processes=auto --coverage-clover=coverage.xml

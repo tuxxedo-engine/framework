@@ -26,7 +26,9 @@ if ($testToken !== false && $testToken !== '') {
     $_SERVER['TUXXEDO_WORKER_ID'] = $testToken;
 }
 
-if (DatabaseServerProbe::isMysqlAvailable()) {
+$skipBootstrapDb = \getenv('TUXXEDO_TEST_SKIP_BOOTSTRAP_DB') === '1';
+
+if (!$skipBootstrapDb && DatabaseServerProbe::isMysqlAvailable()) {
     $mysqlDatabaseName = MysqlTestEnv::databaseName();
 
     try {
@@ -115,7 +117,7 @@ if (DatabaseServerProbe::isMysqlAvailable()) {
     }
 }
 
-if (DatabaseServerProbe::isPgsqlAvailable()) {
+if (!$skipBootstrapDb && DatabaseServerProbe::isPgsqlAvailable()) {
     $pgsqlDatabaseName = PgsqlTestEnv::databaseName();
 
     $pgConnect = static function (string $dsn): PgSql\Connection|false {
