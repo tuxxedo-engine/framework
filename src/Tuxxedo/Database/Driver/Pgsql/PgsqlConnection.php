@@ -123,9 +123,11 @@ class PgsqlConnection extends AbstractConnection
                     : @\pg_connect(\join(' ', $dsn));
 
                 if ($pgsql === false) {
+                    $lastError = \error_get_last();
+
                     throw DatabaseException::fromCannotConnect(
                         code: 0,
-                        error: 'Connection error',
+                        error: $lastError['message'] ?? 'Connection error',
                     );
                 }
 

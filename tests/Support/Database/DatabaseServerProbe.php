@@ -15,6 +15,9 @@ namespace Support\Database;
 
 class DatabaseServerProbe
 {
+    private const int CONNECT_ATTEMPTS = 3;
+    private const int CONNECT_RETRY_DELAY_MS = 200;
+
     private static bool $mysqlProbed = false;
     private static ?string $mysqlReason = null;
 
@@ -58,37 +61,45 @@ class DatabaseServerProbe
         $pass = \getenv('TUXXEDO_TEST_MYSQL_PASS');
         $adminDb = \getenv('TUXXEDO_TEST_MYSQL_ADMIN_DATABASE');
 
-        try {
-            $connection = new \mysqli(
-                hostname: $host,
-                username: ($user === false || $user === '')
-                    ? null
-                    : $user,
-                password: ($pass === false)
-                    ? null
-                    : $pass,
-                database: ($adminDb === false || $adminDb === '')
-                    ? null
-                    : $adminDb,
-                port: $portValue,
-            );
+        $lastError = 'unknown error';
 
-            if ($connection->connect_errno !== 0) {
-                return self::$mysqlReason = \sprintf(
-                    'MySQL connect probe failed: %s',
-                    $connection->connect_error ?? 'unknown error',
+        for ($attempt = 1; $attempt <= self::CONNECT_ATTEMPTS; $attempt++) {
+            try {
+                $connection = new \mysqli(
+                    hostname: $host,
+                    username: ($user === false || $user === '')
+                        ? null
+                        : $user,
+                    password: ($pass === false)
+                        ? null
+                        : $pass,
+                    database: ($adminDb === false || $adminDb === '')
+                        ? null
+                        : $adminDb,
+                    port: $portValue,
                 );
+
+                if ($connection->connect_errno === 0) {
+                    $connection->close();
+
+                    return self::$mysqlReason = null;
+                }
+
+                $lastError = $connection->connect_error ?? 'unknown error';
+            } catch (\mysqli_sql_exception $exception) {
+                $lastError = $exception->getMessage();
             }
 
-            $connection->close();
-
-            return self::$mysqlReason = null;
-        } catch (\mysqli_sql_exception $exception) {
-            return self::$mysqlReason = \sprintf(
-                'MySQL connect probe failed: %s',
-                $exception->getMessage(),
-            );
+            if ($attempt < self::CONNECT_ATTEMPTS) {
+                \usleep(self::CONNECT_RETRY_DELAY_MS * 1000);
+            }
         }
+
+        return self::$mysqlReason = \sprintf(
+            'MySQL connect probe failed after %d attempts: %s',
+            self::CONNECT_ATTEMPTS,
+            $lastError,
+        );
     }
 
     public static function pgsqlUnavailableReason(): ?string
@@ -139,15 +150,31 @@ class DatabaseServerProbe
 
         $dsn[] = 'connect_timeout=' . self::pgsqlQuote('3');
 
-        $connection = @\pg_connect(\join(' ', $dsn));
+        $dsnString = \join(' ', $dsn);
+        $lastError = 'unknown error';
 
-        if ($connection === false) {
-            return self::$pgsqlReason = 'PgSQL connect probe failed';
+        for ($attempt = 1; $attempt <= self::CONNECT_ATTEMPTS; $attempt++) {
+            $connection = @\pg_connect($dsnString);
+
+            if ($connection !== false) {
+                \pg_close($connection);
+
+                return self::$pgsqlReason = null;
+            }
+
+            $errorInfo = \error_get_last();
+            $lastError = $errorInfo['message'] ?? 'unknown error';
+
+            if ($attempt < self::CONNECT_ATTEMPTS) {
+                \usleep(self::CONNECT_RETRY_DELAY_MS * 1000);
+            }
         }
 
-        \pg_close($connection);
-
-        return self::$pgsqlReason = null;
+        return self::$pgsqlReason = \sprintf(
+            'PgSQL connect probe failed after %d attempts: %s',
+            self::CONNECT_ATTEMPTS,
+            $lastError,
+        );
     }
 
     private static function pgsqlQuote(

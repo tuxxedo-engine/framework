@@ -39,10 +39,9 @@ if (DatabaseServerProbe::isMysqlAvailable()) {
         );
 
         if ($mysqlAdmin->connect_errno !== 0) {
-            \fwrite(
-                \STDERR,
+            throw new RuntimeException(
                 \sprintf(
-                    "[bootstrap] MySQL admin connect failed: %s\n",
+                    '[bootstrap] MySQL admin connect failed: %s',
                     $mysqlAdmin->connect_error ?? 'unknown error',
                 ),
             );
@@ -50,10 +49,9 @@ if (DatabaseServerProbe::isMysqlAvailable()) {
             $escapedName = \str_replace('`', '``', $mysqlDatabaseName);
 
             if ($mysqlAdmin->query(\sprintf('DROP DATABASE IF EXISTS `%s`', $escapedName)) === false) {
-                \fwrite(
-                    \STDERR,
+                throw new RuntimeException(
                     \sprintf(
-                        "[bootstrap] DROP DATABASE `%s` failed: %s\n",
+                        '[bootstrap] DROP DATABASE `%s` failed: %s',
                         $mysqlDatabaseName,
                         $mysqlAdmin->error,
                     ),
@@ -61,10 +59,9 @@ if (DatabaseServerProbe::isMysqlAvailable()) {
             }
 
             if ($mysqlAdmin->query(\sprintf('CREATE DATABASE `%s`', $escapedName)) === false) {
-                \fwrite(
-                    \STDERR,
+                throw new RuntimeException(
                     \sprintf(
-                        "[bootstrap] CREATE DATABASE `%s` failed: %s\n",
+                        '[bootstrap] CREATE DATABASE `%s` failed: %s',
                         $mysqlDatabaseName,
                         $mysqlAdmin->error,
                     ),
@@ -108,12 +105,12 @@ if (DatabaseServerProbe::isMysqlAvailable()) {
             );
         }
     } catch (mysqli_sql_exception $exception) {
-        \fwrite(
-            \STDERR,
+        throw new RuntimeException(
             \sprintf(
-                "MySQL admin bootstrap failed: %s\n",
+                '[bootstrap] MySQL admin bootstrap failed: %s',
                 $exception->getMessage(),
             ),
+            previous: $exception,
         );
     }
 }
@@ -161,18 +158,21 @@ if (DatabaseServerProbe::isPgsqlAvailable()) {
     $pgsqlAdmin = $pgConnect($buildPgsqlAdminDsn());
 
     if (!$pgsqlAdmin instanceof PgSql\Connection) {
-        \fwrite(
-            \STDERR,
-            "[bootstrap] PgSQL admin connect failed\n",
+        $errorInfo = \error_get_last();
+
+        throw new RuntimeException(
+            \sprintf(
+                '[bootstrap] PgSQL admin connect failed: %s',
+                $errorInfo['message'] ?? 'unknown error',
+            ),
         );
     } else {
         $escapedName = \str_replace('"', '""', $pgsqlDatabaseName);
 
         if (@\pg_query($pgsqlAdmin, \sprintf('DROP DATABASE IF EXISTS "%s" WITH (FORCE)', $escapedName)) === false) {
-            \fwrite(
-                \STDERR,
+            throw new RuntimeException(
                 \sprintf(
-                    "[bootstrap] DROP DATABASE \"%s\" failed: %s\n",
+                    '[bootstrap] DROP DATABASE "%s" failed: %s',
                     $pgsqlDatabaseName,
                     \pg_last_error($pgsqlAdmin),
                 ),
@@ -180,10 +180,9 @@ if (DatabaseServerProbe::isPgsqlAvailable()) {
         }
 
         if (@\pg_query($pgsqlAdmin, \sprintf('CREATE DATABASE "%s"', $escapedName)) === false) {
-            \fwrite(
-                \STDERR,
+            throw new RuntimeException(
                 \sprintf(
-                    "[bootstrap] CREATE DATABASE \"%s\" failed: %s\n",
+                    '[bootstrap] CREATE DATABASE "%s" failed: %s',
                     $pgsqlDatabaseName,
                     \pg_last_error($pgsqlAdmin),
                 ),
