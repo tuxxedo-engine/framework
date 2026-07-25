@@ -28,12 +28,14 @@ class JwtException extends \Exception
 
     public static function fromInvalidBase64Segment(
         string $segment,
+        ?\Throwable $previous = null,
     ): self {
         return new self(
             message: \sprintf(
                 'JWT segment "%s" is not valid base64url encoded data',
                 $segment,
             ),
+            previous: $previous,
         );
     }
 
@@ -151,23 +153,27 @@ class JwtException extends \Exception
     // @codeCoverageIgnoreStart
     public static function fromSigningFailed(
         string $algorithm,
+        ?\Throwable $previous = null,
     ): self {
         return new self(
             message: \sprintf(
                 'JWT signing with "%s" failed',
                 $algorithm,
             ),
+            previous: $previous,
         );
     }
 
     public static function fromVerificationError(
         string $algorithm,
+        ?\Throwable $previous = null,
     ): self {
         return new self(
             message: \sprintf(
                 'JWT signature verification with "%s" encountered an error',
                 $algorithm,
             ),
+            previous: $previous,
         );
     }
     // @codeCoverageIgnoreEnd
@@ -187,14 +193,19 @@ class JwtException extends \Exception
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromInvalidSignature(
         string $algorithm,
+        ?\Throwable $previous = null,
     ): self {
         return new self(
             message: \sprintf(
                 'JWT signature for "%s" is malformed',
                 $algorithm,
             ),
+            previous: $previous,
         );
     }
 
@@ -311,39 +322,6 @@ class JwtException extends \Exception
     {
         return new self(
             message: 'No JWT is available on the current request',
-        );
-    }
-
-    public static function fromInvalidObjectIdentifier(
-        string $oid,
-    ): self {
-        return new self(
-            message: \sprintf(
-                'Invalid ASN.1 object identifier: "%s"',
-                $oid,
-            ),
-        );
-    }
-
-    public static function fromDerLengthOverflow(
-        int $length,
-    ): self {
-        return new self(
-            message: \sprintf(
-                'ASN.1 DER length %d exceeds the 4-byte encoding limit',
-                $length,
-            ),
-        );
-    }
-
-    public static function fromInvalidDerContextTag(
-        int $tag,
-    ): self {
-        return new self(
-            message: \sprintf(
-                'ASN.1 DER context tag %d is outside the supported single-byte range (0-30)',
-                $tag,
-            ),
         );
     }
 

@@ -11,19 +11,19 @@
 
 declare(strict_types=1);
 
-namespace Unit\Security\Jwt;
+namespace Unit\Security\Crypto\Der;
 
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Security\Jwt\Der;
-use Tuxxedo\Security\Jwt\JwtException;
+use Tuxxedo\Security\Crypto\CryptoException;
+use Tuxxedo\Security\Crypto\Der\DerEncoder;
 
-class DerTest extends TestCase
+class DerEncoderTest extends TestCase
 {
     public function testLengthEncoderShortFormZero(): void
     {
         self::assertSame(
             "\x00",
-            Der::length(
+            DerEncoder::length(
                 length: 0,
             ),
         );
@@ -33,7 +33,7 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x01",
-            Der::length(
+            DerEncoder::length(
                 length: 1,
             ),
         );
@@ -43,7 +43,7 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x7F",
-            Der::length(
+            DerEncoder::length(
                 length: 127,
             ),
         );
@@ -53,14 +53,14 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x81\x80",
-            Der::length(
+            DerEncoder::length(
                 length: 128,
             ),
         );
 
         self::assertSame(
             "\x81\xFF",
-            Der::length(
+            DerEncoder::length(
                 length: 255,
             ),
         );
@@ -70,14 +70,14 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x82\x01\x00",
-            Der::length(
+            DerEncoder::length(
                 length: 256,
             ),
         );
 
         self::assertSame(
             "\x82\xFF\xFF",
-            Der::length(
+            DerEncoder::length(
                 length: 65535,
             ),
         );
@@ -87,14 +87,14 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x83\x01\x00\x00",
-            Der::length(
+            DerEncoder::length(
                 length: 65536,
             ),
         );
 
         self::assertSame(
             "\x83\xFF\xFF\xFF",
-            Der::length(
+            DerEncoder::length(
                 length: 16777215,
             ),
         );
@@ -104,14 +104,14 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x84\x01\x00\x00\x00",
-            Der::length(
+            DerEncoder::length(
                 length: 16777216,
             ),
         );
 
         self::assertSame(
             "\x84\xFF\xFF\xFF\xFF",
-            Der::length(
+            DerEncoder::length(
                 length: 0xFFFFFFFF,
             ),
         );
@@ -119,9 +119,9 @@ class DerTest extends TestCase
 
     public function testLengthEncoderThrowsOnOverflow(): void
     {
-        $this->expectException(JwtException::class);
+        $this->expectException(CryptoException::class);
 
-        Der::length(
+        DerEncoder::length(
             length: 0xFFFFFFFF + 1,
         );
     }
@@ -130,7 +130,7 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x02\x01\x2A",
-            Der::integer(
+            DerEncoder::integer(
                 bytes: "\x2A",
             ),
         );
@@ -140,14 +140,14 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x02\x02\x00\x80",
-            Der::integer(
+            DerEncoder::integer(
                 bytes: "\x80",
             ),
         );
 
         self::assertSame(
             "\x02\x02\x00\xFF",
-            Der::integer(
+            DerEncoder::integer(
                 bytes: "\xFF",
             ),
         );
@@ -157,7 +157,7 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x02\x02\x01\x02",
-            Der::integer(
+            DerEncoder::integer(
                 bytes: "\x00\x01\x02",
             ),
         );
@@ -167,7 +167,7 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x02\x02\x00\xFF",
-            Der::integer(
+            DerEncoder::integer(
                 bytes: "\x00\x00\xFF",
             ),
         );
@@ -177,7 +177,7 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x02\x01\x00",
-            Der::integer(
+            DerEncoder::integer(
                 bytes: "\x00",
             ),
         );
@@ -187,7 +187,7 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x02\x01\x00",
-            Der::integer(
+            DerEncoder::integer(
                 bytes: '',
             ),
         );
@@ -197,7 +197,7 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x02\x01\x00",
-            Der::integer(
+            DerEncoder::integer(
                 bytes: "\x00\x00\x00\x00",
             ),
         );
@@ -207,7 +207,7 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x03\x01\x00",
-            Der::bitString(
+            DerEncoder::bitString(
                 bytes: '',
             ),
         );
@@ -217,7 +217,7 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x03\x02\x00\xFF",
-            Der::bitString(
+            DerEncoder::bitString(
                 bytes: "\xFF",
             ),
         );
@@ -227,7 +227,7 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x03\x04\x00\x01\x02\x03",
-            Der::bitString(
+            DerEncoder::bitString(
                 bytes: "\x01\x02\x03",
             ),
         );
@@ -237,7 +237,7 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x04\x03\x01\x02\x03",
-            Der::octetString(
+            DerEncoder::octetString(
                 bytes: "\x01\x02\x03",
             ),
         );
@@ -247,7 +247,7 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x05\x00",
-            Der::null(),
+            DerEncoder::null(),
         );
     }
 
@@ -255,7 +255,7 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x30\x00",
-            Der::sequence(),
+            DerEncoder::sequence(),
         );
     }
 
@@ -263,8 +263,8 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x30\x03\x02\x01\x01",
-            Der::sequence(
-                Der::integer(
+            DerEncoder::sequence(
+                DerEncoder::integer(
                     bytes: "\x01",
                 ),
             ),
@@ -275,11 +275,11 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x30\x06\x02\x01\x01\x02\x01\x02",
-            Der::sequence(
-                Der::integer(
+            DerEncoder::sequence(
+                DerEncoder::integer(
                     bytes: "\x01",
                 ),
-                Der::integer(
+                DerEncoder::integer(
                     bytes: "\x02",
                 ),
             ),
@@ -290,7 +290,7 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\xA0\x03\x02\x01\x01",
-            Der::contextExplicit(
+            DerEncoder::contextExplicit(
                 tag: 0,
                 inner: "\x02\x01\x01",
             ),
@@ -301,7 +301,7 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\xA1\x03\x03\x01\x00",
-            Der::contextExplicit(
+            DerEncoder::contextExplicit(
                 tag: 1,
                 inner: "\x03\x01\x00",
             ),
@@ -310,9 +310,9 @@ class DerTest extends TestCase
 
     public function testContextExplicitThrowsForNegativeTag(): void
     {
-        $this->expectException(JwtException::class);
+        $this->expectException(CryptoException::class);
 
-        Der::contextExplicit(
+        DerEncoder::contextExplicit(
             tag: -1,
             inner: '',
         );
@@ -320,9 +320,9 @@ class DerTest extends TestCase
 
     public function testContextExplicitThrowsForTagAboveThirty(): void
     {
-        $this->expectException(JwtException::class);
+        $this->expectException(CryptoException::class);
 
-        Der::contextExplicit(
+        DerEncoder::contextExplicit(
             tag: 31,
             inner: '',
         );
@@ -332,7 +332,7 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x06\x09\x2A\x86\x48\x86\xF7\x0D\x01\x01\x01",
-            Der::objectIdentifier(
+            DerEncoder::objectIdentifier(
                 oid: '1.2.840.113549.1.1.1',
             ),
         );
@@ -342,7 +342,7 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x06\x07\x2A\x86\x48\xCE\x3D\x02\x01",
-            Der::objectIdentifier(
+            DerEncoder::objectIdentifier(
                 oid: '1.2.840.10045.2.1',
             ),
         );
@@ -352,7 +352,7 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x06\x08\x2A\x86\x48\xCE\x3D\x03\x01\x07",
-            Der::objectIdentifier(
+            DerEncoder::objectIdentifier(
                 oid: '1.2.840.10045.3.1.7',
             ),
         );
@@ -362,7 +362,7 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x06\x05\x2B\x81\x04\x00\x22",
-            Der::objectIdentifier(
+            DerEncoder::objectIdentifier(
                 oid: '1.3.132.0.34',
             ),
         );
@@ -372,7 +372,7 @@ class DerTest extends TestCase
     {
         self::assertSame(
             "\x06\x05\x2B\x81\x04\x00\x23",
-            Der::objectIdentifier(
+            DerEncoder::objectIdentifier(
                 oid: '1.3.132.0.35',
             ),
         );
@@ -380,45 +380,45 @@ class DerTest extends TestCase
 
     public function testObjectIdentifierThrowsForEmptyString(): void
     {
-        $this->expectException(JwtException::class);
+        $this->expectException(CryptoException::class);
 
-        Der::objectIdentifier(
+        DerEncoder::objectIdentifier(
             oid: '',
         );
     }
 
     public function testObjectIdentifierThrowsForSingleComponent(): void
     {
-        $this->expectException(JwtException::class);
+        $this->expectException(CryptoException::class);
 
-        Der::objectIdentifier(
+        DerEncoder::objectIdentifier(
             oid: '1',
         );
     }
 
     public function testObjectIdentifierThrowsForNonNumericComponent(): void
     {
-        $this->expectException(JwtException::class);
+        $this->expectException(CryptoException::class);
 
-        Der::objectIdentifier(
+        DerEncoder::objectIdentifier(
             oid: '1.abc.2',
         );
     }
 
     public function testObjectIdentifierThrowsForFirstComponentOutOfRange(): void
     {
-        $this->expectException(JwtException::class);
+        $this->expectException(CryptoException::class);
 
-        Der::objectIdentifier(
+        DerEncoder::objectIdentifier(
             oid: '3.1.2',
         );
     }
 
     public function testObjectIdentifierThrowsForSecondComponentOutOfRange(): void
     {
-        $this->expectException(JwtException::class);
+        $this->expectException(CryptoException::class);
 
-        Der::objectIdentifier(
+        DerEncoder::objectIdentifier(
             oid: '1.40.1',
         );
     }

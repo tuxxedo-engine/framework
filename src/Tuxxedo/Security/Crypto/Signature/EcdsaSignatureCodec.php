@@ -11,7 +11,9 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Security\Jwt;
+namespace Tuxxedo\Security\Crypto\Signature;
+
+use Tuxxedo\Security\Crypto\CryptoException;
 
 class EcdsaSignatureCodec
 {
@@ -22,7 +24,7 @@ class EcdsaSignatureCodec
     }
 
     /**
-     * @throws JwtException
+     * @throws CryptoException
      */
     public function derToJose(
         string $der,
@@ -30,8 +32,8 @@ class EcdsaSignatureCodec
         $position = 0;
 
         if (($der[$position] ?? '') !== "\x30") {
-            throw JwtException::fromInvalidSignature(
-                algorithm: $this->algorithmIdentifier,
+            throw CryptoException::fromMalformedEcdsaSignature(
+                algorithmIdentifier: $this->algorithmIdentifier,
             );
         }
 
@@ -43,8 +45,8 @@ class EcdsaSignatureCodec
         );
 
         if (($der[$position] ?? '') !== "\x02") {
-            throw JwtException::fromInvalidSignature(
-                algorithm: $this->algorithmIdentifier,
+            throw CryptoException::fromMalformedEcdsaSignature(
+                algorithmIdentifier: $this->algorithmIdentifier,
             );
         }
 
@@ -59,8 +61,8 @@ class EcdsaSignatureCodec
         $position += $firstIntegerLength;
 
         if (($der[$position] ?? '') !== "\x02") {
-            throw JwtException::fromInvalidSignature(
-                algorithm: $this->algorithmIdentifier,
+            throw CryptoException::fromMalformedEcdsaSignature(
+                algorithmIdentifier: $this->algorithmIdentifier,
             );
         }
 
@@ -80,7 +82,7 @@ class EcdsaSignatureCodec
     }
 
     /**
-     * @throws JwtException
+     * @throws CryptoException
      */
     public function joseToDer(
         string $jose,
@@ -116,7 +118,7 @@ class EcdsaSignatureCodec
     /**
      * @return array{int, int}
      *
-     * @throws JwtException
+     * @throws CryptoException
      */
     private function readDerLength(
         string $der,
@@ -148,7 +150,7 @@ class EcdsaSignatureCodec
     }
 
     /**
-     * @throws JwtException
+     * @throws CryptoException
      */
     private function skipDerLength(
         string $der,
@@ -165,7 +167,7 @@ class EcdsaSignatureCodec
     /**
      * @param int<0, max> $length
      *
-     * @throws JwtException
+     * @throws CryptoException
      */
     private function encodeDerLength(
         int $length,
@@ -182,8 +184,8 @@ class EcdsaSignatureCodec
             return "\x82" . \chr($length >> 8) . \chr($length & 0xff);
         }
 
-        throw JwtException::fromInvalidSignature(
-            algorithm: $this->algorithmIdentifier,
+        throw CryptoException::fromMalformedEcdsaSignature(
+            algorithmIdentifier: $this->algorithmIdentifier,
         );
     }
 }

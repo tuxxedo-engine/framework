@@ -11,12 +11,14 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Security\Jwt;
+namespace Tuxxedo\Security\Crypto\Signature;
+
+use Tuxxedo\Security\Crypto\CryptoException;
 
 class OpensslSignature
 {
     /**
-     * @throws JwtException
+     * @throws CryptoException
      */
     public static function sign(
         \OpenSSLAsymmetricKey $privateKey,
@@ -34,7 +36,7 @@ class OpensslSignature
 
         if ($ok === false || !\is_string($signature)) {
             // @codeCoverageIgnoreStart
-            throw JwtException::fromSigningFailed(
+            throw CryptoException::fromSigningFailed(
                 algorithm: $algorithmIdentifier,
             );
             // @codeCoverageIgnoreEnd
@@ -44,7 +46,7 @@ class OpensslSignature
     }
 
     /**
-     * @throws JwtException
+     * @throws CryptoException
      */
     public static function verify(
         \OpenSSLAsymmetricKey $publicKey,
@@ -62,7 +64,7 @@ class OpensslSignature
 
         if ($result === -1) {
             // @codeCoverageIgnoreStart
-            throw JwtException::fromVerificationError(
+            throw CryptoException::fromVerificationError(
                 algorithm: $algorithmIdentifier,
             );
             // @codeCoverageIgnoreEnd

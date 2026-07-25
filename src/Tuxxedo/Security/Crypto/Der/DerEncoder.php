@@ -11,9 +11,11 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Security\Jwt;
+namespace Tuxxedo\Security\Crypto\Der;
 
-class Der
+use Tuxxedo\Security\Crypto\CryptoException;
+
+class DerEncoder
 {
     private const int TAG_INTEGER = 0x02;
     private const int TAG_BIT_STRING = 0x03;
@@ -26,7 +28,7 @@ class Der
     /**
      * @param int<0, max> $length
      *
-     * @throws JwtException
+     * @throws CryptoException
      */
     public static function length(
         int $length,
@@ -58,13 +60,13 @@ class Der
                 \chr($length & 0xFF);
         }
 
-        throw JwtException::fromDerLengthOverflow(
+        throw CryptoException::fromDerLengthOverflow(
             length: $length,
         );
     }
 
     /**
-     * @throws JwtException
+     * @throws CryptoException
      */
     public static function integer(
         string $bytes,
@@ -81,7 +83,7 @@ class Der
     }
 
     /**
-     * @throws JwtException
+     * @throws CryptoException
      */
     public static function bitString(
         string $bytes,
@@ -92,7 +94,7 @@ class Der
     }
 
     /**
-     * @throws JwtException
+     * @throws CryptoException
      */
     public static function octetString(
         string $bytes,
@@ -106,7 +108,7 @@ class Der
     }
 
     /**
-     * @throws JwtException
+     * @throws CryptoException
      */
     public static function sequence(
         string ...$children,
@@ -117,14 +119,14 @@ class Der
     }
 
     /**
-     * @throws JwtException
+     * @throws CryptoException
      */
     public static function contextExplicit(
         int $tag,
         string $inner,
     ): string {
         if ($tag < 0 || $tag > 30) {
-            throw JwtException::fromInvalidDerContextTag(
+            throw CryptoException::fromInvalidDerContextTag(
                 tag: $tag,
             );
         }
@@ -133,13 +135,13 @@ class Der
     }
 
     /**
-     * @throws JwtException
+     * @throws CryptoException
      */
     public static function objectIdentifier(
         string $oid,
     ): string {
         if (\preg_match('/^\d+(\.\d+)+$/', $oid) !== 1) {
-            throw JwtException::fromInvalidObjectIdentifier(
+            throw CryptoException::fromInvalidObjectIdentifier(
                 oid: $oid,
             );
         }
@@ -151,7 +153,7 @@ class Der
 
         if (\sizeof($parts) < 2) {
             // @codeCoverageIgnoreStart
-            throw JwtException::fromInvalidObjectIdentifier(
+            throw CryptoException::fromInvalidObjectIdentifier(
                 oid: $oid,
             );
             // @codeCoverageIgnoreEnd
@@ -161,20 +163,20 @@ class Der
         $second = $parts[1];
 
         if ($first > 2) {
-            throw JwtException::fromInvalidObjectIdentifier(
+            throw CryptoException::fromInvalidObjectIdentifier(
                 oid: $oid,
             );
         }
 
         if ($first < 2 && $second > 39) {
-            throw JwtException::fromInvalidObjectIdentifier(
+            throw CryptoException::fromInvalidObjectIdentifier(
                 oid: $oid,
             );
         }
 
         if ($first < 0 || $second < 0) {
             // @codeCoverageIgnoreStart
-            throw JwtException::fromInvalidObjectIdentifier(
+            throw CryptoException::fromInvalidObjectIdentifier(
                 oid: $oid,
             );
             // @codeCoverageIgnoreEnd
@@ -189,7 +191,7 @@ class Der
 
             if ($part < 0) {
                 // @codeCoverageIgnoreStart
-                throw JwtException::fromInvalidObjectIdentifier(
+                throw CryptoException::fromInvalidObjectIdentifier(
                     oid: $oid,
                 );
                 // @codeCoverageIgnoreEnd

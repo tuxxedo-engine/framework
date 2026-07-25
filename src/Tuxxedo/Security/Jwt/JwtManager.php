@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Security\Jwt;
 
+use Tuxxedo\Security\Crypto\Base64Url;
+use Tuxxedo\Security\Crypto\CryptoException;
 use Tuxxedo\Security\Jwt\Constraint\ConstraintInterface;
 use Tuxxedo\Security\Jwt\Constraint\SignedWith;
 use Tuxxedo\Security\Jwt\Key\KeyInterface;
@@ -137,7 +139,9 @@ class JwtManager implements JwtManagerInterface
     private function base64UrlEncode(
         string $bytes,
     ): string {
-        return \rtrim(\strtr(\base64_encode($bytes), '+/', '-_'), '=');
+        return Base64Url::encode(
+            bytes: $bytes,
+        );
     }
 
     /**
@@ -146,22 +150,16 @@ class JwtManager implements JwtManagerInterface
     private function base64UrlDecode(
         string $segment,
     ): string {
-        $normalized = \strtr($segment, '-_', '+/');
-        $padding = \strlen($normalized) % 4;
-
-        if ($padding > 0) {
-            $normalized .= \str_repeat('=', 4 - $padding);
-        }
-
-        $decoded = \base64_decode($normalized, strict: true);
-
-        if ($decoded === false) {
-            throw JwtException::fromInvalidBase64Segment(
+        try {
+            return Base64Url::decode(
                 segment: $segment,
             );
+        } catch (CryptoException $exception) {
+            throw JwtException::fromInvalidBase64Segment(
+                segment: $segment,
+                previous: $exception,
+            );
         }
-
-        return $decoded;
     }
 
     /**

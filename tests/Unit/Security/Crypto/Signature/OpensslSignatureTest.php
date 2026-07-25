@@ -11,11 +11,11 @@
 
 declare(strict_types=1);
 
-namespace Unit\Security\Jwt;
+namespace Unit\Security\Crypto\Signature;
 
 use PHPUnit\Framework\TestCase;
 use Support\Security\Jwt\JwtKeyFixtures;
-use Tuxxedo\Security\Jwt\OpensslSignature;
+use Tuxxedo\Security\Crypto\Signature\OpensslSignature;
 
 class OpensslSignatureTest extends TestCase
 {
@@ -189,5 +189,4 @@ class OpensslSignatureTest extends TestCase
             ),
         );
     }
-
 }

@@ -13,10 +13,11 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Security\Jwt\Verifier;
 
+use Tuxxedo\Security\Crypto\CryptoException;
+use Tuxxedo\Security\Crypto\Signature\OpensslSignature;
 use Tuxxedo\Security\Jwt\Algorithm;
 use Tuxxedo\Security\Jwt\JwtException;
 use Tuxxedo\Security\Jwt\Key\RsaPublicKey;
-use Tuxxedo\Security\Jwt\OpensslSignature;
 
 class RsaVerifier implements VerifierInterface
 {
@@ -47,12 +48,21 @@ class RsaVerifier implements VerifierInterface
         string $payload,
         string $signature,
     ): bool {
-        return OpensslSignature::verify(
-            publicKey: $this->key->handle,
-            opensslAlgorithm: $this->opensslAlgorithm,
-            payload: $payload,
-            signature: $signature,
-            algorithmIdentifier: $this->algorithmIdentifier,
-        );
+        try {
+            return OpensslSignature::verify(
+                publicKey: $this->key->handle,
+                opensslAlgorithm: $this->opensslAlgorithm,
+                payload: $payload,
+                signature: $signature,
+                algorithmIdentifier: $this->algorithmIdentifier,
+            );
+        } catch (CryptoException $exception) { // @codeCoverageIgnore
+            // @codeCoverageIgnoreStart
+            throw JwtException::fromVerificationError(
+                algorithm: $this->algorithmIdentifier,
+                previous: $exception,
+            );
+            // @codeCoverageIgnoreEnd
+        }
     }
 }

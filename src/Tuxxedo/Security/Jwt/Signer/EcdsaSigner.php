@@ -13,11 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Security\Jwt\Signer;
 
+use Tuxxedo\Security\Crypto\CryptoException;
+use Tuxxedo\Security\Crypto\Signature\EcdsaSignatureCodec;
+use Tuxxedo\Security\Crypto\Signature\OpensslSignature;
 use Tuxxedo\Security\Jwt\Algorithm;
-use Tuxxedo\Security\Jwt\EcdsaSignatureCodec;
 use Tuxxedo\Security\Jwt\JwtException;
 use Tuxxedo\Security\Jwt\Key\EcdsaPrivateKey;
-use Tuxxedo\Security\Jwt\OpensslSignature;
 
 class EcdsaSigner implements SignerInterface
 {
@@ -62,15 +63,24 @@ class EcdsaSigner implements SignerInterface
     public function sign(
         string $payload,
     ): string {
-        $der = OpensslSignature::sign(
-            privateKey: $this->key->handle,
-            opensslAlgorithm: $this->opensslAlgorithm,
-            payload: $payload,
-            algorithmIdentifier: $this->algorithmIdentifier,
-        );
+        try {
+            $der = OpensslSignature::sign(
+                privateKey: $this->key->handle,
+                opensslAlgorithm: $this->opensslAlgorithm,
+                payload: $payload,
+                algorithmIdentifier: $this->algorithmIdentifier,
+            );
 
-        return $this->codec->derToJose(
-            der: $der,
-        );
+            return $this->codec->derToJose(
+                der: $der,
+            );
+        } catch (CryptoException $exception) { // @codeCoverageIgnore
+            // @codeCoverageIgnoreStart
+            throw JwtException::fromSigningFailed(
+                algorithm: $this->algorithmIdentifier,
+                previous: $exception,
+            );
+            // @codeCoverageIgnoreEnd
+        }
     }
 }

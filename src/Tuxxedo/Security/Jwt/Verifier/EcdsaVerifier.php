@@ -13,11 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Security\Jwt\Verifier;
 
+use Tuxxedo\Security\Crypto\CryptoException;
+use Tuxxedo\Security\Crypto\Signature\EcdsaSignatureCodec;
+use Tuxxedo\Security\Crypto\Signature\OpensslSignature;
 use Tuxxedo\Security\Jwt\Algorithm;
-use Tuxxedo\Security\Jwt\EcdsaSignatureCodec;
 use Tuxxedo\Security\Jwt\JwtException;
 use Tuxxedo\Security\Jwt\Key\EcdsaPublicKey;
-use Tuxxedo\Security\Jwt\OpensslSignature;
 
 class EcdsaVerifier implements VerifierInterface
 {
@@ -73,16 +74,25 @@ class EcdsaVerifier implements VerifierInterface
             );
         }
 
-        $der = $this->codec->joseToDer(
-            jose: $signature,
-        );
+        try {
+            $der = $this->codec->joseToDer(
+                jose: $signature,
+            );
 
-        return OpensslSignature::verify(
-            publicKey: $this->key->handle,
-            opensslAlgorithm: $this->opensslAlgorithm,
-            payload: $payload,
-            signature: $der,
-            algorithmIdentifier: $this->algorithmIdentifier,
-        );
+            return OpensslSignature::verify(
+                publicKey: $this->key->handle,
+                opensslAlgorithm: $this->opensslAlgorithm,
+                payload: $payload,
+                signature: $der,
+                algorithmIdentifier: $this->algorithmIdentifier,
+            );
+        } catch (CryptoException $exception) { // @codeCoverageIgnore
+            // @codeCoverageIgnoreStart
+            throw JwtException::fromInvalidSignature(
+                algorithm: $this->algorithmIdentifier,
+                previous: $exception,
+            );
+            // @codeCoverageIgnoreEnd
+        }
     }
 }

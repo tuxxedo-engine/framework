@@ -11,12 +11,12 @@
 
 declare(strict_types=1);
 
-namespace Unit\Security\Jwt;
+namespace Unit\Security\Crypto\Signature;
 
 use PHPUnit\Framework\TestCase;
 use Support\Security\Jwt\JwtKeyFixtures;
-use Tuxxedo\Security\Jwt\EcdsaSignatureCodec;
-use Tuxxedo\Security\Jwt\JwtException;
+use Tuxxedo\Security\Crypto\CryptoException;
+use Tuxxedo\Security\Crypto\Signature\EcdsaSignatureCodec;
 
 class EcdsaSignatureCodecTest extends TestCase
 {
@@ -172,7 +172,7 @@ class EcdsaSignatureCodecTest extends TestCase
             componentLength: self::P256_COMPONENT_LENGTH,
         );
 
-        $this->expectException(JwtException::class);
+        $this->expectException(CryptoException::class);
 
         $codec->derToJose(
             der: "\x00\x00",
@@ -186,7 +186,7 @@ class EcdsaSignatureCodecTest extends TestCase
             componentLength: self::P256_COMPONENT_LENGTH,
         );
 
-        $this->expectException(JwtException::class);
+        $this->expectException(CryptoException::class);
 
         $codec->derToJose(
             der: "\x30\x04\xFF\x01\x00\x00",
@@ -200,7 +200,7 @@ class EcdsaSignatureCodecTest extends TestCase
             componentLength: self::P256_COMPONENT_LENGTH,
         );
 
-        $this->expectException(JwtException::class);
+        $this->expectException(CryptoException::class);
 
         $codec->derToJose(
             der: "\x30\x06\x02\x01\x01\xFF\x01\x00",
@@ -400,7 +400,7 @@ class EcdsaSignatureCodecTest extends TestCase
             componentLength: $componentLength,
         );
 
-        $this->expectException(JwtException::class);
+        $this->expectException(CryptoException::class);
 
         $codec->joseToDer(
             jose: \str_repeat("\x01", $componentLength * 2),

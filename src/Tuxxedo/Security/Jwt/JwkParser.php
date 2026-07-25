@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Security\Jwt;
 
+use Tuxxedo\Security\Crypto\CryptoException;
+use Tuxxedo\Security\Crypto\Der\DerEncoder;
 use Tuxxedo\Security\Jwt\Key\EcdsaPrivateKey;
 use Tuxxedo\Security\Jwt\Key\EcdsaPublicKey;
 use Tuxxedo\Security\Jwt\Key\EdDsaPrivateKey;
@@ -33,6 +35,7 @@ class JwkParser
     /**
      * @param array<string, mixed> $jwk
      *
+     * @throws CryptoException
      * @throws JwtException
      */
     public static function parse(
@@ -165,6 +168,7 @@ class JwkParser
     /**
      * @param array<string, mixed> $jwk
      *
+     * @throws CryptoException
      * @throws JwtException
      */
     private static function parseRsa(
@@ -191,6 +195,7 @@ class JwkParser
     /**
      * @param array<string, mixed> $jwk
      *
+     * @throws CryptoException
      * @throws JwtException
      */
     private static function parseEc(
@@ -240,6 +245,7 @@ class JwkParser
     /**
      * @param array<string, mixed> $jwk
      *
+     * @throws CryptoException
      * @throws JwtException
      */
     public static function rsaPublicPemFrom(
@@ -255,19 +261,19 @@ class JwkParser
             field: 'e',
         );
 
-        $der = Der::sequence(
-            Der::sequence(
-                Der::objectIdentifier(
+        $der = DerEncoder::sequence(
+            DerEncoder::sequence(
+                DerEncoder::objectIdentifier(
                     oid: self::OID_RSA_ENCRYPTION,
                 ),
-                Der::null(),
+                DerEncoder::null(),
             ),
-            Der::bitString(
-                bytes: Der::sequence(
-                    Der::integer(
+            DerEncoder::bitString(
+                bytes: DerEncoder::sequence(
+                    DerEncoder::integer(
                         bytes: $n,
                     ),
-                    Der::integer(
+                    DerEncoder::integer(
                         bytes: $e,
                     ),
                 ),
@@ -283,6 +289,7 @@ class JwkParser
     /**
      * @param array<string, mixed> $jwk
      *
+     * @throws CryptoException
      * @throws JwtException
      */
     public static function rsaPrivatePemFrom(
@@ -297,32 +304,32 @@ class JwkParser
             );
         }
 
-        $der = Der::sequence(
-            Der::integer(
+        $der = DerEncoder::sequence(
+            DerEncoder::integer(
                 bytes: "\x00",
             ),
-            Der::integer(
+            DerEncoder::integer(
                 bytes: $decoded['n'],
             ),
-            Der::integer(
+            DerEncoder::integer(
                 bytes: $decoded['e'],
             ),
-            Der::integer(
+            DerEncoder::integer(
                 bytes: $decoded['d'],
             ),
-            Der::integer(
+            DerEncoder::integer(
                 bytes: $decoded['p'],
             ),
-            Der::integer(
+            DerEncoder::integer(
                 bytes: $decoded['q'],
             ),
-            Der::integer(
+            DerEncoder::integer(
                 bytes: $decoded['dp'],
             ),
-            Der::integer(
+            DerEncoder::integer(
                 bytes: $decoded['dq'],
             ),
-            Der::integer(
+            DerEncoder::integer(
                 bytes: $decoded['qi'],
             ),
         );
@@ -336,6 +343,7 @@ class JwkParser
     /**
      * @param array<string, mixed> $jwk
      *
+     * @throws CryptoException
      * @throws JwtException
      */
     public static function ecPublicPemFrom(
@@ -359,16 +367,16 @@ class JwkParser
             expectedLength: $coordinateLength,
         );
 
-        $der = Der::sequence(
-            Der::sequence(
-                Der::objectIdentifier(
+        $der = DerEncoder::sequence(
+            DerEncoder::sequence(
+                DerEncoder::objectIdentifier(
                     oid: self::OID_EC_PUBLIC_KEY,
                 ),
-                Der::objectIdentifier(
+                DerEncoder::objectIdentifier(
                     oid: $curveOid,
                 ),
             ),
-            Der::bitString(
+            DerEncoder::bitString(
                 bytes: "\x04" . $x . $y,
             ),
         );
@@ -382,6 +390,7 @@ class JwkParser
     /**
      * @param array<string, mixed> $jwk
      *
+     * @throws CryptoException
      * @throws JwtException
      */
     public static function ecPrivatePemFrom(
@@ -411,22 +420,22 @@ class JwkParser
             expectedLength: $coordinateLength,
         );
 
-        $der = Der::sequence(
-            Der::integer(
+        $der = DerEncoder::sequence(
+            DerEncoder::integer(
                 bytes: "\x01",
             ),
-            Der::octetString(
+            DerEncoder::octetString(
                 bytes: $d,
             ),
-            Der::contextExplicit(
+            DerEncoder::contextExplicit(
                 tag: 0,
-                inner: Der::objectIdentifier(
+                inner: DerEncoder::objectIdentifier(
                     oid: $curveOid,
                 ),
             ),
-            Der::contextExplicit(
+            DerEncoder::contextExplicit(
                 tag: 1,
-                inner: Der::bitString(
+                inner: DerEncoder::bitString(
                     bytes: "\x04" . $x . $y,
                 ),
             ),

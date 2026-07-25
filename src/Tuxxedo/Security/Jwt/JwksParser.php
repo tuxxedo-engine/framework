@@ -13,12 +13,14 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Security\Jwt;
 
+use Tuxxedo\Security\Crypto\CryptoException;
 use Tuxxedo\Security\Jwt\Key\KeySet;
 use Tuxxedo\Security\Jwt\Key\KeySetInterface;
 
 class JwksParser
 {
     /**
+     * @throws CryptoException
      * @throws JwtException
      */
     public static function parse(
