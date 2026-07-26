@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Mail;
 
+use Tuxxedo\Mail\Serializer\Render\EncodedWord;
+
 class Header implements HeaderInterface
 {
     /**
@@ -70,14 +72,6 @@ class Header implements HeaderInterface
     #[\NoDiscard]
     public function toRfc5322(): string
     {
-        if (\preg_match('/[^\x00-\x7F]/', $this->value) === 1) {
-            return \sprintf(
-                '%s: =?UTF-8?B?%s?=',
-                $this->name,
-                \base64_encode($this->value),
-            );
-        }
-
-        return $this->name . ': ' . $this->value;
+        return $this->name . ': ' . EncodedWord::encodeIfNonAscii($this->value);
     }
 }

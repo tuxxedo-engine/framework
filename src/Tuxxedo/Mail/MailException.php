@@ -123,4 +123,31 @@ class MailException extends \Exception
             message: 'alternativeText may only be set when bodyType is BodyType::HTML',
         );
     }
+
+    public static function fromAttachmentReadFailure(
+        ?string $filename,
+        \Throwable $previous,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Failed to read attachment "%s"',
+                $filename ?? '(unnamed)',
+            ),
+            previous: $previous,
+        );
+    }
+
+    /**
+     * @param class-string $mimePartClass
+     */
+    public static function fromNonSerializableMimePart(
+        string $mimePartClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unable to serialize mime part object: %s',
+                $mimePartClass,
+            ),
+        );
+    }
 }

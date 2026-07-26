@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Mail;
 
+use Tuxxedo\Mail\Serializer\Render\EncodedWord;
+
 class Address implements AddressInterface
 {
     private const int EMAIL_MAX_LENGTH = 254;
@@ -120,8 +122,8 @@ class Address implements AddressInterface
 
         if (\preg_match('/[^\x00-\x7F]/', $this->displayName) === 1) {
             return \sprintf(
-                '=?UTF-8?B?%s?= <%s>',
-                \base64_encode($this->displayName),
+                '%s <%s>',
+                EncodedWord::encode($this->displayName),
                 $this->email,
             );
         }
