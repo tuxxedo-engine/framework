@@ -49,11 +49,9 @@ class LocalStorageTest extends TestCase
             $entries = \scandir($path);
 
             if ($entries === false) {
-                // @codeCoverageIgnoreStart
                 @\rmdir($path);
 
                 return;
-                // @codeCoverageIgnoreEnd
             }
 
             foreach ($entries as $entry) {

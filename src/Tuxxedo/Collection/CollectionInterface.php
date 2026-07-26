@@ -53,16 +53,12 @@ interface CollectionInterface extends \Countable, \Iterator, \ArrayAccess
         mixed ...$keys,
     ): bool;
 
-    #[\NoDiscard]
     public function sort(): static;
 
-    #[\NoDiscard]
     public function sortKeys(): static;
 
-    #[\NoDiscard]
     public function reverse(): static;
 
-    #[\NoDiscard]
     public function reverseKeys(): static;
 
     /**

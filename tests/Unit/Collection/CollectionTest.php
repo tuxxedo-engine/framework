@@ -17,14 +17,48 @@ use Fixture\Collection\IntTestEnum;
 use Fixture\Collection\StringTestEnum;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Collection\Collection;
-use Tuxxedo\Collection\IntCollection;
-use Tuxxedo\Collection\StringCollection;
 
 class CollectionTest extends TestCase
 {
+    /**
+     * @param string ...$values
+     * @return Collection<int, string>
+     */
+    private function strings(
+        string ...$values,
+    ): Collection {
+        return new Collection(
+            \array_values($values),
+        );
+    }
+
+    /**
+     * @return Collection<int, int>
+     */
+    private function intRange(
+        int $start,
+        int $end,
+    ): Collection {
+        return new Collection(
+            \range($start, $end),
+        );
+    }
+
+    /**
+     * @param int ...$values
+     * @return Collection<int, int>
+     */
+    private function ints(
+        int ...$values,
+    ): Collection {
+        return new Collection(
+            \array_values($values),
+        );
+    }
+
     public function testCreate(): void
     {
-        $collection = StringCollection::from('Hello', 'World');
+        $collection = $this->strings('Hello', 'World');
 
         self::assertSame($collection->current(), 'Hello');
         self::assertSame($collection->current(), 'Hello');
@@ -32,7 +66,7 @@ class CollectionTest extends TestCase
 
     public function testCount(): void
     {
-        $collection = StringCollection::from('Kalle', 'Christopher', 'Ali');
+        $collection = $this->strings('Kalle', 'Christopher', 'Ali');
 
         self::assertSame($collection->count(), 3);
     }
@@ -40,7 +74,7 @@ class CollectionTest extends TestCase
     public function testIterate(): void
     {
         $i = 0;
-        $collection = StringCollection::from('Foo', 'Bar');
+        $collection = $this->strings('Foo', 'Bar');
 
         foreach ($collection as $value) {
             self::assertTrue($collection->containsKey($collection->key()));
@@ -54,7 +88,7 @@ class CollectionTest extends TestCase
 
     public function testContainsKey(): void
     {
-        $collection = StringCollection::from('Foo', 'Bar', 'Baz');
+        $collection = $this->strings('Foo', 'Bar', 'Baz');
 
         self::assertFalse($collection->containsKey());
         self::assertFalse($collection->containsKey(3));
@@ -62,7 +96,7 @@ class CollectionTest extends TestCase
 
     public function testMap(): void
     {
-        $collection = StringCollection::from('Lorem', 'Ipsum');
+        $collection = $this->strings('Lorem', 'Ipsum');
         $collection->map(\strtoupper(...));
 
         self::assertSame($collection->values(), ['LOREM', 'IPSUM']);
@@ -80,7 +114,7 @@ class CollectionTest extends TestCase
         $republics = ['FI', 'IS'];
         $nordics = $scandinavia + $republics;
 
-        $collection = StringCollection::from(...$nordics);
+        $collection = $this->strings(...$nordics);
         $collection->filter(
             static fn (string $v): bool => \in_array($v, $scandinavia, true),
         );
@@ -91,8 +125,8 @@ class CollectionTest extends TestCase
 
     public function testMerge(): void
     {
-        $scandinavia = StringCollection::from('DK', 'NO', 'SE');
-        $republics = StringCollection::from('FI', 'IS');
+        $scandinavia = $this->strings('DK', 'NO', 'SE');
+        $republics = $this->strings('FI', 'IS');
 
         /** @var Collection<int, string> $nordics */
         $nordics = new Collection();
@@ -105,8 +139,8 @@ class CollectionTest extends TestCase
 
     public function testContains(): void
     {
-        $range1 = IntCollection::fromRange(1, 10);
-        $range2 = IntCollection::fromRange(1, 100);
+        $range1 = $this->intRange(1, 10);
+        $range2 = $this->intRange(1, 100);
 
         self::assertTrue($range1->contains(8));
         self::assertFalse($range1->contains(42));
@@ -119,8 +153,8 @@ class CollectionTest extends TestCase
 
     public function testArrayAccess(): void
     {
-        $ints = IntCollection::fromRange(1, 5);
-        $strings = StringCollection::from('Foo', 'Bar', 'Baz');
+        $ints = $this->intRange(1, 5);
+        $strings = $this->strings('Foo', 'Bar', 'Baz');
 
         self::assertSame($ints[2], 3);
         self::assertTrue(isset($strings[2]));
@@ -136,7 +170,7 @@ class CollectionTest extends TestCase
 
     public function testAppend(): void
     {
-        $range = IntCollection::fromRange(1, 4);
+        $range = $this->intRange(1, 4);
         $range->append(5);
 
         self::assertSame($range->last(), 5);
@@ -144,7 +178,7 @@ class CollectionTest extends TestCase
 
     public function testPop(): void
     {
-        $strings = StringCollection::from('Kalle', 'Christopher', 'Ali');
+        $strings = $this->strings('Kalle', 'Christopher', 'Ali');
         $strings->pop();
 
         self::assertFalse($strings->contains('Ali'));
@@ -152,7 +186,7 @@ class CollectionTest extends TestCase
 
     public function testShift(): void
     {
-        $ints = IntCollection::fromRange(0, 5);
+        $ints = $this->intRange(0, 5);
         $ints->shift();
 
         self::assertSame($ints->first(), 1);
@@ -160,7 +194,7 @@ class CollectionTest extends TestCase
 
     public function testPrepend(): void
     {
-        $ints = IntCollection::fromRange(1, 5);
+        $ints = $this->intRange(1, 5);
         $ints->prepend(0);
 
         self::assertSame($ints->first(), 0);
@@ -168,7 +202,7 @@ class CollectionTest extends TestCase
 
     public function testClear(): void
     {
-        $ints = IntCollection::fromRange(1, 5);
+        $ints = $this->intRange(1, 5);
 
         self::assertSame($ints->count(), 5);
 
@@ -179,7 +213,7 @@ class CollectionTest extends TestCase
 
     public function testFirstLastKey(): void
     {
-        $nordics = StringCollection::from('DK', 'FI', 'IS', 'NO', 'SE');
+        $nordics = $this->strings('DK', 'FI', 'IS', 'NO', 'SE');
 
         self::assertSame($nordics->firstKey(), 0);
         self::assertSame($nordics->lastKey(), 4);
@@ -192,7 +226,7 @@ class CollectionTest extends TestCase
 
     public function testFirstLastValue(): void
     {
-        $nordics = StringCollection::from('DK', 'FI', 'IS', 'NO', 'SE');
+        $nordics = $this->strings('DK', 'FI', 'IS', 'NO', 'SE');
 
         self::assertSame($nordics->first(), 'DK');
         self::assertSame($nordics->last(), 'SE');
@@ -205,7 +239,7 @@ class CollectionTest extends TestCase
 
     public function testSortIntValues(): void
     {
-        $ints = IntCollection::from(1, 2, 3, 4, 5);
+        $ints = $this->ints(1, 2, 3, 4, 5);
         $ints->sort();
 
         self::assertSame($ints->values(), [1, 2, 3, 4, 5]);
@@ -217,7 +251,7 @@ class CollectionTest extends TestCase
 
     public function testSortIntKeys(): void
     {
-        $ints = IntCollection::fromRange(1, 5);
+        $ints = $this->intRange(1, 5);
         $ints->sortKeys();
 
         self::assertSame($ints->keys(), [0, 1, 2, 3, 4]);
@@ -229,7 +263,7 @@ class CollectionTest extends TestCase
 
     public function testSortString(): void
     {
-        $collection = StringCollection::from('Foo', 'Bar', 'Baz');
+        $collection = $this->strings('Foo', 'Bar', 'Baz');
         $collection->sort();
 
         self::assertSame($collection->values(), ['Bar', 'Baz', 'Foo']);
@@ -241,7 +275,7 @@ class CollectionTest extends TestCase
 
     public function testSortStringCaseInsensitive(): void
     {
-        $collection = StringCollection::from('Foo', 'Bar', 'Baz');
+        $collection = $this->strings('Foo', 'Bar', 'Baz');
 
         $collection->merge(
             (clone $collection)->map(\strtolower(...)),
@@ -264,8 +298,21 @@ class CollectionTest extends TestCase
 
     public function testEnumRanges(): void
     {
-        self::assertFalse(StringCollection::fromEnum(StringTestEnum::class)->contains('IS'));
-        self::assertTrue(StringCollection::fromEnum(StringTestEnum::class)->contains('Iceland'));
-        self::assertSame(IntCollection::fromEnum(IntTestEnum::class)->count(), 5);
+        $stringValues = new Collection(
+            \array_map(
+                static fn (StringTestEnum $case): string => $case->value,
+                StringTestEnum::cases(),
+            ),
+        );
+        $intValues = new Collection(
+            \array_map(
+                static fn (IntTestEnum $case): int => $case->value,
+                IntTestEnum::cases(),
+            ),
+        );
+
+        self::assertFalse($stringValues->contains('IS'));
+        self::assertTrue($stringValues->contains('Iceland'));
+        self::assertSame($intValues->count(), 5);
     }
 }

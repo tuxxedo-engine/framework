@@ -36,4 +36,15 @@ class FileException extends \Exception
             ),
         );
     }
+
+    public static function fromNotADirectory(
+        string $path,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Path "%s" does not refer to a directory',
+                $path,
+            ),
+        );
+    }
 }

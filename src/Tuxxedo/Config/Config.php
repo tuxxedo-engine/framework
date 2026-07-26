@@ -13,10 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Config;
 
-use Tuxxedo\Collection\FileCollection;
 use Tuxxedo\Config\Attribute\ConfigKey;
 use Tuxxedo\Config\Attribute\ConfigNamespace;
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\File\FileCollectionFactory;
 
 class Config implements ConfigInterface
 {
@@ -36,8 +36,15 @@ class Config implements ConfigInterface
         $typedConfigs = [];
         $deferredArrayClosures = [];
 
-        foreach (FileCollection::fromFileType($directory, '.php') as $configFile) {
-            $index = \str_replace($directory . '/', '', \substr($configFile, 0, -4));
+        $resolvedDirectory = \realpath($directory);
+        $normalizedDirectory = \str_replace(
+            '\\',
+            '/',
+            $resolvedDirectory !== false ? $resolvedDirectory : $directory,
+        );
+
+        foreach (FileCollectionFactory::paths($directory, '*.php') as $configFile) {
+            $index = \str_replace($normalizedDirectory . '/', '', \substr($configFile, 0, -4));
 
             static::processFileEntry(
                 container: $container,

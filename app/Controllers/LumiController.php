@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use Tuxxedo\Collection\CollectionInterface;
-use Tuxxedo\Collection\FileCollection;
+use Tuxxedo\Collection\Collection;
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\File\FileCollectionFactory;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Kernel\Resolver\Config;
 use Tuxxedo\Http\Request\RequestInterface;
@@ -183,12 +183,11 @@ readonly class LumiController
     }
 
     /**
-     * @return CollectionInterface<array-key, string>
+     * @return Collection<int, string>
      */
-    private function getViewFiles(): CollectionInterface
+    private function getViewFiles(): Collection
     {
-        return FileCollection::fromDirectory($this->viewDirectory)
-            ->filter(\is_file(...))
+        return FileCollectionFactory::paths($this->viewDirectory, '*')
             ->filter(
                 static fn (string $name): bool => \str_contains($name, 'hello_world_'),
             );

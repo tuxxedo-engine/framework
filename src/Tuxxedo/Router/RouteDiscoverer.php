@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Router;
 
-use Tuxxedo\Collection\FileCollection;
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\File\FileCollectionFactory;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Router\Attribute\Argument;
 use Tuxxedo\Router\Attribute\Middleware;
@@ -61,9 +61,9 @@ class RouteDiscoverer implements RouteDiscovererInterface
         }
 
         $namedRoutes = [];
-        $controllers = FileCollection::fromRecursiveFileType(
+        $controllers = FileCollectionFactory::paths(
             directory: $this->directory,
-            extension: '.php',
+            pattern: '**/*.php',
         );
 
         foreach ($controllers as $controller) {
@@ -299,9 +299,15 @@ class RouteDiscoverer implements RouteDiscovererInterface
     private function getControllerClassName(
         string $controllerFile,
     ): string {
+        $resolvedDirectory = \realpath($this->directory);
+        $normalizedDirectory = \str_replace(
+            '\\',
+            '/',
+            $resolvedDirectory !== false ? $resolvedDirectory : $this->directory,
+        );
         $controllerFile = \str_replace(
             [
-                $this->directory . '/',
+                $normalizedDirectory . '/',
                 '.php',
                 '/',
             ],

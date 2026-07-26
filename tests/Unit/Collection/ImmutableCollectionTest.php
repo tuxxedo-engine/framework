@@ -15,15 +15,52 @@ namespace Unit\Collection;
 
 use Fixture\Collection\StringTestEnum;
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Collection\Collection;
 use Tuxxedo\Collection\CollectionException;
-use Tuxxedo\Collection\IntCollection;
-use Tuxxedo\Collection\StringCollection;
+use Tuxxedo\Collection\ImmutableCollection;
 
 class ImmutableCollectionTest extends TestCase
 {
+    /**
+     * @return ImmutableCollection<int, string>
+     */
+    private function nordicStrings(): ImmutableCollection
+    {
+        return new ImmutableCollection(
+            \array_map(
+                static fn (StringTestEnum $case): string => $case->value,
+                StringTestEnum::cases(),
+            ),
+        );
+    }
+
+    /**
+     * @return ImmutableCollection<int, int>
+     */
+    private function intRange(
+        int $start,
+        int $end,
+    ): ImmutableCollection {
+        return new ImmutableCollection(
+            \range($start, $end),
+        );
+    }
+
+    /**
+     * @param string ...$values
+     * @return Collection<int, string>
+     */
+    private function mutableStrings(
+        string ...$values,
+    ): Collection {
+        return new Collection(
+            \array_values($values),
+        );
+    }
+
     public function testImmutableExceptionViaOffsetSet(): void
     {
-        $strings = StringCollection::fromEnum(StringTestEnum::class)->toImmutable();
+        $strings = $this->nordicStrings();
 
         $this->expectException(CollectionException::class);
         $strings['abc'] = 'def';
@@ -31,7 +68,7 @@ class ImmutableCollectionTest extends TestCase
 
     public function testImmutableExceptionsViaOffsetUnset(): void
     {
-        $strings = StringCollection::fromEnum(StringTestEnum::class)->toImmutable();
+        $strings = $this->nordicStrings();
 
         $this->expectException(CollectionException::class);
         unset($strings[$strings->firstKey()]);
@@ -39,14 +76,14 @@ class ImmutableCollectionTest extends TestCase
 
     public function testImmutableOffsetExists(): void
     {
-        $strings = StringCollection::fromEnum(StringTestEnum::class)->toImmutable();
+        $strings = $this->nordicStrings();
 
         self::assertTrue(isset($strings[0]));
     }
 
     public function testImmutableSort(): void
     {
-        $ints = IntCollection::fromRange(1, 3)->toImmutable();
+        $ints = $this->intRange(1, 3);
         $sortedInts = $ints->sort();
 
         self::assertFalse($ints === $sortedInts);
@@ -55,7 +92,7 @@ class ImmutableCollectionTest extends TestCase
 
     public function testImmutableSortKeys(): void
     {
-        $ints = IntCollection::fromRange(1, 3)->toImmutable();
+        $ints = $this->intRange(1, 3);
         $sortedInts = $ints->sortKeys();
 
         self::assertFalse($ints === $sortedInts);
@@ -64,7 +101,7 @@ class ImmutableCollectionTest extends TestCase
 
     public function testImmutableReverse(): void
     {
-        $ints = IntCollection::fromRange(1, 3)->toImmutable();
+        $ints = $this->intRange(1, 3);
         $sortedInts = $ints->reverse();
 
         self::assertFalse($ints === $sortedInts);
@@ -73,7 +110,7 @@ class ImmutableCollectionTest extends TestCase
 
     public function testImmutableReverseKeys(): void
     {
-        $ints = IntCollection::fromRange(1, 3)->toImmutable();
+        $ints = $this->intRange(1, 3);
         $sortedInts = $ints->reverseKeys();
 
         self::assertFalse($ints === $sortedInts);
@@ -82,7 +119,7 @@ class ImmutableCollectionTest extends TestCase
 
     public function testImmutableToMutable(): void
     {
-        $ints = IntCollection::fromRange(1, 3)->toImmutable();
+        $ints = $this->intRange(1, 3);
         $mutableInts = $ints->toMutable();
 
         self::assertSameSize($ints, $mutableInts);
@@ -90,7 +127,7 @@ class ImmutableCollectionTest extends TestCase
 
     public function testImmutableToArray(): void
     {
-        $ints = IntCollection::fromRange(1, 3)->toImmutable();
+        $ints = $this->intRange(1, 3);
         $mutableInts = $ints->toMutable();
 
         self::assertSame($ints->toArray(), $mutableInts->toArray());
@@ -98,7 +135,8 @@ class ImmutableCollectionTest extends TestCase
 
     public function testImmutableFirstLast(): void
     {
-        $collection = IntCollection::from()->toImmutable();
+        /** @var ImmutableCollection<int, int> $collection */
+        $collection = new ImmutableCollection([]);
 
         self::assertSame($collection->count(), 0);
         self::assertNull($collection->first());
@@ -107,7 +145,7 @@ class ImmutableCollectionTest extends TestCase
 
     public function testImmutableContains(): void
     {
-        $ints = IntCollection::fromRange(1, 3)->toImmutable();
+        $ints = $this->intRange(1, 3);
 
         self::assertFalse($ints->contains());
         self::assertFalse($ints->contains(42));
@@ -121,14 +159,14 @@ class ImmutableCollectionTest extends TestCase
 
         self::assertFalse($ints->contains($sameInts));
 
-        $noInts = IntCollection::from()->toImmutable();
+        $noInts = new ImmutableCollection([]);
 
         self::assertFalse($noInts->contains(0));
     }
 
     public function testImmutableKeyValues(): void
     {
-        $ints = IntCollection::fromRange(1, 5)->toImmutable();
+        $ints = $this->intRange(1, 5);
 
         self::assertSame($ints->keys(), [0, 1, 2, 3, 4]);
         self::assertSame($ints->values(), [1, 2, 3, 4, 5]);
@@ -137,7 +175,10 @@ class ImmutableCollectionTest extends TestCase
     public function testImmutableIterate(): void
     {
         $i = 0;
-        $collection = StringCollection::from('Foo', 'Bar')->toImmutable();
+        $collection = new ImmutableCollection([
+            'Foo',
+            'Bar',
+        ]);
 
         foreach ($collection as $value) {
             self::assertTrue($collection->containsKey($collection->key()));
@@ -151,7 +192,7 @@ class ImmutableCollectionTest extends TestCase
 
     public function testImmutableArrayAccess(): void
     {
-        $nordics = StringCollection::from('DK', 'FI', 'IS', 'NO', 'SE');
+        $nordics = $this->mutableStrings('DK', 'FI', 'IS', 'NO', 'SE');
 
         self::assertTrue(isset($nordics[1]));
         self::assertFalse(isset($nordics[5]));
@@ -159,7 +200,11 @@ class ImmutableCollectionTest extends TestCase
 
     public function testImmutableContainsKey(): void
     {
-        $collection = StringCollection::from('Foo', 'Bar', 'Baz')->toImmutable();
+        $collection = new ImmutableCollection([
+            'Foo',
+            'Bar',
+            'Baz',
+        ]);
 
         self::assertFalse($collection->containsKey());
         self::assertFalse($collection->containsKey(3));
@@ -168,7 +213,7 @@ class ImmutableCollectionTest extends TestCase
 
     public function testImmutableCollectionParity(): void
     {
-        $mutable = StringCollection::from('Foo', 'Bar', 'Baz');
+        $mutable = $this->mutableStrings('Foo', 'Bar', 'Baz');
         $immutable = $mutable->toImmutable();
 
         self::assertSame($mutable->count(), $immutable->count());

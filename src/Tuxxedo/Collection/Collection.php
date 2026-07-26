@@ -115,7 +115,7 @@ class Collection implements CollectionInterface
     }
 
     /**
-     * @param Collection<TKey, TValue> ...$collections
+     * @param CollectionInterface<TKey, TValue> ...$collections
      */
     public function merge(
         CollectionInterface ...$collections,
