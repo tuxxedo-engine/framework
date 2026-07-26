@@ -29,9 +29,7 @@ class Header implements HeaderInterface
             throw MailException::fromInvalidHeaderName($name);
         }
 
-        if (\preg_match('/[\x00\r\n]/', $value) === 1) {
-            throw MailException::fromInvalidHeaderValue($name);
-        }
+        self::assertValidValue($name, $value);
     }
 
     public function is(
@@ -40,16 +38,33 @@ class Header implements HeaderInterface
         return \strcasecmp($this->name, $name) === 0;
     }
 
+    /**
+     * @throws MailException
+     */
     #[\NoDiscard]
     public function withValue(
         string $value,
     ): static {
+        self::assertValidValue($this->name, $value);
+
         return clone (
             $this,
             [
                 'value' => $value,
             ],
         );
+    }
+
+    /**
+     * @throws MailException
+     */
+    private static function assertValidValue(
+        string $name,
+        string $value,
+    ): void {
+        if (\preg_match('/[\x00\r\n]/', $value) === 1) {
+            throw MailException::fromInvalidHeaderValue($name);
+        }
     }
 
     #[\NoDiscard]

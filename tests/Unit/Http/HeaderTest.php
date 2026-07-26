@@ -15,6 +15,7 @@ namespace Unit\Http;
 
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Http\Header;
+use Tuxxedo\Http\HttpException;
 
 class HeaderTest extends TestCase
 {
@@ -56,5 +57,72 @@ class HeaderTest extends TestCase
         $updated = $header->withValue('text/html');
 
         self::assertSame('Content-Type', $updated->name);
+    }
+
+    public function testConstructorRejectsEmptyName(): void
+    {
+        $this->expectException(HttpException::class);
+
+        new Header('', 'value');
+    }
+
+    public function testConstructorRejectsNameWithSpace(): void
+    {
+        $this->expectException(HttpException::class);
+
+        new Header('Content Type', 'application/json');
+    }
+
+    public function testConstructorRejectsNameWithColon(): void
+    {
+        $this->expectException(HttpException::class);
+
+        new Header('Content:Type', 'application/json');
+    }
+
+    public function testConstructorRejectsNameWithNonAscii(): void
+    {
+        $this->expectException(HttpException::class);
+
+        new Header('Übermorgen', 'value');
+    }
+
+    public function testConstructorRejectsValueWithNewline(): void
+    {
+        $this->expectException(HttpException::class);
+
+        new Header('X-Custom', "line1\nline2");
+    }
+
+    public function testConstructorRejectsValueWithCarriageReturn(): void
+    {
+        $this->expectException(HttpException::class);
+
+        new Header('X-Custom', "line1\rline2");
+    }
+
+    public function testConstructorRejectsValueWithNullByte(): void
+    {
+        $this->expectException(HttpException::class);
+
+        new Header('X-Custom', "byte\x00bad");
+    }
+
+    public function testWithValueRejectsInjectedNewline(): void
+    {
+        $header = new Header('X-Custom', 'safe');
+
+        $this->expectException(HttpException::class);
+
+        $header->withValue("bad\r\nX-Injected: yes");
+    }
+
+    public function testWithValueRejectsNullByte(): void
+    {
+        $header = new Header('X-Custom', 'safe');
+
+        $this->expectException(HttpException::class);
+
+        $header->withValue("bad\x00byte");
     }
 }
