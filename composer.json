@@ -32,6 +32,7 @@
   },
   "suggest": {
     "ext-fileinfo": "For better file type detection in uploaded files",
+    "ext-intl": "For IDNA (punycode) encoding of internationalized email domains",
     "ext-mysqli": "For database connections to mysql",
     "ext-openssl": "For JWT support",
     "ext-pdo": "For database connections using PDO",

@@ -26,6 +26,8 @@ use Tuxxedo\Http\Url\UrlInterface;
 use Tuxxedo\Router\RouterInterface;
 use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
 
+// @todo Support Mails
+// @todo Support File Storage
 interface ApplicationConfiguratorInterface
 {
     public string $appName {
