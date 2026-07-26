@@ -69,4 +69,58 @@ class MailException extends \Exception
             ),
         );
     }
+
+    public static function fromInvalidContentId(): self
+    {
+        return new self(
+            message: 'Content-ID contains disallowed control characters',
+        );
+    }
+
+    public static function fromInvalidDescription(): self
+    {
+        return new self(
+            message: 'Attachment description contains disallowed control characters',
+        );
+    }
+
+    public static function fromInvalidHeaderName(
+        string $name,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid header name "%s"',
+                $name,
+            ),
+        );
+    }
+
+    public static function fromInvalidHeaderValue(
+        string $name,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Header "%s" has an invalid value (contains disallowed control characters)',
+                $name,
+            ),
+        );
+    }
+
+    public static function fromReservedHeaderName(
+        string $name,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Header "%s" is reserved by the framework and cannot appear in extraHeaders',
+                $name,
+            ),
+        );
+    }
+
+    public static function fromAlternativeTextRequiresHtmlBody(): self
+    {
+        return new self(
+            message: 'alternativeText may only be set when bodyType is BodyType::HTML',
+        );
+    }
 }

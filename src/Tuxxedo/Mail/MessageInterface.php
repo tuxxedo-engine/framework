@@ -30,11 +30,15 @@ interface MessageInterface
         get;
     }
 
-    public ?string $textBody {
+    public ?string $body {
         get;
     }
 
-    public ?string $htmlBody {
+    public BodyType $bodyType {
+        get;
+    }
+
+    public ?string $alternativeText {
         get;
     }
 
@@ -64,6 +68,20 @@ interface MessageInterface
     }
 
     public ?AddressInterface $returnPath {
+        get;
+    }
+
+    /**
+     * @var list<AttachmentInterface>
+     */
+    public array $attachments {
+        get;
+    }
+
+    /**
+     * @var list<HeaderInterface>
+     */
+    public array $extraHeaders {
         get;
     }
 

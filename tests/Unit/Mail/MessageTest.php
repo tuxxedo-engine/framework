@@ -15,6 +15,7 @@ namespace Unit\Mail;
 
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Mail\Address;
+use Tuxxedo\Mail\BodyType;
 use Tuxxedo\Mail\Message;
 
 class MessageTest extends TestCase
@@ -46,8 +47,14 @@ class MessageTest extends TestCase
         );
 
         self::assertSame('Welcome', $message->subject);
-        self::assertNull($message->textBody);
-        self::assertNull($message->htmlBody);
+        self::assertNull($message->body);
+        self::assertSame(BodyType::TEXT, $message->bodyType);
+        self::assertNull($message->alternativeText);
+        self::assertSame(
+            [],
+            $message->extraHeaders,
+        );
+
         self::assertSame(
             [],
             $message->cc,
@@ -141,7 +148,7 @@ class MessageTest extends TestCase
         self::assertSame($returnPath, $message->returnPath);
     }
 
-    public function testStoresTextAndHtmlBodies(): void
+    public function testStoresHtmlBodyWithAlternativeText(): void
     {
         $message = new Message(
             from: new Address(
@@ -153,12 +160,14 @@ class MessageTest extends TestCase
                 ),
             ],
             subject: 'Body',
-            textBody: 'Hello there.',
-            htmlBody: '<p>Hello there.</p>',
+            body: '<p>Hello there.</p>',
+            bodyType: BodyType::HTML,
+            alternativeText: 'Hello there.',
         );
 
-        self::assertSame('Hello there.', $message->textBody);
-        self::assertSame('<p>Hello there.</p>', $message->htmlBody);
+        self::assertSame('<p>Hello there.</p>', $message->body);
+        self::assertSame(BodyType::HTML, $message->bodyType);
+        self::assertSame('Hello there.', $message->alternativeText);
     }
 
     public function testAutoGeneratesMessageIdUsingFromDomain(): void
