@@ -229,12 +229,12 @@ readonly class TestController
         return Response::json(
             json: [
                 'name' => $file->name,
-                'type' => $file->type,
+                'mimeType' => $file->mimeType,
                 'isTrustedType' => $file->isTrustedType(),
                 'size' => $file->size,
                 'temporaryPath' => $file->temporaryPath,
                 'browserPath' => $file->browserPath,
-                'contents' => $file->getContents(),
+                'contents' => $file->contents(),
             ],
         );
     }

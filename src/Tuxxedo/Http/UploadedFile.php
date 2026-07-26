@@ -13,12 +13,14 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http;
 
+use Tuxxedo\File\FileException;
+
 class UploadedFile implements UploadedFileInterface
 {
     private static ?\finfo $finfo = null;
     private ?string $resolvedType = null;
 
-    public string $type {
+    public string $mimeType {
         get {
             return $this->resolveType($this->browserType);
         }
@@ -67,15 +69,18 @@ class UploadedFile implements UploadedFileInterface
         return $this->isTrustedType;
     }
 
-    public function getContents(): ?string
+    #[\NoDiscard]
+    public function contents(): string
     {
         $contents = @\file_get_contents($this->temporaryPath);
 
-        if ($contents !== false) {
-            return $contents;
+        if ($contents === false) {
+            throw FileException::fromReadFailure(
+                path: $this->temporaryPath,
+            );
         }
 
-        return null;
+        return $contents;
     }
 
     public function moveTo(

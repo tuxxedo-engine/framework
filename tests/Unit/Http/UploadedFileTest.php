@@ -15,6 +15,7 @@ namespace Unit\Http;
 
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\File\FileException;
 use Tuxxedo\Http\UploadedFile;
 
 class UploadedFileTest extends TestCase
@@ -47,9 +48,9 @@ class UploadedFileTest extends TestCase
         );
     }
 
-    public function testTypeReturnsBrowserTypeWhenFileDoesNotExist(): void
+    public function testMimeTypeReturnsBrowserTypeWhenFileDoesNotExist(): void
     {
-        self::assertSame('image/jpeg', $this->makeFile()->type);
+        self::assertSame('image/jpeg', $this->makeFile()->mimeType);
     }
 
     public function testIsTrustedTypeReturnsFalseWhenFileDoesNotExist(): void
@@ -58,33 +59,35 @@ class UploadedFileTest extends TestCase
     }
 
     #[RequiresPhpExtension('fileinfo')]
-    public function testTypeIsResolvedByFinfoWhenFileExists(): void
+    public function testMimeTypeIsResolvedByFinfoWhenFileExists(): void
     {
-        self::assertSame('text/plain', $this->makeFile(temporaryPath: $this->tempFile)->type);
+        self::assertSame('text/plain', $this->makeFile($this->tempFile)->mimeType);
     }
 
     #[RequiresPhpExtension('fileinfo')]
     public function testIsTrustedTypeReturnsTrueWhenFileExists(): void
     {
-        self::assertTrue($this->makeFile(temporaryPath: $this->tempFile)->isTrustedType());
+        self::assertTrue($this->makeFile($this->tempFile)->isTrustedType());
     }
 
     #[RequiresPhpExtension('fileinfo')]
-    public function testTypeIsCachedAfterFirstAccess(): void
+    public function testMimeTypeIsCachedAfterFirstAccess(): void
     {
-        $file = $this->makeFile(temporaryPath: $this->tempFile);
+        $file = $this->makeFile($this->tempFile);
 
-        self::assertSame($file->type, $file->type);
+        self::assertSame($file->mimeType, $file->mimeType);
     }
 
-    public function testGetContentsReturnsNullForNonExistentFile(): void
+    public function testContentsThrowsForNonExistentFile(): void
     {
-        self::assertNull($this->makeFile()->getContents());
+        $this->expectException(FileException::class);
+
+        (void) $this->makeFile()->contents();
     }
 
-    public function testGetContentsReturnsFileContents(): void
+    public function testContentsReturnsFileContents(): void
     {
-        self::assertSame('test content', $this->makeFile(temporaryPath: $this->tempFile)->getContents());
+        self::assertSame('test content', $this->makeFile($this->tempFile)->contents());
     }
 
     public function testMoveToReturnsFalseForNonUploadedFile(): void

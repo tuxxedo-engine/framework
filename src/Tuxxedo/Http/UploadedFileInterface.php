@@ -13,13 +13,15 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http;
 
-interface UploadedFileInterface
+use Tuxxedo\File\FileInterface;
+
+interface UploadedFileInterface extends FileInterface
 {
     public string $name {
         get;
     }
 
-    public string $type {
+    public string $mimeType {
         get;
     }
 
@@ -36,8 +38,6 @@ interface UploadedFileInterface
     }
 
     public function isTrustedType(): bool;
-
-    public function getContents(): ?string;
 
     public function moveTo(
         string $fileName,
