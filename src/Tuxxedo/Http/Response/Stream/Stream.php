@@ -197,12 +197,12 @@ class Stream implements StreamInterface
 
     public function getSize(): ?int
     {
-        return $this->streamProxy?->getSize() ?? null;
+        return $this->streamProxy?->getSize();
     }
 
     public function read(): ?string
     {
-        return $this->streamProxy?->read() ?? null;
+        return $this->streamProxy?->read();
     }
 
     public function getContents(): string

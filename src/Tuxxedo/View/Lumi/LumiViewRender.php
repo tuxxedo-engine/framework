@@ -41,7 +41,7 @@ class LumiViewRender implements LumiViewRenderInterface
                 require $__lumiViewFileName;
                 \error_reporting($__lumiErrorReporting);
 
-                return \ob_get_clean();
+                return !\is_bool($body = \ob_get_clean()) ? $body : '';
             };
         } else {
             $this->renderFrame = function (string $__lumiViewFileName, array $__lumiVariables): string {
@@ -49,7 +49,7 @@ class LumiViewRender implements LumiViewRenderInterface
 
                 require $__lumiViewFileName;
 
-                return \ob_get_clean();
+                return !\is_bool($body = \ob_get_clean()) ? $body : '';
             };
         }
     }
