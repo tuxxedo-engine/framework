@@ -105,6 +105,18 @@ class ConditionParserHandler implements ParserHandlerInterface
             }
 
             if ($stream->currentIs(ElseIfToken::class)) {
+                if ($parser->state->conditionDepth > 1) {
+                    if ($parsingElse) {
+                        $elseTokens[] = $stream->current();
+                    } else {
+                        $bodyTokens[] = $stream->current();
+                    }
+
+                    $stream->consume();
+
+                    continue;
+                }
+
                 $stream->consume();
 
                 $branchTokens = [];
@@ -153,6 +165,18 @@ class ConditionParserHandler implements ParserHandlerInterface
             }
 
             if ($stream->currentIs(ElseToken::class)) {
+                if ($parser->state->conditionDepth > 1) {
+                    if ($parsingElse) {
+                        $elseTokens[] = $stream->current();
+                    } else {
+                        $bodyTokens[] = $stream->current();
+                    }
+
+                    $stream->consume();
+
+                    continue;
+                }
+
                 $stream->expect(ElseToken::class);
 
                 $parsingElse = true;

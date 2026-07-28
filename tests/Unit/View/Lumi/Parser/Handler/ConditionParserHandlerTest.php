@@ -321,6 +321,444 @@ class ConditionParserHandlerTest extends TestCase
         );
     }
 
+    public function testParsesNestedIfWithElseInsideOuterBody(): void
+    {
+        $parser = Parser::createWithoutDefaultHandlers(
+            handlers: [
+                new TextParserHandler(),
+                new ConditionParserHandler(),
+            ],
+        );
+
+        $nodes = $this->handler->parse(
+            parser: $parser,
+            stream: new TokenStream(
+                tokens: [
+                    new IfToken(
+                        line: 1,
+                    ),
+                    new IdentifierToken(
+                        line: 1,
+                        op1: 'outer',
+                    ),
+                    new EndToken(
+                        line: 1,
+                    ),
+                    new IfToken(
+                        line: 2,
+                    ),
+                    new IdentifierToken(
+                        line: 2,
+                        op1: 'inner',
+                    ),
+                    new EndToken(
+                        line: 2,
+                    ),
+                    new TextToken(
+                        line: 3,
+                        op1: 'A',
+                    ),
+                    new ElseToken(
+                        line: 4,
+                    ),
+                    new TextToken(
+                        line: 5,
+                        op1: 'B',
+                    ),
+                    new EndIfToken(
+                        line: 6,
+                    ),
+                    new EndIfToken(
+                        line: 7,
+                    ),
+                ],
+            ),
+        );
+
+        self::assertCount(1, $nodes);
+
+        $this->assertConditionalNode(
+            node: $nodes[0],
+            expectedBodyCount: 1,
+            expectedBranchCount: 0,
+            expectedElseCount: 0,
+        );
+
+        self::assertInstanceOf(ConditionalNode::class, $nodes[0]);
+
+        $this->assertIdentifierNode(
+            node: $nodes[0]->operand,
+            expectedName: 'outer',
+        );
+
+        $this->assertConditionalNode(
+            node: $nodes[0]->body[0],
+            expectedBodyCount: 1,
+            expectedBranchCount: 0,
+            expectedElseCount: 1,
+        );
+
+        self::assertInstanceOf(ConditionalNode::class, $nodes[0]->body[0]);
+
+        $this->assertIdentifierNode(
+            node: $nodes[0]->body[0]->operand,
+            expectedName: 'inner',
+        );
+
+        $this->assertTextNode(
+            node: $nodes[0]->body[0]->body[0],
+            expectedText: 'A',
+        );
+
+        $this->assertTextNode(
+            node: $nodes[0]->body[0]->else[0],
+            expectedText: 'B',
+        );
+    }
+
+    public function testParsesNestedIfWithElseIfInsideOuterBody(): void
+    {
+        $parser = Parser::createWithoutDefaultHandlers(
+            handlers: [
+                new TextParserHandler(),
+                new ConditionParserHandler(),
+            ],
+        );
+
+        $nodes = $this->handler->parse(
+            parser: $parser,
+            stream: new TokenStream(
+                tokens: [
+                    new IfToken(
+                        line: 1,
+                    ),
+                    new IdentifierToken(
+                        line: 1,
+                        op1: 'outer',
+                    ),
+                    new EndToken(
+                        line: 1,
+                    ),
+                    new IfToken(
+                        line: 2,
+                    ),
+                    new IdentifierToken(
+                        line: 2,
+                        op1: 'inner',
+                    ),
+                    new EndToken(
+                        line: 2,
+                    ),
+                    new TextToken(
+                        line: 3,
+                        op1: 'A',
+                    ),
+                    new ElseIfToken(
+                        line: 4,
+                    ),
+                    new IdentifierToken(
+                        line: 4,
+                        op1: 'otherbranch',
+                    ),
+                    new EndToken(
+                        line: 4,
+                    ),
+                    new TextToken(
+                        line: 5,
+                        op1: 'B',
+                    ),
+                    new EndIfToken(
+                        line: 6,
+                    ),
+                    new EndIfToken(
+                        line: 7,
+                    ),
+                ],
+            ),
+        );
+
+        self::assertCount(1, $nodes);
+
+        $this->assertConditionalNode(
+            node: $nodes[0],
+            expectedBodyCount: 1,
+            expectedBranchCount: 0,
+            expectedElseCount: 0,
+        );
+
+        self::assertInstanceOf(ConditionalNode::class, $nodes[0]);
+
+        $this->assertIdentifierNode(
+            node: $nodes[0]->operand,
+            expectedName: 'outer',
+        );
+
+        $this->assertConditionalNode(
+            node: $nodes[0]->body[0],
+            expectedBodyCount: 1,
+            expectedBranchCount: 1,
+            expectedElseCount: 0,
+        );
+
+        self::assertInstanceOf(ConditionalNode::class, $nodes[0]->body[0]);
+
+        $this->assertIdentifierNode(
+            node: $nodes[0]->body[0]->operand,
+            expectedName: 'inner',
+        );
+
+        $this->assertTextNode(
+            node: $nodes[0]->body[0]->body[0],
+            expectedText: 'A',
+        );
+
+        $this->assertConditionalBranchNode(
+            node: $nodes[0]->body[0]->branches[0],
+            expectedBodyCount: 1,
+        );
+
+        $this->assertIdentifierNode(
+            node: $nodes[0]->body[0]->branches[0]->operand,
+            expectedName: 'otherbranch',
+        );
+
+        $this->assertTextNode(
+            node: $nodes[0]->body[0]->branches[0]->body[0],
+            expectedText: 'B',
+        );
+    }
+
+    public function testParsesNestedIfWithElseInsideOuterElseBranch(): void
+    {
+        $parser = Parser::createWithoutDefaultHandlers(
+            handlers: [
+                new TextParserHandler(),
+                new ConditionParserHandler(),
+            ],
+        );
+
+        $nodes = $this->handler->parse(
+            parser: $parser,
+            stream: new TokenStream(
+                tokens: [
+                    new IfToken(
+                        line: 1,
+                    ),
+                    new IdentifierToken(
+                        line: 1,
+                        op1: 'outer',
+                    ),
+                    new EndToken(
+                        line: 1,
+                    ),
+                    new TextToken(
+                        line: 2,
+                        op1: 'X',
+                    ),
+                    new ElseToken(
+                        line: 3,
+                    ),
+                    new IfToken(
+                        line: 4,
+                    ),
+                    new IdentifierToken(
+                        line: 4,
+                        op1: 'inner',
+                    ),
+                    new EndToken(
+                        line: 4,
+                    ),
+                    new TextToken(
+                        line: 5,
+                        op1: 'A',
+                    ),
+                    new ElseToken(
+                        line: 6,
+                    ),
+                    new TextToken(
+                        line: 7,
+                        op1: 'B',
+                    ),
+                    new EndIfToken(
+                        line: 8,
+                    ),
+                    new EndIfToken(
+                        line: 9,
+                    ),
+                ],
+            ),
+        );
+
+        self::assertCount(1, $nodes);
+
+        $this->assertConditionalNode(
+            node: $nodes[0],
+            expectedBodyCount: 1,
+            expectedBranchCount: 0,
+            expectedElseCount: 1,
+        );
+
+        self::assertInstanceOf(ConditionalNode::class, $nodes[0]);
+
+        $this->assertIdentifierNode(
+            node: $nodes[0]->operand,
+            expectedName: 'outer',
+        );
+
+        $this->assertTextNode(
+            node: $nodes[0]->body[0],
+            expectedText: 'X',
+        );
+
+        $this->assertConditionalNode(
+            node: $nodes[0]->else[0],
+            expectedBodyCount: 1,
+            expectedBranchCount: 0,
+            expectedElseCount: 1,
+        );
+
+        self::assertInstanceOf(ConditionalNode::class, $nodes[0]->else[0]);
+
+        $this->assertIdentifierNode(
+            node: $nodes[0]->else[0]->operand,
+            expectedName: 'inner',
+        );
+
+        $this->assertTextNode(
+            node: $nodes[0]->else[0]->body[0],
+            expectedText: 'A',
+        );
+
+        $this->assertTextNode(
+            node: $nodes[0]->else[0]->else[0],
+            expectedText: 'B',
+        );
+    }
+
+    public function testParsesNestedIfWithElseIfInsideOuterElseBranch(): void
+    {
+        $parser = Parser::createWithoutDefaultHandlers(
+            handlers: [
+                new TextParserHandler(),
+                new ConditionParserHandler(),
+            ],
+        );
+
+        $nodes = $this->handler->parse(
+            parser: $parser,
+            stream: new TokenStream(
+                tokens: [
+                    new IfToken(
+                        line: 1,
+                    ),
+                    new IdentifierToken(
+                        line: 1,
+                        op1: 'outer',
+                    ),
+                    new EndToken(
+                        line: 1,
+                    ),
+                    new TextToken(
+                        line: 2,
+                        op1: 'X',
+                    ),
+                    new ElseToken(
+                        line: 3,
+                    ),
+                    new IfToken(
+                        line: 4,
+                    ),
+                    new IdentifierToken(
+                        line: 4,
+                        op1: 'inner',
+                    ),
+                    new EndToken(
+                        line: 4,
+                    ),
+                    new TextToken(
+                        line: 5,
+                        op1: 'A',
+                    ),
+                    new ElseIfToken(
+                        line: 6,
+                    ),
+                    new IdentifierToken(
+                        line: 6,
+                        op1: 'otherbranch',
+                    ),
+                    new EndToken(
+                        line: 6,
+                    ),
+                    new TextToken(
+                        line: 7,
+                        op1: 'B',
+                    ),
+                    new EndIfToken(
+                        line: 8,
+                    ),
+                    new EndIfToken(
+                        line: 9,
+                    ),
+                ],
+            ),
+        );
+
+        self::assertCount(1, $nodes);
+
+        $this->assertConditionalNode(
+            node: $nodes[0],
+            expectedBodyCount: 1,
+            expectedBranchCount: 0,
+            expectedElseCount: 1,
+        );
+
+        self::assertInstanceOf(ConditionalNode::class, $nodes[0]);
+
+        $this->assertIdentifierNode(
+            node: $nodes[0]->operand,
+            expectedName: 'outer',
+        );
+
+        $this->assertTextNode(
+            node: $nodes[0]->body[0],
+            expectedText: 'X',
+        );
+
+        $this->assertConditionalNode(
+            node: $nodes[0]->else[0],
+            expectedBodyCount: 1,
+            expectedBranchCount: 1,
+            expectedElseCount: 0,
+        );
+
+        self::assertInstanceOf(ConditionalNode::class, $nodes[0]->else[0]);
+
+        $this->assertIdentifierNode(
+            node: $nodes[0]->else[0]->operand,
+            expectedName: 'inner',
+        );
+
+        $this->assertTextNode(
+            node: $nodes[0]->else[0]->body[0],
+            expectedText: 'A',
+        );
+
+        $this->assertConditionalBranchNode(
+            node: $nodes[0]->else[0]->branches[0],
+            expectedBodyCount: 1,
+        );
+
+        $this->assertIdentifierNode(
+            node: $nodes[0]->else[0]->branches[0]->operand,
+            expectedName: 'otherbranch',
+        );
+
+        $this->assertTextNode(
+            node: $nodes[0]->else[0]->branches[0]->body[0],
+            expectedText: 'B',
+        );
+    }
+
     public function testParsesNestedIfInsideElseBranch(): void
     {
         $parser = Parser::createWithoutDefaultHandlers(
