@@ -180,4 +180,22 @@ class MailException extends \Exception
             ),
         );
     }
+
+    public static function fromMissingIntlExtension(): self
+    {
+        return new self(
+            message: 'The "intl" PHP extension is required to encode internationalized domain names (IDNA)',
+        );
+    }
+
+    public static function fromIdnaConversionFailure(
+        string $domain,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Failed to encode domain "%s" via IDNA (UTS #46)',
+                $domain,
+            ),
+        );
+    }
 }

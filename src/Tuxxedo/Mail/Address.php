@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Mail;
 
 use Tuxxedo\Mail\Serializer\Render\EncodedWord;
+use Tuxxedo\Mail\Serializer\Render\IdnaEncoder;
 
 class Address implements AddressInterface
 {
@@ -116,15 +117,17 @@ class Address implements AddressInterface
     #[\NoDiscard]
     public function toRfc5322(): string
     {
+        $email = $this->localPart . '@' . IdnaEncoder::encode($this->domain);
+
         if ($this->displayName === null) {
-            return $this->email;
+            return $email;
         }
 
         if (\preg_match('/[^\x00-\x7F]/', $this->displayName) === 1) {
             return \sprintf(
                 '%s <%s>',
                 EncodedWord::encode($this->displayName),
-                $this->email,
+                $email,
             );
         }
 
@@ -141,7 +144,7 @@ class Address implements AddressInterface
                 ],
                 $this->displayName,
             ),
-            $this->email,
+            $email,
         );
     }
 

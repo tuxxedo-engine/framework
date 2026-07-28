@@ -166,23 +166,49 @@ class MimeTreeBuilder
         $value = $attachment->disposition->value;
 
         if ($attachment->name !== null) {
-            $value .= \sprintf(
-                '; filename="%s"',
-                \str_replace(
-                    [
-                        '\\',
-                        '"',
-                    ],
-                    [
-                        '\\\\',
-                        '\\"',
-                    ],
-                    $attachment->name,
-                ),
-            );
+            $value .= self::renderFilenameParameter($attachment->name);
         }
 
         return new Header('Content-Disposition', $value);
+    }
+
+    private static function renderFilenameParameter(
+        string $filename,
+    ): string {
+        $hasNonAscii = \preg_match('/[^\x20-\x7E]/', $filename) === 1;
+        $quoted = \str_replace(
+            [
+                '\\',
+                '"',
+            ],
+            [
+                '\\\\',
+                '\\"',
+            ],
+            $filename,
+        );
+
+        if (!$hasNonAscii) {
+            return \sprintf('; filename="%s"', $quoted);
+        }
+
+        $asciiFallback = \str_replace(
+            [
+                '\\',
+                '"',
+            ],
+            [
+                '\\\\',
+                '\\"',
+            ],
+            \preg_replace('/[^\x20-\x7E]/', '?', $filename) ?? '',
+        );
+
+        return \sprintf(
+            '; filename="%s"; filename*=UTF-8\'\'%s',
+            $asciiFallback,
+            \rawurlencode($filename),
+        );
     }
 
     private static function generateBoundary(): string

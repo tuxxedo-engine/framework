@@ -15,15 +15,41 @@ namespace Tuxxedo\Mail\Serializer\Render;
 
 class EncodedWord
 {
+    private const int MAX_ENCODED_WORD_LENGTH = 75;
+
     public static function encode(
         string $value,
         string $charset = 'UTF-8',
     ): string {
-        return \sprintf(
-            '=?%s?B?%s?=',
-            $charset,
-            \base64_encode($value),
-        );
+        $overhead = \strlen($charset) + 7;
+        $maxPayloadBytes = (int) \floor((self::MAX_ENCODED_WORD_LENGTH - $overhead) / 4) * 3;
+
+        if ($maxPayloadBytes < 1) {
+            return self::wrap($charset, \base64_encode($value));
+        }
+
+        $chunks = [];
+        $buffer = '';
+        $characters = \mb_str_split($value, 1, $charset);
+
+        foreach ($characters as $character) {
+            $candidate = $buffer . $character;
+
+            if (\strlen($candidate) > $maxPayloadBytes) {
+                $chunks[] = self::wrap($charset, \base64_encode($buffer));
+                $buffer = $character;
+
+                continue;
+            }
+
+            $buffer = $candidate;
+        }
+
+        if ($buffer !== '') {
+            $chunks[] = self::wrap($charset, \base64_encode($buffer));
+        }
+
+        return \implode("\r\n ", $chunks);
     }
 
     public static function encodeIfNonAscii(
@@ -35,5 +61,16 @@ class EncodedWord
         }
 
         return $value;
+    }
+
+    private static function wrap(
+        string $charset,
+        string $encoded,
+    ): string {
+        return \sprintf(
+            '=?%s?B?%s?=',
+            $charset,
+            $encoded,
+        );
     }
 }
