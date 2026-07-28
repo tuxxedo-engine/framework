@@ -138,6 +138,36 @@ class MailException extends \Exception
     }
 
     /**
+     * @param class-string<Transport\MailTransportInterface> $transport
+     */
+    public static function fromBccNotSupportedByTransport(
+        string $transport,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Transport "%s" does not support Bcc recipients',
+                $transport,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string<Transport\MailTransportInterface> $transport
+     */
+    public static function fromTransportFailure(
+        string $transport,
+        ?\Throwable $previous = null,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Transport "%s" failed to deliver the message',
+                $transport,
+            ),
+            previous: $previous,
+        );
+    }
+
+    /**
      * @param class-string $mimePartClass
      */
     public static function fromNonSerializableMimePart(

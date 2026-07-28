@@ -1,0 +1,25 @@
+{% if resultMessage %}
+    {% if resultSuccess %}
+        <p style="color: green;"><strong>Sent:</strong> {{ resultMessage }}</p>
+    {% else %}
+        <p style="color: red;"><strong>Failed:</strong> {{ resultMessage }}</p>
+    {% endif %}
+{% endif %}
+
+<form action="/mail/" method="post">
+    {! csrf_field() !}
+    <p>
+        <label><strong>To:</strong> <input type="email" name="to" value="user@example.com" required></label>
+    </p>
+    <p>
+        <label><strong>Subject:</strong> <input type="text" name="subject" value="Hello from Engine" required></label>
+    </p>
+    <p>
+        <label><strong>Return-Path (optional):</strong> <input type="email" name="returnPath" placeholder="bounces@example.com"></label>
+    </p>
+    <p>
+        <label><strong>Body:</strong></label><br>
+        <textarea name="body" rows="6" cols="60">Hello from the mail demo.</textarea>
+    </p>
+    <input type="submit" value="Send">
+</form>
