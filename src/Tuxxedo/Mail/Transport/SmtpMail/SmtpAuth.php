@@ -11,11 +11,13 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Mail\Transport\Smtp;
+namespace Tuxxedo\Mail\Transport\SmtpMail;
 
-enum SmtpTls: string
+enum SmtpAuth: string
 {
-    case NONE = 'none';
-    case STARTTLS = 'starttls';
-    case IMPLICIT = 'implicit';
+    case NONE = 'NONE';
+    case PLAIN = 'PLAIN';
+    case LOGIN = 'LOGIN';
+    case CRAM_MD5 = 'CRAM-MD5';
+    case XOAUTH2 = 'XOAUTH2';
 }

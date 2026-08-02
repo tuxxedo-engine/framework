@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Mail\Transport\Smtp;
+namespace Tuxxedo\Mail\Transport\SmtpMail;
 
 use Tuxxedo\Mail\AddressInterface;
 use Tuxxedo\Mail\MailException;
@@ -19,7 +19,7 @@ use Tuxxedo\Mail\MessageInterface;
 use Tuxxedo\Mail\Serializer\MessageSerializer;
 use Tuxxedo\Mail\Serializer\MessageSerializerInterface;
 use Tuxxedo\Mail\Transport\MailTransportInterface;
-use Tuxxedo\Mail\Transport\Smtp\Config\SmtpTransportConfigInterface;
+use Tuxxedo\Mail\Transport\SmtpMail\Config\SmtpTransportConfigInterface;
 
 class SmtpTransport implements MailTransportInterface
 {

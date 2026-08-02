@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Mail\Transport\Smtp;
+namespace Tuxxedo\Mail\Transport\SmtpMail;
 
 enum SmtpTransportMode: string
 {

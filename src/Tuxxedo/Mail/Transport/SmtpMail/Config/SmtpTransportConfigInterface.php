@@ -11,15 +11,15 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Mail\Transport\Smtp\Config;
+namespace Tuxxedo\Mail\Transport\SmtpMail\Config;
 
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Mail\Config\MailTransportConfigInterface;
-use Tuxxedo\Mail\Transport\Smtp\SmtpAuth;
-use Tuxxedo\Mail\Transport\Smtp\SmtpTls;
-use Tuxxedo\Mail\Transport\Smtp\SmtpTransportMode;
-use Tuxxedo\Mail\Transport\Smtp\XoauthTokenProviderInterface;
+use Tuxxedo\Mail\Transport\SmtpMail\SmtpAuth;
+use Tuxxedo\Mail\Transport\SmtpMail\SmtpTls;
+use Tuxxedo\Mail\Transport\SmtpMail\SmtpTransportMode;
+use Tuxxedo\Mail\Transport\SmtpMail\XoauthTokenProviderInterface;
 
 #[DefaultImplementation(class: SmtpTransportConfig::class, lifecycle: Lifecycle::SINGLETON)]
 interface SmtpTransportConfigInterface extends MailTransportConfigInterface
