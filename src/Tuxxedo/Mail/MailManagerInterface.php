@@ -15,6 +15,7 @@ namespace Tuxxedo\Mail;
 
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
+use Tuxxedo\Mail\Result\SendResult;
 use Tuxxedo\Mail\Transport\MailTransportInterface;
 
 #[DefaultImplementation(class: MailManager::class, lifecycle: Lifecycle::SINGLETON)]
@@ -30,4 +31,13 @@ interface MailManagerInterface
     public function send(
         MessageInterface ...$messages,
     ): void;
+
+    /**
+     * @return list<SendResult>
+     *
+     * @throws MailException
+     */
+    public function sendWithResult(
+        MessageInterface ...$messages,
+    ): array;
 }

@@ -13,7 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Mail\Transport\PhpMail;
 
+use Tuxxedo\Mail\AddressInterface;
 use Tuxxedo\Mail\MailException;
+use Tuxxedo\Mail\MessageInterface;
+use Tuxxedo\Mail\Result\RecipientOutcome;
+use Tuxxedo\Mail\Result\RecipientStatus;
+use Tuxxedo\Mail\Result\SendResult;
 use Tuxxedo\Mail\Serializer\SerializedMessageInterface;
 use Tuxxedo\Mail\Transport\MailTransportInterface;
 
@@ -25,6 +30,87 @@ class PhpMailTransport implements MailTransportInterface
         foreach ($serialized as $item) {
             $this->sendOne($item);
         }
+    }
+
+    public function sendWithResult(
+        SerializedMessageInterface ...$serialized,
+    ): array {
+        $results = [];
+
+        foreach ($serialized as $item) {
+            $results[] = $this->sendOneWithResult($item);
+        }
+
+        return $results;
+    }
+
+    private function sendOneWithResult(
+        SerializedMessageInterface $serialized,
+    ): SendResult {
+        $message = $serialized->source;
+        $recipients = self::collectRecipients($message);
+
+        try {
+            $this->sendOne($serialized);
+
+            return new SendResult(
+                message: $message,
+                outcomes: self::outcomesForAll(
+                    recipients: $recipients,
+                    status: RecipientStatus::ACCEPTED,
+                ),
+            );
+        } catch (MailException $e) {
+            return new SendResult(
+                message: $message,
+                outcomes: self::outcomesForAll(
+                    recipients: $recipients,
+                    status: RecipientStatus::PERMANENT_FAILURE,
+                    summary: $e->getMessage(),
+                ),
+            );
+        }
+    }
+
+    /**
+     * @return list<AddressInterface>
+     */
+    private static function collectRecipients(
+        MessageInterface $message,
+    ): array {
+        $recipients = [];
+
+        foreach ($message->to as $recipient) {
+            $recipients[] = $recipient;
+        }
+
+        foreach ($message->cc as $recipient) {
+            $recipients[] = $recipient;
+        }
+
+        return $recipients;
+    }
+
+    /**
+     * @param list<AddressInterface> $recipients
+     * @return list<RecipientOutcome>
+     */
+    private static function outcomesForAll(
+        array $recipients,
+        RecipientStatus $status,
+        ?string $summary = null,
+    ): array {
+        $outcomes = [];
+
+        foreach ($recipients as $recipient) {
+            $outcomes[] = new RecipientOutcome(
+                recipient: $recipient,
+                status: $status,
+                summary: $summary,
+            );
+        }
+
+        return $outcomes;
     }
 
     /**

@@ -62,6 +62,22 @@ class MailManager implements MailManagerInterface
         $this->transport->send(...$serialized);
     }
 
+    public function sendWithResult(
+        MessageInterface ...$messages,
+    ): array {
+        if ($messages === []) {
+            return [];
+        }
+
+        $serialized = [];
+
+        foreach ($messages as $message) {
+            $serialized[] = $this->pipeline($message);
+        }
+
+        return $this->transport->sendWithResult(...$serialized);
+    }
+
     /**
      * @throws MailException
      */

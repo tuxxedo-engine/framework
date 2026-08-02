@@ -16,6 +16,7 @@ namespace Tuxxedo\Mail\Transport\SmtpMail;
 use Tuxxedo\Mail\AddressInterface;
 use Tuxxedo\Mail\MailException;
 use Tuxxedo\Mail\MessageInterface;
+use Tuxxedo\Mail\Result\SendResult;
 use Tuxxedo\Mail\Serializer\SerializedMessageInterface;
 use Tuxxedo\Mail\Transport\MailTransportInterface;
 use Tuxxedo\Mail\Transport\SmtpMail\Config\SmtpTransportConfigInterface;
@@ -115,6 +116,130 @@ class SmtpTransport implements MailTransportInterface
         foreach (\array_chunk($serialized, $reuseLimit) as $chunk) {
             $this->sendReusingConnection($chunk);
         }
+    }
+
+    public function sendWithResult(
+        SerializedMessageInterface ...$serialized,
+    ): array {
+        if ($serialized === []) {
+            return [];
+        }
+
+        return match ($this->config->mode) {
+            SmtpTransportMode::PER_MESSAGE => $this->sendPerMessageWithResult($serialized),
+            SmtpTransportMode::REUSE_CONNECTION => $this->sendReusingConnectionWithResult($serialized),
+            SmtpTransportMode::REUSE_UP_TO_N => $this->sendReusingUpToNWithResult(
+                serialized: $serialized,
+                reuseLimit: $this->config->reuseLimit,
+            ),
+        };
+    }
+
+    /**
+     * @param array<int|string, SerializedMessageInterface> $serialized
+     * @return list<SendResult>
+     *
+     * @throws MailException
+     */
+    private function sendPerMessageWithResult(
+        array $serialized,
+    ): array {
+        $results = [];
+
+        foreach ($serialized as $item) {
+            $session = $this->openSession();
+
+            try {
+                $results[] = $this->dispatchWithResult(
+                    session: $session,
+                    serialized: $item,
+                );
+            } finally {
+                $session->close();
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * @param array<int|string, SerializedMessageInterface> $serialized
+     * @return list<SendResult>
+     *
+     * @throws MailException
+     */
+    private function sendReusingConnectionWithResult(
+        array $serialized,
+    ): array {
+        $session = $this->openSession();
+        $results = [];
+
+        try {
+            $first = true;
+
+            foreach ($serialized as $item) {
+                if (!$first) {
+                    $session->reset();
+                }
+
+                $results[] = $this->dispatchWithResult(
+                    session: $session,
+                    serialized: $item,
+                );
+
+                $first = false;
+            }
+        } finally {
+            $session->close();
+        }
+
+        return $results;
+    }
+
+    /**
+     * @param array<int|string, SerializedMessageInterface> $serialized
+     * @return list<SendResult>
+     *
+     * @throws MailException
+     */
+    private function sendReusingUpToNWithResult(
+        array $serialized,
+        int $reuseLimit,
+    ): array {
+        if ($reuseLimit <= 0) {
+            return $this->sendReusingConnectionWithResult($serialized);
+        }
+
+        $results = [];
+
+        foreach (\array_chunk($serialized, $reuseLimit) as $chunk) {
+            foreach ($this->sendReusingConnectionWithResult($chunk) as $result) {
+                $results[] = $result;
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * @throws MailException
+     */
+    private function dispatchWithResult(
+        SmtpSession $session,
+        SerializedMessageInterface $serialized,
+    ): SendResult {
+        $message = $serialized->source;
+
+        $outcomes = $session->sendMessageWithResult(
+            serialized: $serialized,
+            envelopeFrom: $message->returnPath ?? $message->from,
+            recipients: self::collectRecipients($message),
+        );
+
+        return new SendResult(
+            message: $message,
+            outcomes: $outcomes,
+        );
     }
 
     /**

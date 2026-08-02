@@ -14,6 +14,9 @@ declare(strict_types=1);
 namespace Support\Mail\Transport;
 
 use Tuxxedo\Mail\MessageInterface;
+use Tuxxedo\Mail\Result\RecipientOutcome;
+use Tuxxedo\Mail\Result\RecipientStatus;
+use Tuxxedo\Mail\Result\SendResult;
 use Tuxxedo\Mail\Serializer\SerializedMessageInterface;
 use Tuxxedo\Mail\Transport\MailTransportInterface;
 
@@ -40,5 +43,33 @@ class RecordingMailTransport implements MailTransportInterface
             $this->sent[] = $item->source;
             $this->sentSerialized[] = $item;
         }
+    }
+
+    public function sendWithResult(
+        SerializedMessageInterface ...$serialized,
+    ): array {
+        $this->sendCalls++;
+        $results = [];
+
+        foreach ($serialized as $item) {
+            $this->sent[] = $item->source;
+            $this->sentSerialized[] = $item;
+
+            $outcomes = [];
+
+            foreach ($item->source->to as $recipient) {
+                $outcomes[] = new RecipientOutcome(
+                    recipient: $recipient,
+                    status: RecipientStatus::ACCEPTED,
+                );
+            }
+
+            $results[] = new SendResult(
+                message: $item->source,
+                outcomes: $outcomes,
+            );
+        }
+
+        return $results;
     }
 }

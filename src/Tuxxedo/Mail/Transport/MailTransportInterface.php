@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Mail\Transport;
 
 use Tuxxedo\Mail\MailException;
+use Tuxxedo\Mail\Result\SendResult;
 use Tuxxedo\Mail\Serializer\SerializedMessageInterface;
 
 interface MailTransportInterface
@@ -24,4 +25,13 @@ interface MailTransportInterface
     public function send(
         SerializedMessageInterface ...$serialized,
     ): void;
+
+    /**
+     * @return list<SendResult>
+     *
+     * @throws MailException
+     */
+    public function sendWithResult(
+        SerializedMessageInterface ...$serialized,
+    ): array;
 }

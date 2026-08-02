@@ -52,7 +52,7 @@ abstract class AbstractModelsManagerLifecycleIntegrationTestCase extends Abstrac
             ->limit(1)
             ->execute();
 
-        if (\count($result) === 0) {
+        if (\sizeof($result) === 0) {
             return null;
         }
 

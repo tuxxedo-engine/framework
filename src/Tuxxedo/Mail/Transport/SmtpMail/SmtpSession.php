@@ -15,6 +15,8 @@ namespace Tuxxedo\Mail\Transport\SmtpMail;
 
 use Tuxxedo\Mail\AddressInterface;
 use Tuxxedo\Mail\MailException;
+use Tuxxedo\Mail\Result\RecipientOutcome;
+use Tuxxedo\Mail\Result\RecipientStatus;
 use Tuxxedo\Mail\Serializer\SerializedMessageInterface;
 
 class SmtpSession
@@ -206,6 +208,157 @@ class SmtpSession
                 summary: $bodyResponse->summary,
             );
         }
+    }
+
+    /**
+     * @param list<AddressInterface> $recipients
+     * @return list<RecipientOutcome>
+     *
+     * @throws MailException
+     */
+    public function sendMessageWithResult(
+        SerializedMessageInterface $serialized,
+        AddressInterface $envelopeFrom,
+        array $recipients,
+    ): array {
+        $size = \strlen($serialized->wire);
+
+        $this->enforceSizeLimit(
+            size: $size,
+        );
+
+        $mailFrom = $this->buildMailFromCommand(
+            envelopeFrom: $envelopeFrom,
+            size: $size,
+        );
+
+        $this->socket->writeCommand($mailFrom);
+        $mailFromResponse = $this->socket->readResponse();
+
+        if (!$mailFromResponse->isSuccess) {
+            return self::applyStatusToAll(
+                recipients: $recipients,
+                response: $mailFromResponse,
+            );
+        }
+
+        $outcomes = [];
+        $acceptedIndexes = [];
+
+        foreach ($recipients as $recipient) {
+            $this->socket->writeCommand(
+                command: \sprintf('RCPT TO:<%s>', $recipient->email),
+            );
+
+            $response = $this->socket->readResponse();
+
+            if ($response->isSuccess) {
+                $outcomes[] = new RecipientOutcome(
+                    recipient: $recipient,
+                    status: RecipientStatus::ACCEPTED,
+                    code: $response->code,
+                    summary: $response->summary,
+                );
+                $acceptedIndexes[] = \sizeof($outcomes) - 1;
+
+                continue;
+            }
+
+            $outcomes[] = new RecipientOutcome(
+                recipient: $recipient,
+                status: self::classify($response),
+                code: $response->code,
+                summary: $response->summary,
+            );
+        }
+
+        if ($acceptedIndexes === []) {
+            return $outcomes;
+        }
+
+        $this->socket->writeCommand('DATA');
+        $dataResponse = $this->socket->readResponse();
+
+        if ($dataResponse->code !== self::SMTP_DATA_PROMPT_CODE) {
+            return self::overrideAt(
+                outcomes: $outcomes,
+                indexes: $acceptedIndexes,
+                response: $dataResponse,
+            );
+        }
+
+        $stuffed = \rtrim(self::dotStuff($serialized->wire), "\r\n") . "\r\n";
+        $this->socket->writeRaw($stuffed);
+        $this->socket->writeRaw(".\r\n");
+
+        $bodyResponse = $this->socket->readResponse();
+
+        if (!$bodyResponse->isSuccess) {
+            return self::overrideAt(
+                outcomes: $outcomes,
+                indexes: $acceptedIndexes,
+                response: $bodyResponse,
+            );
+        }
+
+        return $outcomes;
+    }
+
+    /**
+     * @param list<AddressInterface> $recipients
+     * @return list<RecipientOutcome>
+     */
+    private static function applyStatusToAll(
+        array $recipients,
+        SmtpResponse $response,
+    ): array {
+        $status = self::classify($response);
+        $outcomes = [];
+
+        foreach ($recipients as $recipient) {
+            $outcomes[] = new RecipientOutcome(
+                recipient: $recipient,
+                status: $status,
+                code: $response->code,
+                summary: $response->summary,
+            );
+        }
+
+        return $outcomes;
+    }
+
+    /**
+     * @param list<RecipientOutcome> $outcomes
+     * @param list<int> $indexes
+     * @return list<RecipientOutcome>
+     */
+    private static function overrideAt(
+        array $outcomes,
+        array $indexes,
+        SmtpResponse $response,
+    ): array {
+        $status = self::classify($response);
+
+        foreach ($indexes as $index) {
+            $outcomes[$index] = new RecipientOutcome(
+                recipient: $outcomes[$index]->recipient,
+                status: $status,
+                code: $response->code,
+                summary: $response->summary,
+            );
+        }
+
+        return \array_values($outcomes);
+    }
+
+    private static function classify(
+        SmtpResponse $response,
+    ): RecipientStatus {
+        if ($response->isPermanentFailure) {
+            return RecipientStatus::PERMANENT_FAILURE;
+        }
+
+        return RecipientStatus::TRANSIENT_FAILURE;
     }
 
     /**
