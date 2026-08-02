@@ -17,4 +17,5 @@ enum SmtpTransportMode: string
 {
     case PER_MESSAGE = 'per-message';
     case REUSE_CONNECTION = 'reuse-connection';
+    case REUSE_UP_TO_N = 'reuse-up-to-n';
 }

@@ -64,6 +64,10 @@ interface SmtpTransportConfigInterface extends MailTransportConfigInterface
         get;
     }
 
+    public int $reuseLimit {
+        get;
+    }
+
     public ?string $ehloDomain {
         get;
     }

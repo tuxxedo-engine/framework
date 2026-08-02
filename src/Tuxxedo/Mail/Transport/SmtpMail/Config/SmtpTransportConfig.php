@@ -34,6 +34,7 @@ class SmtpTransportConfig implements SmtpTransportConfigInterface
         public readonly int $connectTimeout = 30,
         public readonly int $readTimeout = 30,
         public readonly SmtpTransportMode $mode = SmtpTransportMode::REUSE_CONNECTION,
+        public readonly int $reuseLimit = 0,
         public readonly ?string $ehloDomain = null,
         public readonly bool $verifyPeer = true,
         public readonly ?string $caFile = null,

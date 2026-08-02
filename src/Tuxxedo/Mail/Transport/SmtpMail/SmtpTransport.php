@@ -40,6 +40,10 @@ class SmtpTransport implements MailTransportInterface
         match ($this->config->mode) {
             SmtpTransportMode::PER_MESSAGE => $this->sendPerMessage($messages),
             SmtpTransportMode::REUSE_CONNECTION => $this->sendReusingConnection($messages),
+            SmtpTransportMode::REUSE_UP_TO_N => $this->sendReusingUpToN(
+                messages: $messages,
+                reuseLimit: $this->config->reuseLimit,
+            ),
         };
     }
 
@@ -92,6 +96,26 @@ class SmtpTransport implements MailTransportInterface
             }
         } finally {
             $session->close();
+        }
+    }
+
+    /**
+     * @param array<int|string, MessageInterface> $messages
+     *
+     * @throws MailException
+     */
+    private function sendReusingUpToN(
+        array $messages,
+        int $reuseLimit,
+    ): void {
+        if ($reuseLimit <= 0) {
+            $this->sendReusingConnection($messages);
+
+            return;
+        }
+
+        foreach (\array_chunk($messages, $reuseLimit) as $chunk) {
+            $this->sendReusingConnection($chunk);
         }
     }
 
