@@ -82,10 +82,21 @@ class SmtpSession
         AddressInterface $envelopeFrom,
         array $recipients,
     ): void {
+        $size = \strlen($serialized->wire);
+
+        $this->enforceSizeLimit(
+            size: $size,
+        );
+
+        $mailFrom = $this->buildMailFromCommand(
+            envelopeFrom: $envelopeFrom,
+            size: $size,
+        );
+
         if ($this->capabilities->supports('PIPELINING')) {
             $this->sendMessagePipelined(
                 serialized: $serialized,
-                envelopeFrom: $envelopeFrom,
+                mailFrom: $mailFrom,
                 recipients: $recipients,
             );
 
@@ -94,7 +105,7 @@ class SmtpSession
 
         $this->sendMessageSequential(
             serialized: $serialized,
-            envelopeFrom: $envelopeFrom,
+            mailFrom: $mailFrom,
             recipients: $recipients,
         );
     }
@@ -106,11 +117,11 @@ class SmtpSession
      */
     private function sendMessageSequential(
         SerializedMessageInterface $serialized,
-        AddressInterface $envelopeFrom,
+        string $mailFrom,
         array $recipients,
     ): void {
         $this->sendCommand(
-            command: \sprintf('MAIL FROM:<%s>', $envelopeFrom->email),
+            command: $mailFrom,
         );
 
         foreach ($recipients as $recipient) {
@@ -129,11 +140,11 @@ class SmtpSession
      */
     private function sendMessagePipelined(
         SerializedMessageInterface $serialized,
-        AddressInterface $envelopeFrom,
+        string $mailFrom,
         array $recipients,
     ): void {
         $commands = [
-            \sprintf('MAIL FROM:<%s>', $envelopeFrom->email),
+            $mailFrom,
         ];
 
         foreach ($recipients as $recipient) {
@@ -532,5 +543,57 @@ class SmtpSession
         string $body,
     ): string {
         return \preg_replace('/(^|\r\n)\./', '$1..', $body) ?? $body;
+    }
+
+    /**
+     * @throws MailException
+     */
+    private function enforceSizeLimit(
+        int $size,
+    ): void {
+        $limit = $this->advertisedSizeLimit();
+
+        if ($limit === null || $limit === 0) {
+            return;
+        }
+
+        if ($size > $limit) {
+            throw MailException::fromSmtpMessageTooLarge(
+                size: $size,
+                limit: $limit,
+            );
+        }
+    }
+
+    private function buildMailFromCommand(
+        AddressInterface $envelopeFrom,
+        int $size,
+    ): string {
+        $command = \sprintf('MAIL FROM:<%s>', $envelopeFrom->email);
+
+        if ($this->advertisedSizeLimit() !== null) {
+            $command .= ' SIZE=' . $size;
+        }
+
+        if ($this->capabilities->supports('8BITMIME')) {
+            $command .= ' BODY=8BITMIME';
+        }
+
+        return $command;
+    }
+
+    private function advertisedSizeLimit(): ?int
+    {
+        $params = $this->capabilities->getParams('SIZE');
+
+        if ($params === []) {
+            return null;
+        }
+
+        if (\preg_match('/^\d+$/', $params[0]) !== 1) {
+            return null;
+        }
+
+        return (int) $params[0];
     }
 }

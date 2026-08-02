@@ -309,6 +309,19 @@ class MailException extends \Exception
         );
     }
 
+    public static function fromSmtpMessageTooLarge(
+        int $size,
+        int $limit,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'SMTP message is too large: %d bytes exceeds the server-advertised SIZE limit of %d bytes',
+                $size,
+                $limit,
+            ),
+        );
+    }
+
     public static function fromSmtpStartTlsNotAdvertised(): self
     {
         return new self(
