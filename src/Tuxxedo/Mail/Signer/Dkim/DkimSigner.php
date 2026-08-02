@@ -81,7 +81,9 @@ class DkimSigner implements MailWireMiddlewareInterface
             b: \base64_encode($signature),
         );
 
-        $dkimHeaderLine = 'DKIM-Signature: ' . $completed->toHeaderValue();
+        $dkimHeaderLine = DkimHeaderFolder::fold(
+            headerLine: 'DKIM-Signature: ' . $completed->toHeaderValue(),
+        );
 
         return new SerializedMessage(
             source: $serialized->source,

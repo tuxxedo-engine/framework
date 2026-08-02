@@ -22,11 +22,12 @@ class DkimSigningInput
         DkimSignatureTag $tag,
     ): string {
         $parsed = self::parseHeaders($serialized->headers);
+        $index = self::indexBottomUp($parsed);
 
         $input = '';
 
         foreach ($tag->signedHeaders as $name) {
-            $raw = self::findHeader($parsed, $name);
+            $raw = self::consumeHeader($index, $name);
             $input .= HeaderCanonicalizer::canonicalize($raw, $tag->headerCanonicalization) . "\r\n";
         }
 
@@ -83,19 +84,36 @@ class DkimSigningInput
 
     /**
      * @param list<array{name: string, raw: string}> $parsed
+     * @return array<string, list<string>>
      */
-    private static function findHeader(
+    private static function indexBottomUp(
         array $parsed,
+    ): array {
+        $index = [];
+
+        foreach (\array_reverse($parsed) as $entry) {
+            $lower = \strtolower($entry['name']);
+
+            $index[$lower] ??= [];
+            $index[$lower][] = $entry['raw'];
+        }
+
+        return $index;
+    }
+
+    /**
+     * @param array<string, list<string>> $index
+     */
+    private static function consumeHeader(
+        array &$index,
         string $name,
     ): string {
         $lower = \strtolower($name);
 
-        foreach ($parsed as $entry) {
-            if (\strtolower($entry['name']) === $lower) {
-                return $entry['raw'];
-            }
+        if (!isset($index[$lower]) || $index[$lower] === []) {
+            return $name . ':';
         }
 
-        return $name . ':';
+        return \array_shift($index[$lower]);
     }
 }
