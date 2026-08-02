@@ -322,6 +322,39 @@ class MailException extends \Exception
         );
     }
 
+    public static function fromDkimInvalidPrivateKey(): self
+    {
+        return new self(
+            message: 'Failed to parse DKIM RSA private key',
+        );
+    }
+
+    public static function fromDkimSigningFailed(
+        ?\Throwable $previous = null,
+    ): self {
+        return new self(
+            message: 'DKIM signing failed',
+            previous: $previous,
+        );
+    }
+
+    public static function fromDkimMissingSodiumExtension(): self
+    {
+        return new self(
+            message: 'The "sodium" PHP extension is required for Ed25519 DKIM signing',
+        );
+    }
+
+    public static function fromDkimEd25519InvalidKey(): self
+    {
+        return new self(
+            message: \sprintf(
+                'DKIM Ed25519 private key must be a base64-encoded %d-byte seed',
+                \SODIUM_CRYPTO_SIGN_SEEDBYTES,
+            ),
+        );
+    }
+
     public static function fromSmtpStartTlsNotAdvertised(): self
     {
         return new self(
