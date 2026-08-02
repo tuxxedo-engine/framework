@@ -16,6 +16,11 @@ namespace Tuxxedo\Mail;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DefaultInitializer;
 use Tuxxedo\Mail\Config\MailManagerConfigInterface;
+use Tuxxedo\Mail\Middleware\MailMiddlewareInterface;
+use Tuxxedo\Mail\Middleware\MailWireMiddlewareInterface;
+use Tuxxedo\Mail\Serializer\MessageSerializer;
+use Tuxxedo\Mail\Serializer\MessageSerializerInterface;
+use Tuxxedo\Mail\Serializer\SerializedMessageInterface;
 use Tuxxedo\Mail\Transport\MailTransportInterface;
 
 #[DefaultInitializer(
@@ -29,14 +34,50 @@ use Tuxxedo\Mail\Transport\MailTransportInterface;
 )]
 class MailManager implements MailManagerInterface
 {
+    /**
+     * @param list<MailMiddlewareInterface> $messageMiddleware
+     * @param list<MailWireMiddlewareInterface> $wireMiddleware
+     */
     public function __construct(
         public readonly MailTransportInterface $transport,
+        private readonly MessageSerializerInterface $serializer = new MessageSerializer(),
+        private readonly array $messageMiddleware = [],
+        private readonly array $wireMiddleware = [],
     ) {
     }
 
     public function send(
         MessageInterface ...$messages,
     ): void {
-        $this->transport->send(...$messages);
+        if ($messages === []) {
+            return;
+        }
+
+        $serialized = [];
+
+        foreach ($messages as $message) {
+            $serialized[] = $this->pipeline($message);
+        }
+
+        $this->transport->send(...$serialized);
+    }
+
+    /**
+     * @throws MailException
+     */
+    private function pipeline(
+        MessageInterface $message,
+    ): SerializedMessageInterface {
+        foreach ($this->messageMiddleware as $middleware) {
+            $message = $middleware->process($message);
+        }
+
+        $serialized = $this->serializer->serialize($message);
+
+        foreach ($this->wireMiddleware as $middleware) {
+            $serialized = $middleware->process($serialized);
+        }
+
+        return $serialized;
     }
 }

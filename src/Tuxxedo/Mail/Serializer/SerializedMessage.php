@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Mail\Serializer;
 
+use Tuxxedo\Mail\MessageInterface;
+
 class SerializedMessage implements SerializedMessageInterface
 {
     public string $wire {
@@ -22,6 +24,7 @@ class SerializedMessage implements SerializedMessageInterface
     }
 
     public function __construct(
+        public readonly MessageInterface $source,
         public readonly string $headers,
         public readonly string $body,
     ) {

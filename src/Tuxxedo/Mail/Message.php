@@ -116,6 +116,378 @@ class Message implements MessageInterface
     /**
      * @throws MailException
      */
+    public function withFrom(
+        AddressInterface|string $from,
+    ): MessageInterface {
+        return new self(
+            from: $from,
+            to: $this->to,
+            subject: $this->subject,
+            body: $this->body,
+            bodyType: $this->bodyType,
+            alternativeText: $this->alternativeText,
+            cc: $this->cc,
+            bcc: $this->bcc,
+            replyTo: $this->replyTo,
+            sender: $this->sender,
+            returnPath: $this->returnPath,
+            attachments: $this->attachments,
+            extraHeaders: $this->extraHeaders,
+            messageId: $this->messageId,
+            date: $this->date,
+        );
+    }
+
+    /**
+     * @param list<AddressInterface|string>|AddressInterface|string $to
+     *
+     * @throws MailException
+     */
+    public function withTo(
+        AddressInterface|string|array $to,
+    ): MessageInterface {
+        return new self(
+            from: $this->from,
+            to: $to,
+            subject: $this->subject,
+            body: $this->body,
+            bodyType: $this->bodyType,
+            alternativeText: $this->alternativeText,
+            cc: $this->cc,
+            bcc: $this->bcc,
+            replyTo: $this->replyTo,
+            sender: $this->sender,
+            returnPath: $this->returnPath,
+            attachments: $this->attachments,
+            extraHeaders: $this->extraHeaders,
+            messageId: $this->messageId,
+            date: $this->date,
+        );
+    }
+
+    /**
+     * @throws MailException
+     */
+    public function withSubject(
+        string $subject,
+    ): MessageInterface {
+        return new self(
+            from: $this->from,
+            to: $this->to,
+            subject: $subject,
+            body: $this->body,
+            bodyType: $this->bodyType,
+            alternativeText: $this->alternativeText,
+            cc: $this->cc,
+            bcc: $this->bcc,
+            replyTo: $this->replyTo,
+            sender: $this->sender,
+            returnPath: $this->returnPath,
+            attachments: $this->attachments,
+            extraHeaders: $this->extraHeaders,
+            messageId: $this->messageId,
+            date: $this->date,
+        );
+    }
+
+    /**
+     * @throws MailException
+     */
+    public function withBody(
+        ?string $body,
+        BodyType $bodyType = BodyType::TEXT,
+        ?string $alternativeText = null,
+    ): MessageInterface {
+        return new self(
+            from: $this->from,
+            to: $this->to,
+            subject: $this->subject,
+            body: $body,
+            bodyType: $bodyType,
+            alternativeText: $alternativeText,
+            cc: $this->cc,
+            bcc: $this->bcc,
+            replyTo: $this->replyTo,
+            sender: $this->sender,
+            returnPath: $this->returnPath,
+            attachments: $this->attachments,
+            extraHeaders: $this->extraHeaders,
+            messageId: $this->messageId,
+            date: $this->date,
+        );
+    }
+
+    /**
+     * @param list<AddressInterface|string>|AddressInterface|string $cc
+     *
+     * @throws MailException
+     */
+    public function withCc(
+        AddressInterface|string|array $cc,
+    ): MessageInterface {
+        return new self(
+            from: $this->from,
+            to: $this->to,
+            subject: $this->subject,
+            body: $this->body,
+            bodyType: $this->bodyType,
+            alternativeText: $this->alternativeText,
+            cc: $cc,
+            bcc: $this->bcc,
+            replyTo: $this->replyTo,
+            sender: $this->sender,
+            returnPath: $this->returnPath,
+            attachments: $this->attachments,
+            extraHeaders: $this->extraHeaders,
+            messageId: $this->messageId,
+            date: $this->date,
+        );
+    }
+
+    /**
+     * @param list<AddressInterface|string>|AddressInterface|string $bcc
+     *
+     * @throws MailException
+     */
+    public function withBcc(
+        AddressInterface|string|array $bcc,
+    ): MessageInterface {
+        return new self(
+            from: $this->from,
+            to: $this->to,
+            subject: $this->subject,
+            body: $this->body,
+            bodyType: $this->bodyType,
+            alternativeText: $this->alternativeText,
+            cc: $this->cc,
+            bcc: $bcc,
+            replyTo: $this->replyTo,
+            sender: $this->sender,
+            returnPath: $this->returnPath,
+            attachments: $this->attachments,
+            extraHeaders: $this->extraHeaders,
+            messageId: $this->messageId,
+            date: $this->date,
+        );
+    }
+
+    /**
+     * @param list<AddressInterface|string>|AddressInterface|string $replyTo
+     *
+     * @throws MailException
+     */
+    public function withReplyTo(
+        AddressInterface|string|array $replyTo,
+    ): MessageInterface {
+        return new self(
+            from: $this->from,
+            to: $this->to,
+            subject: $this->subject,
+            body: $this->body,
+            bodyType: $this->bodyType,
+            alternativeText: $this->alternativeText,
+            cc: $this->cc,
+            bcc: $this->bcc,
+            replyTo: $replyTo,
+            sender: $this->sender,
+            returnPath: $this->returnPath,
+            attachments: $this->attachments,
+            extraHeaders: $this->extraHeaders,
+            messageId: $this->messageId,
+            date: $this->date,
+        );
+    }
+
+    /**
+     * @throws MailException
+     */
+    public function withSender(
+        AddressInterface|string|null $sender,
+    ): MessageInterface {
+        return new self(
+            from: $this->from,
+            to: $this->to,
+            subject: $this->subject,
+            body: $this->body,
+            bodyType: $this->bodyType,
+            alternativeText: $this->alternativeText,
+            cc: $this->cc,
+            bcc: $this->bcc,
+            replyTo: $this->replyTo,
+            sender: $sender,
+            returnPath: $this->returnPath,
+            attachments: $this->attachments,
+            extraHeaders: $this->extraHeaders,
+            messageId: $this->messageId,
+            date: $this->date,
+        );
+    }
+
+    /**
+     * @throws MailException
+     */
+    public function withReturnPath(
+        AddressInterface|string|null $returnPath,
+    ): MessageInterface {
+        return new self(
+            from: $this->from,
+            to: $this->to,
+            subject: $this->subject,
+            body: $this->body,
+            bodyType: $this->bodyType,
+            alternativeText: $this->alternativeText,
+            cc: $this->cc,
+            bcc: $this->bcc,
+            replyTo: $this->replyTo,
+            sender: $this->sender,
+            returnPath: $returnPath,
+            attachments: $this->attachments,
+            extraHeaders: $this->extraHeaders,
+            messageId: $this->messageId,
+            date: $this->date,
+        );
+    }
+
+    /**
+     * @throws MailException
+     */
+    public function withAttachment(
+        AttachmentInterface $attachment,
+    ): MessageInterface {
+        return new self(
+            from: $this->from,
+            to: $this->to,
+            subject: $this->subject,
+            body: $this->body,
+            bodyType: $this->bodyType,
+            alternativeText: $this->alternativeText,
+            cc: $this->cc,
+            bcc: $this->bcc,
+            replyTo: $this->replyTo,
+            sender: $this->sender,
+            returnPath: $this->returnPath,
+            attachments: [...$this->attachments, $attachment],
+            extraHeaders: $this->extraHeaders,
+            messageId: $this->messageId,
+            date: $this->date,
+        );
+    }
+
+    /**
+     * @param list<AttachmentInterface> $attachments
+     *
+     * @throws MailException
+     */
+    public function withAttachments(
+        array $attachments,
+    ): MessageInterface {
+        return new self(
+            from: $this->from,
+            to: $this->to,
+            subject: $this->subject,
+            body: $this->body,
+            bodyType: $this->bodyType,
+            alternativeText: $this->alternativeText,
+            cc: $this->cc,
+            bcc: $this->bcc,
+            replyTo: $this->replyTo,
+            sender: $this->sender,
+            returnPath: $this->returnPath,
+            attachments: $attachments,
+            extraHeaders: $this->extraHeaders,
+            messageId: $this->messageId,
+            date: $this->date,
+        );
+    }
+
+    /**
+     * @throws MailException
+     */
+    public function withExtraHeader(
+        HeaderInterface $header,
+    ): MessageInterface {
+        return new self(
+            from: $this->from,
+            to: $this->to,
+            subject: $this->subject,
+            body: $this->body,
+            bodyType: $this->bodyType,
+            alternativeText: $this->alternativeText,
+            cc: $this->cc,
+            bcc: $this->bcc,
+            replyTo: $this->replyTo,
+            sender: $this->sender,
+            returnPath: $this->returnPath,
+            attachments: $this->attachments,
+            extraHeaders: [...$this->extraHeaders, $header],
+            messageId: $this->messageId,
+            date: $this->date,
+        );
+    }
+
+    /**
+     * @param list<HeaderInterface> $extraHeaders
+     *
+     * @throws MailException
+     */
+    public function withExtraHeaders(
+        array $extraHeaders,
+    ): MessageInterface {
+        return new self(
+            from: $this->from,
+            to: $this->to,
+            subject: $this->subject,
+            body: $this->body,
+            bodyType: $this->bodyType,
+            alternativeText: $this->alternativeText,
+            cc: $this->cc,
+            bcc: $this->bcc,
+            replyTo: $this->replyTo,
+            sender: $this->sender,
+            returnPath: $this->returnPath,
+            attachments: $this->attachments,
+            extraHeaders: $extraHeaders,
+            messageId: $this->messageId,
+            date: $this->date,
+        );
+    }
+
+    /**
+     * @throws MailException
+     */
+    public function withoutExtraHeader(
+        string $name,
+    ): MessageInterface {
+        $lower = \strtolower($name);
+        $filtered = \array_values(
+            \array_filter(
+                $this->extraHeaders,
+                static fn (HeaderInterface $header): bool => \strtolower($header->name) !== $lower,
+            ),
+        );
+
+        return new self(
+            from: $this->from,
+            to: $this->to,
+            subject: $this->subject,
+            body: $this->body,
+            bodyType: $this->bodyType,
+            alternativeText: $this->alternativeText,
+            cc: $this->cc,
+            bcc: $this->bcc,
+            replyTo: $this->replyTo,
+            sender: $this->sender,
+            returnPath: $this->returnPath,
+            attachments: $this->attachments,
+            extraHeaders: $filtered,
+            messageId: $this->messageId,
+            date: $this->date,
+        );
+    }
+
+    /**
+     * @throws MailException
+     */
     private static function coerceAddress(
         AddressInterface|string $value,
     ): AddressInterface {

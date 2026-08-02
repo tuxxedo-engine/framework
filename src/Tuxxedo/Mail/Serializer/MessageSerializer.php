@@ -31,6 +31,7 @@ class MessageSerializer implements MessageSerializerInterface
         $body = self::renderRootBody($rootPart);
 
         return new SerializedMessage(
+            source: $message,
             headers: $headers,
             body: $body,
         );

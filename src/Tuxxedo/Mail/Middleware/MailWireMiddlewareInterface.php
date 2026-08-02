@@ -11,15 +11,17 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Mail\Transport\NullMail;
+namespace Tuxxedo\Mail\Middleware;
 
+use Tuxxedo\Mail\MailException;
 use Tuxxedo\Mail\Serializer\SerializedMessageInterface;
-use Tuxxedo\Mail\Transport\MailTransportInterface;
 
-class NullTransport implements MailTransportInterface
+interface MailWireMiddlewareInterface
 {
-    public function send(
-        SerializedMessageInterface ...$serialized,
-    ): void {
-    }
+    /**
+     * @throws MailException
+     */
+    public function process(
+        SerializedMessageInterface $serialized,
+    ): SerializedMessageInterface;
 }

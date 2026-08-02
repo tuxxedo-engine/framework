@@ -16,8 +16,7 @@ namespace Tuxxedo\Mail\Transport\SmtpMail;
 use Tuxxedo\Mail\AddressInterface;
 use Tuxxedo\Mail\MailException;
 use Tuxxedo\Mail\MessageInterface;
-use Tuxxedo\Mail\Serializer\MessageSerializer;
-use Tuxxedo\Mail\Serializer\MessageSerializerInterface;
+use Tuxxedo\Mail\Serializer\SerializedMessageInterface;
 use Tuxxedo\Mail\Transport\MailTransportInterface;
 use Tuxxedo\Mail\Transport\SmtpMail\Config\SmtpTransportConfigInterface;
 
@@ -26,42 +25,41 @@ class SmtpTransport implements MailTransportInterface
     public function __construct(
         private readonly SmtpTransportConfigInterface $config,
         private readonly SmtpSocketInterface $socket,
-        private readonly MessageSerializerInterface $serializer = new MessageSerializer(),
     ) {
     }
 
     public function send(
-        MessageInterface ...$messages,
+        SerializedMessageInterface ...$serialized,
     ): void {
-        if ($messages === []) {
+        if ($serialized === []) {
             return;
         }
 
         match ($this->config->mode) {
-            SmtpTransportMode::PER_MESSAGE => $this->sendPerMessage($messages),
-            SmtpTransportMode::REUSE_CONNECTION => $this->sendReusingConnection($messages),
+            SmtpTransportMode::PER_MESSAGE => $this->sendPerMessage($serialized),
+            SmtpTransportMode::REUSE_CONNECTION => $this->sendReusingConnection($serialized),
             SmtpTransportMode::REUSE_UP_TO_N => $this->sendReusingUpToN(
-                messages: $messages,
+                serialized: $serialized,
                 reuseLimit: $this->config->reuseLimit,
             ),
         };
     }
 
     /**
-     * @param array<int|string, MessageInterface> $messages
+     * @param array<int|string, SerializedMessageInterface> $serialized
      *
      * @throws MailException
      */
     private function sendPerMessage(
-        array $messages,
+        array $serialized,
     ): void {
-        foreach ($messages as $message) {
+        foreach ($serialized as $item) {
             $session = $this->openSession();
 
             try {
                 $this->dispatch(
                     session: $session,
-                    message: $message,
+                    serialized: $item,
                 );
             } finally {
                 $session->close();
@@ -70,26 +68,26 @@ class SmtpTransport implements MailTransportInterface
     }
 
     /**
-     * @param array<int|string, MessageInterface> $messages
+     * @param array<int|string, SerializedMessageInterface> $serialized
      *
      * @throws MailException
      */
     private function sendReusingConnection(
-        array $messages,
+        array $serialized,
     ): void {
         $session = $this->openSession();
 
         try {
             $first = true;
 
-            foreach ($messages as $message) {
+            foreach ($serialized as $item) {
                 if (!$first) {
                     $session->reset();
                 }
 
                 $this->dispatch(
                     session: $session,
-                    message: $message,
+                    serialized: $item,
                 );
 
                 $first = false;
@@ -100,21 +98,21 @@ class SmtpTransport implements MailTransportInterface
     }
 
     /**
-     * @param array<int|string, MessageInterface> $messages
+     * @param array<int|string, SerializedMessageInterface> $serialized
      *
      * @throws MailException
      */
     private function sendReusingUpToN(
-        array $messages,
+        array $serialized,
         int $reuseLimit,
     ): void {
         if ($reuseLimit <= 0) {
-            $this->sendReusingConnection($messages);
+            $this->sendReusingConnection($serialized);
 
             return;
         }
 
-        foreach (\array_chunk($messages, $reuseLimit) as $chunk) {
+        foreach (\array_chunk($serialized, $reuseLimit) as $chunk) {
             $this->sendReusingConnection($chunk);
         }
     }
@@ -154,10 +152,12 @@ class SmtpTransport implements MailTransportInterface
      */
     private function dispatch(
         SmtpSession $session,
-        MessageInterface $message,
+        SerializedMessageInterface $serialized,
     ): void {
+        $message = $serialized->source;
+
         $session->sendMessage(
-            serialized: $this->serializer->serialize($message),
+            serialized: $serialized,
             envelopeFrom: $message->returnPath ?? $message->from,
             recipients: self::collectRecipients($message),
         );

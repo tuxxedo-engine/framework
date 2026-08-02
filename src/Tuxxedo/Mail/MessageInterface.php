@@ -92,4 +92,116 @@ interface MessageInterface
     public \DateTimeImmutable $date {
         get;
     }
+
+    /**
+     * @throws MailException
+     */
+    public function withFrom(
+        AddressInterface|string $from,
+    ): MessageInterface;
+
+    /**
+     * @param list<AddressInterface|string>|AddressInterface|string $to
+     *
+     * @throws MailException
+     */
+    public function withTo(
+        AddressInterface|string|array $to,
+    ): MessageInterface;
+
+    /**
+     * @throws MailException
+     */
+    public function withSubject(
+        string $subject,
+    ): MessageInterface;
+
+    /**
+     * @throws MailException
+     */
+    public function withBody(
+        ?string $body,
+        BodyType $bodyType = BodyType::TEXT,
+        ?string $alternativeText = null,
+    ): MessageInterface;
+
+    /**
+     * @param list<AddressInterface|string>|AddressInterface|string $cc
+     *
+     * @throws MailException
+     */
+    public function withCc(
+        AddressInterface|string|array $cc,
+    ): MessageInterface;
+
+    /**
+     * @param list<AddressInterface|string>|AddressInterface|string $bcc
+     *
+     * @throws MailException
+     */
+    public function withBcc(
+        AddressInterface|string|array $bcc,
+    ): MessageInterface;
+
+    /**
+     * @param list<AddressInterface|string>|AddressInterface|string $replyTo
+     *
+     * @throws MailException
+     */
+    public function withReplyTo(
+        AddressInterface|string|array $replyTo,
+    ): MessageInterface;
+
+    /**
+     * @throws MailException
+     */
+    public function withSender(
+        AddressInterface|string|null $sender,
+    ): MessageInterface;
+
+    /**
+     * @throws MailException
+     */
+    public function withReturnPath(
+        AddressInterface|string|null $returnPath,
+    ): MessageInterface;
+
+    /**
+     * @throws MailException
+     */
+    public function withAttachment(
+        AttachmentInterface $attachment,
+    ): MessageInterface;
+
+    /**
+     * @param list<AttachmentInterface> $attachments
+     *
+     * @throws MailException
+     */
+    public function withAttachments(
+        array $attachments,
+    ): MessageInterface;
+
+    /**
+     * @throws MailException
+     */
+    public function withExtraHeader(
+        HeaderInterface $header,
+    ): MessageInterface;
+
+    /**
+     * @param list<HeaderInterface> $extraHeaders
+     *
+     * @throws MailException
+     */
+    public function withExtraHeaders(
+        array $extraHeaders,
+    ): MessageInterface;
+
+    /**
+     * @throws MailException
+     */
+    public function withoutExtraHeader(
+        string $name,
+    ): MessageInterface;
 }

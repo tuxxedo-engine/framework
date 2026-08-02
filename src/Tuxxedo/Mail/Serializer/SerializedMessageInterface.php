@@ -13,8 +13,14 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Mail\Serializer;
 
+use Tuxxedo\Mail\MessageInterface;
+
 interface SerializedMessageInterface
 {
+    public MessageInterface $source {
+        get;
+    }
+
     public string $headers {
         get;
     }

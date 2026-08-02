@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Support\Mail\Transport;
 
 use Tuxxedo\Mail\MessageInterface;
+use Tuxxedo\Mail\Serializer\SerializedMessageInterface;
 use Tuxxedo\Mail\Transport\MailTransportInterface;
 
 class RecordingMailTransport implements MailTransportInterface
@@ -23,15 +24,21 @@ class RecordingMailTransport implements MailTransportInterface
      */
     public array $sent = [];
 
+    /**
+     * @var list<SerializedMessageInterface>
+     */
+    public array $sentSerialized = [];
+
     public int $sendCalls = 0;
 
     public function send(
-        MessageInterface ...$messages,
+        SerializedMessageInterface ...$serialized,
     ): void {
         $this->sendCalls++;
 
-        foreach ($messages as $message) {
-            $this->sent[] = $message;
+        foreach ($serialized as $item) {
+            $this->sent[] = $item->source;
+            $this->sentSerialized[] = $item;
         }
     }
 }

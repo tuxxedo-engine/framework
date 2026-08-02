@@ -14,23 +14,16 @@ declare(strict_types=1);
 namespace Tuxxedo\Mail\Transport\PhpMail;
 
 use Tuxxedo\Mail\MailException;
-use Tuxxedo\Mail\MessageInterface;
-use Tuxxedo\Mail\Serializer\MessageSerializer;
-use Tuxxedo\Mail\Serializer\MessageSerializerInterface;
+use Tuxxedo\Mail\Serializer\SerializedMessageInterface;
 use Tuxxedo\Mail\Transport\MailTransportInterface;
 
 class PhpMailTransport implements MailTransportInterface
 {
-    public function __construct(
-        private readonly MessageSerializerInterface $serializer = new MessageSerializer(),
-    ) {
-    }
-
     public function send(
-        MessageInterface ...$messages,
+        SerializedMessageInterface ...$serialized,
     ): void {
-        foreach ($messages as $message) {
-            $this->sendOne($message);
+        foreach ($serialized as $item) {
+            $this->sendOne($item);
         }
     }
 
@@ -38,13 +31,13 @@ class PhpMailTransport implements MailTransportInterface
      * @throws MailException
      */
     private function sendOne(
-        MessageInterface $message,
+        SerializedMessageInterface $serialized,
     ): void {
+        $message = $serialized->source;
+
         if ($message->bcc !== []) {
             throw MailException::fromBccNotSupportedByTransport(self::class);
         }
-
-        $serialized = $this->serializer->serialize($message);
 
         [
             $to,
