@@ -11,16 +11,18 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Mail\Transport;
+namespace Tuxxedo\Mail\Transport\PhpMail;
 
 use Tuxxedo\Mail\MailException;
 use Tuxxedo\Mail\MessageInterface;
+use Tuxxedo\Mail\Serializer\MessageSerializer;
 use Tuxxedo\Mail\Serializer\MessageSerializerInterface;
+use Tuxxedo\Mail\Transport\MailTransportInterface;
 
 class PhpMailTransport implements MailTransportInterface
 {
     public function __construct(
-        private readonly MessageSerializerInterface $serializer,
+        private readonly MessageSerializerInterface $serializer = new MessageSerializer(),
     ) {
     }
 
@@ -105,13 +107,12 @@ class PhpMailTransport implements MailTransportInterface
             return @\mail($to, $subject, $body, $headers);
         }
 
-        $additionalParams = '-f ' . \escapeshellarg($envelopeFrom);
         $previousSendmailFrom = \ini_get('sendmail_from');
 
         \ini_set('sendmail_from', $envelopeFrom);
 
         try {
-            return @\mail($to, $subject, $body, $headers, $additionalParams);
+            return @\mail($to, $subject, $body, $headers, '-f ' . \escapeshellarg($envelopeFrom));
         } finally {
             if ($previousSendmailFrom === false) {
                 \ini_restore('sendmail_from');

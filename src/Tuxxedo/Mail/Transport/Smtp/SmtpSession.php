@@ -1,0 +1,536 @@
+<?php
+
+/**
+ * Tuxxedo Engine
+ *
+ * This file is part of the Tuxxedo Engine framework and is licensed under
+ * the MIT license.
+ *
+ * Copyright (C) 2026 Kalle Sommer Nielsen <kalle@php.net>
+ */
+
+declare(strict_types=1);
+
+namespace Tuxxedo\Mail\Transport\Smtp;
+
+use Tuxxedo\Mail\AddressInterface;
+use Tuxxedo\Mail\MailException;
+use Tuxxedo\Mail\Serializer\SerializedMessageInterface;
+
+class SmtpSession
+{
+    private const int SMTP_GREETING_CODE = 220;
+    private const int SMTP_STARTTLS_READY_CODE = 220;
+    private const int SMTP_AUTH_CHALLENGE_CODE = 334;
+    private const int SMTP_AUTH_SUCCESS_CODE = 235;
+    private const int SMTP_DATA_PROMPT_CODE = 354;
+
+    public private(set) SmtpCapabilities $capabilities;
+
+    public function __construct(
+        private readonly SmtpSocketInterface $socket = new SmtpSocket(),
+    ) {
+        $this->capabilities = new SmtpCapabilities();
+    }
+
+    /**
+     * @throws MailException
+     */
+    public function open(
+        string $host,
+        int $port,
+        SmtpTls $tls,
+        int $connectTimeout,
+        int $readTimeout,
+        bool $verifyPeer,
+        ?string $caFile,
+        string $ehloDomain,
+    ): void {
+        $this->socket->connect(
+            host: $host,
+            port: $port,
+            tls: $tls,
+            connectTimeout: $connectTimeout,
+            readTimeout: $readTimeout,
+            verifyPeer: $verifyPeer,
+            caFile: $caFile,
+        );
+
+        $greeting = $this->socket->readResponse();
+
+        if ($greeting->code !== self::SMTP_GREETING_CODE) {
+            throw MailException::fromSmtpUnexpectedGreeting(
+                code: $greeting->code,
+                summary: $greeting->summary,
+            );
+        }
+
+        $this->handshake($ehloDomain);
+
+        if ($tls === SmtpTls::STARTTLS) {
+            $this->negotiateStartTls($ehloDomain);
+        }
+    }
+
+    /**
+     * @param list<AddressInterface> $recipients
+     *
+     * @throws MailException
+     */
+    public function sendMessage(
+        SerializedMessageInterface $serialized,
+        AddressInterface $envelopeFrom,
+        array $recipients,
+    ): void {
+        if ($this->capabilities->supports('PIPELINING')) {
+            $this->sendMessagePipelined(
+                serialized: $serialized,
+                envelopeFrom: $envelopeFrom,
+                recipients: $recipients,
+            );
+
+            return;
+        }
+
+        $this->sendMessageSequential(
+            serialized: $serialized,
+            envelopeFrom: $envelopeFrom,
+            recipients: $recipients,
+        );
+    }
+
+    /**
+     * @param list<AddressInterface> $recipients
+     *
+     * @throws MailException
+     */
+    private function sendMessageSequential(
+        SerializedMessageInterface $serialized,
+        AddressInterface $envelopeFrom,
+        array $recipients,
+    ): void {
+        $this->sendCommand(
+            command: \sprintf('MAIL FROM:<%s>', $envelopeFrom->email),
+        );
+
+        foreach ($recipients as $recipient) {
+            $this->sendCommand(
+                command: \sprintf('RCPT TO:<%s>', $recipient->email),
+            );
+        }
+
+        $this->sendData($serialized);
+    }
+
+    /**
+     * @param list<AddressInterface> $recipients
+     *
+     * @throws MailException
+     */
+    private function sendMessagePipelined(
+        SerializedMessageInterface $serialized,
+        AddressInterface $envelopeFrom,
+        array $recipients,
+    ): void {
+        $commands = [
+            \sprintf('MAIL FROM:<%s>', $envelopeFrom->email),
+        ];
+
+        foreach ($recipients as $recipient) {
+            $commands[] = \sprintf('RCPT TO:<%s>', $recipient->email);
+        }
+
+        $this->socket->writeRaw(
+            bytes: \implode("\r\n", $commands) . "\r\n",
+        );
+
+        $firstFailure = null;
+
+        foreach ($commands as $command) {
+            $response = $this->socket->readResponse();
+
+            if (!$response->isSuccess && $firstFailure === null) {
+                $firstFailure = MailException::fromSmtpCommandRejected(
+                    command: $command,
+                    code: $response->code,
+                    summary: $response->summary,
+                );
+            }
+        }
+
+        if ($firstFailure !== null) {
+            throw $firstFailure;
+        }
+
+        $this->sendData($serialized);
+    }
+
+    /**
+     * @throws MailException
+     */
+    private function sendData(
+        SerializedMessageInterface $serialized,
+    ): void {
+        $this->socket->writeCommand('DATA');
+        $dataResponse = $this->socket->readResponse();
+
+        if ($dataResponse->code !== self::SMTP_DATA_PROMPT_CODE) {
+            throw MailException::fromSmtpCommandRejected(
+                command: 'DATA',
+                code: $dataResponse->code,
+                summary: $dataResponse->summary,
+            );
+        }
+
+        $stuffed = \rtrim(self::dotStuff($serialized->wire), "\r\n") . "\r\n";
+        $this->socket->writeRaw($stuffed);
+        $this->socket->writeRaw(".\r\n");
+
+        $bodyResponse = $this->socket->readResponse();
+
+        if (!$bodyResponse->isSuccess) {
+            throw MailException::fromSmtpCommandRejected(
+                command: 'DATA (body)',
+                code: $bodyResponse->code,
+                summary: $bodyResponse->summary,
+            );
+        }
+    }
+
+    /**
+     * @throws MailException
+     */
+    public function authenticate(
+        SmtpAuth $mechanism,
+        string $username,
+        #[\SensitiveParameter]
+        string $password,
+        ?XoauthTokenProviderInterface $xoauthTokenProvider,
+    ): void {
+        if ($mechanism === SmtpAuth::NONE) {
+            return;
+        }
+
+        $wireName = $mechanism->value;
+
+        if (!$this->supportsAuthMechanism($wireName)) {
+            throw MailException::fromSmtpAuthMechanismNotAdvertised(
+                mechanism: $wireName,
+            );
+        }
+
+        match ($mechanism) {
+            SmtpAuth::PLAIN => $this->authPlain($username, $password),
+            SmtpAuth::LOGIN => $this->authLogin($username, $password),
+            SmtpAuth::CRAM_MD5 => $this->authCramMd5($username, $password),
+            SmtpAuth::XOAUTH2 => $this->authXoauth2($username, $xoauthTokenProvider),
+        };
+    }
+
+    /**
+     * @throws MailException
+     */
+    public function reset(): void
+    {
+        $this->sendCommand(
+            command: 'RSET',
+        );
+    }
+
+    public function close(): void
+    {
+        if (!$this->socket->isConnected) {
+            return;
+        }
+
+        try {
+            $this->socket->writeCommand('QUIT');
+            (void) $this->socket->readResponse();
+        } catch (\Throwable) {
+        } finally {
+            $this->socket->disconnect();
+        }
+    }
+
+    /**
+     * @throws MailException
+     */
+    private function handshake(
+        string $ehloDomain,
+    ): void {
+        $this->socket->writeCommand(
+            command: 'EHLO ' . $ehloDomain,
+        );
+
+        $ehloResponse = $this->socket->readResponse();
+
+        if ($ehloResponse->isSuccess) {
+            $this->capabilities = SmtpCapabilities::parse(
+                lines: $ehloResponse->lines,
+            );
+
+            return;
+        }
+
+        $this->socket->writeCommand(
+            command: 'HELO ' . $ehloDomain,
+        );
+
+        $heloResponse = $this->socket->readResponse();
+
+        if (!$heloResponse->isSuccess) {
+            throw MailException::fromSmtpHelloRejected(
+                code: $heloResponse->code,
+                summary: $heloResponse->summary,
+            );
+        }
+
+        $this->capabilities = new SmtpCapabilities();
+    }
+
+    /**
+     * @throws MailException
+     */
+    private function negotiateStartTls(
+        string $ehloDomain,
+    ): void {
+        if (!$this->capabilities->supports('STARTTLS')) {
+            throw MailException::fromSmtpStartTlsNotAdvertised();
+        }
+
+        $this->socket->writeCommand(
+            command: 'STARTTLS',
+        );
+
+        $response = $this->socket->readResponse();
+
+        if ($response->code !== self::SMTP_STARTTLS_READY_CODE) {
+            throw MailException::fromSmtpCommandRejected(
+                command: 'STARTTLS',
+                code: $response->code,
+                summary: $response->summary,
+            );
+        }
+
+        $this->socket->enableCrypto();
+        $this->handshake($ehloDomain);
+    }
+
+    /**
+     * @throws MailException
+     */
+    private function sendCommand(
+        string $command,
+    ): void {
+        $this->socket->writeCommand(
+            command: $command,
+        );
+
+        $response = $this->socket->readResponse();
+
+        if (!$response->isSuccess) {
+            throw MailException::fromSmtpCommandRejected(
+                command: $command,
+                code: $response->code,
+                summary: $response->summary,
+            );
+        }
+    }
+
+    /**
+     * @throws MailException
+     */
+    private function authPlain(
+        string $username,
+        #[\SensitiveParameter] string $password,
+    ): void {
+        $payload = \base64_encode("\0" . $username . "\0" . $password);
+        $this->socket->writeCommand(
+            command: 'AUTH PLAIN ' . $payload,
+        );
+
+        $response = $this->socket->readResponse();
+
+        if ($response->code !== self::SMTP_AUTH_SUCCESS_CODE) {
+            throw MailException::fromSmtpAuthFailed(
+                mechanism: SmtpAuth::PLAIN->value,
+                code: $response->code,
+                summary: $response->summary,
+            );
+        }
+    }
+
+    /**
+     * @throws MailException
+     */
+    private function authLogin(
+        string $username,
+        #[\SensitiveParameter] string $password,
+    ): void {
+        $this->socket->writeCommand(
+            command: 'AUTH LOGIN',
+        );
+
+        $this->expectChallenge(
+            mechanism: SmtpAuth::LOGIN->value,
+            response: $this->socket->readResponse(),
+        );
+
+        $this->socket->writeCommand(
+            command: \base64_encode($username),
+        );
+
+        $this->expectChallenge(
+            mechanism: SmtpAuth::LOGIN->value,
+            response: $this->socket->readResponse(),
+        );
+
+        $this->socket->writeCommand(
+            command: \base64_encode($password),
+        );
+
+        $final = $this->socket->readResponse();
+
+        if ($final->code !== self::SMTP_AUTH_SUCCESS_CODE) {
+            throw MailException::fromSmtpAuthFailed(
+                mechanism: SmtpAuth::LOGIN->value,
+                code: $final->code,
+                summary: $final->summary,
+            );
+        }
+    }
+
+    /**
+     * @throws MailException
+     */
+    private function authCramMd5(
+        string $username,
+        #[\SensitiveParameter]
+        string $password,
+    ): void {
+        $this->socket->writeCommand(
+            command: 'AUTH CRAM-MD5',
+        );
+
+        $challengeResponse = $this->socket->readResponse();
+        $this->expectChallenge(
+            mechanism: SmtpAuth::CRAM_MD5->value,
+            response: $challengeResponse,
+        );
+
+        $encodedChallenge = $challengeResponse->summary;
+        $challenge = \base64_decode($encodedChallenge, true);
+
+        if ($challenge === false) {
+            throw MailException::fromSmtpAuthMalformedChallenge(
+                challenge: $encodedChallenge,
+            );
+        }
+
+        $digest = \hash_hmac('md5', $challenge, $password);
+        $reply = \base64_encode($username . ' ' . $digest);
+
+        $this->socket->writeCommand(
+            command: $reply,
+        );
+
+        $final = $this->socket->readResponse();
+
+        if ($final->code !== self::SMTP_AUTH_SUCCESS_CODE) {
+            throw MailException::fromSmtpAuthFailed(
+                mechanism: SmtpAuth::CRAM_MD5->value,
+                code: $final->code,
+                summary: $final->summary,
+            );
+        }
+    }
+
+    /**
+     * @throws MailException
+     */
+    private function authXoauth2(
+        string $username,
+        ?XoauthTokenProviderInterface $xoauthTokenProvider,
+    ): void {
+        if ($xoauthTokenProvider === null) {
+            throw MailException::fromSmtpXoauth2ProviderMissing();
+        }
+
+        $token = $xoauthTokenProvider->getToken();
+        $payload = \base64_encode(
+            \sprintf(
+                "user=%s\x01auth=Bearer %s\x01\x01",
+                $username,
+                $token,
+            ),
+        );
+
+        $this->socket->writeCommand(
+            command: 'AUTH XOAUTH2 ' . $payload,
+        );
+
+        $response = $this->socket->readResponse();
+
+        if ($response->code === self::SMTP_AUTH_SUCCESS_CODE) {
+            return;
+        }
+
+        if ($response->code === self::SMTP_AUTH_CHALLENGE_CODE) {
+            $this->socket->writeCommand(
+                command: '',
+            );
+
+            $final = $this->socket->readResponse();
+
+            throw MailException::fromSmtpAuthFailed(
+                mechanism: SmtpAuth::XOAUTH2->value,
+                code: $final->code,
+                summary: $final->summary,
+            );
+        }
+
+        throw MailException::fromSmtpAuthFailed(
+            mechanism: SmtpAuth::XOAUTH2->value,
+            code: $response->code,
+            summary: $response->summary,
+        );
+    }
+
+    private function supportsAuthMechanism(
+        string $mechanism,
+    ): bool {
+        $advertised = $this->capabilities->getParams('AUTH');
+
+        foreach ($advertised as $entry) {
+            if (\strcasecmp($entry, $mechanism) === 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @throws MailException
+     */
+    private function expectChallenge(
+        string $mechanism,
+        SmtpResponse $response,
+    ): void {
+        if ($response->code === self::SMTP_AUTH_CHALLENGE_CODE) {
+            return;
+        }
+
+        throw MailException::fromSmtpAuthFailed(
+            mechanism: $mechanism,
+            code: $response->code,
+            summary: $response->summary,
+        );
+    }
+
+    private static function dotStuff(
+        string $body,
+    ): string {
+        return \preg_replace('/(^|\r\n)\./', '$1..', $body) ?? $body;
+    }
+}

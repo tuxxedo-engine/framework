@@ -11,11 +11,11 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Mail\Transport\Config;
+namespace Tuxxedo\Mail\Transport\PhpMail\Config;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Mail\Transport\MailTransportInterface;
-use Tuxxedo\Mail\Transport\PhpMailTransport;
+use Tuxxedo\Mail\Transport\PhpMail\PhpMailTransport;
 
 class PhpMailTransportConfig implements PhpMailTransportConfigInterface
 {

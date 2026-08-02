@@ -198,4 +198,165 @@ class MailException extends \Exception
             ),
         );
     }
+
+    public static function fromSmtpConnectionFailure(
+        string $host,
+        int $port,
+        string $reason,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Failed to connect to SMTP server %s:%d: %s',
+                $host,
+                $port,
+                $reason,
+            ),
+        );
+    }
+
+    public static function fromSmtpTlsHandshakeFailed(
+        string $reason,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'SMTP TLS handshake failed: %s',
+                $reason,
+            ),
+        );
+    }
+
+    public static function fromSmtpNotConnected(): self
+    {
+        return new self(
+            message: 'SMTP socket operation attempted while not connected',
+        );
+    }
+
+    public static function fromSmtpReadFailure(): self
+    {
+        return new self(
+            message: 'Failed to read from SMTP socket',
+        );
+    }
+
+    public static function fromSmtpReadTimeout(
+        int $timeoutSeconds,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'SMTP socket read timed out after %d seconds',
+                $timeoutSeconds,
+            ),
+        );
+    }
+
+    public static function fromSmtpWriteFailure(): self
+    {
+        return new self(
+            message: 'Failed to write to SMTP socket',
+        );
+    }
+
+    public static function fromSmtpMalformedResponse(
+        string $line,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'SMTP server returned a malformed response line: "%s"',
+                $line,
+            ),
+        );
+    }
+
+    public static function fromSmtpUnexpectedGreeting(
+        int $code,
+        string $summary,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'SMTP server did not send the expected 220 greeting: %d %s',
+                $code,
+                $summary,
+            ),
+        );
+    }
+
+    public static function fromSmtpHelloRejected(
+        int $code,
+        string $summary,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'SMTP server rejected the EHLO/HELO handshake: %d %s',
+                $code,
+                $summary,
+            ),
+        );
+    }
+
+    public static function fromSmtpCommandRejected(
+        string $command,
+        int $code,
+        string $summary,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'SMTP server rejected "%s": %d %s',
+                $command,
+                $code,
+                $summary,
+            ),
+        );
+    }
+
+    public static function fromSmtpStartTlsNotAdvertised(): self
+    {
+        return new self(
+            message: 'SMTP server did not advertise STARTTLS but the configured TLS mode requires it',
+        );
+    }
+
+    public static function fromSmtpAuthMechanismNotAdvertised(
+        string $mechanism,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'SMTP server did not advertise the "%s" AUTH mechanism',
+                $mechanism,
+            ),
+        );
+    }
+
+    public static function fromSmtpAuthFailed(
+        string $mechanism,
+        int $code,
+        string $summary,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'SMTP authentication using "%s" failed: %d %s',
+                $mechanism,
+                $code,
+                $summary,
+            ),
+        );
+    }
+
+    public static function fromSmtpXoauth2ProviderMissing(): self
+    {
+        return new self(
+            message: 'SMTP XOAUTH2 authentication requires an XoauthTokenProviderInterface but none was configured',
+        );
+    }
+
+    public static function fromSmtpAuthMalformedChallenge(
+        string $challenge,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'SMTP server sent a malformed AUTH challenge: "%s"',
+                $challenge,
+            ),
+        );
+    }
 }

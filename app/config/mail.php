@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 use Tuxxedo\Mail\Config\MailManagerConfig;
 use Tuxxedo\Mail\Config\MailManagerConfigInterface;
-use Tuxxedo\Mail\Transport\Config\PhpMailTransportConfig;
+use Tuxxedo\Mail\Transport\PhpMail\Config\PhpMailTransportConfig;
 
 return static fn (): MailManagerConfigInterface => new MailManagerConfig(
     transport: new PhpMailTransportConfig(),

@@ -11,18 +11,15 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Mail\Serializer;
+namespace Tuxxedo\Mail\Transport\Smtp;
 
 use Tuxxedo\Mail\MailException;
-use Tuxxedo\Mail\MessageInterface;
 
-interface MessageSerializerInterface
+interface XoauthTokenProviderInterface
 {
     /**
      * @throws MailException
      */
     #[\NoDiscard]
-    public function serialize(
-        MessageInterface $message,
-    ): SerializedMessageInterface;
+    public function getToken(): string;
 }
