@@ -38,26 +38,34 @@ class SmtpSocket implements SmtpSocketInterface
         int $readTimeout,
         bool $verifyPeer,
         ?string $caFile,
+        ?string $unixSocket = null,
     ): void {
-        $scheme = $tls === SmtpTls::IMPLICIT
-            ? 'ssl'
-            : 'tcp';
+        if ($unixSocket !== null) {
+            $address = 'unix://' . $unixSocket;
+            $context = \stream_context_create();
+        } else {
+            $scheme = $tls === SmtpTls::IMPLICIT
+                ? 'ssl'
+                : 'tcp';
 
-        $context = \stream_context_create(
-            options: [
-                'ssl' => self::buildSslOptions($verifyPeer, $caFile),
-            ],
-        );
-
-        $errno = 0;
-        $errstr = '';
-        $stream = \stream_socket_client(
-            address: \sprintf(
+            $address = \sprintf(
                 '%s://%s:%d',
                 $scheme,
                 $host,
                 $port,
-            ),
+            );
+
+            $context = \stream_context_create(
+                options: [
+                    'ssl' => self::buildSslOptions($verifyPeer, $caFile),
+                ],
+            );
+        }
+
+        $errno = 0;
+        $errstr = '';
+        $stream = \stream_socket_client(
+            address: $address,
             error_code: $errno,
             error_message: $errstr,
             timeout: (float) $connectTimeout,
@@ -70,8 +78,10 @@ class SmtpSocket implements SmtpSocketInterface
             $errno ??= 0;
 
             throw MailException::fromSmtpConnectionFailure(
-                host: $host,
-                port: $port,
+                host: $unixSocket ?? $host,
+                port: $unixSocket !== null
+                    ? 0
+                    : $port,
                 reason: $errstr !== ''
                     ? $errstr
                     : \sprintf('errno %d', $errno),

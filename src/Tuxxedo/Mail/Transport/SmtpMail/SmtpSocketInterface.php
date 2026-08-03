@@ -32,6 +32,7 @@ interface SmtpSocketInterface
         int $readTimeout,
         bool $verifyPeer,
         ?string $caFile,
+        ?string $unixSocket = null,
     ): void;
 
     /**

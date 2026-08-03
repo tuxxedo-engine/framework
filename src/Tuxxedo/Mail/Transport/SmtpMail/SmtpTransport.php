@@ -260,6 +260,7 @@ class SmtpTransport implements MailTransportInterface
             verifyPeer: $this->config->verifyPeer,
             caFile: $this->config->caFile,
             ehloDomain: $this->config->ehloDomain ?? self::resolveDefaultEhloDomain(),
+            unixSocket: $this->config->unixSocket,
         );
 
         $session->authenticate(

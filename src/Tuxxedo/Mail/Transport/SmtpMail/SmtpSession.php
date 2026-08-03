@@ -48,6 +48,7 @@ class SmtpSession
         bool $verifyPeer,
         ?string $caFile,
         string $ehloDomain,
+        ?string $unixSocket = null,
     ): void {
         $this->socket->connect(
             host: $host,
@@ -57,6 +58,7 @@ class SmtpSession
             readTimeout: $readTimeout,
             verifyPeer: $verifyPeer,
             caFile: $caFile,
+            unixSocket: $unixSocket,
         );
 
         $greeting = $this->socket->readResponse();
@@ -70,7 +72,7 @@ class SmtpSession
 
         $this->handshake($ehloDomain);
 
-        if ($tls === SmtpTls::STARTTLS) {
+        if ($tls === SmtpTls::STARTTLS && $unixSocket === null) {
             $this->negotiateStartTls($ehloDomain);
         }
     }

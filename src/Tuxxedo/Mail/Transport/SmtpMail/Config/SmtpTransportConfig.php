@@ -38,6 +38,7 @@ class SmtpTransportConfig implements SmtpTransportConfigInterface
         public readonly ?string $ehloDomain = null,
         public readonly bool $verifyPeer = true,
         public readonly ?string $caFile = null,
+        public readonly ?string $unixSocket = null,
     ) {
     }
 

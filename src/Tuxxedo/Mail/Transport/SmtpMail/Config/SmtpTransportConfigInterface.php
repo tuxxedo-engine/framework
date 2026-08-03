@@ -72,6 +72,10 @@ interface SmtpTransportConfigInterface extends MailTransportConfigInterface
         get;
     }
 
+    public ?string $unixSocket {
+        get;
+    }
+
     public bool $verifyPeer {
         get;
     }
