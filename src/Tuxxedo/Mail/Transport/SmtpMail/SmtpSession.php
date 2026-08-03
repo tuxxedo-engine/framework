@@ -18,6 +18,7 @@ use Tuxxedo\Mail\MailException;
 use Tuxxedo\Mail\Result\RecipientOutcome;
 use Tuxxedo\Mail\Result\RecipientStatus;
 use Tuxxedo\Mail\Serializer\SerializedMessageInterface;
+use Tuxxedo\Mail\Transport\SmtpMail\Xoauth\XoauthTokenProviderInterface;
 
 class SmtpSession
 {

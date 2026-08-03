@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Mail\Transport\SmtpMail;
+namespace Tuxxedo\Mail\Transport\SmtpMail\Xoauth;
 
 use Tuxxedo\Mail\MailException;
 
@@ -20,6 +20,5 @@ interface XoauthTokenProviderInterface
     /**
      * @throws MailException
      */
-    #[\NoDiscard]
     public function getToken(): string;
 }

@@ -19,7 +19,7 @@ use Tuxxedo\Mail\Transport\SmtpMail\SmtpAuth;
 use Tuxxedo\Mail\Transport\SmtpMail\SmtpTls;
 use Tuxxedo\Mail\Transport\SmtpMail\SmtpTransport;
 use Tuxxedo\Mail\Transport\SmtpMail\SmtpTransportMode;
-use Tuxxedo\Mail\Transport\SmtpMail\XoauthTokenProviderInterface;
+use Tuxxedo\Mail\Transport\SmtpMail\Xoauth\XoauthTokenProviderInterface;
 
 class SmtpTransportConfig implements SmtpTransportConfigInterface
 {
