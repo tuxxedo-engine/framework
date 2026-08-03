@@ -15,7 +15,7 @@ namespace Tuxxedo\Mail\Result;
 
 use Tuxxedo\Mail\MessageInterface;
 
-class SendResult
+class SendResult implements SendResultInterface
 {
     public int $acceptedCount {
         get {
@@ -48,7 +48,7 @@ class SendResult
     }
 
     /**
-     * @var list<RecipientOutcome>
+     * @var list<RecipientOutcomeInterface>
      */
     public array $accepted {
         get {
@@ -57,21 +57,21 @@ class SendResult
     }
 
     /**
-     * @var list<RecipientOutcome>
+     * @var list<RecipientOutcomeInterface>
      */
     public array $failed {
         get {
             return \array_values(
                 \array_filter(
                     $this->outcomes,
-                    static fn (RecipientOutcome $outcome): bool => $outcome->status !== RecipientStatus::ACCEPTED,
+                    static fn (RecipientOutcomeInterface $outcome): bool => $outcome->status !== RecipientStatus::ACCEPTED,
                 ),
             );
         }
     }
 
     /**
-     * @var list<RecipientOutcome>
+     * @var list<RecipientOutcomeInterface>
      */
     public array $transientlyFailed {
         get {
@@ -80,7 +80,7 @@ class SendResult
     }
 
     /**
-     * @var list<RecipientOutcome>
+     * @var list<RecipientOutcomeInterface>
      */
     public array $permanentlyFailed {
         get {
@@ -89,7 +89,7 @@ class SendResult
     }
 
     /**
-     * @param list<RecipientOutcome> $outcomes
+     * @param list<RecipientOutcomeInterface> $outcomes
      */
     public function __construct(
         public readonly MessageInterface $message,
@@ -98,7 +98,7 @@ class SendResult
     }
 
     /**
-     * @return list<RecipientOutcome>
+     * @return list<RecipientOutcomeInterface>
      */
     private function filterByStatus(
         RecipientStatus $status,
@@ -106,7 +106,7 @@ class SendResult
         return \array_values(
             \array_filter(
                 $this->outcomes,
-                static fn (RecipientOutcome $outcome): bool => $outcome->status === $status,
+                static fn (RecipientOutcomeInterface $outcome): bool => $outcome->status === $status,
             ),
         );
     }

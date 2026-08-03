@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Mail\Transport;
 
 use Tuxxedo\Mail\MailException;
-use Tuxxedo\Mail\Result\SendResult;
+use Tuxxedo\Mail\Result\SendResultInterface;
 use Tuxxedo\Mail\Serializer\SerializedMessageInterface;
 
 interface MailTransportInterface
@@ -27,7 +27,7 @@ interface MailTransportInterface
     ): void;
 
     /**
-     * @return list<SendResult>
+     * @return list<SendResultInterface>
      *
      * @throws MailException
      */

@@ -15,13 +15,21 @@ namespace Tuxxedo\Mail\Result;
 
 use Tuxxedo\Mail\AddressInterface;
 
-class RecipientOutcome implements RecipientOutcomeInterface
+interface RecipientOutcomeInterface
 {
-    public function __construct(
-        public readonly AddressInterface $recipient,
-        public readonly RecipientStatus $status,
-        public readonly ?int $code = null,
-        public readonly ?string $summary = null,
-    ) {
+    public AddressInterface $recipient {
+        get;
+    }
+
+    public RecipientStatus $status {
+        get;
+    }
+
+    public ?int $code {
+        get;
+    }
+
+    public ?string $summary {
+        get;
     }
 }

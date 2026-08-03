@@ -15,7 +15,7 @@ namespace Tuxxedo\Mail;
 
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
-use Tuxxedo\Mail\Result\SendResult;
+use Tuxxedo\Mail\Result\SendResultInterface;
 use Tuxxedo\Mail\Transport\MailTransportInterface;
 
 #[DefaultImplementation(class: MailManager::class, lifecycle: Lifecycle::SINGLETON)]
@@ -33,7 +33,7 @@ interface MailManagerInterface
     ): void;
 
     /**
-     * @return list<SendResult>
+     * @return list<SendResultInterface>
      *
      * @throws MailException
      */
