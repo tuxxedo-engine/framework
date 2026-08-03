@@ -322,6 +322,13 @@ class MailException extends \Exception
         );
     }
 
+    public static function fromMailManagerConfiguratorMissingTransport(): self
+    {
+        return new self(
+            message: 'MailManagerConfigurator cannot build a MailManager without a transport',
+        );
+    }
+
     public static function fromDkimInvalidPrivateKey(): self
     {
         return new self(

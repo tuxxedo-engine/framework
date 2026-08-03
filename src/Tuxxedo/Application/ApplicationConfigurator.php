@@ -27,6 +27,9 @@ use Tuxxedo\Debug\DebugErrorHandler;
 use Tuxxedo\Env\EnvInterface;
 use Tuxxedo\Event\EventsManager;
 use Tuxxedo\Event\EventsManagerInterface;
+use Tuxxedo\File\Storage\Local\Config\LocalStorageConfigInterface;
+use Tuxxedo\File\Storage\Local\LocalStorage;
+use Tuxxedo\File\Storage\StorageInterface;
 use Tuxxedo\Http\Kernel\Dispatcher;
 use Tuxxedo\Http\Kernel\DispatcherInterface;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
@@ -37,6 +40,9 @@ use Tuxxedo\Http\Response\ResponseEmitter;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Url\Url;
 use Tuxxedo\Http\Url\UrlInterface;
+use Tuxxedo\Mail\MailManagerConfigurator;
+use Tuxxedo\Mail\MailManagerConfiguratorInterface;
+use Tuxxedo\Mail\MailManagerInterface;
 use Tuxxedo\Router\DynamicRouter;
 use Tuxxedo\Router\RouterInterface;
 use Tuxxedo\Router\StaticRouter;
@@ -63,6 +69,11 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
     public private(set) ?ConnectionManagerInterface $connectionManager = null;
     public private(set) bool $useDefaultConnectionManager = false;
     public private(set) ?\Closure $connectionManagerCustomizer = null;
+    public private(set) ?StorageInterface $storage = null;
+    public private(set) bool $useDefaultStorage = false;
+    public private(set) ?MailManagerInterface $mailManager = null;
+    public private(set) bool $useDefaultMailManager = false;
+    public private(set) ?\Closure $mailManagerCustomizer = null;
 
     public private(set) array $middleware = [];
     public private(set) array $exceptionHandlers = [];
@@ -272,6 +283,46 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         return $this;
     }
 
+    public function withStorage(
+        StorageInterface $storage,
+    ): self {
+        $this->storage = $storage;
+        $this->useDefaultStorage = false;
+
+        return $this;
+    }
+
+    public function withDefaultStorage(): self
+    {
+        $this->useDefaultStorage = true;
+        $this->storage = null;
+
+        return $this;
+    }
+
+    public function withMailManager(
+        MailManagerInterface $mailManager,
+    ): self {
+        $this->mailManager = $mailManager;
+        $this->useDefaultMailManager = false;
+        $this->mailManagerCustomizer = null;
+
+        return $this;
+    }
+
+    /**
+     * @param (\Closure(MailManagerConfiguratorInterface $configurator): mixed)|null $customizer
+     */
+    public function withDefaultMailManager(
+        ?\Closure $customizer = null,
+    ): self {
+        $this->useDefaultMailManager = true;
+        $this->mailManagerCustomizer = $customizer;
+        $this->mailManager = null;
+
+        return $this;
+    }
+
     public function withoutMiddleware(): self
     {
         $this->middleware = [];
@@ -464,6 +515,46 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
                     }
 
                     return $manager;
+                },
+            );
+        }
+
+        if ($this->storage !== null) {
+            $storage = $this->storage;
+
+            $container->singletonLazy(
+                StorageInterface::class,
+                static fn (): StorageInterface => $storage,
+            );
+        } elseif ($this->useDefaultStorage) {
+            $container->singletonLazy(
+                StorageInterface::class,
+                static fn (ContainerInterface $container): StorageInterface => new LocalStorage(
+                    config: $container->resolve(LocalStorageConfigInterface::class),
+                ),
+            );
+        }
+
+        if ($this->mailManager !== null) {
+            $mailManager = $this->mailManager;
+
+            $container->singletonLazy(
+                MailManagerInterface::class,
+                static fn (): MailManagerInterface => $mailManager,
+            );
+        } elseif ($this->useDefaultMailManager) {
+            $customizer = $this->mailManagerCustomizer;
+
+            $container->singletonLazy(
+                MailManagerInterface::class,
+                static function (ContainerInterface $container) use ($customizer): MailManagerInterface {
+                    $configurator = MailManagerConfigurator::fromConfig($container);
+
+                    if ($customizer !== null) {
+                        $customizer($configurator);
+                    }
+
+                    return $configurator->build();
                 },
             );
         }

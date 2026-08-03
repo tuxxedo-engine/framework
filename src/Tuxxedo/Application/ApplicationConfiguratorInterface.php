@@ -17,17 +17,18 @@ use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Event\EventsManagerInterface;
+use Tuxxedo\File\Storage\StorageInterface;
 use Tuxxedo\Http\Kernel\DispatcherInterface;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
 use Tuxxedo\Http\Kernel\KernelInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Url\UrlInterface;
+use Tuxxedo\Mail\MailManagerConfiguratorInterface;
+use Tuxxedo\Mail\MailManagerInterface;
 use Tuxxedo\Router\RouterInterface;
 use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
 
-// @todo Support Mails
-// @todo Support File Storage
 interface ApplicationConfiguratorInterface
 {
     public string $appName {
@@ -99,6 +100,22 @@ interface ApplicationConfiguratorInterface
     }
 
     public ?ConnectionManagerInterface $connectionManager {
+        get;
+    }
+
+    public ?StorageInterface $storage {
+        get;
+    }
+
+    public bool $useDefaultStorage {
+        get;
+    }
+
+    public ?MailManagerInterface $mailManager {
+        get;
+    }
+
+    public bool $useDefaultMailManager {
         get;
     }
 
@@ -191,6 +208,23 @@ interface ApplicationConfiguratorInterface
      * @param (\Closure(ConnectionManagerInterface $manager): mixed)|null $customizer
      */
     public function withDefaultConnectionManager(
+        ?\Closure $customizer = null,
+    ): self;
+
+    public function withStorage(
+        StorageInterface $storage,
+    ): self;
+
+    public function withDefaultStorage(): self;
+
+    public function withMailManager(
+        MailManagerInterface $mailManager,
+    ): self;
+
+    /**
+     * @param (\Closure(MailManagerConfiguratorInterface $configurator): mixed)|null $customizer
+     */
+    public function withDefaultMailManager(
         ?\Closure $customizer = null,
     ): self;
 
