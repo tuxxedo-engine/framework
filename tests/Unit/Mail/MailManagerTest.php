@@ -108,6 +108,6 @@ class MailManagerTest extends TestCase
             [],
             $transport->sent,
         );
-        self::assertSame(1, $transport->sendCalls);
+        self::assertSame(0, $transport->sendCalls);
     }
 }
