@@ -26,6 +26,8 @@ use Tuxxedo\Database\Query\Statement\InsertStatement;
 use Tuxxedo\Database\Query\Statement\InsertStatementInterface;
 use Tuxxedo\Database\Query\Statement\SelectStatement;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
+use Tuxxedo\Database\Query\Statement\Table\AlterTableStatement;
+use Tuxxedo\Database\Query\Statement\Table\AlterTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\CreateTableStatement;
 use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\DropTableStatement;
@@ -197,6 +199,15 @@ abstract class AbstractConnection implements ConnectionInterface
         string $table,
     ): CreateTableStatementInterface {
         return new CreateTableStatement(
+            table: $table,
+            connection: $this,
+        );
+    }
+
+    public function alterTable(
+        string $table,
+    ): AlterTableStatementInterface {
+        return new AlterTableStatement(
             table: $table,
             connection: $this,
         );

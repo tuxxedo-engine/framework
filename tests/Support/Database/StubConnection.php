@@ -26,6 +26,7 @@ use Tuxxedo\Database\Query\Statement\ExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\InsertBulkStatementInterface;
 use Tuxxedo\Database\Query\Statement\InsertStatementInterface;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
+use Tuxxedo\Database\Query\Statement\Table\AlterTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\DropTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\UpdateStatementInterface;
@@ -34,6 +35,10 @@ class StubConnection implements ConnectionInterface
 {
     public DialectInterface $dialect {
         get {
+            if ($this->dialectImpl !== null) {
+                return $this->dialectImpl;
+            }
+
             throw new \LogicException('StubConnection: dialect not implemented');
         }
     }
@@ -44,9 +49,19 @@ class StubConnection implements ConnectionInterface
         }
     }
 
+    /**
+     * @var list<string>
+     */
+    public array $recordedQueries = [];
+
+    /**
+     * @param (\Closure(string $sql): ResultSetInterface)|null $queryHandler
+     */
     public function __construct(
         public readonly string $name = 'stub',
         public readonly ConnectionRole $role = ConnectionRole::NONE,
+        private readonly ?DialectInterface $dialectImpl = null,
+        private readonly ?\Closure $queryHandler = null,
     ) {
     }
 
@@ -156,6 +171,12 @@ class StubConnection implements ConnectionInterface
         array $parameters = [],
         bool $native = false,
     ): ResultSetInterface {
+        if ($this->queryHandler !== null) {
+            $this->recordedQueries[] = $sql;
+
+            return ($this->queryHandler)($sql);
+        }
+
         throw new \LogicException('StubConnection: query not implemented');
     }
 
@@ -205,6 +226,12 @@ class StubConnection implements ConnectionInterface
         string $table,
     ): CreateTableStatementInterface {
         throw new \LogicException('StubConnection: createTable not implemented');
+    }
+
+    public function alterTable(
+        string $table,
+    ): AlterTableStatementInterface {
+        throw new \LogicException('StubConnection: alterTable not implemented');
     }
 
     public function dropTable(

@@ -15,6 +15,11 @@ namespace Tuxxedo\Database\Query\Dialect;
 
 use Tuxxedo\Database\Query\Statement\Table\Column\BooleanColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
+use Tuxxedo\Database\Query\Statement\Table\Operation\AddColumn;
+use Tuxxedo\Database\Query\Statement\Table\Operation\DropColumn;
+use Tuxxedo\Database\Query\Statement\Table\Operation\RenameColumn;
+use Tuxxedo\Database\Query\Statement\Table\Operation\RenameTable;
+use Tuxxedo\Database\SqlException;
 
 class SqliteDialect implements DialectInterface
 {
@@ -71,5 +76,67 @@ class SqliteDialect implements DialectInterface
         }
 
         return (bool) $value;
+    }
+
+    public function compileAlterTable(
+        string $table,
+        array $operations,
+    ): array {
+        if ($operations === []) {
+            return [];
+        }
+
+        $tableId = $this->identifier($table);
+        $statements = [];
+
+        foreach ($operations as $operation) {
+            if ($operation instanceof AddColumn) {
+                $statements[] = \sprintf(
+                    'ALTER TABLE %s ADD COLUMN %s',
+                    $tableId,
+                    $operation->column->toSql($this),
+                );
+
+                continue;
+            }
+
+            if ($operation instanceof DropColumn) {
+                $statements[] = \sprintf(
+                    'ALTER TABLE %s DROP COLUMN %s',
+                    $tableId,
+                    $this->identifier($operation->name),
+                );
+
+                continue;
+            }
+
+            if ($operation instanceof RenameColumn) {
+                $statements[] = \sprintf(
+                    'ALTER TABLE %s RENAME COLUMN %s TO %s',
+                    $tableId,
+                    $this->identifier($operation->from),
+                    $this->identifier($operation->to),
+                );
+
+                continue;
+            }
+
+            if ($operation instanceof RenameTable) {
+                $statements[] = \sprintf(
+                    'ALTER TABLE %s RENAME TO %s',
+                    $tableId,
+                    $this->identifier($operation->newName),
+                );
+
+                continue;
+            }
+
+            throw SqlException::fromUnsupportedAlterOperation(
+                dialect: self::class,
+                operation: $operation::class,
+            );
+        }
+
+        return $statements;
     }
 }

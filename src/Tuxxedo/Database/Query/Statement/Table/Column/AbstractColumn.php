@@ -31,6 +31,12 @@ abstract class AbstractColumn implements ColumnInterface
         DialectInterface $dialect,
     ): string;
 
+    public function typeString(
+        DialectInterface $dialect,
+    ): string {
+        return $this->renderType($dialect);
+    }
+
     public function toSql(
         DialectInterface $dialect,
     ): string {

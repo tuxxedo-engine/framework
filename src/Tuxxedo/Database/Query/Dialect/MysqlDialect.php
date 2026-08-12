@@ -17,6 +17,20 @@ use Tuxxedo\Database\Query\Statement\Table\Column\BooleanColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\EnumerationColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\JsonColumn;
+use Tuxxedo\Database\Query\Statement\Table\Operation\AddColumn;
+use Tuxxedo\Database\Query\Statement\Table\Operation\AddForeignKey;
+use Tuxxedo\Database\Query\Statement\Table\Operation\AddIndex;
+use Tuxxedo\Database\Query\Statement\Table\Operation\AddPrimaryKey;
+use Tuxxedo\Database\Query\Statement\Table\Operation\AddUnique;
+use Tuxxedo\Database\Query\Statement\Table\Operation\ChangeColumn;
+use Tuxxedo\Database\Query\Statement\Table\Operation\DropColumn;
+use Tuxxedo\Database\Query\Statement\Table\Operation\DropForeignKey;
+use Tuxxedo\Database\Query\Statement\Table\Operation\DropIndex;
+use Tuxxedo\Database\Query\Statement\Table\Operation\DropPrimaryKey;
+use Tuxxedo\Database\Query\Statement\Table\Operation\DropUnique;
+use Tuxxedo\Database\Query\Statement\Table\Operation\RenameColumn;
+use Tuxxedo\Database\Query\Statement\Table\Operation\RenameTable;
+use Tuxxedo\Database\SqlException;
 
 class MysqlDialect implements DialectInterface
 {
@@ -87,5 +101,206 @@ class MysqlDialect implements DialectInterface
         }
 
         return (bool) $value;
+    }
+
+    public function compileAlterTable(
+        string $table,
+        array $operations,
+    ): array {
+        if ($operations === []) {
+            return [];
+        }
+
+        $tableId = $this->identifier($table);
+        $clauses = [];
+        $extra = [];
+
+        foreach ($operations as $operation) {
+            if ($operation instanceof AddColumn) {
+                $clauses[] = 'ADD COLUMN ' . $operation->column->toSql($this);
+
+                continue;
+            }
+
+            if ($operation instanceof DropColumn) {
+                $clauses[] = \sprintf(
+                    'DROP COLUMN%s %s',
+                    $operation->ifExists
+                        ? ' IF EXISTS'
+                        : '',
+                    $this->identifier($operation->name),
+                );
+
+                continue;
+            }
+
+            if ($operation instanceof RenameColumn) {
+                $clauses[] = \sprintf(
+                    'RENAME COLUMN %s TO %s',
+                    $this->identifier($operation->from),
+                    $this->identifier($operation->to),
+                );
+
+                continue;
+            }
+
+            if ($operation instanceof ChangeColumn) {
+                $clauses[] = 'MODIFY COLUMN ' . $operation->column->toSql($this);
+
+                continue;
+            }
+
+            if ($operation instanceof RenameTable) {
+                $clauses[] = 'RENAME TO ' . $this->identifier($operation->newName);
+
+                continue;
+            }
+
+            if ($operation instanceof AddIndex) {
+                $extra[] = \sprintf(
+                    'CREATE INDEX %s ON %s (%s)',
+                    $this->identifier($operation->name ?? self::defaultIndexName($table, $operation->columns)),
+                    $tableId,
+                    $this->joinColumns($operation->columns),
+                );
+
+                continue;
+            }
+
+            if ($operation instanceof DropIndex) {
+                $extra[] = \sprintf(
+                    'DROP INDEX %s ON %s',
+                    $this->identifier($operation->name),
+                    $tableId,
+                );
+
+                continue;
+            }
+
+            if ($operation instanceof AddUnique) {
+                $clauses[] = \sprintf(
+                    'ADD CONSTRAINT %s UNIQUE (%s)',
+                    $this->identifier($operation->name ?? self::defaultUniqueName($table, $operation->columns)),
+                    $this->joinColumns($operation->columns),
+                );
+
+                continue;
+            }
+
+            if ($operation instanceof DropUnique) {
+                $clauses[] = 'DROP INDEX ' . $this->identifier($operation->name);
+
+                continue;
+            }
+
+            if ($operation instanceof AddForeignKey) {
+                $clause = \sprintf(
+                    'ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s (%s)',
+                    $this->identifier($operation->name ?? self::defaultForeignKeyName($table, $operation->columns)),
+                    $this->joinColumns($operation->columns),
+                    $this->identifier($operation->referencedTable),
+                    $this->joinColumns($operation->referencedColumns),
+                );
+
+                if ($operation->onDelete !== null) {
+                    $clause .= ' ON DELETE ' . $operation->onDelete->value;
+                }
+
+                if ($operation->onUpdate !== null) {
+                    $clause .= ' ON UPDATE ' . $operation->onUpdate->value;
+                }
+
+                $clauses[] = $clause;
+
+                continue;
+            }
+
+            if ($operation instanceof DropForeignKey) {
+                $clauses[] = 'DROP FOREIGN KEY ' . $this->identifier($operation->name);
+
+                continue;
+            }
+
+            if ($operation instanceof AddPrimaryKey) {
+                $clauses[] = \sprintf(
+                    'ADD PRIMARY KEY (%s)',
+                    $this->joinColumns($operation->columns),
+                );
+
+                continue;
+            }
+
+            if ($operation instanceof DropPrimaryKey) {
+                $clauses[] = 'DROP PRIMARY KEY';
+
+                continue;
+            }
+
+            throw SqlException::fromUnsupportedAlterOperation(
+                dialect: self::class,
+                operation: $operation::class,
+            );
+        }
+
+        $statements = [];
+
+        if ($clauses !== []) {
+            $statements[] = \sprintf(
+                'ALTER TABLE %s %s',
+                $tableId,
+                \join(', ', $clauses),
+            );
+        }
+
+        foreach ($extra as $statement) {
+            $statements[] = $statement;
+        }
+
+        return $statements;
+    }
+
+    /**
+     * @param list<string> $columns
+     */
+    private function joinColumns(
+        array $columns,
+    ): string {
+        return \join(
+            ', ',
+            \array_map(
+                fn (string $column): string => $this->identifier($column),
+                $columns,
+            ),
+        );
+    }
+
+    /**
+     * @param list<string> $columns
+     */
+    private static function defaultIndexName(
+        string $table,
+        array $columns,
+    ): string {
+        return $table . '_' . \join('_', $columns) . '_idx';
+    }
+
+    /**
+     * @param list<string> $columns
+     */
+    private static function defaultUniqueName(
+        string $table,
+        array $columns,
+    ): string {
+        return $table . '_' . \join('_', $columns) . '_unq';
+    }
+
+    /**
+     * @param list<string> $columns
+     */
+    private static function defaultForeignKeyName(
+        string $table,
+        array $columns,
+    ): string {
+        return $table . '_' . \join('_', $columns) . '_fk';
     }
 }

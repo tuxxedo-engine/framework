@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Query\Dialect;
 
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
+use Tuxxedo\Database\Query\Statement\Table\Operation\AlterOperationInterface;
 use Tuxxedo\Database\SqlException;
 
 interface DialectInterface
@@ -49,4 +50,15 @@ interface DialectInterface
     public function interpretBoolean(
         mixed $value,
     ): bool;
+
+    /**
+     * @param list<AlterOperationInterface> $operations
+     * @return list<string>
+     *
+     * @throws SqlException
+     */
+    public function compileAlterTable(
+        string $table,
+        array $operations,
+    ): array;
 }

@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database;
 
+use Tuxxedo\Database\Query\Statement\Table\Operation\AlterOperationInterface;
+
 class SqlException extends \Exception
 {
     public static function fromUnboundPlaceholder(
@@ -126,6 +128,23 @@ class SqlException extends \Exception
             message: \sprintf(
                 'Cannot compile CREATE TABLE for `%s`: no columns have been declared',
                 $table,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $dialect
+     * @param class-string<AlterOperationInterface> $operation
+     */
+    public static function fromUnsupportedAlterOperation(
+        string $dialect,
+        string $operation,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Dialect %s does not support ALTER operation %s',
+                $dialect,
+                $operation,
             ),
         );
     }

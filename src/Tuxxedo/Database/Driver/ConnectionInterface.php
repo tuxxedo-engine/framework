@@ -25,6 +25,7 @@ use Tuxxedo\Database\Query\Statement\ExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\InsertBulkStatementInterface;
 use Tuxxedo\Database\Query\Statement\InsertStatementInterface;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
+use Tuxxedo\Database\Query\Statement\Table\AlterTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\DropTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\UpdateStatementInterface;
@@ -194,7 +195,9 @@ interface ConnectionInterface
         string $table,
     ): CreateTableStatementInterface;
 
-    // @todo Support alterTable
+    public function alterTable(
+        string $table,
+    ): AlterTableStatementInterface;
 
     public function dropTable(
         string $table,

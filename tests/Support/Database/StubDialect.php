@@ -15,6 +15,7 @@ namespace Support\Database;
 
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
+use Tuxxedo\Database\Query\Statement\Table\Operation\AlterOperationInterface;
 
 class StubDialect implements DialectInterface
 {
@@ -22,6 +23,18 @@ class StubDialect implements DialectInterface
      * @var list<string>
      */
     public private(set) array $quotations;
+
+    public ?string $compileAlterTableTable = null;
+
+    /**
+     * @var list<AlterOperationInterface>
+     */
+    public array $compileAlterTableOperations = [];
+
+    /**
+     * @var list<string>
+     */
+    public array $compileAlterTableResult = [];
 
     /**
      * @param list<string> $quotations
@@ -74,5 +87,15 @@ class StubDialect implements DialectInterface
         }
 
         return (bool) $value;
+    }
+
+    public function compileAlterTable(
+        string $table,
+        array $operations,
+    ): array {
+        $this->compileAlterTableTable = $table;
+        $this->compileAlterTableOperations = $operations;
+
+        return $this->compileAlterTableResult;
     }
 }

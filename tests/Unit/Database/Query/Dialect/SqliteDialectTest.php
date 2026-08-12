@@ -16,6 +16,22 @@ namespace Unit\Database\Query\Dialect;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Database\Query\Dialect\SqliteDialect;
+use Tuxxedo\Database\Query\Statement\Table\Column\IntegerColumn;
+use Tuxxedo\Database\Query\Statement\Table\Column\VarcharColumn;
+use Tuxxedo\Database\Query\Statement\Table\Operation\AddColumn;
+use Tuxxedo\Database\Query\Statement\Table\Operation\AddForeignKey;
+use Tuxxedo\Database\Query\Statement\Table\Operation\AddIndex;
+use Tuxxedo\Database\Query\Statement\Table\Operation\AddPrimaryKey;
+use Tuxxedo\Database\Query\Statement\Table\Operation\AddUnique;
+use Tuxxedo\Database\Query\Statement\Table\Operation\ChangeColumn;
+use Tuxxedo\Database\Query\Statement\Table\Operation\DropColumn;
+use Tuxxedo\Database\Query\Statement\Table\Operation\DropForeignKey;
+use Tuxxedo\Database\Query\Statement\Table\Operation\DropIndex;
+use Tuxxedo\Database\Query\Statement\Table\Operation\DropPrimaryKey;
+use Tuxxedo\Database\Query\Statement\Table\Operation\DropUnique;
+use Tuxxedo\Database\Query\Statement\Table\Operation\RenameColumn;
+use Tuxxedo\Database\Query\Statement\Table\Operation\RenameTable;
+use Tuxxedo\Database\SqlException;
 
 class SqliteDialectTest extends TestCase
 {
@@ -79,5 +95,270 @@ class SqliteDialectTest extends TestCase
         self::assertFalse(
             (new SqliteDialect())->interpretBoolean($value),
         );
+    }
+
+    public function testCompileAlterTableReturnsEmptyForNoOperations(): void
+    {
+        self::assertSame(
+            [],
+            (new SqliteDialect())->compileAlterTable(
+                table: 'widgets',
+                operations: [],
+            ),
+        );
+    }
+
+    public function testCompileAlterTableAddColumn(): void
+    {
+        $sql = (new SqliteDialect())->compileAlterTable(
+            table: 'widgets',
+            operations: [
+                new AddColumn(
+                    column: new IntegerColumn(
+                        name: 'quantity',
+                    ),
+                ),
+            ],
+        );
+
+        self::assertSame(
+            [
+                'ALTER TABLE "widgets" ADD COLUMN "quantity" INTEGER NOT NULL',
+            ],
+            $sql,
+        );
+    }
+
+    public function testCompileAlterTableDropColumn(): void
+    {
+        $sql = (new SqliteDialect())->compileAlterTable(
+            table: 'widgets',
+            operations: [
+                new DropColumn(
+                    name: 'legacy',
+                ),
+            ],
+        );
+
+        self::assertSame(
+            [
+                'ALTER TABLE "widgets" DROP COLUMN "legacy"',
+            ],
+            $sql,
+        );
+    }
+
+    public function testCompileAlterTableRenameColumn(): void
+    {
+        $sql = (new SqliteDialect())->compileAlterTable(
+            table: 'widgets',
+            operations: [
+                new RenameColumn(
+                    from: 'name',
+                    to: 'title',
+                ),
+            ],
+        );
+
+        self::assertSame(
+            [
+                'ALTER TABLE "widgets" RENAME COLUMN "name" TO "title"',
+            ],
+            $sql,
+        );
+    }
+
+    public function testCompileAlterTableRenameTable(): void
+    {
+        $sql = (new SqliteDialect())->compileAlterTable(
+            table: 'widgets',
+            operations: [
+                new RenameTable(
+                    newName: 'gadgets',
+                ),
+            ],
+        );
+
+        self::assertSame(
+            [
+                'ALTER TABLE "widgets" RENAME TO "gadgets"',
+            ],
+            $sql,
+        );
+    }
+
+    public function testCompileAlterTableChangeColumnThrows(): void
+    {
+        try {
+            (new SqliteDialect())->compileAlterTable(
+                table: 'widgets',
+                operations: [
+                    new ChangeColumn(
+                        column: new VarcharColumn(
+                            name: 'label',
+                            length: 128,
+                        ),
+                    ),
+                ],
+            );
+
+            self::fail('Expected SqlException to be thrown');
+        } catch (SqlException $exception) {
+            self::assertStringContainsString('ChangeColumn', $exception->getMessage());
+        }
+    }
+
+    public function testCompileAlterTableAddIndexThrows(): void
+    {
+        try {
+            (new SqliteDialect())->compileAlterTable(
+                table: 'widgets',
+                operations: [
+                    new AddIndex(
+                        columns: [
+                            'category',
+                        ],
+                    ),
+                ],
+            );
+
+            self::fail('Expected SqlException to be thrown');
+        } catch (SqlException $exception) {
+            self::assertStringContainsString('AddIndex', $exception->getMessage());
+        }
+    }
+
+    public function testCompileAlterTableDropIndexThrows(): void
+    {
+        try {
+            (new SqliteDialect())->compileAlterTable(
+                table: 'widgets',
+                operations: [
+                    new DropIndex(
+                        name: 'category_idx',
+                    ),
+                ],
+            );
+
+            self::fail('Expected SqlException to be thrown');
+        } catch (SqlException $exception) {
+            self::assertStringContainsString('DropIndex', $exception->getMessage());
+        }
+    }
+
+    public function testCompileAlterTableAddUniqueThrows(): void
+    {
+        try {
+            (new SqliteDialect())->compileAlterTable(
+                table: 'widgets',
+                operations: [
+                    new AddUnique(
+                        columns: [
+                            'sku',
+                        ],
+                    ),
+                ],
+            );
+
+            self::fail('Expected SqlException to be thrown');
+        } catch (SqlException $exception) {
+            self::assertStringContainsString('AddUnique', $exception->getMessage());
+        }
+    }
+
+    public function testCompileAlterTableDropUniqueThrows(): void
+    {
+        try {
+            (new SqliteDialect())->compileAlterTable(
+                table: 'widgets',
+                operations: [
+                    new DropUnique(
+                        name: 'sku_unq',
+                    ),
+                ],
+            );
+
+            self::fail('Expected SqlException to be thrown');
+        } catch (SqlException $exception) {
+            self::assertStringContainsString('DropUnique', $exception->getMessage());
+        }
+    }
+
+    public function testCompileAlterTableAddForeignKeyThrows(): void
+    {
+        try {
+            (new SqliteDialect())->compileAlterTable(
+                table: 'widgets',
+                operations: [
+                    new AddForeignKey(
+                        columns: [
+                            'owner_id',
+                        ],
+                        referencedTable: 'users',
+                        referencedColumns: [
+                            'id',
+                        ],
+                    ),
+                ],
+            );
+
+            self::fail('Expected SqlException to be thrown');
+        } catch (SqlException $exception) {
+            self::assertStringContainsString('AddForeignKey', $exception->getMessage());
+        }
+    }
+
+    public function testCompileAlterTableDropForeignKeyThrows(): void
+    {
+        try {
+            (new SqliteDialect())->compileAlterTable(
+                table: 'widgets',
+                operations: [
+                    new DropForeignKey(
+                        name: 'widgets_owner_fk',
+                    ),
+                ],
+            );
+
+            self::fail('Expected SqlException to be thrown');
+        } catch (SqlException $exception) {
+            self::assertStringContainsString('DropForeignKey', $exception->getMessage());
+        }
+    }
+
+    public function testCompileAlterTableAddPrimaryKeyThrows(): void
+    {
+        try {
+            (new SqliteDialect())->compileAlterTable(
+                table: 'widgets',
+                operations: [
+                    new AddPrimaryKey(
+                        columns: [
+                            'id',
+                        ],
+                    ),
+                ],
+            );
+
+            self::fail('Expected SqlException to be thrown');
+        } catch (SqlException $exception) {
+            self::assertStringContainsString('AddPrimaryKey', $exception->getMessage());
+        }
+    }
+
+    public function testCompileAlterTableDropPrimaryKeyThrows(): void
+    {
+        try {
+            (new SqliteDialect())->compileAlterTable(
+                table: 'widgets',
+                operations: [
+                    new DropPrimaryKey(),
+                ],
+            );
+
+            self::fail('Expected SqlException to be thrown');
+        } catch (SqlException $exception) {
+            self::assertStringContainsString('DropPrimaryKey', $exception->getMessage());
+        }
     }
 }
