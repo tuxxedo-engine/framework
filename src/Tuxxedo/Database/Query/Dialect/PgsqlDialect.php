@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Query\Dialect;
 
 use PgSql\Connection;
+use Tuxxedo\Database\Query\Parser\StatementParserResult;
+use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\AbstractColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\BlobColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
@@ -138,7 +140,7 @@ class PgsqlDialect implements DialectInterface
         return (bool) $value;
     }
 
-    public function compileAlterTable(
+    public function alterTable(
         string $table,
         array $operations,
     ): array {
@@ -299,7 +301,39 @@ class PgsqlDialect implements DialectInterface
             );
         }
 
-        return $statements;
+        $results = [];
+
+        foreach ($statements as $sql) {
+            $results[] = new StatementParserResult(
+                sql: $sql,
+            );
+        }
+
+        return $results;
+    }
+
+    public function tableExists(
+        string $table,
+    ): StatementParserResultInterface {
+        return new StatementParserResult(
+            sql: 'SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = :table)',
+            parameters: [
+                'table' => $table,
+            ],
+        );
+    }
+
+    public function columnExists(
+        string $table,
+        string $column,
+    ): StatementParserResultInterface {
+        return new StatementParserResult(
+            sql: 'SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = :table AND column_name = :column)',
+            parameters: [
+                'table' => $table,
+                'column' => $column,
+            ],
+        );
     }
 
     /**

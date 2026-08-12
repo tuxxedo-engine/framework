@@ -16,6 +16,7 @@ namespace Unit\Database\Query\Dialect;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Database\Query\Dialect\MysqlDialect;
+use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\IntegerColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\VarcharColumn;
 use Tuxxedo\Database\Query\Statement\Table\ForeignKeyAction;
@@ -37,6 +38,22 @@ use Tuxxedo\Database\SqlException;
 
 class MysqlDialectTest extends TestCase
 {
+    /**
+     * @param list<StatementParserResultInterface> $results
+     * @return list<string>
+     */
+    private static function sqlOf(
+        array $results,
+    ): array {
+        $sql = [];
+
+        foreach ($results as $result) {
+            $sql[] = $result->sql;
+        }
+
+        return $sql;
+    }
+
     /**
      * @return \Generator<array{0: mixed}>
      */
@@ -103,7 +120,7 @@ class MysqlDialectTest extends TestCase
     {
         self::assertSame(
             [],
-            (new MysqlDialect())->compileAlterTable(
+            (new MysqlDialect())->alterTable(
                 table: 'widgets',
                 operations: [],
             ),
@@ -112,7 +129,7 @@ class MysqlDialectTest extends TestCase
 
     public function testCompileAlterTableAddColumn(): void
     {
-        $sql = (new MysqlDialect())->compileAlterTable(
+        $sql = (new MysqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new AddColumn(
@@ -127,13 +144,13 @@ class MysqlDialectTest extends TestCase
             [
                 'ALTER TABLE `widgets` ADD COLUMN `quantity` INTEGER NOT NULL',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableDropColumn(): void
     {
-        $sql = (new MysqlDialect())->compileAlterTable(
+        $sql = (new MysqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new DropColumn(
@@ -146,13 +163,13 @@ class MysqlDialectTest extends TestCase
             [
                 'ALTER TABLE `widgets` DROP COLUMN `legacy`',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableDropColumnIfExists(): void
     {
-        $sql = (new MysqlDialect())->compileAlterTable(
+        $sql = (new MysqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new DropColumn(
@@ -166,13 +183,13 @@ class MysqlDialectTest extends TestCase
             [
                 'ALTER TABLE `widgets` DROP COLUMN IF EXISTS `legacy`',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableRenameColumn(): void
     {
-        $sql = (new MysqlDialect())->compileAlterTable(
+        $sql = (new MysqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new RenameColumn(
@@ -186,13 +203,13 @@ class MysqlDialectTest extends TestCase
             [
                 'ALTER TABLE `widgets` RENAME COLUMN `name` TO `title`',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableChangeColumn(): void
     {
-        $sql = (new MysqlDialect())->compileAlterTable(
+        $sql = (new MysqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new ChangeColumn(
@@ -208,13 +225,13 @@ class MysqlDialectTest extends TestCase
             [
                 'ALTER TABLE `widgets` MODIFY COLUMN `label` VARCHAR(128) NOT NULL',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableRenameTable(): void
     {
-        $sql = (new MysqlDialect())->compileAlterTable(
+        $sql = (new MysqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new RenameTable(
@@ -227,13 +244,13 @@ class MysqlDialectTest extends TestCase
             [
                 'ALTER TABLE `widgets` RENAME TO `gadgets`',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableAddIndexWithExplicitName(): void
     {
-        $sql = (new MysqlDialect())->compileAlterTable(
+        $sql = (new MysqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new AddIndex(
@@ -250,13 +267,13 @@ class MysqlDialectTest extends TestCase
             [
                 'CREATE INDEX `custom_idx` ON `widgets` (`category`, `status`)',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableAddIndexGeneratesDefaultName(): void
     {
-        $sql = (new MysqlDialect())->compileAlterTable(
+        $sql = (new MysqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new AddIndex(
@@ -271,13 +288,13 @@ class MysqlDialectTest extends TestCase
             [
                 'CREATE INDEX `widgets_category_idx` ON `widgets` (`category`)',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableDropIndex(): void
     {
-        $sql = (new MysqlDialect())->compileAlterTable(
+        $sql = (new MysqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new DropIndex(
@@ -290,13 +307,13 @@ class MysqlDialectTest extends TestCase
             [
                 'DROP INDEX `category_idx` ON `widgets`',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableAddUnique(): void
     {
-        $sql = (new MysqlDialect())->compileAlterTable(
+        $sql = (new MysqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new AddUnique(
@@ -312,13 +329,13 @@ class MysqlDialectTest extends TestCase
             [
                 'ALTER TABLE `widgets` ADD CONSTRAINT `sku_unq` UNIQUE (`sku`)',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableDropUnique(): void
     {
-        $sql = (new MysqlDialect())->compileAlterTable(
+        $sql = (new MysqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new DropUnique(
@@ -331,13 +348,13 @@ class MysqlDialectTest extends TestCase
             [
                 'ALTER TABLE `widgets` DROP INDEX `sku_unq`',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableAddForeignKey(): void
     {
-        $sql = (new MysqlDialect())->compileAlterTable(
+        $sql = (new MysqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new AddForeignKey(
@@ -359,13 +376,13 @@ class MysqlDialectTest extends TestCase
             [
                 'ALTER TABLE `widgets` ADD CONSTRAINT `widgets_owner_fk` FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableDropForeignKey(): void
     {
-        $sql = (new MysqlDialect())->compileAlterTable(
+        $sql = (new MysqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new DropForeignKey(
@@ -378,13 +395,13 @@ class MysqlDialectTest extends TestCase
             [
                 'ALTER TABLE `widgets` DROP FOREIGN KEY `widgets_owner_fk`',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableAddPrimaryKey(): void
     {
-        $sql = (new MysqlDialect())->compileAlterTable(
+        $sql = (new MysqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new AddPrimaryKey(
@@ -400,13 +417,13 @@ class MysqlDialectTest extends TestCase
             [
                 'ALTER TABLE `widgets` ADD PRIMARY KEY (`tenant_id`, `id`)',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableDropPrimaryKey(): void
     {
-        $sql = (new MysqlDialect())->compileAlterTable(
+        $sql = (new MysqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new DropPrimaryKey(),
@@ -417,13 +434,13 @@ class MysqlDialectTest extends TestCase
             [
                 'ALTER TABLE `widgets` DROP PRIMARY KEY',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableMergesStructuralClauses(): void
     {
-        $sql = (new MysqlDialect())->compileAlterTable(
+        $sql = (new MysqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new AddColumn(
@@ -441,13 +458,13 @@ class MysqlDialectTest extends TestCase
             [
                 'ALTER TABLE `widgets` ADD COLUMN `quantity` INTEGER NOT NULL, DROP COLUMN `legacy`',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableEmitsIndexOperationsSeparately(): void
     {
-        $sql = (new MysqlDialect())->compileAlterTable(
+        $sql = (new MysqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new AddColumn(
@@ -468,13 +485,13 @@ class MysqlDialectTest extends TestCase
                 'ALTER TABLE `widgets` ADD COLUMN `quantity` INTEGER NOT NULL',
                 'CREATE INDEX `widgets_quantity_idx` ON `widgets` (`quantity`)',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableAddUniqueGeneratesDefaultName(): void
     {
-        $sql = (new MysqlDialect())->compileAlterTable(
+        $sql = (new MysqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new AddUnique(
@@ -489,13 +506,13 @@ class MysqlDialectTest extends TestCase
             [
                 'ALTER TABLE `widgets` ADD CONSTRAINT `widgets_sku_unq` UNIQUE (`sku`)',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableAddForeignKeyGeneratesDefaultName(): void
     {
-        $sql = (new MysqlDialect())->compileAlterTable(
+        $sql = (new MysqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new AddForeignKey(
@@ -514,7 +531,7 @@ class MysqlDialectTest extends TestCase
             [
                 'ALTER TABLE `widgets` ADD CONSTRAINT `widgets_owner_id_fk` FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`)',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
@@ -524,7 +541,7 @@ class MysqlDialectTest extends TestCase
         };
 
         try {
-            (new MysqlDialect())->compileAlterTable(
+            (new MysqlDialect())->alterTable(
                 table: 'widgets',
                 operations: [
                     $operation,
@@ -535,5 +552,43 @@ class MysqlDialectTest extends TestCase
         } catch (SqlException $exception) {
             self::assertStringContainsString('MysqlDialect', $exception->getMessage());
         }
+    }
+
+    public function testTableExistsBuildsInformationSchemaQuery(): void
+    {
+        $result = (new MysqlDialect())->tableExists(
+            table: 'widgets',
+        );
+
+        self::assertSame(
+            'SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = :table)',
+            $result->sql,
+        );
+        self::assertSame(
+            [
+                'table' => 'widgets',
+            ],
+            $result->parameters,
+        );
+    }
+
+    public function testColumnExistsBuildsInformationSchemaQuery(): void
+    {
+        $result = (new MysqlDialect())->columnExists(
+            table: 'widgets',
+            column: 'quantity',
+        );
+
+        self::assertSame(
+            'SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = :table AND column_name = :column)',
+            $result->sql,
+        );
+        self::assertSame(
+            [
+                'table' => 'widgets',
+                'column' => 'quantity',
+            ],
+            $result->parameters,
+        );
     }
 }

@@ -1,0 +1,154 @@
+<?php
+
+/**
+ * Tuxxedo Engine
+ *
+ * This file is part of the Tuxxedo Engine framework and is licensed under
+ * the MIT license.
+ *
+ * Copyright (C) 2026 Kalle Sommer Nielsen <kalle@php.net>
+ */
+
+declare(strict_types=1);
+
+namespace Unit\Database\Query\Statement\Table;
+
+use PHPUnit\Framework\TestCase;
+use Support\Database\StubConnection;
+use Support\Database\StubDialect;
+use Support\Database\StubResultSet;
+use Tuxxedo\Database\DatabaseException;
+use Tuxxedo\Database\Query\Statement\Table\TableExistsStatement;
+
+class TableExistsStatementTest extends TestCase
+{
+    public function testCompileDelegatesToDialect(): void
+    {
+        $dialect = new StubDialect();
+        $connection = new StubConnection(
+            dialectImpl: $dialect,
+        );
+
+        $statement = new TableExistsStatement(
+            table: 'widgets',
+            connection: $connection,
+        );
+
+        $result = $statement->compile();
+
+        self::assertSame('SELECT 1', $result->sql);
+        self::assertSame(
+            [
+                'table' => 'widgets',
+            ],
+            $result->parameters,
+        );
+        self::assertSame('widgets', $dialect->tableExistsTable);
+    }
+
+    public function testCompileThrowsWithoutConnection(): void
+    {
+        $statement = new TableExistsStatement(
+            table: 'widgets',
+        );
+
+        try {
+            $statement->compile();
+
+            self::fail('Expected DatabaseException to be thrown');
+        } catch (DatabaseException $exception) {
+            self::assertStringContainsString('connection', \strtolower($exception->getMessage()));
+        }
+    }
+
+    public function testExecuteQueriesConnectionWithDialectPreparedSql(): void
+    {
+        $dialect = new StubDialect();
+        $connection = new StubConnection(
+            dialectImpl: $dialect,
+            queryHandler: static fn (string $sql): StubResultSet => new StubResultSet(),
+        );
+
+        $statement = new TableExistsStatement(
+            table: 'widgets',
+            connection: $connection,
+        );
+
+        $statement->execute();
+
+        self::assertSame(
+            [
+                'SELECT 1',
+            ],
+            $connection->recordedQueries,
+        );
+    }
+
+    public function testExecuteThrowsWithoutConnection(): void
+    {
+        $statement = new TableExistsStatement(
+            table: 'widgets',
+        );
+
+        try {
+            $statement->execute();
+
+            self::fail('Expected DatabaseException to be thrown');
+        } catch (DatabaseException $exception) {
+            self::assertStringContainsString('connection', \strtolower($exception->getMessage()));
+        }
+    }
+
+    public function testExistsReturnsTrueWhenDialectInterpretsRowAsTrue(): void
+    {
+        $connection = new StubConnection(
+            dialectImpl: new StubDialect(),
+            queryHandler: static fn (string $sql): StubResultSet => new StubResultSet(
+                firstRow: [
+                    '1',
+                ],
+            ),
+        );
+
+        $statement = new TableExistsStatement(
+            table: 'widgets',
+            connection: $connection,
+        );
+
+        self::assertTrue($statement->exists());
+    }
+
+    public function testExistsReturnsFalseWhenDialectInterpretsRowAsFalse(): void
+    {
+        $connection = new StubConnection(
+            dialectImpl: new StubDialect(),
+            queryHandler: static fn (string $sql): StubResultSet => new StubResultSet(
+                firstRow: [
+                    '0',
+                ],
+            ),
+        );
+
+        $statement = new TableExistsStatement(
+            table: 'widgets',
+            connection: $connection,
+        );
+
+        self::assertFalse($statement->exists());
+    }
+
+    public function testExistsThrowsWithoutConnection(): void
+    {
+        $statement = new TableExistsStatement(
+            table: 'widgets',
+        );
+
+        try {
+            $statement->exists();
+
+            self::fail('Expected DatabaseException to be thrown');
+        } catch (DatabaseException $exception) {
+            self::assertStringContainsString('connection', \strtolower($exception->getMessage()));
+        }
+    }
+}

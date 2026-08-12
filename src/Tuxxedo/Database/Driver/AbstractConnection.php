@@ -28,10 +28,14 @@ use Tuxxedo\Database\Query\Statement\SelectStatement;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\AlterTableStatement;
 use Tuxxedo\Database\Query\Statement\Table\AlterTableStatementInterface;
+use Tuxxedo\Database\Query\Statement\Table\ColumnExistsStatement;
+use Tuxxedo\Database\Query\Statement\Table\ColumnExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\CreateTableStatement;
 use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\DropTableStatement;
 use Tuxxedo\Database\Query\Statement\Table\DropTableStatementInterface;
+use Tuxxedo\Database\Query\Statement\Table\TableExistsStatement;
+use Tuxxedo\Database\Query\Statement\Table\TableExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\UpdateStatement;
 
 abstract class AbstractConnection implements ConnectionInterface
@@ -218,6 +222,26 @@ abstract class AbstractConnection implements ConnectionInterface
     ): DropTableStatementInterface {
         return new DropTableStatement(
             table: $table,
+            connection: $this,
+        );
+    }
+
+    public function tableExists(
+        string $table,
+    ): TableExistsStatementInterface {
+        return new TableExistsStatement(
+            table: $table,
+            connection: $this,
+        );
+    }
+
+    public function columnExists(
+        string $table,
+        string $column,
+    ): ColumnExistsStatementInterface {
+        return new ColumnExistsStatement(
+            table: $table,
+            column: $column,
             connection: $this,
         );
     }

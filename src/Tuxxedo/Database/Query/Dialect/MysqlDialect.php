@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Dialect;
 
+use Tuxxedo\Database\Query\Parser\StatementParserResult;
+use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\BooleanColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\EnumerationColumn;
@@ -103,7 +105,7 @@ class MysqlDialect implements DialectInterface
         return (bool) $value;
     }
 
-    public function compileAlterTable(
+    public function alterTable(
         string $table,
         array $operations,
     ): array {
@@ -245,18 +247,46 @@ class MysqlDialect implements DialectInterface
         $statements = [];
 
         if ($clauses !== []) {
-            $statements[] = \sprintf(
-                'ALTER TABLE %s %s',
-                $tableId,
-                \join(', ', $clauses),
+            $statements[] = new StatementParserResult(
+                sql: \sprintf(
+                    'ALTER TABLE %s %s',
+                    $tableId,
+                    \join(', ', $clauses),
+                ),
             );
         }
 
         foreach ($extra as $statement) {
-            $statements[] = $statement;
+            $statements[] = new StatementParserResult(
+                sql: $statement,
+            );
         }
 
         return $statements;
+    }
+
+    public function tableExists(
+        string $table,
+    ): StatementParserResultInterface {
+        return new StatementParserResult(
+            sql: 'SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = :table)',
+            parameters: [
+                'table' => $table,
+            ],
+        );
+    }
+
+    public function columnExists(
+        string $table,
+        string $column,
+    ): StatementParserResultInterface {
+        return new StatementParserResult(
+            sql: 'SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = :table AND column_name = :column)',
+            parameters: [
+                'table' => $table,
+                'column' => $column,
+            ],
+        );
     }
 
     /**

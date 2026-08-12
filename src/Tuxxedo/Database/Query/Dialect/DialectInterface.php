@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Dialect;
 
+use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AlterOperationInterface;
 use Tuxxedo\Database\SqlException;
@@ -53,12 +54,27 @@ interface DialectInterface
 
     /**
      * @param list<AlterOperationInterface> $operations
-     * @return list<string>
+     * @return list<StatementParserResultInterface>
      *
      * @throws SqlException
      */
-    public function compileAlterTable(
+    public function alterTable(
         string $table,
         array $operations,
     ): array;
+
+    /**
+     * @throws SqlException
+     */
+    public function tableExists(
+        string $table,
+    ): StatementParserResultInterface;
+
+    /**
+     * @throws SqlException
+     */
+    public function columnExists(
+        string $table,
+        string $column,
+    ): StatementParserResultInterface;
 }

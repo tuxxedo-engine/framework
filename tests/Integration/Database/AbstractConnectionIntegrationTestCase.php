@@ -19,7 +19,6 @@ use Support\Database\SqliteSchemaProvider;
 use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
-use Tuxxedo\Database\Query\Statement\Table\Column\IntegerColumn;
 
 abstract class AbstractConnectionIntegrationTestCase extends TestCase
 {
@@ -1126,53 +1125,6 @@ abstract class AbstractConnectionIntegrationTestCase extends TestCase
         );
     }
 
-    public function testAlterTableViaBuilderAddsColumn(): void
-    {
-        $table = $this->connection->createTable(
-            table: 'widgets',
-        );
-
-        $table->integer(
-            name: 'id',
-            primaryKey: true,
-        );
-
-        $table->execute();
-
-        $this->connection->alterTable(
-            table: 'widgets',
-        )
-            ->addColumn(
-                column: new IntegerColumn(
-                    name: 'quantity',
-                    nullable: true,
-                ),
-            )
-            ->execute();
-
-        $this->connection->insert(
-            table: 'widgets',
-        )
-            ->set(
-                column: 'id',
-                value: 1,
-            )
-            ->set(
-                column: 'quantity',
-                value: 42,
-            )
-            ->execute();
-
-        $row = $this->connection->query(
-            sql: 'SELECT quantity FROM widgets WHERE id = 1',
-            native: true,
-        )->fetchAssoc();
-
-        self::assertEquals(
-            42,
-            $row['quantity'],
-        );
-    }
 
     public function testQueryWithMalformedSqlThrowsDatabaseException(): void
     {

@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Support\Database;
 
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
+use Tuxxedo\Database\Query\Parser\StatementParserResult;
+use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AlterOperationInterface;
 
@@ -24,17 +26,23 @@ class StubDialect implements DialectInterface
      */
     public private(set) array $quotations;
 
-    public ?string $compileAlterTableTable = null;
+    public ?string $alterTableTable = null;
 
     /**
      * @var list<AlterOperationInterface>
      */
-    public array $compileAlterTableOperations = [];
+    public array $alterTableOperations = [];
 
     /**
-     * @var list<string>
+     * @var list<StatementParserResultInterface>
      */
-    public array $compileAlterTableResult = [];
+    public array $alterTableResult = [];
+
+    public ?string $tableExistsTable = null;
+
+    public ?string $columnExistsTable = null;
+
+    public ?string $columnExistsColumn = null;
 
     /**
      * @param list<string> $quotations
@@ -89,13 +97,42 @@ class StubDialect implements DialectInterface
         return (bool) $value;
     }
 
-    public function compileAlterTable(
+    public function alterTable(
         string $table,
         array $operations,
     ): array {
-        $this->compileAlterTableTable = $table;
-        $this->compileAlterTableOperations = $operations;
+        $this->alterTableTable = $table;
+        $this->alterTableOperations = $operations;
 
-        return $this->compileAlterTableResult;
+        return $this->alterTableResult;
+    }
+
+    public function tableExists(
+        string $table,
+    ): StatementParserResultInterface {
+        $this->tableExistsTable = $table;
+
+        return new StatementParserResult(
+            sql: 'SELECT 1',
+            parameters: [
+                'table' => $table,
+            ],
+        );
+    }
+
+    public function columnExists(
+        string $table,
+        string $column,
+    ): StatementParserResultInterface {
+        $this->columnExistsTable = $table;
+        $this->columnExistsColumn = $column;
+
+        return new StatementParserResult(
+            sql: 'SELECT 1',
+            parameters: [
+                'table' => $table,
+                'column' => $column,
+            ],
+        );
     }
 }

@@ -18,6 +18,7 @@ use Support\Database\StubConnection;
 use Support\Database\StubDialect;
 use Support\Database\StubResultSet;
 use Tuxxedo\Database\DatabaseException;
+use Tuxxedo\Database\Query\Parser\StatementParserResult;
 use Tuxxedo\Database\Query\Statement\Table\AlterTableStatement;
 use Tuxxedo\Database\Query\Statement\Table\Column\IntegerColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\VarcharColumn;
@@ -429,9 +430,13 @@ class AlterTableStatementTest extends TestCase
 
     public function testGenerateStatementsDelegatesToDialect(): void
     {
+        $expected = new StatementParserResult(
+            sql: 'ALTER TABLE "widgets" DROP COLUMN "legacy"',
+        );
+
         $dialect = new StubDialect();
-        $dialect->compileAlterTableResult = [
-            'ALTER TABLE "widgets" DROP COLUMN "legacy"',
+        $dialect->alterTableResult = [
+            $expected,
         ];
 
         $statement = new AlterTableStatement(
@@ -448,20 +453,24 @@ class AlterTableStatementTest extends TestCase
 
         self::assertSame(
             [
-                'ALTER TABLE "widgets" DROP COLUMN "legacy"',
+                $expected,
             ],
             $result,
         );
-        self::assertSame('widgets', $dialect->compileAlterTableTable);
-        self::assertSame($statement->operations, $dialect->compileAlterTableOperations);
+        self::assertSame('widgets', $dialect->alterTableTable);
+        self::assertSame($statement->operations, $dialect->alterTableOperations);
     }
 
     public function testCompileReturnsSemicolonJoinedSql(): void
     {
         $dialect = new StubDialect();
-        $dialect->compileAlterTableResult = [
-            'ALTER TABLE "widgets" ADD COLUMN "quantity" INTEGER',
-            'ALTER TABLE "widgets" DROP COLUMN "legacy"',
+        $dialect->alterTableResult = [
+            new StatementParserResult(
+                sql: 'ALTER TABLE "widgets" ADD COLUMN "quantity" INTEGER',
+            ),
+            new StatementParserResult(
+                sql: 'ALTER TABLE "widgets" DROP COLUMN "legacy"',
+            ),
         ];
 
         $connection = new StubConnection(
@@ -494,8 +503,10 @@ class AlterTableStatementTest extends TestCase
     public function testCompileUsesExplicitConnectionArgumentWhenProvided(): void
     {
         $dialect = new StubDialect();
-        $dialect->compileAlterTableResult = [
-            'ALTER TABLE "widgets" DROP COLUMN "legacy"',
+        $dialect->alterTableResult = [
+            new StatementParserResult(
+                sql: 'ALTER TABLE "widgets" DROP COLUMN "legacy"',
+            ),
         ];
 
         $connection = new StubConnection(
@@ -538,9 +549,13 @@ class AlterTableStatementTest extends TestCase
     public function testExecuteQueriesConnectionOncePerStatement(): void
     {
         $dialect = new StubDialect();
-        $dialect->compileAlterTableResult = [
-            'ALTER TABLE "widgets" ADD COLUMN "quantity" INTEGER',
-            'ALTER TABLE "widgets" DROP COLUMN "legacy"',
+        $dialect->alterTableResult = [
+            new StatementParserResult(
+                sql: 'ALTER TABLE "widgets" ADD COLUMN "quantity" INTEGER',
+            ),
+            new StatementParserResult(
+                sql: 'ALTER TABLE "widgets" DROP COLUMN "legacy"',
+            ),
         ];
 
         $connection = new StubConnection(

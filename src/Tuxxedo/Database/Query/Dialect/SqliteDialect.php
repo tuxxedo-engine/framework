@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Dialect;
 
+use Tuxxedo\Database\Query\Parser\StatementParserResult;
+use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\BooleanColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddColumn;
@@ -78,7 +80,7 @@ class SqliteDialect implements DialectInterface
         return (bool) $value;
     }
 
-    public function compileAlterTable(
+    public function alterTable(
         string $table,
         array $operations,
     ): array {
@@ -91,41 +93,49 @@ class SqliteDialect implements DialectInterface
 
         foreach ($operations as $operation) {
             if ($operation instanceof AddColumn) {
-                $statements[] = \sprintf(
-                    'ALTER TABLE %s ADD COLUMN %s',
-                    $tableId,
-                    $operation->column->toSql($this),
+                $statements[] = new StatementParserResult(
+                    sql: \sprintf(
+                        'ALTER TABLE %s ADD COLUMN %s',
+                        $tableId,
+                        $operation->column->toSql($this),
+                    ),
                 );
 
                 continue;
             }
 
             if ($operation instanceof DropColumn) {
-                $statements[] = \sprintf(
-                    'ALTER TABLE %s DROP COLUMN %s',
-                    $tableId,
-                    $this->identifier($operation->name),
+                $statements[] = new StatementParserResult(
+                    sql: \sprintf(
+                        'ALTER TABLE %s DROP COLUMN %s',
+                        $tableId,
+                        $this->identifier($operation->name),
+                    ),
                 );
 
                 continue;
             }
 
             if ($operation instanceof RenameColumn) {
-                $statements[] = \sprintf(
-                    'ALTER TABLE %s RENAME COLUMN %s TO %s',
-                    $tableId,
-                    $this->identifier($operation->from),
-                    $this->identifier($operation->to),
+                $statements[] = new StatementParserResult(
+                    sql: \sprintf(
+                        'ALTER TABLE %s RENAME COLUMN %s TO %s',
+                        $tableId,
+                        $this->identifier($operation->from),
+                        $this->identifier($operation->to),
+                    ),
                 );
 
                 continue;
             }
 
             if ($operation instanceof RenameTable) {
-                $statements[] = \sprintf(
-                    'ALTER TABLE %s RENAME TO %s',
-                    $tableId,
-                    $this->identifier($operation->newName),
+                $statements[] = new StatementParserResult(
+                    sql: \sprintf(
+                        'ALTER TABLE %s RENAME TO %s',
+                        $tableId,
+                        $this->identifier($operation->newName),
+                    ),
                 );
 
                 continue;
@@ -138,5 +148,29 @@ class SqliteDialect implements DialectInterface
         }
 
         return $statements;
+    }
+
+    public function tableExists(
+        string $table,
+    ): StatementParserResultInterface {
+        return new StatementParserResult(
+            sql: 'SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = \'table\' AND name = :table)',
+            parameters: [
+                'table' => $table,
+            ],
+        );
+    }
+
+    public function columnExists(
+        string $table,
+        string $column,
+    ): StatementParserResultInterface {
+        return new StatementParserResult(
+            sql: 'SELECT EXISTS(SELECT 1 FROM pragma_table_info(:table) WHERE name = :column)',
+            parameters: [
+                'table' => $table,
+                'column' => $column,
+            ],
+        );
     }
 }

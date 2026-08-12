@@ -27,8 +27,10 @@ use Tuxxedo\Database\Query\Statement\InsertBulkStatementInterface;
 use Tuxxedo\Database\Query\Statement\InsertStatementInterface;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\AlterTableStatementInterface;
+use Tuxxedo\Database\Query\Statement\Table\ColumnExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\DropTableStatementInterface;
+use Tuxxedo\Database\Query\Statement\Table\TableExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\UpdateStatementInterface;
 
 class StubConnection implements ConnectionInterface
@@ -238,5 +240,18 @@ class StubConnection implements ConnectionInterface
         string $table,
     ): DropTableStatementInterface {
         throw new \LogicException('StubConnection: dropTable not implemented');
+    }
+
+    public function tableExists(
+        string $table,
+    ): TableExistsStatementInterface {
+        throw new \LogicException('StubConnection: tableExists not implemented');
+    }
+
+    public function columnExists(
+        string $table,
+        string $column,
+    ): ColumnExistsStatementInterface {
+        throw new \LogicException('StubConnection: columnExists not implemented');
     }
 }

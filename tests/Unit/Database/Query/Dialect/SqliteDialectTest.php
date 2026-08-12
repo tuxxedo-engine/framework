@@ -16,6 +16,7 @@ namespace Unit\Database\Query\Dialect;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Database\Query\Dialect\SqliteDialect;
+use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\IntegerColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\VarcharColumn;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddColumn;
@@ -35,6 +36,22 @@ use Tuxxedo\Database\SqlException;
 
 class SqliteDialectTest extends TestCase
 {
+    /**
+     * @param list<StatementParserResultInterface> $results
+     * @return list<string>
+     */
+    private static function sqlOf(
+        array $results,
+    ): array {
+        $sql = [];
+
+        foreach ($results as $result) {
+            $sql[] = $result->sql;
+        }
+
+        return $sql;
+    }
+
     /**
      * @return \Generator<array{0: mixed}>
      */
@@ -101,7 +118,7 @@ class SqliteDialectTest extends TestCase
     {
         self::assertSame(
             [],
-            (new SqliteDialect())->compileAlterTable(
+            (new SqliteDialect())->alterTable(
                 table: 'widgets',
                 operations: [],
             ),
@@ -110,7 +127,7 @@ class SqliteDialectTest extends TestCase
 
     public function testCompileAlterTableAddColumn(): void
     {
-        $sql = (new SqliteDialect())->compileAlterTable(
+        $sql = (new SqliteDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new AddColumn(
@@ -125,13 +142,13 @@ class SqliteDialectTest extends TestCase
             [
                 'ALTER TABLE "widgets" ADD COLUMN "quantity" INTEGER NOT NULL',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableDropColumn(): void
     {
-        $sql = (new SqliteDialect())->compileAlterTable(
+        $sql = (new SqliteDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new DropColumn(
@@ -144,13 +161,13 @@ class SqliteDialectTest extends TestCase
             [
                 'ALTER TABLE "widgets" DROP COLUMN "legacy"',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableRenameColumn(): void
     {
-        $sql = (new SqliteDialect())->compileAlterTable(
+        $sql = (new SqliteDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new RenameColumn(
@@ -164,13 +181,13 @@ class SqliteDialectTest extends TestCase
             [
                 'ALTER TABLE "widgets" RENAME COLUMN "name" TO "title"',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableRenameTable(): void
     {
-        $sql = (new SqliteDialect())->compileAlterTable(
+        $sql = (new SqliteDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new RenameTable(
@@ -183,14 +200,14 @@ class SqliteDialectTest extends TestCase
             [
                 'ALTER TABLE "widgets" RENAME TO "gadgets"',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableChangeColumnThrows(): void
     {
         try {
-            (new SqliteDialect())->compileAlterTable(
+            (new SqliteDialect())->alterTable(
                 table: 'widgets',
                 operations: [
                     new ChangeColumn(
@@ -211,7 +228,7 @@ class SqliteDialectTest extends TestCase
     public function testCompileAlterTableAddIndexThrows(): void
     {
         try {
-            (new SqliteDialect())->compileAlterTable(
+            (new SqliteDialect())->alterTable(
                 table: 'widgets',
                 operations: [
                     new AddIndex(
@@ -231,7 +248,7 @@ class SqliteDialectTest extends TestCase
     public function testCompileAlterTableDropIndexThrows(): void
     {
         try {
-            (new SqliteDialect())->compileAlterTable(
+            (new SqliteDialect())->alterTable(
                 table: 'widgets',
                 operations: [
                     new DropIndex(
@@ -249,7 +266,7 @@ class SqliteDialectTest extends TestCase
     public function testCompileAlterTableAddUniqueThrows(): void
     {
         try {
-            (new SqliteDialect())->compileAlterTable(
+            (new SqliteDialect())->alterTable(
                 table: 'widgets',
                 operations: [
                     new AddUnique(
@@ -269,7 +286,7 @@ class SqliteDialectTest extends TestCase
     public function testCompileAlterTableDropUniqueThrows(): void
     {
         try {
-            (new SqliteDialect())->compileAlterTable(
+            (new SqliteDialect())->alterTable(
                 table: 'widgets',
                 operations: [
                     new DropUnique(
@@ -287,7 +304,7 @@ class SqliteDialectTest extends TestCase
     public function testCompileAlterTableAddForeignKeyThrows(): void
     {
         try {
-            (new SqliteDialect())->compileAlterTable(
+            (new SqliteDialect())->alterTable(
                 table: 'widgets',
                 operations: [
                     new AddForeignKey(
@@ -311,7 +328,7 @@ class SqliteDialectTest extends TestCase
     public function testCompileAlterTableDropForeignKeyThrows(): void
     {
         try {
-            (new SqliteDialect())->compileAlterTable(
+            (new SqliteDialect())->alterTable(
                 table: 'widgets',
                 operations: [
                     new DropForeignKey(
@@ -329,7 +346,7 @@ class SqliteDialectTest extends TestCase
     public function testCompileAlterTableAddPrimaryKeyThrows(): void
     {
         try {
-            (new SqliteDialect())->compileAlterTable(
+            (new SqliteDialect())->alterTable(
                 table: 'widgets',
                 operations: [
                     new AddPrimaryKey(
@@ -349,7 +366,7 @@ class SqliteDialectTest extends TestCase
     public function testCompileAlterTableDropPrimaryKeyThrows(): void
     {
         try {
-            (new SqliteDialect())->compileAlterTable(
+            (new SqliteDialect())->alterTable(
                 table: 'widgets',
                 operations: [
                     new DropPrimaryKey(),
@@ -360,5 +377,43 @@ class SqliteDialectTest extends TestCase
         } catch (SqlException $exception) {
             self::assertStringContainsString('DropPrimaryKey', $exception->getMessage());
         }
+    }
+
+    public function testTableExistsBuildsSqliteMasterQuery(): void
+    {
+        $result = (new SqliteDialect())->tableExists(
+            table: 'widgets',
+        );
+
+        self::assertSame(
+            'SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = \'table\' AND name = :table)',
+            $result->sql,
+        );
+        self::assertSame(
+            [
+                'table' => 'widgets',
+            ],
+            $result->parameters,
+        );
+    }
+
+    public function testColumnExistsBuildsPragmaTableInfoQuery(): void
+    {
+        $result = (new SqliteDialect())->columnExists(
+            table: 'widgets',
+            column: 'quantity',
+        );
+
+        self::assertSame(
+            'SELECT EXISTS(SELECT 1 FROM pragma_table_info(:table) WHERE name = :column)',
+            $result->sql,
+        );
+        self::assertSame(
+            [
+                'table' => 'widgets',
+                'column' => 'quantity',
+            ],
+            $result->parameters,
+        );
     }
 }

@@ -25,6 +25,14 @@ class StubResultSet implements ResultSetInterface
         }
     }
 
+    /**
+     * @param array<int, mixed> $firstRow
+     */
+    public function __construct(
+        private readonly array $firstRow = [],
+    ) {
+    }
+
     public function fetchAll(
         string|\Closure $class = ResultRowInterface::class,
         ?HydratorInterface $hydrator = null,
@@ -51,7 +59,7 @@ class StubResultSet implements ResultSetInterface
 
     public function fetchRow(): array
     {
-        return [];
+        return $this->firstRow;
     }
 
     public function count(): int

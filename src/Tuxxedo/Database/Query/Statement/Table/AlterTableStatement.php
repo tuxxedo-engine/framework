@@ -200,11 +200,14 @@ class AlterTableStatement implements AlterTableStatementInterface
     ): StatementParserResultInterface {
         $resolvedConnection = $this->resolveConnection($connection);
 
+        $sqlFragments = [];
+
+        foreach ($this->generateStatements($resolvedConnection->dialect) as $result) {
+            $sqlFragments[] = $result->sql;
+        }
+
         return new StatementParserResult(
-            sql: \implode(
-                ";\n",
-                $this->generateStatements($resolvedConnection->dialect),
-            ),
+            sql: \implode(";\n", $sqlFragments),
         );
     }
 
@@ -216,9 +219,10 @@ class AlterTableStatement implements AlterTableStatementInterface
 
         $lastResult = null;
 
-        foreach ($statements as $sql) {
+        foreach ($statements as $result) {
             $lastResult = $resolvedConnection->query(
-                sql: $sql,
+                sql: $result->sql,
+                parameters: $result->parameters,
                 native: true,
             );
         }
@@ -234,12 +238,12 @@ class AlterTableStatement implements AlterTableStatementInterface
     }
 
     /**
-     * @return list<string>
+     * @return list<StatementParserResultInterface>
      */
     public function generateStatements(
         DialectInterface $dialect,
     ): array {
-        return $dialect->compileAlterTable(
+        return $dialect->alterTable(
             table: $this->table,
             operations: $this->operations,
         );

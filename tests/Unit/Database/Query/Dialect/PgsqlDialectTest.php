@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Dialect\PgsqlDialect;
+use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\BooleanColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\IntegerColumn;
@@ -40,6 +41,22 @@ use Tuxxedo\Database\SqlException;
 
 class PgsqlDialectTest extends TestCase
 {
+    /**
+     * @param list<StatementParserResultInterface> $results
+     * @return list<string>
+     */
+    private static function sqlOf(
+        array $results,
+    ): array {
+        $sql = [];
+
+        foreach ($results as $result) {
+            $sql[] = $result->sql;
+        }
+
+        return $sql;
+    }
+
     /**
      * @return \Generator<array{0: mixed}>
      */
@@ -114,7 +131,7 @@ class PgsqlDialectTest extends TestCase
     {
         self::assertSame(
             [],
-            (new PgsqlDialect())->compileAlterTable(
+            (new PgsqlDialect())->alterTable(
                 table: 'widgets',
                 operations: [],
             ),
@@ -123,7 +140,7 @@ class PgsqlDialectTest extends TestCase
 
     public function testCompileAlterTableAddColumn(): void
     {
-        $sql = (new PgsqlDialect())->compileAlterTable(
+        $sql = (new PgsqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new AddColumn(
@@ -138,13 +155,13 @@ class PgsqlDialectTest extends TestCase
             [
                 'ALTER TABLE "widgets" ADD COLUMN "quantity" INTEGER NOT NULL',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableDropColumn(): void
     {
-        $sql = (new PgsqlDialect())->compileAlterTable(
+        $sql = (new PgsqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new DropColumn(
@@ -158,13 +175,13 @@ class PgsqlDialectTest extends TestCase
             [
                 'ALTER TABLE "widgets" DROP COLUMN IF EXISTS "legacy"',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableRenameColumn(): void
     {
-        $sql = (new PgsqlDialect())->compileAlterTable(
+        $sql = (new PgsqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new RenameColumn(
@@ -178,13 +195,13 @@ class PgsqlDialectTest extends TestCase
             [
                 'ALTER TABLE "widgets" RENAME COLUMN "name" TO "title"',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableChangeColumnDecomposesToThreeStatements(): void
     {
-        $sql = (new PgsqlDialect())->compileAlterTable(
+        $sql = (new PgsqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new ChangeColumn(
@@ -202,13 +219,13 @@ class PgsqlDialectTest extends TestCase
                 'ALTER TABLE "widgets" ALTER COLUMN "label" SET NOT NULL',
                 'ALTER TABLE "widgets" ALTER COLUMN "label" DROP DEFAULT',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableChangeColumnNullableSetsDropNotNull(): void
     {
-        $sql = (new PgsqlDialect())->compileAlterTable(
+        $sql = (new PgsqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new ChangeColumn(
@@ -227,13 +244,13 @@ class PgsqlDialectTest extends TestCase
                 'ALTER TABLE "widgets" ALTER COLUMN "label" DROP NOT NULL',
                 'ALTER TABLE "widgets" ALTER COLUMN "label" DROP DEFAULT',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableChangeColumnWithDefault(): void
     {
-        $sql = (new PgsqlDialect())->compileAlterTable(
+        $sql = (new PgsqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new ChangeColumn(
@@ -251,13 +268,13 @@ class PgsqlDialectTest extends TestCase
                 'ALTER TABLE "widgets" ALTER COLUMN "quantity" SET NOT NULL',
                 'ALTER TABLE "widgets" ALTER COLUMN "quantity" SET DEFAULT 0',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableChangeColumnWithUsingExpression(): void
     {
-        $sql = (new PgsqlDialect())->compileAlterTable(
+        $sql = (new PgsqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new ChangeColumn(
@@ -275,13 +292,13 @@ class PgsqlDialectTest extends TestCase
                 'ALTER TABLE "widgets" ALTER COLUMN "quantity" SET NOT NULL',
                 'ALTER TABLE "widgets" ALTER COLUMN "quantity" DROP DEFAULT',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableRenameTable(): void
     {
-        $sql = (new PgsqlDialect())->compileAlterTable(
+        $sql = (new PgsqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new RenameTable(
@@ -294,13 +311,13 @@ class PgsqlDialectTest extends TestCase
             [
                 'ALTER TABLE "widgets" RENAME TO "gadgets"',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableAddIndexGeneratesDefaultName(): void
     {
-        $sql = (new PgsqlDialect())->compileAlterTable(
+        $sql = (new PgsqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new AddIndex(
@@ -315,13 +332,13 @@ class PgsqlDialectTest extends TestCase
             [
                 'CREATE INDEX "widgets_category_idx" ON "widgets" ("category")',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableDropIndex(): void
     {
-        $sql = (new PgsqlDialect())->compileAlterTable(
+        $sql = (new PgsqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new DropIndex(
@@ -334,13 +351,13 @@ class PgsqlDialectTest extends TestCase
             [
                 'DROP INDEX "category_idx"',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableAddUnique(): void
     {
-        $sql = (new PgsqlDialect())->compileAlterTable(
+        $sql = (new PgsqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new AddUnique(
@@ -356,13 +373,13 @@ class PgsqlDialectTest extends TestCase
             [
                 'ALTER TABLE "widgets" ADD CONSTRAINT "sku_unq" UNIQUE ("sku")',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableDropUnique(): void
     {
-        $sql = (new PgsqlDialect())->compileAlterTable(
+        $sql = (new PgsqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new DropUnique(
@@ -375,13 +392,13 @@ class PgsqlDialectTest extends TestCase
             [
                 'ALTER TABLE "widgets" DROP CONSTRAINT "sku_unq"',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableAddForeignKey(): void
     {
-        $sql = (new PgsqlDialect())->compileAlterTable(
+        $sql = (new PgsqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new AddForeignKey(
@@ -402,13 +419,13 @@ class PgsqlDialectTest extends TestCase
             [
                 'ALTER TABLE "widgets" ADD CONSTRAINT "widgets_owner_fk" FOREIGN KEY ("owner_id") REFERENCES "users" ("id") ON DELETE CASCADE',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableDropForeignKey(): void
     {
-        $sql = (new PgsqlDialect())->compileAlterTable(
+        $sql = (new PgsqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new DropForeignKey(
@@ -421,13 +438,13 @@ class PgsqlDialectTest extends TestCase
             [
                 'ALTER TABLE "widgets" DROP CONSTRAINT "widgets_owner_fk"',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableAddPrimaryKey(): void
     {
-        $sql = (new PgsqlDialect())->compileAlterTable(
+        $sql = (new PgsqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new AddPrimaryKey(
@@ -443,13 +460,13 @@ class PgsqlDialectTest extends TestCase
             [
                 'ALTER TABLE "widgets" ADD PRIMARY KEY ("tenant_id", "id")',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableDropPrimaryKey(): void
     {
-        $sql = (new PgsqlDialect())->compileAlterTable(
+        $sql = (new PgsqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new DropPrimaryKey(),
@@ -460,13 +477,13 @@ class PgsqlDialectTest extends TestCase
             [
                 'ALTER TABLE "widgets" DROP CONSTRAINT "widgets_pkey"',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableEmitsOneStatementPerOperation(): void
     {
-        $sql = (new PgsqlDialect())->compileAlterTable(
+        $sql = (new PgsqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new AddColumn(
@@ -485,13 +502,13 @@ class PgsqlDialectTest extends TestCase
                 'ALTER TABLE "widgets" ADD COLUMN "quantity" INTEGER NOT NULL',
                 'ALTER TABLE "widgets" DROP COLUMN "legacy"',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableAddForeignKeyEmitsOnUpdate(): void
     {
-        $sql = (new PgsqlDialect())->compileAlterTable(
+        $sql = (new PgsqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new AddForeignKey(
@@ -512,13 +529,13 @@ class PgsqlDialectTest extends TestCase
             [
                 'ALTER TABLE "widgets" ADD CONSTRAINT "widgets_owner_fk" FOREIGN KEY ("owner_id") REFERENCES "users" ("id") ON UPDATE RESTRICT',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableAddUniqueGeneratesDefaultName(): void
     {
-        $sql = (new PgsqlDialect())->compileAlterTable(
+        $sql = (new PgsqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new AddUnique(
@@ -533,13 +550,13 @@ class PgsqlDialectTest extends TestCase
             [
                 'ALTER TABLE "widgets" ADD CONSTRAINT "widgets_sku_unq" UNIQUE ("sku")',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableAddForeignKeyGeneratesDefaultName(): void
     {
-        $sql = (new PgsqlDialect())->compileAlterTable(
+        $sql = (new PgsqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new AddForeignKey(
@@ -558,13 +575,13 @@ class PgsqlDialectTest extends TestCase
             [
                 'ALTER TABLE "widgets" ADD CONSTRAINT "widgets_owner_id_fk" FOREIGN KEY ("owner_id") REFERENCES "users" ("id")',
             ],
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableChangeColumnRendersBooleanTrueDefault(): void
     {
-        $sql = (new PgsqlDialect())->compileAlterTable(
+        $sql = (new PgsqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new ChangeColumn(
@@ -578,13 +595,13 @@ class PgsqlDialectTest extends TestCase
 
         self::assertContains(
             'ALTER TABLE "widgets" ALTER COLUMN "active" SET DEFAULT TRUE',
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableChangeColumnRendersBooleanFalseDefault(): void
     {
-        $sql = (new PgsqlDialect())->compileAlterTable(
+        $sql = (new PgsqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new ChangeColumn(
@@ -598,13 +615,13 @@ class PgsqlDialectTest extends TestCase
 
         self::assertContains(
             'ALTER TABLE "widgets" ALTER COLUMN "active" SET DEFAULT FALSE',
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
     public function testCompileAlterTableChangeColumnRendersStringDefaultEscaped(): void
     {
-        $sql = (new PgsqlDialect())->compileAlterTable(
+        $sql = (new PgsqlDialect())->alterTable(
             table: 'widgets',
             operations: [
                 new ChangeColumn(
@@ -619,7 +636,7 @@ class PgsqlDialectTest extends TestCase
 
         self::assertContains(
             'ALTER TABLE "widgets" ALTER COLUMN "label" SET DEFAULT \'hello\'\'world\'',
-            $sql,
+            self::sqlOf($sql),
         );
     }
 
@@ -640,7 +657,7 @@ class PgsqlDialectTest extends TestCase
         };
 
         try {
-            (new PgsqlDialect())->compileAlterTable(
+            (new PgsqlDialect())->alterTable(
                 table: 'widgets',
                 operations: [
                     new ChangeColumn(
@@ -661,7 +678,7 @@ class PgsqlDialectTest extends TestCase
         };
 
         try {
-            (new PgsqlDialect())->compileAlterTable(
+            (new PgsqlDialect())->alterTable(
                 table: 'widgets',
                 operations: [
                     $operation,
@@ -672,5 +689,43 @@ class PgsqlDialectTest extends TestCase
         } catch (SqlException $exception) {
             self::assertStringContainsString('PgsqlDialect', $exception->getMessage());
         }
+    }
+
+    public function testTableExistsBuildsInformationSchemaQuery(): void
+    {
+        $result = (new PgsqlDialect())->tableExists(
+            table: 'widgets',
+        );
+
+        self::assertSame(
+            'SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = :table)',
+            $result->sql,
+        );
+        self::assertSame(
+            [
+                'table' => 'widgets',
+            ],
+            $result->parameters,
+        );
+    }
+
+    public function testColumnExistsBuildsInformationSchemaQuery(): void
+    {
+        $result = (new PgsqlDialect())->columnExists(
+            table: 'widgets',
+            column: 'quantity',
+        );
+
+        self::assertSame(
+            'SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = :table AND column_name = :column)',
+            $result->sql,
+        );
+        self::assertSame(
+            [
+                'table' => 'widgets',
+                'column' => 'quantity',
+            ],
+            $result->parameters,
+        );
     }
 }
