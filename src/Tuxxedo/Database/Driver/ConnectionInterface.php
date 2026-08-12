@@ -199,4 +199,12 @@ interface ConnectionInterface
     public function dropTable(
         string $table,
     ): DropTableStatementInterface;
+
+    // @todo Support listTables
+    // @todo Support listDatabases
+    // @todo Support describeTale
+    // @todo Support listIndexes
+    // @todo Support listForeignKeys
+    // @todo Support tableExists
+    // @todo Support columnExists
 }
