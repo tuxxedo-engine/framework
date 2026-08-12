@@ -289,6 +289,20 @@ class MysqlDialect implements DialectInterface
         );
     }
 
+    public function listDatabases(): StatementParserResultInterface
+    {
+        return new StatementParserResult(
+            sql: 'SELECT schema_name FROM information_schema.schemata ORDER BY schema_name',
+        );
+    }
+
+    public function listTables(): StatementParserResultInterface
+    {
+        return new StatementParserResult(
+            sql: 'SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() ORDER BY table_name',
+        );
+    }
+
     /**
      * @param list<string> $columns
      */

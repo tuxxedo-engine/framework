@@ -77,4 +77,14 @@ interface DialectInterface
         string $table,
         string $column,
     ): StatementParserResultInterface;
+
+    /**
+     * @throws SqlException
+     */
+    public function listDatabases(): StatementParserResultInterface;
+
+    /**
+     * @throws SqlException
+     */
+    public function listTables(): StatementParserResultInterface;
 }

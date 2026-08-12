@@ -728,4 +728,32 @@ class PgsqlDialectTest extends TestCase
             $result->parameters,
         );
     }
+
+    public function testListDatabasesBuildsPgDatabaseQuery(): void
+    {
+        $result = (new PgsqlDialect())->listDatabases();
+
+        self::assertSame(
+            'SELECT datname FROM pg_database WHERE NOT datistemplate ORDER BY datname',
+            $result->sql,
+        );
+        self::assertSame(
+            [],
+            $result->parameters,
+        );
+    }
+
+    public function testListTablesBuildsPgTablesQuery(): void
+    {
+        $result = (new PgsqlDialect())->listTables();
+
+        self::assertSame(
+            'SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = current_schema() ORDER BY tablename',
+            $result->sql,
+        );
+        self::assertSame(
+            [],
+            $result->parameters,
+        );
+    }
 }

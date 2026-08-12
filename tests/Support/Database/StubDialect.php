@@ -44,6 +44,10 @@ class StubDialect implements DialectInterface
 
     public ?string $columnExistsColumn = null;
 
+    public int $listDatabasesCalls = 0;
+
+    public int $listTablesCalls = 0;
+
     /**
      * @param list<string> $quotations
      */
@@ -133,6 +137,24 @@ class StubDialect implements DialectInterface
                 'table' => $table,
                 'column' => $column,
             ],
+        );
+    }
+
+    public function listDatabases(): StatementParserResultInterface
+    {
+        $this->listDatabasesCalls++;
+
+        return new StatementParserResult(
+            sql: 'SELECT database_name',
+        );
+    }
+
+    public function listTables(): StatementParserResultInterface
+    {
+        $this->listTablesCalls++;
+
+        return new StatementParserResult(
+            sql: 'SELECT table_name',
         );
     }
 }

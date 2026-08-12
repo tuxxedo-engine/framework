@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Statement\Table\Operation;
 
+// @todo After/Before support for some column like operations?
 interface AlterOperationInterface
 {
 }

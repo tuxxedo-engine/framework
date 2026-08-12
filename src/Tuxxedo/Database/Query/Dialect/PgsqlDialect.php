@@ -336,6 +336,20 @@ class PgsqlDialect implements DialectInterface
         );
     }
 
+    public function listDatabases(): StatementParserResultInterface
+    {
+        return new StatementParserResult(
+            sql: 'SELECT datname FROM pg_database WHERE NOT datistemplate ORDER BY datname',
+        );
+    }
+
+    public function listTables(): StatementParserResultInterface
+    {
+        return new StatementParserResult(
+            sql: 'SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = current_schema() ORDER BY tablename',
+        );
+    }
+
     /**
      * @return list<string>
      *

@@ -591,4 +591,32 @@ class MysqlDialectTest extends TestCase
             $result->parameters,
         );
     }
+
+    public function testListDatabasesBuildsInformationSchemaQuery(): void
+    {
+        $result = (new MysqlDialect())->listDatabases();
+
+        self::assertSame(
+            'SELECT schema_name FROM information_schema.schemata ORDER BY schema_name',
+            $result->sql,
+        );
+        self::assertSame(
+            [],
+            $result->parameters,
+        );
+    }
+
+    public function testListTablesBuildsInformationSchemaQuery(): void
+    {
+        $result = (new MysqlDialect())->listTables();
+
+        self::assertSame(
+            'SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() ORDER BY table_name',
+            $result->sql,
+        );
+        self::assertSame(
+            [],
+            $result->parameters,
+        );
+    }
 }

@@ -173,4 +173,18 @@ class SqliteDialect implements DialectInterface
             ],
         );
     }
+
+    public function listDatabases(): StatementParserResultInterface
+    {
+        return new StatementParserResult(
+            sql: 'SELECT name FROM pragma_database_list ORDER BY seq',
+        );
+    }
+
+    public function listTables(): StatementParserResultInterface
+    {
+        return new StatementParserResult(
+            sql: 'SELECT name FROM sqlite_master WHERE type = \'table\' AND name NOT LIKE \'sqlite_%\' ORDER BY name',
+        );
+    }
 }

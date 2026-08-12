@@ -416,4 +416,32 @@ class SqliteDialectTest extends TestCase
             $result->parameters,
         );
     }
+
+    public function testListDatabasesBuildsPragmaDatabaseListQuery(): void
+    {
+        $result = (new SqliteDialect())->listDatabases();
+
+        self::assertSame(
+            'SELECT name FROM pragma_database_list ORDER BY seq',
+            $result->sql,
+        );
+        self::assertSame(
+            [],
+            $result->parameters,
+        );
+    }
+
+    public function testListTablesBuildsSqliteMasterQuery(): void
+    {
+        $result = (new SqliteDialect())->listTables();
+
+        self::assertSame(
+            'SELECT name FROM sqlite_master WHERE type = \'table\' AND name NOT LIKE \'sqlite_%\' ORDER BY name',
+            $result->sql,
+        );
+        self::assertSame(
+            [],
+            $result->parameters,
+        );
+    }
 }

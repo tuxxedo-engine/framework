@@ -30,6 +30,8 @@ use Tuxxedo\Database\Query\Statement\Table\AlterTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\ColumnExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\DropTableStatementInterface;
+use Tuxxedo\Database\Query\Statement\Table\ListDatabasesStatementInterface;
+use Tuxxedo\Database\Query\Statement\Table\ListTablesStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\TableExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\UpdateStatementInterface;
 
@@ -253,5 +255,15 @@ class StubConnection implements ConnectionInterface
         string $column,
     ): ColumnExistsStatementInterface {
         throw new \LogicException('StubConnection: columnExists not implemented');
+    }
+
+    public function listDatabases(): ListDatabasesStatementInterface
+    {
+        throw new \LogicException('StubConnection: listDatabases not implemented');
+    }
+
+    public function listTables(): ListTablesStatementInterface
+    {
+        throw new \LogicException('StubConnection: listTables not implemented');
     }
 }

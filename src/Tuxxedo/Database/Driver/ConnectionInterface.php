@@ -29,6 +29,8 @@ use Tuxxedo\Database\Query\Statement\Table\AlterTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\ColumnExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\DropTableStatementInterface;
+use Tuxxedo\Database\Query\Statement\Table\ListDatabasesStatementInterface;
+use Tuxxedo\Database\Query\Statement\Table\ListTablesStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\TableExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\UpdateStatementInterface;
 use Tuxxedo\Database\SqlException;
@@ -214,8 +216,10 @@ interface ConnectionInterface
         string $column,
     ): ColumnExistsStatementInterface;
 
-    // @todo Support listTables
-    // @todo Support listDatabases
+    public function listDatabases(): ListDatabasesStatementInterface;
+
+    public function listTables(): ListTablesStatementInterface;
+
     // @todo Support describeTable
     // @todo Support listIndexes
     // @todo Support listForeignKeys

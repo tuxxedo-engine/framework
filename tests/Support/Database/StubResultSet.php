@@ -26,11 +26,29 @@ class StubResultSet implements ResultSetInterface
     }
 
     /**
-     * @param array<int, mixed> $firstRow
+     * @var list<array<int, mixed>>
+     */
+    private array $rows;
+
+    private int $cursor = 0;
+
+    /**
+     * @param list<array<int, mixed>> $rows
+     * @param array<int, mixed>|null $firstRow
      */
     public function __construct(
-        private readonly array $firstRow = [],
+        array $rows = [],
+        ?array $firstRow = null,
     ) {
+        if ($firstRow !== null) {
+            $this->rows = [
+                $firstRow,
+            ];
+
+            return;
+        }
+
+        $this->rows = $rows;
     }
 
     public function fetchAll(
@@ -59,12 +77,16 @@ class StubResultSet implements ResultSetInterface
 
     public function fetchRow(): array
     {
-        return $this->firstRow;
+        if ($this->cursor >= \sizeof($this->rows)) {
+            return [];
+        }
+
+        return $this->rows[$this->cursor++];
     }
 
     public function count(): int
     {
-        return 0;
+        return \sizeof($this->rows);
     }
 
     public function current(): ResultRowInterface
