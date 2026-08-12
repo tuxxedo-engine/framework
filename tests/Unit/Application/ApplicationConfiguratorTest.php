@@ -17,6 +17,7 @@ use Fixture\Application\ApplicationConfigurator\ServiceMarker;
 use PHPUnit\Framework\TestCase;
 use Support\Database\StubConnectionManager;
 use Support\Env\Source\StubEnvSource;
+use Support\File\Storage\StubStorage;
 use Support\Http\Kernel\StubDispatcher;
 use Support\Http\Request\Middleware\RecordingMiddleware;
 use Support\Http\Response\StubResponseEmitter;
@@ -31,6 +32,9 @@ use Tuxxedo\Env\Env;
 use Tuxxedo\Env\EnvInterface;
 use Tuxxedo\Event\EventsManager;
 use Tuxxedo\Event\EventsManagerInterface;
+use Tuxxedo\File\Storage\Local\Config\LocalStorageConfig;
+use Tuxxedo\File\Storage\Local\LocalStorage;
+use Tuxxedo\File\Storage\StorageInterface;
 use Tuxxedo\Http\Kernel\DispatcherInterface;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
 use Tuxxedo\Http\Kernel\KernelInterface;
@@ -478,6 +482,53 @@ class ApplicationConfiguratorTest extends TestCase
         $configurator->withDefaultConnectionManager();
 
         self::assertNull($configurator->connectionManager);
+    }
+
+    public function testWithStorageStoresInstanceAndReturnsFluentSelf(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $storage = new StubStorage();
+
+        $result = $configurator->withStorage(
+            storage: $storage,
+        );
+
+        self::assertSame($storage, $configurator->storage);
+        self::assertSame($configurator, $result);
+    }
+
+    public function testWithStorageClearsDefaultStorageState(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $configurator->withDefaultStorage();
+
+        $configurator->withStorage(
+            storage: new StubStorage(),
+        );
+
+        self::assertFalse($configurator->useDefaultStorage);
+    }
+
+    public function testWithDefaultStorageEnablesUseDefaultStorageAndReturnsFluentSelf(): void
+    {
+        $configurator = new ApplicationConfigurator();
+
+        $result = $configurator->withDefaultStorage();
+
+        self::assertTrue($configurator->useDefaultStorage);
+        self::assertSame($configurator, $result);
+    }
+
+    public function testWithDefaultStorageClearsExplicitStorage(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $configurator->withStorage(
+            storage: new StubStorage(),
+        );
+
+        $configurator->withDefaultStorage();
+
+        self::assertNull($configurator->storage);
     }
 
     public function testWithMiddlewareWrapsInstanceInClosure(): void
@@ -1541,6 +1592,63 @@ class ApplicationConfiguratorTest extends TestCase
         $container = $configurator->container;
 
         self::assertFalse($container->isBound(ConnectionManagerInterface::class));
+    }
+
+    public function testBuildRegistersStorageFromUserSuppliedInstance(): void
+    {
+        $storage = new StubStorage();
+
+        $configurator = $this->makeMinimalConfigurator()
+            ->withStorage(
+                storage: $storage,
+            );
+
+        $configurator->build();
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        self::assertTrue($container->isBound(StorageInterface::class));
+        self::assertSame(
+            $storage,
+            $container->resolve(StorageInterface::class),
+        );
+    }
+
+    public function testBuildRegistersStorageFromDefault(): void
+    {
+        $configurator = $this->makeMinimalConfigurator()
+            ->withDefaultStorage();
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        $container->singleton(
+            new LocalStorageConfig(
+                root: \sys_get_temp_dir(),
+                allowCaseInsensitiveFilesystem: true,
+            ),
+        );
+
+        $configurator->build();
+
+        self::assertTrue($container->isBound(StorageInterface::class));
+        self::assertInstanceOf(
+            LocalStorage::class,
+            $container->resolve(StorageInterface::class),
+        );
+    }
+
+    public function testBuildDoesNotRegisterStorageWhenNotConfigured(): void
+    {
+        $configurator = $this->makeMinimalConfigurator();
+
+        $configurator->build();
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        self::assertFalse($container->isBound(StorageInterface::class));
     }
 
     private static function makeErrorHandler(): ErrorHandlerInterface
