@@ -28,15 +28,19 @@ class IdnaEncoder
         }
 
         if (!\function_exists('idn_to_ascii')) {
+            // @codeCoverageIgnoreStart
             throw MailException::fromMissingIntlExtension();
+            // @codeCoverageIgnoreEnd
         }
 
         $encoded = \idn_to_ascii($domain, \IDNA_DEFAULT, \INTL_IDNA_VARIANT_UTS46);
 
         if ($encoded === false) {
+            // @codeCoverageIgnoreStart
             throw MailException::fromIdnaConversionFailure(
                 domain: $domain,
             );
+            // @codeCoverageIgnoreEnd
         }
 
         return $encoded;

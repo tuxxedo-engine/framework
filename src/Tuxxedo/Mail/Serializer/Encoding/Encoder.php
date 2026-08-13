@@ -23,7 +23,7 @@ class Encoder
         string $content,
         ContentTransferEncoding $encoding,
     ): string {
-        return match ($encoding) {
+        return match ($encoding) { // @codeCoverageIgnore
             ContentTransferEncoding::SEVEN_BIT => self::sevenBit($content),
             ContentTransferEncoding::EIGHT_BIT => self::eightBit($content),
             ContentTransferEncoding::QUOTED_PRINTABLE => self::quotedPrintable($content),

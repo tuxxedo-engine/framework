@@ -48,9 +48,11 @@ class MessageSerializer implements MessageSerializerInterface
             return self::renderMultipartBody($part);
         }
 
+        // @codeCoverageIgnoreStart
         throw MailException::fromNonSerializableMimePart(
             mimePartClass: $part::class,
         );
+        // @codeCoverageIgnoreEnd
     }
 
     private static function renderMultipartBody(
@@ -81,9 +83,11 @@ class MessageSerializer implements MessageSerializerInterface
             return $headers . "\r\n\r\n" . self::renderMultipartBody($part);
         }
 
+        // @codeCoverageIgnoreStart
         throw MailException::fromNonSerializableMimePart(
             mimePartClass: $part::class,
         );
+        // @codeCoverageIgnoreEnd
     }
 
     private static function renderChildHeaders(

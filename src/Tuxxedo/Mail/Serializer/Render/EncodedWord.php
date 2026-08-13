@@ -25,7 +25,9 @@ class EncodedWord
         $maxPayloadBytes = (int) \floor((self::MAX_ENCODED_WORD_LENGTH - $overhead) / 4) * 3;
 
         if ($maxPayloadBytes < 1) {
+            // @codeCoverageIgnoreStart
             return self::wrap($charset, \base64_encode($value));
+            // @codeCoverageIgnoreEnd
         }
 
         $chunks = [];

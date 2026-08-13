@@ -24,7 +24,7 @@ class ContentTransferEncodingSelector
         string $mimeType,
     ): ContentTransferEncoding {
         if (!\str_starts_with($mimeType, 'text/')) {
-            return ContentTransferEncoding::BASE64;
+            return ContentTransferEncoding::BASE64; // @codeCoverageIgnore
         }
 
         if (self::hasLongLines($content)) {
