@@ -18,6 +18,7 @@ use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use Support\Database\SqliteConnectionFactory;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Database\ConnectionRole;
+use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Driver\Sqlite\Config\SqliteConnectionConfig;
 use Tuxxedo\Database\Driver\Sqlite\SqliteConnection;
@@ -49,6 +50,21 @@ class SqliteConnectionIntegrationTest extends AbstractConnectionIntegrationTestC
         );
 
         $connection->close();
+    }
+
+    public function testSwitchDatabaseThrowsUnsupportedFeature(): void
+    {
+        $this->expectException(DatabaseException::class);
+
+        $this->connection->switchDatabase('anything');
+    }
+
+    public function testCurrentDatabaseReturnsFileName(): void
+    {
+        self::assertSame(
+            ':memory:',
+            $this->connection->currentDatabase(),
+        );
     }
 
     public function testNativeQueryBindsScalarNamedParameter(): void

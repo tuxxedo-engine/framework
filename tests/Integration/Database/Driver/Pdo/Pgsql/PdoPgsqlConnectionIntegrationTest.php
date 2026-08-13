@@ -141,4 +141,38 @@ class PdoPgsqlConnectionIntegrationTest extends AbstractConnectionIntegrationTes
 
         $connection->connect();
     }
+
+    public function testSwitchDatabaseUpdatesCurrentDatabase(): void
+    {
+        $original = $this->connection->currentDatabase();
+
+        $this->connection->switchDatabase('postgres');
+
+        self::assertSame(
+            'postgres',
+            $this->connection->currentDatabase(),
+        );
+
+        $this->connection->switchDatabase($original);
+    }
+
+    public function testSwitchDatabaseThrowsWhileInTransaction(): void
+    {
+        $this->connection->begin();
+
+        try {
+            $this->expectException(DatabaseException::class);
+
+            $this->connection->switchDatabase('postgres');
+        } finally {
+            $this->connection->rollback();
+        }
+    }
+
+    public function testSwitchDatabaseThrowsOnNonexistentDatabase(): void
+    {
+        $this->expectException(DatabaseException::class);
+
+        $this->connection->switchDatabase('__nonexistent_database_xyz__');
+    }
 }

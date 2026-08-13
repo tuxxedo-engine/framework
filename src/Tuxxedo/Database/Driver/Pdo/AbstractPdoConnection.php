@@ -39,6 +39,7 @@ abstract class AbstractPdoConnection extends AbstractConnection
     ) {
         $this->name = $config->name;
         $this->role = $config->role;
+        $this->currentDatabase = $config->database;
         $this->dialect = static::getDriverDialect();
         $this->statementParser = new StatementParser(
             dialect: $this->dialect,
@@ -88,7 +89,7 @@ abstract class AbstractPdoConnection extends AbstractConnection
     /**
      * @throws DatabaseException
      */
-    private function connectCheck(): void
+    protected function connectCheck(): void
     {
         if (!isset($this->pdo)) {
             $this->connect();
@@ -270,6 +271,13 @@ abstract class AbstractPdoConnection extends AbstractConnection
     }
 
     public function inTransaction(): bool
+    {
+        $this->connectCheck();
+
+        return $this->pdo->inTransaction();
+    }
+
+    protected function isServerInTransaction(): bool
     {
         $this->connectCheck();
 

@@ -126,6 +126,21 @@ class PdoSqliteConnectionIntegrationTest extends AbstractConnectionIntegrationTe
         $connection->connect();
     }
 
+    public function testSwitchDatabaseThrowsUnsupportedFeature(): void
+    {
+        $this->expectException(DatabaseException::class);
+
+        $this->connection->switchDatabase('anything');
+    }
+
+    public function testCurrentDatabaseReturnsFileName(): void
+    {
+        self::assertSame(
+            ':memory:',
+            $this->connection->currentDatabase(),
+        );
+    }
+
     public function testNativeQueryBindsScalarNamedParameter(): void
     {
         $this->createUsersSchema();

@@ -55,8 +55,8 @@ class PdoPgsqlConnection extends AbstractPdoConnection
         $sslMode = '';
         $sslParams = '';
 
-        if ($config->database !== '') {
-            $database = ';dbname=' . $config->database;
+        if ($this->currentDatabase !== '') {
+            $database = ';dbname=' . $this->currentDatabase;
         }
 
         if ($config->port !== null) {
@@ -157,5 +157,48 @@ class PdoPgsqlConnection extends AbstractPdoConnection
         return $id !== null
             ? (int) $id
             : null;
+    }
+
+    public function switchDatabase(
+        string $database,
+    ): void {
+        $this->connectCheck();
+
+        if ($this->isServerInTransaction()) {
+            throw DatabaseException::fromCannotSwitchDatabaseInTransaction();
+        }
+
+        $previous = $this->currentDatabase;
+        $this->currentDatabase = $database;
+
+        try {
+            $this->connect(
+                reconnect: true,
+            );
+        } catch (DatabaseException $exception) {
+            $this->currentDatabase = $previous;
+
+            throw $exception;
+        }
+    }
+
+    public function currentDatabase(): string
+    {
+        $this->connectCheck();
+
+        $statement = $this->pdo->query('SELECT current_database()');
+
+        if ($statement === false) {
+            return $this->currentDatabase; // @codeCoverageIgnore
+        }
+
+        /** @var array{0: string|null}|false $row */
+        $row = $statement->fetch(\PDO::FETCH_NUM);
+
+        if ($row === false || $row[0] === null) {
+            return ''; // @codeCoverageIgnore
+        }
+
+        return $row[0];
     }
 }

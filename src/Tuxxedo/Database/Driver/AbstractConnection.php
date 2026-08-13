@@ -44,7 +44,14 @@ use Tuxxedo\Database\Query\Statement\UpdateStatement;
 
 abstract class AbstractConnection implements ConnectionInterface
 {
+    protected string $currentDatabase = '';
+
     protected private(set) int $savepointCounter = 0;
+
+    /**
+     * @throws DatabaseException
+     */
+    abstract protected function isServerInTransaction(): bool;
 
     protected function generateSavepointName(): string
     {

@@ -15,6 +15,7 @@ namespace Tuxxedo\Database\Driver\Pdo\Sqlite;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\Config\ConnectionConfigInterface;
+use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
 use Tuxxedo\Database\Driver\Pdo\Config\PdoConnectionConfigInterface;
 use Tuxxedo\Database\Driver\Pdo\Sqlite\Config\PdoSqliteConnectionConfigInterface;
@@ -48,7 +49,7 @@ class PdoSqliteConnection extends AbstractPdoConnection
 
         return \sprintf(
             'sqlite:%s',
-            $config->database,
+            $this->currentDatabase,
         );
     }
 
@@ -64,5 +65,16 @@ class PdoSqliteConnection extends AbstractPdoConnection
         return [
             \PDO::ATTR_TIMEOUT => $config->timeout,
         ];
+    }
+
+    public function switchDatabase(
+        string $database,
+    ): void {
+        throw DatabaseException::fromSwitchDatabaseUnsupported();
+    }
+
+    public function currentDatabase(): string
+    {
+        return $this->currentDatabase;
     }
 }

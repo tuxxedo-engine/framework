@@ -42,6 +42,7 @@ class MysqlConnection extends AbstractConnection
     ) {
         $this->name = $config->name;
         $this->role = $config->role;
+        $this->currentDatabase = $config->database ?? '';
         $this->dialect = new MysqlDialect();
         $this->statementParser = new StatementParser(
             dialect: $this->dialect,
@@ -101,7 +102,7 @@ class MysqlConnection extends AbstractConnection
                             : $config->host,
                         username: $config->username,
                         password: $config->password,
-                        database: $config->database,
+                        database: $this->currentDatabase,
                         port: $config->port,
                         flags: $flags,
                     );
@@ -330,6 +331,55 @@ class MysqlConnection extends AbstractConnection
     public function inTransaction(): bool
     {
         return $this->inTransaction;
+    }
+
+    protected function isServerInTransaction(): bool
+    {
+        return $this->inTransaction;
+    }
+
+    public function switchDatabase(
+        string $database,
+    ): void {
+        $this->connectCheck();
+
+        if ($this->isServerInTransaction()) {
+            throw DatabaseException::fromCannotSwitchDatabaseInTransaction();
+        }
+
+        try {
+            $this->mysqli->select_db($database);
+        } catch (\mysqli_sql_exception $exception) {
+            $this->throwFromMysqliException($exception);
+        }
+
+        $this->currentDatabase = $database;
+    }
+
+    public function currentDatabase(): string
+    {
+        $this->connectCheck();
+
+        try {
+            $result = $this->mysqli->query('SELECT DATABASE()');
+        } catch (\mysqli_sql_exception $exception) { // @codeCoverageIgnore
+            $this->throwFromMysqliException($exception); // @codeCoverageIgnore
+        }
+
+        if (!$result instanceof \mysqli_result) {
+            return $this->currentDatabase; // @codeCoverageIgnore
+        }
+
+        /** @var array{0: string|null}|null $row */
+        $row = $result->fetch_row();
+
+        $result->free();
+
+        if ($row === null || $row[0] === null) {
+            return ''; // @codeCoverageIgnore
+        }
+
+        return $row[0];
     }
 
     public function query(

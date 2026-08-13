@@ -35,9 +35,6 @@ use Tuxxedo\Database\Query\Statement\Table\TableExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\UpdateStatementInterface;
 use Tuxxedo\Database\SqlException;
 
-/**
- * @todo Consider a method to be able to switch database & get the current database on an existing connection
- */
 interface ConnectionInterface
 {
     public static function create(
@@ -219,6 +216,18 @@ interface ConnectionInterface
     public function listDatabases(): ListDatabasesStatementInterface;
 
     public function listTables(): ListTablesStatementInterface;
+
+    /**
+     * @throws DatabaseException
+     */
+    public function switchDatabase(
+        string $database,
+    ): void;
+
+    /**
+     * @throws DatabaseException
+     */
+    public function currentDatabase(): string;
 
     // @todo Support describeTable
     // @todo Support listIndexes

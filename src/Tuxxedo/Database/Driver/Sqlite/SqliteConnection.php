@@ -42,6 +42,7 @@ class SqliteConnection extends AbstractConnection
     ) {
         $this->name = $config->name;
         $this->role = $config->role;
+        $this->currentDatabase = $config->database;
         $this->dialect = new SqliteDialect();
         $this->statementParser = new StatementParser(
             dialect: $this->dialect,
@@ -244,6 +245,22 @@ class SqliteConnection extends AbstractConnection
     public function inTransaction(): bool
     {
         return $this->inTransaction;
+    }
+
+    protected function isServerInTransaction(): bool
+    {
+        return $this->inTransaction;
+    }
+
+    public function switchDatabase(
+        string $database,
+    ): void {
+        throw DatabaseException::fromSwitchDatabaseUnsupported();
+    }
+
+    public function currentDatabase(): string
+    {
+        return $this->currentDatabase;
     }
 
     public function query(

@@ -266,4 +266,15 @@ class StubConnection implements ConnectionInterface
     {
         throw new \LogicException('StubConnection: listTables not implemented');
     }
+
+    public function switchDatabase(
+        string $database,
+    ): void {
+        throw new \LogicException('StubConnection: switchDatabase not implemented');
+    }
+
+    public function currentDatabase(): string
+    {
+        throw new \LogicException('StubConnection: currentDatabase not implemented');
+    }
 }

@@ -191,6 +191,14 @@ abstract class AbstractConnectionIntegrationTestCase extends TestCase
         );
     }
 
+    public function testCurrentDatabaseReturnsNonEmptyString(): void
+    {
+        self::assertNotSame(
+            '',
+            $this->connection->currentDatabase(),
+        );
+    }
+
     public function testBeginPutsConnectionInTransaction(): void
     {
         $this->connection->begin();

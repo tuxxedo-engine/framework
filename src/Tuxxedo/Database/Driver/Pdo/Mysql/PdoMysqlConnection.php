@@ -16,6 +16,7 @@ namespace Tuxxedo\Database\Driver\Pdo\Mysql;
 use Pdo\Mysql;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\Config\ConnectionConfigInterface;
+use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
 use Tuxxedo\Database\Driver\Pdo\Config\PdoConnectionConfigInterface;
 use Tuxxedo\Database\Driver\Pdo\Mysql\Config\PdoMysqlConnectionConfigInterface;
@@ -50,8 +51,8 @@ class PdoMysqlConnection extends AbstractPdoConnection
         $database = '';
         $charset = '';
 
-        if ($config->database !== '') {
-            $database = ';dbname=' . $config->database;
+        if ($this->currentDatabase !== '') {
+            $database = ';dbname=' . $this->currentDatabase;
         }
 
         if ($config->charset !== '') {
@@ -114,5 +115,48 @@ class PdoMysqlConnection extends AbstractPdoConnection
         }
 
         return $options;
+    }
+
+    public function switchDatabase(
+        string $database,
+    ): void {
+        $this->connectCheck();
+
+        if ($this->isServerInTransaction()) {
+            throw DatabaseException::fromCannotSwitchDatabaseInTransaction();
+        }
+
+        try {
+            $this->pdo->exec(
+                \sprintf(
+                    'USE `%s`',
+                    \str_replace('`', '``', $database),
+                ),
+            );
+        } catch (\PDOException $exception) {
+            self::throwFromPdoException($exception);
+        }
+
+        $this->currentDatabase = $database;
+    }
+
+    public function currentDatabase(): string
+    {
+        $this->connectCheck();
+
+        $statement = $this->pdo->query('SELECT DATABASE()');
+
+        if ($statement === false) {
+            return $this->currentDatabase; // @codeCoverageIgnore
+        }
+
+        /** @var array{0: string|null}|false $row */
+        $row = $statement->fetch(\PDO::FETCH_NUM);
+
+        if ($row === false || $row[0] === null) {
+            return ''; // @codeCoverageIgnore
+        }
+
+        return $row[0];
     }
 }

@@ -164,6 +164,40 @@ class PdoMysqlConnectionIntegrationTest extends AbstractConnectionIntegrationTes
         $connection->connect();
     }
 
+    public function testSwitchDatabaseUpdatesCurrentDatabase(): void
+    {
+        $original = $this->connection->currentDatabase();
+
+        $this->connection->switchDatabase('information_schema');
+
+        self::assertSame(
+            'information_schema',
+            $this->connection->currentDatabase(),
+        );
+
+        $this->connection->switchDatabase($original);
+    }
+
+    public function testSwitchDatabaseThrowsWhileInTransaction(): void
+    {
+        $this->connection->begin();
+
+        try {
+            $this->expectException(DatabaseException::class);
+
+            $this->connection->switchDatabase('information_schema');
+        } finally {
+            $this->connection->rollback();
+        }
+    }
+
+    public function testSwitchDatabaseThrowsOnNonexistentDatabase(): void
+    {
+        $this->expectException(DatabaseException::class);
+
+        $this->connection->switchDatabase('__nonexistent_database_xyz__');
+    }
+
     public function testNativeQueryBindsScalarNamedParameter(): void
     {
         $this->createUsersSchema();

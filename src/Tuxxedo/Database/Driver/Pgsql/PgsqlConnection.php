@@ -44,6 +44,7 @@ class PgsqlConnection extends AbstractConnection
     ) {
         $this->name = $config->name;
         $this->role = $config->role;
+        $this->currentDatabase = $config->database;
         $this->dialect = new PgsqlDialect(
             connection: fn (): Connection => $this->getDriverInstance(),
         );
@@ -72,8 +73,8 @@ class PgsqlConnection extends AbstractConnection
                     $dsn[] = 'port=' . $quote((string) $config->port);
                 }
 
-                if ($config->database !== '') {
-                    $dsn[] = 'dbname=' . $quote($config->database);
+                if ($this->currentDatabase !== '') {
+                    $dsn[] = 'dbname=' . $quote($this->currentDatabase);
                 }
 
                 if ($config->username !== '') {
@@ -351,6 +352,59 @@ class PgsqlConnection extends AbstractConnection
     public function inTransaction(): bool
     {
         return $this->inTransaction;
+    }
+
+    protected function isServerInTransaction(): bool
+    {
+        $this->connectCheck();
+
+        $status = \pg_transaction_status($this->pgsql);
+
+        return $status === \PGSQL_TRANSACTION_INTRANS ||
+            $status === \PGSQL_TRANSACTION_ACTIVE ||
+            $status === \PGSQL_TRANSACTION_INERROR;
+    }
+
+    public function switchDatabase(
+        string $database,
+    ): void {
+        $this->connectCheck();
+
+        if ($this->isServerInTransaction()) {
+            throw DatabaseException::fromCannotSwitchDatabaseInTransaction();
+        }
+
+        $previous = $this->currentDatabase;
+        $this->currentDatabase = $database;
+
+        try {
+            $this->connect(
+                reconnect: true,
+            );
+        } catch (DatabaseException $exception) {
+            $this->currentDatabase = $previous;
+
+            throw $exception;
+        }
+    }
+
+    public function currentDatabase(): string
+    {
+        $this->connectCheck();
+
+        $result = @\pg_query($this->pgsql, 'SELECT current_database()');
+
+        if (!$result instanceof Result) {
+            $this->throwFromLastError($this->pgsql); // @codeCoverageIgnore
+        }
+
+        $value = \pg_fetch_result($result, 0, 0);
+
+        if ($value === false || $value === null) {
+            return ''; // @codeCoverageIgnore
+        }
+
+        return $value;
     }
 
     public function query(

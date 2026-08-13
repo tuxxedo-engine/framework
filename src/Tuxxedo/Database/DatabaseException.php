@@ -150,4 +150,18 @@ class DatabaseException extends \Exception
             ),
         );
     }
+
+    public static function fromSwitchDatabaseUnsupported(): self
+    {
+        return new self(
+            message: 'This driver does not support switching database on an existing connection',
+        );
+    }
+
+    public static function fromCannotSwitchDatabaseInTransaction(): self
+    {
+        return new self(
+            message: 'Cannot switch database while a transaction is active',
+        );
+    }
 }

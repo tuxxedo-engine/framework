@@ -21,6 +21,10 @@ interface PdoConnectionConfigInterface extends ConnectionConfigInterface
         get;
     }
 
+    public string $database {
+        get;
+    }
+
     public string $username {
         get;
     }
