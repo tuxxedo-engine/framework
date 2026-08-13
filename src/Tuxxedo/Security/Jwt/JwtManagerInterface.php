@@ -18,7 +18,7 @@ use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Security\Jwt\Constraint\ConstraintInterface;
 use Tuxxedo\Security\Jwt\Key\KeyInterface;
 
-// @todo Support JWE (encrypted JWTs) alongside JWS
+// @todo Support JWE
 #[DefaultImplementation(class: JwtManager::class, lifecycle: Lifecycle::SINGLETON)]
 interface JwtManagerInterface
 {

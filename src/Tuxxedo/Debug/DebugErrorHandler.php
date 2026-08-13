@@ -57,8 +57,9 @@ class DebugErrorHandler implements ErrorHandlerInterface
         self::$registeredPhpErrorHandler = false;
     }
 
-    // @todo This needs a better design
     /**
+     * @todo This needs a better design
+     *
      * @codeCoverageIgnore
      */
     public function handle(

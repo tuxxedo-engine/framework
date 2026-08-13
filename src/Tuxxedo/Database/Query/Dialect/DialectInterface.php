@@ -87,4 +87,18 @@ interface DialectInterface
      * @throws SqlException
      */
     public function listTables(): StatementParserResultInterface;
+
+    /**
+     * @throws SqlException
+     */
+    public function listIndexes(
+        string $table,
+    ): StatementParserResultInterface;
+
+    /**
+     * @throws SqlException
+     */
+    public function listForeignKeys(
+        string $table,
+    ): StatementParserResultInterface;
 }

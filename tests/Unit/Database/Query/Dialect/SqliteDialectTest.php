@@ -444,4 +444,40 @@ class SqliteDialectTest extends TestCase
             $result->parameters,
         );
     }
+
+    public function testListIndexesBuildsPragmaJoin(): void
+    {
+        $result = (new SqliteDialect())->listIndexes(
+            table: 'widgets',
+        );
+
+        self::assertStringContainsString('pragma_index_list(:table)', $result->sql);
+        self::assertStringContainsString('pragma_index_info(il.name)', $result->sql);
+        self::assertStringContainsString('is_unique', $result->sql);
+        self::assertStringContainsString('is_primary', $result->sql);
+        self::assertSame(
+            [
+                'table' => 'widgets',
+            ],
+            $result->parameters,
+        );
+    }
+
+    public function testListForeignKeysBuildsPragmaForeignKeyList(): void
+    {
+        $result = (new SqliteDialect())->listForeignKeys(
+            table: 'widgets',
+        );
+
+        self::assertStringContainsString('pragma_foreign_key_list(:table)', $result->sql);
+        self::assertStringContainsString('constraint_name', $result->sql);
+        self::assertStringContainsString('on_update', $result->sql);
+        self::assertStringContainsString('on_delete', $result->sql);
+        self::assertSame(
+            [
+                'table' => 'widgets',
+            ],
+            $result->parameters,
+        );
+    }
 }

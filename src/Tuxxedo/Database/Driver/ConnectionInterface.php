@@ -30,6 +30,8 @@ use Tuxxedo\Database\Query\Statement\Table\ColumnExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\DropTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\ListDatabasesStatementInterface;
+use Tuxxedo\Database\Query\Statement\Table\ListForeignKeysStatementInterface;
+use Tuxxedo\Database\Query\Statement\Table\ListIndexesStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\ListTablesStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\TableExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\UpdateStatementInterface;
@@ -217,6 +219,16 @@ interface ConnectionInterface
 
     public function listTables(): ListTablesStatementInterface;
 
+    public function listIndexes(
+        string $table,
+    ): ListIndexesStatementInterface;
+
+    public function listForeignKeys(
+        string $table,
+    ): ListForeignKeysStatementInterface;
+
+    // @todo Support describeTable
+
     /**
      * @throws DatabaseException
      */
@@ -228,8 +240,4 @@ interface ConnectionInterface
      * @throws DatabaseException
      */
     public function currentDatabase(): string;
-
-    // @todo Support describeTable
-    // @todo Support listIndexes
-    // @todo Support listForeignKeys
 }

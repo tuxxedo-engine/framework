@@ -756,4 +756,44 @@ class PgsqlDialectTest extends TestCase
             $result->parameters,
         );
     }
+
+    public function testListIndexesBuildsPgCatalogQuery(): void
+    {
+        $result = (new PgsqlDialect())->listIndexes(
+            table: 'widgets',
+        );
+
+        self::assertStringContainsString('pg_catalog.pg_index', $result->sql);
+        self::assertStringContainsString('pg_catalog.pg_attribute', $result->sql);
+        self::assertStringContainsString(':table', $result->sql);
+        self::assertStringContainsString('index_name', $result->sql);
+        self::assertStringContainsString('is_unique', $result->sql);
+        self::assertStringContainsString('is_primary', $result->sql);
+        self::assertSame(
+            [
+                'table' => 'widgets',
+            ],
+            $result->parameters,
+        );
+    }
+
+    public function testListForeignKeysBuildsPgConstraintQuery(): void
+    {
+        $result = (new PgsqlDialect())->listForeignKeys(
+            table: 'widgets',
+        );
+
+        self::assertStringContainsString('pg_catalog.pg_constraint', $result->sql);
+        self::assertStringContainsString(':table', $result->sql);
+        self::assertStringContainsString('constraint_name', $result->sql);
+        self::assertStringContainsString('referenced_table', $result->sql);
+        self::assertStringContainsString('on_update', $result->sql);
+        self::assertStringContainsString('on_delete', $result->sql);
+        self::assertSame(
+            [
+                'table' => 'widgets',
+            ],
+            $result->parameters,
+        );
+    }
 }

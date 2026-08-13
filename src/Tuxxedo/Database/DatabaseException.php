@@ -164,4 +164,15 @@ class DatabaseException extends \Exception
             message: 'Cannot switch database while a transaction is active',
         );
     }
+
+    public static function fromUnknownForeignKeyAction(
+        string $action,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unknown foreign key action reported by driver: %s',
+                $action,
+            ),
+        );
+    }
 }

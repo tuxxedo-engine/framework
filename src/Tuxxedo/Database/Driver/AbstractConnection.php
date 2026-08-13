@@ -36,6 +36,10 @@ use Tuxxedo\Database\Query\Statement\Table\DropTableStatement;
 use Tuxxedo\Database\Query\Statement\Table\DropTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\ListDatabasesStatement;
 use Tuxxedo\Database\Query\Statement\Table\ListDatabasesStatementInterface;
+use Tuxxedo\Database\Query\Statement\Table\ListForeignKeysStatement;
+use Tuxxedo\Database\Query\Statement\Table\ListForeignKeysStatementInterface;
+use Tuxxedo\Database\Query\Statement\Table\ListIndexesStatement;
+use Tuxxedo\Database\Query\Statement\Table\ListIndexesStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\ListTablesStatement;
 use Tuxxedo\Database\Query\Statement\Table\ListTablesStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\TableExistsStatement;
@@ -267,6 +271,24 @@ abstract class AbstractConnection implements ConnectionInterface
     public function listTables(): ListTablesStatementInterface
     {
         return new ListTablesStatement(
+            connection: $this,
+        );
+    }
+
+    public function listIndexes(
+        string $table,
+    ): ListIndexesStatementInterface {
+        return new ListIndexesStatement(
+            table: $table,
+            connection: $this,
+        );
+    }
+
+    public function listForeignKeys(
+        string $table,
+    ): ListForeignKeysStatementInterface {
+        return new ListForeignKeysStatement(
+            table: $table,
             connection: $this,
         );
     }

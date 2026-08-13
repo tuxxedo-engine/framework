@@ -48,6 +48,10 @@ class StubDialect implements DialectInterface
 
     public int $listTablesCalls = 0;
 
+    public ?string $listIndexesTable = null;
+
+    public ?string $listForeignKeysTable = null;
+
     /**
      * @param list<string> $quotations
      */
@@ -155,6 +159,32 @@ class StubDialect implements DialectInterface
 
         return new StatementParserResult(
             sql: 'SELECT table_name',
+        );
+    }
+
+    public function listIndexes(
+        string $table,
+    ): StatementParserResultInterface {
+        $this->listIndexesTable = $table;
+
+        return new StatementParserResult(
+            sql: 'SELECT index_name',
+            parameters: [
+                'table' => $table,
+            ],
+        );
+    }
+
+    public function listForeignKeys(
+        string $table,
+    ): StatementParserResultInterface {
+        $this->listForeignKeysTable = $table;
+
+        return new StatementParserResult(
+            sql: 'SELECT constraint_name',
+            parameters: [
+                'table' => $table,
+            ],
         );
     }
 }

@@ -247,6 +247,9 @@ class SqliteConnection extends AbstractConnection
         return $this->inTransaction;
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     protected function isServerInTransaction(): bool
     {
         return $this->inTransaction;

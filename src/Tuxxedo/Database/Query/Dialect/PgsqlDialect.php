@@ -350,6 +350,73 @@ class PgsqlDialect implements DialectInterface
         );
     }
 
+    public function listIndexes(
+        string $table,
+    ): StatementParserResultInterface {
+        return new StatementParserResult(
+            sql: 'SELECT ' .
+                'ic.relname AS index_name, ' .
+                'a.attname AS column_name, ' .
+                'CASE WHEN ix.indisunique THEN 1 ELSE 0 END AS is_unique, ' .
+                'CASE WHEN ix.indisprimary THEN 1 ELSE 0 END AS is_primary, ' .
+                'ord.ordinality AS column_position ' .
+                'FROM pg_catalog.pg_class t ' .
+                'INNER JOIN pg_catalog.pg_namespace n ON n.oid = t.relnamespace ' .
+                'INNER JOIN pg_catalog.pg_index ix ON ix.indrelid = t.oid ' .
+                'INNER JOIN pg_catalog.pg_class ic ON ic.oid = ix.indexrelid ' .
+                'INNER JOIN LATERAL unnest(ix.indkey) WITH ORDINALITY AS ord(attnum, ordinality) ON TRUE ' .
+                'INNER JOIN pg_catalog.pg_attribute a ON a.attrelid = t.oid AND a.attnum = ord.attnum ' .
+                'WHERE t.relkind IN (\'r\', \'p\') ' .
+                'AND n.nspname = current_schema() ' .
+                'AND t.relname = :table ' .
+                'ORDER BY ic.relname, ord.ordinality',
+            parameters: [
+                'table' => $table,
+            ],
+        );
+    }
+
+    public function listForeignKeys(
+        string $table,
+    ): StatementParserResultInterface {
+        return new StatementParserResult(
+            sql: 'SELECT ' .
+                'con.conname AS constraint_name, ' .
+                'a.attname AS column_name, ' .
+                'ref.relname AS referenced_table, ' .
+                'fa.attname AS referenced_column, ' .
+                'CASE con.confupdtype ' .
+                'WHEN \'a\' THEN \'NO ACTION\' ' .
+                'WHEN \'r\' THEN \'RESTRICT\' ' .
+                'WHEN \'c\' THEN \'CASCADE\' ' .
+                'WHEN \'n\' THEN \'SET NULL\' ' .
+                'WHEN \'d\' THEN \'SET DEFAULT\' ' .
+                'END AS on_update, ' .
+                'CASE con.confdeltype ' .
+                'WHEN \'a\' THEN \'NO ACTION\' ' .
+                'WHEN \'r\' THEN \'RESTRICT\' ' .
+                'WHEN \'c\' THEN \'CASCADE\' ' .
+                'WHEN \'n\' THEN \'SET NULL\' ' .
+                'WHEN \'d\' THEN \'SET DEFAULT\' ' .
+                'END AS on_delete, ' .
+                'ord.ordinality AS column_position ' .
+                'FROM pg_catalog.pg_constraint con ' .
+                'INNER JOIN pg_catalog.pg_class t ON t.oid = con.conrelid ' .
+                'INNER JOIN pg_catalog.pg_namespace n ON n.oid = t.relnamespace ' .
+                'INNER JOIN pg_catalog.pg_class ref ON ref.oid = con.confrelid ' .
+                'INNER JOIN LATERAL unnest(con.conkey, con.confkey) WITH ORDINALITY AS ord(local_attnum, ref_attnum, ordinality) ON TRUE ' .
+                'INNER JOIN pg_catalog.pg_attribute a ON a.attrelid = con.conrelid AND a.attnum = ord.local_attnum ' .
+                'INNER JOIN pg_catalog.pg_attribute fa ON fa.attrelid = con.confrelid AND fa.attnum = ord.ref_attnum ' .
+                'WHERE con.contype = \'f\' ' .
+                'AND n.nspname = current_schema() ' .
+                'AND t.relname = :table ' .
+                'ORDER BY con.conname, ord.ordinality',
+            parameters: [
+                'table' => $table,
+            ],
+        );
+    }
+
     /**
      * @return list<string>
      *

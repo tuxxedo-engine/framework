@@ -303,6 +303,50 @@ class MysqlDialect implements DialectInterface
         );
     }
 
+    public function listIndexes(
+        string $table,
+    ): StatementParserResultInterface {
+        return new StatementParserResult(
+            sql: 'SELECT ' .
+                'index_name AS index_name, ' .
+                'column_name AS column_name, ' .
+                'CASE WHEN non_unique = 0 THEN 1 ELSE 0 END AS is_unique, ' .
+                'CASE WHEN index_name = \'PRIMARY\' THEN 1 ELSE 0 END AS is_primary ' .
+                'FROM information_schema.statistics ' .
+                'WHERE table_schema = DATABASE() AND table_name = :table ' .
+                'ORDER BY index_name, seq_in_index',
+            parameters: [
+                'table' => $table,
+            ],
+        );
+    }
+
+    public function listForeignKeys(
+        string $table,
+    ): StatementParserResultInterface {
+        return new StatementParserResult(
+            sql: 'SELECT ' .
+                'kcu.constraint_name AS constraint_name, ' .
+                'kcu.column_name AS column_name, ' .
+                'kcu.referenced_table_name AS referenced_table, ' .
+                'kcu.referenced_column_name AS referenced_column, ' .
+                'rc.update_rule AS on_update, ' .
+                'rc.delete_rule AS on_delete ' .
+                'FROM information_schema.key_column_usage kcu ' .
+                'INNER JOIN information_schema.referential_constraints rc ' .
+                'ON rc.constraint_schema = kcu.constraint_schema ' .
+                'AND rc.constraint_name = kcu.constraint_name ' .
+                'AND rc.table_name = kcu.table_name ' .
+                'WHERE kcu.table_schema = DATABASE() ' .
+                'AND kcu.table_name = :table ' .
+                'AND kcu.referenced_table_name IS NOT NULL ' .
+                'ORDER BY kcu.constraint_name, kcu.ordinal_position',
+            parameters: [
+                'table' => $table,
+            ],
+        );
+    }
+
     /**
      * @param list<string> $columns
      */

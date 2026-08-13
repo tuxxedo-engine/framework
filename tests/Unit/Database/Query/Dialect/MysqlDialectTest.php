@@ -619,4 +619,44 @@ class MysqlDialectTest extends TestCase
             $result->parameters,
         );
     }
+
+    public function testListIndexesBuildsInformationSchemaQuery(): void
+    {
+        $result = (new MysqlDialect())->listIndexes(
+            table: 'widgets',
+        );
+
+        self::assertStringContainsString('information_schema.statistics', $result->sql);
+        self::assertStringContainsString(':table', $result->sql);
+        self::assertStringContainsString('index_name', $result->sql);
+        self::assertStringContainsString('is_unique', $result->sql);
+        self::assertStringContainsString('is_primary', $result->sql);
+        self::assertSame(
+            [
+                'table' => 'widgets',
+            ],
+            $result->parameters,
+        );
+    }
+
+    public function testListForeignKeysBuildsInformationSchemaQuery(): void
+    {
+        $result = (new MysqlDialect())->listForeignKeys(
+            table: 'widgets',
+        );
+
+        self::assertStringContainsString('key_column_usage', $result->sql);
+        self::assertStringContainsString('referential_constraints', $result->sql);
+        self::assertStringContainsString(':table', $result->sql);
+        self::assertStringContainsString('constraint_name', $result->sql);
+        self::assertStringContainsString('referenced_table', $result->sql);
+        self::assertStringContainsString('on_update', $result->sql);
+        self::assertStringContainsString('on_delete', $result->sql);
+        self::assertSame(
+            [
+                'table' => 'widgets',
+            ],
+            $result->parameters,
+        );
+    }
 }
