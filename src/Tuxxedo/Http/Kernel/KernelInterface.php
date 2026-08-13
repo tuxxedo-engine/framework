@@ -23,7 +23,6 @@ use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Router\RouterInterface;
 
-// @todo Consider a JWT Middleware
 #[DefaultImplementation(class: Kernel::class, lifecycle: Lifecycle::SINGLETON)]
 interface KernelInterface
 {
