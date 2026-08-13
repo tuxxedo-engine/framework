@@ -83,18 +83,8 @@ class Message implements MessageInterface
         ?string $messageId = null,
         ?\DateTimeImmutable $date = null,
     ) {
-        if (
-            $alternativeText !== null &&
-            $bodyType !== BodyType::HTML
-        ) {
-            throw MailException::fromAlternativeTextRequiresHtmlBody();
-        }
-
-        foreach ($extraHeaders as $header) {
-            if (\in_array(\strtolower($header->name), self::RESERVED_HEADER_NAMES, true)) {
-                throw MailException::fromReservedHeaderName($header->name);
-            }
-        }
+        self::assertAlternativeTextAllowed($alternativeText, $bodyType);
+        self::assertExtraHeadersAllowed($extraHeaders);
 
         $this->from = self::coerceAddress($from);
         $this->to = self::coerceAddressList($to);
@@ -116,25 +106,17 @@ class Message implements MessageInterface
     /**
      * @throws MailException
      */
+    /**
+     * @throws MailException
+     */
     public function withFrom(
         AddressInterface|string $from,
     ): MessageInterface {
-        return new self(
-            from: $from,
-            to: $this->to,
-            subject: $this->subject,
-            body: $this->body,
-            bodyType: $this->bodyType,
-            alternativeText: $this->alternativeText,
-            cc: $this->cc,
-            bcc: $this->bcc,
-            replyTo: $this->replyTo,
-            sender: $this->sender,
-            returnPath: $this->returnPath,
-            attachments: $this->attachments,
-            extraHeaders: $this->extraHeaders,
-            messageId: $this->messageId,
-            date: $this->date,
+        return clone (
+            $this,
+            [
+                'from' => self::coerceAddress($from),
+            ],
         );
     }
 
@@ -146,47 +128,22 @@ class Message implements MessageInterface
     public function withTo(
         AddressInterface|string|array $to,
     ): MessageInterface {
-        return new self(
-            from: $this->from,
-            to: $to,
-            subject: $this->subject,
-            body: $this->body,
-            bodyType: $this->bodyType,
-            alternativeText: $this->alternativeText,
-            cc: $this->cc,
-            bcc: $this->bcc,
-            replyTo: $this->replyTo,
-            sender: $this->sender,
-            returnPath: $this->returnPath,
-            attachments: $this->attachments,
-            extraHeaders: $this->extraHeaders,
-            messageId: $this->messageId,
-            date: $this->date,
+        return clone (
+            $this,
+            [
+                'to' => self::coerceAddressList($to),
+            ],
         );
     }
 
-    /**
-     * @throws MailException
-     */
     public function withSubject(
         string $subject,
     ): MessageInterface {
-        return new self(
-            from: $this->from,
-            to: $this->to,
-            subject: $subject,
-            body: $this->body,
-            bodyType: $this->bodyType,
-            alternativeText: $this->alternativeText,
-            cc: $this->cc,
-            bcc: $this->bcc,
-            replyTo: $this->replyTo,
-            sender: $this->sender,
-            returnPath: $this->returnPath,
-            attachments: $this->attachments,
-            extraHeaders: $this->extraHeaders,
-            messageId: $this->messageId,
-            date: $this->date,
+        return clone (
+            $this,
+            [
+                'subject' => $subject,
+            ],
         );
     }
 
@@ -198,22 +155,15 @@ class Message implements MessageInterface
         BodyType $bodyType = BodyType::TEXT,
         ?string $alternativeText = null,
     ): MessageInterface {
-        return new self(
-            from: $this->from,
-            to: $this->to,
-            subject: $this->subject,
-            body: $body,
-            bodyType: $bodyType,
-            alternativeText: $alternativeText,
-            cc: $this->cc,
-            bcc: $this->bcc,
-            replyTo: $this->replyTo,
-            sender: $this->sender,
-            returnPath: $this->returnPath,
-            attachments: $this->attachments,
-            extraHeaders: $this->extraHeaders,
-            messageId: $this->messageId,
-            date: $this->date,
+        self::assertAlternativeTextAllowed($alternativeText, $bodyType);
+
+        return clone (
+            $this,
+            [
+                'body' => $body,
+                'bodyType' => $bodyType,
+                'alternativeText' => $alternativeText,
+            ],
         );
     }
 
@@ -225,22 +175,11 @@ class Message implements MessageInterface
     public function withCc(
         AddressInterface|string|array $cc,
     ): MessageInterface {
-        return new self(
-            from: $this->from,
-            to: $this->to,
-            subject: $this->subject,
-            body: $this->body,
-            bodyType: $this->bodyType,
-            alternativeText: $this->alternativeText,
-            cc: $cc,
-            bcc: $this->bcc,
-            replyTo: $this->replyTo,
-            sender: $this->sender,
-            returnPath: $this->returnPath,
-            attachments: $this->attachments,
-            extraHeaders: $this->extraHeaders,
-            messageId: $this->messageId,
-            date: $this->date,
+        return clone (
+            $this,
+            [
+                'cc' => self::coerceAddressList($cc),
+            ],
         );
     }
 
@@ -252,22 +191,11 @@ class Message implements MessageInterface
     public function withBcc(
         AddressInterface|string|array $bcc,
     ): MessageInterface {
-        return new self(
-            from: $this->from,
-            to: $this->to,
-            subject: $this->subject,
-            body: $this->body,
-            bodyType: $this->bodyType,
-            alternativeText: $this->alternativeText,
-            cc: $this->cc,
-            bcc: $bcc,
-            replyTo: $this->replyTo,
-            sender: $this->sender,
-            returnPath: $this->returnPath,
-            attachments: $this->attachments,
-            extraHeaders: $this->extraHeaders,
-            messageId: $this->messageId,
-            date: $this->date,
+        return clone (
+            $this,
+            [
+                'bcc' => self::coerceAddressList($bcc),
+            ],
         );
     }
 
@@ -279,22 +207,11 @@ class Message implements MessageInterface
     public function withReplyTo(
         AddressInterface|string|array $replyTo,
     ): MessageInterface {
-        return new self(
-            from: $this->from,
-            to: $this->to,
-            subject: $this->subject,
-            body: $this->body,
-            bodyType: $this->bodyType,
-            alternativeText: $this->alternativeText,
-            cc: $this->cc,
-            bcc: $this->bcc,
-            replyTo: $replyTo,
-            sender: $this->sender,
-            returnPath: $this->returnPath,
-            attachments: $this->attachments,
-            extraHeaders: $this->extraHeaders,
-            messageId: $this->messageId,
-            date: $this->date,
+        return clone (
+            $this,
+            [
+                'replyTo' => self::coerceAddressList($replyTo),
+            ],
         );
     }
 
@@ -304,22 +221,13 @@ class Message implements MessageInterface
     public function withSender(
         AddressInterface|string|null $sender,
     ): MessageInterface {
-        return new self(
-            from: $this->from,
-            to: $this->to,
-            subject: $this->subject,
-            body: $this->body,
-            bodyType: $this->bodyType,
-            alternativeText: $this->alternativeText,
-            cc: $this->cc,
-            bcc: $this->bcc,
-            replyTo: $this->replyTo,
-            sender: $sender,
-            returnPath: $this->returnPath,
-            attachments: $this->attachments,
-            extraHeaders: $this->extraHeaders,
-            messageId: $this->messageId,
-            date: $this->date,
+        return clone (
+            $this,
+            [
+                'sender' => $sender !== null
+                    ? self::coerceAddress($sender)
+                    : null,
+            ],
         );
     }
 
@@ -329,74 +237,41 @@ class Message implements MessageInterface
     public function withReturnPath(
         AddressInterface|string|null $returnPath,
     ): MessageInterface {
-        return new self(
-            from: $this->from,
-            to: $this->to,
-            subject: $this->subject,
-            body: $this->body,
-            bodyType: $this->bodyType,
-            alternativeText: $this->alternativeText,
-            cc: $this->cc,
-            bcc: $this->bcc,
-            replyTo: $this->replyTo,
-            sender: $this->sender,
-            returnPath: $returnPath,
-            attachments: $this->attachments,
-            extraHeaders: $this->extraHeaders,
-            messageId: $this->messageId,
-            date: $this->date,
+        return clone (
+            $this,
+            [
+                'returnPath' => $returnPath !== null
+                    ? self::coerceAddress($returnPath)
+                    : null,
+            ],
         );
     }
 
-    /**
-     * @throws MailException
-     */
     public function withAttachment(
         AttachmentInterface $attachment,
     ): MessageInterface {
-        return new self(
-            from: $this->from,
-            to: $this->to,
-            subject: $this->subject,
-            body: $this->body,
-            bodyType: $this->bodyType,
-            alternativeText: $this->alternativeText,
-            cc: $this->cc,
-            bcc: $this->bcc,
-            replyTo: $this->replyTo,
-            sender: $this->sender,
-            returnPath: $this->returnPath,
-            attachments: [...$this->attachments, $attachment],
-            extraHeaders: $this->extraHeaders,
-            messageId: $this->messageId,
-            date: $this->date,
+        return clone (
+            $this,
+            [
+                'attachments' => [
+                    ...$this->attachments,
+                    $attachment,
+                ],
+            ],
         );
     }
 
     /**
      * @param list<AttachmentInterface> $attachments
-     *
-     * @throws MailException
      */
     public function withAttachments(
         array $attachments,
     ): MessageInterface {
-        return new self(
-            from: $this->from,
-            to: $this->to,
-            subject: $this->subject,
-            body: $this->body,
-            bodyType: $this->bodyType,
-            alternativeText: $this->alternativeText,
-            cc: $this->cc,
-            bcc: $this->bcc,
-            replyTo: $this->replyTo,
-            sender: $this->sender,
-            returnPath: $this->returnPath,
-            attachments: $attachments,
-            extraHeaders: $this->extraHeaders,
-            messageId: $this->messageId,
-            date: $this->date,
+        return clone (
+            $this,
+            [
+                'attachments' => $attachments,
+            ],
         );
     }
 
@@ -406,22 +281,18 @@ class Message implements MessageInterface
     public function withExtraHeader(
         HeaderInterface $header,
     ): MessageInterface {
-        return new self(
-            from: $this->from,
-            to: $this->to,
-            subject: $this->subject,
-            body: $this->body,
-            bodyType: $this->bodyType,
-            alternativeText: $this->alternativeText,
-            cc: $this->cc,
-            bcc: $this->bcc,
-            replyTo: $this->replyTo,
-            sender: $this->sender,
-            returnPath: $this->returnPath,
-            attachments: $this->attachments,
-            extraHeaders: [...$this->extraHeaders, $header],
-            messageId: $this->messageId,
-            date: $this->date,
+        self::assertExtraHeadersAllowed([
+            $header,
+        ]);
+
+        return clone (
+            $this,
+            [
+                'extraHeaders' => [
+                    ...$this->extraHeaders,
+                    $header,
+                ],
+            ],
         );
     }
 
@@ -433,28 +304,16 @@ class Message implements MessageInterface
     public function withExtraHeaders(
         array $extraHeaders,
     ): MessageInterface {
-        return new self(
-            from: $this->from,
-            to: $this->to,
-            subject: $this->subject,
-            body: $this->body,
-            bodyType: $this->bodyType,
-            alternativeText: $this->alternativeText,
-            cc: $this->cc,
-            bcc: $this->bcc,
-            replyTo: $this->replyTo,
-            sender: $this->sender,
-            returnPath: $this->returnPath,
-            attachments: $this->attachments,
-            extraHeaders: $extraHeaders,
-            messageId: $this->messageId,
-            date: $this->date,
+        self::assertExtraHeadersAllowed($extraHeaders);
+
+        return clone (
+            $this,
+            [
+                'extraHeaders' => $extraHeaders,
+            ],
         );
     }
 
-    /**
-     * @throws MailException
-     */
     public function withoutExtraHeader(
         string $name,
     ): MessageInterface {
@@ -466,23 +325,42 @@ class Message implements MessageInterface
             ),
         );
 
-        return new self(
-            from: $this->from,
-            to: $this->to,
-            subject: $this->subject,
-            body: $this->body,
-            bodyType: $this->bodyType,
-            alternativeText: $this->alternativeText,
-            cc: $this->cc,
-            bcc: $this->bcc,
-            replyTo: $this->replyTo,
-            sender: $this->sender,
-            returnPath: $this->returnPath,
-            attachments: $this->attachments,
-            extraHeaders: $filtered,
-            messageId: $this->messageId,
-            date: $this->date,
+        return clone (
+            $this,
+            [
+                'extraHeaders' => $filtered,
+            ],
         );
+    }
+
+    /**
+     * @throws MailException
+     */
+    private static function assertAlternativeTextAllowed(
+        ?string $alternativeText,
+        BodyType $bodyType,
+    ): void {
+        if (
+            $alternativeText !== null &&
+            $bodyType !== BodyType::HTML
+        ) {
+            throw MailException::fromAlternativeTextRequiresHtmlBody();
+        }
+    }
+
+    /**
+     * @param list<HeaderInterface> $headers
+     *
+     * @throws MailException
+     */
+    private static function assertExtraHeadersAllowed(
+        array $headers,
+    ): void {
+        foreach ($headers as $header) {
+            if (\in_array(\strtolower($header->name), self::RESERVED_HEADER_NAMES, true)) {
+                throw MailException::fromReservedHeaderName($header->name);
+            }
+        }
     }
 
     /**
