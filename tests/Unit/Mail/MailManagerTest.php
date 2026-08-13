@@ -14,6 +14,9 @@ declare(strict_types=1);
 namespace Unit\Mail;
 
 use PHPUnit\Framework\TestCase;
+use Support\Mail\Middleware\RecordingMessageMiddleware;
+use Support\Mail\Middleware\RecordingWireMiddleware;
+use Support\Mail\Serializer\StubMessageSerializer;
 use Support\Mail\Transport\RecordingMailTransport;
 use Tuxxedo\Mail\Address;
 use Tuxxedo\Mail\MailManager;
@@ -109,5 +112,117 @@ class MailManagerTest extends TestCase
             $transport->sent,
         );
         self::assertSame(0, $transport->sendCalls);
+    }
+
+    public function testSendWithResultWithZeroMessagesReturnsEmptyList(): void
+    {
+        $transport = new RecordingMailTransport();
+        $manager = new MailManager(
+            transport: $transport,
+        );
+
+        $results = $manager->sendWithResult();
+
+        self::assertSame([], $results);
+        self::assertSame(0, $transport->sendCalls);
+    }
+
+    public function testSendWithResultForwardsSingleMessage(): void
+    {
+        $transport = new RecordingMailTransport();
+        $manager = new MailManager(
+            transport: $transport,
+        );
+        $message = $this->makeMessage();
+
+        $results = $manager->sendWithResult($message);
+
+        self::assertCount(1, $results);
+        self::assertSame(
+            [
+                $message,
+            ],
+            $transport->sent,
+        );
+    }
+
+    public function testSendWithResultPreservesOrderAcrossMultipleMessages(): void
+    {
+        $transport = new RecordingMailTransport();
+        $manager = new MailManager(
+            transport: $transport,
+        );
+
+        $first = $this->makeMessage(subject: 'first');
+        $second = $this->makeMessage(subject: 'second');
+
+        $results = $manager->sendWithResult($first, $second);
+
+        self::assertCount(2, $results);
+        self::assertSame($first, $transport->sent[0]);
+        self::assertSame($second, $transport->sent[1]);
+    }
+
+    public function testPipelineInvokesMessageMiddlewareInOrder(): void
+    {
+        $transport = new RecordingMailTransport();
+        $first = new RecordingMessageMiddleware();
+        $second = new RecordingMessageMiddleware();
+
+        $manager = new MailManager(
+            transport: $transport,
+            messageMiddleware: [
+                $first,
+                $second,
+            ],
+        );
+
+        $message = $this->makeMessage();
+
+        $manager->send($message);
+
+        self::assertSame(
+            [
+                $message,
+            ],
+            $first->seen,
+        );
+        self::assertSame(
+            [
+                $message,
+            ],
+            $second->seen,
+        );
+    }
+
+    public function testPipelineInvokesWireMiddlewareAfterSerialization(): void
+    {
+        $transport = new RecordingMailTransport();
+        $serializer = new StubMessageSerializer();
+        $wire = new RecordingWireMiddleware();
+
+        $manager = new MailManager(
+            transport: $transport,
+            serializer: $serializer,
+            wireMiddleware: [
+                $wire,
+            ],
+        );
+
+        $message = $this->makeMessage();
+
+        $manager->send($message);
+
+        self::assertSame(
+            [
+                $message,
+            ],
+            $serializer->seen,
+        );
+        self::assertCount(1, $wire->seen);
+        self::assertSame(
+            $message,
+            $wire->seen[0]->source,
+        );
     }
 }

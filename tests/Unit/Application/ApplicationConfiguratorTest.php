@@ -21,6 +21,7 @@ use Support\File\Storage\StubStorage;
 use Support\Http\Kernel\StubDispatcher;
 use Support\Http\Request\Middleware\RecordingMiddleware;
 use Support\Http\Response\StubResponseEmitter;
+use Support\Mail\Transport\RecordingMailTransport;
 use Tuxxedo\Application\ApplicationConfigurator;
 use Tuxxedo\Application\Profile;
 use Tuxxedo\Config\Config;
@@ -45,6 +46,12 @@ use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Http\Url\Url;
 use Tuxxedo\Http\Url\UrlInterface;
+use Tuxxedo\Mail\Config\MailManagerConfig;
+use Tuxxedo\Mail\MailManager;
+use Tuxxedo\Mail\MailManagerConfiguratorInterface;
+use Tuxxedo\Mail\MailManagerInterface;
+use Tuxxedo\Mail\Transport\FileMail\Config\FileMailTransportConfig;
+use Tuxxedo\Mail\Transport\FileMail\FileMailTransport;
 use Tuxxedo\Router\DynamicRouter;
 use Tuxxedo\Router\RouteDiscoverer;
 use Tuxxedo\Router\RouterInterface;
@@ -1649,6 +1656,111 @@ class ApplicationConfiguratorTest extends TestCase
         $container = $configurator->container;
 
         self::assertFalse($container->isBound(StorageInterface::class));
+    }
+
+    public function testBuildRegistersMailManagerFromUserSuppliedInstance(): void
+    {
+        $mailManager = new MailManager(
+            transport: new RecordingMailTransport(),
+        );
+
+        $configurator = $this->makeMinimalConfigurator()
+            ->withMailManager(
+                mailManager: $mailManager,
+            );
+
+        $configurator->build();
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        self::assertTrue($container->isBound(MailManagerInterface::class));
+        self::assertSame(
+            $mailManager,
+            $container->resolve(MailManagerInterface::class),
+        );
+    }
+
+    public function testBuildRegistersMailManagerFromDefault(): void
+    {
+        $configurator = $this->makeMinimalConfigurator()
+            ->withDefaultMailManager();
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        $transportConfig = new FileMailTransportConfig(
+            directory: \sys_get_temp_dir(),
+        );
+
+        $container->singleton(
+            new MailManagerConfig(
+                transport: $transportConfig,
+            ),
+        );
+
+        $container->singleton(
+            new FileMailTransport(
+                config: $transportConfig,
+            ),
+        );
+
+        $configurator->build();
+
+        self::assertTrue($container->isBound(MailManagerInterface::class));
+        self::assertInstanceOf(
+            MailManager::class,
+            $container->resolve(MailManagerInterface::class),
+        );
+    }
+
+    public function testBuildRegistersMailManagerWithCustomizer(): void
+    {
+        $customizerCalls = 0;
+
+        $configurator = $this->makeMinimalConfigurator()
+            ->withDefaultMailManager(
+                customizer: static function (MailManagerConfiguratorInterface $mailConfigurator) use (&$customizerCalls): void {
+                    $customizerCalls++;
+                },
+            );
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        $transportConfig = new FileMailTransportConfig(
+            directory: \sys_get_temp_dir(),
+        );
+
+        $container->singleton(
+            new MailManagerConfig(
+                transport: $transportConfig,
+            ),
+        );
+
+        $container->singleton(
+            new FileMailTransport(
+                config: $transportConfig,
+            ),
+        );
+
+        $configurator->build();
+
+        $container->resolve(MailManagerInterface::class);
+
+        self::assertSame(1, $customizerCalls);
+    }
+
+    public function testBuildDoesNotRegisterMailManagerWhenNotConfigured(): void
+    {
+        $configurator = $this->makeMinimalConfigurator();
+
+        $configurator->build();
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        self::assertFalse($container->isBound(MailManagerInterface::class));
     }
 
     private static function makeErrorHandler(): ErrorHandlerInterface
