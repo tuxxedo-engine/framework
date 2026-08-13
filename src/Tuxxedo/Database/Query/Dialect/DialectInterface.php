@@ -101,4 +101,11 @@ interface DialectInterface
     public function listForeignKeys(
         string $table,
     ): StatementParserResultInterface;
+
+    /**
+     * @throws SqlException
+     */
+    public function describeTable(
+        string $table,
+    ): StatementParserResultInterface;
 }

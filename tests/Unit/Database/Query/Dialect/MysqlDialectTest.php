@@ -659,4 +659,25 @@ class MysqlDialectTest extends TestCase
             $result->parameters,
         );
     }
+
+    public function testDescribeTableBuildsInformationSchemaQuery(): void
+    {
+        $result = (new MysqlDialect())->describeTable(
+            table: 'widgets',
+        );
+
+        self::assertStringContainsString('information_schema.columns', $result->sql);
+        self::assertStringContainsString(':table', $result->sql);
+        self::assertStringContainsString('column_type', $result->sql);
+        self::assertStringContainsString('is_nullable', $result->sql);
+        self::assertStringContainsString('column_default', $result->sql);
+        self::assertStringContainsString('column_key', $result->sql);
+        self::assertStringContainsString('auto_increment', $result->sql);
+        self::assertSame(
+            [
+                'table' => 'widgets',
+            ],
+            $result->parameters,
+        );
+    }
 }

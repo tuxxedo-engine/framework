@@ -29,6 +29,7 @@ use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\AlterTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\ColumnExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
+use Tuxxedo\Database\Query\Statement\Table\DescribeTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\DropTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\ListDatabasesStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\ListForeignKeysStatementInterface;
@@ -279,6 +280,12 @@ class StubConnection implements ConnectionInterface
         string $table,
     ): ListForeignKeysStatementInterface {
         throw new \LogicException('StubConnection: listForeignKeys not implemented');
+    }
+
+    public function describeTable(
+        string $table,
+    ): DescribeTableStatementInterface {
+        throw new \LogicException('StubConnection: describeTable not implemented');
     }
 
     public function switchDatabase(

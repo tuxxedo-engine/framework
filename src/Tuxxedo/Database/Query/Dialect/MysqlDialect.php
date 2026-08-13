@@ -347,6 +347,26 @@ class MysqlDialect implements DialectInterface
         );
     }
 
+    public function describeTable(
+        string $table,
+    ): StatementParserResultInterface {
+        return new StatementParserResult(
+            sql: 'SELECT ' .
+                'column_name AS name, ' .
+                'column_type AS native_type, ' .
+                'CASE WHEN is_nullable = \'YES\' THEN 1 ELSE 0 END AS nullable, ' .
+                'column_default AS column_default, ' .
+                'CASE WHEN column_key = \'PRI\' THEN 1 ELSE 0 END AS is_primary, ' .
+                'CASE WHEN LOCATE(\'auto_increment\', extra) > 0 THEN 1 ELSE 0 END AS is_auto_increment ' .
+                'FROM information_schema.columns ' .
+                'WHERE table_schema = DATABASE() AND table_name = :table ' .
+                'ORDER BY ordinal_position',
+            parameters: [
+                'table' => $table,
+            ],
+        );
+    }
+
     /**
      * @param list<string> $columns
      */

@@ -52,6 +52,8 @@ class StubDialect implements DialectInterface
 
     public ?string $listForeignKeysTable = null;
 
+    public ?string $describeTableTable = null;
+
     /**
      * @param list<string> $quotations
      */
@@ -182,6 +184,19 @@ class StubDialect implements DialectInterface
 
         return new StatementParserResult(
             sql: 'SELECT constraint_name',
+            parameters: [
+                'table' => $table,
+            ],
+        );
+    }
+
+    public function describeTable(
+        string $table,
+    ): StatementParserResultInterface {
+        $this->describeTableTable = $table;
+
+        return new StatementParserResult(
+            sql: 'SELECT name',
             parameters: [
                 'table' => $table,
             ],

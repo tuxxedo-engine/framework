@@ -32,6 +32,8 @@ use Tuxxedo\Database\Query\Statement\Table\ColumnExistsStatement;
 use Tuxxedo\Database\Query\Statement\Table\ColumnExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\CreateTableStatement;
 use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
+use Tuxxedo\Database\Query\Statement\Table\DescribeTableStatement;
+use Tuxxedo\Database\Query\Statement\Table\DescribeTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\DropTableStatement;
 use Tuxxedo\Database\Query\Statement\Table\DropTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\ListDatabasesStatement;
@@ -288,6 +290,15 @@ abstract class AbstractConnection implements ConnectionInterface
         string $table,
     ): ListForeignKeysStatementInterface {
         return new ListForeignKeysStatement(
+            table: $table,
+            connection: $this,
+        );
+    }
+
+    public function describeTable(
+        string $table,
+    ): DescribeTableStatementInterface {
+        return new DescribeTableStatement(
             table: $table,
             connection: $this,
         );

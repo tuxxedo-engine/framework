@@ -480,4 +480,23 @@ class SqliteDialectTest extends TestCase
             $result->parameters,
         );
     }
+
+    public function testDescribeTableBuildsPragmaTableInfoQuery(): void
+    {
+        $result = (new SqliteDialect())->describeTable(
+            table: 'widgets',
+        );
+
+        self::assertStringContainsString('pragma_table_info(:table)', $result->sql);
+        self::assertStringContainsString('sqlite_master', $result->sql);
+        self::assertStringContainsString('AUTOINCREMENT', $result->sql);
+        self::assertStringContainsString('is_primary', $result->sql);
+        self::assertStringContainsString('is_auto_increment', $result->sql);
+        self::assertSame(
+            [
+                'table' => 'widgets',
+            ],
+            $result->parameters,
+        );
+    }
 }

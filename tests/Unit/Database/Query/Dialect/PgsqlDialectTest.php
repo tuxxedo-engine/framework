@@ -796,4 +796,24 @@ class PgsqlDialectTest extends TestCase
             $result->parameters,
         );
     }
+
+    public function testDescribeTableBuildsPgCatalogQuery(): void
+    {
+        $result = (new PgsqlDialect())->describeTable(
+            table: 'widgets',
+        );
+
+        self::assertStringContainsString('pg_catalog.pg_attribute', $result->sql);
+        self::assertStringContainsString('format_type', $result->sql);
+        self::assertStringContainsString(':table', $result->sql);
+        self::assertStringContainsString('native_type', $result->sql);
+        self::assertStringContainsString('is_primary', $result->sql);
+        self::assertStringContainsString('is_auto_increment', $result->sql);
+        self::assertSame(
+            [
+                'table' => 'widgets',
+            ],
+            $result->parameters,
+        );
+    }
 }

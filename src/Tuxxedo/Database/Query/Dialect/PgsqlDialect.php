@@ -376,6 +376,41 @@ class PgsqlDialect implements DialectInterface
         );
     }
 
+    public function describeTable(
+        string $table,
+    ): StatementParserResultInterface {
+        return new StatementParserResult(
+            sql: 'SELECT ' .
+                'a.attname AS name, ' .
+                'format_type(a.atttypid, a.atttypmod) AS native_type, ' .
+                'CASE WHEN a.attnotnull THEN 0 ELSE 1 END AS nullable, ' .
+                'pg_get_expr(ad.adbin, ad.adrelid) AS column_default, ' .
+                'CASE WHEN pk.attnum IS NOT NULL THEN 1 ELSE 0 END AS is_primary, ' .
+                'CASE ' .
+                'WHEN a.attidentity <> \'\' THEN 1 ' .
+                'WHEN pg_get_expr(ad.adbin, ad.adrelid) LIKE \'nextval(%\' THEN 1 ' .
+                'ELSE 0 ' .
+                'END AS is_auto_increment ' .
+                'FROM pg_catalog.pg_class t ' .
+                'INNER JOIN pg_catalog.pg_namespace n ON n.oid = t.relnamespace ' .
+                'INNER JOIN pg_catalog.pg_attribute a ON a.attrelid = t.oid ' .
+                'LEFT JOIN pg_catalog.pg_attrdef ad ON ad.adrelid = a.attrelid AND ad.adnum = a.attnum ' .
+                'LEFT JOIN (' .
+                'SELECT indrelid, UNNEST(indkey) AS attnum ' .
+                'FROM pg_catalog.pg_index ' .
+                'WHERE indisprimary' .
+                ') pk ON pk.indrelid = t.oid AND pk.attnum = a.attnum ' .
+                'WHERE n.nspname = current_schema() ' .
+                'AND t.relname = :table ' .
+                'AND a.attnum > 0 ' .
+                'AND NOT a.attisdropped ' .
+                'ORDER BY a.attnum',
+            parameters: [
+                'table' => $table,
+            ],
+        );
+    }
+
     public function listForeignKeys(
         string $table,
     ): StatementParserResultInterface {

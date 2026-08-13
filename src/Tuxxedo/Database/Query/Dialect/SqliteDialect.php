@@ -207,6 +207,31 @@ class SqliteDialect implements DialectInterface
         );
     }
 
+    public function describeTable(
+        string $table,
+    ): StatementParserResultInterface {
+        return new StatementParserResult(
+            sql: 'SELECT ' .
+                'ti.name AS name, ' .
+                'ti.type AS native_type, ' .
+                'CASE WHEN ti."notnull" = 0 THEN 1 ELSE 0 END AS nullable, ' .
+                'ti.dflt_value AS column_default, ' .
+                'CASE WHEN ti.pk > 0 THEN 1 ELSE 0 END AS is_primary, ' .
+                'CASE ' .
+                'WHEN ti.pk > 0 AND EXISTS (' .
+                'SELECT 1 FROM sqlite_master ' .
+                'WHERE type = \'table\' AND name = :table AND UPPER(sql) LIKE \'%AUTOINCREMENT%\'' .
+                ') THEN 1 ' .
+                'ELSE 0 ' .
+                'END AS is_auto_increment ' .
+                'FROM pragma_table_info(:table) ti ' .
+                'ORDER BY ti.cid',
+            parameters: [
+                'table' => $table,
+            ],
+        );
+    }
+
     public function listForeignKeys(
         string $table,
     ): StatementParserResultInterface {
