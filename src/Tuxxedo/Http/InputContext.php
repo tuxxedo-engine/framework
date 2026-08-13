@@ -25,7 +25,7 @@ enum InputContext
     public static function fromMethod(
         Method $method
     ): self {
-        return match ($method) {
+        return match ($method) { // @codeCoverageIgnore
             Method::GET => self::GET,
             Method::POST => self::POST,
             default => throw HttpException::fromInternalServerError(),

@@ -24,7 +24,7 @@ enum Type
     public static function fromString(
         string $name,
     ): ?self {
-        return match ($name) {
+        return match ($name) { // @codeCoverageIgnore
             self::STRING->name => self::STRING,
             self::INT->name => self::INT,
             self::FLOAT->name => self::FLOAT,

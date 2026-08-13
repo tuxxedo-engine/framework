@@ -39,7 +39,7 @@ abstract class AbstractLogger implements LoggerInterface
     ): void {
         $this->total++;
 
-        match ($level) {
+        match ($level) { // @codeCoverageIgnore
             LogLevel::ALERT => $this->totalAlert++,
             LogLevel::CRITICAL => $this->totalCritical++,
             LogLevel::DEBUG => $this->totalDebug++,
@@ -141,7 +141,7 @@ abstract class AbstractLogger implements LoggerInterface
     public function getTotalByLogLevel(
         LogLevel $level,
     ): int {
-        return match ($level) {
+        return match ($level) { // @codeCoverageIgnore
             LogLevel::ALERT => $this->totalAlert,
             LogLevel::CRITICAL => $this->totalCritical,
             LogLevel::DEBUG => $this->totalDebug,

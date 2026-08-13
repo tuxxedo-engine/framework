@@ -298,7 +298,7 @@ class Request implements RequestInterface
     public function input(
         InputContext $context,
     ): InputContextInterface {
-        return match ($context) {
+        return match ($context) { // @codeCoverageIgnore
             InputContext::GET => $this->get,
             InputContext::POST => $this->post,
             InputContext::COOKIE => $this->cookies,

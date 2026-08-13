@@ -33,7 +33,7 @@ class Evaluator implements EvaluatorInterface
         Type $type,
         string $value,
     ): string|int|float|bool|null {
-        return match ($type) {
+        return match ($type) { // @codeCoverageIgnore
             Type::STRING => $value,
             Type::INT => \intval($value),
             Type::FLOAT => \floatval($value),

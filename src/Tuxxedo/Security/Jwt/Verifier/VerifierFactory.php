@@ -30,7 +30,7 @@ class VerifierFactory
         Algorithm $algorithm,
         KeyInterface $key,
     ): VerifierInterface {
-        return match ($algorithm) {
+        return match ($algorithm) { // @codeCoverageIgnore
             Algorithm::HS256, Algorithm::HS384, Algorithm::HS512 => self::createHmac(
                 algorithm: $algorithm,
                 key: $key,

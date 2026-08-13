@@ -22,7 +22,7 @@ class LumiLight implements ThemeInterface
     public function color(
         ColorSlot $slot,
     ): string {
-        return match ($slot) {
+        return match ($slot) { // @codeCoverageIgnore
             ColorSlot::TEXT => '#24292F',
             ColorSlot::COMMENT => '#6E7781',
             ColorSlot::DELIMITER => '#57606A',

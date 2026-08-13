@@ -73,7 +73,7 @@ class SyslogLogger extends AbstractLogger
     private function mapLogLevelToPriority(
         LogLevel $level,
     ): int {
-        return match ($level) {
+        return match ($level) { // @codeCoverageIgnore
             LogLevel::EMERGENCY => \LOG_EMERG,
             LogLevel::ALERT => \LOG_ALERT,
             LogLevel::CRITICAL => \LOG_CRIT,

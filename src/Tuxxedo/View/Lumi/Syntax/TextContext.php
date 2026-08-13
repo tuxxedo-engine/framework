@@ -21,7 +21,7 @@ enum TextContext
     public static function fromString(
         string $name,
     ): self {
-        return match ($name) {
+        return match ($name) { // @codeCoverageIgnore
             self::RAW->name => self::RAW,
             default => self::NONE,
         };

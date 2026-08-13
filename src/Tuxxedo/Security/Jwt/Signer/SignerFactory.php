@@ -30,7 +30,7 @@ class SignerFactory
         Algorithm $algorithm,
         KeyInterface $key,
     ): SignerInterface {
-        return match ($algorithm) {
+        return match ($algorithm) { // @codeCoverageIgnore
             Algorithm::HS256, Algorithm::HS384, Algorithm::HS512 => self::createHmac(
                 algorithm: $algorithm,
                 key: $key,

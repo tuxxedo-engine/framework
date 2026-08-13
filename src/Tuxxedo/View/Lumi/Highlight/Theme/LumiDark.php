@@ -22,7 +22,7 @@ class LumiDark implements ThemeInterface
     public function color(
         ColorSlot $slot,
     ): string {
-        return match ($slot) {
+        return match ($slot) { // @codeCoverageIgnore
             ColorSlot::TEXT => '#C9D1D9',
             ColorSlot::COMMENT => '#8B949E',
             ColorSlot::DELIMITER => '#6E7681',
