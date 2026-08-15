@@ -574,4 +574,137 @@ class StaticRouterTest extends TestCase
         self::assertNotNull($dispatchable);
         self::assertSame($route, $dispatchable->route);
     }
+
+    public function testFindByPathPrefersStaticOverDynamicWhenBothMatch(): void
+    {
+        $staticRoute = $this->makeRoute(
+            method: Method::GET,
+            path: '/users/list',
+            action: 'static-list',
+        );
+
+        $dynamicRoute = $this->makeRoute(
+            method: Method::GET,
+            path: '/users/{id}',
+            action: 'dynamic-show',
+            regexPath: '#^/users/(?<id>[^/]+)$#',
+        );
+
+        $router = $this->makeRouter(
+            routes: [
+                $dynamicRoute,
+                $staticRoute,
+            ],
+        );
+
+        $dispatchable = $router->findByPath(
+            method: Method::GET,
+            path: '/users/list',
+        );
+
+        self::assertNotNull($dispatchable);
+        self::assertSame($staticRoute, $dispatchable->route);
+    }
+
+    public function testFindByNameResolvesSameNameAcrossMethods(): void
+    {
+        $getRoute = $this->makeRoute(
+            method: Method::GET,
+            path: '/users',
+            name: 'users.endpoint',
+        );
+
+        $postRoute = $this->makeRoute(
+            method: Method::POST,
+            path: '/users',
+            name: 'users.endpoint',
+        );
+
+        $router = $this->makeRouter(
+            routes: [
+                $getRoute,
+                $postRoute,
+            ],
+        );
+
+        $dispatchable = $router->findByName(
+            name: 'users.endpoint',
+            method: Method::POST,
+        );
+
+        self::assertNotNull($dispatchable);
+        self::assertSame($postRoute, $dispatchable->route);
+    }
+
+    public function testFindByPathMethodNotAllowedWhenStaticPathExistsForDifferentMethod(): void
+    {
+        $router = $this->makeRouter(
+            routes: [
+                $this->makeRoute(
+                    method: Method::POST,
+                    path: '/users',
+                ),
+                $this->makeRoute(
+                    method: Method::DELETE,
+                    path: '/users',
+                ),
+            ],
+        );
+
+        self::expectException(HttpException::class);
+
+        $router->findByPath(
+            method: Method::GET,
+            path: '/users',
+        );
+    }
+
+    public function testFindByPathMethodNotAllowedWhenDynamicRouteMethodMismatches(): void
+    {
+        $router = $this->makeRouter(
+            routes: [
+                $this->makeRoute(
+                    method: Method::GET,
+                    path: '/users/{id}',
+                    regexPath: '#^/users/(?<id>\d+)$#',
+                ),
+            ],
+        );
+
+        self::expectException(HttpException::class);
+
+        $router->findByPath(
+            method: Method::POST,
+            path: '/users/42',
+        );
+    }
+
+    public function testFindByPathReusesRouteIndexAcrossCalls(): void
+    {
+        $route = $this->makeRoute(
+            method: Method::GET,
+            path: '/users',
+        );
+
+        $router = $this->makeRouter(
+            routes: [
+                $route,
+            ],
+        );
+
+        $first = $router->findByPath(
+            method: Method::GET,
+            path: '/users',
+        );
+
+        $second = $router->findByPath(
+            method: Method::GET,
+            path: '/users',
+        );
+
+        self::assertNotNull($first);
+        self::assertNotNull($second);
+        self::assertSame($route, $first->route);
+        self::assertSame($route, $second->route);
+    }
 }
