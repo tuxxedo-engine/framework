@@ -167,6 +167,19 @@ class MailException extends \Exception
         );
     }
 
+    public static function fromSendMailFailure(
+        int $exitCode,
+        string $stderr,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'sendmail exited with code %d: %s',
+                $exitCode,
+                \trim($stderr),
+            ),
+        );
+    }
+
     /**
      * @param class-string $mimePartClass
      */
