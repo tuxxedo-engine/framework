@@ -20,6 +20,8 @@ use Tuxxedo\Security\Jwt\Key\KeySetInterface;
 class JwksParser
 {
     /**
+     * @todo Add `parseUrl(string $url, int $timeout = 5): KeySetInterface` static factory that fetches a remote JWKS document (HTTPS-only default, `protected static fetch()` seam for tests, new `JwtException::fromInsecureJwksUrl` + `::fromJwksFetchFailure` factories). Optional helper for apps whose SPA/service accepts JWTs signed by an external IdP.
+     *
      * @throws CryptoException
      * @throws JwtException
      */
