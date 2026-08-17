@@ -36,6 +36,10 @@ class RangeRule implements RuleInterface
         ValidationContextInterface $context,
         ContainerInterface $container,
     ): ?ViolationInterface {
+        if ($value === null) {
+            return null;
+        }
+
         $numeric = self::coerceNumeric($value);
 
         if ($numeric === null) {

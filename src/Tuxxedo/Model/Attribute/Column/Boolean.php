@@ -18,9 +18,11 @@ use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Behavior\BehaviorInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
+use Tuxxedo\Validator\Rule\Boolean\BooleanRule;
+use Tuxxedo\Validator\RuleProviderInterface;
 
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
-readonly class Boolean implements ColumnInterface
+readonly class Boolean implements ColumnInterface, RuleProviderInterface
 {
     /**
      * @var array<string, mixed>
@@ -39,6 +41,13 @@ readonly class Boolean implements ColumnInterface
         public ?bool $default = null,
     ) {
         $this->coercerArguments = [];
+    }
+
+    public function toRules(): iterable
+    {
+        yield new BooleanRule(
+            strict: true,
+        );
     }
 
     public function toColumnType(

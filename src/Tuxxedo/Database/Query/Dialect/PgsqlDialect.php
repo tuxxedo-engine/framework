@@ -49,7 +49,7 @@ class PgsqlDialect implements DialectInterface
      * @param (\Closure(): Connection)|null $connection
      */
     public function __construct(
-        private readonly \Closure|null $connection = null,
+        private readonly ?\Closure $connection = null,
         private readonly bool $usePositionalPlaceholders = false,
     ) {
     }

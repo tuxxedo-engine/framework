@@ -34,6 +34,10 @@ class ContainsRule implements RuleInterface
         ValidationContextInterface $context,
         ContainerInterface $container,
     ): ?ViolationInterface {
+        if ($value === null) {
+            return null;
+        }
+
         if (!\is_string($value)) {
             return new Violation(
                 code: CommonViolationCode::WRONG_TYPE,

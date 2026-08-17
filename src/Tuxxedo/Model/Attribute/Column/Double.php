@@ -18,9 +18,11 @@ use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Behavior\BehaviorInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
+use Tuxxedo\Validator\Rule\Numeric\NumericRule;
+use Tuxxedo\Validator\RuleProviderInterface;
 
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
-readonly class Double implements ColumnInterface
+readonly class Double implements ColumnInterface, RuleProviderInterface
 {
     /**
      * @var array<string, mixed>
@@ -41,6 +43,13 @@ readonly class Double implements ColumnInterface
         public int|float|null $default = null,
     ) {
         $this->coercerArguments = [];
+    }
+
+    public function toRules(): iterable
+    {
+        yield new NumericRule(
+            strict: false,
+        );
     }
 
     public function toColumnType(

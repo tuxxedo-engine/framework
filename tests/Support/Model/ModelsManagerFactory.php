@@ -23,6 +23,7 @@ use Tuxxedo\Model\MetaData\Adapter\ReflectionMetaDataAdapter;
 use Tuxxedo\Model\MetaData\MetaData;
 use Tuxxedo\Model\ModelsManager;
 use Tuxxedo\Model\ModelsManagerInterface;
+use Tuxxedo\Validator\Validator;
 
 class ModelsManagerFactory
 {
@@ -73,6 +74,9 @@ class ModelsManagerFactory
             ),
             dirtyTracker: new DirtyTracker(),
             databaseHydrator: new DatabaseHydrator(
+                container: $container,
+            ),
+            validator: new Validator(
                 container: $container,
             ),
         );

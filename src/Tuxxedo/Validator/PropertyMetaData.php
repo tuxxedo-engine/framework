@@ -21,6 +21,7 @@ class PropertyMetaData
     public function __construct(
         public readonly string $name,
         public readonly array $rules,
+        public readonly bool $skipCascade = false,
     ) {
     }
 }

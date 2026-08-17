@@ -93,7 +93,7 @@ class LengthRuleTest extends TestCase
         mixed $value,
         ?int $min,
         ?int $max,
-        ViolationCodeInterface|null $expected,
+        ?ViolationCodeInterface $expected,
     ): void {
         $result = $this->runRule(
             rule: new LengthRule(

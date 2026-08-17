@@ -45,16 +45,16 @@ class EmailRuleTest extends TestCase
             CommonViolationCode::WRONG_TYPE,
         ];
 
-        yield 'wrong type: null' => [
+        yield 'null skipped' => [
             null,
-            CommonViolationCode::WRONG_TYPE,
+            null,
         ];
     }
 
     #[DataProvider('providesCases')]
     public function testCheck(
         mixed $value,
-        ViolationCodeInterface|null $expected,
+        ?ViolationCodeInterface $expected,
     ): void {
         $result = $this->runRule(
             rule: new EmailRule(),

@@ -19,9 +19,11 @@ use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\ColumnLengthInterface;
 use Tuxxedo\Model\Behavior\BehaviorInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
+use Tuxxedo\Validator\Rule\Length\LengthRule;
+use Tuxxedo\Validator\RuleProviderInterface;
 
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
-readonly class Char implements ColumnInterface, ColumnLengthInterface
+readonly class Char implements ColumnInterface, ColumnLengthInterface, RuleProviderInterface
 {
     /**
      * @var array<string, mixed>
@@ -43,6 +45,13 @@ readonly class Char implements ColumnInterface, ColumnLengthInterface
         public ?string $default = null,
     ) {
         $this->coercerArguments = [];
+    }
+
+    public function toRules(): iterable
+    {
+        yield new LengthRule(
+            max: $this->length,
+        );
     }
 
     public function toColumnType(

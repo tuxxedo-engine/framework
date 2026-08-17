@@ -34,6 +34,10 @@ class NumericRule implements RuleInterface
         ValidationContextInterface $context,
         ContainerInterface $container,
     ): ?ViolationInterface {
+        if ($value === null) {
+            return null;
+        }
+
         $isValid = $this->strict
             ? \is_int($value) || \is_float($value)
             : \is_numeric($value);

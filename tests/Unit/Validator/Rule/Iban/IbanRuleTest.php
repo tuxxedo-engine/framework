@@ -59,7 +59,7 @@ class IbanRuleTest extends TestCase
     #[DataProvider('providesCases')]
     public function testCheck(
         mixed $value,
-        ViolationCodeInterface|null $expected,
+        ?ViolationCodeInterface $expected,
     ): void {
         $result = $this->runRule(
             rule: new IbanRule(),

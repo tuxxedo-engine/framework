@@ -14,9 +14,13 @@ declare(strict_types=1);
 namespace Tuxxedo\Validator;
 
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Model\Attribute\Relation\RelationInterface;
 use Tuxxedo\Reflection\ClassReflector;
 use Tuxxedo\Reflection\PropertyReflector;
 
+/**
+ * @todo Related entities reached through relation-attributed properties (`#[BelongsTo]`, `#[HasOne]`, `#[HasMany]`, `#[HasManyThrough]`, `#[HasOneThrough]`, `#[BelongsToMany]`) are NOT validated during the parent's save. Reading the relation property triggers Engine's lazy-proxy hydrator and causes runaway recursion via bidirectional links, so those properties are skipped entirely — no value read, no rules invoked, no cascade. Each related entity is expected to run its own validation via its own `ModelsManager::save()`. Revisit when a real "validate the whole aggregate in one shot" use case surfaces — likely wants an explicit `#[Valid]` opt-in marker plus identity-map awareness to break cycles without disabling the walk. See discussion in the Validator design doc.
+ */
 class Validator implements ValidatorInterface
 {
     public const int MAX_RECURSION_DEPTH = 32;
@@ -37,6 +41,9 @@ class Validator implements ValidatorInterface
     ): ValidationResult {
         $violations = [];
 
+        /** @var \WeakMap<object, true> $visited */
+        $visited = new \WeakMap();
+
         $this->walkObject(
             target: $target,
             path: '',
@@ -44,6 +51,7 @@ class Validator implements ValidatorInterface
             group: $group,
             depth: 0,
             violations: $violations,
+            visited: $visited,
         );
 
         return new ValidationResult(
@@ -72,6 +80,7 @@ class Validator implements ValidatorInterface
 
     /**
      * @param list<ViolationInterface> $violations
+     * @param \WeakMap<object, true> $visited
      *
      * @throws ValidatorException
      */
@@ -82,7 +91,14 @@ class Validator implements ValidatorInterface
         ?string $group,
         int $depth,
         array &$violations,
+        \WeakMap $visited,
     ): void {
+        if (isset($visited[$target])) {
+            return;
+        }
+
+        $visited[$target] = true;
+
         if ($depth > self::MAX_RECURSION_DEPTH) {
             throw ValidatorException::fromRecursionDepthExceeded(
                 path: $path,
@@ -91,6 +107,10 @@ class Validator implements ValidatorInterface
         }
 
         foreach ($this->metaDataFor($target::class) as $property) {
+            if ($property->skipCascade) {
+                continue;
+            }
+
             $propertyPath = $path === ''
                 ? $property->name
                 : $path . '.' . $property->name;
@@ -127,12 +147,14 @@ class Validator implements ValidatorInterface
                 group: $group,
                 depth: $depth + 1,
                 violations: $violations,
+                visited: $visited,
             );
         }
     }
 
     /**
      * @param list<ViolationInterface> $violations
+     * @param \WeakMap<object, true> $visited
      *
      * @throws ValidatorException
      */
@@ -143,6 +165,7 @@ class Validator implements ValidatorInterface
         ?string $group,
         int $depth,
         array &$violations,
+        \WeakMap $visited,
     ): void {
         if (\is_object($value)) {
             $this->walkObject(
@@ -152,6 +175,7 @@ class Validator implements ValidatorInterface
                 group: $group,
                 depth: $depth,
                 violations: $violations,
+                visited: $visited,
             );
 
             return;
@@ -173,6 +197,7 @@ class Validator implements ValidatorInterface
                 group: $group,
                 depth: $depth,
                 violations: $violations,
+                visited: $visited,
             );
         }
     }
@@ -200,13 +225,22 @@ class Validator implements ValidatorInterface
 
             $rules = [];
 
+            foreach ($property->getAttributes(RuleProviderInterface::class) as $provider) {
+                foreach ($provider->toRules() as $rule) {
+                    $rules[] = $rule;
+                }
+            }
+
             foreach ($property->getAttributes(RuleInterface::class) as $rule) {
                 $rules[] = $rule;
             }
 
+            $skipCascade = $property->hasAttribute(RelationInterface::class);
+
             $metaData[] = new PropertyMetaData(
                 name: $property->name,
                 rules: $rules,
+                skipCascade: $skipCascade,
             );
         }
 

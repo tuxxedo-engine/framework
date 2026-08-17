@@ -52,11 +52,15 @@ interface ModelsManagerInterface
      *
      * @param TModel $model
      * @return TModel
+     *
+     * @todo Add a `Uuid` column attribute with an optional version option (`UuidVersion` enum: V4/V7/etc.) that delegates to the matching Validator rule for shape and version-byte checking.
+     * @todo `save()` validates the passed model's own columns and property-attribute rules but does NOT recurse into related entities reached through relation attributes — they're skipped by Validator to avoid triggering lazy-proxy hydration and bidirectional-cycle recursion. Each related entity must be saved (and thus validated) independently. Revisit when a real "validate whole aggregate atomically" use case surfaces.
      */
     #[\NoDiscard]
     public function save(
         object $model,
         bool $forceMaterialize = false,
+        bool $skipValidation = false,
     ): object;
 
     /**

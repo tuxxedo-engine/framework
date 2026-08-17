@@ -71,10 +71,10 @@ class NumericRuleTest extends TestCase
             CommonViolationCode::WRONG_TYPE,
         ];
 
-        yield 'null fails' => [
+        yield 'null skipped' => [
             null,
             false,
-            CommonViolationCode::WRONG_TYPE,
+            null,
         ];
     }
 
@@ -82,7 +82,7 @@ class NumericRuleTest extends TestCase
     public function testCheck(
         mixed $value,
         bool $strict,
-        ViolationCodeInterface|null $expected,
+        ?ViolationCodeInterface $expected,
     ): void {
         $result = $this->runRule(
             rule: new NumericRule(

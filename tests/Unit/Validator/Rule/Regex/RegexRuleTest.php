@@ -53,7 +53,7 @@ class RegexRuleTest extends TestCase
     public function testCheck(
         mixed $value,
         string $pattern,
-        ViolationCodeInterface|null $expected,
+        ?ViolationCodeInterface $expected,
     ): void {
         $result = $this->runRule(
             rule: new RegexRule(

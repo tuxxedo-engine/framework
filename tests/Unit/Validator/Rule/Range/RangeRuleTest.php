@@ -118,7 +118,7 @@ class RangeRuleTest extends TestCase
         int|float $min,
         int|float $max,
         bool $inclusive,
-        ViolationCodeInterface|null $expected,
+        ?ViolationCodeInterface $expected,
     ): void {
         $result = $this->runRule(
             rule: new RangeRule(

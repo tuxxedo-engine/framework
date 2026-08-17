@@ -25,6 +25,7 @@ use Tuxxedo\Validator\Rule\CreditCard\CreditCardViolationCode;
 use Tuxxedo\Validator\Rule\DateTime\DateTimeViolationCode;
 use Tuxxedo\Validator\Rule\Ean\EanViolationCode;
 use Tuxxedo\Validator\Rule\Email\EmailViolationCode;
+use Tuxxedo\Validator\Rule\Enum\EnumViolationCode;
 use Tuxxedo\Validator\Rule\EqualTo\EqualToViolationCode;
 use Tuxxedo\Validator\Rule\Hostname\HostnameViolationCode;
 use Tuxxedo\Validator\Rule\Iban\IbanViolationCode;
@@ -140,6 +141,7 @@ class DefaultEnglishMessageFormatter implements MessageFormatterInterface
             CreditCardViolationCode::INVALID_CHECKSUM->value => 'Value at "{path}" has an invalid credit card checksum',
             CountryCodeViolationCode::NOT_RECOGNIZED->value => 'Value at "{path}" ({value}) is not a recognized ISO 3166-1 alpha-2 country code',
             LanguageCodeViolationCode::NOT_RECOGNIZED->value => 'Value at "{path}" ({value}) is not a recognized ISO 639-1 language code',
+            EnumViolationCode::WRONG_INSTANCE->value => 'Value at "{path}" must be an instance of {expected}, got {received}',
         ];
     }
 

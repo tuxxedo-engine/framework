@@ -71,10 +71,10 @@ class IntegerRuleTest extends TestCase
             CommonViolationCode::WRONG_TYPE,
         ];
 
-        yield 'null fails' => [
+        yield 'null skipped' => [
             null,
             true,
-            CommonViolationCode::WRONG_TYPE,
+            null,
         ];
     }
 
@@ -82,7 +82,7 @@ class IntegerRuleTest extends TestCase
     public function testCheck(
         mixed $value,
         bool $strict,
-        ViolationCodeInterface|null $expected,
+        ?ViolationCodeInterface $expected,
     ): void {
         $result = $this->runRule(
             rule: new IntegerRule(

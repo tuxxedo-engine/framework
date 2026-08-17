@@ -66,7 +66,7 @@ class MinRuleTest extends TestCase
     public function testCheck(
         mixed $value,
         int|float $min,
-        ViolationCodeInterface|null $expected,
+        ?ViolationCodeInterface $expected,
     ): void {
         $result = $this->runRule(
             rule: new MinRule(

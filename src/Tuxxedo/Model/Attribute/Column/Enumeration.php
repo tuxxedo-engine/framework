@@ -20,9 +20,11 @@ use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Behavior\BehaviorInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 use Tuxxedo\Model\Hydrator\Coercer\EnumCoercer;
+use Tuxxedo\Validator\Rule\Enum\EnumRule;
+use Tuxxedo\Validator\RuleProviderInterface;
 
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
-readonly class Enumeration implements ColumnInterface, ColumnEnumInterface
+readonly class Enumeration implements ColumnInterface, ColumnEnumInterface, RuleProviderInterface
 {
     /**
      * @var array<string, mixed>
@@ -46,6 +48,13 @@ readonly class Enumeration implements ColumnInterface, ColumnEnumInterface
         $this->coercerArguments = [
             'enum' => $this->enum,
         ];
+    }
+
+    public function toRules(): iterable
+    {
+        yield new EnumRule(
+            enum: $this->enum,
+        );
     }
 
     public function toColumnType(

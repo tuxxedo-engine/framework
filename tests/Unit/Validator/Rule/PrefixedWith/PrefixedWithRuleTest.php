@@ -54,7 +54,7 @@ class PrefixedWithRuleTest extends TestCase
     public function testCheck(
         mixed $value,
         string $prefix,
-        ViolationCodeInterface|null $expected,
+        ?ViolationCodeInterface $expected,
     ): void {
         $result = $this->runRule(
             rule: new PrefixedWithRule(

@@ -80,7 +80,7 @@ class CreateTableStatement extends AbstractTableStatement implements CreateTable
         bool $primaryKey = false,
         bool $autoIncrement = false,
         bool $unique = false,
-        int|null $default = null,
+        ?int $default = null,
     ): ColumnInterface {
         return $this->columns[] = new BigIntegerColumn(
             name: $name,
@@ -105,7 +105,7 @@ class CreateTableStatement extends AbstractTableStatement implements CreateTable
     public function boolean(
         string $name,
         bool $nullable = false,
-        bool|null $default = null,
+        ?bool $default = null,
     ): ColumnInterface {
         return $this->columns[] = new BooleanColumn(
             name: $name,
@@ -120,7 +120,7 @@ class CreateTableStatement extends AbstractTableStatement implements CreateTable
         bool $nullable = false,
         bool $primaryKey = false,
         bool $unique = false,
-        string|null $default = null,
+        ?string $default = null,
     ): ColumnInterface {
         return $this->columns[] = new CharColumn(
             name: $name,
@@ -137,7 +137,7 @@ class CreateTableStatement extends AbstractTableStatement implements CreateTable
         bool $nullable = false,
         bool $primaryKey = false,
         bool $unique = false,
-        string|null $default = null,
+        ?string $default = null,
     ): ColumnInterface {
         return $this->columns[] = new DateColumn(
             name: $name,
@@ -153,7 +153,7 @@ class CreateTableStatement extends AbstractTableStatement implements CreateTable
         bool $nullable = false,
         bool $primaryKey = false,
         bool $unique = false,
-        string|null $default = null,
+        ?string $default = null,
     ): ColumnInterface {
         return $this->columns[] = new DateTimeColumn(
             name: $name,

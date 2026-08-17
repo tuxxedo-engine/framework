@@ -19,9 +19,11 @@ use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\ColumnPrecisionInterface;
 use Tuxxedo\Model\Behavior\BehaviorInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
+use Tuxxedo\Validator\Rule\Numeric\NumericRule;
+use Tuxxedo\Validator\RuleProviderInterface;
 
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
-readonly class Decimal implements ColumnInterface, ColumnPrecisionInterface
+readonly class Decimal implements ColumnInterface, ColumnPrecisionInterface, RuleProviderInterface
 {
     /**
      * @var array<string, mixed>
@@ -44,6 +46,13 @@ readonly class Decimal implements ColumnInterface, ColumnPrecisionInterface
         public int|float|null $default = null,
     ) {
         $this->coercerArguments = [];
+    }
+
+    public function toRules(): iterable
+    {
+        yield new NumericRule(
+            strict: false,
+        );
     }
 
     public function toColumnType(

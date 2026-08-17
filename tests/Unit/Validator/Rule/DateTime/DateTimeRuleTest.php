@@ -72,7 +72,7 @@ class DateTimeRuleTest extends TestCase
     public function testCheck(
         mixed $value,
         ?string $format,
-        ViolationCodeInterface|null $expected,
+        ?ViolationCodeInterface $expected,
     ): void {
         $result = $this->runRule(
             rule: new DateTimeRule(

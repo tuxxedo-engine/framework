@@ -18,9 +18,11 @@ use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Behavior\BehaviorInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
+use Tuxxedo\Validator\Rule\Integer\IntegerRule;
+use Tuxxedo\Validator\RuleProviderInterface;
 
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
-readonly class BigInteger implements ColumnInterface
+readonly class BigInteger implements ColumnInterface, RuleProviderInterface
 {
     /**
      * @var array<string, mixed>
@@ -42,6 +44,13 @@ readonly class BigInteger implements ColumnInterface
         public ?int $default = null,
     ) {
         $this->coercerArguments = [];
+    }
+
+    public function toRules(): iterable
+    {
+        yield new IntegerRule(
+            strict: true,
+        );
     }
 
     public function toColumnType(

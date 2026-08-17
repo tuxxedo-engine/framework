@@ -54,7 +54,7 @@ class SuffixedWithRuleTest extends TestCase
     public function testCheck(
         mixed $value,
         string $suffix,
-        ViolationCodeInterface|null $expected,
+        ?ViolationCodeInterface $expected,
     ): void {
         $result = $this->runRule(
             rule: new SuffixedWithRule(

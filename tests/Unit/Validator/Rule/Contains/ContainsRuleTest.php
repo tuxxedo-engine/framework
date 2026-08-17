@@ -54,7 +54,7 @@ class ContainsRuleTest extends TestCase
     public function testCheck(
         mixed $value,
         string $needle,
-        ViolationCodeInterface|null $expected,
+        ?ViolationCodeInterface $expected,
     ): void {
         $result = $this->runRule(
             rule: new ContainsRule(

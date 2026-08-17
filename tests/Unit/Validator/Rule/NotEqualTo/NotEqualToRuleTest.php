@@ -65,7 +65,7 @@ class NotEqualToRuleTest extends TestCase
     public function testCheck(
         mixed $value,
         int|float|string|bool|null $disallowed,
-        ViolationCodeInterface|null $expected,
+        ?ViolationCodeInterface $expected,
     ): void {
         $result = $this->runRule(
             rule: new NotEqualToRule(

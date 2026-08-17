@@ -44,6 +44,7 @@ use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelPrimaryKeyInterface;
 use Tuxxedo\Model\MetaData\ModelRelationInterface;
 use Tuxxedo\Reflection\PropertyReflector;
+use Tuxxedo\Validator\ValidatorInterface;
 
 #[DefaultInitializer(
     static function (ContainerInterface $container): ModelsManagerInterface {
@@ -53,6 +54,7 @@ use Tuxxedo\Reflection\PropertyReflector;
             metaData: $container->resolve(MetaDataInterface::class),
             dirtyTracker: $container->resolve(DirtyTrackerInterface::class),
             databaseHydrator: $container->resolve(DatabaseHydratorInterface::class),
+            validator: $container->resolve(ValidatorInterface::class),
         );
     },
 )]
@@ -88,6 +90,7 @@ class ModelsManager implements ModelsManagerInterface
         public readonly MetaDataInterface $metaData,
         public readonly DirtyTrackerInterface $dirtyTracker,
         DatabaseHydratorInterface $databaseHydrator,
+        public readonly ValidatorInterface $validator,
         ?HydratorInterface $modelHydrator = null,
     ) {
         $this->hydrator = $modelHydrator ?? new Hydrator($this, $metaData, $databaseHydrator);
@@ -106,9 +109,16 @@ class ModelsManager implements ModelsManagerInterface
     public function save(
         object $model,
         bool $forceMaterialize = false,
+        bool $skipValidation = false,
     ): object {
         if (isset($this->saveInProgress[$model])) {
             return $model; // @codeCoverageIgnore
+        }
+
+        if (!$skipValidation) {
+            $this->validator->validateOrThrow(
+                target: $model,
+            );
         }
 
         $this->saveInProgress[$model] = true;

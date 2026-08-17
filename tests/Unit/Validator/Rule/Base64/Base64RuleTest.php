@@ -49,7 +49,7 @@ class Base64RuleTest extends TestCase
     #[DataProvider('providesCases')]
     public function testCheck(
         mixed $value,
-        ViolationCodeInterface|null $expected,
+        ?ViolationCodeInterface $expected,
     ): void {
         $result = $this->runRule(
             rule: new Base64Rule(),

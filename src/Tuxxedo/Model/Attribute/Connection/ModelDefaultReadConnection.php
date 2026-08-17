@@ -22,6 +22,7 @@ use Tuxxedo\Model\MetaData\MetaDataInterface;
 use Tuxxedo\Model\ModelsManager;
 use Tuxxedo\Model\ModelsManagerInterface;
 use Tuxxedo\Reflection\ParameterReflectorInterface;
+use Tuxxedo\Validator\ValidatorInterface;
 
 /**
  * @implements DependencyResolverInterface<ModelsManagerInterface>
@@ -39,6 +40,7 @@ readonly class ModelDefaultReadConnection implements DependencyResolverInterface
             metaData: $container->resolve(MetaDataInterface::class),
             dirtyTracker: $container->resolve(DirtyTrackerInterface::class),
             databaseHydrator: $container->resolve(HydratorInterface::class),
+            validator: $container->resolve(ValidatorInterface::class),
         );
     }
 }

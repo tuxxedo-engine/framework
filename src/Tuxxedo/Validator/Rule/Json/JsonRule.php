@@ -29,29 +29,36 @@ class JsonRule implements RuleInterface
         ValidationContextInterface $context,
         ContainerInterface $container,
     ): ?ViolationInterface {
-        if (!\is_string($value)) {
+        if ($value === null) {
+            return null;
+        }
+
+        if (\is_string($value)) {
+            if (\json_validate($value)) {
+                return null;
+            }
+
+            return new Violation(
+                code: JsonViolationCode::INVALID_FORMAT,
+                propertyPath: $context->currentPath,
+                invalidValue: $value,
+            );
+        }
+
+        try {
+            \json_encode(
+                value: $value,
+                flags: \JSON_THROW_ON_ERROR,
+            );
+        } catch (\JsonException) {
             return new Violation(
                 code: CommonViolationCode::WRONG_TYPE,
                 propertyPath: $context->currentPath,
                 invalidValue: $value,
                 context: new WrongTypeViolationContext(
-                    expected: 'string',
+                    expected: 'JSON-encodable value',
                     received: \get_debug_type($value),
                 ),
-            );
-        }
-
-        try {
-            \json_decode(
-                json: $value,
-                associative: true,
-                flags: \JSON_THROW_ON_ERROR,
-            );
-        } catch (\JsonException) {
-            return new Violation(
-                code: JsonViolationCode::INVALID_FORMAT,
-                propertyPath: $context->currentPath,
-                invalidValue: $value,
             );
         }
 

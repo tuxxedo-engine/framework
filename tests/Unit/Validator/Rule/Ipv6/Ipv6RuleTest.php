@@ -59,7 +59,7 @@ class Ipv6RuleTest extends TestCase
     #[DataProvider('providesCases')]
     public function testCheck(
         mixed $value,
-        ViolationCodeInterface|null $expected,
+        ?ViolationCodeInterface $expected,
     ): void {
         $result = $this->runRule(
             rule: new Ipv6Rule(),

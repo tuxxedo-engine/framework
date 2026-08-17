@@ -18,9 +18,11 @@ use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Behavior\BehaviorInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
+use Tuxxedo\Validator\Rule\Length\LengthRule;
+use Tuxxedo\Validator\RuleProviderInterface;
 
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
-readonly class Text implements ColumnInterface
+readonly class Text implements ColumnInterface, RuleProviderInterface
 {
     /**
      * @var array<string, mixed>
@@ -38,6 +40,11 @@ readonly class Text implements ColumnInterface
         public bool $nullable = false,
     ) {
         $this->coercerArguments = [];
+    }
+
+    public function toRules(): iterable
+    {
+        yield new LengthRule();
     }
 
     public function toColumnType(

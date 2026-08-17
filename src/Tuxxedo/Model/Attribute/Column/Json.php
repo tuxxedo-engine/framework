@@ -19,9 +19,11 @@ use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Behavior\BehaviorInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 use Tuxxedo\Model\Hydrator\Coercer\JsonCoercer;
+use Tuxxedo\Validator\Rule\Json\JsonRule;
+use Tuxxedo\Validator\RuleProviderInterface;
 
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
-readonly class Json implements ColumnInterface
+readonly class Json implements ColumnInterface, RuleProviderInterface
 {
     /**
      * @var array<string, mixed>
@@ -39,6 +41,11 @@ readonly class Json implements ColumnInterface
         public bool $nullable = false,
     ) {
         $this->coercerArguments = [];
+    }
+
+    public function toRules(): iterable
+    {
+        yield new JsonRule();
     }
 
     public function toColumnType(

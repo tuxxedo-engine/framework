@@ -65,7 +65,7 @@ class NotInRuleTest extends TestCase
     public function testCheck(
         mixed $value,
         array $values,
-        ViolationCodeInterface|null $expected,
+        ?ViolationCodeInterface $expected,
     ): void {
         $result = $this->runRule(
             rule: new NotInRule(

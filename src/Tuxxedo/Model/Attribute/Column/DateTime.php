@@ -21,9 +21,11 @@ use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Behavior\BehaviorInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 use Tuxxedo\Model\Hydrator\Coercer\DateTimeCoercer;
+use Tuxxedo\Validator\Rule\DateTime\DateTimeRule;
+use Tuxxedo\Validator\RuleProviderInterface;
 
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
-readonly class DateTime implements ColumnInterface, ColumnFormatInterface
+readonly class DateTime implements ColumnInterface, ColumnFormatInterface, RuleProviderInterface
 {
     /**
      * @var array<string, mixed>
@@ -55,6 +57,15 @@ readonly class DateTime implements ColumnInterface, ColumnFormatInterface
         return $this->format instanceof DateFormat
                 ? $this->format->value
                 : $this->format;
+    }
+
+    public function toRules(): iterable
+    {
+        yield new DateTimeRule(
+            format: $this->format instanceof DateFormat
+                ? $this->format->value
+                : $this->format,
+        );
     }
 
     public function toColumnType(

@@ -29,6 +29,10 @@ class NegativeIntegerRule implements RuleInterface
         ValidationContextInterface $context,
         ContainerInterface $container,
     ): ?ViolationInterface {
+        if ($value === null) {
+            return null;
+        }
+
         if (!\is_int($value)) {
             return new Violation(
                 code: CommonViolationCode::WRONG_TYPE,

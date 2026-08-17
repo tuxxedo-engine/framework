@@ -34,6 +34,10 @@ class IntegerRule implements RuleInterface
         ValidationContextInterface $context,
         ContainerInterface $container,
     ): ?ViolationInterface {
+        if ($value === null) {
+            return null;
+        }
+
         if (\is_int($value)) {
             return null;
         }

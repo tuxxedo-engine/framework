@@ -66,7 +66,7 @@ class MaxRuleTest extends TestCase
     public function testCheck(
         mixed $value,
         int|float $max,
-        ViolationCodeInterface|null $expected,
+        ?ViolationCodeInterface $expected,
     ): void {
         $result = $this->runRule(
             rule: new MaxRule(

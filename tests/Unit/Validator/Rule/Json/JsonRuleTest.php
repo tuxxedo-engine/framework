@@ -16,7 +16,6 @@ namespace Unit\Validator\Rule\Json;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Support\Validator\RuleTestingTrait;
-use Tuxxedo\Validator\CommonViolationCode;
 use Tuxxedo\Validator\Rule\Json\JsonRule;
 use Tuxxedo\Validator\Rule\Json\JsonViolationCode;
 use Tuxxedo\Validator\ViolationCodeInterface;
@@ -45,16 +44,29 @@ class JsonRuleTest extends TestCase
             JsonViolationCode::INVALID_FORMAT,
         ];
 
-        yield 'wrong type' => [
+        yield 'int accepted as json-encodable' => [
             42,
-            CommonViolationCode::WRONG_TYPE,
+            null,
+        ];
+
+        yield 'array accepted as json-encodable' => [
+            [
+                'a',
+                'b',
+            ],
+            null,
+        ];
+
+        yield 'stdClass accepted as json-encodable' => [
+            new \stdClass(),
+            null,
         ];
     }
 
     #[DataProvider('providesCases')]
     public function testCheck(
         mixed $value,
-        ViolationCodeInterface|null $expected,
+        ?ViolationCodeInterface $expected,
     ): void {
         $result = $this->runRule(
             rule: new JsonRule(),

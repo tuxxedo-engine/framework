@@ -34,6 +34,14 @@ class DateTimeRule implements RuleInterface
         ValidationContextInterface $context,
         ContainerInterface $container,
     ): ?ViolationInterface {
+        if ($value === null) {
+            return null;
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            return null;
+        }
+
         if (!\is_string($value)) {
             return new Violation(
                 code: CommonViolationCode::WRONG_TYPE,

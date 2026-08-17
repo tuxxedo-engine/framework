@@ -34,11 +34,15 @@ class BooleanRule implements RuleInterface
         ValidationContextInterface $context,
         ContainerInterface $container,
     ): ?ViolationInterface {
+        if ($value === null) {
+            return null;
+        }
+
         if (\is_bool($value)) {
             return null;
         }
 
-        if (!$this->strict && $value !== null) {
+        if (!$this->strict) {
             $filtered = \filter_var($value, \FILTER_VALIDATE_BOOLEAN, \FILTER_NULL_ON_FAILURE);
 
             if ($filtered !== null) {
