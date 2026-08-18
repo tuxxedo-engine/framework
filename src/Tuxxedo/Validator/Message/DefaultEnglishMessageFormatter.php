@@ -53,6 +53,7 @@ use Tuxxedo\Validator\Rule\UuidV4\UuidV4ViolationCode;
 use Tuxxedo\Validator\Rule\UuidV7\UuidV7ViolationCode;
 use Tuxxedo\Validator\ViolationInterface;
 
+// @todo This needs to be replaced by a proper translation module
 class DefaultEnglishMessageFormatter implements MessageFormatterInterface
 {
     /**
