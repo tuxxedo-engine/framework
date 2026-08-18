@@ -60,6 +60,7 @@ class TypePatternRegistry implements TypePatternRegistryInterface
             new Type\Timestamp(),
             new Type\Uuid(),
             new Type\UuidV4(),
+            new Type\UuidV7(),
         ];
     }
 

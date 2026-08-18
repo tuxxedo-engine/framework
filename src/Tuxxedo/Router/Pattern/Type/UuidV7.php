@@ -15,8 +15,8 @@ namespace Tuxxedo\Router\Pattern\Type;
 
 use Tuxxedo\Router\Pattern\TypePatternInterface;
 
-class UuidV4 implements TypePatternInterface
+class UuidV7 implements TypePatternInterface
 {
-    public private(set) string $name = 'uuid-v4';
-    public private(set) string $regex = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}';
+    public private(set) string $name = 'uuid-v7';
+    public private(set) string $regex = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}';
 }

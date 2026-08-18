@@ -16,6 +16,8 @@ namespace Unit\Model\Attribute\Column;
 use Fixture\Validator\FixtureStatus;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Database\Query\Statement\Table\Column\CharColumn;
+use Tuxxedo\Database\Query\Statement\Table\CreateTableStatement;
 use Tuxxedo\Model\Attribute\Column\BigInteger;
 use Tuxxedo\Model\Attribute\Column\Boolean;
 use Tuxxedo\Model\Attribute\Column\Char;
@@ -33,6 +35,8 @@ use Tuxxedo\Model\Attribute\Column\Time;
 use Tuxxedo\Model\Attribute\Column\TimeFormat;
 use Tuxxedo\Model\Attribute\Column\Timestamp;
 use Tuxxedo\Model\Attribute\Column\TinyInteger;
+use Tuxxedo\Model\Attribute\Column\Uuid;
+use Tuxxedo\Model\Attribute\Column\UuidVersion;
 use Tuxxedo\Model\Attribute\Column\Varchar;
 use Tuxxedo\Validator\Rule\Boolean\BooleanRule;
 use Tuxxedo\Validator\Rule\DateTime\DateTimeRule;
@@ -41,6 +45,9 @@ use Tuxxedo\Validator\Rule\Integer\IntegerRule;
 use Tuxxedo\Validator\Rule\Json\JsonRule;
 use Tuxxedo\Validator\Rule\Length\LengthRule;
 use Tuxxedo\Validator\Rule\Numeric\NumericRule;
+use Tuxxedo\Validator\Rule\Uuid\UuidRule;
+use Tuxxedo\Validator\Rule\UuidV4\UuidV4Rule;
+use Tuxxedo\Validator\Rule\UuidV7\UuidV7Rule;
 use Tuxxedo\Validator\RuleInterface;
 use Tuxxedo\Validator\RuleProviderInterface;
 
@@ -138,6 +145,32 @@ class ColumnRuleProviderTest extends TestCase
                 enum: FixtureStatus::class,
             ),
             EnumRule::class,
+        ];
+
+        yield 'Uuid default emits UuidRule' => [
+            new Uuid(),
+            UuidRule::class,
+        ];
+
+        yield 'Uuid Any emits UuidRule' => [
+            new Uuid(
+                version: UuidVersion::ANY,
+            ),
+            UuidRule::class,
+        ];
+
+        yield 'Uuid V4 emits UuidV4Rule' => [
+            new Uuid(
+                version: UuidVersion::V4,
+            ),
+            UuidV4Rule::class,
+        ];
+
+        yield 'Uuid V7 emits UuidV7Rule' => [
+            new Uuid(
+                version: UuidVersion::V7,
+            ),
+            UuidV7Rule::class,
         ];
     }
 
@@ -346,5 +379,72 @@ class ColumnRuleProviderTest extends TestCase
         self::assertCount(1, $rules);
         self::assertInstanceOf(BooleanRule::class, $rules[0]);
         self::assertTrue($rules[0]->strict);
+    }
+
+    public function testUuidExposesFixedLengthOfThirtySix(): void
+    {
+        $column = new Uuid();
+
+        self::assertSame(36, $column->length);
+    }
+
+    public function testUuidDefaultsToAnyVersion(): void
+    {
+        $column = new Uuid();
+
+        self::assertSame(UuidVersion::ANY, $column->version);
+    }
+
+    public function testUuidHasNullCoercerByDefault(): void
+    {
+        $column = new Uuid();
+
+        self::assertNull($column->coercer);
+    }
+
+    public function testUuidToColumnTypeProducesCharColumnOfLength36(): void
+    {
+        $statement = new CreateTableStatement(
+            table: 'entities',
+        );
+
+        $column = (new Uuid())->toColumnType(
+            statement: $statement,
+            propertyName: 'id',
+        );
+
+        self::assertInstanceOf(CharColumn::class, $column);
+        self::assertSame('id', $column->name);
+        self::assertSame(36, $column->length);
+        self::assertFalse($column->nullable);
+        self::assertFalse($column->primaryKey);
+        self::assertFalse($column->unique);
+        self::assertNull($column->default);
+    }
+
+    public function testUuidToColumnTypeUsesExplicitNameOverride(): void
+    {
+        $statement = new CreateTableStatement(
+            table: 'entities',
+        );
+
+        $column = (new Uuid(
+            name: 'entity_uuid',
+            nullable: true,
+            primaryKey: true,
+            unique: true,
+            default: '00000000-0000-0000-0000-000000000000',
+        ))->toColumnType(
+            statement: $statement,
+            propertyName: 'id',
+        );
+
+        self::assertInstanceOf(CharColumn::class, $column);
+        self::assertSame('entity_uuid', $column->name);
+        self::assertSame(36, $column->length);
+        self::assertTrue($column->nullable);
+        self::assertTrue($column->primaryKey);
+        self::assertTrue($column->unique);
+        self::assertSame('00000000-0000-0000-0000-000000000000', $column->default);
     }
 }

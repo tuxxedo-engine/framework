@@ -1,0 +1,77 @@
+<?php
+
+/**
+ * Tuxxedo Engine
+ *
+ * This file is part of the Tuxxedo Engine framework and is licensed under
+ * the MIT license.
+ *
+ * Copyright (C) 2026 Kalle Sommer Nielsen <kalle@php.net>
+ */
+
+declare(strict_types=1);
+
+namespace Tuxxedo\Model\Attribute\Column;
+
+use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface as TableColumnInterface;
+use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
+use Tuxxedo\Model\Attribute\ColumnInterface;
+use Tuxxedo\Model\Attribute\ColumnLengthInterface;
+use Tuxxedo\Model\Behavior\BehaviorInterface;
+use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
+use Tuxxedo\Validator\Rule\Uuid\UuidRule;
+use Tuxxedo\Validator\Rule\UuidV4\UuidV4Rule;
+use Tuxxedo\Validator\Rule\UuidV7\UuidV7Rule;
+use Tuxxedo\Validator\RuleProviderInterface;
+
+#[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
+readonly class Uuid implements ColumnInterface, ColumnLengthInterface, RuleProviderInterface
+{
+    public int $length;
+
+    /**
+     * @var array<string, mixed>
+     */
+    public array $coercerArguments;
+
+    /**
+     * @param class-string<CoercerInterface>|null $coercer
+     * @param class-string<BehaviorInterface>|null $behavior
+     */
+    public function __construct(
+        public UuidVersion $version = UuidVersion::ANY,
+        public ?string $name = null,
+        public ?string $coercer = null,
+        public ?string $behavior = null,
+        public bool $nullable = false,
+        public bool $primaryKey = false,
+        public bool $unique = false,
+        public ?string $default = null,
+    ) {
+        $this->length = 36;
+        $this->coercerArguments = [];
+    }
+
+    public function toRules(): iterable
+    {
+        yield match ($this->version) {
+            UuidVersion::ANY => new UuidRule(),
+            UuidVersion::V4 => new UuidV4Rule(),
+            UuidVersion::V7 => new UuidV7Rule(),
+        };
+    }
+
+    public function toColumnType(
+        CreateTableStatementInterface $statement,
+        string $propertyName,
+    ): TableColumnInterface {
+        return $statement->char(
+            name: $this->name ?? $propertyName,
+            length: $this->length,
+            nullable: $this->nullable,
+            primaryKey: $this->primaryKey,
+            unique: $this->unique,
+            default: $this->default,
+        );
+    }
+}

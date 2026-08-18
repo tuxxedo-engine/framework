@@ -18,5 +18,5 @@ use Tuxxedo\Router\Pattern\TypePatternInterface;
 class Uuid implements TypePatternInterface
 {
     public private(set) string $name = 'uuid';
-    public private(set) string $regex = '[0-9a-fA-F\-]{36}';
+    public private(set) string $regex = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
 }

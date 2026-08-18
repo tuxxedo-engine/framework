@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Unit\Router\Pattern;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Router\Pattern\TypePattern;
 use Tuxxedo\Router\Pattern\TypePatternInterface;
@@ -24,7 +25,7 @@ class TypePatternRegistryTest extends TestCase
     {
         $registry = TypePatternRegistry::createDefault();
 
-        self::assertCount(14, $registry->patterns);
+        self::assertCount(15, $registry->patterns);
     }
 
     public function testCreateDefaultPatternsAreIndexedByName(): void
@@ -36,11 +37,11 @@ class TypePatternRegistryTest extends TestCase
         }
     }
 
-    public function testGetDefaultsReturnsAllFourteenInstances(): void
+    public function testGetDefaultsReturnsAllFifteenInstances(): void
     {
         $defaults = TypePatternRegistry::getDefaults();
 
-        self::assertCount(14, $defaults);
+        self::assertCount(15, $defaults);
     }
 
     public function testGetDefaultsReturnsTypePatternInterfaceInstances(): void
@@ -63,7 +64,7 @@ class TypePatternRegistryTest extends TestCase
             ],
         );
 
-        self::assertCount(15, $registry->patterns);
+        self::assertCount(16, $registry->patterns);
         self::assertTrue($registry->has('custom'));
     }
 
@@ -168,5 +169,212 @@ class TypePatternRegistryTest extends TestCase
 
         self::assertNotNull($registry->get('dupe'));
         self::assertSame('second', $registry->get('dupe')->regex);
+    }
+
+    /**
+     * @return \Generator<string, array{0: string, 1: string, 2: bool}>
+     */
+    public static function providesUuidMatchCases(): \Generator
+    {
+        yield 'uuid: canonical lowercase' => [
+            'uuid',
+            '550e8400-e29b-41d4-a716-446655440000',
+            true,
+        ];
+
+        yield 'uuid: canonical uppercase' => [
+            'uuid',
+            '550E8400-E29B-41D4-A716-446655440000',
+            true,
+        ];
+
+        yield 'uuid: mixed case' => [
+            'uuid',
+            '550E8400-e29b-41D4-a716-446655440000',
+            true,
+        ];
+
+        yield 'uuid: v7 accepted' => [
+            'uuid',
+            '018ff8f0-1234-7abc-9def-0123456789ab',
+            true,
+        ];
+
+        yield 'uuid: nil accepted' => [
+            'uuid',
+            '00000000-0000-0000-0000-000000000000',
+            true,
+        ];
+
+        yield 'uuid: all hyphens rejected' => [
+            'uuid',
+            '------------------------------------',
+            false,
+        ];
+
+        yield 'uuid: missing hyphens rejected' => [
+            'uuid',
+            '550e8400e29b41d4a716446655440000',
+            false,
+        ];
+
+        yield 'uuid: wrong segment length rejected' => [
+            'uuid',
+            '550e840-e29b-41d4-a716-446655440000',
+            false,
+        ];
+
+        yield 'uuid: non hex rejected' => [
+            'uuid',
+            '550e8400-e29b-41d4-a716-44665544000g',
+            false,
+        ];
+
+        yield 'uuid: trailing junk rejected' => [
+            'uuid',
+            '550e8400-e29b-41d4-a716-446655440000x',
+            false,
+        ];
+
+        yield 'uuid: empty rejected' => [
+            'uuid',
+            '',
+            false,
+        ];
+
+        yield 'uuid-v4: valid lowercase' => [
+            'uuid-v4',
+            '550e8400-e29b-41d4-a716-446655440000',
+            true,
+        ];
+
+        yield 'uuid-v4: valid uppercase' => [
+            'uuid-v4',
+            '550E8400-E29B-41D4-A716-446655440000',
+            true,
+        ];
+
+        yield 'uuid-v4: uppercase variant nibble' => [
+            'uuid-v4',
+            '550e8400-e29b-41d4-B716-446655440000',
+            true,
+        ];
+
+        yield 'uuid-v4: variant 8' => [
+            'uuid-v4',
+            '550e8400-e29b-41d4-8716-446655440000',
+            true,
+        ];
+
+        yield 'uuid-v4: v7 rejected' => [
+            'uuid-v4',
+            '018ff8f0-1234-7abc-9def-0123456789ab',
+            false,
+        ];
+
+        yield 'uuid-v4: invalid variant c rejected' => [
+            'uuid-v4',
+            '550e8400-e29b-41d4-c716-446655440000',
+            false,
+        ];
+
+        yield 'uuid-v4: v3 rejected' => [
+            'uuid-v4',
+            '550e8400-e29b-31d4-a716-446655440000',
+            false,
+        ];
+
+        yield 'uuid-v4: nil rejected' => [
+            'uuid-v4',
+            '00000000-0000-0000-0000-000000000000',
+            false,
+        ];
+
+        yield 'uuid-v4: missing hyphens rejected' => [
+            'uuid-v4',
+            '550e8400e29b41d4a716446655440000',
+            false,
+        ];
+
+        yield 'uuid-v4: empty rejected' => [
+            'uuid-v4',
+            '',
+            false,
+        ];
+
+        yield 'uuid-v7: valid lowercase' => [
+            'uuid-v7',
+            '018ff8f0-1234-7abc-9def-0123456789ab',
+            true,
+        ];
+
+        yield 'uuid-v7: valid uppercase' => [
+            'uuid-v7',
+            '018FF8F0-1234-7ABC-9DEF-0123456789AB',
+            true,
+        ];
+
+        yield 'uuid-v7: uppercase variant nibble' => [
+            'uuid-v7',
+            '018ff8f0-1234-7abc-Bdef-0123456789ab',
+            true,
+        ];
+
+        yield 'uuid-v7: variant 8' => [
+            'uuid-v7',
+            '018ff8f0-1234-7abc-8def-0123456789ab',
+            true,
+        ];
+
+        yield 'uuid-v7: v4 rejected' => [
+            'uuid-v7',
+            '550e8400-e29b-41d4-a716-446655440000',
+            false,
+        ];
+
+        yield 'uuid-v7: invalid variant c rejected' => [
+            'uuid-v7',
+            '018ff8f0-1234-7abc-cdef-0123456789ab',
+            false,
+        ];
+
+        yield 'uuid-v7: v6 rejected' => [
+            'uuid-v7',
+            '018ff8f0-1234-6abc-9def-0123456789ab',
+            false,
+        ];
+
+        yield 'uuid-v7: nil rejected' => [
+            'uuid-v7',
+            '00000000-0000-0000-0000-000000000000',
+            false,
+        ];
+
+        yield 'uuid-v7: missing hyphens rejected' => [
+            'uuid-v7',
+            '018ff8f012347abc9def0123456789ab',
+            false,
+        ];
+
+        yield 'uuid-v7: empty rejected' => [
+            'uuid-v7',
+            '',
+            false,
+        ];
+    }
+
+    #[DataProvider('providesUuidMatchCases')]
+    public function testUuidPatternRegexMatchesExpected(
+        string $patternName,
+        string $value,
+        bool $shouldMatch,
+    ): void {
+        $pattern = TypePatternRegistry::createDefault()->get($patternName);
+
+        self::assertNotNull($pattern);
+
+        $matched = \preg_match('/^' . $pattern->regex . '$/', $value) === 1;
+
+        self::assertSame($shouldMatch, $matched);
     }
 }
