@@ -72,6 +72,13 @@ class CharacterLengthRuleTest extends TestCase
             null,
             CommonViolationCode::WRONG_TYPE,
         ];
+
+        yield 'null skipped' => [
+            null,
+            null,
+            null,
+            null,
+        ];
     }
 
     #[DataProvider('providesCases')]

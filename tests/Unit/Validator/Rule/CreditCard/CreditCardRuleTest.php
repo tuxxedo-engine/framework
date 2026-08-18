@@ -69,6 +69,11 @@ class CreditCardRuleTest extends TestCase
             42,
             CommonViolationCode::WRONG_TYPE,
         ];
+
+        yield 'null skipped' => [
+            null,
+            null,
+        ];
     }
 
     #[DataProvider('providesCases')]

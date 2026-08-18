@@ -48,6 +48,12 @@ class ContainsRuleTest extends TestCase
             'x',
             CommonViolationCode::WRONG_TYPE,
         ];
+
+        yield 'null skipped' => [
+            null,
+            'x',
+            null,
+        ];
     }
 
     #[DataProvider('providesCases')]

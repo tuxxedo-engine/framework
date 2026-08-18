@@ -83,6 +83,15 @@ class UrlRuleTest extends TestCase
                 'wss',
             ],
         ];
+
+        yield 'null skipped' => [
+            null,
+            null,
+            [
+                'http',
+                'https',
+            ],
+        ];
     }
 
     /**

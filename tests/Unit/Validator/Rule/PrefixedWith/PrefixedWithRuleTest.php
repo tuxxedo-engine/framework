@@ -48,6 +48,12 @@ class PrefixedWithRuleTest extends TestCase
             'foo-',
             CommonViolationCode::WRONG_TYPE,
         ];
+
+        yield 'null skipped' => [
+            null,
+            'foo-',
+            null,
+        ];
     }
 
     #[DataProvider('providesCases')]

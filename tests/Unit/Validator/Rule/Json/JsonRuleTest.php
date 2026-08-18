@@ -16,6 +16,7 @@ namespace Unit\Validator\Rule\Json;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Support\Validator\RuleTestingTrait;
+use Tuxxedo\Validator\CommonViolationCode;
 use Tuxxedo\Validator\Rule\Json\JsonRule;
 use Tuxxedo\Validator\Rule\Json\JsonViolationCode;
 use Tuxxedo\Validator\ViolationCodeInterface;
@@ -60,6 +61,16 @@ class JsonRuleTest extends TestCase
         yield 'stdClass accepted as json-encodable' => [
             new \stdClass(),
             null,
+        ];
+
+        yield 'null skipped' => [
+            null,
+            null,
+        ];
+
+        yield 'unencodable value rejected' => [
+            \NAN,
+            CommonViolationCode::WRONG_TYPE,
         ];
     }
 

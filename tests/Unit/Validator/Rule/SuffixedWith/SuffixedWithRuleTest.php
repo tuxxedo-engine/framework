@@ -48,6 +48,12 @@ class SuffixedWithRuleTest extends TestCase
             '.txt',
             CommonViolationCode::WRONG_TYPE,
         ];
+
+        yield 'null skipped' => [
+            null,
+            '.txt',
+            null,
+        ];
     }
 
     #[DataProvider('providesCases')]

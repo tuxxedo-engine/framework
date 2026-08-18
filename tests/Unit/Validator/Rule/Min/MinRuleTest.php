@@ -60,6 +60,12 @@ class MinRuleTest extends TestCase
             5,
             CommonViolationCode::WRONG_TYPE,
         ];
+
+        yield 'null skipped' => [
+            null,
+            5,
+            null,
+        ];
     }
 
     #[DataProvider('providesCases')]

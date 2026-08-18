@@ -47,6 +47,12 @@ class RegexRuleTest extends TestCase
             '/./',
             CommonViolationCode::WRONG_TYPE,
         ];
+
+        yield 'null skipped' => [
+            null,
+            '/./',
+            null,
+        ];
     }
 
     #[DataProvider('providesCases')]

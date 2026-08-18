@@ -66,6 +66,18 @@ class DateTimeRuleTest extends TestCase
             null,
             CommonViolationCode::WRONG_TYPE,
         ];
+
+        yield 'datetime instance accepted' => [
+            new \DateTimeImmutable(),
+            null,
+            null,
+        ];
+
+        yield 'null skipped' => [
+            null,
+            null,
+            null,
+        ];
     }
 
     #[DataProvider('providesCases')]

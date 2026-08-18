@@ -23,4 +23,9 @@ class StaticPropertyDto
         public readonly string $instanceField,
     ) {
     }
+
+    public static function staticMethodShouldBeSkipped(): string
+    {
+        return 'ignored';
+    }
 }

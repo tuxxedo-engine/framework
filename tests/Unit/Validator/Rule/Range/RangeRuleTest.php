@@ -110,6 +110,14 @@ class RangeRuleTest extends TestCase
             true,
             CommonViolationCode::WRONG_TYPE,
         ];
+
+        yield 'null skipped' => [
+            null,
+            1,
+            10,
+            true,
+            null,
+        ];
     }
 
     #[DataProvider('providesCases')]

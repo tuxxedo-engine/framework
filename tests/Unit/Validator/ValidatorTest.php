@@ -14,6 +14,13 @@ declare(strict_types=1);
 namespace Unit\Validator;
 
 use Fixture\Validator\ArrayContainerDto;
+use Fixture\Validator\AssertAfterFailedRulesDto;
+use Fixture\Validator\AssertBasicDto;
+use Fixture\Validator\AssertContextDto;
+use Fixture\Validator\AssertMultipleDto;
+use Fixture\Validator\AssertNestedChild;
+use Fixture\Validator\AssertNestedParent;
+use Fixture\Validator\AssertServiceDto;
 use Fixture\Validator\ChildDto;
 use Fixture\Validator\ContainerAwareDto;
 use Fixture\Validator\ContainerAwareRuleContext;
@@ -269,6 +276,21 @@ class ValidatorTest extends TestCase
         );
     }
 
+    public function testValidateBreaksCyclesViaVisitedSet(): void
+    {
+        $node = new DeepNode(
+            label: 'self',
+        );
+
+        $node->child = $node;
+
+        $result = $this->makeValidator()->validate(
+            target: $node,
+        );
+
+        self::assertTrue($result->isValid);
+    }
+
     public function testValidateThrowsOnRecursionDepthExceeded(): void
     {
         $leaf = new DeepNode(
@@ -375,5 +397,141 @@ class ValidatorTest extends TestCase
 
         self::assertInstanceOf(ContextSpyRuleContext::class, $result->violations[0]->context);
         self::assertSame('', $result->violations[0]->context->group);
+    }
+
+    public function testValidateInvokesAssertMethodWhenFieldsMismatch(): void
+    {
+        $result = $this->makeValidator()->validate(
+            target: new AssertBasicDto(
+                password: 'a',
+                passwordConfirmation: 'b',
+            ),
+        );
+
+        self::assertFalse($result->isValid);
+        self::assertSame(1, \sizeof($result->violations));
+        self::assertSame('passwordConfirmation', $result->violations[0]->propertyPath);
+    }
+
+    public function testValidateAssertMethodProducesNoViolationOnPass(): void
+    {
+        $result = $this->makeValidator()->validate(
+            target: new AssertBasicDto(
+                password: 'same',
+                passwordConfirmation: 'same',
+            ),
+        );
+
+        self::assertTrue($result->isValid);
+    }
+
+    public function testValidateAssertMethodReceivesContextViaAttribute(): void
+    {
+        $result = $this->makeValidator()->validate(
+            target: new AssertContextDto(),
+        );
+
+        self::assertSame(1, \sizeof($result->violations));
+        self::assertSame('label', $result->violations[0]->propertyPath);
+    }
+
+    public function testValidateAssertMethodAutowiresContainerServices(): void
+    {
+        $container = new Container();
+        $container->singleton(ParityChecker::class);
+        $container->alias(ParityCheckerInterface::class, ParityChecker::class);
+
+        $result = $this->makeValidator(
+            container: $container,
+        )->validate(
+            target: new AssertServiceDto(
+                number: 5,
+            ),
+        );
+
+        self::assertFalse($result->isValid);
+        self::assertSame(FixtureViolationCode::ODD_NUMBER, $result->violations[0]->code);
+        self::assertInstanceOf(ContainerAwareRuleContext::class, $result->violations[0]->context);
+        self::assertSame(5, $result->violations[0]->context->received);
+    }
+
+    public function testValidateAssertMethodPassesWhenAutowiredCheckPasses(): void
+    {
+        $container = new Container();
+        $container->singleton(ParityChecker::class);
+        $container->alias(ParityCheckerInterface::class, ParityChecker::class);
+
+        $result = $this->makeValidator(
+            container: $container,
+        )->validate(
+            target: new AssertServiceDto(
+                number: 4,
+            ),
+        );
+
+        self::assertTrue($result->isValid);
+    }
+
+    public function testValidateCollectsMultipleAssertMethodsInDeclarationOrder(): void
+    {
+        $result = $this->makeValidator()->validate(
+            target: new AssertMultipleDto(),
+        );
+
+        $paths = \array_map(
+            static fn ($v) => $v->propertyPath,
+            $result->violations,
+        );
+
+        self::assertSame(
+            [
+                'first',
+                'second-a',
+                'second-b',
+            ],
+            $paths,
+        );
+    }
+
+    public function testValidateCascadesIntoNestedAssertMethods(): void
+    {
+        $result = $this->makeValidator()->validate(
+            target: new AssertNestedParent(
+                child: new AssertNestedChild(),
+            ),
+        );
+
+        $paths = \array_map(
+            static fn ($v) => $v->propertyPath,
+            $result->violations,
+        );
+
+        self::assertSame(
+            [
+                'child.child-field',
+                'parent-field',
+            ],
+            $paths,
+        );
+    }
+
+    public function testValidateRunsAssertMethodEvenAfterSingleFieldFailure(): void
+    {
+        $result = $this->makeValidator()->validate(
+            target: new AssertAfterFailedRulesDto(),
+        );
+
+        $paths = \array_map(
+            static fn ($v) => $v->propertyPath,
+            $result->violations,
+        );
+
+        self::assertSame(
+            [
+                'field',
+                'assert-emitted',
+            ],
+            $paths,
+        );
     }
 }

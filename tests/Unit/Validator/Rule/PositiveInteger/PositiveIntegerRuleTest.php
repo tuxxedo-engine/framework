@@ -54,6 +54,11 @@ class PositiveIntegerRuleTest extends TestCase
             '5',
             CommonViolationCode::WRONG_TYPE,
         ];
+
+        yield 'null skipped' => [
+            null,
+            null,
+        ];
     }
 
     #[DataProvider('providesCases')]

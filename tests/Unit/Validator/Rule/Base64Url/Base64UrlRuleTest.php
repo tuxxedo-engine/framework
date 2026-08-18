@@ -49,6 +49,11 @@ class Base64UrlRuleTest extends TestCase
             42,
             CommonViolationCode::WRONG_TYPE,
         ];
+
+        yield 'null skipped' => [
+            null,
+            null,
+        ];
     }
 
     #[DataProvider('providesCases')]

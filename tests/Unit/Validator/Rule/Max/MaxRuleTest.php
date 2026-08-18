@@ -60,6 +60,12 @@ class MaxRuleTest extends TestCase
             10,
             CommonViolationCode::WRONG_TYPE,
         ];
+
+        yield 'null skipped' => [
+            null,
+            10,
+            null,
+        ];
     }
 
     #[DataProvider('providesCases')]
