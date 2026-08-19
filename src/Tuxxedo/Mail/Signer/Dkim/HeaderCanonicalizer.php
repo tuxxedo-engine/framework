@@ -19,7 +19,7 @@ class HeaderCanonicalizer
         string $header,
         DkimCanonicalization $mode,
     ): string {
-        return match ($mode) {
+        return match ($mode) { // @codeCoverageIgnore
             DkimCanonicalization::SIMPLE => self::simple($header),
             DkimCanonicalization::RELAXED => self::relaxed($header),
         };

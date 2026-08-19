@@ -349,6 +349,9 @@ class MailException extends \Exception
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromDkimSigningFailed(
         ?\Throwable $previous = null,
     ): self {
@@ -358,6 +361,9 @@ class MailException extends \Exception
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromDkimMissingSodiumExtension(): self
     {
         return new self(

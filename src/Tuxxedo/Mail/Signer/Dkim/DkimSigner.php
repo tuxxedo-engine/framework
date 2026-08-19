@@ -111,10 +111,11 @@ class DkimSigner implements MailWireMiddlewareInterface
                 payload: $input,
                 algorithmIdentifier: DkimAlgorithm::RSA_SHA256->value,
             );
-        } catch (CryptoException $e) {
+        } catch (CryptoException $e) { // @codeCoverageIgnoreStart
             throw MailException::fromDkimSigningFailed(
                 previous: $e,
             );
+            // @codeCoverageIgnoreEnd
         }
     }
 
@@ -125,7 +126,7 @@ class DkimSigner implements MailWireMiddlewareInterface
         string $input,
     ): string {
         if (!\function_exists('sodium_crypto_sign_seed_keypair')) {
-            throw MailException::fromDkimMissingSodiumExtension();
+            throw MailException::fromDkimMissingSodiumExtension(); // @codeCoverageIgnore
         }
 
         $seed = \base64_decode($this->privateKey, true);
