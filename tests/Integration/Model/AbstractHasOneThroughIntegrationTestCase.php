@@ -104,7 +104,7 @@ abstract class AbstractHasOneThroughIntegrationTestCase extends AbstractModelInt
 
     public function testHasOneThroughResolvesTargetViaThroughJoin(): void
     {
-        $country = $this->modelsManager->fetchByIdentifier(
+        $country = $this->modelsManager->fetchById(
             class: Country::class,
             id: 1,
         );
@@ -145,7 +145,7 @@ abstract class AbstractHasOneThroughIntegrationTestCase extends AbstractModelInt
             title: 'Bo one',
         );
 
-        $denmark = $this->modelsManager->fetchByIdentifier(
+        $denmark = $this->modelsManager->fetchById(
             class: Country::class,
             id: 2,
         );

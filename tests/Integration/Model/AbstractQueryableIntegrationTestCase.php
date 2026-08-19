@@ -210,7 +210,7 @@ abstract class AbstractQueryableIntegrationTestCase extends AbstractModelIntegra
      */
     private function alicePosts(): Relation
     {
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 1,
         );

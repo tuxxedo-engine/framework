@@ -76,7 +76,7 @@ abstract class AbstractQueryIntegrationTestCase extends AbstractModelIntegration
 
     public function testFindByIdentifierReturnsHydratedModel(): void
     {
-        $user = $this->modelsManager->findByIdentifier(
+        $user = $this->modelsManager->findById(
             class: User::class,
             id: 1,
         );
@@ -98,7 +98,7 @@ abstract class AbstractQueryIntegrationTestCase extends AbstractModelIntegration
 
     public function testFindByIdentifierReturnsNullForUnknownId(): void
     {
-        $user = $this->modelsManager->findByIdentifier(
+        $user = $this->modelsManager->findById(
             class: User::class,
             id: 999,
         );
@@ -112,7 +112,7 @@ abstract class AbstractQueryIntegrationTestCase extends AbstractModelIntegration
     {
         $this->expectException(ModelException::class);
 
-        (void) $this->modelsManager->fetchByIdentifier(
+        (void) $this->modelsManager->fetchById(
             class: User::class,
             id: 999,
         );
@@ -259,7 +259,7 @@ abstract class AbstractQueryIntegrationTestCase extends AbstractModelIntegration
     public function testExistsByIdentifierReturnsTrueForKnownId(): void
     {
         self::assertTrue(
-            $this->modelsManager->existsByIdentifier(
+            $this->modelsManager->existsById(
                 class: User::class,
                 id: 1,
             ),
@@ -269,7 +269,7 @@ abstract class AbstractQueryIntegrationTestCase extends AbstractModelIntegration
     public function testExistsByIdentifierReturnsFalseForUnknownId(): void
     {
         self::assertFalse(
-            $this->modelsManager->existsByIdentifier(
+            $this->modelsManager->existsById(
                 class: User::class,
                 id: 999,
             ),

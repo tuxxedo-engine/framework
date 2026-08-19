@@ -108,7 +108,7 @@ abstract class AbstractHasManyIntegrationTestCase extends AbstractModelIntegrati
      */
     private function alicePosts(): Relation
     {
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 1,
         );
@@ -161,7 +161,7 @@ abstract class AbstractHasManyIntegrationTestCase extends AbstractModelIntegrati
 
     public function testHasManyRelationEmptyCollectionForUserWithoutPosts(): void
     {
-        $bob = $this->modelsManager->fetchByIdentifier(
+        $bob = $this->modelsManager->fetchById(
             class: User::class,
             id: 2,
         );

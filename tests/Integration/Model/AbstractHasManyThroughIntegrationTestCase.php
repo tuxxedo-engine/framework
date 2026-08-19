@@ -143,7 +143,7 @@ abstract class AbstractHasManyThroughIntegrationTestCase extends AbstractModelIn
      */
     private function swedenPosts(): Relation
     {
-        $country = $this->modelsManager->fetchByIdentifier(
+        $country = $this->modelsManager->fetchById(
             class: Country::class,
             id: 1,
         );
@@ -199,7 +199,7 @@ abstract class AbstractHasManyThroughIntegrationTestCase extends AbstractModelIn
 
     public function testHasManyThroughIsolatesSourceRows(): void
     {
-        $denmark = $this->modelsManager->fetchByIdentifier(
+        $denmark = $this->modelsManager->fetchById(
             class: Country::class,
             id: 2,
         );
@@ -223,7 +223,7 @@ abstract class AbstractHasManyThroughIntegrationTestCase extends AbstractModelIn
             code: 'NO',
         );
 
-        $norway = $this->modelsManager->fetchByIdentifier(
+        $norway = $this->modelsManager->fetchById(
             class: Country::class,
             id: 3,
         );

@@ -2,6 +2,7 @@
 
 {% block buttons %}
     <button onclick="location.href = '{! route('model.new') | escape_js !}';">New</button>
+    <button onclick="location.href = '{! route('model.table') | escape_js !}';">Table</button>
 {% endblock %}
 
 {% block content %}

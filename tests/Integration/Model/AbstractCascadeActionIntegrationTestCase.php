@@ -147,7 +147,7 @@ abstract class AbstractCascadeActionIntegrationTestCase extends AbstractModelInt
             autoGroupId: 1,
         );
 
-        $group = $this->modelsManager->fetchByIdentifier(
+        $group = $this->modelsManager->fetchById(
             class: CascadeGroup::class,
             id: 1,
         );
@@ -175,7 +175,7 @@ abstract class AbstractCascadeActionIntegrationTestCase extends AbstractModelInt
             restrictGroupId: 2,
         );
 
-        $group = $this->modelsManager->fetchByIdentifier(
+        $group = $this->modelsManager->fetchById(
             class: CascadeGroup::class,
             id: 2,
         );
@@ -191,7 +191,7 @@ abstract class AbstractCascadeActionIntegrationTestCase extends AbstractModelInt
             id: 3,
         );
 
-        $group = $this->modelsManager->fetchByIdentifier(
+        $group = $this->modelsManager->fetchById(
             class: CascadeGroup::class,
             id: 3,
         );
@@ -230,7 +230,7 @@ abstract class AbstractCascadeActionIntegrationTestCase extends AbstractModelInt
             nullableGroupId: 4,
         );
 
-        $group = $this->modelsManager->fetchByIdentifier(
+        $group = $this->modelsManager->fetchById(
             class: CascadeGroup::class,
             id: 4,
         );
@@ -266,7 +266,7 @@ abstract class AbstractCascadeActionIntegrationTestCase extends AbstractModelInt
             noActionGroupId: 5,
         );
 
-        $group = $this->modelsManager->fetchByIdentifier(
+        $group = $this->modelsManager->fetchById(
             class: CascadeGroup::class,
             id: 5,
         );
@@ -294,7 +294,7 @@ abstract class AbstractCascadeActionIntegrationTestCase extends AbstractModelInt
             label: 'one',
         );
 
-        $group = $this->modelsManager->fetchByIdentifier(
+        $group = $this->modelsManager->fetchById(
             class: CascadeGroup::class,
             id: 6,
         );
@@ -337,7 +337,7 @@ abstract class AbstractCascadeActionIntegrationTestCase extends AbstractModelInt
             tagId: 71,
         );
 
-        $group = $this->modelsManager->fetchByIdentifier(
+        $group = $this->modelsManager->fetchById(
             class: CascadeGroup::class,
             id: 7,
         );
@@ -400,7 +400,7 @@ abstract class AbstractCascadeActionIntegrationTestCase extends AbstractModelInt
             id: 8,
         );
 
-        $group = $this->modelsManager->fetchByIdentifier(
+        $group = $this->modelsManager->fetchById(
             class: CascadeGroup::class,
             id: 8,
         );
@@ -437,12 +437,12 @@ abstract class AbstractCascadeActionIntegrationTestCase extends AbstractModelInt
             name: 'green',
         );
 
-        $group = $this->modelsManager->fetchByIdentifier(
+        $group = $this->modelsManager->fetchById(
             class: CascadeGroup::class,
             id: 9,
         );
 
-        $tag = $this->modelsManager->fetchByIdentifier(
+        $tag = $this->modelsManager->fetchById(
             class: CascadeTag::class,
             id: 90,
         );
@@ -479,7 +479,7 @@ abstract class AbstractCascadeActionIntegrationTestCase extends AbstractModelInt
             label: 'blocker',
         );
 
-        $group = $this->modelsManager->fetchByIdentifier(
+        $group = $this->modelsManager->fetchById(
             class: CascadeGroup::class,
             id: 100,
         );
@@ -495,7 +495,7 @@ abstract class AbstractCascadeActionIntegrationTestCase extends AbstractModelInt
             id: 101,
         );
 
-        $group = $this->modelsManager->fetchByIdentifier(
+        $group = $this->modelsManager->fetchById(
             class: CascadeGroup::class,
             id: 101,
         );

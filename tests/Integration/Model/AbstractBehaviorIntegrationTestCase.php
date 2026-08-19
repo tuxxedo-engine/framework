@@ -191,7 +191,7 @@ abstract class AbstractBehaviorIntegrationTestCase extends AbstractModelIntegrat
             deletedAt: null,
         );
 
-        $comment = $this->modelsManager->fetchByIdentifier(
+        $comment = $this->modelsManager->fetchById(
             class: Comment::class,
             id: 1,
         );
@@ -218,7 +218,7 @@ abstract class AbstractBehaviorIntegrationTestCase extends AbstractModelIntegrat
             deletedAt: '2026-01-02',
         );
 
-        $result = $this->modelsManager->findByIdentifier(
+        $result = $this->modelsManager->findById(
             class: Comment::class,
             id: 2,
         );
@@ -237,7 +237,7 @@ abstract class AbstractBehaviorIntegrationTestCase extends AbstractModelIntegrat
             deletedAt: '2026-01-02',
         );
 
-        $result = $this->modelsManager->findByIdentifier(
+        $result = $this->modelsManager->findById(
             class: Comment::class,
             id: 3,
             includeDeleted: true,
@@ -284,7 +284,7 @@ abstract class AbstractBehaviorIntegrationTestCase extends AbstractModelIntegrat
             deletedAt: null,
         );
 
-        $comment = $this->modelsManager->fetchByIdentifier(
+        $comment = $this->modelsManager->fetchById(
             class: Comment::class,
             id: 6,
         );
@@ -311,7 +311,7 @@ abstract class AbstractBehaviorIntegrationTestCase extends AbstractModelIntegrat
 
         $this->expectException(ModelException::class);
 
-        (void) $this->modelsManager->fetchByIdentifier(
+        (void) $this->modelsManager->fetchById(
             class: Comment::class,
             id: 7,
         );

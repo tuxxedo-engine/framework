@@ -58,7 +58,7 @@ readonly class ModelController
     public function fetch(): ResponseInterface
     {
         \var_dump(
-            $this->modelsManager->findByIdentifier(User::class, 1),
+            $this->modelsManager->findById(User::class, 1),
             $this->modelsManager->findFirst(User::class),
         );
 
@@ -89,7 +89,7 @@ readonly class ModelController
         RequestInterface $request,
         #[Argument] int $id,
     ): ViewInterface|ResponseInterface {
-        $user = $this->modelsManager->fetchByIdentifier(User::class, $id);
+        $user = $this->modelsManager->fetchById(User::class, $id);
 
         if ($request->isPost()) {
             (void) $this->modelsManager->delete($user);
@@ -137,7 +137,7 @@ readonly class ModelController
         RequestInterface $request,
         #[Argument] int $id,
     ): ViewInterface|ResponseInterface {
-        $user = $this->modelsManager->fetchByIdentifier(User::class, $id);
+        $user = $this->modelsManager->fetchById(User::class, $id);
 
         if ($request->isPost()) {
             $user->name = $request->post->string('name');
@@ -174,5 +174,11 @@ readonly class ModelController
                 'paginator' => $paginator,
             ],
         );
+    }
+
+    #[Route\Get(name: 'model.table')]
+    public function table(): ResponseInterface
+    {
+        return Response::text($this->modelsManager->createTable(User::class)->compile()->sql);
     }
 }

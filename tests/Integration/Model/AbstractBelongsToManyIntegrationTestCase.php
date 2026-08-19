@@ -119,7 +119,7 @@ abstract class AbstractBelongsToManyIntegrationTestCase extends AbstractModelInt
      */
     private function aliceRoles(): Relation
     {
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 1,
         );
@@ -161,7 +161,7 @@ abstract class AbstractBelongsToManyIntegrationTestCase extends AbstractModelInt
 
     public function testBelongsToManyRelationEmptyForUserWithoutPivotRows(): void
     {
-        $bob = $this->modelsManager->fetchByIdentifier(
+        $bob = $this->modelsManager->fetchById(
             class: User::class,
             id: 2,
         );
@@ -192,7 +192,7 @@ abstract class AbstractBelongsToManyIntegrationTestCase extends AbstractModelInt
 
     public function testBelongsToManyInverseFromRoleToUsers(): void
     {
-        $role = $this->modelsManager->fetchByIdentifier(
+        $role = $this->modelsManager->fetchById(
             class: Role::class,
             id: 10,
         );
@@ -223,7 +223,7 @@ abstract class AbstractBelongsToManyIntegrationTestCase extends AbstractModelInt
     {
         $roles = $this->aliceRoles();
 
-        $viewer = $this->modelsManager->fetchByIdentifier(
+        $viewer = $this->modelsManager->fetchById(
             class: Role::class,
             id: 12,
         );
@@ -240,7 +240,7 @@ abstract class AbstractBelongsToManyIntegrationTestCase extends AbstractModelInt
     {
         $roles = $this->aliceRoles();
 
-        $admin = $this->modelsManager->fetchByIdentifier(
+        $admin = $this->modelsManager->fetchById(
             class: Role::class,
             id: 10,
         );
@@ -257,7 +257,7 @@ abstract class AbstractBelongsToManyIntegrationTestCase extends AbstractModelInt
     {
         $roles = $this->aliceRoles();
 
-        $viewer = $this->modelsManager->fetchByIdentifier(
+        $viewer = $this->modelsManager->fetchById(
             class: Role::class,
             id: 12,
         );
@@ -278,12 +278,12 @@ abstract class AbstractBelongsToManyIntegrationTestCase extends AbstractModelInt
 
     public function testSaveWithPendingAttachInsertsPivotRow(): void
     {
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 1,
         );
 
-        $viewer = $this->modelsManager->fetchByIdentifier(
+        $viewer = $this->modelsManager->fetchById(
             class: Role::class,
             id: 12,
         );
@@ -311,12 +311,12 @@ abstract class AbstractBelongsToManyIntegrationTestCase extends AbstractModelInt
 
     public function testSaveWithPendingDetachRemovesPivotRow(): void
     {
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 1,
         );
 
-        $editor = $this->modelsManager->fetchByIdentifier(
+        $editor = $this->modelsManager->fetchById(
             class: Role::class,
             id: 11,
         );

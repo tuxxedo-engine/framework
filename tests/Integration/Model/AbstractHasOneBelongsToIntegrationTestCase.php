@@ -52,7 +52,7 @@ abstract class AbstractHasOneBelongsToIntegrationTestCase extends AbstractModelI
     {
         $this->seedUserWithProfile();
 
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 1,
         );
@@ -76,7 +76,7 @@ abstract class AbstractHasOneBelongsToIntegrationTestCase extends AbstractModelI
     {
         $this->seedUserWithProfile();
 
-        $profile = $this->modelsManager->fetchByIdentifier(
+        $profile = $this->modelsManager->fetchById(
             class: Profile::class,
             id: 10,
         );
@@ -108,7 +108,7 @@ abstract class AbstractHasOneBelongsToIntegrationTestCase extends AbstractModelI
             $saved->id,
         );
 
-        $reloaded = $this->modelsManager->findByIdentifier(
+        $reloaded = $this->modelsManager->findById(
             class: User::class,
             id: $saved->id,
         );
@@ -127,7 +127,7 @@ abstract class AbstractHasOneBelongsToIntegrationTestCase extends AbstractModelI
     {
         $this->seedUserWithProfile();
 
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 1,
         );
@@ -136,7 +136,7 @@ abstract class AbstractHasOneBelongsToIntegrationTestCase extends AbstractModelI
 
         (void) $this->modelsManager->save($user);
 
-        $reloaded = $this->modelsManager->fetchByIdentifier(
+        $reloaded = $this->modelsManager->fetchById(
             class: User::class,
             id: 1,
         );
@@ -160,7 +160,7 @@ abstract class AbstractHasOneBelongsToIntegrationTestCase extends AbstractModelI
             ->set(column: 'score', value: 0.0)
             ->execute();
 
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 2,
         );

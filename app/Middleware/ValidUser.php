@@ -33,7 +33,7 @@ class ValidUser implements MiddlewareInterface
         RequestInterface $request,
         MiddlewareInterface $next,
     ): ResponseInterface {
-        if (!$this->container->resolve(ModelsManagerInterface::class)->existsByIdentifier(User::class, $request->route->arguments['id'])) {
+        if (!$this->container->resolve(ModelsManagerInterface::class)->existsById(User::class, $request->route->arguments['id'])) {
             throw HttpException::fromNotFound();
         }
 

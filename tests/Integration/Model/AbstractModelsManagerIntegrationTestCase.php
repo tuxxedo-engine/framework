@@ -308,7 +308,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
     {
         $this->expectException(ModelException::class);
 
-        (void) $this->modelsManager->findByIdentifier(
+        (void) $this->modelsManager->findById(
             class: Setting::class,
             id: 1,
         );
@@ -337,7 +337,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             name: 'Alice',
         );
 
-        $result = $this->modelsManager->findByIdentifier(
+        $result = $this->modelsManager->findById(
             class: User::class,
             id: 100,
             criteria: static function (SelectStatementInterface $statement): void {
@@ -386,7 +386,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
     {
         $this->expectException(ModelException::class);
 
-        (void) $this->modelsManager->existsByIdentifier(
+        (void) $this->modelsManager->existsById(
             class: Setting::class,
             id: 1,
         );
@@ -403,7 +403,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             name: 'Bob',
         );
 
-        $exists = $this->modelsManager->existsByIdentifier(
+        $exists = $this->modelsManager->existsById(
             class: User::class,
             id: 200,
             criteria: static function (ExistsStatementInterface $statement): void {
@@ -456,7 +456,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             name: 'Original',
         );
 
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 10,
         );
@@ -506,7 +506,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             id: 20,
         );
 
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 20,
         );
@@ -589,7 +589,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             id: 50,
         );
 
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 50,
         );
@@ -612,7 +612,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             id: 60,
         );
 
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 60,
         );
@@ -642,7 +642,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             countryId: null,
         );
 
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 70,
         );
@@ -665,7 +665,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             id: 80,
         );
 
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 80,
         );
@@ -693,7 +693,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             countryId: null,
         );
 
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 81,
         );
@@ -770,7 +770,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             label: 'child',
         );
 
-        $group = $this->modelsManager->fetchByIdentifier(
+        $group = $this->modelsManager->fetchById(
             class: CascadeGroup::class,
             id: 200,
         );
@@ -804,7 +804,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             label: 'child',
         );
 
-        $group = $this->modelsManager->fetchByIdentifier(
+        $group = $this->modelsManager->fetchById(
             class: CascadeGroup::class,
             id: 210,
         );
@@ -871,7 +871,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             label: 'to-remove',
         );
 
-        $fetched = $this->modelsManager->fetchByIdentifier(
+        $fetched = $this->modelsManager->fetchById(
             class: OrphanParent::class,
             id: $saved->id,
         );
@@ -917,7 +917,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             label: 'child',
         );
 
-        $child = $this->modelsManager->fetchByIdentifier(
+        $child = $this->modelsManager->fetchById(
             class: CascadeBelongsToChild::class,
             id: 800,
         );
@@ -949,7 +949,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             userId: 900,
         );
 
-        $country = $this->modelsManager->fetchByIdentifier(
+        $country = $this->modelsManager->fetchById(
             class: Country::class,
             id: 1,
         );
@@ -981,7 +981,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             id: 910,
         );
 
-        $country = $this->modelsManager->fetchByIdentifier(
+        $country = $this->modelsManager->fetchById(
             class: Country::class,
             id: 1,
         );
@@ -1020,7 +1020,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             userId: 920,
         );
 
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 920,
             with: [
@@ -1111,7 +1111,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             handle: 'anna-handle',
         );
 
-        $owner = $this->modelsManager->fetchByIdentifier(
+        $owner = $this->modelsManager->fetchById(
             class: StrictOwner::class,
             id: 1,
         );
@@ -1143,7 +1143,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             handle: 'lazy-handle',
         );
 
-        $owner = $this->modelsManager->fetchByIdentifier(
+        $owner = $this->modelsManager->fetchById(
             class: StrictOwner::class,
             id: 500,
         );
@@ -1171,7 +1171,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             handle: 'force-handle',
         );
 
-        $owner = $this->modelsManager->fetchByIdentifier(
+        $owner = $this->modelsManager->fetchById(
             class: StrictOwner::class,
             id: 510,
         );
@@ -1203,7 +1203,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             tagId: 1300,
         );
 
-        $group = $this->modelsManager->fetchByIdentifier(
+        $group = $this->modelsManager->fetchById(
             class: CascadeGroup::class,
             id: 1200,
         );
@@ -1235,7 +1235,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             name: 'has-country',
         );
 
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 1500,
         );
@@ -1244,7 +1244,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
 
         (void) $this->modelsManager->save($user);
 
-        $refetched = $this->modelsManager->fetchByIdentifier(
+        $refetched = $this->modelsManager->fetchById(
             class: User::class,
             id: 1500,
         );
@@ -1262,7 +1262,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             label: 'orphan',
         );
 
-        $child = $this->modelsManager->fetchByIdentifier(
+        $child = $this->modelsManager->fetchById(
             class: CascadeBelongsToChild::class,
             id: 900,
         );
@@ -1287,7 +1287,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             label: 'force-child',
         );
 
-        $child = $this->modelsManager->fetchByIdentifier(
+        $child = $this->modelsManager->fetchById(
             class: CascadeBelongsToChild::class,
             id: 902,
         );
@@ -1319,7 +1319,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             bio: 'x',
         );
 
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 1600,
             with: [
@@ -1354,7 +1354,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
             id: 1700,
         );
 
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 1700,
         );
@@ -1451,7 +1451,7 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
 
         $this->expectException(ModelException::class);
 
-        (void) $this->modelsManager->fetchByIdentifier(
+        (void) $this->modelsManager->fetchById(
             class: User::class,
             id: 2000,
             with: [

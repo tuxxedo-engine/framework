@@ -60,8 +60,6 @@ use Tuxxedo\Validator\ValidatorInterface;
 )]
 class ModelsManager implements ModelsManagerInterface
 {
-    public const int DEFAULT_EAGER_CHUNK_SIZE = 100;
-
     public readonly HydratorInterface $hydrator;
 
     /**
@@ -116,9 +114,7 @@ class ModelsManager implements ModelsManagerInterface
         }
 
         if (!$skipValidation) {
-            $this->validator->validateOrThrow(
-                target: $model,
-            );
+            $this->validator->validateOrThrow($model);
         }
 
         $this->saveInProgress[$model] = true;
@@ -1256,7 +1252,7 @@ class ModelsManager implements ModelsManagerInterface
      * @throws ModelException
      */
     #[\NoDiscard]
-    public function findByIdentifier(
+    public function findById(
         string $class,
         int|string $id,
         ?\Closure $criteria = null,
@@ -1296,14 +1292,14 @@ class ModelsManager implements ModelsManagerInterface
      * @throws ModelException
      */
     #[\NoDiscard]
-    public function fetchByIdentifier(
+    public function fetchById(
         string $class,
         int|string $id,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
         ?array $with = null,
     ): object {
-        return $this->findByIdentifier($class, $id, $criteria, $includeDeleted, $with) ?? throw ModelException::fromModelNotFound(
+        return $this->findById($class, $id, $criteria, $includeDeleted, $with) ?? throw ModelException::fromModelNotFound(
             modelClass: $class,
         );
     }
@@ -1472,7 +1468,7 @@ class ModelsManager implements ModelsManagerInterface
             );
         }
 
-        $fresh = $this->findByIdentifier($model::class, $value, includeDeleted: true);
+        $fresh = $this->findById($model::class, $value, includeDeleted: true);
 
         if ($fresh === null) {
             throw ModelException::fromModelNoLongerExists(
@@ -1510,7 +1506,7 @@ class ModelsManager implements ModelsManagerInterface
      * @param (\Closure(ExistsStatementInterface $statement): void) $criteria
      */
     #[\NoDiscard]
-    public function existsByIdentifier(
+    public function existsById(
         string $class,
         int|string $id,
         ?\Closure $criteria = null,

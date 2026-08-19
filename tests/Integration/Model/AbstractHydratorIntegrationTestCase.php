@@ -693,7 +693,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
 
         $this->expectException(ModelException::class);
 
-        (void) $this->modelsManager->fetchByIdentifier(
+        (void) $this->modelsManager->fetchById(
             class: StrictChild::class,
             id: 1,
         );
@@ -703,7 +703,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
     {
         $this->seedStrictChild(id: 2, ownerId: 999, label: 'dangling');
 
-        $child = $this->modelsManager->fetchByIdentifier(
+        $child = $this->modelsManager->fetchById(
             class: StrictChild::class,
             id: 2,
         );
@@ -719,7 +719,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
     {
         $this->seedStrictOwner(id: 10, name: 'lonely');
 
-        $owner = $this->modelsManager->fetchByIdentifier(
+        $owner = $this->modelsManager->fetchById(
             class: StrictOwner::class,
             id: 10,
         );
@@ -737,7 +737,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
 
         $this->seedUserGraph(id: 500, name: 'Dana', countryId: 100);
 
-        $country = $this->modelsManager->fetchByIdentifier(
+        $country = $this->modelsManager->fetchById(
             class: Country::class,
             id: 100,
         );
@@ -753,7 +753,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
     {
         $this->seedBaseGraph();
 
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 1,
         );
@@ -778,7 +778,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
     {
         $this->seedBaseGraph();
 
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 1,
         );
@@ -816,7 +816,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
     {
         $this->seedBaseGraph();
 
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 1,
         );
@@ -841,7 +841,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
     {
         $this->seedBaseGraph();
 
-        $country = $this->modelsManager->fetchByIdentifier(
+        $country = $this->modelsManager->fetchById(
             class: Country::class,
             id: 1,
         );
@@ -874,7 +874,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
     {
         $this->seedBaseGraph();
 
-        $country = $this->modelsManager->fetchByIdentifier(
+        $country = $this->modelsManager->fetchById(
             class: Country::class,
             id: 1,
         );
@@ -899,7 +899,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
     {
         $this->seedRegionGraph();
 
-        $region = $this->modelsManager->fetchByIdentifier(
+        $region = $this->modelsManager->fetchById(
             class: Region::class,
             id: 1,
         );
@@ -919,7 +919,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
     {
         $this->seedRegionGraph();
 
-        $region = $this->modelsManager->fetchByIdentifier(
+        $region = $this->modelsManager->fetchById(
             class: Region::class,
             id: 1,
         );
@@ -939,7 +939,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
     {
         $this->seedBaseGraph();
 
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 1,
             with: [
@@ -1124,7 +1124,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
 
         $this->seedBulkChild(id: 10, parentId: 1, label: 'child');
 
-        $parent = $this->modelsManager->fetchByIdentifier(
+        $parent = $this->modelsManager->fetchById(
             class: BulkParent::class,
             id: 1,
         );
@@ -1146,7 +1146,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
 
         $this->seedStrictChild(id: 1, ownerId: 1, label: 'child');
 
-        $child = $this->modelsManager->fetchByIdentifier(
+        $child = $this->modelsManager->fetchById(
             class: StrictChild::class,
             id: 1,
         );
@@ -1161,7 +1161,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
     {
         $this->seedBaseGraph();
 
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 1,
             with: [
@@ -1189,7 +1189,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
     {
         $this->seedBaseGraph();
 
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 1,
             with: [
@@ -1235,7 +1235,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
     {
         $this->seedBaseGraph();
 
-        $user = $this->modelsManager->fetchByIdentifier(
+        $user = $this->modelsManager->fetchById(
             class: User::class,
             id: 1,
             with: [
@@ -1281,7 +1281,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
     {
         $this->seedBaseGraph();
 
-        $country = $this->modelsManager->fetchByIdentifier(
+        $country = $this->modelsManager->fetchById(
             class: Country::class,
             id: 1,
             with: [
@@ -1327,7 +1327,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
     {
         $this->seedNullableThroughOwner(id: 1, nullableRefId: null);
 
-        $owner = $this->modelsManager->fetchByIdentifier(
+        $owner = $this->modelsManager->fetchById(
             class: NullableThroughOwner::class,
             id: 1,
         );
@@ -1341,7 +1341,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
     {
         $this->seedNullableThroughOwner(id: 2, nullableRefId: null);
 
-        $owner = $this->modelsManager->fetchByIdentifier(
+        $owner = $this->modelsManager->fetchById(
             class: NullableThroughOwner::class,
             id: 2,
         );
@@ -1363,7 +1363,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
 
         $this->expectException(ModelException::class);
 
-        (void) $this->modelsManager->fetchByIdentifier(
+        (void) $this->modelsManager->fetchById(
             class: StrictThroughOwner::class,
             id: 3,
         );
@@ -1377,7 +1377,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
 
         $this->expectException(ModelException::class);
 
-        (void) $this->modelsManager->fetchByIdentifier(
+        (void) $this->modelsManager->fetchById(
             class: User::class,
             id: 1,
             with: [

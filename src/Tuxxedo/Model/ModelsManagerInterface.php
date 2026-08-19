@@ -31,6 +31,8 @@ use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 #[DefaultImplementation(class: ModelsManager::class, lifecycle: Lifecycle::SINGLETON)]
 interface ModelsManagerInterface
 {
+    final public const int DEFAULT_EAGER_CHUNK_SIZE = 100;
+
     public ConnectionInterface $connection {
         get;
     }
@@ -130,7 +132,7 @@ interface ModelsManagerInterface
      * @throws ModelException
      */
     #[\NoDiscard]
-    public function findByIdentifier(
+    public function findById(
         string $class,
         int|string $id,
         ?\Closure $criteria = null,
@@ -149,7 +151,7 @@ interface ModelsManagerInterface
      * @throws ModelException
      */
     #[\NoDiscard]
-    public function fetchByIdentifier(
+    public function fetchById(
         string $class,
         int|string $id,
         ?\Closure $criteria = null,
@@ -213,7 +215,7 @@ interface ModelsManagerInterface
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
         ?array $with = null,
-        int $chunkSize = ModelsManager::DEFAULT_EAGER_CHUNK_SIZE,
+        int $chunkSize = self::DEFAULT_EAGER_CHUNK_SIZE,
     ): \Generator;
 
     /**
@@ -242,7 +244,7 @@ interface ModelsManagerInterface
      * @param (\Closure(ExistsStatementInterface $statement): void) $criteria
      */
     #[\NoDiscard]
-    public function existsByIdentifier(
+    public function existsById(
         string $class,
         int|string $id,
         ?\Closure $criteria = null,
