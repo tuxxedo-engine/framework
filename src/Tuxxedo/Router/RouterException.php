@@ -157,4 +157,19 @@ class RouterException extends \Exception
             ),
         );
     }
+
+    public static function fromArgumentHasNoMatchingParameter(
+        string $className,
+        string $method,
+        string $argument,
+    ): self {
+        return new self(
+            message: \sprintf(
+                '%s::%s() has a path argument {%s} that does not match any parameter',
+                $className,
+                $method,
+                $argument,
+            ),
+        );
+    }
 }
