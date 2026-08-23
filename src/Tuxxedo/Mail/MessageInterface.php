@@ -85,6 +85,9 @@ interface MessageInterface
         get;
     }
 
+    /**
+     * @var non-empty-string
+     */
     public string $messageId {
         get;
     }

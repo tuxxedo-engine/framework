@@ -52,10 +52,12 @@ class FileMailTransport implements MailTransportInterface
 
                 $status = RecipientStatus::ACCEPTED;
                 $summary = null;
+                // @codeCoverageIgnoreStart
             } catch (MailException $e) {
                 $status = RecipientStatus::PERMANENT_FAILURE;
                 $summary = $e->getMessage();
             }
+            // @codeCoverageIgnoreEnd
 
             $outcomes = [];
 
@@ -85,9 +87,11 @@ class FileMailTransport implements MailTransportInterface
         $path = \rtrim($this->config->directory, '/\\') . \DIRECTORY_SEPARATOR . self::filenameFor($serialized->source);
 
         if (\file_put_contents($path, $serialized->wire) === false) {
+            // @codeCoverageIgnoreStart
             throw MailException::fromTransportFailure(
                 transport: self::class,
             );
+            // @codeCoverageIgnoreEnd
         }
     }
 

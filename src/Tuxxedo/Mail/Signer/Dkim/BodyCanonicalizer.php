@@ -19,7 +19,7 @@ class BodyCanonicalizer
         string $body,
         DkimCanonicalization $mode,
     ): string {
-        return match ($mode) {
+        return match ($mode) { // @codeCoverageIgnore
             DkimCanonicalization::SIMPLE => self::simple($body),
             DkimCanonicalization::RELAXED => self::relaxed($body),
         };

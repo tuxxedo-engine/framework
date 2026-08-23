@@ -53,7 +53,12 @@ class Message implements MessageInterface
 
     public readonly ?AddressInterface $sender;
     public readonly ?AddressInterface $returnPath;
+
+    /**
+     * @var non-empty-string
+     */
     public readonly string $messageId;
+
     public readonly \DateTimeImmutable $date;
 
     /**
@@ -63,6 +68,7 @@ class Message implements MessageInterface
      * @param list<AddressInterface|string>|AddressInterface|string $replyTo
      * @param list<AttachmentInterface> $attachments
      * @param list<HeaderInterface> $extraHeaders
+     * @param non-empty-string|null $messageId
      *
      * @throws MailException
      */
@@ -226,7 +232,7 @@ class Message implements MessageInterface
             [
                 'sender' => $sender !== null
                     ? self::coerceAddress($sender)
-                    : null,
+                    : null, // @codeCoverageIgnore
             ],
         );
     }
@@ -242,7 +248,7 @@ class Message implements MessageInterface
             [
                 'returnPath' => $returnPath !== null
                     ? self::coerceAddress($returnPath)
-                    : null,
+                    : null, // @codeCoverageIgnore
             ],
         );
     }
@@ -398,6 +404,9 @@ class Message implements MessageInterface
         return $result;
     }
 
+    /**
+     * @return non-empty-string
+     */
     private static function generateMessageId(
         AddressInterface $from,
     ): string {

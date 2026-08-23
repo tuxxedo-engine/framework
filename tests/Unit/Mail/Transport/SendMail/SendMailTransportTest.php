@@ -15,6 +15,7 @@ namespace Unit\Mail\Transport\SendMail;
 
 use PHPUnit\Framework\TestCase;
 use Support\Process\RecordingProcessRunner;
+use Tuxxedo\Container\Container;
 use Tuxxedo\Mail\Address;
 use Tuxxedo\Mail\MailException;
 use Tuxxedo\Mail\Message;
@@ -266,5 +267,18 @@ class SendMailTransportTest extends TestCase
         );
 
         self::assertCount(3, $runner->commands);
+    }
+
+    public function testCreateTransportResolvesSendMailTransportFromContainer(): void
+    {
+        $container = new Container();
+        $container->singleton(new RecordingProcessRunner());
+
+        $config = new SendMailTransportConfig();
+        $transport = $config->createTransport(
+            container: $container,
+        );
+
+        self::assertInstanceOf(SendMailTransport::class, $transport);
     }
 }
