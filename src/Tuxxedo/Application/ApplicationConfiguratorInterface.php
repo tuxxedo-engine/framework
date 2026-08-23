@@ -269,5 +269,11 @@ interface ApplicationConfiguratorInterface
         string $file,
     ): self;
 
+    public function withRouteFile(
+        string $file,
+    ): self;
+
+    public function withoutRouteFiles(): self;
+
     public function build(): KernelInterface;
 }

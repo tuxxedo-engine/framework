@@ -1763,6 +1763,147 @@ class ApplicationConfiguratorTest extends TestCase
         self::assertFalse($container->isBound(MailManagerInterface::class));
     }
 
+    public function testWithRouteFileAppendsToRouteFiles(): void
+    {
+        $configurator = new ApplicationConfigurator();
+
+        $configurator->withRouteFile(
+            file: '/routes/web.php',
+        );
+
+        $configurator->withRouteFile(
+            file: '/routes/api.php',
+        );
+
+        self::assertSame(
+            [
+                '/routes/web.php',
+                '/routes/api.php',
+            ],
+            $configurator->routeFiles,
+        );
+    }
+
+    public function testWithRouteFileReturnsFluentSelf(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $result = $configurator->withRouteFile(
+            file: '/routes/web.php',
+        );
+
+        self::assertSame($configurator, $result);
+    }
+
+    public function testWithoutRouteFilesClearsRouteFiles(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $configurator->withRouteFile(
+            file: '/routes/web.php',
+        );
+
+        $configurator->withoutRouteFiles();
+
+        self::assertSame(
+            [],
+            $configurator->routeFiles,
+        );
+    }
+
+    public function testWithoutRouteFilesReturnsFluentSelf(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $result = $configurator->withoutRouteFiles();
+
+        self::assertSame($configurator, $result);
+    }
+
+    public function testWithRouterClearsRouteFiles(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $configurator->withRouteFile(
+            file: '/routes/web.php',
+        );
+
+        $configurator->withRouter(
+            router: new StaticRouter(
+                routes: [],
+            ),
+        );
+
+        self::assertSame(
+            [],
+            $configurator->routeFiles,
+        );
+    }
+
+    public function testWithDefaultRouterClearsRouteFiles(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $configurator->withRouteFile(
+            file: '/routes/web.php',
+        );
+
+        $configurator->withDefaultRouter(
+            directory: '/path/to/controllers',
+        );
+
+        self::assertSame(
+            [],
+            $configurator->routeFiles,
+        );
+    }
+
+    public function testBuildProducesStaticRouterFromRouteFiles(): void
+    {
+        $configurator = $this->makeMinimalConfigurator()
+            ->withRouteFile(
+                file: __DIR__ . '/../../Fixture/Router/Builder/RouteFiles/valid.php',
+            );
+
+        $configurator->build();
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        $router = $container->resolve(RouterInterface::class);
+
+        self::assertInstanceOf(StaticRouter::class, $router);
+        self::assertCount(2, $router->routes);
+        self::assertSame('/', $router->routes[0]->path);
+        self::assertSame('/about', $router->routes[1]->path);
+    }
+
+    public function testWithRouteFileClearsExplicitRouter(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $configurator->withRouter(
+            router: new StaticRouter(
+                routes: [],
+            ),
+        );
+
+        $configurator->withRouteFile(
+            file: '/routes/web.php',
+        );
+
+        self::assertNull($configurator->router);
+    }
+
+    public function testWithRouteFileClearsDefaultRouterFields(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $configurator->withDefaultRouter(
+            directory: '/path/to/controllers',
+        );
+
+        $configurator->withRouteFile(
+            file: '/routes/web.php',
+        );
+
+        self::assertNull($configurator->defaultRouterDirectory);
+        self::assertNull($configurator->defaultRouterBaseNamespace);
+    }
+
     private static function makeErrorHandler(): ErrorHandlerInterface
     {
         return new class () implements ErrorHandlerInterface {

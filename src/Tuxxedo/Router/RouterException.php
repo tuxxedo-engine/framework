@@ -172,4 +172,26 @@ class RouterException extends \Exception
             ),
         );
     }
+
+    public static function fromRouteFileNotFound(
+        string $path,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Route file "%s" does not exist',
+                $path,
+            ),
+        );
+    }
+
+    public static function fromRouteFileInvalidReturn(
+        string $path,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Route file "%s" must return a Closure(RouteBuilderInterface): list<RouteInterface>',
+                $path,
+            ),
+        );
+    }
 }

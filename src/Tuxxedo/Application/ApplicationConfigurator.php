@@ -80,6 +80,11 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
     public private(set) array $defaultExceptionHandlers = [];
     public private(set) array $serviceFiles = [];
 
+    /**
+     * @var list<string>
+     */
+    public private(set) array $routeFiles = [];
+
     final public function __construct(
         public private(set) string $appName = '',
         public private(set) string $appVersion = '',
@@ -188,6 +193,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         bool $strictMode = true,
     ): self {
         $this->router = null;
+        $this->routeFiles = [];
         $this->defaultRouterDirectory = $directory;
         $this->defaultRouterBaseNamespace = $baseNamespace;
         $this->defaultRouterStrictMode = $strictMode;
@@ -199,8 +205,27 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         RouterInterface $router,
     ): self {
         $this->router = $router;
+        $this->routeFiles = [];
         $this->defaultRouterDirectory = null;
         $this->defaultRouterBaseNamespace = null;
+
+        return $this;
+    }
+
+    public function withRouteFile(
+        string $file,
+    ): self {
+        $this->router = null;
+        $this->defaultRouterDirectory = null;
+        $this->defaultRouterBaseNamespace = null;
+        $this->routeFiles[] = $file;
+
+        return $this;
+    }
+
+    public function withoutRouteFiles(): self
+    {
+        $this->routeFiles = [];
 
         return $this;
     }
@@ -436,6 +461,14 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
 
         if ($this->router !== null) {
             $container->singleton($this->router);
+        } elseif ($this->routeFiles !== []) {
+            $container->singletonLazy(
+                RouterInterface::class,
+                fn (ContainerInterface $container): RouterInterface => StaticRouter::createFromRouteFiles(
+                    container: $container,
+                    files: $this->routeFiles,
+                ),
+            );
         } elseif (
             $this->defaultRouterDirectory !== null &&
             $this->defaultRouterBaseNamespace !== null

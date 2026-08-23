@@ -707,4 +707,128 @@ class StaticRouterTest extends TestCase
         self::assertSame($route, $first->route);
         self::assertSame($route, $second->route);
     }
+
+    private const string ROUTE_FILE_FIXTURES = __DIR__ . '/../../Fixture/Router/Builder/RouteFiles/';
+
+    public function testCreateFromRouteFilesMaterializesRoutesFromFactoryReturn(): void
+    {
+        $router = StaticRouter::createFromRouteFiles(
+            container: new \Tuxxedo\Container\Container(),
+            files: [
+                self::ROUTE_FILE_FIXTURES . 'valid.php',
+            ],
+        );
+
+        self::assertCount(2, $router->routes);
+        self::assertSame('/', $router->routes[0]->path);
+        self::assertSame('/about', $router->routes[1]->path);
+    }
+
+    public function testCreateFromRouteFilesConcatenatesMultipleFiles(): void
+    {
+        $router = StaticRouter::createFromRouteFiles(
+            container: new \Tuxxedo\Container\Container(),
+            files: [
+                self::ROUTE_FILE_FIXTURES . 'valid.php',
+                self::ROUTE_FILE_FIXTURES . 'other.php',
+            ],
+        );
+
+        self::assertCount(3, $router->routes);
+        self::assertSame('/', $router->routes[0]->path);
+        self::assertSame('/about', $router->routes[1]->path);
+        self::assertSame('/contact', $router->routes[2]->path);
+    }
+
+    public function testCreateFromRouteFilesWithEmptyListReturnsEmptyRouter(): void
+    {
+        $router = StaticRouter::createFromRouteFiles(
+            container: new \Tuxxedo\Container\Container(),
+            files: [],
+        );
+
+        self::assertSame(
+            [],
+            $router->routes,
+        );
+    }
+
+    public function testCreateFromRouteFilesWithEmptyFactoryReturnStillProducesRouter(): void
+    {
+        $router = StaticRouter::createFromRouteFiles(
+            container: new \Tuxxedo\Container\Container(),
+            files: [
+                self::ROUTE_FILE_FIXTURES . 'empty.php',
+            ],
+        );
+
+        self::assertSame(
+            [],
+            $router->routes,
+        );
+    }
+
+    public function testCreateFromRouteFilesMissingFileThrows(): void
+    {
+        try {
+            StaticRouter::createFromRouteFiles(
+                container: new \Tuxxedo\Container\Container(),
+                files: [
+                    self::ROUTE_FILE_FIXTURES . 'does-not-exist.php',
+                ],
+            );
+
+            self::fail('Expected RouterException was not thrown');
+        } catch (\Tuxxedo\Router\RouterException $exception) {
+            self::assertStringContainsString('does not exist', $exception->getMessage());
+        }
+    }
+
+    public function testCreateFromRouteFilesNonClosureReturnThrows(): void
+    {
+        try {
+            StaticRouter::createFromRouteFiles(
+                container: new \Tuxxedo\Container\Container(),
+                files: [
+                    self::ROUTE_FILE_FIXTURES . 'non_closure_return.php',
+                ],
+            );
+
+            self::fail('Expected RouterException was not thrown');
+        } catch (\Tuxxedo\Router\RouterException $exception) {
+            self::assertStringContainsString('must return a Closure', $exception->getMessage());
+        }
+    }
+
+    public function testCreateFromRouteFilesClosureReturningNonArrayThrows(): void
+    {
+        try {
+            StaticRouter::createFromRouteFiles(
+                container: new \Tuxxedo\Container\Container(),
+                files: [
+                    self::ROUTE_FILE_FIXTURES . 'non_array_return.php',
+                ],
+            );
+
+            self::fail('Expected RouterException was not thrown');
+        } catch (\Tuxxedo\Router\RouterException $exception) {
+            self::assertStringContainsString('must return a Closure', $exception->getMessage());
+        }
+    }
+
+    public function testCreateFromRouteFilesArrayContainingNonRouteElementThrows(): void
+    {
+        try {
+            StaticRouter::createFromRouteFiles(
+                container: new \Tuxxedo\Container\Container(),
+                files: [
+                    self::ROUTE_FILE_FIXTURES . 'non_route_element.php',
+                ],
+            );
+
+            self::fail('Expected RouterException was not thrown');
+        } catch (\Tuxxedo\Router\RouterException $exception) {
+            self::assertStringContainsString('must return a Closure', $exception->getMessage());
+        }
+    }
 }
