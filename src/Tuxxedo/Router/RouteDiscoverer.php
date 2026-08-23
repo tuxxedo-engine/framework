@@ -19,12 +19,15 @@ use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Router\Attribute\Argument;
 use Tuxxedo\Router\Attribute\Middleware;
 use Tuxxedo\Router\Attribute\Route as RouteAttr;
+use Tuxxedo\Router\Compiler\PathCompiler;
+use Tuxxedo\Router\Compiler\PathCompilerInterface;
 use Tuxxedo\Router\Pattern\TypePatternRegistry;
 use Tuxxedo\Router\Pattern\TypePatternRegistryInterface;
 
 class RouteDiscoverer implements RouteDiscovererInterface
 {
     public readonly TypePatternRegistryInterface $patterns;
+    private readonly PathCompilerInterface $pathCompiler;
     private bool $hasDiscoveryRun = false;
 
     public function __construct(
@@ -33,8 +36,12 @@ class RouteDiscoverer implements RouteDiscovererInterface
         public readonly string $directory,
         public readonly bool $strictMode = false,
         ?TypePatternRegistryInterface $patterns = null,
+        ?PathCompilerInterface $pathCompiler = null,
     ) {
         $this->patterns = $patterns ?? TypePatternRegistry::createDefault();
+        $this->pathCompiler = $pathCompiler ?? new PathCompiler(
+            patterns: $this->patterns,
+        );
     }
 
     /**
@@ -225,13 +232,17 @@ class RouteDiscoverer implements RouteDiscovererInterface
             $namedRoutes[] = $route->name;
         }
 
-        $argumentNodes = $this->getPathArgumentNodes($path, $prefix);
+        $compiled = $this->pathCompiler->compile(
+            path: $path,
+            prefix: $prefix,
+        );
 
-        if (\sizeof($argumentNodes) > 0) {
+        if (\sizeof($compiled->argumentNodes) > 0) {
             yield from $this->discoverRoutesWithArguments(
                 path: $path,
+                regexPath: $compiled->regexPath,
                 middleware: $middleware,
-                nodes: $argumentNodes,
+                nodes: $compiled->argumentNodes,
                 className: $reflector->getName(),
                 method: $method,
                 route: $route,
@@ -369,66 +380,6 @@ class RouteDiscoverer implements RouteDiscovererInterface
     }
 
     /**
-     * @return ArgumentNode[]
-     */
-    private function getPathArgumentNodes(
-        string $path,
-        ?PrefixInterface $prefix,
-    ): array {
-        $nodes = [];
-        $prefixedArguments = [];
-
-        if ($prefix !== null) {
-            $regex = \preg_match_all(
-                '/\{(\??)([a-zA-Z_][a-zA-Z0-9_]*)(?::([^}]+)|<([^>]+)>)?}/',
-                $prefix->path,
-                $matches,
-                \PREG_SET_ORDER,
-            );
-
-            if ($regex !== false && $regex > 0) {
-                foreach ($matches as $match) {
-                    $prefixedArguments[] = $match[2];
-                }
-            }
-        }
-
-        $regex = \preg_match_all(
-            '/\{(\??)([a-zA-Z_][a-zA-Z0-9_]*)(?::([^}]+)|<([^>]+)>)?}/',
-            $path,
-            $matches,
-            \PREG_SET_ORDER,
-        );
-
-        if ($regex !== false && $regex > 0) {
-            foreach ($matches as $match) {
-                $regexConstraint = $match[3] ?? null;
-                $typeConstraint = $match[4] ?? null;
-                $constraint = null;
-                $kind = ArgumentKind::TYPED_IMPLICIT;
-
-                if ($typeConstraint !== null) {
-                    $kind = ArgumentKind::TYPED_EXPLICIT;
-                    $constraint = $typeConstraint;
-                } elseif ($regexConstraint !== null) {
-                    $kind = ArgumentKind::REGEX;
-                    $constraint = $regexConstraint;
-                }
-
-                $nodes[] = new ArgumentNode(
-                    name: $match[2],
-                    kind: $kind,
-                    constraint: $constraint,
-                    optional: $match[1] === '?',
-                    prefixed: \in_array($match[2], $prefixedArguments, true),
-                );
-            }
-        }
-
-        return $nodes;
-    }
-
-    /**
      * @param array<(\Closure(): MiddlewareInterface)> $middleware
      * @param ArgumentNode[] $nodes
      * @param class-string $className
@@ -436,6 +387,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
      */
     private function discoverRoutesWithArguments(
         string $path,
+        string $regexPath,
         array $middleware,
         array $nodes,
         string $className,
@@ -494,7 +446,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
                     name: $route->name,
                     middleware: $middleware,
                     priority: $route->priority,
-                    regexPath: $this->getRegexPath($path),
+                    regexPath: $regexPath,
                     arguments: $arguments,
                 );
             }
@@ -507,7 +459,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
                 name: $route->name,
                 middleware: $middleware,
                 priority: $route->priority,
-                regexPath: $this->getRegexPath($path),
+                regexPath: $regexPath,
                 arguments: $arguments,
             );
         }
@@ -540,25 +492,6 @@ class RouteDiscoverer implements RouteDiscovererInterface
         }
 
         return null;
-    }
-
-    private function getRegexPath(string $path): string
-    {
-        return '#^' . \preg_replace_callback(
-            '/(\/?)\{(\??)([a-zA-Z_][a-zA-Z0-9_]*)(?::([^}]+)|<([^>]+)>)?}/',
-            function (array $matches): string {
-                $regex = ($matches[4] ?? '') !== '' ? $matches[4] : null;
-                $type = ($matches[5] ?? '') !== '' ? $matches[5] : null;
-
-                $pattern = $regex ?? $this->patterns->get($type ?? '')->regex ?? '[^/]+';
-                $segment = '(?<' . $matches[3] . '>' . $pattern . ')';
-
-                return $matches[2] === '?'
-                    ? '(?:' . $matches[1] . $segment . ')?'
-                    : $matches[1] . $segment;
-            },
-            $path,
-        ) . '$#';
     }
 
     private function getNativeType(
