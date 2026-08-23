@@ -16,8 +16,7 @@ namespace Tuxxedo\Temporal;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 
-// @todo Consider extending this namespace with more functionality
-// @todo As functionality improves here, make sure that Lumi's standard library supports this
+// @todo Consider extending this namespace with more functionality with select Lumi support
 #[DefaultImplementation(class: SystemClock::class, lifecycle: Lifecycle::SINGLETON)]
 interface ClockInterface
 {
