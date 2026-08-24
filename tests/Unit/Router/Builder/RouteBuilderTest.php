@@ -312,6 +312,206 @@ class RouteBuilderTest extends TestCase
         );
     }
 
+    public function testGroupNamePrefixIsPrependedToNamedChildRoutes(): void
+    {
+        $routes = $this->builder()
+            ->group(
+                uri: '/admin',
+                middleware: [],
+                callback: static function (RouteBuilderGroupInterface $group): void {
+                    $group->get(
+                        uri: '/dashboard',
+                        controller: SimpleController::class,
+                        action: 'home',
+                        name: 'dashboard',
+                    );
+                    $group->post(
+                        uri: '/users',
+                        controller: SimpleController::class,
+                        action: 'about',
+                        name: 'users.create',
+                    );
+                },
+                name: 'admin.',
+            )
+            ->build();
+
+        self::assertSame('admin.dashboard', $routes[0]->name);
+        self::assertSame('admin.users.create', $routes[1]->name);
+    }
+
+    public function testGroupNamePrefixLeavesUnnamedChildRoutesUnchanged(): void
+    {
+        $routes = $this->builder()
+            ->group(
+                uri: '/admin',
+                middleware: [],
+                callback: static function (RouteBuilderGroupInterface $group): void {
+                    $group->get(
+                        uri: '/dashboard',
+                        controller: SimpleController::class,
+                        action: 'home',
+                    );
+                },
+                name: 'admin.',
+            )
+            ->build();
+
+        self::assertNull($routes[0]->name);
+    }
+
+    public function testGroupWithoutNamePrefixLeavesChildNamesUnchanged(): void
+    {
+        $routes = $this->builder()
+            ->group(
+                uri: '/admin',
+                middleware: [],
+                callback: static function (RouteBuilderGroupInterface $group): void {
+                    $group->get(
+                        uri: '/dashboard',
+                        controller: SimpleController::class,
+                        action: 'home',
+                        name: 'dashboard',
+                    );
+                },
+            )
+            ->build();
+
+        self::assertSame('dashboard', $routes[0]->name);
+    }
+
+    public function testNestedGroupsConcatenateNamePrefixes(): void
+    {
+        $routes = $this->builder()
+            ->group(
+                uri: '/api',
+                middleware: [],
+                callback: static function (RouteBuilderGroupInterface $outer): void {
+                    $outer->group(
+                        uri: '/v1',
+                        middleware: [],
+                        callback: static function (RouteBuilderGroupInterface $inner): void {
+                            $inner->get(
+                                uri: '/status',
+                                controller: SimpleController::class,
+                                action: 'home',
+                                name: 'status',
+                            );
+                        },
+                        name: 'v1.',
+                    );
+                },
+                name: 'api.',
+            )
+            ->build();
+
+        self::assertSame('api.v1.status', $routes[0]->name);
+    }
+
+    public function testDuplicateRouteNameThrows(): void
+    {
+        $builder = $this->builder()
+            ->get(
+                uri: '/a',
+                controller: SimpleController::class,
+                action: 'home',
+                name: 'shared',
+            )
+            ->get(
+                uri: '/b',
+                controller: SimpleController::class,
+                action: 'about',
+                name: 'shared',
+            );
+
+        try {
+            $builder->build();
+
+            self::fail('Expected RouterException was not thrown');
+        } catch (RouterException $exception) {
+            self::assertStringContainsString('shared', $exception->getMessage());
+            self::assertStringContainsString('non-unique', $exception->getMessage());
+        }
+    }
+
+    public function testUnnamedRoutesDoNotCollide(): void
+    {
+        $routes = $this->builder()
+            ->get(
+                uri: '/a',
+                controller: SimpleController::class,
+                action: 'home',
+            )
+            ->get(
+                uri: '/b',
+                controller: SimpleController::class,
+                action: 'about',
+            )
+            ->build();
+
+        self::assertCount(2, $routes);
+        self::assertNull($routes[0]->name);
+        self::assertNull($routes[1]->name);
+    }
+
+    public function testDuplicateRouteNameAcrossGroupsThrows(): void
+    {
+        $builder = $this->builder()
+            ->get(
+                uri: '/a',
+                controller: SimpleController::class,
+                action: 'home',
+                name: 'dashboard',
+            )
+            ->group(
+                uri: '/admin',
+                middleware: [],
+                callback: static function (RouteBuilderGroupInterface $group): void {
+                    $group->get(
+                        uri: '/panel',
+                        controller: SimpleController::class,
+                        action: 'about',
+                        name: 'dashboard',
+                    );
+                },
+            );
+
+        try {
+            $builder->build();
+
+            self::fail('Expected RouterException was not thrown');
+        } catch (RouterException $exception) {
+            self::assertStringContainsString('non-unique', $exception->getMessage());
+        }
+    }
+
+    public function testNestedGroupInheritsOuterNamePrefixWhenInnerHasNone(): void
+    {
+        $routes = $this->builder()
+            ->group(
+                uri: '/api',
+                middleware: [],
+                callback: static function (RouteBuilderGroupInterface $outer): void {
+                    $outer->group(
+                        uri: '/v1',
+                        middleware: [],
+                        callback: static function (RouteBuilderGroupInterface $inner): void {
+                            $inner->get(
+                                uri: '/status',
+                                controller: SimpleController::class,
+                                action: 'home',
+                                name: 'status',
+                            );
+                        },
+                    );
+                },
+                name: 'api.',
+            )
+            ->build();
+
+        self::assertSame('api.status', $routes[0]->name);
+    }
+
     public function testDuplicateArgumentNamesInPathThrows(): void
     {
         $builder = $this->builder()->get(

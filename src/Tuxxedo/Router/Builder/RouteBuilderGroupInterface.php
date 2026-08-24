@@ -169,5 +169,6 @@ interface RouteBuilderGroupInterface
         string $uri,
         array $middleware,
         \Closure $callback,
+        ?string $name = null,
     ): static;
 }

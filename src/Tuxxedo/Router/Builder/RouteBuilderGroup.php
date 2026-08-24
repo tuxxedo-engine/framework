@@ -27,6 +27,7 @@ class RouteBuilderGroup implements RouteBuilderGroupInterface
         private readonly \Closure $sink,
         private readonly string $prefix,
         private readonly array $middleware,
+        private readonly string $namePrefix = '',
     ) {
     }
 
@@ -265,6 +266,7 @@ class RouteBuilderGroup implements RouteBuilderGroupInterface
         string $uri,
         array $middleware,
         \Closure $callback,
+        ?string $name = null,
     ): static {
         $nested = new RouteBuilderGroup(
             sink: $this->sink,
@@ -276,6 +278,7 @@ class RouteBuilderGroup implements RouteBuilderGroupInterface
                 ...$this->middleware,
                 ...$middleware,
             ],
+            namePrefix: $this->namePrefix . ($name ?? ''),
         );
 
         $callback($nested);
@@ -296,6 +299,10 @@ class RouteBuilderGroup implements RouteBuilderGroupInterface
         array $middleware,
         RoutePriority $priority,
     ): void {
+        $resolvedName = $name !== null && $this->namePrefix !== ''
+            ? $this->namePrefix . $name
+            : $name;
+
         ($this->sink)(
             new RouteDefinition(
                 method: $method,
@@ -305,7 +312,7 @@ class RouteBuilderGroup implements RouteBuilderGroupInterface
                 ),
                 controller: $controller,
                 action: $action,
-                name: $name,
+                name: $resolvedName,
                 middleware: [
                     ...$this->middleware,
                     ...$middleware,

@@ -258,6 +258,7 @@ class RouteBuilder implements RouteBuilderInterface
         string $uri,
         array $middleware,
         \Closure $callback,
+        ?string $name = null,
     ): static {
         $group = new RouteBuilderGroup(
             sink: function (RouteDefinition $definition): void {
@@ -265,6 +266,7 @@ class RouteBuilder implements RouteBuilderInterface
             },
             prefix: $uri,
             middleware: $middleware,
+            namePrefix: $name ?? '',
         );
 
         $callback($group);
@@ -275,8 +277,21 @@ class RouteBuilder implements RouteBuilderInterface
     public function build(): array
     {
         $routes = [];
+        $seenNames = [];
 
         foreach ($this->definitions as $definition) {
+            if ($definition->name !== null) {
+                if (\array_key_exists($definition->name, $seenNames)) {
+                    throw RouterException::fromDuplicateRouteName(
+                        className: $definition->controller,
+                        method: $definition->action,
+                        name: $definition->name,
+                    );
+                }
+
+                $seenNames[$definition->name] = true;
+            }
+
             $compiled = $this->pathCompiler->compile(
                 path: $definition->uri,
             );
