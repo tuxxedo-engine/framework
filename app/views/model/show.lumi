@@ -1,0 +1,18 @@
+{% layout 'model/base' %}
+
+{% block buttons %}
+    <button onclick="location.href = '{! route('model.index') | escape_js !}';">Back</button>
+{% endblock %}
+
+{% block content %}
+    <table border="1">
+        <tr>
+            <td><strong>ID</strong></td>
+            <td>{{ user.id }}</td>
+        </tr>
+        <tr>
+            <td><strong>Name</strong></td>
+            <td>{{ user.name }}</td>
+        </tr>
+    </table>
+{% endblock %}

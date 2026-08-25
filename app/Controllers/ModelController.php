@@ -19,6 +19,7 @@ use App\Repositories\UserRepositoryInterface;
 use App\Subscribers\Events\UserCreatedEvent;
 use Tuxxedo\Event\EventsManagerInterface;
 use Tuxxedo\Http\Header;
+use Tuxxedo\Http\Kernel\Resolver\Model;
 use Tuxxedo\Http\Request\Middleware\OutputCapture;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
@@ -162,16 +163,14 @@ readonly class ModelController
         UserRepositoryInterface $userRepository,
         #[Argument] int $page = 1,
     ): ViewInterface {
-        $paginator = new Paginator(
-            paged: $userRepository->findAllPaged(),
-            page: $page,
-            perPage: 5,
-        );
-
         return new View(
             'model/list',
             [
-                'paginator' => $paginator,
+                'paginator' => new Paginator(
+                    paged: $userRepository->findAllPaged(),
+                    page: $page,
+                    perPage: 5,
+                ),
             ],
         );
     }
@@ -180,5 +179,17 @@ readonly class ModelController
     public function table(): ResponseInterface
     {
         return Response::text($this->modelsManager->createTable(User::class)->compile()->sql);
+    }
+
+    #[Route\Get(path: 'show/{id<numeric-id>}', name: 'model.show')]
+    public function show(
+        #[Model('id')] User $user,
+    ): ViewInterface {
+        return new View(
+            'model/show',
+            [
+                'user' => $user,
+            ],
+        );
     }
 }

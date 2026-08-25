@@ -43,6 +43,10 @@ class Dispatcher implements DispatcherInterface
 
         if (\sizeof($dispatchableRoute->arguments) > 0) {
             foreach ($dispatchableRoute->route->arguments as $argument) {
+                if ($argument->resolverConsumed) {
+                    continue;
+                }
+
                 $arguments[$argument->mappedName ?? $argument->node->name] = $argument->getValue(
                     matches: $dispatchableRoute->arguments,
                 );

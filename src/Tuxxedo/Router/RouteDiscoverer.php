@@ -17,6 +17,7 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\File\FileCollectionFactory;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Router\Attribute\Argument;
+use Tuxxedo\Router\Attribute\ArgumentConsumerInterface;
 use Tuxxedo\Router\Attribute\Middleware;
 use Tuxxedo\Router\Attribute\Route as RouteAttr;
 use Tuxxedo\Router\Compiler\PathCompiler;
@@ -465,6 +466,33 @@ class RouteDiscoverer implements RouteDiscovererInterface
         }
     }
 
+    private function countRouteArgumentConsumers(
+        \ReflectionMethod $method,
+        string $name,
+    ): int {
+        $count = 0;
+
+        foreach ($method->getParameters() as $parameter) {
+            $attributes = $parameter->getAttributes(
+                name: ArgumentConsumerInterface::class,
+                flags: \ReflectionAttribute::IS_INSTANCEOF,
+            );
+
+            foreach ($attributes as $attribute) {
+                /** @var ArgumentConsumerInterface $instance */
+                $instance = $attribute->newInstance();
+
+                if (\in_array($name, $instance->routeArguments, true)) {
+                    ++$count;
+
+                    break;
+                }
+            }
+        }
+
+        return $count;
+    }
+
     private function getNamedParameter(
         \ReflectionMethod $method,
         string $name,
@@ -553,6 +581,34 @@ class RouteDiscoverer implements RouteDiscovererInterface
         $parameter = $this->getNamedParameter($method, $node->name);
 
         if ($parameter === null) {
+            $consumerCount = $this->countRouteArgumentConsumers(
+                method: $method,
+                name: $node->name,
+            );
+
+            if ($consumerCount > 1) {
+                $this->handleError(
+                    static fn (): RouterException => RouterException::fromRouteArgumentClaimedTwice(
+                        className: $method->getDeclaringClass()->getName(),
+                        method: $method->getName(),
+                        argument: $node->name,
+                    ),
+                );
+
+                return null;
+            }
+
+            if ($consumerCount === 1) {
+                return new RouteArgument(
+                    node: $node,
+                    mappedName: null,
+                    nativeType: 'string',
+                    allowsNull: false,
+                    defaultValue: null,
+                    resolverConsumed: true,
+                );
+            }
+
             if (
                 $node->prefixed &&
                 $prefix instanceof PrefixDefaultsInterface

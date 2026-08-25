@@ -834,4 +834,11 @@ class ModelException extends \Exception
             ),
         );
     }
+
+    public static function fromInvalidModelClassViaResolver(): self
+    {
+        return new self(
+            message: 'Invalid model class supplied to the #[Model] attribute, type must be a class',
+        );
+    }
 }

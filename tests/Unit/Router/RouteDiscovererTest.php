@@ -699,6 +699,53 @@ class RouteDiscovererTest extends TestCase
         self::assertSame([], $routes);
     }
 
+    public function testRouteArgumentConsumerAttributeSatisfiesNodeWithSentinelArgument(): void
+    {
+        $routes = $this->discoverAll(
+            $this->createDiscoverer('Consumer'),
+        );
+
+        self::assertCount(1, $routes);
+        self::assertCount(1, $routes[0]->arguments);
+
+        $argument = $routes[0]->arguments[0];
+
+        self::assertSame('id', $argument->node->name);
+        self::assertTrue($argument->resolverConsumed);
+        self::assertNull($argument->mappedName);
+        self::assertSame('string', $argument->nativeType);
+        self::assertFalse($argument->allowsNull);
+        self::assertNull($argument->defaultValue);
+    }
+
+    public function testRouteArgumentConsumerClaimedByMultipleParametersThrowsInStrictMode(): void
+    {
+        try {
+            $this->discoverAll(
+                $this->createDiscoverer(
+                    scenario: 'ConsumerDuplicate',
+                    strictMode: true,
+                ),
+            );
+
+            self::fail('Expected RouterException');
+        } catch (RouterException $exception) {
+            self::assertStringContainsString(
+                'claimed by more than one parameter attribute',
+                $exception->getMessage(),
+            );
+        }
+    }
+
+    public function testRouteArgumentConsumerClaimedByMultipleParametersSkipsInNonStrictMode(): void
+    {
+        $routes = $this->discoverAll(
+            $this->createDiscoverer('ConsumerDuplicate'),
+        );
+
+        self::assertSame([], $routes);
+    }
+
     public function testPrefixWithDefaultsProvidesDefaultArgumentValue(): void
     {
         $routes = $this->discoverAll(

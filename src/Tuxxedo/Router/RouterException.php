@@ -173,6 +173,21 @@ class RouterException extends \Exception
         );
     }
 
+    public static function fromRouteArgumentClaimedTwice(
+        string $className,
+        string $method,
+        string $argument,
+    ): self {
+        return new self(
+            message: \sprintf(
+                '%s::%s() has a path argument {%s} claimed by more than one parameter attribute',
+                $className,
+                $method,
+                $argument,
+            ),
+        );
+    }
+
     public static function fromRouteFileNotFound(
         string $path,
     ): self {

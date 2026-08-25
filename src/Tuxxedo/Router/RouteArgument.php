@@ -21,6 +21,7 @@ readonly class RouteArgument implements RouteArgumentInterface
         public string $nativeType,
         public bool $allowsNull,
         public mixed $defaultValue,
+        public bool $resolverConsumed = false,
     ) {
     }
 

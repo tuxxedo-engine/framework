@@ -139,4 +139,40 @@ class DispatcherTest extends TestCase
 
         self::assertSame('42', $response->body);
     }
+
+    public function testDispatchSkipsResolverConsumedRouteArguments(): void
+    {
+        $dispatchable = new DispatchableRoute(
+            route: new Route(
+                method: null,
+                path: '/test',
+                controller: DispatcherController::class,
+                action: 'index',
+                arguments: [
+                    new RouteArgument(
+                        node: new ArgumentNode(
+                            name: 'id',
+                            kind: ArgumentKind::TYPED_EXPLICIT,
+                        ),
+                        mappedName: null,
+                        nativeType: 'string',
+                        allowsNull: false,
+                        defaultValue: null,
+                        resolverConsumed: true,
+                    ),
+                ],
+            ),
+            arguments: [
+                'id' => '42',
+            ],
+        );
+
+        $response = (new Dispatcher())->dispatch(
+            container: new Container(),
+            dispatchableRoute: $dispatchable,
+            request: $this->makeRequest(),
+        );
+
+        self::assertSame('dispatched', $response->body);
+    }
 }

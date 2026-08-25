@@ -35,6 +35,10 @@ interface RouteArgumentInterface
         get;
     }
 
+    public bool $resolverConsumed {
+        get;
+    }
+
     /**
      * @param string[] $matches
      */
