@@ -15,8 +15,7 @@
     "php": ">=8.5",
     "ext-filter": "*",
     "ext-json": "*",
-    "ext-mbstring": "*",
-    "ext-session": "*"
+    "ext-mbstring": "*"
   },
   "require-dev": {
     "phpstan/phpstan": "2.2.*",
@@ -40,6 +39,7 @@
     "ext-pdo-pgsql": "For database connections to postgres using PDO",
     "ext-pdo-sqlite": "For database connections to sqlite using PDO",
     "ext-pgsql": "For database connections to postgres",
+    "ext-session": "For session support",
     "ext-sodium": "For crypto support (JWT, Email signing)",
     "ext-sqlite3": "For database connections to sqlite"
   },
