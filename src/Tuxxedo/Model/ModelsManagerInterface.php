@@ -28,6 +28,9 @@ use Tuxxedo\Model\Hydrator\HydratorInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 
+/**
+ * @todo Consider supporting MorphTo/MorphMany
+ */
 #[DefaultImplementation(class: ModelsManager::class, lifecycle: Lifecycle::SINGLETON)]
 interface ModelsManagerInterface
 {
