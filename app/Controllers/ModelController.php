@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Middleware\ValidUser;
 use App\Models\User;
 use App\Repositories\UserRepositoryInterface;
 use App\Subscribers\Events\UserCreatedEvent;
@@ -29,7 +28,6 @@ use Tuxxedo\Pagination\Paginator;
 use Tuxxedo\Router\Attribute\Argument;
 use Tuxxedo\Router\Attribute\Controller;
 use Tuxxedo\Router\Attribute\Index;
-use Tuxxedo\Router\Attribute\Middleware;
 use Tuxxedo\Router\Attribute\Route;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewInterface;
@@ -129,13 +127,11 @@ readonly class ModelController
         );
     }
 
-    #[Middleware(ValidUser::class)]
     #[Route(path: 'update/{id<numeric-id>}', method: ['POST', 'GET'], name: 'model.update')]
     public function update(
         RequestInterface $request,
-        #[Argument] int $id,
+        #[Model('id')] User $user,
     ): ViewInterface|ResponseInterface {
-        $user = $this->modelsManager->fetchById(User::class, $id);
 
         if ($request->isPost()) {
             $user->name = $request->post->string('name');
