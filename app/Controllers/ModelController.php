@@ -84,14 +84,11 @@ readonly class ModelController
         );
     }
 
-    #[Middleware(ValidUser::class)]
     #[Route(path: 'delete/{id<numeric-id>}', method: ['POST', 'GET'], name: 'model.delete')]
     public function delete(
         RequestInterface $request,
-        #[Argument] int $id,
+        #[Model('id')] User $user,
     ): ViewInterface|ResponseInterface {
-        $user = $this->modelsManager->fetchById(User::class, $id);
-
         if ($request->isPost()) {
             (void) $this->modelsManager->delete($user);
 
