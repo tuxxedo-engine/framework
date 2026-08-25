@@ -44,13 +44,20 @@ use Tuxxedo\View\ViewRenderInterface;
 #[Controller(path: '/lumi', autoTrailingSlash: true)]
 readonly class LumiController
 {
+    private string $viewDirectory;
+
     public function __construct(
-        #[Config('view.directory')] private string $viewDirectory,
+        #[Config('view.directory')] string $viewDirectory,
         #[Config('view.cacheDirectory')] private string $viewCacheDirectory,
         private ContainerInterface $container,
         private ViewController $viewController,
         private LumiViewRenderInterface $viewRender,
     ) {
+        $resolved = \realpath($viewDirectory);
+
+        $this->viewDirectory = $resolved !== false
+            ? $resolved
+            : $viewDirectory;
     }
 
     private function visualizeTokenHeader(): string
@@ -187,7 +194,7 @@ readonly class LumiController
      */
     private function getViewFiles(): Collection
     {
-        return FileCollectionFactory::paths($this->viewDirectory, '*')
+        return FileCollectionFactory::nativePaths($this->viewDirectory, '*')
             ->filter(
                 static fn (string $name): bool => \str_contains($name, 'hello_world_'),
             );
@@ -197,7 +204,7 @@ readonly class LumiController
         string $viewFile,
         bool $extension = true,
     ): string {
-        $file = \str_replace($this->viewDirectory . '/', '', $viewFile);
+        $file = \str_replace($this->viewDirectory . \DIRECTORY_SEPARATOR, '', $viewFile);
 
         if (!$extension) {
             return \str_replace('.lumi', '', $file);
@@ -352,10 +359,10 @@ readonly class LumiController
     #[Route\Get]
     public function index(RequestInterface $request): ResponseInterface
     {
-        $defaultSelectedViewFile = $this->viewDirectory . '/hello_world_include.lumi';
+        $defaultSelectedViewFile = $this->viewDirectory . \DIRECTORY_SEPARATOR . 'hello_world_include.lumi';
 
         if ($request->get->has('file')) {
-            $selectedViewFile = $this->viewDirectory . '/' . $request->get->string('file');
+            $selectedViewFile = $this->viewDirectory . \DIRECTORY_SEPARATOR . $request->get->string('file');
         } else {
             $selectedViewFile = $defaultSelectedViewFile;
         }

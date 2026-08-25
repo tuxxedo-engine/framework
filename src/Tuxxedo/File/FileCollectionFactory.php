@@ -40,6 +40,26 @@ class FileCollectionFactory
     }
 
     /**
+     * @return Collection<int, string>
+     *
+     * @throws FileException
+     */
+    #[\NoDiscard]
+    public static function nativePaths(
+        string $directory,
+        string $pattern = '**',
+    ): Collection {
+        /** @var list<string> $collected */
+        $collected = [];
+
+        foreach (self::walk($directory, $pattern) as $path) {
+            $collected[] = \str_replace('/', \DIRECTORY_SEPARATOR, $path);
+        }
+
+        return new Collection($collected);
+    }
+
+    /**
      * @return Collection<int, FileInterface>
      *
      * @throws FileException

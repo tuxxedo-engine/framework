@@ -222,6 +222,37 @@ class FileCollectionFactoryTest extends TestCase
         );
     }
 
+    public function testNativePathsReturnsPathsWithSystemSeparator(): void
+    {
+        $root = $this->makeRoot();
+
+        $this->writeFile($root, 'a.txt', 'a');
+        $this->writeFile($root, 'nested/b.txt', 'b');
+
+        $paths = FileCollectionFactory::nativePaths($root)->toArray();
+
+        \sort($paths);
+
+        $nativeRoot = \str_replace('/', \DIRECTORY_SEPARATOR, $root);
+
+        self::assertSame(
+            [
+                $nativeRoot . \DIRECTORY_SEPARATOR . 'a.txt',
+                $nativeRoot . \DIRECTORY_SEPARATOR . 'nested' . \DIRECTORY_SEPARATOR . 'b.txt',
+            ],
+            $paths,
+        );
+    }
+
+    public function testNativePathsRejectsNonDirectoryRoot(): void
+    {
+        $this->expectException(FileException::class);
+
+        (void) FileCollectionFactory::nativePaths(
+            directory: '/nonexistent/' . \bin2hex(\random_bytes(8)),
+        );
+    }
+
     public function testFilesReturnsLocalFileInstances(): void
     {
         $root = $this->makeRoot();
