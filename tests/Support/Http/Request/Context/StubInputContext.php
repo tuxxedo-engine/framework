@@ -32,6 +32,11 @@ class StubInputContext implements InputContextInterface
         $this->values = $values;
     }
 
+    public function keys(): array
+    {
+        return \array_keys($this->values);
+    }
+
     public function has(
         string $name,
     ): bool {

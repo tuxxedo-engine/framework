@@ -169,6 +169,17 @@ class EnvironmentUploadedFilesContext implements UploadedFilesContextInterface
         return true;
     }
 
+    public function keys(): array
+    {
+        $keys = [];
+
+        foreach (\array_keys($this->tree()) as $key) {
+            $keys[] = (string) $key;
+        }
+
+        return $keys;
+    }
+
     public function has(
         string $path,
     ): bool {

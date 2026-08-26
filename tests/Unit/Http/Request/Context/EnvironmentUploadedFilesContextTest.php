@@ -46,6 +46,48 @@ class EnvironmentUploadedFilesContextTest extends TestCase
         self::assertFalse((new EnvironmentUploadedFilesContext())->has('avatar'));
     }
 
+    public function testKeysReturnsTopLevelFieldNames(): void
+    {
+        $_FILES = [
+            'avatar' => [
+                'name' => 'photo.jpg',
+                'type' => 'image/jpeg',
+                'size' => 1024,
+                'error' => \UPLOAD_ERR_OK,
+                'tmp_name' => '/tmp/test',
+                'full_path' => 'photo.jpg',
+            ],
+            'gallery' => [
+                [
+                    'name' => 'a.jpg',
+                    'type' => 'image/jpeg',
+                    'size' => 1,
+                    'error' => \UPLOAD_ERR_OK,
+                    'tmp_name' => '/tmp/a',
+                    'full_path' => 'a.jpg',
+                ],
+            ],
+        ];
+
+        self::assertSame(
+            [
+                'avatar',
+                'gallery',
+            ],
+            (new EnvironmentUploadedFilesContext())->keys(),
+        );
+    }
+
+    public function testKeysReturnsEmptyListWhenFilesSuperglobalIsEmpty(): void
+    {
+        $_FILES = [];
+
+        self::assertSame(
+            [],
+            (new EnvironmentUploadedFilesContext())->keys(),
+        );
+    }
+
     public function testHasWithDotNotationPath(): void
     {
         $_FILES['gallery'] = [

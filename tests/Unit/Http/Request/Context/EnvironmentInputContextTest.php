@@ -56,6 +56,48 @@ class EnvironmentInputContextTest extends TestCase
         self::assertFalse($this->makeContext()->has('missing'));
     }
 
+    public function testKeysReturnsTopLevelKeysFromSuperglobal(): void
+    {
+        $_GET = [
+            'alpha' => '1',
+            'beta' => [
+                'nested' => 'x',
+            ],
+        ];
+
+        self::assertSame(
+            [
+                'alpha',
+                'beta',
+            ],
+            $this->makeContext()->keys(),
+        );
+    }
+
+    public function testKeysReturnsEmptyListWhenSuperglobalIsEmpty(): void
+    {
+        self::assertSame(
+            [],
+            $this->makeContext()->keys(),
+        );
+    }
+
+    public function testKeysCastsNumericKeysToString(): void
+    {
+        $_GET = [
+            0 => 'a',
+            1 => 'b',
+        ];
+
+        self::assertSame(
+            [
+                '0',
+                '1',
+            ],
+            $this->makeContext()->keys(),
+        );
+    }
+
     public function testInputSourceUsesPostSuperglobal(): void
     {
         $_POST['name'] = 'post-value';

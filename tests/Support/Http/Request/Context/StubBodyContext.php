@@ -20,6 +20,7 @@ class StubBodyContext implements BodyContextInterface
 {
     public function __construct(
         private readonly ?string $contentType = null,
+        private readonly ?int $contentLength = null,
     ) {
     }
 
@@ -31,6 +32,11 @@ class StubBodyContext implements BodyContextInterface
     public function getRaw(): string
     {
         return '';
+    }
+
+    public function size(): ?int
+    {
+        return $this->contentLength;
     }
 
     public function isJson(): bool

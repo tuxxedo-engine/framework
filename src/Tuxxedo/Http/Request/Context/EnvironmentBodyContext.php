@@ -23,8 +23,26 @@ class EnvironmentBodyContext implements BodyContextInterface
     public function __construct(
         private string $streamInputSource = 'php://input',
         private ?string $contentType = null,
+        private ?int $contentLength = null,
         private MapperInterface $mapper = new Mapper(),
     ) {
+    }
+
+    public function size(): ?int
+    {
+        $contentLength = $this->contentLength ?? ($_SERVER['CONTENT_LENGTH'] ?? null);
+
+        if (!\is_string($contentLength) && !\is_int($contentLength)) {
+            return null;
+        }
+
+        $value = \filter_var($contentLength, \FILTER_VALIDATE_INT);
+
+        if (!\is_int($value) || $value < 0) {
+            return null;
+        }
+
+        return $value;
     }
 
     public function getStream()

@@ -19,6 +19,11 @@ use Tuxxedo\Http\UploadedFileInterface;
 
 class StubUploadedFilesContext implements UploadedFilesContextInterface
 {
+    public function keys(): array
+    {
+        return [];
+    }
+
     public function has(
         string $path,
     ): bool {

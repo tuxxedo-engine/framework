@@ -63,6 +63,77 @@ class EnvironmentBodyContextTest extends TestCase
         self::assertSame('hello world', $this->makeContext('hello world')->getRaw());
     }
 
+    public function testSizeReturnsExplicitContentLengthWhenProvided(): void
+    {
+        $context = new EnvironmentBodyContext(
+            contentLength: 42,
+        );
+
+        self::assertSame(42, $context->size());
+    }
+
+    public function testSizeReadsContentLengthFromServerSuperglobal(): void
+    {
+        $previous = $_SERVER['CONTENT_LENGTH'] ?? null;
+        $_SERVER['CONTENT_LENGTH'] = '128';
+
+        try {
+            self::assertSame(128, (new EnvironmentBodyContext())->size());
+        } finally {
+            if ($previous === null) {
+                unset($_SERVER['CONTENT_LENGTH']);
+            } else {
+                $_SERVER['CONTENT_LENGTH'] = $previous;
+            }
+        }
+    }
+
+    public function testSizeReturnsNullWhenServerContentLengthIsAbsent(): void
+    {
+        $previous = $_SERVER['CONTENT_LENGTH'] ?? null;
+        unset($_SERVER['CONTENT_LENGTH']);
+
+        try {
+            self::assertNull((new EnvironmentBodyContext())->size());
+        } finally {
+            if ($previous !== null) {
+                $_SERVER['CONTENT_LENGTH'] = $previous;
+            }
+        }
+    }
+
+    public function testSizeReturnsNullWhenServerContentLengthIsNegative(): void
+    {
+        $previous = $_SERVER['CONTENT_LENGTH'] ?? null;
+        $_SERVER['CONTENT_LENGTH'] = '-1';
+
+        try {
+            self::assertNull((new EnvironmentBodyContext())->size());
+        } finally {
+            if ($previous === null) {
+                unset($_SERVER['CONTENT_LENGTH']);
+            } else {
+                $_SERVER['CONTENT_LENGTH'] = $previous;
+            }
+        }
+    }
+
+    public function testSizeReturnsNullWhenServerContentLengthIsNotNumeric(): void
+    {
+        $previous = $_SERVER['CONTENT_LENGTH'] ?? null;
+        $_SERVER['CONTENT_LENGTH'] = 'not-a-number';
+
+        try {
+            self::assertNull((new EnvironmentBodyContext())->size());
+        } finally {
+            if ($previous === null) {
+                unset($_SERVER['CONTENT_LENGTH']);
+            } else {
+                $_SERVER['CONTENT_LENGTH'] = $previous;
+            }
+        }
+    }
+
     public function testGetJsonDecodesJsonObject(): void
     {
         $result = $this->makeContext('{"key":"value"}')->getJson();

@@ -18,6 +18,11 @@ use Tuxxedo\Http\UploadedFileInterface;
 
 interface UploadedFilesContextInterface
 {
+    /**
+     * @return list<string>
+     */
+    public function keys(): array;
+
     public function has(
         string $path,
     ): bool;

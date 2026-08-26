@@ -27,6 +27,8 @@ interface BodyContextInterface
 
     public function getRaw(): string;
 
+    public function size(): ?int;
+
     public function isJson(): bool;
 
     public function isXml(): bool;

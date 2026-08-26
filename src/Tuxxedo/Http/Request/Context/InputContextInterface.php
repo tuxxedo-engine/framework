@@ -18,6 +18,11 @@ use Tuxxedo\Mapper\MapperException;
 
 interface InputContextInterface
 {
+    /**
+     * @return list<string>
+     */
+    public function keys(): array;
+
     public function has(
         string $name,
     ): bool;

@@ -39,6 +39,17 @@ class EnvironmentInputContext implements InputContextInterface
         };
     }
 
+    public function keys(): array
+    {
+        $keys = [];
+
+        foreach (\array_keys($this->input()) as $key) {
+            $keys[] = (string) $key;
+        }
+
+        return $keys;
+    }
+
     public function has(
         string $name,
     ): bool {
