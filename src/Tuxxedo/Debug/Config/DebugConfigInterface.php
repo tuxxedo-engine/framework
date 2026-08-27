@@ -30,4 +30,16 @@ interface DebugConfigInterface
     public bool $registerPhpErrorHandler {
         get;
     }
+
+    public ?DebugEditor $openInEditor {
+        get;
+    }
+
+    public ?string $editorRemotePath {
+        get;
+    }
+
+    public ?string $editorLocalPath {
+        get;
+    }
 }

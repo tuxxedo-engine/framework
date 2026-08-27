@@ -132,6 +132,9 @@ class DebugErrorHandler implements ErrorHandlerInterface
         $html .= 'section.trace li::before { content: "#" counter(frame); color: var(--dim); font-size: 12px; padding-top: 1px; font-family: var(--mono); }';
         $html .= 'section.trace .call { font-family: var(--mono); font-size: 13px; word-break: break-word; }';
         $html .= 'section.trace .file { margin-top: 3px; font-size: 12px; color: var(--path); font-family: var(--mono); }';
+        $html .= 'main a { color: inherit; text-decoration: none; }';
+        $html .= 'main a:hover { text-decoration: underline; }';
+        $html .= 'section.trace a, section.exception .previous a { display: block; }';
         $html .= '</style>';
         $html .= '</head>';
         $html .= '<body>';
@@ -141,9 +144,16 @@ class DebugErrorHandler implements ErrorHandlerInterface
         $html .= '<h1>Tuxxedo Engine Debugger<sup>' . \htmlspecialchars(Version::SIMPLE) . '</sup></h1>';
         $html .= '<div class="meta"><div>' . \htmlspecialchars($appConfig->name . ' ' . $appConfig->version) . '</div><div>' . \htmlspecialchars($timestampFormatted) . '</div></div>';
         $html .= '</header>';
+        $exceptionEditorUrl = $this->formatEditorUrl($exception->getFile(), $exception->getLine());
+        $pathSpan = '<span class="path">' . \htmlspecialchars($location) . '</span>';
+
+        if ($exceptionEditorUrl !== null) {
+            $pathSpan = '<a href="' . \htmlspecialchars($exceptionEditorUrl) . '">' . $pathSpan . '</a>';
+        }
+
         $html .= '<section class="exception">';
         $html .= '<p class="class">' . \htmlspecialchars($fqn) . '</p>';
-        $html .= '<p class="loc"><span class="path">' . \htmlspecialchars($location) . '</span><span class="sep"></span>code ' . \htmlspecialchars(\strval($code)) . '</p>';
+        $html .= '<p class="loc">' . $pathSpan . '<span class="sep"></span>code ' . \htmlspecialchars(\strval($code)) . '</p>';
         $html .= '<p class="message">' . \nl2br(\htmlspecialchars($exception->getMessage())) . '</p>';
 
         $previous = $exception->getPrevious();
@@ -159,9 +169,16 @@ class DebugErrorHandler implements ErrorHandlerInterface
                 $prevShortName = $lastBackslash === false
                     ? $prevFqn
                     : \substr($prevFqn, $lastBackslash + 1);
-                $prevLocation = self::formatLocation($previous->getFile(), $previous->getLine(), $this->config->rootPath);
 
-                $html .= '<li><div><div class="call">' . \htmlspecialchars($prevShortName . ': ' . $previous->getMessage()) . '</div><div class="file">' . \htmlspecialchars($prevLocation) . '</div></div></li>';
+                $prevLocation = self::formatLocation($previous->getFile(), $previous->getLine(), $this->config->rootPath);
+                $prevEditorUrl = $this->formatEditorUrl($previous->getFile(), $previous->getLine());
+                $prevInner = '<div class="call">' . \htmlspecialchars($prevShortName . ': ' . $previous->getMessage()) . '</div><div class="file">' . \htmlspecialchars($prevLocation) . '</div>';
+
+                if ($prevEditorUrl !== null) {
+                    $html .= '<li><a href="' . \htmlspecialchars($prevEditorUrl) . '">' . $prevInner . '</a></li>';
+                } else {
+                    $html .= '<li><div>' . $prevInner . '</div></li>';
+                }
 
                 $previous = $previous->getPrevious();
             }
@@ -185,7 +202,17 @@ class DebugErrorHandler implements ErrorHandlerInterface
                 ? ':' . \strval($frame['line'])
                 : '';
 
-            $html .= '<li><div><div class="call">' . \htmlspecialchars($call) . '</div><div class="file">' . \htmlspecialchars($file . $line) . '</div></div></li>';
+            $frameEditorUrl = isset($frame['file'], $frame['line'])
+                ? $this->formatEditorUrl($frame['file'], $frame['line'])
+                : null;
+
+            $frameInner = '<div class="call">' . \htmlspecialchars($call) . '</div><div class="file">' . \htmlspecialchars($file . $line) . '</div>';
+
+            if ($frameEditorUrl !== null) {
+                $html .= '<li><a href="' . \htmlspecialchars($frameEditorUrl) . '">' . $frameInner . '</a></li>';
+            } else {
+                $html .= '<li><div>' . $frameInner . '</div></li>';
+            }
         }
 
         $html .= '</ol>';
@@ -195,6 +222,31 @@ class DebugErrorHandler implements ErrorHandlerInterface
         $html .= '</html>';
 
         return $response->withBody($html);
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    private function formatEditorUrl(
+        string $file,
+        int $line,
+    ): ?string {
+        if ($this->config->openInEditor === null || $file === '') {
+            return null;
+        }
+
+        $normalized = \str_replace('\\', '/', $file);
+
+        if ($this->config->editorRemotePath !== null && $this->config->editorLocalPath !== null) {
+            $remote = \str_replace('\\', '/', $this->config->editorRemotePath);
+            $local = \str_replace('\\', '/', $this->config->editorLocalPath);
+
+            if (\str_starts_with($normalized, $remote)) {
+                $normalized = $local . \substr($normalized, \strlen($remote));
+            }
+        }
+
+        return $this->config->openInEditor->formatUrl($normalized, $line);
     }
 
     /**

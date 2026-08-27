@@ -19,6 +19,9 @@ readonly class DebugConfig implements DebugConfigInterface
         public bool $alwaysShow,
         public string $rootPath,
         public bool $registerPhpErrorHandler,
+        public ?DebugEditor $openInEditor = null,
+        public ?string $editorRemotePath = null,
+        public ?string $editorLocalPath = null,
     ) {
     }
 }
