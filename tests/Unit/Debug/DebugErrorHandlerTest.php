@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Unit\Debug;
 
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Container\Container;
+use Tuxxedo\Debug\Config\DebugConfig;
 use Tuxxedo\Debug\DebugErrorHandler;
 
 class DebugErrorHandlerTest extends TestCase
@@ -28,9 +30,22 @@ class DebugErrorHandlerTest extends TestCase
         }
     }
 
+    private static function makeConfig(
+        bool $registerPhpErrorHandler = true,
+    ): DebugConfig {
+        return new DebugConfig(
+            alwaysShow: false,
+            rootPath: '/tmp',
+            registerPhpErrorHandler: $registerPhpErrorHandler,
+        );
+    }
+
     public function testConstructorRegistersErrorHandlerByDefault(): void
     {
-        $handler = new DebugErrorHandler();
+        $handler = new DebugErrorHandler(
+            container: new Container(),
+            config: self::makeConfig(),
+        );
 
         self::expectException(\ErrorException::class);
 
@@ -39,7 +54,12 @@ class DebugErrorHandlerTest extends TestCase
 
     public function testConstructorSkipsRegistration(): void
     {
-        $handler = new DebugErrorHandler(registerPhpErrorHandler: false);
+        $handler = new DebugErrorHandler(
+            container: new Container(),
+            config: self::makeConfig(
+                registerPhpErrorHandler: false,
+            ),
+        );
 
         $property = new \ReflectionProperty(DebugErrorHandler::class, 'registeredPhpErrorHandler');
 
@@ -76,7 +96,10 @@ class DebugErrorHandlerTest extends TestCase
 
     public function testDestructorRestoresHandlerWhenRegistered(): void
     {
-        $handler = new DebugErrorHandler();
+        $handler = new DebugErrorHandler(
+            container: new Container(),
+            config: self::makeConfig(),
+        );
 
         unset($handler);
 
@@ -87,7 +110,12 @@ class DebugErrorHandlerTest extends TestCase
 
     public function testDestructorDoesNothingWhenNotRegistered(): void
     {
-        $handler = new DebugErrorHandler(registerPhpErrorHandler: false);
+        $handler = new DebugErrorHandler(
+            container: new Container(),
+            config: self::makeConfig(
+                registerPhpErrorHandler: false,
+            ),
+        );
 
         unset($handler);
 

@@ -67,14 +67,6 @@ interface ApplicationConfiguratorInterface
         get;
     }
 
-    public bool $useDebugHandler {
-        get;
-    }
-
-    public bool $registerPhpErrorHandler {
-        get;
-    }
-
     public ?RouterInterface $router {
         get;
     }
@@ -257,11 +249,6 @@ interface ApplicationConfiguratorInterface
         \Closure|ErrorHandlerInterface $handler,
     ): self;
 
-    public function withoutDebugHandler(): self;
-
-    public function withDebugHandler(
-        bool $registerPhpErrorHandler = true,
-    ): self;
 
     public function withoutServiceFiles(): self;
 

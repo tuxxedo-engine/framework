@@ -23,6 +23,7 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\Config\ConnectionManagerConfigInterface;
 use Tuxxedo\Database\ConnectionManager;
 use Tuxxedo\Database\ConnectionManagerInterface;
+use Tuxxedo\Debug\Config\DebugConfigInterface;
 use Tuxxedo\Debug\DebugErrorHandler;
 use Tuxxedo\Env\EnvInterface;
 use Tuxxedo\Event\EventsManager;
@@ -56,8 +57,6 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
     public private(set) ?string $defaultRouterDirectory = null;
     public private(set) ?string $defaultRouterBaseNamespace = null;
     public private(set) bool $defaultRouterStrictMode = true;
-    public private(set) bool $useDebugHandler = false;
-    public private(set) bool $registerPhpErrorHandler = true;
     public private(set) ?RouterInterface $router = null;
     public private(set) ?ResponseEmitterInterface $emitter = null;
     public private(set) ?DispatcherInterface $dispatcher = null;
@@ -407,22 +406,6 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         return $this;
     }
 
-    public function withoutDebugHandler(): self
-    {
-        $this->useDebugHandler = false;
-
-        return $this;
-    }
-
-    public function withDebugHandler(
-        bool $registerPhpErrorHandler = true,
-    ): self {
-        $this->useDebugHandler = true;
-        $this->registerPhpErrorHandler = $registerPhpErrorHandler;
-
-        return $this;
-    }
-
     public function withoutServiceFiles(): self
     {
         $this->serviceFiles = [];
@@ -621,10 +604,11 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
             }
         }
 
-        if ($this->useDebugHandler) {
+        if ($container->isBound(DebugConfigInterface::class)) {
             $kernel->defaultExceptionHandler(
                 handler: fn (): ErrorHandlerInterface => new DebugErrorHandler(
-                    registerPhpErrorHandler: $this->registerPhpErrorHandler,
+                    container: $container,
+                    config: $container->resolve(DebugConfigInterface::class),
                 ),
             );
         }

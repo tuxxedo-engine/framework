@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 use App\Support\HttpErrorHandler;
 use Tuxxedo\Application\ApplicationConfigurator;
-use Tuxxedo\Application\Profile;
 use Tuxxedo\Env\Env;
 use Tuxxedo\Env\Source\DotEnvSource;
 use Tuxxedo\Env\Source\ProcessEnvSource;
@@ -59,9 +58,5 @@ $builder = ApplicationConfigurator::createFromConfigDirectory(
         HttpException::class,
         static fn (): ErrorHandlerInterface => new HttpErrorHandler(),
     );
-
-if ($builder->appProfile === Profile::DEBUG) {
-    $builder->withDebugHandler();
-}
 
 $builder->build()->run();

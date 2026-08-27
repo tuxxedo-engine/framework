@@ -29,6 +29,7 @@ use Tuxxedo\Config\ConfigException;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionManagerInterface;
+use Tuxxedo\Debug\Config\DebugConfig;
 use Tuxxedo\Env\Env;
 use Tuxxedo\Env\EnvInterface;
 use Tuxxedo\Event\EventsManager;
@@ -779,61 +780,6 @@ class ApplicationConfiguratorTest extends TestCase
         self::assertSame($configurator, $result);
     }
 
-    public function testWithDebugHandlerEnablesUseDebugHandler(): void
-    {
-        $configurator = new ApplicationConfigurator();
-
-        $configurator->withDebugHandler();
-
-        self::assertTrue($configurator->useDebugHandler);
-    }
-
-    public function testWithDebugHandlerDefaultsRegisterPhpErrorHandlerToTrue(): void
-    {
-        $configurator = new ApplicationConfigurator();
-
-        $configurator->withDebugHandler();
-
-        self::assertTrue($configurator->registerPhpErrorHandler);
-    }
-
-    public function testWithDebugHandlerHonorsRegisterPhpErrorHandlerArgument(): void
-    {
-        $configurator = new ApplicationConfigurator();
-
-        $configurator->withDebugHandler(
-            registerPhpErrorHandler: false,
-        );
-
-        self::assertFalse($configurator->registerPhpErrorHandler);
-    }
-
-    public function testWithDebugHandlerReturnsFluentSelf(): void
-    {
-        $configurator = new ApplicationConfigurator();
-        $result = $configurator->withDebugHandler();
-
-        self::assertSame($configurator, $result);
-    }
-
-    public function testWithoutDebugHandlerDisablesUseDebugHandler(): void
-    {
-        $configurator = new ApplicationConfigurator();
-        $configurator->withDebugHandler();
-
-        $configurator->withoutDebugHandler();
-
-        self::assertFalse($configurator->useDebugHandler);
-    }
-
-    public function testWithoutDebugHandlerReturnsFluentSelf(): void
-    {
-        $configurator = new ApplicationConfigurator();
-        $result = $configurator->withoutDebugHandler();
-
-        self::assertSame($configurator, $result);
-    }
-
     public function testWithServiceFileAppendsToServiceFiles(): void
     {
         $configurator = new ApplicationConfigurator();
@@ -887,12 +833,20 @@ class ApplicationConfiguratorTest extends TestCase
 
     private function makeMinimalConfigurator(): ApplicationConfigurator
     {
+        return $this->makeMinimalConfiguratorWithContainer(
+            container: new Container(),
+        );
+    }
+
+    private function makeMinimalConfiguratorWithContainer(
+        Container $container,
+    ): ApplicationConfigurator {
         return (new ApplicationConfigurator(
             appName: 'MinimalApp',
             appVersion: '0.1.0',
             appProfile: Profile::RELEASE,
             appUrl: 'https://minimal.test/',
-            container: new Container(),
+            container: $container,
             config: new Config(),
         ))
             ->withEmitter(
@@ -1223,18 +1177,25 @@ class ApplicationConfiguratorTest extends TestCase
         self::assertSame($handler, ($kernel->defaultExceptionHandlers[0])());
     }
 
-    public function testBuildPrependsDebugHandlerToDefaultExceptionHandlersWhenEnabled(): void
+    public function testBuildPrependsDebugHandlerToDefaultExceptionHandlersWhenDebugConfigIsBound(): void
     {
-        $configurator = $this->makeMinimalConfigurator();
+        $container = new Container();
+        $container->singleton(
+            class: new DebugConfig(
+                alwaysShow: false,
+                rootPath: '/tmp',
+                registerPhpErrorHandler: false,
+            ),
+        );
+
+        $configurator = $this->makeMinimalConfiguratorWithContainer(
+            container: $container,
+        );
         $userHandler = self::makeErrorHandler();
 
-        $configurator
-            ->withDebugHandler(
-                registerPhpErrorHandler: false,
-            )
-            ->withDefaultExceptionHandler(
-                handler: $userHandler,
-            );
+        $configurator->withDefaultExceptionHandler(
+            handler: $userHandler,
+        );
 
         $kernel = $configurator->build();
 
@@ -1242,7 +1203,7 @@ class ApplicationConfiguratorTest extends TestCase
         self::assertSame($userHandler, ($kernel->defaultExceptionHandlers[1])());
     }
 
-    public function testBuildSkipsDebugHandlerWhenDisabled(): void
+    public function testBuildSkipsDebugHandlerWhenDebugConfigIsNotBound(): void
     {
         $configurator = $this->makeMinimalConfigurator();
 
