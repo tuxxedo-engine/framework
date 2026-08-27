@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use Tuxxedo\Http\Kernel\KernelInterface;
+use Tuxxedo\Application\Config\AppConfigInterface;
 use Tuxxedo\Router\Attribute\Route;
 use Tuxxedo\Version;
 use Tuxxedo\View\View;
@@ -22,7 +22,7 @@ use Tuxxedo\View\ViewInterface;
 readonly class IndexController
 {
     public function __construct(
-        private KernelInterface $kernel,
+        private AppConfigInterface $appConfig,
     ) {
     }
 
@@ -33,9 +33,14 @@ readonly class IndexController
             name: 'index',
             scope: [
                 'engineVersion' => Version::SIMPLE,
+                'engineVersionFull' => Version::FULL,
                 'phpVersion' => \PHP_VERSION,
-                'appName' => $this->kernel->appName,
-                'appVersion' => $this->kernel->appVersion,
+                'phpSapi' => \PHP_SAPI,
+                'appName' => $this->appConfig->name,
+                'appVersion' => $this->appConfig->version,
+                'appProfile' => $this->appConfig->profile->name,
+                'appUrl' => $this->appConfig->url,
+                'timezone' => \date_default_timezone_get(),
             ],
         );
     }

@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Library\Standard\Function;
 
+use Tuxxedo\Temporal\ClockInterface;
+use Tuxxedo\Temporal\SystemClock;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
 use Tuxxedo\View\Lumi\Runtime\RuntimeContextInterface;
 
@@ -22,6 +24,11 @@ class DateFunction implements FunctionInterface
     public private(set) array $aliases = [
         'time',
     ];
+
+    public function __construct(
+        private readonly ClockInterface $clock = new SystemClock(),
+    ) {
+    }
 
     /**
      * @param \Closure(): RuntimeContextInterface $context
@@ -34,7 +41,7 @@ class DateFunction implements FunctionInterface
         $format = $arguments[0];
 
         /** @var int $timestamp */
-        $timestamp = $arguments[1] ?? \time();
+        $timestamp = $arguments[1] ?? $this->clock->now()->getTimestamp();
 
         return \date($format, $timestamp);
     }

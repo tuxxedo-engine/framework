@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Unit\View\Lumi\Library\Standard\Function;
 
 use PHPUnit\Framework\TestCase;
+use Support\Temporal\FixedClock;
 use Support\View\Lumi\Runtime\StubRuntimeContext;
 use Tuxxedo\View\Lumi\Library\Standard\Function\DateFunction;
 
@@ -43,5 +44,21 @@ class DateFunctionTest extends TestCase
         );
 
         self::assertMatchesRegularExpression('/^\d{4}$/', $result);
+    }
+
+    public function testCallWithCustomClock(): void
+    {
+        $clock = new FixedClock(
+            now: new \DateTimeImmutable('1989-07-02T14:02:00+01:00'),
+        );
+
+        $result = (new DateFunction($clock))->call(
+            [
+                'y-m-d (H:i:s)',
+            ],
+            static fn () => new StubRuntimeContext(),
+        );
+
+        self::assertSame(\date('y-m-d (H:i:s)', $clock->now()->getTimestamp()), $result);
     }
 }

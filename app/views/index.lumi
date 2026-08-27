@@ -1,67 +1,65 @@
-<!doctype html>
-<html lang="en" class="h-full antialiased">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Tuxxedo Engine</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<title>Tuxxedo Engine</title>
+<style>
+:root { --bg: #1a1a1e; --panel: rgba(24, 24, 30, 0.72); --fg: #ececec; --dim: #b2afac; --line: #33363f; --hover: #2f3441; --path: #a3c8de; --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif; --mono: "JetBrains Mono", "JetBrainsMono Nerd Font", Consolas, Menlo, "Liberation Mono", monospace; }
+* { box-sizing: border-box; }
+html, body { overflow-x: hidden; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.55 var(--sans); -webkit-font-smoothing: antialiased; position: relative; }
+code { font-family: var(--mono); font-size: 0.9em; background: rgba(0, 0, 0, 0.32); padding: 3px 4px; border-radius: 4px; }
+.backdrop { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.blob { position: absolute; border-radius: 50%; filter: blur(100px); will-change: transform; }
+.b1 { top: -20%; left: -12%; width: 55vw; height: 55vw; background: #0d9488; opacity: 0.32; animation: drift1 34s ease-in-out infinite alternate; }
+.b2 { bottom: -25%; right: -8%; width: 60vw; height: 60vw; background: #22d3ee; opacity: 0.26; animation: drift2 42s ease-in-out infinite alternate; }
+.b3 { top: 30%; left: 30%; width: 45vw; height: 45vw; background: #0ea5e9; opacity: 0.20; animation: drift3 48s ease-in-out infinite alternate; }
+@keyframes drift1 { from { transform: translate(0, 0) scale(1); } to { transform: translate(22vw, 18vh) scale(1.2); } }
+@keyframes drift2 { from { transform: translate(0, 0) scale(1); } to { transform: translate(-22vw, -14vh) scale(1.15); } }
+@keyframes drift3 { from { transform: translate(0, 0) scale(1); } to { transform: translate(-18vw, 22vh) scale(1.3); } }
+@media (prefers-reduced-motion: reduce) { .blob { animation: none; } }
+main { max-width: 1100px; margin: 40px auto; padding: 40px 40px 56px; position: relative; z-index: 1; background: var(--panel); backdrop-filter: blur(24px) saturate(120%); -webkit-backdrop-filter: blur(24px) saturate(120%); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 8px; }
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 24px; margin-bottom: 32px; }
+header h1 { margin: 0; font: 700 26px/1.15 var(--sans); letter-spacing: -0.01em; }
+header h1 sup { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--dim); margin-left: 6px; top: -1.05em; letter-spacing: 0; }
+header .meta { color: var(--dim); font-size: 13px; text-align: right; }
+header .meta div + div { margin-top: 2px; }
+section.status { margin-bottom: 44px; }
+section.status .profile { font-family: var(--mono); font-size: 18px; font-weight: 700; margin: 0; word-break: break-word; }
+section.status .location { margin: 4px 0 0 0; color: var(--dim); font-size: 13px; font-family: var(--mono); }
+section.status .location .url { color: var(--path); }
+section.status .message { margin: 20px 0 0 0; color: var(--fg); font-size: 16px; line-height: 1.5; max-width: 68ch; }
+section.environment { margin-top: 8px; }
+section.environment .caption { margin: 0 0 12px 0; font-size: 12px; color: var(--dim); }
+section.environment dl { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+section.environment .row { display: grid; grid-template-columns: 140px 1fr; column-gap: 14px; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+section.environment .row:hover { background: var(--hover); }
+section.environment dt { font-family: var(--mono); font-size: 12px; color: var(--dim); padding-top: 1px; margin: 0; }
+section.environment dd { font-family: var(--mono); font-size: 13px; margin: 0; word-break: break-word; }
+</style>
 </head>
-<body class="h-full bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-<div class="absolute inset-0 -z-10 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950"></div>
-
-<main class="mx-auto max-w-7xl px-6">
-    <section class="mx-auto grid max-w-4xl place-items-center gap-6 py-16 text-center md:py-24">
-        <h1 class="text-pretty text-4xl font-extrabold tracking-tight md:text-6xl">Tuxxedo Engine is running...</h1>
-        <div class="flex flex-col items-center gap-3 sm:flex-row">
-            <a href="https://www.tuxxedo.dev/docs/"
-               class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200">Read
-                the docs</a>
-            <a href="https://www.tuxxedo.dev/"
-               class="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900">tuxxedo.dev</a>
-        </div>
-    </section>
-
-    <section class="py-14 -mt-12 md:-mt-20 place-items-center ">
-        <h3 class="text-pretty text-4xl font-extrabold tracking-tight md:text-3xl">Your first route</h3>
-    </section>
-
-    <section class="py-14 -mt-12 md:-mt-20">
-        <div class="grid gap-6 md:grid-cols-2">
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                <h3 class="text-base font-semibold">Controller:</h3>
-                <pre class="mt-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800 p-4 text-sm leading-6 bg-[#0b0f14] text-[#e6edf3]"><code
-                            class="language-php"><span style="color:#FF7B72">class</span> <span style="color:#C9D1D9">HelloWorldController</span>
-<span style="color:#6E7681">{</span>
-    <span style="color:#6E7681">#[</span><span style="color:#D2A8FF">Get</span><span style="color:#6E7681">(</span><span
-                                style="color:#7EE787">'/hello-world'</span><span style="color:#6E7681">)]</span>
-    <span style="color:#FF7B72">public</span> <span style="color:#FF7B72">function</span> <span style="color:#D2A8FF">index</span><span
-                                style="color:#6E7681">()</span>
-    <span style="color:#6E7681">{</span>
-        <span style="color:#FF7B72">return</span> <span style="color:#FF7B72">new</span> <span style="color:#C9D1D9">View</span><span
-                                style="color:#6E7681">(</span><span style="color:#7EE787">'hello'</span><span
-                                style="color:#6E7681">, [</span><span style="color:#7EE787">'name'</span> <span
-                                style="color:#79C0FF">=></span> <span style="color:#7EE787">'World'</span><span
-                                style="color:#6E7681">]</span><span style="color:#6E7681">)</span><span
-                                style="color:#6E7681">;</span>
-    <span style="color:#6E7681">}</span>
-<span style="color:#6E7681">}</span></code></pre>
-            </div>
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                <h3 class="text-base font-semibold">View (Lumi):</h3>
-                <pre class="mt-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800 p-4 text-sm leading-6 bg-[#0b0f14] text-[#e6edf3]"><code
-                            class="language-lumi">{% lumi dark %}Hello {{ name }}{% endlumi %}</code></pre>
-                <h3 class="text-base font-semibold pt-6">Output:</h3>
-                <pre class="mt-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800 p-4 text-sm leading-6 bg-[#0b0f14] text-[#e6edf3]"><code
-                            class="language-lumi"><span style="color:#C9D1D9">Hello World</span></code></pre>
-            </div>
-        </div>
-    </section>
+<body>
+<div class="backdrop" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<main>
+<header>
+<h1>Tuxxedo Engine<sup>{{ engineVersion }}</sup></h1>
+<div class="meta"><div>{{ appName }} {{ appVersion }}</div><div>{{ date('Y-m-d H:i:s T') }} (UTC{{ date('P') }})</div></div>
+</header>
+<section class="status">
+<p class="profile">{{ appProfile }}</p>
+<p class="location">serving <span class="url">{{ appUrl }}</span></p>
+<p class="message">Application is running. Add controllers under <code>app/Controllers/</code> and register routes with <code>#[Route]</code>. Configuration lives in <code>app/config/</code>, views in <code>app/views/</code>.</p>
+</section>
+<section class="environment">
+<p class="caption">Environment</p>
+<dl>
+<div class="row"><dt>Engine</dt><dd>{{ engineVersionFull }}</dd></div>
+<div class="row"><dt>PHP</dt><dd>{{ phpVersion }} ({{ phpSapi }})</dd></div>
+<div class="row"><dt>Application</dt><dd>{{ appName }} {{ appVersion }}</dd></div>
+<div class="row"><dt>URL</dt><dd>{{ appUrl }}</dd></div>
+<div class="row"><dt>Timezone</dt><dd>{{ timezone }}</dd></div>
+</dl>
+</section>
 </main>
-
-<footer class="border-t border-slate-200/60 py-10 text-center text-sm text-slate-500 dark:border-slate-800/60 dark:text-slate-400">
-    <div class="mx-auto max-w-7xl px-6">&copy;
-        2026 {% if appName %}{{ appName }} {% if appVersion %}{{ appVersion }}{% endif %}{% endif %} &bullet; Powered by
-        Tuxxedo Engine {{ engineVersion }} &bullet; PHP {{ phpVersion }}</div>
-</footer>
 </body>
 </html>

@@ -95,7 +95,7 @@ class DebugErrorHandler implements ErrorHandlerInterface
         $html .= '* { box-sizing: border-box; }';
         $html .= 'html, body { overflow-x: hidden; }';
         $html .= 'body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.55 var(--sans); -webkit-font-smoothing: antialiased; position: relative; }';
-        $html .= 'code { font-family: var(--mono); }';
+        $html .= 'code { font-family: var(--mono); font-size: 0.9em; background: rgba(0, 0, 0, 0.32); padding: 1px 6px; border-radius: 4px; }';
         $html .= '.backdrop { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }';
         $html .= '.blob { position: absolute; border-radius: 50%; filter: blur(100px); will-change: transform; }';
         $html .= '.b1 { top: -20%; left: -12%; width: 55vw; height: 55vw; background: #7c3aed; opacity: 0.32; animation: drift1 34s ease-in-out infinite alternate; }';
