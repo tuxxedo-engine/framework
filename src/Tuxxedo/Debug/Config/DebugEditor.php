@@ -21,6 +21,9 @@ enum DebugEditor: string
     case TEXTMATE = 'textmate';
     case IDEA = 'idea';
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function formatUrl(
         string $file,
         int $line,
