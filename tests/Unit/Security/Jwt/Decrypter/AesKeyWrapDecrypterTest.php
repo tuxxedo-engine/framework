@@ -94,4 +94,27 @@ class AesKeyWrapDecrypterTest extends TestCase
             ),
         );
     }
+
+    public function testUnwrapKeyRewrapsCryptoExceptionAsJwtException(): void
+    {
+        $decrypter = new AesKeyWrapDecrypter(
+            algorithm: KeyManagementAlgorithm::A128KW,
+            key: new SymmetricKey(
+                secret: \str_repeat("\x00", 16),
+            ),
+        );
+
+        try {
+            $decrypter->unwrapKey(
+                wrappedKey: \str_repeat("\x00", 16),
+            );
+
+            self::fail('Expected JwtException');
+        } catch (JwtException $exception) {
+            self::assertStringContainsString(
+                'cryptographic primitive failed',
+                $exception->getMessage(),
+            );
+        }
+    }
 }

@@ -1348,4 +1348,119 @@ class JwtManagerTest extends TestCase
             $inner->claims->get('sub'),
         );
     }
+
+    public function testEncryptWritesKidHeaderWhenKeyHasKeyId(): void
+    {
+        $token = $this->manager()->encrypt(
+            claims: [],
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            key: new SymmetricKey(
+                secret: \str_repeat("\x00", 32),
+                keyId: 'kid-1',
+            ),
+        );
+
+        self::assertSame(
+            'kid-1',
+            $token->header->keyId,
+        );
+    }
+
+    public function testParseEncryptedReturnsJweTokenFromValidCompact(): void
+    {
+        $key = new SymmetricKey(
+            secret: \str_repeat("\x00", 32),
+        );
+
+        $encrypted = $this->manager()->encrypt(
+            claims: [
+                'sub' => 'user-1',
+            ],
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            key: $key,
+        );
+
+        $parsed = $this->manager()->parseEncrypted(
+            compact: $encrypted->compact,
+        );
+
+        self::assertSame(
+            $encrypted->compact,
+            $parsed->compact,
+        );
+        self::assertSame(
+            'dir',
+            $parsed->header->algorithm,
+        );
+        self::assertSame(
+            'A256GCM',
+            $parsed->header->get('enc'),
+        );
+    }
+
+    public function testParseEncryptedThrowsForMalformedCompact(): void
+    {
+        $this->expectException(JwtException::class);
+
+        $this->manager()->parseEncrypted(
+            compact: 'a.b.c.d',
+        );
+    }
+
+    public function testDecryptThrowsForMalformedCompact(): void
+    {
+        $this->expectException(JwtException::class);
+
+        $this->manager()->decrypt(
+            'a.b.c.d',
+            new SymmetricKey(
+                secret: \str_repeat("\x00", 32),
+            ),
+            new EncryptedWith(
+                keyAlgorithm: KeyManagementAlgorithm::DIR,
+                contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            ),
+        );
+    }
+
+    public function testDecryptAndDecodeThrowsWhenOuterCtyIsNotJwt(): void
+    {
+        $encryptionKey = new SymmetricKey(
+            secret: \str_repeat("\x00", 32),
+        );
+
+        $token = $this->manager()->encrypt(
+            claims: [],
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            key: $encryptionKey,
+            extraHeader: [
+                'cty' => 'NOT_JWT',
+            ],
+        );
+
+        try {
+            $this->manager()->decryptAndDecode(
+                $token->compact,
+                $encryptionKey,
+                new EncryptedWith(
+                    keyAlgorithm: KeyManagementAlgorithm::DIR,
+                    contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+                ),
+                new SignedWith(
+                    algorithm: Algorithm::HS256,
+                    key: $this->hmacKey(),
+                ),
+            );
+
+            self::fail('Expected JwtException');
+        } catch (JwtException $exception) {
+            self::assertStringContainsString(
+                'NOT_JWT',
+                $exception->getMessage(),
+            );
+        }
+    }
 }
