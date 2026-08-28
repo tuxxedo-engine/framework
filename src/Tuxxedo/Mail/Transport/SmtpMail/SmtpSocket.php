@@ -190,6 +190,7 @@ class SmtpSocket implements SmtpSocketInterface
         }
 
         @\fclose($this->stream);
+
         $this->stream = null;
     }
 
