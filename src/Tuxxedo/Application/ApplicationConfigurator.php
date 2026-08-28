@@ -604,7 +604,10 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
             }
         }
 
-        if ($container->isBound(DebugConfigInterface::class)) {
+        if (
+            $this->appProfile === Profile::DEBUG &&
+            $container->isBound(DebugConfigInterface::class)
+        ) {
             $kernel->defaultExceptionHandler(
                 handler: fn (): ErrorHandlerInterface => new DebugErrorHandler(
                     container: $container,
