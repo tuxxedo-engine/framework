@@ -16,13 +16,13 @@ namespace Unit\Security\Jwt;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Security\Jwt\Claims;
 use Tuxxedo\Security\Jwt\Header;
+use Tuxxedo\Security\Jwt\JwsTokenInterface;
 use Tuxxedo\Security\Jwt\JwtTokenAccessor;
 use Tuxxedo\Security\Jwt\Token;
-use Tuxxedo\Security\Jwt\TokenInterface;
 
 class JwtTokenAccessorTest extends TestCase
 {
-    private function makeToken(): TokenInterface
+    private function makeToken(): JwsTokenInterface
     {
         return new Token(
             header: new Header(

@@ -15,15 +15,15 @@ namespace Tuxxedo\Security\Jwt;
 
 class JwtTokenAccessor implements JwtTokenAccessorInterface
 {
-    private ?TokenInterface $token = null;
+    private ?JwsTokenInterface $token = null;
 
-    public function current(): ?TokenInterface
+    public function current(): ?JwsTokenInterface
     {
         return $this->token;
     }
 
     public function setCurrent(
-        ?TokenInterface $token,
+        ?JwsTokenInterface $token,
     ): void {
         $this->token = $token;
     }

@@ -16,12 +16,12 @@ namespace Tuxxedo\Http\Kernel\Resolver;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
 use Tuxxedo\Reflection\ParameterReflectorInterface;
+use Tuxxedo\Security\Jwt\JwsTokenInterface;
 use Tuxxedo\Security\Jwt\JwtException;
 use Tuxxedo\Security\Jwt\JwtTokenAccessorInterface;
-use Tuxxedo\Security\Jwt\TokenInterface;
 
 /**
- * @implements DependencyResolverInterface<TokenInterface|null>
+ * @implements DependencyResolverInterface<JwsTokenInterface|null>
  */
 #[\Attribute(flags: \Attribute::TARGET_PARAMETER)]
 class Jwt implements DependencyResolverInterface
@@ -32,7 +32,7 @@ class Jwt implements DependencyResolverInterface
     public function resolve(
         ContainerInterface $container,
         ParameterReflectorInterface $parameter,
-    ): ?TokenInterface {
+    ): ?JwsTokenInterface {
         $current = $container->resolve(JwtTokenAccessorInterface::class)->current();
 
         if ($current === null) {

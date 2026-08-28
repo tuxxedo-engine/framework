@@ -13,13 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Security\Jwt;
 
-readonly class Token implements JwsTokenInterface
+interface JwsTokenInterface extends TokenInterface
 {
-    public function __construct(
-        public HeaderInterface $header,
-        public ClaimsInterface $claims,
-        public string $signature,
-        public string $compact,
-    ) {
+    public string $signature {
+        get;
     }
 }

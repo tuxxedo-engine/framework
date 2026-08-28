@@ -11,19 +11,13 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Security\Jwt;
+namespace Tuxxedo\Security\Jwt\Encrypter;
 
-interface TokenInterface
+class DirectEncrypter implements EncrypterInterface
 {
-    public HeaderInterface $header {
-        get;
-    }
-
-    public ClaimsInterface $claims {
-        get;
-    }
-
-    public string $compact {
-        get;
+    public function wrapKey(
+        #[\SensitiveParameter] string $contentEncryptionKey,
+    ): string {
+        return '';
     }
 }

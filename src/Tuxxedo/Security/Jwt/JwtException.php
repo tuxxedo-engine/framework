@@ -409,4 +409,100 @@ class JwtException extends \Exception
             ),
         );
     }
+
+    public static function fromInvalidSymmetricKeyLength(
+        string $algorithm,
+        string $expectedBytes,
+        int $actualBytes,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'JWT algorithm "%s" requires a symmetric key of %s bytes, got %d',
+                $algorithm,
+                $expectedBytes,
+                $actualBytes,
+            ),
+        );
+    }
+
+    public static function fromCryptoFailure(
+        \Throwable $previous,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Underlying cryptographic primitive failed: %s',
+                $previous->getMessage(),
+            ),
+            previous: $previous,
+        );
+    }
+
+    public static function fromAuthenticationTagMismatch(): self
+    {
+        return new self(
+            message: 'Authentication tag mismatch during content decryption',
+        );
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public static function fromContentDecryptionFailed(
+        string $cipher,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Content decryption with "%s" failed',
+                $cipher,
+            ),
+        );
+    }
+
+    public static function fromMissingEncryptionConstraint(): self
+    {
+        return new self(
+            message: 'An EncryptedWith constraint must be provided to decrypt()',
+        );
+    }
+
+    public static function fromWrongTokenType(
+        string $expected,
+        string $actual,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Constraint expected a token of type "%s" but got "%s"',
+                $expected,
+                $actual,
+            ),
+        );
+    }
+
+    public static function fromNestedContentTypeMismatch(
+        string $expected,
+        string $given,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Nested JWT decryption expected outer "cty" header of "%s" but got "%s"',
+                $expected,
+                $given,
+            ),
+        );
+    }
+
+    // @codeCoverageIgnoreStart
+    public static function fromEncryptionFailure(
+        string $context,
+        ?\Throwable $previous = null,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'JWT encryption in "%s" failed',
+                $context,
+            ),
+            previous: $previous,
+        );
+    }
+    // @codeCoverageIgnoreEnd
 }

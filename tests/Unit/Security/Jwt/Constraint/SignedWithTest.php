@@ -17,6 +17,7 @@ use PHPUnit\Framework\TestCase;
 use Support\Security\Jwt\JwtKeyFixtures;
 use Tuxxedo\Security\Jwt\Algorithm;
 use Tuxxedo\Security\Jwt\Constraint\SignedWith;
+use Tuxxedo\Security\Jwt\JwsTokenInterface;
 use Tuxxedo\Security\Jwt\JwtException;
 use Tuxxedo\Security\Jwt\JwtManager;
 use Tuxxedo\Security\Jwt\Key\EcdsaPrivateKey;
@@ -28,7 +29,6 @@ use Tuxxedo\Security\Jwt\Key\RsaPrivateKey;
 use Tuxxedo\Security\Jwt\Key\RsaPublicKey;
 use Tuxxedo\Security\Jwt\Key\SymmetricKey;
 use Tuxxedo\Security\Jwt\Token;
-use Tuxxedo\Security\Jwt\TokenInterface;
 
 class SignedWithTest extends TestCase
 {
@@ -43,7 +43,7 @@ class SignedWithTest extends TestCase
     private function makeHs256Token(
         array $claims = ['sub' => 'user-1'],
         ?string $keyId = null,
-    ): TokenInterface {
+    ): JwsTokenInterface {
         return $this->manager()->encode(
             claims: $claims,
             algorithm: Algorithm::HS256,
@@ -202,6 +202,33 @@ class SignedWithTest extends TestCase
             algorithm: Algorithm::EDDSA,
             key: new EdDsaPublicKey(
                 bytes: JwtKeyFixtures::eddsaOtherPublicBytes(),
+            ),
+        );
+
+        $this->expectException(JwtException::class);
+
+        $constraint->check(
+            token: $token,
+        );
+    }
+
+    public function testCheckThrowsWhenTokenIsJwe(): void
+    {
+        $token = $this->manager()->encrypt(
+            claims: [
+                'sub' => 'user-1',
+            ],
+            keyAlgorithm: \Tuxxedo\Security\Jwt\KeyManagementAlgorithm::DIR,
+            contentAlgorithm: \Tuxxedo\Security\Jwt\ContentEncryptionAlgorithm::A256GCM,
+            key: new SymmetricKey(
+                secret: \str_repeat("\x00", 32),
+            ),
+        );
+
+        $constraint = new SignedWith(
+            algorithm: Algorithm::HS256,
+            key: new SymmetricKey(
+                secret: JwtKeyFixtures::hmacSecretBytes(),
             ),
         );
 

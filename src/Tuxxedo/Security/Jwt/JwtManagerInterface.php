@@ -18,7 +18,6 @@ use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Security\Jwt\Constraint\ConstraintInterface;
 use Tuxxedo\Security\Jwt\Key\KeyInterface;
 
-// @todo Support JWE
 #[DefaultImplementation(class: JwtManager::class, lifecycle: Lifecycle::SINGLETON)]
 interface JwtManagerInterface
 {
@@ -33,14 +32,14 @@ interface JwtManagerInterface
         Algorithm $algorithm,
         KeyInterface $key,
         array $extraHeader = [],
-    ): TokenInterface;
+    ): JwsTokenInterface;
 
     /**
      * @throws JwtException
      */
     public function parse(
         string $compact,
-    ): TokenInterface;
+    ): JwsTokenInterface;
 
     /**
      * @throws JwtException
@@ -48,5 +47,60 @@ interface JwtManagerInterface
     public function decode(
         string $compact,
         ConstraintInterface ...$constraints,
-    ): TokenInterface;
+    ): JwsTokenInterface;
+
+    /**
+     * @param array<string, mixed> $claims
+     * @param array<string, mixed> $extraHeader
+     *
+     * @throws JwtException
+     */
+    public function encrypt(
+        array $claims,
+        KeyManagementAlgorithm $keyAlgorithm,
+        ContentEncryptionAlgorithm $contentAlgorithm,
+        KeyInterface $key,
+        array $extraHeader = [],
+    ): JweTokenInterface;
+
+    /**
+     * @throws JwtException
+     */
+    public function parseEncrypted(
+        string $compact,
+    ): JweTokenInterface;
+
+    /**
+     * @throws JwtException
+     */
+    public function decrypt(
+        string $compact,
+        KeyInterface $key,
+        ConstraintInterface ...$constraints,
+    ): JweTokenInterface;
+
+    /**
+     * @param array<string, mixed> $claims
+     * @param array<string, mixed> $extraHeader
+     *
+     * @throws JwtException
+     */
+    public function encodeAndEncrypt(
+        array $claims,
+        Algorithm $signingAlgorithm,
+        KeyInterface $signingKey,
+        KeyManagementAlgorithm $keyAlgorithm,
+        ContentEncryptionAlgorithm $contentAlgorithm,
+        KeyInterface $encryptionKey,
+        array $extraHeader = [],
+    ): JweTokenInterface;
+
+    /**
+     * @throws JwtException
+     */
+    public function decryptAndDecode(
+        string $compact,
+        KeyInterface $decryptionKey,
+        ConstraintInterface ...$constraints,
+    ): JwsTokenInterface;
 }

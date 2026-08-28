@@ -13,15 +13,18 @@ declare(strict_types=1);
 
 namespace Unit\Security\Jwt;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Support\Security\Jwt\JwtKeyFixtures;
 use Support\Temporal\FixedClock;
 use Tuxxedo\Security\Jwt\Algorithm;
+use Tuxxedo\Security\Jwt\Constraint\EncryptedWith;
 use Tuxxedo\Security\Jwt\Constraint\IdentifiedBy;
 use Tuxxedo\Security\Jwt\Constraint\IssuedBy;
 use Tuxxedo\Security\Jwt\Constraint\PermittedFor;
 use Tuxxedo\Security\Jwt\Constraint\SignedWith;
 use Tuxxedo\Security\Jwt\Constraint\ValidAt;
+use Tuxxedo\Security\Jwt\ContentEncryptionAlgorithm;
 use Tuxxedo\Security\Jwt\JwtException;
 use Tuxxedo\Security\Jwt\JwtManager;
 use Tuxxedo\Security\Jwt\Key\EcdsaPrivateKey;
@@ -31,6 +34,7 @@ use Tuxxedo\Security\Jwt\Key\EdDsaPublicKey;
 use Tuxxedo\Security\Jwt\Key\RsaPrivateKey;
 use Tuxxedo\Security\Jwt\Key\RsaPublicKey;
 use Tuxxedo\Security\Jwt\Key\SymmetricKey;
+use Tuxxedo\Security\Jwt\KeyManagementAlgorithm;
 use Tuxxedo\Security\Jwt\Signer\EdDsaSigner;
 
 class JwtManagerTest extends TestCase
@@ -786,6 +790,562 @@ class JwtManagerTest extends TestCase
         self::assertSame(
             'EDDSA',
             $decoded->header->algorithm,
+        );
+    }
+
+    public function testEncryptProducesCompactWithFiveSegments(): void
+    {
+        $token = $this->manager()->encrypt(
+            claims: [
+                'sub' => 'user-1',
+            ],
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            key: new SymmetricKey(
+                secret: \str_repeat("\x00", 32),
+            ),
+        );
+
+        self::assertCount(
+            5,
+            \explode('.', $token->compact),
+        );
+    }
+
+    public function testEncryptSetsAlgAndEncHeaders(): void
+    {
+        $token = $this->manager()->encrypt(
+            claims: [
+                'sub' => 'user-1',
+            ],
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            key: new SymmetricKey(
+                secret: \str_repeat("\x00", 32),
+            ),
+        );
+
+        self::assertSame(
+            'dir',
+            $token->header->algorithm,
+        );
+        self::assertSame(
+            'A256GCM',
+            $token->header->get('enc'),
+        );
+    }
+
+    public function testEncryptWithDirectAlgorithmThrowsForNonSymmetricKey(): void
+    {
+        $this->expectException(JwtException::class);
+
+        $this->manager()->encrypt(
+            claims: [],
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            key: new EdDsaPublicKey(
+                bytes: JwtKeyFixtures::eddsaPublicBytes(),
+            ),
+        );
+    }
+
+    public function testEncryptWithDirectAlgorithmThrowsForWrongKeyLength(): void
+    {
+        $this->expectException(JwtException::class);
+
+        $this->manager()->encrypt(
+            claims: [],
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            key: new SymmetricKey(
+                secret: \str_repeat("\x00", 16),
+            ),
+        );
+    }
+
+    public function testEncryptWithKeyWrapProducesNonEmptyEncryptedKey(): void
+    {
+        $token = $this->manager()->encrypt(
+            claims: [
+                'sub' => 'user-1',
+            ],
+            keyAlgorithm: KeyManagementAlgorithm::A128KW,
+            contentAlgorithm: ContentEncryptionAlgorithm::A128GCM,
+            key: new SymmetricKey(
+                secret: \str_repeat("\x00", 16),
+            ),
+        );
+
+        self::assertNotSame(
+            '',
+            $token->encryptedKey,
+        );
+    }
+
+    public function testParseEncryptedThrowsForNonFiveSegmentInput(): void
+    {
+        $this->expectException(JwtException::class);
+
+        $this->manager()->parseEncrypted(
+            compact: 'a.b.c',
+        );
+    }
+
+    /**
+     * @return array<string, array{KeyManagementAlgorithm, ContentEncryptionAlgorithm, int}>
+     */
+    public static function providesEncryptDecryptRoundTripCombos(): array
+    {
+        return [
+            'DIR + A128GCM' => [
+                KeyManagementAlgorithm::DIR,
+                ContentEncryptionAlgorithm::A128GCM,
+                16,
+            ],
+            'DIR + A192GCM' => [
+                KeyManagementAlgorithm::DIR,
+                ContentEncryptionAlgorithm::A192GCM,
+                24,
+            ],
+            'DIR + A256GCM' => [
+                KeyManagementAlgorithm::DIR,
+                ContentEncryptionAlgorithm::A256GCM,
+                32,
+            ],
+            'DIR + A128CBC-HS256' => [
+                KeyManagementAlgorithm::DIR,
+                ContentEncryptionAlgorithm::A128CBC_HS256,
+                32,
+            ],
+            'DIR + A192CBC-HS384' => [
+                KeyManagementAlgorithm::DIR,
+                ContentEncryptionAlgorithm::A192CBC_HS384,
+                48,
+            ],
+            'DIR + A256CBC-HS512' => [
+                KeyManagementAlgorithm::DIR,
+                ContentEncryptionAlgorithm::A256CBC_HS512,
+                64,
+            ],
+            'A128KW + A128GCM' => [
+                KeyManagementAlgorithm::A128KW,
+                ContentEncryptionAlgorithm::A128GCM,
+                16,
+            ],
+            'A192KW + A192GCM' => [
+                KeyManagementAlgorithm::A192KW,
+                ContentEncryptionAlgorithm::A192GCM,
+                24,
+            ],
+            'A256KW + A256CBC-HS512' => [
+                KeyManagementAlgorithm::A256KW,
+                ContentEncryptionAlgorithm::A256CBC_HS512,
+                32,
+            ],
+        ];
+    }
+
+    #[DataProvider('providesEncryptDecryptRoundTripCombos')]
+    public function testEncryptDecryptRoundTripsForAlgorithmCombo(
+        KeyManagementAlgorithm $keyAlgorithm,
+        ContentEncryptionAlgorithm $contentAlgorithm,
+        int $keyLength,
+    ): void {
+        $key = new SymmetricKey(
+            secret: \str_repeat("\x11", $keyLength),
+        );
+
+        $token = $this->manager()->encrypt(
+            claims: [
+                'sub' => 'user-1',
+            ],
+            keyAlgorithm: $keyAlgorithm,
+            contentAlgorithm: $contentAlgorithm,
+            key: $key,
+        );
+
+        $decrypted = $this->manager()->decrypt(
+            $token->compact,
+            $key,
+            new EncryptedWith(
+                keyAlgorithm: $keyAlgorithm,
+                contentAlgorithm: $contentAlgorithm,
+            ),
+        );
+
+        self::assertSame(
+            'user-1',
+            $decrypted->claims->get('sub'),
+        );
+    }
+
+    public function testEncryptWithKeyWrapAlgorithmThrowsForNonSymmetricKey(): void
+    {
+        $this->expectException(JwtException::class);
+
+        $this->manager()->encrypt(
+            claims: [],
+            keyAlgorithm: KeyManagementAlgorithm::A128KW,
+            contentAlgorithm: ContentEncryptionAlgorithm::A128GCM,
+            key: new EdDsaPublicKey(
+                bytes: JwtKeyFixtures::eddsaPublicBytes(),
+            ),
+        );
+    }
+
+    public function testDecryptWithKeyWrapAlgorithmThrowsForNonSymmetricKey(): void
+    {
+        $key = new SymmetricKey(
+            secret: \str_repeat("\x00", 16),
+        );
+
+        $token = $this->manager()->encrypt(
+            claims: [],
+            keyAlgorithm: KeyManagementAlgorithm::A128KW,
+            contentAlgorithm: ContentEncryptionAlgorithm::A128GCM,
+            key: $key,
+        );
+
+        $this->expectException(JwtException::class);
+
+        $this->manager()->decrypt(
+            $token->compact,
+            new EdDsaPublicKey(
+                bytes: JwtKeyFixtures::eddsaPublicBytes(),
+            ),
+            new EncryptedWith(
+                keyAlgorithm: KeyManagementAlgorithm::A128KW,
+                contentAlgorithm: ContentEncryptionAlgorithm::A128GCM,
+            ),
+        );
+    }
+
+    public function testDecryptThrowsWhenEncryptedWithConstraintIsMissing(): void
+    {
+        $key = new SymmetricKey(
+            secret: \str_repeat("\x00", 32),
+        );
+
+        $token = $this->manager()->encrypt(
+            claims: [],
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            key: $key,
+        );
+
+        $this->expectException(JwtException::class);
+
+        $this->manager()->decrypt(
+            $token->compact,
+            $key,
+        );
+    }
+
+    public function testDecryptThrowsForAlgMismatch(): void
+    {
+        $key = new SymmetricKey(
+            secret: \str_repeat("\x00", 32),
+        );
+
+        $token = $this->manager()->encrypt(
+            claims: [],
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            key: $key,
+        );
+
+        $this->expectException(JwtException::class);
+
+        $this->manager()->decrypt(
+            $token->compact,
+            $key,
+            new EncryptedWith(
+                keyAlgorithm: KeyManagementAlgorithm::A128KW,
+                contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            ),
+        );
+    }
+
+    public function testDecryptThrowsForEncMismatch(): void
+    {
+        $key = new SymmetricKey(
+            secret: \str_repeat("\x00", 32),
+        );
+
+        $token = $this->manager()->encrypt(
+            claims: [],
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            key: $key,
+        );
+
+        $this->expectException(JwtException::class);
+
+        $this->manager()->decrypt(
+            $token->compact,
+            $key,
+            new EncryptedWith(
+                keyAlgorithm: KeyManagementAlgorithm::DIR,
+                contentAlgorithm: ContentEncryptionAlgorithm::A128GCM,
+            ),
+        );
+    }
+
+    public function testDecryptWithDirAlgorithmThrowsForNonSymmetricKey(): void
+    {
+        $key = new SymmetricKey(
+            secret: \str_repeat("\x00", 32),
+        );
+
+        $token = $this->manager()->encrypt(
+            claims: [],
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            key: $key,
+        );
+
+        $this->expectException(JwtException::class);
+
+        $this->manager()->decrypt(
+            $token->compact,
+            new EdDsaPublicKey(
+                bytes: JwtKeyFixtures::eddsaPublicBytes(),
+            ),
+            new EncryptedWith(
+                keyAlgorithm: KeyManagementAlgorithm::DIR,
+                contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            ),
+        );
+    }
+
+    public function testDecryptWithDirAlgorithmThrowsForWrongKeyLength(): void
+    {
+        $key = new SymmetricKey(
+            secret: \str_repeat("\x00", 32),
+        );
+
+        $token = $this->manager()->encrypt(
+            claims: [],
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            key: $key,
+        );
+
+        $this->expectException(JwtException::class);
+
+        $this->manager()->decrypt(
+            $token->compact,
+            new SymmetricKey(
+                secret: \str_repeat("\x00", 16),
+            ),
+            new EncryptedWith(
+                keyAlgorithm: KeyManagementAlgorithm::DIR,
+                contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            ),
+        );
+    }
+
+    public function testDecryptRunsAdditionalConstraintsAfterDecryption(): void
+    {
+        $key = new SymmetricKey(
+            secret: \str_repeat("\x44", 32),
+        );
+
+        $token = $this->manager()->encrypt(
+            claims: [
+                'iss' => 'issuer-a',
+            ],
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            key: $key,
+        );
+
+        $this->expectException(JwtException::class);
+
+        $this->manager()->decrypt(
+            $token->compact,
+            $key,
+            new EncryptedWith(
+                keyAlgorithm: KeyManagementAlgorithm::DIR,
+                contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            ),
+            new IssuedBy(
+                issuer: 'issuer-b',
+            ),
+        );
+    }
+
+    public function testEncodeAndEncryptRoundTripsThroughDecryptAndDecode(): void
+    {
+        $signingKey = new SymmetricKey(
+            secret: JwtKeyFixtures::hmacSecretBytes(),
+        );
+        $encryptionKey = new SymmetricKey(
+            secret: \str_repeat("\x55", 32),
+        );
+
+        $token = $this->manager()->encodeAndEncrypt(
+            claims: [
+                'sub' => 'user-nested',
+            ],
+            signingAlgorithm: Algorithm::HS256,
+            signingKey: $signingKey,
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            encryptionKey: $encryptionKey,
+        );
+
+        $inner = $this->manager()->decryptAndDecode(
+            $token->compact,
+            $encryptionKey,
+            new EncryptedWith(
+                keyAlgorithm: KeyManagementAlgorithm::DIR,
+                contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            ),
+            new SignedWith(
+                algorithm: Algorithm::HS256,
+                key: $signingKey,
+            ),
+        );
+
+        self::assertSame(
+            'user-nested',
+            $inner->claims->get('sub'),
+        );
+    }
+
+    public function testEncodeAndEncryptSetsCtyHeaderOnOuterJwe(): void
+    {
+        $token = $this->manager()->encodeAndEncrypt(
+            claims: [],
+            signingAlgorithm: Algorithm::HS256,
+            signingKey: new SymmetricKey(
+                secret: JwtKeyFixtures::hmacSecretBytes(),
+            ),
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            encryptionKey: new SymmetricKey(
+                secret: \str_repeat("\x00", 32),
+            ),
+        );
+
+        self::assertSame(
+            'JWT',
+            $token->header->get('cty'),
+        );
+    }
+
+    public function testDecryptAndDecodeThrowsWhenOuterCtyIsMissing(): void
+    {
+        $key = new SymmetricKey(
+            secret: \str_repeat("\x66", 32),
+        );
+
+        $token = $this->manager()->encrypt(
+            claims: [
+                'sub' => 'x',
+            ],
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            key: $key,
+        );
+
+        $this->expectException(JwtException::class);
+
+        $this->manager()->decryptAndDecode(
+            $token->compact,
+            $key,
+            new EncryptedWith(
+                keyAlgorithm: KeyManagementAlgorithm::DIR,
+                contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            ),
+            new SignedWith(
+                algorithm: Algorithm::HS256,
+                key: new SymmetricKey(
+                    secret: JwtKeyFixtures::hmacSecretBytes(),
+                ),
+            ),
+        );
+    }
+
+    public function testDecryptAndDecodeAcceptsLowercaseCtyForCompatibility(): void
+    {
+        $signingKey = new SymmetricKey(
+            secret: JwtKeyFixtures::hmacSecretBytes(),
+        );
+        $encryptionKey = new SymmetricKey(
+            secret: \str_repeat("\x77", 32),
+        );
+
+        $token = $this->manager()->encodeAndEncrypt(
+            claims: [
+                'sub' => 'lower',
+            ],
+            signingAlgorithm: Algorithm::HS256,
+            signingKey: $signingKey,
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            encryptionKey: $encryptionKey,
+            extraHeader: [
+                'cty' => 'jwt',
+            ],
+        );
+
+        $inner = $this->manager()->decryptAndDecode(
+            $token->compact,
+            $encryptionKey,
+            new EncryptedWith(
+                keyAlgorithm: KeyManagementAlgorithm::DIR,
+                contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            ),
+            new SignedWith(
+                algorithm: Algorithm::HS256,
+                key: $signingKey,
+            ),
+        );
+
+        self::assertSame(
+            'lower',
+            $inner->claims->get('sub'),
+        );
+    }
+
+    public function testDecryptAndDecodeFiltersEncryptedWithFromInnerConstraints(): void
+    {
+        $signingKey = new SymmetricKey(
+            secret: JwtKeyFixtures::hmacSecretBytes(),
+        );
+        $encryptionKey = new SymmetricKey(
+            secret: \str_repeat("\x88", 32),
+        );
+
+        $token = $this->manager()->encodeAndEncrypt(
+            claims: [
+                'sub' => 'filter-test',
+            ],
+            signingAlgorithm: Algorithm::HS256,
+            signingKey: $signingKey,
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            encryptionKey: $encryptionKey,
+        );
+
+        $inner = $this->manager()->decryptAndDecode(
+            $token->compact,
+            $encryptionKey,
+            new EncryptedWith(
+                keyAlgorithm: KeyManagementAlgorithm::DIR,
+                contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            ),
+            new SignedWith(
+                algorithm: Algorithm::HS256,
+                key: $signingKey,
+            ),
+        );
+
+        self::assertSame(
+            'filter-test',
+            $inner->claims->get('sub'),
         );
     }
 }

@@ -13,17 +13,21 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Security\Jwt;
 
-interface TokenInterface
+interface JweTokenInterface extends TokenInterface
 {
-    public HeaderInterface $header {
+    public string $encryptedKey {
         get;
     }
 
-    public ClaimsInterface $claims {
+    public string $initializationVector {
         get;
     }
 
-    public string $compact {
+    public string $ciphertext {
+        get;
+    }
+
+    public string $authenticationTag {
         get;
     }
 }

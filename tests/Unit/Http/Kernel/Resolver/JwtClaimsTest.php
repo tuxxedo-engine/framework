@@ -21,14 +21,14 @@ use Tuxxedo\Http\Kernel\Resolver\JwtClaims as JwtClaimsResolver;
 use Tuxxedo\Security\Jwt\Claims;
 use Tuxxedo\Security\Jwt\ClaimsInterface;
 use Tuxxedo\Security\Jwt\Header;
+use Tuxxedo\Security\Jwt\JwsTokenInterface;
 use Tuxxedo\Security\Jwt\JwtException;
 use Tuxxedo\Security\Jwt\Token;
-use Tuxxedo\Security\Jwt\TokenInterface;
 
 class JwtClaimsTest extends TestCase
 {
     private function containerWith(
-        ?TokenInterface $token,
+        ?JwsTokenInterface $token,
     ): Container {
         $container = new Container();
 
@@ -43,7 +43,7 @@ class JwtClaimsTest extends TestCase
 
     private function makeToken(
         ClaimsInterface $claims,
-    ): TokenInterface {
+    ): JwsTokenInterface {
         return new Token(
             header: new Header(
                 all: [

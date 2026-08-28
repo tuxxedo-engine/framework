@@ -19,5 +19,5 @@ use Tuxxedo\Container\Lifecycle;
 #[DefaultImplementation(class: JwtTokenAccessor::class, lifecycle: Lifecycle::SINGLETON)]
 interface JwtTokenAccessorInterface
 {
-    public function current(): ?TokenInterface;
+    public function current(): ?JwsTokenInterface;
 }

@@ -97,4 +97,64 @@ class CryptoException extends \Exception
             ),
         );
     }
+
+    public static function fromInvalidSymmetricKeyLength(
+        string $algorithm,
+        string $expectedBytes,
+        int $actualBytes,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Algorithm "%s" requires a symmetric key of %s bytes, got %d',
+                $algorithm,
+                $expectedBytes,
+                $actualBytes,
+            ),
+        );
+    }
+
+    public static function fromInvalidCekLength(
+        int $bytes,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'AES Key Wrap requires a CEK of at least 16 bytes in multiples of 8, got %d',
+                $bytes,
+            ),
+        );
+    }
+
+    public static function fromInvalidWrappedKeyLength(
+        int $bytes,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'AES Key Wrap requires a wrapped key of at least 24 bytes in multiples of 8, got %d',
+                $bytes,
+            ),
+        );
+    }
+
+    public static function fromKeyUnwrapIntegrityFailed(): self
+    {
+        return new self(
+            message: 'AES Key Wrap integrity check failed during unwrap',
+        );
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public static function fromEncryptionFailure(
+        string $context,
+        ?\Throwable $previous = null,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Encryption in "%s" failed',
+                $context,
+            ),
+            previous: $previous,
+        );
+    }
 }

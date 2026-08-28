@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Security\Jwt\Constraint;
 
 use Tuxxedo\Security\Jwt\Algorithm;
+use Tuxxedo\Security\Jwt\JwsTokenInterface;
 use Tuxxedo\Security\Jwt\JwtException;
 use Tuxxedo\Security\Jwt\Key\KeyInterface;
 use Tuxxedo\Security\Jwt\Key\KeySetInterface;
@@ -43,6 +44,13 @@ class SignedWith implements ConstraintInterface
     public function check(
         TokenInterface $token,
     ): void {
+        if (!$token instanceof JwsTokenInterface) {
+            throw JwtException::fromWrongTokenType(
+                expected: JwsTokenInterface::class,
+                actual: $token::class,
+            );
+        }
+
         if (!$this->algorithm->is($token->header->algorithm)) {
             throw JwtException::fromAlgorithmMismatch(
                 expected: $this->algorithm->identifier(),
@@ -79,7 +87,7 @@ class SignedWith implements ConstraintInterface
      * @throws JwtException
      */
     private function resolveKey(
-        TokenInterface $token,
+        JwsTokenInterface $token,
     ): KeyInterface {
         /** @var KeySetInterface $keySet */
         $keySet = $this->key;

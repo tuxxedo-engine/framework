@@ -20,14 +20,14 @@ use Tuxxedo\Container\Container;
 use Tuxxedo\Http\Kernel\Resolver\Jwt as JwtResolver;
 use Tuxxedo\Security\Jwt\Claims;
 use Tuxxedo\Security\Jwt\Header;
+use Tuxxedo\Security\Jwt\JwsTokenInterface;
 use Tuxxedo\Security\Jwt\JwtException;
 use Tuxxedo\Security\Jwt\Token;
-use Tuxxedo\Security\Jwt\TokenInterface;
 
 class JwtTest extends TestCase
 {
     private function containerWith(
-        ?TokenInterface $token,
+        ?JwsTokenInterface $token,
     ): Container {
         $container = new Container();
 
@@ -40,7 +40,7 @@ class JwtTest extends TestCase
         return $container;
     }
 
-    private function makeToken(): TokenInterface
+    private function makeToken(): JwsTokenInterface
     {
         return new Token(
             header: new Header(
@@ -70,7 +70,7 @@ class JwtTest extends TestCase
                     token: $token,
                 ),
                 parameter: new StubParameterReflector(
-                    defaultType: TokenInterface::class,
+                    defaultType: JwsTokenInterface::class,
                 ),
             ),
         );
@@ -84,7 +84,7 @@ class JwtTest extends TestCase
                     token: null,
                 ),
                 parameter: new StubParameterReflector(
-                    defaultType: TokenInterface::class,
+                    defaultType: JwsTokenInterface::class,
                     nullable: true,
                 ),
             ),
@@ -100,7 +100,7 @@ class JwtTest extends TestCase
                 token: null,
             ),
             parameter: new StubParameterReflector(
-                defaultType: TokenInterface::class,
+                defaultType: JwsTokenInterface::class,
             ),
         );
     }

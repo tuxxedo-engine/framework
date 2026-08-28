@@ -13,23 +13,23 @@ declare(strict_types=1);
 
 namespace Support\Security\Jwt;
 
+use Tuxxedo\Security\Jwt\JwsTokenInterface;
 use Tuxxedo\Security\Jwt\JwtTokenAccessorInterface;
-use Tuxxedo\Security\Jwt\TokenInterface;
 
 class StubJwtTokenAccessor implements JwtTokenAccessorInterface
 {
     public function __construct(
-        private ?TokenInterface $token = null,
+        private ?JwsTokenInterface $token = null,
     ) {
     }
 
-    public function current(): ?TokenInterface
+    public function current(): ?JwsTokenInterface
     {
         return $this->token;
     }
 
     public function setCurrent(
-        ?TokenInterface $token,
+        ?JwsTokenInterface $token,
     ): void {
         $this->token = $token;
     }

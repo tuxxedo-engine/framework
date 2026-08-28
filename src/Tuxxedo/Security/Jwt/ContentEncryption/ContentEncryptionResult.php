@@ -11,15 +11,14 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Security\Jwt;
+namespace Tuxxedo\Security\Jwt\ContentEncryption;
 
-readonly class Token implements JwsTokenInterface
+class ContentEncryptionResult
 {
     public function __construct(
-        public HeaderInterface $header,
-        public ClaimsInterface $claims,
-        public string $signature,
-        public string $compact,
+        public readonly string $ciphertext,
+        public readonly string $initializationVector,
+        public readonly string $authenticationTag,
     ) {
     }
 }
