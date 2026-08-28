@@ -840,11 +840,12 @@ class ApplicationConfiguratorTest extends TestCase
 
     private function makeMinimalConfiguratorWithContainer(
         Container $container,
+        Profile $profile = Profile::RELEASE,
     ): ApplicationConfigurator {
         return (new ApplicationConfigurator(
             appName: 'MinimalApp',
             appVersion: '0.1.0',
-            appProfile: Profile::RELEASE,
+            appProfile: $profile,
             appUrl: 'https://minimal.test/',
             container: $container,
             config: new Config(),
@@ -1180,6 +1181,7 @@ class ApplicationConfiguratorTest extends TestCase
     public function testBuildPrependsDebugHandlerToDefaultExceptionHandlersWhenDebugConfigIsBound(): void
     {
         $container = new Container();
+
         $container->singleton(
             class: new DebugConfig(
                 alwaysShow: false,
@@ -1190,7 +1192,9 @@ class ApplicationConfiguratorTest extends TestCase
 
         $configurator = $this->makeMinimalConfiguratorWithContainer(
             container: $container,
+            profile: Profile::DEBUG,
         );
+
         $userHandler = self::makeErrorHandler();
 
         $configurator->withDefaultExceptionHandler(
