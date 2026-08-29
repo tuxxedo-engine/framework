@@ -1463,4 +1463,221 @@ class JwtManagerTest extends TestCase
             );
         }
     }
+
+    public function testEncryptWithZipDefSetsZipHeaderAndRoundTripsThroughDecrypt(): void
+    {
+        $key = new SymmetricKey(
+            secret: \str_repeat("\x00", 32),
+        );
+
+        $token = $this->manager()->encrypt(
+            claims: [
+                'sub' => 'user-zip',
+                'padding' => \str_repeat('A', 1024),
+            ],
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            key: $key,
+            extraHeader: [
+                'zip' => 'DEF',
+            ],
+        );
+
+        self::assertSame(
+            'DEF',
+            $token->header->get('zip'),
+        );
+
+        $decrypted = $this->manager()->decrypt(
+            $token->compact,
+            $key,
+            new EncryptedWith(
+                keyAlgorithm: KeyManagementAlgorithm::DIR,
+                contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            ),
+        );
+
+        self::assertSame(
+            'user-zip',
+            $decrypted->claims->get('sub'),
+        );
+        self::assertSame(
+            \str_repeat('A', 1024),
+            $decrypted->claims->get('padding'),
+        );
+    }
+
+    public function testEncryptWithZipDefProducesShorterCiphertextForRepetitivePayload(): void
+    {
+        $key = new SymmetricKey(
+            secret: \str_repeat("\x00", 32),
+        );
+
+        $claims = [
+            'padding' => \str_repeat('A', 4096),
+        ];
+
+        $uncompressed = $this->manager()->encrypt(
+            claims: $claims,
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            key: $key,
+        );
+
+        $compressed = $this->manager()->encrypt(
+            claims: $claims,
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            key: $key,
+            extraHeader: [
+                'zip' => 'DEF',
+            ],
+        );
+
+        self::assertLessThan(
+            \strlen($uncompressed->ciphertext),
+            \strlen($compressed->ciphertext),
+        );
+    }
+
+    public function testEncryptThrowsForUnsupportedZipHeaderValue(): void
+    {
+        try {
+            $this->manager()->encrypt(
+                claims: [],
+                keyAlgorithm: KeyManagementAlgorithm::DIR,
+                contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+                key: new SymmetricKey(
+                    secret: \str_repeat("\x00", 32),
+                ),
+                extraHeader: [
+                    'zip' => 'GZIP',
+                ],
+            );
+
+            self::fail('Expected JwtException');
+        } catch (JwtException $exception) {
+            self::assertStringContainsString(
+                'GZIP',
+                $exception->getMessage(),
+            );
+        }
+    }
+
+    public function testEncodeAndEncryptWithZipDefRoundTripsThroughDecryptAndDecode(): void
+    {
+        $signingKey = $this->hmacKey();
+        $encryptionKey = new SymmetricKey(
+            secret: \str_repeat("\x00", 32),
+        );
+
+        $token = $this->manager()->encodeAndEncrypt(
+            claims: [
+                'sub' => 'nested-zip',
+            ],
+            signingAlgorithm: Algorithm::HS256,
+            signingKey: $signingKey,
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            encryptionKey: $encryptionKey,
+            extraHeader: [
+                'zip' => 'DEF',
+            ],
+        );
+
+        $inner = $this->manager()->decryptAndDecode(
+            $token->compact,
+            $encryptionKey,
+            new EncryptedWith(
+                keyAlgorithm: KeyManagementAlgorithm::DIR,
+                contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            ),
+            new SignedWith(
+                algorithm: Algorithm::HS256,
+                key: $signingKey,
+            ),
+        );
+
+        self::assertSame(
+            'nested-zip',
+            $inner->claims->get('sub'),
+        );
+    }
+
+    public function testDecryptAndDecodeThrowsWhenInnerJwsClaimsFurtherNestingWithCtyJwt(): void
+    {
+        $signingKey = $this->hmacKey();
+        $encryptionKey = new SymmetricKey(
+            secret: \str_repeat("\x00", 32),
+        );
+
+        $token = $this->manager()->encodeAndEncrypt(
+            claims: [],
+            signingAlgorithm: Algorithm::HS256,
+            signingKey: $signingKey,
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            encryptionKey: $encryptionKey,
+            signingExtraHeader: [
+                'cty' => 'JWT',
+            ],
+        );
+
+        try {
+            $this->manager()->decryptAndDecode(
+                $token->compact,
+                $encryptionKey,
+                new EncryptedWith(
+                    keyAlgorithm: KeyManagementAlgorithm::DIR,
+                    contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+                ),
+                new SignedWith(
+                    algorithm: Algorithm::HS256,
+                    key: $signingKey,
+                ),
+            );
+
+            self::fail('Expected JwtException');
+        } catch (JwtException $exception) {
+            self::assertStringContainsString(
+                'nested',
+                \strtolower($exception->getMessage()),
+            );
+        }
+    }
+
+    public function testDecryptAndDecodeThrowsWhenInnerJwsClaimsFurtherNestingWithCtyJwe(): void
+    {
+        $signingKey = $this->hmacKey();
+        $encryptionKey = new SymmetricKey(
+            secret: \str_repeat("\x00", 32),
+        );
+
+        $token = $this->manager()->encodeAndEncrypt(
+            claims: [],
+            signingAlgorithm: Algorithm::HS256,
+            signingKey: $signingKey,
+            keyAlgorithm: KeyManagementAlgorithm::DIR,
+            contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            encryptionKey: $encryptionKey,
+            signingExtraHeader: [
+                'cty' => 'JWE',
+            ],
+        );
+
+        $this->expectException(JwtException::class);
+
+        $this->manager()->decryptAndDecode(
+            $token->compact,
+            $encryptionKey,
+            new EncryptedWith(
+                keyAlgorithm: KeyManagementAlgorithm::DIR,
+                contentAlgorithm: ContentEncryptionAlgorithm::A256GCM,
+            ),
+            new SignedWith(
+                algorithm: Algorithm::HS256,
+                key: $signingKey,
+            ),
+        );
+    }
 }

@@ -491,6 +491,38 @@ class JwtException extends \Exception
         );
     }
 
+    public static function fromUnsupportedCompression(
+        string $value,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unsupported JWE compression algorithm "%s" (only "DEF" is supported)',
+                $value,
+            ),
+        );
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public static function fromCompressionFailure(
+        string $context,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'JWE payload compression in "%s" failed',
+                $context,
+            ),
+        );
+    }
+
+    public static function fromExcessiveNesting(): self
+    {
+        return new self(
+            message: 'Nested JWT structure exceeds the supported depth of one JWS inside one JWE',
+        );
+    }
+
     // @codeCoverageIgnoreStart
     public static function fromEncryptionFailure(
         string $context,

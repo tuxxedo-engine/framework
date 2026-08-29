@@ -168,6 +168,11 @@ class JwtManager implements JwtManagerInterface
         );
     }
 
+    /**
+     * @param array<string, mixed> $claims
+     * @param array<string, mixed> $extraHeader
+     * @param array<string, mixed> $signingExtraHeader
+     */
     public function encodeAndEncrypt(
         array $claims,
         Algorithm $signingAlgorithm,
@@ -176,11 +181,13 @@ class JwtManager implements JwtManagerInterface
         ContentEncryptionAlgorithm $contentAlgorithm,
         KeyInterface $encryptionKey,
         array $extraHeader = [],
+        array $signingExtraHeader = [],
     ): JweTokenInterface {
         $inner = $this->encode(
             claims: $claims,
             algorithm: $signingAlgorithm,
             key: $signingKey,
+            extraHeader: $signingExtraHeader,
         );
 
         $outerHeader = $extraHeader;
@@ -227,6 +234,28 @@ class JwtManager implements JwtManagerInterface
         $headerData = \array_merge($headerData, $extraHeader);
         $headerData['alg'] = $keyAlgorithm->identifier();
         $headerData['enc'] = $contentAlgorithm->identifier();
+
+        if (isset($headerData['zip'])) {
+            if ($headerData['zip'] !== 'DEF') {
+                throw JwtException::fromUnsupportedCompression(
+                    value: \is_scalar($headerData['zip'])
+                        ? \strval($headerData['zip'])
+                        : '',
+                );
+            }
+
+            $deflated = \gzdeflate($plaintext);
+
+            if ($deflated === false) {
+                // @codeCoverageIgnoreStart
+                throw JwtException::fromCompressionFailure(
+                    context: 'gzdeflate',
+                );
+                // @codeCoverageIgnoreEnd
+            }
+
+            $plaintext = $deflated;
+        }
 
         $encodedHeader = $this->base64UrlEncode(
             bytes: $this->jsonEncode($headerData),
@@ -275,11 +304,11 @@ class JwtManager implements JwtManagerInterface
             additionalAuthenticatedData: $encodedHeader,
         );
 
-        $compact = $encodedHeader
-            . '.' . $this->base64UrlEncode(bytes: $encryptedKey)
-            . '.' . $this->base64UrlEncode(bytes: $result->initializationVector)
-            . '.' . $this->base64UrlEncode(bytes: $result->ciphertext)
-            . '.' . $this->base64UrlEncode(bytes: $result->authenticationTag);
+        $compact = $encodedHeader . '.' .
+            $this->base64UrlEncode($encryptedKey) . '.' .
+            $this->base64UrlEncode($result->initializationVector) . '.' .
+            $this->base64UrlEncode($result->ciphertext) . '.' .
+            $this->base64UrlEncode($result->authenticationTag);
 
         return [
             'headerData' => $headerData,
@@ -385,10 +414,18 @@ class JwtManager implements JwtManagerInterface
             $innerConstraints[] = $constraint;
         }
 
-        return $this->decode(
+        $inner = $this->decode(
             $decrypted['plaintext'],
             ...$innerConstraints,
         );
+
+        $innerCty = $inner->header->get('cty');
+
+        if (\is_string($innerCty) && (\strcasecmp($innerCty, 'JWT') === 0 || \strcasecmp($innerCty, 'JWE') === 0)) {
+            throw JwtException::fromExcessiveNesting();
+        }
+
+        return $inner;
     }
 
     /**
@@ -499,6 +536,32 @@ class JwtManager implements JwtManagerInterface
             contentEncryptionKey: $cek,
             additionalAuthenticatedData: $encodedHeader,
         );
+
+        $zipHeaderValue = $header->get('zip');
+
+        if ($zipHeaderValue !== null) {
+            if ($zipHeaderValue !== 'DEF') {
+                // @codeCoverageIgnoreStart
+                throw JwtException::fromUnsupportedCompression(
+                    value: \is_scalar($zipHeaderValue)
+                        ? \strval($zipHeaderValue)
+                        : '',
+                );
+                // @codeCoverageIgnoreEnd
+            }
+
+            $inflated = \gzinflate($plaintext);
+
+            if ($inflated === false) {
+                // @codeCoverageIgnoreStart
+                throw JwtException::fromCompressionFailure(
+                    context: 'gzinflate',
+                );
+                // @codeCoverageIgnoreEnd
+            }
+
+            $plaintext = $inflated;
+        }
 
         return [
             'header' => $header,

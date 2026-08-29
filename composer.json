@@ -41,7 +41,8 @@
     "ext-pgsql": "For database connections to postgres",
     "ext-session": "For session support",
     "ext-sodium": "For crypto support (JWT, Email signing)",
-    "ext-sqlite3": "For database connections to sqlite"
+    "ext-sqlite3": "For database connections to sqlite",
+    "ext-zlib": "For DEFLATE payload compression in JWE"
   },
   "autoload": {
     "psr-4": {
