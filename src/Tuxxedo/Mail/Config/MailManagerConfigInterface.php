@@ -22,4 +22,8 @@ interface MailManagerConfigInterface
     public MailTransportConfigInterface $transport {
         get;
     }
+
+    public ?MailTemplateConfigInterface $template {
+        get;
+    }
 }

@@ -15,6 +15,7 @@ namespace Tuxxedo\Mail;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DefaultInitializer;
+use Tuxxedo\Mail\Attribute\MailTemplate;
 use Tuxxedo\Mail\Config\MailManagerConfigInterface;
 use Tuxxedo\Mail\Middleware\MailMiddlewareInterface;
 use Tuxxedo\Mail\Middleware\MailWireMiddlewareInterface;
@@ -29,6 +30,7 @@ use Tuxxedo\Mail\Transport\MailTransportInterface;
 
         return new MailManager(
             transport: $config->transport->createTransport($container),
+            templateRender: $config->template?->createTemplateRender($container),
         );
     },
 )]
@@ -40,6 +42,7 @@ class MailManager implements MailManagerInterface
      */
     public function __construct(
         public readonly MailTransportInterface $transport,
+        private readonly ?MailTemplateRenderInterface $templateRender = null,
         private readonly MessageSerializerInterface $serializer = new MessageSerializer(),
         private readonly array $messageMiddleware = [],
         private readonly array $wireMiddleware = [],
@@ -84,6 +87,16 @@ class MailManager implements MailManagerInterface
     private function pipeline(
         MessageInterface $message,
     ): SerializedMessageInterface {
+        if (MailTemplate::extractFrom($message) !== null) {
+            if ($this->templateRender === null) {
+                throw MailException::fromNoMailTemplateRendererRegistered(
+                    className: $message::class,
+                );
+            }
+
+            $message = $this->templateRender->render($message);
+        }
+
         foreach ($this->messageMiddleware as $middleware) {
             $message = $middleware->process($message);
         }

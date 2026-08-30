@@ -18,7 +18,6 @@ use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Mail\Result\SendResultInterface;
 use Tuxxedo\Mail\Transport\MailTransportInterface;
 
-// @todo Consider how templating could work for mails, Lumi integration? Others? This may need LumiEngine to be preconfigured to different backend use-cases and better configurability, which it currently does not support
 // @todo Test cases for Mail
 #[DefaultImplementation(class: MailManager::class, lifecycle: Lifecycle::SINGLETON)]
 interface MailManagerInterface

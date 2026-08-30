@@ -23,3 +23,17 @@
     </p>
     <input type="submit" value="Send">
 </form>
+
+<hr>
+
+<h3>Template send (WelcomeMail via #[MailTemplate])</h3>
+<form action="/mail/template" method="post">
+    {! csrf_field() !}
+    <p>
+        <label><strong>To:</strong> <input type="email" name="to" value="user@example.com" required></label>
+    </p>
+    <p>
+        <label><strong>Recipient name:</strong> <input type="text" name="recipientName" value="Kalle"></label>
+    </p>
+    <input type="submit" value="Send welcome template">
+</form>

@@ -16,13 +16,18 @@ namespace Unit\Mail;
 use PHPUnit\Framework\TestCase;
 use Support\Mail\Middleware\RecordingMessageMiddleware;
 use Support\Mail\Middleware\RecordingWireMiddleware;
+use Support\Mail\RecordingMailTemplateRender;
 use Support\Mail\Serializer\StubMessageSerializer;
+use Support\Mail\StubTemplateMessage;
 use Support\Mail\Transport\RecordingMailTransport;
 use Tuxxedo\Container\Container;
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Mail\Config\MailManagerConfig;
+use Tuxxedo\Mail\Config\MailTemplateConfigInterface;
 use Tuxxedo\Mail\MailException;
 use Tuxxedo\Mail\MailManager;
 use Tuxxedo\Mail\MailManagerConfigurator;
+use Tuxxedo\Mail\MailTemplateRenderInterface;
 use Tuxxedo\Mail\Serializer\MessageSerializer;
 use Tuxxedo\Mail\Transport\FileMail\Config\FileMailTransportConfig;
 use Tuxxedo\Mail\Transport\FileMail\FileMailTransport;
@@ -154,6 +159,82 @@ class MailManagerConfiguratorTest extends TestCase
         self::assertSame(
             $transport,
             $configurator->transport,
+        );
+    }
+
+    public function testWithTemplateRenderStoresRenderAndReturnsSelf(): void
+    {
+        $configurator = new MailManagerConfigurator();
+        $templateRender = new RecordingMailTemplateRender();
+
+        $result = $configurator->withTemplateRender($templateRender);
+
+        self::assertSame($configurator, $result);
+        self::assertSame($templateRender, $configurator->templateRender);
+    }
+
+    public function testFromConfigWiresTemplateRenderFromConfigTemplate(): void
+    {
+        $transportConfig = new FileMailTransportConfig(
+            directory: '/tmp',
+        );
+
+        $templateRender = new RecordingMailTemplateRender();
+        $templateConfig = new class ($templateRender) implements MailTemplateConfigInterface {
+            public function __construct(
+                private readonly MailTemplateRenderInterface $templateRender,
+            ) {
+            }
+
+            public function createTemplateRender(
+                ContainerInterface $container,
+            ): MailTemplateRenderInterface {
+                return $this->templateRender;
+            }
+        };
+
+        $mailConfig = new MailManagerConfig(
+            transport: $transportConfig,
+            template: $templateConfig,
+        );
+
+        $transport = new FileMailTransport(
+            config: $transportConfig,
+        );
+
+        $container = new Container();
+        $container->singleton($mailConfig);
+        $container->singleton($transport);
+
+        $configurator = MailManagerConfigurator::fromConfig($container);
+
+        self::assertSame(
+            $templateRender,
+            $configurator->templateRender,
+        );
+    }
+
+    public function testBuildPassesTemplateRenderToMailManager(): void
+    {
+        $transport = new RecordingMailTransport();
+        $templateRender = new RecordingMailTemplateRender(
+            body: 'rendered',
+        );
+
+        $manager = (new MailManagerConfigurator())
+            ->withTransport($transport)
+            ->withTemplateRender($templateRender)
+            ->build();
+
+        $manager->send(
+            new StubTemplateMessage(),
+        );
+
+        self::assertCount(1, $templateRender->seen);
+        self::assertCount(1, $transport->sent);
+        self::assertSame(
+            'rendered',
+            $transport->sent[0]->body,
         );
     }
 }

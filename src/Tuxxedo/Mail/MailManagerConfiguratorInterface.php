@@ -28,6 +28,10 @@ interface MailManagerConfiguratorInterface
         get;
     }
 
+    public ?MailTemplateRenderInterface $templateRender {
+        get;
+    }
+
     /**
      * @var list<MailMiddlewareInterface>
      */
@@ -48,6 +52,10 @@ interface MailManagerConfiguratorInterface
 
     public function withSerializer(
         MessageSerializerInterface $serializer,
+    ): self;
+
+    public function withTemplateRender(
+        MailTemplateRenderInterface $templateRender,
     ): self;
 
     public function withMessageMiddleware(

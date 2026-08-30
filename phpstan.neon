@@ -9,4 +9,5 @@ parameters:
         - tests/
     excludePaths:
         analyse:
+            - app/mails/cache
             - app/views/cache

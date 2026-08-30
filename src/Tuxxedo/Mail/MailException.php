@@ -431,4 +431,42 @@ class MailException extends \Exception
             ),
         );
     }
+
+    public static function fromMissingMailTemplateAttribute(
+        string $className,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Mail template render was called on "%s" but the class has no #[MailTemplate] attribute',
+                $className,
+            ),
+        );
+    }
+
+    public static function fromMailTemplateRenderFailed(
+        string $className,
+        string $templateName,
+        \Throwable $previous,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Rendering mail template "%s" for class "%s" failed: %s',
+                $templateName,
+                $className,
+                $previous->getMessage(),
+            ),
+            previous: $previous,
+        );
+    }
+
+    public static function fromNoMailTemplateRendererRegistered(
+        string $className,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Message class "%s" has a #[MailTemplate] attribute but the MailManager has no MailTemplateRenderInterface configured',
+                $className,
+            ),
+        );
+    }
 }

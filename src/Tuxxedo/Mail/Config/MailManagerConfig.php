@@ -20,6 +20,7 @@ class MailManagerConfig implements MailManagerConfigInterface
 {
     public function __construct(
         public readonly MailTransportConfigInterface $transport,
+        public readonly ?MailTemplateConfigInterface $template = null,
     ) {
     }
 }

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Mail\WelcomeMail;
 use Tuxxedo\Http\Request\Middleware\Csrf;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Mail\MailException;
@@ -76,6 +77,46 @@ readonly class MailController
                 'resultSuccess' => true,
                 'resultMessage' => \sprintf(
                     'Message dispatched to %s',
+                    $to,
+                ),
+            ],
+        );
+    }
+
+    #[Route\Post(path: '/template')]
+    #[Middleware(Csrf::class)]
+    public function sendTemplate(
+        RequestInterface $request,
+    ): ViewInterface {
+        $to = $request->post->string('to');
+        $recipientName = $request->post->string('recipientName');
+
+        try {
+            $this->mailManager->send(
+                new WelcomeMail(
+                    to: $to,
+                    recipientName: $recipientName !== ''
+                        ? $recipientName
+                        : 'friend',
+                    activationUrl: 'https://example.com/activate/demo-token',
+                ),
+            );
+        } catch (MailException $e) {
+            return new View(
+                name: 'mail_form',
+                scope: [
+                    'resultSuccess' => false,
+                    'resultMessage' => $e->getMessage(),
+                ],
+            );
+        }
+
+        return new View(
+            name: 'mail_form',
+            scope: [
+                'resultSuccess' => true,
+                'resultMessage' => \sprintf(
+                    'Welcome template dispatched to %s',
                     $to,
                 ),
             ],

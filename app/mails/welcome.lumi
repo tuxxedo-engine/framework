@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Welcome to Engine</title>
+</head>
+<body style="font-family: -apple-system, sans-serif; max-width: 640px; margin: 0 auto; padding: 24px;">
+    <h1 style="color: #333;">Hi {{ recipientName }},</h1>
+
+    <p>Welcome to Engine! Your account has been created successfully.</p>
+
+    <p>To activate your account and get started, please click the link below:</p>
+
+    <p>
+        <a href="{{ activationUrl }}" style="display: inline-block; padding: 12px 24px; background: #0066cc; color: #fff; text-decoration: none; border-radius: 4px;">
+            Activate your account
+        </a>
+    </p>
+
+    <p style="color: #666; font-size: 12px;">
+        If the button above doesn't work, copy and paste this URL into your browser:<br>
+        {{ activationUrl }}
+    </p>
+
+    <hr style="border: none; border-top: 1px solid #ddd; margin: 24px 0;">
+
+    <p style="color: #999; font-size: 12px;">
+        This message was sent to {{ recipientName }} from the Engine mail template demo.
+    </p>
+</body>
+</html>

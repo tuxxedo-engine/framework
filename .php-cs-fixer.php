@@ -26,6 +26,7 @@ $finder = (new Finder())
     )
     ->exclude(
         [
+            'mails/cache',
             'views/cache/',
         ],
     );

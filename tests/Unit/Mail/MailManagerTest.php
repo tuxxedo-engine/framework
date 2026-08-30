@@ -16,9 +16,12 @@ namespace Unit\Mail;
 use PHPUnit\Framework\TestCase;
 use Support\Mail\Middleware\RecordingMessageMiddleware;
 use Support\Mail\Middleware\RecordingWireMiddleware;
+use Support\Mail\RecordingMailTemplateRender;
 use Support\Mail\Serializer\StubMessageSerializer;
+use Support\Mail\StubTemplateMessage;
 use Support\Mail\Transport\RecordingMailTransport;
 use Tuxxedo\Mail\Address;
+use Tuxxedo\Mail\MailException;
 use Tuxxedo\Mail\MailManager;
 use Tuxxedo\Mail\Message;
 
@@ -223,6 +226,79 @@ class MailManagerTest extends TestCase
         self::assertSame(
             $message,
             $wire->seen[0]->source,
+        );
+    }
+
+    public function testPipelineDispatchesToTemplateRenderWhenMessageHasMailTemplateAttribute(): void
+    {
+        $transport = new RecordingMailTransport();
+        $templateRender = new RecordingMailTemplateRender(
+            body: '<p>Hello stub-user</p>',
+        );
+        $manager = new MailManager(
+            transport: $transport,
+            templateRender: $templateRender,
+        );
+
+        $message = new StubTemplateMessage();
+
+        $manager->send($message);
+
+        self::assertSame(
+            [
+                $message,
+            ],
+            $templateRender->seen,
+        );
+        self::assertCount(1, $transport->sent);
+        self::assertSame(
+            '<p>Hello stub-user</p>',
+            $transport->sent[0]->body,
+        );
+    }
+
+    public function testPipelineThrowsWhenTemplateMessageHasNoRenderer(): void
+    {
+        $manager = new MailManager(
+            transport: new RecordingMailTransport(),
+        );
+
+        try {
+            $manager->send(
+                new StubTemplateMessage(),
+            );
+
+            self::fail('Expected MailException');
+        } catch (MailException $exception) {
+            self::assertStringContainsString(
+                StubTemplateMessage::class,
+                $exception->getMessage(),
+            );
+        }
+    }
+
+    public function testPipelineBypassesTemplateRenderForPlainMessage(): void
+    {
+        $transport = new RecordingMailTransport();
+        $templateRender = new RecordingMailTemplateRender();
+        $manager = new MailManager(
+            transport: $transport,
+            templateRender: $templateRender,
+        );
+
+        $message = $this->makeMessage();
+
+        $manager->send($message);
+
+        self::assertSame(
+            [],
+            $templateRender->seen,
+        );
+        self::assertSame(
+            [
+                $message,
+            ],
+            $transport->sent,
         );
     }
 }

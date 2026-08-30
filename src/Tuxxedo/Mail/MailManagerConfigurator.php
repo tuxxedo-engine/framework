@@ -25,6 +25,7 @@ class MailManagerConfigurator implements MailManagerConfiguratorInterface
 {
     public private(set) ?MailTransportInterface $transport = null;
     public private(set) MessageSerializerInterface $serializer;
+    public private(set) ?MailTemplateRenderInterface $templateRender = null;
 
     /**
      * @var list<MailMiddlewareInterface>
@@ -50,6 +51,10 @@ class MailManagerConfigurator implements MailManagerConfiguratorInterface
         $self = new self();
         $self->transport = $config->transport->createTransport($container);
 
+        if ($config->template !== null) {
+            $self->templateRender = $config->template->createTemplateRender($container);
+        }
+
         return $self;
     }
 
@@ -65,6 +70,14 @@ class MailManagerConfigurator implements MailManagerConfiguratorInterface
         MessageSerializerInterface $serializer,
     ): self {
         $this->serializer = $serializer;
+
+        return $this;
+    }
+
+    public function withTemplateRender(
+        MailTemplateRenderInterface $templateRender,
+    ): self {
+        $this->templateRender = $templateRender;
 
         return $this;
     }
@@ -93,6 +106,7 @@ class MailManagerConfigurator implements MailManagerConfiguratorInterface
 
         return new MailManager(
             transport: $this->transport,
+            templateRender: $this->templateRender,
             serializer: $this->serializer,
             messageMiddleware: $this->messageMiddleware,
             wireMiddleware: $this->wireMiddleware,
