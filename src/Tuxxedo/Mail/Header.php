@@ -69,7 +69,6 @@ class Header implements HeaderInterface
         }
     }
 
-    #[\NoDiscard]
     public function toRfc5322(): string
     {
         return $this->name . ': ' . EncodedWord::encodeIfNonAscii($this->value);

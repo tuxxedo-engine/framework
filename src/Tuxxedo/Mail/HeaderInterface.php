@@ -32,6 +32,5 @@ interface HeaderInterface
         string $value,
     ): static;
 
-    #[\NoDiscard]
     public function toRfc5322(): string;
 }

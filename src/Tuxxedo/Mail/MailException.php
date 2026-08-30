@@ -182,6 +182,8 @@ class MailException extends \Exception
 
     /**
      * @param class-string $mimePartClass
+     *
+     * @codeCoverageIgnore
      */
     public static function fromNonSerializableMimePart(
         string $mimePartClass,
@@ -194,6 +196,9 @@ class MailException extends \Exception
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromMissingIntlExtension(): self
     {
         return new self(
@@ -201,6 +206,9 @@ class MailException extends \Exception
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromIdnaConversionFailure(
         string $domain,
     ): self {

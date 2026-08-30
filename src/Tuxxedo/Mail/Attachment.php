@@ -102,7 +102,6 @@ class Attachment implements AttachmentInterface
     /**
      * @throws FileException
      */
-    #[\NoDiscard]
     public function contents(): string
     {
         return $this->file->contents();

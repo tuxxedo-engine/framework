@@ -452,7 +452,7 @@ class MessageSerializerTest extends TestCase
         );
 
         try {
-            (void) $this->serializer()->serialize($message);
+            $this->serializer()->serialize($message);
 
             self::fail('Expected MailException');
         } catch (MailException $exception) {

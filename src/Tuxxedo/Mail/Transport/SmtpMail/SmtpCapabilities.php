@@ -41,7 +41,6 @@ class SmtpCapabilities
     /**
      * @param list<string> $lines
      */
-    #[\NoDiscard]
     public static function parse(
         array $lines,
     ): self {

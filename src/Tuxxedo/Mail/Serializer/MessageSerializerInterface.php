@@ -21,7 +21,6 @@ interface MessageSerializerInterface
     /**
      * @throws MailException
      */
-    #[\NoDiscard]
     public function serialize(
         MessageInterface $message,
     ): SerializedMessageInterface;

@@ -22,7 +22,6 @@ use Tuxxedo\Mail\Serializer\Mime\MultipartMimePart;
 
 class MessageSerializer implements MessageSerializerInterface
 {
-    #[\NoDiscard]
     public function serialize(
         MessageInterface $message,
     ): SerializedMessageInterface {

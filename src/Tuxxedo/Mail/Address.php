@@ -114,7 +114,6 @@ class Address implements AddressInterface
         );
     }
 
-    #[\NoDiscard]
     public function toRfc5322(): string
     {
         $email = $this->localPart . '@' . IdnaEncoder::encode($this->domain);
@@ -148,7 +147,6 @@ class Address implements AddressInterface
         );
     }
 
-    #[\NoDiscard]
     public function isInternationalized(): bool
     {
         return \preg_match('/[^\x00-\x7F]/', $this->email) === 1;

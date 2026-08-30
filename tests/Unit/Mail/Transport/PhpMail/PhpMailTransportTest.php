@@ -15,12 +15,14 @@ namespace Unit\Mail\Transport\PhpMail;
 
 use PHPUnit\Framework\TestCase;
 use Support\Mail\RecordingPhpMailer;
+use Tuxxedo\Container\Container;
 use Tuxxedo\Mail\Address;
 use Tuxxedo\Mail\MailException;
 use Tuxxedo\Mail\Message;
 use Tuxxedo\Mail\Result\RecipientStatus;
 use Tuxxedo\Mail\Serializer\MessageSerializer;
 use Tuxxedo\Mail\Serializer\SerializedMessageInterface;
+use Tuxxedo\Mail\Transport\PhpMail\Config\PhpMailTransportConfig;
 use Tuxxedo\Mail\Transport\PhpMail\PhpMailTransport;
 
 class PhpMailTransportTest extends TestCase
@@ -287,6 +289,18 @@ class PhpMailTransportTest extends TestCase
         );
         self::assertNotNull(
             $results[0]->outcomes[0]->summary,
+        );
+    }
+
+    public function testConfigCreateTransportResolvesPhpMailTransportFromContainer(): void
+    {
+        $transport = (new PhpMailTransportConfig())->createTransport(
+            container: new Container(),
+        );
+
+        self::assertInstanceOf(
+            PhpMailTransport::class,
+            $transport,
         );
     }
 

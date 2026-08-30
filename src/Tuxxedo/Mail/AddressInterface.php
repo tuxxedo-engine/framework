@@ -31,9 +31,7 @@ interface AddressInterface
         get;
     }
 
-    #[\NoDiscard]
     public function toRfc5322(): string;
 
-    #[\NoDiscard]
     public function isInternationalized(): bool;
 }

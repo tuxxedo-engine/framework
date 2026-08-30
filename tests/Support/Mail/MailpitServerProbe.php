@@ -41,8 +41,31 @@ class MailpitServerProbe
             return self::$reason = 'TUXXEDO_TEST_MAILPIT_HOST is not set';
         }
 
+        $smtpReason = self::probeSmtp(
+            host: $host,
+            port: MailpitTestEnv::smtpPort(),
+        );
+
+        if ($smtpReason !== null) {
+            return self::$reason = $smtpReason;
+        }
+
+        $apiReason = self::probeApi(
+            apiUrl: MailpitTestEnv::apiUrl(),
+        );
+
+        if ($apiReason !== null) {
+            return self::$reason = $apiReason;
+        }
+
+        return self::$reason = null;
+    }
+
+    private static function probeSmtp(
+        string $host,
+        int $port,
+    ): ?string {
         $lastError = 'unknown error';
-        $port = MailpitTestEnv::smtpPort();
 
         for ($attempt = 1; $attempt <= self::CONNECT_ATTEMPTS; $attempt++) {
             $errno = 0;
@@ -59,7 +82,7 @@ class MailpitServerProbe
             if ($socket !== false) {
                 \fclose($socket);
 
-                return self::$reason = null;
+                return null;
             }
 
             $lastError = $errstr !== ''
@@ -71,12 +94,41 @@ class MailpitServerProbe
             }
         }
 
-        return self::$reason = \sprintf(
+        return \sprintf(
             'Mailpit SMTP probe on %s:%d failed after %d attempts: %s',
             $host,
             $port,
             self::CONNECT_ATTEMPTS,
             $lastError,
         );
+    }
+
+    private static function probeApi(
+        string $apiUrl,
+    ): ?string {
+        $context = \stream_context_create(
+            options: [
+                'http' => [
+                    'method' => 'GET',
+                    'ignore_errors' => true,
+                    'timeout' => self::CONNECT_TIMEOUT_SECONDS,
+                    'header' => "Accept: application/json\r\n",
+                ],
+            ],
+        );
+
+        $response = @\file_get_contents(
+            filename: $apiUrl . '/messages',
+            context: $context,
+        );
+
+        if ($response === false) {
+            return \sprintf(
+                'Mailpit API probe on %s failed (endpoint unreachable)',
+                $apiUrl,
+            );
+        }
+
+        return null;
     }
 }

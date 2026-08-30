@@ -1,5 +1,5 @@
 @ECHO OFF
-IF "%MAILPIT_PATH%"=="" (
+IF "%MAILPIT_PATH%" == "" (
     EXIT /B 1
 )
 

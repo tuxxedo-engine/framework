@@ -30,6 +30,7 @@ class PhpMailTransportIntegrationTest extends TestCase
 
     private MailpitApiClient $api;
     private PhpMailTransport $transport;
+    private string $marker;
 
     protected function mailpitSkipReason(): ?string
     {
@@ -43,7 +44,7 @@ class PhpMailTransportIntegrationTest extends TestCase
         $this->api = new MailpitApiClient(
             baseUrl: MailpitTestEnv::apiUrl(),
         );
-        $this->api->deleteAll();
+        $this->marker = 'php-' . \bin2hex(\random_bytes(6));
 
         $this->transport = new PhpMailTransport(
             mailer: new SmtpForwardingPhpMailer(
@@ -55,6 +56,7 @@ class PhpMailTransportIntegrationTest extends TestCase
 
     public function testSendDeliversMessageToMailpit(): void
     {
+        $subject = $this->markedSubject('ping');
         $manager = new MailManager(
             transport: $this->transport,
         );
@@ -65,17 +67,17 @@ class PhpMailTransportIntegrationTest extends TestCase
                     email: 'demo@example.com',
                 ),
                 to: 'recipient@example.com',
-                subject: 'Integration ping',
+                subject: $subject,
                 body: 'Hello from PhpMailTransportIntegrationTest',
             ),
         );
 
-        $messages = $this->api->list();
+        $matches = $this->messagesMatchingMarker();
 
-        self::assertCount(1, $messages);
+        self::assertCount(1, $matches);
         self::assertSame(
-            'Integration ping',
-            $messages[0]['Subject'] ?? null,
+            $subject,
+            $matches[0]['Subject'] ?? null,
         );
     }
 
@@ -91,18 +93,17 @@ class PhpMailTransportIntegrationTest extends TestCase
                     email: 'demo@example.com',
                 ),
                 to: 'recipient@example.com',
-                subject: 'Body check',
+                subject: $this->markedSubject('body'),
                 body: 'Line one.',
             ),
         );
 
-        $messages = $this->api->list();
+        $matches = $this->messagesMatchingMarker();
 
-        self::assertCount(1, $messages);
+        self::assertCount(1, $matches);
 
-        $id = $messages[0]['ID'] ?? null;
+        $id = $matches[0]['ID'] ?? null;
 
-        self::assertNotNull($id);
         self::assertIsString($id);
 
         $raw = $this->api->fetchRaw(
@@ -113,5 +114,29 @@ class PhpMailTransportIntegrationTest extends TestCase
             'Line one.',
             $raw,
         );
+    }
+
+    private function markedSubject(
+        string $label,
+    ): string {
+        return $this->marker . ' ' . $label;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function messagesMatchingMarker(): array
+    {
+        $matches = [];
+
+        foreach ($this->api->list() as $envelope) {
+            $subject = $envelope['Subject'] ?? null;
+
+            if (\is_string($subject) && \str_starts_with($subject, $this->marker)) {
+                $matches[] = $envelope;
+            }
+        }
+
+        return $matches;
     }
 }
