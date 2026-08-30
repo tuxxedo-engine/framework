@@ -23,8 +23,10 @@ use Tuxxedo\View\Lumi\Library\Standard\Function\CsrfTokenFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\DateFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\DirectiveFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\DumpFunction;
+use Tuxxedo\View\Lumi\Library\Standard\Function\HasAttachmentFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\HasDirectiveFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\HasSessionFunction;
+use Tuxxedo\View\Lumi\Library\Standard\Function\InlineImageFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\IsEvenFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\IsOddFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\JoinFunction;
@@ -162,5 +164,8 @@ class StandardFunctions implements FunctionProviderInterface
         yield new DumpFunction();
         yield new JsonFunction();
         yield new JsonPrettyFunction();
+
+        yield new HasAttachmentFunction();
+        yield new InlineImageFunction($container);
     }
 }

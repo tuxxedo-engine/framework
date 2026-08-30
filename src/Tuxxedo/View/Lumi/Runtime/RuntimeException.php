@@ -128,4 +128,15 @@ class RuntimeException extends LumiException
             message: 'Invalid view file name',
         );
     }
+
+    public static function fromMissingInlineAttachment(
+        string $name,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'inline_image() could not find an attachment with content-id "%s"',
+                $name,
+            ),
+        );
+    }
 }
