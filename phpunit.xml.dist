@@ -34,5 +34,8 @@
     <env name="TUXXEDO_TEST_PGSQL_DATABASE_PREFIX" value="tuxxedo_test"/>
     <env name="TUXXEDO_TEST_PGSQL_CHARSET" value="UTF8"/>
     <env name="TUXXEDO_TEST_PGSQL_TIMEOUT" value=""/>
+    <env name="TUXXEDO_TEST_MAILPIT_HOST" value=""/>
+    <env name="TUXXEDO_TEST_MAILPIT_SMTP_PORT" value=""/>
+    <env name="TUXXEDO_TEST_MAILPIT_API_URL" value=""/>
   </php>
 </phpunit>

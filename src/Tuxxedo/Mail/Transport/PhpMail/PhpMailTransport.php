@@ -24,6 +24,11 @@ use Tuxxedo\Mail\Transport\MailTransportInterface;
 
 class PhpMailTransport implements MailTransportInterface
 {
+    public function __construct(
+        private readonly PhpMailerInterface $mailer = new NativePhpMailer(),
+    ) {
+    }
+
     public function send(
         SerializedMessageInterface ...$serialized,
     ): void {
@@ -132,7 +137,7 @@ class PhpMailTransport implements MailTransportInterface
         ] = self::extractRoutingHeaders($serialized->headers);
 
         $envelopeFrom = $message->returnPath?->email;
-        $delivered = self::invokeMail(
+        $delivered = $this->mailer->send(
             to: $to,
             subject: $subject,
             body: $serialized->body,
@@ -173,31 +178,5 @@ class PhpMailTransport implements MailTransportInterface
             $subject,
             \implode("\r\n", $rest),
         ];
-    }
-
-    private static function invokeMail(
-        string $to,
-        string $subject,
-        string $body,
-        string $headers,
-        ?string $envelopeFrom,
-    ): bool {
-        if ($envelopeFrom === null) {
-            return @\mail($to, $subject, $body, $headers);
-        }
-
-        $previousSendmailFrom = \ini_get('sendmail_from');
-
-        \ini_set('sendmail_from', $envelopeFrom);
-
-        try {
-            return @\mail($to, $subject, $body, $headers, '-f ' . \escapeshellarg($envelopeFrom));
-        } finally {
-            if ($previousSendmailFrom === false) {
-                \ini_restore('sendmail_from');
-            } else {
-                \ini_set('sendmail_from', $previousSendmailFrom);
-            }
-        }
     }
 }
