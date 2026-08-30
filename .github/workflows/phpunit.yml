@@ -39,6 +39,15 @@ jobs:
           - 1025:1025
           - 8025:8025
 
+      mailpit-auth:
+        image: axllent/mailpit
+        ports:
+          - 1026:1025
+          - 8026:8025
+        env:
+          MP_SMTP_AUTH_ACCEPT_ANY: '1'
+          MP_SMTP_AUTH_ALLOW_INSECURE: '1'
+
     env:
       TUXXEDO_TEST_MYSQL_HOST: '127.0.0.1'
       TUXXEDO_TEST_MYSQL_PORT: '3306'
@@ -59,6 +68,8 @@ jobs:
       TUXXEDO_TEST_SKIP_BOOTSTRAP_DB: '1'
       TUXXEDO_TEST_MAILPIT_HOST: '127.0.0.1'
       TUXXEDO_TEST_MAILPIT_SMTP_PORT: '1025'
+      TUXXEDO_TEST_MAILPIT_AUTH_HOST: '127.0.0.1'
+      TUXXEDO_TEST_MAILPIT_AUTH_SMTP_PORT: '1026'
 
     steps:
       - name: Checkout code

@@ -37,5 +37,8 @@
     <env name="TUXXEDO_TEST_MAILPIT_HOST" value=""/>
     <env name="TUXXEDO_TEST_MAILPIT_SMTP_PORT" value=""/>
     <env name="TUXXEDO_TEST_MAILPIT_API_URL" value=""/>
+    <env name="TUXXEDO_TEST_MAILPIT_AUTH_HOST" value=""/>
+    <env name="TUXXEDO_TEST_MAILPIT_AUTH_SMTP_PORT" value=""/>
+    <env name="TUXXEDO_TEST_MAILPIT_AUTH_API_URL" value=""/>
   </php>
 </phpunit>
