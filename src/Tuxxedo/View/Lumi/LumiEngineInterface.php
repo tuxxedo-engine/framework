@@ -27,7 +27,6 @@ use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\ViewException;
 
-// @todo Easier API for configuring features of a LumiEngine instance? Like withoutFunctionCalls(), withForLoops(), ...?
 // @todo Tangent to the configuring API, #[LumiExtension] and reorganizing existing infrastructure as mini packages. Breaking up the Optimizer to bits might be overkill
 interface LumiEngineInterface
 {
