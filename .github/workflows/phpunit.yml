@@ -70,6 +70,8 @@ jobs:
       TUXXEDO_TEST_MAILPIT_SMTP_PORT: '1025'
       TUXXEDO_TEST_MAILPIT_AUTH_HOST: '127.0.0.1'
       TUXXEDO_TEST_MAILPIT_AUTH_SMTP_PORT: '1026'
+      TUXXEDO_TEST_MAILPIT_TLS_HOST: '127.0.0.1'
+      TUXXEDO_TEST_MAILPIT_TLS_SMTP_PORT: '1027'
 
     steps:
       - name: Checkout code
@@ -84,6 +86,19 @@ jobs:
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
+
+      - name: Start mailpit-tls
+        run: |
+          docker run -d --name mailpit-tls \
+            -p 1027:1025 -p 8027:8025 \
+            -v ${{ github.workspace }}/tests/Fixture/Mail/tls:/certs:ro \
+            -e MP_SMTP_TLS_CERT=/certs/mailpit-test.crt \
+            -e MP_SMTP_TLS_KEY=/certs/mailpit-test.key \
+            axllent/mailpit
+          for i in {1..30}; do
+            curl -sf http://127.0.0.1:8027/api/v1/messages > /dev/null && break
+            sleep 1
+          done
 
       - name: Provision test databases
         run: php tests/provision_databases.php "$(nproc)"

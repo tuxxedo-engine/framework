@@ -17,9 +17,13 @@ use PHPUnit\Framework\TestCase;
 use Support\Mail\MailpitApiClient;
 use Support\Mail\MailpitServerProbe;
 use Support\Mail\MailpitTestEnv;
+use Support\Mail\Middleware\RecordingMessageMiddleware;
+use Support\Mail\Middleware\RecordingWireMiddleware;
 use Support\Mail\RealMailpitIntegrationSetup;
 use Tuxxedo\Container\Container;
+use Tuxxedo\File\File;
 use Tuxxedo\Mail\Address;
+use Tuxxedo\Mail\Attachment;
 use Tuxxedo\Mail\BodyType;
 use Tuxxedo\Mail\MailManager;
 use Tuxxedo\Mail\Message;
@@ -391,6 +395,380 @@ class SmtpTransportIntegrationTest extends TestCase
         );
 
         self::assertCount(2, $results);
+    }
+
+    public function testSendDeliversFileAttachment(): void
+    {
+        $manager = new MailManager(
+            transport: $this->transport,
+        );
+
+        $subject = $this->markedSubject('attach-file');
+
+        $manager->send(
+            new Message(
+                from: new Address(
+                    email: 'demo@example.com',
+                ),
+                to: 'recipient@example.com',
+                subject: $subject,
+                body: 'body',
+                attachments: [
+                    Attachment::attachment(
+                        file: new File(
+                            name: 'greeting.txt',
+                            mimeType: 'text/plain',
+                            bytes: 'attached-payload-marker',
+                        ),
+                    ),
+                ],
+            ),
+        );
+
+        $matches = $this->messagesMatchingMarker();
+
+        self::assertCount(1, $matches);
+
+        $id = $matches[0]['ID'] ?? null;
+
+        self::assertIsString($id);
+
+        $raw = $this->api->fetchRaw(
+            id: $id,
+        );
+
+        self::assertStringContainsString(
+            'greeting.txt',
+            $raw,
+        );
+        self::assertStringContainsString(
+            \base64_encode('attached-payload-marker'),
+            $raw,
+        );
+    }
+
+    public function testSendDeliversInlineImageAttachment(): void
+    {
+        $manager = new MailManager(
+            transport: $this->transport,
+        );
+
+        $subject = $this->markedSubject('attach-inline');
+
+        $manager->send(
+            new Message(
+                from: new Address(
+                    email: 'demo@example.com',
+                ),
+                to: 'recipient@example.com',
+                subject: $subject,
+                body: '<img src="cid:logo">',
+                bodyType: BodyType::HTML,
+                attachments: [
+                    Attachment::inline(
+                        file: new File(
+                            name: 'logo.png',
+                            mimeType: 'image/png',
+                            bytes: 'PNG-INLINE-BYTES',
+                        ),
+                        contentId: 'logo',
+                    ),
+                ],
+            ),
+        );
+
+        $matches = $this->messagesMatchingMarker();
+
+        self::assertCount(1, $matches);
+
+        $id = $matches[0]['ID'] ?? null;
+
+        self::assertIsString($id);
+
+        $raw = $this->api->fetchRaw(
+            id: $id,
+        );
+
+        self::assertStringContainsString(
+            'Content-ID: <logo>',
+            $raw,
+        );
+        self::assertStringContainsString(
+            'inline',
+            $raw,
+        );
+    }
+
+    public function testSendPreservesLineStartingWithDot(): void
+    {
+        $manager = new MailManager(
+            transport: $this->transport,
+        );
+
+        $subject = $this->markedSubject('dotstuff');
+
+        $manager->send(
+            new Message(
+                from: new Address(
+                    email: 'demo@example.com',
+                ),
+                to: 'recipient@example.com',
+                subject: $subject,
+                body: "First line.\r\n.leading-dot-line\r\nThird line.",
+            ),
+        );
+
+        $matches = $this->messagesMatchingMarker();
+
+        self::assertCount(1, $matches);
+
+        $id = $matches[0]['ID'] ?? null;
+
+        self::assertIsString($id);
+
+        $raw = $this->api->fetchRaw(
+            id: $id,
+        );
+
+        self::assertStringContainsString(
+            '.leading-dot-line',
+            $raw,
+        );
+        self::assertStringNotContainsString(
+            '..leading-dot-line',
+            $raw,
+        );
+    }
+
+    public function testSendDeliversCcRecipient(): void
+    {
+        $manager = new MailManager(
+            transport: $this->transport,
+        );
+
+        $subject = $this->markedSubject('cc');
+
+        $manager->send(
+            new Message(
+                from: new Address(
+                    email: 'from@example.com',
+                ),
+                to: 'to@example.com',
+                subject: $subject,
+                body: 'body',
+                cc: 'cc@example.com',
+            ),
+        );
+
+        $matches = $this->messagesMatchingMarker();
+
+        self::assertCount(1, $matches);
+
+        /** @var list<array{Address?: string}> $ccList */
+        $ccList = $matches[0]['Cc'] ?? [];
+
+        self::assertSame(
+            'cc@example.com',
+            $ccList[0]['Address'] ?? null,
+        );
+    }
+
+    public function testSendWithResultInPerMessageModeReturnsAcceptedForEachMessage(): void
+    {
+        $manager = new MailManager(
+            transport: $this->transportWithMode(
+                mode: SmtpTransportMode::PER_MESSAGE,
+            ),
+        );
+
+        $results = $manager->sendWithResult(
+            ...$this->makeNumberedMessages(
+                count: 3,
+                label: 'withresult-permsg',
+            ),
+        );
+
+        self::assertCount(3, $results);
+
+        foreach ($results as $result) {
+            self::assertCount(1, $result->outcomes);
+            self::assertSame(
+                RecipientStatus::ACCEPTED,
+                $result->outcomes[0]->status,
+            );
+        }
+    }
+
+    public function testTransportSendWithZeroMessagesIsANoop(): void
+    {
+        $this->transport->send();
+
+        self::assertSame(
+            [],
+            $this->sortedSubjectsMatchingMarker(),
+        );
+    }
+
+    public function testTransportSendWithResultWithZeroMessagesReturnsEmptyList(): void
+    {
+        self::assertSame(
+            [],
+            $this->transport->sendWithResult(),
+        );
+    }
+
+    public function testSendInReuseUpToNModeWithZeroReuseLimitFallsBackToConnectionReuse(): void
+    {
+        $manager = new MailManager(
+            transport: $this->transportWithMode(
+                mode: SmtpTransportMode::REUSE_UP_TO_N,
+                reuseLimit: 0,
+            ),
+        );
+
+        $manager->send(
+            ...$this->makeNumberedMessages(
+                count: 3,
+                label: 'reuseN-zero',
+            ),
+        );
+
+        self::assertSame(
+            [
+                $this->markedSubject('reuseN-zero-1'),
+                $this->markedSubject('reuseN-zero-2'),
+                $this->markedSubject('reuseN-zero-3'),
+            ],
+            $this->sortedSubjectsMatchingMarker(),
+        );
+    }
+
+    public function testSendWithResultInReuseUpToNModeWithZeroReuseLimitFallsBackToConnectionReuse(): void
+    {
+        $manager = new MailManager(
+            transport: $this->transportWithMode(
+                mode: SmtpTransportMode::REUSE_UP_TO_N,
+                reuseLimit: 0,
+            ),
+        );
+
+        $results = $manager->sendWithResult(
+            ...$this->makeNumberedMessages(
+                count: 3,
+                label: 'withresult-reuseN-zero',
+            ),
+        );
+
+        self::assertCount(3, $results);
+    }
+
+    public function testSendWithResultCollectsBccAsOutcomeRecipient(): void
+    {
+        $manager = new MailManager(
+            transport: $this->transport,
+        );
+
+        $results = $manager->sendWithResult(
+            new Message(
+                from: new Address(
+                    email: 'demo@example.com',
+                ),
+                to: 'to@example.com',
+                subject: $this->markedSubject('bcc-outcomes'),
+                body: 'body',
+                bcc: 'bcc@example.com',
+            ),
+        );
+
+        self::assertCount(1, $results);
+        self::assertCount(2, $results[0]->outcomes);
+    }
+
+    public function testSendWithResultInReuseUpToNModeReturnsAcceptedAcrossReconnect(): void
+    {
+        $manager = new MailManager(
+            transport: $this->transportWithMode(
+                mode: SmtpTransportMode::REUSE_UP_TO_N,
+                reuseLimit: 2,
+            ),
+        );
+
+        $results = $manager->sendWithResult(
+            ...$this->makeNumberedMessages(
+                count: 5,
+                label: 'withresult-reuseN',
+            ),
+        );
+
+        self::assertCount(5, $results);
+
+        foreach ($results as $result) {
+            self::assertCount(1, $result->outcomes);
+            self::assertSame(
+                RecipientStatus::ACCEPTED,
+                $result->outcomes[0]->status,
+            );
+        }
+    }
+
+    public function testSendInvokesMessageMiddleware(): void
+    {
+        $middleware = new RecordingMessageMiddleware();
+        $manager = new MailManager(
+            transport: $this->transport,
+            messageMiddleware: [
+                $middleware,
+            ],
+        );
+
+        $subject = $this->markedSubject('msgmiddleware');
+
+        $manager->send(
+            new Message(
+                from: new Address(
+                    email: 'demo@example.com',
+                ),
+                to: 'recipient@example.com',
+                subject: $subject,
+                body: 'body',
+            ),
+        );
+
+        self::assertCount(1, $middleware->seen);
+        self::assertSame(
+            $subject,
+            $middleware->seen[0]->subject,
+        );
+    }
+
+    public function testSendInvokesWireMiddleware(): void
+    {
+        $wire = new RecordingWireMiddleware();
+        $manager = new MailManager(
+            transport: $this->transport,
+            wireMiddleware: [
+                $wire,
+            ],
+        );
+
+        $subject = $this->markedSubject('wire');
+
+        $manager->send(
+            new Message(
+                from: new Address(
+                    email: 'demo@example.com',
+                ),
+                to: 'recipient@example.com',
+                subject: $subject,
+                body: 'body',
+            ),
+        );
+
+        self::assertCount(1, $wire->seen);
+        self::assertSame(
+            $subject,
+            $wire->seen[0]->source->subject,
+        );
     }
 
     private function markedSubject(

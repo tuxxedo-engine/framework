@@ -18,7 +18,6 @@ use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Mail\Result\SendResultInterface;
 use Tuxxedo\Mail\Transport\MailTransportInterface;
 
-// @todo Test cases for Mail
 #[DefaultImplementation(class: MailManager::class, lifecycle: Lifecycle::SINGLETON)]
 interface MailManagerInterface
 {

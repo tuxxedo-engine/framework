@@ -386,7 +386,7 @@ class SmtpSession
             );
         }
 
-        match ($mechanism) {
+        match ($mechanism) { // @codeCoverageIgnore
             SmtpAuth::PLAIN => $this->authPlain($username, $password),
             SmtpAuth::LOGIN => $this->authLogin($username, $password),
             SmtpAuth::CRAM_MD5 => $this->authCramMd5($username, $password),

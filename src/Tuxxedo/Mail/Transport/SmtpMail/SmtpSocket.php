@@ -41,16 +41,14 @@ class SmtpSocket implements SmtpSocketInterface
         ?string $unixSocket = null,
     ): void {
         if ($unixSocket !== null) {
+            // @codeCoverageIgnoreStart
             $address = 'unix://' . $unixSocket;
             $context = \stream_context_create();
+            // @codeCoverageIgnoreEnd
         } else {
-            $scheme = $tls === SmtpTls::IMPLICIT
-                ? 'ssl'
-                : 'tcp';
-
             $address = \sprintf(
                 '%s://%s:%d',
-                $scheme,
+                $tls === SmtpTls::IMPLICIT ? 'ssl' : 'tcp',
                 $host,
                 $port,
             );
@@ -74,6 +72,7 @@ class SmtpSocket implements SmtpSocketInterface
         );
 
         if ($stream === false) {
+            // @codeCoverageIgnoreStart
             $errstr ??= '';
             $errno ??= 0;
 
@@ -86,6 +85,7 @@ class SmtpSocket implements SmtpSocketInterface
                     ? $errstr
                     : \sprintf('errno %d', $errno),
             );
+            // @codeCoverageIgnoreEnd
         }
 
         \stream_set_timeout($stream, $readTimeout);
@@ -97,7 +97,7 @@ class SmtpSocket implements SmtpSocketInterface
     public function enableCrypto(): void
     {
         $stream = $this->requireStream();
-        $result = \stream_socket_enable_crypto(
+        $result = @\stream_socket_enable_crypto(
             stream: $stream,
             enable: true,
             crypto_method: \STREAM_CRYPTO_METHOD_TLS_CLIENT,
@@ -126,7 +126,9 @@ class SmtpSocket implements SmtpSocketInterface
             $written = \fwrite($stream, $remaining);
 
             if ($written === false || $written === 0) {
+                // @codeCoverageIgnoreStart
                 throw MailException::fromSmtpWriteFailure();
+                // @codeCoverageIgnoreEnd
             }
 
             $remaining = \substr($remaining, $written);
@@ -144,6 +146,7 @@ class SmtpSocket implements SmtpSocketInterface
             $line = \fgets($stream);
 
             if ($line === false) {
+                // @codeCoverageIgnoreStart
                 $metadata = \stream_get_meta_data($stream);
 
                 if ($metadata['timed_out']) {
@@ -151,12 +154,15 @@ class SmtpSocket implements SmtpSocketInterface
                 }
 
                 throw MailException::fromSmtpReadFailure();
+                // @codeCoverageIgnoreEnd
             }
 
             $trimmed = \rtrim($line, "\r\n");
 
             if (\strlen($trimmed) < 4) {
+                // @codeCoverageIgnoreStart
                 throw MailException::fromSmtpMalformedResponse($trimmed);
+                // @codeCoverageIgnoreEnd
             }
 
             $lineCode = (int) \substr($trimmed, 0, 3);
@@ -173,7 +179,9 @@ class SmtpSocket implements SmtpSocketInterface
             }
 
             if ($separator !== '-') {
+                // @codeCoverageIgnoreStart
                 throw MailException::fromSmtpMalformedResponse($trimmed);
+                // @codeCoverageIgnoreEnd
             }
         }
 

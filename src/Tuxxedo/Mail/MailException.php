@@ -220,6 +220,9 @@ class MailException extends \Exception
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromSmtpConnectionFailure(
         string $host,
         int $port,
@@ -253,6 +256,9 @@ class MailException extends \Exception
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromSmtpReadFailure(): self
     {
         return new self(
@@ -260,6 +266,9 @@ class MailException extends \Exception
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromSmtpReadTimeout(
         int $timeoutSeconds,
     ): self {
@@ -271,6 +280,9 @@ class MailException extends \Exception
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromSmtpWriteFailure(): self
     {
         return new self(
@@ -278,6 +290,9 @@ class MailException extends \Exception
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromSmtpMalformedResponse(
         string $line,
     ): self {
