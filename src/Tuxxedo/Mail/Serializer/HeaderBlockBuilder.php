@@ -79,7 +79,7 @@ class HeaderBlockBuilder
             $lines[] = $header->toRfc5322();
         }
 
-        return \implode(
+        return \join(
             "\r\n",
             \array_map(
                 static fn (string $line): string => self::fold($line),
@@ -137,7 +137,7 @@ class HeaderBlockBuilder
     private static function renderAddressList(
         array $addresses,
     ): string {
-        return \implode(
+        return \join(
             ', ',
             \array_map(
                 static fn (AddressInterface $address): string => $address->toRfc5322(),

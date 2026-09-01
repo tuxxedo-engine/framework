@@ -187,6 +187,6 @@ class SmtpForwardingPhpMailer implements PhpMailerInterface
             }
         }
 
-        return \implode("\r\n", $lines);
+        return \join("\r\n", $lines);
     }
 }

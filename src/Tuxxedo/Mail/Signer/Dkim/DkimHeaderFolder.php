@@ -44,7 +44,7 @@ class DkimHeaderFolder
             $folded[] = self::foldLongTag($line);
         }
 
-        return \implode("\r\n", $folded);
+        return \join("\r\n", $folded);
     }
 
     /**
@@ -101,6 +101,6 @@ class DkimHeaderFolder
             $chunks[] = $remaining;
         }
 
-        return \implode($indent, $chunks);
+        return \join($indent, $chunks);
     }
 }

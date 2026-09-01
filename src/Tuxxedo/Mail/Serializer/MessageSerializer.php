@@ -104,7 +104,7 @@ class MessageSerializer implements MessageSerializerInterface
             $lines[] = $header->toRfc5322();
         }
 
-        return \implode(
+        return \join(
             "\r\n",
             \array_map(
                 static fn (string $line): string => HeaderBlockBuilder::fold($line),

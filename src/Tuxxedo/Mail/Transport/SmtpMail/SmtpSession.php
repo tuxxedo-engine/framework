@@ -157,7 +157,7 @@ class SmtpSession
         }
 
         $this->socket->writeRaw(
-            bytes: \implode("\r\n", $commands) . "\r\n",
+            bytes: \join("\r\n", $commands) . "\r\n",
         );
 
         $firstFailure = null;

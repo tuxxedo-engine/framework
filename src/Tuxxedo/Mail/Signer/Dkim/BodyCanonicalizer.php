@@ -45,7 +45,7 @@ class BodyCanonicalizer
             $processed[] = \rtrim($collapsed);
         }
 
-        $joined = \implode("\r\n", $processed);
+        $joined = \join("\r\n", $processed);
         $joined = \preg_replace('/(\r\n)+$/', '', $joined) ?? $joined;
 
         return $joined . "\r\n";

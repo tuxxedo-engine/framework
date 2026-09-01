@@ -55,7 +55,7 @@ class DkimSignatureTag
             'c=' . $this->headerCanonicalization->value . '/' . $this->bodyCanonicalization->value,
             'd=' . $this->domain,
             's=' . $this->selector,
-            'h=' . \implode(':', $this->signedHeaders),
+            'h=' . \join(':', $this->signedHeaders),
             'bh=' . $this->bh,
         ];
 
@@ -65,6 +65,6 @@ class DkimSignatureTag
 
         $parts[] = 'b=' . $this->b;
 
-        return \implode('; ', $parts);
+        return \join('; ', $parts);
     }
 }

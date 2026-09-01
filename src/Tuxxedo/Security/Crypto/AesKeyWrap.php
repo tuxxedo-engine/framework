@@ -61,7 +61,7 @@ class AesKeyWrap
             }
         }
 
-        return $a . \implode('', $blocks);
+        return $a . \join('', $blocks);
     }
 
     /**
@@ -112,7 +112,7 @@ class AesKeyWrap
             throw CryptoException::fromKeyUnwrapIntegrityFailed();
         }
 
-        return \implode('', $blocks);
+        return \join('', $blocks);
     }
 
     /**

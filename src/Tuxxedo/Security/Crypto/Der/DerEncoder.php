@@ -113,7 +113,7 @@ class DerEncoder
     public static function sequence(
         string ...$children,
     ): string {
-        $body = \implode('', $children);
+        $body = \join('', $children);
 
         return \chr(self::TAG_SEQUENCE) . self::length(\strlen($body)) . $body;
     }

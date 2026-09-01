@@ -29,6 +29,7 @@ use Tuxxedo\Mail\MailManagerInterface;
 use Tuxxedo\Router\RouterInterface;
 use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
 
+// @todo Cleanup this interface
 interface ApplicationConfiguratorInterface
 {
     public string $appName {

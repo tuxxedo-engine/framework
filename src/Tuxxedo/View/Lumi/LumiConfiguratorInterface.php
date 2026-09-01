@@ -27,6 +27,7 @@ use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
 
+// @todo Cleanup this interface
 interface LumiConfiguratorInterface
 {
     public string $viewDirectory {

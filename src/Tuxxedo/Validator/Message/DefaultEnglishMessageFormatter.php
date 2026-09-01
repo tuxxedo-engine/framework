@@ -194,7 +194,7 @@ class DefaultEnglishMessageFormatter implements MessageFormatterInterface
         }
 
         if (\is_array($value)) {
-            return \implode(', ', \array_map(self::stringifyValue(...), $value));
+            return \join(', ', \array_map(self::stringifyValue(...), $value));
         }
 
         return \get_debug_type($value);

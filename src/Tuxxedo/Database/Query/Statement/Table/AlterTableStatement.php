@@ -207,7 +207,7 @@ class AlterTableStatement implements AlterTableStatementInterface
         }
 
         return new StatementParserResult(
-            sql: \implode(";\n", $sqlFragments),
+            sql: \join(";\n", $sqlFragments),
         );
     }
 

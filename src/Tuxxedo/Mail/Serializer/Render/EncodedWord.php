@@ -51,7 +51,7 @@ class EncodedWord
             $chunks[] = self::wrap($charset, \base64_encode($buffer));
         }
 
-        return \implode("\r\n ", $chunks);
+        return \join("\r\n ", $chunks);
     }
 
     public static function encodeIfNonAscii(

@@ -19,6 +19,8 @@ $finder = (new Finder())
     ->in(
         [
             'app/',
+            'bin/',
+            'console/',
             'public/',
             'src/',
             'tests/',
@@ -26,7 +28,7 @@ $finder = (new Finder())
     )
     ->exclude(
         [
-            'mails/cache',
+            'mails/cache/',
             'views/cache/',
         ],
     );

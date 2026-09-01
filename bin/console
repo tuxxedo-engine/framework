@@ -1,0 +1,28 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Tuxxedo Engine
+ *
+ * This file is part of the Tuxxedo Engine framework and is licensed under
+ * the MIT license.
+ *
+ * Copyright (C) 2026 Kalle Sommer Nielsen <kalle@php.net>
+ */
+
+declare(strict_types=1);
+
+use Tuxxedo\Console\ConsoleConfigurator;
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+exit(
+    ConsoleConfigurator::create()
+        ->withDefaultCommandDiscovery(
+            directory: __DIR__ . '/../console/Commands',
+            baseNamespace: '\Console\Commands\\',
+        )
+        ->build()
+        ->run($argv)
+        ->value
+);

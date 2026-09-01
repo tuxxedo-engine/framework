@@ -4,6 +4,8 @@ parameters:
     level: max
     paths:
         - app/
+        - bin/
+        - console/
         - public/
         - src/
         - tests/

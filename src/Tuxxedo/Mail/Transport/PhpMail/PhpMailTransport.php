@@ -176,7 +176,7 @@ class PhpMailTransport implements MailTransportInterface
         return [
             $to,
             $subject,
-            \implode("\r\n", $rest),
+            \join("\r\n", $rest),
         ];
     }
 }

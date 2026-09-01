@@ -54,7 +54,7 @@ class Encoder
     public static function base64(
         string $content,
     ): string {
-        return \implode(
+        return \join(
             "\r\n",
             \str_split(
                 \base64_encode($content),
