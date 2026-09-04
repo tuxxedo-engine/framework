@@ -641,16 +641,6 @@ class LumiConfiguratorTest extends TestCase
         self::assertSame([], $configurator->functionProviders);
     }
 
-    public function testWithStandardLibrarySetsTrue(): void
-    {
-        $configurator = $this->makeConfigurator();
-
-        $configurator->withoutStandardLibrary();
-        $configurator->withStandardLibrary();
-
-        self::assertTrue($configurator->withStandardLibrary);
-    }
-
     public function testWithoutStandardLibrarySetsFalse(): void
     {
         $configurator = $this->makeConfigurator();
@@ -660,12 +650,12 @@ class LumiConfiguratorTest extends TestCase
         self::assertFalse($configurator->withStandardLibrary);
     }
 
-    public function testWithAnyInstanceCallClearsInstanceCallClasses(): void
+    public function testAllowAllInstanceCallsClearsInstanceCallClasses(): void
     {
         $configurator = $this->makeConfigurator();
 
         $configurator->withAllowedInstanceCall(\stdClass::class);
-        $configurator->withAnyInstanceCall();
+        $configurator->allowAllInstanceCalls();
 
         self::assertSame([], $configurator->instanceCallClasses);
     }
@@ -689,42 +679,6 @@ class LumiConfiguratorTest extends TestCase
         self::assertContains(\ArrayObject::class, $configurator->instanceCallClasses);
     }
 
-    public function testUseLexerSetsLexer(): void
-    {
-        $configurator = $this->makeConfigurator();
-        $lexer = LumiEngine::createDefaultLexer();
-        $configurator->useLexer($lexer);
-
-        self::assertSame($lexer, $configurator->lexer);
-    }
-
-    public function testUseParserSetsParser(): void
-    {
-        $configurator = $this->makeConfigurator();
-        $parser = LumiEngine::createDefaultParser();
-        $configurator->useParser($parser);
-
-        self::assertSame($parser, $configurator->parser);
-    }
-
-    public function testUseCompilerSetsCompiler(): void
-    {
-        $configurator = $this->makeConfigurator();
-        $compiler = LumiEngine::createDefaultCompiler();
-        $configurator->useCompiler($compiler);
-
-        self::assertSame($compiler, $configurator->compiler);
-    }
-
-    public function testUseHighlighterSetsHighlighter(): void
-    {
-        $configurator = $this->makeConfigurator();
-        $highlighter = LumiEngine::createDefaultHighlighter();
-        $configurator->useHighlighter($highlighter);
-
-        self::assertSame($highlighter, $configurator->highlighter);
-    }
-
     public function testUseLoaderSetsLoader(): void
     {
         $configurator = $this->makeConfigurator();
@@ -745,42 +699,6 @@ class LumiConfiguratorTest extends TestCase
         $configurator->withoutOptimizers();
 
         self::assertSame([], $configurator->optimizers);
-    }
-
-    public function testWithDceOptimizerAddsDceOptimizer(): void
-    {
-        $configurator = $this->makeConfigurator();
-        $configurator->withoutOptimizers();
-        $configurator->withDceOptimizer();
-
-        self::assertArrayHasKey(DceOptimizer::class, $configurator->optimizers);
-        self::assertInstanceOf(DceOptimizer::class, $configurator->optimizers[DceOptimizer::class]);
-    }
-
-    public function testWithoutDceOptimizerRemovesDceOptimizer(): void
-    {
-        $configurator = $this->makeConfigurator();
-        $configurator->withoutDceOptimizer();
-
-        self::assertArrayNotHasKey(DceOptimizer::class, $configurator->optimizers);
-    }
-
-    public function testWithSccpOptimizerAddsSccpOptimizer(): void
-    {
-        $configurator = $this->makeConfigurator();
-        $configurator->withoutOptimizers();
-        $configurator->withSccpOptimizer();
-
-        self::assertArrayHasKey(SccpOptimizer::class, $configurator->optimizers);
-        self::assertInstanceOf(SccpOptimizer::class, $configurator->optimizers[SccpOptimizer::class]);
-    }
-
-    public function testWithoutSccpOptimizerRemovesSccpOptimizer(): void
-    {
-        $configurator = $this->makeConfigurator();
-        $configurator->withoutSccpOptimizer();
-
-        self::assertArrayNotHasKey(SccpOptimizer::class, $configurator->optimizers);
     }
 
     public function testWithCustomOptimizerAddsOptimizer(): void
@@ -860,16 +778,4 @@ class LumiConfiguratorTest extends TestCase
         self::assertInstanceOf(ViewRenderInterface::class, $configurator->build());
     }
 
-    public function testBuildWithExplicitCompilerUsesIt(): void
-    {
-        $configurator = $this->makeConfigurator();
-
-        $configurator->withoutStandardLibrary();
-
-        $compiler = LumiEngine::createDefaultCompiler();
-
-        $configurator->useCompiler($compiler);
-
-        self::assertInstanceOf(ViewRenderInterface::class, $configurator->build());
-    }
 }

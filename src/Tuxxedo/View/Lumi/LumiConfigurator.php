@@ -16,11 +16,8 @@ namespace Tuxxedo\View\Lumi;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Reflection\MethodReflector;
 use Tuxxedo\View\Lumi\Compiler\Compiler;
-use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Compiler\CompilerState;
 use Tuxxedo\View\Lumi\Config\LumiConfigInterface;
-use Tuxxedo\View\Lumi\Highlight\HighlighterInterface;
-use Tuxxedo\View\Lumi\Lexer\LexerInterface;
 use Tuxxedo\View\Lumi\Library\Attribute\LumiFilter;
 use Tuxxedo\View\Lumi\Library\Attribute\LumiFunction;
 use Tuxxedo\View\Lumi\Library\Directive\DefaultDirectives;
@@ -35,10 +32,7 @@ use Tuxxedo\View\Lumi\Library\Function\PhpFunction;
 use Tuxxedo\View\Lumi\Library\LibraryDiscoveryInterface;
 use Tuxxedo\View\Lumi\Library\LibraryProviderInterface;
 use Tuxxedo\View\Lumi\Library\Standard\StandardLibrary;
-use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
-use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpOptimizer;
-use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Runtime\Loader;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\Runtime;
@@ -51,11 +45,6 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public private(set) bool $viewAlwaysCompile = false;
     public private(set) bool $viewDisableErrorReporting = true;
     public private(set) string $viewCacheDirectory = '';
-
-    public private(set) ?LexerInterface $lexer = null;
-    public private(set) ?ParserInterface $parser = null;
-    public private(set) ?CompilerInterface $compiler = null;
-    public private(set) ?HighlighterInterface $highlighter = null;
 
     public private(set) array $optimizers = [];
 
@@ -302,13 +291,6 @@ class LumiConfigurator implements LumiConfiguratorInterface
         return $this;
     }
 
-    public function withStandardLibrary(): self
-    {
-        $this->withStandardLibrary = true;
-
-        return $this;
-    }
-
     public function withoutStandardLibrary(): self
     {
         $this->withStandardLibrary = false;
@@ -316,7 +298,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
         return $this;
     }
 
-    public function withAnyInstanceCall(): self
+    public function allowAllInstanceCalls(): self
     {
         $this->instanceCallClasses = [];
 
@@ -337,61 +319,9 @@ class LumiConfigurator implements LumiConfiguratorInterface
         return $this;
     }
 
-    public function useLexer(
-        LexerInterface $lexer,
-    ): self {
-        $this->lexer = $lexer;
-
-        return $this;
-    }
-
-    public function useParser(
-        ParserInterface $parser,
-    ): self {
-        $this->parser = $parser;
-
-        return $this;
-    }
-
-    public function useCompiler(
-        CompilerInterface $compiler,
-    ): self {
-        $this->compiler = $compiler;
-
-        return $this;
-    }
-
     public function withoutOptimizers(): self
     {
         $this->optimizers = [];
-
-        return $this;
-    }
-
-    public function withSccpOptimizer(): self
-    {
-        $this->optimizers[SccpOptimizer::class] = new SccpOptimizer();
-
-        return $this;
-    }
-
-    public function withoutSccpOptimizer(): self
-    {
-        unset($this->optimizers[SccpOptimizer::class]);
-
-        return $this;
-    }
-
-    public function withDceOptimizer(): self
-    {
-        $this->optimizers[DceOptimizer::class] = new DceOptimizer();
-
-        return $this;
-    }
-
-    public function withoutDceOptimizer(): self
-    {
-        unset($this->optimizers[DceOptimizer::class]);
 
         return $this;
     }
@@ -402,14 +332,6 @@ class LumiConfigurator implements LumiConfiguratorInterface
         foreach ($optimizers as $optimizer) {
             $this->optimizers[$optimizer::class] = $optimizer;
         }
-
-        return $this;
-    }
-
-    public function useHighlighter(
-        HighlighterInterface $highlighter,
-    ): self {
-        $this->highlighter = $highlighter;
 
         return $this;
     }
@@ -571,20 +493,16 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
     public function build(): LumiViewRenderInterface
     {
-        if ($this->compiler === null) {
-            if ($this->defaultDirectives !== DefaultDirectives::defaults()) {
-                $compiler = Compiler::createWithDefaultProviders(
-                    state: new CompilerState(
-                        directives: new MutableDirectives(
-                            directives: $this->defaultDirectives,
-                        ),
+        $compiler = null;
+
+        if ($this->defaultDirectives !== DefaultDirectives::defaults()) {
+            $compiler = Compiler::createWithDefaultProviders(
+                state: new CompilerState(
+                    directives: new MutableDirectives(
+                        directives: $this->defaultDirectives,
                     ),
-                );
-            } else {
-                $compiler = null;
-            }
-        } else {
-            $compiler = $this->compiler;
+                ),
+            );
         }
 
         if ($this->withStandardLibrary) {
@@ -601,10 +519,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
             ),
             runtime: new Runtime(
                 engine: LumiEngine::createCustom(
-                    lexer: $this->lexer,
-                    parser: $this->parser,
                     compiler: $compiler,
-                    highlighter: $this->highlighter,
                     optimizers: $this->optimizers,
                 ),
                 directives: \array_merge(

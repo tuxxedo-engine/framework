@@ -13,9 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi;
 
-use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
-use Tuxxedo\View\Lumi\Highlight\HighlighterInterface;
-use Tuxxedo\View\Lumi\Lexer\LexerInterface;
 use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
 use Tuxxedo\View\Lumi\Library\Filter\FilterProviderInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
@@ -23,11 +20,9 @@ use Tuxxedo\View\Lumi\Library\Function\FunctionProviderInterface;
 use Tuxxedo\View\Lumi\Library\LibraryDiscoveryInterface;
 use Tuxxedo\View\Lumi\Library\LibraryProviderInterface;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
-use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
 
-// @todo Cleanup this interface
 interface LumiConfiguratorInterface
 {
     public string $viewDirectory {
@@ -47,22 +42,6 @@ interface LumiConfiguratorInterface
     }
 
     public string $viewCacheDirectory {
-        get;
-    }
-
-    public ?LexerInterface $lexer {
-        get;
-    }
-
-    public ?ParserInterface $parser {
-        get;
-    }
-
-    public ?CompilerInterface $compiler {
-        get;
-    }
-
-    public ?HighlighterInterface $highlighter {
         get;
     }
 
@@ -185,11 +164,9 @@ interface LumiConfiguratorInterface
         LibraryProviderInterface|LibraryDiscoveryInterface $library,
     ): self;
 
-    public function withStandardLibrary(): self;
-
     public function withoutStandardLibrary(): self;
 
-    public function withAnyInstanceCall(): self;
+    public function allowAllInstanceCalls(): self;
 
     /**
      * @param class-string $className
@@ -198,32 +175,10 @@ interface LumiConfiguratorInterface
         string ...$className,
     ): self;
 
-    public function useLexer(
-        LexerInterface $lexer,
-    ): self;
-
-    public function useParser(
-        ParserInterface $parser,
-    ): self;
-
-    public function useCompiler(
-        CompilerInterface $compiler,
-    ): self;
-
     public function withoutOptimizers(): self;
-
-    public function withSccpOptimizer(): self;
-    public function withoutSccpOptimizer(): self;
-
-    public function withDceOptimizer(): self;
-    public function withoutDceOptimizer(): self;
 
     public function withCustomOptimizer(
         OptimizerInterface ...$optimizers,
-    ): self;
-
-    public function useHighlighter(
-        HighlighterInterface $highlighter,
     ): self;
 
     public function useLoader(
