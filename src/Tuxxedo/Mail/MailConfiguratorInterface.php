@@ -15,16 +15,11 @@ namespace Tuxxedo\Mail;
 
 use Tuxxedo\Mail\Middleware\MailMiddlewareInterface;
 use Tuxxedo\Mail\Middleware\MailWireMiddlewareInterface;
-use Tuxxedo\Mail\Serializer\MessageSerializerInterface;
 use Tuxxedo\Mail\Transport\MailTransportInterface;
 
 interface MailConfiguratorInterface
 {
     public ?MailTransportInterface $transport {
-        get;
-    }
-
-    public MessageSerializerInterface $serializer {
         get;
     }
 

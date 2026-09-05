@@ -18,13 +18,11 @@ use Tuxxedo\Mail\Config\MailManagerConfigInterface;
 use Tuxxedo\Mail\Middleware\MailMiddlewareInterface;
 use Tuxxedo\Mail\Middleware\MailWireMiddlewareInterface;
 use Tuxxedo\Mail\Serializer\MessageSerializer;
-use Tuxxedo\Mail\Serializer\MessageSerializerInterface;
 use Tuxxedo\Mail\Transport\MailTransportInterface;
 
 class MailConfigurator implements MailConfiguratorInterface
 {
     public private(set) ?MailTransportInterface $transport = null;
-    public private(set) MessageSerializerInterface $serializer;
     public private(set) ?MailTemplateRenderInterface $templateRender = null;
 
     /**
@@ -36,11 +34,6 @@ class MailConfigurator implements MailConfiguratorInterface
      * @var list<MailWireMiddlewareInterface>
      */
     public private(set) array $wireMiddleware = [];
-
-    public function __construct()
-    {
-        $this->serializer = new MessageSerializer();
-    }
 
     public static function fromConfig(
         ContainerInterface $container,
@@ -98,7 +91,7 @@ class MailConfigurator implements MailConfiguratorInterface
         return new MailManager(
             transport: $this->transport,
             templateRender: $this->templateRender,
-            serializer: $this->serializer,
+            serializer: new MessageSerializer(),
             messageMiddleware: $this->messageMiddleware,
             wireMiddleware: $this->wireMiddleware,
         );

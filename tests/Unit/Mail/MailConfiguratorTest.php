@@ -27,22 +27,11 @@ use Tuxxedo\Mail\MailConfigurator;
 use Tuxxedo\Mail\MailException;
 use Tuxxedo\Mail\MailManager;
 use Tuxxedo\Mail\MailTemplateRenderInterface;
-use Tuxxedo\Mail\Serializer\MessageSerializer;
 use Tuxxedo\Mail\Transport\FileMail\Config\FileMailTransportConfig;
 use Tuxxedo\Mail\Transport\FileMail\FileMailTransport;
 
 class MailConfiguratorTest extends TestCase
 {
-    public function testConstructorSetsDefaultMessageSerializer(): void
-    {
-        $configurator = new MailConfigurator();
-
-        self::assertInstanceOf(
-            MessageSerializer::class,
-            $configurator->serializer,
-        );
-    }
-
     public function testWithTransportStoresTransportAndReturnsSelf(): void
     {
         $configurator = new MailConfigurator();

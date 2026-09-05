@@ -58,10 +58,6 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
     public private(set) ?string $defaultRouterBaseNamespace = null;
     public private(set) bool $defaultRouterStrictMode = true;
     public private(set) ?RouterInterface $router = null;
-    public private(set) ?ResponseEmitterInterface $emitter = null;
-    public private(set) ?DispatcherInterface $dispatcher = null;
-    public private(set) ?EventsManagerInterface $eventsManager = null;
-    public private(set) ?UrlInterface $url = null;
     public private(set) ?LumiConfiguratorInterface $lumiConfigurator = null;
     public private(set) bool $useDefaultLumi = false;
     public private(set) ?\Closure $lumiCustomizer = null;
@@ -225,38 +221,6 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
     public function withoutRouteFiles(): self
     {
         $this->routeFiles = [];
-
-        return $this;
-    }
-
-    public function withEmitter(
-        ResponseEmitterInterface $emitter,
-    ): self {
-        $this->emitter = $emitter;
-
-        return $this;
-    }
-
-    public function withDispatcher(
-        DispatcherInterface $dispatcher,
-    ): self {
-        $this->dispatcher = $dispatcher;
-
-        return $this;
-    }
-
-    public function withEventsManager(
-        EventsManagerInterface $eventsManager,
-    ): self {
-        $this->eventsManager = $eventsManager;
-
-        return $this;
-    }
-
-    public function withUrl(
-        UrlInterface $url,
-    ): self {
-        $this->url = $url;
 
         return $this;
     }
@@ -427,13 +391,20 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
 
         $container->singleton($container);
         $container->singleton($this->config ?? Config::class);
-        $container->singleton($this->emitter ?? ResponseEmitter::class);
-        $container->singleton($this->dispatcher ?? Dispatcher::class);
-        $container->singleton($this->eventsManager ?? EventsManager::class);
 
-        if ($this->url !== null) {
-            $container->singleton($this->url);
-        } else {
+        if (!$container->isBound(ResponseEmitterInterface::class)) {
+            $container->singleton(ResponseEmitter::class);
+        }
+
+        if (!$container->isBound(DispatcherInterface::class)) {
+            $container->singleton(Dispatcher::class);
+        }
+
+        if (!$container->isBound(EventsManagerInterface::class)) {
+            $container->singleton(EventsManager::class);
+        }
+
+        if (!$container->isBound(UrlInterface::class)) {
             $container->singletonLazy(
                 UrlInterface::class,
                 fn (): UrlInterface => new Url(

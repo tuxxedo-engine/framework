@@ -32,8 +32,6 @@ use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Debug\Config\DebugConfig;
 use Tuxxedo\Env\Env;
 use Tuxxedo\Env\EnvInterface;
-use Tuxxedo\Event\EventsManager;
-use Tuxxedo\Event\EventsManagerInterface;
 use Tuxxedo\File\Storage\Local\Config\LocalStorageConfig;
 use Tuxxedo\File\Storage\Local\LocalStorage;
 use Tuxxedo\File\Storage\StorageInterface;
@@ -278,63 +276,6 @@ class ApplicationConfiguratorTest extends TestCase
         self::assertSame($router, $configurator->router);
         self::assertNull($configurator->defaultRouterDirectory);
         self::assertNull($configurator->defaultRouterBaseNamespace);
-        self::assertSame($configurator, $result);
-    }
-
-    public function testWithEmitterUpdatesPropertyAndReturnsFluentSelf(): void
-    {
-        $configurator = new ApplicationConfigurator();
-        $emitter = new StubResponseEmitter();
-        $result = $configurator->withEmitter(
-            emitter: $emitter,
-        );
-
-        self::assertSame($emitter, $configurator->emitter);
-        self::assertSame($configurator, $result);
-    }
-
-    public function testWithDispatcherUpdatesPropertyAndReturnsFluentSelf(): void
-    {
-        $configurator = new ApplicationConfigurator();
-        $dispatcher = new StubDispatcher(
-            result: new Response(),
-        );
-
-        $result = $configurator->withDispatcher(
-            dispatcher: $dispatcher,
-        );
-
-        self::assertSame($dispatcher, $configurator->dispatcher);
-        self::assertSame($configurator, $result);
-    }
-
-    public function testWithEventsManagerUpdatesPropertyAndReturnsFluentSelf(): void
-    {
-        $configurator = new ApplicationConfigurator();
-        $eventsManager = new EventsManager(
-            container: new Container(),
-        );
-
-        $result = $configurator->withEventsManager(
-            eventsManager: $eventsManager,
-        );
-
-        self::assertSame($eventsManager, $configurator->eventsManager);
-        self::assertSame($configurator, $result);
-    }
-
-    public function testWithUrlUpdatesPropertyAndReturnsFluentSelf(): void
-    {
-        $configurator = new ApplicationConfigurator();
-        $url = new Url(
-            base: 'https://example.test/',
-        );
-
-        $result = $configurator->withUrl(
-            url: $url,
-        );
-
-        self::assertSame($url, $configurator->url);
         self::assertSame($configurator, $result);
     }
 
@@ -842,6 +783,15 @@ class ApplicationConfiguratorTest extends TestCase
         Container $container,
         Profile $profile = Profile::RELEASE,
     ): ApplicationConfigurator {
+        $container->singleton(
+            new StubResponseEmitter(),
+        );
+        $container->singleton(
+            new StubDispatcher(
+                result: new Response(),
+            ),
+        );
+
         return (new ApplicationConfigurator(
             appName: 'MinimalApp',
             appVersion: '0.1.0',
@@ -850,14 +800,6 @@ class ApplicationConfiguratorTest extends TestCase
             container: $container,
             config: new Config(),
         ))
-            ->withEmitter(
-                emitter: new StubResponseEmitter(),
-            )
-            ->withDispatcher(
-                dispatcher: new StubDispatcher(
-                    result: new Response(),
-                ),
-            )
             ->withRouter(
                 router: new StaticRouter(
                     routes: [],
@@ -883,68 +825,13 @@ class ApplicationConfiguratorTest extends TestCase
         self::assertSame('https://minimal.test/', $kernel->appUrl);
     }
 
-    public function testBuildPropagatesExplicitEmitterToKernel(): void
-    {
-        $emitter = new StubResponseEmitter();
-        $configurator = (new ApplicationConfigurator())
-            ->withEmitter(
-                emitter: $emitter,
-            )
-            ->withDispatcher(
-                dispatcher: new StubDispatcher(
-                    result: new Response(),
-                ),
-            )
-            ->withRouter(
-                router: new StaticRouter(
-                    routes: [],
-                ),
-            );
-
-        $kernel = $configurator->build();
-
-        self::assertSame($emitter, $kernel->emitter);
-    }
-
-    public function testBuildPropagatesExplicitDispatcherToKernel(): void
-    {
-        $dispatcher = new StubDispatcher(
-            result: new Response(),
-        );
-
-        $configurator = (new ApplicationConfigurator())
-            ->withEmitter(
-                emitter: new StubResponseEmitter(),
-            )
-            ->withDispatcher(
-                dispatcher: $dispatcher,
-            )
-            ->withRouter(
-                router: new StaticRouter(
-                    routes: [],
-                ),
-            );
-
-        $kernel = $configurator->build();
-
-        self::assertSame($dispatcher, $kernel->dispatcher);
-    }
-
     public function testBuildPropagatesExplicitRouterToKernel(): void
     {
         $router = new StaticRouter(
             routes: [],
         );
 
-        $configurator = (new ApplicationConfigurator())
-            ->withEmitter(
-                emitter: new StubResponseEmitter(),
-            )
-            ->withDispatcher(
-                dispatcher: new StubDispatcher(
-                    result: new Response(),
-                ),
-            )
+        $configurator = $this->makeMinimalConfigurator()
             ->withRouter(
                 router: $router,
             );
@@ -957,17 +844,21 @@ class ApplicationConfiguratorTest extends TestCase
     public function testBuildPropagatesExplicitConfigToKernel(): void
     {
         $config = new Config();
+        $container = new Container();
+
+        $container->singleton(
+            new StubResponseEmitter(),
+        );
+        $container->singleton(
+            new StubDispatcher(
+                result: new Response(),
+            ),
+        );
+
         $configurator = (new ApplicationConfigurator(
+            container: $container,
             config: $config,
         ))
-            ->withEmitter(
-                emitter: new StubResponseEmitter(),
-            )
-            ->withDispatcher(
-                dispatcher: new StubDispatcher(
-                    result: new Response(),
-                ),
-            )
             ->withRouter(
                 router: new StaticRouter(
                     routes: [],
@@ -982,17 +873,19 @@ class ApplicationConfiguratorTest extends TestCase
     public function testBuildReusesProvidedContainer(): void
     {
         $container = new Container();
+
+        $container->singleton(
+            new StubResponseEmitter(),
+        );
+        $container->singleton(
+            new StubDispatcher(
+                result: new Response(),
+            ),
+        );
+
         $configurator = (new ApplicationConfigurator(
             container: $container,
         ))
-            ->withEmitter(
-                emitter: new StubResponseEmitter(),
-            )
-            ->withDispatcher(
-                dispatcher: new StubDispatcher(
-                    result: new Response(),
-                ),
-            )
             ->withRouter(
                 router: new StaticRouter(
                     routes: [],
@@ -1007,14 +900,6 @@ class ApplicationConfiguratorTest extends TestCase
     public function testBuildCreatesContainerWhenNoneProvided(): void
     {
         $configurator = (new ApplicationConfigurator())
-            ->withEmitter(
-                emitter: new StubResponseEmitter(),
-            )
-            ->withDispatcher(
-                dispatcher: new StubDispatcher(
-                    result: new Response(),
-                ),
-            )
             ->withRouter(
                 router: new StaticRouter(
                     routes: [],
@@ -1029,17 +914,19 @@ class ApplicationConfiguratorTest extends TestCase
     public function testBuildBindsContainerToItself(): void
     {
         $container = new Container();
+
+        $container->singleton(
+            new StubResponseEmitter(),
+        );
+        $container->singleton(
+            new StubDispatcher(
+                result: new Response(),
+            ),
+        );
+
         $configurator = (new ApplicationConfigurator(
             container: $container,
         ))
-            ->withEmitter(
-                emitter: new StubResponseEmitter(),
-            )
-            ->withDispatcher(
-                dispatcher: new StubDispatcher(
-                    result: new Response(),
-                ),
-            )
             ->withRouter(
                 router: new StaticRouter(
                     routes: [],
@@ -1049,25 +936,6 @@ class ApplicationConfiguratorTest extends TestCase
         $configurator->build();
 
         self::assertSame($container, $container->resolve(ContainerInterface::class));
-    }
-
-    public function testBuildRegistersUrlInstanceWhenProvided(): void
-    {
-        $url = new Url(
-            base: 'https://custom.test/',
-        );
-
-        $configurator = $this->makeMinimalConfigurator()
-            ->withUrl(
-                url: $url,
-            );
-
-        $configurator->build();
-
-        /** @var Container $container */
-        $container = $configurator->container;
-
-        self::assertSame($url, $container->resolve(UrlInterface::class));
     }
 
     public function testBuildRegistersLazyUrlBasedOnAppUrlWhenNoneProvided(): void
@@ -1082,25 +950,6 @@ class ApplicationConfiguratorTest extends TestCase
 
         self::assertInstanceOf(Url::class, $url);
         self::assertSame('https://minimal.test/', $url->base);
-    }
-
-    public function testBuildRegistersEventsManagerInstanceWhenProvided(): void
-    {
-        $eventsManager = new EventsManager(
-            container: new Container(),
-        );
-
-        $configurator = $this->makeMinimalConfigurator()
-            ->withEventsManager(
-                eventsManager: $eventsManager,
-            );
-
-        $configurator->build();
-
-        /** @var Container $container */
-        $container = $configurator->container;
-
-        self::assertSame($eventsManager, $container->resolve(EventsManagerInterface::class));
     }
 
     public function testBuildAttachesMiddlewareToKernel(): void
@@ -1263,11 +1112,6 @@ class ApplicationConfiguratorTest extends TestCase
     public function testBuildResolvesDefaultEmitterFromContainerWhenNoneProvided(): void
     {
         $configurator = (new ApplicationConfigurator())
-            ->withDispatcher(
-                dispatcher: new StubDispatcher(
-                    result: new Response(),
-                ),
-            )
             ->withRouter(
                 router: new StaticRouter(
                     routes: [],
@@ -1282,9 +1126,6 @@ class ApplicationConfiguratorTest extends TestCase
     public function testBuildResolvesDefaultDispatcherFromContainerWhenNoneProvided(): void
     {
         $configurator = (new ApplicationConfigurator())
-            ->withEmitter(
-                emitter: new StubResponseEmitter(),
-            )
             ->withRouter(
                 router: new StaticRouter(
                     routes: [],
@@ -1298,15 +1139,7 @@ class ApplicationConfiguratorTest extends TestCase
 
     public function testBuildResolvesDefaultStaticRouterWhenNoRouterOrDirectoryProvided(): void
     {
-        $configurator = (new ApplicationConfigurator())
-            ->withEmitter(
-                emitter: new StubResponseEmitter(),
-            )
-            ->withDispatcher(
-                dispatcher: new StubDispatcher(
-                    result: new Response(),
-                ),
-            );
+        $configurator = new ApplicationConfigurator();
 
         $kernel = $configurator->build();
 
@@ -1316,14 +1149,6 @@ class ApplicationConfiguratorTest extends TestCase
     public function testBuildResolvesDynamicRouterWhenDefaultRouterDirectoryProvided(): void
     {
         $configurator = (new ApplicationConfigurator())
-            ->withEmitter(
-                emitter: new StubResponseEmitter(),
-            )
-            ->withDispatcher(
-                dispatcher: new StubDispatcher(
-                    result: new Response(),
-                ),
-            )
             ->withDefaultRouter(
                 directory: '/path/to/controllers',
             );
@@ -1339,14 +1164,6 @@ class ApplicationConfiguratorTest extends TestCase
             container: new Container(),
             config: new Config(),
         ))
-            ->withEmitter(
-                emitter: new StubResponseEmitter(),
-            )
-            ->withDispatcher(
-                dispatcher: new StubDispatcher(
-                    result: new Response(),
-                ),
-            )
             ->withDefaultRouter(
                 directory: '/path/to/controllers',
             );
@@ -1369,14 +1186,6 @@ class ApplicationConfiguratorTest extends TestCase
             container: new Container(),
             config: new Config(),
         ))
-            ->withEmitter(
-                emitter: new StubResponseEmitter(),
-            )
-            ->withDispatcher(
-                dispatcher: new StubDispatcher(
-                    result: new Response(),
-                ),
-            )
             ->withDefaultRouter(
                 directory: '/path/to/controllers',
                 baseNamespace: '\App\Custom\\',
@@ -1399,14 +1208,6 @@ class ApplicationConfiguratorTest extends TestCase
             container: new Container(),
             config: new Config(),
         ))
-            ->withEmitter(
-                emitter: new StubResponseEmitter(),
-            )
-            ->withDispatcher(
-                dispatcher: new StubDispatcher(
-                    result: new Response(),
-                ),
-            )
             ->withDefaultRouter(
                 directory: '/path/to/controllers',
                 strictMode: false,

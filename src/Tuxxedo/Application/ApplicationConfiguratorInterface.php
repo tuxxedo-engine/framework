@@ -16,20 +16,15 @@ namespace Tuxxedo\Application;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionManagerInterface;
-use Tuxxedo\Event\EventsManagerInterface;
 use Tuxxedo\File\Storage\StorageInterface;
-use Tuxxedo\Http\Kernel\DispatcherInterface;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
 use Tuxxedo\Http\Kernel\KernelInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
-use Tuxxedo\Http\Response\ResponseEmitterInterface;
-use Tuxxedo\Http\Url\UrlInterface;
 use Tuxxedo\Mail\MailConfiguratorInterface;
 use Tuxxedo\Mail\MailManagerInterface;
 use Tuxxedo\Router\RouterInterface;
 use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
 
-// @todo Cleanup this interface
 interface ApplicationConfiguratorInterface
 {
     public string $appName {
@@ -69,22 +64,6 @@ interface ApplicationConfiguratorInterface
     }
 
     public ?RouterInterface $router {
-        get;
-    }
-
-    public ?ResponseEmitterInterface $emitter {
-        get;
-    }
-
-    public ?DispatcherInterface $dispatcher {
-        get;
-    }
-
-    public ?EventsManagerInterface $eventsManager {
-        get;
-    }
-
-    public ?UrlInterface $url {
         get;
     }
 
@@ -164,22 +143,6 @@ interface ApplicationConfiguratorInterface
 
     public function withRouter(
         RouterInterface $router,
-    ): self;
-
-    public function withEmitter(
-        ResponseEmitterInterface $emitter,
-    ): self;
-
-    public function withDispatcher(
-        DispatcherInterface $dispatcher,
-    ): self;
-
-    public function withEventsManager(
-        EventsManagerInterface $eventsManager,
-    ): self;
-
-    public function withUrl(
-        UrlInterface $url,
     ): self;
 
     public function withLumi(
