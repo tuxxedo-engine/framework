@@ -358,10 +358,10 @@ class MailException extends \Exception
         );
     }
 
-    public static function fromMailManagerConfiguratorMissingTransport(): self
+    public static function fromMailConfiguratorMissingTransport(): self
     {
         return new self(
-            message: 'MailManagerConfigurator cannot build a MailManager without a transport',
+            message: 'MailConfigurator cannot build a MailManager without a transport',
         );
     }
 

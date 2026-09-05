@@ -18,7 +18,7 @@ use Tuxxedo\Mail\Middleware\MailWireMiddlewareInterface;
 use Tuxxedo\Mail\Serializer\MessageSerializerInterface;
 use Tuxxedo\Mail\Transport\MailTransportInterface;
 
-interface MailManagerConfiguratorInterface
+interface MailConfiguratorInterface
 {
     public ?MailTransportInterface $transport {
         get;
@@ -48,10 +48,6 @@ interface MailManagerConfiguratorInterface
 
     public function withTransport(
         MailTransportInterface $transport,
-    ): self;
-
-    public function withSerializer(
-        MessageSerializerInterface $serializer,
     ): self;
 
     public function withTemplateRender(

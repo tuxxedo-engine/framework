@@ -17,26 +17,25 @@ use PHPUnit\Framework\TestCase;
 use Support\Mail\Middleware\RecordingMessageMiddleware;
 use Support\Mail\Middleware\RecordingWireMiddleware;
 use Support\Mail\RecordingMailTemplateRender;
-use Support\Mail\Serializer\StubMessageSerializer;
 use Support\Mail\StubTemplateMessage;
 use Support\Mail\Transport\RecordingMailTransport;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Mail\Config\MailManagerConfig;
 use Tuxxedo\Mail\Config\MailTemplateConfigInterface;
+use Tuxxedo\Mail\MailConfigurator;
 use Tuxxedo\Mail\MailException;
 use Tuxxedo\Mail\MailManager;
-use Tuxxedo\Mail\MailManagerConfigurator;
 use Tuxxedo\Mail\MailTemplateRenderInterface;
 use Tuxxedo\Mail\Serializer\MessageSerializer;
 use Tuxxedo\Mail\Transport\FileMail\Config\FileMailTransportConfig;
 use Tuxxedo\Mail\Transport\FileMail\FileMailTransport;
 
-class MailManagerConfiguratorTest extends TestCase
+class MailConfiguratorTest extends TestCase
 {
-    public function testConstructorFallsBackToMessageSerializer(): void
+    public function testConstructorSetsDefaultMessageSerializer(): void
     {
-        $configurator = new MailManagerConfigurator();
+        $configurator = new MailConfigurator();
 
         self::assertInstanceOf(
             MessageSerializer::class,
@@ -46,7 +45,7 @@ class MailManagerConfiguratorTest extends TestCase
 
     public function testWithTransportStoresTransportAndReturnsSelf(): void
     {
-        $configurator = new MailManagerConfigurator();
+        $configurator = new MailConfigurator();
         $transport = new RecordingMailTransport();
 
         $result = $configurator->withTransport($transport);
@@ -55,20 +54,9 @@ class MailManagerConfiguratorTest extends TestCase
         self::assertSame($transport, $configurator->transport);
     }
 
-    public function testWithSerializerReplacesSerializer(): void
-    {
-        $configurator = new MailManagerConfigurator();
-        $serializer = new StubMessageSerializer();
-
-        $result = $configurator->withSerializer($serializer);
-
-        self::assertSame($configurator, $result);
-        self::assertSame($serializer, $configurator->serializer);
-    }
-
     public function testWithMessageMiddlewareAppends(): void
     {
-        $configurator = new MailManagerConfigurator();
+        $configurator = new MailConfigurator();
         $first = new RecordingMessageMiddleware();
         $second = new RecordingMessageMiddleware();
 
@@ -86,7 +74,7 @@ class MailManagerConfiguratorTest extends TestCase
 
     public function testWithWireMiddlewareAppends(): void
     {
-        $configurator = new MailManagerConfigurator();
+        $configurator = new MailConfigurator();
         $first = new RecordingWireMiddleware();
         $second = new RecordingWireMiddleware();
 
@@ -105,13 +93,11 @@ class MailManagerConfiguratorTest extends TestCase
     public function testBuildProducesMailManagerWithConfiguredState(): void
     {
         $transport = new RecordingMailTransport();
-        $serializer = new StubMessageSerializer();
         $messageMiddleware = new RecordingMessageMiddleware();
         $wireMiddleware = new RecordingWireMiddleware();
 
-        $manager = (new MailManagerConfigurator())
+        $manager = (new MailConfigurator())
             ->withTransport($transport)
-            ->withSerializer($serializer)
             ->withMessageMiddleware($messageMiddleware)
             ->withWireMiddleware($wireMiddleware)
             ->build();
@@ -122,7 +108,7 @@ class MailManagerConfiguratorTest extends TestCase
 
     public function testBuildThrowsWhenTransportIsMissing(): void
     {
-        $configurator = new MailManagerConfigurator();
+        $configurator = new MailConfigurator();
 
         try {
             $configurator->build();
@@ -154,7 +140,7 @@ class MailManagerConfiguratorTest extends TestCase
         $container->singleton($mailConfig);
         $container->singleton($transport);
 
-        $configurator = MailManagerConfigurator::fromConfig($container);
+        $configurator = MailConfigurator::fromConfig($container);
 
         self::assertSame(
             $transport,
@@ -164,7 +150,7 @@ class MailManagerConfiguratorTest extends TestCase
 
     public function testWithTemplateRenderStoresRenderAndReturnsSelf(): void
     {
-        $configurator = new MailManagerConfigurator();
+        $configurator = new MailConfigurator();
         $templateRender = new RecordingMailTemplateRender();
 
         $result = $configurator->withTemplateRender($templateRender);
@@ -206,7 +192,7 @@ class MailManagerConfiguratorTest extends TestCase
         $container->singleton($mailConfig);
         $container->singleton($transport);
 
-        $configurator = MailManagerConfigurator::fromConfig($container);
+        $configurator = MailConfigurator::fromConfig($container);
 
         self::assertSame(
             $templateRender,
@@ -221,7 +207,7 @@ class MailManagerConfiguratorTest extends TestCase
             body: 'rendered',
         );
 
-        $manager = (new MailManagerConfigurator())
+        $manager = (new MailConfigurator())
             ->withTransport($transport)
             ->withTemplateRender($templateRender)
             ->build();

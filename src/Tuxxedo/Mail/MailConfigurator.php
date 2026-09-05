@@ -21,7 +21,7 @@ use Tuxxedo\Mail\Serializer\MessageSerializer;
 use Tuxxedo\Mail\Serializer\MessageSerializerInterface;
 use Tuxxedo\Mail\Transport\MailTransportInterface;
 
-class MailManagerConfigurator implements MailManagerConfiguratorInterface
+class MailConfigurator implements MailConfiguratorInterface
 {
     public private(set) ?MailTransportInterface $transport = null;
     public private(set) MessageSerializerInterface $serializer;
@@ -37,10 +37,9 @@ class MailManagerConfigurator implements MailManagerConfiguratorInterface
      */
     public private(set) array $wireMiddleware = [];
 
-    public function __construct(
-        ?MessageSerializerInterface $serializer = null,
-    ) {
-        $this->serializer = $serializer ?? new MessageSerializer();
+    public function __construct()
+    {
+        $this->serializer = new MessageSerializer();
     }
 
     public static function fromConfig(
@@ -62,14 +61,6 @@ class MailManagerConfigurator implements MailManagerConfiguratorInterface
         MailTransportInterface $transport,
     ): self {
         $this->transport = $transport;
-
-        return $this;
-    }
-
-    public function withSerializer(
-        MessageSerializerInterface $serializer,
-    ): self {
-        $this->serializer = $serializer;
 
         return $this;
     }
@@ -101,7 +92,7 @@ class MailManagerConfigurator implements MailManagerConfiguratorInterface
     public function build(): MailManagerInterface
     {
         if ($this->transport === null) {
-            throw MailException::fromMailManagerConfiguratorMissingTransport();
+            throw MailException::fromMailConfiguratorMissingTransport();
         }
 
         return new MailManager(

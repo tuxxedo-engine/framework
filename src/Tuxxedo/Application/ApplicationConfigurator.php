@@ -41,8 +41,8 @@ use Tuxxedo\Http\Response\ResponseEmitter;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Url\Url;
 use Tuxxedo\Http\Url\UrlInterface;
-use Tuxxedo\Mail\MailManagerConfigurator;
-use Tuxxedo\Mail\MailManagerConfiguratorInterface;
+use Tuxxedo\Mail\MailConfigurator;
+use Tuxxedo\Mail\MailConfiguratorInterface;
 use Tuxxedo\Mail\MailManagerInterface;
 use Tuxxedo\Router\DynamicRouter;
 use Tuxxedo\Router\RouterInterface;
@@ -335,7 +335,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
     }
 
     /**
-     * @param (\Closure(MailManagerConfiguratorInterface $configurator): mixed)|null $customizer
+     * @param (\Closure(MailConfiguratorInterface $configurator): mixed)|null $customizer
      */
     public function withDefaultMailManager(
         ?\Closure $customizer = null,
@@ -564,7 +564,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
             $container->singletonLazy(
                 MailManagerInterface::class,
                 static function (ContainerInterface $container) use ($customizer): MailManagerInterface {
-                    $configurator = MailManagerConfigurator::fromConfig($container);
+                    $configurator = MailConfigurator::fromConfig($container);
 
                     if ($customizer !== null) {
                         $customizer($configurator);

@@ -24,7 +24,7 @@ use Tuxxedo\Http\Kernel\KernelInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Url\UrlInterface;
-use Tuxxedo\Mail\MailManagerConfiguratorInterface;
+use Tuxxedo\Mail\MailConfiguratorInterface;
 use Tuxxedo\Mail\MailManagerInterface;
 use Tuxxedo\Router\RouterInterface;
 use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
@@ -215,7 +215,7 @@ interface ApplicationConfiguratorInterface
     ): self;
 
     /**
-     * @param (\Closure(MailManagerConfiguratorInterface $configurator): mixed)|null $customizer
+     * @param (\Closure(MailConfiguratorInterface $configurator): mixed)|null $customizer
      */
     public function withDefaultMailManager(
         ?\Closure $customizer = null,

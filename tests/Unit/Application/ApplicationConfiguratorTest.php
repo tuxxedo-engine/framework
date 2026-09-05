@@ -48,8 +48,8 @@ use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Http\Url\Url;
 use Tuxxedo\Http\Url\UrlInterface;
 use Tuxxedo\Mail\Config\MailManagerConfig;
+use Tuxxedo\Mail\MailConfiguratorInterface;
 use Tuxxedo\Mail\MailManager;
-use Tuxxedo\Mail\MailManagerConfiguratorInterface;
 use Tuxxedo\Mail\MailManagerInterface;
 use Tuxxedo\Mail\Transport\FileMail\Config\FileMailTransportConfig;
 use Tuxxedo\Mail\Transport\FileMail\FileMailTransport;
@@ -1685,7 +1685,7 @@ class ApplicationConfiguratorTest extends TestCase
 
         $configurator = $this->makeMinimalConfigurator()
             ->withDefaultMailManager(
-                customizer: static function (MailManagerConfiguratorInterface $mailConfigurator) use (&$customizerCalls): void {
+                customizer: static function (MailConfiguratorInterface $mailConfigurator) use (&$customizerCalls): void {
                     $customizerCalls++;
                 },
             );
