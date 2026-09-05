@@ -19,6 +19,7 @@ use Tuxxedo\Reflection\ClassReflector;
 use Tuxxedo\Reflection\PropertyReflector;
 use Tuxxedo\Validator\Attribute\Assert;
 use Tuxxedo\Validator\Attribute\Context;
+use Tuxxedo\Validator\Attribute\SkipCascade;
 
 /**
  * @todo Related entities reached through relation-attributed properties (`#[BelongsTo]`, `#[HasOne]`, `#[HasMany]`, `#[HasManyThrough]`, `#[HasOneThrough]`, `#[BelongsToMany]`) are NOT validated during the parent's save. Reading the relation property triggers Engine's lazy-proxy hydrator and causes runaway recursion via bidirectional links, so those properties are skipped entirely - no value read, no rules invoked, no cascade. Each related entity is expected to run its own validation via its own `ModelsManager::save()`. Revisit when a real "validate the whole aggregate in one shot" use case surfaces - likely wants an explicit `#[Valid]` opt-in marker plus identity-map awareness to break cycles without disabling the walk
@@ -290,7 +291,8 @@ class Validator implements ValidatorInterface
                 $rules[] = $rule;
             }
 
-            $skipCascade = $property->hasAttribute(RelationInterface::class);
+            $skipCascade = $property->hasAttribute(RelationInterface::class) ||
+                $property->hasAttribute(SkipCascade::class);
 
             $properties[] = new PropertyMetaData(
                 name: $property->name,

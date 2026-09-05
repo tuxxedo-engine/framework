@@ -1794,14 +1794,11 @@ abstract class AbstractPolymorphicIntegrationTestCase extends AbstractModelInteg
         self::assertSame(0, $count);
     }
 
-    public function testCascadeSaveMorphManyEarlyReturnsForUnmaterializedRelationWhenValidationSkipped(): void
+    public function testCascadeSaveMorphManyEarlyReturnsForUnmaterializedRelation(): void
     {
         $article = $this->modelsManager->fetchById(class: Article::class, id: 11);
 
-        (void) $this->modelsManager->save(
-            model: $article,
-            skipValidation: true,
-        );
+        (void) $this->modelsManager->save($article);
 
         $count = $this->connection->count(table: 'poly_comments')
             ->where('commentable_type', Article::class)
@@ -1811,14 +1808,11 @@ abstract class AbstractPolymorphicIntegrationTestCase extends AbstractModelInteg
         self::assertSame(1, $count);
     }
 
-    public function testCascadeSaveMorphToManyEarlyReturnsForUnmaterializedPivotWhenValidationSkipped(): void
+    public function testCascadeSaveMorphToManyEarlyReturnsForUnmaterializedPivot(): void
     {
         $article = $this->modelsManager->fetchById(class: Article::class, id: 11);
 
-        (void) $this->modelsManager->save(
-            model: $article,
-            skipValidation: true,
-        );
+        (void) $this->modelsManager->save($article);
 
         $count = $this->connection->count(table: 'poly_taggables')
             ->where('taggable_type', Article::class)

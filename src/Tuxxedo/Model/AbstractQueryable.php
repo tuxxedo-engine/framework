@@ -27,6 +27,7 @@ use Tuxxedo\Model\Attribute\Relation\HasOneThrough;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelPrimaryKeyInterface;
 use Tuxxedo\Model\MetaData\ModelRelationInterface;
+use Tuxxedo\Validator\Attribute\SkipCascade;
 
 /**
  * @template TModel of object
@@ -42,6 +43,7 @@ abstract class AbstractQueryable implements QueryableInterface
 
     private ?int $cachedTotalCount = null;
 
+    #[SkipCascade]
     public int $totalCount {
         get {
             return $this->cachedTotalCount ??= $this->computeTotalCount();
@@ -50,9 +52,8 @@ abstract class AbstractQueryable implements QueryableInterface
 
     /**
      * @var int<0, max>
-     *
-     * @todo Property-hook materializes on read; validator's property-walk triggers full child fetch on any cascade save/delete over a MorphMany/MorphToMany/HasMany/BelongsToMany. Skip from cascade or expose via method only.
      */
+    #[SkipCascade]
     public int $count {
         get {
             return \sizeof($this->materialize());
