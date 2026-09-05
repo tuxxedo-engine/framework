@@ -714,7 +714,9 @@ abstract class AbstractConnectionIntegrationTestCase extends TestCase
         }
 
         self::assertSame(
-            ['outer'],
+            [
+                'outer',
+            ],
             $names,
         );
     }
@@ -803,7 +805,9 @@ abstract class AbstractConnectionIntegrationTestCase extends TestCase
         }
 
         self::assertSame(
-            ['before-savepoint'],
+            [
+                'before-savepoint',
+            ],
             $names,
         );
     }
@@ -928,7 +932,9 @@ abstract class AbstractConnectionIntegrationTestCase extends TestCase
         }
 
         self::assertSame(
-            ['outer'],
+            [
+                'outer',
+            ],
             $names,
         );
     }

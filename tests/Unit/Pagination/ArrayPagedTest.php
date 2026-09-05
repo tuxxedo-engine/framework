@@ -150,7 +150,10 @@ class ArrayPagedTest extends TestCase
         );
 
         self::assertSame(
-            [0, 1],
+            [
+                0,
+                1,
+            ],
             \array_keys($result),
         );
     }

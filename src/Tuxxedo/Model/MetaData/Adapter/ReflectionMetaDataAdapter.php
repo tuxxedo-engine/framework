@@ -17,6 +17,7 @@ use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\CompositeKey;
 use Tuxxedo\Model\Attribute\Identifier;
 use Tuxxedo\Model\Attribute\Index;
+use Tuxxedo\Model\Attribute\OnConnection;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
 use Tuxxedo\Model\Attribute\Relation\HasMany;
@@ -147,7 +148,18 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             behaviors: $behaviors,
             uniques: $this->getUniques($class),
             indexes: $this->getIndexes($class),
+            connection: $this->getConnection($class),
         );
+    }
+
+    private function getConnection(
+        ClassReflector $class,
+    ): ?string {
+        if (!$class->hasAttribute(OnConnection::class)) {
+            return null;
+        }
+
+        return $class->getAttribute(OnConnection::class)->name;
     }
 
     /**

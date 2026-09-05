@@ -109,7 +109,10 @@ class KeySetTest extends TestCase
         );
 
         self::assertSame(
-            [$a, $b],
+            [
+                $a,
+                $b,
+            ],
             $set->keys,
         );
     }

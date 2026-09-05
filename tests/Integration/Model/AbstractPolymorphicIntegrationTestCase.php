@@ -1064,7 +1064,9 @@ abstract class AbstractPolymorphicIntegrationTestCase extends AbstractModelInteg
     {
         $article = $this->modelsManager->hydrator->hydrate(
             Article::class,
-            ['title' => 'unsaved'],
+            [
+                'title' => 'unsaved',
+            ],
         );
 
         self::assertInstanceOf(Relation::class, $article->comments);
@@ -1075,7 +1077,9 @@ abstract class AbstractPolymorphicIntegrationTestCase extends AbstractModelInteg
     {
         $article = $this->modelsManager->hydrator->hydrate(
             Article::class,
-            ['title' => 'unsaved'],
+            [
+                'title' => 'unsaved',
+            ],
         );
 
         self::assertInstanceOf(Relation::class, $article->tags);
@@ -1826,7 +1830,9 @@ abstract class AbstractPolymorphicIntegrationTestCase extends AbstractModelInteg
     {
         $employee = $this->modelsManager->hydrator->hydrate(
             Employee::class,
-            ['name' => 'no-id'],
+            [
+                'name' => 'no-id',
+            ],
         );
 
         self::assertNull($employee->avatar);
@@ -1837,7 +1843,9 @@ abstract class AbstractPolymorphicIntegrationTestCase extends AbstractModelInteg
         try {
             $this->modelsManager->hydrator->hydrate(
                 StrictPoster::class,
-                ['name' => 'strict-no-id'],
+                [
+                    'name' => 'strict-no-id',
+                ],
             );
 
             self::fail('Expected ModelException for missing FK on non-nullable MorphOne');
@@ -1978,13 +1986,18 @@ abstract class AbstractPolymorphicIntegrationTestCase extends AbstractModelInteg
     {
         $unsavedArticle = $this->modelsManager->hydrator->hydrate(
             Article::class,
-            ['title' => 'unsaved-in-batch'],
+            [
+                'title' => 'unsaved-in-batch',
+            ],
         );
 
         $realArticle = $this->modelsManager->fetchById(class: Article::class, id: 10);
 
         $this->modelsManager->hydrator->eagerLoad(
-            parents: [$unsavedArticle, $realArticle],
+            parents: [
+                $unsavedArticle,
+                $realArticle,
+            ],
             with: [
                 'comments' => static fn (Relation $r): Relation => $r,
             ],
@@ -2005,7 +2018,9 @@ abstract class AbstractPolymorphicIntegrationTestCase extends AbstractModelInteg
 
         try {
             $this->modelsManager->hydrator->eagerLoad(
-                parents: [$comment],
+                parents: [
+                    $comment,
+                ],
                 with: [
                     'commentable' => static fn (Relation $r): Relation => $r,
                 ],
@@ -2030,7 +2045,9 @@ abstract class AbstractPolymorphicIntegrationTestCase extends AbstractModelInteg
 
         try {
             $this->modelsManager->hydrator->eagerLoad(
-                parents: [$comment],
+                parents: [
+                    $comment,
+                ],
                 with: [
                     'commentable' => static fn (Relation $r): Relation => $r,
                 ],
@@ -2049,13 +2066,18 @@ abstract class AbstractPolymorphicIntegrationTestCase extends AbstractModelInteg
     {
         $unsavedEmployee = $this->modelsManager->hydrator->hydrate(
             Employee::class,
-            ['name' => 'unsaved-in-morph-one-batch'],
+            [
+                'name' => 'unsaved-in-morph-one-batch',
+            ],
         );
 
         $realEmployee = $this->modelsManager->fetchById(class: Employee::class, id: 500);
 
         $this->modelsManager->hydrator->eagerLoad(
-            parents: [$unsavedEmployee, $realEmployee],
+            parents: [
+                $unsavedEmployee,
+                $realEmployee,
+            ],
             with: [
                 'avatar' => static fn (Relation $r): Relation => $r,
             ],

@@ -28,6 +28,10 @@ interface ModelMetaDataInterface
         get;
     }
 
+    public ?string $connection {
+        get;
+    }
+
     public ModelPrimaryKeyInterface|ModelCompositeKeyInterface|null $key {
         get;
     }

@@ -935,4 +935,46 @@ class ModelException extends \Exception
             ),
         );
     }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromAggregateCompositeKeyEntity(
+        string $modelClass,
+        string $path,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Aggregate save cannot include entity "%s" at path "%s": composite-key entities are not yet supported in aggregate graphs (deferred post-v1.0)',
+                $modelClass,
+                $path === ''
+                    ? '(root)'
+                    : $path,
+            ),
+        );
+    }
+
+    public static function fromAggregateEntityCycle(): self
+    {
+        return new self(
+            message: 'Aggregate save cannot resolve a stable ordering: two or more attached instances reference each other, forming a cycle at the instance level',
+        );
+    }
+
+    public static function fromAggregateCrossConnection(
+        string $modelClass,
+        string $path,
+        string $declaredConnection,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Aggregate save cannot include entity "%s" at path "%s": model declares connection "%s" but the aggregate is being saved on a different connection',
+                $modelClass,
+                $path === ''
+                    ? '(root)'
+                    : $path,
+                $declaredConnection,
+            ),
+        );
+    }
 }

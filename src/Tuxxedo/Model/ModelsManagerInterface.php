@@ -27,6 +27,7 @@ use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 use Tuxxedo\Model\Hydrator\HydratorInterface;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
+use Tuxxedo\Validator\ValidationException;
 
 #[DefaultImplementation(class: ModelsManager::class, lifecycle: Lifecycle::SINGLETON)]
 interface ModelsManagerInterface
@@ -55,13 +56,16 @@ interface ModelsManagerInterface
      * @param TModel $model
      * @return TModel
      *
-     * @todo `save()` validates the passed model's own columns and property-attribute rules but does NOT recurse into related entities reached through relation attributes — they're skipped by Validator to avoid triggering lazy-proxy hydration and bidirectional-cycle recursion. Each related entity must be saved (and thus validated) independently. Revisit when a real "validate whole aggregate atomically" use case surfaces.
+     * @throws ModelException
+     * @throws ValidationException
      */
     #[\NoDiscard]
     public function save(
         object $model,
         bool $forceMaterialize = false,
         bool $skipValidation = false,
+        ValidationScope $scope = ValidationScope::SELF,
+        bool $skipCascade = false,
     ): object;
 
     /**

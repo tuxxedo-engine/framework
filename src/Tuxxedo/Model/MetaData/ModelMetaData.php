@@ -39,6 +39,7 @@ readonly class ModelMetaData implements ModelMetaDataInterface
         public array $behaviors = [],
         public array $uniques = [],
         public array $indexes = [],
+        public ?string $connection = null,
     ) {
     }
 

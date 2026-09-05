@@ -25,6 +25,7 @@ use Tuxxedo\Model\MetaData\MetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 use Tuxxedo\Model\ModelsManagerInterface;
 use Tuxxedo\Model\Query;
+use Tuxxedo\Model\ValidationScope;
 
 class StubModelsManager implements ModelsManagerInterface
 {
@@ -88,6 +89,8 @@ class StubModelsManager implements ModelsManagerInterface
         object $model,
         bool $forceMaterialize = false,
         bool $skipValidation = false,
+        ValidationScope $scope = ValidationScope::SELF,
+        bool $skipCascade = false,
     ): object {
         throw new \LogicException('Not implemented in stub');
     }

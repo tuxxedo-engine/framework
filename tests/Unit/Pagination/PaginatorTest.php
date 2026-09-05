@@ -504,7 +504,9 @@ class PaginatorTest extends TestCase
         );
 
         self::assertSame(
-            [10],
+            [
+                10,
+            ],
             $paginator->pageRange(window: -5),
         );
     }

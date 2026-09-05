@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Unit\Model\MetaData\Adapter;
 
+use Fixture\Model\Aggregate\OnConnectionAuditModel;
 use Fixture\Model\Category;
 use Fixture\Model\ClassLevelIndex;
 use Fixture\Model\ClassLevelUnique;
@@ -66,6 +67,20 @@ class ReflectionMetaDataAdapterTest extends TestCase
             'users',
             $meta->table,
         );
+    }
+
+    public function testConnectionIsNullWhenNoOnConnectionAttributePresent(): void
+    {
+        $meta = $this->adapter->getModel(User::class);
+
+        self::assertNull($meta->connection);
+    }
+
+    public function testConnectionIsPopulatedWhenOnConnectionAttributePresent(): void
+    {
+        $meta = $this->adapter->getModel(OnConnectionAuditModel::class);
+
+        self::assertSame('audit', $meta->connection);
     }
 
     public function testUserPrimaryKeyDetectedAsAutoIncrementIdColumn(): void

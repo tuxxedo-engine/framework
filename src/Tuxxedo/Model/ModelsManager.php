@@ -23,6 +23,11 @@ use Tuxxedo\Database\Query\Statement\ExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
+use Tuxxedo\Model\Aggregate\AggregateEntityCollector;
+use Tuxxedo\Model\Aggregate\AggregateSaveOrder;
+use Tuxxedo\Model\Aggregate\AggregateValidator;
+use Tuxxedo\Model\Aggregate\CollectedEntity;
+use Tuxxedo\Model\Aggregate\RelationLoadState;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
@@ -47,6 +52,7 @@ use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelPrimaryKeyInterface;
 use Tuxxedo\Model\MetaData\ModelRelationInterface;
 use Tuxxedo\Reflection\PropertyReflector;
+use Tuxxedo\Validator\ValidationException;
 use Tuxxedo\Validator\ValidatorInterface;
 
 #[DefaultInitializer(
@@ -105,13 +111,22 @@ class ModelsManager implements ModelsManagerInterface
      *
      * @param TModel $model
      * @return TModel
+     *
+     * @throws ModelException
+     * @throws ValidationException
      */
     #[\NoDiscard]
     public function save(
         object $model,
         bool $forceMaterialize = false,
         bool $skipValidation = false,
+        ValidationScope $scope = ValidationScope::SELF,
+        bool $skipCascade = false,
     ): object {
+        if ($scope === ValidationScope::AGGREGATE) {
+            return $this->saveAggregate($model, $forceMaterialize);
+        }
+
         if (isset($this->saveInProgress[$model])) {
             return $model; // @codeCoverageIgnore
         }
@@ -124,10 +139,355 @@ class ModelsManager implements ModelsManagerInterface
 
         try {
             return $this->connection->nestedTransaction(
-                fn (): object => $this->doSave($model, $forceMaterialize),
+                fn (): object => $this->doSave($model, $forceMaterialize, $skipCascade),
             );
         } finally {
             unset($this->saveInProgress[$model]);
+        }
+    }
+
+    /**
+     * @template TModel of object
+     *
+     * @param TModel $model
+     * @return TModel
+     */
+    private function saveAggregate(
+        object $model,
+        bool $forceMaterialize,
+    ): object {
+        $collector = new AggregateEntityCollector($this->metaData);
+        $aggregateValidator = new AggregateValidator($this->validator);
+        $order = new AggregateSaveOrder();
+        $entities = $collector->collect($model);
+
+        $this->guardAggregateConnections($entities);
+        $aggregateValidator->validateOrThrow($entities);
+
+        $sorted = $order->sort($entities);
+
+        /** @var TModel $result */
+        $result = $this->connection->nestedTransaction(
+            function () use ($sorted, $model, $forceMaterialize): object {
+                $rootResult = $model;
+
+                foreach ($sorted as $collected) {
+                    $this->propagateAggregateForeignKeys(
+                        entity: $collected->entity,
+                        metaData: $collected->metaData,
+                    );
+
+                    $saved = $this->save(
+                        model: $collected->entity,
+                        forceMaterialize: $forceMaterialize,
+                        skipValidation: true,
+                        skipCascade: true,
+                    );
+
+                    if ($saved !== $collected->entity) {
+                        $this->copyBackAggregatePrimaryKey(
+                            original: $collected->entity,
+                            saved: $saved,
+                            metaData: $collected->metaData,
+                        );
+                    }
+
+                    $this->propagateAggregateChildForeignKeys(
+                        entity: $collected->entity,
+                        metaData: $collected->metaData,
+                    );
+
+                    $this->flushAggregatePivots(
+                        entity: $collected->entity,
+                        metaData: $collected->metaData,
+                    );
+
+                    if ($collected->entity === $model) {
+                        $rootResult = $saved;
+                    }
+                }
+
+                return $rootResult;
+            },
+        );
+
+        return $result;
+    }
+
+    private function propagateAggregateChildForeignKeys(
+        object $entity,
+        ModelMetaDataInterface $metaData,
+    ): void {
+        foreach ($metaData->relations as $relation) {
+            $attribute = $relation->attribute;
+
+            if (!RelationLoadState::isLoaded($entity, $relation)) {
+                continue;
+            }
+
+            if ($attribute instanceof HasOne) {
+                $child = PropertyReflector::createFromObject($entity, $relation->property)->getValue($entity);
+
+                if (\is_object($child)) {
+                    $this->writeHasFkOnChild(
+                        parent: $entity,
+                        parentMetaData: $metaData,
+                        relation: $relation,
+                        localKey: $attribute->localKey,
+                        foreignKey: $attribute->foreignKey,
+                        child: $child,
+                    );
+                }
+
+                continue;
+            }
+
+            if ($attribute instanceof HasMany) {
+                $value = PropertyReflector::createFromObject($entity, $relation->property)->getValue($entity);
+
+                if ($value instanceof RelationInterface) {
+                    foreach ($value as $child) {
+                        $this->writeHasFkOnChild(
+                            parent: $entity,
+                            parentMetaData: $metaData,
+                            relation: $relation,
+                            localKey: $attribute->localKey,
+                            foreignKey: $attribute->foreignKey,
+                            child: $child,
+                        );
+                    }
+                }
+
+                continue;
+            }
+
+            if ($attribute instanceof MorphOne) {
+                $child = PropertyReflector::createFromObject($entity, $relation->property)->getValue($entity);
+
+                if (\is_object($child)) {
+                    $this->writeMorphFkOnChild(
+                        parent: $entity,
+                        parentMetaData: $metaData,
+                        relation: $relation,
+                        attribute: $attribute,
+                        child: $child,
+                    );
+                }
+
+                continue;
+            }
+
+            if ($attribute instanceof MorphMany) {
+                $value = PropertyReflector::createFromObject($entity, $relation->property)->getValue($entity);
+
+                if ($value instanceof RelationInterface) {
+                    foreach ($value as $child) {
+                        $this->writeMorphFkOnChild(
+                            parent: $entity,
+                            parentMetaData: $metaData,
+                            relation: $relation,
+                            attribute: $attribute,
+                            child: $child,
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    private function writeHasFkOnChild(
+        object $parent,
+        ModelMetaDataInterface $parentMetaData,
+        ModelRelationInterface $relation,
+        ?string $localKey,
+        string $foreignKey,
+        object $child,
+    ): void {
+        $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $localKey);
+        $localKeyValue = PropertyReflector::createFromObject($parent, $localKeyProperty)->getValue($parent);
+
+        if ($localKeyValue === null) {
+            return; // @codeCoverageIgnore
+        }
+
+        $childMetaData = $this->metaData->getModel($relation->relatedClass);
+        $foreignKeyProperty = $this->findPropertyForColumn(
+            metaData: $childMetaData,
+            relation: $relation,
+            columnName: $foreignKey,
+            keyKind: 'foreignKey',
+        );
+
+        PropertyReflector::createFromObject($child, $foreignKeyProperty)->setValue($child, $localKeyValue);
+    }
+
+    private function writeMorphFkOnChild(
+        object $parent,
+        ModelMetaDataInterface $parentMetaData,
+        ModelRelationInterface $relation,
+        MorphOne|MorphMany $attribute,
+        object $child,
+    ): void {
+        $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
+        $localKeyValue = PropertyReflector::createFromObject($parent, $localKeyProperty)->getValue($parent);
+
+        if ($localKeyValue === null) {
+            return; // @codeCoverageIgnore
+        }
+
+        $childMetaData = $this->metaData->getModel($relation->relatedClass);
+        $typeProperty = $this->findPropertyForColumnOnMetadata($childMetaData, $attribute->typeColumn);
+        $idProperty = $this->findPropertyForColumnOnMetadata($childMetaData, $attribute->idColumn);
+        $typeValue = MorphTypeResolver::encode(
+            class: $parentMetaData->model,
+            typeMap: $attribute->typeMap,
+        );
+
+        PropertyReflector::createFromObject($child, $typeProperty)->setValue($child, $typeValue);
+        PropertyReflector::createFromObject($child, $idProperty)->setValue($child, $localKeyValue);
+    }
+
+    private function flushAggregatePivots(
+        object $entity,
+        ModelMetaDataInterface $metaData,
+    ): void {
+        foreach ($metaData->relations as $relation) {
+            $attribute = $relation->attribute;
+
+            if ($attribute instanceof BelongsToMany) {
+                $this->flushBelongsToManyPivotChanges($entity, $relation);
+
+                continue;
+            }
+
+            if ($attribute instanceof MorphToMany) {
+                $this->flushMorphToManyPivotChanges($entity, $metaData, $relation);
+            }
+        }
+    }
+
+    private function copyBackAggregatePrimaryKey(
+        object $original,
+        object $saved,
+        ModelMetaDataInterface $metaData,
+    ): void {
+        if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
+            return; // @codeCoverageIgnore
+        }
+
+        $property = $metaData->key->property;
+        $savedValue = PropertyReflector::createFromObject($saved, $property)->getValue($saved);
+
+        if ($savedValue === null) {
+            return; // @codeCoverageIgnore
+        }
+
+        PropertyReflector::createFromObject($original, $property)->setValue($original, $savedValue);
+    }
+
+    /**
+     * @param list<CollectedEntity> $entities
+     *
+     * @throws ModelException
+     */
+    private function guardAggregateConnections(
+        array $entities,
+    ): void {
+        $connectionManager = null;
+
+        foreach ($entities as $collected) {
+            $declared = $collected->metaData->connection;
+
+            if ($declared === null) {
+                continue;
+            }
+
+            $connectionManager ??= $this->container->resolve(ConnectionManagerInterface::class);
+            $declaredConnection = $connectionManager->getNamedConnection($declared);
+
+            if ($declaredConnection === $this->connection) {
+                continue;
+            }
+
+            throw ModelException::fromAggregateCrossConnection(
+                modelClass: $collected->metaData->model,
+                path: $collected->path,
+                declaredConnection: $declared,
+            );
+        }
+    }
+
+    private function propagateAggregateForeignKeys(
+        object $entity,
+        ModelMetaDataInterface $metaData,
+    ): void {
+        foreach ($metaData->relations as $relation) {
+            if (!$relation->attribute instanceof BelongsTo) {
+                continue;
+            }
+
+            if (!RelationLoadState::isLoaded($entity, $relation)) {
+                continue;
+            }
+
+            $target = PropertyReflector::createFromObject($entity, $relation->property)->getValue($entity);
+
+            if (!\is_object($target)) {
+                continue; // @codeCoverageIgnore
+            }
+
+            $targetMetaData = $this->metaData->getModel($relation->relatedClass);
+
+            if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
+                continue; // @codeCoverageIgnore
+            }
+
+            $ownerKeyColumn = $relation->attribute->ownerKey ?? $targetMetaData->key->column;
+            $ownerKeyProperty = $this->findPropertyForColumnOnMetadata($targetMetaData, $ownerKeyColumn);
+            $ownerKeyValue = PropertyReflector::createFromObject($target, $ownerKeyProperty)->getValue($target);
+
+            if ($ownerKeyValue === null) {
+                continue; // @codeCoverageIgnore
+            }
+
+            $foreignKeyProperty = $this->findPropertyForColumnOnMetadata($metaData, $relation->attribute->foreignKey);
+
+            PropertyReflector::createFromObject($entity, $foreignKeyProperty)->setValue($entity, $ownerKeyValue);
+        }
+
+        foreach ($metaData->morphToRelations as $morphTo) {
+            if (!RelationLoadState::isLoaded($entity, $morphTo)) {
+                continue;
+            }
+
+            $target = PropertyReflector::createFromObject($entity, $morphTo->property)->getValue($entity);
+
+            if (!\is_object($target)) {
+                continue; // @codeCoverageIgnore
+            }
+
+            $targetMetaData = $this->metaData->getModel($target::class);
+
+            if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
+                continue; // @codeCoverageIgnore
+            }
+
+            $targetPkValue = PropertyReflector::createFromObject($target, $targetMetaData->key->property)->getValue($target);
+
+            if ($targetPkValue === null) {
+                continue; // @codeCoverageIgnore
+            }
+
+            $typeValue = MorphTypeResolver::encode(
+                class: $target::class,
+                typeMap: $morphTo->typeMap,
+            );
+
+            $typeProperty = $this->findPropertyForColumnOnMetadata($metaData, $morphTo->typeColumn);
+            $idProperty = $this->findPropertyForColumnOnMetadata($metaData, $morphTo->idColumn);
+
+            PropertyReflector::createFromObject($entity, $typeProperty)->setValue($entity, $typeValue);
+            PropertyReflector::createFromObject($entity, $idProperty)->setValue($entity, $targetPkValue);
         }
     }
 
@@ -217,10 +577,13 @@ class ModelsManager implements ModelsManagerInterface
     private function doSave(
         object $model,
         bool $forceMaterialize,
+        bool $skipCascade = false,
     ): object {
         $metaData = $this->metaData->getModel($model::class);
 
-        $this->cascadeSaveMorphToRelations($model, $metaData, $forceMaterialize);
+        if (!$skipCascade) {
+            $this->cascadeSaveMorphToRelations($model, $metaData, $forceMaterialize);
+        }
 
         if ($this->isNewModel($model, $metaData)) {
             $this->dispatchBeforeInsert($model, $metaData);
@@ -242,7 +605,9 @@ class ModelsManager implements ModelsManagerInterface
             }
         }
 
-        $this->cascadeSaveRelations($result, $metaData, $forceMaterialize);
+        if (!$skipCascade) {
+            $this->cascadeSaveRelations($result, $metaData, $forceMaterialize);
+        }
 
         return $result;
     }
