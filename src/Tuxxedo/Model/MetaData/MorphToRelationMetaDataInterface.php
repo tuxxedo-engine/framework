@@ -13,18 +13,11 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\MetaData;
 
-use Tuxxedo\Model\Attribute\Relation\RelationAttributeInterface;
+use Tuxxedo\Model\Attribute\Relation\MorphTo;
 
-interface ModelRelationInterface
+interface MorphToRelationMetaDataInterface
 {
     public string $property {
-        get;
-    }
-
-    /**
-     * @var class-string
-     */
-    public string $relatedClass {
         get;
     }
 
@@ -32,15 +25,15 @@ interface ModelRelationInterface
         get;
     }
 
-    public RelationAttributeInterface $attribute {
+    public MorphTo $attribute {
         get;
     }
 
-    public ?string $typeColumn {
+    public string $typeColumn {
         get;
     }
 
-    public ?string $idColumn {
+    public string $idColumn {
         get;
     }
 

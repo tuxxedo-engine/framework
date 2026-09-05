@@ -23,6 +23,13 @@ use Tuxxedo\Model\Attribute\Relation\HasMany;
 use Tuxxedo\Model\Attribute\Relation\HasManyThrough;
 use Tuxxedo\Model\Attribute\Relation\HasOne;
 use Tuxxedo\Model\Attribute\Relation\HasOneThrough;
+use Tuxxedo\Model\Attribute\Relation\InversePolymorphicRelationInterface;
+use Tuxxedo\Model\Attribute\Relation\MorphMany;
+use Tuxxedo\Model\Attribute\Relation\MorphOne;
+use Tuxxedo\Model\Attribute\Relation\MorphTo;
+use Tuxxedo\Model\Attribute\Relation\MorphToMany;
+use Tuxxedo\Model\Attribute\Relation\PolymorphicRelationInterface;
+use Tuxxedo\Model\Attribute\Relation\RelationAttributeInterface;
 use Tuxxedo\Model\Attribute\Relation\RelationInterface;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\Attribute\Unique;
@@ -43,6 +50,8 @@ use Tuxxedo\Model\MetaData\ModelPrimaryKey;
 use Tuxxedo\Model\MetaData\ModelPrimaryKeyInterface;
 use Tuxxedo\Model\MetaData\ModelRelation;
 use Tuxxedo\Model\MetaData\ModelRelationInterface;
+use Tuxxedo\Model\MetaData\MorphToRelationMetaData;
+use Tuxxedo\Model\MetaData\MorphToRelationMetaDataInterface;
 use Tuxxedo\Model\ModelException;
 use Tuxxedo\Model\Relation;
 use Tuxxedo\Reflection\ClassReflector;
@@ -117,6 +126,15 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
 
         $behaviors = $this->buildBehaviors($model, $columns);
 
+        $morphToRelations = [];
+        $relations = $this->getRelations(
+            class: $class,
+            columns: $columns,
+            sourcePrimaryKey: $primaryKey,
+            sourceCompositeKey: $compositeKey,
+            morphToRelations: $morphToRelations,
+        );
+
         return new ModelMetaData(
             model: $model,
             table: $this->getTable($class),
@@ -124,7 +142,8 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             columns: $columns,
             identifiers: $identifiers,
             readonly: $readonly,
-            relations: $this->getRelations($class, $columns, $primaryKey, $compositeKey),
+            relations: $relations,
+            morphToRelations: $morphToRelations,
             behaviors: $behaviors,
             uniques: $this->getUniques($class),
             indexes: $this->getIndexes($class),
@@ -171,6 +190,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
 
     /**
      * @param non-empty-array<ModelColumnInterface> $columns
+     * @param list<MorphToRelationMetaDataInterface> $morphToRelations
      * @return ModelRelationInterface[]
      *
      * @throws ModelException
@@ -180,6 +200,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         array $columns,
         ?ModelPrimaryKeyInterface $sourcePrimaryKey,
         ?ModelCompositeKeyInterface $sourceCompositeKey,
+        array &$morphToRelations,
     ): array {
         $relations = [];
         $sourceColumnNames = \array_map(
@@ -200,7 +221,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 continue;
             }
 
-            $relationAttributes = \iterator_to_array($property->getAttributes(RelationInterface::class));
+            $relationAttributes = \iterator_to_array($property->getAttributes(RelationAttributeInterface::class));
             $relationAttributesCount = \sizeof($relationAttributes);
 
             if ($relationAttributesCount === 0) {
@@ -224,6 +245,22 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 );
             }
 
+            if ($attribute instanceof PolymorphicRelationInterface) {
+                $this->processPolymorphicRelation(
+                    class: $class,
+                    property: $property,
+                    attribute: $attribute,
+                    sourceColumnNames: $sourceColumnNames,
+                    sourcePrimaryKey: $sourcePrimaryKey,
+                    parentHasSoftDelete: $parentHasSoftDelete,
+                    relations: $relations,
+                    morphToRelations: $morphToRelations,
+                );
+
+                continue;
+            }
+
+            /** @var RelationInterface $attribute */
             $relatedClass = $attribute->related;
 
             try {
@@ -347,6 +384,415 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         }
 
         return $relations;
+    }
+
+    /**
+     * @param string[] $sourceColumnNames
+     * @param list<ModelRelationInterface> $relations
+     * @param list<MorphToRelationMetaDataInterface> $morphToRelations
+     *
+     * @throws ModelException
+     */
+    private function processPolymorphicRelation(
+        ClassReflector $class,
+        PropertyReflectorInterface $property,
+        PolymorphicRelationInterface $attribute,
+        array $sourceColumnNames,
+        ?ModelPrimaryKeyInterface $sourcePrimaryKey,
+        bool $parentHasSoftDelete,
+        array &$relations,
+        array &$morphToRelations,
+    ): void {
+        $this->validatePolymorphicCascadeConfiguration(
+            modelClass: $class->name,
+            property: $property->name,
+            attribute: $attribute,
+        );
+
+        if ($attribute instanceof MorphTo) {
+            $this->validateMorphToRelation(
+                modelClass: $class->name,
+                property: $property->name,
+                attribute: $attribute,
+                sourceColumnNames: $sourceColumnNames,
+            );
+
+            $this->validateMorphToPropertyType(
+                modelClass: $class->name,
+                property: $property,
+            );
+
+            $morphToRelations[] = new MorphToRelationMetaData(
+                property: $property->name,
+                nullable: $property->isNullable(),
+                attribute: $attribute,
+                typeColumn: $attribute->typeColumn,
+                idColumn: $attribute->idColumn,
+                typeMap: $attribute->typeMap,
+            );
+
+            return;
+        }
+
+        if (!$attribute instanceof InversePolymorphicRelationInterface) {
+            // @codeCoverageIgnoreStart
+            throw ModelException::fromUnsupportedRelationType(
+                modelClass: $class->name,
+                property: $property->name,
+                relationClass: $attribute::class,
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        $relatedClass = $attribute->related;
+
+        try {
+            $relatedReflection = new \ReflectionClass($relatedClass);
+
+            if (
+                $relatedReflection->isAbstract() ||
+                $relatedReflection->isTrait() ||
+                $relatedReflection->isInterface() ||
+                $relatedReflection->isEnum()
+            ) {
+                throw new \ReflectionException();
+            }
+        } catch (\ReflectionException) {
+            throw ModelException::fromInvalidRelatedClass(
+                modelClass: $class->name,
+                property: $property->name,
+                relatedClass: $relatedClass,
+            );
+        }
+
+        if (\sizeof($relatedReflection->getAttributes(Table::class)) === 0) {
+            throw ModelException::fromRelatedClassNotAModel(
+                modelClass: $class->name,
+                property: $property->name,
+                relatedClass: $relatedClass,
+            );
+        }
+
+        $targetColumnNames = $this->getColumnNamesFromReflection($relatedReflection);
+
+        if (\sizeof($targetColumnNames) === 0) {
+            throw ModelException::fromHasNoColumns(
+                modelClass: $relatedClass,
+            );
+        }
+
+        $this->validateInverseMorphRelation(
+            modelClass: $class->name,
+            property: $property->name,
+            attribute: $attribute,
+            relatedClass: $relatedClass,
+            sourceColumnNames: $sourceColumnNames,
+            targetColumnNames: $targetColumnNames,
+            sourcePrimaryKey: $sourcePrimaryKey,
+        );
+
+        $this->validateInverseMorphPropertyType(
+            modelClass: $class->name,
+            property: $property,
+            attribute: $attribute,
+        );
+
+        $relations[] = new ModelRelation(
+            property: $property->name,
+            relatedClass: $relatedClass,
+            nullable: $property->isNullable(),
+            attribute: $attribute,
+            typeColumn: $attribute->typeColumn,
+            idColumn: $attribute->idColumn,
+            typeMap: $attribute->typeMap,
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     * @param string[] $sourceColumnNames
+     *
+     * @throws ModelException
+     */
+    private function validateMorphToRelation(
+        string $modelClass,
+        string $property,
+        MorphTo $attribute,
+        array $sourceColumnNames,
+    ): void {
+        if (!\in_array($attribute->typeColumn, $sourceColumnNames, true)) {
+            throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                modelClass: $modelClass,
+                property: $property,
+                keyKind: 'typeColumn',
+                keyValue: $attribute->typeColumn,
+                referencedClass: $modelClass,
+            );
+        }
+
+        if (!\in_array($attribute->idColumn, $sourceColumnNames, true)) {
+            throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                modelClass: $modelClass,
+                property: $property,
+                keyKind: 'idColumn',
+                keyValue: $attribute->idColumn,
+                referencedClass: $modelClass,
+            );
+        }
+
+        if ($attribute->typeMap === null) {
+            return;
+        }
+
+        foreach ($attribute->typeMap as $alias => $mappedClass) {
+            try {
+                $mappedReflection = new \ReflectionClass($mappedClass);
+
+                if (
+                    $mappedReflection->isAbstract() ||
+                    $mappedReflection->isTrait() ||
+                    $mappedReflection->isInterface() ||
+                    $mappedReflection->isEnum()
+                ) {
+                    throw new \ReflectionException();
+                }
+            } catch (\ReflectionException) {
+                throw ModelException::fromMorphTypeMapEntryInvalid(
+                    modelClass: $modelClass,
+                    property: $property,
+                    alias: $alias,
+                    mappedClass: $mappedClass,
+                );
+            }
+
+            if (\sizeof($mappedReflection->getAttributes(Table::class)) === 0) {
+                throw ModelException::fromMorphTypeMapEntryNotAModel(
+                    modelClass: $modelClass,
+                    property: $property,
+                    alias: $alias,
+                    mappedClass: $mappedClass,
+                );
+            }
+        }
+    }
+
+    /**
+     * @param class-string $modelClass
+     * @param class-string $relatedClass
+     * @param string[] $sourceColumnNames
+     * @param string[] $targetColumnNames
+     *
+     * @throws ModelException
+     */
+    private function validateInverseMorphRelation(
+        string $modelClass,
+        string $property,
+        InversePolymorphicRelationInterface $attribute,
+        string $relatedClass,
+        array $sourceColumnNames,
+        array $targetColumnNames,
+        ?ModelPrimaryKeyInterface $sourcePrimaryKey,
+    ): void {
+        if (!$attribute instanceof MorphToMany) {
+            if (!\in_array($attribute->typeColumn, $targetColumnNames, true)) {
+                throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                    modelClass: $modelClass,
+                    property: $property,
+                    keyKind: 'typeColumn',
+                    keyValue: $attribute->typeColumn,
+                    referencedClass: $relatedClass,
+                );
+            }
+
+            if (!\in_array($attribute->idColumn, $targetColumnNames, true)) {
+                throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                    modelClass: $modelClass,
+                    property: $property,
+                    keyKind: 'idColumn',
+                    keyValue: $attribute->idColumn,
+                    referencedClass: $relatedClass,
+                );
+            }
+        }
+
+        if ($attribute instanceof MorphOne || $attribute instanceof MorphMany) {
+            if ($attribute->localKey !== null && !\in_array($attribute->localKey, $sourceColumnNames, true)) {
+                throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                    modelClass: $modelClass,
+                    property: $property,
+                    keyKind: 'localKey',
+                    keyValue: $attribute->localKey,
+                    referencedClass: $modelClass,
+                );
+            }
+
+            if ($attribute->localKey === null && $sourcePrimaryKey === null) {
+                throw ModelException::fromRelationRequiresPrimaryKey(
+                    modelClass: $modelClass,
+                    property: $property,
+                    side: 'source',
+                );
+            }
+        }
+
+        if ($attribute instanceof MorphToMany && $sourcePrimaryKey === null) {
+            throw ModelException::fromRelationRequiresPrimaryKey(
+                modelClass: $modelClass,
+                property: $property,
+                side: 'source',
+            );
+        }
+
+        if ($attribute->typeMap !== null) {
+            foreach ($attribute->typeMap as $alias => $mappedClass) {
+                try {
+                    $mappedReflection = new \ReflectionClass($mappedClass);
+
+                    if (
+                        $mappedReflection->isAbstract() ||
+                        $mappedReflection->isTrait() ||
+                        $mappedReflection->isInterface() ||
+                        $mappedReflection->isEnum()
+                    ) {
+                        throw new \ReflectionException();
+                    }
+                } catch (\ReflectionException) {
+                    throw ModelException::fromMorphTypeMapEntryInvalid(
+                        modelClass: $modelClass,
+                        property: $property,
+                        alias: $alias,
+                        mappedClass: $mappedClass,
+                    );
+                }
+
+                if (\sizeof($mappedReflection->getAttributes(Table::class)) === 0) {
+                    throw ModelException::fromMorphTypeMapEntryNotAModel(
+                        modelClass: $modelClass,
+                        property: $property,
+                        alias: $alias,
+                        mappedClass: $mappedClass,
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * @param class-string $modelClass
+     *
+     * @throws ModelException
+     */
+    private function validatePolymorphicCascadeConfiguration(
+        string $modelClass,
+        string $property,
+        PolymorphicRelationInterface $attribute,
+    ): void {
+        $relationType = match (true) {
+            $attribute instanceof MorphTo => 'MorphTo',
+            $attribute instanceof MorphOne => 'MorphOne',
+            $attribute instanceof MorphMany => 'MorphMany',
+            $attribute instanceof MorphToMany => 'MorphToMany',
+            // @codeCoverageIgnoreStart
+            default => throw ModelException::fromUnsupportedRelationType(
+                modelClass: $modelClass,
+                property: $property,
+                relationClass: $attribute::class,
+            ),
+            // @codeCoverageIgnoreEnd
+        };
+
+        if (
+            $attribute->onSave === CascadeAction::RESTRICT ||
+            $attribute->onSave === CascadeAction::SET_NULL
+        ) {
+            throw ModelException::fromInvalidCascadeConfiguration(
+                modelClass: $modelClass,
+                property: $property,
+                relationType: $relationType,
+                side: 'onSave',
+                action: $attribute->onSave,
+            );
+        }
+
+        if (
+            ($attribute instanceof MorphTo || $attribute instanceof MorphToMany) &&
+            ($attribute->onDelete === CascadeAction::RESTRICT || $attribute->onDelete === CascadeAction::SET_NULL)
+        ) {
+            throw ModelException::fromInvalidCascadeConfiguration(
+                modelClass: $modelClass,
+                property: $property,
+                relationType: $relationType,
+                side: 'onDelete',
+                action: $attribute->onDelete,
+            );
+        }
+    }
+
+    /**
+     * @param class-string $modelClass
+     *
+     * @throws ModelException
+     */
+    private function validateMorphToPropertyType(
+        string $modelClass,
+        PropertyReflectorInterface $property,
+    ): void {
+        $builtin = $property->getBuiltinType();
+
+        if ($builtin === 'object') {
+            return;
+        }
+
+        $declaredType = $property->getDefaultType();
+
+        if ($declaredType === null) {
+            throw ModelException::fromMorphToPropertyMustBeObject(
+                modelClass: $modelClass,
+                property: $property->name,
+                declaredType: $builtin ?? 'mixed',
+            );
+        }
+
+        throw ModelException::fromMorphToPropertyMustBeObject(
+            modelClass: $modelClass,
+            property: $property->name,
+            declaredType: $declaredType,
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     *
+     * @throws ModelException
+     */
+    private function validateInverseMorphPropertyType(
+        string $modelClass,
+        PropertyReflectorInterface $property,
+        InversePolymorphicRelationInterface $attribute,
+    ): void {
+        $declaredType = $property->getDefaultType();
+
+        if ($declaredType === null) {
+            // @codeCoverageIgnoreStart
+            throw ModelException::fromRelationPropertyTypeUnsupported(
+                modelClass: $modelClass,
+                property: $property->name,
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        $expectedType = $attribute instanceof MorphMany || $attribute instanceof MorphToMany
+            ? Relation::class
+            : $attribute->related;
+
+        if (!\is_a($expectedType, $declaredType, true)) {
+            throw ModelException::fromRelationPropertyTypeMismatch(
+                modelClass: $modelClass,
+                property: $property->name,
+                declaredType: $declaredType,
+                expectedType: $expectedType,
+            );
+        }
     }
 
     /**

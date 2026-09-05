@@ -50,6 +50,8 @@ abstract class AbstractQueryable implements QueryableInterface
 
     /**
      * @var int<0, max>
+     *
+     * @todo Property-hook materializes on read; validator's property-walk triggers full child fetch on any cascade save/delete over a MorphMany/MorphToMany/HasMany/BelongsToMany. Skip from cascade or expose via method only.
      */
     public int $count {
         get {

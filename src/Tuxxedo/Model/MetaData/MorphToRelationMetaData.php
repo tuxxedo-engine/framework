@@ -13,21 +13,19 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\MetaData;
 
-use Tuxxedo\Model\Attribute\Relation\RelationAttributeInterface;
+use Tuxxedo\Model\Attribute\Relation\MorphTo;
 
-readonly class ModelRelation implements ModelRelationInterface
+readonly class MorphToRelationMetaData implements MorphToRelationMetaDataInterface
 {
     /**
-     * @param class-string $relatedClass
      * @param array<string, class-string>|null $typeMap
      */
     public function __construct(
         public string $property,
-        public string $relatedClass,
         public bool $nullable,
-        public RelationAttributeInterface $attribute,
-        public ?string $typeColumn = null,
-        public ?string $idColumn = null,
+        public MorphTo $attribute,
+        public string $typeColumn,
+        public string $idColumn,
         public ?array $typeMap = null,
     ) {
     }

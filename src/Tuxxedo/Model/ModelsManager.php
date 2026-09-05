@@ -30,6 +30,9 @@ use Tuxxedo\Model\Attribute\Relation\HasMany;
 use Tuxxedo\Model\Attribute\Relation\HasManyThrough;
 use Tuxxedo\Model\Attribute\Relation\HasOne;
 use Tuxxedo\Model\Attribute\Relation\HasOneThrough;
+use Tuxxedo\Model\Attribute\Relation\MorphMany;
+use Tuxxedo\Model\Attribute\Relation\MorphOne;
+use Tuxxedo\Model\Attribute\Relation\MorphToMany;
 use Tuxxedo\Model\Behavior\BeforeDeleteBehaviorInterface;
 use Tuxxedo\Model\Behavior\BeforeInsertBehaviorInterface;
 use Tuxxedo\Model\Behavior\BeforeUpdateBehaviorInterface;
@@ -198,6 +201,10 @@ class ModelsManager implements ModelsManagerInterface
             );
         }
 
+        foreach ($metaData->morphToRelations as $morphTo) {
+            $statement->index($morphTo->typeColumn, $morphTo->idColumn);
+        }
+
         return $statement;
     }
 
@@ -212,6 +219,8 @@ class ModelsManager implements ModelsManagerInterface
         bool $forceMaterialize,
     ): object {
         $metaData = $this->metaData->getModel($model::class);
+
+        $this->cascadeSaveMorphToRelations($model, $metaData, $forceMaterialize);
 
         if ($this->isNewModel($model, $metaData)) {
             $this->dispatchBeforeInsert($model, $metaData);
@@ -522,6 +531,10 @@ class ModelsManager implements ModelsManagerInterface
                 $this->flushBelongsToManyPivotChanges($model, $relation);
             }
 
+            if ($attribute instanceof MorphToMany) {
+                $this->flushMorphToManyPivotChanges($model, $metaData, $relation);
+            }
+
             if ($attribute->onSave !== CascadeAction::CASCADE) {
                 continue;
             }
@@ -540,6 +553,24 @@ class ModelsManager implements ModelsManagerInterface
 
             if ($attribute instanceof BelongsToMany) {
                 $this->cascadeSaveBelongsToManyRelation($model, $relation, $forceMaterialize);
+
+                continue;
+            }
+
+            if ($attribute instanceof MorphOne) {
+                $this->cascadeSaveMorphSingleObjectRelation($model, $metaData, $relation, $forceMaterialize);
+
+                continue;
+            }
+
+            if ($attribute instanceof MorphMany) {
+                $this->cascadeSaveMorphCollectionRelation($model, $metaData, $relation, $forceMaterialize);
+
+                continue;
+            }
+
+            if ($attribute instanceof MorphToMany) {
+                $this->cascadeSaveMorphToManyRelation($model, $relation, $forceMaterialize);
             }
         }
     }
@@ -718,6 +749,257 @@ class ModelsManager implements ModelsManagerInterface
         $value->clearPending();
     }
 
+    private function cascadeSaveMorphToRelations(
+        object $model,
+        ModelMetaDataInterface $metaData,
+        bool $forceMaterialize,
+    ): void {
+        foreach ($metaData->morphToRelations as $morphTo) {
+            if ($morphTo->attribute->onSave !== CascadeAction::CASCADE) {
+                continue;
+            }
+
+            $value = PropertyReflector::createFromObject($model, $morphTo->property)->getValue($model);
+
+            if (!\is_object($value)) {
+                continue;
+            }
+
+            $reflection = new \ReflectionClass($value);
+
+            if ($reflection->isUninitializedLazyObject($value)) {
+                if (!$forceMaterialize) {
+                    continue;
+                }
+
+                $reflection->initializeLazyObject($value);
+            }
+
+            $saved = $this->save(
+                model: $value,
+                forceMaterialize: $forceMaterialize,
+            );
+
+            $targetMetaData = $this->metaData->getModel($saved::class);
+
+            if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
+                // @codeCoverageIgnoreStart
+                throw ModelException::fromCantFetchWithoutPrimaryKey(
+                    modelClass: $saved::class,
+                );
+                // @codeCoverageIgnoreEnd
+            }
+
+            $targetPkValue = PropertyReflector::createFromObject($saved, $targetMetaData->key->property)->getValue($saved);
+            $typeValue = MorphTypeResolver::encode(
+                class: $saved::class,
+                typeMap: $morphTo->typeMap,
+            );
+
+            $typeProperty = $this->findPropertyForColumnOnMetadata($metaData, $morphTo->typeColumn);
+            $idProperty = $this->findPropertyForColumnOnMetadata($metaData, $morphTo->idColumn);
+
+            PropertyReflector::createFromObject($model, $typeProperty)->setValue($model, $typeValue);
+            PropertyReflector::createFromObject($model, $idProperty)->setValue($model, $targetPkValue);
+        }
+    }
+
+    private function cascadeSaveMorphSingleObjectRelation(
+        object $model,
+        ModelMetaDataInterface $parentMetaData,
+        ModelRelationInterface $relation,
+        bool $forceMaterialize,
+    ): void {
+        /** @var MorphOne $attribute */
+        $attribute = $relation->attribute;
+        $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
+
+        if (!\is_object($value)) {
+            return;
+        }
+
+        $reflection = new \ReflectionClass($value);
+
+        if ($reflection->isUninitializedLazyObject($value)) {
+            if (!$forceMaterialize) {
+                return;
+            }
+
+            $reflection->initializeLazyObject($value);
+        }
+
+        $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
+        $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
+
+        $childMetaData = $this->metaData->getModel($relation->relatedClass);
+        $typeProperty = $this->findPropertyForColumnOnMetadata($childMetaData, $attribute->typeColumn);
+        $idProperty = $this->findPropertyForColumnOnMetadata($childMetaData, $attribute->idColumn);
+        $typeValue = MorphTypeResolver::encode(
+            class: $parentMetaData->model,
+            typeMap: $attribute->typeMap,
+        );
+
+        PropertyReflector::createFromObject($value, $typeProperty)->setValue($value, $typeValue);
+        PropertyReflector::createFromObject($value, $idProperty)->setValue($value, $localKeyValue);
+
+        (void) $this->save(
+            model: $value,
+            forceMaterialize: $forceMaterialize,
+        );
+    }
+
+    private function cascadeSaveMorphCollectionRelation(
+        object $model,
+        ModelMetaDataInterface $parentMetaData,
+        ModelRelationInterface $relation,
+        bool $forceMaterialize,
+    ): void {
+        /** @var MorphMany $attribute */
+        $attribute = $relation->attribute;
+        $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
+
+        if (!$value instanceof RelationInterface) {
+            return;
+        }
+
+        $hasPending = $value->pendingAdds !== [] || $value->pendingRemoves !== [];
+
+        if (!$value->isMaterialized() && !$hasPending && !$forceMaterialize) {
+            return;
+        }
+
+        $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
+        $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
+
+        $childMetaData = $this->metaData->getModel($relation->relatedClass);
+        $typeProperty = $this->findPropertyForColumnOnMetadata($childMetaData, $attribute->typeColumn);
+        $idProperty = $this->findPropertyForColumnOnMetadata($childMetaData, $attribute->idColumn);
+        $typeValue = MorphTypeResolver::encode(
+            class: $parentMetaData->model,
+            typeMap: $attribute->typeMap,
+        );
+
+        foreach ($value as $item) {
+            PropertyReflector::createFromObject($item, $typeProperty)->setValue($item, $typeValue);
+            PropertyReflector::createFromObject($item, $idProperty)->setValue($item, $localKeyValue);
+
+            (void) $this->save(
+                model: $item,
+                forceMaterialize: $forceMaterialize,
+            );
+        }
+
+        if ($attribute->removeOrphan) {
+            foreach ($value->pendingRemoves as $item) {
+                (void) $this->delete($item);
+            }
+        }
+
+        $value->clearPending();
+    }
+
+    private function cascadeSaveMorphToManyRelation(
+        object $model,
+        ModelRelationInterface $relation,
+        bool $forceMaterialize,
+    ): void {
+        $attribute = $relation->attribute;
+
+        if (!$attribute instanceof MorphToMany) {
+            return; // @codeCoverageIgnore
+        }
+
+        $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
+
+        if (!$value instanceof RelationInterface) {
+            return;
+        }
+
+        $hasPending = $value->pendingAdds !== [] || $value->pendingRemoves !== [];
+
+        if (!$value->isMaterialized() && !$hasPending && !$forceMaterialize) {
+            return;
+        }
+
+        foreach ($value as $item) {
+            (void) $this->save(
+                model: $item,
+                forceMaterialize: $forceMaterialize,
+            );
+        }
+    }
+
+    private function flushMorphToManyPivotChanges(
+        object $model,
+        ModelMetaDataInterface $parentMetaData,
+        ModelRelationInterface $relation,
+    ): void {
+        $attribute = $relation->attribute;
+
+        if (!$attribute instanceof MorphToMany) {
+            return; // @codeCoverageIgnore
+        }
+
+        $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
+
+        if (!$value instanceof RelationInterface) {
+            return;
+        }
+
+        if ($value->pendingAdds === [] && $value->pendingRemoves === []) {
+            return;
+        }
+
+        $localKeyValue = $this->resolveOwnKeyValue($model, $parentMetaData);
+        $relatedMetaData = $this->metaData->getModel($relation->relatedClass);
+        $typeValue = MorphTypeResolver::encode(
+            class: $parentMetaData->model,
+            typeMap: $attribute->typeMap,
+        );
+
+        foreach ($value->pendingRemoves as $item) {
+            $foreignKeyValue = $this->resolveOwnKeyValue($item, $relatedMetaData);
+
+            $this->connection
+                ->delete($attribute->table)
+                ->where($attribute->typeColumn, $typeValue)
+                ->where($attribute->idColumn, $localKeyValue)
+                ->where($attribute->foreignKey, $foreignKeyValue)
+                ->execute();
+        }
+
+        foreach ($value->pendingAdds as $item) {
+            $foreignKeyValue = $this->resolveOwnKeyValue($item, $relatedMetaData);
+
+            $this->connection
+                ->insert($attribute->table)
+                ->set($attribute->typeColumn, $typeValue)
+                ->set($attribute->idColumn, $localKeyValue)
+                ->set($attribute->foreignKey, $foreignKeyValue)
+                ->execute();
+        }
+
+        $value->clearPending();
+    }
+
+    private function findPropertyForColumnOnMetadata(
+        ModelMetaDataInterface $metaData,
+        string $columnName,
+    ): string {
+        foreach ($metaData->columns as $column) {
+            if ($column->column === $columnName) {
+                return $column->property;
+            }
+        }
+
+        // @codeCoverageIgnoreStart
+        throw ModelException::fromPropertyIsNotAColumn(
+            modelClass: $metaData->model,
+            property: $columnName,
+        );
+        // @codeCoverageIgnoreEnd
+    }
+
     private function resolveOwnKeyValue(
         object $model,
         ModelMetaDataInterface $metaData,
@@ -837,19 +1119,27 @@ class ModelsManager implements ModelsManagerInterface
                 continue;
             }
 
+            $attribute = $relation->attribute;
+
             if ($action === CascadeAction::RESTRICT) {
-                $this->cascadeDeleteRestrictRelation($model, $relation);
+                if ($attribute instanceof MorphOne || $attribute instanceof MorphMany) {
+                    $this->cascadeDeleteMorphRestrictRelation($model, $metaData, $relation);
+                } else {
+                    $this->cascadeDeleteRestrictRelation($model, $relation);
+                }
 
                 continue;
             }
 
             if ($action === CascadeAction::SET_NULL) {
-                $this->cascadeDeleteSetNullRelation($model, $relation);
+                if ($attribute instanceof MorphOne || $attribute instanceof MorphMany) {
+                    $this->cascadeDeleteMorphSetNullRelation($model, $metaData, $relation);
+                } else {
+                    $this->cascadeDeleteSetNullRelation($model, $relation);
+                }
 
                 continue;
             }
-
-            $attribute = $relation->attribute;
 
             if ($attribute instanceof HasOne || $attribute instanceof BelongsTo) {
                 $this->cascadeDeleteSingleObjectRelation($model, $relation, $force);
@@ -865,6 +1155,24 @@ class ModelsManager implements ModelsManagerInterface
 
             if ($attribute instanceof BelongsToMany) {
                 $this->cascadeDeleteBelongsToManyPivot($model, $relation);
+
+                continue;
+            }
+
+            if ($attribute instanceof MorphOne) {
+                $this->cascadeDeleteMorphSingleObjectRelation($model, $metaData, $relation, $force);
+
+                continue;
+            }
+
+            if ($attribute instanceof MorphMany) {
+                $this->cascadeDeleteMorphCollectionRelation($model, $metaData, $relation, $force);
+
+                continue;
+            }
+
+            if ($attribute instanceof MorphToMany) {
+                $this->cascadeDeleteMorphToManyPivot($model, $metaData, $relation);
 
                 continue;
             }
@@ -1092,6 +1400,243 @@ class ModelsManager implements ModelsManagerInterface
             ->update($relatedMetaData->table)
             ->set($attribute->foreignKey, null)
             ->where($attribute->foreignKey, $localKeyValue)
+            ->execute();
+    }
+
+    private function cascadeDeleteMorphSingleObjectRelation(
+        object $model,
+        ModelMetaDataInterface $parentMetaData,
+        ModelRelationInterface $relation,
+        bool $force,
+    ): void {
+        /** @var MorphOne $attribute */
+        $attribute = $relation->attribute;
+        $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
+        $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
+        $localKeyValue = $this->dehydrateColumnValue($parentMetaData, $localKeyProperty, $localKeyValue);
+
+        if (!\is_scalar($localKeyValue)) {
+            return; // @codeCoverageIgnore
+        }
+
+        $typeColumn = $attribute->typeColumn;
+        $idColumn = $attribute->idColumn;
+        $typeValue = MorphTypeResolver::encode(
+            class: $parentMetaData->model,
+            typeMap: $attribute->typeMap,
+        );
+
+        $child = $this->findFirst(
+            $relation->relatedClass,
+            static function (SelectStatementInterface $statement) use ($typeColumn, $idColumn, $typeValue, $localKeyValue): void {
+                $statement
+                    ->where($typeColumn, $typeValue)
+                    ->where($idColumn, $localKeyValue);
+            },
+        );
+
+        if ($child === null) {
+            return;
+        }
+
+        if ($force) {
+            (void) $this->forceDelete($child);
+
+            return;
+        }
+
+        (void) $this->delete($child);
+    }
+
+    private function cascadeDeleteMorphCollectionRelation(
+        object $model,
+        ModelMetaDataInterface $parentMetaData,
+        ModelRelationInterface $relation,
+        bool $force,
+    ): void {
+        /** @var MorphMany $attribute */
+        $attribute = $relation->attribute;
+
+        if ($attribute->bulkDelete) {
+            $this->cascadeMorphBulkDeleteRelation($model, $parentMetaData, $relation, $attribute);
+
+            return;
+        }
+
+        $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
+
+        if (!$value instanceof RelationInterface) {
+            return; // @codeCoverageIgnore
+        }
+
+        foreach ($value as $item) {
+            if ($force) {
+                (void) $this->forceDelete($item);
+
+                continue;
+            }
+
+            (void) $this->delete($item);
+        }
+    }
+
+    private function cascadeMorphBulkDeleteRelation(
+        object $model,
+        ModelMetaDataInterface $parentMetaData,
+        ModelRelationInterface $relation,
+        MorphMany $attribute,
+    ): void {
+        $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
+        $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
+
+        if ($localKeyValue === null) {
+            return; // @codeCoverageIgnore
+        }
+
+        if (!\is_scalar($localKeyValue)) {
+            // @codeCoverageIgnoreStart
+            throw ModelException::fromPropertyValueMustBeScalar(
+                modelClass: $parentMetaData->model,
+                property: $localKeyProperty,
+                actualType: \get_debug_type($localKeyValue),
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        $childMetaData = $this->metaData->getModel($relation->relatedClass);
+        $typeValue = MorphTypeResolver::encode(
+            class: $parentMetaData->model,
+            typeMap: $attribute->typeMap,
+        );
+
+        $this->connection
+            ->delete($childMetaData->table)
+            ->where($attribute->typeColumn, $typeValue)
+            ->where($attribute->idColumn, $localKeyValue)
+            ->execute();
+    }
+
+    private function cascadeDeleteMorphToManyPivot(
+        object $model,
+        ModelMetaDataInterface $parentMetaData,
+        ModelRelationInterface $relation,
+    ): void {
+        $attribute = $relation->attribute;
+
+        if (!$attribute instanceof MorphToMany) {
+            return; // @codeCoverageIgnore
+        }
+
+        $localKeyValue = $this->resolveOwnKeyValue($model, $parentMetaData);
+        $typeValue = MorphTypeResolver::encode(
+            class: $parentMetaData->model,
+            typeMap: $attribute->typeMap,
+        );
+
+        $this->connection
+            ->delete($attribute->table)
+            ->where($attribute->typeColumn, $typeValue)
+            ->where($attribute->idColumn, $localKeyValue)
+            ->execute();
+    }
+
+    private function cascadeDeleteMorphRestrictRelation(
+        object $model,
+        ModelMetaDataInterface $parentMetaData,
+        ModelRelationInterface $relation,
+    ): void {
+        $attribute = $relation->attribute;
+
+        if ($attribute instanceof MorphOne) {
+            $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
+            $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
+            $localKeyValue = $this->dehydrateColumnValue($parentMetaData, $localKeyProperty, $localKeyValue);
+
+            if (!\is_scalar($localKeyValue)) {
+                return; // @codeCoverageIgnore
+            }
+
+            $relatedMetaData = $this->metaData->getModel($relation->relatedClass);
+            $typeValue = MorphTypeResolver::encode(
+                class: $parentMetaData->model,
+                typeMap: $attribute->typeMap,
+            );
+
+            $count = $this->connection->count($relatedMetaData->table)
+                ->where($attribute->typeColumn, $typeValue)
+                ->where($attribute->idColumn, $localKeyValue)
+                ->count();
+
+            if ($count === 0) {
+                return;
+            }
+
+            throw ModelException::fromRestrictedRelation(
+                modelClass: $model::class,
+                property: $relation->property,
+                relatedClass: $relation->relatedClass,
+            );
+        }
+
+        if ($attribute instanceof MorphMany) {
+            $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
+
+            if (!$value instanceof RelationInterface) {
+                return; // @codeCoverageIgnore
+            }
+
+            if ($value->totalCount === 0) {
+                return;
+            }
+
+            throw ModelException::fromRestrictedRelation(
+                modelClass: $model::class,
+                property: $relation->property,
+                relatedClass: $relation->relatedClass,
+            );
+        }
+    }
+
+    private function cascadeDeleteMorphSetNullRelation(
+        object $model,
+        ModelMetaDataInterface $parentMetaData,
+        ModelRelationInterface $relation,
+    ): void {
+        $attribute = $relation->attribute;
+
+        if (
+            !$attribute instanceof MorphOne &&
+            !$attribute instanceof MorphMany
+        ) {
+            return; // @codeCoverageIgnore
+        }
+
+        $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
+        $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
+        $localKeyValue = $this->dehydrateColumnValue($parentMetaData, $localKeyProperty, $localKeyValue);
+
+        if ($localKeyValue === null) {
+            // @codeCoverageIgnoreStart
+            throw ModelException::fromPropertyValueMustBeScalar(
+                modelClass: $parentMetaData->model,
+                property: $localKeyProperty,
+                actualType: 'null',
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        $relatedMetaData = $this->metaData->getModel($relation->relatedClass);
+        $typeValue = MorphTypeResolver::encode(
+            class: $parentMetaData->model,
+            typeMap: $attribute->typeMap,
+        );
+
+        $this->connection
+            ->update($relatedMetaData->table)
+            ->set($attribute->typeColumn, null)
+            ->set($attribute->idColumn, null)
+            ->where($attribute->typeColumn, $typeValue)
+            ->where($attribute->idColumn, $localKeyValue)
             ->execute();
     }
 

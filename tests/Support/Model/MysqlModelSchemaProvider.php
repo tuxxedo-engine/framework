@@ -325,4 +325,201 @@ class MysqlModelSchemaProvider implements ModelSchemaProvider
             'nullable_ref_id INT NULL' .
             ')';
     }
+
+    public function articlesPolymorphicSchemaSql(): string
+    {
+        return 'CREATE TABLE articles (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'user_id INT NOT NULL, ' .
+            'title VARCHAR(255) NOT NULL' .
+            ')';
+    }
+
+    public function videosPolymorphicSchemaSql(): string
+    {
+        return 'CREATE TABLE videos (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'user_id INT NOT NULL, ' .
+            'title VARCHAR(255) NOT NULL' .
+            ')';
+    }
+
+    public function polyCommentsSchemaSql(): string
+    {
+        return 'CREATE TABLE poly_comments (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'commentable_type VARCHAR(255) NOT NULL, ' .
+            'commentable_id INT NOT NULL, ' .
+            'body TEXT NOT NULL' .
+            ')';
+    }
+
+    public function polyTagsSchemaSql(): string
+    {
+        return 'CREATE TABLE poly_tags (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'name VARCHAR(100) NOT NULL' .
+            ')';
+    }
+
+    public function polyTaggablesPivotSchemaSql(): string
+    {
+        return 'CREATE TABLE poly_taggables (' .
+            'tag_id INT NOT NULL, ' .
+            'taggable_type VARCHAR(255) NOT NULL, ' .
+            'taggable_id INT NOT NULL, ' .
+            'PRIMARY KEY (tag_id, taggable_type, taggable_id)' .
+            ')';
+    }
+
+    public function employeesPolymorphicSchemaSql(): string
+    {
+        return 'CREATE TABLE employees (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'name VARCHAR(100) NOT NULL' .
+            ')';
+    }
+
+    public function avatarsPolymorphicSchemaSql(): string
+    {
+        return 'CREATE TABLE avatars (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'subject_type VARCHAR(255) NOT NULL, ' .
+            'subject_id INT NOT NULL, ' .
+            'url VARCHAR(255) NOT NULL' .
+            ')';
+    }
+
+    public function mappedArticlesSchemaSql(): string
+    {
+        return 'CREATE TABLE mapped_articles (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'title VARCHAR(255) NOT NULL' .
+            ')';
+    }
+
+    public function mappedCommentsSchemaSql(): string
+    {
+        return 'CREATE TABLE mapped_comments (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'commentable_type VARCHAR(255) NOT NULL, ' .
+            'commentable_id INT NOT NULL, ' .
+            'body TEXT NOT NULL' .
+            ')';
+    }
+
+    public function restrictArticlesSchemaSql(): string
+    {
+        return 'CREATE TABLE restrict_articles (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'title VARCHAR(255) NOT NULL' .
+            ')';
+    }
+
+    public function nullableAvatarsSchemaSql(): string
+    {
+        return 'CREATE TABLE nullable_avatars (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'subject_type VARCHAR(255) NULL, ' .
+            'subject_id INT NULL, ' .
+            'url VARCHAR(255) NOT NULL' .
+            ')';
+    }
+
+    public function setNullOwnersSchemaSql(): string
+    {
+        return 'CREATE TABLE set_null_owners (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'name VARCHAR(100) NOT NULL' .
+            ')';
+    }
+
+    public function bulkDeleteBoardsSchemaSql(): string
+    {
+        return 'CREATE TABLE bulk_delete_boards (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'name VARCHAR(100) NOT NULL' .
+            ')';
+    }
+
+    public function orphanFeedsSchemaSql(): string
+    {
+        return 'CREATE TABLE orphan_feeds (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'name VARCHAR(100) NOT NULL' .
+            ')';
+    }
+
+    public function strictCommentsSchemaSql(): string
+    {
+        return 'CREATE TABLE strict_comments (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'commentable_type VARCHAR(255) NOT NULL, ' .
+            'commentable_id INT NOT NULL, ' .
+            'body TEXT NOT NULL' .
+            ')';
+    }
+
+    public function cascadeSaveCommentsSchemaSql(): string
+    {
+        return 'CREATE TABLE cascade_save_comments (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'commentable_type VARCHAR(255) NOT NULL, ' .
+            'commentable_id INT NOT NULL, ' .
+            'body TEXT NOT NULL' .
+            ')';
+    }
+
+    public function plainAvatarsSchemaSql(): string
+    {
+        return 'CREATE TABLE plain_avatars (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'subject_type VARCHAR(255) NOT NULL, ' .
+            'subject_id INT NOT NULL, ' .
+            'url VARCHAR(255) NOT NULL' .
+            ')';
+    }
+
+    public function postersSchemaSql(): string
+    {
+        return 'CREATE TABLE posters (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'name VARCHAR(100) NOT NULL' .
+            ')';
+    }
+
+    public function simpleHostsSchemaSql(): string
+    {
+        return 'CREATE TABLE simple_hosts (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'name VARCHAR(100) NOT NULL' .
+            ')';
+    }
+
+    public function hostedCommentsSchemaSql(): string
+    {
+        return 'CREATE TABLE hosted_comments (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'host_type VARCHAR(255) NOT NULL, ' .
+            'host_id INT NOT NULL, ' .
+            'body TEXT NOT NULL' .
+            ')';
+    }
+
+    public function strictPostersSchemaSql(): string
+    {
+        return 'CREATE TABLE strict_posters (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'name VARCHAR(100) NOT NULL' .
+            ')';
+    }
+
+    public function localKeyPostersSchemaSql(): string
+    {
+        return 'CREATE TABLE localkey_posters (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'external_id INT NOT NULL, ' .
+            'name VARCHAR(100) NOT NULL' .
+            ')';
+    }
 }

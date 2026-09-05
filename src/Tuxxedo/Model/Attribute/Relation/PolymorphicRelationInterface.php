@@ -13,12 +13,20 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\Attribute\Relation;
 
-interface RelationInterface extends RelationAttributeInterface
+interface PolymorphicRelationInterface extends RelationAttributeInterface
 {
+    public string $typeColumn {
+        get;
+    }
+
+    public string $idColumn {
+        get;
+    }
+
     /**
-     * @var class-string
+     * @var array<string, class-string>|null
      */
-    public string $related {
+    public ?array $typeMap {
         get;
     }
 }

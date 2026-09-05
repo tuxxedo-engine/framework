@@ -13,12 +13,15 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\Attribute\Relation;
 
-interface RelationInterface extends RelationAttributeInterface
+use Tuxxedo\Model\CascadeAction;
+
+interface RelationAttributeInterface
 {
-    /**
-     * @var class-string
-     */
-    public string $related {
+    public CascadeAction $onSave {
+        get;
+    }
+
+    public CascadeAction $onDelete {
         get;
     }
 }

@@ -80,4 +80,48 @@ interface ModelSchemaProvider
     public function nullableThroughOwnersSchemaSql(): string;
 
     public function strictThroughOwnersSchemaSql(): string;
+
+    public function articlesPolymorphicSchemaSql(): string;
+
+    public function videosPolymorphicSchemaSql(): string;
+
+    public function polyCommentsSchemaSql(): string;
+
+    public function polyTagsSchemaSql(): string;
+
+    public function polyTaggablesPivotSchemaSql(): string;
+
+    public function employeesPolymorphicSchemaSql(): string;
+
+    public function avatarsPolymorphicSchemaSql(): string;
+
+    public function mappedArticlesSchemaSql(): string;
+
+    public function mappedCommentsSchemaSql(): string;
+
+    public function restrictArticlesSchemaSql(): string;
+
+    public function nullableAvatarsSchemaSql(): string;
+
+    public function setNullOwnersSchemaSql(): string;
+
+    public function bulkDeleteBoardsSchemaSql(): string;
+
+    public function orphanFeedsSchemaSql(): string;
+
+    public function strictCommentsSchemaSql(): string;
+
+    public function cascadeSaveCommentsSchemaSql(): string;
+
+    public function plainAvatarsSchemaSql(): string;
+
+    public function postersSchemaSql(): string;
+
+    public function simpleHostsSchemaSql(): string;
+
+    public function hostedCommentsSchemaSql(): string;
+
+    public function strictPostersSchemaSql(): string;
+
+    public function localKeyPostersSchemaSql(): string;
 }

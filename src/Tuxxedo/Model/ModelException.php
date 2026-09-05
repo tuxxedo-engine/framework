@@ -841,4 +841,98 @@ class ModelException extends \Exception
             message: 'Invalid model class supplied to the #[Model] attribute, type must be a class',
         );
     }
+
+    /**
+     * @param class-string $modelClass
+     *
+     * @codeCoverageIgnore
+     */
+    public static function fromPolymorphicRelationInFixedTargetPath(
+        string $modelClass,
+        string $property,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Polymorphic relation "%s::$%s" reached a code path that only supports fixed-target relations; this indicates a metadata-processing bug',
+                $modelClass,
+                $property,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromMorphTypeMapEntryInvalid(
+        string $modelClass,
+        string $property,
+        string $alias,
+        string $mappedClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Polymorphic relation on property "%s" has typeMap entry "%s" pointing at "%s", which does not exist or is not a non-abstract class',
+                $modelClass,
+                $property,
+                $alias,
+                $mappedClass,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromMorphTypeMapEntryNotAModel(
+        string $modelClass,
+        string $property,
+        string $alias,
+        string $mappedClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Polymorphic relation on property "%s" has typeMap entry "%s" pointing at "%s", which is missing the #[Table] attribute and cannot be used as a morph target',
+                $modelClass,
+                $property,
+                $alias,
+                $mappedClass,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromMorphTypeValueUnresolvable(
+        string $modelClass,
+        string $property,
+        string $typeValue,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Polymorphic relation "%s::$%s" cannot resolve type value "%s" to a target class (not in typeMap and not a loadable class-string)',
+                $modelClass,
+                $property,
+                $typeValue,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromMorphToPropertyMustBeObject(
+        string $modelClass,
+        string $property,
+        string $declaredType,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": #[MorphTo] property "%s" declares type "%s" but must be typed as "object" (or nullable "?object") since the concrete target is resolved at runtime',
+                $modelClass,
+                $property,
+                $declaredType,
+            ),
+        );
+    }
 }

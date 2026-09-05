@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\Attribute\Relation;
 
-interface RelationInterface extends RelationAttributeInterface
+interface InversePolymorphicRelationInterface extends PolymorphicRelationInterface
 {
     /**
      * @var class-string

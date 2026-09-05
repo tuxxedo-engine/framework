@@ -54,6 +54,13 @@ interface ModelMetaDataInterface
     }
 
     /**
+     * @var list<MorphToRelationMetaDataInterface>
+     */
+    public array $morphToRelations {
+        get;
+    }
+
+    /**
      * @var array<string, class-string<BehaviorInterface>>
      */
     public array $behaviors {
