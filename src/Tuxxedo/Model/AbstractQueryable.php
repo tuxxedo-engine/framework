@@ -18,12 +18,16 @@ use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
+use Tuxxedo\Model\Attribute\Aggregate\RelationAggregateFunction;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
 use Tuxxedo\Model\Attribute\Relation\HasMany;
 use Tuxxedo\Model\Attribute\Relation\HasManyThrough;
 use Tuxxedo\Model\Attribute\Relation\HasOne;
 use Tuxxedo\Model\Attribute\Relation\HasOneThrough;
+use Tuxxedo\Model\Attribute\Relation\MorphMany;
+use Tuxxedo\Model\Attribute\Relation\MorphOne;
+use Tuxxedo\Model\Attribute\Relation\MorphToMany;
 use Tuxxedo\Model\MetaData\ModelCompositeKeyInterface;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelPrimaryKeyInterface;
@@ -578,6 +582,171 @@ abstract class AbstractQueryable implements QueryableInterface
         );
     }
 
+    #[\NoDiscard]
+    public function withCount(
+        string $relationName,
+        ?string $alias = null,
+    ): static {
+        return $this->withAggregate(
+            function: RelationAggregateFunction::COUNT,
+            relationName: $relationName,
+            column: null,
+            alias: $alias,
+        );
+    }
+
+    #[\NoDiscard]
+    public function withSum(
+        string $relationName,
+        string $column,
+        ?string $alias = null,
+    ): static {
+        return $this->withAggregate(
+            function: RelationAggregateFunction::SUM,
+            relationName: $relationName,
+            column: $column,
+            alias: $alias,
+        );
+    }
+
+    #[\NoDiscard]
+    public function withAvg(
+        string $relationName,
+        string $column,
+        ?string $alias = null,
+    ): static {
+        return $this->withAggregate(
+            function: RelationAggregateFunction::AVG,
+            relationName: $relationName,
+            column: $column,
+            alias: $alias,
+        );
+    }
+
+    #[\NoDiscard]
+    public function withMin(
+        string $relationName,
+        string $column,
+        ?string $alias = null,
+    ): static {
+        return $this->withAggregate(
+            function: RelationAggregateFunction::MIN,
+            relationName: $relationName,
+            column: $column,
+            alias: $alias,
+        );
+    }
+
+    #[\NoDiscard]
+    public function withMax(
+        string $relationName,
+        string $column,
+        ?string $alias = null,
+    ): static {
+        return $this->withAggregate(
+            function: RelationAggregateFunction::MAX,
+            relationName: $relationName,
+            column: $column,
+            alias: $alias,
+        );
+    }
+
+    private function withAggregate(
+        RelationAggregateFunction $function,
+        string $relationName,
+        ?string $column,
+        ?string $alias,
+    ): static {
+        $methodName = 'with' . \ucfirst(\strtolower($function->value));
+
+        if ($this->manager === null || $this->modelClass === null) {
+            throw ModelException::fromChainMethodRequiresModelContext(
+                method: $methodName,
+            );
+        }
+
+        $manager = $this->manager;
+        $parentMetaData = $manager->metaData->getModel($this->modelClass);
+
+        foreach ($parentMetaData->morphToRelations as $morphTo) {
+            if ($morphTo->property === $relationName) {
+                throw ModelException::fromAggregateOnMorphToViaQueryable(
+                    modelClass: $parentMetaData->model,
+                    relation: $relationName,
+                    method: $methodName,
+                );
+            }
+        }
+
+        $relation = $this->resolveRelation($parentMetaData, $relationName);
+        $targetMetaData = $manager->metaData->getModel($relation->relatedClass);
+
+        $subquery = $this->buildRelationExistsSubquery(
+            relationName: $relationName,
+            callback: null,
+            includeDeleted: false,
+        );
+
+        $subquery->select(
+            $function === RelationAggregateFunction::COUNT
+                ? 'COUNT(*)'
+                : $function->sqlFunction() . '(' . $targetMetaData->table . '.' . $column . ')',
+        );
+
+        $matchingSlotAlias = null;
+
+        foreach ($parentMetaData->aggregates as $aggregate) {
+            if (
+                $aggregate->relation === $relationName &&
+                $aggregate->function === $function &&
+                $aggregate->column === $column
+            ) {
+                $matchingSlotAlias = $aggregate->alias;
+
+                break;
+            }
+        }
+
+        $resolvedAlias = $alias ?? $matchingSlotAlias;
+
+        if ($resolvedAlias === null) {
+            throw ModelException::fromAggregateNoDeclaredSlot(
+                modelClass: $parentMetaData->model,
+                relation: $relationName,
+                alias: $this->defaultAggregateAliasFor(
+                    function: $function,
+                    relationName: $relationName,
+                    column: $column,
+                ),
+            );
+        }
+
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($subquery, $resolvedAlias): void {
+                if (!$statement instanceof SelectStatementInterface) {
+                    // @codeCoverageIgnoreStart
+                    return;
+                    // @codeCoverageIgnoreEnd
+                }
+
+                $statement->selectSubquery(
+                    subquery: $subquery,
+                    alias: $resolvedAlias,
+                );
+            },
+        );
+    }
+
+    private function defaultAggregateAliasFor(
+        RelationAggregateFunction $function,
+        string $relationName,
+        ?string $column,
+    ): string {
+        return $function === RelationAggregateFunction::COUNT
+            ? $relationName . '_count'
+            : $relationName . '_' . $function->value . '_' . ($column ?? '');
+    }
+
     /**
      * @param \Closure(WhereStatementInterface): void $callback
      */
@@ -778,6 +947,22 @@ abstract class AbstractQueryable implements QueryableInterface
                 attribute: $attribute,
                 includeDeleted: $includeDeleted,
             );
+        } elseif ($attribute instanceof MorphOne || $attribute instanceof MorphMany) {
+            $subquery = $this->buildMorphExistsSubquery(
+                manager: $manager,
+                parentMetaData: $parentMetaData,
+                targetMetaData: $targetMetaData,
+                relation: $relation,
+                attribute: $attribute,
+            );
+        } elseif ($attribute instanceof MorphToMany) {
+            $subquery = $this->buildMorphToManyExistsSubquery(
+                manager: $manager,
+                parentMetaData: $parentMetaData,
+                targetMetaData: $targetMetaData,
+                relation: $relation,
+                attribute: $attribute,
+            );
         } else {
             // @codeCoverageIgnoreStart
             throw ModelException::fromRelationNotFoundOnModel(
@@ -949,6 +1134,103 @@ abstract class AbstractQueryable implements QueryableInterface
 
         if (!$includeDeleted) {
             $manager->applySoftDeleteFilter($subquery, $throughMetaData);
+        }
+
+        return $subquery;
+    }
+
+    private function buildMorphExistsSubquery(
+        ModelsManagerInterface $manager,
+        ModelMetaDataInterface $parentMetaData,
+        ModelMetaDataInterface $targetMetaData,
+        ModelRelationInterface $relation,
+        MorphOne|MorphMany $attribute,
+    ): SelectStatementInterface {
+        $foreignKeyColumns = $relation->foreignKeyColumns;
+        $referencedKeyColumns = $relation->referencedKeyColumns;
+
+        if ($foreignKeyColumns === null || $referencedKeyColumns === null) {
+            // @codeCoverageIgnoreStart
+            throw ModelException::fromRelationNotFoundOnModel(
+                modelClass: $parentMetaData->model,
+                property: $relation->property,
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        $typeValue = MorphTypeResolver::encode(
+            class: $parentMetaData->model,
+            typeMap: $attribute->typeMap,
+        );
+
+        $subquery = $manager->connection->select($targetMetaData->table)
+            ->where(
+                column: $targetMetaData->table . '.' . $attribute->typeColumn,
+                value: $typeValue,
+            );
+
+        foreach ($foreignKeyColumns as $index => $foreignColumn) {
+            $localColumn = $referencedKeyColumns[$index];
+            $subquery->whereColumn(
+                column: $targetMetaData->table . '.' . $foreignColumn,
+                other: $parentMetaData->table . '.' . $localColumn,
+            );
+        }
+
+        return $subquery;
+    }
+
+    private function buildMorphToManyExistsSubquery(
+        ModelsManagerInterface $manager,
+        ModelMetaDataInterface $parentMetaData,
+        ModelMetaDataInterface $targetMetaData,
+        ModelRelationInterface $relation,
+        MorphToMany $attribute,
+    ): SelectStatementInterface {
+        $parentPkColumns = $this->resolvePkColumns($parentMetaData);
+        $targetPkColumns = $this->resolvePkColumns($targetMetaData);
+        $pivotSourceColumns = $relation->pivotSourceColumns;
+        $pivotTargetColumns = $relation->pivotTargetColumns;
+
+        if ($pivotSourceColumns === null || $pivotTargetColumns === null) {
+            // @codeCoverageIgnoreStart
+            throw ModelException::fromRelationNotFoundOnModel(
+                modelClass: $parentMetaData->model,
+                property: $relation->property,
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        $typeValue = MorphTypeResolver::encode(
+            class: $parentMetaData->model,
+            typeMap: $attribute->typeMap,
+        );
+
+        $subquery = $manager->connection->select($targetMetaData->table)
+            ->innerJoin(
+                table: $attribute->table,
+                first: $attribute->table . '.' . $pivotTargetColumns[0],
+                second: $targetMetaData->table . '.' . $targetPkColumns[0],
+            )
+            ->where(
+                column: $attribute->table . '.' . $attribute->typeColumn,
+                value: $typeValue,
+            );
+
+        $targetArity = \sizeof($pivotTargetColumns);
+
+        for ($index = 1; $index < $targetArity; $index++) {
+            $subquery->whereColumn(
+                column: $attribute->table . '.' . $pivotTargetColumns[$index],
+                other: $targetMetaData->table . '.' . $targetPkColumns[$index],
+            );
+        }
+
+        foreach ($pivotSourceColumns as $index => $pivotSourceColumn) {
+            $subquery->whereColumn(
+                column: $attribute->table . '.' . $pivotSourceColumn,
+                other: $parentMetaData->table . '.' . $parentPkColumns[$index],
+            );
         }
 
         return $subquery;

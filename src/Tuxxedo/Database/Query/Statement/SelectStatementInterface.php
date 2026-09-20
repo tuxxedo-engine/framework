@@ -28,6 +28,11 @@ interface SelectStatementInterface extends WhereStatementInterface
         string ...$columns,
     ): static;
 
+    public function selectSubquery(
+        SelectStatementInterface $subquery,
+        string $alias,
+    ): static;
+
     public function distinct(): static;
 
     public function orderBy(

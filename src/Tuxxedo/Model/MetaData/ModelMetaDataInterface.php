@@ -65,6 +65,13 @@ interface ModelMetaDataInterface
     }
 
     /**
+     * @var list<ModelRelationAggregateInterface>
+     */
+    public array $aggregates {
+        get;
+    }
+
+    /**
      * @var array<string, class-string<BehaviorInterface>>
      */
     public array $behaviors {

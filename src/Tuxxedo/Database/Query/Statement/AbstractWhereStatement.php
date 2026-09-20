@@ -493,8 +493,19 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         int $index,
         DialectInterface $dialect,
     ): string {
+        return $this->renderSubqueryWithPrefix(
+            subquery: $subquery,
+            prefix: 'subq_' . $index . '_',
+            dialect: $dialect,
+        );
+    }
+
+    protected function renderSubqueryWithPrefix(
+        AbstractStatement $subquery,
+        string $prefix,
+        DialectInterface $dialect,
+    ): string {
         $sql = $subquery->generateSql($dialect);
-        $prefix = 'subq_' . $index . '_';
 
         foreach ($subquery->parameters as $key => $value) {
             $stringKey = (string) $key;

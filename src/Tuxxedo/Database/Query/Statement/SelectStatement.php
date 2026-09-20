@@ -35,6 +35,11 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
     private array $columns = [];
 
     /**
+     * @var list<array{subquery: SelectStatementInterface, alias: string}>
+     */
+    private array $selectSubqueries = [];
+
+    /**
      * @var array<string, OrderDirection>
      */
     private array $orderBy = [];
@@ -61,6 +66,26 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
                 : $dialect->qualifiedIdentifier($column),
             $this->columns,
         );
+
+        if (\sizeof($this->selectSubqueries) > 0 && \sizeof($renderedColumns) === 0) {
+            $renderedColumns[] = \sizeof($this->joins) > 0
+                ? $dialect->identifier($this->table) . '.*'
+                : '*';
+        }
+
+        foreach ($this->selectSubqueries as $index => $entry) {
+            $subquery = $entry['subquery'];
+
+            if (!$subquery instanceof AbstractStatement) {
+                continue; // @codeCoverageIgnore
+            }
+
+            $renderedColumns[] = '(' . $this->renderSubqueryWithPrefix(
+                subquery: $subquery,
+                prefix: 'ssq_' . $index . '_',
+                dialect: $dialect,
+            ) . ') AS ' . $dialect->identifier($entry['alias']);
+        }
 
         $columns = \sizeof($renderedColumns) > 0
             ? \join(', ', $renderedColumns)
@@ -178,6 +203,18 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
         foreach ($columns as $column) {
             $this->columns[] = $column;
         }
+
+        return $this;
+    }
+
+    public function selectSubquery(
+        SelectStatementInterface $subquery,
+        string $alias,
+    ): static {
+        $this->selectSubqueries[] = [
+            'subquery' => $subquery,
+            'alias' => $alias,
+        ];
 
         return $this;
     }

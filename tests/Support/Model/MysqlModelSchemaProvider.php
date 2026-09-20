@@ -640,4 +640,70 @@ class MysqlModelSchemaProvider implements ModelSchemaProvider
             'label VARCHAR(255) NOT NULL DEFAULT \'\'' .
             ')';
     }
+
+    public function aggregateOwnersSchemaSql(): string
+    {
+        return 'CREATE TABLE aggregate_owners (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'label VARCHAR(64) NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function aggregateOrdersSchemaSql(): string
+    {
+        return 'CREATE TABLE aggregate_orders (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'owner_id INT NOT NULL, ' .
+            'amount INT NOT NULL DEFAULT 0' .
+            ')';
+    }
+
+    public function aggregateTagsSchemaSql(): string
+    {
+        return 'CREATE TABLE aggregate_tags (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'label VARCHAR(64) NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function aggregateOwnerTagPivotSchemaSql(): string
+    {
+        return 'CREATE TABLE aggregate_owner_tag (' .
+            'owner_id INT NOT NULL, ' .
+            'tag_id INT NOT NULL, ' .
+            'PRIMARY KEY (owner_id, tag_id)' .
+            ')';
+    }
+
+    public function aggregateNotesSchemaSql(): string
+    {
+        return 'CREATE TABLE aggregate_notes (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'host_type VARCHAR(64) NOT NULL, ' .
+            'host_id INT NOT NULL, ' .
+            'length INT NOT NULL DEFAULT 0' .
+            ')';
+    }
+
+    public function aggregatePolyTagsSchemaSql(): string
+    {
+        return 'CREATE TABLE aggregate_poly_tags (' .
+            'realm VARCHAR(32) NOT NULL, ' .
+            'code VARCHAR(32) NOT NULL, ' .
+            'label VARCHAR(64) NOT NULL DEFAULT \'\', ' .
+            'weight INT NOT NULL DEFAULT 0, ' .
+            'PRIMARY KEY (realm, code)' .
+            ')';
+    }
+
+    public function aggregateOwnerPolyTagPivotSchemaSql(): string
+    {
+        return 'CREATE TABLE aggregate_owner_poly_tag (' .
+            'owner_type VARCHAR(255) NOT NULL, ' .
+            'owner_id INT NOT NULL, ' .
+            'poly_tag_realm VARCHAR(32) NOT NULL, ' .
+            'poly_tag_code VARCHAR(32) NOT NULL, ' .
+            'PRIMARY KEY (owner_type, owner_id, poly_tag_realm, poly_tag_code)' .
+            ')';
+    }
 }

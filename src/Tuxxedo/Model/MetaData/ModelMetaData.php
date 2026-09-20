@@ -23,6 +23,7 @@ readonly class ModelMetaData implements ModelMetaDataInterface
      * @param ModelIdentifierInterface[] $identifiers
      * @param ModelRelationInterface[] $relations
      * @param list<MorphToRelationMetaDataInterface> $morphToRelations
+     * @param list<ModelRelationAggregateInterface> $aggregates
      * @param array<string, class-string<BehaviorInterface>> $behaviors
      * @param list<list<string>> $uniques
      * @param list<list<string>> $indexes
@@ -36,6 +37,7 @@ readonly class ModelMetaData implements ModelMetaDataInterface
         public bool $readonly,
         public array $relations = [],
         public array $morphToRelations = [],
+        public array $aggregates = [],
         public array $behaviors = [],
         public array $uniques = [],
         public array $indexes = [],

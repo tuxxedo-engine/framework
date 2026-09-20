@@ -148,4 +148,18 @@ interface ModelSchemaProvider
     public function ulidRecordsSchemaSql(): string;
 
     public function uuidV4ExplicitsSchemaSql(): string;
+
+    public function aggregateOwnersSchemaSql(): string;
+
+    public function aggregateOrdersSchemaSql(): string;
+
+    public function aggregateTagsSchemaSql(): string;
+
+    public function aggregateOwnerTagPivotSchemaSql(): string;
+
+    public function aggregateNotesSchemaSql(): string;
+
+    public function aggregatePolyTagsSchemaSql(): string;
+
+    public function aggregateOwnerPolyTagPivotSchemaSql(): string;
 }

@@ -640,4 +640,70 @@ class SqliteModelSchemaProvider implements ModelSchemaProvider
             'label TEXT NOT NULL DEFAULT \'\'' .
             ')';
     }
+
+    public function aggregateOwnersSchemaSql(): string
+    {
+        return 'CREATE TABLE aggregate_owners (' .
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
+            'label TEXT NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function aggregateOrdersSchemaSql(): string
+    {
+        return 'CREATE TABLE aggregate_orders (' .
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
+            'owner_id INTEGER NOT NULL, ' .
+            'amount INTEGER NOT NULL DEFAULT 0' .
+            ')';
+    }
+
+    public function aggregateTagsSchemaSql(): string
+    {
+        return 'CREATE TABLE aggregate_tags (' .
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
+            'label TEXT NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function aggregateOwnerTagPivotSchemaSql(): string
+    {
+        return 'CREATE TABLE aggregate_owner_tag (' .
+            'owner_id INTEGER NOT NULL, ' .
+            'tag_id INTEGER NOT NULL, ' .
+            'PRIMARY KEY (owner_id, tag_id)' .
+            ')';
+    }
+
+    public function aggregateNotesSchemaSql(): string
+    {
+        return 'CREATE TABLE aggregate_notes (' .
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
+            'host_type TEXT NOT NULL, ' .
+            'host_id INTEGER NOT NULL, ' .
+            'length INTEGER NOT NULL DEFAULT 0' .
+            ')';
+    }
+
+    public function aggregatePolyTagsSchemaSql(): string
+    {
+        return 'CREATE TABLE aggregate_poly_tags (' .
+            'realm TEXT NOT NULL, ' .
+            'code TEXT NOT NULL, ' .
+            'label TEXT NOT NULL DEFAULT \'\', ' .
+            'weight INTEGER NOT NULL DEFAULT 0, ' .
+            'PRIMARY KEY (realm, code)' .
+            ')';
+    }
+
+    public function aggregateOwnerPolyTagPivotSchemaSql(): string
+    {
+        return 'CREATE TABLE aggregate_owner_poly_tag (' .
+            'owner_type TEXT NOT NULL, ' .
+            'owner_id INTEGER NOT NULL, ' .
+            'poly_tag_realm TEXT NOT NULL, ' .
+            'poly_tag_code TEXT NOT NULL, ' .
+            'PRIMARY KEY (owner_type, owner_id, poly_tag_realm, poly_tag_code)' .
+            ')';
+    }
 }

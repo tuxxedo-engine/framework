@@ -1002,4 +1002,166 @@ class ModelException extends \Exception
             ),
         );
     }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromAggregateUnknownRelation(
+        string $modelClass,
+        string $property,
+        string $relation,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Relation aggregate on "%s::$%s" references relation "%s" which is not declared on the model',
+                $modelClass,
+                $property,
+                $relation,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromAggregateOnMorphTo(
+        string $modelClass,
+        string $property,
+        string $relation,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Relation aggregate on "%s::$%s" targets MorphTo relation "%s": MorphTo aggregates are not supported because the target class is only known at hydration time',
+                $modelClass,
+                $property,
+                $relation,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromAggregateMissingColumn(
+        string $modelClass,
+        string $property,
+        string $function,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Relation aggregate on "%s::$%s" using function "%s" requires a target column',
+                $modelClass,
+                $property,
+                $function,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromAggregateUnexpectedColumn(
+        string $modelClass,
+        string $property,
+        string $function,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Relation aggregate on "%s::$%s" using function "%s" does not accept a target column',
+                $modelClass,
+                $property,
+                $function,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromAggregateNonNumericSlot(
+        string $modelClass,
+        string $property,
+        ?string $type,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Relation aggregate on "%s::$%s" must be a nullable int|float property, got "%s"',
+                $modelClass,
+                $property,
+                $type ?? 'mixed',
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromAggregateNotNullableSlot(
+        string $modelClass,
+        string $property,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Relation aggregate on "%s::$%s" must be nullable; aggregates read as null when the queryable does not populate them',
+                $modelClass,
+                $property,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromAggregateDuplicateAlias(
+        string $modelClass,
+        string $property,
+        string $existingProperty,
+        string $alias,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Relation aggregate on "%s::$%s" collides with existing aggregate on "$%s": both resolve to alias "%s"',
+                $modelClass,
+                $property,
+                $existingProperty,
+                $alias,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromAggregateOnMorphToViaQueryable(
+        string $modelClass,
+        string $relation,
+        string $method,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot call %s() on "%s::$%s": MorphTo aggregates are not supported because the target class is only known at hydration time',
+                $method,
+                $modelClass,
+                $relation,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromAggregateNoDeclaredSlot(
+        string $modelClass,
+        string $relation,
+        string $alias,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'No relation aggregate declared on "%s" accepts alias "%s" for relation "%s"; add a #[CountAggregate]/#[SumAggregate]/etc. property or pass an explicit alias matching an existing one',
+                $modelClass,
+                $alias,
+                $relation,
+            ),
+        );
+    }
 }

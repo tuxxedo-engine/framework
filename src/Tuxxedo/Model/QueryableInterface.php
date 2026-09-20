@@ -280,6 +280,40 @@ interface QueryableInterface extends PagedInterface, \IteratorAggregate, \Counta
         bool $includeDeleted = false,
     ): static;
 
+    #[\NoDiscard]
+    public function withCount(
+        string $relationName,
+        ?string $alias = null,
+    ): static;
+
+    #[\NoDiscard]
+    public function withSum(
+        string $relationName,
+        string $column,
+        ?string $alias = null,
+    ): static;
+
+    #[\NoDiscard]
+    public function withAvg(
+        string $relationName,
+        string $column,
+        ?string $alias = null,
+    ): static;
+
+    #[\NoDiscard]
+    public function withMin(
+        string $relationName,
+        string $column,
+        ?string $alias = null,
+    ): static;
+
+    #[\NoDiscard]
+    public function withMax(
+        string $relationName,
+        string $column,
+        ?string $alias = null,
+    ): static;
+
     /**
      * @param \Closure(WhereStatementInterface): void $callback
      * @return static

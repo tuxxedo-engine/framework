@@ -305,6 +305,41 @@ abstract class AbstractModelIntegrationTestCase extends TestCase
         $this->executeSchema($this->schemaProvider->uuidV4ExplicitsSchemaSql());
     }
 
+    protected function createAggregateOwnersTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->aggregateOwnersSchemaSql());
+    }
+
+    protected function createAggregateOrdersTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->aggregateOrdersSchemaSql());
+    }
+
+    protected function createAggregateTagsTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->aggregateTagsSchemaSql());
+    }
+
+    protected function createAggregateOwnerTagPivotTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->aggregateOwnerTagPivotSchemaSql());
+    }
+
+    protected function createAggregateNotesTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->aggregateNotesSchemaSql());
+    }
+
+    protected function createAggregatePolyTagsTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->aggregatePolyTagsSchemaSql());
+    }
+
+    protected function createAggregateOwnerPolyTagPivotTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->aggregateOwnerPolyTagPivotSchemaSql());
+    }
+
     private function executeSchema(
         string $sql,
     ): void {

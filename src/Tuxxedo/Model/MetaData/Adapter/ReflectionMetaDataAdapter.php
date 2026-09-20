@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\MetaData\Adapter;
 
+use Tuxxedo\Model\Attribute\Aggregate\RelationAggregate;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\CompositeKey;
 use Tuxxedo\Model\Attribute\Identifier;
@@ -51,6 +52,8 @@ use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelPrimaryKey;
 use Tuxxedo\Model\MetaData\ModelPrimaryKeyInterface;
 use Tuxxedo\Model\MetaData\ModelRelation;
+use Tuxxedo\Model\MetaData\ModelRelationAggregate;
+use Tuxxedo\Model\MetaData\ModelRelationAggregateInterface;
 use Tuxxedo\Model\MetaData\ModelRelationInterface;
 use Tuxxedo\Model\MetaData\MorphToRelationMetaData;
 use Tuxxedo\Model\MetaData\MorphToRelationMetaDataInterface;
@@ -137,6 +140,12 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             morphToRelations: $morphToRelations,
         );
 
+        $aggregates = $this->getAggregates(
+            class: $class,
+            relations: $relations,
+            morphToRelations: $morphToRelations,
+        );
+
         return new ModelMetaData(
             model: $model,
             table: $this->getTable($class),
@@ -146,6 +155,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             readonly: $readonly,
             relations: $relations,
             morphToRelations: $morphToRelations,
+            aggregates: $aggregates,
             behaviors: $behaviors,
             uniques: $this->getUniques($class),
             indexes: $this->getIndexes($class),
@@ -1772,6 +1782,131 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         $identifiers = \array_values($identifiers);
 
         return $columns;
+    }
+
+    /**
+     * @param ModelRelationInterface[] $relations
+     * @param list<MorphToRelationMetaDataInterface> $morphToRelations
+     * @return list<ModelRelationAggregateInterface>
+     *
+     * @throws ModelException
+     */
+    private function getAggregates(
+        ClassReflector $class,
+        array $relations,
+        array $morphToRelations,
+    ): array {
+        $aggregates = [];
+        $seenAliases = [];
+
+        foreach ($class->properties() as $property) {
+            $attributes = \iterator_to_array($property->getAttributes(RelationAggregate::class));
+
+            if (\sizeof($attributes) === 0) {
+                continue;
+            }
+
+            foreach ($attributes as $attribute) {
+                $function = $attribute->function;
+                $sqlFn = $function->sqlFunction();
+
+                if ($function->requiresColumn() && $attribute->column === null) {
+                    throw ModelException::fromAggregateMissingColumn(
+                        modelClass: $class->name,
+                        property: $property->name,
+                        function: $sqlFn,
+                    );
+                }
+
+                if (!$function->requiresColumn() && $attribute->column !== null) {
+                    throw ModelException::fromAggregateUnexpectedColumn(
+                        modelClass: $class->name,
+                        property: $property->name,
+                        function: $sqlFn,
+                    );
+                }
+
+                $relationName = $attribute->relation;
+                $relationExists = false;
+
+                foreach ($relations as $relation) {
+                    if ($relation->property === $relationName) {
+                        $relationExists = true;
+
+                        break;
+                    }
+                }
+
+                if (!$relationExists) {
+                    foreach ($morphToRelations as $morphTo) {
+                        if ($morphTo->property === $relationName) {
+                            throw ModelException::fromAggregateOnMorphTo(
+                                modelClass: $class->name,
+                                property: $property->name,
+                                relation: $relationName,
+                            );
+                        }
+                    }
+
+                    throw ModelException::fromAggregateUnknownRelation(
+                        modelClass: $class->name,
+                        property: $property->name,
+                        relation: $relationName,
+                    );
+                }
+
+                if (!$property->isNullable()) {
+                    throw ModelException::fromAggregateNotNullableSlot(
+                        modelClass: $class->name,
+                        property: $property->name,
+                    );
+                }
+
+                $builtin = $property->getBuiltinType();
+
+                if ($builtin !== 'int' && $builtin !== 'float') {
+                    throw ModelException::fromAggregateNonNumericSlot(
+                        modelClass: $class->name,
+                        property: $property->name,
+                        type: $builtin,
+                    );
+                }
+
+                $alias = $attribute->alias ?? $this->defaultAggregateAlias(
+                    property: $property->name,
+                );
+
+                if (isset($seenAliases[$alias])) {
+                    throw ModelException::fromAggregateDuplicateAlias(
+                        modelClass: $class->name,
+                        property: $property->name,
+                        existingProperty: $seenAliases[$alias],
+                        alias: $alias,
+                    );
+                }
+
+                $seenAliases[$alias] = $property->name;
+
+                $aggregates[] = new ModelRelationAggregate(
+                    property: $property->name,
+                    alias: $alias,
+                    relation: $relationName,
+                    function: $function,
+                    column: $attribute->column,
+                    slotType: $builtin,
+                );
+            }
+        }
+
+        return $aggregates;
+    }
+
+    private function defaultAggregateAlias(
+        string $property,
+    ): string {
+        $snake = \preg_replace('/([a-z0-9])([A-Z])/', '$1_$2', $property);
+
+        return \strtolower($snake ?? $property);
     }
 
     /**

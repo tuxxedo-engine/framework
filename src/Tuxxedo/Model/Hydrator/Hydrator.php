@@ -96,10 +96,46 @@ class Hydrator implements HydratorInterface
 
         $model = $this->hydrator->hydrate($className, $propertyValues);
 
+        $this->applyAggregates($model, $metaData, $values);
         $this->attachRelations($model, $metaData);
         $this->modelsManager->dirtyTracker->recordSnapshot($model, $metaData);
 
         return $model;
+    }
+
+    /**
+     * @param array<string, mixed> $values
+     */
+    private function applyAggregates(
+        object $model,
+        ModelMetaDataInterface $metaData,
+        array $values,
+    ): void {
+        foreach ($metaData->aggregates as $aggregate) {
+            if (!\array_key_exists($aggregate->alias, $values)) {
+                continue;
+            }
+
+            $rawValue = $values[$aggregate->alias];
+
+            if ($rawValue === null) {
+                PropertyReflector::createFromObject($model, $aggregate->property)->setValue($model, null);
+
+                continue;
+            }
+
+            if (!\is_scalar($rawValue)) {
+                // @codeCoverageIgnoreStart
+                continue;
+                // @codeCoverageIgnoreEnd
+            }
+
+            $casted = $aggregate->slotType === 'int'
+                ? (int) $rawValue
+                : (float) $rawValue;
+
+            PropertyReflector::createFromObject($model, $aggregate->property)->setValue($model, $casted);
+        }
     }
 
     private function attachRelations(
