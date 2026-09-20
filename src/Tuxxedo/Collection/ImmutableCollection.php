@@ -59,8 +59,13 @@ class ImmutableCollection implements CollectionInterface
      */
     public function key(): mixed
     {
-        /** @var TKey */
-        return \key($this->collection);
+        $key = \key($this->collection);
+
+        if ($key === null) {
+            throw CollectionException::fromInvalidIteratorState();
+        }
+
+        return $key;
     }
 
     public function valid(): bool

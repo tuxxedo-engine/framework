@@ -56,8 +56,13 @@ class Collection implements CollectionInterface
 
     public function key(): mixed
     {
-        /** @var TKey */
-        return \key($this->collection);
+        $key = \key($this->collection);
+
+        if ($key === null) {
+            throw CollectionException::fromInvalidIteratorState();
+        }
+
+        return $key;
     }
 
     public function valid(): bool
@@ -133,7 +138,12 @@ class Collection implements CollectionInterface
     public function append(
         mixed ...$values,
     ): static {
-        \array_push($this->collection, ...$values);
+        $collection = $this->collection;
+
+        \array_push($collection, ...$values);
+
+        /** @var array<TKey, TValue> $collection */
+        $this->collection = $collection;
 
         return $this;
     }
@@ -144,7 +154,12 @@ class Collection implements CollectionInterface
     public function prepend(
         mixed ...$values,
     ): static {
-        \array_unshift($this->collection, ...$values);
+        $collection = $this->collection;
+
+        \array_unshift($collection, ...$values);
+
+        /** @var array<TKey, TValue> $collection */
+        $this->collection = $collection;
 
         return $this;
     }

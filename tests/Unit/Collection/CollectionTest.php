@@ -17,6 +17,7 @@ use Fixture\Collection\IntTestEnum;
 use Fixture\Collection\StringTestEnum;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Collection\Collection;
+use Tuxxedo\Collection\CollectionException;
 
 class CollectionTest extends TestCase
 {
@@ -84,6 +85,14 @@ class CollectionTest extends TestCase
         }
 
         self::assertSame($collection->count(), $i);
+    }
+
+    public function testKeyThrowsWhenIteratorInvalid(): void
+    {
+        $collection = new Collection([]);
+
+        $this->expectException(CollectionException::class);
+        $collection->key();
     }
 
     public function testContainsKey(): void

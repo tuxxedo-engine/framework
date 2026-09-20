@@ -21,4 +21,11 @@ class CollectionException extends \Exception
             message: 'Immutable collections cannot be modified',
         );
     }
+
+    public static function fromInvalidIteratorState(): self
+    {
+        return new self(
+            message: 'key() called on an invalidated iterator; call valid() first',
+        );
+    }
 }

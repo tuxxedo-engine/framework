@@ -63,7 +63,7 @@ class ImmutableCollectionTest extends TestCase
         $strings = $this->nordicStrings();
 
         $this->expectException(CollectionException::class);
-        $strings['abc'] = 'def';
+        $strings[0] = 'def';
     }
 
     public function testImmutableExceptionsViaOffsetUnset(): void
@@ -188,6 +188,14 @@ class ImmutableCollectionTest extends TestCase
         }
 
         self::assertSame($collection->count(), $i);
+    }
+
+    public function testImmutableKeyThrowsWhenIteratorInvalid(): void
+    {
+        $collection = new ImmutableCollection([]);
+
+        $this->expectException(CollectionException::class);
+        $collection->key();
     }
 
     public function testImmutableArrayAccess(): void
