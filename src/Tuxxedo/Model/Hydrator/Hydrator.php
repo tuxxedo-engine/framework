@@ -26,7 +26,9 @@ use Tuxxedo\Model\Attribute\Relation\HasOneThrough;
 use Tuxxedo\Model\Attribute\Relation\MorphMany;
 use Tuxxedo\Model\Attribute\Relation\MorphOne;
 use Tuxxedo\Model\Attribute\Relation\MorphToMany;
+use Tuxxedo\Model\Attribute\Relation\RelationKeyTupleHasher;
 use Tuxxedo\Model\MetaData\MetaDataInterface;
+use Tuxxedo\Model\MetaData\ModelCompositeKeyInterface;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelPrimaryKeyInterface;
 use Tuxxedo\Model\MetaData\ModelRelationInterface;
@@ -166,35 +168,47 @@ class Hydrator implements HydratorInterface
         ModelMetaDataInterface $metaData,
         ModelRelationInterface $relation,
     ): void {
-        $sourceProperty = PropertyReflector::createFromObject($model, $this->resolveSourceProperty($metaData, $relation));
-        $sourceValue = $sourceProperty->getValue($model);
+        $sourceColumns = $this->resolveSourceColumns($metaData, $relation);
+        $sourceValues = [];
 
-        if ($sourceValue === null) {
-            if (!$relation->nullable) {
-                throw ModelException::fromMissingForeignKeyValue(
-                    modelClass: $metaData->model,
-                    property: $relation->property,
-                );
+        foreach ($sourceColumns as $sourceColumn) {
+            $sourcePropertyName = $this->findPropertyByColumn(
+                metaData: $metaData,
+                column: $sourceColumn,
+                relationProperty: $relation->property,
+            );
+
+            $sourceValue = PropertyReflector::createFromObject($model, $sourcePropertyName)->getValue($model);
+
+            if ($sourceValue === null) {
+                if (!$relation->nullable) {
+                    throw ModelException::fromMissingForeignKeyValue(
+                        modelClass: $metaData->model,
+                        property: $relation->property,
+                    );
+                }
+
+                PropertyReflector::createFromObject($model, $relation->property)->setValue($model, null);
+
+                return;
             }
 
-            PropertyReflector::createFromObject($model, $relation->property)->setValue($model, null);
+            if (!\is_scalar($sourceValue)) {
+                // @codeCoverageIgnoreStart
+                throw ModelException::fromPropertyValueMustBeScalar(
+                    modelClass: $metaData->model,
+                    property: $sourcePropertyName,
+                    actualType: \get_debug_type($sourceValue),
+                );
+                // @codeCoverageIgnoreEnd
+            }
 
-            return;
-        }
-
-        if (!\is_scalar($sourceValue)) {
-            // @codeCoverageIgnoreStart
-            throw ModelException::fromPropertyValueMustBeScalar(
-                modelClass: $metaData->model,
-                property: $sourceProperty->name,
-                actualType: \get_debug_type($sourceValue),
-            );
-            // @codeCoverageIgnoreEnd
+            $sourceValues[$sourceColumn] = $sourceValue;
         }
 
         $relatedClass = new \ReflectionClass($relation->relatedClass);
         $proxy = $relatedClass->newLazyProxy(
-            fn (): object => $this->loadSingleRelation($metaData, $relation, $sourceValue),
+            fn (): object => $this->loadSingleRelation($metaData, $relation, $sourceValues),
         );
 
         PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $proxy);
@@ -205,42 +219,57 @@ class Hydrator implements HydratorInterface
         ModelMetaDataInterface $metaData,
         ModelRelationInterface $relation,
     ): void {
-        $sourceProperty = PropertyReflector::createFromObject($model, $this->resolveSourceProperty($metaData, $relation));
-        $sourceValue = $sourceProperty->getValue($model);
+        $sourceColumns = $this->resolveSourceColumns($metaData, $relation);
+        $targetColumns = $this->resolveTargetColumns($relation);
         $relatedClass = $relation->relatedClass;
+        $sourceValues = [];
 
-        if ($sourceValue === null) {
-            PropertyReflector::createFromObject($model, $relation->property)->setValue(
-                $model,
-                Relation::createFromPrefetched(
-                    values: [],
-                    manager: $this->modelsManager,
-                    modelClass: $relatedClass,
-                ),
+        foreach ($sourceColumns as $sourceColumn) {
+            $sourcePropertyName = $this->findPropertyByColumn(
+                metaData: $metaData,
+                column: $sourceColumn,
+                relationProperty: $relation->property,
             );
 
-            return;
+            $value = PropertyReflector::createFromObject($model, $sourcePropertyName)->getValue($model);
+
+            if ($value === null) {
+                PropertyReflector::createFromObject($model, $relation->property)->setValue(
+                    $model,
+                    Relation::createFromPrefetched(
+                        values: [],
+                        manager: $this->modelsManager,
+                        modelClass: $relatedClass,
+                    ),
+                );
+
+                return;
+            }
+
+            if (!\is_scalar($value)) {
+                // @codeCoverageIgnoreStart
+                throw ModelException::fromPropertyValueMustBeScalar(
+                    modelClass: $metaData->model,
+                    property: $sourcePropertyName,
+                    actualType: \get_debug_type($value),
+                );
+                // @codeCoverageIgnoreEnd
+            }
+
+            $sourceValues[$sourceColumn] = $value;
         }
 
-        if (!\is_scalar($sourceValue)) {
-            // @codeCoverageIgnoreStart
-            throw ModelException::fromPropertyValueMustBeScalar(
-                modelClass: $metaData->model,
-                property: $sourceProperty->name,
-                actualType: \get_debug_type($sourceValue),
-            );
-            // @codeCoverageIgnoreEnd
-        }
-
-        $targetColumn = $this->resolveTargetColumn($relation);
         $manager = $this->modelsManager;
         $targetTable = $manager->metaData->getModel($relatedClass)->table;
 
         $relationInstance = Relation::createFromBuilder(
             loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
                 $relatedClass,
-                static function (SelectStatementInterface $statement) use ($targetColumn, $sourceValue, $criteria, $orderBy, $limit, $offset): void {
-                    $statement->where($targetColumn, $sourceValue);
+                static function (SelectStatementInterface $statement) use ($sourceColumns, $targetColumns, $sourceValues, $criteria, $orderBy, $limit, $offset): void {
+                    foreach ($sourceColumns as $index => $sourceColumn) {
+                        $targetColumn = $targetColumns[$index];
+                        $statement->where($targetColumn, $sourceValues[$sourceColumn]);
+                    }
 
                     foreach ($criteria as $extra) {
                         $extra($statement);
@@ -255,9 +284,13 @@ class Hydrator implements HydratorInterface
                     }
                 },
             ),
-            countBuilder: static function (array $criteria) use ($manager, $targetTable, $targetColumn, $sourceValue): int {
-                $statement = $manager->connection->count($targetTable)
-                    ->where($targetColumn, $sourceValue);
+            countBuilder: static function (array $criteria) use ($manager, $targetTable, $sourceColumns, $targetColumns, $sourceValues): int {
+                $statement = $manager->connection->count($targetTable);
+
+                foreach ($sourceColumns as $index => $sourceColumn) {
+                    $targetColumn = $targetColumns[$index];
+                    $statement->where($targetColumn, $sourceValues[$sourceColumn]);
+                }
 
                 foreach ($criteria as $extra) {
                     $extra($statement);
@@ -277,19 +310,37 @@ class Hydrator implements HydratorInterface
         ModelMetaDataInterface $metaData,
         ModelRelationInterface $relation,
     ): void {
-        if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
+        $relatedClass = $relation->relatedClass;
+        $manager = $this->modelsManager;
+        $targetMetaData = $manager->metaData->getModel($relatedClass);
+
+        $parentPkColumns = $this->resolvePkColumns($metaData);
+        $targetPkColumns = $this->resolvePkColumns($targetMetaData);
+        $pivotSourceColumns = $relation->pivotSourceColumns;
+        $pivotTargetColumns = $relation->pivotTargetColumns;
+
+        if ($pivotSourceColumns === null || $pivotTargetColumns === null) {
             // @codeCoverageIgnoreStart
-            throw ModelException::fromCantFetchWithoutPrimaryKey(
+            throw ModelException::fromRelationNotFoundOnModel(
                 modelClass: $metaData->model,
+                property: $relation->property,
             );
             // @codeCoverageIgnoreEnd
         }
 
-        $sourceProperty = PropertyReflector::createFromObject($model, $metaData->key->property);
-        $sourceValue = $sourceProperty->getValue($model);
-        $relatedClass = $relation->relatedClass;
+        $sourcePropertyNames = [];
 
-        if ($sourceValue === null) {
+        foreach ($parentPkColumns as $parentColumn) {
+            $sourcePropertyNames[$parentColumn] = $this->findPropertyByColumn(
+                metaData: $metaData,
+                column: $parentColumn,
+                relationProperty: $relation->property,
+            );
+        }
+
+        $parentValues = $this->readTupleFromModel($model, $metaData, $parentPkColumns, $sourcePropertyNames);
+
+        if ($parentValues === null) {
             PropertyReflector::createFromObject($model, $relation->property)->setValue(
                 $model,
                 Relation::createFromPrefetched(
@@ -302,42 +353,25 @@ class Hydrator implements HydratorInterface
             return;
         }
 
-        if (!\is_scalar($sourceValue)) {
-            // @codeCoverageIgnoreStart
-            throw ModelException::fromPropertyValueMustBeScalar(
-                modelClass: $metaData->model,
-                property: $sourceProperty->name,
-                actualType: \get_debug_type($sourceValue),
-            );
-            // @codeCoverageIgnoreEnd
-        }
-
         /** @var BelongsToMany $attribute */
         $attribute = $relation->attribute;
-        $manager = $this->modelsManager;
-        $targetMetaData = $manager->metaData->getModel($relatedClass);
-
-        if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
-            // @codeCoverageIgnoreStart
-            throw ModelException::fromCantFetchWithoutPrimaryKey(
-                modelClass: $relatedClass,
-            );
-            // @codeCoverageIgnoreEnd
-        }
-
         $targetTable = $targetMetaData->table;
-        $targetPrimaryKey = $targetMetaData->key->column;
         $pivotTable = $attribute->table;
-        $pivotLocalKey = $attribute->localKey;
-        $pivotForeignKey = $attribute->foreignKey;
 
         $relationInstance = Relation::createFromBuilder(
-            loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
+            loaderBuilder: fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
                 $relatedClass,
-                static function (SelectStatementInterface $statement) use ($pivotTable, $pivotForeignKey, $pivotLocalKey, $targetTable, $targetPrimaryKey, $sourceValue, $criteria, $orderBy, $limit, $offset): void {
-                    $statement
-                        ->innerJoin($pivotTable, $pivotTable . '.' . $pivotForeignKey, $targetTable . '.' . $targetPrimaryKey)
-                        ->where($pivotTable . '.' . $pivotLocalKey, $sourceValue);
+                function (SelectStatementInterface $statement) use ($pivotTable, $pivotSourceColumns, $pivotTargetColumns, $parentPkColumns, $targetPkColumns, $targetTable, $parentValues, $criteria, $orderBy, $limit, $offset): void {
+                    $this->applyBelongsToManyPivotJoin(
+                        statement: $statement,
+                        pivotTable: $pivotTable,
+                        pivotTargetColumns: $pivotTargetColumns,
+                        targetTable: $targetTable,
+                        targetPkColumns: $targetPkColumns,
+                        pivotSourceColumns: $pivotSourceColumns,
+                        parentPkColumns: $parentPkColumns,
+                        parentValues: $parentValues,
+                    );
 
                     foreach ($criteria as $extra) {
                         $extra($statement);
@@ -352,10 +386,19 @@ class Hydrator implements HydratorInterface
                     }
                 },
             ),
-            countBuilder: static function (array $criteria) use ($manager, $pivotTable, $pivotForeignKey, $pivotLocalKey, $targetTable, $targetPrimaryKey, $sourceValue): int {
-                $statement = $manager->connection->count($targetTable)
-                    ->innerJoin($pivotTable, $pivotTable . '.' . $pivotForeignKey, $targetTable . '.' . $targetPrimaryKey)
-                    ->where($pivotTable . '.' . $pivotLocalKey, $sourceValue);
+            countBuilder: function (array $criteria) use ($manager, $pivotTable, $pivotSourceColumns, $pivotTargetColumns, $parentPkColumns, $targetPkColumns, $targetTable, $parentValues): int {
+                $statement = $manager->connection->count($targetTable);
+
+                $this->applyBelongsToManyPivotJoin(
+                    statement: $statement,
+                    pivotTable: $pivotTable,
+                    pivotTargetColumns: $pivotTargetColumns,
+                    targetTable: $targetTable,
+                    targetPkColumns: $targetPkColumns,
+                    pivotSourceColumns: $pivotSourceColumns,
+                    parentPkColumns: $parentPkColumns,
+                    parentValues: $parentValues,
+                );
 
                 foreach ($criteria as $extra) {
                     $extra($statement);
@@ -517,17 +560,23 @@ class Hydrator implements HydratorInterface
             column: $morphTo->typeColumn,
             relationProperty: $morphTo->property,
         );
-        $idColumnProperty = $this->findPropertyByColumn(
-            metaData: $metaData,
-            column: $morphTo->idColumn,
-            relationProperty: $morphTo->property,
-        );
+
+        $idColumns = $morphTo->idColumns;
+        $idColumnProperties = [];
+
+        foreach ($idColumns as $idColumn) {
+            $idColumnProperties[$idColumn] = $this->findPropertyByColumn(
+                metaData: $metaData,
+                column: $idColumn,
+                relationProperty: $morphTo->property,
+            );
+        }
 
         $typeValue = PropertyReflector::createFromObject($model, $typeColumnProperty)->getValue($model);
-        $idValue = PropertyReflector::createFromObject($model, $idColumnProperty)->getValue($model);
+        $idTuple = $this->readTupleFromModel($model, $metaData, $idColumns, $idColumnProperties);
         $morphProperty = PropertyReflector::createFromObject($model, $morphTo->property);
 
-        if ($typeValue === null || $typeValue === '' || $idValue === null) {
+        if ($typeValue === null || $typeValue === '' || $idTuple === null) {
             if (!$morphTo->nullable) {
                 throw ModelException::fromMissingForeignKeyValue(
                     modelClass: $metaData->model,
@@ -550,16 +599,6 @@ class Hydrator implements HydratorInterface
             // @codeCoverageIgnoreEnd
         }
 
-        if (!\is_scalar($idValue)) {
-            // @codeCoverageIgnoreStart
-            throw ModelException::fromPropertyValueMustBeScalar(
-                modelClass: $metaData->model,
-                property: $idColumnProperty,
-                actualType: \get_debug_type($idValue),
-            );
-            // @codeCoverageIgnoreEnd
-        }
-
         $targetClass = MorphTypeResolver::resolve(
             typeValue: $typeValue,
             typeMap: $morphTo->typeMap,
@@ -577,24 +616,31 @@ class Hydrator implements HydratorInterface
         $manager = $this->modelsManager;
         $morphPropertyName = $morphTo->property;
         $sourceMetaData = $metaData;
+        $idValues = \array_values($idTuple);
 
         $proxy = $reflectionClass->newLazyProxy(
-            function () use ($manager, $targetClass, $idValue, $sourceMetaData, $morphPropertyName): object {
+            function () use ($manager, $targetClass, $idValues, $sourceMetaData, $morphPropertyName): object {
                 $targetMetaData = $manager->metaData->getModel($targetClass);
+                $targetPkColumns = $this->resolvePkColumns($targetMetaData);
 
-                if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
+                if (\sizeof($targetPkColumns) !== \sizeof($idValues)) {
                     // @codeCoverageIgnoreStart
-                    throw ModelException::fromCantFetchWithoutPrimaryKey(
-                        modelClass: $targetClass,
+                    throw ModelException::fromRelationForeignKeyArityMismatch(
+                        modelClass: $sourceMetaData->model,
+                        property: $morphPropertyName,
+                        keyKind: 'idColumn',
+                        expected: \sizeof($targetPkColumns),
+                        actual: \sizeof($idValues),
                     );
                     // @codeCoverageIgnoreEnd
                 }
 
-                $targetPrimaryColumn = $targetMetaData->key->column;
                 $result = $manager->findFirst(
                     $targetClass,
-                    static function (WhereStatementInterface $statement) use ($targetPrimaryColumn, $idValue): void {
-                        $statement->where($targetPrimaryColumn, $idValue);
+                    static function (WhereStatementInterface $statement) use ($targetPkColumns, $idValues): void {
+                        foreach ($targetPkColumns as $index => $pkColumn) {
+                            $statement->where($pkColumn, $idValues[$index]);
+                        }
                     },
                 );
 
@@ -620,10 +666,31 @@ class Hydrator implements HydratorInterface
     ): void {
         /** @var MorphOne $attribute */
         $attribute = $relation->attribute;
-        $sourceProperty = PropertyReflector::createFromObject($model, $this->resolveMorphSourceProperty($metaData, $attribute->localKey, $relation->property));
-        $sourceValue = $sourceProperty->getValue($model);
+        $sourceColumns = $relation->referencedKeyColumns;
+        $idColumns = $relation->foreignKeyColumns;
 
-        if ($sourceValue === null) {
+        if ($sourceColumns === null || $idColumns === null) {
+            // @codeCoverageIgnoreStart
+            throw ModelException::fromRelationNotFoundOnModel(
+                modelClass: $metaData->model,
+                property: $relation->property,
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        $sourcePropertyNames = [];
+
+        foreach ($sourceColumns as $sourceColumn) {
+            $sourcePropertyNames[$sourceColumn] = $this->findPropertyByColumn(
+                metaData: $metaData,
+                column: $sourceColumn,
+                relationProperty: $relation->property,
+            );
+        }
+
+        $sourceTuple = $this->readTupleFromModel($model, $metaData, $sourceColumns, $sourcePropertyNames);
+
+        if ($sourceTuple === null) {
             if (!$relation->nullable) {
                 throw ModelException::fromMissingForeignKeyValue(
                     modelClass: $metaData->model,
@@ -636,16 +703,6 @@ class Hydrator implements HydratorInterface
             return;
         }
 
-        if (!\is_scalar($sourceValue)) {
-            // @codeCoverageIgnoreStart
-            throw ModelException::fromPropertyValueMustBeScalar(
-                modelClass: $metaData->model,
-                property: $sourceProperty->name,
-                actualType: \get_debug_type($sourceValue),
-            );
-            // @codeCoverageIgnoreEnd
-        }
-
         $typeValue = MorphTypeResolver::encode(
             class: $metaData->model,
             typeMap: $attribute->typeMap,
@@ -654,18 +711,20 @@ class Hydrator implements HydratorInterface
         $manager = $this->modelsManager;
         $relatedClass = $relation->relatedClass;
         $typeColumn = $attribute->typeColumn;
-        $idColumn = $attribute->idColumn;
         $sourceMetaData = $metaData;
         $relationProperty = $relation->property;
+        $sourceValues = \array_values($sourceTuple);
 
         $proxy = $reflectionClass->newLazyProxy(
-            function () use ($manager, $relatedClass, $typeColumn, $idColumn, $typeValue, $sourceValue, $sourceMetaData, $relationProperty): object {
+            function () use ($manager, $relatedClass, $typeColumn, $idColumns, $typeValue, $sourceValues, $sourceMetaData, $relationProperty): object {
                 $result = $manager->findFirst(
                     $relatedClass,
-                    static function (WhereStatementInterface $statement) use ($typeColumn, $idColumn, $typeValue, $sourceValue): void {
-                        $statement
-                            ->where($typeColumn, $typeValue)
-                            ->where($idColumn, $sourceValue);
+                    static function (WhereStatementInterface $statement) use ($typeColumn, $idColumns, $typeValue, $sourceValues): void {
+                        $statement->where($typeColumn, $typeValue);
+
+                        foreach ($idColumns as $index => $idColumn) {
+                            $statement->where($idColumn, $sourceValues[$index]);
+                        }
                     },
                 );
 
@@ -691,11 +750,32 @@ class Hydrator implements HydratorInterface
     ): void {
         /** @var MorphMany $attribute */
         $attribute = $relation->attribute;
-        $sourceProperty = PropertyReflector::createFromObject($model, $this->resolveMorphSourceProperty($metaData, $attribute->localKey, $relation->property));
-        $sourceValue = $sourceProperty->getValue($model);
         $relatedClass = $relation->relatedClass;
+        $sourceColumns = $relation->referencedKeyColumns;
+        $idColumns = $relation->foreignKeyColumns;
 
-        if ($sourceValue === null) {
+        if ($sourceColumns === null || $idColumns === null) {
+            // @codeCoverageIgnoreStart
+            throw ModelException::fromRelationNotFoundOnModel(
+                modelClass: $metaData->model,
+                property: $relation->property,
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        $sourcePropertyNames = [];
+
+        foreach ($sourceColumns as $sourceColumn) {
+            $sourcePropertyNames[$sourceColumn] = $this->findPropertyByColumn(
+                metaData: $metaData,
+                column: $sourceColumn,
+                relationProperty: $relation->property,
+            );
+        }
+
+        $sourceTuple = $this->readTupleFromModel($model, $metaData, $sourceColumns, $sourcePropertyNames);
+
+        if ($sourceTuple === null) {
             PropertyReflector::createFromObject($model, $relation->property)->setValue(
                 $model,
                 Relation::createFromPrefetched(
@@ -708,16 +788,6 @@ class Hydrator implements HydratorInterface
             return;
         }
 
-        if (!\is_scalar($sourceValue)) {
-            // @codeCoverageIgnoreStart
-            throw ModelException::fromPropertyValueMustBeScalar(
-                modelClass: $metaData->model,
-                property: $sourceProperty->name,
-                actualType: \get_debug_type($sourceValue),
-            );
-            // @codeCoverageIgnoreEnd
-        }
-
         $typeValue = MorphTypeResolver::encode(
             class: $metaData->model,
             typeMap: $attribute->typeMap,
@@ -725,15 +795,17 @@ class Hydrator implements HydratorInterface
         $manager = $this->modelsManager;
         $targetTable = $manager->metaData->getModel($relatedClass)->table;
         $typeColumn = $attribute->typeColumn;
-        $idColumn = $attribute->idColumn;
+        $sourceValues = \array_values($sourceTuple);
 
         $relationInstance = Relation::createFromBuilder(
             loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
                 $relatedClass,
-                static function (SelectStatementInterface $statement) use ($typeColumn, $idColumn, $typeValue, $sourceValue, $criteria, $orderBy, $limit, $offset): void {
-                    $statement
-                        ->where($typeColumn, $typeValue)
-                        ->where($idColumn, $sourceValue);
+                static function (SelectStatementInterface $statement) use ($typeColumn, $idColumns, $typeValue, $sourceValues, $criteria, $orderBy, $limit, $offset): void {
+                    $statement->where($typeColumn, $typeValue);
+
+                    foreach ($idColumns as $index => $idColumn) {
+                        $statement->where($idColumn, $sourceValues[$index]);
+                    }
 
                     foreach ($criteria as $extra) {
                         $extra($statement);
@@ -748,10 +820,13 @@ class Hydrator implements HydratorInterface
                     }
                 },
             ),
-            countBuilder: static function (array $criteria) use ($manager, $targetTable, $typeColumn, $idColumn, $typeValue, $sourceValue): int {
+            countBuilder: static function (array $criteria) use ($manager, $targetTable, $typeColumn, $idColumns, $typeValue, $sourceValues): int {
                 $statement = $manager->connection->count($targetTable)
-                    ->where($typeColumn, $typeValue)
-                    ->where($idColumn, $sourceValue);
+                    ->where($typeColumn, $typeValue);
+
+                foreach ($idColumns as $index => $idColumn) {
+                    $statement->where($idColumn, $sourceValues[$index]);
+                }
 
                 foreach ($criteria as $extra) {
                     $extra($statement);
@@ -771,19 +846,37 @@ class Hydrator implements HydratorInterface
         ModelMetaDataInterface $metaData,
         ModelRelationInterface $relation,
     ): void {
-        if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
+        $relatedClass = $relation->relatedClass;
+        $manager = $this->modelsManager;
+        $targetMetaData = $manager->metaData->getModel($relatedClass);
+
+        $parentPkColumns = $this->resolvePkColumns($metaData);
+        $targetPkColumns = $this->resolvePkColumns($targetMetaData);
+        $pivotSourceColumns = $relation->pivotSourceColumns;
+        $pivotTargetColumns = $relation->pivotTargetColumns;
+
+        if ($pivotSourceColumns === null || $pivotTargetColumns === null) {
             // @codeCoverageIgnoreStart
-            throw ModelException::fromCantFetchWithoutPrimaryKey(
+            throw ModelException::fromRelationNotFoundOnModel(
                 modelClass: $metaData->model,
+                property: $relation->property,
             );
             // @codeCoverageIgnoreEnd
         }
 
-        $sourceProperty = PropertyReflector::createFromObject($model, $metaData->key->property);
-        $sourceValue = $sourceProperty->getValue($model);
-        $relatedClass = $relation->relatedClass;
+        $sourcePropertyNames = [];
 
-        if ($sourceValue === null) {
+        foreach ($parentPkColumns as $parentColumn) {
+            $sourcePropertyNames[$parentColumn] = $this->findPropertyByColumn(
+                metaData: $metaData,
+                column: $parentColumn,
+                relationProperty: $relation->property,
+            );
+        }
+
+        $parentValues = $this->readTupleFromModel($model, $metaData, $parentPkColumns, $sourcePropertyNames);
+
+        if ($parentValues === null) {
             PropertyReflector::createFromObject($model, $relation->property)->setValue(
                 $model,
                 Relation::createFromPrefetched(
@@ -796,48 +889,32 @@ class Hydrator implements HydratorInterface
             return;
         }
 
-        if (!\is_scalar($sourceValue)) {
-            // @codeCoverageIgnoreStart
-            throw ModelException::fromPropertyValueMustBeScalar(
-                modelClass: $metaData->model,
-                property: $sourceProperty->name,
-                actualType: \get_debug_type($sourceValue),
-            );
-            // @codeCoverageIgnoreEnd
-        }
-
         /** @var MorphToMany $attribute */
         $attribute = $relation->attribute;
-        $manager = $this->modelsManager;
-        $targetMetaData = $manager->metaData->getModel($relatedClass);
-
-        if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
-            // @codeCoverageIgnoreStart
-            throw ModelException::fromCantFetchWithoutPrimaryKey(
-                modelClass: $relatedClass,
-            );
-            // @codeCoverageIgnoreEnd
-        }
-
         $typeValue = MorphTypeResolver::encode(
             class: $metaData->model,
             typeMap: $attribute->typeMap,
         );
         $targetTable = $targetMetaData->table;
-        $targetPrimaryKey = $targetMetaData->key->column;
         $pivotTable = $attribute->table;
         $pivotTypeColumn = $attribute->typeColumn;
-        $pivotIdColumn = $attribute->idColumn;
-        $pivotForeignKey = $attribute->foreignKey;
 
         $relationInstance = Relation::createFromBuilder(
-            loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
+            loaderBuilder: fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
                 $relatedClass,
-                static function (SelectStatementInterface $statement) use ($pivotTable, $pivotForeignKey, $pivotTypeColumn, $pivotIdColumn, $targetTable, $targetPrimaryKey, $typeValue, $sourceValue, $criteria, $orderBy, $limit, $offset): void {
-                    $statement
-                        ->innerJoin($pivotTable, $pivotTable . '.' . $pivotForeignKey, $targetTable . '.' . $targetPrimaryKey)
-                        ->where($pivotTable . '.' . $pivotTypeColumn, $typeValue)
-                        ->where($pivotTable . '.' . $pivotIdColumn, $sourceValue);
+                function (SelectStatementInterface $statement) use ($pivotTable, $pivotSourceColumns, $pivotTargetColumns, $pivotTypeColumn, $parentPkColumns, $targetPkColumns, $targetTable, $parentValues, $typeValue, $criteria, $orderBy, $limit, $offset): void {
+                    $this->applyBelongsToManyPivotJoin(
+                        statement: $statement,
+                        pivotTable: $pivotTable,
+                        pivotTargetColumns: $pivotTargetColumns,
+                        targetTable: $targetTable,
+                        targetPkColumns: $targetPkColumns,
+                        pivotSourceColumns: $pivotSourceColumns,
+                        parentPkColumns: $parentPkColumns,
+                        parentValues: $parentValues,
+                    );
+
+                    $statement->where($pivotTable . '.' . $pivotTypeColumn, $typeValue);
 
                     foreach ($criteria as $extra) {
                         $extra($statement);
@@ -852,11 +929,21 @@ class Hydrator implements HydratorInterface
                     }
                 },
             ),
-            countBuilder: static function (array $criteria) use ($manager, $pivotTable, $pivotForeignKey, $pivotTypeColumn, $pivotIdColumn, $targetTable, $targetPrimaryKey, $typeValue, $sourceValue): int {
-                $statement = $manager->connection->count($targetTable)
-                    ->innerJoin($pivotTable, $pivotTable . '.' . $pivotForeignKey, $targetTable . '.' . $targetPrimaryKey)
-                    ->where($pivotTable . '.' . $pivotTypeColumn, $typeValue)
-                    ->where($pivotTable . '.' . $pivotIdColumn, $sourceValue);
+            countBuilder: function (array $criteria) use ($manager, $pivotTable, $pivotSourceColumns, $pivotTargetColumns, $pivotTypeColumn, $parentPkColumns, $targetPkColumns, $targetTable, $parentValues, $typeValue): int {
+                $statement = $manager->connection->count($targetTable);
+
+                $this->applyBelongsToManyPivotJoin(
+                    statement: $statement,
+                    pivotTable: $pivotTable,
+                    pivotTargetColumns: $pivotTargetColumns,
+                    targetTable: $targetTable,
+                    targetPkColumns: $targetPkColumns,
+                    pivotSourceColumns: $pivotSourceColumns,
+                    parentPkColumns: $parentPkColumns,
+                    parentValues: $parentValues,
+                );
+
+                $statement->where($pivotTable . '.' . $pivotTypeColumn, $typeValue);
 
                 foreach ($criteria as $extra) {
                     $extra($statement);
@@ -869,26 +956,6 @@ class Hydrator implements HydratorInterface
         );
 
         PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $relationInstance);
-    }
-
-    private function resolveMorphSourceProperty(
-        ModelMetaDataInterface $metaData,
-        ?string $localKey,
-        string $relationProperty,
-    ): string {
-        if ($localKey === null) {
-            if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
-                // @codeCoverageIgnoreStart
-                throw ModelException::fromCantFetchWithoutPrimaryKey(
-                    modelClass: $metaData->model,
-                );
-                // @codeCoverageIgnoreEnd
-            }
-
-            return $metaData->key->property;
-        }
-
-        return $this->findPropertyByColumn($metaData, $localKey, $relationProperty);
     }
 
     private function loadHasOneThroughRelation(
@@ -945,17 +1012,24 @@ class Hydrator implements HydratorInterface
         return $throughMetaData->key->column;
     }
 
+    /**
+     * @param non-empty-array<string, string|int|float|bool> $sourceValues
+     */
     private function loadSingleRelation(
         ModelMetaDataInterface $sourceMetaData,
         ModelRelationInterface $relation,
-        string|int|float|bool $sourceValue,
+        array $sourceValues,
     ): object {
-        $targetColumn = $this->resolveTargetColumn($relation);
+        $sourceColumns = $this->resolveSourceColumns($sourceMetaData, $relation);
+        $targetColumns = $this->resolveTargetColumns($relation);
 
         $result = $this->modelsManager->findFirst(
             $relation->relatedClass,
-            static function (WhereStatementInterface $statement) use ($targetColumn, $sourceValue): void {
-                $statement->where($targetColumn, $sourceValue);
+            static function (WhereStatementInterface $statement) use ($sourceColumns, $targetColumns, $sourceValues): void {
+                foreach ($sourceColumns as $index => $sourceColumn) {
+                    $targetColumn = $targetColumns[$index];
+                    $statement->where($targetColumn, $sourceValues[$sourceColumn]);
+                }
             },
         );
 
@@ -1129,20 +1203,26 @@ class Hydrator implements HydratorInterface
             column: $morphTo->typeColumn,
             relationProperty: $morphTo->property,
         );
-        $idColumnProperty = $this->findPropertyByColumn(
-            metaData: $metaData,
-            column: $morphTo->idColumn,
-            relationProperty: $morphTo->property,
-        );
 
-        /** @var array<string, array<int|string, int|string>> $idsByType */
-        $idsByType = [];
+        $idColumns = $morphTo->idColumns;
+        $idColumnProperties = [];
+
+        foreach ($idColumns as $idColumn) {
+            $idColumnProperties[$idColumn] = $this->findPropertyByColumn(
+                metaData: $metaData,
+                column: $idColumn,
+                relationProperty: $morphTo->property,
+            );
+        }
+
+        /** @var array<string, array<string, non-empty-array<string, int|string>>> $tuplesByTypeAndHash */
+        $tuplesByTypeAndHash = [];
 
         foreach ($parents as $parent) {
             $typeValue = PropertyReflector::createFromObject($parent, $typeColumnProperty)->getValue($parent);
-            $idValue = PropertyReflector::createFromObject($parent, $idColumnProperty)->getValue($parent);
+            $idTuple = $this->readTupleFromModel($parent, $metaData, $idColumns, $idColumnProperties);
 
-            if ($typeValue === null || $typeValue === '' || $idValue === null) {
+            if ($typeValue === null || $typeValue === '' || $idTuple === null) {
                 continue;
             }
 
@@ -1150,18 +1230,14 @@ class Hydrator implements HydratorInterface
                 continue; // @codeCoverageIgnore
             }
 
-            if (!\is_int($idValue) && !\is_string($idValue)) {
-                continue; // @codeCoverageIgnore
-            }
-
-            $idsByType[$typeValue][$idValue] = $idValue;
+            $tuplesByTypeAndHash[$typeValue][RelationKeyTupleHasher::hash(\array_values($idTuple))] = $idTuple;
         }
 
-        /** @var array<string, array<int|string, object>> $targetsByTypeAndId */
-        $targetsByTypeAndId = [];
+        /** @var array<string, array<string, object>> $targetsByTypeAndHash */
+        $targetsByTypeAndHash = [];
         $manager = $this->modelsManager;
 
-        foreach ($idsByType as $typeValue => $ids) {
+        foreach ($tuplesByTypeAndHash as $typeValue => $tuplesByHash) {
             $targetClass = MorphTypeResolver::resolve(
                 typeValue: $typeValue,
                 typeMap: $morphTo->typeMap,
@@ -1176,25 +1252,36 @@ class Hydrator implements HydratorInterface
             }
 
             $targetMetaData = $manager->metaData->getModel($targetClass);
+            $targetPkColumns = $this->resolvePkColumns($targetMetaData);
 
-            if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
+            if (\sizeof($targetPkColumns) !== \sizeof($idColumns)) {
                 // @codeCoverageIgnoreStart
-                throw ModelException::fromCantFetchWithoutPrimaryKey(
-                    modelClass: $targetClass,
+                throw ModelException::fromRelationForeignKeyArityMismatch(
+                    modelClass: $metaData->model,
+                    property: $morphTo->property,
+                    keyKind: 'idColumn',
+                    expected: \sizeof($targetPkColumns),
+                    actual: \sizeof($idColumns),
                 );
                 // @codeCoverageIgnoreEnd
             }
 
-            $targetPrimaryColumn = $targetMetaData->key->column;
-            $targetPrimaryProperty = $targetMetaData->key->property;
-            $idValues = \array_values($ids);
+            $targetPropertyNames = [];
 
-            if (\sizeof($idValues) === 0) {
+            foreach ($targetPkColumns as $pkColumn) {
+                $targetPropertyNames[$pkColumn] = $this->findPropertyByColumn(
+                    metaData: $targetMetaData,
+                    column: $pkColumn,
+                    relationProperty: $morphTo->property,
+                );
+            }
+
+            if ($tuplesByHash === []) {
                 continue; // @codeCoverageIgnore
             }
 
-            $targetQuery = $manager->connection->select($targetMetaData->table)
-                ->whereIn($targetPrimaryColumn, $idValues);
+            $targetQuery = $manager->connection->select($targetMetaData->table);
+            $this->applyCompositeTuplesFilter($targetQuery, $idColumns, $targetPkColumns, $tuplesByHash);
 
             $shaped = $this->shapeConstraint($constraint, $targetClass);
             $this->applyConstraintToBatch($targetQuery, $shaped);
@@ -1202,22 +1289,22 @@ class Hydrator implements HydratorInterface
             $rows = $targetQuery->fetchAll($targetClass, $manager->hydrator);
 
             foreach ($rows as $row) {
-                $pkValue = PropertyReflector::createFromObject($row, $targetPrimaryProperty)->getValue($row);
+                $rowTuple = $this->readTupleFromModelByColumnMap($row, $targetPropertyNames, $idColumns, $targetPkColumns);
 
-                if (!\is_int($pkValue) && !\is_string($pkValue)) {
+                if ($rowTuple === null) {
                     continue; // @codeCoverageIgnore
                 }
 
-                $targetsByTypeAndId[$typeValue][$pkValue] = $row;
+                $targetsByTypeAndHash[$typeValue][RelationKeyTupleHasher::hash(\array_values($rowTuple))] = $row;
             }
         }
 
         foreach ($parents as $parent) {
             $typeValue = PropertyReflector::createFromObject($parent, $typeColumnProperty)->getValue($parent);
-            $idValue = PropertyReflector::createFromObject($parent, $idColumnProperty)->getValue($parent);
+            $idTuple = $this->readTupleFromModel($parent, $metaData, $idColumns, $idColumnProperties);
             $morphProperty = PropertyReflector::createFromObject($parent, $morphTo->property);
 
-            if ($typeValue === null || $typeValue === '' || $idValue === null) {
+            if ($typeValue === null || $typeValue === '' || $idTuple === null) {
                 if (!$morphTo->nullable) {
                     throw ModelException::fromMissingForeignKeyValue(
                         modelClass: $metaData->model,
@@ -1230,11 +1317,11 @@ class Hydrator implements HydratorInterface
                 continue;
             }
 
-            if (!\is_string($typeValue) || (!\is_int($idValue) && !\is_string($idValue))) {
+            if (!\is_string($typeValue)) {
                 continue; // @codeCoverageIgnore
             }
 
-            $target = $targetsByTypeAndId[$typeValue][$idValue] ?? null;
+            $target = $targetsByTypeAndHash[$typeValue][RelationKeyTupleHasher::hash(\array_values($idTuple))] ?? null;
 
             if ($target === null) {
                 if ($morphTo->nullable) {
@@ -1316,6 +1403,7 @@ class Hydrator implements HydratorInterface
             }
 
             if ($value instanceof Relation) {
+                /** @var object $child */
                 foreach ($value as $child) {
                     $grouped[$child::class][] = $child;
                 }
@@ -1416,8 +1504,8 @@ class Hydrator implements HydratorInterface
         ModelRelationInterface $relation,
         ?Relation $shaped = null,
     ): void {
-        $sourcePropertyName = $this->resolveSourceProperty($metaData, $relation);
-        $targetColumn = $this->resolveTargetColumn($relation);
+        $sourceColumns = $this->resolveSourceColumns($metaData, $relation);
+        $targetColumns = $this->resolveTargetColumns($relation);
 
         /** @var class-string $relatedClass */
         $relatedClass = $relation->relatedClass;
@@ -1425,70 +1513,75 @@ class Hydrator implements HydratorInterface
         $targetMetaData = $manager->metaData->getModel($relatedClass);
         $targetTable = $targetMetaData->table;
 
-        $targetForeignProperty = $this->findPropertyByColumn(
-            metaData: $targetMetaData,
-            column: $targetColumn,
-            relationProperty: $relation->property,
-        );
+        $sourcePropertyNames = [];
 
-        /** @var array<int|string, int|string> $sourceValues */
-        $sourceValues = [];
+        foreach ($sourceColumns as $sourceColumn) {
+            $sourcePropertyNames[$sourceColumn] = $this->findPropertyByColumn(
+                metaData: $metaData,
+                column: $sourceColumn,
+                relationProperty: $relation->property,
+            );
+        }
+
+        $targetPropertyNames = [];
+
+        foreach ($targetColumns as $targetColumn) {
+            $targetPropertyNames[$targetColumn] = $this->findPropertyByColumn(
+                metaData: $targetMetaData,
+                column: $targetColumn,
+                relationProperty: $relation->property,
+            );
+        }
+
+        /** @var array<string, non-empty-array<string, int|string>> $tuplesByHash */
+        $tuplesByHash = [];
 
         foreach ($parents as $parent) {
-            $value = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+            $tuple = $this->readTupleFromModel($parent, $metaData, $sourceColumns, $sourcePropertyNames);
 
-            if ($value === null) {
+            if ($tuple === null) {
                 continue;
             }
 
-            if (!\is_int($value) && !\is_string($value)) {
-                // @codeCoverageIgnoreStart
-                throw ModelException::fromPropertyValueMustBeScalar(
-                    modelClass: $metaData->model,
-                    property: $sourcePropertyName,
-                    actualType: \get_debug_type($value),
-                );
-                // @codeCoverageIgnoreEnd
-            }
-
-            $sourceValues[$value] = $value;
+            $tuplesByHash[RelationKeyTupleHasher::hash(\array_values($tuple))] = $tuple;
         }
 
-        /** @var array<int|string, list<object>> $grouped */
+        /** @var array<string, list<object>> $grouped */
         $grouped = [];
 
-        if (\sizeof($sourceValues) > 0) {
-            $batchQuery = $manager->connection->select($targetTable)
-                ->whereIn($targetColumn, \array_values($sourceValues));
+        if (\sizeof($tuplesByHash) > 0) {
+            $batchQuery = $manager->connection->select($targetTable);
 
+            $this->applyCompositeTuplesFilter($batchQuery, $sourceColumns, $targetColumns, $tuplesByHash);
             $this->applyConstraintToBatch($batchQuery, $shaped);
 
             $batchRows = $batchQuery->fetchAll($relatedClass, $manager->hydrator);
 
             foreach ($batchRows as $row) {
-                $fkValue = PropertyReflector::createFromObject($row, $targetForeignProperty)->getValue($row);
+                $rowTuple = $this->readTupleFromModelByColumnMap($row, $targetPropertyNames, $sourceColumns, $targetColumns);
 
-                if (!\is_int($fkValue) && !\is_string($fkValue)) {
+                if ($rowTuple === null) {
                     continue; // @codeCoverageIgnore
                 }
 
-                $grouped[$fkValue][] = $row;
+                $grouped[RelationKeyTupleHasher::hash(\array_values($rowTuple))][] = $row;
             }
         }
 
         foreach ($parents as $parent) {
-            $sourceValue = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
-            $prefetched = \is_int($sourceValue) || \is_string($sourceValue)
-                ? ($grouped[$sourceValue] ?? [])
-                : [];
+            $tuple = $this->readTupleFromModel($parent, $metaData, $sourceColumns, $sourcePropertyNames);
+            $prefetched = $tuple === null
+                ? []
+                : ($grouped[RelationKeyTupleHasher::hash(\array_values($tuple))] ?? []);
             $prefetched = $this->sliceForConstraint($prefetched, $shaped);
 
             $relationInstance = $this->buildHasManyEagerRelation(
                 manager: $manager,
                 relatedClass: $relatedClass,
                 targetTable: $targetTable,
-                targetColumn: $targetColumn,
-                sourceValue: $sourceValue,
+                sourceColumns: $sourceColumns,
+                targetColumns: $targetColumns,
+                sourceValues: $tuple,
                 prefetched: $prefetched,
                 shaped: $shaped,
             );
@@ -1499,6 +1592,9 @@ class Hydrator implements HydratorInterface
 
     /**
      * @param class-string $relatedClass
+     * @param non-empty-list<string> $sourceColumns
+     * @param non-empty-list<string> $targetColumns
+     * @param non-empty-array<string, int|string>|null $sourceValues
      * @param list<object> $prefetched
      * @param Relation<object>|null $shaped
      * @return Relation<object>
@@ -1507,12 +1603,13 @@ class Hydrator implements HydratorInterface
         ModelsManagerInterface $manager,
         string $relatedClass,
         string $targetTable,
-        string $targetColumn,
-        mixed $sourceValue,
+        array $sourceColumns,
+        array $targetColumns,
+        ?array $sourceValues,
         array $prefetched,
         ?Relation $shaped = null,
     ): Relation {
-        if (!\is_int($sourceValue) && !\is_string($sourceValue)) {
+        if ($sourceValues === null) {
             // @codeCoverageIgnoreStart
             return Relation::createFromPrefetched(
                 values: $prefetched,
@@ -1526,8 +1623,11 @@ class Hydrator implements HydratorInterface
             prefetched: $prefetched,
             loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
                 $relatedClass,
-                static function (SelectStatementInterface $statement) use ($targetColumn, $sourceValue, $criteria, $orderBy, $limit, $offset): void {
-                    $statement->where($targetColumn, $sourceValue);
+                static function (SelectStatementInterface $statement) use ($sourceColumns, $targetColumns, $sourceValues, $criteria, $orderBy, $limit, $offset): void {
+                    foreach ($sourceColumns as $index => $sourceColumn) {
+                        $targetColumn = $targetColumns[$index];
+                        $statement->where($targetColumn, $sourceValues[$sourceColumn]);
+                    }
 
                     foreach ($criteria as $extra) {
                         $extra($statement);
@@ -1542,9 +1642,13 @@ class Hydrator implements HydratorInterface
                     }
                 },
             ),
-            countBuilder: static function (array $criteria) use ($manager, $targetTable, $targetColumn, $sourceValue): int {
-                $statement = $manager->connection->count($targetTable)
-                    ->where($targetColumn, $sourceValue);
+            countBuilder: static function (array $criteria) use ($manager, $targetTable, $sourceColumns, $targetColumns, $sourceValues): int {
+                $statement = $manager->connection->count($targetTable);
+
+                foreach ($sourceColumns as $index => $sourceColumn) {
+                    $targetColumn = $targetColumns[$index];
+                    $statement->where($targetColumn, $sourceValues[$sourceColumn]);
+                }
 
                 foreach ($criteria as $extra) {
                     $extra($statement);
@@ -1574,119 +1678,141 @@ class Hydrator implements HydratorInterface
         /** @var BelongsToMany $attribute */
         $attribute = $relation->attribute;
 
-        if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
-            // @codeCoverageIgnoreStart
-            throw ModelException::fromCantFetchWithoutPrimaryKey(
-                modelClass: $metaData->model,
-            );
-            // @codeCoverageIgnoreEnd
-        }
-
         /** @var class-string $relatedClass */
         $relatedClass = $relation->relatedClass;
         $manager = $this->modelsManager;
         $targetMetaData = $manager->metaData->getModel($relatedClass);
 
-        if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
+        $parentPkColumns = $this->resolvePkColumns($metaData);
+        $targetPkColumns = $this->resolvePkColumns($targetMetaData);
+        $pivotSourceColumns = $relation->pivotSourceColumns;
+        $pivotTargetColumns = $relation->pivotTargetColumns;
+
+        if ($pivotSourceColumns === null || $pivotTargetColumns === null) {
             // @codeCoverageIgnoreStart
-            throw ModelException::fromCantFetchWithoutPrimaryKey(
-                modelClass: $relatedClass,
+            throw ModelException::fromRelationNotFoundOnModel(
+                modelClass: $metaData->model,
+                property: $relation->property,
             );
             // @codeCoverageIgnoreEnd
         }
 
-        $sourcePropertyName = $metaData->key->property;
         $targetTable = $targetMetaData->table;
-        $targetPrimaryKey = $targetMetaData->key->column;
-        $targetPrimaryProperty = $targetMetaData->key->property;
         $pivotTable = $attribute->table;
-        $pivotLocalKey = $attribute->localKey;
-        $pivotForeignKey = $attribute->foreignKey;
 
-        /** @var array<int|string, int|string> $sourceValues */
-        $sourceValues = [];
+        $sourcePropertyNames = [];
+
+        foreach ($parentPkColumns as $parentColumn) {
+            $sourcePropertyNames[$parentColumn] = $this->findPropertyByColumn(
+                metaData: $metaData,
+                column: $parentColumn,
+                relationProperty: $relation->property,
+            );
+        }
+
+        $targetPropertyNames = [];
+
+        foreach ($targetPkColumns as $targetColumn) {
+            $targetPropertyNames[$targetColumn] = $this->findPropertyByColumn(
+                metaData: $targetMetaData,
+                column: $targetColumn,
+                relationProperty: $relation->property,
+            );
+        }
+
+        /** @var array<string, non-empty-array<string, int|string>> $parentTuplesByHash */
+        $parentTuplesByHash = [];
 
         foreach ($parents as $parent) {
-            $value = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+            $tuple = $this->readTupleFromModel($parent, $metaData, $parentPkColumns, $sourcePropertyNames);
 
-            if ($value === null) {
+            if ($tuple === null) {
                 continue; // @codeCoverageIgnore
             }
 
-            if (!\is_int($value) && !\is_string($value)) {
-                // @codeCoverageIgnoreStart
-                throw ModelException::fromPropertyValueMustBeScalar(
-                    modelClass: $metaData->model,
-                    property: $sourcePropertyName,
-                    actualType: \get_debug_type($value),
-                );
-                // @codeCoverageIgnoreEnd
-            }
-
-            $sourceValues[$value] = $value;
+            $parentTuplesByHash[RelationKeyTupleHasher::hash(\array_values($tuple))] = $tuple;
         }
 
-        /** @var array<int|string, list<int|string>> $pivotPairs */
-        $pivotPairs = [];
-        /** @var array<int|string, object> $targetsByPk */
-        $targetsByPk = [];
+        /** @var array<string, list<string>> $targetHashesByParent */
+        $targetHashesByParent = [];
+        /** @var array<string, non-empty-array<string, int|string>> $targetTuplesByHash */
+        $targetTuplesByHash = [];
+        /** @var array<string, object> $targetsByHash */
+        $targetsByHash = [];
 
-        if (\sizeof($sourceValues) > 0) {
-            $pivotResult = $manager->connection
+        if (\sizeof($parentTuplesByHash) > 0) {
+            $pivotQuery = $manager->connection
                 ->select($pivotTable)
-                ->select($pivotLocalKey, $pivotForeignKey)
-                ->whereIn($pivotLocalKey, \array_values($sourceValues))
-                ->execute();
+                ->select(...$pivotSourceColumns, ...$pivotTargetColumns);
 
-            /** @var array<int|string, int|string> $foreignKeys */
-            $foreignKeys = [];
+            $this->applyCompositeTuplesFilter($pivotQuery, $parentPkColumns, $pivotSourceColumns, $parentTuplesByHash);
+
+            $pivotResult = $pivotQuery->execute();
 
             foreach ($pivotResult as $row) {
-                $local = $row->properties[$pivotLocalKey] ?? null;
-                $foreign = $row->properties[$pivotForeignKey] ?? null;
+                /** @var non-empty-array<string, int|string> $parentTuple */
+                $parentTuple = [];
+                /** @var non-empty-array<string, int|string> $targetTuple */
+                $targetTuple = [];
 
-                if (!\is_int($local) && !\is_string($local)) {
-                    continue; // @codeCoverageIgnore
+                foreach ($pivotSourceColumns as $index => $pivotSourceColumn) {
+                    $value = $row->properties[$pivotSourceColumn] ?? null;
+
+                    if (!\is_int($value) && !\is_string($value)) {
+                        continue 2; // @codeCoverageIgnore
+                    }
+
+                    $parentTuple[$parentPkColumns[$index]] = $value;
                 }
 
-                if (!\is_int($foreign) && !\is_string($foreign)) {
-                    continue; // @codeCoverageIgnore
+                foreach ($pivotTargetColumns as $index => $pivotTargetColumn) {
+                    $value = $row->properties[$pivotTargetColumn] ?? null;
+
+                    if (!\is_int($value) && !\is_string($value)) {
+                        continue 2; // @codeCoverageIgnore
+                    }
+
+                    $targetTuple[$targetPkColumns[$index]] = $value;
                 }
 
-                $pivotPairs[$local][] = $foreign;
-                $foreignKeys[$foreign] = $foreign;
+                $parentHash = RelationKeyTupleHasher::hash(\array_values($parentTuple));
+                $targetHash = RelationKeyTupleHasher::hash(\array_values($targetTuple));
+
+                $targetHashesByParent[$parentHash][] = $targetHash;
+                $targetTuplesByHash[$targetHash] = $targetTuple;
             }
 
-            if (\sizeof($foreignKeys) > 0) {
-                $targetQuery = $manager->connection
-                    ->select($targetTable)
-                    ->whereIn($targetPrimaryKey, \array_values($foreignKeys));
+            if (\sizeof($targetTuplesByHash) > 0) {
+                $targetQuery = $manager->connection->select($targetTable);
 
+                $this->applyCompositeTuplesFilter($targetQuery, $targetPkColumns, $targetPkColumns, $targetTuplesByHash);
                 $this->applyConstraintToBatch($targetQuery, $shaped);
 
                 $targetRows = $targetQuery->fetchAll($relatedClass, $manager->hydrator);
 
                 foreach ($targetRows as $row) {
-                    $pkValue = PropertyReflector::createFromObject($row, $targetPrimaryProperty)->getValue($row);
+                    $rowTuple = $this->readTupleFromModelByColumnMap($row, $targetPropertyNames, $targetPkColumns, $targetPkColumns);
 
-                    if (!\is_int($pkValue) && !\is_string($pkValue)) {
+                    if ($rowTuple === null) {
                         continue; // @codeCoverageIgnore
                     }
 
-                    $targetsByPk[$pkValue] = $row;
+                    $targetsByHash[RelationKeyTupleHasher::hash(\array_values($rowTuple))] = $row;
                 }
             }
         }
 
         foreach ($parents as $parent) {
-            $sourceValue = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+            $tuple = $this->readTupleFromModel($parent, $metaData, $parentPkColumns, $sourcePropertyNames);
             /** @var list<object> $prefetched */
             $prefetched = [];
 
-            if (\is_int($sourceValue) || \is_string($sourceValue)) {
-                foreach ($pivotPairs[$sourceValue] ?? [] as $fk) {
-                    if (isset($targetsByPk[$fk])) {
-                        $prefetched[] = $targetsByPk[$fk];
+            if ($tuple !== null) {
+                $parentHash = RelationKeyTupleHasher::hash(\array_values($tuple));
+
+                foreach ($targetHashesByParent[$parentHash] ?? [] as $targetHash) {
+                    if (isset($targetsByHash[$targetHash])) {
+                        $prefetched[] = $targetsByHash[$targetHash];
                     }
                 }
             }
@@ -1697,11 +1823,12 @@ class Hydrator implements HydratorInterface
                 manager: $manager,
                 relatedClass: $relatedClass,
                 targetTable: $targetTable,
-                targetPrimaryKey: $targetPrimaryKey,
+                targetPkColumns: $targetPkColumns,
                 pivotTable: $pivotTable,
-                pivotLocalKey: $pivotLocalKey,
-                pivotForeignKey: $pivotForeignKey,
-                sourceValue: $sourceValue,
+                pivotSourceColumns: $pivotSourceColumns,
+                pivotTargetColumns: $pivotTargetColumns,
+                parentPkColumns: $parentPkColumns,
+                parentValues: $tuple,
                 prefetched: $prefetched,
                 shaped: $shaped,
             );
@@ -1712,6 +1839,11 @@ class Hydrator implements HydratorInterface
 
     /**
      * @param class-string $relatedClass
+     * @param non-empty-list<string> $targetPkColumns
+     * @param non-empty-list<string> $pivotSourceColumns
+     * @param non-empty-list<string> $pivotTargetColumns
+     * @param non-empty-list<string> $parentPkColumns
+     * @param non-empty-array<string, int|string>|null $parentValues
      * @param list<object> $prefetched
      * @param Relation<object>|null $shaped
      * @return Relation<object>
@@ -1720,15 +1852,16 @@ class Hydrator implements HydratorInterface
         ModelsManagerInterface $manager,
         string $relatedClass,
         string $targetTable,
-        string $targetPrimaryKey,
+        array $targetPkColumns,
         string $pivotTable,
-        string $pivotLocalKey,
-        string $pivotForeignKey,
-        mixed $sourceValue,
+        array $pivotSourceColumns,
+        array $pivotTargetColumns,
+        array $parentPkColumns,
+        ?array $parentValues,
         array $prefetched,
         ?Relation $shaped = null,
     ): Relation {
-        if (!\is_int($sourceValue) && !\is_string($sourceValue)) {
+        if ($parentValues === null) {
             // @codeCoverageIgnoreStart
             return Relation::createFromPrefetched(
                 values: $prefetched,
@@ -1740,12 +1873,19 @@ class Hydrator implements HydratorInterface
 
         return Relation::createFromPrefetchedWithBuilder(
             prefetched: $prefetched,
-            loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
+            loaderBuilder: fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
                 $relatedClass,
-                static function (SelectStatementInterface $statement) use ($pivotTable, $pivotForeignKey, $pivotLocalKey, $targetTable, $targetPrimaryKey, $sourceValue, $criteria, $orderBy, $limit, $offset): void {
-                    $statement
-                        ->innerJoin($pivotTable, $pivotTable . '.' . $pivotForeignKey, $targetTable . '.' . $targetPrimaryKey)
-                        ->where($pivotTable . '.' . $pivotLocalKey, $sourceValue);
+                function (SelectStatementInterface $statement) use ($pivotTable, $pivotSourceColumns, $pivotTargetColumns, $parentPkColumns, $targetPkColumns, $targetTable, $parentValues, $criteria, $orderBy, $limit, $offset): void {
+                    $this->applyBelongsToManyPivotJoin(
+                        statement: $statement,
+                        pivotTable: $pivotTable,
+                        pivotTargetColumns: $pivotTargetColumns,
+                        targetTable: $targetTable,
+                        targetPkColumns: $targetPkColumns,
+                        pivotSourceColumns: $pivotSourceColumns,
+                        parentPkColumns: $parentPkColumns,
+                        parentValues: $parentValues,
+                    );
 
                     foreach ($criteria as $extra) {
                         $extra($statement);
@@ -1760,10 +1900,19 @@ class Hydrator implements HydratorInterface
                     }
                 },
             ),
-            countBuilder: static function (array $criteria) use ($manager, $pivotTable, $pivotForeignKey, $pivotLocalKey, $targetTable, $targetPrimaryKey, $sourceValue): int {
-                $statement = $manager->connection->count($targetTable)
-                    ->innerJoin($pivotTable, $pivotTable . '.' . $pivotForeignKey, $targetTable . '.' . $targetPrimaryKey)
-                    ->where($pivotTable . '.' . $pivotLocalKey, $sourceValue);
+            countBuilder: function (array $criteria) use ($manager, $pivotTable, $pivotSourceColumns, $pivotTargetColumns, $parentPkColumns, $targetPkColumns, $targetTable, $parentValues): int {
+                $statement = $manager->connection->count($targetTable);
+
+                $this->applyBelongsToManyPivotJoin(
+                    statement: $statement,
+                    pivotTable: $pivotTable,
+                    pivotTargetColumns: $pivotTargetColumns,
+                    targetTable: $targetTable,
+                    targetPkColumns: $targetPkColumns,
+                    pivotSourceColumns: $pivotSourceColumns,
+                    parentPkColumns: $parentPkColumns,
+                    parentValues: $parentValues,
+                );
 
                 foreach ($criteria as $extra) {
                     $extra($statement);
@@ -2016,8 +2165,8 @@ class Hydrator implements HydratorInterface
         ModelRelationInterface $relation,
         ?Relation $shaped = null,
     ): void {
-        $sourcePropertyName = $this->resolveSourceProperty($metaData, $relation);
-        $targetColumn = $this->resolveTargetColumn($relation);
+        $sourceColumns = $this->resolveSourceColumns($metaData, $relation);
+        $targetColumns = $this->resolveTargetColumns($relation);
 
         /** @var class-string $relatedClass */
         $relatedClass = $relation->relatedClass;
@@ -2025,68 +2174,73 @@ class Hydrator implements HydratorInterface
         $targetMetaData = $manager->metaData->getModel($relatedClass);
         $targetTable = $targetMetaData->table;
 
-        $targetForeignProperty = $this->findPropertyByColumn(
-            metaData: $targetMetaData,
-            column: $targetColumn,
-            relationProperty: $relation->property,
-        );
+        $sourcePropertyNames = [];
 
-        /** @var array<int|string, int|string> $sourceValues */
-        $sourceValues = [];
+        foreach ($sourceColumns as $sourceColumn) {
+            $sourcePropertyNames[$sourceColumn] = $this->findPropertyByColumn(
+                metaData: $metaData,
+                column: $sourceColumn,
+                relationProperty: $relation->property,
+            );
+        }
+
+        $targetPropertyNames = [];
+
+        foreach ($targetColumns as $targetColumn) {
+            $targetPropertyNames[$targetColumn] = $this->findPropertyByColumn(
+                metaData: $targetMetaData,
+                column: $targetColumn,
+                relationProperty: $relation->property,
+            );
+        }
+
+        /** @var array<string, non-empty-array<string, int|string>> $tuplesByHash */
+        $tuplesByHash = [];
 
         foreach ($parents as $parent) {
-            $value = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+            $tuple = $this->readTupleFromModel($parent, $metaData, $sourceColumns, $sourcePropertyNames);
 
-            if ($value === null) {
+            if ($tuple === null) {
                 continue;
             }
 
-            if (!\is_int($value) && !\is_string($value)) {
-                // @codeCoverageIgnoreStart
-                throw ModelException::fromPropertyValueMustBeScalar(
-                    modelClass: $metaData->model,
-                    property: $sourcePropertyName,
-                    actualType: \get_debug_type($value),
-                );
-                // @codeCoverageIgnoreEnd
-            }
-
-            $sourceValues[$value] = $value;
+            $tuplesByHash[RelationKeyTupleHasher::hash(\array_values($tuple))] = $tuple;
         }
 
-        /** @var array<int|string, object> $targetsByFk */
-        $targetsByFk = [];
+        /** @var array<string, object> $targetsByHash */
+        $targetsByHash = [];
 
-        if (\sizeof($sourceValues) > 0) {
-            $targetQuery = $manager->connection
-                ->select($targetTable)
-                ->whereIn($targetColumn, \array_values($sourceValues));
+        if (\sizeof($tuplesByHash) > 0) {
+            $targetQuery = $manager->connection->select($targetTable);
 
+            $this->applyCompositeTuplesFilter($targetQuery, $sourceColumns, $targetColumns, $tuplesByHash);
             $this->applyConstraintToBatch($targetQuery, $shaped);
 
             $targetRows = $targetQuery->fetchAll($relatedClass, $manager->hydrator);
 
             foreach ($targetRows as $row) {
-                $fk = PropertyReflector::createFromObject($row, $targetForeignProperty)->getValue($row);
+                $rowTuple = $this->readTupleFromModelByColumnMap($row, $targetPropertyNames, $sourceColumns, $targetColumns);
 
-                if (!\is_int($fk) && !\is_string($fk)) {
+                if ($rowTuple === null) {
                     continue; // @codeCoverageIgnore
                 }
 
-                $targetsByFk[$fk] = $row;
+                $targetsByHash[RelationKeyTupleHasher::hash(\array_values($rowTuple))] = $row;
             }
         }
 
         foreach ($parents as $parent) {
-            $sourceValue = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+            $tuple = $this->readTupleFromModel($parent, $metaData, $sourceColumns, $sourcePropertyNames);
+            $target = $tuple === null
+                ? null
+                : ($targetsByHash[RelationKeyTupleHasher::hash(\array_values($tuple))] ?? null);
+
             $this->assignSingleRowEager(
                 parent: $parent,
                 metaData: $metaData,
                 relation: $relation,
-                sourceValue: $sourceValue,
-                target: \is_int($sourceValue) || \is_string($sourceValue)
-                    ? ($targetsByFk[$sourceValue] ?? null)
-                    : null,
+                sourceValue: $tuple === null ? null : \array_values($tuple)[0],
+                target: $target,
             );
         }
     }
@@ -2101,8 +2255,8 @@ class Hydrator implements HydratorInterface
         ModelRelationInterface $relation,
         ?Relation $shaped = null,
     ): void {
-        $sourcePropertyName = $this->resolveSourceProperty($metaData, $relation);
-        $targetColumn = $this->resolveTargetColumn($relation);
+        $sourceColumns = $this->resolveSourceColumns($metaData, $relation);
+        $targetColumns = $this->resolveTargetColumns($relation);
 
         /** @var class-string $relatedClass */
         $relatedClass = $relation->relatedClass;
@@ -2110,68 +2264,73 @@ class Hydrator implements HydratorInterface
         $targetMetaData = $manager->metaData->getModel($relatedClass);
         $targetTable = $targetMetaData->table;
 
-        $targetForeignProperty = $this->findPropertyByColumn(
-            metaData: $targetMetaData,
-            column: $targetColumn,
-            relationProperty: $relation->property,
-        );
+        $sourcePropertyNames = [];
 
-        /** @var array<int|string, int|string> $sourceValues */
-        $sourceValues = [];
+        foreach ($sourceColumns as $sourceColumn) {
+            $sourcePropertyNames[$sourceColumn] = $this->findPropertyByColumn(
+                metaData: $metaData,
+                column: $sourceColumn,
+                relationProperty: $relation->property,
+            );
+        }
+
+        $targetPropertyNames = [];
+
+        foreach ($targetColumns as $targetColumn) {
+            $targetPropertyNames[$targetColumn] = $this->findPropertyByColumn(
+                metaData: $targetMetaData,
+                column: $targetColumn,
+                relationProperty: $relation->property,
+            );
+        }
+
+        /** @var array<string, non-empty-array<string, int|string>> $tuplesByHash */
+        $tuplesByHash = [];
 
         foreach ($parents as $parent) {
-            $value = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+            $tuple = $this->readTupleFromModel($parent, $metaData, $sourceColumns, $sourcePropertyNames);
 
-            if ($value === null) {
+            if ($tuple === null) {
                 continue;
             }
 
-            if (!\is_int($value) && !\is_string($value)) {
-                // @codeCoverageIgnoreStart
-                throw ModelException::fromPropertyValueMustBeScalar(
-                    modelClass: $metaData->model,
-                    property: $sourcePropertyName,
-                    actualType: \get_debug_type($value),
-                );
-                // @codeCoverageIgnoreEnd
-            }
-
-            $sourceValues[$value] = $value;
+            $tuplesByHash[RelationKeyTupleHasher::hash(\array_values($tuple))] = $tuple;
         }
 
-        /** @var array<int|string, object> $targetsByOwnerKey */
-        $targetsByOwnerKey = [];
+        /** @var array<string, object> $targetsByHash */
+        $targetsByHash = [];
 
-        if (\sizeof($sourceValues) > 0) {
-            $targetQuery = $manager->connection
-                ->select($targetTable)
-                ->whereIn($targetColumn, \array_values($sourceValues));
+        if (\sizeof($tuplesByHash) > 0) {
+            $targetQuery = $manager->connection->select($targetTable);
 
+            $this->applyCompositeTuplesFilter($targetQuery, $sourceColumns, $targetColumns, $tuplesByHash);
             $this->applyConstraintToBatch($targetQuery, $shaped);
 
             $targetRows = $targetQuery->fetchAll($relatedClass, $manager->hydrator);
 
             foreach ($targetRows as $row) {
-                $ownerValue = PropertyReflector::createFromObject($row, $targetForeignProperty)->getValue($row);
+                $rowTuple = $this->readTupleFromModelByColumnMap($row, $targetPropertyNames, $sourceColumns, $targetColumns);
 
-                if (!\is_int($ownerValue) && !\is_string($ownerValue)) {
+                if ($rowTuple === null) {
                     continue; // @codeCoverageIgnore
                 }
 
-                $targetsByOwnerKey[$ownerValue] = $row;
+                $targetsByHash[RelationKeyTupleHasher::hash(\array_values($rowTuple))] = $row;
             }
         }
 
         foreach ($parents as $parent) {
-            $sourceValue = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+            $tuple = $this->readTupleFromModel($parent, $metaData, $sourceColumns, $sourcePropertyNames);
+            $target = $tuple === null
+                ? null
+                : ($targetsByHash[RelationKeyTupleHasher::hash(\array_values($tuple))] ?? null);
+
             $this->assignSingleRowEager(
                 parent: $parent,
                 metaData: $metaData,
                 relation: $relation,
-                sourceValue: $sourceValue,
-                target: \is_int($sourceValue) || \is_string($sourceValue)
-                    ? ($targetsByOwnerKey[$sourceValue] ?? null)
-                    : null,
+                sourceValue: $tuple === null ? null : \array_values($tuple)[0],
+                target: $target,
             );
         }
     }
@@ -2317,7 +2476,17 @@ class Hydrator implements HydratorInterface
     ): void {
         /** @var MorphOne $attribute */
         $attribute = $relation->attribute;
-        $sourcePropertyName = $this->resolveMorphSourceProperty($metaData, $attribute->localKey, $relation->property);
+        $sourceColumns = $relation->referencedKeyColumns;
+        $idColumns = $relation->foreignKeyColumns;
+
+        if ($sourceColumns === null || $idColumns === null) {
+            // @codeCoverageIgnoreStart
+            throw ModelException::fromRelationNotFoundOnModel(
+                modelClass: $metaData->model,
+                property: $relation->property,
+            );
+            // @codeCoverageIgnoreEnd
+        }
 
         /** @var class-string $relatedClass */
         $relatedClass = $relation->relatedClass;
@@ -2325,74 +2494,80 @@ class Hydrator implements HydratorInterface
         $targetMetaData = $manager->metaData->getModel($relatedClass);
         $targetTable = $targetMetaData->table;
         $typeColumn = $attribute->typeColumn;
-        $idColumn = $attribute->idColumn;
         $typeValue = MorphTypeResolver::encode(
             class: $metaData->model,
             typeMap: $attribute->typeMap,
         );
-        $targetIdProperty = $this->findPropertyByColumn(
-            metaData: $targetMetaData,
-            column: $idColumn,
-            relationProperty: $relation->property,
-        );
 
-        /** @var array<int|string, int|string> $sourceValues */
-        $sourceValues = [];
+        $sourcePropertyNames = [];
+
+        foreach ($sourceColumns as $sourceColumn) {
+            $sourcePropertyNames[$sourceColumn] = $this->findPropertyByColumn(
+                metaData: $metaData,
+                column: $sourceColumn,
+                relationProperty: $relation->property,
+            );
+        }
+
+        $targetPropertyNames = [];
+
+        foreach ($idColumns as $idColumn) {
+            $targetPropertyNames[$idColumn] = $this->findPropertyByColumn(
+                metaData: $targetMetaData,
+                column: $idColumn,
+                relationProperty: $relation->property,
+            );
+        }
+
+        /** @var array<string, non-empty-array<string, int|string>> $tuplesByHash */
+        $tuplesByHash = [];
 
         foreach ($parents as $parent) {
-            $value = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+            $tuple = $this->readTupleFromModel($parent, $metaData, $sourceColumns, $sourcePropertyNames);
 
-            if ($value === null) {
+            if ($tuple === null) {
                 continue;
             }
 
-            if (!\is_int($value) && !\is_string($value)) {
-                // @codeCoverageIgnoreStart
-                throw ModelException::fromPropertyValueMustBeScalar(
-                    modelClass: $metaData->model,
-                    property: $sourcePropertyName,
-                    actualType: \get_debug_type($value),
-                );
-                // @codeCoverageIgnoreEnd
-            }
-
-            $sourceValues[$value] = $value;
+            $tuplesByHash[RelationKeyTupleHasher::hash(\array_values($tuple))] = $tuple;
         }
 
-        /** @var array<int|string, object> $targetsByFk */
-        $targetsByFk = [];
+        /** @var array<string, object> $targetsByHash */
+        $targetsByHash = [];
 
-        if (\sizeof($sourceValues) > 0) {
+        if (\sizeof($tuplesByHash) > 0) {
             $targetQuery = $manager->connection
                 ->select($targetTable)
-                ->where($typeColumn, $typeValue)
-                ->whereIn($idColumn, \array_values($sourceValues));
+                ->where($typeColumn, $typeValue);
 
+            $this->applyCompositeTuplesFilter($targetQuery, $sourceColumns, $idColumns, $tuplesByHash);
             $this->applyConstraintToBatch($targetQuery, $shaped);
 
             $targetRows = $targetQuery->fetchAll($relatedClass, $manager->hydrator);
 
             foreach ($targetRows as $row) {
-                $fk = PropertyReflector::createFromObject($row, $targetIdProperty)->getValue($row);
+                $rowTuple = $this->readTupleFromModelByColumnMap($row, $targetPropertyNames, $sourceColumns, $idColumns);
 
-                if (!\is_int($fk) && !\is_string($fk)) {
+                if ($rowTuple === null) {
                     continue; // @codeCoverageIgnore
                 }
 
-                $targetsByFk[$fk] = $row;
+                $targetsByHash[RelationKeyTupleHasher::hash(\array_values($rowTuple))] = $row;
             }
         }
 
         foreach ($parents as $parent) {
-            $sourceValue = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+            $tuple = $this->readTupleFromModel($parent, $metaData, $sourceColumns, $sourcePropertyNames);
+            $target = $tuple === null
+                ? null
+                : ($targetsByHash[RelationKeyTupleHasher::hash(\array_values($tuple))] ?? null);
+
             $this->assignSingleRowEager(
                 parent: $parent,
                 metaData: $metaData,
                 relation: $relation,
-                sourceValue: $sourceValue,
-                target: \is_int($sourceValue) || \is_string($sourceValue)
-                    ? ($targetsByFk[$sourceValue] ?? null)
-                    : null,
+                sourceValue: $tuple === null ? null : \array_values($tuple)[0],
+                target: $target,
             );
         }
     }
@@ -2409,7 +2584,17 @@ class Hydrator implements HydratorInterface
     ): void {
         /** @var MorphMany $attribute */
         $attribute = $relation->attribute;
-        $sourcePropertyName = $this->resolveMorphSourceProperty($metaData, $attribute->localKey, $relation->property);
+        $sourceColumns = $relation->referencedKeyColumns;
+        $idColumns = $relation->foreignKeyColumns;
+
+        if ($sourceColumns === null || $idColumns === null) {
+            // @codeCoverageIgnoreStart
+            throw ModelException::fromRelationNotFoundOnModel(
+                modelClass: $metaData->model,
+                property: $relation->property,
+            );
+            // @codeCoverageIgnoreEnd
+        }
 
         /** @var class-string $relatedClass */
         $relatedClass = $relation->relatedClass;
@@ -2417,68 +2602,72 @@ class Hydrator implements HydratorInterface
         $targetMetaData = $manager->metaData->getModel($relatedClass);
         $targetTable = $targetMetaData->table;
         $typeColumn = $attribute->typeColumn;
-        $idColumn = $attribute->idColumn;
         $typeValue = MorphTypeResolver::encode(
             class: $metaData->model,
             typeMap: $attribute->typeMap,
         );
-        $targetIdProperty = $this->findPropertyByColumn(
-            metaData: $targetMetaData,
-            column: $idColumn,
-            relationProperty: $relation->property,
-        );
 
-        /** @var array<int|string, int|string> $sourceValues */
-        $sourceValues = [];
+        $sourcePropertyNames = [];
+
+        foreach ($sourceColumns as $sourceColumn) {
+            $sourcePropertyNames[$sourceColumn] = $this->findPropertyByColumn(
+                metaData: $metaData,
+                column: $sourceColumn,
+                relationProperty: $relation->property,
+            );
+        }
+
+        $targetPropertyNames = [];
+
+        foreach ($idColumns as $idColumn) {
+            $targetPropertyNames[$idColumn] = $this->findPropertyByColumn(
+                metaData: $targetMetaData,
+                column: $idColumn,
+                relationProperty: $relation->property,
+            );
+        }
+
+        /** @var array<string, non-empty-array<string, int|string>> $tuplesByHash */
+        $tuplesByHash = [];
 
         foreach ($parents as $parent) {
-            $value = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+            $tuple = $this->readTupleFromModel($parent, $metaData, $sourceColumns, $sourcePropertyNames);
 
-            if ($value === null) {
+            if ($tuple === null) {
                 continue;
             }
 
-            if (!\is_int($value) && !\is_string($value)) {
-                // @codeCoverageIgnoreStart
-                throw ModelException::fromPropertyValueMustBeScalar(
-                    modelClass: $metaData->model,
-                    property: $sourcePropertyName,
-                    actualType: \get_debug_type($value),
-                );
-                // @codeCoverageIgnoreEnd
-            }
-
-            $sourceValues[$value] = $value;
+            $tuplesByHash[RelationKeyTupleHasher::hash(\array_values($tuple))] = $tuple;
         }
 
-        /** @var array<int|string, list<object>> $grouped */
+        /** @var array<string, list<object>> $grouped */
         $grouped = [];
 
-        if (\sizeof($sourceValues) > 0) {
+        if (\sizeof($tuplesByHash) > 0) {
             $batchQuery = $manager->connection->select($targetTable)
-                ->where($typeColumn, $typeValue)
-                ->whereIn($idColumn, \array_values($sourceValues));
+                ->where($typeColumn, $typeValue);
 
+            $this->applyCompositeTuplesFilter($batchQuery, $sourceColumns, $idColumns, $tuplesByHash);
             $this->applyConstraintToBatch($batchQuery, $shaped);
 
             $batchRows = $batchQuery->fetchAll($relatedClass, $manager->hydrator);
 
             foreach ($batchRows as $row) {
-                $fkValue = PropertyReflector::createFromObject($row, $targetIdProperty)->getValue($row);
+                $rowTuple = $this->readTupleFromModelByColumnMap($row, $targetPropertyNames, $sourceColumns, $idColumns);
 
-                if (!\is_int($fkValue) && !\is_string($fkValue)) {
+                if ($rowTuple === null) {
                     continue; // @codeCoverageIgnore
                 }
 
-                $grouped[$fkValue][] = $row;
+                $grouped[RelationKeyTupleHasher::hash(\array_values($rowTuple))][] = $row;
             }
         }
 
         foreach ($parents as $parent) {
-            $sourceValue = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
-            $prefetched = \is_int($sourceValue) || \is_string($sourceValue)
-                ? ($grouped[$sourceValue] ?? [])
-                : [];
+            $tuple = $this->readTupleFromModel($parent, $metaData, $sourceColumns, $sourcePropertyNames);
+            $prefetched = $tuple === null
+                ? []
+                : ($grouped[RelationKeyTupleHasher::hash(\array_values($tuple))] ?? []);
             $prefetched = $this->sliceForConstraint($prefetched, $shaped);
 
             $relationInstance = $this->buildMorphManyEagerRelation(
@@ -2486,9 +2675,9 @@ class Hydrator implements HydratorInterface
                 relatedClass: $relatedClass,
                 targetTable: $targetTable,
                 typeColumn: $typeColumn,
-                idColumn: $idColumn,
+                idColumns: $idColumns,
                 typeValue: $typeValue,
-                sourceValue: $sourceValue,
+                sourceValues: $tuple === null ? null : \array_values($tuple),
                 prefetched: $prefetched,
                 shaped: $shaped,
             );
@@ -2499,6 +2688,8 @@ class Hydrator implements HydratorInterface
 
     /**
      * @param class-string $relatedClass
+     * @param non-empty-list<string> $idColumns
+     * @param non-empty-list<int|string>|null $sourceValues
      * @param list<object> $prefetched
      * @param Relation<object>|null $shaped
      * @return Relation<object>
@@ -2508,13 +2699,13 @@ class Hydrator implements HydratorInterface
         string $relatedClass,
         string $targetTable,
         string $typeColumn,
-        string $idColumn,
+        array $idColumns,
         string $typeValue,
-        mixed $sourceValue,
+        ?array $sourceValues,
         array $prefetched,
         ?Relation $shaped = null,
     ): Relation {
-        if (!\is_int($sourceValue) && !\is_string($sourceValue)) {
+        if ($sourceValues === null) {
             // @codeCoverageIgnoreStart
             return Relation::createFromPrefetched(
                 values: $prefetched,
@@ -2528,10 +2719,12 @@ class Hydrator implements HydratorInterface
             prefetched: $prefetched,
             loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
                 $relatedClass,
-                static function (SelectStatementInterface $statement) use ($typeColumn, $idColumn, $typeValue, $sourceValue, $criteria, $orderBy, $limit, $offset): void {
-                    $statement
-                        ->where($typeColumn, $typeValue)
-                        ->where($idColumn, $sourceValue);
+                static function (SelectStatementInterface $statement) use ($typeColumn, $idColumns, $typeValue, $sourceValues, $criteria, $orderBy, $limit, $offset): void {
+                    $statement->where($typeColumn, $typeValue);
+
+                    foreach ($idColumns as $index => $idColumn) {
+                        $statement->where($idColumn, $sourceValues[$index]);
+                    }
 
                     foreach ($criteria as $extra) {
                         $extra($statement);
@@ -2546,10 +2739,13 @@ class Hydrator implements HydratorInterface
                     }
                 },
             ),
-            countBuilder: static function (array $criteria) use ($manager, $targetTable, $typeColumn, $idColumn, $typeValue, $sourceValue): int {
+            countBuilder: static function (array $criteria) use ($manager, $targetTable, $typeColumn, $idColumns, $typeValue, $sourceValues): int {
                 $statement = $manager->connection->count($targetTable)
-                    ->where($typeColumn, $typeValue)
-                    ->where($idColumn, $sourceValue);
+                    ->where($typeColumn, $typeValue);
+
+                foreach ($idColumns as $index => $idColumn) {
+                    $statement->where($idColumn, $sourceValues[$index]);
+                }
 
                 foreach ($criteria as $extra) {
                     $extra($statement);
@@ -2579,125 +2775,147 @@ class Hydrator implements HydratorInterface
         /** @var MorphToMany $attribute */
         $attribute = $relation->attribute;
 
-        if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
-            // @codeCoverageIgnoreStart
-            throw ModelException::fromCantFetchWithoutPrimaryKey(
-                modelClass: $metaData->model,
-            );
-            // @codeCoverageIgnoreEnd
-        }
-
         /** @var class-string $relatedClass */
         $relatedClass = $relation->relatedClass;
         $manager = $this->modelsManager;
         $targetMetaData = $manager->metaData->getModel($relatedClass);
 
-        if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
+        $parentPkColumns = $this->resolvePkColumns($metaData);
+        $targetPkColumns = $this->resolvePkColumns($targetMetaData);
+        $pivotSourceColumns = $relation->pivotSourceColumns;
+        $pivotTargetColumns = $relation->pivotTargetColumns;
+
+        if ($pivotSourceColumns === null || $pivotTargetColumns === null) {
             // @codeCoverageIgnoreStart
-            throw ModelException::fromCantFetchWithoutPrimaryKey(
-                modelClass: $relatedClass,
+            throw ModelException::fromRelationNotFoundOnModel(
+                modelClass: $metaData->model,
+                property: $relation->property,
             );
             // @codeCoverageIgnoreEnd
         }
 
-        $sourcePropertyName = $metaData->key->property;
         $targetTable = $targetMetaData->table;
-        $targetPrimaryKey = $targetMetaData->key->column;
-        $targetPrimaryProperty = $targetMetaData->key->property;
         $pivotTable = $attribute->table;
         $pivotTypeColumn = $attribute->typeColumn;
-        $pivotIdColumn = $attribute->idColumn;
-        $pivotForeignKey = $attribute->foreignKey;
         $typeValue = MorphTypeResolver::encode(
             class: $metaData->model,
             typeMap: $attribute->typeMap,
         );
 
-        /** @var array<int|string, int|string> $sourceValues */
-        $sourceValues = [];
+        $sourcePropertyNames = [];
+
+        foreach ($parentPkColumns as $parentColumn) {
+            $sourcePropertyNames[$parentColumn] = $this->findPropertyByColumn(
+                metaData: $metaData,
+                column: $parentColumn,
+                relationProperty: $relation->property,
+            );
+        }
+
+        $targetPropertyNames = [];
+
+        foreach ($targetPkColumns as $targetColumn) {
+            $targetPropertyNames[$targetColumn] = $this->findPropertyByColumn(
+                metaData: $targetMetaData,
+                column: $targetColumn,
+                relationProperty: $relation->property,
+            );
+        }
+
+        /** @var array<string, non-empty-array<string, int|string>> $parentTuplesByHash */
+        $parentTuplesByHash = [];
 
         foreach ($parents as $parent) {
-            $value = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+            $tuple = $this->readTupleFromModel($parent, $metaData, $parentPkColumns, $sourcePropertyNames);
 
-            if ($value === null) {
+            if ($tuple === null) {
                 continue; // @codeCoverageIgnore
             }
 
-            if (!\is_int($value) && !\is_string($value)) {
-                // @codeCoverageIgnoreStart
-                throw ModelException::fromPropertyValueMustBeScalar(
-                    modelClass: $metaData->model,
-                    property: $sourcePropertyName,
-                    actualType: \get_debug_type($value),
-                );
-                // @codeCoverageIgnoreEnd
-            }
-
-            $sourceValues[$value] = $value;
+            $parentTuplesByHash[RelationKeyTupleHasher::hash(\array_values($tuple))] = $tuple;
         }
 
-        /** @var array<int|string, list<int|string>> $pivotPairs */
-        $pivotPairs = [];
-        /** @var array<int|string, object> $targetsByPk */
-        $targetsByPk = [];
+        /** @var array<string, list<string>> $targetHashesByParent */
+        $targetHashesByParent = [];
+        /** @var array<string, non-empty-array<string, int|string>> $targetTuplesByHash */
+        $targetTuplesByHash = [];
+        /** @var array<string, object> $targetsByHash */
+        $targetsByHash = [];
 
-        if (\sizeof($sourceValues) > 0) {
-            $pivotResult = $manager->connection
+        if (\sizeof($parentTuplesByHash) > 0) {
+            $pivotQuery = $manager->connection
                 ->select($pivotTable)
-                ->select($pivotIdColumn, $pivotForeignKey)
-                ->where($pivotTypeColumn, $typeValue)
-                ->whereIn($pivotIdColumn, \array_values($sourceValues))
-                ->execute();
+                ->select(...$pivotSourceColumns, ...$pivotTargetColumns)
+                ->where($pivotTypeColumn, $typeValue);
 
-            /** @var array<int|string, int|string> $foreignKeys */
-            $foreignKeys = [];
+            $this->applyCompositeTuplesFilter($pivotQuery, $parentPkColumns, $pivotSourceColumns, $parentTuplesByHash);
+
+            $pivotResult = $pivotQuery->execute();
 
             foreach ($pivotResult as $row) {
-                $local = $row->properties[$pivotIdColumn] ?? null;
-                $foreign = $row->properties[$pivotForeignKey] ?? null;
+                /** @var non-empty-array<string, int|string> $parentTuple */
+                $parentTuple = [];
+                /** @var non-empty-array<string, int|string> $targetTuple */
+                $targetTuple = [];
 
-                if (!\is_int($local) && !\is_string($local)) {
-                    continue; // @codeCoverageIgnore
+                foreach ($pivotSourceColumns as $index => $pivotSourceColumn) {
+                    $value = $row->properties[$pivotSourceColumn] ?? null;
+
+                    if (!\is_int($value) && !\is_string($value)) {
+                        continue 2; // @codeCoverageIgnore
+                    }
+
+                    $parentTuple[$parentPkColumns[$index]] = $value;
                 }
 
-                if (!\is_int($foreign) && !\is_string($foreign)) {
-                    continue; // @codeCoverageIgnore
+                foreach ($pivotTargetColumns as $index => $pivotTargetColumn) {
+                    $value = $row->properties[$pivotTargetColumn] ?? null;
+
+                    if (!\is_int($value) && !\is_string($value)) {
+                        continue 2; // @codeCoverageIgnore
+                    }
+
+                    $targetTuple[$targetPkColumns[$index]] = $value;
                 }
 
-                $pivotPairs[$local][] = $foreign;
-                $foreignKeys[$foreign] = $foreign;
+                $parentHash = RelationKeyTupleHasher::hash(\array_values($parentTuple));
+                $targetHash = RelationKeyTupleHasher::hash(\array_values($targetTuple));
+
+                $targetHashesByParent[$parentHash][] = $targetHash;
+                $targetTuplesByHash[$targetHash] = $targetTuple;
             }
 
-            if (\sizeof($foreignKeys) > 0) {
-                $targetQuery = $manager->connection
-                    ->select($targetTable)
-                    ->whereIn($targetPrimaryKey, \array_values($foreignKeys));
+            if (\sizeof($targetTuplesByHash) > 0) {
+                $targetQuery = $manager->connection->select($targetTable);
 
+                $this->applyCompositeTuplesFilter($targetQuery, $targetPkColumns, $targetPkColumns, $targetTuplesByHash);
                 $this->applyConstraintToBatch($targetQuery, $shaped);
 
                 $targetRows = $targetQuery->fetchAll($relatedClass, $manager->hydrator);
 
                 foreach ($targetRows as $row) {
-                    $pkValue = PropertyReflector::createFromObject($row, $targetPrimaryProperty)->getValue($row);
+                    $rowTuple = $this->readTupleFromModelByColumnMap($row, $targetPropertyNames, $targetPkColumns, $targetPkColumns);
 
-                    if (!\is_int($pkValue) && !\is_string($pkValue)) {
+                    if ($rowTuple === null) {
                         continue; // @codeCoverageIgnore
                     }
 
-                    $targetsByPk[$pkValue] = $row;
+                    $targetsByHash[RelationKeyTupleHasher::hash(\array_values($rowTuple))] = $row;
                 }
             }
         }
 
         foreach ($parents as $parent) {
-            $sourceValue = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+            $tuple = $this->readTupleFromModel($parent, $metaData, $parentPkColumns, $sourcePropertyNames);
             /** @var list<object> $prefetched */
             $prefetched = [];
 
-            if (\is_int($sourceValue) || \is_string($sourceValue)) {
-                foreach ($pivotPairs[$sourceValue] ?? [] as $fk) {
-                    if (isset($targetsByPk[$fk])) {
-                        $prefetched[] = $targetsByPk[$fk];
+            if ($tuple !== null) {
+                $parentHash = RelationKeyTupleHasher::hash(\array_values($tuple));
+
+                foreach ($targetHashesByParent[$parentHash] ?? [] as $targetHash) {
+                    if (isset($targetsByHash[$targetHash])) {
+                        $prefetched[] = $targetsByHash[$targetHash];
                     }
                 }
             }
@@ -2708,13 +2926,14 @@ class Hydrator implements HydratorInterface
                 manager: $manager,
                 relatedClass: $relatedClass,
                 targetTable: $targetTable,
-                targetPrimaryKey: $targetPrimaryKey,
+                targetPkColumns: $targetPkColumns,
                 pivotTable: $pivotTable,
                 pivotTypeColumn: $pivotTypeColumn,
-                pivotIdColumn: $pivotIdColumn,
-                pivotForeignKey: $pivotForeignKey,
+                pivotSourceColumns: $pivotSourceColumns,
+                pivotTargetColumns: $pivotTargetColumns,
+                parentPkColumns: $parentPkColumns,
                 typeValue: $typeValue,
-                sourceValue: $sourceValue,
+                parentValues: $tuple,
                 prefetched: $prefetched,
                 shaped: $shaped,
             );
@@ -2725,6 +2944,11 @@ class Hydrator implements HydratorInterface
 
     /**
      * @param class-string $relatedClass
+     * @param non-empty-list<string> $targetPkColumns
+     * @param non-empty-list<string> $pivotSourceColumns
+     * @param non-empty-list<string> $pivotTargetColumns
+     * @param non-empty-list<string> $parentPkColumns
+     * @param non-empty-array<string, int|string>|null $parentValues
      * @param list<object> $prefetched
      * @param Relation<object>|null $shaped
      * @return Relation<object>
@@ -2733,17 +2957,18 @@ class Hydrator implements HydratorInterface
         ModelsManagerInterface $manager,
         string $relatedClass,
         string $targetTable,
-        string $targetPrimaryKey,
+        array $targetPkColumns,
         string $pivotTable,
         string $pivotTypeColumn,
-        string $pivotIdColumn,
-        string $pivotForeignKey,
+        array $pivotSourceColumns,
+        array $pivotTargetColumns,
+        array $parentPkColumns,
         string $typeValue,
-        mixed $sourceValue,
+        ?array $parentValues,
         array $prefetched,
         ?Relation $shaped = null,
     ): Relation {
-        if (!\is_int($sourceValue) && !\is_string($sourceValue)) {
+        if ($parentValues === null) {
             // @codeCoverageIgnoreStart
             return Relation::createFromPrefetched(
                 values: $prefetched,
@@ -2755,13 +2980,21 @@ class Hydrator implements HydratorInterface
 
         return Relation::createFromPrefetchedWithBuilder(
             prefetched: $prefetched,
-            loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
+            loaderBuilder: fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
                 $relatedClass,
-                static function (SelectStatementInterface $statement) use ($pivotTable, $pivotForeignKey, $pivotTypeColumn, $pivotIdColumn, $targetTable, $targetPrimaryKey, $typeValue, $sourceValue, $criteria, $orderBy, $limit, $offset): void {
-                    $statement
-                        ->innerJoin($pivotTable, $pivotTable . '.' . $pivotForeignKey, $targetTable . '.' . $targetPrimaryKey)
-                        ->where($pivotTable . '.' . $pivotTypeColumn, $typeValue)
-                        ->where($pivotTable . '.' . $pivotIdColumn, $sourceValue);
+                function (SelectStatementInterface $statement) use ($pivotTable, $pivotSourceColumns, $pivotTargetColumns, $pivotTypeColumn, $parentPkColumns, $targetPkColumns, $targetTable, $typeValue, $parentValues, $criteria, $orderBy, $limit, $offset): void {
+                    $this->applyBelongsToManyPivotJoin(
+                        statement: $statement,
+                        pivotTable: $pivotTable,
+                        pivotTargetColumns: $pivotTargetColumns,
+                        targetTable: $targetTable,
+                        targetPkColumns: $targetPkColumns,
+                        pivotSourceColumns: $pivotSourceColumns,
+                        parentPkColumns: $parentPkColumns,
+                        parentValues: $parentValues,
+                    );
+
+                    $statement->where($pivotTable . '.' . $pivotTypeColumn, $typeValue);
 
                     foreach ($criteria as $extra) {
                         $extra($statement);
@@ -2776,11 +3009,21 @@ class Hydrator implements HydratorInterface
                     }
                 },
             ),
-            countBuilder: static function (array $criteria) use ($manager, $pivotTable, $pivotForeignKey, $pivotTypeColumn, $pivotIdColumn, $targetTable, $targetPrimaryKey, $typeValue, $sourceValue): int {
-                $statement = $manager->connection->count($targetTable)
-                    ->innerJoin($pivotTable, $pivotTable . '.' . $pivotForeignKey, $targetTable . '.' . $targetPrimaryKey)
-                    ->where($pivotTable . '.' . $pivotTypeColumn, $typeValue)
-                    ->where($pivotTable . '.' . $pivotIdColumn, $sourceValue);
+            countBuilder: function (array $criteria) use ($manager, $pivotTable, $pivotSourceColumns, $pivotTargetColumns, $pivotTypeColumn, $parentPkColumns, $targetPkColumns, $targetTable, $typeValue, $parentValues): int {
+                $statement = $manager->connection->count($targetTable);
+
+                $this->applyBelongsToManyPivotJoin(
+                    statement: $statement,
+                    pivotTable: $pivotTable,
+                    pivotTargetColumns: $pivotTargetColumns,
+                    targetTable: $targetTable,
+                    targetPkColumns: $targetPkColumns,
+                    pivotSourceColumns: $pivotSourceColumns,
+                    parentPkColumns: $parentPkColumns,
+                    parentValues: $parentValues,
+                );
+
+                $statement->where($pivotTable . '.' . $pivotTypeColumn, $typeValue);
 
                 foreach ($criteria as $extra) {
                     $extra($statement);
@@ -2842,33 +3085,43 @@ class Hydrator implements HydratorInterface
         ModelMetaDataInterface $metaData,
         ModelRelationInterface $relation,
     ): string {
+        /** @var HasOneThrough|HasManyThrough $attribute */
+        $attribute = $relation->attribute;
+
+        if ($attribute->localKey !== null) {
+            return $this->findPropertyByColumn($metaData, $attribute->localKey, $relation->property);
+        }
+
+        if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
+            // @codeCoverageIgnoreStart
+            throw ModelException::fromCantFetchWithoutPrimaryKey(
+                modelClass: $metaData->model,
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        return $metaData->key->property;
+    }
+
+    /**
+     * @return non-empty-list<string>
+     */
+    private function resolveSourceColumns(
+        ModelMetaDataInterface $metaData,
+        ModelRelationInterface $relation,
+    ): array {
         $attribute = $relation->attribute;
 
         if ($attribute instanceof BelongsTo) {
-            return $this->findPropertyByColumn($metaData, $attribute->foreignKey, $relation->property);
+            if ($relation->foreignKeyColumns !== null) {
+                return $relation->foreignKeyColumns;
+            }
         }
 
-        if (
-            $attribute instanceof HasOne ||
-            $attribute instanceof HasMany ||
-            $attribute instanceof HasOneThrough ||
-            $attribute instanceof HasManyThrough
-        ) {
-            $localKey = $attribute->localKey;
-
-            if ($localKey === null) {
-                if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
-                    // @codeCoverageIgnoreStart
-                    throw ModelException::fromCantFetchWithoutPrimaryKey(
-                        modelClass: $metaData->model,
-                    );
-                    // @codeCoverageIgnoreEnd
-                }
-
-                return $metaData->key->property;
+        if ($attribute instanceof HasOne || $attribute instanceof HasMany) {
+            if ($relation->referencedKeyColumns !== null) {
+                return $relation->referencedKeyColumns;
             }
-
-            return $this->findPropertyByColumn($metaData, $localKey, $relation->property);
         }
 
         // @codeCoverageIgnoreStart
@@ -2879,33 +3132,24 @@ class Hydrator implements HydratorInterface
         // @codeCoverageIgnoreEnd
     }
 
-    private function resolveTargetColumn(
+    /**
+     * @return non-empty-list<string>
+     */
+    private function resolveTargetColumns(
         ModelRelationInterface $relation,
-    ): string {
+    ): array {
         $attribute = $relation->attribute;
 
         if ($attribute instanceof HasOne || $attribute instanceof HasMany) {
-            return $attribute->foreignKey;
+            if ($relation->foreignKeyColumns !== null) {
+                return $relation->foreignKeyColumns;
+            }
         }
 
         if ($attribute instanceof BelongsTo) {
-            $ownerKey = $attribute->ownerKey;
-
-            if ($ownerKey !== null) {
-                return $ownerKey;
+            if ($relation->referencedKeyColumns !== null) {
+                return $relation->referencedKeyColumns;
             }
-
-            $targetMetaData = $this->modelsManager->metaData->getModel($relation->relatedClass);
-
-            if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
-                // @codeCoverageIgnoreStart
-                throw ModelException::fromCantFetchWithoutPrimaryKey(
-                    modelClass: $relation->relatedClass,
-                );
-                // @codeCoverageIgnoreEnd
-            }
-
-            return $targetMetaData->key->column;
         }
 
         // @codeCoverageIgnoreStart
@@ -2914,6 +3158,177 @@ class Hydrator implements HydratorInterface
             property: $relation->property,
         );
         // @codeCoverageIgnoreEnd
+    }
+
+    /**
+     * @return non-empty-list<string>
+     */
+    private function resolvePkColumns(
+        ModelMetaDataInterface $metaData,
+    ): array {
+        if ($metaData->key instanceof ModelPrimaryKeyInterface) {
+            return [
+                $metaData->key->column,
+            ];
+        }
+
+        if ($metaData->key instanceof ModelCompositeKeyInterface) {
+            return \array_values($metaData->key->columns);
+        }
+
+        // @codeCoverageIgnoreStart
+        throw ModelException::fromCantFetchWithoutPrimaryKey(
+            modelClass: $metaData->model,
+        );
+        // @codeCoverageIgnoreEnd
+    }
+
+    /**
+     * @param non-empty-list<string> $pivotTargetColumns
+     * @param non-empty-list<string> $targetPkColumns
+     * @param non-empty-list<string> $pivotSourceColumns
+     * @param non-empty-list<string> $parentPkColumns
+     * @param non-empty-array<string, int|string> $parentValues
+     */
+    private function applyBelongsToManyPivotJoin(
+        WhereStatementInterface $statement,
+        string $pivotTable,
+        array $pivotTargetColumns,
+        string $targetTable,
+        array $targetPkColumns,
+        array $pivotSourceColumns,
+        array $parentPkColumns,
+        array $parentValues,
+    ): void {
+        $statement->innerJoin(
+            table: $pivotTable,
+            first: $pivotTable . '.' . $pivotTargetColumns[0],
+            second: $targetTable . '.' . $targetPkColumns[0],
+        );
+
+        $arity = \sizeof($pivotTargetColumns);
+
+        for ($index = 1; $index < $arity; $index++) {
+            $statement->whereColumn(
+                column: $pivotTable . '.' . $pivotTargetColumns[$index],
+                other: $targetTable . '.' . $targetPkColumns[$index],
+            );
+        }
+
+        foreach ($pivotSourceColumns as $index => $pivotSourceColumn) {
+            $parentColumn = $parentPkColumns[$index];
+            $statement->where($pivotTable . '.' . $pivotSourceColumn, $parentValues[$parentColumn]);
+        }
+    }
+
+    /**
+     * @param non-empty-list<string> $sourceColumns
+     * @param array<string, string> $sourcePropertyNames
+     * @return non-empty-array<string, int|string>|null
+     */
+    private function readTupleFromModel(
+        object $model,
+        ModelMetaDataInterface $metaData,
+        array $sourceColumns,
+        array $sourcePropertyNames,
+    ): ?array {
+        $tuple = [];
+
+        foreach ($sourceColumns as $sourceColumn) {
+            $propertyName = $sourcePropertyNames[$sourceColumn];
+            $value = PropertyReflector::createFromObject($model, $propertyName)->getValue($model);
+
+            if ($value === null) {
+                return null;
+            }
+
+            if (!\is_int($value) && !\is_string($value)) {
+                // @codeCoverageIgnoreStart
+                throw ModelException::fromPropertyValueMustBeScalar(
+                    modelClass: $metaData->model,
+                    property: $propertyName,
+                    actualType: \get_debug_type($value),
+                );
+                // @codeCoverageIgnoreEnd
+            }
+
+            $tuple[$sourceColumn] = $value;
+        }
+
+        return $tuple;
+    }
+
+    /**
+     * @param array<string, string> $targetPropertyNames
+     * @param non-empty-list<string> $sourceColumns
+     * @param non-empty-list<string> $targetColumns
+     * @return non-empty-array<string, int|string>|null
+     */
+    private function readTupleFromModelByColumnMap(
+        object $model,
+        array $targetPropertyNames,
+        array $sourceColumns,
+        array $targetColumns,
+    ): ?array {
+        $tuple = [];
+
+        foreach ($targetColumns as $index => $targetColumn) {
+            $sourceColumn = $sourceColumns[$index];
+            $propertyName = $targetPropertyNames[$targetColumn];
+            $value = PropertyReflector::createFromObject($model, $propertyName)->getValue($model);
+
+            if (!\is_int($value) && !\is_string($value)) {
+                return null; // @codeCoverageIgnore
+            }
+
+            $tuple[$sourceColumn] = $value;
+        }
+
+        return $tuple;
+    }
+
+    /**
+     * @param non-empty-list<string> $sourceColumns
+     * @param non-empty-list<string> $targetColumns
+     * @param non-empty-array<string, non-empty-array<string, int|string>> $tuplesByHash
+     */
+    private function applyCompositeTuplesFilter(
+        WhereStatementInterface $statement,
+        array $sourceColumns,
+        array $targetColumns,
+        array $tuplesByHash,
+    ): void {
+        if (\sizeof($sourceColumns) === 1) {
+            $sourceColumn = $sourceColumns[0];
+            $targetColumn = $targetColumns[0];
+            $values = [];
+
+            foreach ($tuplesByHash as $tuple) {
+                $values[] = $tuple[$sourceColumn];
+            }
+
+            $statement->whereIn($targetColumn, $values);
+
+            return;
+        }
+
+        $isFirst = true;
+
+        foreach ($tuplesByHash as $tuple) {
+            $groupCallback = static function (WhereStatementInterface $inner) use ($sourceColumns, $targetColumns, $tuple): void {
+                foreach ($sourceColumns as $index => $sourceColumn) {
+                    $targetColumn = $targetColumns[$index];
+                    $inner->where($targetColumn, $tuple[$sourceColumn]);
+                }
+            };
+
+            if ($isFirst) {
+                $statement->whereGroup($groupCallback);
+                $isFirst = false;
+            } else {
+                $statement->orWhereGroup($groupCallback);
+            }
+        }
     }
 
     private function findPropertyByColumn(

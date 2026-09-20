@@ -18,6 +18,7 @@ use Tuxxedo\Model\Attribute\Relation\MorphTo;
 readonly class MorphToRelationMetaData implements MorphToRelationMetaDataInterface
 {
     /**
+     * @param non-empty-list<string> $idColumns
      * @param array<string, class-string>|null $typeMap
      */
     public function __construct(
@@ -26,6 +27,7 @@ readonly class MorphToRelationMetaData implements MorphToRelationMetaDataInterfa
         public MorphTo $attribute,
         public string $typeColumn,
         public string $idColumn,
+        public array $idColumns,
         public ?array $typeMap = null,
     ) {
     }

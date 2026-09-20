@@ -20,6 +20,10 @@ readonly class ModelRelation implements ModelRelationInterface
     /**
      * @param class-string $relatedClass
      * @param array<string, class-string>|null $typeMap
+     * @param non-empty-list<string>|null $foreignKeyColumns
+     * @param non-empty-list<string>|null $referencedKeyColumns
+     * @param non-empty-list<string>|null $pivotSourceColumns
+     * @param non-empty-list<string>|null $pivotTargetColumns
      */
     public function __construct(
         public string $property,
@@ -29,6 +33,10 @@ readonly class ModelRelation implements ModelRelationInterface
         public ?string $typeColumn = null,
         public ?string $idColumn = null,
         public ?array $typeMap = null,
+        public ?array $foreignKeyColumns = null,
+        public ?array $referencedKeyColumns = null,
+        public ?array $pivotSourceColumns = null,
+        public ?array $pivotTargetColumns = null,
     ) {
     }
 }

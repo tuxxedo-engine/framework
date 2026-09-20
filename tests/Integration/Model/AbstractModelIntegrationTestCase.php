@@ -245,6 +245,46 @@ abstract class AbstractModelIntegrationTestCase extends TestCase
         $this->executeSchema($this->schemaProvider->strictThroughOwnersSchemaSql());
     }
 
+    protected function createCompositeOwnersTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->compositeOwnersSchemaSql());
+    }
+
+    protected function createCompositeOwnerHasOneChildrenTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->compositeOwnerHasOneChildrenSchemaSql());
+    }
+
+    protected function createCompositeOwnerHasManyChildrenTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->compositeOwnerHasManyChildrenSchemaSql());
+    }
+
+    protected function createCompositeChildOfSingleParentTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->compositeChildOfSingleParentSchemaSql());
+    }
+
+    protected function createCompositeTagsTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->compositeTagsSchemaSql());
+    }
+
+    protected function createCompositeOwnerTagsPivotTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->compositeOwnerTagsPivotSchemaSql());
+    }
+
+    protected function createCompositeMorphNotesTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->compositeMorphNotesSchemaSql());
+    }
+
+    protected function createCompositeMorphTagsPivotTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->compositeMorphTagsPivotSchemaSql());
+    }
+
     private function executeSchema(
         string $sql,
     ): void {

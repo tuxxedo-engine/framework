@@ -19,11 +19,12 @@ use Tuxxedo\Model\CascadeAction;
 readonly class MorphTo implements PolymorphicRelationInterface
 {
     /**
+     * @param string|non-empty-array<string> $idColumn
      * @param array<string, class-string>|null $typeMap
      */
     public function __construct(
         public string $typeColumn,
-        public string $idColumn,
+        public string|array $idColumn,
         public ?array $typeMap = null,
         public CascadeAction $onSave = CascadeAction::NO_ACTION,
         public CascadeAction $onDelete = CascadeAction::NO_ACTION,

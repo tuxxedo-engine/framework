@@ -233,8 +233,6 @@ class ModelsManager implements ModelsManagerInterface
                         parent: $entity,
                         parentMetaData: $metaData,
                         relation: $relation,
-                        localKey: $attribute->localKey,
-                        foreignKey: $attribute->foreignKey,
                         child: $child,
                     );
                 }
@@ -251,8 +249,6 @@ class ModelsManager implements ModelsManagerInterface
                             parent: $entity,
                             parentMetaData: $metaData,
                             relation: $relation,
-                            localKey: $attribute->localKey,
-                            foreignKey: $attribute->foreignKey,
                             child: $child,
                         );
                     }
@@ -299,26 +295,35 @@ class ModelsManager implements ModelsManagerInterface
         object $parent,
         ModelMetaDataInterface $parentMetaData,
         ModelRelationInterface $relation,
-        ?string $localKey,
-        string $foreignKey,
         object $child,
     ): void {
-        $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $localKey);
-        $localKeyValue = PropertyReflector::createFromObject($parent, $localKeyProperty)->getValue($parent);
+        $foreignKeyColumns = $relation->foreignKeyColumns;
+        $referencedKeyColumns = $relation->referencedKeyColumns;
 
-        if ($localKeyValue === null) {
-            return; // @codeCoverageIgnore
+        if ($foreignKeyColumns === null || $referencedKeyColumns === null) {
+            // @codeCoverageIgnoreStart
+            throw ModelException::fromRelationNotFoundOnModel(
+                modelClass: $parentMetaData->model,
+                property: $relation->property,
+            );
+            // @codeCoverageIgnoreEnd
         }
 
         $childMetaData = $this->metaData->getModel($relation->relatedClass);
-        $foreignKeyProperty = $this->findPropertyForColumn(
-            metaData: $childMetaData,
-            relation: $relation,
-            columnName: $foreignKey,
-            keyKind: 'foreignKey',
-        );
 
-        PropertyReflector::createFromObject($child, $foreignKeyProperty)->setValue($child, $localKeyValue);
+        foreach ($foreignKeyColumns as $index => $childColumn) {
+            $parentColumn = $referencedKeyColumns[$index];
+            $parentProperty = $this->findPropertyForColumnOnMetadata($parentMetaData, $parentColumn);
+            $childProperty = $this->findPropertyForColumnOnMetadata($childMetaData, $childColumn);
+
+            $value = PropertyReflector::createFromObject($parent, $parentProperty)->getValue($parent);
+
+            if ($value === null) {
+                return; // @codeCoverageIgnore
+            }
+
+            PropertyReflector::createFromObject($child, $childProperty)->setValue($child, $value);
+        }
     }
 
     private function writeMorphFkOnChild(
@@ -328,23 +333,40 @@ class ModelsManager implements ModelsManagerInterface
         MorphOne|MorphMany $attribute,
         object $child,
     ): void {
-        $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
-        $localKeyValue = PropertyReflector::createFromObject($parent, $localKeyProperty)->getValue($parent);
+        $idColumns = $relation->foreignKeyColumns;
+        $referencedKeyColumns = $relation->referencedKeyColumns;
 
-        if ($localKeyValue === null) {
-            return; // @codeCoverageIgnore
+        if ($idColumns === null || $referencedKeyColumns === null) {
+            // @codeCoverageIgnoreStart
+            throw ModelException::fromRelationNotFoundOnModel(
+                modelClass: $parentMetaData->model,
+                property: $relation->property,
+            );
+            // @codeCoverageIgnoreEnd
         }
 
         $childMetaData = $this->metaData->getModel($relation->relatedClass);
         $typeProperty = $this->findPropertyForColumnOnMetadata($childMetaData, $attribute->typeColumn);
-        $idProperty = $this->findPropertyForColumnOnMetadata($childMetaData, $attribute->idColumn);
         $typeValue = MorphTypeResolver::encode(
             class: $parentMetaData->model,
             typeMap: $attribute->typeMap,
         );
 
         PropertyReflector::createFromObject($child, $typeProperty)->setValue($child, $typeValue);
-        PropertyReflector::createFromObject($child, $idProperty)->setValue($child, $localKeyValue);
+
+        foreach ($idColumns as $index => $childColumn) {
+            $parentColumn = $referencedKeyColumns[$index];
+            $parentProperty = $this->findPropertyForColumnOnMetadata($parentMetaData, $parentColumn);
+            $childProperty = $this->findPropertyForColumnOnMetadata($childMetaData, $childColumn);
+
+            $value = PropertyReflector::createFromObject($parent, $parentProperty)->getValue($parent);
+
+            if ($value === null) {
+                return; // @codeCoverageIgnore
+            }
+
+            PropertyReflector::createFromObject($child, $childProperty)->setValue($child, $value);
+        }
     }
 
     private function flushAggregatePivots(
@@ -436,23 +458,28 @@ class ModelsManager implements ModelsManagerInterface
                 continue; // @codeCoverageIgnore
             }
 
+            $foreignKeyColumns = $relation->foreignKeyColumns;
+            $referencedKeyColumns = $relation->referencedKeyColumns;
+
+            if ($foreignKeyColumns === null || $referencedKeyColumns === null) {
+                continue; // @codeCoverageIgnore
+            }
+
             $targetMetaData = $this->metaData->getModel($relation->relatedClass);
 
-            if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
-                continue; // @codeCoverageIgnore
+            foreach ($foreignKeyColumns as $index => $sourceColumn) {
+                $targetColumn = $referencedKeyColumns[$index];
+                $ownerProperty = $this->findPropertyForColumnOnMetadata($targetMetaData, $targetColumn);
+                $ownerValue = PropertyReflector::createFromObject($target, $ownerProperty)->getValue($target);
+
+                if ($ownerValue === null) {
+                    continue 2; // @codeCoverageIgnore
+                }
+
+                $foreignKeyProperty = $this->findPropertyForColumnOnMetadata($metaData, $sourceColumn);
+
+                PropertyReflector::createFromObject($entity, $foreignKeyProperty)->setValue($entity, $ownerValue);
             }
-
-            $ownerKeyColumn = $relation->attribute->ownerKey ?? $targetMetaData->key->column;
-            $ownerKeyProperty = $this->findPropertyForColumnOnMetadata($targetMetaData, $ownerKeyColumn);
-            $ownerKeyValue = PropertyReflector::createFromObject($target, $ownerKeyProperty)->getValue($target);
-
-            if ($ownerKeyValue === null) {
-                continue; // @codeCoverageIgnore
-            }
-
-            $foreignKeyProperty = $this->findPropertyForColumnOnMetadata($metaData, $relation->attribute->foreignKey);
-
-            PropertyReflector::createFromObject($entity, $foreignKeyProperty)->setValue($entity, $ownerKeyValue);
         }
 
         foreach ($metaData->morphToRelations as $morphTo) {
@@ -467,16 +494,7 @@ class ModelsManager implements ModelsManagerInterface
             }
 
             $targetMetaData = $this->metaData->getModel($target::class);
-
-            if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
-                continue; // @codeCoverageIgnore
-            }
-
-            $targetPkValue = PropertyReflector::createFromObject($target, $targetMetaData->key->property)->getValue($target);
-
-            if ($targetPkValue === null) {
-                continue; // @codeCoverageIgnore
-            }
+            $targetPkValues = \array_values($this->resolveOwnKeyValues($target, $targetMetaData));
 
             $typeValue = MorphTypeResolver::encode(
                 class: $target::class,
@@ -484,10 +502,12 @@ class ModelsManager implements ModelsManagerInterface
             );
 
             $typeProperty = $this->findPropertyForColumnOnMetadata($metaData, $morphTo->typeColumn);
-            $idProperty = $this->findPropertyForColumnOnMetadata($metaData, $morphTo->idColumn);
-
             PropertyReflector::createFromObject($entity, $typeProperty)->setValue($entity, $typeValue);
-            PropertyReflector::createFromObject($entity, $idProperty)->setValue($entity, $targetPkValue);
+
+            foreach ($morphTo->idColumns as $index => $idColumn) {
+                $idProperty = $this->findPropertyForColumnOnMetadata($metaData, $idColumn);
+                PropertyReflector::createFromObject($entity, $idProperty)->setValue($entity, $targetPkValues[$index]);
+            }
         }
     }
 
@@ -543,26 +563,22 @@ class ModelsManager implements ModelsManagerInterface
             }
 
             $targetMetaData = $this->metaData->getModel($relation->relatedClass);
+            $foreignKeyColumns = $relation->foreignKeyColumns;
+            $referencedKeyColumns = $relation->referencedKeyColumns;
 
-            if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
-                continue;
+            if ($foreignKeyColumns === null || $referencedKeyColumns === null) {
+                continue; // @codeCoverageIgnore
             }
 
-            $referencedColumn = $attribute->ownerKey ?? $targetMetaData->key->column;
-
             $statement->foreignKey(
-                columns: [
-                    $attribute->foreignKey,
-                ],
+                columns: $foreignKeyColumns,
                 referencedTable: $targetMetaData->table,
-                referencedColumns: [
-                    $referencedColumn,
-                ],
+                referencedColumns: $referencedKeyColumns,
             );
         }
 
         foreach ($metaData->morphToRelations as $morphTo) {
-            $statement->index($morphTo->typeColumn, $morphTo->idColumn);
+            $statement->index($morphTo->typeColumn, ...$morphTo->idColumns);
         }
 
         return $statement;
@@ -965,17 +981,13 @@ class ModelsManager implements ModelsManagerInterface
 
         if ($attribute instanceof HasOne) {
             $parentMetaData = $this->metaData->getModel($model::class);
-            $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
-            $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
-            $relatedMetaData = $this->metaData->getModel($relation->relatedClass);
-            $foreignKeyProperty = $this->findPropertyForColumn(
-                metaData: $relatedMetaData,
-                relation: $relation,
-                columnName: $attribute->foreignKey,
-                keyKind: 'foreignKey',
-            );
 
-            PropertyReflector::createFromObject($value, $foreignKeyProperty)->setValue($value, $localKeyValue);
+            $this->writeHasFkOnChild(
+                parent: $model,
+                parentMetaData: $parentMetaData,
+                relation: $relation,
+                child: $value,
+            );
         }
 
         (void) $this->save(
@@ -1008,18 +1020,14 @@ class ModelsManager implements ModelsManagerInterface
         }
 
         $parentMetaData = $this->metaData->getModel($model::class);
-        $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
-        $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
-        $relatedMetaData = $this->metaData->getModel($relation->relatedClass);
-        $foreignKeyProperty = $this->findPropertyForColumn(
-            metaData: $relatedMetaData,
-            relation: $relation,
-            columnName: $attribute->foreignKey,
-            keyKind: 'foreignKey',
-        );
 
         foreach ($value as $item) {
-            PropertyReflector::createFromObject($item, $foreignKeyProperty)->setValue($item, $localKeyValue);
+            $this->writeHasFkOnChild(
+                parent: $model,
+                parentMetaData: $parentMetaData,
+                relation: $relation,
+                child: $item,
+            );
 
             (void) $this->save(
                 model: $item,
@@ -1088,27 +1096,53 @@ class ModelsManager implements ModelsManagerInterface
         }
 
         $parentMetaData = $this->metaData->getModel($model::class);
-        $localKeyValue = $this->resolveOwnKeyValue($model, $parentMetaData);
+        $localKeyValues = $this->resolveOwnKeyValues($model, $parentMetaData);
         $relatedMetaData = $this->metaData->getModel($relation->relatedClass);
 
-        foreach ($value->pendingRemoves as $item) {
-            $foreignKeyValue = $this->resolveOwnKeyValue($item, $relatedMetaData);
+        $pivotSourceColumns = $relation->pivotSourceColumns;
+        $pivotTargetColumns = $relation->pivotTargetColumns;
 
-            $this->connection
-                ->delete($attribute->table)
-                ->where($attribute->localKey, $localKeyValue)
-                ->where($attribute->foreignKey, $foreignKeyValue)
-                ->execute();
+        if ($pivotSourceColumns === null || $pivotTargetColumns === null) {
+            // @codeCoverageIgnoreStart
+            throw ModelException::fromRelationNotFoundOnModel(
+                modelClass: $parentMetaData->model,
+                property: $relation->property,
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        $localValueList = \array_values($localKeyValues);
+
+        foreach ($value->pendingRemoves as $item) {
+            $foreignKeyValues = \array_values($this->resolveOwnKeyValues($item, $relatedMetaData));
+
+            $statement = $this->connection->delete($attribute->table);
+
+            foreach ($pivotSourceColumns as $index => $pivotSourceColumn) {
+                $statement->where($pivotSourceColumn, $localValueList[$index]);
+            }
+
+            foreach ($pivotTargetColumns as $index => $pivotTargetColumn) {
+                $statement->where($pivotTargetColumn, $foreignKeyValues[$index]);
+            }
+
+            $statement->execute();
         }
 
         foreach ($value->pendingAdds as $item) {
-            $foreignKeyValue = $this->resolveOwnKeyValue($item, $relatedMetaData);
+            $foreignKeyValues = \array_values($this->resolveOwnKeyValues($item, $relatedMetaData));
 
-            $this->connection
-                ->insert($attribute->table)
-                ->set($attribute->localKey, $localKeyValue)
-                ->set($attribute->foreignKey, $foreignKeyValue)
-                ->execute();
+            $statement = $this->connection->insert($attribute->table);
+
+            foreach ($pivotSourceColumns as $index => $pivotSourceColumn) {
+                $statement->set($pivotSourceColumn, $localValueList[$index]);
+            }
+
+            foreach ($pivotTargetColumns as $index => $pivotTargetColumn) {
+                $statement->set($pivotTargetColumn, $foreignKeyValues[$index]);
+            }
+
+            $statement->execute();
         }
 
         $value->clearPending();
@@ -1146,26 +1180,21 @@ class ModelsManager implements ModelsManagerInterface
             );
 
             $targetMetaData = $this->metaData->getModel($saved::class);
-
-            if (!$targetMetaData->key instanceof ModelPrimaryKeyInterface) {
-                // @codeCoverageIgnoreStart
-                throw ModelException::fromCantFetchWithoutPrimaryKey(
-                    modelClass: $saved::class,
-                );
-                // @codeCoverageIgnoreEnd
-            }
-
-            $targetPkValue = PropertyReflector::createFromObject($saved, $targetMetaData->key->property)->getValue($saved);
+            $targetPkValues = $this->resolveOwnKeyValues($saved, $targetMetaData);
             $typeValue = MorphTypeResolver::encode(
                 class: $saved::class,
                 typeMap: $morphTo->typeMap,
             );
 
             $typeProperty = $this->findPropertyForColumnOnMetadata($metaData, $morphTo->typeColumn);
-            $idProperty = $this->findPropertyForColumnOnMetadata($metaData, $morphTo->idColumn);
-
             PropertyReflector::createFromObject($model, $typeProperty)->setValue($model, $typeValue);
-            PropertyReflector::createFromObject($model, $idProperty)->setValue($model, $targetPkValue);
+
+            $targetPkValueList = \array_values($targetPkValues);
+
+            foreach ($morphTo->idColumns as $index => $idColumn) {
+                $idProperty = $this->findPropertyForColumnOnMetadata($metaData, $idColumn);
+                PropertyReflector::createFromObject($model, $idProperty)->setValue($model, $targetPkValueList[$index]);
+            }
         }
     }
 
@@ -1193,19 +1222,13 @@ class ModelsManager implements ModelsManagerInterface
             $reflection->initializeLazyObject($value);
         }
 
-        $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
-        $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
-
-        $childMetaData = $this->metaData->getModel($relation->relatedClass);
-        $typeProperty = $this->findPropertyForColumnOnMetadata($childMetaData, $attribute->typeColumn);
-        $idProperty = $this->findPropertyForColumnOnMetadata($childMetaData, $attribute->idColumn);
-        $typeValue = MorphTypeResolver::encode(
-            class: $parentMetaData->model,
-            typeMap: $attribute->typeMap,
+        $this->writeMorphFkOnChild(
+            parent: $model,
+            parentMetaData: $parentMetaData,
+            relation: $relation,
+            attribute: $attribute,
+            child: $value,
         );
-
-        PropertyReflector::createFromObject($value, $typeProperty)->setValue($value, $typeValue);
-        PropertyReflector::createFromObject($value, $idProperty)->setValue($value, $localKeyValue);
 
         (void) $this->save(
             model: $value,
@@ -1233,20 +1256,14 @@ class ModelsManager implements ModelsManagerInterface
             return;
         }
 
-        $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
-        $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
-
-        $childMetaData = $this->metaData->getModel($relation->relatedClass);
-        $typeProperty = $this->findPropertyForColumnOnMetadata($childMetaData, $attribute->typeColumn);
-        $idProperty = $this->findPropertyForColumnOnMetadata($childMetaData, $attribute->idColumn);
-        $typeValue = MorphTypeResolver::encode(
-            class: $parentMetaData->model,
-            typeMap: $attribute->typeMap,
-        );
-
         foreach ($value as $item) {
-            PropertyReflector::createFromObject($item, $typeProperty)->setValue($item, $typeValue);
-            PropertyReflector::createFromObject($item, $idProperty)->setValue($item, $localKeyValue);
+            $this->writeMorphFkOnChild(
+                parent: $model,
+                parentMetaData: $parentMetaData,
+                relation: $relation,
+                attribute: $attribute,
+                child: $item,
+            );
 
             (void) $this->save(
                 model: $item,
@@ -1315,33 +1332,61 @@ class ModelsManager implements ModelsManagerInterface
             return;
         }
 
-        $localKeyValue = $this->resolveOwnKeyValue($model, $parentMetaData);
+        $localKeyValues = $this->resolveOwnKeyValues($model, $parentMetaData);
         $relatedMetaData = $this->metaData->getModel($relation->relatedClass);
         $typeValue = MorphTypeResolver::encode(
             class: $parentMetaData->model,
             typeMap: $attribute->typeMap,
         );
 
-        foreach ($value->pendingRemoves as $item) {
-            $foreignKeyValue = $this->resolveOwnKeyValue($item, $relatedMetaData);
+        $pivotSourceColumns = $relation->pivotSourceColumns;
+        $pivotTargetColumns = $relation->pivotTargetColumns;
 
-            $this->connection
+        if ($pivotSourceColumns === null || $pivotTargetColumns === null) {
+            // @codeCoverageIgnoreStart
+            throw ModelException::fromRelationNotFoundOnModel(
+                modelClass: $parentMetaData->model,
+                property: $relation->property,
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        $localValueList = \array_values($localKeyValues);
+
+        foreach ($value->pendingRemoves as $item) {
+            $foreignKeyValues = \array_values($this->resolveOwnKeyValues($item, $relatedMetaData));
+
+            $statement = $this->connection
                 ->delete($attribute->table)
-                ->where($attribute->typeColumn, $typeValue)
-                ->where($attribute->idColumn, $localKeyValue)
-                ->where($attribute->foreignKey, $foreignKeyValue)
-                ->execute();
+                ->where($attribute->typeColumn, $typeValue);
+
+            foreach ($pivotSourceColumns as $index => $pivotSourceColumn) {
+                $statement->where($pivotSourceColumn, $localValueList[$index]);
+            }
+
+            foreach ($pivotTargetColumns as $index => $pivotTargetColumn) {
+                $statement->where($pivotTargetColumn, $foreignKeyValues[$index]);
+            }
+
+            $statement->execute();
         }
 
         foreach ($value->pendingAdds as $item) {
-            $foreignKeyValue = $this->resolveOwnKeyValue($item, $relatedMetaData);
+            $foreignKeyValues = \array_values($this->resolveOwnKeyValues($item, $relatedMetaData));
 
-            $this->connection
+            $statement = $this->connection
                 ->insert($attribute->table)
-                ->set($attribute->typeColumn, $typeValue)
-                ->set($attribute->idColumn, $localKeyValue)
-                ->set($attribute->foreignKey, $foreignKeyValue)
-                ->execute();
+                ->set($attribute->typeColumn, $typeValue);
+
+            foreach ($pivotSourceColumns as $index => $pivotSourceColumn) {
+                $statement->set($pivotSourceColumn, $localValueList[$index]);
+            }
+
+            foreach ($pivotTargetColumns as $index => $pivotTargetColumn) {
+                $statement->set($pivotTargetColumn, $foreignKeyValues[$index]);
+            }
+
+            $statement->execute();
         }
 
         $value->clearPending();
@@ -1365,10 +1410,41 @@ class ModelsManager implements ModelsManagerInterface
         // @codeCoverageIgnoreEnd
     }
 
-    private function resolveOwnKeyValue(
+    /**
+     * @return non-empty-array<string, string|int|float|bool>
+     *
+     * @throws ModelException
+     */
+    private function resolveOwnKeyValues(
         object $model,
         ModelMetaDataInterface $metaData,
-    ): string|int|float|bool {
+    ): array {
+        if ($metaData->key instanceof ModelCompositeKeyInterface) {
+            $values = [];
+            $columns = \array_values($metaData->key->columns);
+            $properties = \array_values($metaData->key->properties);
+
+            foreach ($columns as $index => $column) {
+                $property = $properties[$index];
+                $raw = PropertyReflector::createFromObject($model, $property)->getValue($model);
+                $value = $this->dehydrateColumnValue($metaData, $property, $raw);
+
+                if ($value === null) {
+                    // @codeCoverageIgnoreStart
+                    throw ModelException::fromPropertyValueMustBeScalar(
+                        modelClass: $metaData->model,
+                        property: $property,
+                        actualType: 'null',
+                    );
+                    // @codeCoverageIgnoreEnd
+                }
+
+                $values[$column] = $value;
+            }
+
+            return $values;
+        }
+
         if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
             // @codeCoverageIgnoreStart
             throw ModelException::fromCantFetchWithoutPrimaryKey(
@@ -1377,8 +1453,8 @@ class ModelsManager implements ModelsManagerInterface
             // @codeCoverageIgnoreEnd
         }
 
-        $value = PropertyReflector::createFromObject($model, $metaData->key->property)->getValue($model);
-        $value = $this->dehydrateColumnValue($metaData, $metaData->key->property, $value);
+        $raw = PropertyReflector::createFromObject($model, $metaData->key->property)->getValue($model);
+        $value = $this->dehydrateColumnValue($metaData, $metaData->key->property, $raw);
 
         if ($value === null) {
             // @codeCoverageIgnoreStart
@@ -1390,7 +1466,9 @@ class ModelsManager implements ModelsManagerInterface
             // @codeCoverageIgnoreEnd
         }
 
-        return $value;
+        return [
+            $metaData->key->column => $value,
+        ];
     }
 
     /**
@@ -1553,19 +1631,38 @@ class ModelsManager implements ModelsManagerInterface
 
         if ($attribute instanceof HasOne) {
             $parentMetaData = $this->metaData->getModel($model::class);
-            $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
-            $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
-            $localKeyValue = $this->dehydrateColumnValue($parentMetaData, $localKeyProperty, $localKeyValue);
+            $foreignKeyColumns = $relation->foreignKeyColumns;
+            $referencedKeyColumns = $relation->referencedKeyColumns;
 
-            if (!\is_scalar($localKeyValue)) {
-                return; // @codeCoverageIgnore
+            if ($foreignKeyColumns === null || $referencedKeyColumns === null) {
+                // @codeCoverageIgnoreStart
+                throw ModelException::fromRelationNotFoundOnModel(
+                    modelClass: $parentMetaData->model,
+                    property: $relation->property,
+                );
+                // @codeCoverageIgnoreEnd
             }
 
-            $foreignKey = $attribute->foreignKey;
+            $parentValues = [];
+
+            foreach ($referencedKeyColumns as $parentColumn) {
+                $parentProperty = $this->findPropertyForColumnOnMetadata($parentMetaData, $parentColumn);
+                $raw = PropertyReflector::createFromObject($model, $parentProperty)->getValue($model);
+                $value = $this->dehydrateColumnValue($parentMetaData, $parentProperty, $raw);
+
+                if (!\is_scalar($value)) {
+                    return; // @codeCoverageIgnore
+                }
+
+                $parentValues[] = $value;
+            }
+
             $child = $this->findFirst(
                 $relation->relatedClass,
-                static function (SelectStatementInterface $statement) use ($foreignKey, $localKeyValue): void {
-                    $statement->where($foreignKey, $localKeyValue);
+                static function (SelectStatementInterface $statement) use ($foreignKeyColumns, $parentValues): void {
+                    foreach ($foreignKeyColumns as $index => $childColumn) {
+                        $statement->where($childColumn, $parentValues[$index]);
+                    }
                 },
             );
 
@@ -1635,29 +1732,30 @@ class ModelsManager implements ModelsManagerInterface
         HasMany $attribute,
     ): void {
         $parentMetaData = $this->metaData->getModel($model::class);
-        $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
-        $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
+        $foreignKeyColumns = $relation->foreignKeyColumns;
+        $referencedKeyColumns = $relation->referencedKeyColumns;
 
-        if ($localKeyValue === null) {
+        if ($foreignKeyColumns === null || $referencedKeyColumns === null) {
             return; // @codeCoverageIgnore
         }
 
-        if (!\is_scalar($localKeyValue)) {
-            // @codeCoverageIgnoreStart
-            throw ModelException::fromPropertyValueMustBeScalar(
-                modelClass: $parentMetaData->model,
-                property: $localKeyProperty,
-                actualType: \get_debug_type($localKeyValue),
-            );
-            // @codeCoverageIgnoreEnd
+        $childMetaData = $this->metaData->getModel($relation->relatedClass);
+        $statement = $this->connection->delete($childMetaData->table);
+
+        foreach ($foreignKeyColumns as $index => $childColumn) {
+            $parentColumn = $referencedKeyColumns[$index];
+            $parentProperty = $this->findPropertyForColumnOnMetadata($parentMetaData, $parentColumn);
+            $parentValue = PropertyReflector::createFromObject($model, $parentProperty)->getValue($model);
+            $parentValue = $this->dehydrateColumnValue($parentMetaData, $parentProperty, $parentValue);
+
+            if ($parentValue === null) {
+                return; // @codeCoverageIgnore
+            }
+
+            $statement->where($childColumn, $parentValue);
         }
 
-        $childMetaData = $this->metaData->getModel($relation->relatedClass);
-
-        $this->connection
-            ->delete($childMetaData->table)
-            ->where($attribute->foreignKey, $localKeyValue)
-            ->execute();
+        $statement->execute();
     }
 
     private function cascadeDeleteBelongsToManyPivot(
@@ -1671,12 +1769,26 @@ class ModelsManager implements ModelsManagerInterface
         }
 
         $parentMetaData = $this->metaData->getModel($model::class);
-        $localKeyValue = $this->resolveOwnKeyValue($model, $parentMetaData);
+        $localKeyValues = $this->resolveOwnKeyValues($model, $parentMetaData);
+        $pivotSourceColumns = $relation->pivotSourceColumns;
 
-        $this->connection
-            ->delete($attribute->table)
-            ->where($attribute->localKey, $localKeyValue)
-            ->execute();
+        if ($pivotSourceColumns === null) {
+            // @codeCoverageIgnoreStart
+            throw ModelException::fromRelationNotFoundOnModel(
+                modelClass: $parentMetaData->model,
+                property: $relation->property,
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        $localValueList = \array_values($localKeyValues);
+        $statement = $this->connection->delete($attribute->table);
+
+        foreach ($pivotSourceColumns as $index => $pivotSourceColumn) {
+            $statement->where($pivotSourceColumn, $localValueList[$index]);
+        }
+
+        $statement->execute();
     }
 
     private function cascadeDeleteRestrictRelation(
@@ -1687,19 +1799,30 @@ class ModelsManager implements ModelsManagerInterface
 
         if ($attribute instanceof HasOne) {
             $parentMetaData = $this->metaData->getModel($model::class);
-            $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
-            $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
-            $localKeyValue = $this->dehydrateColumnValue($parentMetaData, $localKeyProperty, $localKeyValue);
+            $foreignKeyColumns = $relation->foreignKeyColumns;
+            $referencedKeyColumns = $relation->referencedKeyColumns;
 
-            if (!\is_scalar($localKeyValue)) {
+            if ($foreignKeyColumns === null || $referencedKeyColumns === null) {
                 return; // @codeCoverageIgnore
             }
 
             $relatedMetaData = $this->metaData->getModel($relation->relatedClass);
+            $statement = $this->connection->count($relatedMetaData->table);
 
-            $count = $this->connection->count($relatedMetaData->table)
-                ->where($attribute->foreignKey, $localKeyValue)
-                ->count();
+            foreach ($foreignKeyColumns as $index => $childColumn) {
+                $parentColumn = $referencedKeyColumns[$index];
+                $parentProperty = $this->findPropertyForColumnOnMetadata($parentMetaData, $parentColumn);
+                $parentValue = PropertyReflector::createFromObject($model, $parentProperty)->getValue($model);
+                $parentValue = $this->dehydrateColumnValue($parentMetaData, $parentProperty, $parentValue);
+
+                if (!\is_scalar($parentValue)) {
+                    return; // @codeCoverageIgnore
+                }
+
+                $statement->where($childColumn, $parentValue);
+            }
+
+            $count = $statement->count();
 
             if ($count === 0) {
                 return;
@@ -1745,27 +1868,40 @@ class ModelsManager implements ModelsManagerInterface
         }
 
         $parentMetaData = $this->metaData->getModel($model::class);
-        $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
-        $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
-        $localKeyValue = $this->dehydrateColumnValue($parentMetaData, $localKeyProperty, $localKeyValue);
+        $foreignKeyColumns = $relation->foreignKeyColumns;
+        $referencedKeyColumns = $relation->referencedKeyColumns;
 
-        if ($localKeyValue === null) {
-            // @codeCoverageIgnoreStart
-            throw ModelException::fromPropertyValueMustBeScalar(
-                modelClass: $parentMetaData->model,
-                property: $localKeyProperty,
-                actualType: 'null',
-            );
-            // @codeCoverageIgnoreEnd
+        if ($foreignKeyColumns === null || $referencedKeyColumns === null) {
+            return; // @codeCoverageIgnore
         }
 
         $relatedMetaData = $this->metaData->getModel($relation->relatedClass);
+        $statement = $this->connection->update($relatedMetaData->table);
 
-        $this->connection
-            ->update($relatedMetaData->table)
-            ->set($attribute->foreignKey, null)
-            ->where($attribute->foreignKey, $localKeyValue)
-            ->execute();
+        foreach ($foreignKeyColumns as $childColumn) {
+            $statement->set($childColumn, null);
+        }
+
+        foreach ($foreignKeyColumns as $index => $childColumn) {
+            $parentColumn = $referencedKeyColumns[$index];
+            $parentProperty = $this->findPropertyForColumnOnMetadata($parentMetaData, $parentColumn);
+            $parentValue = PropertyReflector::createFromObject($model, $parentProperty)->getValue($model);
+            $parentValue = $this->dehydrateColumnValue($parentMetaData, $parentProperty, $parentValue);
+
+            if ($parentValue === null) {
+                // @codeCoverageIgnoreStart
+                throw ModelException::fromPropertyValueMustBeScalar(
+                    modelClass: $parentMetaData->model,
+                    property: $parentProperty,
+                    actualType: 'null',
+                );
+                // @codeCoverageIgnoreEnd
+            }
+
+            $statement->where($childColumn, $parentValue);
+        }
+
+        $statement->execute();
     }
 
     private function cascadeDeleteMorphSingleObjectRelation(
@@ -1776,27 +1912,29 @@ class ModelsManager implements ModelsManagerInterface
     ): void {
         /** @var MorphOne $attribute */
         $attribute = $relation->attribute;
-        $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
-        $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
-        $localKeyValue = $this->dehydrateColumnValue($parentMetaData, $localKeyProperty, $localKeyValue);
+        $parentTuple = $this->readMorphParentTuple($model, $parentMetaData, $relation);
 
-        if (!\is_scalar($localKeyValue)) {
+        if ($parentTuple === null) {
             return; // @codeCoverageIgnore
         }
 
         $typeColumn = $attribute->typeColumn;
-        $idColumn = $attribute->idColumn;
         $typeValue = MorphTypeResolver::encode(
             class: $parentMetaData->model,
             typeMap: $attribute->typeMap,
         );
 
+        /** @var non-empty-list<string> $idColumns */
+        $idColumns = $relation->foreignKeyColumns;
+
         $child = $this->findFirst(
             $relation->relatedClass,
-            static function (SelectStatementInterface $statement) use ($typeColumn, $idColumn, $typeValue, $localKeyValue): void {
-                $statement
-                    ->where($typeColumn, $typeValue)
-                    ->where($idColumn, $localKeyValue);
+            static function (SelectStatementInterface $statement) use ($typeColumn, $idColumns, $typeValue, $parentTuple): void {
+                $statement->where($typeColumn, $typeValue);
+
+                foreach ($idColumns as $index => $idColumn) {
+                    $statement->where($idColumn, $parentTuple[$index]);
+                }
             },
         );
 
@@ -1851,22 +1989,14 @@ class ModelsManager implements ModelsManagerInterface
         ModelRelationInterface $relation,
         MorphMany $attribute,
     ): void {
-        $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
-        $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
+        $parentTuple = $this->readMorphParentTuple($model, $parentMetaData, $relation);
 
-        if ($localKeyValue === null) {
+        if ($parentTuple === null) {
             return; // @codeCoverageIgnore
         }
 
-        if (!\is_scalar($localKeyValue)) {
-            // @codeCoverageIgnoreStart
-            throw ModelException::fromPropertyValueMustBeScalar(
-                modelClass: $parentMetaData->model,
-                property: $localKeyProperty,
-                actualType: \get_debug_type($localKeyValue),
-            );
-            // @codeCoverageIgnoreEnd
-        }
+        /** @var non-empty-list<string> $idColumns */
+        $idColumns = $relation->foreignKeyColumns;
 
         $childMetaData = $this->metaData->getModel($relation->relatedClass);
         $typeValue = MorphTypeResolver::encode(
@@ -1874,11 +2004,15 @@ class ModelsManager implements ModelsManagerInterface
             typeMap: $attribute->typeMap,
         );
 
-        $this->connection
+        $statement = $this->connection
             ->delete($childMetaData->table)
-            ->where($attribute->typeColumn, $typeValue)
-            ->where($attribute->idColumn, $localKeyValue)
-            ->execute();
+            ->where($attribute->typeColumn, $typeValue);
+
+        foreach ($idColumns as $index => $idColumn) {
+            $statement->where($idColumn, $parentTuple[$index]);
+        }
+
+        $statement->execute();
     }
 
     private function cascadeDeleteMorphToManyPivot(
@@ -1892,17 +2026,33 @@ class ModelsManager implements ModelsManagerInterface
             return; // @codeCoverageIgnore
         }
 
-        $localKeyValue = $this->resolveOwnKeyValue($model, $parentMetaData);
+        $localKeyValues = $this->resolveOwnKeyValues($model, $parentMetaData);
         $typeValue = MorphTypeResolver::encode(
             class: $parentMetaData->model,
             typeMap: $attribute->typeMap,
         );
 
-        $this->connection
+        $pivotSourceColumns = $relation->pivotSourceColumns;
+
+        if ($pivotSourceColumns === null) {
+            // @codeCoverageIgnoreStart
+            throw ModelException::fromRelationNotFoundOnModel(
+                modelClass: $parentMetaData->model,
+                property: $relation->property,
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        $localValueList = \array_values($localKeyValues);
+        $statement = $this->connection
             ->delete($attribute->table)
-            ->where($attribute->typeColumn, $typeValue)
-            ->where($attribute->idColumn, $localKeyValue)
-            ->execute();
+            ->where($attribute->typeColumn, $typeValue);
+
+        foreach ($pivotSourceColumns as $index => $pivotSourceColumn) {
+            $statement->where($pivotSourceColumn, $localValueList[$index]);
+        }
+
+        $statement->execute();
     }
 
     private function cascadeDeleteMorphRestrictRelation(
@@ -1913,13 +2063,14 @@ class ModelsManager implements ModelsManagerInterface
         $attribute = $relation->attribute;
 
         if ($attribute instanceof MorphOne) {
-            $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
-            $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
-            $localKeyValue = $this->dehydrateColumnValue($parentMetaData, $localKeyProperty, $localKeyValue);
+            $parentTuple = $this->readMorphParentTuple($model, $parentMetaData, $relation);
 
-            if (!\is_scalar($localKeyValue)) {
+            if ($parentTuple === null) {
                 return; // @codeCoverageIgnore
             }
+
+            /** @var non-empty-list<string> $idColumns */
+            $idColumns = $relation->foreignKeyColumns;
 
             $relatedMetaData = $this->metaData->getModel($relation->relatedClass);
             $typeValue = MorphTypeResolver::encode(
@@ -1927,10 +2078,14 @@ class ModelsManager implements ModelsManagerInterface
                 typeMap: $attribute->typeMap,
             );
 
-            $count = $this->connection->count($relatedMetaData->table)
-                ->where($attribute->typeColumn, $typeValue)
-                ->where($attribute->idColumn, $localKeyValue)
-                ->count();
+            $statement = $this->connection->count($relatedMetaData->table)
+                ->where($attribute->typeColumn, $typeValue);
+
+            foreach ($idColumns as $index => $idColumn) {
+                $statement->where($idColumn, $parentTuple[$index]);
+            }
+
+            $count = $statement->count();
 
             if ($count === 0) {
                 return;
@@ -1976,19 +2131,20 @@ class ModelsManager implements ModelsManagerInterface
             return; // @codeCoverageIgnore
         }
 
-        $localKeyProperty = $this->resolveLocalKeyProperty($parentMetaData, $relation, $attribute->localKey);
-        $localKeyValue = PropertyReflector::createFromObject($model, $localKeyProperty)->getValue($model);
-        $localKeyValue = $this->dehydrateColumnValue($parentMetaData, $localKeyProperty, $localKeyValue);
+        $parentTuple = $this->readMorphParentTuple($model, $parentMetaData, $relation);
 
-        if ($localKeyValue === null) {
+        if ($parentTuple === null) {
             // @codeCoverageIgnoreStart
             throw ModelException::fromPropertyValueMustBeScalar(
                 modelClass: $parentMetaData->model,
-                property: $localKeyProperty,
+                property: $relation->property,
                 actualType: 'null',
             );
             // @codeCoverageIgnoreEnd
         }
+
+        /** @var non-empty-list<string> $idColumns */
+        $idColumns = $relation->foreignKeyColumns;
 
         $relatedMetaData = $this->metaData->getModel($relation->relatedClass);
         $typeValue = MorphTypeResolver::encode(
@@ -1996,63 +2152,60 @@ class ModelsManager implements ModelsManagerInterface
             typeMap: $attribute->typeMap,
         );
 
-        $this->connection
+        $statement = $this->connection
             ->update($relatedMetaData->table)
-            ->set($attribute->typeColumn, null)
-            ->set($attribute->idColumn, null)
-            ->where($attribute->typeColumn, $typeValue)
-            ->where($attribute->idColumn, $localKeyValue)
-            ->execute();
-    }
+            ->set($attribute->typeColumn, null);
 
-    private function resolveLocalKeyProperty(
-        ModelMetaDataInterface $metaData,
-        ModelRelationInterface $relation,
-        ?string $localKey,
-    ): string {
-        if ($localKey === null) {
-            if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
-                // @codeCoverageIgnoreStart
-                throw ModelException::fromCantFetchWithoutPrimaryKey(
-                    modelClass: $metaData->model,
-                );
-                // @codeCoverageIgnoreEnd
-            }
-
-            return $metaData->key->property;
+        foreach ($idColumns as $idColumn) {
+            $statement->set($idColumn, null);
         }
 
-        return $this->findPropertyForColumn(
-            metaData: $metaData,
-            relation: $relation,
-            columnName: $localKey,
-            keyKind: 'localKey',
-        );
-    }
+        $statement->where($attribute->typeColumn, $typeValue);
 
-    private function findPropertyForColumn(
-        ModelMetaDataInterface $metaData,
-        ModelRelationInterface $relation,
-        string $columnName,
-        string $keyKind,
-    ): string {
-        foreach ($metaData->columns as $column) {
-            if ($column->column === $columnName) {
-                return $column->property;
-            }
+        foreach ($idColumns as $index => $idColumn) {
+            $statement->where($idColumn, $parentTuple[$index]);
         }
 
-        // @codeCoverageIgnoreStart
-        throw ModelException::fromRelationKeyReferencesUnknownColumn(
-            modelClass: $metaData->model,
-            property: $relation->property,
-            keyKind: $keyKind,
-            keyValue: $columnName,
-            referencedClass: $metaData->model,
-        );
-        // @codeCoverageIgnoreEnd
+        $statement->execute();
     }
 
+    /**
+     * @return non-empty-list<int|string>|null
+     *
+     * @throws ModelException
+     */
+    private function readMorphParentTuple(
+        object $model,
+        ModelMetaDataInterface $parentMetaData,
+        ModelRelationInterface $relation,
+    ): ?array {
+        $referencedKeyColumns = $relation->referencedKeyColumns;
+
+        if ($referencedKeyColumns === null) {
+            // @codeCoverageIgnoreStart
+            throw ModelException::fromRelationNotFoundOnModel(
+                modelClass: $parentMetaData->model,
+                property: $relation->property,
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        $tuple = [];
+
+        foreach ($referencedKeyColumns as $parentColumn) {
+            $parentProperty = $this->findPropertyForColumnOnMetadata($parentMetaData, $parentColumn);
+            $raw = PropertyReflector::createFromObject($model, $parentProperty)->getValue($model);
+            $value = $this->dehydrateColumnValue($parentMetaData, $parentProperty, $raw);
+
+            if (!\is_int($value) && !\is_string($value)) {
+                return null; // @codeCoverageIgnore
+            }
+
+            $tuple[] = $value;
+        }
+
+        return $tuple;
+    }
     /**
      * @param array<string, (\Closure(Relation<object>): Relation<object>)|null>|null $explicitWith
      * @return array<string, (\Closure(Relation<object>): Relation<object>)|null>

@@ -20,11 +20,13 @@ readonly class HasOne implements RelationInterface
 {
     /**
      * @param class-string $related
+     * @param string|non-empty-array<string> $foreignKey
+     * @param string|non-empty-array<string>|null $localKey
      */
     public function __construct(
         public string $related,
-        public string $foreignKey,
-        public ?string $localKey = null,
+        public string|array $foreignKey,
+        public string|array|null $localKey = null,
         public CascadeAction $onSave = CascadeAction::NO_ACTION,
         public CascadeAction $onDelete = CascadeAction::NO_ACTION,
     ) {

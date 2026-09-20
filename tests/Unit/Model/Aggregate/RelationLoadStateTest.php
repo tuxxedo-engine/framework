@@ -236,6 +236,9 @@ class RelationLoadStateTest extends TestCase
             ),
             typeColumn: 'commentable_type',
             idColumn: 'commentable_id',
+            idColumns: [
+                'commentable_id',
+            ],
         );
     }
 }

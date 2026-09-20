@@ -20,11 +20,13 @@ readonly class BelongsTo implements RelationInterface
 {
     /**
      * @param class-string $related
+     * @param string|non-empty-array<string> $foreignKey
+     * @param string|non-empty-array<string>|null $ownerKey
      */
     public function __construct(
         public string $related,
-        public string $foreignKey,
-        public ?string $ownerKey = null,
+        public string|array $foreignKey,
+        public string|array|null $ownerKey = null,
         public CascadeAction $onSave = CascadeAction::NO_ACTION,
         public CascadeAction $onDelete = CascadeAction::NO_ACTION,
     ) {

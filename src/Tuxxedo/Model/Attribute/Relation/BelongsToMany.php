@@ -20,12 +20,14 @@ readonly class BelongsToMany implements RelationInterface
 {
     /**
      * @param class-string $related
+     * @param string|non-empty-array<string> $localKey
+     * @param string|non-empty-array<string> $foreignKey
      */
     public function __construct(
         public string $related,
         public string $table,
-        public string $localKey,
-        public string $foreignKey,
+        public string|array $localKey,
+        public string|array $foreignKey,
         public CascadeAction $onSave = CascadeAction::NO_ACTION,
         public CascadeAction $onDelete = CascadeAction::NO_ACTION,
     ) {

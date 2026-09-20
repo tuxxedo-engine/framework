@@ -25,6 +25,7 @@ use Fixture\Model\Broken\BulkDeleteChildBehavior;
 use Fixture\Model\Broken\BulkDeleteChildCascade;
 use Fixture\Model\Broken\BulkDeleteRequiresCascade;
 use Fixture\Model\Broken\CascadeBareTarget;
+use Fixture\Model\Broken\CompositeKeyThroughRelation;
 use Fixture\Model\Broken\CompositeKeyUnknownColumn;
 use Fixture\Model\Broken\DuplicatePrimaryKey;
 use Fixture\Model\Broken\HardParentSoftChildCascadeMismatch;
@@ -351,6 +352,14 @@ class ReflectionMetaDataAdapterValidationTest extends TestCase
         $this->assertRejectsModelWithMessage(
             modelClass: ThroughFirstKeyUnknown::class,
             needle: 'firstKey',
+        );
+    }
+
+    public function testRejectsThroughOnCompositeKeyParent(): void
+    {
+        $this->assertRejectsModelWithMessage(
+            modelClass: CompositeKeyThroughRelation::class,
+            needle: 'composite-key parent',
         );
     }
 

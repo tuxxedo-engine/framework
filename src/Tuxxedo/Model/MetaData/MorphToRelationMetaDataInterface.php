@@ -38,6 +38,13 @@ interface MorphToRelationMetaDataInterface
     }
 
     /**
+     * @var non-empty-list<string>
+     */
+    public array $idColumns {
+        get;
+    }
+
+    /**
      * @var array<string, class-string>|null
      */
     public ?array $typeMap {

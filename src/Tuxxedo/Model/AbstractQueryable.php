@@ -24,6 +24,7 @@ use Tuxxedo\Model\Attribute\Relation\HasMany;
 use Tuxxedo\Model\Attribute\Relation\HasManyThrough;
 use Tuxxedo\Model\Attribute\Relation\HasOne;
 use Tuxxedo\Model\Attribute\Relation\HasOneThrough;
+use Tuxxedo\Model\MetaData\ModelCompositeKeyInterface;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelPrimaryKeyInterface;
 use Tuxxedo\Model\MetaData\ModelRelationInterface;
@@ -750,6 +751,7 @@ abstract class AbstractQueryable implements QueryableInterface
                 manager: $manager,
                 parentMetaData: $parentMetaData,
                 targetMetaData: $targetMetaData,
+                relation: $relation,
                 attribute: $attribute,
             );
         } elseif ($attribute instanceof BelongsTo) {
@@ -757,6 +759,7 @@ abstract class AbstractQueryable implements QueryableInterface
                 manager: $manager,
                 parentMetaData: $parentMetaData,
                 targetMetaData: $targetMetaData,
+                relation: $relation,
                 attribute: $attribute,
             );
         } elseif ($attribute instanceof BelongsToMany) {
@@ -764,6 +767,7 @@ abstract class AbstractQueryable implements QueryableInterface
                 manager: $manager,
                 parentMetaData: $parentMetaData,
                 targetMetaData: $targetMetaData,
+                relation: $relation,
                 attribute: $attribute,
             );
         } elseif ($attribute instanceof HasManyThrough || $attribute instanceof HasOneThrough) {
@@ -814,51 +818,111 @@ abstract class AbstractQueryable implements QueryableInterface
         ModelsManagerInterface $manager,
         ModelMetaDataInterface $parentMetaData,
         ModelMetaDataInterface $targetMetaData,
+        ModelRelationInterface $relation,
         HasMany|HasOne $attribute,
     ): SelectStatementInterface {
-        $localKey = $attribute->localKey ?? $this->requirePrimaryKeyColumn($parentMetaData);
+        $foreignKeyColumns = $relation->foreignKeyColumns;
+        $referencedKeyColumns = $relation->referencedKeyColumns;
 
-        return $manager->connection->select($targetMetaData->table)
-            ->whereColumn(
-                column: $targetMetaData->table . '.' . $attribute->foreignKey,
-                other: $parentMetaData->table . '.' . $localKey,
+        if ($foreignKeyColumns === null || $referencedKeyColumns === null) {
+            // @codeCoverageIgnoreStart
+            throw ModelException::fromRelationNotFoundOnModel(
+                modelClass: $parentMetaData->model,
+                property: $relation->property,
             );
+            // @codeCoverageIgnoreEnd
+        }
+
+        $subquery = $manager->connection->select($targetMetaData->table);
+
+        foreach ($foreignKeyColumns as $index => $foreignColumn) {
+            $localColumn = $referencedKeyColumns[$index];
+            $subquery->whereColumn(
+                column: $targetMetaData->table . '.' . $foreignColumn,
+                other: $parentMetaData->table . '.' . $localColumn,
+            );
+        }
+
+        return $subquery;
     }
 
     private function buildBelongsToExistsSubquery(
         ModelsManagerInterface $manager,
         ModelMetaDataInterface $parentMetaData,
         ModelMetaDataInterface $targetMetaData,
+        ModelRelationInterface $relation,
         BelongsTo $attribute,
     ): SelectStatementInterface {
-        $ownerKey = $attribute->ownerKey ?? $this->requirePrimaryKeyColumn($targetMetaData);
+        $foreignKeyColumns = $relation->foreignKeyColumns;
+        $referencedKeyColumns = $relation->referencedKeyColumns;
 
-        return $manager->connection->select($targetMetaData->table)
-            ->whereColumn(
-                column: $targetMetaData->table . '.' . $ownerKey,
-                other: $parentMetaData->table . '.' . $attribute->foreignKey,
+        if ($foreignKeyColumns === null || $referencedKeyColumns === null) {
+            // @codeCoverageIgnoreStart
+            throw ModelException::fromRelationNotFoundOnModel(
+                modelClass: $parentMetaData->model,
+                property: $relation->property,
             );
+            // @codeCoverageIgnoreEnd
+        }
+
+        $subquery = $manager->connection->select($targetMetaData->table);
+
+        foreach ($referencedKeyColumns as $index => $ownerColumn) {
+            $foreignColumn = $foreignKeyColumns[$index];
+            $subquery->whereColumn(
+                column: $targetMetaData->table . '.' . $ownerColumn,
+                other: $parentMetaData->table . '.' . $foreignColumn,
+            );
+        }
+
+        return $subquery;
     }
 
     private function buildBelongsToManyExistsSubquery(
         ModelsManagerInterface $manager,
         ModelMetaDataInterface $parentMetaData,
         ModelMetaDataInterface $targetMetaData,
+        ModelRelationInterface $relation,
         BelongsToMany $attribute,
     ): SelectStatementInterface {
-        $parentPk = $this->requirePrimaryKeyColumn($parentMetaData);
-        $targetPk = $this->requirePrimaryKeyColumn($targetMetaData);
+        $parentPkColumns = $this->resolvePkColumns($parentMetaData);
+        $targetPkColumns = $this->resolvePkColumns($targetMetaData);
+        $pivotSourceColumns = $relation->pivotSourceColumns;
+        $pivotTargetColumns = $relation->pivotTargetColumns;
 
-        return $manager->connection->select($targetMetaData->table)
+        if ($pivotSourceColumns === null || $pivotTargetColumns === null) {
+            // @codeCoverageIgnoreStart
+            throw ModelException::fromRelationNotFoundOnModel(
+                modelClass: $parentMetaData->model,
+                property: $relation->property,
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        $subquery = $manager->connection->select($targetMetaData->table)
             ->innerJoin(
                 table: $attribute->table,
-                first: $attribute->table . '.' . $attribute->foreignKey,
-                second: $targetMetaData->table . '.' . $targetPk,
-            )
-            ->whereColumn(
-                column: $attribute->table . '.' . $attribute->localKey,
-                other: $parentMetaData->table . '.' . $parentPk,
+                first: $attribute->table . '.' . $pivotTargetColumns[0],
+                second: $targetMetaData->table . '.' . $targetPkColumns[0],
             );
+
+        $targetArity = \sizeof($pivotTargetColumns);
+
+        for ($index = 1; $index < $targetArity; $index++) {
+            $subquery->whereColumn(
+                column: $attribute->table . '.' . $pivotTargetColumns[$index],
+                other: $targetMetaData->table . '.' . $targetPkColumns[$index],
+            );
+        }
+
+        foreach ($pivotSourceColumns as $index => $pivotSourceColumn) {
+            $subquery->whereColumn(
+                column: $attribute->table . '.' . $pivotSourceColumn,
+                other: $parentMetaData->table . '.' . $parentPkColumns[$index],
+            );
+        }
+
+        return $subquery;
     }
 
     private function buildHasThroughExistsSubquery(
@@ -902,5 +966,28 @@ abstract class AbstractQueryable implements QueryableInterface
         }
 
         return $metaData->key->column;
+    }
+
+    /**
+     * @return non-empty-list<string>
+     */
+    private function resolvePkColumns(
+        ModelMetaDataInterface $metaData,
+    ): array {
+        if ($metaData->key instanceof ModelPrimaryKeyInterface) {
+            return [
+                $metaData->key->column,
+            ];
+        }
+
+        if ($metaData->key instanceof ModelCompositeKeyInterface) {
+            return \array_values($metaData->key->columns);
+        }
+
+        // @codeCoverageIgnoreStart
+        throw ModelException::fromCantFetchWithoutPrimaryKey(
+            modelClass: $metaData->model,
+        );
+        // @codeCoverageIgnoreEnd
     }
 }

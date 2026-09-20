@@ -23,7 +23,6 @@ use Fixture\Model\Polymorphic\PolyTag;
 use Fixture\Model\Post;
 use Fixture\Model\Profile;
 use Fixture\Model\Role;
-use Fixture\Model\Setting;
 use Fixture\Model\User;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Model\Aggregate\AggregateEntityCollector;
@@ -308,21 +307,6 @@ class AggregateSaveOrderTest extends TestCase
 
         self::assertCount(1, $sorted);
         self::assertSame($category, $sorted[0]->entity);
-    }
-
-    public function testSortThrowsForCompositeKeyEntityInGraph(): void
-    {
-        $setting = new Setting();
-
-        try {
-            $this->order->sort(
-                $this->collector->collect($setting),
-            );
-
-            self::fail('Expected ModelException for composite-key entity in aggregate');
-        } catch (ModelException $exception) {
-            self::assertStringContainsString('composite-key', \strtolower($exception->getMessage()));
-        }
     }
 
     /**

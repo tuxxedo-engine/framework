@@ -50,4 +50,32 @@ interface ModelRelationInterface
     public ?array $typeMap {
         get;
     }
+
+    /**
+     * @var non-empty-list<string>|null
+     */
+    public ?array $foreignKeyColumns {
+        get;
+    }
+
+    /**
+     * @var non-empty-list<string>|null
+     */
+    public ?array $referencedKeyColumns {
+        get;
+    }
+
+    /**
+     * @var non-empty-list<string>|null
+     */
+    public ?array $pivotSourceColumns {
+        get;
+    }
+
+    /**
+     * @var non-empty-list<string>|null
+     */
+    public ?array $pivotTargetColumns {
+        get;
+    }
 }

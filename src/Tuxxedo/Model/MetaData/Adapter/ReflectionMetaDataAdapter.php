@@ -32,6 +32,7 @@ use Tuxxedo\Model\Attribute\Relation\MorphToMany;
 use Tuxxedo\Model\Attribute\Relation\PolymorphicRelationInterface;
 use Tuxxedo\Model\Attribute\Relation\RelationAttributeInterface;
 use Tuxxedo\Model\Attribute\Relation\RelationInterface;
+use Tuxxedo\Model\Attribute\Relation\RelationKeyNormalizer;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\Attribute\Unique;
 use Tuxxedo\Model\Behavior\BeforeDeleteBehaviorInterface;
@@ -249,7 +250,10 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
 
             $attribute = $relationAttributes[0];
 
-            if ($sourceCompositeKey !== null) {
+            if ($sourceCompositeKey !== null && (
+                $attribute instanceof HasOneThrough ||
+                $attribute instanceof HasManyThrough
+            )) {
                 throw ModelException::fromCompositeKeyRelationsUnsupported(
                     modelClass: $class->name,
                     property: $property->name,
@@ -264,6 +268,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                     attribute: $attribute,
                     sourceColumnNames: $sourceColumnNames,
                     sourcePrimaryKey: $sourcePrimaryKey,
+                    sourceCompositeKey: $sourceCompositeKey,
                     parentHasSoftDelete: $parentHasSoftDelete,
                     relations: $relations,
                     morphToRelations: $morphToRelations,
@@ -309,6 +314,11 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                     modelClass: $relatedClass,
                 );
             }
+
+            $foreignKeyColumns = null;
+            $referencedKeyColumns = null;
+            $pivotSourceColumns = null;
+            $pivotTargetColumns = null;
 
             if ($attribute instanceof HasOneThrough || $attribute instanceof HasManyThrough) {
                 $throughClass = $attribute->through;
@@ -360,7 +370,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                     sourcePrimaryKey: $sourcePrimaryKey,
                 );
             } else {
-                $this->validateRelationKeys(
+                $normalized = $this->validateRelationKeys(
                     modelClass: $class->name,
                     property: $property->name,
                     attribute: $attribute,
@@ -369,7 +379,13 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                     sourceColumnNames: $sourceColumnNames,
                     targetColumnNames: $targetColumnNames,
                     sourcePrimaryKey: $sourcePrimaryKey,
+                    sourceCompositeKey: $sourceCompositeKey,
                 );
+
+                $foreignKeyColumns = $normalized[0];
+                $referencedKeyColumns = $normalized[1];
+                $pivotSourceColumns = $normalized[2];
+                $pivotTargetColumns = $normalized[3];
             }
 
             $this->validateCascadeConfiguration(
@@ -392,6 +408,10 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 relatedClass: $relatedClass,
                 nullable: $property->isNullable(),
                 attribute: $attribute,
+                foreignKeyColumns: $foreignKeyColumns,
+                referencedKeyColumns: $referencedKeyColumns,
+                pivotSourceColumns: $pivotSourceColumns,
+                pivotTargetColumns: $pivotTargetColumns,
             );
         }
 
@@ -411,6 +431,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         PolymorphicRelationInterface $attribute,
         array $sourceColumnNames,
         ?ModelPrimaryKeyInterface $sourcePrimaryKey,
+        ?ModelCompositeKeyInterface $sourceCompositeKey,
         bool $parentHasSoftDelete,
         array &$relations,
         array &$morphToRelations,
@@ -422,7 +443,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         );
 
         if ($attribute instanceof MorphTo) {
-            $this->validateMorphToRelation(
+            $idColumns = $this->validateMorphToRelation(
                 modelClass: $class->name,
                 property: $property->name,
                 attribute: $attribute,
@@ -439,7 +460,8 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 nullable: $property->isNullable(),
                 attribute: $attribute,
                 typeColumn: $attribute->typeColumn,
-                idColumn: $attribute->idColumn,
+                idColumn: $idColumns[0],
+                idColumns: $idColumns,
                 typeMap: $attribute->typeMap,
             );
 
@@ -493,14 +515,16 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             );
         }
 
-        $this->validateInverseMorphRelation(
+        $normalized = $this->validateInverseMorphRelation(
             modelClass: $class->name,
             property: $property->name,
             attribute: $attribute,
             relatedClass: $relatedClass,
+            relatedReflection: $relatedReflection,
             sourceColumnNames: $sourceColumnNames,
             targetColumnNames: $targetColumnNames,
             sourcePrimaryKey: $sourcePrimaryKey,
+            sourceCompositeKey: $sourceCompositeKey,
         );
 
         $this->validateInverseMorphPropertyType(
@@ -509,20 +533,35 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             attribute: $attribute,
         );
 
+        $foreignKeyColumns = $normalized[0];
+        $referencedKeyColumns = $normalized[1];
+        $pivotSourceColumns = $normalized[2];
+        $pivotTargetColumns = $normalized[3];
+
         $relations[] = new ModelRelation(
             property: $property->name,
             relatedClass: $relatedClass,
             nullable: $property->isNullable(),
             attribute: $attribute,
             typeColumn: $attribute->typeColumn,
-            idColumn: $attribute->idColumn,
+            idColumn: $foreignKeyColumns[0]
+                ?? $pivotSourceColumns[0]
+                ?? throw ModelException::fromRelationNotFoundOnModel(
+                    modelClass: $class->name,
+                    property: $property->name,
+                ),
             typeMap: $attribute->typeMap,
+            foreignKeyColumns: $foreignKeyColumns,
+            referencedKeyColumns: $referencedKeyColumns,
+            pivotSourceColumns: $pivotSourceColumns,
+            pivotTargetColumns: $pivotTargetColumns,
         );
     }
 
     /**
      * @param class-string $modelClass
      * @param string[] $sourceColumnNames
+     * @return non-empty-list<string>
      *
      * @throws ModelException
      */
@@ -531,7 +570,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         string $property,
         MorphTo $attribute,
         array $sourceColumnNames,
-    ): void {
+    ): array {
         if (!\in_array($attribute->typeColumn, $sourceColumnNames, true)) {
             throw ModelException::fromRelationKeyReferencesUnknownColumn(
                 modelClass: $modelClass,
@@ -542,19 +581,25 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             );
         }
 
-        if (!\in_array($attribute->idColumn, $sourceColumnNames, true)) {
-            throw ModelException::fromRelationKeyReferencesUnknownColumn(
-                modelClass: $modelClass,
-                property: $property,
-                keyKind: 'idColumn',
-                keyValue: $attribute->idColumn,
-                referencedClass: $modelClass,
-            );
+        $idColumns = RelationKeyNormalizer::toColumns($attribute->idColumn);
+
+        foreach ($idColumns as $idColumn) {
+            if (!\in_array($idColumn, $sourceColumnNames, true)) {
+                throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                    modelClass: $modelClass,
+                    property: $property,
+                    keyKind: 'idColumn',
+                    keyValue: $idColumn,
+                    referencedClass: $modelClass,
+                );
+            }
         }
 
         if ($attribute->typeMap === null) {
-            return;
+            return $idColumns;
         }
+
+        $expectedArity = \sizeof($idColumns);
 
         foreach ($attribute->typeMap as $alias => $mappedClass) {
             try {
@@ -585,14 +630,42 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                     mappedClass: $mappedClass,
                 );
             }
+
+            $mappedPkColumns = $this->resolveTargetKeyColumnsFromReflection($mappedReflection);
+
+            if ($mappedPkColumns === null) {
+                // @codeCoverageIgnoreStart
+                throw ModelException::fromRelationRequiresPrimaryKey(
+                    modelClass: $modelClass,
+                    property: $property,
+                    side: 'target',
+                );
+                // @codeCoverageIgnoreEnd
+            }
+
+            if (\sizeof($mappedPkColumns) !== $expectedArity) {
+                // @codeCoverageIgnoreStart
+                throw ModelException::fromRelationForeignKeyArityMismatch(
+                    modelClass: $modelClass,
+                    property: $property,
+                    keyKind: 'idColumn',
+                    expected: \sizeof($mappedPkColumns),
+                    actual: $expectedArity,
+                );
+                // @codeCoverageIgnoreEnd
+            }
         }
+
+        return $idColumns;
     }
 
     /**
      * @param class-string $modelClass
      * @param class-string $relatedClass
+     * @param \ReflectionClass<object> $relatedReflection
      * @param string[] $sourceColumnNames
      * @param string[] $targetColumnNames
+     * @return array{0: non-empty-list<string>|null, 1: non-empty-list<string>|null, 2: non-empty-list<string>|null, 3: non-empty-list<string>|null}
      *
      * @throws ModelException
      */
@@ -601,11 +674,44 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         string $property,
         InversePolymorphicRelationInterface $attribute,
         string $relatedClass,
+        \ReflectionClass $relatedReflection,
         array $sourceColumnNames,
         array $targetColumnNames,
         ?ModelPrimaryKeyInterface $sourcePrimaryKey,
-    ): void {
-        if (!$attribute instanceof MorphToMany) {
+        ?ModelCompositeKeyInterface $sourceCompositeKey,
+    ): array {
+        $foreignKeyColumns = null;
+        $referencedKeyColumns = null;
+        $pivotSourceColumns = null;
+        $pivotTargetColumns = null;
+
+        if ($attribute instanceof MorphOne || $attribute instanceof MorphMany) {
+            $sourceKeyColumns = $this->resolveSourceKeyColumns($sourcePrimaryKey, $sourceCompositeKey);
+
+            if ($sourceKeyColumns === null) {
+                throw ModelException::fromRelationRequiresPrimaryKey(
+                    modelClass: $modelClass,
+                    property: $property,
+                    side: 'source',
+                );
+            }
+
+            $foreignKeyColumns = RelationKeyNormalizer::toParentOrderedColumns(
+                value: $attribute->idColumn,
+                parentPkColumns: $sourceKeyColumns,
+                modelClass: $modelClass,
+                property: $property,
+                keyKind: 'idColumn',
+            );
+
+            $referencedKeyColumns = RelationKeyNormalizer::toParentOrderedColumnsOrNull(
+                value: $attribute->localKey,
+                parentPkColumns: $sourceKeyColumns,
+                modelClass: $modelClass,
+                property: $property,
+                keyKind: 'localKey',
+            ) ?? $sourceKeyColumns;
+
             if (!\in_array($attribute->typeColumn, $targetColumnNames, true)) {
                 throw ModelException::fromRelationKeyReferencesUnknownColumn(
                     modelClass: $modelClass,
@@ -616,42 +722,68 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 );
             }
 
-            if (!\in_array($attribute->idColumn, $targetColumnNames, true)) {
-                throw ModelException::fromRelationKeyReferencesUnknownColumn(
-                    modelClass: $modelClass,
-                    property: $property,
-                    keyKind: 'idColumn',
-                    keyValue: $attribute->idColumn,
-                    referencedClass: $relatedClass,
-                );
+            foreach ($foreignKeyColumns as $column) {
+                if (!\in_array($column, $targetColumnNames, true)) {
+                    throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                        modelClass: $modelClass,
+                        property: $property,
+                        keyKind: 'idColumn',
+                        keyValue: $column,
+                        referencedClass: $relatedClass,
+                    );
+                }
+            }
+
+            foreach ($referencedKeyColumns as $column) {
+                if (!\in_array($column, $sourceColumnNames, true)) {
+                    throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                        modelClass: $modelClass,
+                        property: $property,
+                        keyKind: 'localKey',
+                        keyValue: $column,
+                        referencedClass: $modelClass,
+                    );
+                }
             }
         }
 
-        if ($attribute instanceof MorphOne || $attribute instanceof MorphMany) {
-            if ($attribute->localKey !== null && !\in_array($attribute->localKey, $sourceColumnNames, true)) {
-                throw ModelException::fromRelationKeyReferencesUnknownColumn(
-                    modelClass: $modelClass,
-                    property: $property,
-                    keyKind: 'localKey',
-                    keyValue: $attribute->localKey,
-                    referencedClass: $modelClass,
-                );
-            }
+        if ($attribute instanceof MorphToMany) {
+            $sourceKeyColumns = $this->resolveSourceKeyColumns($sourcePrimaryKey, $sourceCompositeKey);
 
-            if ($attribute->localKey === null && $sourcePrimaryKey === null) {
+            if ($sourceKeyColumns === null) {
                 throw ModelException::fromRelationRequiresPrimaryKey(
                     modelClass: $modelClass,
                     property: $property,
                     side: 'source',
                 );
             }
-        }
 
-        if ($attribute instanceof MorphToMany && $sourcePrimaryKey === null) {
-            throw ModelException::fromRelationRequiresPrimaryKey(
+            $targetKeyColumns = $this->resolveTargetKeyColumnsFromReflection($relatedReflection);
+
+            if ($targetKeyColumns === null) {
+                // @codeCoverageIgnoreStart
+                throw ModelException::fromRelationRequiresPrimaryKey(
+                    modelClass: $modelClass,
+                    property: $property,
+                    side: 'target',
+                );
+                // @codeCoverageIgnoreEnd
+            }
+
+            $pivotSourceColumns = RelationKeyNormalizer::toParentOrderedColumns(
+                value: $attribute->idColumn,
+                parentPkColumns: $sourceKeyColumns,
                 modelClass: $modelClass,
                 property: $property,
-                side: 'source',
+                keyKind: 'idColumn',
+            );
+
+            $pivotTargetColumns = RelationKeyNormalizer::toParentOrderedColumns(
+                value: $attribute->foreignKey,
+                parentPkColumns: $targetKeyColumns,
+                modelClass: $modelClass,
+                property: $property,
+                keyKind: 'foreignKey',
             );
         }
 
@@ -687,6 +819,13 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 }
             }
         }
+
+        return [
+            $foreignKeyColumns,
+            $referencedKeyColumns,
+            $pivotSourceColumns,
+            $pivotTargetColumns,
+        ];
     }
 
     /**
@@ -972,15 +1111,18 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
 
         if (
             ($attribute instanceof HasOne || $attribute instanceof HasMany) &&
-            $attribute->onDelete === CascadeAction::SET_NULL &&
-            !$this->isColumnNullableInReflection($relatedReflection, $attribute->foreignKey)
+            $attribute->onDelete === CascadeAction::SET_NULL
         ) {
-            throw ModelException::fromSetNullRequiresNullableColumn(
-                modelClass: $modelClass,
-                property: $property,
-                relatedClass: $relatedClass,
-                foreignKey: $attribute->foreignKey,
-            );
+            foreach (RelationKeyNormalizer::toColumns($attribute->foreignKey) as $cascadeForeignKey) {
+                if (!$this->isColumnNullableInReflection($relatedReflection, $cascadeForeignKey)) {
+                    throw ModelException::fromSetNullRequiresNullableColumn(
+                        modelClass: $modelClass,
+                        property: $property,
+                        relatedClass: $relatedClass,
+                        foreignKey: $cascadeForeignKey,
+                    );
+                }
+            }
         }
 
         if ($attribute instanceof HasMany && $attribute->bulkDelete) {
@@ -1169,6 +1311,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
      * @param \ReflectionClass<object> $relatedReflection
      * @param string[] $sourceColumnNames
      * @param string[] $targetColumnNames
+     * @return array{0: non-empty-list<string>|null, 1: non-empty-list<string>|null, 2: non-empty-list<string>|null, 3: non-empty-list<string>|null}
      *
      * @throws ModelException
      */
@@ -1181,29 +1324,12 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         array $sourceColumnNames,
         array $targetColumnNames,
         ?ModelPrimaryKeyInterface $sourcePrimaryKey,
-    ): void {
-        if ($attribute instanceof HasOne) {
-            if (!\in_array($attribute->foreignKey, $targetColumnNames, true)) {
-                throw ModelException::fromRelationKeyReferencesUnknownColumn(
-                    modelClass: $modelClass,
-                    property: $property,
-                    keyKind: 'foreignKey',
-                    keyValue: $attribute->foreignKey,
-                    referencedClass: $relatedClass,
-                );
-            }
+        ?ModelCompositeKeyInterface $sourceCompositeKey,
+    ): array {
+        if ($attribute instanceof HasOne || $attribute instanceof HasMany) {
+            $sourceKeyColumns = $this->resolveSourceKeyColumns($sourcePrimaryKey, $sourceCompositeKey);
 
-            if ($attribute->localKey !== null && !\in_array($attribute->localKey, $sourceColumnNames, true)) {
-                throw ModelException::fromRelationKeyReferencesUnknownColumn(
-                    modelClass: $modelClass,
-                    property: $property,
-                    keyKind: 'localKey',
-                    keyValue: $attribute->localKey,
-                    referencedClass: $modelClass,
-                );
-            }
-
-            if ($attribute->localKey === null && $sourcePrimaryKey === null) {
+            if ($sourceKeyColumns === null) {
                 throw ModelException::fromRelationRequiresPrimaryKey(
                     modelClass: $modelClass,
                     property: $property,
@@ -1211,63 +1337,58 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 );
             }
 
-            return;
-        }
+            $foreignKeyColumns = RelationKeyNormalizer::toParentOrderedColumns(
+                value: $attribute->foreignKey,
+                parentPkColumns: $sourceKeyColumns,
+                modelClass: $modelClass,
+                property: $property,
+                keyKind: 'foreignKey',
+            );
 
-        if ($attribute instanceof HasMany) {
-            if (!\in_array($attribute->foreignKey, $targetColumnNames, true)) {
-                throw ModelException::fromRelationKeyReferencesUnknownColumn(
-                    modelClass: $modelClass,
-                    property: $property,
-                    keyKind: 'foreignKey',
-                    keyValue: $attribute->foreignKey,
-                    referencedClass: $relatedClass,
-                );
+            $referencedKeyColumns = RelationKeyNormalizer::toParentOrderedColumnsOrNull(
+                value: $attribute->localKey,
+                parentPkColumns: $sourceKeyColumns,
+                modelClass: $modelClass,
+                property: $property,
+                keyKind: 'localKey',
+            ) ?? $sourceKeyColumns;
+
+            foreach ($foreignKeyColumns as $column) {
+                if (!\in_array($column, $targetColumnNames, true)) {
+                    throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                        modelClass: $modelClass,
+                        property: $property,
+                        keyKind: 'foreignKey',
+                        keyValue: $column,
+                        referencedClass: $relatedClass,
+                    );
+                }
             }
 
-            if ($attribute->localKey !== null && !\in_array($attribute->localKey, $sourceColumnNames, true)) {
-                throw ModelException::fromRelationKeyReferencesUnknownColumn(
-                    modelClass: $modelClass,
-                    property: $property,
-                    keyKind: 'localKey',
-                    keyValue: $attribute->localKey,
-                    referencedClass: $modelClass,
-                );
+            foreach ($referencedKeyColumns as $column) {
+                if (!\in_array($column, $sourceColumnNames, true)) {
+                    throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                        modelClass: $modelClass,
+                        property: $property,
+                        keyKind: 'localKey',
+                        keyValue: $column,
+                        referencedClass: $modelClass,
+                    );
+                }
             }
 
-            if ($attribute->localKey === null && $sourcePrimaryKey === null) {
-                throw ModelException::fromRelationRequiresPrimaryKey(
-                    modelClass: $modelClass,
-                    property: $property,
-                    side: 'source',
-                );
-            }
-
-            return;
+            return [
+                $foreignKeyColumns,
+                $referencedKeyColumns,
+                null,
+                null,
+            ];
         }
 
         if ($attribute instanceof BelongsTo) {
-            if (!\in_array($attribute->foreignKey, $sourceColumnNames, true)) {
-                throw ModelException::fromRelationKeyReferencesUnknownColumn(
-                    modelClass: $modelClass,
-                    property: $property,
-                    keyKind: 'foreignKey',
-                    keyValue: $attribute->foreignKey,
-                    referencedClass: $modelClass,
-                );
-            }
+            $targetKeyColumns = $this->resolveTargetKeyColumnsFromReflection($relatedReflection);
 
-            if ($attribute->ownerKey !== null && !\in_array($attribute->ownerKey, $targetColumnNames, true)) {
-                throw ModelException::fromRelationKeyReferencesUnknownColumn(
-                    modelClass: $modelClass,
-                    property: $property,
-                    keyKind: 'ownerKey',
-                    keyValue: $attribute->ownerKey,
-                    referencedClass: $relatedClass,
-                );
-            }
-
-            if ($attribute->ownerKey === null && !$this->hasPrimaryKeyFromReflection($relatedReflection)) {
+            if ($targetKeyColumns === null) {
                 throw ModelException::fromRelationRequiresPrimaryKey(
                     modelClass: $modelClass,
                     property: $property,
@@ -1275,11 +1396,58 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 );
             }
 
-            return;
+            $foreignKeyColumns = RelationKeyNormalizer::toParentOrderedColumns(
+                value: $attribute->foreignKey,
+                parentPkColumns: $targetKeyColumns,
+                modelClass: $modelClass,
+                property: $property,
+                keyKind: 'foreignKey',
+            );
+
+            $referencedKeyColumns = RelationKeyNormalizer::toParentOrderedColumnsOrNull(
+                value: $attribute->ownerKey,
+                parentPkColumns: $targetKeyColumns,
+                modelClass: $modelClass,
+                property: $property,
+                keyKind: 'ownerKey',
+            ) ?? $targetKeyColumns;
+
+            foreach ($foreignKeyColumns as $column) {
+                if (!\in_array($column, $sourceColumnNames, true)) {
+                    throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                        modelClass: $modelClass,
+                        property: $property,
+                        keyKind: 'foreignKey',
+                        keyValue: $column,
+                        referencedClass: $modelClass,
+                    );
+                }
+            }
+
+            foreach ($referencedKeyColumns as $column) {
+                if (!\in_array($column, $targetColumnNames, true)) {
+                    throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                        modelClass: $modelClass,
+                        property: $property,
+                        keyKind: 'ownerKey',
+                        keyValue: $column,
+                        referencedClass: $relatedClass,
+                    );
+                }
+            }
+
+            return [
+                $foreignKeyColumns,
+                $referencedKeyColumns,
+                null,
+                null,
+            ];
         }
 
         if ($attribute instanceof BelongsToMany) {
-            if ($sourcePrimaryKey === null) {
+            $sourceKeyColumns = $this->resolveSourceKeyColumns($sourcePrimaryKey, $sourceCompositeKey);
+
+            if ($sourceKeyColumns === null) {
                 throw ModelException::fromRelationRequiresPrimaryKey(
                     modelClass: $modelClass,
                     property: $property,
@@ -1287,7 +1455,9 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 );
             }
 
-            if (!$this->hasPrimaryKeyFromReflection($relatedReflection)) {
+            $targetKeyColumns = $this->resolveTargetKeyColumnsFromReflection($relatedReflection);
+
+            if ($targetKeyColumns === null) {
                 throw ModelException::fromRelationRequiresPrimaryKey(
                     modelClass: $modelClass,
                     property: $property,
@@ -1295,9 +1465,88 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 );
             }
 
-            return;
+            $pivotSourceColumns = RelationKeyNormalizer::toParentOrderedColumns(
+                value: $attribute->localKey,
+                parentPkColumns: $sourceKeyColumns,
+                modelClass: $modelClass,
+                property: $property,
+                keyKind: 'localKey',
+            );
+
+            $pivotTargetColumns = RelationKeyNormalizer::toParentOrderedColumns(
+                value: $attribute->foreignKey,
+                parentPkColumns: $targetKeyColumns,
+                modelClass: $modelClass,
+                property: $property,
+                keyKind: 'foreignKey',
+            );
+
+            return [
+                null,
+                null,
+                $pivotSourceColumns,
+                $pivotTargetColumns,
+            ];
         }
 
+        // @codeCoverageIgnoreStart
+        return [
+            null,
+            null,
+            null,
+            null,
+        ];
+        // @codeCoverageIgnoreEnd
+    }
+
+    /**
+     * @return non-empty-list<string>|null
+     */
+    private function resolveSourceKeyColumns(
+        ?ModelPrimaryKeyInterface $sourcePrimaryKey,
+        ?ModelCompositeKeyInterface $sourceCompositeKey,
+    ): ?array {
+        if ($sourceCompositeKey !== null) {
+            return \array_values($sourceCompositeKey->columns);
+        }
+
+        if ($sourcePrimaryKey !== null) {
+            return [
+                $sourcePrimaryKey->column,
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * @param \ReflectionClass<object> $reflection
+     * @return non-empty-list<string>|null
+     */
+    private function resolveTargetKeyColumnsFromReflection(
+        \ReflectionClass $reflection,
+    ): ?array {
+        $compositeAttributes = $reflection->getAttributes(CompositeKey::class);
+
+        if (\sizeof($compositeAttributes) !== 0) {
+            $composite = $compositeAttributes[0]->newInstance();
+
+            return \array_values($composite->columns);
+        }
+
+        foreach ($reflection->getProperties() as $property) {
+            foreach ($property->getAttributes(ColumnInterface::class, \ReflectionAttribute::IS_INSTANCEOF) as $columnAttribute) {
+                $column = $columnAttribute->newInstance();
+
+                if (\property_exists($column, 'primaryKey') && $column->primaryKey === true) {
+                    return [
+                        $column->name ?? $property->getName(),
+                    ];
+                }
+            }
+        }
+
+        return null;
     }
 
     /**

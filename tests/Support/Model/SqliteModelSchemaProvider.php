@@ -522,4 +522,89 @@ class SqliteModelSchemaProvider implements ModelSchemaProvider
             'name TEXT NOT NULL' .
             ')';
     }
+
+    public function compositeOwnersSchemaSql(): string
+    {
+        return 'CREATE TABLE composite_owners (' .
+            'scope TEXT NOT NULL, ' .
+            'name TEXT NOT NULL, ' .
+            'label TEXT NOT NULL DEFAULT \'\', ' .
+            'PRIMARY KEY (scope, name)' .
+            ')';
+    }
+
+    public function compositeOwnerHasOneChildrenSchemaSql(): string
+    {
+        return 'CREATE TABLE composite_owner_hasone_children (' .
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
+            'owner_scope TEXT NOT NULL, ' .
+            'owner_name TEXT NOT NULL, ' .
+            'label TEXT NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function compositeOwnerHasManyChildrenSchemaSql(): string
+    {
+        return 'CREATE TABLE composite_owner_hasmany_children (' .
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
+            'owner_scope TEXT NOT NULL, ' .
+            'owner_name TEXT NOT NULL, ' .
+            'label TEXT NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function compositeChildOfSingleParentSchemaSql(): string
+    {
+        return 'CREATE TABLE composite_child_of_single_parent (' .
+            'scope TEXT NOT NULL, ' .
+            'name TEXT NOT NULL, ' .
+            'user_id INTEGER NOT NULL, ' .
+            'label TEXT NOT NULL DEFAULT \'\', ' .
+            'PRIMARY KEY (scope, name)' .
+            ')';
+    }
+
+    public function compositeTagsSchemaSql(): string
+    {
+        return 'CREATE TABLE composite_tags (' .
+            'realm TEXT NOT NULL, ' .
+            'code TEXT NOT NULL, ' .
+            'label TEXT NOT NULL DEFAULT \'\', ' .
+            'PRIMARY KEY (realm, code)' .
+            ')';
+    }
+
+    public function compositeOwnerTagsPivotSchemaSql(): string
+    {
+        return 'CREATE TABLE composite_owner_tags (' .
+            'owner_scope TEXT NOT NULL, ' .
+            'owner_name TEXT NOT NULL, ' .
+            'tag_realm TEXT NOT NULL, ' .
+            'tag_code TEXT NOT NULL, ' .
+            'PRIMARY KEY (owner_scope, owner_name, tag_realm, tag_code)' .
+            ')';
+    }
+
+    public function compositeMorphNotesSchemaSql(): string
+    {
+        return 'CREATE TABLE composite_morph_notes (' .
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
+            'ownerType TEXT NULL, ' .
+            'ownerScope TEXT NULL, ' .
+            'ownerName TEXT NULL, ' .
+            'body TEXT NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function compositeMorphTagsPivotSchemaSql(): string
+    {
+        return 'CREATE TABLE composite_morph_tags (' .
+            'owner_type TEXT NOT NULL, ' .
+            'owner_scope TEXT NOT NULL, ' .
+            'owner_name TEXT NOT NULL, ' .
+            'tag_realm TEXT NOT NULL, ' .
+            'tag_code TEXT NOT NULL, ' .
+            'PRIMARY KEY (owner_type, owner_scope, owner_name, tag_realm, tag_code)' .
+            ')';
+    }
 }

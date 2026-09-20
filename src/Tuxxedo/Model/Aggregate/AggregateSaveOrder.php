@@ -20,7 +20,6 @@ use Tuxxedo\Model\Attribute\Relation\HasOne;
 use Tuxxedo\Model\Attribute\Relation\MorphMany;
 use Tuxxedo\Model\Attribute\Relation\MorphOne;
 use Tuxxedo\Model\Attribute\Relation\MorphToMany;
-use Tuxxedo\Model\MetaData\ModelCompositeKeyInterface;
 use Tuxxedo\Model\ModelException;
 use Tuxxedo\Model\RelationInterface;
 use Tuxxedo\Reflection\PropertyReflector;
@@ -36,8 +35,6 @@ class AggregateSaveOrder
     public function sort(
         array $entities,
     ): array {
-        $this->guardCompositeKeys($entities);
-
         /** @var array<int, CollectedEntity> $byId */
         $byId = [];
         /** @var array<int, list<int>> $successors */
@@ -66,24 +63,6 @@ class AggregateSaveOrder
             inDegree: $inDegree,
             successors: $successors,
         );
-    }
-
-    /**
-     * @param list<CollectedEntity> $entities
-     *
-     * @throws ModelException
-     */
-    private function guardCompositeKeys(
-        array $entities,
-    ): void {
-        foreach ($entities as $collected) {
-            if ($collected->metaData->key instanceof ModelCompositeKeyInterface) {
-                throw ModelException::fromAggregateCompositeKeyEntity(
-                    modelClass: $collected->metaData->model,
-                    path: $collected->path,
-                );
-            }
-        }
     }
 
     /**

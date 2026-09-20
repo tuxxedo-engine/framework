@@ -51,6 +51,13 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
 
     private int $subqueryCounter = 0;
 
+    protected int $parameterCounter = 0;
+
+    protected function nextParameterOffset(): int
+    {
+        return $this->parameterCounter++;
+    }
+
     protected function generateWhereSql(
         DialectInterface $dialect,
     ): string {
@@ -235,7 +242,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
             return $this;
         }
 
-        $parameterKey = 'where_' . \sizeof($this->conditions);
+        $parameterKey = 'where_' . $this->nextParameterOffset();
 
         $this->parameters[$parameterKey] = $value;
         $this->conditions[] = new Condition(
@@ -271,7 +278,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
             return $this;
         }
 
-        $parameterKey = 'where_' . \sizeof($this->conditions);
+        $parameterKey = 'where_' . $this->nextParameterOffset();
 
         $this->parameters[$parameterKey] = $value;
         $this->conditions[] = new Condition(
@@ -350,7 +357,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
             return $this;
         }
 
-        $parameterKey = 'where_' . \sizeof($this->conditions);
+        $parameterKey = 'where_' . $this->nextParameterOffset();
 
         $this->parameters[$parameterKey] = $values;
         $this->conditions[] = new Condition(
@@ -381,7 +388,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
             return $this;
         }
 
-        $parameterKey = 'where_' . \sizeof($this->conditions);
+        $parameterKey = 'where_' . $this->nextParameterOffset();
 
         $this->parameters[$parameterKey] = $values;
         $this->conditions[] = new Condition(
@@ -412,7 +419,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
             return $this;
         }
 
-        $parameterKey = 'where_' . \sizeof($this->conditions);
+        $parameterKey = 'where_' . $this->nextParameterOffset();
 
         $this->parameters[$parameterKey] = $values;
         $this->conditions[] = new Condition(
@@ -443,7 +450,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
             return $this;
         }
 
-        $parameterKey = 'where_' . \sizeof($this->conditions);
+        $parameterKey = 'where_' . $this->nextParameterOffset();
 
         $this->parameters[$parameterKey] = $values;
         $this->conditions[] = new Condition(
@@ -589,7 +596,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
             $operator = BetweenOperator::fromInput($operator);
         }
 
-        $parameterKey = 'between_' . \sizeof($this->conditions);
+        $parameterKey = 'between_' . $this->nextParameterOffset();
 
         $this->parameters[$parameterKey . '_from'] = $from;
         $this->parameters[$parameterKey . '_to'] = $to;
@@ -627,7 +634,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
             $operator = BetweenOperator::fromInput($operator);
         }
 
-        $parameterKey = 'between_' . \sizeof($this->conditions);
+        $parameterKey = 'between_' . $this->nextParameterOffset();
 
         $this->parameters[$parameterKey . '_from'] = $from;
         $this->parameters[$parameterKey . '_to'] = $to;
@@ -659,7 +666,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         string $column,
         string $pattern,
     ): static {
-        $parameterKey = 'where_' . \sizeof($this->conditions);
+        $parameterKey = 'where_' . $this->nextParameterOffset();
 
         $this->parameters[$parameterKey] = $pattern;
         $this->conditions[] = new Condition(
@@ -676,7 +683,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         string $column,
         string $pattern,
     ): static {
-        $parameterKey = 'where_' . \sizeof($this->conditions);
+        $parameterKey = 'where_' . $this->nextParameterOffset();
 
         $this->parameters[$parameterKey] = $pattern;
         $this->conditions[] = new Condition(
@@ -693,7 +700,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         string $column,
         string $pattern,
     ): static {
-        $parameterKey = 'where_' . \sizeof($this->conditions);
+        $parameterKey = 'where_' . $this->nextParameterOffset();
 
         $this->parameters[$parameterKey] = $pattern;
         $this->conditions[] = new Condition(
@@ -710,7 +717,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         string $column,
         string $pattern,
     ): static {
-        $parameterKey = 'where_' . \sizeof($this->conditions);
+        $parameterKey = 'where_' . $this->nextParameterOffset();
 
         $this->parameters[$parameterKey] = $pattern;
         $this->conditions[] = new Condition(
@@ -768,7 +775,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         string $sql,
         array $bindings = [],
     ): static {
-        $prefix = 'raw_' . \sizeof($this->conditions) . '_';
+        $prefix = 'raw_' . $this->nextParameterOffset() . '_';
 
         $rewritten = \preg_replace_callback(
             '/(?<!:):([a-zA-Z_][a-zA-Z0-9_]*)/',

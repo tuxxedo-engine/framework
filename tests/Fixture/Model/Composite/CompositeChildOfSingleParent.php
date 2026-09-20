@@ -11,18 +11,18 @@
 
 declare(strict_types=1);
 
-namespace Fixture\Model;
+namespace Fixture\Model\Composite;
 
+use Fixture\Model\User;
 use Tuxxedo\Model\Attribute\Column\Integer;
 use Tuxxedo\Model\Attribute\Column\Varchar;
 use Tuxxedo\Model\Attribute\CompositeKey;
-use Tuxxedo\Model\Attribute\Relation\HasMany;
+use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Table;
-use Tuxxedo\Model\Relation;
 
-#[Table(name: 'composite_key_with_relation')]
+#[Table(name: 'composite_child_of_single_parent')]
 #[CompositeKey('scope', 'name')]
-class CompositeKeyWithRelation
+class CompositeChildOfSingleParent
 {
     #[Varchar(length: 64)]
     public string $scope = '';
@@ -30,15 +30,15 @@ class CompositeKeyWithRelation
     #[Varchar(length: 64)]
     public string $name = '';
 
-    #[Integer]
-    public int $value = 0;
+    #[Integer(name: 'user_id')]
+    public int $userId = 0;
 
-    /**
-     * @var Relation<Post>|null
-     */
-    #[HasMany(
-        related: Post::class,
+    #[Varchar(length: 255)]
+    public string $label = '';
+
+    #[BelongsTo(
+        related: User::class,
         foreignKey: 'user_id',
     )]
-    public ?Relation $posts = null;
+    public ?User $user = null;
 }

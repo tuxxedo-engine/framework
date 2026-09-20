@@ -24,7 +24,6 @@ use Fixture\Model\Polymorphic\PolyTag;
 use Fixture\Model\Post;
 use Fixture\Model\Profile;
 use Fixture\Model\Role;
-use Fixture\Model\Setting;
 use Fixture\Model\User;
 use Fixture\Validator\FixtureViolationCode;
 use Tuxxedo\Model\ModelException;
@@ -39,7 +38,6 @@ abstract class AbstractAggregateSaveIntegrationTestCase extends AbstractModelInt
         parent::setUp();
 
         $this->createAllFixtureTables();
-        $this->createSettingsTable();
 
         $this->createPolymorphicTables();
 
@@ -350,30 +348,6 @@ abstract class AbstractAggregateSaveIntegrationTestCase extends AbstractModelInt
         }
 
         self::assertSame(0, $this->countRows(table: 'aggregate_failing_models'));
-    }
-
-    public function testAggregateSaveRaisesForCompositeKeyRoot(): void
-    {
-        $setting = new Setting();
-        $setting->scope = 'system';
-        $setting->name = 'timezone';
-        $setting->value = 'UTC';
-
-        try {
-            (void) $this->modelsManager->save(
-                model: $setting,
-                scope: ValidationScope::AGGREGATE,
-            );
-
-            self::fail('Expected ModelException for composite-key root');
-        } catch (ModelException $exception) {
-            self::assertStringContainsString(
-                'composite-key',
-                \strtolower($exception->getMessage()),
-            );
-        }
-
-        self::assertSame(0, $this->countRows(table: 'settings'));
     }
 
     public function testAggregateSaveThrowsForInstanceLevelCycle(): void

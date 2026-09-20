@@ -806,10 +806,53 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Relation "%s" on property "%s" is not supported because the model declares a composite key; single-column parent keys are required for relations in this Engine release',
+                'Invalid model class "%s": Relation "%s" on property "%s" is not supported on a composite-key parent; through relations require a single-column parent key',
                 $modelClass,
                 $relationClass,
                 $property,
+            ),
+        );
+    }
+
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromRelationForeignKeyArityMismatch(
+        string $modelClass,
+        string $property,
+        string $keyKind,
+        int $expected,
+        int $actual,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Relation on property "%s" declares a %s with %d column(s) but the referenced parent key has %d column(s); the arities must match',
+                $modelClass,
+                $property,
+                $keyKind,
+                $actual,
+                $expected,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromRelationForeignKeyMapMissingParentColumn(
+        string $modelClass,
+        string $property,
+        string $keyKind,
+        string $parentColumn,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": Relation on property "%s" declares a map-form %s but does not provide an entry for parent column "%s"',
+                $modelClass,
+                $property,
+                $keyKind,
+                $parentColumn,
             ),
         );
     }
@@ -932,24 +975,6 @@ class ModelException extends \Exception
                 $modelClass,
                 $property,
                 $declaredType,
-            ),
-        );
-    }
-
-    /**
-     * @param class-string $modelClass
-     */
-    public static function fromAggregateCompositeKeyEntity(
-        string $modelClass,
-        string $path,
-    ): self {
-        return new self(
-            message: \sprintf(
-                'Aggregate save cannot include entity "%s" at path "%s": composite-key entities are not yet supported in aggregate graphs (deferred post-v1.0)',
-                $modelClass,
-                $path === ''
-                    ? '(root)'
-                    : $path,
             ),
         );
     }

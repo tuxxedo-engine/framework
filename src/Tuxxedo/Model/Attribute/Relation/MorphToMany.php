@@ -20,14 +20,16 @@ readonly class MorphToMany implements InversePolymorphicRelationInterface
 {
     /**
      * @param class-string $related
+     * @param string|non-empty-array<string> $idColumn
+     * @param string|non-empty-array<string> $foreignKey
      * @param array<string, class-string>|null $typeMap
      */
     public function __construct(
         public string $related,
         public string $table,
         public string $typeColumn,
-        public string $idColumn,
-        public string $foreignKey,
+        public string|array $idColumn,
+        public string|array $foreignKey,
         public ?array $typeMap = null,
         public CascadeAction $onSave = CascadeAction::NO_ACTION,
         public CascadeAction $onDelete = CascadeAction::NO_ACTION,

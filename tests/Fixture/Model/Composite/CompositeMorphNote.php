@@ -11,26 +11,27 @@
 
 declare(strict_types=1);
 
-namespace Fixture\Model;
+namespace Fixture\Model\Composite;
 
 use Tuxxedo\Model\Attribute\Column\Integer;
 use Tuxxedo\Model\Attribute\Column\Varchar;
-use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Table;
 
-#[Table(name: 'belongs_to_composite_target')]
-class BelongsToCompositeTarget
+#[Table(name: 'composite_morph_notes')]
+class CompositeMorphNote
 {
     #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
-    #[Varchar(name: 'target_ref', length: 64)]
-    public string $targetRef = '';
+    #[Varchar(length: 64)]
+    public ?string $ownerType = null;
 
-    #[BelongsTo(
-        related: Setting::class,
-        foreignKey: 'target_ref',
-        ownerKey: 'name',
-    )]
-    public ?Setting $target = null;
+    #[Varchar(length: 64)]
+    public ?string $ownerScope = null;
+
+    #[Varchar(length: 64)]
+    public ?string $ownerName = null;
+
+    #[Varchar(length: 255)]
+    public string $body = '';
 }

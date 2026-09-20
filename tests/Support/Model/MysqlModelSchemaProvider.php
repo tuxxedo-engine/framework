@@ -522,4 +522,89 @@ class MysqlModelSchemaProvider implements ModelSchemaProvider
             'name VARCHAR(100) NOT NULL' .
             ')';
     }
+
+    public function compositeOwnersSchemaSql(): string
+    {
+        return 'CREATE TABLE composite_owners (' .
+            'scope VARCHAR(64) NOT NULL, ' .
+            'name VARCHAR(64) NOT NULL, ' .
+            'label VARCHAR(255) NOT NULL DEFAULT \'\', ' .
+            'PRIMARY KEY (scope, name)' .
+            ')';
+    }
+
+    public function compositeOwnerHasOneChildrenSchemaSql(): string
+    {
+        return 'CREATE TABLE composite_owner_hasone_children (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'owner_scope VARCHAR(64) NOT NULL, ' .
+            'owner_name VARCHAR(64) NOT NULL, ' .
+            'label VARCHAR(255) NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function compositeOwnerHasManyChildrenSchemaSql(): string
+    {
+        return 'CREATE TABLE composite_owner_hasmany_children (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'owner_scope VARCHAR(64) NOT NULL, ' .
+            'owner_name VARCHAR(64) NOT NULL, ' .
+            'label VARCHAR(255) NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function compositeChildOfSingleParentSchemaSql(): string
+    {
+        return 'CREATE TABLE composite_child_of_single_parent (' .
+            'scope VARCHAR(64) NOT NULL, ' .
+            'name VARCHAR(64) NOT NULL, ' .
+            'user_id INT NOT NULL, ' .
+            'label VARCHAR(255) NOT NULL DEFAULT \'\', ' .
+            'PRIMARY KEY (scope, name)' .
+            ')';
+    }
+
+    public function compositeTagsSchemaSql(): string
+    {
+        return 'CREATE TABLE composite_tags (' .
+            'realm VARCHAR(64) NOT NULL, ' .
+            'code VARCHAR(64) NOT NULL, ' .
+            'label VARCHAR(255) NOT NULL DEFAULT \'\', ' .
+            'PRIMARY KEY (realm, code)' .
+            ')';
+    }
+
+    public function compositeOwnerTagsPivotSchemaSql(): string
+    {
+        return 'CREATE TABLE composite_owner_tags (' .
+            'owner_scope VARCHAR(64) NOT NULL, ' .
+            'owner_name VARCHAR(64) NOT NULL, ' .
+            'tag_realm VARCHAR(64) NOT NULL, ' .
+            'tag_code VARCHAR(64) NOT NULL, ' .
+            'PRIMARY KEY (owner_scope, owner_name, tag_realm, tag_code)' .
+            ')';
+    }
+
+    public function compositeMorphNotesSchemaSql(): string
+    {
+        return 'CREATE TABLE composite_morph_notes (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'ownerType VARCHAR(64) NULL, ' .
+            'ownerScope VARCHAR(64) NULL, ' .
+            'ownerName VARCHAR(64) NULL, ' .
+            'body VARCHAR(255) NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function compositeMorphTagsPivotSchemaSql(): string
+    {
+        return 'CREATE TABLE composite_morph_tags (' .
+            'owner_type VARCHAR(64) NOT NULL, ' .
+            'owner_scope VARCHAR(64) NOT NULL, ' .
+            'owner_name VARCHAR(64) NOT NULL, ' .
+            'tag_realm VARCHAR(64) NOT NULL, ' .
+            'tag_code VARCHAR(64) NOT NULL, ' .
+            'PRIMARY KEY (owner_type, owner_scope, owner_name, tag_realm, tag_code)' .
+            ')';
+    }
 }

@@ -124,4 +124,20 @@ interface ModelSchemaProvider
     public function strictPostersSchemaSql(): string;
 
     public function localKeyPostersSchemaSql(): string;
+
+    public function compositeOwnersSchemaSql(): string;
+
+    public function compositeOwnerHasOneChildrenSchemaSql(): string;
+
+    public function compositeOwnerHasManyChildrenSchemaSql(): string;
+
+    public function compositeChildOfSingleParentSchemaSql(): string;
+
+    public function compositeTagsSchemaSql(): string;
+
+    public function compositeOwnerTagsPivotSchemaSql(): string;
+
+    public function compositeMorphNotesSchemaSql(): string;
+
+    public function compositeMorphTagsPivotSchemaSql(): string;
 }

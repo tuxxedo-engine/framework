@@ -19,7 +19,10 @@ interface PolymorphicRelationInterface extends RelationAttributeInterface
         get;
     }
 
-    public string $idColumn {
+    /**
+     * @var string|non-empty-array<string>
+     */
+    public string|array $idColumn {
         get;
     }
 
