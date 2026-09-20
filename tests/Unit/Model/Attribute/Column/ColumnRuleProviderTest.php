@@ -17,6 +17,7 @@ use Fixture\Validator\FixtureStatus;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Database\Query\Statement\Table\Column\CharColumn;
+use Tuxxedo\Database\Query\Statement\Table\Column\UuidColumn;
 use Tuxxedo\Database\Query\Statement\Table\CreateTableStatement;
 use Tuxxedo\Model\Attribute\Column\BigInteger;
 use Tuxxedo\Model\Attribute\Column\Boolean;
@@ -35,6 +36,7 @@ use Tuxxedo\Model\Attribute\Column\Time;
 use Tuxxedo\Model\Attribute\Column\TimeFormat;
 use Tuxxedo\Model\Attribute\Column\Timestamp;
 use Tuxxedo\Model\Attribute\Column\TinyInteger;
+use Tuxxedo\Model\Attribute\Column\Ulid;
 use Tuxxedo\Model\Attribute\Column\Uuid;
 use Tuxxedo\Model\Attribute\Column\UuidVersion;
 use Tuxxedo\Model\Attribute\Column\Varchar;
@@ -402,7 +404,7 @@ class ColumnRuleProviderTest extends TestCase
         self::assertNull($column->coercer);
     }
 
-    public function testUuidToColumnTypeProducesCharColumnOfLength36(): void
+    public function testUuidToColumnTypeProducesUuidColumn(): void
     {
         $statement = new CreateTableStatement(
             table: 'entities',
@@ -413,9 +415,8 @@ class ColumnRuleProviderTest extends TestCase
             propertyName: 'id',
         );
 
-        self::assertInstanceOf(CharColumn::class, $column);
+        self::assertInstanceOf(UuidColumn::class, $column);
         self::assertSame('id', $column->name);
-        self::assertSame(36, $column->length);
         self::assertFalse($column->nullable);
         self::assertFalse($column->primaryKey);
         self::assertFalse($column->unique);
@@ -439,12 +440,57 @@ class ColumnRuleProviderTest extends TestCase
             propertyName: 'id',
         );
 
-        self::assertInstanceOf(CharColumn::class, $column);
+        self::assertInstanceOf(UuidColumn::class, $column);
         self::assertSame('entity_uuid', $column->name);
-        self::assertSame(36, $column->length);
         self::assertTrue($column->nullable);
         self::assertTrue($column->primaryKey);
         self::assertTrue($column->unique);
         self::assertSame('00000000-0000-0000-0000-000000000000', $column->default);
+    }
+
+    public function testUlidToColumnTypeProducesCharColumnOfLength26(): void
+    {
+        $statement = new CreateTableStatement(
+            table: 'records',
+        );
+
+        $column = (new Ulid())->toColumnType(
+            statement: $statement,
+            propertyName: 'id',
+        );
+
+        self::assertInstanceOf(CharColumn::class, $column);
+        self::assertSame('id', $column->name);
+        self::assertSame(26, $column->length);
+        self::assertFalse($column->nullable);
+        self::assertFalse($column->primaryKey);
+        self::assertFalse($column->unique);
+        self::assertNull($column->default);
+    }
+
+    public function testUlidToColumnTypeUsesExplicitNameOverride(): void
+    {
+        $statement = new CreateTableStatement(
+            table: 'records',
+        );
+
+        $column = (new Ulid(
+            name: 'record_ulid',
+            nullable: true,
+            primaryKey: true,
+            unique: true,
+            default: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+        ))->toColumnType(
+            statement: $statement,
+            propertyName: 'id',
+        );
+
+        self::assertInstanceOf(CharColumn::class, $column);
+        self::assertSame('record_ulid', $column->name);
+        self::assertSame(26, $column->length);
+        self::assertTrue($column->nullable);
+        self::assertTrue($column->primaryKey);
+        self::assertTrue($column->unique);
+        self::assertSame('01ARZ3NDEKTSV4RRFFQ69G5FAV', $column->default);
     }
 }

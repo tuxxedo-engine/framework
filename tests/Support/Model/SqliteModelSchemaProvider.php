@@ -607,4 +607,37 @@ class SqliteModelSchemaProvider implements ModelSchemaProvider
             'PRIMARY KEY (owner_type, owner_scope, owner_name, tag_realm, tag_code)' .
             ')';
     }
+
+    public function uuidV7OwnersSchemaSql(): string
+    {
+        return 'CREATE TABLE uuid_v7_owners (' .
+            'id TEXT NOT NULL PRIMARY KEY, ' .
+            'label TEXT NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function uuidV7ChildrenSchemaSql(): string
+    {
+        return 'CREATE TABLE uuid_v7_children (' .
+            'id TEXT NOT NULL PRIMARY KEY, ' .
+            'owner_id TEXT NULL, ' .
+            'label TEXT NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function ulidRecordsSchemaSql(): string
+    {
+        return 'CREATE TABLE ulid_records (' .
+            'id TEXT NOT NULL PRIMARY KEY, ' .
+            'label TEXT NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function uuidV4ExplicitsSchemaSql(): string
+    {
+        return 'CREATE TABLE uuid_v4_explicits (' .
+            'id TEXT NOT NULL PRIMARY KEY, ' .
+            'label TEXT NOT NULL DEFAULT \'\'' .
+            ')';
+    }
 }

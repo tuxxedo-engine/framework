@@ -23,6 +23,7 @@ use Tuxxedo\Database\Query\Statement\Table\Column\DateTimeColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\DoubleColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\JsonColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\TinyIntegerColumn;
+use Tuxxedo\Database\Query\Statement\Table\Column\UuidColumn;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddColumn;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddForeignKey;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddIndex;
@@ -120,6 +121,10 @@ class PgsqlDialect implements DialectInterface
 
         if ($column instanceof TinyIntegerColumn) {
             return 'SMALLINT';
+        }
+
+        if ($column instanceof UuidColumn) {
+            return 'UUID';
         }
 
         return null;

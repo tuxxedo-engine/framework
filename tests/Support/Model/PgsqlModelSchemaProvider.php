@@ -607,4 +607,37 @@ class PgsqlModelSchemaProvider implements ModelSchemaProvider
             'PRIMARY KEY (owner_type, owner_scope, owner_name, tag_realm, tag_code)' .
             ')';
     }
+
+    public function uuidV7OwnersSchemaSql(): string
+    {
+        return 'CREATE TABLE uuid_v7_owners (' .
+            'id UUID NOT NULL PRIMARY KEY, ' .
+            'label VARCHAR(255) NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function uuidV7ChildrenSchemaSql(): string
+    {
+        return 'CREATE TABLE uuid_v7_children (' .
+            'id UUID NOT NULL PRIMARY KEY, ' .
+            'owner_id UUID NULL, ' .
+            'label VARCHAR(255) NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function ulidRecordsSchemaSql(): string
+    {
+        return 'CREATE TABLE ulid_records (' .
+            'id CHAR(26) NOT NULL PRIMARY KEY, ' .
+            'label VARCHAR(255) NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function uuidV4ExplicitsSchemaSql(): string
+    {
+        return 'CREATE TABLE uuid_v4_explicits (' .
+            'id UUID NOT NULL PRIMARY KEY, ' .
+            'label VARCHAR(255) NOT NULL DEFAULT \'\'' .
+            ')';
+    }
 }

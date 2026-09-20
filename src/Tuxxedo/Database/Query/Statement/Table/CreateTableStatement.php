@@ -35,6 +35,7 @@ use Tuxxedo\Database\Query\Statement\Table\Column\TextColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\TimeColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\TimestampColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\TinyIntegerColumn;
+use Tuxxedo\Database\Query\Statement\Table\Column\UuidColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\VarcharColumn;
 use Tuxxedo\Database\SqlException;
 
@@ -125,6 +126,22 @@ class CreateTableStatement extends AbstractTableStatement implements CreateTable
         return $this->columns[] = new CharColumn(
             name: $name,
             length: $length,
+            nullable: $nullable,
+            primaryKey: $primaryKey,
+            unique: $unique,
+            default: $default,
+        );
+    }
+
+    public function uuid(
+        string $name,
+        bool $nullable = false,
+        bool $primaryKey = false,
+        bool $unique = false,
+        ?string $default = null,
+    ): ColumnInterface {
+        return $this->columns[] = new UuidColumn(
+            name: $name,
             nullable: $nullable,
             primaryKey: $primaryKey,
             unique: $unique,

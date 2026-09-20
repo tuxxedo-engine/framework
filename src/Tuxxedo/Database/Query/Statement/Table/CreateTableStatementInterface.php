@@ -49,6 +49,14 @@ interface CreateTableStatementInterface extends StatementInterface
         string|null $default = null,
     ): ColumnInterface;
 
+    public function uuid(
+        string $name,
+        bool $nullable = false,
+        bool $primaryKey = false,
+        bool $unique = false,
+        string|null $default = null,
+    ): ColumnInterface;
+
     public function date(
         string $name,
         bool $nullable = false,

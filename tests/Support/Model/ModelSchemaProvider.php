@@ -140,4 +140,12 @@ interface ModelSchemaProvider
     public function compositeMorphNotesSchemaSql(): string;
 
     public function compositeMorphTagsPivotSchemaSql(): string;
+
+    public function uuidV7OwnersSchemaSql(): string;
+
+    public function uuidV7ChildrenSchemaSql(): string;
+
+    public function ulidRecordsSchemaSql(): string;
+
+    public function uuidV4ExplicitsSchemaSql(): string;
 }

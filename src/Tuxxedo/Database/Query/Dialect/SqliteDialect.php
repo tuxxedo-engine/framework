@@ -17,6 +17,7 @@ use Tuxxedo\Database\Query\Parser\StatementParserResult;
 use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\BooleanColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
+use Tuxxedo\Database\Query\Statement\Table\Column\UuidColumn;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddColumn;
 use Tuxxedo\Database\Query\Statement\Table\Operation\DropColumn;
 use Tuxxedo\Database\Query\Statement\Table\Operation\RenameColumn;
@@ -60,6 +61,10 @@ class SqliteDialect implements DialectInterface
     ): ?string {
         if ($column instanceof BooleanColumn) {
             return 'INTEGER';
+        }
+
+        if ($column instanceof UuidColumn) {
+            return 'TEXT';
         }
 
         return null;

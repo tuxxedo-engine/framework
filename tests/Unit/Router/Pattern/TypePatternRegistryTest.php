@@ -25,7 +25,7 @@ class TypePatternRegistryTest extends TestCase
     {
         $registry = TypePatternRegistry::createDefault();
 
-        self::assertCount(15, $registry->patterns);
+        self::assertCount(16, $registry->patterns);
     }
 
     public function testCreateDefaultPatternsAreIndexedByName(): void
@@ -37,11 +37,11 @@ class TypePatternRegistryTest extends TestCase
         }
     }
 
-    public function testGetDefaultsReturnsAllFifteenInstances(): void
+    public function testGetDefaultsReturnsAllSixteenInstances(): void
     {
         $defaults = TypePatternRegistry::getDefaults();
 
-        self::assertCount(15, $defaults);
+        self::assertCount(16, $defaults);
     }
 
     public function testGetDefaultsReturnsTypePatternInterfaceInstances(): void
@@ -64,7 +64,7 @@ class TypePatternRegistryTest extends TestCase
             ],
         );
 
-        self::assertCount(16, $registry->patterns);
+        self::assertCount(17, $registry->patterns);
         self::assertTrue($registry->has('custom'));
     }
 

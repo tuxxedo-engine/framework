@@ -47,6 +47,7 @@ use Tuxxedo\Validator\Rule\PrefixedWith\PrefixedWithViolationCode;
 use Tuxxedo\Validator\Rule\Range\RangeViolationCode;
 use Tuxxedo\Validator\Rule\Regex\RegexViolationCode;
 use Tuxxedo\Validator\Rule\SuffixedWith\SuffixedWithViolationCode;
+use Tuxxedo\Validator\Rule\Ulid\UlidViolationCode;
 use Tuxxedo\Validator\Rule\Url\UrlViolationCode;
 use Tuxxedo\Validator\Rule\Uuid\UuidViolationCode;
 use Tuxxedo\Validator\Rule\UuidV4\UuidV4ViolationCode;
@@ -129,6 +130,7 @@ class DefaultEnglishMessageFormatter implements MessageFormatterInterface
             UuidViolationCode::INVALID_FORMAT->value => 'Value at "{path}" is not a valid UUID',
             UuidV4ViolationCode::INVALID_FORMAT->value => 'Value at "{path}" is not a valid UUID v4',
             UuidV7ViolationCode::INVALID_FORMAT->value => 'Value at "{path}" is not a valid UUID v7',
+            UlidViolationCode::INVALID_FORMAT->value => 'Value at "{path}" is not a valid ULID',
             EanViolationCode::INVALID_FORMAT->value => 'Value at "{path}" is not a valid EAN barcode',
             EanViolationCode::INVALID_CHECKSUM->value => 'Value at "{path}" has an invalid EAN checksum',
             IpViolationCode::INVALID_FORMAT->value => 'Value at "{path}" is not a valid IP address',

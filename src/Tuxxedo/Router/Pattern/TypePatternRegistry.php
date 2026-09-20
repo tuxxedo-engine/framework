@@ -58,6 +58,7 @@ class TypePatternRegistry implements TypePatternRegistryInterface
             new Type\Sha256(),
             new Type\Slug(),
             new Type\Timestamp(),
+            new Type\Ulid(),
             new Type\Uuid(),
             new Type\UuidV4(),
             new Type\UuidV7(),
