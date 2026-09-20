@@ -11,8 +11,10 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Database\Query\Dialect;
+namespace Tuxxedo\Database\Query\Dialect\Mysql;
 
+use Tuxxedo\Database\Query\Dialect\DialectInterface;
+use Tuxxedo\Database\Query\Dialect\NativeColumnTypeParserInterface;
 use Tuxxedo\Database\Query\Parser\StatementParserResult;
 use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\BooleanColumn;
@@ -88,6 +90,11 @@ class MysqlDialect implements DialectInterface
         }
 
         return null;
+    }
+
+    public function nativeColumnTypeParser(): NativeColumnTypeParserInterface
+    {
+        return new MysqlNativeColumnTypeParser();
     }
 
     public function autoIncrementClause(): string

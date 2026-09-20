@@ -53,7 +53,8 @@ class DescribeTableStatement implements DescribeTableStatementInterface
     public function all(
         ?ConnectionInterface $connection = null,
     ): array {
-        $result = $this->execute($connection);
+        $resolvedConnection = $this->resolveConnection($connection);
+        $result = $this->execute($resolvedConnection);
 
         $columns = [];
         $rowCount = \sizeof($result);
@@ -65,6 +66,7 @@ class DescribeTableStatement implements DescribeTableStatementInterface
             $columns[] = new ColumnDescription(
                 name: $row['name'],
                 nativeType: $row['native_type'],
+                dialect: $resolvedConnection->dialect,
                 nullable: (bool) (int) $row['nullable'],
                 default: $row['column_default'],
                 primary: (bool) (int) $row['is_primary'],

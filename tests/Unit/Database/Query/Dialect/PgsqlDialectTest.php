@@ -16,7 +16,7 @@ namespace Unit\Database\Query\Dialect;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
-use Tuxxedo\Database\Query\Dialect\PgsqlDialect;
+use Tuxxedo\Database\Query\Dialect\Pgsql\PgsqlDialect;
 use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\BooleanColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;

@@ -15,8 +15,9 @@ namespace Unit\Database\Query\Statement\Table\Column;
 
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
-use Tuxxedo\Database\Query\Dialect\PgsqlDialect;
-use Tuxxedo\Database\Query\Dialect\SqliteDialect;
+use Tuxxedo\Database\Query\Dialect\NativeColumnTypeParserInterface;
+use Tuxxedo\Database\Query\Dialect\Pgsql\PgsqlDialect;
+use Tuxxedo\Database\Query\Dialect\Sqlite\SqliteDialect;
 use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\UuidColumn;
@@ -74,6 +75,11 @@ class UuidColumnTest extends TestCase
                 ColumnInterface $column,
             ): ?string {
                 return null;
+            }
+
+            public function nativeColumnTypeParser(): NativeColumnTypeParserInterface
+            {
+                throw new \LogicException('not used');
             }
 
             public function autoIncrementClause(): string

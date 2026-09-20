@@ -175,4 +175,17 @@ class DatabaseException extends \Exception
             ),
         );
     }
+
+    public static function fromUnknownNativeColumnType(
+        string $nativeType,
+        string $driver,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot parse native column type "%s" for driver "%s": no matching Engine column type; if this is a valid type for the driver, extend the driver\'s NativeColumnTypeParserInterface implementation',
+                $nativeType,
+                $driver,
+            ),
+        );
+    }
 }

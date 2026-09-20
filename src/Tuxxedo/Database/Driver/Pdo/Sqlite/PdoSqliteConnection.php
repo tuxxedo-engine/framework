@@ -20,7 +20,7 @@ use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
 use Tuxxedo\Database\Driver\Pdo\Config\PdoConnectionConfigInterface;
 use Tuxxedo\Database\Driver\Pdo\Sqlite\Config\PdoSqliteConnectionConfigInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
-use Tuxxedo\Database\Query\Dialect\SqliteDialect;
+use Tuxxedo\Database\Query\Dialect\Sqlite\SqliteDialect;
 
 class PdoSqliteConnection extends AbstractPdoConnection
 {

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Support\Database;
 
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
+use Tuxxedo\Database\Query\Dialect\NativeColumnTypeParserInterface;
 use Tuxxedo\Database\Query\Parser\StatementParserResult;
 use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
@@ -90,6 +91,11 @@ class StubDialect implements DialectInterface
         ColumnInterface $column,
     ): ?string {
         return null;
+    }
+
+    public function nativeColumnTypeParser(): NativeColumnTypeParserInterface
+    {
+        return new StubNativeColumnTypeParser();
     }
 
     public function autoIncrementClause(): string

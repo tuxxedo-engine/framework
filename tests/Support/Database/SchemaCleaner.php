@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace Support\Database;
 
 use Tuxxedo\Database\Driver\ConnectionInterface;
-use Tuxxedo\Database\Query\Dialect\MysqlDialect;
-use Tuxxedo\Database\Query\Dialect\PgsqlDialect;
-use Tuxxedo\Database\Query\Dialect\SqliteDialect;
+use Tuxxedo\Database\Query\Dialect\Mysql\MysqlDialect;
+use Tuxxedo\Database\Query\Dialect\Pgsql\PgsqlDialect;
+use Tuxxedo\Database\Query\Dialect\Sqlite\SqliteDialect;
 
 class SchemaCleaner
 {

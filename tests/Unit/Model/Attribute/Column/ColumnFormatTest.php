@@ -15,7 +15,7 @@ namespace Unit\Model\Attribute\Column;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Database\Query\Dialect\SqliteDialect;
+use Tuxxedo\Database\Query\Dialect\Sqlite\SqliteDialect;
 use Tuxxedo\Model\Attribute\Column\Date;
 use Tuxxedo\Model\Attribute\Column\DateFormat;
 use Tuxxedo\Model\Attribute\Column\DateTime;

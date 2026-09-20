@@ -13,15 +13,26 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Statement\Table;
 
+use Tuxxedo\Database\Query\Dialect\DialectInterface;
+use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
+
 class ColumnDescription implements ColumnDescriptionInterface
 {
     public function __construct(
         public readonly string $name,
         public readonly string $nativeType,
+        public readonly DialectInterface $dialect,
         public readonly bool $nullable,
         public readonly ?string $default,
         public readonly bool $primary,
         public readonly bool $autoIncrement,
     ) {
+    }
+
+    public function toColumn(): ColumnInterface
+    {
+        return $this->dialect->nativeColumnTypeParser()->parse(
+            description: $this,
+        );
     }
 }

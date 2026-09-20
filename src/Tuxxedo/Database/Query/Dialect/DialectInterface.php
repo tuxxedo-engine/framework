@@ -46,6 +46,8 @@ interface DialectInterface
         ColumnInterface $column,
     ): ?string;
 
+    public function nativeColumnTypeParser(): NativeColumnTypeParserInterface;
+
     public function autoIncrementClause(): string;
 
     public function interpretBoolean(

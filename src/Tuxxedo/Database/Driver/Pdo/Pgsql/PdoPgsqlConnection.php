@@ -20,7 +20,7 @@ use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
 use Tuxxedo\Database\Driver\Pdo\Config\PdoConnectionConfigInterface;
 use Tuxxedo\Database\Driver\Pdo\Pgsql\Config\PdoPgsqlConnectionConfigInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
-use Tuxxedo\Database\Query\Dialect\PgsqlDialect;
+use Tuxxedo\Database\Query\Dialect\Pgsql\PgsqlDialect;
 
 class PdoPgsqlConnection extends AbstractPdoConnection
 {

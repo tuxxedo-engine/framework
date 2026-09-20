@@ -21,7 +21,7 @@ use Tuxxedo\Database\Driver\Pdo\AbstractPdoConnection;
 use Tuxxedo\Database\Driver\Pdo\Config\PdoConnectionConfigInterface;
 use Tuxxedo\Database\Driver\Pdo\Mysql\Config\PdoMysqlConnectionConfigInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
-use Tuxxedo\Database\Query\Dialect\MysqlDialect;
+use Tuxxedo\Database\Query\Dialect\Mysql\MysqlDialect;
 
 class PdoMysqlConnection extends AbstractPdoConnection
 {

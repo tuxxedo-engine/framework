@@ -15,7 +15,7 @@ namespace Unit\Database\Query\Dialect;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Database\Query\Dialect\MysqlDialect;
+use Tuxxedo\Database\Query\Dialect\Mysql\MysqlDialect;
 use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\IntegerColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\VarcharColumn;

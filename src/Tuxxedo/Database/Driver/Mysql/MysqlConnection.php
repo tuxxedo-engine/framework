@@ -20,7 +20,7 @@ use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\AbstractConnection;
 use Tuxxedo\Database\Driver\Mysql\Config\MysqlConnectionConfigInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
-use Tuxxedo\Database\Query\Dialect\MysqlDialect;
+use Tuxxedo\Database\Query\Dialect\Mysql\MysqlDialect;
 use Tuxxedo\Database\Query\Parser\StatementParser;
 use Tuxxedo\Database\Query\Parser\StatementParserInterface;
 

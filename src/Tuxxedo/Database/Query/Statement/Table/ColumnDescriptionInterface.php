@@ -13,14 +13,21 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Statement\Table;
 
+use Tuxxedo\Database\DatabaseException;
+use Tuxxedo\Database\Query\Dialect\DialectInterface;
+use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
+
 interface ColumnDescriptionInterface
 {
     public string $name {
         get;
     }
 
-    // @todo Hydrate this raw driver string into an Engine-native column type attribute
     public string $nativeType {
+        get;
+    }
+
+    public DialectInterface $dialect {
         get;
     }
 
@@ -39,4 +46,9 @@ interface ColumnDescriptionInterface
     public bool $autoIncrement {
         get;
     }
+
+    /**
+     * @throws DatabaseException when the native type cannot be parsed
+     */
+    public function toColumn(): ColumnInterface;
 }

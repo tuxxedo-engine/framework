@@ -22,7 +22,7 @@ use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\AbstractConnection;
 use Tuxxedo\Database\Driver\Pgsql\Config\PgsqlConnectionConfigInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
-use Tuxxedo\Database\Query\Dialect\PgsqlDialect;
+use Tuxxedo\Database\Query\Dialect\Pgsql\PgsqlDialect;
 use Tuxxedo\Database\Query\Parser\StatementParser;
 use Tuxxedo\Database\Query\Parser\StatementParserInterface;
 

@@ -20,7 +20,7 @@ use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\AbstractConnection;
 use Tuxxedo\Database\Driver\Sqlite\Config\SqliteConnectionConfigInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
-use Tuxxedo\Database\Query\Dialect\SqliteDialect;
+use Tuxxedo\Database\Query\Dialect\Sqlite\SqliteDialect;
 use Tuxxedo\Database\Query\Parser\StatementParser;
 use Tuxxedo\Database\Query\Parser\StatementParserInterface;
 
