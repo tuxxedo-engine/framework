@@ -16,7 +16,6 @@ namespace Unit\Security\Jwt;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Support\Security\Jwt\JwtKeyFixtures;
-use Support\Temporal\FixedClock;
 use Tuxxedo\Security\Jwt\Algorithm;
 use Tuxxedo\Security\Jwt\Constraint\EncryptedWith;
 use Tuxxedo\Security\Jwt\Constraint\IdentifiedBy;
@@ -36,6 +35,8 @@ use Tuxxedo\Security\Jwt\Key\RsaPublicKey;
 use Tuxxedo\Security\Jwt\Key\SymmetricKey;
 use Tuxxedo\Security\Jwt\KeyManagementAlgorithm;
 use Tuxxedo\Security\Jwt\Signer\EdDsaSigner;
+use Tuxxedo\Temporal\FixedClock;
+use Tuxxedo\Temporal\Instant;
 
 class JwtManagerTest extends TestCase
 {
@@ -388,8 +389,8 @@ class JwtManagerTest extends TestCase
     {
         $manager = $this->manager();
         $clock = new FixedClock(
-            now: new \DateTimeImmutable(
-                datetime: '2026-01-01T00:00:00Z',
+            instant: Instant::parse(
+                input: '2026-01-01T00:00:00Z',
             ),
         );
 
@@ -399,8 +400,8 @@ class JwtManagerTest extends TestCase
                 'iss' => 'https://issuer.example',
                 'aud' => ['api-service'],
                 'jti' => 'token-42',
-                'exp' => $clock->now()->getTimestamp() + 3600,
-                'nbf' => $clock->now()->getTimestamp() - 60,
+                'exp' => $clock->now()->toUnixTimestamp() + 3600,
+                'nbf' => $clock->now()->toUnixTimestamp() - 60,
             ],
             algorithm: Algorithm::HS256,
             key: $this->hmacKey(),

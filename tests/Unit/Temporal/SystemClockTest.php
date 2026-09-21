@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Unit\Temporal;
 
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Temporal\Instant;
 use Tuxxedo\Temporal\SystemClock;
 
 class SystemClockTest extends TestCase
@@ -24,14 +25,16 @@ class SystemClockTest extends TestCase
         $now = (new SystemClock())->now();
         $after = \time();
 
+        self::assertInstanceOf(Instant::class, $now);
+
         self::assertGreaterThanOrEqual(
             $before,
-            $now->getTimestamp(),
+            $now->toUnixTimestamp(),
         );
 
         self::assertLessThanOrEqual(
             $after,
-            $now->getTimestamp(),
+            $now->toUnixTimestamp(),
         );
     }
 

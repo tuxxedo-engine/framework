@@ -41,7 +41,7 @@ class DateFunction implements FunctionInterface
         $format = $arguments[0];
 
         /** @var int $timestamp */
-        $timestamp = $arguments[1] ?? $this->clock->now()->getTimestamp();
+        $timestamp = $arguments[1] ?? $this->clock->now()->toUnixTimestamp();
 
         return \date($format, $timestamp);
     }

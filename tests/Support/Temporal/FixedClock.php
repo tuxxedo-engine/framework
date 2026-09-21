@@ -13,23 +13,6 @@ declare(strict_types=1);
 
 namespace Support\Temporal;
 
-use Tuxxedo\Temporal\ClockInterface;
-
-class FixedClock implements ClockInterface
+class FixedClock extends \Tuxxedo\Temporal\FixedClock
 {
-    public function __construct(
-        private \DateTimeImmutable $now,
-    ) {
-    }
-
-    public function now(): \DateTimeImmutable
-    {
-        return $this->now;
-    }
-
-    public function setNow(
-        \DateTimeImmutable $now,
-    ): void {
-        $this->now = $now;
-    }
 }

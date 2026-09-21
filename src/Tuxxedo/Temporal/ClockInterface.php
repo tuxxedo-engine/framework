@@ -19,5 +19,5 @@ use Tuxxedo\Container\Lifecycle;
 #[DefaultImplementation(class: SystemClock::class, lifecycle: Lifecycle::SINGLETON)]
 interface ClockInterface
 {
-    public function now(): \DateTimeImmutable;
+    public function now(): InstantInterface;
 }

@@ -13,12 +13,15 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Temporal;
 
-class SystemClock implements ClockInterface
+class FixedClock implements ClockInterface
 {
+    public function __construct(
+        public readonly InstantInterface $instant,
+    ) {
+    }
+
     public function now(): InstantInterface
     {
-        return Instant::fromDateTime(
-            dateTime: new \DateTimeImmutable(),
-        );
+        return $this->instant;
     }
 }

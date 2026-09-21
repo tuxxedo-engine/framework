@@ -14,13 +14,14 @@ declare(strict_types=1);
 namespace Unit\Security\Jwt\Constraint;
 
 use PHPUnit\Framework\TestCase;
-use Support\Temporal\FixedClock;
 use Tuxxedo\Security\Jwt\Claims;
 use Tuxxedo\Security\Jwt\Constraint\ValidAt;
 use Tuxxedo\Security\Jwt\Header;
 use Tuxxedo\Security\Jwt\JwtException;
 use Tuxxedo\Security\Jwt\Token;
 use Tuxxedo\Security\Jwt\TokenInterface;
+use Tuxxedo\Temporal\FixedClock;
+use Tuxxedo\Temporal\Instant;
 
 class ValidAtTest extends TestCase
 {
@@ -45,12 +46,20 @@ class ValidAtTest extends TestCase
         );
     }
 
+    private function fixedClockAt(
+        string $iso,
+    ): FixedClock {
+        return new FixedClock(
+            instant: Instant::parse(
+                input: $iso,
+            ),
+        );
+    }
+
     public function testCheckPassesWhenExpiryIsInTheFuture(): void
     {
-        $clock = new FixedClock(
-            now: new \DateTimeImmutable(
-                datetime: '2026-01-01T00:00:00Z',
-            ),
+        $clock = $this->fixedClockAt(
+            iso: '2026-01-01T00:00:00Z',
         );
 
         $constraint = new ValidAt(
@@ -62,7 +71,7 @@ class ValidAtTest extends TestCase
         $constraint->check(
             token: $this->makeToken(
                 claims: [
-                    'exp' => $clock->now()->getTimestamp() + 60,
+                    'exp' => $clock->now()->toUnixTimestamp() + 60,
                 ],
             ),
         );
@@ -70,10 +79,8 @@ class ValidAtTest extends TestCase
 
     public function testCheckThrowsWhenTokenExpired(): void
     {
-        $clock = new FixedClock(
-            now: new \DateTimeImmutable(
-                datetime: '2026-01-01T00:00:00Z',
-            ),
+        $clock = $this->fixedClockAt(
+            iso: '2026-01-01T00:00:00Z',
         );
 
         $constraint = new ValidAt(
@@ -85,7 +92,7 @@ class ValidAtTest extends TestCase
         $constraint->check(
             token: $this->makeToken(
                 claims: [
-                    'exp' => $clock->now()->getTimestamp() - 60,
+                    'exp' => $clock->now()->toUnixTimestamp() - 60,
                 ],
             ),
         );
@@ -93,10 +100,8 @@ class ValidAtTest extends TestCase
 
     public function testExpiredTokenPassesWithLeeway(): void
     {
-        $clock = new FixedClock(
-            now: new \DateTimeImmutable(
-                datetime: '2026-01-01T00:00:00Z',
-            ),
+        $clock = $this->fixedClockAt(
+            iso: '2026-01-01T00:00:00Z',
         );
 
         $constraint = new ValidAt(
@@ -109,7 +114,7 @@ class ValidAtTest extends TestCase
         $constraint->check(
             token: $this->makeToken(
                 claims: [
-                    'exp' => $clock->now()->getTimestamp() - 60,
+                    'exp' => $clock->now()->toUnixTimestamp() - 60,
                 ],
             ),
         );
@@ -117,10 +122,8 @@ class ValidAtTest extends TestCase
 
     public function testCheckPassesWhenNotBeforeIsInThePast(): void
     {
-        $clock = new FixedClock(
-            now: new \DateTimeImmutable(
-                datetime: '2026-01-01T00:00:00Z',
-            ),
+        $clock = $this->fixedClockAt(
+            iso: '2026-01-01T00:00:00Z',
         );
 
         $constraint = new ValidAt(
@@ -132,7 +135,7 @@ class ValidAtTest extends TestCase
         $constraint->check(
             token: $this->makeToken(
                 claims: [
-                    'nbf' => $clock->now()->getTimestamp() - 60,
+                    'nbf' => $clock->now()->toUnixTimestamp() - 60,
                 ],
             ),
         );
@@ -140,10 +143,8 @@ class ValidAtTest extends TestCase
 
     public function testCheckThrowsWhenTokenNotYetValid(): void
     {
-        $clock = new FixedClock(
-            now: new \DateTimeImmutable(
-                datetime: '2026-01-01T00:00:00Z',
-            ),
+        $clock = $this->fixedClockAt(
+            iso: '2026-01-01T00:00:00Z',
         );
 
         $constraint = new ValidAt(
@@ -155,7 +156,7 @@ class ValidAtTest extends TestCase
         $constraint->check(
             token: $this->makeToken(
                 claims: [
-                    'nbf' => $clock->now()->getTimestamp() + 60,
+                    'nbf' => $clock->now()->toUnixTimestamp() + 60,
                 ],
             ),
         );
@@ -163,10 +164,8 @@ class ValidAtTest extends TestCase
 
     public function testNotYetValidTokenPassesWithLeeway(): void
     {
-        $clock = new FixedClock(
-            now: new \DateTimeImmutable(
-                datetime: '2026-01-01T00:00:00Z',
-            ),
+        $clock = $this->fixedClockAt(
+            iso: '2026-01-01T00:00:00Z',
         );
 
         $constraint = new ValidAt(
@@ -179,7 +178,7 @@ class ValidAtTest extends TestCase
         $constraint->check(
             token: $this->makeToken(
                 claims: [
-                    'nbf' => $clock->now()->getTimestamp() + 60,
+                    'nbf' => $clock->now()->toUnixTimestamp() + 60,
                 ],
             ),
         );
@@ -187,10 +186,8 @@ class ValidAtTest extends TestCase
 
     public function testCheckIgnoresMissingExpAndNbf(): void
     {
-        $clock = new FixedClock(
-            now: new \DateTimeImmutable(
-                datetime: '2026-01-01T00:00:00Z',
-            ),
+        $clock = $this->fixedClockAt(
+            iso: '2026-01-01T00:00:00Z',
         );
 
         $constraint = new ValidAt(

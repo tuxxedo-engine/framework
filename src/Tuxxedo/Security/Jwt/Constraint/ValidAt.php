@@ -28,7 +28,7 @@ class ValidAt implements ConstraintInterface
     public function check(
         TokenInterface $token,
     ): void {
-        $now = $this->clock->now()->getTimestamp();
+        $now = $this->clock->now()->toUnixTimestamp();
 
         $expiresAt = $token->claims->expiresAt;
 

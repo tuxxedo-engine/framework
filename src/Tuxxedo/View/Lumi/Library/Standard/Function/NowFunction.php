@@ -35,6 +35,6 @@ class NowFunction implements FunctionInterface
         array $arguments,
         \Closure $context,
     ): string {
-        return (string) $this->clock->now()->getTimestamp();
+        return (string) $this->clock->now()->toUnixTimestamp();
     }
 }

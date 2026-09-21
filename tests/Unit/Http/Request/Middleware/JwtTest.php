@@ -20,7 +20,6 @@ use Support\Http\Request\Context\StubInputContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Http\Request\Middleware\RecordingMiddleware;
 use Support\Security\Jwt\JwtKeyFixtures;
-use Support\Temporal\FixedClock;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Middleware\Jwt;
@@ -33,6 +32,8 @@ use Tuxxedo\Security\Jwt\JwtException;
 use Tuxxedo\Security\Jwt\JwtManager;
 use Tuxxedo\Security\Jwt\JwtTokenAccessor;
 use Tuxxedo\Security\Jwt\Key\SymmetricKey;
+use Tuxxedo\Temporal\FixedClock;
+use Tuxxedo\Temporal\Instant;
 
 class JwtTest extends TestCase
 {
@@ -296,14 +297,16 @@ class JwtTest extends TestCase
         $accessor = new JwtTokenAccessor();
         $next = new RecordingMiddleware();
         $clock = new FixedClock(
-            now: new \DateTimeImmutable('2026-01-01T00:00:00+00:00'),
+            instant: Instant::parse(
+                input: '2026-01-01T00:00:00+00:00',
+            ),
         );
 
         $compact = $this->issue(
             manager: $manager,
             claims: [
                 'sub' => 'user-1',
-                'exp' => $clock->now()->getTimestamp() - 60,
+                'exp' => $clock->now()->toUnixTimestamp() - 60,
             ],
         );
 
