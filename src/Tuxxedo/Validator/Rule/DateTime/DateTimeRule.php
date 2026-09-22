@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Validator\Rule\DateTime;
 
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Temporal\InstantInterface;
 use Tuxxedo\Validator\CommonViolationCode;
 use Tuxxedo\Validator\RuleInterface;
 use Tuxxedo\Validator\ValidationContextInterface;
@@ -39,6 +40,10 @@ class DateTimeRule implements RuleInterface
         }
 
         if ($value instanceof \DateTimeInterface) {
+            return null;
+        }
+
+        if ($value instanceof InstantInterface) {
             return null;
         }
 

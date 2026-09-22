@@ -19,6 +19,7 @@ use Tuxxedo\Model\Attribute\Column\Integer;
 use Tuxxedo\Model\Attribute\Column\Text;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Table;
+use Tuxxedo\Temporal\InstantInterface;
 
 #[Table(name: 'comments')]
 class Comment
@@ -36,10 +37,10 @@ class Comment
     public string $body = '';
 
     #[CreatedAt]
-    public ?\DateTimeImmutable $createdAt = null;
+    public ?InstantInterface $createdAt = null;
 
     #[DeletedAt]
-    public ?\DateTimeImmutable $deletedAt = null;
+    public ?InstantInterface $deletedAt = null;
 
     #[BelongsTo(related: Post::class, foreignKey: 'post_id')]
     public ?Post $post = null;

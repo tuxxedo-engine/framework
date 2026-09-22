@@ -31,6 +31,7 @@ use Fixture\Model\User;
 use Fixture\Model\Warehouse;
 use Tuxxedo\Model\ModelException;
 use Tuxxedo\Model\Relation;
+use Tuxxedo\Temporal\InstantInterface;
 
 abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrationTestCase
 {
@@ -306,7 +307,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
         );
     }
 
-    public function testHydrateUserCreatedAtCoercedToDateTimeImmutable(): void
+    public function testHydrateUserCreatedAtCoercedToInstant(): void
     {
         $user = $this->modelsManager->hydrator->hydrate(
             className: User::class,
@@ -318,7 +319,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
         );
 
         self::assertInstanceOf(
-            \DateTimeImmutable::class,
+            InstantInterface::class,
             $user->createdAt,
         );
 
@@ -573,7 +574,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
         );
 
         self::assertInstanceOf(
-            \DateTimeImmutable::class,
+            InstantInterface::class,
             $comment->deletedAt,
         );
     }

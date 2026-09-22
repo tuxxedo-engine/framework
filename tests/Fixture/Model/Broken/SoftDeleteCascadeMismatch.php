@@ -18,6 +18,7 @@ use Tuxxedo\Model\Attribute\Column\Integer;
 use Tuxxedo\Model\Attribute\Relation\HasOne;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\CascadeAction;
+use Tuxxedo\Temporal\InstantInterface;
 
 #[Table(name: 'soft_delete_cascade_mismatch')]
 class SoftDeleteCascadeMismatch
@@ -26,7 +27,7 @@ class SoftDeleteCascadeMismatch
     public ?int $id = null;
 
     #[DeletedAt]
-    public ?\DateTimeImmutable $deletedAt = null;
+    public ?InstantInterface $deletedAt = null;
 
     #[HasOne(
         related: ValidTarget::class,

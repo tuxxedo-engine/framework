@@ -16,6 +16,7 @@ namespace Fixture\Model\Broken;
 use Tuxxedo\Model\Attribute\Column\DeletedAt;
 use Tuxxedo\Model\Attribute\Column\Integer;
 use Tuxxedo\Model\Attribute\Table;
+use Tuxxedo\Temporal\InstantInterface;
 
 #[Table(name: 'multiple_soft_delete')]
 class MultipleSoftDelete
@@ -24,8 +25,8 @@ class MultipleSoftDelete
     public ?int $id = null;
 
     #[DeletedAt]
-    public ?\DateTimeImmutable $deletedAt = null;
+    public ?InstantInterface $deletedAt = null;
 
     #[DeletedAt]
-    public ?\DateTimeImmutable $archivedAt = null;
+    public ?InstantInterface $archivedAt = null;
 }

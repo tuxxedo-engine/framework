@@ -16,6 +16,7 @@ namespace Fixture\Model\Broken;
 use Tuxxedo\Model\Attribute\Column\DeletedAt;
 use Tuxxedo\Model\Attribute\Column\Integer;
 use Tuxxedo\Model\Attribute\Table;
+use Tuxxedo\Temporal\InstantInterface;
 
 #[Table(name: 'soft_target')]
 class SoftTarget
@@ -27,5 +28,5 @@ class SoftTarget
     public int $ownerId = 0;
 
     #[DeletedAt]
-    public ?\DateTimeImmutable $deletedAt = null;
+    public ?InstantInterface $deletedAt = null;
 }

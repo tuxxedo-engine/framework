@@ -17,6 +17,7 @@ use Fixture\Model\Comment;
 use Fixture\Model\Sentinel;
 use Fixture\Model\User;
 use Tuxxedo\Model\ModelException;
+use Tuxxedo\Temporal\InstantInterface;
 
 abstract class AbstractBehaviorIntegrationTestCase extends AbstractModelIntegrationTestCase
 {
@@ -92,7 +93,7 @@ abstract class AbstractBehaviorIntegrationTestCase extends AbstractModelIntegrat
         $saved = $this->modelsManager->save($user);
 
         self::assertInstanceOf(
-            \DateTimeImmutable::class,
+            InstantInterface::class,
             $saved->createdAt,
         );
     }
@@ -106,7 +107,7 @@ abstract class AbstractBehaviorIntegrationTestCase extends AbstractModelIntegrat
         $saved = $this->modelsManager->save($user);
 
         self::assertInstanceOf(
-            \DateTimeImmutable::class,
+            InstantInterface::class,
             $saved->updatedAt,
         );
     }
@@ -122,12 +123,12 @@ abstract class AbstractBehaviorIntegrationTestCase extends AbstractModelIntegrat
         $originalUpdatedAt = $saved->updatedAt;
 
         self::assertInstanceOf(
-            \DateTimeImmutable::class,
+            InstantInterface::class,
             $originalCreatedAt,
         );
 
         self::assertInstanceOf(
-            \DateTimeImmutable::class,
+            InstantInterface::class,
             $originalUpdatedAt,
         );
 
@@ -137,18 +138,18 @@ abstract class AbstractBehaviorIntegrationTestCase extends AbstractModelIntegrat
         (void) $this->modelsManager->save($saved);
 
         self::assertInstanceOf(
-            \DateTimeImmutable::class,
+            InstantInterface::class,
             $saved->updatedAt,
         );
 
         self::assertSame(
-            $originalCreatedAt->format(format: 'Y-m-d H:i:s'),
-            $saved->createdAt?->format(format: 'Y-m-d H:i:s'),
+            $originalCreatedAt->format('Y-m-d H:i:s'),
+            $saved->createdAt?->format('Y-m-d H:i:s'),
         );
 
         self::assertGreaterThan(
-            $originalUpdatedAt->getTimestamp(),
-            $saved->updatedAt->getTimestamp(),
+            $originalUpdatedAt->toUnixTimestamp(),
+            $saved->updatedAt->toUnixTimestamp(),
         );
     }
 
@@ -161,24 +162,24 @@ abstract class AbstractBehaviorIntegrationTestCase extends AbstractModelIntegrat
         $saved = $this->modelsManager->save($user);
 
         self::assertInstanceOf(
-            \DateTimeImmutable::class,
+            InstantInterface::class,
             $saved->updatedAt,
         );
 
-        $originalTimestamp = $saved->updatedAt->getTimestamp();
+        $originalTimestamp = $saved->updatedAt->toUnixTimestamp();
 
         \usleep(microseconds: 1_100_000);
 
         (void) $this->modelsManager->save($saved);
 
         self::assertInstanceOf(
-            \DateTimeImmutable::class,
+            InstantInterface::class,
             $saved->updatedAt,
         );
 
         self::assertSame(
             $originalTimestamp,
-            $saved->updatedAt->getTimestamp(),
+            $saved->updatedAt->toUnixTimestamp(),
         );
     }
 

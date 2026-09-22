@@ -14,10 +14,26 @@ declare(strict_types=1);
 namespace Unit\Model\Hydrator\Coercer;
 
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Model\Attribute\Column\DateFormat;
 use Tuxxedo\Model\Hydrator\Coercer\DateTimeCoercer;
 
 class DateTimeCoercerTest extends TestCase
 {
+    public function testRoundTripWithDateFormatEnum(): void
+    {
+        $coercer = new DateTimeCoercer(format: DateFormat::DEFAULT);
+        $original = '2026-07-16';
+
+        $rehydrated = $coercer->dehydrate(
+            value: $coercer->hydrate(value: $original),
+        );
+
+        self::assertSame(
+            $original,
+            $rehydrated,
+        );
+    }
+
     public function testRoundTripWithExplicitDateTimeFormat(): void
     {
         $coercer = new DateTimeCoercer(format: 'Y-m-d H:i:s');

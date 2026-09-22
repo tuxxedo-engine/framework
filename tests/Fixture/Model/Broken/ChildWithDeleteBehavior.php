@@ -16,6 +16,7 @@ namespace Fixture\Model\Broken;
 use Tuxxedo\Model\Attribute\Column\DeletedAt;
 use Tuxxedo\Model\Attribute\Column\Integer;
 use Tuxxedo\Model\Attribute\Table;
+use Tuxxedo\Temporal\InstantInterface;
 
 #[Table(name: 'child_with_delete_behavior')]
 class ChildWithDeleteBehavior
@@ -27,5 +28,5 @@ class ChildWithDeleteBehavior
     public ?int $ownerId = null;
 
     #[DeletedAt]
-    public ?\DateTimeImmutable $deletedAt = null;
+    public ?InstantInterface $deletedAt = null;
 }

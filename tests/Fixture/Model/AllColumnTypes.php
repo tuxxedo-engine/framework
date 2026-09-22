@@ -31,6 +31,7 @@ use Tuxxedo\Model\Attribute\Column\Timestamp;
 use Tuxxedo\Model\Attribute\Column\TinyInteger;
 use Tuxxedo\Model\Attribute\Column\Varchar;
 use Tuxxedo\Model\Attribute\Table;
+use Tuxxedo\Temporal\InstantInterface;
 
 #[Table(name: 'all_column_types')]
 class AllColumnTypes
@@ -81,11 +82,11 @@ class AllColumnTypes
     public ?\DateTimeImmutable $day = null;
 
     #[DateTime(nullable: true)]
-    public ?\DateTimeImmutable $at = null;
+    public ?InstantInterface $at = null;
 
     #[Time(nullable: true)]
     public ?\DateTimeImmutable $clock = null;
 
     #[Timestamp(nullable: true)]
-    public ?\DateTimeImmutable $stamped = null;
+    public ?InstantInterface $stamped = null;
 }

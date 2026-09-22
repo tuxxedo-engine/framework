@@ -15,14 +15,20 @@ namespace Tuxxedo\Model\Behavior;
 
 use Tuxxedo\Model\MetaData\ModelColumnInterface;
 use Tuxxedo\Reflection\PropertyReflector;
+use Tuxxedo\Temporal\ClockInterface;
 
 class DeletedAtBehavior implements SoftDeleteBehaviorInterface
 {
+    public function __construct(
+        private readonly ClockInterface $clock,
+    ) {
+    }
+
     public function beforeDelete(
         object $model,
         ModelColumnInterface $column,
     ): void {
         PropertyReflector::createFromObject($model, $column->property)
-            ->setValue($model, new \DateTimeImmutable());
+            ->setValue($model, $this->clock->now());
     }
 }

@@ -15,7 +15,7 @@ namespace Tuxxedo\Model\Attribute\Column;
 
 use Tuxxedo\Model\Behavior\CreatedAtBehavior;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
-use Tuxxedo\Model\Hydrator\Coercer\DateTimeCoercer;
+use Tuxxedo\Model\Hydrator\Coercer\InstantCoercer;
 
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
 readonly class CreatedAt extends DateTime
@@ -26,7 +26,7 @@ readonly class CreatedAt extends DateTime
     public function __construct(
         DateFormat|string $format = DateFormat::DEFAULT,
         ?string $name = null,
-        ?string $coercer = DateTimeCoercer::class,
+        ?string $coercer = InstantCoercer::class,
         bool $nullable = true,
         bool $unique = false,
         ?string $default = null,

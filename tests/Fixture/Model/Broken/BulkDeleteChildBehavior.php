@@ -19,6 +19,7 @@ use Tuxxedo\Model\Attribute\Relation\HasMany;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\CascadeAction;
 use Tuxxedo\Model\Relation;
+use Tuxxedo\Temporal\InstantInterface;
 
 #[Table(name: 'bulk_delete_child_behavior')]
 class BulkDeleteChildBehavior
@@ -27,7 +28,7 @@ class BulkDeleteChildBehavior
     public ?int $id = null;
 
     #[DeletedAt]
-    public ?\DateTimeImmutable $deletedAt = null;
+    public ?InstantInterface $deletedAt = null;
 
     /**
      * @var Relation<ChildWithDeleteBehavior>|null

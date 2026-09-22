@@ -26,6 +26,7 @@ use Tuxxedo\Model\Attribute\Relation\HasMany;
 use Tuxxedo\Model\Attribute\Relation\HasOne;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\Relation;
+use Tuxxedo\Temporal\InstantInterface;
 
 #[Table(name: 'users')]
 class User
@@ -52,13 +53,13 @@ class User
     public ?int $countryId = null;
 
     #[Timestamp(nullable: true)]
-    public ?\DateTimeImmutable $lastLoginAt = null;
+    public ?InstantInterface $lastLoginAt = null;
 
     #[CreatedAt]
-    public ?\DateTimeImmutable $createdAt = null;
+    public ?InstantInterface $createdAt = null;
 
     #[UpdatedAt]
-    public ?\DateTimeImmutable $updatedAt = null;
+    public ?InstantInterface $updatedAt = null;
 
     #[BelongsTo(related: Country::class, foreignKey: 'country_id')]
     public ?Country $country = null;

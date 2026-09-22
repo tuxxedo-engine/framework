@@ -18,6 +18,7 @@ use Tuxxedo\Model\Attribute\Column\Integer;
 use Tuxxedo\Model\Attribute\Relation\HasOne;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\CascadeAction;
+use Tuxxedo\Temporal\InstantInterface;
 
 #[Table(name: 'both_soft_delete_has_one')]
 class BothSoftDeleteHasOne
@@ -26,7 +27,7 @@ class BothSoftDeleteHasOne
     public ?int $id = null;
 
     #[DeletedAt]
-    public ?\DateTimeImmutable $deletedAt = null;
+    public ?InstantInterface $deletedAt = null;
 
     #[HasOne(
         related: TargetWithSoftDelete::class,

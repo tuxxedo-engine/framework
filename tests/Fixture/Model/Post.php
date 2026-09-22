@@ -25,6 +25,7 @@ use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
 use Tuxxedo\Model\Attribute\Relation\HasMany;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\Relation;
+use Tuxxedo\Temporal\InstantInterface;
 
 #[Table(name: 'posts')]
 class Post
@@ -45,7 +46,7 @@ class Post
     public PostStatus $status = PostStatus::DRAFT;
 
     #[DateTime]
-    public ?\DateTimeImmutable $publishedAt = null;
+    public ?InstantInterface $publishedAt = null;
 
     #[BigInteger]
     public int $viewCount = 0;
