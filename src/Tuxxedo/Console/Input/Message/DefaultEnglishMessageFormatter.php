@@ -7,8 +7,6 @@
  * the MIT license.
  *
  * Copyright (C) 2026 Kalle Sommer Nielsen <kalle@php.net>
- *
- * @todo This needs to be replaced by a proper translation module.
  */
 
 declare(strict_types=1);
