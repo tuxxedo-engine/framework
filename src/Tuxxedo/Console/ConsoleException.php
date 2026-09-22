@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console;
 
+use Tuxxedo\Console\Input\Message\MessageFormatterInterface;
 use Tuxxedo\Console\Output\ConsoleOutputInterface;
 
 class ConsoleException extends \Exception implements ExitCodeInterface, ExitCodeExceptionInterface
@@ -324,6 +325,47 @@ class ConsoleException extends \Exception implements ExitCodeInterface, ExitCode
         return new self(
             exitCode: ExitCode::CONFIG_ERROR,
             message: 'FrameSequence must contain at least one frame',
+        );
+    }
+
+    public static function fromEofOnRequiredInput(
+        MessageFormatterInterface $formatter,
+    ): self {
+        return new self(
+            exitCode: ExitCode::IO_ERROR,
+            message: $formatter->forEofOnRequiredInput(),
+        );
+    }
+
+    public static function fromEmptyAnswerNotAllowed(
+        MessageFormatterInterface $formatter,
+    ): self {
+        return new self(
+            exitCode: ExitCode::USAGE,
+            message: $formatter->forEmptyAnswerNotAllowed(),
+        );
+    }
+
+    public static function fromEmptyChoiceList(): self
+    {
+        return new self(
+            exitCode: ExitCode::CONFIG_ERROR,
+            message: 'Choice list must contain at least one option',
+        );
+    }
+
+    /**
+     * @param class-string $className
+     */
+    public static function fromUnknownQuestionType(
+        string $className,
+    ): self {
+        return new self(
+            exitCode: ExitCode::CONFIG_ERROR,
+            message: \sprintf(
+                'Unknown question type "%s"; supported types are TextQuestion, ConfirmQuestion, ChoiceQuestion',
+                $className,
+            ),
         );
     }
 }

@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console;
 
+use Tuxxedo\Console\Input\InputInterface;
+use Tuxxedo\Console\Input\StdinInput;
 use Tuxxedo\Console\Invocation\ArgvParser;
 use Tuxxedo\Console\Invocation\ParameterBinder;
 use Tuxxedo\Console\Kernel\CommandDiscoverer;
@@ -24,6 +26,7 @@ use Tuxxedo\Console\Kernel\KernelInterface;
 use Tuxxedo\Console\Middleware\CommandMiddlewareInterface;
 use Tuxxedo\Console\Output\ConsoleOutput;
 use Tuxxedo\Console\Output\OutputInterface;
+use Tuxxedo\Console\Stream\PhpInputStream;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\File\FileCollectionFactory;
@@ -157,11 +160,26 @@ class ConsoleConfigurator implements ConsoleConfiguratorInterface
     public function build(): KernelInterface
     {
         $output = ConsoleOutput::createFromStandardStreams();
+        $stdin = \fopen('php://stdin', 'rb');
+
+        if ($stdin === false) {
+            throw ConsoleException::fromStreamNotOpen();
+        }
+
+        $input = new StdinInput(
+            stream: new PhpInputStream(resource: $stdin),
+            output: $output->stdout,
+        );
 
         $this->container->singleton($output);
+        $this->container->singleton($input);
         $this->container->singletonLazy(
             class: OutputInterface::class,
             initializer: static fn (): OutputInterface => $output->stdout,
+        );
+        $this->container->singletonLazy(
+            class: InputInterface::class,
+            initializer: static fn (): InputInterface => $input,
         );
 
         foreach ($this->serviceFiles as $file) {
