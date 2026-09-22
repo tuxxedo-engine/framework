@@ -16,9 +16,9 @@ namespace Console\Commands;
 use Tuxxedo\Console\Attribute\Command;
 use Tuxxedo\Console\ExitCode;
 use Tuxxedo\Console\Output\OutputInterface;
-use Tuxxedo\Console\Output\Renderable\ProgressBar;
-use Tuxxedo\Console\Output\Renderable\Spinner;
-use Tuxxedo\Console\Output\Renderable\Table;
+use Tuxxedo\Console\Output\ProgressBar;
+use Tuxxedo\Console\Output\Spinner;
+use Tuxxedo\Console\Output\Table;
 
 class DemoCommand
 {
@@ -26,42 +26,40 @@ class DemoCommand
     public function table(
         OutputInterface $output,
     ): ExitCode {
-        $output->render(
-            new Table(
-                headers: [
-                    'ID',
-                    'Name',
-                    'Role',
-                    'Status',
+        (new Table(
+            headers: [
+                'ID',
+                'Name',
+                'Role',
+                'Status',
+            ],
+            rows: [
+                [
+                    '1',
+                    'Alice',
+                    'admin',
+                    'active',
                 ],
-                rows: [
-                    [
-                        '1',
-                        'Alice',
-                        'admin',
-                        'active',
-                    ],
-                    [
-                        '2',
-                        'Bob',
-                        'member',
-                        'active',
-                    ],
-                    [
-                        '3',
-                        'Charlie',
-                        'guest',
-                        'pending',
-                    ],
-                    [
-                        '4',
-                        'Dana',
-                        'member',
-                        'suspended',
-                    ],
+                [
+                    '2',
+                    'Bob',
+                    'member',
+                    'active',
                 ],
-            ),
-        );
+                [
+                    '3',
+                    'Charlie',
+                    'guest',
+                    'pending',
+                ],
+                [
+                    '4',
+                    'Dana',
+                    'member',
+                    'suspended',
+                ],
+            ],
+        ))->render(output: $output);
 
         return ExitCode::SUCCESS;
     }

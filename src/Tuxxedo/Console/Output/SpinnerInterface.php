@@ -11,17 +11,23 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Console\Output\Renderable;
+namespace Tuxxedo\Console\Output;
 
 use Tuxxedo\Console\ConsoleException;
-use Tuxxedo\Console\Output\OutputInterface;
 
-interface RenderableInterface
+interface SpinnerInterface
 {
     /**
      * @throws ConsoleException
      */
-    public function renderTo(
-        OutputInterface $output,
+    public function tick(): void;
+
+    public function setMessage(
+        string $message,
     ): void;
+
+    /**
+     * @throws ConsoleException
+     */
+    public function finish(): void;
 }

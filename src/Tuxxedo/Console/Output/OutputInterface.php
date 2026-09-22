@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Tuxxedo\Console\Output;
 
 use Tuxxedo\Console\ConsoleException;
-use Tuxxedo\Console\Output\Renderable\RenderableInterface;
 use Tuxxedo\Console\Stream\OutputStreamInterface;
 
 interface OutputInterface
@@ -43,12 +42,5 @@ interface OutputInterface
         string $text = '',
         ?Color $foreground = null,
         ?Color $background = null,
-    ): void;
-
-    /**
-     * @throws ConsoleException
-     */
-    public function render(
-        RenderableInterface $renderable,
     ): void;
 }

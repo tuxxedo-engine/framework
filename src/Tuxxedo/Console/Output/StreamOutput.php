@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console\Output;
 
-use Tuxxedo\Console\Output\Renderable\RenderableInterface;
 use Tuxxedo\Console\Stream\OutputStreamInterface;
 
 class StreamOutput implements OutputInterface
@@ -26,6 +25,7 @@ class StreamOutput implements OutputInterface
 
     public function __construct(
         public readonly OutputStreamInterface $stream,
+        public readonly DecorationMode $decorationMode = DecorationMode::AUTO,
     ) {
     }
 
@@ -57,12 +57,6 @@ class StreamOutput implements OutputInterface
         );
     }
 
-    public function render(
-        RenderableInterface $renderable,
-    ): void {
-        $renderable->renderTo($this);
-    }
-
     private function decorate(
         string $bytes,
         ?Color $foreground,
@@ -72,11 +66,7 @@ class StreamOutput implements OutputInterface
             return $bytes;
         }
 
-        if (!$this->stream->isTerminal) {
-            return $bytes;
-        }
-
-        if (\getenv('NO_COLOR') !== false) {
+        if (!$this->shouldDecorate()) {
             return $bytes;
         }
 
@@ -91,5 +81,14 @@ class StreamOutput implements OutputInterface
         }
 
         return "\033[" . \join(';', $codes) . 'm' . $bytes . "\033[0m";
+    }
+
+    private function shouldDecorate(): bool
+    {
+        return match ($this->decorationMode) {
+            DecorationMode::ALWAYS => true,
+            DecorationMode::NEVER => false,
+            DecorationMode::AUTO => $this->stream->isTerminal && \getenv('NO_COLOR') === false,
+        };
     }
 }

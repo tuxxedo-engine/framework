@@ -20,7 +20,6 @@ use Tuxxedo\Console\Invocation\ArgvParserInterface;
 use Tuxxedo\Console\Invocation\ParameterBinderInterface;
 use Tuxxedo\Console\Middleware\CommandInvocation;
 use Tuxxedo\Console\Middleware\CommandInvocationInterface;
-use Tuxxedo\Console\Registry\CommandRegistryInterface;
 use Tuxxedo\Container\ContainerInterface;
 
 class CommandDispatcher implements CommandDispatcherInterface

@@ -11,33 +11,25 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Console\Output\Renderable;
+namespace Tuxxedo\Console\Output;
 
-use Tuxxedo\Console\Output\OutputInterface;
-
-class Spinner
+class Spinner implements SpinnerInterface
 {
-    private const FRAMES = [
-        '⣾',
-        '⣽',
-        '⣻',
-        '⢿',
-        '⡿',
-        '⣟',
-        '⣯',
-        '⣷',
-    ];
-
-    private const TICK_THROTTLE_SECONDS = 0.08;
+    private readonly FrameSequence $frames;
+    private readonly float $throttleSeconds;
 
     private int $frame = 0;
     private float $lastTickTime = 0;
+
     private string $message;
 
     public function __construct(
         private readonly OutputInterface $output,
+        ?FrameSequence $frames = null,
         string $message = '',
     ) {
+        $this->frames = $frames ?? FrameSequence::brailleDots();
+        $this->throttleSeconds = $this->frames->interval->seconds + $this->frames->interval->nanoseconds / 1_000_000_000;
         $this->message = $message;
 
         $this->draw();
@@ -51,12 +43,12 @@ class Spinner
 
         $now = \microtime(true);
 
-        if ($now - $this->lastTickTime < self::TICK_THROTTLE_SECONDS) {
+        if ($now - $this->lastTickTime < $this->throttleSeconds) {
             return;
         }
 
         $this->lastTickTime = $now;
-        $this->frame = ($this->frame + 1) % \sizeof(self::FRAMES);
+        $this->frame = ($this->frame + 1) % \sizeof($this->frames->frames);
 
         $this->draw();
     }
@@ -79,10 +71,14 @@ class Spinner
     private function draw(): void
     {
         if (!$this->output->isInteractive) {
+            if ($this->message !== '') {
+                $this->output->line($this->message);
+            }
+
             return;
         }
 
-        $line = self::FRAMES[$this->frame];
+        $line = $this->frames->frames[$this->frame];
 
         if ($this->message !== '') {
             $line .= ' ' . $this->message;

@@ -13,17 +13,17 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console;
 
-use Tuxxedo\Console\Discovery\CommandDiscoverer;
 use Tuxxedo\Console\Invocation\ArgvParser;
 use Tuxxedo\Console\Invocation\ParameterBinder;
+use Tuxxedo\Console\Kernel\CommandDiscoverer;
 use Tuxxedo\Console\Kernel\CommandDispatcher;
+use Tuxxedo\Console\Kernel\CommandRegistry;
 use Tuxxedo\Console\Kernel\ConsoleErrorHandlerInterface;
 use Tuxxedo\Console\Kernel\Kernel;
 use Tuxxedo\Console\Kernel\KernelInterface;
 use Tuxxedo\Console\Middleware\CommandMiddlewareInterface;
 use Tuxxedo\Console\Output\ConsoleOutput;
 use Tuxxedo\Console\Output\OutputInterface;
-use Tuxxedo\Console\Registry\CommandRegistry;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\File\FileCollectionFactory;

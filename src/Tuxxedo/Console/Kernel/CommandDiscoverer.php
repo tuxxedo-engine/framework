@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Console\Discovery;
+namespace Tuxxedo\Console\Kernel;
 
 use Tuxxedo\Console\Attribute\Argument;
 use Tuxxedo\Console\Attribute\Command;
@@ -21,14 +21,12 @@ use Tuxxedo\Console\Attribute\Flag;
 use Tuxxedo\Console\Attribute\Option;
 use Tuxxedo\Console\ConsoleException;
 use Tuxxedo\Console\Descriptor\ArgumentDescriptor;
-use Tuxxedo\Console\Descriptor\ArgumentDescriptorInterface;
 use Tuxxedo\Console\Descriptor\CommandDescriptor;
 use Tuxxedo\Console\Descriptor\CommandDescriptorInterface;
 use Tuxxedo\Console\Descriptor\FlagDescriptor;
-use Tuxxedo\Console\Descriptor\FlagDescriptorInterface;
 use Tuxxedo\Console\Descriptor\OptionDescriptor;
-use Tuxxedo\Console\Descriptor\OptionDescriptorInterface;
 use Tuxxedo\Console\ExitCode;
+use Tuxxedo\Console\Invocation\ParameterBinding;
 
 class CommandDiscoverer implements CommandDiscovererInterface
 {
@@ -80,9 +78,9 @@ class CommandDiscoverer implements CommandDiscovererInterface
                     path: [],
                     description: $default->description,
                     hasReturnValue: $hasReturnValue,
-                    arguments: $binding['arguments'],
-                    options: $binding['options'],
-                    flags: $binding['flags'],
+                    arguments: $binding->arguments,
+                    options: $binding->options,
+                    flags: $binding->flags,
                     className: $className,
                     methodName: $method->getName(),
                 );
@@ -97,9 +95,9 @@ class CommandDiscoverer implements CommandDiscovererInterface
                     path: $command->path,
                     description: $command->description,
                     hasReturnValue: $hasReturnValue,
-                    arguments: $binding['arguments'],
-                    options: $binding['options'],
-                    flags: $binding['flags'],
+                    arguments: $binding->arguments,
+                    options: $binding->options,
+                    flags: $binding->flags,
                     className: $className,
                     methodName: $method->getName(),
                 );
@@ -143,17 +141,11 @@ class CommandDiscoverer implements CommandDiscovererInterface
 
     /**
      * @param class-string $className
-     *
-     * @return array{
-     *     arguments: list<ArgumentDescriptorInterface>,
-     *     options: list<OptionDescriptorInterface>,
-     *     flags: list<FlagDescriptorInterface>,
-     * }
      */
     private function extractParameterBindings(
         string $className,
         \ReflectionMethod $method,
-    ): array {
+    ): ParameterBinding {
         $arguments = [];
         $options = [];
         $flags = [];
@@ -236,10 +228,10 @@ class CommandDiscoverer implements CommandDiscovererInterface
             );
         }
 
-        return [
-            'arguments' => $arguments,
-            'options' => $options,
-            'flags' => $flags,
-        ];
+        return new ParameterBinding(
+            arguments: $arguments,
+            options: $options,
+            flags: $flags,
+        );
     }
 }

@@ -318,4 +318,12 @@ class ConsoleException extends \Exception implements ExitCodeInterface, ExitCode
             ),
         );
     }
+
+    public static function fromEmptyFrameSequence(): self
+    {
+        return new self(
+            exitCode: ExitCode::CONFIG_ERROR,
+            message: 'FrameSequence must contain at least one frame',
+        );
+    }
 }

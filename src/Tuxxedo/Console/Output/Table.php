@@ -11,40 +11,10 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Console\Output\Renderable;
+namespace Tuxxedo\Console\Output;
 
-use Tuxxedo\Console\Output\OutputInterface;
-
-class Table implements RenderableInterface
+class Table implements TableInterface
 {
-    private const CHARS_UNICODE = [
-        'top_left' => '┌',
-        'top_mid' => '┬',
-        'top_right' => '┐',
-        'mid_left' => '├',
-        'mid_mid' => '┼',
-        'mid_right' => '┤',
-        'bot_left' => '└',
-        'bot_mid' => '┴',
-        'bot_right' => '┘',
-        'vert' => '│',
-        'horiz' => '─',
-    ];
-
-    private const CHARS_ASCII = [
-        'top_left' => '+',
-        'top_mid' => '+',
-        'top_right' => '+',
-        'mid_left' => '+',
-        'mid_mid' => '+',
-        'mid_right' => '+',
-        'bot_left' => '+',
-        'bot_mid' => '+',
-        'bot_right' => '+',
-        'vert' => '|',
-        'horiz' => '-',
-    ];
-
     /**
      * @param list<string> $headers
      * @param list<list<string>> $rows
@@ -52,24 +22,27 @@ class Table implements RenderableInterface
     public function __construct(
         public readonly array $headers,
         public readonly array $rows,
+        public readonly ?TableCharacterSet $characters = null,
     ) {
     }
 
-    public function renderTo(
+    public function render(
         OutputInterface $output,
     ): void {
         $widths = $this->computeColumnWidths();
-        $chars = $output->isInteractive
-            ? self::CHARS_UNICODE
-            : self::CHARS_ASCII;
+        $chars = $this->characters ?? (
+            $output->isInteractive
+                ? TableCharacterSet::unicode()
+                : TableCharacterSet::ascii()
+        );
 
         $output->line(
             $this->buildBorder(
                 widths: $widths,
-                left: $chars['top_left'],
-                mid: $chars['top_mid'],
-                right: $chars['top_right'],
-                horiz: $chars['horiz'],
+                left: $chars->topLeft,
+                junction: $chars->topJunction,
+                right: $chars->topRight,
+                horizontal: $chars->horizontal,
             ),
         );
 
@@ -78,17 +51,17 @@ class Table implements RenderableInterface
                 $this->buildRow(
                     cells: $this->headers,
                     widths: $widths,
-                    vert: $chars['vert'],
+                    vertical: $chars->vertical,
                 ),
             );
 
             $output->line(
                 $this->buildBorder(
                     widths: $widths,
-                    left: $chars['mid_left'],
-                    mid: $chars['mid_mid'],
-                    right: $chars['mid_right'],
-                    horiz: $chars['horiz'],
+                    left: $chars->middleLeft,
+                    junction: $chars->middleJunction,
+                    right: $chars->middleRight,
+                    horizontal: $chars->horizontal,
                 ),
             );
         }
@@ -98,7 +71,7 @@ class Table implements RenderableInterface
                 $this->buildRow(
                     cells: $row,
                     widths: $widths,
-                    vert: $chars['vert'],
+                    vertical: $chars->vertical,
                 ),
             );
         }
@@ -106,10 +79,10 @@ class Table implements RenderableInterface
         $output->line(
             $this->buildBorder(
                 widths: $widths,
-                left: $chars['bot_left'],
-                mid: $chars['bot_mid'],
-                right: $chars['bot_right'],
-                horiz: $chars['horiz'],
+                left: $chars->bottomLeft,
+                junction: $chars->bottomJunction,
+                right: $chars->bottomRight,
+                horizontal: $chars->horizontal,
             ),
         );
     }
@@ -140,17 +113,17 @@ class Table implements RenderableInterface
     private function buildBorder(
         array $widths,
         string $left,
-        string $mid,
+        string $junction,
         string $right,
-        string $horiz,
+        string $horizontal,
     ): string {
         $parts = [];
 
         foreach ($widths as $width) {
-            $parts[] = \str_repeat($horiz, $width + 2);
+            $parts[] = \str_repeat($horizontal, $width + 2);
         }
 
-        return $left . \join($mid, $parts) . $right;
+        return $left . \join($junction, $parts) . $right;
     }
 
     /**
@@ -160,7 +133,7 @@ class Table implements RenderableInterface
     private function buildRow(
         array $cells,
         array $widths,
-        string $vert,
+        string $vertical,
     ): string {
         $parts = [];
 
@@ -169,6 +142,6 @@ class Table implements RenderableInterface
             $parts[] = ' ' . \str_pad($cell, $width) . ' ';
         }
 
-        return $vert . \join($vert, $parts) . $vert;
+        return $vertical . \join($vertical, $parts) . $vertical;
     }
 }

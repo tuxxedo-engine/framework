@@ -11,25 +11,28 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Console\Output\Renderable;
+namespace Tuxxedo\Console\Output;
 
-use Tuxxedo\Console\Output\OutputInterface;
-
-class ProgressBar
+class ProgressBar implements ProgressBarInterface
 {
-    private const BAR_WIDTH = 30;
-    private const REDRAW_THROTTLE_SECONDS = 0.03;
-    private const NON_INTERACTIVE_MILESTONE_PERCENT = 25;
+    private const float REDRAW_THROTTLE_SECONDS = 0.03;
+    private const int NON_INTERACTIVE_MILESTONE_PERCENT = 25;
 
     private int $current = 0;
     private float $lastDrawTime = 0;
     private int $lastMilestone = -1;
+
     private string $message = '';
+
+    private readonly ProgressBarThemeInterface $theme;
 
     public function __construct(
         private readonly OutputInterface $output,
         private readonly int $total,
+        ?ProgressBarThemeInterface $theme = null,
     ) {
+        $this->theme = $theme ?? ProgressBarTheme::default();
+
         $this->draw();
     }
 
@@ -112,14 +115,26 @@ class ProgressBar
     private function draw(): void
     {
         $percent = $this->currentPercent();
-        $filled = (int) (($percent / 100) * self::BAR_WIDTH);
-        $bar = \str_repeat('=', $filled) .
-            ($filled < self::BAR_WIDTH ? '>' : '') .
-            \str_repeat(' ', \max(0, self::BAR_WIDTH - $filled - 1));
+        $filled = (int) (($percent / 100) * $this->theme->width);
+        $showHead = $filled < $this->theme->width && $this->theme->head !== '';
+        $headWidth = $showHead
+            ? 1
+            : 0;
+
+        $bar = \str_repeat($this->theme->filledSegment, $filled) .
+            ($showHead
+                ? $this->theme->head
+                : '') .
+            \str_repeat(
+                $this->theme->emptySegment,
+                \max(0, $this->theme->width - $filled - $headWidth),
+            );
 
         $line = \sprintf(
-            '[%s] %3d%%',
+            '%s%s%s %3d%%',
+            $this->theme->leadingCap,
             $bar,
+            $this->theme->trailingCap,
             $percent,
         );
 

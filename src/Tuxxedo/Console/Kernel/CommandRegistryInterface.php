@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Console\Registry;
+namespace Tuxxedo\Console\Kernel;
 
 use Tuxxedo\Console\Descriptor\CommandDescriptorInterface;
 
