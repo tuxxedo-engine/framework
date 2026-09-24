@@ -17,10 +17,39 @@ use PHPUnit\Framework\TestCase;
 use Support\View\Lumi\Runtime\StubRuntimeContext;
 use Tuxxedo\Temporal\FixedClock;
 use Tuxxedo\Temporal\Instant;
+use Tuxxedo\Temporal\LocalDate;
 use Tuxxedo\View\Lumi\Library\Standard\Function\DateFunction;
 
 class DateFunctionTest extends TestCase
 {
+    public function testCallAcceptsInstantValue(): void
+    {
+        self::assertSame(
+            '2026-07-16',
+            (new DateFunction())->call(
+                [
+                    'Y-m-d',
+                    Instant::parse('2026-07-16T12:00:00Z'),
+                ],
+                static fn () => new StubRuntimeContext(),
+            ),
+        );
+    }
+
+    public function testCallAcceptsLocalDateValue(): void
+    {
+        self::assertSame(
+            '16/07/2026',
+            (new DateFunction())->call(
+                [
+                    'd/m/Y',
+                    LocalDate::of(year: 2026, month: 7, day: 16),
+                ],
+                static fn () => new StubRuntimeContext(),
+            ),
+        );
+    }
+
     public function testCallFormatsDateWithExplicitTimestamp(): void
     {
         self::assertSame(
@@ -49,11 +78,7 @@ class DateFunctionTest extends TestCase
 
     public function testCallWithCustomClock(): void
     {
-        $clock = new FixedClock(
-            instant: Instant::parse(
-                input: '1989-07-02T14:02:00+01:00',
-            ),
-        );
+        $clock = new FixedClock(Instant::parse('1989-07-02T14:02:00+01:00'));
 
         $result = (new DateFunction($clock))->call(
             [
@@ -62,6 +87,6 @@ class DateFunctionTest extends TestCase
             static fn () => new StubRuntimeContext(),
         );
 
-        self::assertSame(\date('y-m-d (H:i:s)', $clock->now()->toUnixTimestamp()), $result);
+        self::assertSame('89-07-02 (14:02:00)', $result);
     }
 }

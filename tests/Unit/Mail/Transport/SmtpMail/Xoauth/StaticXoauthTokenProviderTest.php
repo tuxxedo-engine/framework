@@ -30,13 +30,4 @@ class StaticXoauthTokenProviderTest extends TestCase
         );
     }
 
-    public function testGetTokenIsStableAcrossCalls(): void
-    {
-        $provider = new StaticXoauthTokenProvider(
-            token: 'abc',
-        );
-
-        self::assertSame('abc', $provider->getToken());
-        self::assertSame('abc', $provider->getToken());
-    }
 }

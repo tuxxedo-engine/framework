@@ -15,16 +15,13 @@ namespace Tuxxedo\View\Lumi\Library\Standard\Function;
 
 use Tuxxedo\Temporal\ClockInterface;
 use Tuxxedo\Temporal\SystemClock;
-use Tuxxedo\Temporal\TemporalCoercion;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
 use Tuxxedo\View\Lumi\Runtime\RuntimeContextInterface;
 
-class DateFunction implements FunctionInterface
+class DateTodayFunction implements FunctionInterface
 {
-    public private(set) string $name = 'date';
-    public private(set) array $aliases = [
-        'time',
-    ];
+    public private(set) string $name = 'date_today';
+    public private(set) array $aliases = [];
 
     public function __construct(
         private readonly ClockInterface $clock = new SystemClock(),
@@ -38,14 +35,6 @@ class DateFunction implements FunctionInterface
         array $arguments,
         \Closure $context,
     ): string {
-        /** @var string $format */
-        $format = $arguments[0];
-
-        $value = $arguments[1] ?? $this->clock->now();
-
-        return TemporalCoercion::format(
-            value: $value,
-            pattern: $format,
-        );
+        return $this->clock->now()->format('Y-m-d');
     }
 }

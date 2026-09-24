@@ -20,7 +20,11 @@ use Tuxxedo\View\Lumi\Library\Standard\Function\ConfigFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\CsrfFieldFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\CsrfFieldNameFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\CsrfTokenFunction;
+use Tuxxedo\View\Lumi\Library\Standard\Function\DateDurationFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\DateFunction;
+use Tuxxedo\View\Lumi\Library\Standard\Function\DateLocalFunction;
+use Tuxxedo\View\Lumi\Library\Standard\Function\DateNowFunction;
+use Tuxxedo\View\Lumi\Library\Standard\Function\DateTodayFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\DirectiveFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\DumpFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\HasAttachmentFunction;
@@ -48,6 +52,7 @@ use Tuxxedo\View\Lumi\Library\Standard\Function\SessionFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\SessionIdFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\SortFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\SplitFunction;
+use Tuxxedo\View\Lumi\Library\Standard\Function\TimeNowFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\TruncateFunction;
 use Tuxxedo\View\Lumi\Library\Standard\Function\UrlFunction;
 
@@ -159,6 +164,11 @@ class StandardFunctions implements FunctionProviderInterface
         yield new TruncateFunction();
 
         yield new DateFunction();
+        yield new DateNowFunction();
+        yield new DateTodayFunction();
+        yield new TimeNowFunction();
+        yield new DateLocalFunction();
+        yield $container->resolve(DateDurationFunction::class);
         yield new NowFunction();
 
         yield new DumpFunction();

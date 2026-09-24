@@ -62,7 +62,6 @@ class CollectionTest extends TestCase
         $collection = $this->strings('Hello', 'World');
 
         self::assertSame($collection->current(), 'Hello');
-        self::assertSame($collection->current(), 'Hello');
     }
 
     public function testCount(): void

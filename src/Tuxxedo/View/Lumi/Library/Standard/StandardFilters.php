@@ -17,6 +17,11 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\View\Lumi\Library\Filter\FilterProviderInterface;
 use Tuxxedo\View\Lumi\Library\Standard\Filter\CapitalizeFilter;
 use Tuxxedo\View\Lumi\Library\Standard\Filter\CountFilter;
+use Tuxxedo\View\Lumi\Library\Standard\Filter\DateAgoFilter;
+use Tuxxedo\View\Lumi\Library\Standard\Filter\DateIsoFilter;
+use Tuxxedo\View\Lumi\Library\Standard\Filter\DateLongFilter;
+use Tuxxedo\View\Lumi\Library\Standard\Filter\DateShortFilter;
+use Tuxxedo\View\Lumi\Library\Standard\Filter\DateUtcFilter;
 use Tuxxedo\View\Lumi\Library\Standard\Filter\DumpFilter;
 use Tuxxedo\View\Lumi\Library\Standard\Filter\EscapeAttrFilter;
 use Tuxxedo\View\Lumi\Library\Standard\Filter\EscapeCssFilter;
@@ -33,6 +38,7 @@ use Tuxxedo\View\Lumi\Library\Standard\Filter\Nl2brFilter;
 use Tuxxedo\View\Lumi\Library\Standard\Filter\RtrimFilter;
 use Tuxxedo\View\Lumi\Library\Standard\Filter\SlugifyFilter;
 use Tuxxedo\View\Lumi\Library\Standard\Filter\StripTagsFilter;
+use Tuxxedo\View\Lumi\Library\Standard\Filter\TimeIsoFilter;
 use Tuxxedo\View\Lumi\Library\Standard\Filter\TrimFilter;
 use Tuxxedo\View\Lumi\Library\Standard\Filter\UpperFilter;
 
@@ -66,5 +72,12 @@ readonly class StandardFilters implements FilterProviderInterface
         yield new Nl2brFilter();
         yield new StripTagsFilter();
         yield new DumpFilter();
+
+        yield new DateIsoFilter();
+        yield new DateShortFilter();
+        yield new DateLongFilter();
+        yield $container->resolve(DateAgoFilter::class);
+        yield new DateUtcFilter();
+        yield new TimeIsoFilter();
     }
 }

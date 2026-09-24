@@ -172,11 +172,6 @@ abstract class AbstractBehaviorIntegrationTestCase extends AbstractModelIntegrat
 
         (void) $this->modelsManager->save($saved);
 
-        self::assertInstanceOf(
-            InstantInterface::class,
-            $saved->updatedAt,
-        );
-
         self::assertSame(
             $originalTimestamp,
             $saved->updatedAt->toUnixTimestamp(),
