@@ -25,15 +25,11 @@ class Humanizer
     private const int JUST_NOW_CUTOFF_SECONDS = 60;
 
     private const int SECONDS_PER_MINUTE = 60;
-
     private const int SECONDS_PER_HOUR = 3_600;
-
     private const int SECONDS_PER_DAY = 86_400;
-
     private const int SECONDS_PER_WEEK = 604_800;
 
     private const float SECONDS_PER_MONTH = 2_629_746.0;
-
     private const float SECONDS_PER_YEAR = 31_556_952.0;
 
     private const int RELATIVE_UNITS_IN_DURATION = 2;
