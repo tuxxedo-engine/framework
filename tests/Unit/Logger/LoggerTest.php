@@ -19,6 +19,7 @@ use Tuxxedo\Logger\LogLevel;
 use Tuxxedo\Logger\LogMessageFormatter;
 use Tuxxedo\Logger\LoggerInterface;
 use Tuxxedo\Logger\NullLogger;
+use Tuxxedo\Temporal\Instant;
 
 class LoggerTest extends TestCase
 {
@@ -161,7 +162,7 @@ class LoggerTest extends TestCase
 
     public function testFormatTimestamp(): void
     {
-        $timestamp = new \DateTimeImmutable('2026-01-01T12:00:00.000000+00:00');
+        $timestamp = Instant::parse(input: '2026-01-01T12:00:00.000000+00:00');
 
         self::assertSame(
             '[2026-01-01T12:00:00.000000+00:00] message',
@@ -174,7 +175,7 @@ class LoggerTest extends TestCase
 
     public function testFormatWithNoLevelNoTimestamp(): void
     {
-        $timestamp = new \DateTimeImmutable('2026-01-01T12:00:00.000000+00:00');
+        $timestamp = Instant::parse(input: '2026-01-01T12:00:00.000000+00:00');
 
         self::assertSame(
             '[2026-01-01T12:00:00.000000+00:00] Hello' . \PHP_EOL,
@@ -187,7 +188,7 @@ class LoggerTest extends TestCase
 
     public function testFormatWithLevel(): void
     {
-        $timestamp = new \DateTimeImmutable('2026-01-01T12:00:00.000000+00:00');
+        $timestamp = Instant::parse(input: '2026-01-01T12:00:00.000000+00:00');
 
         self::assertSame(
             '[2026-01-01T12:00:00.000000+00:00] [ERROR] Hello' . \PHP_EOL,
@@ -201,7 +202,7 @@ class LoggerTest extends TestCase
 
     public function testFormatWithPlaceholders(): void
     {
-        $timestamp = new \DateTimeImmutable('2026-01-01T12:00:00.000000+00:00');
+        $timestamp = Instant::parse(input: '2026-01-01T12:00:00.000000+00:00');
 
         self::assertSame(
             '[2026-01-01T12:00:00.000000+00:00] [INFO] Hello Kalle' . \PHP_EOL,

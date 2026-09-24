@@ -25,6 +25,9 @@ use Tuxxedo\Http\Request\Context\HeaderContextInterface;
 use Tuxxedo\Http\Request\Context\InputContextInterface;
 use Tuxxedo\Http\Request\Context\UploadedFilesContextInterface;
 use Tuxxedo\Router\DispatchableRouteInterface;
+use Tuxxedo\Temporal\ClockInterface;
+use Tuxxedo\Temporal\InstantInterface;
+use Tuxxedo\Temporal\SystemClock;
 
 class Request implements RequestInterface
 {
@@ -39,6 +42,8 @@ class Request implements RequestInterface
     public readonly string $host;
     public readonly int $port;
     public readonly string $ipAddress;
+
+    public readonly InstantInterface $receivedAt;
 
     public function __construct(
         ?DispatchableRouteInterface $route = null,
@@ -63,10 +68,14 @@ class Request implements RequestInterface
         ?string $host = null,
         ?int $port = null,
         ?string $ipAddress = null,
+        ?InstantInterface $receivedAt = null,
+        ?ClockInterface $clock = null,
     ) {
         if ($route !== null) {
             $this->route = $route;
         }
+
+        $this->receivedAt = $receivedAt ?? ($clock ?? new SystemClock())->now();
 
         if (\is_string($method)) {
             $method = Method::from($method);
@@ -415,7 +424,7 @@ class Request implements RequestInterface
 
     public function isModified(
         ?string $etag = null,
-        ?\DateTimeInterface $lastModified = null,
+        ?InstantInterface $lastModified = null,
     ): bool {
         return !$this->isNotModified(
             etag: $etag,
@@ -425,7 +434,7 @@ class Request implements RequestInterface
 
     public function isNotModified(
         ?string $etag = null,
-        ?\DateTimeInterface $lastModified = null,
+        ?InstantInterface $lastModified = null,
     ): bool {
         if ($etag !== null && $this->headers->has('If-None-Match')) {
             return $this->matchesIfNoneMatch($etag);
@@ -465,7 +474,7 @@ class Request implements RequestInterface
     }
 
     private function matchesIfModifiedSince(
-        \DateTimeInterface $lastModified,
+        InstantInterface $lastModified,
     ): bool {
         $value = $this->headers->string('If-Modified-Since');
         $clientTime = \DateTimeImmutable::createFromFormat('D, d M Y H:i:s \G\M\T', $value);
@@ -474,7 +483,7 @@ class Request implements RequestInterface
             return false;
         }
 
-        return $lastModified->getTimestamp() <= $clientTime->getTimestamp();
+        return $lastModified->toUnixTimestamp() <= $clientTime->getTimestamp();
     }
 
     private function normalizeEtag(

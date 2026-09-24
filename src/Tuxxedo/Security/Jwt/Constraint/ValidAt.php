@@ -32,13 +32,13 @@ class ValidAt implements ConstraintInterface
 
         $expiresAt = $token->claims->expiresAt;
 
-        if ($expiresAt !== null && $now > $expiresAt->getTimestamp() + $this->leewaySeconds) {
+        if ($expiresAt !== null && $now > $expiresAt->toUnixTimestamp() + $this->leewaySeconds) {
             throw JwtException::fromExpiredToken();
         }
 
         $notBefore = $token->claims->notBefore;
 
-        if ($notBefore !== null && $now + $this->leewaySeconds < $notBefore->getTimestamp()) {
+        if ($notBefore !== null && $now + $this->leewaySeconds < $notBefore->toUnixTimestamp()) {
             throw JwtException::fromTokenNotYetValid();
         }
     }

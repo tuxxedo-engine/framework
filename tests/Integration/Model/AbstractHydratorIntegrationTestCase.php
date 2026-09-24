@@ -32,6 +32,8 @@ use Fixture\Model\Warehouse;
 use Tuxxedo\Model\ModelException;
 use Tuxxedo\Model\Relation;
 use Tuxxedo\Temporal\InstantInterface;
+use Tuxxedo\Temporal\LocalDateInterface;
+use Tuxxedo\Temporal\LocalTimeInterface;
 
 abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrationTestCase
 {
@@ -493,13 +495,13 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
         );
 
         self::assertInstanceOf(
-            \DateTimeImmutable::class,
+            LocalDateInterface::class,
             $profile->birthDate,
         );
 
         self::assertSame(
             '1990-05-20',
-            $profile->birthDate->format('Y-m-d'),
+            $profile->birthDate->toIso8601(),
         );
     }
 
@@ -593,13 +595,13 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
         );
 
         self::assertInstanceOf(
-            \DateTimeImmutable::class,
+            LocalTimeInterface::class,
             $role->startsAt,
         );
 
         self::assertSame(
             '09:00:00',
-            $role->startsAt->format('H:i:s'),
+            $role->startsAt->toIso8601(),
         );
     }
 

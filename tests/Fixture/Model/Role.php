@@ -21,6 +21,7 @@ use Tuxxedo\Model\Attribute\Column\Varchar;
 use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\Relation;
+use Tuxxedo\Temporal\LocalTimeInterface;
 
 #[Table(name: 'roles')]
 class Role
@@ -38,7 +39,7 @@ class Role
     public int $sortOrder = 0;
 
     #[Time]
-    public ?\DateTimeImmutable $startsAt = null;
+    public ?LocalTimeInterface $startsAt = null;
 
     /**
      * @var Relation<User>|null

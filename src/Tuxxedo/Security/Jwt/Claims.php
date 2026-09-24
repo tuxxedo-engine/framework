@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Security\Jwt;
 
+use Tuxxedo\Temporal\Instant;
+use Tuxxedo\Temporal\InstantInterface;
+
 class Claims implements ClaimsInterface
 {
     /**
@@ -59,7 +62,7 @@ class Claims implements ClaimsInterface
         }
     }
 
-    public ?\DateTimeImmutable $expiresAt {
+    public ?InstantInterface $expiresAt {
         get {
             return $this->timestampClaim(
                 claim: 'exp',
@@ -67,7 +70,7 @@ class Claims implements ClaimsInterface
         }
     }
 
-    public ?\DateTimeImmutable $notBefore {
+    public ?InstantInterface $notBefore {
         get {
             return $this->timestampClaim(
                 claim: 'nbf',
@@ -75,7 +78,7 @@ class Claims implements ClaimsInterface
         }
     }
 
-    public ?\DateTimeImmutable $issuedAt {
+    public ?InstantInterface $issuedAt {
         get {
             return $this->timestampClaim(
                 claim: 'iat',
@@ -116,7 +119,7 @@ class Claims implements ClaimsInterface
 
     private function timestampClaim(
         string $claim,
-    ): ?\DateTimeImmutable {
+    ): ?InstantInterface {
         $value = $this->all[$claim] ?? null;
 
         if (!\is_int($value) && !\is_float($value)) {
@@ -133,6 +136,6 @@ class Claims implements ClaimsInterface
             return null; // @codeCoverageIgnore
         }
 
-        return $result;
+        return Instant::fromDateTime(dateTime: $result);
     }
 }

@@ -19,6 +19,7 @@ use Tuxxedo\Model\Hydrator\Coercer\InstantCoercer;
 use Tuxxedo\Model\ModelException;
 use Tuxxedo\Temporal\Instant;
 use Tuxxedo\Temporal\InstantInterface;
+use Tuxxedo\Temporal\TimeZone;
 
 class InstantCoercerTest extends TestCase
 {
@@ -116,5 +117,32 @@ class InstantCoercerTest extends TestCase
         );
 
         self::assertSame($original, $rehydrated);
+    }
+
+    public function testForceTimeZoneConvertsHydratedInstant(): void
+    {
+        $coercer = new InstantCoercer(
+            format: 'Y-m-d\TH:i:sP',
+            forceTimeZone: TimeZone::parse(input: 'America/New_York'),
+        );
+
+        $instant = $coercer->hydrate(value: '2026-07-16T10:30:45+00:00');
+
+        self::assertSame(
+            'America/New_York',
+            $instant->toDateTime()->getTimezone()->getName(),
+        );
+    }
+
+    public function testForceTimeZoneNullPassesThroughFormatZone(): void
+    {
+        $coercer = new InstantCoercer(format: 'Y-m-d\TH:i:sP');
+
+        $instant = $coercer->hydrate(value: '2026-07-16T10:30:45+02:00');
+
+        self::assertSame(
+            '+02:00',
+            $instant->toDateTime()->getTimezone()->getName(),
+        );
     }
 }

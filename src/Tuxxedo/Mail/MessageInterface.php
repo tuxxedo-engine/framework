@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Mail;
 
+use Tuxxedo\Temporal\InstantInterface;
+
 interface MessageInterface
 {
     public AddressInterface $from {
@@ -92,7 +94,7 @@ interface MessageInterface
         get;
     }
 
-    public \DateTimeImmutable $date {
+    public InstantInterface $date {
         get;
     }
 

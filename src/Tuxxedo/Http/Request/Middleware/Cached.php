@@ -18,17 +18,18 @@ use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseCode;
 use Tuxxedo\Http\Response\ResponseInterface;
+use Tuxxedo\Temporal\InstantInterface;
 
 #[\Attribute(flags: \Attribute::TARGET_CLASS | \Attribute::TARGET_METHOD)]
 readonly class Cached implements MiddlewareInterface
 {
     /**
      * @param (\Closure(RequestInterface): ?string)|string|null $etag
-     * @param (\Closure(RequestInterface): ?\DateTimeInterface)|\DateTimeInterface|null $lastModified
+     * @param (\Closure(RequestInterface): ?InstantInterface)|InstantInterface|null $lastModified
      */
     public function __construct(
         public \Closure|string|null $etag = null,
-        public \Closure|\DateTimeInterface|null $lastModified = null,
+        public \Closure|InstantInterface|null $lastModified = null,
     ) {
     }
 
@@ -94,12 +95,12 @@ readonly class Cached implements MiddlewareInterface
 
     private function resolveLastModified(
         RequestInterface $request,
-    ): ?\DateTimeInterface {
+    ): ?InstantInterface {
         if ($this->lastModified === null) {
             return null;
         }
 
-        if ($this->lastModified instanceof \DateTimeInterface) {
+        if ($this->lastModified instanceof InstantInterface) {
             return $this->lastModified;
         }
 

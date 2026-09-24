@@ -32,12 +32,12 @@ class Instant implements InstantInterface
 
     public static function parse(
         string $input,
-        ?\DateTimeZone $default = null,
+        ?TimeZoneInterface $default = null,
     ): self {
         try {
             $dateTime = new \DateTimeImmutable(
                 datetime: $input,
-                timezone: $default,
+                timezone: $default?->dateTimeZone,
             );
         } catch (\Exception $exception) {
             throw TemporalException::fromMalformedInstantParse(
@@ -53,7 +53,7 @@ class Instant implements InstantInterface
 
     public static function fromUnixTimestamp(
         int $timestamp,
-        ?\DateTimeZone $timeZone = null,
+        ?TimeZoneInterface $timeZone = null,
     ): self {
         $dateTime = (new \DateTimeImmutable(
             datetime: '@' . $timestamp,
@@ -61,7 +61,7 @@ class Instant implements InstantInterface
 
         if ($timeZone !== null) {
             $dateTime = $dateTime->setTimezone(
-                timezone: $timeZone,
+                timezone: $timeZone->dateTimeZone,
             );
         }
 
@@ -199,6 +199,22 @@ class Instant implements InstantInterface
     public function month(): Month
     {
         return Month::fromInstant($this);
+    }
+
+    public function withTimeZone(
+        TimeZoneInterface $timeZone,
+    ): self {
+        return new self(
+            dateTime: $this->dateTime->setTimezone(timezone: $timeZone->dateTimeZone),
+            nanosecondFraction: $this->nanosecondFraction,
+        );
+    }
+
+    public function diffForHumans(
+        Humanizer\Humanizer $humanizer,
+        ?InstantInterface $reference = null,
+    ): string {
+        return $humanizer->diffForHumans(moment: $this, reference: $reference);
     }
 
     private function shift(

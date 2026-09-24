@@ -718,7 +718,7 @@ class JwtManagerTest extends TestCase
 
         self::assertSame(
             $issuedAt,
-            $token->claims->issuedAt->getTimestamp(),
+            $token->claims->issuedAt->toUnixTimestamp(),
         );
     }
 

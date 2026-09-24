@@ -30,6 +30,7 @@ readonly class UpdatedAt extends DateTime
         bool $nullable = true,
         bool $unique = false,
         ?string $default = null,
+        ?string $timeZone = null,
     ) {
         parent::__construct(
             format: $format,
@@ -39,6 +40,7 @@ readonly class UpdatedAt extends DateTime
             nullable: $nullable,
             unique: $unique,
             default: $default,
+            timeZone: $timeZone,
         );
     }
 }

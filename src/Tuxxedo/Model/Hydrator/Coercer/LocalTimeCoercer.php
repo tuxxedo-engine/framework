@@ -13,18 +13,28 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\Hydrator\Coercer;
 
+use Tuxxedo\Model\Attribute\Column\TimeFormat;
 use Tuxxedo\Model\ModelException;
+use Tuxxedo\Temporal\LocalTime;
+use Tuxxedo\Temporal\LocalTimeInterface;
 
-abstract class AbstractDateTimeFormatCoercer implements CoercerInterface
+class LocalTimeCoercer implements CoercerInterface
 {
+    private const int NANOS_PER_MICROSECOND = 1_000;
+
+    private readonly string $formatString;
+
     public function __construct(
-        private readonly string $formatString,
+        TimeFormat|string $format = TimeFormat::DEFAULT,
     ) {
+        $this->formatString = $format instanceof TimeFormat
+            ? $format->value
+            : $format;
     }
 
     public function hydrate(
         string|int|float|bool $value,
-    ): \DateTimeImmutable {
+    ): LocalTimeInterface {
         if (!\is_string($value)) {
             throw ModelException::fromCoercionFailure(
                 coercerClass: static::class,
@@ -33,9 +43,9 @@ abstract class AbstractDateTimeFormatCoercer implements CoercerInterface
             );
         }
 
-        $result = \DateTimeImmutable::createFromFormat($this->formatString, $value);
+        $dateTime = \DateTimeImmutable::createFromFormat($this->formatString, $value);
 
-        if ($result === false) {
+        if ($dateTime === false) {
             throw ModelException::fromCoercionFailure(
                 coercerClass: static::class,
                 expectedType: \sprintf(
@@ -49,16 +59,21 @@ abstract class AbstractDateTimeFormatCoercer implements CoercerInterface
             );
         }
 
-        return $result;
+        return LocalTime::of(
+            hour: (int) $dateTime->format('G'),
+            minute: (int) $dateTime->format('i'),
+            second: (int) $dateTime->format('s'),
+            nanosecond: ((int) $dateTime->format('u')) * self::NANOS_PER_MICROSECOND,
+        );
     }
 
     public function dehydrate(
         mixed $value,
-    ): string|int|float|bool {
-        if (!$value instanceof \DateTimeInterface) {
+    ): string {
+        if (!$value instanceof LocalTimeInterface) {
             throw ModelException::fromCoercionFailure(
                 coercerClass: static::class,
-                expectedType: \DateTimeInterface::class,
+                expectedType: LocalTimeInterface::class,
                 actualType: \get_debug_type($value),
             );
         }

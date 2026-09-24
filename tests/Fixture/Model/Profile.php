@@ -20,6 +20,7 @@ use Tuxxedo\Model\Attribute\Column\Json;
 use Tuxxedo\Model\Attribute\Column\Text;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Table;
+use Tuxxedo\Temporal\LocalDateInterface;
 
 #[Table(name: 'profiles')]
 class Profile
@@ -43,7 +44,7 @@ class Profile
     public ?array $settings = null;
 
     #[Date]
-    public ?\DateTimeImmutable $birthDate = null;
+    public ?LocalDateInterface $birthDate = null;
 
     #[BelongsTo(related: User::class, foreignKey: 'user_id')]
     public ?User $user = null;

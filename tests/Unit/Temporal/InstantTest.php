@@ -20,6 +20,7 @@ use Tuxxedo\Temporal\FixedClock;
 use Tuxxedo\Temporal\Instant;
 use Tuxxedo\Temporal\Month;
 use Tuxxedo\Temporal\TemporalException;
+use Tuxxedo\Temporal\TimeZone;
 
 class InstantTest extends TestCase
 {
@@ -58,9 +59,7 @@ class InstantTest extends TestCase
     {
         $instant = Instant::parse(
             input: '2026-01-01 12:00:00',
-            default: new \DateTimeZone(
-                timezone: 'Europe/Copenhagen',
-            ),
+            default: TimeZone::parse(input: 'Europe/Copenhagen'),
         );
 
         self::assertSame(
@@ -91,9 +90,7 @@ class InstantTest extends TestCase
     {
         $instant = Instant::fromUnixTimestamp(
             timestamp: 0,
-            timeZone: new \DateTimeZone(
-                timezone: 'Europe/Copenhagen',
-            ),
+            timeZone: TimeZone::parse(input: 'Europe/Copenhagen'),
         );
 
         self::assertSame(
@@ -332,5 +329,32 @@ class InstantTest extends TestCase
         );
 
         self::assertSame(Month::JULY, $instant->month());
+    }
+
+    public function testWithTimeZoneShiftsPresentationZone(): void
+    {
+        $instant = Instant::parse(
+            input: '2026-07-16T12:00:00Z',
+        );
+
+        $shifted = $instant->withTimeZone(
+            timeZone: TimeZone::parse(input: 'America/New_York'),
+        );
+
+        self::assertSame(
+            'America/New_York',
+            $shifted->toDateTime()->getTimezone()->getName(),
+        );
+        self::assertSame($instant->toUnixTimestamp(), $shifted->toUnixTimestamp());
+    }
+
+    public function testWithTimeZonePreservesNanosecondFraction(): void
+    {
+        $instant = Instant::fromUnixTimestamp(timestamp: 0)
+            ->minus(duration: Duration::fromNanoseconds(nanoseconds: 5));
+
+        $shifted = $instant->withTimeZone(timeZone: TimeZone::utc());
+
+        self::assertSame($instant->nanosecondFraction, $shifted->nanosecondFraction);
     }
 }

@@ -20,7 +20,7 @@ use Tuxxedo\Model\Attribute\ColumnFormatInterface;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Behavior\BehaviorInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
-use Tuxxedo\Model\Hydrator\Coercer\TimeCoercer;
+use Tuxxedo\Model\Hydrator\Coercer\LocalTimeCoercer;
 use Tuxxedo\Validator\Rule\DateTime\DateTimeRule;
 use Tuxxedo\Validator\RuleProviderInterface;
 
@@ -39,7 +39,7 @@ readonly class Time implements ColumnInterface, ColumnFormatInterface, RuleProvi
     public function __construct(
         public TimeFormat|string $format = TimeFormat::DEFAULT,
         public ?string $name = null,
-        public ?string $coercer = TimeCoercer::class,
+        public ?string $coercer = LocalTimeCoercer::class,
         public ?string $behavior = null,
         public bool $nullable = false,
         public bool $primaryKey = false,

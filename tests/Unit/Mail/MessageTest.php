@@ -21,6 +21,7 @@ use Tuxxedo\Mail\BodyType;
 use Tuxxedo\Mail\Header;
 use Tuxxedo\Mail\MailException;
 use Tuxxedo\Mail\Message;
+use Tuxxedo\Temporal\Instant;
 
 class MessageTest extends TestCase
 {
@@ -246,7 +247,7 @@ class MessageTest extends TestCase
 
     public function testAutoGeneratesDateCloseToNow(): void
     {
-        $before = new \DateTimeImmutable();
+        $before = \time();
         $message = new Message(
             from: new Address(
                 email: 'from@example.com',
@@ -259,15 +260,15 @@ class MessageTest extends TestCase
             subject: 'auto date',
         );
 
-        $after = new \DateTimeImmutable();
+        $after = \time();
 
-        self::assertGreaterThanOrEqual($before, $message->date);
-        self::assertLessThanOrEqual($after, $message->date);
+        self::assertGreaterThanOrEqual($before, $message->date->toUnixTimestamp());
+        self::assertLessThanOrEqual($after, $message->date->toUnixTimestamp());
     }
 
     public function testExplicitDateIsPreserved(): void
     {
-        $explicit = new \DateTimeImmutable('2026-01-15 12:00:00');
+        $explicit = Instant::parse(input: '2026-01-15 12:00:00');
         $message = new Message(
             from: new Address(
                 email: 'from@example.com',

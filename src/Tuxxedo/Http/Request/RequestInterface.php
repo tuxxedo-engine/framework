@@ -22,6 +22,7 @@ use Tuxxedo\Http\Request\Context\HeaderContextInterface;
 use Tuxxedo\Http\Request\Context\InputContextInterface;
 use Tuxxedo\Http\Request\Context\UploadedFilesContextInterface;
 use Tuxxedo\Router\DispatchableRouteInterface;
+use Tuxxedo\Temporal\InstantInterface;
 
 #[DefaultImplementation(class: Request::class)]
 interface RequestInterface
@@ -87,6 +88,10 @@ interface RequestInterface
     }
 
     public string $ipAddress {
+        get;
+    }
+
+    public InstantInterface $receivedAt {
         get;
     }
 
@@ -158,12 +163,12 @@ interface RequestInterface
 
     public function isModified(
         ?string $etag = null,
-        ?\DateTimeInterface $lastModified = null,
+        ?InstantInterface $lastModified = null,
     ): bool;
 
     public function isNotModified(
         ?string $etag = null,
-        ?\DateTimeInterface $lastModified = null,
+        ?InstantInterface $lastModified = null,
     ): bool;
 
     public function isGet(): bool;

@@ -21,6 +21,7 @@ use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Behavior\BehaviorInterface;
 use Tuxxedo\Model\Hydrator\Coercer\CoercerInterface;
 use Tuxxedo\Model\Hydrator\Coercer\InstantCoercer;
+use Tuxxedo\Temporal\TimeZone;
 use Tuxxedo\Validator\Rule\DateTime\DateTimeRule;
 use Tuxxedo\Validator\RuleProviderInterface;
 
@@ -45,9 +46,13 @@ readonly class Timestamp implements ColumnInterface, ColumnFormatInterface, Rule
         public bool $primaryKey = false,
         public bool $unique = false,
         public ?string $default = null,
+        public ?string $timeZone = null,
     ) {
         $this->coercerArguments = [
             'format' => $this->format,
+            'forceTimeZone' => $this->timeZone !== null
+                ? TimeZone::parse(input: $this->timeZone)
+                : null,
         ];
     }
 

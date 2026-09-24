@@ -24,6 +24,7 @@ use Tuxxedo\Http\Response\Stream\SseEventInterface;
 use Tuxxedo\Http\Response\Stream\Stream;
 use Tuxxedo\Http\Response\Stream\StreamInterface;
 use Tuxxedo\Router\RouterInterface;
+use Tuxxedo\Temporal\InstantInterface;
 
 class Response implements ResponseInterface, ResponsableInterface
 {
@@ -766,10 +767,9 @@ class Response implements ResponseInterface, ResponsableInterface
     }
 
     public function withLastModified(
-        \DateTimeInterface $when,
+        InstantInterface $when,
     ): static {
-        $utc = \DateTimeImmutable::createFromInterface($when)
-            ->setTimezone(new \DateTimeZone('UTC'));
+        $utc = $when->dateTime->setTimezone(new \DateTimeZone('UTC'));
 
         return $this->withHeader(
             header: new Header('Last-Modified', $utc->format('D, d M Y H:i:s \G\M\T')),

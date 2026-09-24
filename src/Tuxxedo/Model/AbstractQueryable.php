@@ -724,9 +724,7 @@ abstract class AbstractQueryable implements QueryableInterface
         return $this->extend(
             criterion: static function (WhereStatementInterface $statement) use ($subquery, $resolvedAlias): void {
                 if (!$statement instanceof SelectStatementInterface) {
-                    // @codeCoverageIgnoreStart
-                    return;
-                    // @codeCoverageIgnoreEnd
+                    return; // @codeCoverageIgnore
                 }
 
                 $statement->selectSubquery(

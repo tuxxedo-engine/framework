@@ -19,6 +19,7 @@ use Tuxxedo\Debug\Config\DebugConfigInterface;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
+use Tuxxedo\Temporal\Instant;
 use Tuxxedo\Version;
 
 class DebugErrorHandler implements ErrorHandlerInterface
@@ -77,7 +78,7 @@ class DebugErrorHandler implements ErrorHandlerInterface
         \ob_clean();
 
         $appConfig = $this->container->resolve(AppConfigInterface::class);
-        $timestamp = new \DateTimeImmutable();
+        $timestamp = Instant::now()->dateTime;
         $timestampFormatted = $timestamp->format('Y-m-d H:i:s T') . ' (UTC' . $timestamp->format('P') . ')';
 
         $fqn = $exception::class;

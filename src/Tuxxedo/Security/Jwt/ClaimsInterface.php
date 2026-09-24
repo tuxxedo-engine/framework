@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Security\Jwt;
 
+use Tuxxedo\Temporal\InstantInterface;
+
 interface ClaimsInterface
 {
     public ?string $issuer {
@@ -30,15 +32,15 @@ interface ClaimsInterface
         get;
     }
 
-    public ?\DateTimeImmutable $expiresAt {
+    public ?InstantInterface $expiresAt {
         get;
     }
 
-    public ?\DateTimeImmutable $notBefore {
+    public ?InstantInterface $notBefore {
         get;
     }
 
-    public ?\DateTimeImmutable $issuedAt {
+    public ?InstantInterface $issuedAt {
         get;
     }
 

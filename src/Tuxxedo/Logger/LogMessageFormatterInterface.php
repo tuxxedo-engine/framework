@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Logger;
 
+use Tuxxedo\Temporal\InstantInterface;
+
 interface LogMessageFormatterInterface
 {
     /**
@@ -30,7 +32,7 @@ interface LogMessageFormatterInterface
         string $message,
         array $placeholders = [],
         ?LogLevel $level = null,
-        ?\DateTimeImmutable $timestamp = null,
+        ?InstantInterface $timestamp = null,
     ): string;
 
     public function formatLogLevel(
@@ -40,6 +42,6 @@ interface LogMessageFormatterInterface
 
     public function formatTimestamp(
         string $message,
-        \DateTimeImmutable $timestamp,
+        InstantInterface $timestamp,
     ): string;
 }

@@ -28,6 +28,8 @@ use Tuxxedo\Http\Response\Stream\Stream;
 use Tuxxedo\Http\Response\Stream\StreamInterface;
 use Tuxxedo\Router\Route;
 use Tuxxedo\Router\StaticRouter;
+use Tuxxedo\Temporal\Instant;
+use Tuxxedo\Temporal\TimeZone;
 
 class ResponseTest extends TestCase
 {
@@ -1798,7 +1800,7 @@ class ResponseTest extends TestCase
 
     public function testWithLastModifiedFormatsAsRfc7231(): void
     {
-        $when = new \DateTimeImmutable('2026-01-15 10:30:00', new \DateTimeZone('UTC'));
+        $when = Instant::parse(input: '2026-01-15 10:30:00');
 
         $response = (new Response())->withLastModified($when);
 
@@ -1810,7 +1812,10 @@ class ResponseTest extends TestCase
 
     public function testWithLastModifiedConvertsToUtc(): void
     {
-        $when = new \DateTimeImmutable('2026-01-15 12:30:00', new \DateTimeZone('America/New_York'));
+        $when = Instant::parse(
+            input: '2026-01-15 12:30:00',
+            default: TimeZone::parse(input: 'America/New_York'),
+        );
 
         $response = (new Response())->withLastModified($when);
 
@@ -1820,24 +1825,11 @@ class ResponseTest extends TestCase
         self::assertSame('Thu, 15 Jan 2026 17:30:00 GMT', $lastModified->value);
     }
 
-    public function testWithLastModifiedAcceptsMutableDateTime(): void
-    {
-        $when = new \DateTime('2026-01-15 10:30:00', new \DateTimeZone('UTC'));
-
-        $response = (new Response())->withLastModified($when);
-        $when->setTimezone(new \DateTimeZone('America/New_York'));
-
-        $lastModified = $this->findHeader($response, 'Last-Modified');
-
-        self::assertNotNull($lastModified);
-        self::assertSame('Thu, 15 Jan 2026 10:30:00 GMT', $lastModified->value);
-    }
-
     public function testWithLastModifiedReplacesExistingHeader(): void
     {
         $response = (new Response())
-            ->withLastModified(new \DateTimeImmutable('2026-01-01 00:00:00', new \DateTimeZone('UTC')))
-            ->withLastModified(new \DateTimeImmutable('2026-02-01 00:00:00', new \DateTimeZone('UTC')));
+            ->withLastModified(Instant::parse(input: '2026-01-01 00:00:00'))
+            ->withLastModified(Instant::parse(input: '2026-02-01 00:00:00'));
 
         $entries = \array_values(
             \array_filter(
@@ -1853,7 +1845,7 @@ class ResponseTest extends TestCase
     public function testWithLastModifiedReturnsNewInstance(): void
     {
         $response = new Response();
-        $updated = $response->withLastModified(new \DateTimeImmutable('2026-01-15', new \DateTimeZone('UTC')));
+        $updated = $response->withLastModified(Instant::parse(input: '2026-01-15'));
 
         self::assertNotSame($response, $updated);
         self::assertCount(0, $response->headers);

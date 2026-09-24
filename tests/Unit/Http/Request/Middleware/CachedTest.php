@@ -27,6 +27,8 @@ use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseCode;
 use Tuxxedo\Http\Response\ResponseInterface;
+use Tuxxedo\Temporal\Instant;
+use Tuxxedo\Temporal\InstantInterface;
 
 class CachedTest extends TestCase
 {
@@ -203,7 +205,7 @@ class CachedTest extends TestCase
     public function testHandleReturnsNotModifiedWhenLastModifiedIsAtOrAfterIfModifiedSince(): void
     {
         $next = new RecordingMiddleware();
-        $lastModified = new \DateTimeImmutable('2026-01-01 12:00:00', new \DateTimeZone('UTC'));
+        $lastModified = Instant::parse(input: '2026-01-01 12:00:00');
 
         $response = (new Cached(
             lastModified: $lastModified,
@@ -225,7 +227,7 @@ class CachedTest extends TestCase
 
     public function testHandleAnnotatesResponseWithLastModifiedOnCacheMiss(): void
     {
-        $lastModified = new \DateTimeImmutable('2026-01-15 10:30:00', new \DateTimeZone('UTC'));
+        $lastModified = Instant::parse(input: '2026-01-15 10:30:00');
 
         $response = (new Cached(
             lastModified: $lastModified,
@@ -241,8 +243,8 @@ class CachedTest extends TestCase
     public function testHandleResolvesClosureLastModified(): void
     {
         $response = (new Cached(
-            lastModified: static function (): \DateTimeInterface {
-                return new \DateTimeImmutable('2026-02-01 00:00:00', new \DateTimeZone('UTC'));
+            lastModified: static function (): InstantInterface {
+                return Instant::parse(input: '2026-02-01 00:00:00');
             },
         ))->handle(
             request: $this->makeRequest(),
@@ -255,7 +257,7 @@ class CachedTest extends TestCase
     public function testHandleSkipsLastModifiedAnnotationWhenClosureReturnsNull(): void
     {
         $response = (new Cached(
-            lastModified: static function (): ?\DateTimeInterface {
+            lastModified: static function (): ?InstantInterface {
                 return null;
             },
         ))->handle(
@@ -268,7 +270,7 @@ class CachedTest extends TestCase
 
     public function testHandleAnnotatesBothEtagAndLastModifiedOnCacheMiss(): void
     {
-        $lastModified = new \DateTimeImmutable('2026-01-15 10:30:00', new \DateTimeZone('UTC'));
+        $lastModified = Instant::parse(input: '2026-01-15 10:30:00');
 
         $response = (new Cached(
             etag: 'abc123',
@@ -284,7 +286,7 @@ class CachedTest extends TestCase
 
     public function testHandleReturns304WithBothEtagAndLastModifiedWhenEtagMatches(): void
     {
-        $lastModified = new \DateTimeImmutable('2026-01-15 10:30:00', new \DateTimeZone('UTC'));
+        $lastModified = Instant::parse(input: '2026-01-15 10:30:00');
 
         $response = (new Cached(
             etag: 'abc123',
@@ -328,7 +330,7 @@ class CachedTest extends TestCase
         );
 
         $response = (new Cached(
-            lastModified: new \DateTimeImmutable('2026-01-15 10:30:00', new \DateTimeZone('UTC')),
+            lastModified: Instant::parse(input: '2026-01-15 10:30:00'),
         ))->handle(
             request: $this->makeRequest(),
             next: new RecordingMiddleware(response: $existing),

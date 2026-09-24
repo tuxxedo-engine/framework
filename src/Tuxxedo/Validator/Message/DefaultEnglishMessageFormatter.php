@@ -23,6 +23,7 @@ use Tuxxedo\Validator\Rule\Contains\ContainsViolationCode;
 use Tuxxedo\Validator\Rule\CountryCode\CountryCodeViolationCode;
 use Tuxxedo\Validator\Rule\CreditCard\CreditCardViolationCode;
 use Tuxxedo\Validator\Rule\DateTime\DateTimeViolationCode;
+use Tuxxedo\Validator\Rule\Duration\DurationViolationCode;
 use Tuxxedo\Validator\Rule\Ean\EanViolationCode;
 use Tuxxedo\Validator\Rule\Email\EmailViolationCode;
 use Tuxxedo\Validator\Rule\Enum\EnumViolationCode;
@@ -30,6 +31,7 @@ use Tuxxedo\Validator\Rule\EqualTo\EqualToViolationCode;
 use Tuxxedo\Validator\Rule\Hostname\HostnameViolationCode;
 use Tuxxedo\Validator\Rule\Iban\IbanViolationCode;
 use Tuxxedo\Validator\Rule\In\InViolationCode;
+use Tuxxedo\Validator\Rule\Instant\InstantOrderViolationCode;
 use Tuxxedo\Validator\Rule\Ip\IpViolationCode;
 use Tuxxedo\Validator\Rule\Ipv4\Ipv4ViolationCode;
 use Tuxxedo\Validator\Rule\Ipv6\Ipv6ViolationCode;
@@ -42,11 +44,13 @@ use Tuxxedo\Validator\Rule\NegativeInteger\NegativeIntegerViolationCode;
 use Tuxxedo\Validator\Rule\NotEmpty\NotEmptyViolationCode;
 use Tuxxedo\Validator\Rule\NotEqualTo\NotEqualToViolationCode;
 use Tuxxedo\Validator\Rule\NotIn\NotInViolationCode;
+use Tuxxedo\Validator\Rule\Period\PeriodViolationCode;
 use Tuxxedo\Validator\Rule\PositiveInteger\PositiveIntegerViolationCode;
 use Tuxxedo\Validator\Rule\PrefixedWith\PrefixedWithViolationCode;
 use Tuxxedo\Validator\Rule\Range\RangeViolationCode;
 use Tuxxedo\Validator\Rule\Regex\RegexViolationCode;
 use Tuxxedo\Validator\Rule\SuffixedWith\SuffixedWithViolationCode;
+use Tuxxedo\Validator\Rule\TimeZone\TimeZoneViolationCode;
 use Tuxxedo\Validator\Rule\Ulid\UlidViolationCode;
 use Tuxxedo\Validator\Rule\Url\UrlViolationCode;
 use Tuxxedo\Validator\Rule\Uuid\UuidViolationCode;
@@ -126,6 +130,11 @@ class DefaultEnglishMessageFormatter implements MessageFormatterInterface
             EqualToViolationCode::NOT_EQUAL->value => 'Value at "{path}" ({value}) must equal {expected}',
             NotEqualToViolationCode::EQUAL->value => 'Value at "{path}" ({value}) may not equal {disallowed}',
             DateTimeViolationCode::INVALID_FORMAT->value => 'Value at "{path}" is not a valid date/time',
+            DurationViolationCode::INVALID_FORMAT->value => 'Value at "{path}" is not a valid ISO 8601 duration ({reason})',
+            TimeZoneViolationCode::UNKNOWN_TIMEZONE->value => 'Value at "{path}" ({received}) is not a recognized time zone',
+            InstantOrderViolationCode::NOT_BEFORE->value => 'Value at "{path}" must be before {anchor}',
+            InstantOrderViolationCode::NOT_AFTER->value => 'Value at "{path}" must be after {anchor}',
+            PeriodViolationCode::INVERTED->value => 'Period at "{path}" is inverted: end ({end}) precedes start ({start})',
             UuidViolationCode::INVALID_FORMAT->value => 'Value at "{path}" is not a valid UUID',
             UuidV4ViolationCode::INVALID_FORMAT->value => 'Value at "{path}" is not a valid UUID v4',
             UuidV7ViolationCode::INVALID_FORMAT->value => 'Value at "{path}" is not a valid UUID v7',

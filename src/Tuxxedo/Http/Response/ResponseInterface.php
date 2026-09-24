@@ -19,6 +19,7 @@ use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\HttpVersion;
 use Tuxxedo\Http\Response\Stream\StreamInterface;
+use Tuxxedo\Temporal\InstantInterface;
 
 #[DefaultImplementation(class: Response::class)]
 interface ResponseInterface extends ResponseCodeInterface
@@ -116,7 +117,7 @@ interface ResponseInterface extends ResponseCodeInterface
     ): static;
 
     public function withLastModified(
-        \DateTimeInterface $when,
+        InstantInterface $when,
     ): static;
 
     /**

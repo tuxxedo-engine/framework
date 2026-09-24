@@ -64,4 +64,8 @@ interface InstantInterface
     public function dayOfWeek(): DayOfWeek;
 
     public function month(): Month;
+
+    public function withTimeZone(
+        TimeZoneInterface $timeZone,
+    ): self;
 }

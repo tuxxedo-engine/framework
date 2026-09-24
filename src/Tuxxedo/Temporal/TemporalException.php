@@ -98,4 +98,71 @@ class TemporalException extends \Exception
             ),
         );
     }
+
+    public static function fromMalformedTimeZone(
+        string $input,
+        ?\Throwable $previous = null,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot parse "%s" as a TimeZone',
+                $input,
+            ),
+            previous: $previous,
+        );
+    }
+
+    public static function fromMalformedLocalDate(
+        string $input,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot parse "%s" as a LocalDate',
+                $input,
+            ),
+        );
+    }
+
+    public static function fromMalformedLocalTime(
+        string $input,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot parse "%s" as a LocalTime',
+                $input,
+            ),
+        );
+    }
+
+    public static function fromInvalidLocalDateComponents(
+        int $year,
+        int $month,
+        int $day,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid LocalDate components: %04d-%02d-%02d',
+                $year,
+                $month,
+                $day,
+            ),
+        );
+    }
+
+    public static function fromInvalidLocalTimeComponents(
+        int $hour,
+        int $minute,
+        int $second,
+        int $nanosecondFraction,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid LocalTime components: %02d:%02d:%02d.%09d',
+                $hour,
+                $minute,
+                $second,
+                $nanosecondFraction,
+            ),
+        );
+    }
 }

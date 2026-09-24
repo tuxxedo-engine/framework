@@ -17,6 +17,7 @@ use Tuxxedo\Model\Attribute\Column\DateFormat;
 use Tuxxedo\Model\ModelException;
 use Tuxxedo\Temporal\Instant;
 use Tuxxedo\Temporal\InstantInterface;
+use Tuxxedo\Temporal\TimeZoneInterface;
 
 class InstantCoercer implements CoercerInterface
 {
@@ -24,6 +25,7 @@ class InstantCoercer implements CoercerInterface
 
     public function __construct(
         DateFormat|string $format = DateFormat::DEFAULT,
+        private readonly ?TimeZoneInterface $forceTimeZone = null,
     ) {
         $this->formatString = $format instanceof DateFormat
             ? $format->value
@@ -57,9 +59,15 @@ class InstantCoercer implements CoercerInterface
             );
         }
 
-        return Instant::fromDateTime(
+        $instant = Instant::fromDateTime(
             dateTime: $dateTime,
         );
+
+        if ($this->forceTimeZone !== null) {
+            $instant = $instant->withTimeZone(timeZone: $this->forceTimeZone);
+        }
+
+        return $instant;
     }
 
     public function dehydrate(

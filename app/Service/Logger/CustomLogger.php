@@ -17,6 +17,7 @@ use Tuxxedo\Container\DefaultLifecycle;
 use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Logger\AbstractLogger;
 use Tuxxedo\Logger\LogLevel;
+use Tuxxedo\Temporal\Instant;
 
 #[DefaultLifecycle(lifecycle: Lifecycle::SINGLETON)]
 class CustomLogger extends AbstractLogger implements CustomLoggerInterface
@@ -31,7 +32,7 @@ class CustomLogger extends AbstractLogger implements CustomLoggerInterface
         array $placeholders = [],
         LogLevel $level = LogLevel::ERROR,
     ): static {
-        $timestamp = new \DateTimeImmutable();
+        $timestamp = Instant::now();
 
         $this->entries[] = new LogEntry(
             date: $timestamp->format('H:i:s j/n/Y'),

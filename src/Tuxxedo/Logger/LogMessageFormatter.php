@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Logger;
 
+use Tuxxedo\Temporal\Instant;
+use Tuxxedo\Temporal\InstantInterface;
+
 class LogMessageFormatter implements LogMessageFormatterInterface
 {
     public function interpolate(
@@ -37,7 +40,7 @@ class LogMessageFormatter implements LogMessageFormatterInterface
         string $message,
         array $placeholders = [],
         ?LogLevel $level = null,
-        ?\DateTimeImmutable $timestamp = null,
+        ?InstantInterface $timestamp = null,
     ): string {
         $message = $this->interpolate($message, $placeholders);
 
@@ -45,7 +48,7 @@ class LogMessageFormatter implements LogMessageFormatterInterface
             $message = $this->formatLogLevel($message, $level);
         }
 
-        return $this->formatTimestamp($message, $timestamp ?? new \DateTimeImmutable()) . \PHP_EOL;
+        return $this->formatTimestamp($message, $timestamp ?? Instant::now()) . \PHP_EOL;
     }
 
     public function formatLogLevel(
@@ -61,7 +64,7 @@ class LogMessageFormatter implements LogMessageFormatterInterface
 
     public function formatTimestamp(
         string $message,
-        \DateTimeImmutable $timestamp,
+        InstantInterface $timestamp,
     ): string {
         return \sprintf(
             '[%s] %s',

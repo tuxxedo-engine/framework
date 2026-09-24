@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Mail;
 
+use Tuxxedo\Temporal\Instant;
+use Tuxxedo\Temporal\InstantInterface;
+
 class Message implements MessageInterface
 {
     private const array RESERVED_HEADER_NAMES = [
@@ -59,7 +62,7 @@ class Message implements MessageInterface
      */
     public readonly string $messageId;
 
-    public readonly \DateTimeImmutable $date;
+    public readonly InstantInterface $date;
 
     /**
      * @param list<AddressInterface|string>|AddressInterface|string $to
@@ -87,7 +90,7 @@ class Message implements MessageInterface
         public readonly array $attachments = [],
         public readonly array $extraHeaders = [],
         ?string $messageId = null,
-        ?\DateTimeImmutable $date = null,
+        ?InstantInterface $date = null,
     ) {
         self::assertAlternativeTextAllowed($alternativeText, $bodyType);
         self::assertExtraHeadersAllowed($extraHeaders);
@@ -106,7 +109,7 @@ class Message implements MessageInterface
             : null;
 
         $this->messageId = $messageId ?? self::generateMessageId($this->from);
-        $this->date = $date ?? new \DateTimeImmutable();
+        $this->date = $date ?? Instant::now();
     }
 
     /**

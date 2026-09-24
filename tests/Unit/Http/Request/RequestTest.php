@@ -30,6 +30,7 @@ use Tuxxedo\Http\Request\Context\UploadedFilesContextInterface;
 use Tuxxedo\Http\Request\Request;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Router\DispatchableRouteInterface;
+use Tuxxedo\Temporal\Instant;
 
 class RequestTest extends TestCase
 {
@@ -444,7 +445,7 @@ class RequestTest extends TestCase
         self::assertFalse(
             $request->isNotModified(
                 etag: 'abc123',
-                lastModified: new \DateTimeImmutable('2026-01-01 00:00:00', new \DateTimeZone('UTC')),
+                lastModified: Instant::parse(input: '2026-01-01 00:00:00'),
             ),
         );
     }
@@ -576,7 +577,7 @@ class RequestTest extends TestCase
 
         self::assertTrue(
             $request->isNotModified(
-                lastModified: new \DateTimeImmutable('2026-01-01 12:00:00', new \DateTimeZone('UTC')),
+                lastModified: Instant::parse(input: '2026-01-01 12:00:00'),
             ),
         );
     }
@@ -593,7 +594,7 @@ class RequestTest extends TestCase
 
         self::assertTrue(
             $request->isNotModified(
-                lastModified: new \DateTimeImmutable('2026-01-01 12:00:00', new \DateTimeZone('UTC')),
+                lastModified: Instant::parse(input: '2026-01-01 12:00:00'),
             ),
         );
     }
@@ -610,7 +611,7 @@ class RequestTest extends TestCase
 
         self::assertFalse(
             $request->isNotModified(
-                lastModified: new \DateTimeImmutable('2026-01-02 00:00:00', new \DateTimeZone('UTC')),
+                lastModified: Instant::parse(input: '2026-01-02 00:00:00'),
             ),
         );
     }
@@ -627,7 +628,7 @@ class RequestTest extends TestCase
 
         self::assertFalse(
             $request->isNotModified(
-                lastModified: new \DateTimeImmutable('2026-01-01', new \DateTimeZone('UTC')),
+                lastModified: Instant::parse(input: '2026-01-01'),
             ),
         );
     }
@@ -646,7 +647,7 @@ class RequestTest extends TestCase
         self::assertFalse(
             $request->isNotModified(
                 etag: 'abc123',
-                lastModified: new \DateTimeImmutable('2026-01-01 12:00:00', new \DateTimeZone('UTC')),
+                lastModified: Instant::parse(input: '2026-01-01 12:00:00'),
             ),
         );
     }
@@ -664,7 +665,7 @@ class RequestTest extends TestCase
         self::assertTrue(
             $request->isNotModified(
                 etag: 'abc123',
-                lastModified: new \DateTimeImmutable('2026-01-01 12:00:00', new \DateTimeZone('UTC')),
+                lastModified: Instant::parse(input: '2026-01-01 12:00:00'),
             ),
         );
     }
