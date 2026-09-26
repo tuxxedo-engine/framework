@@ -18,14 +18,14 @@ use Tuxxedo\Console\ConsoleException;
 interface TableInterface
 {
     /**
-     * @var list<string>
+     * @var list<string|StyledCell>
      */
     public array $headers {
         get;
     }
 
     /**
-     * @var list<list<string>>
+     * @var list<list<string|StyledCell>>
      */
     public array $rows {
         get;

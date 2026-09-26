@@ -13,9 +13,11 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console\Output;
 
+use Tuxxedo\Console\Output\Style\Style;
+
 class Spinner implements SpinnerInterface
 {
-    private readonly FrameSequence $frames;
+    private readonly SpinnerTheme $theme;
     private readonly float $throttleSeconds;
 
     private int $frame = 0;
@@ -25,11 +27,11 @@ class Spinner implements SpinnerInterface
 
     public function __construct(
         private readonly OutputInterface $output,
-        ?FrameSequence $frames = null,
+        ?SpinnerTheme $theme = null,
         string $message = '',
     ) {
-        $this->frames = $frames ?? FrameSequence::brailleDots();
-        $this->throttleSeconds = $this->frames->interval->seconds + $this->frames->interval->nanoseconds / 1_000_000_000;
+        $this->theme = $theme ?? SpinnerTheme::default();
+        $this->throttleSeconds = $this->theme->frames->interval->seconds + $this->theme->frames->interval->nanoseconds / 1_000_000_000;
         $this->message = $message;
 
         $this->draw();
@@ -48,7 +50,7 @@ class Spinner implements SpinnerInterface
         }
 
         $this->lastTickTime = $now;
-        $this->frame = ($this->frame + 1) % \sizeof($this->frames->frames);
+        $this->frame = ($this->frame + 1) % \sizeof($this->theme->frames->frames);
 
         $this->draw();
     }
@@ -72,18 +74,42 @@ class Spinner implements SpinnerInterface
     {
         if (!$this->output->isInteractive) {
             if ($this->message !== '') {
-                $this->output->line($this->message);
+                $this->writePart(
+                    bytes: $this->message,
+                    style: $this->theme->messageStyle,
+                );
+
+                $this->output->line();
             }
 
             return;
         }
 
-        $line = $this->frames->frames[$this->frame];
+        $this->output->write("\r\033[2K");
+
+        $this->writePart(
+            bytes: $this->theme->frames->frames[$this->frame],
+            style: $this->theme->frameStyle,
+        );
 
         if ($this->message !== '') {
-            $line .= ' ' . $this->message;
+            $this->writePart(
+                bytes: ' ' . $this->message,
+                style: $this->theme->messageStyle,
+            );
+        }
+    }
+
+    private function writePart(
+        string $bytes,
+        ?Style $style,
+    ): void {
+        if ($style === null) {
+            $this->output->write($bytes);
+
+            return;
         }
 
-        $this->output->write("\r\033[2K" . $line);
+        $this->output->styled($bytes, $style);
     }
 }

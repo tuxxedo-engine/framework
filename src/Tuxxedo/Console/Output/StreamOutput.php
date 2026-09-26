@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console\Output;
 
+use Tuxxedo\Console\Output\Style\Style;
 use Tuxxedo\Console\Stream\OutputStreamInterface;
 
 class StreamOutput implements OutputInterface
@@ -55,6 +56,41 @@ class StreamOutput implements OutputInterface
                 background: $background,
             ) . \PHP_EOL,
         );
+    }
+
+    public function styled(
+        string $bytes,
+        Style $style,
+    ): void {
+        $this->stream->write(
+            $this->shouldDecorate()
+                ? $style->apply($bytes)
+                : $bytes,
+        );
+    }
+
+    public function error(
+        string $bytes,
+    ): void {
+        $this->styled($bytes, Style::error());
+    }
+
+    public function success(
+        string $bytes,
+    ): void {
+        $this->styled($bytes, Style::success());
+    }
+
+    public function warning(
+        string $bytes,
+    ): void {
+        $this->styled($bytes, Style::warning());
+    }
+
+    public function info(
+        string $bytes,
+    ): void {
+        $this->styled($bytes, Style::info());
     }
 
     private function decorate(

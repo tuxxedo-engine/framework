@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console\Output;
 
+use Tuxxedo\Console\Output\Style\Style;
+
 class ProgressBarTheme implements ProgressBarThemeInterface
 {
     public function __construct(
@@ -22,6 +24,11 @@ class ProgressBarTheme implements ProgressBarThemeInterface
         public readonly string $head,
         public readonly string $leadingCap,
         public readonly string $trailingCap,
+        public readonly ?Style $filledStyle = null,
+        public readonly ?Style $emptyStyle = null,
+        public readonly ?Style $capStyle = null,
+        public readonly ?Style $percentageStyle = null,
+        public readonly ?Style $messageStyle = null,
     ) {
     }
 

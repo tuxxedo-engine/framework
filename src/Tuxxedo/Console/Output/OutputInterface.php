@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Console\Output;
 
 use Tuxxedo\Console\ConsoleException;
+use Tuxxedo\Console\Output\Style\Style;
 use Tuxxedo\Console\Stream\OutputStreamInterface;
 
 interface OutputInterface
@@ -42,5 +43,41 @@ interface OutputInterface
         string $text = '',
         ?Color $foreground = null,
         ?Color $background = null,
+    ): void;
+
+    /**
+     * @throws ConsoleException
+     */
+    public function styled(
+        string $bytes,
+        Style $style,
+    ): void;
+
+    /**
+     * @throws ConsoleException
+     */
+    public function error(
+        string $bytes,
+    ): void;
+
+    /**
+     * @throws ConsoleException
+     */
+    public function success(
+        string $bytes,
+    ): void;
+
+    /**
+     * @throws ConsoleException
+     */
+    public function warning(
+        string $bytes,
+    ): void;
+
+    /**
+     * @throws ConsoleException
+     */
+    public function info(
+        string $bytes,
     ): void;
 }

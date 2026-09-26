@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console\Output;
 
+use Tuxxedo\Console\Output\Style\Style;
+
 interface ProgressBarThemeInterface
 {
     public int $width {
@@ -36,6 +38,26 @@ interface ProgressBarThemeInterface
     }
 
     public string $trailingCap {
+        get;
+    }
+
+    public ?Style $filledStyle {
+        get;
+    }
+
+    public ?Style $emptyStyle {
+        get;
+    }
+
+    public ?Style $capStyle {
+        get;
+    }
+
+    public ?Style $percentageStyle {
+        get;
+    }
+
+    public ?Style $messageStyle {
         get;
     }
 }

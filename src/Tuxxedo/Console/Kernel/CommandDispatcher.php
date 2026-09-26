@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console\Kernel;
 
+use Tuxxedo\Console\Config\ConsoleAppConfigInterface;
+use Tuxxedo\Console\Config\SuggestionPolicy;
 use Tuxxedo\Console\ConsoleException;
 use Tuxxedo\Console\Descriptor\CommandDescriptorInterface;
 use Tuxxedo\Console\ExitCode;
@@ -20,12 +22,11 @@ use Tuxxedo\Console\Invocation\ArgvParserInterface;
 use Tuxxedo\Console\Invocation\ParameterBinderInterface;
 use Tuxxedo\Console\Middleware\CommandInvocation;
 use Tuxxedo\Console\Middleware\CommandInvocationInterface;
+use Tuxxedo\Container\ContainerException;
 use Tuxxedo\Container\ContainerInterface;
 
 class CommandDispatcher implements CommandDispatcherInterface
 {
-    private const int SUGGESTION_MAX_DISTANCE = 3;
-
     public function __construct(
         private readonly CommandRegistryInterface $registry,
         private readonly ArgvParserInterface $parser,
@@ -63,9 +64,15 @@ class CommandDispatcher implements CommandDispatcherInterface
     private function closestPath(
         array $argv,
     ): ?string {
+        $policy = $this->suggestionPolicy();
+
+        if (!$policy->enabled) {
+            return null;
+        }
+
         $input = \join(' ', $argv);
         $best = null;
-        $bestDistance = self::SUGGESTION_MAX_DISTANCE + 1;
+        $bestDistance = $policy->maxDistance + 1;
 
         foreach ($this->registry->commands as $descriptor) {
             $candidate = \join(' ', $descriptor->path);
@@ -77,9 +84,18 @@ class CommandDispatcher implements CommandDispatcherInterface
             }
         }
 
-        return $bestDistance <= self::SUGGESTION_MAX_DISTANCE
+        return $bestDistance <= $policy->maxDistance
             ? $best
             : null;
+    }
+
+    private function suggestionPolicy(): SuggestionPolicy
+    {
+        try {
+            return $this->container->resolve(ConsoleAppConfigInterface::class)->suggestionPolicy;
+        } catch (ContainerException) {
+            return SuggestionPolicy::default();
+        }
     }
 
     public function findDescriptor(

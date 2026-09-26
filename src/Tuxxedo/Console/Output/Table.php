@@ -13,16 +13,20 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console\Output;
 
+use Tuxxedo\Console\Output\Style\Style;
+
 class Table implements TableInterface
 {
     /**
-     * @param list<string> $headers
-     * @param list<list<string>> $rows
+     * @param list<string|StyledCell> $headers
+     * @param list<list<string|StyledCell>> $rows
      */
     public function __construct(
         public readonly array $headers,
         public readonly array $rows,
         public readonly ?TableCharacterSet $characters = null,
+        public readonly ?Style $headerStyle = null,
+        public readonly ?Style $borderStyle = null,
     ) {
     }
 
@@ -36,54 +40,51 @@ class Table implements TableInterface
                 : TableCharacterSet::ascii()
         );
 
-        $output->line(
-            $this->buildBorder(
-                widths: $widths,
-                left: $chars->topLeft,
-                junction: $chars->topJunction,
-                right: $chars->topRight,
-                horizontal: $chars->horizontal,
-            ),
+        $this->writeBorder(
+            output: $output,
+            widths: $widths,
+            left: $chars->topLeft,
+            junction: $chars->topJunction,
+            right: $chars->topRight,
+            horizontal: $chars->horizontal,
         );
 
         if ($this->headers !== []) {
-            $output->line(
-                $this->buildRow(
-                    cells: $this->headers,
-                    widths: $widths,
-                    vertical: $chars->vertical,
-                ),
+            $this->writeRow(
+                output: $output,
+                cells: $this->headers,
+                widths: $widths,
+                vertical: $chars->vertical,
+                rowStyle: $this->headerStyle,
             );
 
-            $output->line(
-                $this->buildBorder(
-                    widths: $widths,
-                    left: $chars->middleLeft,
-                    junction: $chars->middleJunction,
-                    right: $chars->middleRight,
-                    horizontal: $chars->horizontal,
-                ),
+            $this->writeBorder(
+                output: $output,
+                widths: $widths,
+                left: $chars->middleLeft,
+                junction: $chars->middleJunction,
+                right: $chars->middleRight,
+                horizontal: $chars->horizontal,
             );
         }
 
         foreach ($this->rows as $row) {
-            $output->line(
-                $this->buildRow(
-                    cells: $row,
-                    widths: $widths,
-                    vertical: $chars->vertical,
-                ),
+            $this->writeRow(
+                output: $output,
+                cells: $row,
+                widths: $widths,
+                vertical: $chars->vertical,
+                rowStyle: null,
             );
         }
 
-        $output->line(
-            $this->buildBorder(
-                widths: $widths,
-                left: $chars->bottomLeft,
-                junction: $chars->bottomJunction,
-                right: $chars->bottomRight,
-                horizontal: $chars->horizontal,
-            ),
+        $this->writeBorder(
+            output: $output,
+            widths: $widths,
+            left: $chars->bottomLeft,
+            junction: $chars->bottomJunction,
+            right: $chars->bottomRight,
+            horizontal: $chars->horizontal,
         );
     }
 
@@ -95,12 +96,12 @@ class Table implements TableInterface
         $widths = [];
 
         foreach ($this->headers as $index => $header) {
-            $widths[$index] = \strlen($header);
+            $widths[$index] = \strlen(self::cellValue($header));
         }
 
         foreach ($this->rows as $row) {
             foreach ($row as $index => $cell) {
-                $widths[$index] = \max($widths[$index] ?? 0, \strlen($cell));
+                $widths[$index] = \max($widths[$index] ?? 0, \strlen(self::cellValue($cell)));
             }
         }
 
@@ -110,38 +111,88 @@ class Table implements TableInterface
     /**
      * @param list<int> $widths
      */
-    private function buildBorder(
+    private function writeBorder(
+        OutputInterface $output,
         array $widths,
         string $left,
         string $junction,
         string $right,
         string $horizontal,
-    ): string {
+    ): void {
         $parts = [];
 
         foreach ($widths as $width) {
             $parts[] = \str_repeat($horizontal, $width + 2);
         }
 
-        return $left . \join($junction, $parts) . $right;
+        $this->writeStyled(
+            output: $output,
+            bytes: $left . \join($junction, $parts) . $right,
+            style: $this->borderStyle,
+        );
+
+        $output->line();
     }
 
     /**
-     * @param list<string> $cells
+     * @param list<string|StyledCell> $cells
      * @param list<int> $widths
      */
-    private function buildRow(
+    private function writeRow(
+        OutputInterface $output,
         array $cells,
         array $widths,
         string $vertical,
-    ): string {
-        $parts = [];
-
+        ?Style $rowStyle,
+    ): void {
         foreach ($widths as $index => $width) {
+            $this->writeStyled(
+                output: $output,
+                bytes: $vertical,
+                style: $this->borderStyle,
+            );
+
             $cell = $cells[$index] ?? '';
-            $parts[] = ' ' . \str_pad($cell, $width) . ' ';
+            $value = self::cellValue($cell);
+            $cellStyle = $cell instanceof StyledCell
+                ? $cell->style
+                : $rowStyle;
+
+            $this->writeStyled(
+                output: $output,
+                bytes: ' ' . \str_pad($value, $width) . ' ',
+                style: $cellStyle,
+            );
         }
 
-        return $vertical . \join($vertical, $parts) . $vertical;
+        $this->writeStyled(
+            output: $output,
+            bytes: $vertical,
+            style: $this->borderStyle,
+        );
+
+        $output->line();
+    }
+
+    private function writeStyled(
+        OutputInterface $output,
+        string $bytes,
+        ?Style $style,
+    ): void {
+        if ($style === null) {
+            $output->write($bytes);
+
+            return;
+        }
+
+        $output->styled($bytes, $style);
+    }
+
+    private static function cellValue(
+        string|StyledCell $cell,
+    ): string {
+        return $cell instanceof StyledCell
+            ? $cell->value
+            : $cell;
     }
 }

@@ -13,7 +13,11 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console;
 
+use Tuxxedo\Console\Config\ConsoleAppConfigInterface;
+use Tuxxedo\Console\Config\HelpConfig;
+use Tuxxedo\Console\Config\SuggestionPolicy;
 use Tuxxedo\Console\Kernel\ConsoleErrorHandlerInterface;
+use Tuxxedo\Console\Kernel\HelpFormatterInterface;
 use Tuxxedo\Console\Kernel\KernelInterface;
 use Tuxxedo\Console\Middleware\CommandMiddlewareInterface;
 
@@ -65,6 +69,22 @@ interface ConsoleConfiguratorInterface
     ): self;
 
     public function withoutMiddleware(): self;
+
+    public function withAppConfig(
+        ConsoleAppConfigInterface $config,
+    ): self;
+
+    public function withSuggestionPolicy(
+        SuggestionPolicy $policy,
+    ): self;
+
+    public function withHelpConfig(
+        HelpConfig $config,
+    ): self;
+
+    public function withHelpFormatter(
+        HelpFormatterInterface $formatter,
+    ): self;
 
     /**
      * @throws ConsoleException

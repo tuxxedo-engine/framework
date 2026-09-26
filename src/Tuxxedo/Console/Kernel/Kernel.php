@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console\Kernel;
 
+use Tuxxedo\Console\Config\ConsoleAppConfigInterface;
+use Tuxxedo\Console\Config\HelpConfig;
 use Tuxxedo\Console\ExitCode;
 use Tuxxedo\Console\ExitCodeExceptionInterface;
 use Tuxxedo\Console\Middleware\CommandInvocationInterface;
@@ -21,6 +23,7 @@ use Tuxxedo\Console\Middleware\MiddlewareNode;
 use Tuxxedo\Console\Output\Color;
 use Tuxxedo\Console\Output\ConsoleOutputInterface;
 use Tuxxedo\Console\PrefersExitCodeInterface;
+use Tuxxedo\Container\ContainerException;
 use Tuxxedo\Container\ContainerInterface;
 
 class Kernel implements KernelInterface
@@ -101,12 +104,13 @@ class Kernel implements KernelInterface
     private function handleHelpRequest(
         array $tail,
     ): bool {
+        $tokens = $this->helpTokens();
         $match = $this->dispatcher->findDescriptor($tail);
 
         if ($match !== null) {
             foreach ($match['tail'] as $token) {
-                if ($token === '--help' || $token === '-h') {
-                    (new HelpFormatter())->render(
+                if (\in_array($token, $tokens, true)) {
+                    $this->helpFormatter()->render(
                         descriptor: $match['descriptor'],
                         output: $this->output->stdout,
                     );
@@ -119,10 +123,10 @@ class Kernel implements KernelInterface
         }
 
         foreach ($tail as $token) {
-            if ($token === '--help' || $token === '-h') {
+            if (\in_array($token, $tokens, true)) {
                 $registry = $this->container->resolve(CommandRegistryInterface::class);
 
-                (new HelpFormatter())->renderIndex(
+                $this->helpFormatter()->renderIndex(
                     commands: $registry->commands,
                     output: $this->output->stdout,
                 );
@@ -132,6 +136,23 @@ class Kernel implements KernelInterface
         }
 
         return false;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function helpTokens(): array
+    {
+        try {
+            return $this->container->resolve(ConsoleAppConfigInterface::class)->helpConfig->tokens;
+        } catch (ContainerException) {
+            return HelpConfig::default()->tokens;
+        }
+    }
+
+    private function helpFormatter(): HelpFormatterInterface
+    {
+        return $this->container->resolve(HelpFormatterInterface::class);
     }
 
     private function pipeline(

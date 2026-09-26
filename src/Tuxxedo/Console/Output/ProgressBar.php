@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console\Output;
 
+use Tuxxedo\Console\Output\Style\Style;
+
 class ProgressBar implements ProgressBarInterface
 {
     private const float REDRAW_THROTTLE_SECONDS = 0.03;
@@ -121,33 +123,62 @@ class ProgressBar implements ProgressBarInterface
             ? 1
             : 0;
 
-        $bar = \str_repeat($this->theme->filledSegment, $filled) .
-            ($showHead
+        if ($this->output->isInteractive) {
+            $this->output->write("\r\033[2K");
+        }
+
+        $this->writePart(
+            bytes: $this->theme->leadingCap,
+            style: $this->theme->capStyle,
+        );
+
+        $this->writePart(
+            bytes: \str_repeat($this->theme->filledSegment, $filled) . ($showHead
                 ? $this->theme->head
-                : '') .
-            \str_repeat(
+                : ''),
+            style: $this->theme->filledStyle,
+        );
+
+        $this->writePart(
+            bytes: \str_repeat(
                 $this->theme->emptySegment,
                 \max(0, $this->theme->width - $filled - $headWidth),
-            );
+            ),
+            style: $this->theme->emptyStyle,
+        );
 
-        $line = \sprintf(
-            '%s%s%s %3d%%',
-            $this->theme->leadingCap,
-            $bar,
-            $this->theme->trailingCap,
-            $percent,
+        $this->writePart(
+            bytes: $this->theme->trailingCap,
+            style: $this->theme->capStyle,
+        );
+
+        $this->writePart(
+            bytes: \sprintf(' %3d%%', $percent),
+            style: $this->theme->percentageStyle,
         );
 
         if ($this->message !== '') {
-            $line .= ' ' . $this->message;
+            $this->writePart(
+                bytes: ' ' . $this->message,
+                style: $this->theme->messageStyle,
+            );
         }
 
-        if ($this->output->isInteractive) {
-            $this->output->write("\r\033[2K" . $line);
+        if (!$this->output->isInteractive) {
+            $this->output->line();
+        }
+    }
+
+    private function writePart(
+        string $bytes,
+        ?Style $style,
+    ): void {
+        if ($style === null) {
+            $this->output->write($bytes);
 
             return;
         }
 
-        $this->output->line($line);
+        $this->output->styled($bytes, $style);
     }
 }

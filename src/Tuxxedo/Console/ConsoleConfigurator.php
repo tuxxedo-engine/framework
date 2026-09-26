@@ -13,6 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console;
 
+use Tuxxedo\Console\Config\ConsoleAppConfig;
+use Tuxxedo\Console\Config\ConsoleAppConfigInterface;
+use Tuxxedo\Console\Config\HelpConfig;
+use Tuxxedo\Console\Config\SuggestionPolicy;
 use Tuxxedo\Console\Input\InputInterface;
 use Tuxxedo\Console\Input\StdinInput;
 use Tuxxedo\Console\Invocation\ArgvParser;
@@ -21,6 +25,7 @@ use Tuxxedo\Console\Kernel\CommandDiscoverer;
 use Tuxxedo\Console\Kernel\CommandDispatcher;
 use Tuxxedo\Console\Kernel\CommandRegistry;
 use Tuxxedo\Console\Kernel\ConsoleErrorHandlerInterface;
+use Tuxxedo\Console\Kernel\HelpFormatterInterface;
 use Tuxxedo\Console\Kernel\Kernel;
 use Tuxxedo\Console\Kernel\KernelInterface;
 use Tuxxedo\Console\Middleware\CommandMiddlewareInterface;
@@ -61,6 +66,11 @@ class ConsoleConfigurator implements ConsoleConfiguratorInterface
      * @var list<\Closure|CommandMiddlewareInterface>
      */
     private array $middleware = [];
+
+    private ?ConsoleAppConfigInterface $appConfig = null;
+    private ?SuggestionPolicy $suggestionPolicyOverride = null;
+    private ?HelpConfig $helpConfigOverride = null;
+    private ?HelpFormatterInterface $helpFormatter = null;
 
     public function __construct(
         private readonly ContainerInterface $container,
@@ -157,6 +167,38 @@ class ConsoleConfigurator implements ConsoleConfiguratorInterface
         return $this;
     }
 
+    public function withAppConfig(
+        ConsoleAppConfigInterface $config,
+    ): self {
+        $this->appConfig = $config;
+
+        return $this;
+    }
+
+    public function withSuggestionPolicy(
+        SuggestionPolicy $policy,
+    ): self {
+        $this->suggestionPolicyOverride = $policy;
+
+        return $this;
+    }
+
+    public function withHelpConfig(
+        HelpConfig $config,
+    ): self {
+        $this->helpConfigOverride = $config;
+
+        return $this;
+    }
+
+    public function withHelpFormatter(
+        HelpFormatterInterface $formatter,
+    ): self {
+        $this->helpFormatter = $formatter;
+
+        return $this;
+    }
+
     public function build(): KernelInterface
     {
         $output = ConsoleOutput::createFromStandardStreams();
@@ -181,6 +223,14 @@ class ConsoleConfigurator implements ConsoleConfiguratorInterface
             class: InputInterface::class,
             initializer: static fn (): InputInterface => $input,
         );
+
+        if ($this->appConfig !== null) {
+            $this->container->singleton($this->composeAppConfig($this->appConfig));
+        }
+
+        if ($this->helpFormatter !== null) {
+            $this->container->singleton($this->helpFormatter);
+        }
 
         foreach ($this->serviceFiles as $file) {
             $this->container->callFile($file);
@@ -283,5 +333,21 @@ class ConsoleConfigurator implements ConsoleConfiguratorInterface
         }
 
         return $classes;
+    }
+
+    private function composeAppConfig(
+        ConsoleAppConfigInterface $base,
+    ): ConsoleAppConfigInterface {
+        if ($this->suggestionPolicyOverride === null && $this->helpConfigOverride === null) {
+            return $base;
+        }
+
+        return new ConsoleAppConfig(
+            name: $base->name,
+            version: $base->version,
+            profile: $base->profile,
+            suggestionPolicy: $this->suggestionPolicyOverride ?? $base->suggestionPolicy,
+            helpConfig: $this->helpConfigOverride ?? $base->helpConfig,
+        );
     }
 }
