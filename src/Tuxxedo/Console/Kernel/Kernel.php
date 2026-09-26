@@ -83,12 +83,55 @@ class Kernel implements KernelInterface
         $tail = \array_slice($argv, 1);
 
         try {
+            if ($this->handleHelpRequest($tail)) {
+                return ExitCode::SUCCESS;
+            }
+
             $invocation = $this->dispatcher->resolve($tail);
 
             return $this->pipeline($invocation);
         } catch (\Throwable $exception) {
             return $this->handleException($exception);
         }
+    }
+
+    /**
+     * @param list<string> $tail
+     */
+    private function handleHelpRequest(
+        array $tail,
+    ): bool {
+        $match = $this->dispatcher->findDescriptor($tail);
+
+        if ($match !== null) {
+            foreach ($match['tail'] as $token) {
+                if ($token === '--help' || $token === '-h') {
+                    (new HelpFormatter())->render(
+                        descriptor: $match['descriptor'],
+                        output: $this->output->stdout,
+                    );
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        foreach ($tail as $token) {
+            if ($token === '--help' || $token === '-h') {
+                $registry = $this->container->resolve(CommandRegistryInterface::class);
+
+                (new HelpFormatter())->renderIndex(
+                    commands: $registry->commands,
+                    output: $this->output->stdout,
+                );
+
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function pipeline(

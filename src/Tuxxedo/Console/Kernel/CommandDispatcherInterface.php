@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Console\Kernel;
 
 use Tuxxedo\Console\ConsoleException;
+use Tuxxedo\Console\Descriptor\CommandDescriptorInterface;
 use Tuxxedo\Console\ExitCode;
 use Tuxxedo\Console\Middleware\CommandInvocationInterface;
 
@@ -27,6 +28,14 @@ interface CommandDispatcherInterface
     public function resolve(
         array $argv,
     ): CommandInvocationInterface;
+
+    /**
+     * @param list<string> $argv
+     * @return array{descriptor: CommandDescriptorInterface, tail: list<string>}|null
+     */
+    public function findDescriptor(
+        array $argv,
+    ): ?array;
 
     /**
      * @throws ConsoleException

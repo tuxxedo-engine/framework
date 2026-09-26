@@ -24,6 +24,8 @@ use Tuxxedo\Container\ContainerInterface;
 
 class CommandDispatcher implements CommandDispatcherInterface
 {
+    private const int SUGGESTION_MAX_DISTANCE = 3;
+
     public function __construct(
         private readonly CommandRegistryInterface $registry,
         private readonly ArgvParserInterface $parser,
@@ -35,17 +37,65 @@ class CommandDispatcher implements CommandDispatcherInterface
     public function resolve(
         array $argv,
     ): CommandInvocationInterface {
+        $match = $this->findDescriptor($argv);
+
+        if ($match === null) {
+            if ($argv === []) {
+                throw ConsoleException::fromNoCommandGiven();
+            }
+
+            $suggestion = $this->closestPath($argv);
+
+            throw $suggestion === null
+                ? ConsoleException::fromUnrecognizedCommand($argv)
+                : ConsoleException::fromUnrecognizedCommandWithSuggestion($argv, $suggestion);
+        }
+
+        return $this->buildInvocation(
+            descriptor: $match['descriptor'],
+            argvTail: $match['tail'],
+        );
+    }
+
+    /**
+     * @param list<string> $argv
+     */
+    private function closestPath(
+        array $argv,
+    ): ?string {
+        $input = \join(' ', $argv);
+        $best = null;
+        $bestDistance = self::SUGGESTION_MAX_DISTANCE + 1;
+
+        foreach ($this->registry->commands as $descriptor) {
+            $candidate = \join(' ', $descriptor->path);
+            $distance = \levenshtein($input, $candidate);
+
+            if ($distance < $bestDistance) {
+                $bestDistance = $distance;
+                $best = $candidate;
+            }
+        }
+
+        return $bestDistance <= self::SUGGESTION_MAX_DISTANCE
+            ? $best
+            : null;
+    }
+
+    public function findDescriptor(
+        array $argv,
+    ): ?array {
         if ($argv === []) {
             $default = $this->registry->defaultCommand;
 
             if ($default === null) {
-                throw ConsoleException::fromNoCommandGiven();
+                return null;
             }
 
-            return $this->buildInvocation(
-                descriptor: $default,
-                argvTail: [],
-            );
+            return [
+                'descriptor' => $default,
+                'tail' => [],
+            ];
         }
 
         $count = \sizeof($argv);
@@ -62,13 +112,13 @@ class CommandDispatcher implements CommandDispatcherInterface
             /** @var list<string> $tail */
             $tail = \array_slice($argv, $i);
 
-            return $this->buildInvocation(
-                descriptor: $descriptor,
-                argvTail: $tail,
-            );
+            return [
+                'descriptor' => $descriptor,
+                'tail' => $tail,
+            ];
         }
 
-        throw ConsoleException::fromUnrecognizedCommand($argv);
+        return null;
     }
 
     /**

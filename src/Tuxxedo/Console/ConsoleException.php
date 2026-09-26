@@ -281,6 +281,23 @@ class ConsoleException extends \Exception implements ExitCodeInterface, ExitCode
         );
     }
 
+    /**
+     * @param list<string> $argv
+     */
+    public static function fromUnrecognizedCommandWithSuggestion(
+        array $argv,
+        string $suggestion,
+    ): self {
+        return new self(
+            exitCode: ExitCode::COMMAND_NOT_FOUND,
+            message: \sprintf(
+                'Unrecognized command: %s. Did you mean: %s?',
+                \join(' ', $argv),
+                $suggestion,
+            ),
+        );
+    }
+
     public static function fromDiscoveryDirectoryNotFound(
         string $directory,
         ?\Throwable $previous = null,

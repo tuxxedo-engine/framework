@@ -195,8 +195,12 @@ class ConsoleConfigurator implements ConsoleConfiguratorInterface
             }
         }
 
+        $registry = new CommandRegistry(commands: $descriptors);
+
+        $this->container->singleton($registry);
+
         $dispatcher = new CommandDispatcher(
-            registry: new CommandRegistry(commands: $descriptors),
+            registry: $registry,
             parser: new ArgvParser(),
             binder: new ParameterBinder(container: $this->container),
             container: $this->container,
