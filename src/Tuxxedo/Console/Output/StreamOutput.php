@@ -88,7 +88,11 @@ class StreamOutput implements OutputInterface
         return match ($this->decorationMode) {
             DecorationMode::ALWAYS => true,
             DecorationMode::NEVER => false,
-            DecorationMode::AUTO => $this->stream->isTerminal && \getenv('NO_COLOR') === false,
+            DecorationMode::AUTO => \getenv('NO_COLOR') === false &&
+                (
+                    \getenv('FORCE_COLOR') !== false ||
+                    $this->stream->isTerminal
+                ),
         };
     }
 }
