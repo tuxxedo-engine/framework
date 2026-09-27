@@ -293,32 +293,34 @@ class ConsoleConfigurator extends AbstractConfigurator implements ConsoleConfigu
             output: $output->stdout,
         );
 
-        $this->container->singleton($output);
-        $this->container->singleton($input);
-        $this->container->singletonLazy(
+        $container = $this->container ?? new Container();
+
+        $container->singleton($output);
+        $container->singleton($input);
+        $container->singletonLazy(
             class: OutputInterface::class,
             initializer: static fn (): OutputInterface => $output->stdout,
         );
 
-        $this->container->singletonLazy(
+        $container->singletonLazy(
             class: InputInterface::class,
             initializer: static fn (): InputInterface => $input,
         );
 
-        $this->container->singleton($this->appEnvironment);
-        $this->container->singleton($this->suggestionPolicyOverride ?? SuggestionPolicy::default());
-        $this->container->singleton($this->helpConfigOverride ?? HelpConfig::default());
+        $container->singleton($this->appEnvironment);
+        $container->singleton($this->suggestionPolicyOverride ?? SuggestionPolicy::default());
+        $container->singleton($this->helpConfigOverride ?? HelpConfig::default());
 
         if ($this->helpFormatter !== null) {
-            $this->container->singleton($this->helpFormatter);
+            $container->singleton($this->helpFormatter);
         }
 
         foreach ($this->serviceFiles as $file) {
-            $this->container->callFile($file);
+            $container->callFile($file);
         }
 
         $discoverer = new CommandDiscoverer(
-            container: $this->container,
+            container: $container,
         );
         $descriptors = [];
 
@@ -330,17 +332,17 @@ class ConsoleConfigurator extends AbstractConfigurator implements ConsoleConfigu
 
         $registry = new CommandRegistry($descriptors);
 
-        $this->container->singleton($registry);
+        $container->singleton($registry);
 
         $dispatcher = new CommandDispatcher(
             registry: $registry,
             parser: new ArgvParser(),
-            binder: new ParameterBinder($this->container),
-            container: $this->container,
+            binder: new ParameterBinder($container),
+            container: $container,
         );
 
         $kernel = new Kernel(
-            container: $this->container,
+            container: $container,
             dispatcher: $dispatcher,
             output: $output,
             appName: $this->appName,

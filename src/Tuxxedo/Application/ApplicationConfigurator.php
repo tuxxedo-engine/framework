@@ -20,17 +20,11 @@ use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Container\ContainerException;
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Database\Config\ConnectionManagerConfigInterface;
-use Tuxxedo\Database\ConnectionManager;
-use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Debug\Config\DebugConfigInterface;
 use Tuxxedo\Debug\DebugErrorHandler;
 use Tuxxedo\Env\EnvInterface;
 use Tuxxedo\Event\EventsManager;
 use Tuxxedo\Event\EventsManagerInterface;
-use Tuxxedo\File\Storage\Local\Config\LocalStorageConfigInterface;
-use Tuxxedo\File\Storage\Local\LocalStorage;
-use Tuxxedo\File\Storage\StorageInterface;
 use Tuxxedo\Http\Kernel\Dispatcher;
 use Tuxxedo\Http\Kernel\DispatcherInterface;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
@@ -41,39 +35,20 @@ use Tuxxedo\Http\Response\ResponseEmitter;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Url\Url;
 use Tuxxedo\Http\Url\UrlInterface;
-use Tuxxedo\Mail\MailConfigurator;
-use Tuxxedo\Mail\MailConfiguratorInterface;
-use Tuxxedo\Mail\MailManagerInterface;
 use Tuxxedo\Router\DynamicRouter;
 use Tuxxedo\Router\RouterInterface;
 use Tuxxedo\Router\StaticRouter;
-use Tuxxedo\View\Lumi\LumiConfigurator;
-use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
-use Tuxxedo\View\Lumi\LumiViewRenderInterface;
-use Tuxxedo\View\ViewRenderInterface;
 
-class ApplicationConfigurator implements ApplicationConfiguratorInterface
+class ApplicationConfigurator extends AbstractConfigurator implements ApplicationConfiguratorInterface
 {
     public private(set) ?string $defaultRouterDirectory = null;
     public private(set) ?string $defaultRouterBaseNamespace = null;
     public private(set) bool $defaultRouterStrictMode = true;
     public private(set) ?RouterInterface $router = null;
-    public private(set) ?LumiConfiguratorInterface $lumiConfigurator = null;
-    public private(set) bool $useDefaultLumi = false;
-    public private(set) ?\Closure $lumiCustomizer = null;
-    public private(set) ?ConnectionManagerInterface $connectionManager = null;
-    public private(set) bool $useDefaultConnectionManager = false;
-    public private(set) ?\Closure $connectionManagerCustomizer = null;
-    public private(set) ?StorageInterface $storage = null;
-    public private(set) bool $useDefaultStorage = false;
-    public private(set) ?MailManagerInterface $mailManager = null;
-    public private(set) bool $useDefaultMailManager = false;
-    public private(set) ?\Closure $mailManagerCustomizer = null;
 
     public private(set) array $middleware = [];
     public private(set) array $exceptionHandlers = [];
     public private(set) array $defaultExceptionHandlers = [];
-    public private(set) array $serviceFiles = [];
 
     /**
      * @var list<string>
@@ -85,9 +60,13 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         public private(set) string $appVersion = '',
         public private(set) Environment $appEnvironment = Environment::PRODUCTION,
         public private(set) string $appUrl = '',
-        public private(set) ?ConfigInterface $config = null,
-        public private(set) ?ContainerInterface $container = null,
+        ?ConfigInterface $config = null,
+        ?ContainerInterface $container = null,
     ) {
+        parent::__construct(
+            config: $config,
+            container: $container,
+        );
     }
 
     public static function createFromConfigFile(
@@ -225,92 +204,6 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         return $this;
     }
 
-    public function withLumi(
-        LumiConfiguratorInterface $lumiConfigurator,
-    ): self {
-        $this->lumiConfigurator = $lumiConfigurator;
-        $this->useDefaultLumi = false;
-        $this->lumiCustomizer = null;
-
-        return $this;
-    }
-
-    /**
-     * @param (\Closure(LumiConfiguratorInterface $configurator): mixed)|null $customizer
-     */
-    public function withDefaultLumi(
-        ?\Closure $customizer = null,
-    ): self {
-        $this->useDefaultLumi = true;
-        $this->lumiCustomizer = $customizer;
-        $this->lumiConfigurator = null;
-
-        return $this;
-    }
-
-    public function withConnectionManager(
-        ConnectionManagerInterface $connectionManager,
-    ): self {
-        $this->connectionManager = $connectionManager;
-        $this->useDefaultConnectionManager = false;
-        $this->connectionManagerCustomizer = null;
-
-        return $this;
-    }
-
-    /**
-     * @param (\Closure(ConnectionManagerInterface $manager): mixed)|null $customizer
-     */
-    public function withDefaultConnectionManager(
-        ?\Closure $customizer = null,
-    ): self {
-        $this->useDefaultConnectionManager = true;
-        $this->connectionManagerCustomizer = $customizer;
-        $this->connectionManager = null;
-
-        return $this;
-    }
-
-    public function withStorage(
-        StorageInterface $storage,
-    ): self {
-        $this->storage = $storage;
-        $this->useDefaultStorage = false;
-
-        return $this;
-    }
-
-    public function withDefaultStorage(): self
-    {
-        $this->useDefaultStorage = true;
-        $this->storage = null;
-
-        return $this;
-    }
-
-    public function withMailManager(
-        MailManagerInterface $mailManager,
-    ): self {
-        $this->mailManager = $mailManager;
-        $this->useDefaultMailManager = false;
-        $this->mailManagerCustomizer = null;
-
-        return $this;
-    }
-
-    /**
-     * @param (\Closure(MailConfiguratorInterface $configurator): mixed)|null $customizer
-     */
-    public function withDefaultMailManager(
-        ?\Closure $customizer = null,
-    ): self {
-        $this->useDefaultMailManager = true;
-        $this->mailManagerCustomizer = $customizer;
-        $this->mailManager = null;
-
-        return $this;
-    }
-
     public function withoutMiddleware(): self
     {
         $this->middleware = [];
@@ -366,21 +259,6 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         }
 
         $this->defaultExceptionHandlers[] = $handler;
-
-        return $this;
-    }
-
-    public function withoutServiceFiles(): self
-    {
-        $this->serviceFiles = [];
-
-        return $this;
-    }
-
-    public function withServiceFile(
-        string $file,
-    ): self {
-        $this->serviceFiles[] = $file;
 
         return $this;
     }
@@ -445,106 +323,10 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
             );
         }
 
-        if ($this->lumiConfigurator !== null) {
-            $lumiConfigurator = $this->lumiConfigurator;
-
-            $container->singletonLazy(
-                LumiViewRenderInterface::class,
-                static fn (): LumiViewRenderInterface => $lumiConfigurator->build(),
-            );
-
-            $container->alias(
-                ViewRenderInterface::class,
-                LumiViewRenderInterface::class,
-            );
-        } elseif ($this->useDefaultLumi) {
-            $customizer = $this->lumiCustomizer;
-
-            $container->singletonLazy(
-                LumiViewRenderInterface::class,
-                static function (ContainerInterface $container) use ($customizer): LumiViewRenderInterface {
-                    $lumi = LumiConfigurator::fromConfig($container);
-
-                    if ($customizer !== null) {
-                        $customizer($lumi);
-                    }
-
-                    return $lumi->build();
-                },
-            );
-
-            $container->alias(
-                ViewRenderInterface::class,
-                LumiViewRenderInterface::class,
-            );
-        }
-
-        if ($this->connectionManager !== null) {
-            $connectionManager = $this->connectionManager;
-
-            $container->singletonLazy(
-                ConnectionManagerInterface::class,
-                static fn (): ConnectionManagerInterface => $connectionManager,
-            );
-        } elseif ($this->useDefaultConnectionManager) {
-            $customizer = $this->connectionManagerCustomizer;
-
-            $container->singletonLazy(
-                ConnectionManagerInterface::class,
-                static function (ContainerInterface $container) use ($customizer): ConnectionManagerInterface {
-                    $manager = ConnectionManager::createFromConfig(
-                        container: $container,
-                        config: $container->resolve(ConnectionManagerConfigInterface::class),
-                    );
-
-                    if ($customizer !== null) {
-                        $customizer($manager);
-                    }
-
-                    return $manager;
-                },
-            );
-        }
-
-        if ($this->storage !== null) {
-            $storage = $this->storage;
-
-            $container->singletonLazy(
-                StorageInterface::class,
-                static fn (): StorageInterface => $storage,
-            );
-        } elseif ($this->useDefaultStorage) {
-            $container->singletonLazy(
-                StorageInterface::class,
-                static fn (ContainerInterface $container): StorageInterface => new LocalStorage(
-                    config: $container->resolve(LocalStorageConfigInterface::class),
-                ),
-            );
-        }
-
-        if ($this->mailManager !== null) {
-            $mailManager = $this->mailManager;
-
-            $container->singletonLazy(
-                MailManagerInterface::class,
-                static fn (): MailManagerInterface => $mailManager,
-            );
-        } elseif ($this->useDefaultMailManager) {
-            $customizer = $this->mailManagerCustomizer;
-
-            $container->singletonLazy(
-                MailManagerInterface::class,
-                static function (ContainerInterface $container) use ($customizer): MailManagerInterface {
-                    $configurator = MailConfigurator::fromConfig($container);
-
-                    if ($customizer !== null) {
-                        $customizer($configurator);
-                    }
-
-                    return $configurator->build();
-                },
-            );
-        }
+        $this->registerLumi($container);
+        $this->registerConnectionManager($container);
+        $this->registerStorage($container);
+        $this->registerMailManager($container);
 
         $container->singletonLazy(
             KernelInterface::class,
@@ -593,11 +375,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
             }
         }
 
-        if (\sizeof($this->serviceFiles) > 0) {
-            foreach ($this->serviceFiles as $serviceFile) {
-                $container->callFile($serviceFile);
-            }
-        }
+        $this->loadServiceFiles($container);
 
         return $kernel;
     }

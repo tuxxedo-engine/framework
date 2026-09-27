@@ -72,46 +72,46 @@ interface AbstractConfiguratorInterface
 
     public function withLumi(
         LumiConfiguratorInterface $lumiConfigurator,
-    ): self;
+    ): static;
 
     /**
      * @param (\Closure(LumiConfiguratorInterface $configurator): mixed)|null $customizer
      */
     public function withDefaultLumi(
         ?\Closure $customizer = null,
-    ): self;
+    ): static;
 
     public function withConnectionManager(
         ConnectionManagerInterface $connectionManager,
-    ): self;
+    ): static;
 
     /**
      * @param (\Closure(ConnectionManagerInterface $manager): mixed)|null $customizer
      */
     public function withDefaultConnectionManager(
         ?\Closure $customizer = null,
-    ): self;
+    ): static;
 
     public function withStorage(
         StorageInterface $storage,
-    ): self;
+    ): static;
 
-    public function withDefaultStorage(): self;
+    public function withDefaultStorage(): static;
 
     public function withMailManager(
         MailManagerInterface $mailManager,
-    ): self;
+    ): static;
 
     /**
      * @param (\Closure(MailConfiguratorInterface $configurator): mixed)|null $customizer
      */
     public function withDefaultMailManager(
         ?\Closure $customizer = null,
-    ): self;
+    ): static;
 
     public function withServiceFile(
         string $file,
-    ): self;
+    ): static;
 
-    public function withoutServiceFiles(): self;
+    public function withoutServiceFiles(): static;
 }

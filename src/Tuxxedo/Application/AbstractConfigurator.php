@@ -56,7 +56,7 @@ abstract class AbstractConfigurator implements AbstractConfiguratorInterface
 
     public function withLumi(
         LumiConfiguratorInterface $lumiConfigurator,
-    ): self {
+    ): static {
         $this->lumiConfigurator = $lumiConfigurator;
         $this->useDefaultLumi = false;
         $this->lumiCustomizer = null;
@@ -69,7 +69,7 @@ abstract class AbstractConfigurator implements AbstractConfiguratorInterface
      */
     public function withDefaultLumi(
         ?\Closure $customizer = null,
-    ): self {
+    ): static {
         $this->useDefaultLumi = true;
         $this->lumiCustomizer = $customizer;
         $this->lumiConfigurator = null;
@@ -79,7 +79,7 @@ abstract class AbstractConfigurator implements AbstractConfiguratorInterface
 
     public function withConnectionManager(
         ConnectionManagerInterface $connectionManager,
-    ): self {
+    ): static {
         $this->connectionManager = $connectionManager;
         $this->useDefaultConnectionManager = false;
         $this->connectionManagerCustomizer = null;
@@ -92,7 +92,7 @@ abstract class AbstractConfigurator implements AbstractConfiguratorInterface
      */
     public function withDefaultConnectionManager(
         ?\Closure $customizer = null,
-    ): self {
+    ): static {
         $this->useDefaultConnectionManager = true;
         $this->connectionManagerCustomizer = $customizer;
         $this->connectionManager = null;
@@ -102,14 +102,14 @@ abstract class AbstractConfigurator implements AbstractConfiguratorInterface
 
     public function withStorage(
         StorageInterface $storage,
-    ): self {
+    ): static {
         $this->storage = $storage;
         $this->useDefaultStorage = false;
 
         return $this;
     }
 
-    public function withDefaultStorage(): self
+    public function withDefaultStorage(): static
     {
         $this->useDefaultStorage = true;
         $this->storage = null;
@@ -119,7 +119,7 @@ abstract class AbstractConfigurator implements AbstractConfiguratorInterface
 
     public function withMailManager(
         MailManagerInterface $mailManager,
-    ): self {
+    ): static {
         $this->mailManager = $mailManager;
         $this->useDefaultMailManager = false;
         $this->mailManagerCustomizer = null;
@@ -132,7 +132,7 @@ abstract class AbstractConfigurator implements AbstractConfiguratorInterface
      */
     public function withDefaultMailManager(
         ?\Closure $customizer = null,
-    ): self {
+    ): static {
         $this->useDefaultMailManager = true;
         $this->mailManagerCustomizer = $customizer;
         $this->mailManager = null;
@@ -142,13 +142,13 @@ abstract class AbstractConfigurator implements AbstractConfiguratorInterface
 
     public function withServiceFile(
         string $file,
-    ): self {
+    ): static {
         $this->serviceFiles[] = $file;
 
         return $this;
     }
 
-    public function withoutServiceFiles(): self
+    public function withoutServiceFiles(): static
     {
         $this->serviceFiles = [];
 

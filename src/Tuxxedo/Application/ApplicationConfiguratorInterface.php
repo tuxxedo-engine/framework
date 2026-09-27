@@ -13,19 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Application;
 
-use Tuxxedo\Config\ConfigInterface;
-use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Database\ConnectionManagerInterface;
-use Tuxxedo\File\Storage\StorageInterface;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
 use Tuxxedo\Http\Kernel\KernelInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
-use Tuxxedo\Mail\MailConfiguratorInterface;
-use Tuxxedo\Mail\MailManagerInterface;
 use Tuxxedo\Router\RouterInterface;
-use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
 
-interface ApplicationConfiguratorInterface
+interface ApplicationConfiguratorInterface extends AbstractConfiguratorInterface
 {
     public string $appName {
         get;
@@ -43,14 +36,6 @@ interface ApplicationConfiguratorInterface
         get;
     }
 
-    public ?ConfigInterface $config {
-        get;
-    }
-
-    public ?ContainerInterface $container {
-        get;
-    }
-
     public ?string $defaultRouterDirectory {
         get;
     }
@@ -64,30 +49,6 @@ interface ApplicationConfiguratorInterface
     }
 
     public ?RouterInterface $router {
-        get;
-    }
-
-    public ?LumiConfiguratorInterface $lumiConfigurator {
-        get;
-    }
-
-    public ?ConnectionManagerInterface $connectionManager {
-        get;
-    }
-
-    public ?StorageInterface $storage {
-        get;
-    }
-
-    public bool $useDefaultStorage {
-        get;
-    }
-
-    public ?MailManagerInterface $mailManager {
-        get;
-    }
-
-    public bool $useDefaultMailManager {
         get;
     }
 
@@ -109,13 +70,6 @@ interface ApplicationConfiguratorInterface
      * @var array<(\Closure(): ErrorHandlerInterface)>
      */
     public array $defaultExceptionHandlers {
-        get;
-    }
-
-    /**
-     * @var string[]
-     */
-    public array $serviceFiles {
         get;
     }
 
@@ -145,45 +99,6 @@ interface ApplicationConfiguratorInterface
         RouterInterface $router,
     ): self;
 
-    public function withLumi(
-        LumiConfiguratorInterface $lumiConfigurator,
-    ): self;
-
-    /**
-     * @param (\Closure(LumiConfiguratorInterface $configurator): mixed)|null $customizer
-     */
-    public function withDefaultLumi(
-        ?\Closure $customizer = null,
-    ): self;
-
-    public function withConnectionManager(
-        ConnectionManagerInterface $connectionManager,
-    ): self;
-
-    /**
-     * @param (\Closure(ConnectionManagerInterface $manager): mixed)|null $customizer
-     */
-    public function withDefaultConnectionManager(
-        ?\Closure $customizer = null,
-    ): self;
-
-    public function withStorage(
-        StorageInterface $storage,
-    ): self;
-
-    public function withDefaultStorage(): self;
-
-    public function withMailManager(
-        MailManagerInterface $mailManager,
-    ): self;
-
-    /**
-     * @param (\Closure(MailConfiguratorInterface $configurator): mixed)|null $customizer
-     */
-    public function withDefaultMailManager(
-        ?\Closure $customizer = null,
-    ): self;
-
     public function withoutMiddleware(): self;
 
     /**
@@ -211,13 +126,6 @@ interface ApplicationConfiguratorInterface
      */
     public function withDefaultExceptionHandler(
         \Closure|ErrorHandlerInterface $handler,
-    ): self;
-
-
-    public function withoutServiceFiles(): self;
-
-    public function withServiceFile(
-        string $file,
     ): self;
 
     public function withRouteFile(
