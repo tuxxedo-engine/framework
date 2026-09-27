@@ -13,11 +13,11 @@ declare(strict_types=1);
 
 use Tuxxedo\Application\Config\AppConfig;
 use Tuxxedo\Application\Config\AppConfigInterface;
-use Tuxxedo\Application\Profile;
+use Tuxxedo\Application\Environment;
 
 return static fn (): AppConfigInterface => new AppConfig(
     name: 'TuxxedoTestApp',
     version: '1.2.3',
-    profile: Profile::RELEASE,
+    environment: Environment::PRODUCTION,
     url: 'https://example.test/',
 );

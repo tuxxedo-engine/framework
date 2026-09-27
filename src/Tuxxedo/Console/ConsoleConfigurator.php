@@ -71,6 +71,8 @@ class ConsoleConfigurator implements ConsoleConfiguratorInterface
     private ?SuggestionPolicy $suggestionPolicyOverride = null;
     private ?HelpConfig $helpConfigOverride = null;
     private ?HelpFormatterInterface $helpFormatter = null;
+    private bool $appNameHeaderEnabled = false;
+    private ?string $appNameHeaderLabel = null;
 
     public function __construct(
         private readonly ContainerInterface $container,
@@ -199,84 +201,15 @@ class ConsoleConfigurator implements ConsoleConfiguratorInterface
         return $this;
     }
 
-    public function build(): KernelInterface
-    {
-        $output = ConsoleOutput::createFromStandardStreams();
-        $stdin = \fopen('php://stdin', 'rb');
+    public function withAppNameHeader(
+        ?string $label = null,
+    ): self {
+        $this->appNameHeaderEnabled = true;
+        $this->appNameHeaderLabel = $label === '' || $label === null
+            ? null
+            : $label;
 
-        if ($stdin === false) {
-            throw ConsoleException::fromStreamNotOpen();
-        }
-
-        $input = new StdinInput(
-            stream: new PhpInputStream(resource: $stdin),
-            output: $output->stdout,
-        );
-
-        $this->container->singleton($output);
-        $this->container->singleton($input);
-        $this->container->singletonLazy(
-            class: OutputInterface::class,
-            initializer: static fn (): OutputInterface => $output->stdout,
-        );
-        $this->container->singletonLazy(
-            class: InputInterface::class,
-            initializer: static fn (): InputInterface => $input,
-        );
-
-        if ($this->appConfig !== null) {
-            $this->container->singleton($this->composeAppConfig($this->appConfig));
-        }
-
-        if ($this->helpFormatter !== null) {
-            $this->container->singleton($this->helpFormatter);
-        }
-
-        foreach ($this->serviceFiles as $file) {
-            $this->container->callFile($file);
-        }
-
-        $discoverer = new CommandDiscoverer();
-        $descriptors = [];
-
-        foreach ($this->collectClasses() as $class) {
-            foreach ($discoverer->discover($class) as $descriptor) {
-                $descriptors[] = $descriptor;
-            }
-        }
-
-        $registry = new CommandRegistry(commands: $descriptors);
-
-        $this->container->singleton($registry);
-
-        $dispatcher = new CommandDispatcher(
-            registry: $registry,
-            parser: new ArgvParser(),
-            binder: new ParameterBinder(container: $this->container),
-            container: $this->container,
-        );
-
-        $kernel = new Kernel(
-            container: $this->container,
-            dispatcher: $dispatcher,
-            output: $output,
-        );
-
-        foreach ($this->exceptionHandlers as $exceptionClass => $handlers) {
-            foreach ($handlers as $handler) {
-                $kernel->whenException($exceptionClass, $handler);
-            }
-        }
-
-        foreach ($this->defaultExceptionHandlers as $handler) {
-            $kernel->defaultExceptionHandler($handler);
-        }
-
-        foreach ($this->middleware as $middleware) {
-            $kernel->middleware($middleware);
-        }
-
-        return $kernel;
+        return $this;
     }
 
     /**
@@ -345,9 +278,94 @@ class ConsoleConfigurator implements ConsoleConfiguratorInterface
         return new ConsoleAppConfig(
             name: $base->name,
             version: $base->version,
-            profile: $base->profile,
+            environment: $base->environment,
             suggestionPolicy: $this->suggestionPolicyOverride ?? $base->suggestionPolicy,
             helpConfig: $this->helpConfigOverride ?? $base->helpConfig,
         );
+    }
+
+    public function build(): KernelInterface
+    {
+        $output = ConsoleOutput::createFromStandardStreams();
+        $stdin = \fopen('php://stdin', 'rb');
+
+        if ($stdin === false) {
+            throw ConsoleException::fromStreamNotOpen();
+        }
+
+        $input = new StdinInput(
+            stream: new PhpInputStream($stdin),
+            output: $output->stdout,
+        );
+
+        $this->container->singleton($output);
+        $this->container->singleton($input);
+        $this->container->singletonLazy(
+            class: OutputInterface::class,
+            initializer: static fn (): OutputInterface => $output->stdout,
+        );
+
+        $this->container->singletonLazy(
+            class: InputInterface::class,
+            initializer: static fn (): InputInterface => $input,
+        );
+
+        if ($this->appConfig !== null) {
+            $this->container->singleton($this->composeAppConfig($this->appConfig));
+        }
+
+        if ($this->helpFormatter !== null) {
+            $this->container->singleton($this->helpFormatter);
+        }
+
+        foreach ($this->serviceFiles as $file) {
+            $this->container->callFile($file);
+        }
+
+        $discoverer = new CommandDiscoverer(
+            container: $this->container,
+        );
+        $descriptors = [];
+
+        foreach ($this->collectClasses() as $class) {
+            foreach ($discoverer->discover($class) as $descriptor) {
+                $descriptors[] = $descriptor;
+            }
+        }
+
+        $registry = new CommandRegistry($descriptors);
+
+        $this->container->singleton($registry);
+
+        $dispatcher = new CommandDispatcher(
+            registry: $registry,
+            parser: new ArgvParser(),
+            binder: new ParameterBinder($this->container),
+            container: $this->container,
+        );
+
+        $kernel = new Kernel(
+            container: $this->container,
+            dispatcher: $dispatcher,
+            output: $output,
+            appNameHeaderEnabled: $this->appNameHeaderEnabled,
+            appNameHeaderLabel: $this->appNameHeaderLabel,
+        );
+
+        foreach ($this->exceptionHandlers as $exceptionClass => $handlers) {
+            foreach ($handlers as $handler) {
+                $kernel->whenException($exceptionClass, $handler);
+            }
+        }
+
+        foreach ($this->defaultExceptionHandlers as $handler) {
+            $kernel->defaultExceptionHandler($handler);
+        }
+
+        foreach ($this->middleware as $middleware) {
+            $kernel->middleware($middleware);
+        }
+
+        return $kernel;
     }
 }

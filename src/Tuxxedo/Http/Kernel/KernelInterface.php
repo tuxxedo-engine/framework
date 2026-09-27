@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Kernel;
 
-use Tuxxedo\Application\Profile;
+use Tuxxedo\Application\Environment;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DefaultImplementation;
@@ -75,7 +75,7 @@ interface KernelInterface
         get;
     }
 
-    public Profile $appProfile {
+    public Environment $appEnvironment {
         get;
     }
 

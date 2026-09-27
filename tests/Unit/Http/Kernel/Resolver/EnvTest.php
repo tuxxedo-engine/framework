@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Unit\Http\Kernel\Resolver;
 
-use Fixture\Env\Profile;
+use Fixture\Env\Environment;
 use PHPUnit\Framework\TestCase;
 use Support\Env\Source\StubEnvSource;
 use Support\Reflection\StubParameterReflector;
@@ -136,7 +136,7 @@ class EnvTest extends TestCase
         );
 
         self::assertSame(
-            Profile::PRODUCTION,
+            Environment::PRODUCTION,
             $resolver->resolve(
                 container: $this->containerWith(
                     values: [
@@ -144,7 +144,7 @@ class EnvTest extends TestCase
                     ],
                 ),
                 parameter: new StubParameterReflector(
-                    defaultType: Profile::class,
+                    defaultType: Environment::class,
                 ),
             ),
         );

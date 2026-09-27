@@ -13,12 +13,12 @@ declare(strict_types=1);
 
 use Tuxxedo\Application\Config\AppConfig;
 use Tuxxedo\Application\Config\AppConfigInterface;
-use Tuxxedo\Application\Profile;
+use Tuxxedo\Application\Environment;
 use Tuxxedo\Env\EnvInterface;
 
 return static fn (EnvInterface $env): AppConfigInterface => new AppConfig(
     name: $env->string('APP_NAME'),
     version: $env->string('APP_VERSION'),
-    profile: $env->enum('APP_PROFILE', Profile::class),
+    environment: $env->enum('APP_ENVIRONMENT', Environment::class),
     url: $env->string('APP_URL'),
 );

@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Unit\Env;
 
-use Fixture\Env\Profile;
+use Fixture\Env\Environment;
 use PHPUnit\Framework\TestCase;
 use Support\Env\Source\StubEnvSource;
 use Tuxxedo\Env\Env;
@@ -573,10 +573,10 @@ class EnvTest extends TestCase
         );
 
         self::assertSame(
-            Profile::PRODUCTION,
+            Environment::PRODUCTION,
             $env->enum(
                 key: 'PROFILE',
-                enum: Profile::class,
+                enum: Environment::class,
             ),
         );
     }
@@ -584,11 +584,11 @@ class EnvTest extends TestCase
     public function testEnumReturnsDefaultWhenKeyMissing(): void
     {
         self::assertSame(
-            Profile::DEVELOPMENT,
+            Environment::DEVELOPMENT,
             (new Env())->enum(
                 key: 'PROFILE',
-                enum: Profile::class,
-                default: Profile::DEVELOPMENT,
+                enum: Environment::class,
+                default: Environment::DEVELOPMENT,
             ),
         );
     }
@@ -599,7 +599,7 @@ class EnvTest extends TestCase
 
         (new Env())->enum(
             key: 'PROFILE',
-            enum: Profile::class,
+            enum: Environment::class,
         );
     }
 
@@ -617,7 +617,7 @@ class EnvTest extends TestCase
 
         $env->enum(
             key: 'PROFILE',
-            enum: Profile::class,
+            enum: Environment::class,
         );
     }
 }

@@ -11,11 +11,12 @@
 
 declare(strict_types=1);
 
-namespace Fixture\Env;
+namespace Tuxxedo\Application;
 
-enum Profile
+enum Environment
 {
     case PRODUCTION;
+    case STAGING;
+    case TESTING;
     case DEVELOPMENT;
-    case TEST;
 }

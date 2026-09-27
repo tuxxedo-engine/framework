@@ -25,7 +25,7 @@ header h1 sup { font-family: var(--mono); font-size: 11px; font-weight: 500; col
 header .meta { color: var(--dim); font-size: 13px; text-align: right; }
 header .meta div + div { margin-top: 2px; }
 section.status { margin-bottom: 44px; }
-section.status .profile { font-family: var(--mono); font-size: 18px; font-weight: 700; margin: 0; word-break: break-word; }
+section.status .environment { font-family: var(--mono); font-size: 18px; font-weight: 700; margin: 0; word-break: break-word; }
 section.status .location { margin: 4px 0 0 0; color: var(--dim); font-size: 13px; font-family: var(--mono); }
 section.status .location .url { color: var(--path); }
 section.status .message { margin: 20px 0 0 0; color: var(--fg); font-size: 16px; line-height: 1.5; max-width: 68ch; }
@@ -46,7 +46,7 @@ section.environment dd { font-family: var(--mono); font-size: 13px; margin: 0; w
 <div class="meta"><div>{{ appName }} {{ appVersion }}</div><div>{{ date('Y-m-d H:i:s T') }} (UTC{{ date('P') }})</div></div>
 </header>
 <section class="status">
-<p class="profile">{{ appProfile }}</p>
+<p class="environment">{{ appEnvironment }}</p>
 <p class="location">serving <span class="url">{{ appUrl }}</span></p>
 <p class="message">Application is running. Add controllers under <code>app/Controllers/</code> and register routes with <code>#[Route]</code>. Configuration lives in <code>app/config/</code>, views in <code>app/views/</code>.</p>
 </section>

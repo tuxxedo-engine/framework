@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Kernel;
 
-use Tuxxedo\Application\Profile;
+use Tuxxedo\Application\Environment;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\HttpException;
@@ -42,7 +42,7 @@ class Kernel implements KernelInterface
         public readonly RouterInterface $router,
         public readonly string $appName = '',
         public readonly string $appVersion = '',
-        public readonly Profile $appProfile = Profile::RELEASE,
+        public readonly Environment $appEnvironment = Environment::PRODUCTION,
         public readonly string $appUrl = '',
     ) {
     }

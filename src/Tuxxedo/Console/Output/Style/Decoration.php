@@ -19,4 +19,7 @@ enum Decoration: int
     case DIM = 2;
     case ITALIC = 3;
     case UNDERLINE = 4;
+    case INVERSE = 7;
+    case HIDDEN = 8;
+    case STRIKETHROUGH = 9;
 }

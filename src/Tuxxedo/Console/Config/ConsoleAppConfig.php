@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console\Config;
 
-use Tuxxedo\Application\Profile;
+use Tuxxedo\Application\Environment;
 use Tuxxedo\Config\Attribute\ConfigNamespace;
 
 #[ConfigNamespace('console')]
@@ -25,7 +25,7 @@ class ConsoleAppConfig implements ConsoleAppConfigInterface
     public function __construct(
         public readonly string $name,
         public readonly string $version,
-        public readonly Profile $profile,
+        public readonly Environment $environment,
         ?SuggestionPolicy $suggestionPolicy = null,
         ?HelpConfig $helpConfig = null,
     ) {

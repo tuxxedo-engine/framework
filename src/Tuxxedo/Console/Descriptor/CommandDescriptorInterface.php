@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console\Descriptor;
 
+use Tuxxedo\Console\Middleware\CommandMiddlewareInterface;
+
 interface CommandDescriptorInterface
 {
     /**
@@ -59,6 +61,13 @@ interface CommandDescriptorInterface
     }
 
     public string $methodName {
+        get;
+    }
+
+    /**
+     * @var array<\Closure(): CommandMiddlewareInterface>
+     */
+    public array $middleware {
         get;
     }
 }

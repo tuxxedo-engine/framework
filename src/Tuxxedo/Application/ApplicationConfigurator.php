@@ -83,7 +83,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
     final public function __construct(
         public private(set) string $appName = '',
         public private(set) string $appVersion = '',
-        public private(set) Profile $appProfile = Profile::RELEASE,
+        public private(set) Environment $appEnvironment = Environment::PRODUCTION,
         public private(set) string $appUrl = '',
         public private(set) ?ConfigInterface $config = null,
         public private(set) ?ContainerInterface $container = null,
@@ -107,7 +107,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         return new static(
             appName: $appConfig->name,
             appVersion: $appConfig->version,
-            appProfile: $appConfig->profile,
+            appEnvironment: $appConfig->environment,
             appUrl: $appConfig->url,
             container: $container,
             config: $config,
@@ -131,7 +131,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         return new static(
             appName: $appConfig->name,
             appVersion: $appConfig->version,
-            appProfile: $appConfig->profile,
+            appEnvironment: $appConfig->environment,
             appUrl: $appConfig->url,
             container: $container,
             config: $config,
@@ -166,10 +166,10 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         return $this;
     }
 
-    public function withAppProfile(
-        Profile $profile,
+    public function withAppEnvironment(
+        Environment $environment,
     ): self {
-        $this->appProfile = $profile;
+        $this->appEnvironment = $environment;
 
         return $this;
     }
@@ -553,7 +553,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
                 [
                     'appName' => $this->appName,
                     'appVersion' => $this->appVersion,
-                    'appProfile' => $this->appProfile,
+                    'appEnvironment' => $this->appEnvironment,
                     'appUrl' => $this->appUrl,
                 ],
             ),
@@ -576,7 +576,7 @@ class ApplicationConfigurator implements ApplicationConfiguratorInterface
         }
 
         if (
-            $this->appProfile === Profile::DEBUG &&
+            $this->appEnvironment === Environment::DEVELOPMENT &&
             $container->isBound(DebugConfigInterface::class)
         ) {
             $kernel->defaultExceptionHandler(

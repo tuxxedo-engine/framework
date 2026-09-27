@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console\Descriptor;
 
+use Tuxxedo\Console\Middleware\CommandMiddlewareInterface;
+
 class CommandDescriptor implements CommandDescriptorInterface
 {
     /**
@@ -21,6 +23,7 @@ class CommandDescriptor implements CommandDescriptorInterface
      * @param list<OptionDescriptorInterface> $options
      * @param list<FlagDescriptorInterface> $flags
      * @param class-string $className
+     * @param array<\Closure(): CommandMiddlewareInterface> $middleware
      */
     public function __construct(
         public readonly array $path,
@@ -31,6 +34,7 @@ class CommandDescriptor implements CommandDescriptorInterface
         public readonly array $flags,
         public readonly string $className,
         public readonly string $methodName,
+        public readonly array $middleware = [],
     ) {
     }
 }

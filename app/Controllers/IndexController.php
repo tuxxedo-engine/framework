@@ -38,7 +38,7 @@ readonly class IndexController
                 'phpSapi' => \PHP_SAPI,
                 'appName' => $this->appConfig->name,
                 'appVersion' => $this->appConfig->version,
-                'appProfile' => $this->appConfig->profile->name,
+                'appEnvironment' => $this->appConfig->environment->name,
                 'appUrl' => $this->appConfig->url,
                 'timezone' => \date_default_timezone_get(),
             ],

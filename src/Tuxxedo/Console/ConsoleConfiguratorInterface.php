@@ -21,6 +21,7 @@ use Tuxxedo\Console\Kernel\HelpFormatterInterface;
 use Tuxxedo\Console\Kernel\KernelInterface;
 use Tuxxedo\Console\Middleware\CommandMiddlewareInterface;
 
+// @todo Expose properties like ApplicationConfiguratorInterface
 interface ConsoleConfiguratorInterface
 {
     public function withDefaultCommandDiscovery(
@@ -84,6 +85,10 @@ interface ConsoleConfiguratorInterface
 
     public function withHelpFormatter(
         HelpFormatterInterface $formatter,
+    ): self;
+
+    public function withAppNameHeader(
+        ?string $label = null,
     ): self;
 
     /**

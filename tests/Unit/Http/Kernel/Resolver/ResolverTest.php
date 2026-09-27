@@ -16,14 +16,14 @@ namespace Unit\Http\Kernel\Resolver;
 use PHPUnit\Framework\TestCase;
 use Support\Http\Kernel\StubDispatcher;
 use Support\Http\Response\StubResponseEmitter;
-use Tuxxedo\Application\Profile;
+use Tuxxedo\Application\Environment;
 use Tuxxedo\Config\Config;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Http\Kernel\Kernel;
 use Tuxxedo\Http\Kernel\KernelInterface;
 use Tuxxedo\Http\Kernel\Resolver\App;
+use Tuxxedo\Http\Kernel\Resolver\AppEnvironment;
 use Tuxxedo\Http\Kernel\Resolver\AppName;
-use Tuxxedo\Http\Kernel\Resolver\AppProfile;
 use Tuxxedo\Http\Kernel\Resolver\AppUrl;
 use Tuxxedo\Http\Kernel\Resolver\AppVersion;
 use Tuxxedo\Http\Kernel\Resolver\Config as ConfigAttr;
@@ -36,7 +36,7 @@ class ResolverTest extends TestCase
     private function makeContainer(
         string $appName = '',
         string $appVersion = '',
-        Profile $appProfile = Profile::RELEASE,
+        Environment $appProfile = Environment::PRODUCTION,
         string $appUrl = '',
         Config $config = new Config(),
     ): Container {
@@ -53,7 +53,7 @@ class ResolverTest extends TestCase
                 ),
                 appName: $appName,
                 appVersion: $appVersion,
-                appProfile: $appProfile,
+                appEnvironment: $appProfile,
                 appUrl: $appUrl,
             ),
         );
@@ -143,10 +143,10 @@ class ResolverTest extends TestCase
     public function testAppProfileResolvesAppProfile(): void
     {
         $container = $this->makeContainer(
-            appProfile: Profile::DEBUG,
+            appProfile: Environment::DEVELOPMENT,
         );
 
-        self::assertSame(Profile::DEBUG, (new AppProfile())->resolve($container, $this->parameter()));
+        self::assertSame(Environment::DEVELOPMENT, (new AppEnvironment())->resolve($container, $this->parameter()));
     }
 
     public function testAppUrlResolvesAppUrl(): void

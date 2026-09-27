@@ -23,7 +23,7 @@ use Support\Http\Request\Middleware\RecordingMiddleware;
 use Support\Http\Response\StubResponseEmitter;
 use Support\Mail\Transport\RecordingMailTransport;
 use Tuxxedo\Application\ApplicationConfigurator;
-use Tuxxedo\Application\Profile;
+use Tuxxedo\Application\Environment;
 use Tuxxedo\Config\Config;
 use Tuxxedo\Config\ConfigException;
 use Tuxxedo\Container\Container;
@@ -77,13 +77,13 @@ class ApplicationConfiguratorTest extends TestCase
         $configurator = new ApplicationConfigurator(
             appName: 'MyApp',
             appVersion: '9.9.9',
-            appProfile: Profile::DEBUG,
+            appEnvironment: Environment::DEVELOPMENT,
             appUrl: 'https://my.app/',
         );
 
         self::assertSame('MyApp', $configurator->appName);
         self::assertSame('9.9.9', $configurator->appVersion);
-        self::assertSame(Profile::DEBUG, $configurator->appProfile);
+        self::assertSame(Environment::DEVELOPMENT, $configurator->appEnvironment);
         self::assertSame('https://my.app/', $configurator->appUrl);
     }
 
@@ -93,7 +93,7 @@ class ApplicationConfiguratorTest extends TestCase
 
         self::assertSame('TuxxedoTestApp', $configurator->appName);
         self::assertSame('1.2.3', $configurator->appVersion);
-        self::assertSame(Profile::RELEASE, $configurator->appProfile);
+        self::assertSame(Environment::PRODUCTION, $configurator->appEnvironment);
         self::assertSame('https://example.test/', $configurator->appUrl);
     }
 
@@ -126,7 +126,7 @@ class ApplicationConfiguratorTest extends TestCase
 
         self::assertSame('TuxxedoDirApp', $configurator->appName);
         self::assertSame('4.5.6', $configurator->appVersion);
-        self::assertSame(Profile::DEBUG, $configurator->appProfile);
+        self::assertSame(Environment::DEVELOPMENT, $configurator->appEnvironment);
         self::assertSame('https://example.dir/', $configurator->appUrl);
     }
 
@@ -186,11 +186,11 @@ class ApplicationConfiguratorTest extends TestCase
     public function testWithAppProfileUpdatesPropertyAndReturnsFluentSelf(): void
     {
         $configurator = new ApplicationConfigurator();
-        $result = $configurator->withAppProfile(
-            profile: Profile::DEBUG,
+        $result = $configurator->withAppEnvironment(
+            environment: Environment::DEVELOPMENT,
         );
 
-        self::assertSame(Profile::DEBUG, $configurator->appProfile);
+        self::assertSame(Environment::DEVELOPMENT, $configurator->appEnvironment);
         self::assertSame($configurator, $result);
     }
 
@@ -781,7 +781,7 @@ class ApplicationConfiguratorTest extends TestCase
 
     private function makeMinimalConfiguratorWithContainer(
         Container $container,
-        Profile $profile = Profile::RELEASE,
+        Environment $profile = Environment::PRODUCTION,
     ): ApplicationConfigurator {
         $container->singleton(
             new StubResponseEmitter(),
@@ -795,7 +795,7 @@ class ApplicationConfiguratorTest extends TestCase
         return (new ApplicationConfigurator(
             appName: 'MinimalApp',
             appVersion: '0.1.0',
-            appProfile: $profile,
+            appEnvironment: $profile,
             appUrl: 'https://minimal.test/',
             container: $container,
             config: new Config(),
@@ -821,7 +821,7 @@ class ApplicationConfiguratorTest extends TestCase
 
         self::assertSame('MinimalApp', $kernel->appName);
         self::assertSame('0.1.0', $kernel->appVersion);
-        self::assertSame(Profile::RELEASE, $kernel->appProfile);
+        self::assertSame(Environment::PRODUCTION, $kernel->appEnvironment);
         self::assertSame('https://minimal.test/', $kernel->appUrl);
     }
 
@@ -1041,7 +1041,7 @@ class ApplicationConfiguratorTest extends TestCase
 
         $configurator = $this->makeMinimalConfiguratorWithContainer(
             container: $container,
-            profile: Profile::DEBUG,
+            profile: Environment::DEVELOPMENT,
         );
 
         $userHandler = self::makeErrorHandler();

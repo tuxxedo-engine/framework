@@ -27,9 +27,17 @@ use Tuxxedo\Console\Descriptor\FlagDescriptor;
 use Tuxxedo\Console\Descriptor\OptionDescriptor;
 use Tuxxedo\Console\ExitCode;
 use Tuxxedo\Console\Invocation\ParameterBinding;
+use Tuxxedo\Console\Middleware\Attribute\CommandMiddleware;
+use Tuxxedo\Console\Middleware\CommandMiddlewareInterface;
+use Tuxxedo\Container\ContainerInterface;
 
 class CommandDiscoverer implements CommandDiscovererInterface
 {
+    public function __construct(
+        private readonly ContainerInterface $container,
+    ) {
+    }
+
     /**
      * @param class-string $className
      *
@@ -42,6 +50,7 @@ class CommandDiscoverer implements CommandDiscovererInterface
     ): array {
         $reflection = new \ReflectionClass($className);
         $descriptors = [];
+        $baseMiddleware = $this->getMiddleware($reflection);
 
         foreach ($reflection->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
             $commandAttributes = $method->getAttributes(
@@ -71,6 +80,11 @@ class CommandDiscoverer implements CommandDiscovererInterface
                 method: $method,
             );
 
+            $middleware = \array_merge(
+                $baseMiddleware,
+                $this->getMiddleware($method),
+            );
+
             if ($defaultAttributes !== []) {
                 $default = $defaultAttributes[0]->newInstance();
 
@@ -83,6 +97,7 @@ class CommandDiscoverer implements CommandDiscovererInterface
                     flags: $binding->flags,
                     className: $className,
                     methodName: $method->getName(),
+                    middleware: $middleware,
                 );
 
                 continue;
@@ -100,11 +115,42 @@ class CommandDiscoverer implements CommandDiscovererInterface
                     flags: $binding->flags,
                     className: $className,
                     methodName: $method->getName(),
+                    middleware: $middleware,
                 );
             }
         }
 
         return $descriptors;
+    }
+
+    /**
+     * @param \ReflectionClass<object>|\ReflectionMethod $reflector
+     *
+     * @return array<\Closure(): CommandMiddlewareInterface>
+     */
+    private function getMiddleware(
+        \ReflectionClass|\ReflectionMethod $reflector,
+    ): array {
+        $middleware = [];
+
+        /** @var \ReflectionAttribute<CommandMiddleware> $wrapper */
+        foreach ($reflector->getAttributes(CommandMiddleware::class, \ReflectionAttribute::IS_INSTANCEOF) as $wrapper) {
+            $middlewareInstance = $wrapper->newInstance()->middleware;
+
+            if (\is_string($middlewareInstance)) {
+                $middleware[] = fn (): CommandMiddlewareInterface => /** @var CommandMiddlewareInterface */ $this->container->resolve($middlewareInstance);
+            } else {
+                $middleware[] = fn (): CommandMiddlewareInterface => $middlewareInstance($this->container);
+            }
+        }
+
+        /** @var \ReflectionAttribute<CommandMiddlewareInterface> $direct */
+        foreach ($reflector->getAttributes(CommandMiddlewareInterface::class, \ReflectionAttribute::IS_INSTANCEOF) as $direct) {
+            $className = $direct->getName();
+            $middleware[] = fn (): CommandMiddlewareInterface => /** @var CommandMiddlewareInterface */ $this->container->resolve($className);
+        }
+
+        return $middleware;
     }
 
     /**

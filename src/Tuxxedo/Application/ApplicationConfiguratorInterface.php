@@ -35,7 +35,7 @@ interface ApplicationConfiguratorInterface
         get;
     }
 
-    public Profile $appProfile {
+    public Environment $appEnvironment {
         get;
     }
 
@@ -127,8 +127,8 @@ interface ApplicationConfiguratorInterface
         string $version,
     ): self;
 
-    public function withAppProfile(
-        Profile $profile,
+    public function withAppEnvironment(
+        Environment $environment,
     ): self;
 
     public function withAppUrl(

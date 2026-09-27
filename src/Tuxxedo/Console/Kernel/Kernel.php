@@ -38,6 +38,8 @@ class Kernel implements KernelInterface
         public readonly ContainerInterface $container,
         public readonly CommandDispatcherInterface $dispatcher,
         public readonly ConsoleOutputInterface $output,
+        public readonly bool $appNameHeaderEnabled = false,
+        public readonly ?string $appNameHeaderLabel = null,
     ) {
     }
 
@@ -155,6 +157,23 @@ class Kernel implements KernelInterface
         return $this->container->resolve(HelpFormatterInterface::class);
     }
 
+    private function appNameHeader(): ?string
+    {
+        if (!$this->appNameHeaderEnabled) {
+            return null;
+        }
+
+        if ($this->appNameHeaderLabel !== null) {
+            return $this->appNameHeaderLabel;
+        }
+
+        try {
+            return $this->container->resolve(ConsoleAppConfigInterface::class)->name;
+        } catch (ContainerException) {
+            return null;
+        }
+    }
+
     private function pipeline(
         CommandInvocationInterface $invocation,
     ): ExitCode {
@@ -162,7 +181,14 @@ class Kernel implements KernelInterface
             dispatcher: $this->dispatcher,
         );
 
-        foreach (\array_reverse($this->middleware) as $middleware) {
+        $middlewares = \array_reverse(
+            \array_merge(
+                $this->middleware,
+                $invocation->descriptor->middleware,
+            ),
+        );
+
+        foreach ($middlewares as $middleware) {
             $next = new MiddlewareNode(
                 container: $this->container,
                 current: $middleware,
@@ -238,9 +264,15 @@ class Kernel implements KernelInterface
         $stderr = $this->output->stderr;
         $cwd = \getcwd();
 
+        $header = $this->appNameHeader();
+        $prefix = $header !== null
+            ? \sprintf('[%s] ', $header)
+            : '';
+
         $stderr->line(
             \sprintf(
-                'An unhandled exception occurred: \\%s: %s',
+                '%sAn unhandled exception occurred: \\%s: %s',
+                $prefix,
                 $exception::class,
                 $exception->getMessage(),
             ),

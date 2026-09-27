@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Application\Config;
 
-use Tuxxedo\Application\Profile;
+use Tuxxedo\Application\Environment;
 use Tuxxedo\Config\Attribute\ConfigNamespace;
 
 #[ConfigNamespace('app')]
@@ -22,7 +22,7 @@ readonly class AppConfig implements AppConfigInterface
     public function __construct(
         public string $name,
         public string $version,
-        public Profile $profile,
+        public Environment $environment,
         public string $url,
     ) {
     }

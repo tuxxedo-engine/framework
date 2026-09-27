@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console\Config;
 
-use Tuxxedo\Application\Profile;
+use Tuxxedo\Application\Environment;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 
@@ -28,7 +28,7 @@ interface ConsoleAppConfigInterface
         get;
     }
 
-    public Profile $profile {
+    public Environment $environment {
         get;
     }
 
