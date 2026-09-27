@@ -13,20 +13,15 @@
 declare(strict_types=1);
 
 use Tuxxedo\Application\Environment;
-use Tuxxedo\Console\Config\ConsoleAppConfig;
 use Tuxxedo\Console\ConsoleConfigurator;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
 exit(
     ConsoleConfigurator::create()
-        ->withAppConfig(
-            new ConsoleAppConfig(
-                name: 'engine-demo',
-                version: '0.1.0',
-                environment: Environment::DEVELOPMENT,
-            ),
-        )
+        ->withAppName('engine-demo')
+        ->withAppVersion('0.1.0')
+        ->withAppEnvironment(Environment::DEVELOPMENT)
         ->withAppNameHeader()
         ->withDefaultCommandDiscovery(
             directory: __DIR__ . '/../console/Commands',

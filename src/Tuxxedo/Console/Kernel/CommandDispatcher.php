@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console\Kernel;
 
-use Tuxxedo\Console\Config\ConsoleAppConfigInterface;
 use Tuxxedo\Console\Config\SuggestionPolicy;
 use Tuxxedo\Console\ConsoleException;
 use Tuxxedo\Console\Descriptor\CommandDescriptorInterface;
@@ -92,7 +91,7 @@ class CommandDispatcher implements CommandDispatcherInterface
     private function suggestionPolicy(): SuggestionPolicy
     {
         try {
-            return $this->container->resolve(ConsoleAppConfigInterface::class)->suggestionPolicy;
+            return $this->container->resolve(SuggestionPolicy::class);
         } catch (ContainerException) {
             return SuggestionPolicy::default();
         }

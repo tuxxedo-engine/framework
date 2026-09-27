@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console\Kernel;
 
-use Tuxxedo\Console\Config\ConsoleAppConfigInterface;
 use Tuxxedo\Console\Config\HelpConfig;
 use Tuxxedo\Console\ExitCode;
 use Tuxxedo\Console\ExitCodeExceptionInterface;
@@ -38,6 +37,7 @@ class Kernel implements KernelInterface
         public readonly ContainerInterface $container,
         public readonly CommandDispatcherInterface $dispatcher,
         public readonly ConsoleOutputInterface $output,
+        public readonly string $appName = '',
         public readonly bool $appNameHeaderEnabled = false,
         public readonly ?string $appNameHeaderLabel = null,
     ) {
@@ -146,7 +146,7 @@ class Kernel implements KernelInterface
     private function helpTokens(): array
     {
         try {
-            return $this->container->resolve(ConsoleAppConfigInterface::class)->helpConfig->tokens;
+            return $this->container->resolve(HelpConfig::class)->tokens;
         } catch (ContainerException) {
             return HelpConfig::default()->tokens;
         }
@@ -167,11 +167,9 @@ class Kernel implements KernelInterface
             return $this->appNameHeaderLabel;
         }
 
-        try {
-            return $this->container->resolve(ConsoleAppConfigInterface::class)->name;
-        } catch (ContainerException) {
-            return null;
-        }
+        return $this->appName !== ''
+            ? $this->appName
+            : null;
     }
 
     private function pipeline(

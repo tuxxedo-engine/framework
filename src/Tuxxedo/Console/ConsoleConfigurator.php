@@ -13,8 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console;
 
-use Tuxxedo\Console\Config\ConsoleAppConfig;
-use Tuxxedo\Console\Config\ConsoleAppConfigInterface;
+use Tuxxedo\Application\AbstractConfigurator;
+use Tuxxedo\Application\Environment;
+use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Console\Config\HelpConfig;
 use Tuxxedo\Console\Config\SuggestionPolicy;
 use Tuxxedo\Console\Input\InputInterface;
@@ -37,17 +38,12 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\File\FileCollectionFactory;
 use Tuxxedo\File\FileException;
 
-class ConsoleConfigurator implements ConsoleConfiguratorInterface
+class ConsoleConfigurator extends AbstractConfigura tor implements ConsoleConfiguratorInterface
 {
     /**
      * @var list<class-string>
      */
     public private(set) array $commandClasses = [];
-
-    /**
-     * @var list<string>
-     */
-    public private(set) array $serviceFiles = [];
 
     public private(set) ?string $discoveryDirectory = null;
     public private(set) ?string $discoveryBaseNamespace = null;
@@ -67,7 +63,9 @@ class ConsoleConfigurator implements ConsoleConfiguratorInterface
      */
     public private(set) array $middleware = [];
 
-    public private(set) ?ConsoleAppConfigInterface $appConfig = null;
+    public private(set) string $appName = '';
+    public private(set) string $appVersion = '';
+    public private(set) Environment $appEnvironment = Environment::PRODUCTION;
     public private(set) ?SuggestionPolicy $suggestionPolicyOverride = null;
     public private(set) ?HelpConfig $helpConfigOverride = null;
     public private(set) ?HelpFormatterInterface $helpFormatter = null;
@@ -75,8 +73,37 @@ class ConsoleConfigurator implements ConsoleConfiguratorInterface
     public private(set) ?string $appNameHeaderLabel = null;
 
     public function __construct(
-        public private(set) ContainerInterface $container,
+        ContainerInterface $container,
+        ?ConfigInterface $config = null,
     ) {
+        parent::__construct(
+            config: $config,
+            container: $container,
+        );
+    }
+
+    public function withAppName(
+        string $name,
+    ): self {
+        $this->appName = $name;
+
+        return $this;
+    }
+
+    public function withAppVersion(
+        string $version,
+    ): self {
+        $this->appVersion = $version;
+
+        return $this;
+    }
+
+    public function withAppEnvironment(
+        Environment $environment,
+    ): self {
+        $this->appEnvironment = $environment;
+
+        return $this;
     }
 
     public static function create(
@@ -110,14 +137,6 @@ class ConsoleConfigurator implements ConsoleConfiguratorInterface
         $this->commandClasses = [];
         $this->discoveryDirectory = null;
         $this->discoveryBaseNamespace = null;
-
-        return $this;
-    }
-
-    public function withServiceFile(
-        string $file,
-    ): self {
-        $this->serviceFiles[] = $file;
 
         return $this;
     }
@@ -165,14 +184,6 @@ class ConsoleConfigurator implements ConsoleConfiguratorInterface
     public function withoutMiddleware(): self
     {
         $this->middleware = [];
-
-        return $this;
-    }
-
-    public function withAppConfig(
-        ConsoleAppConfigInterface $config,
-    ): self {
-        $this->appConfig = $config;
 
         return $this;
     }
@@ -268,22 +279,6 @@ class ConsoleConfigurator implements ConsoleConfiguratorInterface
         return $classes;
     }
 
-    private function composeAppConfig(
-        ConsoleAppConfigInterface $base,
-    ): ConsoleAppConfigInterface {
-        if ($this->suggestionPolicyOverride === null && $this->helpConfigOverride === null) {
-            return $base;
-        }
-
-        return new ConsoleAppConfig(
-            name: $base->name,
-            version: $base->version,
-            environment: $base->environment,
-            suggestionPolicy: $this->suggestionPolicyOverride ?? $base->suggestionPolicy,
-            helpConfig: $this->helpConfigOverride ?? $base->helpConfig,
-        );
-    }
-
     public function build(): KernelInterface
     {
         $output = ConsoleOutput::createFromStandardStreams();
@@ -298,32 +293,37 @@ class ConsoleConfigurator implements ConsoleConfiguratorInterface
             output: $output->stdout,
         );
 
-        $this->container->singleton($output);
-        $this->container->singleton($input);
-        $this->container->singletonLazy(
+        $container = $this->container ?? new Container();
+
+        $container->singleton($output);
+        $container->singleton($input);
+        $container->singletonLazy(
             class: OutputInterface::class,
             initializer: static fn (): OutputInterface => $output->stdout,
         );
 
-        $this->container->singletonLazy(
+        $container->singletonLazy(
             class: InputInterface::class,
             initializer: static fn (): InputInterface => $input,
         );
 
-        if ($this->appConfig !== null) {
-            $this->container->singleton($this->composeAppConfig($this->appConfig));
-        }
+        $container->singleton($this->appEnvironment);
+        $container->singleton($this->suggestionPolicyOverride ?? SuggestionPolicy::default());
+        $container->singleton($this->helpConfigOverride ?? HelpConfig::default());
 
         if ($this->helpFormatter !== null) {
-            $this->container->singleton($this->helpFormatter);
+            $container->singleton($this->helpFormatter);
         }
 
-        foreach ($this->serviceFiles as $file) {
-            $this->container->callFile($file);
-        }
+        $this->registerLumi($container);
+        $this->registerConnectionManager($container);
+        $this->registerStorage($container);
+        $this->registerMailManager($container);
+
+        $this->loadServiceFiles($container);
 
         $discoverer = new CommandDiscoverer(
-            container: $this->container,
+            container: $container,
         );
         $descriptors = [];
 
@@ -335,19 +335,20 @@ class ConsoleConfigurator implements ConsoleConfiguratorInterface
 
         $registry = new CommandRegistry($descriptors);
 
-        $this->container->singleton($registry);
+        $container->singleton($registry);
 
         $dispatcher = new CommandDispatcher(
             registry: $registry,
             parser: new ArgvParser(),
-            binder: new ParameterBinder($this->container),
-            container: $this->container,
+            binder: new ParameterBinder($container),
+            container: $container,
         );
 
         $kernel = new Kernel(
-            container: $this->container,
+            container: $container,
             dispatcher: $dispatcher,
             output: $output,
+            appName: $this->appName,
             appNameHeaderEnabled: $this->appNameHeaderEnabled,
             appNameHeaderLabel: $this->appNameHeaderLabel,
         );

@@ -13,21 +13,17 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console;
 
-use Tuxxedo\Console\Config\ConsoleAppConfigInterface;
+use Tuxxedo\Application\AbstractConfiguratorInterface;
+use Tuxxedo\Application\Environment;
 use Tuxxedo\Console\Config\HelpConfig;
 use Tuxxedo\Console\Config\SuggestionPolicy;
 use Tuxxedo\Console\Kernel\ConsoleErrorHandlerInterface;
 use Tuxxedo\Console\Kernel\HelpFormatterInterface;
 use Tuxxedo\Console\Kernel\KernelInterface;
 use Tuxxedo\Console\Middleware\CommandMiddlewareInterface;
-use Tuxxedo\Container\ContainerInterface;
 
-interface ConsoleConfiguratorInterface
+interface ConsoleConfiguratorInterface extends AbstractConfiguratorInterface
 {
-    public ContainerInterface $container {
-        get;
-    }
-
     public ?string $discoveryDirectory {
         get;
     }
@@ -43,7 +39,15 @@ interface ConsoleConfiguratorInterface
         get;
     }
 
-    public ?ConsoleAppConfigInterface $appConfig {
+    public string $appName {
+        get;
+    }
+
+    public string $appVersion {
+        get;
+    }
+
+    public Environment $appEnvironment {
         get;
     }
 
@@ -88,13 +92,6 @@ interface ConsoleConfiguratorInterface
         get;
     }
 
-    /**
-     * @var list<string>
-     */
-    public array $serviceFiles {
-        get;
-    }
-
     public function withDefaultCommandDiscovery(
         string $directory,
         string $baseNamespace,
@@ -108,10 +105,6 @@ interface ConsoleConfiguratorInterface
     ): self;
 
     public function withoutCommandClasses(): self;
-
-    public function withServiceFile(
-        string $file,
-    ): self;
 
     /**
      * @param class-string<\Throwable> $exceptionClass
@@ -142,8 +135,16 @@ interface ConsoleConfiguratorInterface
 
     public function withoutMiddleware(): self;
 
-    public function withAppConfig(
-        ConsoleAppConfigInterface $config,
+    public function withAppName(
+        string $name,
+    ): self;
+
+    public function withAppVersion(
+        string $version,
+    ): self;
+
+    public function withAppEnvironment(
+        Environment $environment,
     ): self;
 
     public function withSuggestionPolicy(
