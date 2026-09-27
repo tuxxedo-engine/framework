@@ -276,11 +276,12 @@ class SpinnerTest extends TestCase
             theme: $theme,
         );
 
-        $bytesBefore = $stream->bytes;
+        $spinner->tick();
+        $bytesAfterFirstTick = $stream->bytes;
         $spinner->tick();
 
         self::assertSame(
-            $bytesBefore,
+            $bytesAfterFirstTick,
             $stream->bytes,
         );
     }

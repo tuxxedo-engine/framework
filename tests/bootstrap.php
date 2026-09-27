@@ -27,6 +27,7 @@ if ($testToken !== false && $testToken !== '') {
 }
 
 $skipBootstrapDb = \getenv('TUXXEDO_TEST_SKIP_BOOTSTRAP_DB') === '1';
+$isParatestWorker = $testToken !== false && $testToken !== '';
 
 if (!$skipBootstrapDb && DatabaseServerProbe::isMysqlAvailable()) {
     $mysqlDatabaseName = MysqlTestEnv::databaseName();
@@ -72,39 +73,41 @@ if (!$skipBootstrapDb && DatabaseServerProbe::isMysqlAvailable()) {
 
             $mysqlAdmin->close();
 
-            \register_shutdown_function(
-                static function () use ($mysqlDatabaseName): void {
-                    $keepDatabase = \getenv('TUXXEDO_TEST_KEEP_DATABASE');
+            if (!$isParatestWorker) {
+                \register_shutdown_function(
+                    static function () use ($mysqlDatabaseName): void {
+                        $keepDatabase = \getenv('TUXXEDO_TEST_KEEP_DATABASE');
 
-                    if ($keepDatabase === '1' || $keepDatabase === 'true') {
-                        return;
-                    }
-
-                    try {
-                        $shutdownAdmin = new mysqli(
-                            hostname: MysqlTestEnv::host(),
-                            username: MysqlTestEnv::username(),
-                            password: MysqlTestEnv::password(),
-                            database: MysqlTestEnv::adminDatabase(),
-                            port: MysqlTestEnv::port(),
-                        );
-
-                        if ($shutdownAdmin->connect_errno !== 0) {
+                        if ($keepDatabase === '1' || $keepDatabase === 'true') {
                             return;
                         }
 
-                        $shutdownAdmin->query(
-                            \sprintf(
-                                'DROP DATABASE IF EXISTS `%s`',
-                                \str_replace('`', '``', $mysqlDatabaseName),
-                            ),
-                        );
+                        try {
+                            $shutdownAdmin = new mysqli(
+                                hostname: MysqlTestEnv::host(),
+                                username: MysqlTestEnv::username(),
+                                password: MysqlTestEnv::password(),
+                                database: MysqlTestEnv::adminDatabase(),
+                                port: MysqlTestEnv::port(),
+                            );
 
-                        $shutdownAdmin->close();
-                    } catch (mysqli_sql_exception) {
-                    }
-                },
-            );
+                            if ($shutdownAdmin->connect_errno !== 0) {
+                                return;
+                            }
+
+                            $shutdownAdmin->query(
+                                \sprintf(
+                                    'DROP DATABASE IF EXISTS `%s`',
+                                    \str_replace('`', '``', $mysqlDatabaseName),
+                                ),
+                            );
+
+                            $shutdownAdmin->close();
+                        } catch (mysqli_sql_exception) {
+                        }
+                    },
+                );
+            }
         }
     } catch (mysqli_sql_exception $exception) {
         throw new RuntimeException(
@@ -193,30 +196,32 @@ if (!$skipBootstrapDb && DatabaseServerProbe::isPgsqlAvailable()) {
 
         \pg_close($pgsqlAdmin);
 
-        \register_shutdown_function(
-            static function () use ($pgsqlDatabaseName, $buildPgsqlAdminDsn, $pgConnect): void {
-                $keepDatabase = \getenv('TUXXEDO_TEST_KEEP_DATABASE');
+        if (!$isParatestWorker) {
+            \register_shutdown_function(
+                static function () use ($pgsqlDatabaseName, $buildPgsqlAdminDsn, $pgConnect): void {
+                    $keepDatabase = \getenv('TUXXEDO_TEST_KEEP_DATABASE');
 
-                if ($keepDatabase === '1' || $keepDatabase === 'true') {
-                    return;
-                }
+                    if ($keepDatabase === '1' || $keepDatabase === 'true') {
+                        return;
+                    }
 
-                $shutdownAdmin = $pgConnect($buildPgsqlAdminDsn());
+                    $shutdownAdmin = $pgConnect($buildPgsqlAdminDsn());
 
-                if (!$shutdownAdmin instanceof PgSql\Connection) {
-                    return;
-                }
+                    if (!$shutdownAdmin instanceof PgSql\Connection) {
+                        return;
+                    }
 
-                @\pg_query(
-                    $shutdownAdmin,
-                    \sprintf(
-                        'DROP DATABASE IF EXISTS "%s" WITH (FORCE)',
-                        \str_replace('"', '""', $pgsqlDatabaseName),
-                    ),
-                );
+                    @\pg_query(
+                        $shutdownAdmin,
+                        \sprintf(
+                            'DROP DATABASE IF EXISTS "%s" WITH (FORCE)',
+                            \str_replace('"', '""', $pgsqlDatabaseName),
+                        ),
+                    );
 
-                \pg_close($shutdownAdmin);
-            },
-        );
+                    \pg_close($shutdownAdmin);
+                },
+            );
+        }
     }
 }
