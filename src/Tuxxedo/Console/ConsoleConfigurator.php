@@ -42,40 +42,40 @@ class ConsoleConfigurator implements ConsoleConfiguratorInterface
     /**
      * @var list<class-string>
      */
-    private array $commandClasses = [];
+    public private(set) array $commandClasses = [];
 
     /**
      * @var list<string>
      */
-    private array $serviceFiles = [];
+    public private(set) array $serviceFiles = [];
 
-    private ?string $discoveryDirectory = null;
-    private ?string $discoveryBaseNamespace = null;
+    public private(set) ?string $discoveryDirectory = null;
+    public private(set) ?string $discoveryBaseNamespace = null;
 
     /**
      * @var array<class-string<\Throwable>, list<\Closure|ConsoleErrorHandlerInterface>>
      */
-    private array $exceptionHandlers = [];
+    public private(set) array $exceptionHandlers = [];
 
     /**
      * @var list<\Closure|ConsoleErrorHandlerInterface>
      */
-    private array $defaultExceptionHandlers = [];
+    public private(set) array $defaultExceptionHandlers = [];
 
     /**
      * @var list<\Closure|CommandMiddlewareInterface>
      */
-    private array $middleware = [];
+    public private(set) array $middleware = [];
 
-    private ?ConsoleAppConfigInterface $appConfig = null;
-    private ?SuggestionPolicy $suggestionPolicyOverride = null;
-    private ?HelpConfig $helpConfigOverride = null;
-    private ?HelpFormatterInterface $helpFormatter = null;
-    private bool $appNameHeaderEnabled = false;
-    private ?string $appNameHeaderLabel = null;
+    public private(set) ?ConsoleAppConfigInterface $appConfig = null;
+    public private(set) ?SuggestionPolicy $suggestionPolicyOverride = null;
+    public private(set) ?HelpConfig $helpConfigOverride = null;
+    public private(set) ?HelpFormatterInterface $helpFormatter = null;
+    public private(set) bool $appNameHeaderEnabled = false;
+    public private(set) ?string $appNameHeaderLabel = null;
 
     public function __construct(
-        private readonly ContainerInterface $container,
+        public private(set) ContainerInterface $container,
     ) {
     }
 

@@ -20,10 +20,81 @@ use Tuxxedo\Console\Kernel\ConsoleErrorHandlerInterface;
 use Tuxxedo\Console\Kernel\HelpFormatterInterface;
 use Tuxxedo\Console\Kernel\KernelInterface;
 use Tuxxedo\Console\Middleware\CommandMiddlewareInterface;
+use Tuxxedo\Container\ContainerInterface;
 
-// @todo Expose properties like ApplicationConfiguratorInterface
 interface ConsoleConfiguratorInterface
 {
+    public ContainerInterface $container {
+        get;
+    }
+
+    public ?string $discoveryDirectory {
+        get;
+    }
+
+    public ?string $discoveryBaseNamespace {
+        get;
+    }
+
+    /**
+     * @var list<class-string>
+     */
+    public array $commandClasses {
+        get;
+    }
+
+    public ?ConsoleAppConfigInterface $appConfig {
+        get;
+    }
+
+    public ?SuggestionPolicy $suggestionPolicyOverride {
+        get;
+    }
+
+    public ?HelpConfig $helpConfigOverride {
+        get;
+    }
+
+    public ?HelpFormatterInterface $helpFormatter {
+        get;
+    }
+
+    public bool $appNameHeaderEnabled {
+        get;
+    }
+
+    public ?string $appNameHeaderLabel {
+        get;
+    }
+
+    /**
+     * @var list<\Closure|CommandMiddlewareInterface>
+     */
+    public array $middleware {
+        get;
+    }
+
+    /**
+     * @var array<class-string<\Throwable>, list<\Closure|ConsoleErrorHandlerInterface>>
+     */
+    public array $exceptionHandlers {
+        get;
+    }
+
+    /**
+     * @var list<\Closure|ConsoleErrorHandlerInterface>
+     */
+    public array $defaultExceptionHandlers {
+        get;
+    }
+
+    /**
+     * @var list<string>
+     */
+    public array $serviceFiles {
+        get;
+    }
+
     public function withDefaultCommandDiscovery(
         string $directory,
         string $baseNamespace,
