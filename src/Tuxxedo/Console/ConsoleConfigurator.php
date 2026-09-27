@@ -285,7 +285,7 @@ class ConsoleConfigurator extends AbstractConfigurator implements ConsoleConfigu
         $stdin = \fopen('php://stdin', 'rb');
 
         if ($stdin === false) {
-            throw ConsoleException::fromStreamNotOpen();
+            throw ConsoleException::fromStreamNotOpen(); // @codeCoverageIgnore
         }
 
         $input = new StdinInput(

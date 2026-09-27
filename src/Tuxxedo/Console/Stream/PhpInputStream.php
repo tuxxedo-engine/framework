@@ -45,7 +45,7 @@ class PhpInputStream implements InputStreamInterface
         $bytes = \fread($resource, $length);
 
         if ($bytes === false) {
-            throw ConsoleException::fromStreamReadFailure();
+            throw ConsoleException::fromStreamReadFailure(); // @codeCoverageIgnore
         }
 
         return $bytes;
@@ -61,7 +61,7 @@ class PhpInputStream implements InputStreamInterface
                 return null;
             }
 
-            throw ConsoleException::fromStreamReadFailure();
+            throw ConsoleException::fromStreamReadFailure(); // @codeCoverageIgnore
         }
 
         return \rtrim($line, "\r\n");
@@ -73,7 +73,7 @@ class PhpInputStream implements InputStreamInterface
         $contents = \stream_get_contents($resource);
 
         if ($contents === false) {
-            throw ConsoleException::fromStreamReadFailure();
+            throw ConsoleException::fromStreamReadFailure(); // @codeCoverageIgnore
         }
 
         return $contents;

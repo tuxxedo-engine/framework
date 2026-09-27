@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Unit\Console\Kernel;
 
 use Fixture\Console\Commands\ClassLevelMiddlewareCommand;
+use Fixture\Console\Commands\ClosureMiddlewareCommand;
 use Fixture\Console\Commands\ConflictingKindCommand;
 use Fixture\Console\Commands\ConflictingParamCommand;
 use Fixture\Console\Commands\DefaultDispatchCommand;
@@ -27,6 +28,7 @@ use Fixture\Console\Commands\ParameterizedCommand;
 use Fixture\Console\Commands\SimpleCommand;
 use Fixture\Console\Commands\VoidCommand;
 use Fixture\Console\Commands\WrapperMiddlewareCommand;
+use Fixture\Console\Invocation\BinderMethodFixtures;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Support\Console\Middleware\DirectAttributeMiddleware;
@@ -38,6 +40,13 @@ use Tuxxedo\Container\Container;
 
 class CommandDiscovererTest extends TestCase
 {
+    public function testDiscoveryIgnoresMethodsWithoutCommandAttribute(): void
+    {
+        $descriptors = $this->discoverer()->discover(BinderMethodFixtures::class);
+
+        self::assertSame([], $descriptors);
+    }
+
     public function testDiscoversSimpleCommandDescriptor(): void
     {
         $descriptors = $this->discoverer()->discover(SimpleCommand::class);
@@ -164,6 +173,23 @@ class CommandDiscovererTest extends TestCase
             RecordingCommandMiddleware::class,
             $resolved,
         );
+    }
+
+    public function testClosureMiddlewareWrapperIsCollectedAndInvokedWithContainer(): void
+    {
+        $container = new Container();
+        $recording = new RecordingCommandMiddleware();
+        $container->singleton($recording);
+
+        $descriptor = (new CommandDiscoverer(
+            container: $container,
+        ))->discover(ClosureMiddlewareCommand::class)[0];
+
+        self::assertCount(1, $descriptor->middleware);
+
+        $resolved = ($descriptor->middleware[0])();
+
+        self::assertSame($recording, $resolved);
     }
 
     public function testDirectAttributeMiddlewareIsCollectedByInterfaceMatch(): void

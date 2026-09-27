@@ -45,7 +45,7 @@ class PhpOutputStream implements OutputStreamInterface
             $written = \fwrite($resource, $remaining);
 
             if ($written === false || $written === 0) {
-                throw ConsoleException::fromStreamWriteFailure();
+                throw ConsoleException::fromStreamWriteFailure(); // @codeCoverageIgnore
             }
 
             $remaining = \substr($remaining, $written);

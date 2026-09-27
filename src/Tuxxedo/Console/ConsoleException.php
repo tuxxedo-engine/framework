@@ -49,6 +49,9 @@ class ConsoleException extends \Exception implements ExitCodeInterface, ExitCode
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromStreamReadFailure(
         ?\Throwable $previous = null,
     ): self {
@@ -59,6 +62,9 @@ class ConsoleException extends \Exception implements ExitCodeInterface, ExitCode
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromStreamWriteFailure(
         ?\Throwable $previous = null,
     ): self {
@@ -77,6 +83,9 @@ class ConsoleException extends \Exception implements ExitCodeInterface, ExitCode
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromCommandNameParseFailure(): self
     {
         return new self(
@@ -337,6 +346,9 @@ class ConsoleException extends \Exception implements ExitCodeInterface, ExitCode
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromEmptyFrameSequence(): self
     {
         return new self(

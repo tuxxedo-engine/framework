@@ -14,9 +14,11 @@ declare(strict_types=1);
 namespace Unit\Console\Kernel;
 
 use Fixture\Console\Commands\ClassLevelMiddlewareCommand;
+use Fixture\Console\Commands\ClosureMiddlewareCommand;
 use Fixture\Console\Commands\DirectAttributeMiddlewareCommand;
 use Fixture\Console\Commands\SimpleCommand;
 use Fixture\Console\Commands\TaggingDescriptorMiddlewareCommand;
+use Fixture\Console\Commands\VoidCommand;
 use Fixture\Console\Commands\WrapperMiddlewareCommand;
 use PHPUnit\Framework\TestCase;
 use Support\Console\Middleware\DirectAttributeMiddleware;
@@ -53,6 +55,28 @@ class KernelPipelineTest extends TestCase
         $this->stdout = new BufferedOutputStream();
         $this->stderr = new BufferedOutputStream();
         $this->container = new Container();
+    }
+
+    public function testVoidReturningCommandYieldsSuccessExitCode(): void
+    {
+        $kernel = $this->makeKernel(
+            commandClasses: [
+                VoidCommand::class,
+            ],
+        );
+
+        $exitCode = $kernel->run(
+            argv: [
+                'bin/console',
+                'demo:void',
+            ],
+        );
+
+        self::assertSame(ExitCode::SUCCESS, $exitCode);
+        self::assertStringContainsString(
+            'void',
+            $this->stdout->bytes,
+        );
     }
 
     public function testTerminalDispatchNodeExecutesCommandAndReturnsItsExitCode(): void
@@ -140,6 +164,28 @@ class KernelPipelineTest extends TestCase
             argv: [
                 'bin/console',
                 'demo:class-mw',
+            ],
+        );
+
+        self::assertSame(ExitCode::SUCCESS, $exitCode);
+        self::assertSame(1, $recording->callCount);
+    }
+
+    public function testDescriptorClosureMiddlewareIsInvokedThroughContainerFactory(): void
+    {
+        $recording = new RecordingCommandMiddleware();
+        $this->container->singleton($recording);
+
+        $kernel = $this->makeKernel(
+            commandClasses: [
+                ClosureMiddlewareCommand::class,
+            ],
+        );
+
+        $exitCode = $kernel->run(
+            argv: [
+                'bin/console',
+                'demo:closure-mw',
             ],
         );
 
