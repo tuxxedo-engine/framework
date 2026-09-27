@@ -55,6 +55,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
+use Tuxxedo\View\Lumi\Syntax\Node\YieldNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
@@ -883,6 +884,43 @@ class HighlighterTest extends TestCase
                             text: 'body',
                         ),
                     ],
+                ),
+            ),
+        );
+    }
+
+    #[DataProvider('provideThemes')]
+    public function testHighlightYieldNode(
+        ThemeInterface $theme,
+    ): void {
+        $expected = $this->dye(
+            theme: $theme,
+            slot: ColorSlot::DELIMITER,
+            text: '{% ',
+        ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::KEYWORD,
+                text: 'yield',
+            ) .
+            ' ' .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::IDENTIFIER,
+                text: 'sidebar',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: ' %}',
+            );
+
+        self::assertSame(
+            $expected,
+            $this->highlight(
+                theme: $theme,
+                node: new YieldNode(
+                    name: 'sidebar',
                 ),
             ),
         );

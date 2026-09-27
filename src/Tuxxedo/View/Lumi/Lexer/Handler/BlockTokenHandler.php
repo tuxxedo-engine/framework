@@ -43,6 +43,7 @@ use Tuxxedo\View\Lumi\Lexer\Handler\Block\LumiBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\RawBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\SetBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\WhileBlockHandler;
+use Tuxxedo\View\Lumi\Lexer\Handler\Block\YieldBlockHandler;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Lexer\LexerStateFlag;
 use Tuxxedo\View\Lumi\Lexer\LexerStateInterface;
@@ -99,6 +100,7 @@ class BlockTokenHandler implements TokenHandlerInterface
             new RawBlockHandler(),
             new SetBlockHandler(),
             new WhileBlockHandler(),
+            new YieldBlockHandler(),
         ];
     }
 

@@ -37,6 +37,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\LumiNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
+use Tuxxedo\View\Lumi\Syntax\Node\YieldNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 use Tuxxedo\View\Lumi\Syntax\TextContext;
@@ -505,6 +506,27 @@ class TextCompilerProviderTest extends TestCase
 
         self::assertSame(
             "\n<?php \$this->block('content', function (array &\$__lumiVariables): void { ?>/* foo */<?php }); ?>",
+            $output,
+        );
+    }
+
+    public function testCompilesYieldNode(): void
+    {
+        $node = new YieldNode(
+            name: 'sidebar',
+        );
+
+        $output = $this->compiler->compileNode(
+            node: $node,
+            stream: new NodeStream(
+                nodes: [
+                    $node,
+                ],
+            ),
+        );
+
+        self::assertSame(
+            "<?php \$this->executeBlock('sidebar', \$__lumiVariables); ?>",
             $output,
         );
     }

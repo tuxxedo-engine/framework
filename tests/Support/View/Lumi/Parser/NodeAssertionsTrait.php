@@ -42,6 +42,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
+use Tuxxedo\View\Lumi\Syntax\Node\YieldNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
@@ -376,6 +377,21 @@ trait NodeAssertionsTrait
         self::assertSame(
             $expectedFile,
             $node->file,
+        );
+    }
+
+    private function assertYieldNode(
+        NodeInterface $node,
+        string $expectedName,
+    ): void {
+        self::assertInstanceOf(
+            YieldNode::class,
+            $node,
+        );
+
+        self::assertSame(
+            $expectedName,
+            $node->name,
         );
     }
 

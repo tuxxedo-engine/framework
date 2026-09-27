@@ -30,6 +30,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\LumiNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
+use Tuxxedo\View\Lumi\Syntax\Node\YieldNode;
 use Tuxxedo\View\Lumi\Syntax\TextContext;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
@@ -157,6 +158,17 @@ class TextCompilerProvider implements CompilerProviderInterface
         );
     }
 
+    private function compileYield(
+        YieldNode $node,
+        CompilerInterface $compiler,
+        NodeStreamInterface $stream,
+    ): string {
+        return \sprintf(
+            '<?php $this->executeBlock(\'%s\', $__lumiVariables); ?>',
+            $compiler->escaper->js($node->name),
+        );
+    }
+
     private function compileLayout(
         LayoutNode $node,
         CompilerInterface $compiler,
@@ -224,6 +236,11 @@ class TextCompilerProvider implements CompilerProviderInterface
         yield new NodeCompilerHandler(
             nodeClassName: BlockNode::class,
             handler: $this->compileBlock(...),
+        );
+
+        yield new NodeCompilerHandler(
+            nodeClassName: YieldNode::class,
+            handler: $this->compileYield(...),
         );
 
         yield new NodeCompilerHandler(

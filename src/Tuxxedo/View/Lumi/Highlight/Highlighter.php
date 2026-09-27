@@ -49,6 +49,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
+use Tuxxedo\View\Lumi\Syntax\Node\YieldNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\CharacterSymbol;
@@ -125,6 +126,7 @@ class Highlighter implements HighlighterInterface
             $node instanceof TextNode => $this->highlightTextNode($node),
             $node instanceof UnaryOpNode => $this->highlightUnaryOpNode($node),
             $node instanceof WhileNode => $this->highlightWhileNode($node),
+            $node instanceof YieldNode => $this->highlightYieldNode($node),
             default => throw HighlightException::fromUnknownHighlightNode($node),
         };
     }
@@ -329,6 +331,15 @@ class Highlighter implements HighlighterInterface
         }
 
         return $output;
+    }
+
+    public function highlightYieldNode(
+        YieldNode $node,
+    ): string {
+        return $this->dye(ColorSlot::DELIMITER, '{% ') .
+            $this->dye(ColorSlot::KEYWORD, 'yield') . ' ' .
+            $this->dye(ColorSlot::IDENTIFIER, $node->name) .
+            $this->dye(ColorSlot::DELIMITER, ' %}');
     }
 
     private function highlightContinueNode(

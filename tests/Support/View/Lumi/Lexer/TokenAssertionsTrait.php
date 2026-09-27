@@ -42,6 +42,7 @@ use Tuxxedo\View\Lumi\Syntax\Token\OperatorToken;
 use Tuxxedo\View\Lumi\Syntax\Token\TextToken;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 use Tuxxedo\View\Lumi\Syntax\Token\WhileToken;
+use Tuxxedo\View\Lumi\Syntax\Token\YieldToken;
 
 trait TokenAssertionsTrait
 {
@@ -382,6 +383,27 @@ trait TokenAssertionsTrait
     ): void {
         self::assertInstanceOf(
             LayoutToken::class,
+            $token,
+        );
+
+        self::assertSame(
+            $expectedLine,
+            $token->line,
+        );
+
+        self::assertSame(
+            $expectedOp1,
+            $token->op1,
+        );
+    }
+
+    private function assertYieldToken(
+        TokenInterface $token,
+        int $expectedLine,
+        string $expectedOp1,
+    ): void {
+        self::assertInstanceOf(
+            YieldToken::class,
             $token,
         );
 

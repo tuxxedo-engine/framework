@@ -34,6 +34,7 @@ use Tuxxedo\View\Lumi\Parser\Handler\ParserHandlerInterface;
 use Tuxxedo\View\Lumi\Parser\Handler\TextParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\VoidParserHandler;
 use Tuxxedo\View\Lumi\Parser\Handler\WhileParserHandler;
+use Tuxxedo\View\Lumi\Parser\Handler\YieldParserHandler;
 use Tuxxedo\View\Lumi\Syntax\Token\ElseIfToken;
 use Tuxxedo\View\Lumi\Syntax\Token\ElseToken;
 use Tuxxedo\View\Lumi\Syntax\Token\EndBlockToken;
@@ -108,6 +109,7 @@ class Parser implements ParserInterface
             ),
             new LumiParserHandler(),
             new IncludeParserHandler(),
+            new YieldParserHandler(),
         ];
     }
 

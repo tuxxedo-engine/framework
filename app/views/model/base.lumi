@@ -1,15 +1,8 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Models playground</title>
-    </head>
-    <body>
-        <div style="text-align: right;">
-            {% block buttons %}{% endblock %}
-        </div>
+{% layout 'layout/base' %}
 
-        <div>
-            {% block content %}{% endblock %}
-        </div>
-    </body>
-</html>
+{% block main %}
+    <main>
+        {% yield buttons %}
+        {% yield content %}
+    </main>
+{% endblock %}
