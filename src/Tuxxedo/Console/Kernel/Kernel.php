@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console\Kernel;
 
+use Tuxxedo\Application\Environment;
 use Tuxxedo\Console\Config\HelpConfig;
 use Tuxxedo\Console\ExitCode;
 use Tuxxedo\Console\ExitCodeExceptionInterface;
@@ -38,6 +39,8 @@ class Kernel implements KernelInterface
         public readonly CommandDispatcherInterface $dispatcher,
         public readonly ConsoleOutputInterface $output,
         public readonly string $appName = '',
+        public readonly string $appVersion = '',
+        public readonly Environment $appEnvironment = Environment::PRODUCTION,
         public readonly bool $appNameHeaderEnabled = false,
         public readonly ?string $appNameHeaderLabel = null,
     ) {

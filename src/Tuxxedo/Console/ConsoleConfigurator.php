@@ -253,7 +253,7 @@ class ConsoleConfigurator extends AbstractConfigurator implements ConsoleConfigu
             '/',
             $resolvedDirectory !== false
                 ? $resolvedDirectory
-                : $this->discoveryDirectory,
+                : $this->discoveryDirectory, // @codeCoverageIgnore
         );
 
         foreach ($paths as $path) {
@@ -295,6 +295,7 @@ class ConsoleConfigurator extends AbstractConfigurator implements ConsoleConfigu
 
         $container = $this->container ?? new Container();
 
+        $container->singleton($container);
         $container->singleton($output);
         $container->singleton($input);
         $container->singletonLazy(
@@ -307,7 +308,6 @@ class ConsoleConfigurator extends AbstractConfigurator implements ConsoleConfigu
             initializer: static fn (): InputInterface => $input,
         );
 
-        $container->singleton($this->appEnvironment);
         $container->singleton($this->suggestionPolicyOverride ?? SuggestionPolicy::default());
         $container->singleton($this->helpConfigOverride ?? HelpConfig::default());
 
@@ -341,14 +341,23 @@ class ConsoleConfigurator extends AbstractConfigurator implements ConsoleConfigu
             container: $container,
         );
 
-        $kernel = new Kernel(
-            container: $container,
-            dispatcher: $dispatcher,
-            output: $output,
-            appName: $this->appName,
-            appNameHeaderEnabled: $this->appNameHeaderEnabled,
-            appNameHeaderLabel: $this->appNameHeaderLabel,
+        $container->singleton($dispatcher);
+
+        $container->singletonLazy(
+            KernelInterface::class,
+            fn (ContainerInterface $container): KernelInterface => $container->resolve(
+                Kernel::class,
+                [
+                    'appName' => $this->appName,
+                    'appVersion' => $this->appVersion,
+                    'appEnvironment' => $this->appEnvironment,
+                    'appNameHeaderEnabled' => $this->appNameHeaderEnabled,
+                    'appNameHeaderLabel' => $this->appNameHeaderLabel,
+                ],
+            ),
         );
+
+        $kernel = $container->resolve(KernelInterface::class);
 
         foreach ($this->exceptionHandlers as $exceptionClass => $handlers) {
             foreach ($handlers as $handler) {

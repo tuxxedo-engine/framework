@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console\Kernel;
 
+use Tuxxedo\Application\Environment;
 use Tuxxedo\Console\ExitCode;
 use Tuxxedo\Console\Middleware\CommandMiddlewareInterface;
 use Tuxxedo\Console\Output\ConsoleOutputInterface;
@@ -29,6 +30,18 @@ interface KernelInterface
     }
 
     public ConsoleOutputInterface $output {
+        get;
+    }
+
+    public string $appName {
+        get;
+    }
+
+    public string $appVersion {
+        get;
+    }
+
+    public Environment $appEnvironment {
         get;
     }
 

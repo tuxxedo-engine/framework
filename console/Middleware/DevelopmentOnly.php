@@ -15,6 +15,7 @@ namespace Console\Middleware;
 
 use Tuxxedo\Application\Environment;
 use Tuxxedo\Console\ExitCode;
+use Tuxxedo\Console\Kernel\KernelInterface;
 use Tuxxedo\Console\Middleware\CommandInvocationInterface;
 use Tuxxedo\Console\Middleware\CommandMiddlewareInterface;
 
@@ -22,7 +23,7 @@ use Tuxxedo\Console\Middleware\CommandMiddlewareInterface;
 class DevelopmentOnly implements CommandMiddlewareInterface
 {
     public function __construct(
-        private readonly Environment $environment,
+        private readonly KernelInterface $kernel,
     ) {
     }
 
@@ -30,13 +31,13 @@ class DevelopmentOnly implements CommandMiddlewareInterface
         CommandInvocationInterface $invocation,
         CommandMiddlewareInterface $next,
     ): ExitCode {
-        if ($this->environment === Environment::DEVELOPMENT) {
+        if ($this->kernel->appEnvironment === Environment::DEVELOPMENT) {
             return $next->handle($invocation, $next);
         }
 
         throw DevelopmentOnlyException::fromCommandRejection(
             commandPath: $invocation->descriptor->path,
-            currentEnvironment: $this->environment,
+            currentEnvironment: $this->kernel->appEnvironment,
         );
     }
 }
