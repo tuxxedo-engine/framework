@@ -38,7 +38,7 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\File\FileCollectionFactory;
 use Tuxxedo\File\FileException;
 
-class ConsoleConfigurator extends AbstractConfigura tor implements ConsoleConfiguratorInterface
+class ConsoleConfigurator extends AbstractConfigurator implements ConsoleConfiguratorInterface
 {
     /**
      * @var list<class-string>
@@ -293,37 +293,32 @@ class ConsoleConfigurator extends AbstractConfigura tor implements ConsoleConfig
             output: $output->stdout,
         );
 
-        $container = $this->container ?? new Container();
-
-        $container->singleton($output);
-        $container->singleton($input);
-        $container->singletonLazy(
+        $this->container->singleton($output);
+        $this->container->singleton($input);
+        $this->container->singletonLazy(
             class: OutputInterface::class,
             initializer: static fn (): OutputInterface => $output->stdout,
         );
 
-        $container->singletonLazy(
+        $this->container->singletonLazy(
             class: InputInterface::class,
             initializer: static fn (): InputInterface => $input,
         );
 
-        $container->singleton($this->appEnvironment);
-        $container->singleton($this->suggestionPolicyOverride ?? SuggestionPolicy::default());
-        $container->singleton($this->helpConfigOverride ?? HelpConfig::default());
+        $this->container->singleton($this->appEnvironment);
+        $this->container->singleton($this->suggestionPolicyOverride ?? SuggestionPolicy::default());
+        $this->container->singleton($this->helpConfigOverride ?? HelpConfig::default());
 
         if ($this->helpFormatter !== null) {
-            $container->singleton($this->helpFormatter);
+            $this->container->singleton($this->helpFormatter);
         }
 
-        $this->registerLumi($container);
-        $this->registerConnectionManager($container);
-        $this->registerStorage($container);
-        $this->registerMailManager($container);
-
-        $this->loadServiceFiles($container);
+        foreach ($this->serviceFiles as $file) {
+            $this->container->callFile($file);
+        }
 
         $discoverer = new CommandDiscoverer(
-            container: $container,
+            container: $this->container,
         );
         $descriptors = [];
 
@@ -335,17 +330,17 @@ class ConsoleConfigurator extends AbstractConfigura tor implements ConsoleConfig
 
         $registry = new CommandRegistry($descriptors);
 
-        $container->singleton($registry);
+        $this->container->singleton($registry);
 
         $dispatcher = new CommandDispatcher(
             registry: $registry,
             parser: new ArgvParser(),
-            binder: new ParameterBinder($container),
-            container: $container,
+            binder: new ParameterBinder($this->container),
+            container: $this->container,
         );
 
         $kernel = new Kernel(
-            container: $container,
+            container: $this->container,
             dispatcher: $dispatcher,
             output: $output,
             appName: $this->appName,
