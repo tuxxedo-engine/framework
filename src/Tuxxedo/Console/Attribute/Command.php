@@ -48,7 +48,9 @@ readonly class Command
             );
 
             if ($split === false) {
+                // @codeCoverageIgnoreStart
                 throw ConsoleException::fromCommandNameParseFailure();
+                // @codeCoverageIgnoreEnd
             }
 
             $name = $split;

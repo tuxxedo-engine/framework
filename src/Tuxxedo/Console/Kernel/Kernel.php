@@ -330,7 +330,9 @@ class Kernel implements KernelInterface
         string|false $cwd,
     ): string {
         if ($cwd === false) {
+            // @codeCoverageIgnoreStart
             return $path;
+            // @codeCoverageIgnoreEnd
         }
 
         $normalizedPath = \str_replace('\\', '/', $path);
@@ -340,6 +342,8 @@ class Kernel implements KernelInterface
             return \substr($normalizedPath, \strlen($normalizedCwd) + 1);
         }
 
+        // @codeCoverageIgnoreStart
         return $path;
+        // @codeCoverageIgnoreEnd
     }
 }

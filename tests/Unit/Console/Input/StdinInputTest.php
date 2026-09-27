@@ -15,6 +15,8 @@ namespace Unit\Console\Input;
 
 use Fixture\Console\Input\ChoiceBackedEnum;
 use Fixture\Console\Input\ChoiceUnitEnum;
+use Fixture\Console\Input\StringableChoice;
+use Fixture\Console\Input\UnknownQuestion;
 use PHPUnit\Framework\TestCase;
 use Support\Console\Stream\BufferedOutputStream;
 use Support\Console\Stream\ScriptedInputStream;
@@ -468,6 +470,130 @@ class StdinInputTest extends TestCase
         self::assertStringContainsString(
             '[1] ALPHA',
             $this->outputStream->bytes,
+        );
+    }
+
+    public function testChooseStringifiesIntChoiceViaScalarCast(): void
+    {
+        $input = $this->makeInput(
+            lines: [
+                '1',
+            ],
+        );
+
+        $input->choose(
+            question: 'Pick',
+            choices: [
+                42,
+            ],
+        );
+
+        self::assertStringContainsString(
+            '[1] 42',
+            $this->outputStream->bytes,
+        );
+    }
+
+    public function testChooseStringifiesFloatChoiceViaScalarCast(): void
+    {
+        $input = $this->makeInput(
+            lines: [
+                '1',
+            ],
+        );
+
+        $input->choose(
+            question: 'Pick',
+            choices: [
+                1.5,
+            ],
+        );
+
+        self::assertStringContainsString(
+            '[1] 1.5',
+            $this->outputStream->bytes,
+        );
+    }
+
+    public function testChooseStringifiesBoolChoiceViaScalarCast(): void
+    {
+        $input = $this->makeInput(
+            lines: [
+                '1',
+            ],
+        );
+
+        $input->choose(
+            question: 'Pick',
+            choices: [
+                true,
+            ],
+        );
+
+        self::assertStringContainsString(
+            '[1] 1',
+            $this->outputStream->bytes,
+        );
+    }
+
+    public function testChooseStringifiesStringableChoice(): void
+    {
+        $input = $this->makeInput(
+            lines: [
+                '1',
+            ],
+        );
+
+        $input->choose(
+            question: 'Pick',
+            choices: [
+                new StringableChoice(
+                    label: 'my-label',
+                ),
+            ],
+        );
+
+        self::assertStringContainsString(
+            '[1] my-label',
+            $this->outputStream->bytes,
+        );
+    }
+
+    public function testChooseFallsBackToDebugTypeForNonStringifiableObject(): void
+    {
+        $input = $this->makeInput(
+            lines: [
+                '1',
+            ],
+        );
+
+        $input->choose(
+            question: 'Pick',
+            choices: [
+                new \stdClass(),
+            ],
+        );
+
+        self::assertStringContainsString(
+            '[1] stdClass',
+            $this->outputStream->bytes,
+        );
+    }
+
+    public function testAskThrowsForUnknownQuestionType(): void
+    {
+        $input = $this->makeInput(
+            lines: [],
+        );
+
+        $this->expectException(ConsoleException::class);
+
+        $input->ask(
+            new Questionnaire(
+                questions: [
+                    new UnknownQuestion(),
+                ],
+            ),
         );
     }
 

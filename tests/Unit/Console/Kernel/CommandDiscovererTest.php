@@ -18,6 +18,7 @@ use Fixture\Console\Commands\ConflictingKindCommand;
 use Fixture\Console\Commands\ConflictingParamCommand;
 use Fixture\Console\Commands\DefaultDispatchCommand;
 use Fixture\Console\Commands\DirectAttributeMiddlewareCommand;
+use Fixture\Console\Commands\EmptyCommandNameCommand;
 use Fixture\Console\Commands\GroupedCommand;
 use Fixture\Console\Commands\InvalidReturnCommand;
 use Fixture\Console\Commands\MissingParamTypeCommand;
@@ -223,6 +224,10 @@ class CommandDiscovererTest extends TestCase
 
         yield 'parameter has attribute but no type declared' => [
             MissingParamTypeCommand::class,
+        ];
+
+        yield 'command name is empty after whitespace trim' => [
+            EmptyCommandNameCommand::class,
         ];
     }
 

@@ -14,8 +14,12 @@ declare(strict_types=1);
 namespace Unit\Console\Kernel;
 
 use Fixture\Console\Commands\DeepThrowingCommand;
+use Fixture\Console\Commands\PreferredExitCodeThrowingCommand;
 use Fixture\Console\Commands\ThrowingCommand;
+use Fixture\Console\Commands\WrappedExitCodeThrowingCommand;
+use Fixture\Console\Commands\WrappedPreferredExitCodeThrowingCommand;
 use PHPUnit\Framework\TestCase;
+use Support\Console\Kernel\RecordingErrorHandler;
 use Support\Console\Stream\BufferedOutputStream;
 use Tuxxedo\Console\ExitCode;
 use Tuxxedo\Console\Invocation\ArgvParser;
@@ -163,6 +167,108 @@ class KernelExceptionTest extends TestCase
         );
     }
 
+    public function testPerClassExceptionHandlerRegisteredAsInstanceIsInvoked(): void
+    {
+        $handler = new RecordingErrorHandler(
+            returnedExitCode: ExitCode::CONFIG_ERROR,
+        );
+
+        $kernel = $this->makeKernel();
+        $kernel->whenException(
+            exceptionClass: \RuntimeException::class,
+            handler: $handler,
+        );
+
+        $exitCode = $kernel->run(
+            argv: [
+                'bin/console',
+                'demo:throw',
+            ],
+        );
+
+        self::assertSame(1, $handler->callCount);
+        self::assertInstanceOf(\RuntimeException::class, $handler->lastException);
+        self::assertSame(ExitCode::CONFIG_ERROR, $exitCode);
+    }
+
+    public function testDefaultExceptionHandlerRegisteredAsInstanceIsInvoked(): void
+    {
+        $handler = new RecordingErrorHandler(
+            returnedExitCode: ExitCode::SOFTWARE_ERROR,
+        );
+
+        $kernel = $this->makeKernel();
+        $kernel->defaultExceptionHandler($handler);
+
+        $exitCode = $kernel->run(
+            argv: [
+                'bin/console',
+                'demo:throw',
+            ],
+        );
+
+        self::assertSame(1, $handler->callCount);
+        self::assertSame(ExitCode::SOFTWARE_ERROR, $exitCode);
+    }
+
+    public function testExitCodeExceptionInPreviousChainIsHonoured(): void
+    {
+        $kernel = $this->makeKernel();
+
+        $exitCode = $kernel->run(
+            argv: [
+                'bin/console',
+                'demo:wrapped-exit-code',
+            ],
+        );
+
+        self::assertSame(ExitCode::CONFIG_ERROR, $exitCode);
+        self::assertStringContainsString(
+            'inner console exception',
+            $this->stderr->bytes,
+        );
+        self::assertStringNotContainsString(
+            'An unhandled exception occurred',
+            $this->stderr->bytes,
+        );
+    }
+
+    public function testOuterExceptionPreferredExitCodeIsUsed(): void
+    {
+        $kernel = $this->makeKernel();
+
+        $exitCode = $kernel->run(
+            argv: [
+                'bin/console',
+                'demo:prefers-exit-code',
+            ],
+        );
+
+        self::assertSame(ExitCode::CONFIG_ERROR, $exitCode);
+        self::assertStringContainsString(
+            'An unhandled exception occurred',
+            $this->stderr->bytes,
+        );
+    }
+
+    public function testPreviousChainPreferredExitCodeIsUsedWhenOuterDoesNotImplementIt(): void
+    {
+        $kernel = $this->makeKernel();
+
+        $exitCode = $kernel->run(
+            argv: [
+                'bin/console',
+                'demo:wrapped-prefers-exit-code',
+            ],
+        );
+
+        self::assertSame(ExitCode::CONFIG_ERROR, $exitCode);
+        self::assertStringContainsString(
+            'An unhandled exception occurred',
+            $this->stderr->bytes,
+        );
+    }
+
     private function makeKernel(
         string $appName = '',
         bool $appNameHeaderEnabled = false,
@@ -187,12 +293,18 @@ class KernelExceptionTest extends TestCase
 
         $descriptors = [];
 
-        foreach ($discoverer->discover(ThrowingCommand::class) as $descriptor) {
-            $descriptors[] = $descriptor;
-        }
+        $commandClasses = [
+            ThrowingCommand::class,
+            DeepThrowingCommand::class,
+            PreferredExitCodeThrowingCommand::class,
+            WrappedExitCodeThrowingCommand::class,
+            WrappedPreferredExitCodeThrowingCommand::class,
+        ];
 
-        foreach ($discoverer->discover(DeepThrowingCommand::class) as $descriptor) {
-            $descriptors[] = $descriptor;
+        foreach ($commandClasses as $commandClass) {
+            foreach ($discoverer->discover($commandClass) as $descriptor) {
+                $descriptors[] = $descriptor;
+            }
         }
 
         $registry = new CommandRegistry(
