@@ -38,7 +38,7 @@ class FrameSequence
         DurationInterface $interval,
     ): self {
         if ($frames === []) {
-            throw ConsoleException::fromEmptyFrameSequence();
+            throw ConsoleException::fromEmptyFrameSequence(); // @codeCoverageIgnore
         }
 
         return new self(

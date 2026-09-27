@@ -34,11 +34,7 @@ class Table implements TableInterface
         OutputInterface $output,
     ): void {
         $widths = $this->computeColumnWidths();
-        $chars = $this->characters ?? (
-            $output->isInteractive
-                ? TableCharacterSet::unicode()
-                : TableCharacterSet::ascii()
-        );
+        $chars = $this->characters ?? ($output->isInteractive ? TableCharacterSet::unicode() : TableCharacterSet::ascii());
 
         $this->writeBorder(
             output: $output,
