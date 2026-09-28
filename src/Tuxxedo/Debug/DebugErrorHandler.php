@@ -272,7 +272,6 @@ class DebugErrorHandler implements ErrorHandlerInterface
         $normalized = \str_replace('\\', '/', $file);
         $normalizedRoot = \str_replace('\\', '/', $rootPath);
 
-        // @todo This may need some tweaking if the path is outside the root, e.g. an include
         if (\str_starts_with($normalized, $normalizedRoot)) {
             return \ltrim(\substr($normalized, \strlen($normalizedRoot)), '/');
         }
