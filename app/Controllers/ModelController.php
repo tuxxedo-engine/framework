@@ -53,35 +53,6 @@ readonly class ModelController
         );
     }
 
-    #[Route\Get]
-    public function fetch(): ResponseInterface
-    {
-        \var_dump(
-            $this->modelsManager->findById(User::class, 1),
-            $this->modelsManager->findFirst(User::class),
-        );
-
-        return Response::empty(
-            headers: [
-                new Header('Content-Type', 'text/plain'),
-            ],
-        );
-    }
-
-    #[Route\Get]
-    public function fetchAll(): ResponseInterface
-    {
-        \var_dump(
-            \iterator_to_array($this->modelsManager->findAll(User::class)),
-        );
-
-        return Response::empty(
-            headers: [
-                new Header('Content-Type', 'text/plain'),
-            ],
-        );
-    }
-
     #[Route(path: 'delete/{id<numeric-id>}', method: ['POST', 'GET'], name: 'model.delete')]
     public function delete(
         RequestInterface $request,
