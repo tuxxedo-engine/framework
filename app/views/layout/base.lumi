@@ -36,6 +36,7 @@
         section.environment .row:hover { background: var(--hover); }
         section.environment dt { font-family: var(--mono); font-size: 12px; color: var(--dim); padding-top: 1px; margin: 0; }
         section.environment dd { font-family: var(--mono); font-size: 13px; margin: 0; word-break: break-word; }
+        {% block extra_css %}{% endblock %}
     </style>
 </head>
 <body>

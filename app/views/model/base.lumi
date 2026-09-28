@@ -1,8 +1,199 @@
 {% layout 'layout/base' %}
 
+{% block extra_css %}
+    a {
+        color: var(--path);
+        text-decoration: none;
+        transition: color .15s ease;
+    }
+
+    a:hover {
+        color: #d5e7f2;
+        text-decoration: underline;
+    }
+
+    header .toolbar {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 7px 14px;
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--path);
+        font: 500 12px/1 var(--mono);
+        letter-spacing: 0.02em;
+        text-decoration: none;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 6px;
+        transition: background .15s ease, border-color .15s ease, color .15s ease;
+    }
+
+    .btn:hover {
+        background: rgba(163, 200, 222, 0.10);
+        border-color: rgba(163, 200, 222, 0.32);
+        color: #d5e7f2;
+        text-decoration: none;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 8px 0 0 0;
+        border-top: 1px solid var(--line);
+    }
+
+    table thead th {
+        text-align: left;
+        font: 500 12px/1.4 var(--mono);
+        color: var(--dim);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+        font-weight: 500;
+    }
+
+    table thead th strong {
+        font-weight: 500;
+    }
+
+    table tbody td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+        font: 13px/1.4 var(--mono);
+        vertical-align: middle;
+    }
+
+    table tbody td strong {
+        color: var(--dim);
+        font: 500 11px/1.2 var(--mono);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    table tbody tr:hover {
+        background: var(--hover);
+    }
+
+    table td.actions {
+        text-align: right;
+        white-space: nowrap;
+        width: 1%;
+    }
+
+    table td.actions a {
+        margin-left: 14px;
+    }
+
+    table td.actions a:first-child {
+        margin-left: 0;
+    }
+
+    pre.code {
+        margin: 8px 0 0 0;
+        padding: 16px 18px;
+        background: rgba(0, 0, 0, 0.34);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        font: 13px/1.55 var(--mono);
+        color: var(--fg);
+        overflow-x: auto;
+        white-space: pre;
+        tab-size: 4;
+        -moz-tab-size: 4;
+    }
+
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        max-width: 480px;
+        padding: 20px 20px 22px;
+        margin: 8px 0 0 0;
+        background: rgba(0, 0, 0, 0.22);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+    }
+
+    form .field {
+        display: flex;
+        flex-direction:
+        column; gap: 6px;
+    }
+
+    form label, form .field > strong {
+        color: var(--dim);
+        font: 500 11px/1.2 var(--mono);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    form input[type="text"] {
+        background: rgba(0, 0, 0, 0.34);
+        border: 1px solid var(--line);
+        color: var(--fg);
+        padding: 9px 11px;
+        border-radius: 4px;
+        font: 13px/1.4 var(--mono);
+        transition: border-color .15s ease, background .15s ease;
+    }
+
+    form input[type="text"]:focus {
+        outline: none;
+        border-color: var(--path);
+        background: rgba(0, 0, 0, 0.44);
+    }
+
+    form input[type="submit"] {
+        align-self: flex-start;
+        background: var(--path);
+        color: #101318;
+        border: 1px solid transparent;
+        padding: 9px 22px;
+        border-radius: 6px;
+        font: 600 13px/1 var(--sans);
+        letter-spacing: 0.01em;
+        cursor: pointer;
+        transition: background .15s ease, color .15s ease;
+    }
+
+    form input[type="submit"]:hover {
+        background: #d5e7f2;
+    }
+
+    nav.pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-top: 20px;
+        padding: 14px 4px 0;
+        border-top: 1px solid var(--line);
+        font: 12px/1.4 var(--mono);
+        color: var(--dim);
+    }
+
+    nav.pagination .links {
+        display: flex;
+        gap: 8px;
+    }
+
+    nav.pagination .status {
+        color: var(--dim);
+    }
+{% endblock %}
+
 {% block main %}
     <main>
-        {% yield buttons %}
+        <header>
+            <h1>Model</h1>
+            <div class="toolbar">
+                {% yield buttons %}
+            </div>
+        </header>
         {% yield content %}
     </main>
 {% endblock %}

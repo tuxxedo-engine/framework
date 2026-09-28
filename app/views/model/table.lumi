@@ -1,0 +1,11 @@
+{% layout 'model/base' %}
+
+{% block buttons %}
+    <a href="{! route('model.index') | escape_attr !}" class="btn">
+        Back
+    </a>
+{% endblock %}
+
+{% block content %}
+    <pre class="code">{{ sql }}</pre>
+{% endblock %}

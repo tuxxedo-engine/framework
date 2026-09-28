@@ -1,17 +1,21 @@
 {% layout 'model/base' %}
 
 {% block buttons %}
-    <button onclick="location.href = '{! route('model.new') | escape_js !}';">New</button>
-    <button onclick="location.href = '{! route('model.table') | escape_js !}';">Table</button>
+    <a href="{! route('model.new') | escape_attr !}" class="btn">
+        New
+    </a>
+    <a href="{! route('model.table') | escape_attr !}" class="btn">
+        Table
+    </a>
 {% endblock %}
 
 {% block content %}
     <table>
         <thead>
             <tr>
-                <th><strong>#</strong></th>
-                <th><strong>Name</strong></th>
-                <th colspan="3">&nbsp;</th>
+                <th>#</th>
+                <th>Name</th>
+                <th>&nbsp;</th>
             </tr>
         </thead>
         <tbody>
@@ -19,13 +23,9 @@
                 <tr>
                     <td>{{ user.id }}</td>
                     <td>{{ user.name }}</td>
-                    <td nowrap="nowrap">
+                    <td class="actions">
                         <a href="{! route('model.show', ['id': user.id]) | escape_attr !}">Show</a>
-                    </td>
-                    <td nowrap="nowrap">
                         <a href="{! route('model.update', ['id': user.id]) | escape_attr !}">Edit</a>
-                    </td>
-                    <td nowrap="nowrap">
                         <a href="{! route('model.delete', ['id': user.id]) | escape_attr !}">Delete</a>
                     </td>
                 </tr>
@@ -33,15 +33,19 @@
         </tbody>
     </table>
 
-    <nav>
-        {% if paginator.hasPreviousPage %}
-            <a href="{! route('model.list.page', ['page': paginator.previousPage]) | escape_attr !}">Previous</a>
-        {% endif %}
-
-        <span>Page {{ paginator.page }} of {{ paginator.totalPages }} ({{ paginator.totalCount }} total)</span>
-
-        {% if paginator.hasNextPage %}
-            <a href="{! route('model.list.page', ['page': paginator.nextPage]) | escape_attr !}">Next</a>
-        {% endif %}
+    <nav class="pagination">
+        <div class="links">
+            {% if paginator.hasPreviousPage %}
+                <a href="{! route('model.list.page', ['page': paginator.previousPage]) | escape_attr !}" class="btn">
+                    Previous
+                </a>
+            {% endif %}
+            {% if paginator.hasNextPage %}
+                <a href="{! route('model.list.page', ['page': paginator.nextPage]) | escape_attr !}" class="btn">
+                    Next
+                </a>
+            {% endif %}
+        </div>
+        <span class="status">Page {{ paginator.page }} of {{ paginator.totalPages }} ({{ paginator.totalCount }} total)</span>
     </nav>
 {% endblock %}

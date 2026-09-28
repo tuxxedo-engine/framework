@@ -169,9 +169,14 @@ readonly class ModelController
     }
 
     #[Route\Get(name: 'model.table')]
-    public function table(): ResponseInterface
+    public function table(): ViewInterface
     {
-        return Response::text($this->modelsManager->createTable(User::class)->compile()->sql);
+        return new View(
+            'model/table',
+            [
+                'sql' => $this->modelsManager->createTable(User::class)->compile()->sql,
+            ],
+        );
     }
 
     #[Route\Get(path: 'show/{id<numeric-id>}', name: 'model.show')]
