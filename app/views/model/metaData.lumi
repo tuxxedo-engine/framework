@@ -38,6 +38,197 @@
         </tbody>
     </table>
 
-    {# @todo missing: Composite Keys, Columns, Identifiers, Relations, MorphToRelations, Aggregates, Behaviors, Uniques, Indexes #}
-    <pre class="code">{{ metaData | dump }}</pre>
+    {% if metaData.key !== null && is_a(metaData.key, '\Tuxxedo\Model\MetaData\ModelCompositeKey') %}
+        <h3>Composite Key</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Column</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for property, column in metaData.key.columns %}
+                    <tr>
+                        <td>{{ property }}</td>
+                        <td>{{ column }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% if metaData.columns | count > 0 %}
+        <h3>Columns</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Column</th>
+                    <th>Nullable</th>
+                    <th>Unique</th>
+                    <th>Readonly</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for column in metaData.columns %}
+                    <tr>
+                        <td>{{ column.property }}</td>
+                        <td>{{ column.column }}</td>
+                        <td>{% if column.nullable %}Yes{% else %}No{% endif %}</td>
+                        <td>{% if column.unique %}Yes{% else %}No{% endif %}</td>
+                        <td>{% if column.readonly %}Yes{% else %}No{% endif %}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% if metaData.identifiers | count > 0 %}
+        <h3>Identifiers</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Column</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for identifier in metaData.identifiers %}
+                    <tr>
+                        <td>{{ identifier.column }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% if metaData.relations | count > 0 %}
+        <h3>Relations</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Related Class</th>
+                    <th>Nullable</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for relation in metaData.relations %}
+                    <tr>
+                        <td>{{ relation.property }}</td>
+                        <td>{{ relation.relatedClass }}</td>
+                        <td>{% if relation.nullable %}Yes{% else %}No{% endif %}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% if metaData.morphToRelations | count > 0 %}
+        <h3>MorphTo Relations</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Type Column</th>
+                    <th>Id Column</th>
+                    <th>Nullable</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for morph in metaData.morphToRelations %}
+                    <tr>
+                        <td>{{ morph.property }}</td>
+                        <td>{{ morph.typeColumn }}</td>
+                        <td>{{ morph.idColumn }}</td>
+                        <td>{% if morph.nullable %}Yes{% else %}No{% endif %}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% if metaData.aggregates | count > 0 %}
+        <h3>Aggregates</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Alias</th>
+                    <th>Relation</th>
+                    <th>Function</th>
+                    <th>Column</th>
+                    <th>Slot Type</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for aggregate in metaData.aggregates %}
+                    <tr>
+                        <td>{{ aggregate.property }}</td>
+                        <td>{{ aggregate.alias }}</td>
+                        <td>{{ aggregate.relation }}</td>
+                        <td>{{ aggregate.function.value }}</td>
+                        <td>{% if aggregate.column !== null %}{{ aggregate.column }}{% else %}&mdash;{% endif %}</td>
+                        <td>{{ aggregate.slotType }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% if metaData.behaviors | count > 0 %}
+        <h3>Behaviors</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Behavior Class</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for property, behaviorClass in metaData.behaviors %}
+                    <tr>
+                        <td>{{ property }}</td>
+                        <td>{{ behaviorClass }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% if metaData.uniques | count > 0 %}
+        <h3>Uniques</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Columns</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for unique in metaData.uniques %}
+                    <tr>
+                        <td>{{ join(unique, ', ') }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% if metaData.indexes | count > 0 %}
+        <h3>Indexes</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Columns</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for index in metaData.indexes %}
+                    <tr>
+                        <td>{{ join(index, ', ') }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
 {% endblock %}
