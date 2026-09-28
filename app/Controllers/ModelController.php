@@ -17,7 +17,6 @@ use App\Models\User;
 use App\Repositories\UserRepositoryInterface;
 use App\Subscribers\Events\UserCreatedEvent;
 use Tuxxedo\Event\EventsManagerInterface;
-use Tuxxedo\Http\Header;
 use Tuxxedo\Http\Kernel\Resolver\Model;
 use Tuxxedo\Http\Request\Middleware\OutputCapture;
 use Tuxxedo\Http\Request\RequestInterface;
@@ -39,18 +38,6 @@ readonly class ModelController
     public function __construct(
         private ModelsManagerInterface $modelsManager,
     ) {
-    }
-
-    #[Route\Get]
-    public function metaData(): ResponseInterface
-    {
-        \var_dump($this->modelsManager->metaData->getModel(User::class));
-
-        return Response::empty(
-            headers: [
-                new Header('Content-Type', 'text/plain'),
-            ],
-        );
     }
 
     #[Route(path: 'delete/{id<numeric-id>}', method: ['POST', 'GET'], name: 'model.delete')]
@@ -146,6 +133,17 @@ readonly class ModelController
             'model/table',
             [
                 'sql' => $this->modelsManager->createTable(User::class)->compile()->sql,
+            ],
+        );
+    }
+
+    #[Route\Get(name: 'model.metaData')]
+    public function metaData(): ViewInterface
+    {
+        return new View(
+            'model/metaData',
+            [
+                'metaData' => $this->modelsManager->metaData->getModel(User::class),
             ],
         );
     }

@@ -50,6 +50,7 @@ $builder = ApplicationConfigurator::createFromConfigDirectory(
             ->allowFunction('printf')
             ->allowFunction('acos')
             ->allowFunction('strval')
+            ->allowFunction('is_a')
             ->disableErrorReporting(),
     )
     ->withDefaultConnectionManager()

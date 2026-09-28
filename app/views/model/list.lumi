@@ -7,6 +7,9 @@
     <a href="{! route('model.table') | escape_attr !}" class="btn">
         Table
     </a>
+    <a href="{! route('model.metaData') | escape_attr !}" class="btn">
+        Meta Data
+    </a>
 {% endblock %}
 
 {% block content %}

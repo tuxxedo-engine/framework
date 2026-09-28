@@ -1,0 +1,43 @@
+{% layout 'model/base' %}
+
+{% block buttons %}
+    <a href="{! route('model.index') | escape_attr !}" class="btn">
+        Back
+    </a>
+{% endblock %}
+
+{% block content %}
+    <table>
+        <tbody>
+            <tr>
+                <td><strong>Model</strong></td>
+                <td>{{ metaData.model }}</td>
+            </tr>
+            <tr>
+                <td><strong>Table</strong></td>
+                <td>{{ metaData.table }}</td>
+            </tr>
+            {% if metaData.key !== null && is_a(metaData.key, '\Tuxxedo\Model\MetaData\ModelPrimaryKey') %}
+                <tr>
+                    <td><strong>Primary key column</strong></td>
+                    <td>{{ metaData.key.column }} (declared on property: {{ metaData.key.property }})</td>
+                </tr>
+                <tr>
+                    <td><strong>Primary key auto increment?</strong></td>
+                    <td>{% if metaData.key.autoIncrement %}Yes{% else %}No{% endif %}</td>
+                </tr>
+            {% endif %}
+            <tr>
+                <td><strong>Is Model marked as readonly?</strong></td>
+                <td>{% if metaData.readonly %}Yes{% else %}No{% endif %}</td>
+            </tr>
+            <tr>
+                <td><strong>Database Connection</strong></td>
+                <td>{% if metaData.connection !== null %}On named connection: {{ metaData.connection }}{% else %}On the models manager connection{% endif %}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    {# @todo missing: Composite Keys, Columns, Identifiers, Relations, MorphToRelations, Aggregates, Behaviors, Uniques, Indexes #}
+    <pre class="code">{{ metaData | dump }}</pre>
+{% endblock %}

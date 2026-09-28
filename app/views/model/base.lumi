@@ -189,7 +189,7 @@
 {% block main %}
     <main>
         <header>
-            <h1>Model</h1>
+            <h1>Model Playground</h1>
             <div class="toolbar">
                 {% yield buttons %}
             </div>

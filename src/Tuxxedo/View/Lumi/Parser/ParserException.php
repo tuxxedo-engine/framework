@@ -22,6 +22,7 @@ class ParserException extends LumiException
         string $tokenName,
         int $line,
     ): self {
+        // @todo Maybe some tokens can print their value alongside the token name for better debugging
         return new self(
             message: \sprintf(
                 'Syntax error: Unexpected token "%s" on line %d',
@@ -39,6 +40,7 @@ class ParserException extends LumiException
         array $expectedTokenNames,
         int $line,
     ): self {
+        // @todo Maybe some tokens can print their value alongside the token name for better debugging
         return new self(
             message: \sprintf(
                 'Syntax error: Unexpected token "%s", expected one of "%s" on line %d',

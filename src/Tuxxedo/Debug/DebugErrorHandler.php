@@ -81,10 +81,6 @@ class DebugErrorHandler implements ErrorHandlerInterface
         $timestamp = Instant::now()->dateTime;
         $timestampFormatted = $timestamp->format('Y-m-d H:i:s T') . ' (UTC' . $timestamp->format('P') . ')';
 
-        $fqn = $exception::class;
-        $location = self::formatLocation($exception->getFile(), $exception->getLine(), $this->config->rootPath);
-        $code = $exception->getCode();
-
         $html = '';
         $html .= '<!DOCTYPE html>';
         $html .= '<html lang="en">';
@@ -145,16 +141,17 @@ class DebugErrorHandler implements ErrorHandlerInterface
         $html .= '<h1>Tuxxedo Engine Debugger<sup>' . \htmlspecialchars(Version::SIMPLE) . '</sup></h1>';
         $html .= '<div class="meta"><div>' . \htmlspecialchars($appConfig->name . ' ' . $appConfig->version) . '</div><div>' . \htmlspecialchars($timestampFormatted) . '</div></div>';
         $html .= '</header>';
+
         $exceptionEditorUrl = $this->formatEditorUrl($exception->getFile(), $exception->getLine());
-        $pathSpan = '<span class="path">' . \htmlspecialchars($location) . '</span>';
+        $pathSpan = '<span class="path">' . \htmlspecialchars(self::formatLocation($exception->getFile(), $exception->getLine(), $this->config->rootPath)) . '</span>';
 
         if ($exceptionEditorUrl !== null) {
             $pathSpan = '<a href="' . \htmlspecialchars($exceptionEditorUrl) . '">' . $pathSpan . '</a>';
         }
 
         $html .= '<section class="exception">';
-        $html .= '<p class="class">' . \htmlspecialchars($fqn) . '</p>';
-        $html .= '<p class="loc">' . $pathSpan . '<span class="sep"></span>code ' . \htmlspecialchars(\strval($code)) . '</p>';
+        $html .= '<p class="class">' . \htmlspecialchars($exception::class) . '</p>';
+        $html .= '<p class="loc">' . $pathSpan . '<span class="sep"></span>code ' . \htmlspecialchars(\strval($exception->getCode())) . '</p>';
         $html .= '<p class="message">' . \nl2br(\htmlspecialchars($exception->getMessage())) . '</p>';
 
         $previous = $exception->getPrevious();
@@ -275,6 +272,7 @@ class DebugErrorHandler implements ErrorHandlerInterface
         $normalized = \str_replace('\\', '/', $file);
         $normalizedRoot = \str_replace('\\', '/', $rootPath);
 
+        // @todo This may need some tweaking if the path is outside the root, e.g. an include
         if (\str_starts_with($normalized, $normalizedRoot)) {
             return \ltrim(\substr($normalized, \strlen($normalizedRoot)), '/');
         }
