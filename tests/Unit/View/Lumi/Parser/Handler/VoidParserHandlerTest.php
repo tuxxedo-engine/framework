@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Unit\View\Lumi\Parser\Handler;
 
 use Fixture\View\Lumi\Parser\Parser\BarHandler;
-use Fixture\View\Lumi\Parser\Parser\BarToken;
 use Fixture\View\Lumi\Parser\Parser\EndTokenStubHandler;
 use Fixture\View\Lumi\Parser\Parser\FooToken;
 use Fixture\View\Lumi\Parser\Parser\IdentifierTokenStubHandler;
@@ -91,7 +90,7 @@ class VoidParserHandlerTest extends TestCase
                 ),
             );
         } catch (ParserException $e) {
-            self::assertStringContainsString(BarToken::class, $e->getMessage());
+            self::assertStringContainsString('BarToken', $e->getMessage());
         }
     }
 

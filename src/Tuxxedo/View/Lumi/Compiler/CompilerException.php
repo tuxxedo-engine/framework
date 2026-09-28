@@ -40,8 +40,8 @@ class CompilerException extends LumiException
     ): self {
         return new self(
             message: \sprintf(
-                'Unexpected node "%s" encountered: No handler defined',
-                $nodeClass,
+                'Unexpected node %s encountered: no compiler handler defined',
+                self::formatQuoted(self::formatShortClass($nodeClass)),
             ),
         );
     }
@@ -51,8 +51,8 @@ class CompilerException extends LumiException
     ): self {
         return new self(
             message: \sprintf(
-                'Unexpected scope state entrance for "%s", old scope state must be left first',
-                $scope->name,
+                'Unexpected scope state entry for %s, previous scope state must be left first',
+                self::formatQuoted($scope->name),
             ),
         );
     }
@@ -62,8 +62,8 @@ class CompilerException extends LumiException
     ): self {
         return new self(
             message: \sprintf(
-                'Unexpected scope state leave for "%s", there is no scope state entrance for this',
-                $scope->name,
+                'Unexpected scope state exit for %s, no matching entry recorded',
+                self::formatQuoted($scope->name),
             ),
         );
     }
@@ -77,15 +77,14 @@ class CompilerException extends LumiException
     ): self {
         return new self(
             message: \sprintf(
-                'Unexpected scope state for node (can be: "%s"), expecting "%s"',
-                \join(
-                    '", "',
+                'Unexpected scope state for node (can be: %s), expecting %s',
+                self::formatOneOf(
                     \array_map(
                         static fn (NodeScope $scope): string => $scope->name,
                         $scopes,
                     ),
                 ),
-                $expects->name ?? 'unknown',
+                self::formatQuoted($expects->name ?? 'unknown'),
             ),
         );
     }
@@ -117,7 +116,7 @@ class CompilerException extends LumiException
     public static function fromFunctionCallNotIdentifier(): self
     {
         return new self(
-            message: 'Function calls must only be using identifiers',
+            message: 'Function calls must only use identifiers',
         );
     }
 }

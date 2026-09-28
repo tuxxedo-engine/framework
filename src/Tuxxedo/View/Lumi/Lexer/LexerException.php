@@ -57,7 +57,7 @@ class LexerException extends LumiException
     ): self {
         return new self(
             message: \sprintf(
-                'Expected syntax: For loops must be constructed like {%% for value[,key] in iterator %%} on line %d',
+                'Invalid for-loop syntax: expected {%% for value[, key] in iterator %%} on line %d',
                 $line,
             ),
         );
@@ -68,7 +68,7 @@ class LexerException extends LumiException
     ): self {
         return new self(
             message: \sprintf(
-                'Expected syntax: Foreach loops must be constructed like {%% foreach iterator as [key =>]value %%} on line %d',
+                'Invalid foreach-loop syntax: expected {%% foreach iterator as [key =>] value %%} on line %d',
                 $line,
             ),
         );
@@ -79,7 +79,7 @@ class LexerException extends LumiException
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid loop depth, must be a positive integer on line %d',
+                'Loop depth must be a positive integer on line %d',
                 $line,
             ),
         );
@@ -102,7 +102,7 @@ class LexerException extends LumiException
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid quoted string, no ending %s character found on line %d',
+                'Unterminated string literal, expected closing %s character on line %d',
                 $quoteChar,
                 $line,
             ),
@@ -115,9 +115,9 @@ class LexerException extends LumiException
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid numeric value: %s cannot be represented as a number %d',
-                $value,
-                $line,
+                'Invalid numeric value %s cannot be represented as a number%s',
+                self::formatQuoted($value),
+                self::formatLocation($line),
             ),
         );
     }
@@ -138,7 +138,7 @@ class LexerException extends LumiException
     public static function fromTokenStreamEof(): self
     {
         return new self(
-            message: 'Token stream has reached the end of stream unexpectedly',
+            message: 'Token stream ended unexpectedly',
         );
     }
 
@@ -149,10 +149,12 @@ class LexerException extends LumiException
     ): self {
         return new self(
             message: \sprintf(
-                'Unexpected token "%s" encountered in token stream, expected "%s" on line %d',
-                $tokenName,
-                $expectedTokenName,
-                $line,
+                'Unexpected token in token stream, %s%s',
+                self::formatExpectedGot(
+                    expected: self::formatShortClass($expectedTokenName),
+                    got: self::formatShortClass($tokenName),
+                ),
+                self::formatLocation($line),
             ),
         );
     }
@@ -176,11 +178,13 @@ class LexerException extends LumiException
     ): self {
         return new self(
             message: \sprintf(
-                'Unexpected token operand for %s, expected "%s" but got "%s" on line %d',
+                'Unexpected token operand for %s, %s%s',
                 $operand,
-                $expectedOperand,
-                $actualOperand,
-                $line,
+                self::formatExpectedGot(
+                    expected: $expectedOperand,
+                    got: $actualOperand,
+                ),
+                self::formatLocation($line),
             ),
         );
     }
@@ -190,7 +194,7 @@ class LexerException extends LumiException
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid declare syntax: A declare must have an assignment on line %d',
+                'Invalid declare syntax: declare statements must have an assignment on line %d',
                 $line,
             ),
         );
@@ -201,7 +205,7 @@ class LexerException extends LumiException
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid declare syntax: The right operand must be a literal value on line %d',
+                'Invalid declare syntax: right operand must be a literal value on line %d',
                 $line,
             ),
         );
@@ -223,7 +227,7 @@ class LexerException extends LumiException
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid layout file, must be a literal string value on line %d',
+                'Invalid layout file, expected a literal string on line %d',
                 $line,
             ),
         );
@@ -245,7 +249,7 @@ class LexerException extends LumiException
     public static function fromUncleanLexerState(): self
     {
         return new self(
-            message: 'Lexer state was left in an unclean state, possible end of sequence tag missing',
+            message: 'Lexer finished in an unclean state, possible missing end-of-sequence tag',
         );
     }
 

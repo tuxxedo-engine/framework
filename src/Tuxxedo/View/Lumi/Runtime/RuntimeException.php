@@ -40,7 +40,7 @@ class RuntimeException extends LumiException
     ): self {
         return new self(
             message: \sprintf(
-                'Cannot call instance of class "%s", as it has not explicitly been allowed',
+                'Cannot call instance of class "%s", as it has not been explicitly allowed',
                 $class,
             ),
         );
@@ -51,7 +51,7 @@ class RuntimeException extends LumiException
     ): self {
         return new self(
             message: \sprintf(
-                'Directive "%s" is not declared and must be declared or have a default value before usage',
+                'Directive "%s" is not declared and must be declared or have a default value before use',
                 $directive,
             ),
         );
@@ -64,10 +64,12 @@ class RuntimeException extends LumiException
     ): self {
         return new self(
             message: \sprintf(
-                'Cannot fetch directive "%s" as "%s" (type is: "%s")',
-                $directive,
-                $expectedType,
-                $type,
+                'Cannot fetch directive %s, %s',
+                self::formatQuoted($directive),
+                self::formatExpectedGot(
+                    expected: $expectedType,
+                    got: $type,
+                ),
             ),
         );
     }

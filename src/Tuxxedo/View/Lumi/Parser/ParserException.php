@@ -25,9 +25,9 @@ class ParserException extends LumiException
         // @todo Maybe some tokens can print their value alongside the token name for better debugging
         return new self(
             message: \sprintf(
-                'Syntax error: Unexpected token "%s" on line %d',
-                $tokenName,
-                $line,
+                'Syntax error%s: unexpected token %s',
+                self::formatLocation($line),
+                self::formatQuoted(self::formatShortClass($tokenName)),
             ),
         );
     }
@@ -43,10 +43,15 @@ class ParserException extends LumiException
         // @todo Maybe some tokens can print their value alongside the token name for better debugging
         return new self(
             message: \sprintf(
-                'Syntax error: Unexpected token "%s", expected one of "%s" on line %d',
-                $tokenName,
-                \join('", "', $expectedTokenNames),
-                $line,
+                'Syntax error%s: unexpected token %s, expected one of %s',
+                self::formatLocation($line),
+                self::formatQuoted(self::formatShortClass($tokenName)),
+                self::formatOneOf(
+                    \array_map(
+                        static fn (string $name): string => self::formatShortClass($name),
+                        $expectedTokenNames,
+                    ),
+                ),
             ),
         );
     }
@@ -54,7 +59,7 @@ class ParserException extends LumiException
     public static function fromNodeStreamEof(): self
     {
         return new self(
-            message: 'Node stream has reached the end of stream unexpectedly',
+            message: 'Node stream ended unexpectedly',
         );
     }
 
@@ -68,7 +73,7 @@ class ParserException extends LumiException
     public static function fromUnexpectedConditionExit(): self
     {
         return new self(
-            message: 'Cannot exit condition: no active conditional context found',
+            message: 'Cannot exit conditional: no active conditional context found',
         );
     }
 
@@ -97,10 +102,12 @@ class ParserException extends LumiException
     ): self {
         return new self(
             message: \sprintf(
-                'Expected a %s value for key "%s", but received %s',
-                $expectedType,
-                $key,
-                $type,
+                'Unexpected state value for key %s, %s',
+                self::formatQuoted($key),
+                self::formatExpectedGot(
+                    expected: $expectedType,
+                    got: $type,
+                ),
             ),
         );
     }
@@ -195,7 +202,7 @@ class ParserException extends LumiException
     ): self {
         return new self(
             message: \sprintf(
-                'A file with a layout rule must only contain block and whitespace at root level on line %d',
+                'A file with a layout rule must only contain blocks and whitespace at root level on line %d',
                 $line,
             ),
         );
@@ -228,7 +235,7 @@ class ParserException extends LumiException
     ): self {
         return new self(
             message: \sprintf(
-                'Declare must be at the top level on line %d',
+                'Declare statements must be at the top level on line %d',
                 $line,
             ),
         );
@@ -287,7 +294,7 @@ class ParserException extends LumiException
     ): self {
         return new self(
             message: \sprintf(
-                'Include scopes must be an array on line %d',
+                'Include scope must be an array on line %d',
                 $line,
             ),
         );

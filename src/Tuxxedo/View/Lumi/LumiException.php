@@ -28,4 +28,73 @@ class LumiException extends \Exception
 
         parent::__construct($message);
     }
+
+    protected static function formatShortClass(
+        string $fqcn,
+    ): string {
+        $position = \strrpos($fqcn, '\\');
+
+        if ($position === false) {
+            return $fqcn;
+        }
+
+        return \substr($fqcn, $position + 1);
+    }
+
+    protected static function formatQuoted(
+        string $value,
+    ): string {
+        return '"' . $value . '"';
+    }
+
+    /**
+     * @param string[] $items
+     */
+    protected static function formatOneOf(
+        array $items,
+        string $conjunction = 'or',
+    ): string {
+        $quoted = \array_map(
+            static fn (string $item): string => self::formatQuoted($item),
+            $items,
+        );
+
+        $count = \sizeof($quoted);
+
+        if ($count === 0) {
+            return '';
+        }
+
+        if ($count === 1) {
+            return $quoted[0];
+        }
+
+        if ($count === 2) {
+            return $quoted[0] . ' ' . $conjunction . ' ' . $quoted[1];
+        }
+
+        $last = \array_pop($quoted);
+
+        return \join(', ', $quoted) . ', ' . $conjunction . ' ' . $last;
+    }
+
+    protected static function formatExpectedGot(
+        string $expected,
+        string $got,
+    ): string {
+        return \sprintf(
+            'expected %s, got %s',
+            self::formatQuoted($expected),
+            self::formatQuoted($got),
+        );
+    }
+
+    protected static function formatLocation(
+        int $line,
+    ): string {
+        return \sprintf(
+            ' on line %d',
+            $line,
+        );
+    }
 }

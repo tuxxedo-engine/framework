@@ -24,7 +24,7 @@ class HighlightException extends LumiException
         return new self(
             message: \sprintf(
                 'Cannot highlight source, unknown node encountered: %s',
-                $node::class,
+                self::formatQuoted(self::formatShortClass($node::class)),
             ),
         );
     }
@@ -34,7 +34,7 @@ class HighlightException extends LumiException
     ): self {
         return new self(
             message: \sprintf(
-                'Cannot highlight source, as the theme "%s" does not exist',
+                'Cannot highlight source: theme "%s" does not exist',
                 $theme,
             ),
         );
