@@ -13,13 +13,14 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http;
 
+use Tuxxedo\Exception;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseCode;
 use Tuxxedo\Http\Response\ResponseCodeInterface;
 use Tuxxedo\Http\Response\ResponseExceptionInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 
-class HttpException extends \Exception implements ResponseCodeInterface, ResponseExceptionInterface
+class HttpException extends Exception implements ResponseCodeInterface, ResponseExceptionInterface
 {
     public readonly ResponseCode $responseCode;
 

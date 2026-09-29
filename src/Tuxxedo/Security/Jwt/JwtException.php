@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Security\Jwt;
 
-class JwtException extends \Exception
+use Tuxxedo\Exception;
+
+class JwtException extends Exception
 {
     public static function fromMalformedToken(
         string $token,
@@ -471,7 +473,7 @@ class JwtException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Constraint expected a token of type "%s" but got "%s"',
+                'Constraint expected a token of type "%s", got "%s"',
                 $expected,
                 $actual,
             ),
@@ -484,7 +486,7 @@ class JwtException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Nested JWT decryption expected outer "cty" header of "%s" but got "%s"',
+                'Nested JWT decryption expected outer "cty" header of "%s", got "%s"',
                 $expected,
                 $given,
             ),

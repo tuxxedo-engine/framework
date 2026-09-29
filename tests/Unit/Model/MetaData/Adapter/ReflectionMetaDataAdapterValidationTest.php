@@ -159,7 +159,7 @@ class ReflectionMetaDataAdapterValidationTest extends TestCase
     {
         $this->assertRejectsModelWithMessage(
             modelClass: InvalidRelatedClass::class,
-            needle: 'Relation on property',
+            needle: 'relation on property',
         );
     }
 
@@ -175,7 +175,7 @@ class ReflectionMetaDataAdapterValidationTest extends TestCase
     {
         $this->assertRejectsModelWithMessage(
             modelClass: InvalidThroughClass::class,
-            needle: 'Through relation',
+            needle: 'through relation',
         );
     }
 
@@ -183,7 +183,7 @@ class ReflectionMetaDataAdapterValidationTest extends TestCase
     {
         $this->assertRejectsModelWithMessage(
             modelClass: ThroughClassNotAModel::class,
-            needle: 'Through relation',
+            needle: 'through relation',
         );
     }
 

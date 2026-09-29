@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\File\Storage;
 
-class StorageException extends \Exception
+use Tuxxedo\Exception;
+
+class StorageException extends Exception
 {
     public static function fromInvalidKey(
         string $key,

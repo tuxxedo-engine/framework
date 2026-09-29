@@ -15,8 +15,9 @@ namespace Tuxxedo\Console;
 
 use Tuxxedo\Console\Input\Message\MessageFormatterInterface;
 use Tuxxedo\Console\Output\ConsoleOutputInterface;
+use Tuxxedo\Exception;
 
-class ConsoleException extends \Exception implements ExitCodeInterface, ExitCodeExceptionInterface
+class ConsoleException extends Exception implements ExitCodeInterface, ExitCodeExceptionInterface
 {
     public readonly ExitCode $exitCode;
 
@@ -104,10 +105,9 @@ class ConsoleException extends \Exception implements ExitCodeInterface, ExitCode
         return new self(
             exitCode: ExitCode::CONFIG_ERROR,
             message: \sprintf(
-                'Command %s::%s must return void or %s',
+                'Command %s::%s must return void or ExitCode',
                 $className,
                 $methodName,
-                ExitCode::class,
             ),
         );
     }
@@ -245,7 +245,7 @@ class ConsoleException extends \Exception implements ExitCodeInterface, ExitCode
         return new self(
             exitCode: ExitCode::DATA_ERROR,
             message: \sprintf(
-                'Value "%s" is not valid for parameter $%s of type %s',
+                'Value "%s" is not valid for parameter $%s of type "%s"',
                 $rawValue,
                 $parameterName,
                 $typeName,
@@ -260,7 +260,7 @@ class ConsoleException extends \Exception implements ExitCodeInterface, ExitCode
         return new self(
             exitCode: ExitCode::CONFIG_ERROR,
             message: \sprintf(
-                'Parameter $%s has unsupported type %s',
+                'Parameter $%s has unsupported type "%s"',
                 $parameterName,
                 $typeName,
             ),
@@ -284,7 +284,7 @@ class ConsoleException extends \Exception implements ExitCodeInterface, ExitCode
         return new self(
             exitCode: ExitCode::COMMAND_NOT_FOUND,
             message: \sprintf(
-                'Unrecognized command: %s',
+                'Unrecognized command "%s"',
                 \join(' ', $argv),
             ),
         );
@@ -300,7 +300,7 @@ class ConsoleException extends \Exception implements ExitCodeInterface, ExitCode
         return new self(
             exitCode: ExitCode::COMMAND_NOT_FOUND,
             message: \sprintf(
-                'Unrecognized command: %s. Did you mean: %s?',
+                'Unrecognized command "%s". Did you mean "%s"?',
                 \join(' ', $argv),
                 $suggestion,
             ),

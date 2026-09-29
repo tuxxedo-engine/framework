@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Hydrator;
 
-class HydrationException extends \Exception
+use Tuxxedo\Exception;
+
+class HydrationException extends Exception
 {
     /**
      * @param class-string $className
@@ -23,7 +25,7 @@ class HydrationException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Cannot hydrate class "%s": Class does not exist or is not instantiable',
+                'Cannot hydrate class "%s": class does not exist or is not instantiable',
                 $className,
             ),
         );
@@ -38,7 +40,7 @@ class HydrationException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Cannot hydrate class "%1$s": Property %1$s::\$%2$s does not exist',
+                'Cannot hydrate class "%1$s": property "$%2$s" does not exist',
                 $className,
                 $property,
             ),

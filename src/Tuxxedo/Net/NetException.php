@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Net;
 
-class NetException extends \Exception
+use Tuxxedo\Exception;
+
+class NetException extends Exception
 {
     public static function fromUnparseableCidrAddress(
         string $cidr,

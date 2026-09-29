@@ -13,14 +13,16 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Process;
 
-class ProcessException extends \Exception
+use Tuxxedo\Exception;
+
+class ProcessException extends Exception
 {
     public static function fromLaunchFailure(
         string $binary,
     ): self {
         return new self(
             message: \sprintf(
-                'Failed to launch process: %s',
+                'Failed to launch process "%s"',
                 $binary,
             ),
         );
@@ -31,7 +33,7 @@ class ProcessException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Process exceeded timeout of %d seconds',
+                'Process exceeded the timeout of %d seconds',
                 $seconds,
             ),
         );
@@ -42,7 +44,7 @@ class ProcessException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Process output exceeded limit of %d bytes',
+                'Process output exceeded the limit of %d bytes',
                 $bytes,
             ),
         );

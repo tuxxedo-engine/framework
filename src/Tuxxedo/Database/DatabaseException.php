@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database;
 
-class DatabaseException extends \Exception
+use Tuxxedo\Exception;
+
+class DatabaseException extends Exception
 {
     public function __construct(
         #[\SensitiveParameter] string $message,
@@ -29,7 +31,7 @@ class DatabaseException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Unable to find connection: Named connection "%s" was not registered',
+                'Unable to find connection: named connection "%s" was not registered',
                 $name,
             ),
         );
@@ -38,21 +40,21 @@ class DatabaseException extends \Exception
     public static function fromNoDefaultConnectionAvailable(): self
     {
         return new self(
-            message: 'Unable to find connection: No default connection is available',
+            message: 'Unable to find connection: no default connection is available',
         );
     }
 
     public static function fromNoReadConnectionAvailable(): self
     {
         return new self(
-            message: 'Unable to find connection: No read connection is available',
+            message: 'Unable to find connection: no read connection is available',
         );
     }
 
     public static function fromNoWriteConnectionAvailable(): self
     {
         return new self(
-            message: 'Unable to find connection: No write connection is available',
+            message: 'Unable to find connection: no write connection is available',
         );
     }
 
@@ -129,14 +131,14 @@ class DatabaseException extends \Exception
     public static function fromSavepointOutsideTransaction(): self
     {
         return new self(
-            message: 'Cannot create savepoint: No transaction is currently active',
+            message: 'Cannot create savepoint: no transaction is currently active',
         );
     }
 
     public static function fromNoConnectionAvailable(): self
     {
         return new self(
-            message: 'Cannot execute statement: No connection was provided at construction or execution time',
+            message: 'Cannot execute statement: no connection was provided at construction or execution time',
         );
     }
 
@@ -170,7 +172,7 @@ class DatabaseException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Unknown foreign key action reported by driver: %s',
+                'Unknown foreign key action reported by driver: "%s"',
                 $action,
             ),
         );

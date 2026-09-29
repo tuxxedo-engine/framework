@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Mail;
 
-class MailException extends \Exception
+use Tuxxedo\Exception;
+
+class MailException extends Exception
 {
     public static function fromInvalidEmail(
         string $email,
@@ -146,7 +148,7 @@ class MailException extends \Exception
         return new self(
             message: \sprintf(
                 'Transport "%s" does not support Bcc recipients',
-                $transport,
+                self::formatShortClass($transport),
             ),
         );
     }
@@ -161,7 +163,7 @@ class MailException extends \Exception
         return new self(
             message: \sprintf(
                 'Transport "%s" failed to deliver the message',
-                $transport,
+                self::formatShortClass($transport),
             ),
             previous: $previous,
         );
@@ -190,8 +192,8 @@ class MailException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Unable to serialize mime part object: %s',
-                $mimePartClass,
+                'Unable to serialize MIME part object "%s"',
+                self::formatShortClass($mimePartClass),
             ),
         );
     }
@@ -230,7 +232,7 @@ class MailException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Failed to connect to SMTP server %s:%d: %s',
+                'Failed to connect to SMTP server "%s:%d": %s',
                 $host,
                 $port,
                 $reason,

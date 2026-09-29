@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Uuid;
 
-class UuidException extends \Exception
+use Tuxxedo\Exception;
+
+class UuidException extends Exception
 {
     public static function fromInvalidUuidFormat(
         string $value,

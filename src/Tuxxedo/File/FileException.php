@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\File;
 
-class FileException extends \Exception
+use Tuxxedo\Exception;
+
+class FileException extends Exception
 {
     public static function fromReadFailure(
         string $path,

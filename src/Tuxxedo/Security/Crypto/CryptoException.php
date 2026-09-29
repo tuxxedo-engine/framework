@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Security\Crypto;
 
-class CryptoException extends \Exception
+use Tuxxedo\Exception;
+
+class CryptoException extends Exception
 {
     /**
      * @codeCoverageIgnore

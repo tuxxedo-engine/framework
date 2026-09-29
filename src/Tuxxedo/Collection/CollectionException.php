@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Collection;
 
-class CollectionException extends \Exception
+use Tuxxedo\Exception;
+
+class CollectionException extends Exception
 {
     public static function fromWriteViolation(): self
     {

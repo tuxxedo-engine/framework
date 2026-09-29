@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Config;
 
-class ConfigException extends \Exception
+use Tuxxedo\Exception;
+
+class ConfigException extends Exception
 {
     public static function fromInvalidDirective(
         string $directive,

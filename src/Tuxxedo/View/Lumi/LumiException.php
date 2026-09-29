@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi;
 
-class LumiException extends \Exception
+use Tuxxedo\Exception;
+
+class LumiException extends Exception
 {
     public function __construct(
         string $message,
@@ -27,55 +29,6 @@ class LumiException extends \Exception
         }
 
         parent::__construct($message);
-    }
-
-    protected static function formatShortClass(
-        string $fqcn,
-    ): string {
-        $position = \strrpos($fqcn, '\\');
-
-        if ($position === false) {
-            return $fqcn;
-        }
-
-        return \substr($fqcn, $position + 1);
-    }
-
-    protected static function formatQuoted(
-        string $value,
-    ): string {
-        return '"' . $value . '"';
-    }
-
-    /**
-     * @param string[] $items
-     */
-    protected static function formatOneOf(
-        array $items,
-        string $conjunction = 'or',
-    ): string {
-        $quoted = \array_map(
-            static fn (string $item): string => self::formatQuoted($item),
-            $items,
-        );
-
-        $count = \sizeof($quoted);
-
-        if ($count === 0) {
-            return '';
-        }
-
-        if ($count === 1) {
-            return $quoted[0];
-        }
-
-        if ($count === 2) {
-            return $quoted[0] . ' ' . $conjunction . ' ' . $quoted[1];
-        }
-
-        $last = \array_pop($quoted);
-
-        return \join(', ', $quoted) . ', ' . $conjunction . ' ' . $last;
     }
 
     protected static function formatExpectedGot(
@@ -96,5 +49,34 @@ class LumiException extends \Exception
             ' on line %d',
             $line,
         );
+    }
+
+    /**
+     * @param string[] $items
+     */
+    protected static function formatOneOf(
+        array $items,
+        string $conjunction = 'or',
+    ): string {
+        $quoted = \array_map(
+            self::formatQuoted(...),
+            $items,
+        );
+
+        $count = \sizeof($quoted);
+
+        if ($count === 0) {
+            return '';
+        }
+
+        if ($count === 1) {
+            return $quoted[0];
+        }
+
+        if ($count === 2) {
+            return $quoted[0] . ' ' . $conjunction . ' ' . $quoted[1];
+        }
+
+        return \join(', ', $quoted) . ', ' . $conjunction . ' ' . \array_pop($quoted);
     }
 }

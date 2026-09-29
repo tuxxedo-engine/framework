@@ -377,7 +377,7 @@ class ReflectionMetaDataAdapterPolymorphicTest extends TestCase
     {
         $this->assertRejectsModelWithMessage(
             modelClass: MorphOnePropertyMismatchClass::class,
-            needle: 'declares type',
+            needle: 'must declare a type',
         );
     }
 

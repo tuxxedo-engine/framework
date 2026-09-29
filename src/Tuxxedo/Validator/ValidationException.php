@@ -13,10 +13,11 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Validator;
 
+use Tuxxedo\Exception;
 use Tuxxedo\Http\Response\PrefersResponseCodeInterface;
 use Tuxxedo\Http\Response\ResponseCode;
 
-class ValidationException extends \Exception implements PrefersResponseCodeInterface
+class ValidationException extends Exception implements PrefersResponseCodeInterface
 {
     public ?ResponseCode $responseCode {
         get {

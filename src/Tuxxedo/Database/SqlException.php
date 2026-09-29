@@ -14,8 +14,9 @@ declare(strict_types=1);
 namespace Tuxxedo\Database;
 
 use Tuxxedo\Database\Query\Statement\Table\Operation\AlterOperationInterface;
+use Tuxxedo\Exception;
 
-class SqlException extends \Exception
+class SqlException extends Exception
 {
     public static function fromUnboundPlaceholder(
         string $name,
@@ -58,7 +59,7 @@ class SqlException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Cannot escape identifier, as its invalid: %s',
+                'Cannot escape invalid identifier `%s`',
                 $name,
             ),
         );
@@ -70,7 +71,7 @@ class SqlException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Bulk insertion column count mismatch: expected %d but got %d',
+                'Bulk insertion column count mismatch: expected %d, got %d',
                 $expectedRows,
                 $rows,
             ),
@@ -87,7 +88,7 @@ class SqlException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Bulk insertion column shape mismatch: expected [%s] but got [%s]',
+                'Bulk insertion column shape mismatch: expected [%s], got [%s]',
                 \join(', ', $expectedColumns),
                 \join(', ', $columns),
             ),
@@ -142,9 +143,9 @@ class SqlException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Dialect %s does not support ALTER operation %s',
-                $dialect,
-                $operation,
+                'Dialect "%s" does not support ALTER operation "%s"',
+                self::formatShortClass($dialect),
+                self::formatShortClass($operation),
             ),
         );
     }

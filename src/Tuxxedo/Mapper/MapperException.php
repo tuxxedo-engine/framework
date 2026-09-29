@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Mapper;
 
-class MapperException extends \Exception
+use Tuxxedo\Exception;
+
+class MapperException extends Exception
 {
     /**
      * @param class-string $className
@@ -24,7 +26,7 @@ class MapperException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid property "%s", property does not exist on class "%s"',
+                'Invalid property "%s": property does not exist on class "%s"',
                 $property,
                 $className,
             ),
@@ -42,11 +44,11 @@ class MapperException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid type for property "%s" (%s), expected "%s" on class "%s"',
+                'Invalid type for property "%s" on class "%s": expected "%s", got "%s"',
                 $property,
-                $type,
-                $expectedType,
                 $className,
+                $expectedType,
+                $type,
             ),
         );
     }

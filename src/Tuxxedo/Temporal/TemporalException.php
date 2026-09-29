@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Temporal;
 
-class TemporalException extends \Exception
+use Tuxxedo\Exception;
+
+class TemporalException extends Exception
 {
     public static function fromNanosecondsOutOfRange(
         int $nanoseconds,
@@ -32,7 +34,7 @@ class TemporalException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                '%s() requires a non-negative value; got %d — use negate() for a negative duration',
+                '%s() requires a non-negative value, got %d; use negate() for a negative duration',
                 $factory,
                 $value,
             ),
@@ -42,7 +44,7 @@ class TemporalException extends \Exception
     public static function fromDurationOverflow(): self
     {
         return new self(
-            message: 'Duration arithmetic overflowed integer range',
+            message: 'Duration arithmetic overflowed the integer range',
         );
     }
 

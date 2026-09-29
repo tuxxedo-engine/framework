@@ -13,14 +13,16 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View;
 
-class ViewException extends \Exception
+use Tuxxedo\Exception;
+
+class ViewException extends Exception
 {
     public static function fromViewNotFound(
         string $view,
     ): self {
         return new self(
             message: \sprintf(
-                'Cannot load view file: %s',
+                'Cannot load view file "%s"',
                 $view,
             ),
         );
@@ -45,7 +47,7 @@ class ViewException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Unable to determine view name for: %s',
+                'Unable to determine view name for "%s"',
                 $view,
             ),
         );

@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Container;
 
-class ContainerException extends \Exception
+use Tuxxedo\Exception;
+
+class ContainerException extends Exception
 {
     protected static function formatNamedType(
         \ReflectionNamedType $type,
@@ -107,7 +109,7 @@ class ContainerException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Unable to resolve dependency: "%s"; intersection types is not supported',
+                'Unable to resolve dependency: "%s"; intersection types are not supported',
                 self::formatIntersectionType($intersectionType),
             ),
         );
@@ -145,10 +147,10 @@ class ContainerException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'File "%s" returned type "%s" but expected "%s"',
+                'File "%s" returned an unexpected type: expected "%s", got "%s"',
                 $path,
-                $actualType,
                 $expectedType,
+                $actualType,
             ),
         );
     }

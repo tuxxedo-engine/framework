@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Request\Context;
 
-class UploadedFileException extends \Exception
+use Tuxxedo\Exception;
+
+class UploadedFileException extends Exception
 {
     public function __construct(
         string $message,
@@ -40,14 +42,14 @@ class UploadedFileException extends \Exception
     public static function fromSaveFile(): self
     {
         return new self(
-            message: 'Uploaded file could not be saved on server',
+            message: 'Uploaded file could not be saved on the server',
         );
     }
 
     public static function fromExtensionError(): self
     {
         return new self(
-            message: 'Uploaded file could not be uploaded because an extension prevented it',
+            message: 'Uploaded file was stopped by a PHP extension',
         );
     }
 
@@ -89,7 +91,7 @@ class UploadedFileException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Expected an array of file records at path "%s", but entries are nested structures rather than file records — the path is too shallow',
+                'Expected an array of file records at path "%s", but entries are nested structures rather than file records; the path is too shallow',
                 $path,
             ),
         );

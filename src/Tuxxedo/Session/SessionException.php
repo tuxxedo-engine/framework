@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Session;
 
-class SessionException extends \Exception
+use Tuxxedo\Exception;
+
+class SessionException extends Exception
 {
     public static function fromNotStarted(): self
     {
@@ -71,7 +73,7 @@ class SessionException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Unable to fetch "%s", enum is invalid "%s" or not suitable for this value',
+                'Unable to fetch "%s": enum "%s" is invalid or not suitable for this value',
                 $name,
                 $enum,
             ),

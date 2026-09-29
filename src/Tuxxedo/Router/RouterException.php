@@ -13,14 +13,16 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Router;
 
-class RouterException extends \Exception
+use Tuxxedo\Exception;
+
+class RouterException extends Exception
 {
     public static function fromInvalidClassLikeStructure(
         string $className,
     ): self {
         return new self(
             message: \sprintf(
-                '%s must be a class',
+                '"%s" must be a class',
                 $className,
             ),
         );
@@ -62,10 +64,10 @@ class RouterException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                '%s::%s() has path with non-unique arguments: %s',
+                '%s::%s() has a path with non-unique arguments: %s',
                 $className,
                 $method,
-                \join(', ', $names),
+                \join(', ', \array_map(static fn (string $name): string => '"' . $name . '"', $names)),
             ),
         );
     }

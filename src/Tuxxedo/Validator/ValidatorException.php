@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Validator;
 
-class ValidatorException extends \Exception
+use Tuxxedo\Exception;
+
+class ValidatorException extends Exception
 {
     public static function fromRecursionDepthExceeded(
         string $path,

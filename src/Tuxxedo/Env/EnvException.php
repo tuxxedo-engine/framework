@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Env;
 
-class EnvException extends \Exception
+use Tuxxedo\Exception;
+
+class EnvException extends Exception
 {
     public static function fromDuplicateKey(
         string $file,

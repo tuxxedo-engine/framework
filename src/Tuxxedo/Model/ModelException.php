@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model;
 
-class ModelException extends \Exception
+use Tuxxedo\Exception;
+
+class ModelException extends Exception
 {
     /**
      * @codeCoverageIgnore
@@ -37,7 +39,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Class does not exist or is not a non-abstract class',
+                'Invalid model class "%s": class does not exist or is not a non-abstract class',
                 $modelClass,
             ),
         );
@@ -51,7 +53,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Model is missing the #[Table] attribute',
+                'Invalid model class "%s": model is missing the #[Table] attribute',
                 $modelClass,
             ),
         );
@@ -65,7 +67,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Model does not have any #[Column] attributes',
+                'Invalid model class "%s": model does not have any #[Column] attributes',
                 $modelClass,
             ),
         );
@@ -80,7 +82,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%1$s": Property %1$s::\$%2$s has more than one #[Column] attribute',
+                'Invalid model class "%1$s": property "%1$s::$%2$s" has more than one #[Column] attribute',
                 $modelClass,
                 $property,
             ),
@@ -96,7 +98,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%1$s": Models may only define one primary-key column (duplicate declared at %1$s::\$%2$s)',
+                'Invalid model class "%1$s": a model may only define one primary-key column (duplicate declared at "%1$s::$%2$s")',
                 $modelClass,
                 $property,
             ),
@@ -112,7 +114,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%1$s": Column %1$s::\$%2$s declares primaryKey: true but the class also declares #[CompositeKey] — these are mutually exclusive',
+                'Invalid model class "%1$s": column "%1$s::$%2$s" declares primaryKey: true but the class also declares #[CompositeKey]; these are mutually exclusive',
                 $modelClass,
                 $property,
             ),
@@ -147,7 +149,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Cannot perform action on model "%s": The property value for "%s" must be a scalar, but "%s" was given',
+                'Cannot perform action on model "%s": the value of property "%s" must be a scalar, got "%s"',
                 $modelClass,
                 $property,
                 $actualType,
@@ -165,7 +167,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Cannot perform action on model "%s": The property value for "%s" must be string|int, but "%s" was given',
+                'Cannot perform action on model "%s": the value of property "%s" must be string|int, got "%s"',
                 $modelClass,
                 $property,
                 $actualType,
@@ -256,7 +258,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Cannot perform action on model "%s": A NULL value was supplied to property "%s", but it is not marked as nullable',
+                'Cannot perform action on model "%s": a NULL value was supplied to property "%s", but it is not marked as nullable',
                 $modelClass,
                 $property,
             ),
@@ -273,7 +275,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Relation on property "%s" references "%s" which does not exist or is not a non-abstract class',
+                'Invalid model class "%s": relation on property "%s" references "%s" which does not exist or is not a non-abstract class',
                 $modelClass,
                 $property,
                 $relatedClass,
@@ -290,7 +292,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%1$s": Property %1$s::\$%2$s has more than one relation attribute',
+                'Invalid model class "%1$s": property "%1$s::$%2$s" has more than one relation attribute',
                 $modelClass,
                 $property,
             ),
@@ -310,7 +312,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Relation on property "%s" references %s "%s" which does not exist as a column on "%s"',
+                'Invalid model class "%s": relation on property "%s" references %s "%s" which does not exist as a column on "%s"',
                 $modelClass,
                 $property,
                 $keyKind,
@@ -381,7 +383,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Relation on property "%s" requires the %s model to define a primary key',
+                'Invalid model class "%s": relation on property "%s" requires the %s model to define a primary key',
                 $modelClass,
                 $property,
                 $side,
@@ -416,7 +418,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Relation on property "%s" references "%s" which is not a model (missing #[Table] attribute)',
+                'Invalid model class "%s": relation on property "%s" references "%s" which is not a model (missing #[Table] attribute)',
                 $modelClass,
                 $property,
                 $relatedClass,
@@ -435,7 +437,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Through relation on property "%s" references "%s" which does not exist or is not a non-abstract class',
+                'Invalid model class "%s": through relation on property "%s" references "%s" which does not exist or is not a non-abstract class',
                 $modelClass,
                 $property,
                 $throughClass,
@@ -454,7 +456,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Through relation on property "%s" references "%s" which is not a model (missing #[Table] attribute)',
+                'Invalid model class "%s": through relation on property "%s" references "%s" which is not a model (missing #[Table] attribute)',
                 $modelClass,
                 $property,
                 $throughClass,
@@ -474,7 +476,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Cascade action "%s" on %s of %s relation %s::$%s is not a valid configuration',
+                'Invalid model class "%s": cascade action "%s" on %s of %s relation "%s::$%s" is not a valid configuration',
                 $modelClass,
                 $action->name,
                 $side,
@@ -497,7 +499,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Cascade action SET_NULL on property "%s" requires column "%s" on "%s" to be nullable',
+                'Invalid model class "%s": cascade action SET_NULL on property "%s" requires column "%s" on "%s" to be nullable',
                 $modelClass,
                 $property,
                 $foreignKey,
@@ -517,7 +519,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Cannot delete model "%s": Relation on property "%s" has dependent rows in "%s" and is marked RESTRICT',
+                'Cannot delete model "%s": relation on property "%s" has dependent rows in "%s" and is marked RESTRICT',
                 $modelClass,
                 $property,
                 $relatedClass,
@@ -602,7 +604,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Relation on property "%s" must declare a single named class type',
+                'Invalid model class "%s": relation on property "%s" must declare a single named class type',
                 $modelClass,
                 $property,
             ),
@@ -621,11 +623,11 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Relation on property "%s" declares type "%s" but expected a type compatible with "%s"',
+                'Invalid model class "%s": relation on property "%s" must declare a type compatible with "%s", got "%s"',
                 $modelClass,
                 $property,
-                $declaredType,
                 $expectedType,
+                $declaredType,
             ),
         );
     }
@@ -660,7 +662,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Coercer "%s" on property "%s" does not exist or does not implement CoercerInterface',
+                'Invalid model class "%s": coercer "%s" on property "%s" does not exist or does not implement CoercerInterface',
                 $modelClass,
                 $coercerClass,
                 $property,
@@ -680,7 +682,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Behavior "%s" on property "%s" does not exist or does not implement BehaviorInterface',
+                'Invalid model class "%s": behavior "%s" on property "%s" does not exist or does not implement BehaviorInterface',
                 $modelClass,
                 $behaviorClass,
                 $property,
@@ -698,7 +700,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Multiple columns declare a SoftDeleteBehaviorInterface (%s); a model may only have one soft-delete tombstone',
+                'Invalid model class "%s": multiple columns declare a SoftDeleteBehaviorInterface (%s); a model may only have one soft-delete tombstone',
                 $modelClass,
                 \join(', ', $properties),
             ),
@@ -718,7 +720,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Relation on property "%s" cascades to "%s", but soft-delete states differ (parent: %s, child: %s) — cascade would silently cross the soft/hard boundary',
+                'Invalid model class "%s": relation on property "%s" cascades to "%s", but soft-delete states differ (parent: %s, child: %s); cascade would silently cross the soft/hard boundary',
                 $modelClass,
                 $property,
                 $relatedClass,
@@ -741,7 +743,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Relation on property "%s" sets bulkDelete: true but onDelete is not CASCADE',
+                'Invalid model class "%s": relation on property "%s" sets bulkDelete: true but onDelete is not CASCADE',
                 $modelClass,
                 $property,
             ),
@@ -762,7 +764,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Relation on property "%s" sets bulkDelete: true but child "%s" declares BeforeDelete behavior "%s" on property "%s" — bulk DELETE skips per-row behavior dispatch',
+                'Invalid model class "%s": relation on property "%s" sets bulkDelete: true but child "%s" declares BeforeDelete behavior "%s" on property "%s"; bulk DELETE skips per-row behavior dispatch',
                 $modelClass,
                 $property,
                 $relatedClass,
@@ -785,7 +787,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Relation on property "%s" sets bulkDelete: true but child "%s" declares cascade onDelete "%s" on relation "%s" — bulk DELETE skips child cascade dispatch',
+                'Invalid model class "%s": relation on property "%s" sets bulkDelete: true but child "%s" declares cascade onDelete "%s" on relation "%s"; bulk DELETE skips child cascade dispatch',
                 $modelClass,
                 $property,
                 $relatedClass,
@@ -806,7 +808,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Relation "%s" on property "%s" is not supported on a composite-key parent; through relations require a single-column parent key',
+                'Invalid model class "%s": relation "%s" on property "%s" is not supported on a composite-key parent; through relations require a single-column parent key',
                 $modelClass,
                 $relationClass,
                 $property,
@@ -827,7 +829,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Relation on property "%s" declares a %s with %d column(s) but the referenced parent key has %d column(s); the arities must match',
+                'Invalid model class "%s": relation on property "%s" declares a %s with %d column(s) but the referenced parent key has %d column(s); the arities must match',
                 $modelClass,
                 $property,
                 $keyKind,
@@ -848,7 +850,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Relation on property "%s" declares a map-form %s but does not provide an entry for parent column "%s"',
+                'Invalid model class "%s": relation on property "%s" declares a map-form %s but does not provide an entry for parent column "%s"',
                 $modelClass,
                 $property,
                 $keyKind,
@@ -870,7 +872,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Relation "%s" on property "%s" is not one of the built-in relation types supported by this Engine release',
+                'Invalid model class "%s": relation "%s" on property "%s" is not one of the built-in relation types supported by this Engine release',
                 $modelClass,
                 $relationClass,
                 $property,
@@ -881,7 +883,7 @@ class ModelException extends \Exception
     public static function fromInvalidModelClassViaResolver(): self
     {
         return new self(
-            message: 'Invalid model class supplied to the #[Model] attribute, type must be a class',
+            message: 'Invalid model class supplied to the #[Model] attribute: type must be a class',
         );
     }
 
@@ -914,7 +916,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Polymorphic relation on property "%s" has typeMap entry "%s" pointing at "%s", which does not exist or is not a non-abstract class',
+                'Invalid model class "%s": polymorphic relation on property "%s" has typeMap entry "%s" pointing at "%s", which does not exist or is not a non-abstract class',
                 $modelClass,
                 $property,
                 $alias,
@@ -934,7 +936,7 @@ class ModelException extends \Exception
     ): self {
         return new self(
             message: \sprintf(
-                'Invalid model class "%s": Polymorphic relation on property "%s" has typeMap entry "%s" pointing at "%s", which is missing the #[Table] attribute and cannot be used as a morph target',
+                'Invalid model class "%s": polymorphic relation on property "%s" has typeMap entry "%s" pointing at "%s", which is missing the #[Table] attribute and cannot be used as a morph target',
                 $modelClass,
                 $property,
                 $alias,

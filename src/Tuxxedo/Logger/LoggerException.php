@@ -13,14 +13,16 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Logger;
 
-class LoggerException extends \Exception
+use Tuxxedo\Exception;
+
+class LoggerException extends Exception
 {
     public static function fromUnableToOpenFile(
         string $file,
     ): self {
         return new self(
             message: \sprintf(
-                'Unable to initial logger as the log file could not be opened or created: %s',
+                'Unable to initialize logger, the log file "%s" could not be opened or created',
                 $file,
             ),
         );
