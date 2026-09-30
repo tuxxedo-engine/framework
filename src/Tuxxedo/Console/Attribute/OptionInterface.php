@@ -13,13 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console\Attribute;
 
-#[\Attribute(\Attribute::TARGET_PARAMETER)]
-readonly class Option implements OptionInterface
+interface OptionInterface extends CommandParameterInterface
 {
-    public function __construct(
-        public ?string $name = null,
-        public ?string $short = null,
-        public ?string $description = null,
-    ) {
+    public ?string $short {
+        get;
     }
 }

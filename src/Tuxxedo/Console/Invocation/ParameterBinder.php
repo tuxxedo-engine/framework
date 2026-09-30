@@ -16,7 +16,8 @@ namespace Tuxxedo\Console\Invocation;
 use Tuxxedo\Console\Attribute\Argument;
 use Tuxxedo\Console\Attribute\CommandParameterInterface;
 use Tuxxedo\Console\Attribute\Flag;
-use Tuxxedo\Console\Attribute\Option;
+use Tuxxedo\Console\Attribute\OptionInterface;
+use Tuxxedo\Console\Attribute\RepeatableOptionInterface;
 use Tuxxedo\Console\ConsoleException;
 use Tuxxedo\Console\Descriptor\CommandDescriptorInterface;
 use Tuxxedo\Container\ContainerInterface;
@@ -101,7 +102,20 @@ class ParameterBinder implements ParameterBinderInterface
                 continue;
             }
 
-            if ($binding instanceof Option) {
+            if ($binding instanceof OptionInterface) {
+                if ($binding instanceof RepeatableOptionInterface) {
+                    foreach ($argv->options[$name] ?? [] as $value) {
+                        $bound[] = $this->coerce(
+                            rawValue: $value,
+                            typeName: $type->getName(),
+                            isBuiltin: $type->isBuiltin(),
+                            parameterName: $name,
+                        );
+                    }
+
+                    continue;
+                }
+
                 if (!isset($argv->options[$name])) {
                     if ($parameter->isDefaultValueAvailable()) {
                         $bound[] = $parameter->getDefaultValue();
@@ -112,29 +126,12 @@ class ParameterBinder implements ParameterBinderInterface
                     continue;
                 }
 
-                $values = $argv->options[$name];
-
-                if ($binding->repeatable) {
-                    $coerced = [];
-
-                    foreach ($values as $value) {
-                        $coerced[] = $this->coerce(
-                            rawValue: $value,
-                            typeName: $type->getName(),
-                            isBuiltin: $type->isBuiltin(),
-                            parameterName: $name,
-                        );
-                    }
-
-                    $bound[] = $coerced;
-                } else {
-                    $bound[] = $this->coerce(
-                        rawValue: $values[0],
-                        typeName: $type->getName(),
-                        isBuiltin: $type->isBuiltin(),
-                        parameterName: $name,
-                    );
-                }
+                $bound[] = $this->coerce(
+                    rawValue: $argv->options[$name][0],
+                    typeName: $type->getName(),
+                    isBuiltin: $type->isBuiltin(),
+                    parameterName: $name,
+                );
 
                 continue;
             }

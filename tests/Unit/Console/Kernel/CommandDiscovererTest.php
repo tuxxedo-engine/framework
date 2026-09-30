@@ -24,8 +24,11 @@ use Fixture\Console\Commands\GroupedCommand;
 use Fixture\Console\Commands\InvalidReturnCommand;
 use Fixture\Console\Commands\MissingParamTypeCommand;
 use Fixture\Console\Commands\MissingReturnCommand;
+use Fixture\Console\Commands\NonVariadicRepeatableOptionCommand;
 use Fixture\Console\Commands\ParameterizedCommand;
 use Fixture\Console\Commands\SimpleCommand;
+use Fixture\Console\Commands\ThirdPartyRepeatableOptionCommand;
+use Fixture\Console\Commands\VariadicOptionCommand;
 use Fixture\Console\Commands\VoidCommand;
 use Fixture\Console\Commands\WrapperMiddlewareCommand;
 use Fixture\Console\Invocation\BinderMethodFixtures;
@@ -255,6 +258,25 @@ class CommandDiscovererTest extends TestCase
         yield 'command name is empty after whitespace trim' => [
             EmptyCommandNameCommand::class,
         ];
+
+        yield 'RepeatableOption on non-variadic parameter' => [
+            NonVariadicRepeatableOptionCommand::class,
+        ];
+
+        yield 'Option on variadic parameter' => [
+            VariadicOptionCommand::class,
+        ];
+    }
+
+    public function testThirdPartyAttributeImplementingRepeatableOptionInterfaceIsDiscovered(): void
+    {
+        $descriptor = $this->discoverer()->discover(ThirdPartyRepeatableOptionCommand::class)[0];
+
+        self::assertCount(1, $descriptor->options);
+        self::assertSame('entry', $descriptor->options[0]->name);
+        self::assertSame('e', $descriptor->options[0]->short);
+        self::assertSame('int', $descriptor->options[0]->typeName);
+        self::assertTrue($descriptor->options[0]->repeatable);
     }
 
     private function discoverer(): CommandDiscoverer

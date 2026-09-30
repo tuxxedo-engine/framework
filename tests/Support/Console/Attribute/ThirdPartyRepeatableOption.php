@@ -11,10 +11,12 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Console\Attribute;
+namespace Support\Console\Attribute;
+
+use Tuxxedo\Console\Attribute\RepeatableOptionInterface;
 
 #[\Attribute(\Attribute::TARGET_PARAMETER)]
-readonly class Option implements OptionInterface
+readonly class ThirdPartyRepeatableOption implements RepeatableOptionInterface
 {
     public function __construct(
         public ?string $name = null,

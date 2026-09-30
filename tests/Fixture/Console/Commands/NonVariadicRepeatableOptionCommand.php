@@ -13,25 +13,16 @@ declare(strict_types=1);
 
 namespace Fixture\Console\Commands;
 
-use Tuxxedo\Console\Attribute\Argument;
 use Tuxxedo\Console\Attribute\Command;
-use Tuxxedo\Console\Attribute\Flag;
-use Tuxxedo\Console\Attribute\Option;
 use Tuxxedo\Console\Attribute\RepeatableOption;
 use Tuxxedo\Console\ExitCode;
 
-class ParameterizedCommand
+class NonVariadicRepeatableOptionCommand
 {
-    #[Command('demo:params')]
+    #[Command('demo:non-variadic-repeatable')]
     public function run(
-        #[Argument(description: 'Positional target')]
-        string $target,
-        #[Option(short: 'n', description: 'How many')]
-        int $count = 1,
-        #[Flag(short: 'f')]
-        bool $force = false,
-        #[RepeatableOption(short: 't')]
-        string ...$tags,
+        #[RepeatableOption]
+        string $tag,
     ): ExitCode {
         return ExitCode::SUCCESS;
     }

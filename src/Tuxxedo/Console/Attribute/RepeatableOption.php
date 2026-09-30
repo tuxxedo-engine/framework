@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Console\Attribute;
 
 #[\Attribute(\Attribute::TARGET_PARAMETER)]
-readonly class Option implements OptionInterface
+readonly class RepeatableOption implements RepeatableOptionInterface
 {
     public function __construct(
         public ?string $name = null,

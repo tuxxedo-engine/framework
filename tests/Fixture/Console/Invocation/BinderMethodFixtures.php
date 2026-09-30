@@ -13,9 +13,11 @@ declare(strict_types=1);
 
 namespace Fixture\Console\Invocation;
 
+use Support\Console\Attribute\ThirdPartyRepeatableOption;
 use Tuxxedo\Console\Attribute\Argument;
 use Tuxxedo\Console\Attribute\Flag;
 use Tuxxedo\Console\Attribute\Option;
+use Tuxxedo\Console\Attribute\RepeatableOption;
 
 class BinderMethodFixtures
 {
@@ -110,8 +112,14 @@ class BinderMethodFixtures
     }
 
     public function repeatableStringOption(
-        #[Option(repeatable: true)]
-        string $tag,
+        #[RepeatableOption]
+        string ...$tag,
+    ): void {
+    }
+
+    public function thirdPartyRepeatableIntOption(
+        #[ThirdPartyRepeatableOption]
+        int ...$entry,
     ): void {
     }
 

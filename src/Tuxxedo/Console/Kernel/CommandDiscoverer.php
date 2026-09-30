@@ -18,7 +18,8 @@ use Tuxxedo\Console\Attribute\Command;
 use Tuxxedo\Console\Attribute\CommandParameterInterface;
 use Tuxxedo\Console\Attribute\DefaultCommand;
 use Tuxxedo\Console\Attribute\Flag;
-use Tuxxedo\Console\Attribute\Option;
+use Tuxxedo\Console\Attribute\OptionInterface;
+use Tuxxedo\Console\Attribute\RepeatableOptionInterface;
 use Tuxxedo\Console\ConsoleException;
 use Tuxxedo\Console\Descriptor\ArgumentDescriptor;
 use Tuxxedo\Console\Descriptor\CommandDescriptor;
@@ -250,7 +251,25 @@ class CommandDiscoverer implements CommandDiscovererInterface
                 continue;
             }
 
-            if ($binding instanceof Option) {
+            if ($binding instanceof OptionInterface) {
+                $repeatable = $binding instanceof RepeatableOptionInterface;
+
+                if ($repeatable && !$parameter->isVariadic()) {
+                    throw ConsoleException::fromRepeatableOptionMustBeVariadic(
+                        className: $className,
+                        methodName: $method->getName(),
+                        parameterName: $parameter->getName(),
+                    );
+                }
+
+                if (!$repeatable && $parameter->isVariadic()) {
+                    throw ConsoleException::fromNonRepeatableOptionMustNotBeVariadic(
+                        className: $className,
+                        methodName: $method->getName(),
+                        parameterName: $parameter->getName(),
+                    );
+                }
+
                 $options[] = new OptionDescriptor(
                     name: $name,
                     short: $binding->short,
@@ -260,7 +279,7 @@ class CommandDiscoverer implements CommandDiscovererInterface
                     isNullable: $type->allowsNull(),
                     hasDefault: $hasDefault,
                     default: $default,
-                    repeatable: $binding->repeatable,
+                    repeatable: $repeatable,
                 );
 
                 continue;

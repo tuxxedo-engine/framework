@@ -527,7 +527,7 @@ class ParameterBinderTest extends TestCase
         );
     }
 
-    public function testRepeatableOptionCollectsCoercedValuesIntoArray(): void
+    public function testRepeatableOptionSpreadsCoercedValuesForVariadicCall(): void
     {
         $bound = $this->binder()->bind(
             argv: new ParsedArgv(
@@ -546,11 +546,46 @@ class ParameterBinderTest extends TestCase
 
         self::assertSame(
             [
-                [
-                    'one',
-                    'two',
-                    'three',
+                'one',
+                'two',
+                'three',
+            ],
+            $bound,
+        );
+    }
+
+    public function testRepeatableOptionMissingProducesNoValues(): void
+    {
+        $bound = $this->binder()->bind(
+            argv: $this->emptyArgv(),
+            descriptor: $this->descriptor('repeatableStringOption'),
+        );
+
+        self::assertSame([], $bound);
+    }
+
+    public function testThirdPartyRepeatableOptionAttributeIsBoundAndCoerced(): void
+    {
+        $bound = $this->binder()->bind(
+            argv: new ParsedArgv(
+                positionals: [],
+                options: [
+                    'entry' => [
+                        '1',
+                        '2',
+                        '3',
+                    ],
                 ],
+                flags: [],
+            ),
+            descriptor: $this->descriptor('thirdPartyRepeatableIntOption'),
+        );
+
+        self::assertSame(
+            [
+                1,
+                2,
+                3,
             ],
             $bound,
         );

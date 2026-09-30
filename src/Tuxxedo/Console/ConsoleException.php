@@ -151,6 +151,45 @@ class ConsoleException extends Exception implements ExitCodeInterface, ExitCodeE
     }
 
     /**
+     * @param class-string $className
+     */
+    public static function fromRepeatableOptionMustBeVariadic(
+        string $className,
+        string $methodName,
+        string $parameterName,
+    ): self {
+        return new self(
+            exitCode: ExitCode::CONFIG_ERROR,
+            message: \sprintf(
+                'Command %s::%s parameter $%s uses a repeatable option and must be declared variadic (type ...$%s)',
+                $className,
+                $methodName,
+                $parameterName,
+                $parameterName,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $className
+     */
+    public static function fromNonRepeatableOptionMustNotBeVariadic(
+        string $className,
+        string $methodName,
+        string $parameterName,
+    ): self {
+        return new self(
+            exitCode: ExitCode::CONFIG_ERROR,
+            message: \sprintf(
+                'Command %s::%s parameter $%s is a single-value option and must not be declared variadic; use RepeatableOption instead',
+                $className,
+                $methodName,
+                $parameterName,
+            ),
+        );
+    }
+
+    /**
      * @param list<string> $path
      */
     public static function fromDuplicateCommandPath(
