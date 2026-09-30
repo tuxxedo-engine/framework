@@ -118,17 +118,15 @@ class LumiEngineTest extends TestCase
     public function testCreateCustomWithProvidedCompilerLeavesCompilerPipelineUntouched(): void
     {
         $compiler = LumiEngine::createDefaultCompiler();
-        $optimizers = [
-            new RecordingOptimizer(),
-        ];
 
         $engine = LumiEngine::createCustom(
             compiler: $compiler,
-            optimizers: $optimizers,
+            optimizers: [
+                new RecordingOptimizer(),
+            ],
         );
 
         self::assertSame([], $engine->compiler->optimizerPipeline->optimizers);
-        self::assertSame($optimizers, $engine->optimizerPipeline->optimizers);
     }
 
     public function testCreateCustomFallsBackToDefaultsForOmittedDependencies(): void
@@ -311,81 +309,4 @@ class LumiEngineTest extends TestCase
         self::assertStringContainsString('<span', $output);
     }
 
-    public function testHighlightStringRunsOptimizersWhenOptimizedFlagTrue(): void
-    {
-        $optimizer = new RecordingOptimizer();
-
-        $engine = LumiEngine::createCustom(
-            optimizers: [
-                $optimizer,
-            ],
-        );
-
-        $engine->highlightString(
-            source: 'hello',
-            theme: new LumiDark(),
-        );
-
-        self::assertSame(1, $optimizer->callCount);
-    }
-
-    public function testHighlightStringSkipsOptimizersWhenOptimizedFlagFalse(): void
-    {
-        $optimizer = new RecordingOptimizer();
-
-        $engine = LumiEngine::createCustom(
-            optimizers: [
-                $optimizer,
-            ],
-        );
-
-        $engine->highlightString(
-            source: 'hello',
-            theme: new LumiDark(),
-            optimized: false,
-        );
-
-        self::assertSame(0, $optimizer->callCount);
-    }
-
-    public function testHighlightFileRunsOptimizersWhenOptimizedFlagTrue(): void
-    {
-        $optimizer = new RecordingOptimizer();
-
-        $engine = LumiEngine::createCustom(
-            optimizers: [
-                $optimizer,
-            ],
-        );
-
-        $file = $this->writeLumiFile('hello');
-
-        $engine->highlightFile(
-            file: $file,
-            theme: new LumiDark(),
-        );
-
-        self::assertSame(1, $optimizer->callCount);
-    }
-
-    public function testHighlightFileSkipsOptimizersWhenOptimizedFlagFalse(): void
-    {
-        $optimizer = new RecordingOptimizer();
-
-        $engine = LumiEngine::createCustom(
-            optimizers: [
-                $optimizer,
-            ],
-        );
-
-        $file = $this->writeLumiFile('hello');
-
-        $engine->highlightFile(
-            file: $file,
-            theme: new LumiDark(),
-            optimized: false,
-        );
-
-        self::assertSame(0, $optimizer->callCount);
-    }
 }

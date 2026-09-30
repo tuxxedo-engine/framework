@@ -519,7 +519,6 @@ class RuntimeTest extends TestCase
         self::assertSame('<highlighted/>', $output);
         self::assertSame('<source/>', $this->engine->lastHighlightedSource);
         self::assertSame('lumi-dark', $this->engine->lastHighlightedTheme);
-        self::assertFalse($this->engine->lastHighlightedOptimized);
     }
 
     public function testIncludeThrowsForNonStringFile(): void

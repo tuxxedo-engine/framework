@@ -25,7 +25,6 @@ use Tuxxedo\View\Lumi\Lexer\LexerInterface;
 use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerPipeline;
-use Tuxxedo\View\Lumi\Optimizer\OptimizerPipelineInterface;
 use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpOptimizer;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Parser\Parser;
@@ -34,8 +33,6 @@ use Tuxxedo\View\ViewException;
 
 readonly class LumiEngine implements LumiEngineInterface
 {
-    public OptimizerPipelineInterface $optimizerPipeline;
-
     /**
      * @param OptimizerInterface[] $optimizers
      */
@@ -46,9 +43,6 @@ readonly class LumiEngine implements LumiEngineInterface
         public HighlighterInterface $highlighter,
         public array $optimizers = [],
     ) {
-        $this->optimizerPipeline = new OptimizerPipeline(
-            optimizers: $optimizers,
-        );
     }
 
     public static function createDefaultLexer(): LexerInterface
@@ -174,38 +168,20 @@ readonly class LumiEngine implements LumiEngineInterface
     public function highlightFile(
         string $file,
         ThemeInterface|string $theme,
-        bool $optimized = true,
     ): string {
-        $nodes = $this->parseByFile($file);
-
-        if ($optimized) {
-            $nodes = $this->optimizerPipeline->run(
-                stream: $nodes,
-            );
-        }
-
         return $this->highlighter->highlight(
             theme: $theme,
-            stream: $nodes,
+            stream: $this->parseByFile($file),
         );
     }
 
     public function highlightString(
         string $source,
         ThemeInterface|string $theme,
-        bool $optimized = true,
     ): string {
-        $nodes = $this->parseByString($source);
-
-        if ($optimized) {
-            $nodes = $this->optimizerPipeline->run(
-                stream: $nodes,
-            );
-        }
-
         return $this->highlighter->highlight(
             theme: $theme,
-            stream: $nodes,
+            stream: $this->parseByString($source),
         );
     }
 }

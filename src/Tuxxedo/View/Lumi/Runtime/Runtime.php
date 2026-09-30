@@ -259,7 +259,6 @@ class Runtime implements RuntimeInterface
         echo $this->engine->highlightString(
             source: $sourceCode,
             theme: $theme,
-            optimized: false,
         );
     }
 
