@@ -24,6 +24,8 @@ use Tuxxedo\View\Lumi\Lexer\Lexer;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
 use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
+use Tuxxedo\View\Lumi\Optimizer\OptimizerPipeline;
+use Tuxxedo\View\Lumi\Optimizer\OptimizerPipelineInterface;
 use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpOptimizer;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Parser\Parser;
@@ -32,6 +34,8 @@ use Tuxxedo\View\ViewException;
 
 readonly class LumiEngine implements LumiEngineInterface
 {
+    public OptimizerPipelineInterface $optimizerPipeline;
+
     /**
      * @param OptimizerInterface[] $optimizers
      */
@@ -42,6 +46,9 @@ readonly class LumiEngine implements LumiEngineInterface
         public HighlighterInterface $highlighter,
         public array $optimizers = [],
     ) {
+        $this->optimizerPipeline = new OptimizerPipeline(
+            optimizers: $optimizers,
+        );
     }
 
     public static function createDefaultLexer(): LexerInterface
@@ -77,11 +84,17 @@ readonly class LumiEngine implements LumiEngineInterface
 
     public static function createDefault(): static
     {
+        $optimizers = self::createDefaultOptimizers();
+
         return new static(
             lexer: self::createDefaultLexer(),
             parser: self::createDefaultParser(),
-            compiler: self::createDefaultCompiler(),
-            optimizers: self::createDefaultOptimizers(),
+            compiler: Compiler::createWithDefaultProviders(
+                optimizerPipeline: new OptimizerPipeline(
+                    optimizers: $optimizers,
+                ),
+            ),
+            optimizers: $optimizers,
             highlighter: self::createDefaultHighlighter(),
         );
     }
@@ -96,11 +109,17 @@ readonly class LumiEngine implements LumiEngineInterface
         ?HighlighterInterface $highlighter = null,
         ?array $optimizers = null,
     ): static {
+        $optimizers = $optimizers ?? self::createDefaultOptimizers();
+
         return new static(
             lexer: $lexer ?? self::createDefaultLexer(),
             parser: $parser ?? self::createDefaultParser(),
-            compiler: $compiler ?? self::createDefaultCompiler(),
-            optimizers: $optimizers ?? self::createDefaultOptimizers(),
+            compiler: $compiler ?? Compiler::createWithDefaultProviders(
+                optimizerPipeline: new OptimizerPipeline(
+                    optimizers: $optimizers,
+                ),
+            ),
+            optimizers: $optimizers,
             highlighter: $highlighter ?? self::createDefaultHighlighter(),
         );
     }
@@ -116,21 +135,10 @@ readonly class LumiEngine implements LumiEngineInterface
             );
         }
 
-        $nodes = $this->parseByFile($file);
-
-        if (\sizeof($this->optimizers) > 0) {
-            foreach ($this->optimizers as $optimizer) {
-                do {
-                    $result = $optimizer->optimize($nodes);
-                    $nodes = $result->stream;
-                } while ($result->changed);
-            }
-        }
-
         return new CompiledFile(
             sourceFile: $viewName,
             sourceCode: $this->compiler->compile(
-                stream: $nodes,
+                stream: $this->parseByFile($file),
             ),
         );
     }
@@ -138,19 +146,8 @@ readonly class LumiEngine implements LumiEngineInterface
     public function compileString(
         string $source,
     ): string {
-        $nodes = $this->parseByString($source);
-
-        if (\sizeof($this->optimizers) > 0) {
-            foreach ($this->optimizers as $optimizer) {
-                do {
-                    $result = $optimizer->optimize($nodes);
-                    $nodes = $result->stream;
-                } while ($result->changed);
-            }
-        }
-
         return $this->compiler->compile(
-            stream: $nodes,
+            stream: $this->parseByString($source),
         );
     }
 
@@ -181,13 +178,10 @@ readonly class LumiEngine implements LumiEngineInterface
     ): string {
         $nodes = $this->parseByFile($file);
 
-        if ($optimized && \sizeof($this->optimizers) > 0) {
-            foreach ($this->optimizers as $optimizer) {
-                do {
-                    $result = $optimizer->optimize($nodes);
-                    $nodes = $result->stream;
-                } while ($result->changed);
-            }
+        if ($optimized) {
+            $nodes = $this->optimizerPipeline->run(
+                stream: $nodes,
+            );
         }
 
         return $this->highlighter->highlight(
@@ -203,13 +197,10 @@ readonly class LumiEngine implements LumiEngineInterface
     ): string {
         $nodes = $this->parseByString($source);
 
-        if ($optimized && \sizeof($this->optimizers) > 0) {
-            foreach ($this->optimizers as $optimizer) {
-                do {
-                    $result = $optimizer->optimize($nodes);
-                    $nodes = $result->stream;
-                } while ($result->changed);
-            }
+        if ($optimized) {
+            $nodes = $this->optimizerPipeline->run(
+                stream: $nodes,
+            );
         }
 
         return $this->highlighter->highlight(

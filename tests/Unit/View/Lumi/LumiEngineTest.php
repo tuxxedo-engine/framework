@@ -95,6 +95,42 @@ class LumiEngineTest extends TestCase
         self::assertSame($optimizers, $engine->optimizers);
     }
 
+    public function testCreateCustomWithoutCompilerBuildsDefaultCompilerWithMatchingPipeline(): void
+    {
+        $optimizers = [
+            new RecordingOptimizer(),
+        ];
+
+        $engine = LumiEngine::createCustom(
+            optimizers: $optimizers,
+        );
+
+        self::assertSame(
+            $optimizers,
+            $engine->compiler->optimizerPipeline->optimizers,
+        );
+        self::assertSame(
+            $engine->optimizers,
+            $engine->compiler->optimizerPipeline->optimizers,
+        );
+    }
+
+    public function testCreateCustomWithProvidedCompilerLeavesCompilerPipelineUntouched(): void
+    {
+        $compiler = LumiEngine::createDefaultCompiler();
+        $optimizers = [
+            new RecordingOptimizer(),
+        ];
+
+        $engine = LumiEngine::createCustom(
+            compiler: $compiler,
+            optimizers: $optimizers,
+        );
+
+        self::assertSame([], $engine->compiler->optimizerPipeline->optimizers);
+        self::assertSame($optimizers, $engine->optimizerPipeline->optimizers);
+    }
+
     public function testCreateCustomFallsBackToDefaultsForOmittedDependencies(): void
     {
         $engine = LumiEngine::createCustom();

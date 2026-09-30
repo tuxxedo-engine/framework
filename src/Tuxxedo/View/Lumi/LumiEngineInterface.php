@@ -22,6 +22,7 @@ use Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
+use Tuxxedo\View\Lumi\Optimizer\OptimizerPipelineInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
@@ -49,6 +50,10 @@ interface LumiEngineInterface
      * @var OptimizerInterface[]
      */
     public array $optimizers {
+        get;
+    }
+
+    public OptimizerPipelineInterface $optimizerPipeline {
         get;
     }
 

@@ -33,6 +33,7 @@ use Tuxxedo\View\Lumi\Library\LibraryDiscoveryInterface;
 use Tuxxedo\View\Lumi\Library\LibraryProviderInterface;
 use Tuxxedo\View\Lumi\Library\Standard\StandardLibrary;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
+use Tuxxedo\View\Lumi\Optimizer\OptimizerPipeline;
 use Tuxxedo\View\Lumi\Runtime\Loader;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\Runtime;
@@ -501,6 +502,9 @@ class LumiConfigurator implements LumiConfiguratorInterface
                     directives: new MutableDirectives(
                         directives: $this->defaultDirectives,
                     ),
+                ),
+                optimizerPipeline: new OptimizerPipeline(
+                    optimizers: $this->optimizers,
                 ),
             );
         }

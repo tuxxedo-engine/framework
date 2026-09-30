@@ -24,6 +24,8 @@ use Tuxxedo\View\Lumi\Lexer\Lexer;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
 use Tuxxedo\View\Lumi\LumiEngineInterface;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
+use Tuxxedo\View\Lumi\Optimizer\OptimizerPipeline;
+use Tuxxedo\View\Lumi\Optimizer\OptimizerPipelineInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Parser\Parser;
@@ -49,6 +51,8 @@ class StubLumiEngine implements LumiEngineInterface
      */
     public array $optimizers = [];
 
+    public OptimizerPipelineInterface $optimizerPipeline;
+
     public function __construct(
         public string $highlightOutput = '<highlighted/>',
     ) {
@@ -56,6 +60,7 @@ class StubLumiEngine implements LumiEngineInterface
         $this->parser = Parser::createWithDefaultHandlers();
         $this->compiler = Compiler::createWithDefaultProviders();
         $this->highlighter = new Highlighter();
+        $this->optimizerPipeline = new OptimizerPipeline();
     }
 
     public function compileFile(

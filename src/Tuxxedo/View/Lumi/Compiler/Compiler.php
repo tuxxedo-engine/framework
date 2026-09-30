@@ -26,6 +26,8 @@ use Tuxxedo\View\Lumi\Compiler\Provider\PostNodeCompilerHandlerInterface;
 use Tuxxedo\View\Lumi\Compiler\Provider\StagedNodeCompilerHandler;
 use Tuxxedo\View\Lumi\Compiler\Provider\StagedNodeCompilerHandlerInterface;
 use Tuxxedo\View\Lumi\Compiler\Provider\TextCompilerProvider;
+use Tuxxedo\View\Lumi\Optimizer\OptimizerPipeline;
+use Tuxxedo\View\Lumi\Optimizer\OptimizerPipelineInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
@@ -49,6 +51,8 @@ class Compiler implements CompilerInterface
      */
     private array $stagedPostHandlers = [];
 
+    public readonly OptimizerPipelineInterface $optimizerPipeline;
+
     /**
      * @param CompilerProviderInterface[] $providers
      */
@@ -57,6 +61,7 @@ class Compiler implements CompilerInterface
         public readonly ExpressionCompilerInterface $expressionCompiler,
         public readonly CompilerStateInterface $state,
         public readonly EscaperInterface $escaper,
+        ?OptimizerPipelineInterface $optimizerPipeline = null,
     ) {
         $compilerHandlers = [];
         $postCompilerHandlers = [];
@@ -73,6 +78,7 @@ class Compiler implements CompilerInterface
 
         $this->handlers = $compilerHandlers;
         $this->postHandlers = $postCompilerHandlers;
+        $this->optimizerPipeline = $optimizerPipeline ?? new OptimizerPipeline();
     }
 
     /**
@@ -111,6 +117,7 @@ class Compiler implements CompilerInterface
         ?ExpressionCompilerInterface $expressionCompiler = null,
         ?CompilerStateInterface $state = null,
         ?EscaperInterface $escaper = null,
+        ?OptimizerPipelineInterface $optimizerPipeline = null,
     ): static {
         return new static(
             providers: \array_merge(
@@ -120,6 +127,7 @@ class Compiler implements CompilerInterface
             expressionCompiler: $expressionCompiler ?? self::createDefaultExpressionCompiler(),
             state: $state ?? self::createDefaultCompilerState(),
             escaper: $escaper ?? self::createDefaultEscaper(),
+            optimizerPipeline: $optimizerPipeline,
         );
     }
 
@@ -131,18 +139,24 @@ class Compiler implements CompilerInterface
         ?ExpressionCompilerInterface $expressionCompiler = null,
         ?CompilerStateInterface $state = null,
         ?EscaperInterface $escaper = null,
+        ?OptimizerPipelineInterface $optimizerPipeline = null,
     ): static {
         return new static(
             providers: $providers,
             expressionCompiler: $expressionCompiler ?? self::createDefaultExpressionCompiler(),
             state: $state ?? self::createDefaultCompilerState(),
             escaper: $escaper ?? self::createDefaultEscaper(),
+            optimizerPipeline: $optimizerPipeline,
         );
     }
 
     public function compile(
         NodeStreamInterface $stream,
     ): string {
+        $stream = $this->optimizerPipeline->run(
+            stream: $stream,
+        );
+
         $source = '';
 
         $this->state->enter(NodeScope::STATEMENT);

@@ -20,6 +20,7 @@ use Fixture\View\Lumi\Compiler\Compiler\FooProvider;
 use Fixture\View\Lumi\Compiler\Compiler\OutOfScopeNode;
 use Fixture\View\Lumi\Compiler\Compiler\OutOfScopeProvider;
 use Fixture\View\Lumi\Compiler\Compiler\PostFooProvider;
+use Fixture\View\Lumi\RecordingOptimizer;
 use PHPUnit\Framework\TestCase;
 use Support\View\Lumi\Compiler\RecordingExpressionCompiler;
 use Tuxxedo\Escaper\Escaper;
@@ -32,6 +33,7 @@ use Tuxxedo\View\Lumi\Compiler\Provider\ConditionalCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\ExpressionCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\LoopCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\TextCompilerProvider;
+use Tuxxedo\View\Lumi\Optimizer\OptimizerPipeline;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
@@ -361,6 +363,69 @@ class CompilerTest extends TestCase
                 ],
             ),
         );
+    }
+
+    public function testDefaultOptimizerPipelineIsEmpty(): void
+    {
+        $compiler = Compiler::createWithoutDefaultProviders();
+
+        self::assertSame([], $compiler->optimizerPipeline->optimizers);
+    }
+
+    public function testCreateWithoutDefaultProvidersAcceptsExplicitPipeline(): void
+    {
+        $pipeline = new OptimizerPipeline(
+            optimizers: [
+                new RecordingOptimizer(),
+            ],
+        );
+
+        $compiler = Compiler::createWithoutDefaultProviders(
+            optimizerPipeline: $pipeline,
+        );
+
+        self::assertSame($pipeline, $compiler->optimizerPipeline);
+    }
+
+    public function testCreateWithDefaultProvidersAcceptsExplicitPipeline(): void
+    {
+        $pipeline = new OptimizerPipeline(
+            optimizers: [
+                new RecordingOptimizer(),
+            ],
+        );
+
+        $compiler = Compiler::createWithDefaultProviders(
+            optimizerPipeline: $pipeline,
+        );
+
+        self::assertSame($pipeline, $compiler->optimizerPipeline);
+    }
+
+    public function testCompileRunsOptimizerPipelineBeforeEmission(): void
+    {
+        $optimizer = new RecordingOptimizer();
+
+        $compiler = Compiler::createWithoutDefaultProviders(
+            providers: [
+                new FooProvider(),
+            ],
+            optimizerPipeline: new OptimizerPipeline(
+                optimizers: [
+                    $optimizer,
+                ],
+            ),
+        );
+
+        $compiler->compile(
+            stream: new NodeStream(
+                nodes: [
+                    new FooNode(),
+                ],
+            ),
+        );
+
+        self::assertSame(1, $optimizer->callCount);
     }
 
     public function testCompileExpressionDelegatesToExpressionCompiler(): void

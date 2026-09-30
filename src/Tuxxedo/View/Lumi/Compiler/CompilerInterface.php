@@ -15,6 +15,7 @@ namespace Tuxxedo\View\Lumi\Compiler;
 
 use Tuxxedo\Escaper\EscaperInterface;
 use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompilerInterface;
+use Tuxxedo\View\Lumi\Optimizer\OptimizerPipelineInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
@@ -30,6 +31,10 @@ interface CompilerInterface
     }
 
     public EscaperInterface $escaper {
+        get;
+    }
+
+    public OptimizerPipelineInterface $optimizerPipeline {
         get;
     }
 
