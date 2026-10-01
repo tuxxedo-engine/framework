@@ -742,6 +742,7 @@ class LumiConfiguratorTest extends TestCase
             identifier: 'brand',
             color: '#000',
         );
+
         $second = $this->makeStubTheme(
             identifier: 'brand',
             color: '#fff',
