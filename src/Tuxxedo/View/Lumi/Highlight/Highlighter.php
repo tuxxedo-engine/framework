@@ -18,8 +18,12 @@ use Tuxxedo\Escaper\EscaperInterface;
 use Tuxxedo\View\Lumi\Highlight\Theme\ThemeFactory;
 use Tuxxedo\View\Lumi\Highlight\Theme\ThemeFactoryInterface;
 use Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface;
+use Tuxxedo\View\Lumi\Lexer\Lexer;
+use Tuxxedo\View\Lumi\Lexer\LexerInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
+use Tuxxedo\View\Lumi\Parser\Parser;
 use Tuxxedo\View\Lumi\Parser\ParserException;
+use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayItemNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
@@ -62,13 +66,19 @@ class Highlighter implements HighlighterInterface
     private ThemeInterface $theme;
     private readonly EscaperInterface $escaper;
     private readonly ThemeFactoryInterface $themeFactory;
+    private readonly LexerInterface $lexer;
+    private readonly ParserInterface $parser;
 
     public function __construct(
         ?EscaperInterface $escaper = null,
         ?ThemeFactoryInterface $themeFactory = null,
+        ?LexerInterface $lexer = null,
+        ?ParserInterface $parser = null,
     ) {
         $this->escaper = $escaper ?? new Escaper();
         $this->themeFactory = $themeFactory ?? ThemeFactory::createDefault();
+        $this->lexer = $lexer ?? Lexer::createWithDefaultHandlers();
+        $this->parser = $parser ?? Parser::createWithDefaultHandlers();
     }
 
     public function highlight(
@@ -89,6 +99,20 @@ class Highlighter implements HighlighterInterface
         }
 
         return $source;
+    }
+
+    public function highlightString(
+        ThemeInterface|string $theme,
+        string $source,
+    ): string {
+        return $this->highlight(
+            theme: $theme,
+            stream: $this->parser->parse(
+                stream: $this->lexer->tokenizeByString(
+                    sourceCode: $source,
+                ),
+            ),
+        );
     }
 
     /**

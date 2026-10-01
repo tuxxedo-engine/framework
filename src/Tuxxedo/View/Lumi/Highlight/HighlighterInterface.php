@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Highlight;
 
 use Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface;
+use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
+use Tuxxedo\View\Lumi\Parser\ParserException;
 
 interface HighlighterInterface
 {
@@ -24,5 +26,15 @@ interface HighlighterInterface
     public function highlight(
         ThemeInterface|string $theme,
         NodeStreamInterface $stream,
+    ): string;
+
+    /**
+     * @throws HighlightException
+     * @throws LexerException
+     * @throws ParserException
+     */
+    public function highlightString(
+        ThemeInterface|string $theme,
+        string $source,
     ): string;
 }

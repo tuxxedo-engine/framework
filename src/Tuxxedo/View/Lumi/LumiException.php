@@ -31,6 +31,13 @@ class LumiException extends Exception
         parent::__construct($message);
     }
 
+    public static function fromAmbiguousCompilerAndOptimizers(): self
+    {
+        return new self(
+            message: 'Cannot pass both a compiler and an optimizers list; pass the optimizers to the compiler instead',
+        );
+    }
+
     protected static function formatExpectedGot(
         string $expected,
         string $got,

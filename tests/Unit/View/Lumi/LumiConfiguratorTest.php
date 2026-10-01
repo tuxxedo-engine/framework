@@ -23,6 +23,7 @@ use Fixture\View\Lumi\Runtime\RecordingFunction;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Container\Container;
 use Tuxxedo\View\Lumi\Config\LumiConfig;
+use Tuxxedo\View\Lumi\Highlight\Theme\LumiDark;
 use Tuxxedo\View\Lumi\Library\Directive\DefaultDirectives;
 use Tuxxedo\View\Lumi\Library\Function\PhpFunction;
 use Tuxxedo\View\Lumi\LumiConfigurator;
@@ -699,6 +700,47 @@ class LumiConfiguratorTest extends TestCase
         $configurator->withoutOptimizers();
 
         self::assertSame([], $configurator->optimizers);
+    }
+
+    public function testWithHighlightThemeRegistersThemeByIdentifier(): void
+    {
+        $configurator = $this->makeConfigurator();
+        $theme = new LumiDark();
+
+        $configurator->withHighlightTheme($theme);
+
+        self::assertArrayHasKey($theme->identifier, $configurator->highlightThemes);
+        self::assertSame($theme, $configurator->highlightThemes[$theme->identifier]);
+    }
+
+    public function testWithHighlightThemeAddsMultipleThemes(): void
+    {
+        $configurator = $this->makeConfigurator();
+
+        $first = new class () implements \Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface {
+            public string $identifier = 'brand-a';
+
+            public function color(
+                \Tuxxedo\View\Lumi\Highlight\ColorSlot $slot,
+            ): string {
+                return '#000';
+            }
+        };
+
+        $second = new class () implements \Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface {
+            public string $identifier = 'brand-b';
+
+            public function color(
+                \Tuxxedo\View\Lumi\Highlight\ColorSlot $slot,
+            ): string {
+                return '#fff';
+            }
+        };
+
+        $configurator->withHighlightTheme($first, $second);
+
+        self::assertSame($first, $configurator->highlightThemes['brand-a']);
+        self::assertSame($second, $configurator->highlightThemes['brand-b']);
     }
 
     public function testWithCustomOptimizerAddsOptimizer(): void

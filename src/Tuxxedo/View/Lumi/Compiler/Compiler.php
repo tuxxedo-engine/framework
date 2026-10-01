@@ -26,6 +26,8 @@ use Tuxxedo\View\Lumi\Compiler\Provider\PostNodeCompilerHandlerInterface;
 use Tuxxedo\View\Lumi\Compiler\Provider\StagedNodeCompilerHandler;
 use Tuxxedo\View\Lumi\Compiler\Provider\StagedNodeCompilerHandlerInterface;
 use Tuxxedo\View\Lumi\Compiler\Provider\TextCompilerProvider;
+use Tuxxedo\View\Lumi\Highlight\Highlighter;
+use Tuxxedo\View\Lumi\Highlight\HighlighterInterface;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerPipeline;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerPipelineInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
@@ -52,6 +54,7 @@ class Compiler implements CompilerInterface
     private array $stagedPostHandlers = [];
 
     public readonly OptimizerPipelineInterface $optimizerPipeline;
+    public readonly HighlighterInterface $highlighter;
 
     /**
      * @param CompilerProviderInterface[] $providers
@@ -62,6 +65,7 @@ class Compiler implements CompilerInterface
         public readonly CompilerStateInterface $state,
         public readonly EscaperInterface $escaper,
         ?OptimizerPipelineInterface $optimizerPipeline = null,
+        ?HighlighterInterface $highlighter = null,
     ) {
         $compilerHandlers = [];
         $postCompilerHandlers = [];
@@ -79,6 +83,7 @@ class Compiler implements CompilerInterface
         $this->handlers = $compilerHandlers;
         $this->postHandlers = $postCompilerHandlers;
         $this->optimizerPipeline = $optimizerPipeline ?? new OptimizerPipeline();
+        $this->highlighter = $highlighter ?? new Highlighter();
     }
 
     /**
@@ -118,6 +123,7 @@ class Compiler implements CompilerInterface
         ?CompilerStateInterface $state = null,
         ?EscaperInterface $escaper = null,
         ?OptimizerPipelineInterface $optimizerPipeline = null,
+        ?HighlighterInterface $highlighter = null,
     ): static {
         return new static(
             providers: \array_merge(
@@ -128,6 +134,7 @@ class Compiler implements CompilerInterface
             state: $state ?? self::createDefaultCompilerState(),
             escaper: $escaper ?? self::createDefaultEscaper(),
             optimizerPipeline: $optimizerPipeline,
+            highlighter: $highlighter,
         );
     }
 
@@ -140,6 +147,7 @@ class Compiler implements CompilerInterface
         ?CompilerStateInterface $state = null,
         ?EscaperInterface $escaper = null,
         ?OptimizerPipelineInterface $optimizerPipeline = null,
+        ?HighlighterInterface $highlighter = null,
     ): static {
         return new static(
             providers: $providers,
@@ -147,6 +155,7 @@ class Compiler implements CompilerInterface
             state: $state ?? self::createDefaultCompilerState(),
             escaper: $escaper ?? self::createDefaultEscaper(),
             optimizerPipeline: $optimizerPipeline,
+            highlighter: $highlighter,
         );
     }
 

@@ -185,10 +185,11 @@ class TextCompilerProvider implements CompilerProviderInterface
         CompilerInterface $compiler,
         NodeStreamInterface $stream,
     ): string {
-        return \sprintf(
-            "<?php \$this->highlight('%s', '%s'); ?>",
-            $compiler->escaper->js($node->theme),
-            $compiler->escaper->js($node->sourceCode),
+        return $this->stripPhpOpeningTag(
+            code: $compiler->highlighter->highlightString(
+                theme: $node->theme,
+                source: $node->sourceCode,
+            ),
         );
     }
 

@@ -33,15 +33,11 @@ use Tuxxedo\View\ViewException;
 
 readonly class LumiEngine implements LumiEngineInterface
 {
-    /**
-     * @param OptimizerInterface[] $optimizers
-     */
     final private function __construct(
         public LexerInterface $lexer,
         public ParserInterface $parser,
         public CompilerInterface $compiler,
         public HighlighterInterface $highlighter,
-        public array $optimizers = [],
     ) {
     }
 
@@ -79,6 +75,7 @@ readonly class LumiEngine implements LumiEngineInterface
     public static function createDefault(): static
     {
         $optimizers = self::createDefaultOptimizers();
+        $highlighter = self::createDefaultHighlighter();
 
         return new static(
             lexer: self::createDefaultLexer(),
@@ -87,14 +84,16 @@ readonly class LumiEngine implements LumiEngineInterface
                 optimizerPipeline: new OptimizerPipeline(
                     optimizers: $optimizers,
                 ),
+                highlighter: $highlighter,
             ),
-            optimizers: $optimizers,
-            highlighter: self::createDefaultHighlighter(),
+            highlighter: $highlighter,
         );
     }
 
     /**
      * @param OptimizerInterface[]|null $optimizers
+     *
+     * @throws LumiException
      */
     public static function createCustom(
         ?LexerInterface $lexer = null,
@@ -103,18 +102,22 @@ readonly class LumiEngine implements LumiEngineInterface
         ?HighlighterInterface $highlighter = null,
         ?array $optimizers = null,
     ): static {
-        $optimizers = $optimizers ?? self::createDefaultOptimizers();
+        if ($compiler !== null && $optimizers !== null) {
+            throw LumiException::fromAmbiguousCompilerAndOptimizers();
+        }
+
+        $highlighter = $highlighter ?? self::createDefaultHighlighter();
 
         return new static(
             lexer: $lexer ?? self::createDefaultLexer(),
             parser: $parser ?? self::createDefaultParser(),
             compiler: $compiler ?? Compiler::createWithDefaultProviders(
                 optimizerPipeline: new OptimizerPipeline(
-                    optimizers: $optimizers,
+                    optimizers: $optimizers ?? self::createDefaultOptimizers(),
                 ),
+                highlighter: $highlighter,
             ),
-            optimizers: $optimizers,
-            highlighter: $highlighter ?? self::createDefaultHighlighter(),
+            highlighter: $highlighter,
         );
     }
 
@@ -179,9 +182,9 @@ readonly class LumiEngine implements LumiEngineInterface
         string $source,
         ThemeInterface|string $theme,
     ): string {
-        return $this->highlighter->highlight(
+        return $this->highlighter->highlightString(
             theme: $theme,
-            stream: $this->parseByString($source),
+            source: $source,
         );
     }
 }

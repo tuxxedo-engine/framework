@@ -252,16 +252,6 @@ class Runtime implements RuntimeInterface
         );
     }
 
-    public function highlight(
-        string $theme,
-        string $sourceCode,
-    ): void {
-        echo $this->engine->highlightString(
-            source: $sourceCode,
-            theme: $theme,
-        );
-    }
-
     public function include(
         mixed $file,
         array $scope = [],

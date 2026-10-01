@@ -164,11 +164,6 @@ interface RuntimeInterface
         array $scope = [],
     ): void;
 
-    public function highlight(
-        string $theme,
-        string $sourceCode,
-    ): void;
-
     /**
      * @param array<string, mixed> $scope
      *

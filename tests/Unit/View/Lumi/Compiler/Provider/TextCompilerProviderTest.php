@@ -531,10 +531,10 @@ class TextCompilerProviderTest extends TestCase
         );
     }
 
-    public function testCompilesLumiNode(): void
+    public function testCompilesLumiNodeBakesHighlightedMarkup(): void
     {
         $node = new LumiNode(
-            theme: 'github-dark',
+            theme: 'dark',
             sourceCode: '{% if user %}hi{% endif %}',
         );
 
@@ -547,10 +547,32 @@ class TextCompilerProviderTest extends TestCase
             ),
         );
 
-        self::assertSame(
-            "<?php \$this->highlight('github-dark', '{% if user %}hi{% endif %}'); ?>",
-            $output,
+        self::assertStringNotContainsString('$this->highlight', $output);
+        self::assertStringNotContainsString('<?php', $output);
+        self::assertStringContainsString('<span', $output);
+        self::assertStringContainsString('if', $output);
+        self::assertStringContainsString('endif', $output);
+    }
+
+    public function testCompilesLumiNodeEscapesPhpOpeningTagInBakedOutput(): void
+    {
+        $node = new LumiNode(
+            theme: 'dark',
+            sourceCode: '{{ "<?php echo 1; ?>" }}',
         );
+
+        $output = $this->compiler->compileNode(
+            node: $node,
+            stream: new NodeStream(
+                nodes: [
+                    $node,
+                ],
+            ),
+        );
+
+        self::assertStringNotContainsString('<?php', $output);
+        self::assertStringNotContainsString('<?', $output);
+        self::assertStringContainsString('&lt;?', $output);
     }
 
     public function testCompilesIncludeNodeWithoutScope(): void

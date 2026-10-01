@@ -23,7 +23,6 @@ use Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface;
 use Tuxxedo\View\Lumi\Lexer\Lexer;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
 use Tuxxedo\View\Lumi\LumiEngineInterface;
-use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Parser\Parser;
@@ -31,9 +30,6 @@ use Tuxxedo\View\Lumi\Parser\ParserInterface;
 
 class StubLumiEngine implements LumiEngineInterface
 {
-    public ?string $lastHighlightedSource = null;
-    public ThemeInterface|string|null $lastHighlightedTheme = null;
-
     public ?string $lastCompiledFile = null;
     public int $compileCallCount = 0;
     public string $compileSourceCode = '<?php /* compiled */ ?>';
@@ -42,11 +38,6 @@ class StubLumiEngine implements LumiEngineInterface
     public ParserInterface $parser;
     public CompilerInterface $compiler;
     public HighlighterInterface $highlighter;
-
-    /**
-     * @var OptimizerInterface[]
-     */
-    public array $optimizers = [];
 
     public function __construct(
         public string $highlightOutput = '<highlighted/>',
@@ -102,9 +93,6 @@ class StubLumiEngine implements LumiEngineInterface
         string $source,
         ThemeInterface|string $theme,
     ): string {
-        $this->lastHighlightedSource = $source;
-        $this->lastHighlightedTheme = $theme;
-
         return $this->highlightOutput;
     }
 }

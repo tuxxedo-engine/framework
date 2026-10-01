@@ -21,6 +21,7 @@ use Tuxxedo\View\Lumi\Highlight\Highlighter;
 use Tuxxedo\View\Lumi\Highlight\Theme\LumiDark;
 use Tuxxedo\View\Lumi\Lexer\Lexer;
 use Tuxxedo\View\Lumi\LumiEngine;
+use Tuxxedo\View\Lumi\LumiException;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Parser\Parser;
 use Tuxxedo\View\ViewException;
@@ -66,33 +67,28 @@ class LumiEngineTest extends TestCase
         self::assertInstanceOf(Highlighter::class, $engine->highlighter);
         self::assertSame(
             \sizeof(LumiEngine::createDefaultOptimizers()),
-            \sizeof($engine->optimizers),
+            \sizeof($engine->compiler->optimizerPipeline->optimizers),
         );
     }
 
-    public function testCreateCustomAcceptsAllProvidedDependencies(): void
+    public function testCreateCustomAcceptsAllProvidedDependenciesWithoutOptimizers(): void
     {
         $lexer = LumiEngine::createDefaultLexer();
         $parser = LumiEngine::createDefaultParser();
         $compiler = LumiEngine::createDefaultCompiler();
         $highlighter = LumiEngine::createDefaultHighlighter();
-        $optimizers = [
-            new RecordingOptimizer(),
-        ];
 
         $engine = LumiEngine::createCustom(
             lexer: $lexer,
             parser: $parser,
             compiler: $compiler,
             highlighter: $highlighter,
-            optimizers: $optimizers,
         );
 
         self::assertSame($lexer, $engine->lexer);
         self::assertSame($parser, $engine->parser);
         self::assertSame($compiler, $engine->compiler);
         self::assertSame($highlighter, $engine->highlighter);
-        self::assertSame($optimizers, $engine->optimizers);
     }
 
     public function testCreateCustomWithoutCompilerBuildsDefaultCompilerWithMatchingPipeline(): void
@@ -109,24 +105,18 @@ class LumiEngineTest extends TestCase
             $optimizers,
             $engine->compiler->optimizerPipeline->optimizers,
         );
-        self::assertSame(
-            $engine->optimizers,
-            $engine->compiler->optimizerPipeline->optimizers,
-        );
     }
 
-    public function testCreateCustomWithProvidedCompilerLeavesCompilerPipelineUntouched(): void
+    public function testCreateCustomThrowsWhenBothCompilerAndOptimizersProvided(): void
     {
-        $compiler = LumiEngine::createDefaultCompiler();
+        self::expectException(LumiException::class);
 
-        $engine = LumiEngine::createCustom(
-            compiler: $compiler,
+        LumiEngine::createCustom(
+            compiler: LumiEngine::createDefaultCompiler(),
             optimizers: [
                 new RecordingOptimizer(),
             ],
         );
-
-        self::assertSame([], $engine->compiler->optimizerPipeline->optimizers);
     }
 
     public function testCreateCustomFallsBackToDefaultsForOmittedDependencies(): void
@@ -137,7 +127,7 @@ class LumiEngineTest extends TestCase
         self::assertInstanceOf(Parser::class, $engine->parser);
         self::assertInstanceOf(Compiler::class, $engine->compiler);
         self::assertInstanceOf(Highlighter::class, $engine->highlighter);
-        self::assertNotSame([], $engine->optimizers);
+        self::assertNotSame([], $engine->compiler->optimizerPipeline->optimizers);
     }
 
     public function testCreateCustomAcceptsEmptyOptimizerList(): void
@@ -146,7 +136,7 @@ class LumiEngineTest extends TestCase
             optimizers: [],
         );
 
-        self::assertSame([], $engine->optimizers);
+        self::assertSame([], $engine->compiler->optimizerPipeline->optimizers);
     }
 
     public function testCreateDefaultOptimizersReturnsTwoOptimizers(): void

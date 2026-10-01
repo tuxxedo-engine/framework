@@ -335,7 +335,7 @@ readonly class LumiController
     ): ViewRenderInterface {
         $configurator = LumiConfigurator::fromConfig($this->container)
             ->withoutOptimizers()
-            ->withCustomOptimizer(...$engine->optimizers);
+            ->withCustomOptimizer(...$engine->compiler->optimizerPipeline->optimizers);
 
         foreach ($this->viewRender->runtime->filters as $filter) {
             $configurator->defineFilter($filter);

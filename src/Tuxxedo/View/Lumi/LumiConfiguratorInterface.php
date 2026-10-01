@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi;
 
+use Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface;
 use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
 use Tuxxedo\View\Lumi\Library\Filter\FilterProviderInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
@@ -49,6 +50,13 @@ interface LumiConfiguratorInterface
      * @var array<class-string<OptimizerInterface>, OptimizerInterface>
      */
     public array $optimizers {
+        get;
+    }
+
+    /**
+     * @var array<string, ThemeInterface>
+     */
+    public array $highlightThemes {
         get;
     }
 
@@ -179,6 +187,10 @@ interface LumiConfiguratorInterface
 
     public function withCustomOptimizer(
         OptimizerInterface ...$optimizers,
+    ): self;
+
+    public function withHighlightTheme(
+        ThemeInterface ...$themes,
     ): self;
 
     public function useLoader(

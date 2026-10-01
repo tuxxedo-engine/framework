@@ -18,6 +18,10 @@ use Tuxxedo\Reflection\MethodReflector;
 use Tuxxedo\View\Lumi\Compiler\Compiler;
 use Tuxxedo\View\Lumi\Compiler\CompilerState;
 use Tuxxedo\View\Lumi\Config\LumiConfigInterface;
+use Tuxxedo\View\Lumi\Highlight\Highlighter;
+use Tuxxedo\View\Lumi\Highlight\HighlighterInterface;
+use Tuxxedo\View\Lumi\Highlight\Theme\ThemeFactory;
+use Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface;
 use Tuxxedo\View\Lumi\Library\Attribute\LumiFilter;
 use Tuxxedo\View\Lumi\Library\Attribute\LumiFunction;
 use Tuxxedo\View\Lumi\Library\Directive\DefaultDirectives;
@@ -63,6 +67,11 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
     public private(set) array $customFilters = [];
     public private(set) array $filterProviders = [];
+
+    /**
+     * @var array<string, ThemeInterface>
+     */
+    public private(set) array $highlightThemes = [];
 
     public private(set) bool $withStandardLibrary = true;
 
@@ -337,6 +346,16 @@ class LumiConfigurator implements LumiConfiguratorInterface
         return $this;
     }
 
+    public function withHighlightTheme(
+        ThemeInterface ...$themes,
+    ): self {
+        foreach ($themes as $theme) {
+            $this->highlightThemes[$theme->identifier] = $theme;
+        }
+
+        return $this;
+    }
+
     public function useLoader(
         LoaderInterface $loader,
     ): self {
@@ -494,6 +513,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
     public function build(): LumiViewRenderInterface
     {
+        $highlighter = $this->buildHighlighter();
         $compiler = null;
 
         if ($this->defaultDirectives !== DefaultDirectives::defaults()) {
@@ -506,6 +526,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
                 optimizerPipeline: new OptimizerPipeline(
                     optimizers: $this->optimizers,
                 ),
+                highlighter: $highlighter,
             );
         }
 
@@ -524,7 +545,10 @@ class LumiConfigurator implements LumiConfiguratorInterface
             runtime: new Runtime(
                 engine: LumiEngine::createCustom(
                     compiler: $compiler,
-                    optimizers: $this->optimizers,
+                    highlighter: $highlighter,
+                    optimizers: $compiler === null
+                        ? $this->optimizers
+                        : null,
                 ),
                 directives: \array_merge(
                     $this->directives,
@@ -543,6 +567,15 @@ class LumiConfigurator implements LumiConfiguratorInterface
             ),
             alwaysCompile: $this->viewAlwaysCompile,
             disableErrorReporting: $this->viewDisableErrorReporting,
+        );
+    }
+
+    private function buildHighlighter(): HighlighterInterface
+    {
+        return new Highlighter(
+            themeFactory: ThemeFactory::createDefault(
+                themes: \array_values($this->highlightThemes),
+            ),
         );
     }
 }

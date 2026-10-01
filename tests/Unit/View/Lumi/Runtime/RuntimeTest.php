@@ -508,19 +508,6 @@ class RuntimeTest extends TestCase
         self::assertSame(['lumi.autoescape' => true], $renderer->renderCalls[0]['directives']);
     }
 
-    public function testHighlightDelegatesToEngine(): void
-    {
-        $runtime = $this->createRuntime();
-
-        \ob_start();
-        $runtime->highlight('lumi-dark', '<source/>');
-        $output = \ob_get_clean();
-
-        self::assertSame('<highlighted/>', $output);
-        self::assertSame('<source/>', $this->engine->lastHighlightedSource);
-        self::assertSame('lumi-dark', $this->engine->lastHighlightedTheme);
-    }
-
     public function testIncludeThrowsForNonStringFile(): void
     {
         $runtime = $this->createRuntime();

@@ -205,6 +205,29 @@ class HighlighterTest extends TestCase
         );
     }
 
+    public function testHighlightStringLexesParsesAndHighlights(): void
+    {
+        $output = $this->highlighter->highlightString(
+            theme: new LumiDark(),
+            source: 'hello {{ name }}',
+        );
+
+        self::assertStringContainsString('<span', $output);
+        self::assertStringContainsString('hello', $output);
+        self::assertStringContainsString('name', $output);
+    }
+
+    public function testHighlightStringResolvesThemeByIdentifier(): void
+    {
+        $output = $this->highlighter->highlightString(
+            theme: 'dark',
+            source: 'hello',
+        );
+
+        self::assertStringContainsString('<span', $output);
+        self::assertStringContainsString('hello', $output);
+    }
+
     public function testHighlightThrowsForUnknownThemeIdentifier(): void
     {
         self::expectException(HighlightException::class);

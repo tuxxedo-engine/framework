@@ -21,7 +21,6 @@ use Tuxxedo\View\Lumi\Highlight\HighlighterInterface;
 use Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Lexer\LexerInterface;
-use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
@@ -42,13 +41,6 @@ interface LumiEngineInterface
     }
 
     public HighlighterInterface $highlighter {
-        get;
-    }
-
-    /**
-     * @var OptimizerInterface[]
-     */
-    public array $optimizers {
         get;
     }
 

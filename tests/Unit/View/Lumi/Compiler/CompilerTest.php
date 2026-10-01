@@ -33,6 +33,8 @@ use Tuxxedo\View\Lumi\Compiler\Provider\ConditionalCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\ExpressionCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\LoopCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\TextCompilerProvider;
+use Tuxxedo\View\Lumi\Highlight\Highlighter;
+use Tuxxedo\View\Lumi\Highlight\HighlighterInterface;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerPipeline;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
@@ -400,6 +402,35 @@ class CompilerTest extends TestCase
         );
 
         self::assertSame($pipeline, $compiler->optimizerPipeline);
+    }
+
+    public function testDefaultHighlighterIsCreated(): void
+    {
+        $compiler = Compiler::createWithoutDefaultProviders();
+
+        self::assertInstanceOf(HighlighterInterface::class, $compiler->highlighter);
+    }
+
+    public function testCreateWithoutDefaultProvidersAcceptsExplicitHighlighter(): void
+    {
+        $highlighter = new Highlighter();
+
+        $compiler = Compiler::createWithoutDefaultProviders(
+            highlighter: $highlighter,
+        );
+
+        self::assertSame($highlighter, $compiler->highlighter);
+    }
+
+    public function testCreateWithDefaultProvidersAcceptsExplicitHighlighter(): void
+    {
+        $highlighter = new Highlighter();
+
+        $compiler = Compiler::createWithDefaultProviders(
+            highlighter: $highlighter,
+        );
+
+        self::assertSame($highlighter, $compiler->highlighter);
     }
 
     public function testCompileRunsOptimizerPipelineBeforeEmission(): void
