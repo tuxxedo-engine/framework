@@ -23,12 +23,15 @@ use Fixture\View\Lumi\Runtime\RecordingFunction;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Container\Container;
 use Tuxxedo\View\Lumi\Config\LumiConfig;
+use Tuxxedo\View\Lumi\Highlight\ColorSlot;
 use Tuxxedo\View\Lumi\Highlight\Theme\LumiDark;
+use Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface;
 use Tuxxedo\View\Lumi\Library\Directive\DefaultDirectives;
 use Tuxxedo\View\Lumi\Library\Function\PhpFunction;
 use Tuxxedo\View\Lumi\LumiConfigurator;
 use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
 use Tuxxedo\View\Lumi\LumiEngine;
+use Tuxxedo\View\Lumi\LumiViewRender;
 use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
 use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpOptimizer;
 use Tuxxedo\View\Lumi\Runtime\Loader;
@@ -716,31 +719,100 @@ class LumiConfiguratorTest extends TestCase
     public function testWithHighlightThemeAddsMultipleThemes(): void
     {
         $configurator = $this->makeConfigurator();
+        $first = $this->makeStubTheme(
+            identifier: 'brand-a',
+            color: '#000',
+        );
 
-        $first = new class () implements \Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface {
-            public string $identifier = 'brand-a';
-
-            public function color(
-                \Tuxxedo\View\Lumi\Highlight\ColorSlot $slot,
-            ): string {
-                return '#000';
-            }
-        };
-
-        $second = new class () implements \Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface {
-            public string $identifier = 'brand-b';
-
-            public function color(
-                \Tuxxedo\View\Lumi\Highlight\ColorSlot $slot,
-            ): string {
-                return '#fff';
-            }
-        };
+        $second = $this->makeStubTheme(
+            identifier: 'brand-b',
+            color: '#fff',
+        );
 
         $configurator->withHighlightTheme($first, $second);
 
         self::assertSame($first, $configurator->highlightThemes['brand-a']);
         self::assertSame($second, $configurator->highlightThemes['brand-b']);
+    }
+
+    public function testWithHighlightThemeLastWriteWinsOnDuplicateIdentifier(): void
+    {
+        $configurator = $this->makeConfigurator();
+        $first = $this->makeStubTheme(
+            identifier: 'brand',
+            color: '#000',
+        );
+        $second = $this->makeStubTheme(
+            identifier: 'brand',
+            color: '#fff',
+        );
+
+        $configurator->withHighlightTheme($first);
+        $configurator->withHighlightTheme($second);
+
+        self::assertCount(1, $configurator->highlightThemes);
+        self::assertSame($second, $configurator->highlightThemes['brand']);
+    }
+
+    public function testBuildPropagatesCustomThemeIntoCompilerHighlighter(): void
+    {
+        $configurator = $this->makeConfigurator();
+        $theme = $this->makeStubTheme(
+            identifier: 'brand-magenta',
+            color: '#ff00ff',
+        );
+
+        $configurator->withHighlightTheme($theme);
+        $render = $configurator->build();
+
+        self::assertInstanceOf(LumiViewRender::class, $render);
+
+        $output = $render->runtime->engine->compiler->highlighter->highlightString(
+            theme: 'brand-magenta',
+            source: 'hello',
+        );
+
+        self::assertStringContainsString('#ff00ff', $output);
+    }
+
+    public function testBuildPropagatesCustomThemeIntoEngineHighlighter(): void
+    {
+        $configurator = $this->makeConfigurator();
+        $theme = $this->makeStubTheme(
+            identifier: 'brand-cyan',
+            color: '#00ffff',
+        );
+
+        $configurator->withHighlightTheme($theme);
+        $render = $configurator->build();
+
+        self::assertInstanceOf(LumiViewRender::class, $render);
+
+        $output = $render->runtime->engine->highlightString(
+            source: 'hello',
+            theme: 'brand-cyan',
+        );
+
+        self::assertStringContainsString('#00ffff', $output);
+    }
+
+    private function makeStubTheme(
+        string $identifier,
+        string $color,
+    ): ThemeInterface {
+        return new class ($identifier, $color) implements ThemeInterface {
+            public function __construct(
+                public string $identifier,
+                private readonly string $color,
+            ) {
+            }
+
+            public function color(
+                ColorSlot $slot,
+            ): string {
+                return $this->color;
+            }
+        };
     }
 
     public function testWithCustomOptimizerAddsOptimizer(): void
