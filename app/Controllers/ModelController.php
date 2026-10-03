@@ -18,7 +18,6 @@ use App\Repositories\UserRepositoryInterface;
 use App\Subscribers\Events\UserCreatedEvent;
 use Tuxxedo\Event\EventsManagerInterface;
 use Tuxxedo\Http\Kernel\Resolver\Model;
-use Tuxxedo\Http\Request\Middleware\OutputCapture;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
@@ -32,7 +31,6 @@ use Tuxxedo\View\View;
 use Tuxxedo\View\ViewInterface;
 
 #[Controller(path: '/model/')]
-#[OutputCapture]
 readonly class ModelController
 {
     public function __construct(

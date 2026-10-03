@@ -67,6 +67,7 @@ class ShowcaseCommand
                 ],
             ),
         );
+
         $output->line();
         $output->line();
     }
@@ -83,14 +84,18 @@ class ShowcaseCommand
             ],
             style: Style::success(),
             padding: 2,
-        ))->render(output: $output);
+        ))->render($output);
+
         $output->line();
     }
 
     private function sectionTable(
         OutputInterface $output,
     ): void {
-        $this->header(output: $output, title: 'Table with headerStyle + borderStyle + StyledCell');
+        $this->header(
+            output: $output,
+            title: 'Table with headerStyle + borderStyle + StyledCell',
+        );
 
         (new Table(
             headers: [
@@ -102,17 +107,26 @@ class ShowcaseCommand
                 [
                     'alice',
                     'admin',
-                    new StyledCell(value: 'active', style: Style::success()),
+                    new StyledCell(
+                        value: 'active',
+                        style: Style::success(),
+                    ),
                 ],
                 [
                     'bob',
                     'guest',
-                    new StyledCell(value: 'pending', style: Style::warning()),
+                    new StyledCell(
+                        value: 'pending',
+                        style: Style::warning(),
+                    ),
                 ],
                 [
                     'carol',
                     'admin',
-                    new StyledCell(value: 'blocked', style: Style::error()),
+                    new StyledCell(
+                        value: 'blocked',
+                        style: Style::error(),
+                    ),
                 ],
             ],
             headerStyle: new Style(
@@ -122,7 +136,8 @@ class ShowcaseCommand
                 ],
             ),
             borderStyle: Style::dim(),
-        ))->render(output: $output);
+        ))->render($output);
+
         $output->line();
     }
 
