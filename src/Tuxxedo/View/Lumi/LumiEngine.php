@@ -29,6 +29,8 @@ use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpOptimizer;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Parser\Parser;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
+use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospector;
+use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospectorInterface;
 use Tuxxedo\View\ViewException;
 
 readonly class LumiEngine implements LumiEngineInterface
@@ -61,6 +63,11 @@ readonly class LumiEngine implements LumiEngineInterface
         return new Highlighter();
     }
 
+    public static function createDefaultIntrospector(): RuntimeIntrospectorInterface
+    {
+        return new RuntimeIntrospector();
+    }
+
     /**
      * @return OptimizerInterface[]
      */
@@ -76,6 +83,7 @@ readonly class LumiEngine implements LumiEngineInterface
     {
         $optimizers = self::createDefaultOptimizers();
         $highlighter = self::createDefaultHighlighter();
+        $introspector = self::createDefaultIntrospector();
 
         return new static(
             lexer: self::createDefaultLexer(),
@@ -85,6 +93,7 @@ readonly class LumiEngine implements LumiEngineInterface
                     optimizers: $optimizers,
                 ),
                 highlighter: $highlighter,
+                introspector: $introspector,
             ),
             highlighter: $highlighter,
         );
@@ -101,9 +110,14 @@ readonly class LumiEngine implements LumiEngineInterface
         ?CompilerInterface $compiler = null,
         ?HighlighterInterface $highlighter = null,
         ?array $optimizers = null,
+        ?RuntimeIntrospectorInterface $introspector = null,
     ): static {
         if ($compiler !== null && $optimizers !== null) {
             throw LumiException::fromAmbiguousCompilerAndOptimizers();
+        }
+
+        if ($compiler !== null && $introspector !== null) {
+            throw LumiException::fromAmbiguousCompilerAndIntrospector();
         }
 
         $highlighter = $highlighter ?? self::createDefaultHighlighter();
@@ -116,6 +130,7 @@ readonly class LumiEngine implements LumiEngineInterface
                     optimizers: $optimizers ?? self::createDefaultOptimizers(),
                 ),
                 highlighter: $highlighter,
+                introspector: $introspector ?? self::createDefaultIntrospector(),
             ),
             highlighter: $highlighter,
         );

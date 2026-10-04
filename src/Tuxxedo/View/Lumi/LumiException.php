@@ -38,6 +38,13 @@ class LumiException extends Exception
         );
     }
 
+    public static function fromAmbiguousCompilerAndIntrospector(): self
+    {
+        return new self(
+            message: 'Cannot pass both a compiler and an introspector; pass the introspector to the compiler instead',
+        );
+    }
+
     protected static function formatExpectedGot(
         string $expected,
         string $got,

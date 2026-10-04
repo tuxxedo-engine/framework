@@ -876,6 +876,120 @@ class LumiConfiguratorTest extends TestCase
         self::assertFalse($configurator->validate());
     }
 
+    public function testBuildPropagatesRegisteredFunctionIntoCompilerIntrospector(): void
+    {
+        $configurator = $this->makeConfigurator();
+        $function = new RecordingFunction(
+            name: 'noop',
+            aliases: [
+                'nope',
+            ],
+        );
+
+        $configurator->defineFunction($function);
+        $render = $configurator->build();
+
+        self::assertInstanceOf(LumiViewRender::class, $render);
+
+        $introspector = $render->runtime->engine->compiler->introspector;
+
+        self::assertTrue($introspector->hasFunction('noop'));
+        self::assertTrue($introspector->hasFunction('nope'));
+
+        $metadata = $introspector->getFunction('nope');
+
+        self::assertNotNull($metadata);
+        self::assertSame('noop', $metadata->name);
+        self::assertSame(RecordingFunction::class, $metadata->className);
+    }
+
+    public function testBuildDeduplicatesFunctionDefinedAndEmittedByProvider(): void
+    {
+        $configurator = $this->makeConfigurator();
+        $function = new RecordingFunction(
+            name: 'shared',
+        );
+
+        $configurator->defineFunction($function);
+        $configurator->withFunctionProvider(
+            provider: new class ($function) implements \Tuxxedo\View\Lumi\Library\Function\FunctionProviderInterface {
+                public function __construct(
+                    private readonly RecordingFunction $function,
+                ) {
+                }
+
+                public function export(
+                    \Tuxxedo\Container\ContainerInterface $container,
+                ): \Generator {
+                    yield $this->function;
+                }
+            },
+        );
+
+        $render = $configurator->build();
+        $metadata = $render->runtime->engine->compiler->introspector->getFunction('shared');
+
+        self::assertNotNull($metadata);
+        self::assertSame(RecordingFunction::class, $metadata->className);
+    }
+
+    public function testBuildDeduplicatesFilterDefinedAndEmittedByProvider(): void
+    {
+        $configurator = $this->makeConfigurator();
+        $filter = new RecordingFilter(
+            name: 'shared',
+        );
+
+        $configurator->defineFilter($filter);
+        $configurator->withFilterProvider(
+            provider: new class ($filter) implements \Tuxxedo\View\Lumi\Library\Filter\FilterProviderInterface {
+                public function __construct(
+                    private readonly RecordingFilter $filter,
+                ) {
+                }
+
+                public function export(
+                    \Tuxxedo\Container\ContainerInterface $container,
+                ): \Generator {
+                    yield $this->filter;
+                }
+            },
+        );
+
+        $render = $configurator->build();
+        $metadata = $render->runtime->engine->compiler->introspector->getFilter('shared');
+
+        self::assertNotNull($metadata);
+        self::assertSame(RecordingFilter::class, $metadata->className);
+    }
+
+    public function testBuildPropagatesRegisteredFilterIntoCompilerIntrospector(): void
+    {
+        $configurator = $this->makeConfigurator();
+        $filter = new RecordingFilter(
+            name: 'tag',
+            aliases: [
+                'label',
+            ],
+        );
+
+        $configurator->defineFilter($filter);
+        $render = $configurator->build();
+
+        self::assertInstanceOf(LumiViewRender::class, $render);
+
+        $introspector = $render->runtime->engine->compiler->introspector;
+
+        self::assertTrue($introspector->hasFilter('tag'));
+        self::assertTrue($introspector->hasFilter('label'));
+
+        $metadata = $introspector->getFilter('label');
+
+        self::assertNotNull($metadata);
+        self::assertSame('tag', $metadata->name);
+        self::assertSame(RecordingFilter::class, $metadata->className);
+    }
+
     public function testBuildReturnsViewRenderInterface(): void
     {
         $configurator = $this->makeConfigurator();

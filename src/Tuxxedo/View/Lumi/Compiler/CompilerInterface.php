@@ -18,6 +18,7 @@ use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompilerInterface;
 use Tuxxedo\View\Lumi\Highlight\HighlighterInterface;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerPipelineInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
+use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospectorInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 
@@ -40,6 +41,10 @@ interface CompilerInterface
     }
 
     public HighlighterInterface $highlighter {
+        get;
+    }
+
+    public RuntimeIntrospectorInterface $introspector {
         get;
     }
 

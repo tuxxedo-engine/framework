@@ -24,6 +24,8 @@ use Tuxxedo\View\Lumi\LumiEngine;
 use Tuxxedo\View\Lumi\LumiException;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Parser\Parser;
+use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospector;
+use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospectorInterface;
 use Tuxxedo\View\ViewException;
 
 class LumiEngineTest extends TestCase
@@ -117,6 +119,35 @@ class LumiEngineTest extends TestCase
                 new RecordingOptimizer(),
             ],
         );
+    }
+
+    public function testCreateCustomThrowsWhenBothCompilerAndIntrospectorProvided(): void
+    {
+        self::expectException(LumiException::class);
+
+        LumiEngine::createCustom(
+            compiler: LumiEngine::createDefaultCompiler(),
+            introspector: new RuntimeIntrospector(),
+        );
+    }
+
+    public function testCreateCustomWithoutCompilerPassesIntrospectorToDefaultCompiler(): void
+    {
+        $introspector = new RuntimeIntrospector();
+
+        $engine = LumiEngine::createCustom(
+            introspector: $introspector,
+        );
+
+        self::assertSame($introspector, $engine->compiler->introspector);
+    }
+
+    public function testCreateCustomWithoutIntrospectorBuildsEmptyDefaultOnDefaultCompiler(): void
+    {
+        $engine = LumiEngine::createCustom();
+
+        self::assertInstanceOf(RuntimeIntrospectorInterface::class, $engine->compiler->introspector);
+        self::assertFalse($engine->compiler->introspector->hasFunction('anything'));
     }
 
     public function testCreateCustomFallsBackToDefaultsForOmittedDependencies(): void

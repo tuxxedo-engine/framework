@@ -37,6 +37,8 @@ use Tuxxedo\View\Lumi\Highlight\Highlighter;
 use Tuxxedo\View\Lumi\Highlight\HighlighterInterface;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerPipeline;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
+use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospector;
+use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospectorInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Type;
@@ -431,6 +433,37 @@ class CompilerTest extends TestCase
         );
 
         self::assertSame($highlighter, $compiler->highlighter);
+    }
+
+    public function testDefaultIntrospectorIsCreated(): void
+    {
+        $compiler = Compiler::createWithoutDefaultProviders();
+
+        self::assertInstanceOf(RuntimeIntrospectorInterface::class, $compiler->introspector);
+        self::assertFalse($compiler->introspector->hasFunction('anything'));
+        self::assertFalse($compiler->introspector->hasFilter('anything'));
+    }
+
+    public function testCreateWithoutDefaultProvidersAcceptsExplicitIntrospector(): void
+    {
+        $introspector = new RuntimeIntrospector();
+
+        $compiler = Compiler::createWithoutDefaultProviders(
+            introspector: $introspector,
+        );
+
+        self::assertSame($introspector, $compiler->introspector);
+    }
+
+    public function testCreateWithDefaultProvidersAcceptsExplicitIntrospector(): void
+    {
+        $introspector = new RuntimeIntrospector();
+
+        $compiler = Compiler::createWithDefaultProviders(
+            introspector: $introspector,
+        );
+
+        self::assertSame($introspector, $compiler->introspector);
     }
 
     public function testCompileRunsOptimizerPipelineBeforeEmission(): void

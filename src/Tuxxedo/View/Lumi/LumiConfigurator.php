@@ -19,7 +19,6 @@ use Tuxxedo\View\Lumi\Compiler\Compiler;
 use Tuxxedo\View\Lumi\Compiler\CompilerState;
 use Tuxxedo\View\Lumi\Config\LumiConfigInterface;
 use Tuxxedo\View\Lumi\Highlight\Highlighter;
-use Tuxxedo\View\Lumi\Highlight\HighlighterInterface;
 use Tuxxedo\View\Lumi\Highlight\Theme\ThemeFactory;
 use Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface;
 use Tuxxedo\View\Lumi\Library\Attribute\LumiFilter;
@@ -38,6 +37,10 @@ use Tuxxedo\View\Lumi\Library\LibraryProviderInterface;
 use Tuxxedo\View\Lumi\Library\Standard\StandardLibrary;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerPipeline;
+use Tuxxedo\View\Lumi\Runtime\Introspector\CallableKind;
+use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadata;
+use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadataInterface;
+use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospector;
 use Tuxxedo\View\Lumi\Runtime\Loader;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\Runtime;
@@ -513,7 +516,21 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
     public function build(): LumiViewRenderInterface
     {
-        $highlighter = $this->buildHighlighter();
+        if ($this->withStandardLibrary) {
+            $this->withLibrary(
+                library: new StandardLibrary(),
+            );
+        }
+
+        $highlighter = new Highlighter(
+            themeFactory: ThemeFactory::createDefault(
+                themes: \array_values($this->highlightThemes),
+            ),
+        );
+        $introspector = new RuntimeIntrospector(
+            functions: $this->collectFunctionMetadata(),
+            filters: $this->collectFilterMetadata(),
+        );
         $compiler = null;
 
         if ($this->defaultDirectives !== DefaultDirectives::defaults()) {
@@ -527,12 +544,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
                     optimizers: $this->optimizers,
                 ),
                 highlighter: $highlighter,
-            );
-        }
-
-        if ($this->withStandardLibrary) {
-            $this->withLibrary(
-                library: new StandardLibrary(),
+                introspector: $introspector,
             );
         }
 
@@ -548,6 +560,9 @@ class LumiConfigurator implements LumiConfiguratorInterface
                     highlighter: $highlighter,
                     optimizers: $compiler === null
                         ? $this->optimizers
+                        : null,
+                    introspector: $compiler === null
+                        ? $introspector
                         : null,
                 ),
                 directives: \array_merge(
@@ -570,12 +585,93 @@ class LumiConfigurator implements LumiConfiguratorInterface
         );
     }
 
-    private function buildHighlighter(): HighlighterInterface
+    /**
+     * @return list<CallableMetadataInterface>
+     */
+    private function collectFunctionMetadata(): array
     {
-        return new Highlighter(
-            themeFactory: ThemeFactory::createDefault(
-                themes: \array_values($this->highlightThemes),
-            ),
-        );
+        $seen = [];
+        $metadata = [];
+
+        foreach ($this->functions as $function) {
+            if (isset($seen[\spl_object_id($function)])) {
+                continue;
+            }
+
+            $seen[\spl_object_id($function)] = true;
+            $metadata[] = new CallableMetadata(
+                name: $function->name,
+                kind: CallableKind::LEGACY_INTERFACE,
+                className: $function::class,
+                methodName: 'call',
+                wantsContext: true,
+                aliases: \array_values($function->aliases),
+            );
+        }
+
+        foreach ($this->functionProviders as $provider) {
+            foreach ($provider->export($this->container) as $function) {
+                if (isset($seen[\spl_object_id($function)])) {
+                    continue;
+                }
+
+                $seen[\spl_object_id($function)] = true;
+                $metadata[] = new CallableMetadata(
+                    name: $function->name,
+                    kind: CallableKind::LEGACY_INTERFACE,
+                    className: $function::class,
+                    methodName: 'call',
+                    wantsContext: true,
+                    aliases: \array_values($function->aliases),
+                );
+            }
+        }
+
+        return $metadata;
+    }
+
+    /**
+     * @return list<CallableMetadataInterface>
+     */
+    private function collectFilterMetadata(): array
+    {
+        $seen = [];
+        $metadata = [];
+
+        foreach ($this->customFilters as $filter) {
+            if (isset($seen[\spl_object_id($filter)])) {
+                continue;
+            }
+
+            $seen[\spl_object_id($filter)] = true;
+            $metadata[] = new CallableMetadata(
+                name: $filter->name,
+                kind: CallableKind::LEGACY_INTERFACE,
+                className: $filter::class,
+                methodName: 'call',
+                wantsContext: true,
+                aliases: \array_values($filter->aliases),
+            );
+        }
+
+        foreach ($this->filterProviders as $provider) {
+            foreach ($provider->export($this->container) as $filter) {
+                if (isset($seen[\spl_object_id($filter)])) {
+                    continue;
+                }
+
+                $seen[\spl_object_id($filter)] = true;
+                $metadata[] = new CallableMetadata(
+                    name: $filter->name,
+                    kind: CallableKind::LEGACY_INTERFACE,
+                    className: $filter::class,
+                    methodName: 'call',
+                    wantsContext: true,
+                    aliases: \array_values($filter->aliases),
+                );
+            }
+        }
+
+        return $metadata;
     }
 }
