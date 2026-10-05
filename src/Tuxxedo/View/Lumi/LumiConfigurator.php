@@ -33,7 +33,9 @@ use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospector;
 use Tuxxedo\View\Lumi\Runtime\Loader;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\Runtime;
+use Tuxxedo\View\Lumi\Runtime\RuntimeContext;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
+use Tuxxedo\View\Lumi\Runtime\RuntimeInterface;
 
 class LumiConfigurator implements LumiConfiguratorInterface
 {
@@ -372,18 +374,23 @@ class LumiConfigurator implements LumiConfiguratorInterface
             foreach (StandardLibrary::functions() as $className) {
                 $this->withFunctionClass($className);
             }
+
+            StandardLibrary::registerPhpFunctions($this);
         }
 
+        $compiler = null;
         $highlighter = new Highlighter(
             themeFactory: ThemeFactory::createDefault(
                 themes: \array_values($this->highlightThemes),
             ),
         );
+
+        $functionMetadata = $this->collectFunctionMetadata();
+        $filterMetadata = $this->collectFilterMetadata();
         $introspector = new RuntimeIntrospector(
-            functions: $this->collectFunctionMetadata(),
-            filters: $this->collectFilterMetadata(),
+            functions: $functionMetadata,
+            filters: $filterMetadata,
         );
-        $compiler = null;
 
         if ($this->defaultDirectives !== DefaultDirectives::defaults()) {
             $compiler = Compiler::createWithDefaultProviders(
@@ -399,6 +406,12 @@ class LumiConfigurator implements LumiConfiguratorInterface
                 introspector: $introspector,
             );
         }
+
+        $container = $this->container;
+        $instanceResolver = static function (string $className) use ($container): object {
+            /** @var class-string $className */
+            return $container->resolve($className);
+        };
 
         return new LumiViewRender(
             loader: $this->loader ?? new Loader(
@@ -417,6 +430,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
                         ? $introspector
                         : null,
                 ),
+                instanceResolver: $instanceResolver,
                 directives: \array_merge(
                     $this->directives,
                     $this->defaultDirectives,
@@ -424,7 +438,14 @@ class LumiConfigurator implements LumiConfiguratorInterface
                 phpFunctions: $this->phpFunctions,
                 functionPolicy: $this->functionPolicy,
                 instanceCallClasses: $this->instanceCallClasses,
-                container: $this->container,
+                filterDispatchers: self::buildDispatcherTable(
+                    metadata: $filterMetadata,
+                    instanceResolver: $instanceResolver,
+                ),
+                functionDispatchers: self::buildDispatcherTable(
+                    metadata: $functionMetadata,
+                    instanceResolver: $instanceResolver,
+                ),
             ),
             alwaysCompile: $this->viewAlwaysCompile,
             disableErrorReporting: $this->viewDisableErrorReporting,
@@ -432,20 +453,70 @@ class LumiConfigurator implements LumiConfiguratorInterface
     }
 
     /**
-     * @return list<CallableMetadataInterface>
+     * @param list<CallableMetadataInterface> $metadata
+     * @param \Closure(class-string): object $instanceResolver
+     *
+     * @return array<string, \Closure(mixed[], RuntimeInterface): mixed>
      */
-    private function collectFunctionMetadata(): array
-    {
-        $metadata = [];
-        $discoverer = new CallableDiscoverer();
+    private static function buildDispatcherTable(
+        array $metadata,
+        \Closure $instanceResolver,
+    ): array {
+        $table = [];
 
-        foreach ($this->functionClasses as $className) {
-            foreach ($discoverer->discoverFunctions($className) as $entry) {
-                $metadata[] = $entry;
+        foreach ($metadata as $entry) {
+            $dispatcher = self::makeDispatcher(
+                className: $entry->className,
+                methodName: $entry->methodName,
+                contextIndex: $entry->contextParameterIndex,
+                instanceResolver: $instanceResolver,
+            );
+
+            $table[\strtolower($entry->name)] = $dispatcher;
+
+            foreach ($entry->aliases as $alias) {
+                $table[\strtolower($alias)] = $dispatcher;
             }
         }
 
-        return $metadata;
+        return $table;
+    }
+
+    /**
+     * @param class-string $className
+     * @param \Closure(class-string): object $instanceResolver
+     *
+     * @return \Closure(mixed[], RuntimeInterface): mixed
+     */
+    private static function makeDispatcher(
+        string $className,
+        string $methodName,
+        ?int $contextIndex,
+        \Closure $instanceResolver,
+    ): \Closure {
+        $handler = null;
+
+        return static function (array $arguments, RuntimeInterface $runtime) use (&$handler, $instanceResolver, $className, $methodName, $contextIndex): mixed {
+            $handler ??= $instanceResolver($className);
+
+            if ($contextIndex !== null) {
+                $arguments = [
+                    ...\array_slice($arguments, 0, $contextIndex),
+                    new RuntimeContext(
+                        runtime: $runtime,
+                    ),
+                    ...\array_slice($arguments, $contextIndex),
+                ];
+            }
+
+            /** @var callable $callable */
+            $callable = [
+                $handler,
+                $methodName,
+            ];
+
+            return \call_user_func_array($callable, $arguments);
+        };
     }
 
     /**
@@ -458,6 +529,23 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
         foreach ($this->filterClasses as $className) {
             foreach ($discoverer->discoverFilters($className) as $entry) {
+                $metadata[] = $entry;
+            }
+        }
+
+        return $metadata;
+    }
+
+    /**
+     * @return list<CallableMetadataInterface>
+     */
+    private function collectFunctionMetadata(): array
+    {
+        $metadata = [];
+        $discoverer = new CallableDiscoverer();
+
+        foreach ($this->functionClasses as $className) {
+            foreach ($discoverer->discoverFunctions($className) as $entry) {
                 $metadata[] = $entry;
             }
         }

@@ -21,7 +21,6 @@ readonly class CallableMetadata implements CallableMetadataInterface
      */
     public function __construct(
         public string $name,
-        public CallableKind $kind,
         public string $className,
         public string $methodName,
         public bool $wantsContext,

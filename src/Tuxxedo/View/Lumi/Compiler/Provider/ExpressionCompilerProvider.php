@@ -17,12 +17,14 @@ use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Compiler\CompilerStateFlag;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
+use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadataInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayItemNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ConcatNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\FilterOrBitwiseOrNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
@@ -321,10 +323,15 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         if ($node->right instanceof IdentifierNode) {
             $name = \mb_strtolower($node->right->name);
 
-            if (
-                !$compiler->introspector->hasAnyFilters() ||
-                $compiler->introspector->hasFilter($name)
-            ) {
+            if ($compiler->introspector->hasFilter($name)) {
+                return $this->emitDirectFilterCall(
+                    compiler: $compiler,
+                    metadata: $compiler->introspector->getFilter($name),
+                    valueNode: $node->left,
+                );
+            }
+
+            if (!$compiler->introspector->hasAnyFilters()) {
                 return \sprintf(
                     '$this->filter(%s, \'%s\')',
                     $compiler->compileExpression($node->left),
@@ -343,6 +350,31 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
             '((%s) | (%s))',
             $compiler->compileExpression($node->left),
             $compiler->compileExpression($node->right),
+        );
+    }
+
+    private function emitDirectFilterCall(
+        CompilerInterface $compiler,
+        CallableMetadataInterface $metadata,
+        ExpressionNodeInterface $valueNode,
+    ): string {
+        $arguments = [
+            $compiler->compileExpression($valueNode),
+        ];
+
+        if ($metadata->contextParameterIndex !== null) {
+            $arguments = [
+                ...\array_slice($arguments, 0, $metadata->contextParameterIndex),
+                'new \\Tuxxedo\\View\\Lumi\\Runtime\\RuntimeContext($this)',
+                ...\array_slice($arguments, $metadata->contextParameterIndex),
+            ];
+        }
+
+        return \sprintf(
+            '$this->resolveInstance(\\%s::class)->%s(%s)',
+            $metadata->className,
+            $metadata->methodName,
+            \join(', ', $arguments),
         );
     }
 

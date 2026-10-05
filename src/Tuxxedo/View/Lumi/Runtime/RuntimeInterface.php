@@ -33,6 +33,34 @@ interface RuntimeInterface
         get;
     }
 
+    /**
+     * @var array<string, \Closure(mixed[], RuntimeInterface): mixed>
+     */
+    public array $filterDispatchers {
+        get;
+    }
+
+    /**
+     * @var array<string, \Closure(mixed[], RuntimeInterface): mixed>
+     */
+    public array $functionDispatchers {
+        get;
+    }
+
+    /**
+     * @var array<class-string, object>
+     */
+    public array $instances {
+        get;
+    }
+
+    /**
+     * @var \Closure(class-string): object
+     */
+    public \Closure $instanceResolver {
+        get;
+    }
+
     public RuntimeFunctionPolicy $functionPolicy {
         get;
     }
@@ -54,6 +82,13 @@ interface RuntimeInterface
     public array $blocks {
         get;
     }
+
+    /**
+     * @param class-string $className
+     */
+    public function resolveInstance(
+        string $className,
+    ): object;
 
     public function renderer(
         LumiViewRenderInterface $render,

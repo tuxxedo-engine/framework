@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Unit\View\Lumi\Runtime\Introspector;
 
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\View\Lumi\Runtime\Introspector\CallableKind;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadata;
 use Tuxxedo\View\Lumi\Runtime\Introspector\IntrospectorException;
 use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospector;
@@ -199,7 +198,6 @@ class RuntimeIntrospectorTest extends TestCase
     ): CallableMetadata {
         return new CallableMetadata(
             name: $name,
-            kind: CallableKind::TYPED_ATTRIBUTE,
             className: \stdClass::class,
             methodName: 'call',
             wantsContext: true,

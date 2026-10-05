@@ -31,7 +31,6 @@ class CallableDiscoverer implements CallableDiscovererInterface
 
                 $metadata[] = new CallableMetadata(
                     name: $instance->name,
-                    kind: CallableKind::TYPED_ATTRIBUTE,
                     className: $className,
                     methodName: $method->getName(),
                     wantsContext: $index !== null,
@@ -56,7 +55,6 @@ class CallableDiscoverer implements CallableDiscovererInterface
 
                 $metadata[] = new CallableMetadata(
                     name: $instance->name,
-                    kind: CallableKind::TYPED_ATTRIBUTE,
                     className: $className,
                     methodName: $method->getName(),
                     wantsContext: $index !== null,

@@ -16,7 +16,6 @@ namespace Unit\View\Lumi\Runtime\Introspector;
 use Fixture\View\Lumi\Runtime\Introspector\StubFilterClass;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableDiscoverer;
-use Tuxxedo\View\Lumi\Runtime\Introspector\CallableKind;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadataInterface;
 
 class CallableDiscovererTest extends TestCase
@@ -27,14 +26,6 @@ class CallableDiscovererTest extends TestCase
         $metadata = $discoverer->discoverFilters(StubFilterClass::class);
 
         self::assertCount(2, $metadata);
-    }
-
-    public function testDiscoveredFilterCarriesTypedAttributeKind(): void
-    {
-        $discoverer = new CallableDiscoverer();
-        $metadata = $discoverer->discoverFilters(StubFilterClass::class);
-
-        self::assertSame(CallableKind::TYPED_ATTRIBUTE, $metadata[0]->kind);
     }
 
     public function testDiscoveredFilterWithoutContextParameterHasNullIndex(): void

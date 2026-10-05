@@ -13,11 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime;
 
-use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\View\Lumi\Library\Function\PhpFunctionInterface;
 use Tuxxedo\View\Lumi\LumiEngineInterface;
 use Tuxxedo\View\Lumi\LumiViewRenderInterface;
-use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadataInterface;
 use Tuxxedo\View\View;
 
 class Runtime implements RuntimeInterface
@@ -26,6 +24,16 @@ class Runtime implements RuntimeInterface
      * @var array<string, PhpFunctionInterface>
      */
     public readonly array $phpFunctions;
+
+    /**
+     * @var array<string, \Closure(mixed[], RuntimeInterface): mixed>
+     */
+    public readonly array $filterDispatchers;
+
+    /**
+     * @var array<string, \Closure(mixed[], RuntimeInterface): mixed>
+     */
+    public readonly array $functionDispatchers;
 
     /**
      * @var array<array<string, string|int|float|bool|null>>
@@ -38,23 +46,40 @@ class Runtime implements RuntimeInterface
     public private(set) array $blocksStack = [];
 
     public private(set) LumiViewRenderInterface $renderer;
-
-    public array $blocks = [];
+    public private(set) array $blocks = [];
 
     /**
+     * @param \Closure(class-string): object $instanceResolver
      * @param array<string, string|int|float|bool|null> $directives
      * @param array<string, PhpFunctionInterface> $phpFunctions
+     * @param array<string, \Closure(mixed[], RuntimeInterface): mixed> $filterDispatchers
+     * @param array<string, \Closure(mixed[], RuntimeInterface): mixed> $functionDispatchers
+     * @param array<class-string, object> $instances
      * @param array<class-string> $instanceCallClasses
      */
     public function __construct(
         public readonly LumiEngineInterface $engine,
+        public readonly \Closure $instanceResolver,
         public private(set) array $directives = [],
         array $phpFunctions = [],
         public readonly RuntimeFunctionPolicy $functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY,
         public readonly array $instanceCallClasses = [],
-        public readonly ?ContainerInterface $container = null,
+        array $filterDispatchers = [],
+        array $functionDispatchers = [],
+        public private(set) array $instances = [],
     ) {
         $this->phpFunctions = \array_change_key_case($phpFunctions);
+        $this->filterDispatchers = \array_change_key_case($filterDispatchers);
+        $this->functionDispatchers = \array_change_key_case($functionDispatchers);
+    }
+
+    /**
+     * @param class-string $className
+     */
+    public function resolveInstance(
+        string $className,
+    ): object {
+        return $this->instances[$className] ??= ($this->instanceResolver)($className);
     }
 
     public function renderer(
@@ -102,37 +127,28 @@ class Runtime implements RuntimeInterface
             throw RuntimeException::fromFunctionCallsDisabled();
         }
 
-        $introspector = $this->engine->compiler->introspector;
         $key = \strtolower($function);
-        $isTyped = $introspector->hasFunction($function);
-        $isPhp = \array_key_exists($key, $this->phpFunctions);
+        $dispatcher = $this->functionDispatchers[$key] ?? null;
 
-        if (
-            $this->functionPolicy === RuntimeFunctionPolicy::CUSTOM_ONLY &&
-            !$isTyped &&
-            !$isPhp
-        ) {
-            throw RuntimeException::fromCannotCallCustomFunction(
-                function: $function,
-            );
-        }
-
-        if ($isTyped) {
+        if ($dispatcher !== null) {
             if (!isset($this->renderer)) {
                 throw RuntimeException::fromCannotCallCustomFunctionWithRender();
             }
 
-            return $this->dispatchTypedCallable(
-                arguments: $arguments,
-                metadata: $introspector->getFunction($function),
-            );
+            return $dispatcher($arguments, $this);
         }
 
-        if ($isPhp) {
+        if (\array_key_exists($key, $this->phpFunctions)) {
             /** @var callable-string $callable */
             $callable = $this->phpFunctions[$key]->mappedName ?? $this->phpFunctions[$key]->name;
 
             return \call_user_func_array($callable, $arguments);
+        }
+
+        if ($this->functionPolicy === RuntimeFunctionPolicy::CUSTOM_ONLY) {
+            throw RuntimeException::fromCannotCallCustomFunction(
+                function: $function,
+            );
         }
 
         /** @var callable-string $function */
@@ -172,52 +188,16 @@ class Runtime implements RuntimeInterface
             throw RuntimeException::fromCannotCallCustomFunctionWithRender();
         }
 
-        $introspector = $this->engine->compiler->introspector;
+        $dispatcher = $this->filterDispatchers[\strtolower($filter)] ?? throw RuntimeException::fromUnknownFilterCall(
+            filter: $filter,
+        );
 
-        if (!$introspector->hasFilter($filter)) {
-            throw RuntimeException::fromUnknownFilterCall(
-                filter: $filter,
-            );
-        }
-
-        return $this->dispatchTypedCallable(
-            arguments: [
+        return $dispatcher(
+            [
                 $value,
             ],
-            metadata: $introspector->getFilter($filter),
+            $this,
         );
-    }
-
-    /**
-     * @param mixed[] $arguments
-     */
-    private function dispatchTypedCallable(
-        array $arguments,
-        CallableMetadataInterface $metadata,
-    ): mixed {
-        if ($this->container === null) {
-            throw RuntimeException::fromTypedCallableWithoutContainer();
-        }
-
-        $handler = $this->container->resolve($metadata->className);
-
-        if ($metadata->contextParameterIndex !== null) {
-            $arguments = [
-                ...\array_slice($arguments, 0, $metadata->contextParameterIndex),
-                new RuntimeContext(
-                    runtime: $this,
-                ),
-                ...\array_slice($arguments, $metadata->contextParameterIndex),
-            ];
-        }
-
-        /** @var callable $callable */
-        $callable = [
-            $handler,
-            $metadata->methodName,
-        ];
-
-        return \call_user_func_array($callable, $arguments);
     }
 
     public function propertyAccess(

@@ -112,8 +112,16 @@ class LumiMailTemplateRenderTest extends TestCase
             extension: '.lumi',
             alwaysCompile: true,
         ))->createTemplateRender(
-            container: new Container(),
+            container: $this->makeContainer(),
         );
+    }
+
+    private function makeContainer(): Container
+    {
+        $container = new Container();
+        $container->singleton($container);
+
+        return $container;
     }
 
     public function testRenderSetsRenderedBodyOnReturnedMessage(): void
@@ -210,7 +218,7 @@ class LumiMailTemplateRenderTest extends TestCase
             extension: '.lumi',
             alwaysCompile: false,
         ))->createTemplateRender(
-            container: new Container(),
+            container: $this->makeContainer(),
         );
 
         self::assertInstanceOf(
@@ -227,7 +235,7 @@ class LumiMailTemplateRenderTest extends TestCase
             extension: '.lumi',
             disableErrorReporting: false,
         ))->createTemplateRender(
-            container: new Container(),
+            container: $this->makeContainer(),
         );
 
         self::assertInstanceOf(

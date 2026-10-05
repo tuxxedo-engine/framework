@@ -18,17 +18,13 @@ use Fixture\View\Lumi\Runtime\RecordingFunction;
 use PHPUnit\Framework\TestCase;
 use Support\View\Lumi\Runtime\StubLumiEngine;
 use Support\View\Lumi\Runtime\StubRenderer;
-use Tuxxedo\Container\Container;
-use Tuxxedo\View\Lumi\Compiler\Compiler;
 use Tuxxedo\View\Lumi\Library\Function\PhpFunction;
-use Tuxxedo\View\Lumi\Runtime\Introspector\CallableKind;
-use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadata;
-use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospector;
 use Tuxxedo\View\Lumi\Runtime\Loader;
 use Tuxxedo\View\Lumi\Runtime\Runtime;
 use Tuxxedo\View\Lumi\Runtime\RuntimeContext;
 use Tuxxedo\View\Lumi\Runtime\RuntimeException;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
+use Tuxxedo\View\Lumi\Runtime\RuntimeInterface;
 
 class RuntimeContextTest extends TestCase
 {
@@ -45,38 +41,12 @@ class RuntimeContextTest extends TestCase
         $this->function = new RecordingFunction();
         $this->function->returnValue = 'fn-result';
 
-        $container = new Container();
-        $container->singleton($this->filter);
-        $container->singleton($this->function);
-
-        $engine = new StubLumiEngine();
-        $engine->compiler = Compiler::createWithDefaultProviders(
-            introspector: new RuntimeIntrospector(
-                functions: [
-                    new CallableMetadata(
-                        name: 'recording',
-                        kind: CallableKind::TYPED_ATTRIBUTE,
-                        className: RecordingFunction::class,
-                        methodName: 'run',
-                        wantsContext: true,
-                        contextParameterIndex: 0,
-                    ),
-                ],
-                filters: [
-                    new CallableMetadata(
-                        name: 'recording',
-                        kind: CallableKind::TYPED_ATTRIBUTE,
-                        className: RecordingFilter::class,
-                        methodName: 'record',
-                        wantsContext: true,
-                        contextParameterIndex: 1,
-                    ),
-                ],
-            ),
-        );
+        $filter = $this->filter;
+        $function = $this->function;
 
         $this->runtime = new Runtime(
-            engine: $engine,
+            engine: new StubLumiEngine(),
+            instanceResolver: static fn (string $class): object => new $class(),
             directives: [
                 'lumi.autoescape' => true,
             ],
@@ -86,7 +56,42 @@ class RuntimeContextTest extends TestCase
                 ),
             ],
             functionPolicy: RuntimeFunctionPolicy::CUSTOM_ONLY,
-            container: $container,
+            filterDispatchers: [
+                'recording' => static function (array $arguments, RuntimeInterface $runtime) use ($filter): mixed {
+                    $arguments = [
+                        $arguments[0],
+                        new RuntimeContext(
+                            runtime: $runtime,
+                        ),
+                    ];
+
+                    /** @var callable $callable */
+                    $callable = [
+                        $filter,
+                        'record',
+                    ];
+
+                    return \call_user_func_array($callable, $arguments);
+                },
+            ],
+            functionDispatchers: [
+                'recording' => static function (array $arguments, RuntimeInterface $runtime) use ($function): mixed {
+                    $arguments = [
+                        new RuntimeContext(
+                            runtime: $runtime,
+                        ),
+                        ...$arguments,
+                    ];
+
+                    /** @var callable $callable */
+                    $callable = [
+                        $function,
+                        'run',
+                    ];
+
+                    return \call_user_func_array($callable, $arguments);
+                },
+            ],
         );
 
         $this->runtime->renderer(
@@ -141,7 +146,7 @@ class RuntimeContextTest extends TestCase
         $this->context->directive('lumi.missing');
     }
 
-    public function testHasFilterDelegatesToIntrospector(): void
+    public function testHasFilterConsultsDispatcherTable(): void
     {
         self::assertTrue($this->context->hasFilter('recording'));
         self::assertFalse($this->context->hasFilter('missing'));
@@ -162,7 +167,7 @@ class RuntimeContextTest extends TestCase
         self::assertFalse($this->context->hasFunction('missing'));
     }
 
-    public function testHasFunctionConsultsIntrospector(): void
+    public function testHasFunctionConsultsDispatcherTable(): void
     {
         self::assertTrue($this->context->hasFunction('recording'));
     }

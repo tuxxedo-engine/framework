@@ -112,6 +112,7 @@ class LumiViewRenderTest extends TestCase
     ): Runtime {
         return new Runtime(
             engine: $this->engine,
+            instanceResolver: static fn (string $class): object => new $class(),
             directives: $directives,
             functionPolicy: RuntimeFunctionPolicy::ALLOW_ALL,
         );

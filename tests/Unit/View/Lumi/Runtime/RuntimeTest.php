@@ -21,18 +21,14 @@ use Fixture\View\Lumi\Runtime\RecordingFunction;
 use PHPUnit\Framework\TestCase;
 use Support\View\Lumi\Runtime\StubLumiEngine;
 use Support\View\Lumi\Runtime\StubRenderer;
-use Tuxxedo\Container\Container;
-use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\View\Lumi\Compiler\Compiler;
 use Tuxxedo\View\Lumi\Library\Function\PhpFunction;
 use Tuxxedo\View\Lumi\Library\Function\PhpFunctionInterface;
-use Tuxxedo\View\Lumi\Runtime\Introspector\CallableKind;
-use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadata;
-use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospector;
 use Tuxxedo\View\Lumi\Runtime\Loader;
 use Tuxxedo\View\Lumi\Runtime\Runtime;
+use Tuxxedo\View\Lumi\Runtime\RuntimeContext;
 use Tuxxedo\View\Lumi\Runtime\RuntimeException;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
+use Tuxxedo\View\Lumi\Runtime\RuntimeInterface;
 
 class RuntimeTest extends TestCase
 {
@@ -47,49 +43,56 @@ class RuntimeTest extends TestCase
      * @param array<string, string|int|float|bool|null> $directives
      * @param array<string, PhpFunctionInterface> $phpFunctions
      * @param array<class-string> $instanceCallClasses
+     * @param array<string, \Closure(mixed[], RuntimeInterface): mixed> $filterDispatchers
+     * @param array<string, \Closure(mixed[], RuntimeInterface): mixed> $functionDispatchers
      */
     private function createRuntime(
         RuntimeFunctionPolicy $policy = RuntimeFunctionPolicy::CUSTOM_ONLY,
         array $directives = [],
         array $phpFunctions = [],
         array $instanceCallClasses = [],
-        ?ContainerInterface $container = null,
+        array $filterDispatchers = [],
+        array $functionDispatchers = [],
     ): Runtime {
         return new Runtime(
             engine: $this->engine,
+            instanceResolver: static fn (string $class): object => new $class(),
             directives: $directives,
             phpFunctions: $phpFunctions,
             functionPolicy: $policy,
             instanceCallClasses: $instanceCallClasses,
-            container: $container,
+            filterDispatchers: $filterDispatchers,
+            functionDispatchers: $functionDispatchers,
         );
     }
 
     /**
-     * @param list<CallableMetadata> $filters
-     * @param list<CallableMetadata> $functions
+     * @return \Closure(mixed[], RuntimeInterface): mixed
      */
-    private function installIntrospectorMetadata(
-        array $filters = [],
-        array $functions = [],
-    ): void {
-        $this->engine->compiler = Compiler::createWithDefaultProviders(
-            introspector: new RuntimeIntrospector(
-                functions: $functions,
-                filters: $filters,
-            ),
-        );
-    }
+    private function makeDispatcher(
+        object $handler,
+        string $methodName,
+        ?int $contextIndex = null,
+    ): \Closure {
+        return static function (array $arguments, RuntimeInterface $runtime) use ($handler, $methodName, $contextIndex): mixed {
+            if ($contextIndex !== null) {
+                $arguments = [
+                    ...\array_slice($arguments, 0, $contextIndex),
+                    new RuntimeContext(
+                        runtime: $runtime,
+                    ),
+                    ...\array_slice($arguments, $contextIndex),
+                ];
+            }
 
-    /**
-     * @param list<CallableMetadata> $filters
-     */
-    private function installFilterMetadata(
-        array $filters,
-    ): void {
-        $this->installIntrospectorMetadata(
-            filters: $filters,
-        );
+            /** @var callable $callable */
+            $callable = [
+                $handler,
+                $methodName,
+            ];
+
+            return \call_user_func_array($callable, $arguments);
+        };
     }
 
     private function attachRenderer(
@@ -131,6 +134,79 @@ class RuntimeTest extends TestCase
         );
 
         self::assertArrayHasKey('uppercase', $runtime->phpFunctions);
+    }
+
+    public function testConstructorExposesInstancesTable(): void
+    {
+        $handler = new RecordingFilter();
+        $runtime = new Runtime(
+            engine: $this->engine,
+            instanceResolver: static fn (string $class): object => new $class(),
+            instances: [
+                RecordingFilter::class => $handler,
+            ],
+        );
+
+        self::assertSame($handler, $runtime->instances[RecordingFilter::class]);
+    }
+
+    public function testResolveInstanceReturnsCachedInstanceWithoutInvokingResolver(): void
+    {
+        $handler = new RecordingFilter();
+        $invocations = 0;
+
+        $runtime = new Runtime(
+            engine: $this->engine,
+            instanceResolver: static function (string $class) use (&$invocations): object {
+                ++$invocations;
+
+                return new $class();
+            },
+            instances: [
+                RecordingFilter::class => $handler,
+            ],
+        );
+
+        self::assertSame($handler, $runtime->resolveInstance(RecordingFilter::class));
+        self::assertSame(0, $invocations);
+    }
+
+    public function testResolveInstanceInvokesResolverAndCachesResult(): void
+    {
+        $invocations = 0;
+
+        $runtime = new Runtime(
+            engine: $this->engine,
+            instanceResolver: static function (string $class) use (&$invocations): object {
+                ++$invocations;
+
+                return new $class();
+            },
+        );
+
+        $first = $runtime->resolveInstance(RecordingFilter::class);
+        $second = $runtime->resolveInstance(RecordingFilter::class);
+
+        self::assertInstanceOf(RecordingFilter::class, $first);
+        self::assertSame($first, $second);
+        self::assertSame(1, $invocations);
+    }
+
+    public function testConstructorLowercasesDispatcherKeys(): void
+    {
+        $filter = new RecordingFilter();
+
+        $runtime = $this->createRuntime(
+            filterDispatchers: [
+                'Recording' => $this->makeDispatcher(
+                    handler: $filter,
+                    methodName: 'record',
+                    contextIndex: 1,
+                ),
+            ],
+        );
+
+        self::assertArrayHasKey('recording', $runtime->filterDispatchers);
     }
 
     public function testRendererSetterStoresRenderer(): void
@@ -228,7 +304,12 @@ class RuntimeTest extends TestCase
 
         self::expectException(RuntimeException::class);
 
-        $runtime->functionCall('strtoupper', ['hello']);
+        $runtime->functionCall(
+            'strtoupper',
+            [
+                'hello',
+            ],
+        );
     }
 
     public function testFunctionCallThrowsForUnknownCustomFunctionUnderCustomOnlyPolicy(): void
@@ -237,7 +318,12 @@ class RuntimeTest extends TestCase
 
         self::expectException(RuntimeException::class);
 
-        $runtime->functionCall('strtoupper', ['hello']);
+        $runtime->functionCall(
+            'strtoupper',
+            [
+                'hello',
+            ],
+        );
     }
 
     public function testFunctionCallInvokesPhpFunctionWithoutRenderer(): void
@@ -251,7 +337,15 @@ class RuntimeTest extends TestCase
             ],
         );
 
-        self::assertSame('HELLO', $runtime->functionCall('uppercase', ['hello']));
+        self::assertSame(
+            'HELLO',
+            $runtime->functionCall(
+                'uppercase',
+                [
+                    'hello',
+                ],
+            ),
+        );
     }
 
     public function testFunctionCallResolvesPhpFunctionCaseInsensitively(): void
@@ -265,7 +359,15 @@ class RuntimeTest extends TestCase
             ],
         );
 
-        self::assertSame('HELLO', $runtime->functionCall('UPPERCASE', ['hello']));
+        self::assertSame(
+            'HELLO',
+            $runtime->functionCall(
+                'UPPERCASE',
+                [
+                    'hello',
+                ],
+            ),
+        );
     }
 
     public function testFunctionCallDispatchesTypedFunction(): void
@@ -273,52 +375,48 @@ class RuntimeTest extends TestCase
         $function = new RecordingFunction();
         $function->returnValue = 'typed-result';
 
-        $container = new Container();
-        $container->singleton($function);
-
-        $this->installIntrospectorMetadata(
-            functions: [
-                new CallableMetadata(
-                    name: 'recording',
-                    kind: CallableKind::TYPED_ATTRIBUTE,
-                    className: RecordingFunction::class,
+        $runtime = $this->createRuntime(
+            functionDispatchers: [
+                'recording' => $this->makeDispatcher(
+                    handler: $function,
                     methodName: 'run',
-                    wantsContext: true,
-                    contextParameterIndex: 0,
+                    contextIndex: 0,
                 ),
             ],
         );
-
-        $runtime = $this->createRuntime(
-            container: $container,
-        );
         $this->attachRenderer($runtime);
 
-        self::assertSame('typed-result', $runtime->functionCall('recording', ['arg']));
-        self::assertSame(['arg'], $function->lastArguments);
+        self::assertSame(
+            'typed-result',
+            $runtime->functionCall(
+                'recording',
+                [
+                    'arg',
+                ],
+            ),
+        );
+
+        self::assertSame(
+            [
+                'arg',
+            ],
+            $function->lastArguments,
+        );
         self::assertNotNull($function->lastContext);
     }
 
     public function testFunctionCallThrowsWhenRendererNotSetForTypedFunction(): void
     {
-        $container = new Container();
-        $container->singleton(new RecordingFunction());
-
-        $this->installIntrospectorMetadata(
-            functions: [
-                new CallableMetadata(
-                    name: 'recording',
-                    kind: CallableKind::TYPED_ATTRIBUTE,
-                    className: RecordingFunction::class,
-                    methodName: 'run',
-                    wantsContext: true,
-                    contextParameterIndex: 0,
-                ),
-            ],
-        );
+        $function = new RecordingFunction();
 
         $runtime = $this->createRuntime(
-            container: $container,
+            functionDispatchers: [
+                'recording' => $this->makeDispatcher(
+                    handler: $function,
+                    methodName: 'run',
+                    contextIndex: 0,
+                ),
+            ],
         );
 
         self::expectException(RuntimeException::class);
@@ -332,7 +430,15 @@ class RuntimeTest extends TestCase
             policy: RuntimeFunctionPolicy::ALLOW_ALL,
         );
 
-        self::assertSame('HELLO', $runtime->functionCall('strtoupper', ['hello']));
+        self::assertSame(
+            'HELLO',
+            $runtime->functionCall(
+                'strtoupper',
+                [
+                    'hello',
+                ],
+            ),
+        );
     }
 
     public function testInstanceCallReturnsObjectByDefault(): void
@@ -407,20 +513,17 @@ class RuntimeTest extends TestCase
 
     public function testFilterThrowsWhenRendererNotSet(): void
     {
-        $this->installFilterMetadata(
-            filters: [
-                new CallableMetadata(
-                    name: 'recording',
-                    kind: CallableKind::TYPED_ATTRIBUTE,
-                    className: RecordingFilter::class,
+        $filter = new RecordingFilter();
+
+        $runtime = $this->createRuntime(
+            filterDispatchers: [
+                'recording' => $this->makeDispatcher(
+                    handler: $filter,
                     methodName: 'record',
-                    wantsContext: true,
-                    contextParameterIndex: 1,
+                    contextIndex: 1,
                 ),
             ],
         );
-
-        $runtime = $this->createRuntime();
 
         self::expectException(RuntimeException::class);
 
@@ -432,24 +535,14 @@ class RuntimeTest extends TestCase
         $filter = new RecordingFilter();
         $filter->returnValue = 'FILTERED';
 
-        $container = new Container();
-        $container->singleton($filter);
-
-        $this->installFilterMetadata(
-            filters: [
-                new CallableMetadata(
-                    name: 'recording',
-                    kind: CallableKind::TYPED_ATTRIBUTE,
-                    className: RecordingFilter::class,
+        $runtime = $this->createRuntime(
+            filterDispatchers: [
+                'recording' => $this->makeDispatcher(
+                    handler: $filter,
                     methodName: 'record',
-                    wantsContext: true,
-                    contextParameterIndex: 1,
+                    contextIndex: 1,
                 ),
             ],
-        );
-
-        $runtime = $this->createRuntime(
-            container: $container,
         );
         $this->attachRenderer($runtime);
 
@@ -462,53 +555,20 @@ class RuntimeTest extends TestCase
     {
         $filter = new ContextFirstFilter();
 
-        $container = new Container();
-        $container->singleton($filter);
-
-        $this->installFilterMetadata(
-            filters: [
-                new CallableMetadata(
-                    name: 'context_first',
-                    kind: CallableKind::TYPED_ATTRIBUTE,
-                    className: ContextFirstFilter::class,
+        $runtime = $this->createRuntime(
+            filterDispatchers: [
+                'context_first' => $this->makeDispatcher(
+                    handler: $filter,
                     methodName: 'run',
-                    wantsContext: true,
-                    contextParameterIndex: 0,
+                    contextIndex: 0,
                 ),
             ],
-        );
-
-        $runtime = $this->createRuntime(
-            container: $container,
         );
         $this->attachRenderer($runtime);
 
         self::assertSame('hello', $runtime->filter('hello', 'context_first'));
         self::assertSame('hello', $filter->lastValue);
         self::assertNotNull($filter->lastContext);
-    }
-
-    public function testFilterThrowsWhenContainerMissing(): void
-    {
-        $this->installFilterMetadata(
-            filters: [
-                new CallableMetadata(
-                    name: 'recording',
-                    kind: CallableKind::TYPED_ATTRIBUTE,
-                    className: RecordingFilter::class,
-                    methodName: 'record',
-                    wantsContext: true,
-                    contextParameterIndex: 1,
-                ),
-            ],
-        );
-
-        $runtime = $this->createRuntime();
-        $this->attachRenderer($runtime);
-
-        self::expectException(RuntimeException::class);
-
-        $runtime->filter('value', 'recording');
     }
 
     public function testPropertyAccessReturnsObject(): void
@@ -638,14 +698,29 @@ class RuntimeTest extends TestCase
         $renderer->output = 'rendered-layout';
 
         \ob_start();
-        $runtime->layout('layouts/base', ['title' => 'home']);
+        $runtime->layout(
+            'layouts/base',
+            [
+                'title' => 'home',
+            ],
+        );
         $output = \ob_get_clean();
 
         self::assertSame('rendered-layout', $output);
         self::assertCount(1, $renderer->renderCalls);
         self::assertSame('layouts/base', $renderer->renderCalls[0]['view']->name);
-        self::assertSame(['title' => 'home'], $renderer->renderCalls[0]['view']->scope);
-        self::assertSame(['lumi.autoescape' => true], $renderer->renderCalls[0]['directives']);
+        self::assertSame(
+            [
+                'title' => 'home',
+            ],
+            $renderer->renderCalls[0]['view']->scope,
+        );
+        self::assertSame(
+            [
+                'lumi.autoescape' => true,
+            ],
+            $renderer->renderCalls[0]['directives'],
+        );
     }
 
     public function testIncludeThrowsForNonStringFile(): void
@@ -684,7 +759,12 @@ class RuntimeTest extends TestCase
 
         try {
             \ob_start();
-            $runtime->include($name, ['extra' => 1]);
+            $runtime->include(
+                $name,
+                [
+                    'extra' => 1,
+                ],
+            );
             $output = \ob_get_clean();
 
             self::assertSame('<rendered/>', $output);

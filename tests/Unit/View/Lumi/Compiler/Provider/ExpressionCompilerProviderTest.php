@@ -21,7 +21,6 @@ use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Compiler\CompilerStateFlag;
 use Tuxxedo\View\Lumi\Compiler\Provider\ExpressionCompilerProvider;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
-use Tuxxedo\View\Lumi\Runtime\Introspector\CallableKind;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadata;
 use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospector;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
@@ -59,7 +58,6 @@ class ExpressionCompilerProviderTest extends TestCase
                 filters: [
                     new CallableMetadata(
                         name: '__noise__',
-                        kind: CallableKind::TYPED_ATTRIBUTE,
                         className: \stdClass::class,
                         methodName: 'noise',
                         wantsContext: false,
@@ -2336,7 +2334,6 @@ class ExpressionCompilerProviderTest extends TestCase
                 filters: [
                     new CallableMetadata(
                         name: 'upper',
-                        kind: CallableKind::TYPED_ATTRIBUTE,
                         className: \stdClass::class,
                         methodName: 'upper',
                         wantsContext: false,
@@ -2358,7 +2355,82 @@ class ExpressionCompilerProviderTest extends TestCase
         );
 
         self::assertSame(
-            '$this->filter($__lumiVariables[\'name\'], \'upper\')',
+            '$this->resolveInstance(\\stdClass::class)->upper($__lumiVariables[\'name\'])',
+            $output,
+        );
+    }
+
+    public function testCompileFilterOrBitwiseOrWithKnownContextFirstFilterEmitsDirectDispatch(): void
+    {
+        $compiler = Compiler::createWithoutDefaultProviders(
+            providers: [
+                new ExpressionCompilerProvider(),
+            ],
+            introspector: new RuntimeIntrospector(
+                filters: [
+                    new CallableMetadata(
+                        name: 'ctx_first',
+                        className: \stdClass::class,
+                        methodName: 'run',
+                        wantsContext: true,
+                        contextParameterIndex: 0,
+                    ),
+                ],
+            ),
+        );
+        $compiler->state->enter(NodeScope::STATEMENT);
+
+        $output = $compiler->compileExpression(
+            new FilterOrBitwiseOrNode(
+                left: new IdentifierNode(
+                    name: 'name',
+                ),
+                right: new IdentifierNode(
+                    name: 'ctx_first',
+                ),
+            ),
+        );
+
+        self::assertSame(
+            '$this->resolveInstance(\\stdClass::class)->run(new \\Tuxxedo\\View\\Lumi\\Runtime\\RuntimeContext(runtime: $this), $__lumiVariables[\'name\'])',
+            $output,
+        );
+    }
+
+    public function testCompileFilterOrBitwiseOrWithKnownContextLastFilterEmitsDirectDispatch(): void
+    {
+        $compiler = Compiler::createWithoutDefaultProviders(
+            providers: [
+                new ExpressionCompilerProvider(),
+            ],
+            introspector: new RuntimeIntrospector(
+                filters: [
+                    new CallableMetadata(
+                        name: 'ctx_last',
+                        className: \stdClass::class,
+                        methodName: 'record',
+                        wantsContext: true,
+                        contextParameterIndex: 1,
+                    ),
+                ],
+            ),
+        );
+
+        $compiler->state->enter(NodeScope::STATEMENT);
+
+        $output = $compiler->compileExpression(
+            new FilterOrBitwiseOrNode(
+                left: new IdentifierNode(
+                    name: 'name',
+                ),
+                right: new IdentifierNode(
+                    name: 'ctx_last',
+                ),
+            ),
+        );
+
+        self::assertSame(
+            '$this->resolveInstance(\\stdClass::class)->record($__lumiVariables[\'name\'], new \\Tuxxedo\\View\\Lumi\\Runtime\\RuntimeContext(runtime: $this))',
             $output,
         );
     }
@@ -2613,14 +2685,12 @@ class ExpressionCompilerProviderTest extends TestCase
                 filters: [
                     new CallableMetadata(
                         name: 'upper',
-                        kind: CallableKind::TYPED_ATTRIBUTE,
                         className: \stdClass::class,
                         methodName: 'upper',
                         wantsContext: false,
                     ),
                     new CallableMetadata(
                         name: 'trim',
-                        kind: CallableKind::TYPED_ATTRIBUTE,
                         className: \stdClass::class,
                         methodName: 'trim',
                         wantsContext: false,
@@ -2647,7 +2717,7 @@ class ExpressionCompilerProviderTest extends TestCase
         );
 
         self::assertSame(
-            '$this->filter($this->filter($__lumiVariables[\'name\'], \'upper\'), \'trim\')',
+            '$this->resolveInstance(\\stdClass::class)->trim($this->resolveInstance(\\stdClass::class)->upper($__lumiVariables[\'name\']))',
             $output,
         );
     }

@@ -19,10 +19,6 @@ interface CallableMetadataInterface
         get;
     }
 
-    public CallableKind $kind {
-        get;
-    }
-
     /**
      * @var class-string
      */

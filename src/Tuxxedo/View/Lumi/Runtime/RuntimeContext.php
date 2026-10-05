@@ -44,7 +44,7 @@ readonly class RuntimeContext implements RuntimeContextInterface
     public function hasFilter(
         string $filter,
     ): bool {
-        return $this->runtime->engine->compiler->introspector->hasFilter($filter);
+        return isset($this->runtime->filterDispatchers[\strtolower($filter)]);
     }
 
     public function callFilter(
@@ -57,8 +57,10 @@ readonly class RuntimeContext implements RuntimeContextInterface
     public function hasFunction(
         string $function,
     ): bool {
-        return $this->runtime->engine->compiler->introspector->hasFunction($function)
-            || \array_key_exists(\strtolower($function), $this->runtime->phpFunctions);
+        $key = \strtolower($function);
+
+        return isset($this->runtime->functionDispatchers[$key]) ||
+            \array_key_exists($key, $this->runtime->phpFunctions);
     }
 
     /**
