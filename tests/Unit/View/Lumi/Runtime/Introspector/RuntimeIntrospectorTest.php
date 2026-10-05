@@ -199,7 +199,7 @@ class RuntimeIntrospectorTest extends TestCase
     ): CallableMetadata {
         return new CallableMetadata(
             name: $name,
-            kind: CallableKind::LEGACY_INTERFACE,
+            kind: CallableKind::TYPED_ATTRIBUTE,
             className: \stdClass::class,
             methodName: 'call',
             wantsContext: true,

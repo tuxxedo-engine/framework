@@ -342,8 +342,12 @@ readonly class LumiController
             RuntimeFunctionPolicy::DISALLOW_ALL => $configurator->disallowAllFunctions(),
             RuntimeFunctionPolicy::CUSTOM_ONLY => (
                 function () use ($configurator): void {
-                    foreach ($this->viewRender->runtime->functions as $function) {
-                        $configurator->defineFunction($function);
+                    foreach ($this->viewRender->runtime->phpFunctions as $function) {
+                        $configurator->addFunction(
+                            name: $function->name,
+                            mappedName: $function->mappedName,
+                            aliases: $function->aliases,
+                        );
                     }
                 }
             )(),

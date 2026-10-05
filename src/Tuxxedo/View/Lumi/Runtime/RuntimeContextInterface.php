@@ -41,7 +41,6 @@ interface RuntimeContextInterface
     ): bool;
 
     /**
-     * @param callable-string $function
      * @param mixed[] $arguments
      */
     public function callFunction(

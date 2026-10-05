@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime;
 
-use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
+use Tuxxedo\View\Lumi\Library\Function\PhpFunctionInterface;
 use Tuxxedo\View\Lumi\LumiEngineInterface;
 use Tuxxedo\View\Lumi\LumiViewRenderInterface;
 
@@ -27,9 +27,9 @@ interface RuntimeInterface
     }
 
     /**
-     * @var array<string, FunctionInterface>
+     * @var array<string, PhpFunctionInterface>
      */
-    public array $functions {
+    public array $phpFunctions {
         get;
     }
 
@@ -79,7 +79,6 @@ interface RuntimeInterface
     ): void;
 
     /**
-     * @param callable-string $function
      * @param mixed[] $arguments
      *
      * @throws RuntimeException

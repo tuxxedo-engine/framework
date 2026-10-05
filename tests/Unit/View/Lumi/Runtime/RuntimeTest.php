@@ -24,7 +24,8 @@ use Support\View\Lumi\Runtime\StubRenderer;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\View\Lumi\Compiler\Compiler;
-use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
+use Tuxxedo\View\Lumi\Library\Function\PhpFunction;
+use Tuxxedo\View\Lumi\Library\Function\PhpFunctionInterface;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableKind;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadata;
 use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospector;
@@ -44,23 +45,39 @@ class RuntimeTest extends TestCase
 
     /**
      * @param array<string, string|int|float|bool|null> $directives
-     * @param array<string, FunctionInterface> $functions
+     * @param array<string, PhpFunctionInterface> $phpFunctions
      * @param array<class-string> $instanceCallClasses
      */
     private function createRuntime(
         RuntimeFunctionPolicy $policy = RuntimeFunctionPolicy::CUSTOM_ONLY,
         array $directives = [],
-        array $functions = [],
+        array $phpFunctions = [],
         array $instanceCallClasses = [],
         ?ContainerInterface $container = null,
     ): Runtime {
         return new Runtime(
             engine: $this->engine,
             directives: $directives,
-            functions: $functions,
+            phpFunctions: $phpFunctions,
             functionPolicy: $policy,
             instanceCallClasses: $instanceCallClasses,
             container: $container,
+        );
+    }
+
+    /**
+     * @param list<CallableMetadata> $filters
+     * @param list<CallableMetadata> $functions
+     */
+    private function installIntrospectorMetadata(
+        array $filters = [],
+        array $functions = [],
+    ): void {
+        $this->engine->compiler = Compiler::createWithDefaultProviders(
+            introspector: new RuntimeIntrospector(
+                functions: $functions,
+                filters: $filters,
+            ),
         );
     }
 
@@ -70,10 +87,8 @@ class RuntimeTest extends TestCase
     private function installFilterMetadata(
         array $filters,
     ): void {
-        $this->engine->compiler = Compiler::createWithDefaultProviders(
-            introspector: new RuntimeIntrospector(
-                filters: $filters,
-            ),
+        $this->installIntrospectorMetadata(
+            filters: $filters,
         );
     }
 
@@ -105,15 +120,17 @@ class RuntimeTest extends TestCase
         self::assertSame([], $runtime->directives);
     }
 
-    public function testConstructorLowercasesFunctionKeys(): void
+    public function testConstructorLowercasesPhpFunctionKeys(): void
     {
         $runtime = $this->createRuntime(
-            functions: [
-                'UpperCase' => new RecordingFunction(),
+            phpFunctions: [
+                'UpperCase' => new PhpFunction(
+                    name: 'UpperCase',
+                ),
             ],
         );
 
-        self::assertArrayHasKey('uppercase', $runtime->functions);
+        self::assertArrayHasKey('uppercase', $runtime->phpFunctions);
     }
 
     public function testRendererSetterStoresRenderer(): void
@@ -223,38 +240,90 @@ class RuntimeTest extends TestCase
         $runtime->functionCall('strtoupper', ['hello']);
     }
 
-    public function testFunctionCallThrowsWhenRendererNotSetForCustomFunction(): void
+    public function testFunctionCallInvokesPhpFunctionWithoutRenderer(): void
     {
         $runtime = $this->createRuntime(
-            functions: [
-                'strtoupper' => new RecordingFunction(),
+            phpFunctions: [
+                'uppercase' => new PhpFunction(
+                    name: 'uppercase',
+                    mappedName: 'strtoupper',
+                ),
             ],
+        );
+
+        self::assertSame('HELLO', $runtime->functionCall('uppercase', ['hello']));
+    }
+
+    public function testFunctionCallResolvesPhpFunctionCaseInsensitively(): void
+    {
+        $runtime = $this->createRuntime(
+            phpFunctions: [
+                'uppercase' => new PhpFunction(
+                    name: 'uppercase',
+                    mappedName: 'strtoupper',
+                ),
+            ],
+        );
+
+        self::assertSame('HELLO', $runtime->functionCall('UPPERCASE', ['hello']));
+    }
+
+    public function testFunctionCallDispatchesTypedFunction(): void
+    {
+        $function = new RecordingFunction();
+        $function->returnValue = 'typed-result';
+
+        $container = new Container();
+        $container->singleton($function);
+
+        $this->installIntrospectorMetadata(
+            functions: [
+                new CallableMetadata(
+                    name: 'recording',
+                    kind: CallableKind::TYPED_ATTRIBUTE,
+                    className: RecordingFunction::class,
+                    methodName: 'run',
+                    wantsContext: true,
+                    contextParameterIndex: 0,
+                ),
+            ],
+        );
+
+        $runtime = $this->createRuntime(
+            container: $container,
+        );
+        $this->attachRenderer($runtime);
+
+        self::assertSame('typed-result', $runtime->functionCall('recording', ['arg']));
+        self::assertSame(['arg'], $function->lastArguments);
+        self::assertNotNull($function->lastContext);
+    }
+
+    public function testFunctionCallThrowsWhenRendererNotSetForTypedFunction(): void
+    {
+        $container = new Container();
+        $container->singleton(new RecordingFunction());
+
+        $this->installIntrospectorMetadata(
+            functions: [
+                new CallableMetadata(
+                    name: 'recording',
+                    kind: CallableKind::TYPED_ATTRIBUTE,
+                    className: RecordingFunction::class,
+                    methodName: 'run',
+                    wantsContext: true,
+                    contextParameterIndex: 0,
+                ),
+            ],
+        );
+
+        $runtime = $this->createRuntime(
+            container: $container,
         );
 
         self::expectException(RuntimeException::class);
 
-        $runtime->functionCall('strtoupper');
-    }
-
-    public function testFunctionCallInvokesCustomFunctionWithRendererSet(): void
-    {
-        $function = new RecordingFunction(
-            returnValue: 'custom-result',
-        );
-
-        $runtime = $this->createRuntime(
-            functions: [
-                'strtoupper' => $function,
-            ],
-        );
-
-        $this->attachRenderer($runtime);
-
-        $result = $runtime->functionCall('strtoupper', ['arg']);
-
-        self::assertSame('custom-result', $result);
-        self::assertSame(['arg'], $function->lastArguments);
-        self::assertNotNull($function->lastContext);
+        $runtime->functionCall('recording');
     }
 
     public function testFunctionCallFallsBackToGlobalFunctionUnderAllowAllPolicy(): void

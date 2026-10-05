@@ -57,7 +57,8 @@ readonly class RuntimeContext implements RuntimeContextInterface
     public function hasFunction(
         string $function,
     ): bool {
-        return \array_key_exists(\strtolower($function), $this->runtime->functions);
+        return $this->runtime->engine->compiler->introspector->hasFunction($function)
+            || \array_key_exists(\strtolower($function), $this->runtime->phpFunctions);
     }
 
     /**

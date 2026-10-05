@@ -45,12 +45,12 @@ $builder = ApplicationConfigurator::createFromConfigDirectory(
     ->withDefaultRouter($appDirectory . '/Controllers')
     ->withDefaultLumi(
         static fn (LumiConfiguratorInterface $lumi): LumiConfiguratorInterface => $lumi
-            ->allowFunction('php_sapi_name')
-            ->allowFunction('php_uname')
-            ->allowFunction('printf')
-            ->allowFunction('acos')
-            ->allowFunction('strval')
-            ->allowFunction('is_a')
+            ->addFunction('php_sapi_name')
+            ->addFunction('php_uname')
+            ->addFunction('printf')
+            ->addFunction('acos')
+            ->addFunction('strval')
+            ->addFunction('is_a')
             ->disableErrorReporting(),
     )
     ->withDefaultConnectionManager()

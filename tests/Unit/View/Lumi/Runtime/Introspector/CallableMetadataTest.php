@@ -23,7 +23,7 @@ class CallableMetadataTest extends TestCase
     {
         $metadata = new CallableMetadata(
             name: 'date',
-            kind: CallableKind::LEGACY_INTERFACE,
+            kind: CallableKind::TYPED_ATTRIBUTE,
             className: \stdClass::class,
             methodName: 'call',
             wantsContext: true,
@@ -34,7 +34,7 @@ class CallableMetadataTest extends TestCase
         );
 
         self::assertSame('date', $metadata->name);
-        self::assertSame(CallableKind::LEGACY_INTERFACE, $metadata->kind);
+        self::assertSame(CallableKind::TYPED_ATTRIBUTE, $metadata->kind);
         self::assertSame(\stdClass::class, $metadata->className);
         self::assertSame('call', $metadata->methodName);
         self::assertTrue($metadata->wantsContext);
@@ -51,7 +51,7 @@ class CallableMetadataTest extends TestCase
     {
         $metadata = new CallableMetadata(
             name: 'date',
-            kind: CallableKind::LEGACY_INTERFACE,
+            kind: CallableKind::TYPED_ATTRIBUTE,
             className: \stdClass::class,
             methodName: 'call',
             wantsContext: true,

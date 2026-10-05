@@ -15,9 +15,35 @@ namespace Tuxxedo\View\Lumi\Runtime\Introspector;
 
 use Tuxxedo\View\Lumi\Library\Attribute\Context;
 use Tuxxedo\View\Lumi\Library\Attribute\LumiFilter;
+use Tuxxedo\View\Lumi\Library\Attribute\LumiFunction;
 
 class CallableDiscoverer implements CallableDiscovererInterface
 {
+    public function discoverFunctions(
+        string $className,
+    ): array {
+        $metadata = [];
+
+        foreach ((new \ReflectionClass($className))->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
+            foreach ($method->getAttributes(LumiFunction::class) as $attribute) {
+                $instance = $attribute->newInstance();
+                $index = self::findContextParameterIndex($method);
+
+                $metadata[] = new CallableMetadata(
+                    name: $instance->name,
+                    kind: CallableKind::TYPED_ATTRIBUTE,
+                    className: $className,
+                    methodName: $method->getName(),
+                    wantsContext: $index !== null,
+                    contextParameterIndex: $index,
+                    aliases: \array_values($instance->aliases),
+                );
+            }
+        }
+
+        return $metadata;
+    }
+
     public function discoverFilters(
         string $className,
     ): array {

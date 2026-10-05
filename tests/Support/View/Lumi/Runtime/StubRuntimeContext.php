@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Support\View\Lumi\Runtime;
 
-use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
 use Tuxxedo\View\Lumi\Runtime\RuntimeContextInterface;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
 
@@ -27,35 +26,22 @@ class StubRuntimeContext implements RuntimeContextInterface
     private array $directives;
 
     /**
-     * @var array<string, FunctionInterface>
-     */
-    private array $functions;
-
-    /**
      * @var string[]
      */
     private array $blocks;
 
     /**
      * @param array<string, string|int|float|bool|null> $directives
-     * @param FunctionInterface[] $functions
      * @param string[] $blocks
      */
     public function __construct(
         array $directives = [],
-        array $functions = [],
         array $blocks = [],
         RuntimeFunctionPolicy $functionPolicy = RuntimeFunctionPolicy::ALLOW_ALL,
     ) {
         $this->directives = $directives;
         $this->functionPolicy = $functionPolicy;
         $this->blocks = $blocks;
-
-        $this->functions = [];
-
-        foreach ($functions as $function) {
-            $this->functions[\strtolower($function->name)] = $function;
-        }
     }
 
     public function hasDirective(
@@ -86,20 +72,14 @@ class StubRuntimeContext implements RuntimeContextInterface
     public function hasFunction(
         string $function,
     ): bool {
-        return \array_key_exists(\strtolower($function), $this->functions);
+        return false;
     }
 
     public function callFunction(
         string $function,
         array $arguments = [],
     ): mixed {
-        $instance = $this->functions[\strtolower($function)] ?? null;
-
-        if ($instance === null) {
-            return null;
-        }
-
-        return $instance->call($arguments, fn (): static => $this);
+        return null;
     }
 
     public function hasBlock(

@@ -13,10 +13,11 @@ declare(strict_types=1);
 
 namespace Fixture\View\Lumi\Runtime;
 
-use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
+use Tuxxedo\View\Lumi\Library\Attribute\Context;
+use Tuxxedo\View\Lumi\Library\Attribute\LumiFunction;
 use Tuxxedo\View\Lumi\Runtime\RuntimeContextInterface;
 
-class RecordingFunction implements FunctionInterface
+class RecordingFunction
 {
     /**
      * @var mixed[]
@@ -24,23 +25,16 @@ class RecordingFunction implements FunctionInterface
     public array $lastArguments = [];
 
     public ?RuntimeContextInterface $lastContext = null;
+    public mixed $returnValue = null;
 
-    /**
-     * @param string[] $aliases
-     */
-    public function __construct(
-        public string $name = 'noop',
-        public array $aliases = [],
-        public mixed $returnValue = null,
-    ) {
-    }
-
-    public function call(
-        array $arguments,
-        \Closure $context,
+    #[LumiFunction('recording', aliases: ['recorder'])]
+    public function run(
+        #[Context]
+        RuntimeContextInterface $context,
+        mixed ...$arguments,
     ): mixed {
+        $this->lastContext = $context;
         $this->lastArguments = $arguments;
-        $this->lastContext = $context();
 
         return $this->returnValue;
     }

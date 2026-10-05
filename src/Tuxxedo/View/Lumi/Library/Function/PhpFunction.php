@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Library\Function;
 
-class PhpFunction implements FunctionInterface
+class PhpFunction implements PhpFunctionInterface
 {
     /**
      * @param string[] $aliases
@@ -22,17 +22,7 @@ class PhpFunction implements FunctionInterface
     public function __construct(
         public readonly string $name,
         public array $aliases = [],
-        private readonly ?string $mappedName = null,
+        public readonly ?string $mappedName = null,
     ) {
-    }
-
-    public function call(
-        array $arguments,
-        \Closure $context,
-    ): mixed {
-        /** @var callable-string $function */
-        $function = $this->mappedName ?? $this->name;
-
-        return \call_user_func_array($function, $arguments);
     }
 }

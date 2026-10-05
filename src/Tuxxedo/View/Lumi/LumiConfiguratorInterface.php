@@ -14,10 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi;
 
 use Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface;
-use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
-use Tuxxedo\View\Lumi\Library\Function\FunctionProviderInterface;
-use Tuxxedo\View\Lumi\Library\LibraryDiscoveryInterface;
-use Tuxxedo\View\Lumi\Library\LibraryProviderInterface;
+use Tuxxedo\View\Lumi\Library\Function\PhpFunctionInterface;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
 use Tuxxedo\View\Lumi\Runtime\LoaderInterface;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
@@ -65,6 +62,13 @@ interface LumiConfiguratorInterface
         get;
     }
 
+    /**
+     * @var list<class-string>
+     */
+    public array $functionClasses {
+        get;
+    }
+
     public ?LoaderInterface $loader {
         get;
     }
@@ -84,20 +88,13 @@ interface LumiConfiguratorInterface
     }
 
     /**
-     * @var array<string, FunctionInterface>
+     * @var array<string, PhpFunctionInterface>
      */
-    public array $functions {
+    public array $phpFunctions {
         get;
     }
 
     public RuntimeFunctionPolicy $functionPolicy {
-        get;
-    }
-
-    /**
-     * @var FunctionProviderInterface[]
-     */
-    public array $functionProviders {
         get;
     }
 
@@ -136,16 +133,18 @@ interface LumiConfiguratorInterface
         string $directory,
     ): self;
 
-    public function allowFunction(
+    /**
+     * @param string[] $aliases
+     * @param callable-string|null $mappedName
+     */
+    public function addFunction(
         string $name,
+        ?string $mappedName = null,
+        array $aliases = [],
     ): self;
 
     public function allowAllFunctions(): self;
     public function disallowAllFunctions(): self;
-
-    public function defineFunction(
-        FunctionInterface $handler,
-    ): self;
 
     /**
      * @param class-string $className
@@ -154,12 +153,11 @@ interface LumiConfiguratorInterface
         string $className,
     ): self;
 
-    public function withFunctionProvider(
-        FunctionProviderInterface $provider,
-    ): self;
-
-    public function withLibrary(
-        LibraryProviderInterface|LibraryDiscoveryInterface $library,
+    /**
+     * @param class-string $className
+     */
+    public function withFunctionClass(
+        string $className,
     ): self;
 
     public function withoutStandardLibrary(): self;

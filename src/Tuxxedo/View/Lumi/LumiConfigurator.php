@@ -14,28 +14,20 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi;
 
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Reflection\MethodReflector;
 use Tuxxedo\View\Lumi\Compiler\Compiler;
 use Tuxxedo\View\Lumi\Compiler\CompilerState;
 use Tuxxedo\View\Lumi\Config\LumiConfigInterface;
 use Tuxxedo\View\Lumi\Highlight\Highlighter;
 use Tuxxedo\View\Lumi\Highlight\Theme\ThemeFactory;
 use Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface;
-use Tuxxedo\View\Lumi\Library\Attribute\LumiFunction;
 use Tuxxedo\View\Lumi\Library\Directive\DefaultDirectives;
 use Tuxxedo\View\Lumi\Library\Directive\MutableDirectives;
-use Tuxxedo\View\Lumi\Library\Function\CustomFunction;
-use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
-use Tuxxedo\View\Lumi\Library\Function\FunctionProviderInterface;
 use Tuxxedo\View\Lumi\Library\Function\PhpFunction;
-use Tuxxedo\View\Lumi\Library\LibraryDiscoveryInterface;
-use Tuxxedo\View\Lumi\Library\LibraryProviderInterface;
+use Tuxxedo\View\Lumi\Library\Function\PhpFunctionInterface;
 use Tuxxedo\View\Lumi\Library\Standard\StandardLibrary;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerPipeline;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableDiscoverer;
-use Tuxxedo\View\Lumi\Runtime\Introspector\CallableKind;
-use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadata;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadataInterface;
 use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospector;
 use Tuxxedo\View\Lumi\Runtime\Loader;
@@ -58,10 +50,17 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public private(set) array $directives = [];
     public private(set) array $defaultDirectives = [];
 
-    public private(set) array $functions = [];
+    /**
+     * @var array<string, PhpFunctionInterface>
+     */
+    public private(set) array $phpFunctions = [];
 
     public private(set) RuntimeFunctionPolicy $functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY;
-    public private(set) array $functionProviders = [];
+
+    /**
+     * @var list<class-string>
+     */
+    public private(set) array $functionClasses = [];
 
     public private(set) array $instanceCallClasses = [];
 
@@ -209,14 +208,32 @@ class LumiConfigurator implements LumiConfiguratorInterface
         return $this;
     }
 
-    public function allowFunction(
+    /**
+     * @param string[] $aliases
+     * @param callable-string|null $mappedName
+     */
+    public function addFunction(
         string $name,
+        ?string $mappedName = null,
+        array $aliases = [],
     ): self {
-        return $this->defineFunction(
-            handler: new PhpFunction(
-                name: $name,
-            ),
+        $handler = new PhpFunction(
+            name: $name,
+            aliases: $aliases,
+            mappedName: $mappedName,
         );
+
+        $this->phpFunctions[\strtolower($name)] = $handler;
+
+        foreach ($aliases as $alias) {
+            $this->phpFunctions[\strtolower($alias)] = $handler;
+        }
+
+        if ($this->functionPolicy === RuntimeFunctionPolicy::DISALLOW_ALL) {
+            $this->functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY;
+        }
+
+        return $this;
     }
 
     public function allowAllFunctions(): self
@@ -228,25 +245,8 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
     public function disallowAllFunctions(): self
     {
-        $this->functions = [];
-        $this->functionProviders = [];
+        $this->phpFunctions = [];
         $this->functionPolicy = RuntimeFunctionPolicy::DISALLOW_ALL;
-
-        return $this;
-    }
-
-    public function defineFunction(
-        FunctionInterface $handler,
-    ): self {
-        $this->functions[$handler->name] = $handler;
-
-        foreach ($handler->aliases as $alias) {
-            $this->functions[$alias] = $handler;
-        }
-
-        if ($this->functionPolicy === RuntimeFunctionPolicy::DISALLOW_ALL) {
-            $this->functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY;
-        }
 
         return $this;
     }
@@ -262,29 +262,16 @@ class LumiConfigurator implements LumiConfiguratorInterface
         return $this;
     }
 
-    public function withFunctionProvider(
-        FunctionProviderInterface $provider,
+    /**
+     * @param class-string $className
+     */
+    public function withFunctionClass(
+        string $className,
     ): self {
-        $this->functionProviders[] = $provider;
+        $this->functionClasses[] = $className;
 
         if ($this->functionPolicy === RuntimeFunctionPolicy::DISALLOW_ALL) {
             $this->functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY;
-        }
-
-        return $this;
-    }
-
-    public function withLibrary(
-        LibraryProviderInterface|LibraryDiscoveryInterface $library,
-    ): LumiConfiguratorInterface {
-        if ($library instanceof LibraryDiscoveryInterface) {
-            $this->loadDiscoveredLibrary($library);
-
-            return $this;
-        }
-
-        if (($functionProvider = $library->functions()) !== null) {
-            $this->withFunctionProvider($functionProvider);
         }
 
         return $this;
@@ -375,87 +362,15 @@ class LumiConfigurator implements LumiConfiguratorInterface
         return true;
     }
 
-    private function loadDiscoveredLibrary(
-        LibraryDiscoveryInterface $library,
-    ): void {
-        $instance = new \ReflectionObject($library);
-
-        foreach ($instance->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
-            $method = new MethodReflector(
-                reflector: $method,
-            );
-
-            $callback = [
-                $library,
-                $method->name,
-            ];
-
-            if (!\is_callable($callback)) {
-                continue; // @codeCoverageIgnore
-            }
-
-            if ($method->hasAttribute(LumiFunction::class)) {
-                $function = $method->getAttribute(LumiFunction::class);
-
-                $this->defineFunction(
-                    handler: new CustomFunction(
-                        name: $function->name,
-                        implementation: fn (): mixed => $callback(...),
-                        aliases: $function->aliases,
-                    ),
-                );
-            }
-        }
-    }
-
-    /**
-     * @return array<string, FunctionInterface>
-     */
-    private function loadFunctionProvider(
-        FunctionProviderInterface $provider,
-    ): array {
-        $functions = [];
-
-        foreach ($provider->export($this->container) as $handler) {
-            $functions[\strtolower($handler->name)] = $handler;
-
-            foreach ($handler->aliases as $alias) {
-                $functions[\strtolower($alias)] = $handler;
-            }
-        }
-
-        return $functions;
-    }
-
-    /**
-     * @return array<string, FunctionInterface>
-     */
-    private function buildCustomFunctions(): array
-    {
-        $customFunctions = [];
-
-        if (\sizeof($this->functionProviders) > 0) {
-            $customFunctions = \array_merge(
-                $customFunctions,
-                ...\array_map(
-                    fn (FunctionProviderInterface $provider): array => $this->loadFunctionProvider($provider),
-                    $this->functionProviders,
-                ),
-            );
-        }
-
-        return $customFunctions;
-    }
-
     public function build(): LumiViewRenderInterface
     {
         if ($this->withStandardLibrary) {
-            $this->withLibrary(
-                library: new StandardLibrary(),
-            );
-
             foreach (StandardLibrary::filters() as $className) {
                 $this->withFilterClass($className);
+            }
+
+            foreach (StandardLibrary::functions() as $className) {
+                $this->withFunctionClass($className);
             }
         }
 
@@ -506,10 +421,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
                     $this->directives,
                     $this->defaultDirectives,
                 ),
-                functions: \array_merge(
-                    $this->buildCustomFunctions(),
-                    $this->functions,
-                ),
+                phpFunctions: $this->phpFunctions,
                 functionPolicy: $this->functionPolicy,
                 instanceCallClasses: $this->instanceCallClasses,
                 container: $this->container,
@@ -524,40 +436,12 @@ class LumiConfigurator implements LumiConfiguratorInterface
      */
     private function collectFunctionMetadata(): array
     {
-        $seen = [];
         $metadata = [];
+        $discoverer = new CallableDiscoverer();
 
-        foreach ($this->functions as $function) {
-            if (isset($seen[\spl_object_id($function)])) {
-                continue;
-            }
-
-            $seen[\spl_object_id($function)] = true;
-            $metadata[] = new CallableMetadata(
-                name: $function->name,
-                kind: CallableKind::LEGACY_INTERFACE,
-                className: $function::class,
-                methodName: 'call',
-                wantsContext: true,
-                aliases: \array_values($function->aliases),
-            );
-        }
-
-        foreach ($this->functionProviders as $provider) {
-            foreach ($provider->export($this->container) as $function) {
-                if (isset($seen[\spl_object_id($function)])) {
-                    continue;
-                }
-
-                $seen[\spl_object_id($function)] = true;
-                $metadata[] = new CallableMetadata(
-                    name: $function->name,
-                    kind: CallableKind::LEGACY_INTERFACE,
-                    className: $function::class,
-                    methodName: 'call',
-                    wantsContext: true,
-                    aliases: \array_values($function->aliases),
-                );
+        foreach ($this->functionClasses as $className) {
+            foreach ($discoverer->discoverFunctions($className) as $entry) {
+                $metadata[] = $entry;
             }
         }
 

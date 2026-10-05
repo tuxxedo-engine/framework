@@ -20,6 +20,7 @@ use Support\View\Lumi\Runtime\StubLumiEngine;
 use Support\View\Lumi\Runtime\StubRenderer;
 use Tuxxedo\Container\Container;
 use Tuxxedo\View\Lumi\Compiler\Compiler;
+use Tuxxedo\View\Lumi\Library\Function\PhpFunction;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableKind;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadata;
 use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospector;
@@ -32,23 +33,35 @@ use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
 class RuntimeContextTest extends TestCase
 {
     private RecordingFilter $filter;
+    private RecordingFunction $function;
     private Runtime $runtime;
     private RuntimeContext $context;
 
     protected function setUp(): void
     {
         $this->filter = new RecordingFilter();
-
         $this->filter->returnValue = 'FILTERED';
 
-        $container = new Container();
+        $this->function = new RecordingFunction();
+        $this->function->returnValue = 'fn-result';
 
+        $container = new Container();
         $container->singleton($this->filter);
+        $container->singleton($this->function);
 
         $engine = new StubLumiEngine();
-
         $engine->compiler = Compiler::createWithDefaultProviders(
             introspector: new RuntimeIntrospector(
+                functions: [
+                    new CallableMetadata(
+                        name: 'recording',
+                        kind: CallableKind::TYPED_ATTRIBUTE,
+                        className: RecordingFunction::class,
+                        methodName: 'run',
+                        wantsContext: true,
+                        contextParameterIndex: 0,
+                    ),
+                ],
                 filters: [
                     new CallableMetadata(
                         name: 'recording',
@@ -67,9 +80,9 @@ class RuntimeContextTest extends TestCase
             directives: [
                 'lumi.autoescape' => true,
             ],
-            functions: [
-                'strtoupper' => new RecordingFunction(
-                    returnValue: 'fn-result',
+            phpFunctions: [
+                'strtoupper' => new PhpFunction(
+                    name: 'strtoupper',
                 ),
             ],
             functionPolicy: RuntimeFunctionPolicy::CUSTOM_ONLY,
@@ -142,19 +155,37 @@ class RuntimeContextTest extends TestCase
         );
     }
 
-    public function testHasFunctionLowercasesLookupName(): void
+    public function testHasFunctionLowercasesPhpFunctionLookup(): void
     {
         self::assertTrue($this->context->hasFunction('STRTOUPPER'));
         self::assertTrue($this->context->hasFunction('Strtoupper'));
         self::assertFalse($this->context->hasFunction('missing'));
     }
 
-    public function testCallFunctionDelegatesToRuntime(): void
+    public function testHasFunctionConsultsIntrospector(): void
+    {
+        self::assertTrue($this->context->hasFunction('recording'));
+    }
+
+    public function testCallFunctionDispatchesPhpFunction(): void
+    {
+        self::assertSame(
+            'HELLO',
+            $this->context->callFunction(
+                'strtoupper',
+                [
+                    'hello',
+                ],
+            ),
+        );
+    }
+
+    public function testCallFunctionDispatchesTypedFunction(): void
     {
         self::assertSame(
             'fn-result',
             $this->context->callFunction(
-                'strtoupper',
+                'recording',
                 [
                     'arg',
                 ],

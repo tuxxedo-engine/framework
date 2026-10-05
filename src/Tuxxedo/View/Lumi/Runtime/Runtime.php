@@ -14,17 +14,18 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Runtime;
 
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
+use Tuxxedo\View\Lumi\Library\Function\PhpFunctionInterface;
 use Tuxxedo\View\Lumi\LumiEngineInterface;
 use Tuxxedo\View\Lumi\LumiViewRenderInterface;
+use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadataInterface;
 use Tuxxedo\View\View;
 
 class Runtime implements RuntimeInterface
 {
     /**
-     * @var array<string, FunctionInterface>
+     * @var array<string, PhpFunctionInterface>
      */
-    public readonly array $functions;
+    public readonly array $phpFunctions;
 
     /**
      * @var array<array<string, string|int|float|bool|null>>
@@ -42,18 +43,18 @@ class Runtime implements RuntimeInterface
 
     /**
      * @param array<string, string|int|float|bool|null> $directives
-     * @param array<string, FunctionInterface> $functions
+     * @param array<string, PhpFunctionInterface> $phpFunctions
      * @param array<class-string> $instanceCallClasses
      */
     public function __construct(
         public readonly LumiEngineInterface $engine,
         public private(set) array $directives = [],
-        array $functions = [],
+        array $phpFunctions = [],
         public readonly RuntimeFunctionPolicy $functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY,
         public readonly array $instanceCallClasses = [],
         public readonly ?ContainerInterface $container = null,
     ) {
-        $this->functions = \array_change_key_case($functions);
+        $this->phpFunctions = \array_change_key_case($phpFunctions);
     }
 
     public function renderer(
@@ -99,27 +100,42 @@ class Runtime implements RuntimeInterface
     ): mixed {
         if ($this->functionPolicy === RuntimeFunctionPolicy::DISALLOW_ALL) {
             throw RuntimeException::fromFunctionCallsDisabled();
-        } elseif (
+        }
+
+        $introspector = $this->engine->compiler->introspector;
+        $key = \strtolower($function);
+        $isTyped = $introspector->hasFunction($function);
+        $isPhp = \array_key_exists($key, $this->phpFunctions);
+
+        if (
             $this->functionPolicy === RuntimeFunctionPolicy::CUSTOM_ONLY &&
-            !\array_key_exists($function, $this->functions)
+            !$isTyped &&
+            !$isPhp
         ) {
             throw RuntimeException::fromCannotCallCustomFunction(
                 function: $function,
             );
         }
 
-        if (\array_key_exists($function, $this->functions)) {
+        if ($isTyped) {
             if (!isset($this->renderer)) {
                 throw RuntimeException::fromCannotCallCustomFunctionWithRender();
             }
 
-            return ($this->functions[$function])->call(
+            return $this->dispatchTypedCallable(
                 arguments: $arguments,
-                context: fn (): RuntimeContextInterface => new RuntimeContext(
-                    runtime: $this,
-                ),
+                metadata: $introspector->getFunction($function),
             );
         }
+
+        if ($isPhp) {
+            /** @var callable-string $callable */
+            $callable = $this->phpFunctions[$key]->mappedName ?? $this->phpFunctions[$key]->name;
+
+            return \call_user_func_array($callable, $arguments);
+        }
+
+        /** @var callable-string $function */
 
         return $function(...$arguments);
     }
@@ -164,54 +180,41 @@ class Runtime implements RuntimeInterface
             );
         }
 
-        $metadata = $introspector->getFilter($filter);
-
-        return $this->dispatchTypedFilter(
-            value: $value,
-            className: $metadata->className,
-            methodName: $metadata->methodName,
-            contextParameterIndex: $metadata->contextParameterIndex,
+        return $this->dispatchTypedCallable(
+            arguments: [
+                $value,
+            ],
+            metadata: $introspector->getFilter($filter),
         );
     }
 
     /**
-     * @param class-string $className
+     * @param mixed[] $arguments
      */
-    private function dispatchTypedFilter(
-        mixed $value,
-        string $className,
-        string $methodName,
-        ?int $contextParameterIndex,
+    private function dispatchTypedCallable(
+        array $arguments,
+        CallableMetadataInterface $metadata,
     ): mixed {
         if ($this->container === null) {
             throw RuntimeException::fromTypedCallableWithoutContainer();
         }
 
-        $handler = $this->container->resolve($className);
-        $arguments = $contextParameterIndex === 0
-            ? [
+        $handler = $this->container->resolve($metadata->className);
+
+        if ($metadata->contextParameterIndex !== null) {
+            $arguments = [
+                ...\array_slice($arguments, 0, $metadata->contextParameterIndex),
                 new RuntimeContext(
                     runtime: $this,
                 ),
-                $value,
-            ]
-            : (
-                $contextParameterIndex === null
-                    ? [
-                        $value,
-                    ]
-                    : [
-                        $value,
-                        new RuntimeContext(
-                            runtime: $this,
-                        ),
-                    ]
-            );
+                ...\array_slice($arguments, $metadata->contextParameterIndex),
+            ];
+        }
 
         /** @var callable $callable */
         $callable = [
             $handler,
-            $methodName,
+            $metadata->methodName,
         ];
 
         return \call_user_func_array($callable, $arguments);

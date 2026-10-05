@@ -13,11 +13,9 @@ declare(strict_types=1);
 
 namespace Unit\View\Lumi;
 
-use Fixture\View\Lumi\LumiConfigurator\StubFunctionProvider;
-use Fixture\View\Lumi\LumiConfigurator\StubLibraryDiscovery;
-use Fixture\View\Lumi\LumiConfigurator\StubLibraryProvider;
 use Fixture\View\Lumi\RecordingOptimizer;
-use Fixture\View\Lumi\Runtime\RecordingFunction;
+use Fixture\View\Lumi\Runtime\Introspector\StubFilterClass;
+use Fixture\View\Lumi\Runtime\Introspector\StubFunctionClass;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Container\Container;
 use Tuxxedo\View\Lumi\Config\LumiConfig;
@@ -25,13 +23,13 @@ use Tuxxedo\View\Lumi\Highlight\ColorSlot;
 use Tuxxedo\View\Lumi\Highlight\Theme\LumiDark;
 use Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface;
 use Tuxxedo\View\Lumi\Library\Directive\DefaultDirectives;
-use Tuxxedo\View\Lumi\Library\Function\PhpFunction;
 use Tuxxedo\View\Lumi\LumiConfigurator;
 use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
 use Tuxxedo\View\Lumi\LumiEngine;
 use Tuxxedo\View\Lumi\LumiViewRender;
 use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
 use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpOptimizer;
+use Tuxxedo\View\Lumi\Runtime\Introspector\CallableKind;
 use Tuxxedo\View\Lumi\Runtime\Loader;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
 use Tuxxedo\View\ViewRenderInterface;
@@ -370,184 +368,93 @@ class LumiConfiguratorTest extends TestCase
         self::assertSame(RuntimeFunctionPolicy::DISALLOW_ALL, $configurator->functionPolicy);
     }
 
-    public function testDisallowAllFunctionsClearsFunctions(): void
+    public function testDisallowAllFunctionsClearsPhpFunctions(): void
     {
         $configurator = $this->makeConfigurator();
 
-        $configurator->defineFunction(
-            handler: new RecordingFunction(name: 'fn'),
-        );
+        $configurator->addFunction('strlen');
 
         $configurator->disallowAllFunctions();
 
-        self::assertSame([], $configurator->functions);
+        self::assertSame([], $configurator->phpFunctions);
     }
 
-    public function testDisallowAllFunctionsClearsFunctionProviders(): void
+    public function testAddFunctionRegistersPhpFunctionByName(): void
     {
         $configurator = $this->makeConfigurator();
 
-        $configurator->withFunctionProvider(
-            new StubFunctionProvider(),
-        );
+        $configurator->addFunction('strlen');
 
-        $configurator->disallowAllFunctions();
-
-        self::assertSame([], $configurator->functionProviders);
+        self::assertArrayHasKey('strlen', $configurator->phpFunctions);
+        self::assertSame('strlen', $configurator->phpFunctions['strlen']->name);
+        self::assertNull($configurator->phpFunctions['strlen']->mappedName);
     }
 
-    public function testDefineFunctionAddsByName(): void
+    public function testAddFunctionRecordsMappedName(): void
     {
         $configurator = $this->makeConfigurator();
 
-        $fn = new RecordingFunction(
-            name: 'my_fn',
+        $configurator->addFunction(
+            name: 'uppercase',
+            mappedName: 'strtoupper',
         );
 
-        $configurator->defineFunction(
-            handler: $fn,
-        );
-
-        self::assertSame($fn, $configurator->functions['my_fn']);
+        self::assertSame('strtoupper', $configurator->phpFunctions['uppercase']->mappedName);
     }
 
-    public function testDefineFunctionAddsAliases(): void
+    public function testAddFunctionRegistersAliases(): void
     {
         $configurator = $this->makeConfigurator();
 
-        $fn = new RecordingFunction(
-            name: 'my_fn',
+        $configurator->addFunction(
+            name: 'uppercase',
             aliases: [
-                'alias_one',
-                'alias_two',
+                'upper',
+                'to_upper',
             ],
         );
 
-        $configurator->defineFunction(
-            handler: $fn,
-        );
-
-        self::assertSame($fn, $configurator->functions['alias_one']);
-        self::assertSame($fn, $configurator->functions['alias_two']);
+        self::assertArrayHasKey('upper', $configurator->phpFunctions);
+        self::assertArrayHasKey('to_upper', $configurator->phpFunctions);
     }
 
-    public function testDefineFunctionResetsDisallowAllToCustomOnly(): void
+    public function testAddFunctionLowercasesLookupKeys(): void
+    {
+        $configurator = $this->makeConfigurator();
+
+        $configurator->addFunction('StrLen');
+
+        self::assertArrayHasKey('strlen', $configurator->phpFunctions);
+    }
+
+    public function testAddFunctionResetsDisallowAllToCustomOnly(): void
     {
         $configurator = $this->makeConfigurator();
 
         $configurator->disallowAllFunctions();
-        $configurator->defineFunction(
-            handler: new RecordingFunction(
-                name: 'fn',
-            ),
-        );
+        $configurator->addFunction('strlen');
 
         self::assertSame(RuntimeFunctionPolicy::CUSTOM_ONLY, $configurator->functionPolicy);
     }
 
-    public function testDefineFunctionDoesNotChangeAllowAllPolicy(): void
+    public function testAddFunctionDoesNotChangeAllowAllPolicy(): void
     {
         $configurator = $this->makeConfigurator();
 
         $configurator->allowAllFunctions();
-        $configurator->defineFunction(
-            handler: new RecordingFunction(
-                name: 'fn',
-            ),
-        );
+        $configurator->addFunction('strlen');
 
         self::assertSame(RuntimeFunctionPolicy::ALLOW_ALL, $configurator->functionPolicy);
     }
 
-    public function testAllowFunctionAddsPhpFunctionByName(): void
-    {
-        $configurator = $this->makeConfigurator();
-
-        $configurator->allowFunction('strlen');
-
-        self::assertInstanceOf(PhpFunction::class, $configurator->functions['strlen']);
-    }
-
-    public function testWithFunctionProviderAddsToProviders(): void
-    {
-        $configurator = $this->makeConfigurator();
-        $provider = new StubFunctionProvider();
-
-        $configurator->withFunctionProvider($provider);
-
-        self::assertContains($provider, $configurator->functionProviders);
-    }
-
-    public function testWithFunctionProviderResetsDisallowAllToCustomOnly(): void
+    public function testWithFunctionClassResetsDisallowAllToCustomOnly(): void
     {
         $configurator = $this->makeConfigurator();
 
         $configurator->disallowAllFunctions();
-        $configurator->withFunctionProvider(
-            new StubFunctionProvider(),
-        );
+        $configurator->withFunctionClass(StubFunctionClass::class);
 
         self::assertSame(RuntimeFunctionPolicy::CUSTOM_ONLY, $configurator->functionPolicy);
-    }
-
-    public function testWithLibraryDiscoveryRegistersLumiFunctions(): void
-    {
-        $configurator = $this->makeConfigurator();
-
-        $configurator->withLibrary(
-            new StubLibraryDiscovery(),
-        );
-
-        self::assertArrayHasKey('stub_fn', $configurator->functions);
-    }
-
-    public function testWithLibraryDiscoveryRegistersLumiFunctionAliases(): void
-    {
-        $configurator = $this->makeConfigurator();
-
-        $configurator->withLibrary(
-            new StubLibraryDiscovery(),
-        );
-
-        self::assertArrayHasKey('stub_fn_alias', $configurator->functions);
-    }
-
-    public function testWithLibraryDiscoverySkipsUnannotatedMethods(): void
-    {
-        $configurator = $this->makeConfigurator();
-
-        $configurator->withLibrary(
-            new StubLibraryDiscovery(),
-        );
-
-        self::assertArrayNotHasKey('unannotatedMethod', $configurator->functions);
-    }
-
-    public function testWithLibraryProviderAddsFunctionProvider(): void
-    {
-        $configurator = $this->makeConfigurator();
-        $functionProvider = new StubFunctionProvider();
-
-        $configurator->withLibrary(
-            new StubLibraryProvider(
-                functionProvider: $functionProvider,
-            ),
-        );
-
-        self::assertContains($functionProvider, $configurator->functionProviders);
-    }
-
-    public function testWithLibraryProviderSkipsNullFunctionProvider(): void
-    {
-        $configurator = $this->makeConfigurator();
-
-        $configurator->withLibrary(
-            new StubLibraryProvider(
-                functionProvider: null,
-            ),
-        );
-
-        self::assertSame([], $configurator->functionProviders);
     }
 
     public function testWithoutStandardLibrarySetsFalse(): void
@@ -781,65 +688,29 @@ class LumiConfiguratorTest extends TestCase
         self::assertFalse($configurator->validate());
     }
 
-    public function testBuildPropagatesRegisteredFunctionIntoCompilerIntrospector(): void
+    public function testWithFunctionClassRegistersAttributedMethodsIntoIntrospector(): void
     {
         $configurator = $this->makeConfigurator();
-        $function = new RecordingFunction(
-            name: 'noop',
-            aliases: [
-                'nope',
-            ],
-        );
+        $configurator->withFunctionClass(StubFunctionClass::class);
 
-        $configurator->defineFunction($function);
         $render = $configurator->build();
-
-        self::assertInstanceOf(LumiViewRender::class, $render);
-
         $introspector = $render->runtime->engine->compiler->introspector;
 
-        self::assertTrue($introspector->hasFunction('noop'));
-        self::assertTrue($introspector->hasFunction('nope'));
+        self::assertTrue($introspector->hasFunction('stub_upper'));
+        self::assertTrue($introspector->hasFunction('stub_context'));
+        self::assertTrue($introspector->hasFunction('stub_ctx'));
 
-        $metadata = $introspector->getFunction('nope');
+        $withContext = $introspector->getFunction('stub_context');
 
-        self::assertSame('noop', $metadata->name);
-        self::assertSame(RecordingFunction::class, $metadata->className);
-    }
-
-    public function testBuildDeduplicatesFunctionDefinedAndEmittedByProvider(): void
-    {
-        $configurator = $this->makeConfigurator();
-        $function = new RecordingFunction(
-            name: 'shared',
-        );
-
-        $configurator->defineFunction($function);
-        $configurator->withFunctionProvider(
-            provider: new class ($function) implements \Tuxxedo\View\Lumi\Library\Function\FunctionProviderInterface {
-                public function __construct(
-                    private readonly RecordingFunction $function,
-                ) {
-                }
-
-                public function export(
-                    \Tuxxedo\Container\ContainerInterface $container,
-                ): \Generator {
-                    yield $this->function;
-                }
-            },
-        );
-
-        $render = $configurator->build();
-        $metadata = $render->runtime->engine->compiler->introspector->getFunction('shared');
-
-        self::assertSame(RecordingFunction::class, $metadata->className);
+        self::assertSame(CallableKind::TYPED_ATTRIBUTE, $withContext->kind);
+        self::assertTrue($withContext->wantsContext);
+        self::assertSame(0, $withContext->contextParameterIndex);
     }
 
     public function testWithFilterClassRegistersAttributedMethodsIntoIntrospector(): void
     {
         $configurator = $this->makeConfigurator();
-        $configurator->withFilterClass(\Fixture\View\Lumi\Runtime\Introspector\StubFilterClass::class);
+        $configurator->withFilterClass(StubFilterClass::class);
 
         $render = $configurator->build();
         $introspector = $render->runtime->engine->compiler->introspector;
@@ -850,7 +721,7 @@ class LumiConfiguratorTest extends TestCase
 
         $withContext = $introspector->getFilter('stub_context');
 
-        self::assertSame(\Tuxxedo\View\Lumi\Runtime\Introspector\CallableKind::TYPED_ATTRIBUTE, $withContext->kind);
+        self::assertSame(CallableKind::TYPED_ATTRIBUTE, $withContext->kind);
         self::assertTrue($withContext->wantsContext);
         self::assertSame(1, $withContext->contextParameterIndex);
     }

@@ -15,10 +15,5 @@ namespace Tuxxedo\View\Lumi\Runtime\Introspector;
 
 enum CallableKind
 {
-    case LEGACY_INTERFACE;
-
-    /**
-     * @todo Populated once the stdlib migrates from FunctionInterface to #[LumiFunction]
-     */
     case TYPED_ATTRIBUTE;
 }

@@ -20,6 +20,15 @@ interface CallableDiscovererInterface
      *
      * @return list<CallableMetadataInterface>
      */
+    public function discoverFunctions(
+        string $className,
+    ): array;
+
+    /**
+     * @param class-string $className
+     *
+     * @return list<CallableMetadataInterface>
+     */
     public function discoverFilters(
         string $className,
     ): array;
