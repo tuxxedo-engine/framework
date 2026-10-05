@@ -2392,7 +2392,7 @@ class ExpressionCompilerProviderTest extends TestCase
         );
 
         self::assertSame(
-            '$this->resolveInstance(\\stdClass::class)->run(new \\Tuxxedo\\View\\Lumi\\Runtime\\RuntimeContext(runtime: $this), $__lumiVariables[\'name\'])',
+            '$this->resolveInstance(\\stdClass::class)->run(new \\Tuxxedo\\View\\Lumi\\Runtime\\RuntimeContext($this), $__lumiVariables[\'name\'])',
             $output,
         );
     }
@@ -2430,7 +2430,7 @@ class ExpressionCompilerProviderTest extends TestCase
         );
 
         self::assertSame(
-            '$this->resolveInstance(\\stdClass::class)->record($__lumiVariables[\'name\'], new \\Tuxxedo\\View\\Lumi\\Runtime\\RuntimeContext(runtime: $this))',
+            '$this->resolveInstance(\\stdClass::class)->record($__lumiVariables[\'name\'], new \\Tuxxedo\\View\\Lumi\\Runtime\\RuntimeContext($this))',
             $output,
         );
     }
