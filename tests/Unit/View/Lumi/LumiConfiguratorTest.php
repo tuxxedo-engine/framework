@@ -13,12 +13,10 @@ declare(strict_types=1);
 
 namespace Unit\View\Lumi;
 
-use Fixture\View\Lumi\LumiConfigurator\StubFilterProvider;
 use Fixture\View\Lumi\LumiConfigurator\StubFunctionProvider;
 use Fixture\View\Lumi\LumiConfigurator\StubLibraryDiscovery;
 use Fixture\View\Lumi\LumiConfigurator\StubLibraryProvider;
 use Fixture\View\Lumi\RecordingOptimizer;
-use Fixture\View\Lumi\Runtime\RecordingFilter;
 use Fixture\View\Lumi\Runtime\RecordingFunction;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Container\Container;
@@ -492,49 +490,6 @@ class LumiConfiguratorTest extends TestCase
         self::assertSame(RuntimeFunctionPolicy::CUSTOM_ONLY, $configurator->functionPolicy);
     }
 
-    public function testDefineFilterAddsByName(): void
-    {
-        $configurator = $this->makeConfigurator();
-
-        $filter = new RecordingFilter(
-            name: 'my_filter',
-        );
-
-        $configurator->defineFilter(
-            handler: $filter,
-        );
-
-        self::assertSame($filter, $configurator->customFilters['my_filter']);
-    }
-
-    public function testDefineFilterAddsAliases(): void
-    {
-        $configurator = $this->makeConfigurator();
-
-        $filter = new RecordingFilter(
-            name: 'my_filter',
-            aliases: [
-                'filter_alias',
-            ],
-        );
-
-        $configurator->defineFilter(
-            handler: $filter,
-        );
-
-        self::assertSame($filter, $configurator->customFilters['filter_alias']);
-    }
-
-    public function testWithFilterProviderAddsToProviders(): void
-    {
-        $configurator = $this->makeConfigurator();
-        $provider = new StubFilterProvider();
-
-        $configurator->withFilterProvider($provider);
-
-        self::assertContains($provider, $configurator->filterProviders);
-    }
-
     public function testWithLibraryDiscoveryRegistersLumiFunctions(): void
     {
         $configurator = $this->makeConfigurator();
@@ -557,26 +512,6 @@ class LumiConfiguratorTest extends TestCase
         self::assertArrayHasKey('stub_fn_alias', $configurator->functions);
     }
 
-    public function testWithLibraryDiscoveryRegistersLumiFilters(): void
-    {
-        $configurator = $this->makeConfigurator();
-
-        $configurator->withLibrary(new StubLibraryDiscovery());
-
-        self::assertArrayHasKey('stub_filter', $configurator->customFilters);
-    }
-
-    public function testWithLibraryDiscoveryRegistersLumiFilterAliases(): void
-    {
-        $configurator = $this->makeConfigurator();
-
-        $configurator->withLibrary(
-            new StubLibraryDiscovery(),
-        );
-
-        self::assertArrayHasKey('stub_filter_alias', $configurator->customFilters);
-    }
-
     public function testWithLibraryDiscoverySkipsUnannotatedMethods(): void
     {
         $configurator = $this->makeConfigurator();
@@ -586,21 +521,6 @@ class LumiConfiguratorTest extends TestCase
         );
 
         self::assertArrayNotHasKey('unannotatedMethod', $configurator->functions);
-        self::assertArrayNotHasKey('unannotatedMethod', $configurator->customFilters);
-    }
-
-    public function testWithLibraryProviderAddsFilterProvider(): void
-    {
-        $configurator = $this->makeConfigurator();
-        $filterProvider = new StubFilterProvider();
-
-        $configurator->withLibrary(
-            new StubLibraryProvider(
-                filterProvider: $filterProvider,
-            ),
-        );
-
-        self::assertContains($filterProvider, $configurator->filterProviders);
     }
 
     public function testWithLibraryProviderAddsFunctionProvider(): void
@@ -617,27 +537,12 @@ class LumiConfiguratorTest extends TestCase
         self::assertContains($functionProvider, $configurator->functionProviders);
     }
 
-    public function testWithLibraryProviderSkipsNullFilterProvider(): void
-    {
-        $configurator = $this->makeConfigurator();
-
-        $configurator->withLibrary(
-            new StubLibraryProvider(
-                filterProvider: null,
-                functionProvider: new StubFunctionProvider(),
-            ),
-        );
-
-        self::assertSame([], $configurator->filterProviders);
-    }
-
     public function testWithLibraryProviderSkipsNullFunctionProvider(): void
     {
         $configurator = $this->makeConfigurator();
 
         $configurator->withLibrary(
             new StubLibraryProvider(
-                filterProvider: new StubFilterProvider(),
                 functionProvider: null,
             ),
         );
@@ -898,7 +803,6 @@ class LumiConfiguratorTest extends TestCase
 
         $metadata = $introspector->getFunction('nope');
 
-        self::assertNotNull($metadata);
         self::assertSame('noop', $metadata->name);
         self::assertSame(RecordingFunction::class, $metadata->className);
     }
@@ -929,65 +833,26 @@ class LumiConfiguratorTest extends TestCase
         $render = $configurator->build();
         $metadata = $render->runtime->engine->compiler->introspector->getFunction('shared');
 
-        self::assertNotNull($metadata);
         self::assertSame(RecordingFunction::class, $metadata->className);
     }
 
-    public function testBuildDeduplicatesFilterDefinedAndEmittedByProvider(): void
+    public function testWithFilterClassRegistersAttributedMethodsIntoIntrospector(): void
     {
         $configurator = $this->makeConfigurator();
-        $filter = new RecordingFilter(
-            name: 'shared',
-        );
-
-        $configurator->defineFilter($filter);
-        $configurator->withFilterProvider(
-            provider: new class ($filter) implements \Tuxxedo\View\Lumi\Library\Filter\FilterProviderInterface {
-                public function __construct(
-                    private readonly RecordingFilter $filter,
-                ) {
-                }
-
-                public function export(
-                    \Tuxxedo\Container\ContainerInterface $container,
-                ): \Generator {
-                    yield $this->filter;
-                }
-            },
-        );
+        $configurator->withFilterClass(\Fixture\View\Lumi\Runtime\Introspector\StubFilterClass::class);
 
         $render = $configurator->build();
-        $metadata = $render->runtime->engine->compiler->introspector->getFilter('shared');
-
-        self::assertNotNull($metadata);
-        self::assertSame(RecordingFilter::class, $metadata->className);
-    }
-
-    public function testBuildPropagatesRegisteredFilterIntoCompilerIntrospector(): void
-    {
-        $configurator = $this->makeConfigurator();
-        $filter = new RecordingFilter(
-            name: 'tag',
-            aliases: [
-                'label',
-            ],
-        );
-
-        $configurator->defineFilter($filter);
-        $render = $configurator->build();
-
-        self::assertInstanceOf(LumiViewRender::class, $render);
-
         $introspector = $render->runtime->engine->compiler->introspector;
 
-        self::assertTrue($introspector->hasFilter('tag'));
-        self::assertTrue($introspector->hasFilter('label'));
+        self::assertTrue($introspector->hasFilter('stub_upper'));
+        self::assertTrue($introspector->hasFilter('stub_context'));
+        self::assertTrue($introspector->hasFilter('stub_ctx'));
 
-        $metadata = $introspector->getFilter('label');
+        $withContext = $introspector->getFilter('stub_context');
 
-        self::assertNotNull($metadata);
-        self::assertSame('tag', $metadata->name);
-        self::assertSame(RecordingFilter::class, $metadata->className);
+        self::assertSame(\Tuxxedo\View\Lumi\Runtime\Introspector\CallableKind::TYPED_ATTRIBUTE, $withContext->kind);
+        self::assertTrue($withContext->wantsContext);
+        self::assertSame(1, $withContext->contextParameterIndex);
     }
 
     public function testBuildReturnsViewRenderInterface(): void

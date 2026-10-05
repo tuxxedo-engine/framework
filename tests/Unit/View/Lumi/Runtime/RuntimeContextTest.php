@@ -18,6 +18,11 @@ use Fixture\View\Lumi\Runtime\RecordingFunction;
 use PHPUnit\Framework\TestCase;
 use Support\View\Lumi\Runtime\StubLumiEngine;
 use Support\View\Lumi\Runtime\StubRenderer;
+use Tuxxedo\Container\Container;
+use Tuxxedo\View\Lumi\Compiler\Compiler;
+use Tuxxedo\View\Lumi\Runtime\Introspector\CallableKind;
+use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadata;
+use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospector;
 use Tuxxedo\View\Lumi\Runtime\Loader;
 use Tuxxedo\View\Lumi\Runtime\Runtime;
 use Tuxxedo\View\Lumi\Runtime\RuntimeContext;
@@ -26,13 +31,39 @@ use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
 
 class RuntimeContextTest extends TestCase
 {
+    private RecordingFilter $filter;
     private Runtime $runtime;
     private RuntimeContext $context;
 
     protected function setUp(): void
     {
+        $this->filter = new RecordingFilter();
+
+        $this->filter->returnValue = 'FILTERED';
+
+        $container = new Container();
+
+        $container->singleton($this->filter);
+
+        $engine = new StubLumiEngine();
+
+        $engine->compiler = Compiler::createWithDefaultProviders(
+            introspector: new RuntimeIntrospector(
+                filters: [
+                    new CallableMetadata(
+                        name: 'recording',
+                        kind: CallableKind::TYPED_ATTRIBUTE,
+                        className: RecordingFilter::class,
+                        methodName: 'record',
+                        wantsContext: true,
+                        contextParameterIndex: 1,
+                    ),
+                ],
+            ),
+        );
+
         $this->runtime = new Runtime(
-            engine: new StubLumiEngine(),
+            engine: $engine,
             directives: [
                 'lumi.autoescape' => true,
             ],
@@ -41,12 +72,8 @@ class RuntimeContextTest extends TestCase
                     returnValue: 'fn-result',
                 ),
             ],
-            filters: [
-                'upper' => new RecordingFilter(
-                    returnValue: 'FILTERED',
-                ),
-            ],
             functionPolicy: RuntimeFunctionPolicy::CUSTOM_ONLY,
+            container: $container,
         );
 
         $this->runtime->renderer(
@@ -101,9 +128,9 @@ class RuntimeContextTest extends TestCase
         $this->context->directive('lumi.missing');
     }
 
-    public function testHasFilterDelegatesToRuntime(): void
+    public function testHasFilterDelegatesToIntrospector(): void
     {
-        self::assertTrue($this->context->hasFilter('upper'));
+        self::assertTrue($this->context->hasFilter('recording'));
         self::assertFalse($this->context->hasFilter('missing'));
     }
 
@@ -111,7 +138,7 @@ class RuntimeContextTest extends TestCase
     {
         self::assertSame(
             'FILTERED',
-            $this->context->callFilter('hello', 'upper'),
+            $this->context->callFilter('hello', 'recording'),
         );
     }
 

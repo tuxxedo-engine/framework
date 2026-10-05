@@ -14,6 +14,9 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Library\Standard\Function;
 
 use Tuxxedo\Temporal\ClockInterface;
+use Tuxxedo\Temporal\InstantInterface;
+use Tuxxedo\Temporal\LocalDateInterface;
+use Tuxxedo\Temporal\LocalTimeInterface;
 use Tuxxedo\Temporal\SystemClock;
 use Tuxxedo\Temporal\TemporalCoercion;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
@@ -41,6 +44,7 @@ class DateFunction implements FunctionInterface
         /** @var string $format */
         $format = $arguments[0];
 
+        /** @var InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value */
         $value = $arguments[1] ?? $this->clock->now();
 
         return TemporalCoercion::format(

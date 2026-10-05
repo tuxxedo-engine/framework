@@ -81,6 +81,13 @@ class RuntimeException extends LumiException
         );
     }
 
+    public static function fromTypedCallableWithoutContainer(): self
+    {
+        return new self(
+            message: 'Cannot dispatch a typed callable; the runtime was built without a container',
+        );
+    }
+
     public static function fromUnableToPopStateStack(): self
     {
         return new self(

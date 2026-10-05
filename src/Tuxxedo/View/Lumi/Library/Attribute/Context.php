@@ -11,11 +11,9 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\View\Lumi\Library;
+namespace Tuxxedo\View\Lumi\Library\Attribute;
 
-use Tuxxedo\View\Lumi\Library\Function\FunctionProviderInterface;
-
-interface LibraryProviderInterface
+#[\Attribute(flags: \Attribute::TARGET_PARAMETER)]
+readonly class Context
 {
-    public function functions(): ?FunctionProviderInterface;
 }

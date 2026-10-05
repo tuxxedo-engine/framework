@@ -38,6 +38,10 @@ interface CallableMetadataInterface
         get;
     }
 
+    public ?int $contextParameterIndex {
+        get;
+    }
+
     /**
      * @var list<string>
      */

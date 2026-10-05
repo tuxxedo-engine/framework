@@ -19,15 +19,25 @@ interface RuntimeIntrospectorInterface
         string $name,
     ): bool;
 
+    /**
+     * @throws IntrospectorException
+     */
     public function getFunction(
         string $name,
-    ): ?CallableMetadataInterface;
+    ): CallableMetadataInterface;
+
+    public function hasAnyFunctions(): bool;
 
     public function hasFilter(
         string $name,
     ): bool;
 
+    /**
+     * @throws IntrospectorException
+     */
     public function getFilter(
         string $name,
-    ): ?CallableMetadataInterface;
+    ): CallableMetadataInterface;
+
+    public function hasAnyFilters(): bool;
 }

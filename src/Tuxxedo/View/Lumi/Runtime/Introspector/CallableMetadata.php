@@ -25,6 +25,7 @@ readonly class CallableMetadata implements CallableMetadataInterface
         public string $className,
         public string $methodName,
         public bool $wantsContext,
+        public ?int $contextParameterIndex = null,
         public array $aliases = [],
     ) {
     }

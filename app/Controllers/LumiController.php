@@ -337,10 +337,6 @@ readonly class LumiController
             ->withoutOptimizers()
             ->withCustomOptimizer(...$engine->compiler->optimizerPipeline->optimizers);
 
-        foreach ($this->viewRender->runtime->filters as $filter) {
-            $configurator->defineFilter($filter);
-        }
-
         match ($this->viewRender->runtime->functionPolicy) {
             RuntimeFunctionPolicy::ALLOW_ALL => $configurator->allowAllFunctions(),
             RuntimeFunctionPolicy::DISALLOW_ALL => $configurator->disallowAllFunctions(),
@@ -451,6 +447,7 @@ readonly class LumiController
 
         $engine = LumiEngine::createCustom(
             optimizers: $optimizers,
+            introspector: $this->viewRender->runtime->engine->compiler->introspector,
         );
 
         try {

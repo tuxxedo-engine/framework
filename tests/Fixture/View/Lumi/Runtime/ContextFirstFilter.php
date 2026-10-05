@@ -17,21 +17,19 @@ use Tuxxedo\View\Lumi\Library\Attribute\Context;
 use Tuxxedo\View\Lumi\Library\Attribute\LumiFilter;
 use Tuxxedo\View\Lumi\Runtime\RuntimeContextInterface;
 
-class RecordingFilter
+class ContextFirstFilter
 {
-    public mixed $lastValue = null;
     public ?RuntimeContextInterface $lastContext = null;
-    public mixed $returnValue = null;
+    public mixed $lastValue = null;
 
-    #[LumiFilter('recording', aliases: ['recorder'])]
-    public function record(
+    #[LumiFilter('context_first')]
+    public function run(
+        #[Context] RuntimeContextInterface $context,
         mixed $value,
-        #[Context]
-        RuntimeContextInterface $context,
     ): mixed {
-        $this->lastValue = $value;
         $this->lastContext = $context;
+        $this->lastValue = $value;
 
-        return $this->returnValue ?? $value;
+        return $value;
     }
 }

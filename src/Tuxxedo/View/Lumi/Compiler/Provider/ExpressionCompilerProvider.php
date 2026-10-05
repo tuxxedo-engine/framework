@@ -319,9 +319,21 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         NodeStreamInterface $stream,
     ): string {
         if ($node->right instanceof IdentifierNode) {
+            $name = \mb_strtolower($node->right->name);
+
+            if (
+                !$compiler->introspector->hasAnyFilters() ||
+                $compiler->introspector->hasFilter($name)
+            ) {
+                return \sprintf(
+                    '$this->filter(%s, \'%s\')',
+                    $compiler->compileExpression($node->left),
+                    $compiler->escaper->js($name),
+                );
+            }
+
             return \sprintf(
-                '($this->hasFilter(\'%1$s\') ? $this->filter(%2$s, \'%1$s\') : ((%2$s) | (%3$s)))',
-                $compiler->escaper->js(\mb_strtolower($node->right->name)),
+                '((%s) | (%s))',
                 $compiler->compileExpression($node->left),
                 $compiler->compileExpression($node->right),
             );

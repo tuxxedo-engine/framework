@@ -21,6 +21,9 @@ use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Compiler\CompilerStateFlag;
 use Tuxxedo\View\Lumi\Compiler\Provider\ExpressionCompilerProvider;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
+use Tuxxedo\View\Lumi\Runtime\Introspector\CallableKind;
+use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadata;
+use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospector;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayItemNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
@@ -52,6 +55,17 @@ class ExpressionCompilerProviderTest extends TestCase
             providers: [
                 new ExpressionCompilerProvider(),
             ],
+            introspector: new RuntimeIntrospector(
+                filters: [
+                    new CallableMetadata(
+                        name: '__noise__',
+                        kind: CallableKind::TYPED_ATTRIBUTE,
+                        className: \stdClass::class,
+                        methodName: 'noise',
+                        wantsContext: false,
+                    ),
+                ],
+            ),
         );
 
         $this->compiler->state->enter(NodeScope::STATEMENT);
@@ -2267,7 +2281,7 @@ class ExpressionCompilerProviderTest extends TestCase
         );
     }
 
-    public function testCompileFilterOrBitwiseOrWithIdentifierRightEmitsFilterTernary(): void
+    public function testCompileFilterOrBitwiseOrWithUnknownFilterEmitsPlainBitwiseOr(): void
     {
         $output = $this->compiler->compileExpression(
             new FilterOrBitwiseOrNode(
@@ -2281,12 +2295,75 @@ class ExpressionCompilerProviderTest extends TestCase
         );
 
         self::assertSame(
-            '($this->hasFilter(\'upper\') ? $this->filter($__lumiVariables[\'name\'], \'upper\') : (($__lumiVariables[\'name\']) | ($__lumiVariables[\'upper\'])))',
+            '(($__lumiVariables[\'name\']) | ($__lumiVariables[\'upper\']))',
             $output,
         );
     }
 
-    public function testCompileFilterOrBitwiseOrLowercasesFilterName(): void
+    public function testCompileFilterOrBitwiseOrDefersToRuntimeWhenNoIntrospectionAvailable(): void
+    {
+        $compiler = Compiler::createWithoutDefaultProviders(
+            providers: [
+                new ExpressionCompilerProvider(),
+            ],
+        );
+        $compiler->state->enter(NodeScope::STATEMENT);
+
+        $output = $compiler->compileExpression(
+            new FilterOrBitwiseOrNode(
+                left: new IdentifierNode(
+                    name: 'name',
+                ),
+                right: new IdentifierNode(
+                    name: 'anything',
+                ),
+            ),
+        );
+
+        self::assertSame(
+            '$this->filter($__lumiVariables[\'name\'], \'anything\')',
+            $output,
+        );
+    }
+
+    public function testCompileFilterOrBitwiseOrWithKnownFilterEmitsDirectDispatch(): void
+    {
+        $compiler = Compiler::createWithoutDefaultProviders(
+            providers: [
+                new ExpressionCompilerProvider(),
+            ],
+            introspector: new RuntimeIntrospector(
+                filters: [
+                    new CallableMetadata(
+                        name: 'upper',
+                        kind: CallableKind::TYPED_ATTRIBUTE,
+                        className: \stdClass::class,
+                        methodName: 'upper',
+                        wantsContext: false,
+                    ),
+                ],
+            ),
+        );
+        $compiler->state->enter(NodeScope::STATEMENT);
+
+        $output = $compiler->compileExpression(
+            new FilterOrBitwiseOrNode(
+                left: new IdentifierNode(
+                    name: 'name',
+                ),
+                right: new IdentifierNode(
+                    name: 'upper',
+                ),
+            ),
+        );
+
+        self::assertSame(
+            '$this->filter($__lumiVariables[\'name\'], \'upper\')',
+            $output,
+        );
+    }
+
+    public function testCompileFilterOrBitwiseOrLowercasesFilterNameForLookupWhenUnknown(): void
     {
         $output = $this->compiler->compileExpression(
             new FilterOrBitwiseOrNode(
@@ -2300,12 +2377,12 @@ class ExpressionCompilerProviderTest extends TestCase
         );
 
         self::assertSame(
-            '($this->hasFilter(\'upper\') ? $this->filter($__lumiVariables[\'name\'], \'upper\') : (($__lumiVariables[\'name\']) | ($__lumiVariables[\'UPPER\'])))',
+            '(($__lumiVariables[\'name\']) | ($__lumiVariables[\'UPPER\']))',
             $output,
         );
     }
 
-    public function testCompileFilterOrBitwiseOrLowercasesMixedCaseFilterName(): void
+    public function testCompileFilterOrBitwiseOrLowercasesMixedCaseFilterNameForLookupWhenUnknown(): void
     {
         $output = $this->compiler->compileExpression(
             new FilterOrBitwiseOrNode(
@@ -2319,31 +2396,12 @@ class ExpressionCompilerProviderTest extends TestCase
         );
 
         self::assertSame(
-            '($this->hasFilter(\'titlecase\') ? $this->filter($__lumiVariables[\'name\'], \'titlecase\') : (($__lumiVariables[\'name\']) | ($__lumiVariables[\'TitleCase\'])))',
+            '(($__lumiVariables[\'name\']) | ($__lumiVariables[\'TitleCase\']))',
             $output,
         );
     }
 
-    public function testCompileFilterOrBitwiseOrEscapesSingleQuoteInFilterName(): void
-    {
-        $output = $this->compiler->compileExpression(
-            new FilterOrBitwiseOrNode(
-                left: new IdentifierNode(
-                    name: 'name',
-                ),
-                right: new IdentifierNode(
-                    name: 'weird\'filter',
-                ),
-            ),
-        );
-
-        self::assertSame(
-            '($this->hasFilter(\'weird\\\'filter\') ? $this->filter($__lumiVariables[\'name\'], \'weird\\\'filter\') : (($__lumiVariables[\'name\']) | ($__lumiVariables[\'weird\\\'filter\'])))',
-            $output,
-        );
-    }
-
-    public function testCompileFilterOrBitwiseOrSupportsLiteralLeft(): void
+    public function testCompileFilterOrBitwiseOrWithUnknownFilterSupportsLiteralLeft(): void
     {
         $output = $this->compiler->compileExpression(
             new FilterOrBitwiseOrNode(
@@ -2355,12 +2413,12 @@ class ExpressionCompilerProviderTest extends TestCase
         );
 
         self::assertSame(
-            '($this->hasFilter(\'upper\') ? $this->filter(\'hello\', \'upper\') : ((\'hello\') | ($__lumiVariables[\'upper\'])))',
+            '((\'hello\') | ($__lumiVariables[\'upper\']))',
             $output,
         );
     }
 
-    public function testCompileFilterOrBitwiseOrSupportsBinaryOpLeft(): void
+    public function testCompileFilterOrBitwiseOrWithUnknownFilterSupportsBinaryOpLeft(): void
     {
         $output = $this->compiler->compileExpression(
             new FilterOrBitwiseOrNode(
@@ -2380,12 +2438,12 @@ class ExpressionCompilerProviderTest extends TestCase
         );
 
         self::assertSame(
-            '($this->hasFilter(\'upper\') ? $this->filter($__lumiVariables[\'a\'] + $__lumiVariables[\'b\'], \'upper\') : (($__lumiVariables[\'a\'] + $__lumiVariables[\'b\']) | ($__lumiVariables[\'upper\'])))',
+            '(($__lumiVariables[\'a\'] + $__lumiVariables[\'b\']) | ($__lumiVariables[\'upper\']))',
             $output,
         );
     }
 
-    public function testCompileFilterOrBitwiseOrSupportsMethodCallLeft(): void
+    public function testCompileFilterOrBitwiseOrWithUnknownFilterSupportsMethodCallLeft(): void
     {
         $output = $this->compiler->compileExpression(
             new FilterOrBitwiseOrNode(
@@ -2403,7 +2461,7 @@ class ExpressionCompilerProviderTest extends TestCase
         );
 
         self::assertSame(
-            '($this->hasFilter(\'upper\') ? $this->filter($this->instanceCall($__lumiVariables[\'user\'])->name(), \'upper\') : (($this->instanceCall($__lumiVariables[\'user\'])->name()) | ($__lumiVariables[\'upper\'])))',
+            '(($this->instanceCall($__lumiVariables[\'user\'])->name()) | ($__lumiVariables[\'upper\']))',
             $output,
         );
     }
@@ -2521,7 +2579,7 @@ class ExpressionCompilerProviderTest extends TestCase
         );
     }
 
-    public function testCompileFilterOrBitwiseOrChainsViaNestedNode(): void
+    public function testCompileFilterOrBitwiseOrChainsViaNestedNodeWithUnknownFilters(): void
     {
         $output = $this->compiler->compileExpression(
             new FilterOrBitwiseOrNode(
@@ -2540,7 +2598,56 @@ class ExpressionCompilerProviderTest extends TestCase
         );
 
         self::assertSame(
-            '($this->hasFilter(\'trim\') ? $this->filter(($this->hasFilter(\'upper\') ? $this->filter($__lumiVariables[\'name\'], \'upper\') : (($__lumiVariables[\'name\']) | ($__lumiVariables[\'upper\']))), \'trim\') : ((($this->hasFilter(\'upper\') ? $this->filter($__lumiVariables[\'name\'], \'upper\') : (($__lumiVariables[\'name\']) | ($__lumiVariables[\'upper\'])))) | ($__lumiVariables[\'trim\'])))',
+            '(((($__lumiVariables[\'name\']) | ($__lumiVariables[\'upper\']))) | ($__lumiVariables[\'trim\']))',
+            $output,
+        );
+    }
+
+    public function testCompileFilterOrBitwiseOrChainsViaNestedNodeWithKnownFilters(): void
+    {
+        $compiler = Compiler::createWithoutDefaultProviders(
+            providers: [
+                new ExpressionCompilerProvider(),
+            ],
+            introspector: new RuntimeIntrospector(
+                filters: [
+                    new CallableMetadata(
+                        name: 'upper',
+                        kind: CallableKind::TYPED_ATTRIBUTE,
+                        className: \stdClass::class,
+                        methodName: 'upper',
+                        wantsContext: false,
+                    ),
+                    new CallableMetadata(
+                        name: 'trim',
+                        kind: CallableKind::TYPED_ATTRIBUTE,
+                        className: \stdClass::class,
+                        methodName: 'trim',
+                        wantsContext: false,
+                    ),
+                ],
+            ),
+        );
+        $compiler->state->enter(NodeScope::STATEMENT);
+
+        $output = $compiler->compileExpression(
+            new FilterOrBitwiseOrNode(
+                left: new FilterOrBitwiseOrNode(
+                    left: new IdentifierNode(
+                        name: 'name',
+                    ),
+                    right: new IdentifierNode(
+                        name: 'upper',
+                    ),
+                ),
+                right: new IdentifierNode(
+                    name: 'trim',
+                ),
+            ),
+        );
+
+        self::assertSame(
+            '$this->filter($this->filter($__lumiVariables[\'name\'], \'upper\'), \'trim\')',
             $output,
         );
     }

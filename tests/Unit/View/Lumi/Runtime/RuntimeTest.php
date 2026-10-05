@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Unit\View\Lumi\Runtime;
 
+use Fixture\View\Lumi\Runtime\ContextFirstFilter;
 use Fixture\View\Lumi\Runtime\OtherObject;
 use Fixture\View\Lumi\Runtime\PlainObject;
 use Fixture\View\Lumi\Runtime\RecordingFilter;
@@ -20,8 +21,13 @@ use Fixture\View\Lumi\Runtime\RecordingFunction;
 use PHPUnit\Framework\TestCase;
 use Support\View\Lumi\Runtime\StubLumiEngine;
 use Support\View\Lumi\Runtime\StubRenderer;
-use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
+use Tuxxedo\Container\Container;
+use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\View\Lumi\Compiler\Compiler;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
+use Tuxxedo\View\Lumi\Runtime\Introspector\CallableKind;
+use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadata;
+use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospector;
 use Tuxxedo\View\Lumi\Runtime\Loader;
 use Tuxxedo\View\Lumi\Runtime\Runtime;
 use Tuxxedo\View\Lumi\Runtime\RuntimeException;
@@ -39,23 +45,35 @@ class RuntimeTest extends TestCase
     /**
      * @param array<string, string|int|float|bool|null> $directives
      * @param array<string, FunctionInterface> $functions
-     * @param array<string, FilterInterface> $filters
      * @param array<class-string> $instanceCallClasses
      */
     private function createRuntime(
         RuntimeFunctionPolicy $policy = RuntimeFunctionPolicy::CUSTOM_ONLY,
         array $directives = [],
         array $functions = [],
-        array $filters = [],
         array $instanceCallClasses = [],
+        ?ContainerInterface $container = null,
     ): Runtime {
         return new Runtime(
             engine: $this->engine,
             directives: $directives,
             functions: $functions,
-            filters: $filters,
             functionPolicy: $policy,
             instanceCallClasses: $instanceCallClasses,
+            container: $container,
+        );
+    }
+
+    /**
+     * @param list<CallableMetadata> $filters
+     */
+    private function installFilterMetadata(
+        array $filters,
+    ): void {
+        $this->engine->compiler = Compiler::createWithDefaultProviders(
+            introspector: new RuntimeIntrospector(
+                filters: $filters,
+            ),
         );
     }
 
@@ -87,19 +105,15 @@ class RuntimeTest extends TestCase
         self::assertSame([], $runtime->directives);
     }
 
-    public function testConstructorLowercasesFunctionAndFilterKeys(): void
+    public function testConstructorLowercasesFunctionKeys(): void
     {
         $runtime = $this->createRuntime(
             functions: [
                 'UpperCase' => new RecordingFunction(),
             ],
-            filters: [
-                'TRIM' => new RecordingFilter(),
-            ],
         );
 
         self::assertArrayHasKey('uppercase', $runtime->functions);
-        self::assertArrayHasKey('trim', $runtime->filters);
     }
 
     public function testRendererSetterStoresRenderer(): void
@@ -312,27 +326,10 @@ class RuntimeTest extends TestCase
         $runtime->instanceCall($runtime);
     }
 
-    public function testHasFilterReturnsTrueForRegisteredFilter(): void
-    {
-        $runtime = $this->createRuntime(
-            filters: [
-                'upper' => new RecordingFilter(),
-            ],
-        );
-
-        self::assertTrue($runtime->hasFilter('upper'));
-    }
-
-    public function testHasFilterReturnsFalseForUnknownFilter(): void
-    {
-        $runtime = $this->createRuntime();
-
-        self::assertFalse($runtime->hasFilter('upper'));
-    }
-
     public function testFilterThrowsForUnknownFilter(): void
     {
         $runtime = $this->createRuntime();
+        $this->attachRenderer($runtime);
 
         self::expectException(RuntimeException::class);
 
@@ -341,34 +338,108 @@ class RuntimeTest extends TestCase
 
     public function testFilterThrowsWhenRendererNotSet(): void
     {
-        $runtime = $this->createRuntime(
+        $this->installFilterMetadata(
             filters: [
-                'upper' => new RecordingFilter(),
+                new CallableMetadata(
+                    name: 'recording',
+                    kind: CallableKind::TYPED_ATTRIBUTE,
+                    className: RecordingFilter::class,
+                    methodName: 'record',
+                    wantsContext: true,
+                    contextParameterIndex: 1,
+                ),
             ],
         );
 
+        $runtime = $this->createRuntime();
+
         self::expectException(RuntimeException::class);
 
-        $runtime->filter('value', 'upper');
+        $runtime->filter('value', 'recording');
     }
 
     public function testFilterCallsRegisteredFilter(): void
     {
-        $filter = new RecordingFilter(
-            returnValue: 'FILTERED',
-        );
+        $filter = new RecordingFilter();
+        $filter->returnValue = 'FILTERED';
 
-        $runtime = $this->createRuntime(
+        $container = new Container();
+        $container->singleton($filter);
+
+        $this->installFilterMetadata(
             filters: [
-                'upper' => $filter,
+                new CallableMetadata(
+                    name: 'recording',
+                    kind: CallableKind::TYPED_ATTRIBUTE,
+                    className: RecordingFilter::class,
+                    methodName: 'record',
+                    wantsContext: true,
+                    contextParameterIndex: 1,
+                ),
             ],
         );
 
+        $runtime = $this->createRuntime(
+            container: $container,
+        );
         $this->attachRenderer($runtime);
 
-        self::assertSame('FILTERED', $runtime->filter('hello', 'upper'));
+        self::assertSame('FILTERED', $runtime->filter('hello', 'recording'));
         self::assertSame('hello', $filter->lastValue);
         self::assertNotNull($filter->lastContext);
+    }
+
+    public function testFilterDispatchesContextFirstFilter(): void
+    {
+        $filter = new ContextFirstFilter();
+
+        $container = new Container();
+        $container->singleton($filter);
+
+        $this->installFilterMetadata(
+            filters: [
+                new CallableMetadata(
+                    name: 'context_first',
+                    kind: CallableKind::TYPED_ATTRIBUTE,
+                    className: ContextFirstFilter::class,
+                    methodName: 'run',
+                    wantsContext: true,
+                    contextParameterIndex: 0,
+                ),
+            ],
+        );
+
+        $runtime = $this->createRuntime(
+            container: $container,
+        );
+        $this->attachRenderer($runtime);
+
+        self::assertSame('hello', $runtime->filter('hello', 'context_first'));
+        self::assertSame('hello', $filter->lastValue);
+        self::assertNotNull($filter->lastContext);
+    }
+
+    public function testFilterThrowsWhenContainerMissing(): void
+    {
+        $this->installFilterMetadata(
+            filters: [
+                new CallableMetadata(
+                    name: 'recording',
+                    kind: CallableKind::TYPED_ATTRIBUTE,
+                    className: RecordingFilter::class,
+                    methodName: 'record',
+                    wantsContext: true,
+                    contextParameterIndex: 1,
+                ),
+            ],
+        );
+
+        $runtime = $this->createRuntime();
+        $this->attachRenderer($runtime);
+
+        self::expectException(RuntimeException::class);
+
+        $runtime->filter('value', 'recording');
     }
 
     public function testPropertyAccessReturnsObject(): void

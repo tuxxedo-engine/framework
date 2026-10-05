@@ -16,6 +16,7 @@ namespace Unit\View\Lumi\Runtime\Introspector;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableKind;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadata;
+use Tuxxedo\View\Lumi\Runtime\Introspector\IntrospectorException;
 use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospector;
 
 class RuntimeIntrospectorTest extends TestCase
@@ -25,9 +26,61 @@ class RuntimeIntrospectorTest extends TestCase
         $introspector = new RuntimeIntrospector();
 
         self::assertFalse($introspector->hasFunction('date'));
-        self::assertNull($introspector->getFunction('date'));
         self::assertFalse($introspector->hasFilter('upper'));
-        self::assertNull($introspector->getFilter('upper'));
+    }
+
+    public function testGetFunctionThrowsForUnknownName(): void
+    {
+        $introspector = new RuntimeIntrospector();
+
+        self::expectException(IntrospectorException::class);
+
+        $introspector->getFunction('date');
+    }
+
+    public function testGetFilterThrowsForUnknownName(): void
+    {
+        $introspector = new RuntimeIntrospector();
+
+        self::expectException(IntrospectorException::class);
+
+        $introspector->getFilter('upper');
+    }
+
+    public function testHasAnyFunctionsIsFalseForEmptyIntrospector(): void
+    {
+        self::assertFalse((new RuntimeIntrospector())->hasAnyFunctions());
+    }
+
+    public function testHasAnyFunctionsIsTrueWhenAtLeastOneFunctionRegistered(): void
+    {
+        $introspector = new RuntimeIntrospector(
+            functions: [
+                $this->makeMetadata(
+                    name: 'date',
+                ),
+            ],
+        );
+
+        self::assertTrue($introspector->hasAnyFunctions());
+    }
+
+    public function testHasAnyFiltersIsFalseForEmptyIntrospector(): void
+    {
+        self::assertFalse((new RuntimeIntrospector())->hasAnyFilters());
+    }
+
+    public function testHasAnyFiltersIsTrueWhenAtLeastOneFilterRegistered(): void
+    {
+        $introspector = new RuntimeIntrospector(
+            filters: [
+                $this->makeMetadata(
+                    name: 'upper',
+                ),
+            ],
+        );
+
+        self::assertTrue($introspector->hasAnyFilters());
     }
 
     public function testGetFunctionByCanonicalName(): void

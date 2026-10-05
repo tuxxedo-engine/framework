@@ -13,12 +13,14 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime\Introspector;
 
-enum CallableKind
+interface CallableDiscovererInterface
 {
-    case LEGACY_INTERFACE;
-
     /**
-     * @todo Populated once the stdlib migrates from FunctionInterface to #[LumiFunction]
+     * @param class-string $className
+     *
+     * @return list<CallableMetadataInterface>
      */
-    case TYPED_ATTRIBUTE;
+    public function discoverFilters(
+        string $className,
+    ): array;
 }

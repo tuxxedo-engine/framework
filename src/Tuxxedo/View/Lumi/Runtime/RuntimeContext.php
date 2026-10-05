@@ -44,7 +44,7 @@ readonly class RuntimeContext implements RuntimeContextInterface
     public function hasFilter(
         string $filter,
     ): bool {
-        return $this->runtime->hasFilter($filter);
+        return $this->runtime->engine->compiler->introspector->hasFilter($filter);
     }
 
     public function callFilter(

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Library\Standard\Function;
 
+use Tuxxedo\Temporal\InstantInterface;
 use Tuxxedo\Temporal\TemporalCoercion;
 use Tuxxedo\Temporal\TimeZone;
 use Tuxxedo\Temporal\TimeZoneInterface;
@@ -31,6 +32,7 @@ class DateLocalFunction implements FunctionInterface
         array $arguments,
         \Closure $context,
     ): string {
+        /** @var InstantInterface|\DateTimeInterface|int|string $value */
         $value = $arguments[0];
 
         $tzArgument = $arguments[1] ?? null;

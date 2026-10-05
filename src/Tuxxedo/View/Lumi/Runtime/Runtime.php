@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime;
 
-use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
 use Tuxxedo\View\Lumi\LumiEngineInterface;
 use Tuxxedo\View\Lumi\LumiViewRenderInterface;
@@ -25,11 +25,6 @@ class Runtime implements RuntimeInterface
      * @var array<string, FunctionInterface>
      */
     public readonly array $functions;
-
-    /**
-     * @var array<string, FilterInterface>
-     */
-    public readonly array $filters;
 
     /**
      * @var array<array<string, string|int|float|bool|null>>
@@ -48,19 +43,17 @@ class Runtime implements RuntimeInterface
     /**
      * @param array<string, string|int|float|bool|null> $directives
      * @param array<string, FunctionInterface> $functions
-     * @param array<string, FilterInterface> $filters
      * @param array<class-string> $instanceCallClasses
      */
     public function __construct(
         public readonly LumiEngineInterface $engine,
         public private(set) array $directives = [],
         array $functions = [],
-        array $filters = [],
         public readonly RuntimeFunctionPolicy $functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY,
         public readonly array $instanceCallClasses = [],
+        public readonly ?ContainerInterface $container = null,
     ) {
         $this->functions = \array_change_key_case($functions);
-        $this->filters = \array_change_key_case($filters);
     }
 
     public function renderer(
@@ -155,30 +148,73 @@ class Runtime implements RuntimeInterface
         return $instance;
     }
 
-    public function hasFilter(
-        string $filter,
-    ): bool {
-        return \array_key_exists($filter, $this->filters);
-    }
-
     public function filter(
         mixed $value,
         string $filter,
     ): mixed {
-        if (!\array_key_exists($filter, $this->filters)) {
-            throw RuntimeException::fromUnknownFilterCall(
-                filter: $filter,
-            );
-        } elseif (!isset($this->renderer)) {
+        if (!isset($this->renderer)) {
             throw RuntimeException::fromCannotCallCustomFunctionWithRender();
         }
 
-        return ($this->filters[$filter])->call(
+        $introspector = $this->engine->compiler->introspector;
+
+        if (!$introspector->hasFilter($filter)) {
+            throw RuntimeException::fromUnknownFilterCall(
+                filter: $filter,
+            );
+        }
+
+        $metadata = $introspector->getFilter($filter);
+
+        return $this->dispatchTypedFilter(
             value: $value,
-            context: fn (): RuntimeContextInterface => new RuntimeContext(
-                runtime: $this,
-            ),
+            className: $metadata->className,
+            methodName: $metadata->methodName,
+            contextParameterIndex: $metadata->contextParameterIndex,
         );
+    }
+
+    /**
+     * @param class-string $className
+     */
+    private function dispatchTypedFilter(
+        mixed $value,
+        string $className,
+        string $methodName,
+        ?int $contextParameterIndex,
+    ): mixed {
+        if ($this->container === null) {
+            throw RuntimeException::fromTypedCallableWithoutContainer();
+        }
+
+        $handler = $this->container->resolve($className);
+        $arguments = $contextParameterIndex === 0
+            ? [
+                new RuntimeContext(
+                    runtime: $this,
+                ),
+                $value,
+            ]
+            : (
+                $contextParameterIndex === null
+                    ? [
+                        $value,
+                    ]
+                    : [
+                        $value,
+                        new RuntimeContext(
+                            runtime: $this,
+                        ),
+                    ]
+            );
+
+        /** @var callable $callable */
+        $callable = [
+            $handler,
+            $methodName,
+        ];
+
+        return \call_user_func_array($callable, $arguments);
     }
 
     public function propertyAccess(

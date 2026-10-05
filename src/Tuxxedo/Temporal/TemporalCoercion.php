@@ -16,7 +16,7 @@ namespace Tuxxedo\Temporal;
 class TemporalCoercion
 {
     public static function toInstant(
-        mixed $value,
+        InstantInterface|\DateTimeInterface|int|string $value,
     ): InstantInterface {
         if ($value instanceof InstantInterface) {
             return $value;
@@ -34,13 +34,11 @@ class TemporalCoercion
             return Instant::fromUnixTimestamp($value);
         }
 
-        /** @var string $value */
-
         return Instant::parse($value);
     }
 
     public static function format(
-        mixed $value,
+        InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
         string $pattern,
     ): string {
         if (

@@ -21,13 +21,9 @@ use Tuxxedo\View\Lumi\Config\LumiConfigInterface;
 use Tuxxedo\View\Lumi\Highlight\Highlighter;
 use Tuxxedo\View\Lumi\Highlight\Theme\ThemeFactory;
 use Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface;
-use Tuxxedo\View\Lumi\Library\Attribute\LumiFilter;
 use Tuxxedo\View\Lumi\Library\Attribute\LumiFunction;
 use Tuxxedo\View\Lumi\Library\Directive\DefaultDirectives;
 use Tuxxedo\View\Lumi\Library\Directive\MutableDirectives;
-use Tuxxedo\View\Lumi\Library\Filter\CustomFilter;
-use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
-use Tuxxedo\View\Lumi\Library\Filter\FilterProviderInterface;
 use Tuxxedo\View\Lumi\Library\Function\CustomFunction;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionProviderInterface;
@@ -37,6 +33,7 @@ use Tuxxedo\View\Lumi\Library\LibraryProviderInterface;
 use Tuxxedo\View\Lumi\Library\Standard\StandardLibrary;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerPipeline;
+use Tuxxedo\View\Lumi\Runtime\Introspector\CallableDiscoverer;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableKind;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadata;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadataInterface;
@@ -68,8 +65,10 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
     public private(set) array $instanceCallClasses = [];
 
-    public private(set) array $customFilters = [];
-    public private(set) array $filterProviders = [];
+    /**
+     * @var list<class-string>
+     */
+    public private(set) array $filterClasses = [];
 
     /**
      * @var array<string, ThemeInterface>
@@ -252,22 +251,13 @@ class LumiConfigurator implements LumiConfiguratorInterface
         return $this;
     }
 
-    public function defineFilter(
-        FilterInterface $handler,
+    /**
+     * @param class-string $className
+     */
+    public function withFilterClass(
+        string $className,
     ): self {
-        $this->customFilters[$handler->name] = $handler;
-
-        foreach ($handler->aliases as $alias) {
-            $this->customFilters[$alias] = $handler;
-        }
-
-        return $this;
-    }
-
-    public function withFilterProvider(
-        FilterProviderInterface $provider,
-    ): LumiConfiguratorInterface {
-        $this->filterProviders[] = $provider;
+        $this->filterClasses[] = $className;
 
         return $this;
     }
@@ -291,10 +281,6 @@ class LumiConfigurator implements LumiConfiguratorInterface
             $this->loadDiscoveredLibrary($library);
 
             return $this;
-        }
-
-        if (($filterProvider = $library->filters()) !== null) {
-            $this->withFilterProvider($filterProvider);
         }
 
         if (($functionProvider = $library->functions()) !== null) {
@@ -418,20 +404,6 @@ class LumiConfigurator implements LumiConfiguratorInterface
                         aliases: $function->aliases,
                     ),
                 );
-
-                continue;
-            }
-
-            if ($method->hasAttribute(LumiFilter::class)) {
-                $filter = $method->getAttribute(LumiFilter::class);
-
-                $this->defineFilter(
-                    handler: new CustomFilter(
-                        name: $filter->name,
-                        implementation: fn (): mixed => $callback(...),
-                        aliases: $filter->aliases,
-                    ),
-                );
             }
         }
     }
@@ -456,25 +428,6 @@ class LumiConfigurator implements LumiConfiguratorInterface
     }
 
     /**
-     * @return array<string, FilterInterface>
-     */
-    private function loadFilterProvider(
-        FilterProviderInterface $provider,
-    ): array {
-        $filters = [];
-
-        foreach ($provider->export($this->container) as $handler) {
-            $filters[\strtolower($handler->name)] = $handler;
-
-            foreach ($handler->aliases as $alias) {
-                $filters[\strtolower($alias)] = $handler;
-            }
-        }
-
-        return $filters;
-    }
-
-    /**
      * @return array<string, FunctionInterface>
      */
     private function buildCustomFunctions(): array
@@ -494,32 +447,16 @@ class LumiConfigurator implements LumiConfiguratorInterface
         return $customFunctions;
     }
 
-    /**
-     * @return array<string, FilterInterface>
-     */
-    private function buildCustomFilters(): array
-    {
-        $customFilters = [];
-
-        if (\sizeof($this->filterProviders) > 0) {
-            $customFilters = \array_merge(
-                $customFilters,
-                ...\array_map(
-                    fn (FilterProviderInterface $provider): array => $this->loadFilterProvider($provider),
-                    $this->filterProviders,
-                ),
-            );
-        }
-
-        return $customFilters;
-    }
-
     public function build(): LumiViewRenderInterface
     {
         if ($this->withStandardLibrary) {
             $this->withLibrary(
                 library: new StandardLibrary(),
             );
+
+            foreach (StandardLibrary::filters() as $className) {
+                $this->withFilterClass($className);
+            }
         }
 
         $highlighter = new Highlighter(
@@ -575,10 +512,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
                 ),
                 functionPolicy: $this->functionPolicy,
                 instanceCallClasses: $this->instanceCallClasses,
-                filters: \array_merge(
-                    $this->buildCustomFilters(),
-                    $this->customFilters,
-                ),
+                container: $this->container,
             ),
             alwaysCompile: $this->viewAlwaysCompile,
             disableErrorReporting: $this->viewDisableErrorReporting,
@@ -635,40 +569,12 @@ class LumiConfigurator implements LumiConfiguratorInterface
      */
     private function collectFilterMetadata(): array
     {
-        $seen = [];
         $metadata = [];
+        $discoverer = new CallableDiscoverer();
 
-        foreach ($this->customFilters as $filter) {
-            if (isset($seen[\spl_object_id($filter)])) {
-                continue;
-            }
-
-            $seen[\spl_object_id($filter)] = true;
-            $metadata[] = new CallableMetadata(
-                name: $filter->name,
-                kind: CallableKind::LEGACY_INTERFACE,
-                className: $filter::class,
-                methodName: 'call',
-                wantsContext: true,
-                aliases: \array_values($filter->aliases),
-            );
-        }
-
-        foreach ($this->filterProviders as $provider) {
-            foreach ($provider->export($this->container) as $filter) {
-                if (isset($seen[\spl_object_id($filter)])) {
-                    continue;
-                }
-
-                $seen[\spl_object_id($filter)] = true;
-                $metadata[] = new CallableMetadata(
-                    name: $filter->name,
-                    kind: CallableKind::LEGACY_INTERFACE,
-                    className: $filter::class,
-                    methodName: 'call',
-                    wantsContext: true,
-                    aliases: \array_values($filter->aliases),
-                );
+        foreach ($this->filterClasses as $className) {
+            foreach ($discoverer->discoverFilters($className) as $entry) {
+                $metadata[] = $entry;
             }
         }
 

@@ -45,8 +45,21 @@ readonly class RuntimeIntrospector implements RuntimeIntrospectorInterface
 
     public function getFunction(
         string $name,
-    ): ?CallableMetadataInterface {
-        return $this->functionLookup[\strtolower($name)] ?? null;
+    ): CallableMetadataInterface {
+        $key = \strtolower($name);
+
+        if (!isset($this->functionLookup[$key])) {
+            throw IntrospectorException::fromUnknownFunction(
+                name: $name,
+            );
+        }
+
+        return $this->functionLookup[$key];
+    }
+
+    public function hasAnyFunctions(): bool
+    {
+        return \sizeof($this->functionLookup) > 0;
     }
 
     public function hasFilter(
@@ -57,8 +70,21 @@ readonly class RuntimeIntrospector implements RuntimeIntrospectorInterface
 
     public function getFilter(
         string $name,
-    ): ?CallableMetadataInterface {
-        return $this->filterLookup[\strtolower($name)] ?? null;
+    ): CallableMetadataInterface {
+        $key = \strtolower($name);
+
+        if (!isset($this->filterLookup[$key])) {
+            throw IntrospectorException::fromUnknownFilter(
+                name: $name,
+            );
+        }
+
+        return $this->filterLookup[$key];
+    }
+
+    public function hasAnyFilters(): bool
+    {
+        return \sizeof($this->filterLookup) > 0;
     }
 
     /**

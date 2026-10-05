@@ -14,8 +14,6 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi;
 
 use Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface;
-use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
-use Tuxxedo\View\Lumi\Library\Filter\FilterProviderInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionProviderInterface;
 use Tuxxedo\View\Lumi\Library\LibraryDiscoveryInterface;
@@ -57,6 +55,13 @@ interface LumiConfiguratorInterface
      * @var array<string, ThemeInterface>
      */
     public array $highlightThemes {
+        get;
+    }
+
+    /**
+     * @var list<class-string>
+     */
+    public array $filterClasses {
         get;
     }
 
@@ -103,20 +108,6 @@ interface LumiConfiguratorInterface
         get;
     }
 
-    /**
-     * @var array<string, FilterInterface>
-     */
-    public array $customFilters {
-        get;
-    }
-
-    /**
-     * @var FilterProviderInterface[]
-     */
-    public array $filterProviders {
-        get;
-    }
-
     public bool $withStandardLibrary {
         get;
     }
@@ -156,12 +147,11 @@ interface LumiConfiguratorInterface
         FunctionInterface $handler,
     ): self;
 
-    public function defineFilter(
-        FilterInterface $handler,
-    ): self;
-
-    public function withFilterProvider(
-        FilterProviderInterface $provider,
+    /**
+     * @param class-string $className
+     */
+    public function withFilterClass(
+        string $className,
     ): self;
 
     public function withFunctionProvider(

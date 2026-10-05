@@ -13,21 +13,14 @@ declare(strict_types=1);
 
 namespace Fixture\View\Lumi\LumiConfigurator;
 
-use Tuxxedo\View\Lumi\Library\Filter\FilterProviderInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionProviderInterface;
 use Tuxxedo\View\Lumi\Library\LibraryProviderInterface;
 
 class StubLibraryProvider implements LibraryProviderInterface
 {
     public function __construct(
-        private readonly ?FilterProviderInterface $filterProvider = null,
         private readonly ?FunctionProviderInterface $functionProvider = null,
     ) {
-    }
-
-    public function filters(): ?FilterProviderInterface
-    {
-        return $this->filterProvider;
     }
 
     public function functions(): ?FunctionProviderInterface

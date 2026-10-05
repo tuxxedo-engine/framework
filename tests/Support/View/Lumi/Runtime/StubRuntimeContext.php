@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Support\View\Lumi\Runtime;
 
-use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
 use Tuxxedo\View\Lumi\Runtime\RuntimeContextInterface;
 use Tuxxedo\View\Lumi\Runtime\RuntimeFunctionPolicy;
@@ -28,11 +27,6 @@ class StubRuntimeContext implements RuntimeContextInterface
     private array $directives;
 
     /**
-     * @var array<string, FilterInterface>
-     */
-    private array $filters;
-
-    /**
      * @var array<string, FunctionInterface>
      */
     private array $functions;
@@ -44,13 +38,11 @@ class StubRuntimeContext implements RuntimeContextInterface
 
     /**
      * @param array<string, string|int|float|bool|null> $directives
-     * @param FilterInterface[] $filters
      * @param FunctionInterface[] $functions
      * @param string[] $blocks
      */
     public function __construct(
         array $directives = [],
-        array $filters = [],
         array $functions = [],
         array $blocks = [],
         RuntimeFunctionPolicy $functionPolicy = RuntimeFunctionPolicy::ALLOW_ALL,
@@ -58,12 +50,6 @@ class StubRuntimeContext implements RuntimeContextInterface
         $this->directives = $directives;
         $this->functionPolicy = $functionPolicy;
         $this->blocks = $blocks;
-
-        $this->filters = [];
-
-        foreach ($filters as $filter) {
-            $this->filters[\strtolower($filter->name)] = $filter;
-        }
 
         $this->functions = [];
 
@@ -87,20 +73,14 @@ class StubRuntimeContext implements RuntimeContextInterface
     public function hasFilter(
         string $filter,
     ): bool {
-        return \array_key_exists(\strtolower($filter), $this->filters);
+        return false;
     }
 
     public function callFilter(
         mixed $value,
         string $filter,
     ): mixed {
-        $instance = $this->filters[\strtolower($filter)] ?? null;
-
-        if ($instance === null) {
-            return $value;
-        }
-
-        return $instance->call($value, fn (): static => $this);
+        return $value;
     }
 
     public function hasFunction(

@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime;
 
-use Tuxxedo\View\Lumi\Library\Filter\FilterInterface;
 use Tuxxedo\View\Lumi\Library\Function\FunctionInterface;
 use Tuxxedo\View\Lumi\LumiEngineInterface;
 use Tuxxedo\View\Lumi\LumiViewRenderInterface;
@@ -46,13 +45,6 @@ interface RuntimeInterface
      * @var array<class-string>
      */
     public array $instanceCallClasses {
-        get;
-    }
-
-    /**
-     * @var array<string, FilterInterface>
-     */
-    public array $filters {
         get;
     }
 
@@ -104,10 +96,6 @@ interface RuntimeInterface
         mixed $instance,
         bool $nullSafe = false,
     ): ?object;
-
-    public function hasFilter(
-        string $filter,
-    ): bool;
 
     /**
      * @throws RuntimeException
