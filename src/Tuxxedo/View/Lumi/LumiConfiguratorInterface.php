@@ -73,6 +73,10 @@ interface LumiConfiguratorInterface
         get;
     }
 
+    public ?string $configurationHash {
+        get;
+    }
+
     /**
      * @var array<string, string|int|float|bool|null>
      */
@@ -131,6 +135,10 @@ interface LumiConfiguratorInterface
 
     public function cacheDirectory(
         string $directory,
+    ): self;
+
+    public function withConfigurationHash(
+        string $hash,
     ): self;
 
     /**

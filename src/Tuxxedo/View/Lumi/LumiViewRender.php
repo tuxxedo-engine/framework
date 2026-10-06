@@ -103,6 +103,12 @@ class LumiViewRender implements LumiViewRenderInterface
         $compiledFileName = $this->loader->getCachedFileName($view);
 
         if ($this->alwaysCompile || !$this->loader->isCached($view)) {
+            $directory = \dirname($compiledFileName);
+
+            if (!\is_dir($directory)) {
+                \mkdir($directory, 0755, true);
+            }
+
             $this->runtime->engine->compileFile($viewFileName)->save($compiledFileName);
         }
 

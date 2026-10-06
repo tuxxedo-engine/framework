@@ -27,6 +27,10 @@ interface LoaderInterface
         get;
     }
 
+    public string $configurationHash {
+        get;
+    }
+
     public function getViewFileName(
         string $view,
     ): string;

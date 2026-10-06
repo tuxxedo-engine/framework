@@ -19,6 +19,7 @@ use Fixture\View\Lumi\Runtime\Introspector\StubFunctionClass;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Container\Container;
 use Tuxxedo\View\Lumi\Config\LumiConfig;
+use Tuxxedo\View\Lumi\Config\LumiHashBuilder;
 use Tuxxedo\View\Lumi\Highlight\ColorSlot;
 use Tuxxedo\View\Lumi\Highlight\Theme\LumiDark;
 use Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface;
@@ -26,6 +27,7 @@ use Tuxxedo\View\Lumi\Library\Directive\DefaultDirectives;
 use Tuxxedo\View\Lumi\LumiConfigurator;
 use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
 use Tuxxedo\View\Lumi\LumiEngine;
+use Tuxxedo\View\Lumi\LumiException;
 use Tuxxedo\View\Lumi\LumiViewRender;
 use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
 use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpOptimizer;
@@ -802,6 +804,68 @@ class LumiConfiguratorTest extends TestCase
                 $render->runtime,
             ),
         );
+    }
+
+    public function testBuildPopulatesLoaderWithAutoComputedConfigurationHash(): void
+    {
+        $configurator = $this->makeConfigurator();
+        $configurator->withoutStandardLibrary();
+
+        $render = $configurator->build();
+
+        self::assertSame(
+            LumiHashBuilder::fromConfiguratorStandalone($configurator),
+            $render->loader->configurationHash,
+        );
+    }
+
+    public function testWithConfigurationHashOverridesAutoCompute(): void
+    {
+        $configurator = $this->makeConfigurator();
+        $configurator->withoutStandardLibrary();
+        $configurator->withConfigurationHash('explicit-override-hash');
+
+        $render = $configurator->build();
+
+        self::assertSame(
+            'explicit-override-hash',
+            $render->loader->configurationHash,
+        );
+    }
+
+    public function testBuildLeavesHostSuppliedLoaderUntouched(): void
+    {
+        $hostLoader = new Loader(
+            directory: '/views',
+            cacheDirectory: '/cache',
+            extension: '.lumi',
+            configurationHash: 'host-hash',
+        );
+
+        $configurator = $this->makeConfigurator();
+        $configurator->withoutStandardLibrary();
+        $configurator->useLoader($hostLoader);
+
+        $render = $configurator->build();
+
+        self::assertSame($hostLoader, $render->loader);
+        self::assertSame('host-hash', $render->loader->configurationHash);
+    }
+
+    public function testBuildThrowsWhenHostLoaderAndConfigurationHashBothSupplied(): void
+    {
+        $configurator = $this->makeConfigurator();
+        $configurator->withoutStandardLibrary();
+        $configurator->useLoader(new Loader(
+            directory: '/views',
+            cacheDirectory: '/cache',
+            extension: '.lumi',
+        ));
+        $configurator->withConfigurationHash('explicit');
+
+        self::expectException(LumiException::class);
+
+        $configurator->build();
     }
 
     public function testBuildReturnsViewRenderInterface(): void

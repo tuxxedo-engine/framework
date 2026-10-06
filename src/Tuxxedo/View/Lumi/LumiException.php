@@ -45,6 +45,13 @@ class LumiException extends Exception
         );
     }
 
+    public static function fromAmbiguousLoaderAndConfigurationHash(): self
+    {
+        return new self(
+            message: 'Cannot pass both a host-supplied loader and a configuration hash; set the configuration hash on the loader itself',
+        );
+    }
+
     protected static function formatExpectedGot(
         string $expected,
         string $got,

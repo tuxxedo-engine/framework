@@ -55,6 +55,76 @@ class LoaderTest extends TestCase
         self::assertSame('/views', $loader->directory);
         self::assertSame('/cache', $loader->cacheDirectory);
         self::assertSame('.lumi', $loader->extension);
+        self::assertSame('', $loader->configurationHash);
+    }
+
+    public function testConstructorExposesConfigurationHashWhenProvided(): void
+    {
+        $loader = new Loader(
+            directory: '/views',
+            cacheDirectory: '/cache',
+            extension: '.lumi',
+            configurationHash: 'abc123',
+        );
+
+        self::assertSame('abc123', $loader->configurationHash);
+    }
+
+    public function testGetCachedFileNameInsertsConfigurationHashSubDirectory(): void
+    {
+        $loader = new Loader(
+            directory: '/views',
+            cacheDirectory: '/cache',
+            extension: '.lumi',
+            configurationHash: 'abc123',
+        );
+
+        self::assertSame(
+            '/cache/abc123/home.php',
+            $loader->getCachedFileName('home'),
+        );
+    }
+
+    public function testGetCachedFileNameHashSubDirectoryPreservesNestedViewName(): void
+    {
+        $loader = new Loader(
+            directory: '/views',
+            cacheDirectory: '/cache',
+            extension: '.lumi',
+            configurationHash: 'abc123',
+        );
+
+        self::assertSame(
+            '/cache/abc123/admin/dashboard.php',
+            $loader->getCachedFileName('admin/dashboard'),
+        );
+    }
+
+    public function testInvalidateRemovesHashedCachedFile(): void
+    {
+        $hash = 'cfg_' . \uniqid('', true);
+        $name = $this->uniqueName();
+        $directory = $this->tempDir() . '/' . $hash;
+
+        \mkdir($directory, 0755, true);
+
+        $file = $directory . '/' . $name . '.php';
+
+        \file_put_contents($file, '<?php');
+
+        $this->createdFiles[] = $file;
+
+        $loader = new Loader(
+            directory: $this->tempDir(),
+            cacheDirectory: $this->tempDir(),
+            extension: '.lumi',
+            configurationHash: $hash,
+        );
+
+        self::assertTrue($loader->invalidate($name));
+        self::assertFileDoesNotExist($file);
+
+        @\rmdir($directory);
     }
 
     public function testGetViewFileNameJoinsDirectoryViewAndExtension(): void

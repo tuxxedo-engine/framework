@@ -19,6 +19,7 @@ readonly class Loader implements LoaderInterface
         public string $directory,
         public string $cacheDirectory,
         public string $extension,
+        public string $configurationHash = '',
     ) {
     }
 
@@ -31,7 +32,11 @@ readonly class Loader implements LoaderInterface
     public function getCachedFileName(
         string $view,
     ): string {
-        return $this->cacheDirectory . '/' . $view . '.php';
+        if ($this->configurationHash === '') {
+            return $this->cacheDirectory . '/' . $view . '.php';
+        }
+
+        return $this->cacheDirectory . '/' . $this->configurationHash . '/' . $view . '.php';
     }
 
     public function exists(

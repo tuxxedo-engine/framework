@@ -17,6 +17,7 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\View\Lumi\Compiler\Compiler;
 use Tuxxedo\View\Lumi\Compiler\CompilerState;
 use Tuxxedo\View\Lumi\Config\LumiConfigInterface;
+use Tuxxedo\View\Lumi\Config\LumiHashBuilder;
 use Tuxxedo\View\Lumi\Highlight\Highlighter;
 use Tuxxedo\View\Lumi\Highlight\Theme\ThemeFactory;
 use Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface;
@@ -48,6 +49,8 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public private(set) array $optimizers = [];
 
     public private(set) ?LoaderInterface $loader = null;
+
+    public private(set) ?string $configurationHash = null;
 
     public private(set) array $directives = [];
     public private(set) array $defaultDirectives = [];
@@ -206,6 +209,14 @@ class LumiConfigurator implements LumiConfiguratorInterface
         string $directory,
     ): self {
         $this->viewCacheDirectory = $directory;
+
+        return $this;
+    }
+
+    public function withConfigurationHash(
+        string $hash,
+    ): self {
+        $this->configurationHash = $hash;
 
         return $this;
     }
@@ -407,18 +418,29 @@ class LumiConfigurator implements LumiConfiguratorInterface
             );
         }
 
+        if ($this->loader !== null && $this->configurationHash !== null) {
+            throw LumiException::fromAmbiguousLoaderAndConfigurationHash();
+        }
+
         $container = $this->container;
         $instanceResolver = static function (string $className) use ($container): object {
             /** @var class-string $className */
             return $container->resolve($className);
         };
 
-        return new LumiViewRender(
-            loader: $this->loader ?? new Loader(
-                directory: $this->viewDirectory,
-                cacheDirectory: $this->viewCacheDirectory,
-                extension: $this->viewExtension,
+        $loader = $this->loader ?? new Loader(
+            directory: $this->viewDirectory,
+            cacheDirectory: $this->viewCacheDirectory,
+            extension: $this->viewExtension,
+            configurationHash: $this->configurationHash ?? LumiHashBuilder::fromConfigurator(
+                configurator: $this,
+                filterMetadata: $filterMetadata,
+                functionMetadata: $functionMetadata,
             ),
+        );
+
+        return new LumiViewRender(
+            loader: $loader,
             runtime: new Runtime(
                 engine: LumiEngine::createCustom(
                     compiler: $compiler,
