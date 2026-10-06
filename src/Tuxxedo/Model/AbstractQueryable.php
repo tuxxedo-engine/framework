@@ -919,7 +919,6 @@ abstract class AbstractQueryable implements QueryableInterface
                 parentMetaData: $parentMetaData,
                 targetMetaData: $targetMetaData,
                 relation: $relation,
-                attribute: $attribute,
             );
         } elseif ($attribute instanceof BelongsTo) {
             $subquery = $this->buildBelongsToExistsSubquery(
@@ -927,7 +926,6 @@ abstract class AbstractQueryable implements QueryableInterface
                 parentMetaData: $parentMetaData,
                 targetMetaData: $targetMetaData,
                 relation: $relation,
-                attribute: $attribute,
             );
         } elseif ($attribute instanceof BelongsToMany) {
             $subquery = $this->buildBelongsToManyExistsSubquery(
@@ -1002,7 +1000,6 @@ abstract class AbstractQueryable implements QueryableInterface
         ModelMetaDataInterface $parentMetaData,
         ModelMetaDataInterface $targetMetaData,
         ModelRelationInterface $relation,
-        HasMany|HasOne $attribute,
     ): SelectStatementInterface {
         $foreignKeyColumns = $relation->foreignKeyColumns;
         $referencedKeyColumns = $relation->referencedKeyColumns;
@@ -1034,7 +1031,6 @@ abstract class AbstractQueryable implements QueryableInterface
         ModelMetaDataInterface $parentMetaData,
         ModelMetaDataInterface $targetMetaData,
         ModelRelationInterface $relation,
-        BelongsTo $attribute,
     ): SelectStatementInterface {
         $foreignKeyColumns = $relation->foreignKeyColumns;
         $referencedKeyColumns = $relation->referencedKeyColumns;
