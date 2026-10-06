@@ -22,16 +22,14 @@ class CallableDiscovererTest extends TestCase
 {
     public function testDiscoverFiltersExtractsAllAttributedMethods(): void
     {
-        $discoverer = new CallableDiscoverer();
-        $metadata = $discoverer->discoverFilters(StubFilterClass::class);
+        $metadata = CallableDiscoverer::discoverFilters(StubFilterClass::class);
 
         self::assertCount(2, $metadata);
     }
 
     public function testDiscoveredFilterWithoutContextParameterHasNullIndex(): void
     {
-        $discoverer = new CallableDiscoverer();
-        $metadata = $discoverer->discoverFilters(StubFilterClass::class);
+        $metadata = CallableDiscoverer::discoverFilters(StubFilterClass::class);
         $upper = $this->findByName($metadata, 'stub_upper');
 
         self::assertNotNull($upper);
@@ -41,8 +39,7 @@ class CallableDiscovererTest extends TestCase
 
     public function testDiscoveredFilterWithContextAttributeCapturesIndex(): void
     {
-        $discoverer = new CallableDiscoverer();
-        $metadata = $discoverer->discoverFilters(StubFilterClass::class);
+        $metadata = CallableDiscoverer::discoverFilters(StubFilterClass::class);
         $withContext = $this->findByName($metadata, 'stub_context');
 
         self::assertNotNull($withContext);
@@ -52,8 +49,7 @@ class CallableDiscovererTest extends TestCase
 
     public function testDiscoveredFilterCapturesAliases(): void
     {
-        $discoverer = new CallableDiscoverer();
-        $metadata = $discoverer->discoverFilters(StubFilterClass::class);
+        $metadata = CallableDiscoverer::discoverFilters(StubFilterClass::class);
         $withContext = $this->findByName($metadata, 'stub_context');
 
         self::assertNotNull($withContext);

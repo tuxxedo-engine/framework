@@ -19,7 +19,7 @@ use Tuxxedo\View\Lumi\Library\Attribute\LumiFunction;
 
 class CallableDiscoverer implements CallableDiscovererInterface
 {
-    public function discoverFunctions(
+    public static function discoverFunctions(
         string $className,
     ): array {
         $metadata = [];
@@ -43,7 +43,7 @@ class CallableDiscoverer implements CallableDiscovererInterface
         return $metadata;
     }
 
-    public function discoverFilters(
+    public static function discoverFilters(
         string $className,
     ): array {
         $metadata = [];

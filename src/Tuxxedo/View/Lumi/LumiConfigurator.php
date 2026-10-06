@@ -547,10 +547,9 @@ class LumiConfigurator implements LumiConfiguratorInterface
     private function collectFilterMetadata(): array
     {
         $metadata = [];
-        $discoverer = new CallableDiscoverer();
 
         foreach ($this->filterClasses as $className) {
-            foreach ($discoverer->discoverFilters($className) as $entry) {
+            foreach (CallableDiscoverer::discoverFilters($className) as $entry) {
                 $metadata[] = $entry;
             }
         }
@@ -564,10 +563,9 @@ class LumiConfigurator implements LumiConfiguratorInterface
     private function collectFunctionMetadata(): array
     {
         $metadata = [];
-        $discoverer = new CallableDiscoverer();
 
         foreach ($this->functionClasses as $className) {
-            foreach ($discoverer->discoverFunctions($className) as $entry) {
+            foreach (CallableDiscoverer::discoverFunctions($className) as $entry) {
                 $metadata[] = $entry;
             }
         }

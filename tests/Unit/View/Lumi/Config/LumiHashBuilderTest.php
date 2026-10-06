@@ -50,9 +50,8 @@ class LumiHashBuilderTest extends TestCase
         $configurator->withFilterClass(StubFilterClass::class);
         $configurator->withFunctionClass(StubFunctionClass::class);
 
-        $discoverer = new CallableDiscoverer();
-        $filterMetadata = $discoverer->discoverFilters(StubFilterClass::class);
-        $functionMetadata = $discoverer->discoverFunctions(StubFunctionClass::class);
+        $filterMetadata = CallableDiscoverer::discoverFilters(StubFilterClass::class);
+        $functionMetadata = CallableDiscoverer::discoverFunctions(StubFunctionClass::class);
 
         self::assertSame(
             LumiHashBuilder::fromConfigurator(

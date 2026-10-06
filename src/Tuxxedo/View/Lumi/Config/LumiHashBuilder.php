@@ -120,18 +120,17 @@ class LumiHashBuilder
     public static function fromConfiguratorStandalone(
         LumiConfiguratorInterface $configurator,
     ): string {
-        $discoverer = new CallableDiscoverer();
         $filterMetadata = [];
         $functionMetadata = [];
 
         foreach ($configurator->filterClasses as $className) {
-            foreach ($discoverer->discoverFilters($className) as $entry) {
+            foreach (CallableDiscoverer::discoverFilters($className) as $entry) {
                 $filterMetadata[] = $entry;
             }
         }
 
         foreach ($configurator->functionClasses as $className) {
-            foreach ($discoverer->discoverFunctions($className) as $entry) {
+            foreach (CallableDiscoverer::discoverFunctions($className) as $entry) {
                 $functionMetadata[] = $entry;
             }
         }

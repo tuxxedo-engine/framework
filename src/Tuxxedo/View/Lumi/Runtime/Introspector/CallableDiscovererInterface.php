@@ -20,7 +20,7 @@ interface CallableDiscovererInterface
      *
      * @return list<CallableMetadataInterface>
      */
-    public function discoverFunctions(
+    public static function discoverFunctions(
         string $className,
     ): array;
 
@@ -29,7 +29,7 @@ interface CallableDiscovererInterface
      *
      * @return list<CallableMetadataInterface>
      */
-    public function discoverFilters(
+    public static function discoverFilters(
         string $className,
     ): array;
 }
