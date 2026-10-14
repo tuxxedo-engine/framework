@@ -279,7 +279,6 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                     sourceColumnNames: $sourceColumnNames,
                     sourcePrimaryKey: $sourcePrimaryKey,
                     sourceCompositeKey: $sourceCompositeKey,
-                    parentHasSoftDelete: $parentHasSoftDelete,
                     relations: $relations,
                     morphToRelations: $morphToRelations,
                 );
@@ -442,7 +441,6 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         array $sourceColumnNames,
         ?ModelPrimaryKeyInterface $sourcePrimaryKey,
         ?ModelCompositeKeyInterface $sourceCompositeKey,
-        bool $parentHasSoftDelete,
         array &$relations,
         array &$morphToRelations,
     ): void {

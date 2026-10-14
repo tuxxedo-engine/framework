@@ -15,10 +15,19 @@ namespace Unit\Temporal\Humanizer;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Intl\Config\IntlConfig;
+use Tuxxedo\Intl\Loader\FlatFileLoader;
+use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\MissingKeyMode;
+use Tuxxedo\Intl\PluralSelector;
+use Tuxxedo\Intl\Resolver\StaticLocaleResolver;
+use Tuxxedo\Intl\Translator;
 use Tuxxedo\Temporal\Duration;
 use Tuxxedo\Temporal\FixedClock;
 use Tuxxedo\Temporal\HumanizedStyle;
 use Tuxxedo\Temporal\Humanizer\Humanizer;
+use Tuxxedo\Temporal\Humanizer\Message\MessageFormatterInterface;
+use Tuxxedo\Temporal\Humanizer\Message\TranslatorMessageFormatter;
 use Tuxxedo\Temporal\Instant;
 
 class HumanizerTest extends TestCase
@@ -106,7 +115,10 @@ class HumanizerTest extends TestCase
             ? $reference->plus(duration: Duration::fromSeconds(seconds: $offsetSeconds))
             : $reference->minus(duration: Duration::fromSeconds(seconds: \abs($offsetSeconds)));
 
-        $humanizer = new Humanizer(clock: $clock);
+        $humanizer = new Humanizer(
+            clock: $clock,
+            messageFormatter: $this->makeMessageFormatter(),
+        );
 
         self::assertSame($expected, $humanizer->diffForHumans(moment: $moment));
     }
@@ -117,6 +129,7 @@ class HumanizerTest extends TestCase
         $moment = Instant::parse(input: '2026-01-01T00:30:00Z');
         $humanizer = new Humanizer(
             clock: new FixedClock(instant: Instant::parse(input: '2030-01-01T00:00:00Z')),
+            messageFormatter: $this->makeMessageFormatter(),
         );
 
         self::assertSame(
@@ -284,7 +297,10 @@ class HumanizerTest extends TestCase
     {
         $reference = Instant::parse(input: '2026-07-16T12:00:00Z');
         $moment = $reference->minus(duration: Duration::fromHours(hours: 3));
-        $humanizer = new Humanizer(clock: new FixedClock(instant: $reference));
+        $humanizer = new Humanizer(
+            clock: new FixedClock(instant: $reference),
+            messageFormatter: $this->makeMessageFormatter(),
+        );
 
         self::assertSame(
             '3 hours ago',
@@ -298,6 +314,7 @@ class HumanizerTest extends TestCase
         $reference = Instant::parse(input: '2026-01-01T00:30:00Z');
         $humanizer = new Humanizer(
             clock: new FixedClock(instant: Instant::parse(input: '2030-01-01T00:00:00Z')),
+            messageFormatter: $this->makeMessageFormatter(),
         );
 
         self::assertSame(
@@ -310,6 +327,29 @@ class HumanizerTest extends TestCase
     {
         return new Humanizer(
             clock: new FixedClock(instant: Instant::parse(input: '2026-07-16T12:00:00Z')),
+            messageFormatter: $this->makeMessageFormatter(),
+        );
+    }
+
+    private function makeMessageFormatter(): MessageFormatterInterface
+    {
+        $config = new IntlConfig(
+            rootDirectory: '/unused',
+            defaultLocale: Locale::parse('en-US'),
+            missingKeyMode: MissingKeyMode::PASSTHROUGH,
+        );
+
+        return new TranslatorMessageFormatter(
+            translator: new Translator(
+                config: $config,
+                loader: new FlatFileLoader(
+                    rootDirectory: \dirname(__DIR__, 4) . '/resources/intl',
+                ),
+                resolver: new StaticLocaleResolver(
+                    config: $config,
+                ),
+                pluralSelector: new PluralSelector(),
+            ),
         );
     }
 }

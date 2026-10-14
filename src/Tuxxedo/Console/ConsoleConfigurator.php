@@ -19,6 +19,7 @@ use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Console\Config\HelpConfig;
 use Tuxxedo\Console\Config\SuggestionPolicy;
 use Tuxxedo\Console\Input\InputInterface;
+use Tuxxedo\Console\Input\Message\MessageFormatterInterface;
 use Tuxxedo\Console\Input\StdinInput;
 use Tuxxedo\Console\Invocation\ArgvParser;
 use Tuxxedo\Console\Invocation\ParameterBinder;
@@ -288,24 +289,29 @@ class ConsoleConfigurator extends AbstractConfigurator implements ConsoleConfigu
             throw ConsoleException::fromStreamNotOpen(); // @codeCoverageIgnore
         }
 
-        $input = new StdinInput(
-            stream: new PhpInputStream($stdin),
-            output: $output->stdout,
-        );
+        $inputStream = new PhpInputStream($stdin);
 
         $container = $this->container ?? new Container();
 
         $container->singleton($container);
         $container->singleton($output);
-        $container->singleton($input);
         $container->singletonLazy(
             class: OutputInterface::class,
             initializer: static fn (): OutputInterface => $output->stdout,
         );
 
         $container->singletonLazy(
+            class: StdinInput::class,
+            initializer: static fn (ContainerInterface $container): StdinInput => new StdinInput(
+                stream: $inputStream,
+                output: $output->stdout,
+                messageFormatter: $container->resolve(MessageFormatterInterface::class),
+            ),
+        );
+
+        $container->singletonLazy(
             class: InputInterface::class,
-            initializer: static fn (): InputInterface => $input,
+            initializer: static fn (ContainerInterface $container): InputInterface => $container->resolve(StdinInput::class),
         );
 
         $container->singleton($this->suggestionPolicyOverride ?? SuggestionPolicy::default());

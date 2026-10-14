@@ -13,8 +13,11 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Validator\Message;
 
+use Tuxxedo\Container\DefaultImplementation;
+use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Validator\ViolationInterface;
 
+#[DefaultImplementation(class: TranslatorMessageFormatter::class, lifecycle: Lifecycle::SINGLETON)]
 interface MessageFormatterInterface
 {
     public function format(

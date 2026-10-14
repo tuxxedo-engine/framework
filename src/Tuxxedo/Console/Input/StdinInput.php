@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Tuxxedo\Console\Input;
 
 use Tuxxedo\Console\ConsoleException;
-use Tuxxedo\Console\Input\Message\DefaultEnglishMessageFormatter;
 use Tuxxedo\Console\Input\Message\MessageFormatterInterface;
 use Tuxxedo\Console\Output\OutputInterface;
 use Tuxxedo\Console\Stream\InputStreamInterface;
@@ -27,14 +26,11 @@ class StdinInput implements InputInterface
         }
     }
 
-    private readonly MessageFormatterInterface $messageFormatter;
-
     public function __construct(
         public readonly InputStreamInterface $stream,
         private readonly OutputInterface $output,
-        ?MessageFormatterInterface $messageFormatter = null,
+        private readonly MessageFormatterInterface $messageFormatter,
     ) {
-        $this->messageFormatter = $messageFormatter ?? new DefaultEnglishMessageFormatter();
     }
 
     public function readLine(): ?string
@@ -99,13 +95,13 @@ class StdinInput implements InputInterface
                 return $default;
             }
 
-            $normalized = \strtolower(\trim($answer));
+            $trimmed = \mb_trim($answer);
 
-            if ($normalized === '') {
+            if ($trimmed === '') {
                 return $default;
             }
 
-            $parsed = $this->messageFormatter->parseConfirmAnswer(normalized: $normalized);
+            $parsed = $this->messageFormatter->parseConfirmAnswer(answer: $trimmed);
 
             if ($parsed !== null) {
                 return $parsed;

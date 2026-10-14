@@ -550,8 +550,6 @@ abstract class AbstractConnectionIntegrationTestCase extends TestCase
     {
         $this->createUsersSchema();
 
-        $caught = null;
-
         try {
             $this->connection->transaction(
                 transaction: function ($connection): void {
@@ -667,8 +665,6 @@ abstract class AbstractConnectionIntegrationTestCase extends TestCase
                 value: 'outer',
             )
             ->execute();
-
-        $caught = null;
 
         try {
             $this->connection->nestedTransaction(
@@ -823,8 +819,6 @@ abstract class AbstractConnectionIntegrationTestCase extends TestCase
     {
         $this->createUsersSchema();
 
-        $caught = null;
-
         try {
             $this->connection->transaction(
                 transaction: function ($connection): void {
@@ -885,8 +879,6 @@ abstract class AbstractConnectionIntegrationTestCase extends TestCase
                 value: 'outer',
             )
             ->execute();
-
-        $caught = null;
 
         try {
             $this->connection->nestedTransaction(

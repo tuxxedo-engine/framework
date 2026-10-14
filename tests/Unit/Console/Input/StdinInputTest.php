@@ -23,11 +23,20 @@ use Support\Console\Stream\ScriptedInputStream;
 use Tuxxedo\Console\ConsoleException;
 use Tuxxedo\Console\Input\ChoiceQuestion;
 use Tuxxedo\Console\Input\ConfirmQuestion;
+use Tuxxedo\Console\Input\Message\MessageFormatterInterface;
+use Tuxxedo\Console\Input\Message\TranslatorMessageFormatter;
 use Tuxxedo\Console\Input\Questionnaire;
 use Tuxxedo\Console\Input\StdinInput;
 use Tuxxedo\Console\Input\TextQuestion;
 use Tuxxedo\Console\Output\DecorationMode;
 use Tuxxedo\Console\Output\StreamOutput;
+use Tuxxedo\Intl\Config\IntlConfig;
+use Tuxxedo\Intl\Loader\FlatFileLoader;
+use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\MissingKeyMode;
+use Tuxxedo\Intl\PluralSelector;
+use Tuxxedo\Intl\Resolver\StaticLocaleResolver;
+use Tuxxedo\Intl\Translator;
 
 class StdinInputTest extends TestCase
 {
@@ -78,11 +87,13 @@ class StdinInputTest extends TestCase
                 isTerminal: true,
             ),
             output: $this->makeOutput(),
+            messageFormatter: $this->makeMessageFormatter(),
         );
 
         $piped = new StdinInput(
             stream: new ScriptedInputStream(),
             output: $this->makeOutput(),
+            messageFormatter: $this->makeMessageFormatter(),
         );
 
         self::assertTrue($interactive->isInteractive);
@@ -651,6 +662,7 @@ class StdinInputTest extends TestCase
                 lines: $lines,
             ),
             output: $this->makeOutput(),
+            messageFormatter: $this->makeMessageFormatter(),
         );
     }
 
@@ -659,6 +671,28 @@ class StdinInputTest extends TestCase
         return new StreamOutput(
             stream: $this->outputStream,
             decorationMode: DecorationMode::NEVER,
+        );
+    }
+
+    private function makeMessageFormatter(): MessageFormatterInterface
+    {
+        $config = new IntlConfig(
+            rootDirectory: '/unused',
+            defaultLocale: Locale::parse('en-US'),
+            missingKeyMode: MissingKeyMode::PASSTHROUGH,
+        );
+
+        return new TranslatorMessageFormatter(
+            translator: new Translator(
+                config: $config,
+                loader: new FlatFileLoader(
+                    rootDirectory: \dirname(__DIR__, 4) . '/resources/intl',
+                ),
+                resolver: new StaticLocaleResolver(
+                    config: $config,
+                ),
+                pluralSelector: new PluralSelector(),
+            ),
         );
     }
 }

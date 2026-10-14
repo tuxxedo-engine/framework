@@ -15,9 +15,18 @@ namespace Unit\View\Lumi\Library\Standard\Filter;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Intl\Config\IntlConfig;
+use Tuxxedo\Intl\Loader\FlatFileLoader;
+use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\MissingKeyMode;
+use Tuxxedo\Intl\PluralSelector;
+use Tuxxedo\Intl\Resolver\StaticLocaleResolver;
+use Tuxxedo\Intl\Translator;
 use Tuxxedo\Temporal\Duration;
 use Tuxxedo\Temporal\FixedClock;
 use Tuxxedo\Temporal\Humanizer\Humanizer;
+use Tuxxedo\Temporal\Humanizer\Message\MessageFormatterInterface;
+use Tuxxedo\Temporal\Humanizer\Message\TranslatorMessageFormatter;
 use Tuxxedo\Temporal\Instant;
 use Tuxxedo\Temporal\InstantInterface;
 use Tuxxedo\Temporal\LocalDate;
@@ -33,7 +42,30 @@ class DateFiltersTest extends TestCase
     ): DateFilters {
         return new DateFilters(
             humanizer: new Humanizer(
-                new FixedClock(Instant::parse($reference)),
+                clock: new FixedClock(Instant::parse($reference)),
+                messageFormatter: $this->makeMessageFormatter(),
+            ),
+        );
+    }
+
+    private function makeMessageFormatter(): MessageFormatterInterface
+    {
+        $config = new IntlConfig(
+            rootDirectory: '/unused',
+            defaultLocale: Locale::parse('en-US'),
+            missingKeyMode: MissingKeyMode::PASSTHROUGH,
+        );
+
+        return new TranslatorMessageFormatter(
+            translator: new Translator(
+                config: $config,
+                loader: new FlatFileLoader(
+                    rootDirectory: \dirname(__DIR__, 7) . '/resources/intl',
+                ),
+                resolver: new StaticLocaleResolver(
+                    config: $config,
+                ),
+                pluralSelector: new PluralSelector(),
             ),
         );
     }
@@ -59,11 +91,6 @@ class DateFiltersTest extends TestCase
         $filters = $this->filtersAt('2026-07-16T12:00:00Z');
 
         self::assertSame('1 hour ago', $filters->dateAgo('2026-07-16T11:00:00Z'));
-    }
-
-    public function testDateAgoDefaultsToSystemClockWhenNoDependenciesInjected(): void
-    {
-        self::assertSame('just now', (new DateFilters())->dateAgo(Instant::now()));
     }
 
     /**
@@ -112,14 +139,14 @@ class DateFiltersTest extends TestCase
         InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
         string $expected,
     ): void {
-        self::assertSame($expected, (new DateFilters())->dateIso($value));
+        self::assertSame($expected, $this->filtersAt('2026-07-16T12:00:00Z')->dateIso($value));
     }
 
     public function testDateLongFormatsInstantWithLongPreset(): void
     {
         self::assertSame(
             'Thursday, July 16, 2026 12:00 PM',
-            (new DateFilters())->dateLong(Instant::parse('2026-07-16T12:00:00Z')),
+            $this->filtersAt('2026-07-16T12:00:00Z')->dateLong(Instant::parse('2026-07-16T12:00:00Z')),
         );
     }
 
@@ -127,7 +154,7 @@ class DateFiltersTest extends TestCase
     {
         self::assertSame(
             '2026-07-16 12:00',
-            (new DateFilters())->dateShort(Instant::parse('2026-07-16T12:00:00Z')),
+            $this->filtersAt('2026-07-16T12:00:00Z')->dateShort(Instant::parse('2026-07-16T12:00:00Z')),
         );
     }
 
@@ -135,7 +162,7 @@ class DateFiltersTest extends TestCase
     {
         self::assertSame(
             '2026-07-16 12:00',
-            (new DateFilters())->dateShort('2026-07-16T12:00:00Z'),
+            $this->filtersAt('2026-07-16T12:00:00Z')->dateShort('2026-07-16T12:00:00Z'),
         );
     }
 
@@ -143,7 +170,7 @@ class DateFiltersTest extends TestCase
     {
         self::assertSame(
             '2026-07-16 11:00:00',
-            (new DateFilters())->dateUtc(Instant::parse('2026-07-16T13:00:00+02:00')),
+            $this->filtersAt('2026-07-16T12:00:00Z')->dateUtc(Instant::parse('2026-07-16T13:00:00+02:00')),
         );
     }
 
@@ -151,20 +178,20 @@ class DateFiltersTest extends TestCase
     {
         self::assertSame(
             '2026-07-16 12:00:00',
-            (new DateFilters())->dateUtc(Instant::parse('2026-07-16T12:00:00Z')),
+            $this->filtersAt('2026-07-16T12:00:00Z')->dateUtc(Instant::parse('2026-07-16T12:00:00Z')),
         );
     }
 
     public function testDateUtcCoercesUnixTimestampAsUtc(): void
     {
-        self::assertSame('2026-07-16 12:00:00', (new DateFilters())->dateUtc(1_784_203_200));
+        self::assertSame('2026-07-16 12:00:00', $this->filtersAt('2026-07-16T12:00:00Z')->dateUtc(1_784_203_200));
     }
 
     public function testTimeIsoFormatsLocalTimeAsIso(): void
     {
         self::assertSame(
             '09:30:15',
-            (new DateFilters())->timeIso(LocalTime::of(hour: 9, minute: 30, second: 15)),
+            $this->filtersAt('2026-07-16T12:00:00Z')->timeIso(LocalTime::of(hour: 9, minute: 30, second: 15)),
         );
     }
 
@@ -172,7 +199,7 @@ class DateFiltersTest extends TestCase
     {
         self::assertSame(
             '12:00:00',
-            (new DateFilters())->timeIso(Instant::parse('2026-07-16T12:00:00Z')),
+            $this->filtersAt('2026-07-16T12:00:00Z')->timeIso(Instant::parse('2026-07-16T12:00:00Z')),
         );
     }
 
@@ -180,7 +207,7 @@ class DateFiltersTest extends TestCase
     {
         self::assertSame(
             '12:00:00',
-            (new DateFilters())->timeIso('2026-07-16T12:00:00Z'),
+            $this->filtersAt('2026-07-16T12:00:00Z')->timeIso('2026-07-16T12:00:00Z'),
         );
     }
 }

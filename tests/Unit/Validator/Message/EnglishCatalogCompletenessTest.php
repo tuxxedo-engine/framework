@@ -14,17 +14,41 @@ declare(strict_types=1);
 namespace Unit\Validator\Message;
 
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Validator\Message\DefaultEnglishMessageFormatter;
+use Tuxxedo\Intl\Config\IntlConfig;
+use Tuxxedo\Intl\Loader\FlatFileLoader;
+use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\MissingKeyMode;
+use Tuxxedo\Intl\PluralSelector;
+use Tuxxedo\Intl\Resolver\StaticLocaleResolver;
+use Tuxxedo\Intl\Translator;
+use Tuxxedo\Validator\Message\TranslatorMessageFormatter;
 use Tuxxedo\Validator\Violation;
 use Tuxxedo\Validator\ViolationCodeInterface;
 
 class EnglishCatalogCompletenessTest extends TestCase
 {
     private const string RULE_ROOT = __DIR__ . '/../../../../src/Tuxxedo/Validator';
+    private const string RESOURCES_ROOT = __DIR__ . '/../../../../resources/intl';
 
     public function testEveryShippedViolationCodeHasEnglishTemplate(): void
     {
-        $formatter = new DefaultEnglishMessageFormatter();
+        $config = new IntlConfig(
+            rootDirectory: '/unused',
+            defaultLocale: Locale::parse('en-US'),
+            missingKeyMode: MissingKeyMode::STRICT,
+        );
+        $formatter = new TranslatorMessageFormatter(
+            translator: new Translator(
+                config: $config,
+                loader: new FlatFileLoader(
+                    rootDirectory: self::RESOURCES_ROOT,
+                ),
+                resolver: new StaticLocaleResolver(
+                    config: $config,
+                ),
+                pluralSelector: new PluralSelector(),
+            ),
+        );
 
         foreach (self::discoverViolationCodeEnums() as $enumClass) {
             $cases = $enumClass::cases();

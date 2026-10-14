@@ -54,7 +54,6 @@ class TextCompilerProvider implements CompilerProviderInterface
     private function compileComment(
         CommentNode $node,
         CompilerInterface $compiler,
-        NodeStreamInterface $stream,
     ): string {
         if ($compiler->state->directives->asBool('lumi.strip_comments')) {
             return '';
@@ -78,7 +77,6 @@ class TextCompilerProvider implements CompilerProviderInterface
     private function compileEcho(
         EchoNode $node,
         CompilerInterface $compiler,
-        NodeStreamInterface $stream,
     ): string {
         $value = $compiler->compileExpression($node->operand);
 
@@ -161,7 +159,6 @@ class TextCompilerProvider implements CompilerProviderInterface
     private function compileYield(
         YieldNode $node,
         CompilerInterface $compiler,
-        NodeStreamInterface $stream,
     ): string {
         return \sprintf(
             '<?php $this->executeBlock(\'%s\', $__lumiVariables); ?>',
@@ -172,7 +169,6 @@ class TextCompilerProvider implements CompilerProviderInterface
     private function compileLayout(
         LayoutNode $node,
         CompilerInterface $compiler,
-        NodeStreamInterface $stream,
     ): string {
         return \sprintf(
             "\n<?php \$this->layout('%s', \$__lumiVariables); ?>",
@@ -183,7 +179,6 @@ class TextCompilerProvider implements CompilerProviderInterface
     private function compileLumi(
         LumiNode $node,
         CompilerInterface $compiler,
-        NodeStreamInterface $stream,
     ): string {
         return $this->stripPhpOpeningTag(
             code: $compiler->highlighter->highlightString(
@@ -196,7 +191,6 @@ class TextCompilerProvider implements CompilerProviderInterface
     private function compileInclude(
         IncludeNode $node,
         CompilerInterface $compiler,
-        NodeStreamInterface $stream,
     ): string {
         if ($node->scope !== null) {
             return \sprintf(

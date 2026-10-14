@@ -21,7 +21,6 @@ use Tuxxedo\Temporal\Humanizer\Humanizer;
 use Tuxxedo\Temporal\InstantInterface;
 use Tuxxedo\Temporal\LocalDateInterface;
 use Tuxxedo\Temporal\LocalTimeInterface;
-use Tuxxedo\Temporal\SystemClock;
 use Tuxxedo\Temporal\TemporalCoercion;
 use Tuxxedo\Temporal\TimeZone;
 use Tuxxedo\Temporal\TimeZoneInterface;
@@ -29,15 +28,10 @@ use Tuxxedo\View\Lumi\Library\Attribute\LumiFunction;
 
 class DateFunctions
 {
-    private readonly ClockInterface $clock;
-    private readonly Humanizer $humanizer;
-
     public function __construct(
-        ?ClockInterface $clock = null,
-        ?Humanizer $humanizer = null,
+        private readonly ClockInterface $clock,
+        private readonly Humanizer $humanizer,
     ) {
-        $this->clock = $clock ?? new SystemClock();
-        $this->humanizer = $humanizer ?? new Humanizer($this->clock);
     }
 
     #[LumiFunction('date', aliases: ['time'])]

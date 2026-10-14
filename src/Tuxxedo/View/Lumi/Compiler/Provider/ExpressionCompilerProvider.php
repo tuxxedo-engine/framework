@@ -42,7 +42,6 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     private function compileIdentifier(
         IdentifierNode $node,
         CompilerInterface $compiler,
-        NodeStreamInterface $stream,
     ): string {
         return \sprintf(
             '$__lumiVariables[\'%s\']',
@@ -52,8 +51,6 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
 
     private function compileLiteral(
         LiteralNode $node,
-        CompilerInterface $compiler,
-        NodeStreamInterface $stream,
     ): string {
         return match ($node->type) {
             Type::STRING => '\'' . \str_replace('\'', '\\\'', $node->operand) . '\'',
@@ -153,7 +150,6 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     private function compileAssignment(
         AssignmentNode $node,
         CompilerInterface $compiler,
-        NodeStreamInterface $stream,
     ): string {
         if ($node->name instanceof PropertyAccessNode) {
             $oldState = $compiler->state->swap(NodeScope::EXPRESSION_ASSIGN);
@@ -191,7 +187,6 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     private function compileGroup(
         GroupNode $node,
         CompilerInterface $compiler,
-        NodeStreamInterface $stream,
     ): string {
         return \sprintf(
             '(%s)',
@@ -202,7 +197,6 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     private function compileConcat(
         ConcatNode $node,
         CompilerInterface $compiler,
-        NodeStreamInterface $stream,
     ): string {
         return \join(
             ' . ',
@@ -233,7 +227,6 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     private function compileArrayAccess(
         ArrayAccessNode $node,
         CompilerInterface $compiler,
-        NodeStreamInterface $stream,
     ): string {
         if ($node->key === null) {
             throw CompilerException::fromArrayAccessWithoutKey();
@@ -249,7 +242,6 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     private function compileArrayItem(
         ArrayItemNode $node,
         CompilerInterface $compiler,
-        NodeStreamInterface $stream,
     ): string {
         if ($node->key !== null) {
             return \sprintf(
@@ -265,7 +257,6 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     private function compilePropertyAccess(
         PropertyAccessNode $node,
         CompilerInterface $compiler,
-        NodeStreamInterface $stream,
     ): string {
         if ($compiler->state->is(NodeScope::EXPRESSION_ASSIGN)) {
             if ($node->nullSafe) {
@@ -298,7 +289,6 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     private function compileUnaryOp(
         UnaryOpNode $node,
         CompilerInterface $compiler,
-        NodeStreamInterface $stream,
     ): string {
         if ($node->operator->isPost()) {
             return \sprintf(
@@ -318,7 +308,6 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     private function compileFilterOrBitwiseOr(
         FilterOrBitwiseOrNode $node,
         CompilerInterface $compiler,
-        NodeStreamInterface $stream,
     ): string {
         if ($node->right instanceof IdentifierNode) {
             $name = \mb_strtolower($node->right->name);

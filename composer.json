@@ -14,16 +14,17 @@
   "require": {
     "php": ">=8.5",
     "ext-filter": "*",
+    "ext-intl": "*",
     "ext-json": "*",
     "ext-mbstring": "*"
   },
   "require-dev": {
-    "phpstan/phpstan": "2.2.*",
-    "phpunit/phpunit": "13.4.*",
-    "phpstan/phpstan-strict-rules": "2.0.*",
-    "phpstan/extension-installer": "1.4.*",
-    "friendsofphp/php-cs-fixer": "3.95.*",
-    "brianium/paratest": "7.26.*"
+    "phpstan/phpstan": "2.*",
+    "phpunit/phpunit": "13.*",
+    "phpstan/phpstan-strict-rules": "2.*",
+    "phpstan/extension-installer": "1.*",
+    "friendsofphp/php-cs-fixer": "3.*",
+    "brianium/paratest": "7.*"
   },
   "scripts": {
     "test": "vendor/bin/phpunit",
@@ -31,16 +32,15 @@
   },
   "suggest": {
     "ext-fileinfo": "For better file type detection in uploaded files",
-    "ext-intl": "For IDNA (punycode) encoding of internationalized email domains",
     "ext-mysqli": "For database connections to mysql",
-    "ext-openssl": "For crypto support (JWT, Email signing)",
+    "ext-openssl": "For crypto support in JWT, and Email signing",
     "ext-pdo": "For database connections using PDO",
     "ext-pdo-mysql": "For database connections to mysql using PDO",
     "ext-pdo-pgsql": "For database connections to postgres using PDO",
     "ext-pdo-sqlite": "For database connections to sqlite using PDO",
     "ext-pgsql": "For database connections to postgres",
     "ext-session": "For session support",
-    "ext-sodium": "For crypto support (JWT, Email signing)",
+    "ext-sodium": "For crypto support in JWT, and Email signing",
     "ext-sqlite3": "For database connections to sqlite",
     "ext-zlib": "For DEFLATE payload compression in JWE"
   },

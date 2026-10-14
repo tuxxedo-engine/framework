@@ -16,11 +16,11 @@ namespace Tuxxedo\Mail\Config;
 use Tuxxedo\Config\Attribute\ConfigNamespace;
 
 #[ConfigNamespace('mail')]
-class MailManagerConfig implements MailManagerConfigInterface
+readonly class MailManagerConfig implements MailManagerConfigInterface
 {
     public function __construct(
-        public readonly MailTransportConfigInterface $transport,
-        public readonly ?MailTemplateConfigInterface $template = null,
+        public MailTransportConfigInterface $transport,
+        public ?MailTemplateConfigInterface $template = null,
     ) {
     }
 }

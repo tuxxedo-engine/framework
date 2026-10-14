@@ -535,8 +535,6 @@ class Hydrator implements HydratorInterface
 
         $throughTable = $manager->metaData->getModel($attribute->through)->table;
         $throughSecondLocalKey = $this->resolveThroughSecondLocalKeyColumn($attribute);
-        $targetTable = $targetMetaData->table;
-        $targetPrimaryKey = $targetMetaData->key->column;
         $secondKey = $attribute->secondKey;
         $firstKey = $attribute->firstKey;
 
@@ -1997,7 +1995,6 @@ class Hydrator implements HydratorInterface
             // @codeCoverageIgnoreEnd
         }
 
-        $targetPrimaryKey = $targetMetaData->key->column;
         $targetForeignProperty = $this->findPropertyByColumn(
             metaData: $targetMetaData,
             column: $secondKey,
@@ -2099,7 +2096,6 @@ class Hydrator implements HydratorInterface
                 manager: $manager,
                 relatedClass: $relatedClass,
                 targetTable: $targetTable,
-                targetPrimaryKey: $targetPrimaryKey,
                 throughTable: $throughTable,
                 throughSecondLocalKey: $throughSecondLocalKey,
                 secondKey: $secondKey,
@@ -2123,7 +2119,6 @@ class Hydrator implements HydratorInterface
         ModelsManagerInterface $manager,
         string $relatedClass,
         string $targetTable,
-        string $targetPrimaryKey,
         string $throughTable,
         string $throughSecondLocalKey,
         string $secondKey,

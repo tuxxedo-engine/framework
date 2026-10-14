@@ -13,14 +13,23 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Console\Input\Message;
 
+use Tuxxedo\Container\DefaultImplementation;
+use Tuxxedo\Container\Lifecycle;
+
+#[DefaultImplementation(class: TranslatorMessageFormatter::class, lifecycle: Lifecycle::SINGLETON)]
 interface MessageFormatterInterface
 {
     public function forConfirmIndicator(
         bool $default,
     ): string;
 
+    /**
+     * @return array{yes: list<string>, no: list<string>}
+     */
+    public function confirmAnswers(): array;
+
     public function parseConfirmAnswer(
-        string $normalized,
+        string $answer,
     ): ?bool;
 
     public function forDefaultSuffix(

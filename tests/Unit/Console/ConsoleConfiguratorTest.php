@@ -33,6 +33,8 @@ use Tuxxedo\Console\Kernel\KernelInterface;
 use Tuxxedo\Console\Output\ConsoleOutputInterface;
 use Tuxxedo\Console\Output\OutputInterface;
 use Tuxxedo\Container\Container;
+use Tuxxedo\Intl\Config\IntlConfig;
+use Tuxxedo\Intl\Locale;
 
 class ConsoleConfiguratorTest extends TestCase
 {
@@ -263,6 +265,12 @@ class ConsoleConfiguratorTest extends TestCase
     public function testBuildReturnsKernelAndBindsRuntimeServicesInContainer(): void
     {
         $container = new Container();
+        $container->singleton(
+            new IntlConfig(
+                rootDirectory: \dirname(__DIR__, 3) . '/resources/intl',
+                defaultLocale: Locale::parse('en-US'),
+            ),
+        );
 
         $kernel = ConsoleConfigurator::create(
             container: $container,

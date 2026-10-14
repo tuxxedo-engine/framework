@@ -63,8 +63,6 @@ class LoopCompilerProvider implements CompilerProviderInterface
 
     private function compileContinue(
         ContinueNode $node,
-        CompilerInterface $compiler,
-        NodeStreamInterface $stream,
     ): string {
         if ($node->count !== null && $node->count > 1) {
             return \sprintf(
@@ -78,8 +76,6 @@ class LoopCompilerProvider implements CompilerProviderInterface
 
     private function compileBreak(
         BreakNode $node,
-        CompilerInterface $compiler,
-        NodeStreamInterface $stream,
     ): string {
         if ($node->count !== null && $node->count > 1) {
             return \sprintf(

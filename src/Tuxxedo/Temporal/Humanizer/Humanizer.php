@@ -16,7 +16,6 @@ namespace Tuxxedo\Temporal\Humanizer;
 use Tuxxedo\Temporal\ClockInterface;
 use Tuxxedo\Temporal\DurationInterface;
 use Tuxxedo\Temporal\HumanizedStyle;
-use Tuxxedo\Temporal\Humanizer\Message\DefaultEnglishMessageFormatter;
 use Tuxxedo\Temporal\Humanizer\Message\MessageFormatterInterface;
 use Tuxxedo\Temporal\InstantInterface;
 
@@ -34,13 +33,10 @@ class Humanizer
 
     private const int RELATIVE_UNITS_IN_DURATION = 2;
 
-    private readonly MessageFormatterInterface $messageFormatter;
-
     public function __construct(
         private readonly ClockInterface $clock,
-        ?MessageFormatterInterface $messageFormatter = null,
+        private readonly MessageFormatterInterface $messageFormatter,
     ) {
-        $this->messageFormatter = $messageFormatter ?? new DefaultEnglishMessageFormatter();
     }
 
     public function diffForHumans(
@@ -58,6 +54,7 @@ class Humanizer
         $direction = $diffSeconds < 0
             ? RelativeDirection::PAST
             : RelativeDirection::FUTURE;
+
         [$count, $unit] = self::selectLargestUnit(seconds: $absSeconds);
 
         return $this->messageFormatter->forRelativeMoment(

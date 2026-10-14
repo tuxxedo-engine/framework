@@ -13,25 +13,19 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Library\Standard\Filter;
 
-use Tuxxedo\Temporal\ClockInterface;
 use Tuxxedo\Temporal\Humanizer\Humanizer;
 use Tuxxedo\Temporal\InstantInterface;
 use Tuxxedo\Temporal\LocalDateInterface;
 use Tuxxedo\Temporal\LocalTimeInterface;
-use Tuxxedo\Temporal\SystemClock;
 use Tuxxedo\Temporal\TemporalCoercion;
 use Tuxxedo\Temporal\TimeZone;
 use Tuxxedo\View\Lumi\Library\Attribute\LumiFilter;
 
 class DateFilters
 {
-    private readonly Humanizer $humanizer;
-
     public function __construct(
-        ?Humanizer $humanizer = null,
-        ?ClockInterface $clock = null,
+        private readonly Humanizer $humanizer,
     ) {
-        $this->humanizer = $humanizer ?? new Humanizer($clock ?? new SystemClock());
     }
 
     #[LumiFilter('date_ago')]

@@ -15,12 +15,23 @@ namespace Unit\View\Lumi\Library\Standard\Function;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Intl\Config\IntlConfig;
+use Tuxxedo\Intl\Loader\FlatFileLoader;
+use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\MissingKeyMode;
+use Tuxxedo\Intl\PluralSelector;
+use Tuxxedo\Intl\Resolver\StaticLocaleResolver;
+use Tuxxedo\Intl\Translator;
+use Tuxxedo\Temporal\ClockInterface;
 use Tuxxedo\Temporal\Duration;
 use Tuxxedo\Temporal\DurationInterface;
 use Tuxxedo\Temporal\FixedClock;
 use Tuxxedo\Temporal\Humanizer\Humanizer;
+use Tuxxedo\Temporal\Humanizer\Message\MessageFormatterInterface;
+use Tuxxedo\Temporal\Humanizer\Message\TranslatorMessageFormatter;
 use Tuxxedo\Temporal\Instant;
 use Tuxxedo\Temporal\LocalDate;
+use Tuxxedo\Temporal\SystemClock;
 use Tuxxedo\Temporal\TimeZone;
 use Tuxxedo\View\Lumi\Library\Standard\Function\DateFunctions;
 
@@ -35,7 +46,51 @@ class DateFunctionsTest extends TestCase
 
         return new DateFunctions(
             clock: $clock,
-            humanizer: new Humanizer($clock),
+            humanizer: new Humanizer(
+                clock: $clock,
+                messageFormatter: $this->makeMessageFormatter(),
+            ),
+        );
+    }
+
+    private function functionsWithSystemClock(): DateFunctions
+    {
+        return $this->functionsWith(
+            clock: new SystemClock(),
+        );
+    }
+
+    private function functionsWith(
+        ClockInterface $clock,
+    ): DateFunctions {
+        return new DateFunctions(
+            clock: $clock,
+            humanizer: new Humanizer(
+                clock: $clock,
+                messageFormatter: $this->makeMessageFormatter(),
+            ),
+        );
+    }
+
+    private function makeMessageFormatter(): MessageFormatterInterface
+    {
+        $config = new IntlConfig(
+            rootDirectory: '/unused',
+            defaultLocale: Locale::parse('en-US'),
+            missingKeyMode: MissingKeyMode::PASSTHROUGH,
+        );
+
+        return new TranslatorMessageFormatter(
+            translator: new Translator(
+                config: $config,
+                loader: new FlatFileLoader(
+                    rootDirectory: \dirname(__DIR__, 7) . '/resources/intl',
+                ),
+                resolver: new StaticLocaleResolver(
+                    config: $config,
+                ),
+                pluralSelector: new PluralSelector(),
+            ),
         );
     }
 
@@ -43,7 +98,7 @@ class DateFunctionsTest extends TestCase
     {
         self::assertSame(
             '2026-07-16',
-            (new DateFunctions())->date(
+            $this->functionsWithSystemClock()->date(
                 format: 'Y-m-d',
                 value: Instant::parse('2026-07-16T12:00:00Z'),
             ),
@@ -54,7 +109,7 @@ class DateFunctionsTest extends TestCase
     {
         self::assertSame(
             '16/07/2026',
-            (new DateFunctions())->date(
+            $this->functionsWithSystemClock()->date(
                 format: 'd/m/Y',
                 value: LocalDate::of(year: 2026, month: 7, day: 16),
             ),
@@ -63,7 +118,7 @@ class DateFunctionsTest extends TestCase
 
     public function testDateFormatsWithExplicitUnixTimestamp(): void
     {
-        self::assertSame('1970-01-01', (new DateFunctions())->date('Y-m-d', 0));
+        self::assertSame('1970-01-01', $this->functionsWithSystemClock()->date('Y-m-d', 0));
     }
 
     public function testDateUsesInjectedClockWhenNoValueProvided(): void
@@ -76,7 +131,7 @@ class DateFunctionsTest extends TestCase
 
     public function testDateUsesSystemClockWhenNoDependenciesInjected(): void
     {
-        self::assertMatchesRegularExpression('/^\d{4}$/', (new DateFunctions())->date('Y'));
+        self::assertMatchesRegularExpression('/^\d{4}$/', $this->functionsWithSystemClock()->date('Y'));
     }
 
     /**
@@ -135,7 +190,7 @@ class DateFunctionsTest extends TestCase
     ): void {
         self::assertSame(
             $expected,
-            (new DateFunctions())->dateDuration($value, $style),
+            $this->functionsWithSystemClock()->dateDuration($value, $style),
         );
     }
 
@@ -143,7 +198,7 @@ class DateFunctionsTest extends TestCase
     {
         self::assertSame(
             '2026-07-16 14:00:00',
-            (new DateFunctions())->dateLocal(
+            $this->functionsWithSystemClock()->dateLocal(
                 value: Instant::parse('2026-07-16T12:00:00Z'),
                 timeZone: 'Europe/Copenhagen',
             ),
@@ -154,7 +209,7 @@ class DateFunctionsTest extends TestCase
     {
         self::assertSame(
             '2026-07-16 14:00:00',
-            (new DateFunctions())->dateLocal(
+            $this->functionsWithSystemClock()->dateLocal(
                 value: Instant::parse('2026-07-16T12:00:00Z'),
                 timeZone: TimeZone::parse('Europe/Copenhagen'),
             ),
@@ -165,7 +220,7 @@ class DateFunctionsTest extends TestCase
     {
         self::assertSame(
             '14:00',
-            (new DateFunctions())->dateLocal(
+            $this->functionsWithSystemClock()->dateLocal(
                 value: Instant::parse('2026-07-16T12:00:00Z'),
                 timeZone: 'Europe/Copenhagen',
                 format: 'H:i',
@@ -182,7 +237,7 @@ class DateFunctionsTest extends TestCase
         try {
             self::assertSame(
                 '2026-07-16 12:00:00',
-                (new DateFunctions())->dateLocal(
+                $this->functionsWithSystemClock()->dateLocal(
                     value: Instant::parse('2026-07-16T12:00:00Z'),
                 ),
             );
@@ -195,7 +250,7 @@ class DateFunctionsTest extends TestCase
     {
         self::assertSame(
             '2026-07-16 14:00:00',
-            (new DateFunctions())->dateLocal(
+            $this->functionsWithSystemClock()->dateLocal(
                 value: '2026-07-16T12:00:00Z',
                 timeZone: 'Europe/Copenhagen',
             ),
@@ -220,7 +275,7 @@ class DateFunctionsTest extends TestCase
 
     public function testDateNowFallsBackToSystemClock(): void
     {
-        self::assertMatchesRegularExpression('/^\d{4}$/', (new DateFunctions())->dateNow('Y'));
+        self::assertMatchesRegularExpression('/^\d{4}$/', $this->functionsWithSystemClock()->dateNow('Y'));
     }
 
     public function testDateTodayRendersIsoDate(): void
@@ -241,7 +296,7 @@ class DateFunctionsTest extends TestCase
 
     public function testNowFallsBackToSystemClock(): void
     {
-        self::assertMatchesRegularExpression('/^\d+$/', (new DateFunctions())->now());
+        self::assertMatchesRegularExpression('/^\d+$/', $this->functionsWithSystemClock()->now());
     }
 
     public function testTimeNowDefaultFormat(): void
@@ -262,6 +317,6 @@ class DateFunctionsTest extends TestCase
 
     public function testTimeNowFallsBackToSystemClock(): void
     {
-        self::assertMatchesRegularExpression('/^\d{2}:\d{2}:\d{2}$/', (new DateFunctions())->timeNow());
+        self::assertMatchesRegularExpression('/^\d{2}:\d{2}:\d{2}$/', $this->functionsWithSystemClock()->timeNow());
     }
 }

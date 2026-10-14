@@ -183,7 +183,6 @@ class ExpressionLexer implements ExpressionLexerInterface
             }
 
             if (\preg_match('/^[^\p{L}\p{N}\s]$/u', $char) === 1) {
-                $buffer = '';
                 $line = $startingLine + ($stream->line - 1);
                 $lastValid = null;
 

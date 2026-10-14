@@ -1704,7 +1704,7 @@ class ModelsManager implements ModelsManagerInterface
         $attribute = $relation->attribute;
 
         if ($attribute instanceof HasMany && $attribute->bulkDelete) {
-            $this->cascadeBulkDeleteRelation($model, $relation, $attribute);
+            $this->cascadeBulkDeleteRelation($model, $relation);
 
             return;
         }
@@ -1729,7 +1729,6 @@ class ModelsManager implements ModelsManagerInterface
     private function cascadeBulkDeleteRelation(
         object $model,
         ModelRelationInterface $relation,
-        HasMany $attribute,
     ): void {
         $parentMetaData = $this->metaData->getModel($model::class);
         $foreignKeyColumns = $relation->foreignKeyColumns;

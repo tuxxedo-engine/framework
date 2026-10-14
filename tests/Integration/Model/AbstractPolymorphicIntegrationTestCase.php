@@ -1169,13 +1169,7 @@ abstract class AbstractPolymorphicIntegrationTestCase extends AbstractModelInteg
         self::assertInstanceOf(Article::class, $alice);
         self::assertInstanceOf(Relation::class, $alice->comments);
 
-        $prefetchedCount = 0;
-
-        foreach ($alice->comments as $ignored) {
-            $prefetchedCount++;
-        }
-
-        self::assertSame(1, $prefetchedCount);
+        self::assertSame(1, \sizeof(\iterator_to_array($alice->comments)));
     }
 
     public function testEagerMorphToManyWithLimitConstraintSlicesPrefetched(): void
@@ -1203,13 +1197,7 @@ abstract class AbstractPolymorphicIntegrationTestCase extends AbstractModelInteg
         self::assertInstanceOf(Article::class, $alice);
         self::assertInstanceOf(Relation::class, $alice->tags);
 
-        $prefetchedCount = 0;
-
-        foreach ($alice->tags as $ignored) {
-            $prefetchedCount++;
-        }
-
-        self::assertSame(1, $prefetchedCount);
+        self::assertSame(1, \sizeof(\iterator_to_array($alice->tags)));
     }
 
     public function testCreateTableEmitsCompositeIndexForMorphTo(): void

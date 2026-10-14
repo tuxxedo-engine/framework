@@ -17,6 +17,7 @@ use Tuxxedo\View\Lumi\Library\Standard\Filter\CollectionFilters;
 use Tuxxedo\View\Lumi\Library\Standard\Filter\DateFilters;
 use Tuxxedo\View\Lumi\Library\Standard\Filter\DebugFilters;
 use Tuxxedo\View\Lumi\Library\Standard\Filter\EscapeFilters;
+use Tuxxedo\View\Lumi\Library\Standard\Filter\IntlFilters;
 use Tuxxedo\View\Lumi\Library\Standard\Filter\JsonFilters;
 use Tuxxedo\View\Lumi\Library\Standard\Filter\StringFilters;
 use Tuxxedo\View\Lumi\Library\Standard\Function\ArrayFunctions;
@@ -24,6 +25,7 @@ use Tuxxedo\View\Lumi\Library\Standard\Function\ConfigFunctions;
 use Tuxxedo\View\Lumi\Library\Standard\Function\CsrfFunctions;
 use Tuxxedo\View\Lumi\Library\Standard\Function\DateFunctions;
 use Tuxxedo\View\Lumi\Library\Standard\Function\DebugFunctions;
+use Tuxxedo\View\Lumi\Library\Standard\Function\IntlFunctions;
 use Tuxxedo\View\Lumi\Library\Standard\Function\JsonFunctions;
 use Tuxxedo\View\Lumi\Library\Standard\Function\MailFunctions;
 use Tuxxedo\View\Lumi\Library\Standard\Function\MathFunctions;
@@ -44,6 +46,7 @@ class StandardLibrary
             DateFilters::class,
             DebugFilters::class,
             EscapeFilters::class,
+            IntlFilters::class,
             JsonFilters::class,
             StringFilters::class,
         ];
@@ -60,6 +63,7 @@ class StandardLibrary
             CsrfFunctions::class,
             DateFunctions::class,
             DebugFunctions::class,
+            IntlFunctions::class,
             JsonFunctions::class,
             MailFunctions::class,
             MathFunctions::class,
