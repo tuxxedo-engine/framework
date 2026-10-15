@@ -12,11 +12,11 @@ jobs:
       - uses: php-actions/composer@v6
         with:
           php_version: '8.5'
-          php_extensions: filter, mbstring, mysqli, openssl, pdo, pdo_mysql, pdo_pgsql, pdo_sqlite, pgsql, session, sodium, sqlite3, fileinfo, intl
+          php_extensions: filter mbstring mysqli openssl pdo pdo_mysql pdo_pgsql pdo_sqlite pgsql session sodium sqlite3 fileinfo intl
           version: 2.x
 
       - uses: php-actions/phpstan@v3
         with:
           php_version: '8.5'
-          php_extensions: filter, mbstring, mysqli, openssl, pdo, pdo_mysql, pdo_pgsql, pdo_sqlite, pgsql, session, sodium, sqlite3, fileinfo, intl
+          php_extensions: filter mbstring mysqli openssl pdo pdo_mysql pdo_pgsql pdo_sqlite pgsql session sodium sqlite3 fileinfo intl
           version: 2.*
