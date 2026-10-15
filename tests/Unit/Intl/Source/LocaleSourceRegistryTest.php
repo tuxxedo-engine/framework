@@ -89,6 +89,7 @@ class LocaleSourceRegistryTest extends TestCase
     public function testSourcesRegisteredThroughContainerReachNegotiatingResolver(): void
     {
         $container = new Container();
+
         $container->singleton(
             new IntlConfig(
                 rootDirectory: '/unused',
@@ -120,6 +121,7 @@ class LocaleSourceRegistryTest extends TestCase
         );
 
         $registry = new LocaleSourceRegistry();
+
         $registry->register(
             priority: SourcePriority::NORMAL,
             source: $normal,
@@ -177,6 +179,7 @@ class LocaleSourceRegistryTest extends TestCase
             ],
             $first,
         );
+
         self::assertSame($first, $registry->sortedSources());
     }
 }

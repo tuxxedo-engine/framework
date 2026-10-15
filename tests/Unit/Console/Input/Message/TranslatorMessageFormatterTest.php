@@ -321,6 +321,7 @@ class TranslatorMessageFormatterTest extends TestCase
         $config = new IntlConfig(
             defaultLocale: Locale::parse('da-DK'),
         );
+
         $formatter = $this->makeFormatter(
             translator: new Translator(
                 config: $config,

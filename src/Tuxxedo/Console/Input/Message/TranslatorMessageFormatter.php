@@ -39,9 +39,11 @@ class TranslatorMessageFormatter implements MessageFormatterInterface
         $yes = $this->acceptedAnswers(
             key: 'console.input.confirm.yesAnswers',
         );
+
         $no = $this->acceptedAnswers(
             key: 'console.input.confirm.noAnswers',
         );
+
         $ambiguous = \array_intersect($yes, $no);
 
         return [
@@ -56,6 +58,7 @@ class TranslatorMessageFormatter implements MessageFormatterInterface
         $normalized = self::normalize(
             answer: $answer,
         );
+
         $answers = $this->confirmAnswers();
 
         if (\in_array($normalized, $answers['yes'], true)) {

@@ -19,6 +19,10 @@ use Tuxxedo\Container\Lifecycle;
 #[DefaultImplementation(class: Translator::class, lifecycle: Lifecycle::SINGLETON)]
 interface TranslatorInterface
 {
+    public Locale $locale {
+        get;
+    }
+
     /**
      * @param array<string, scalar|null> $replacements
      *

@@ -180,19 +180,83 @@ class TranslatorMessageFormatterTest extends TestCase
      */
     public static function shippedPluralMatrix(): iterable
     {
-        yield 'da-DK one' => ['da-DK', 1, '1 time'];
-        yield 'da-DK other' => ['da-DK', 5, '5 timer'];
-        yield 'fi-FI one' => ['fi-FI', 1, '1 tunti'];
-        yield 'fi-FI other' => ['fi-FI', 5, '5 tuntia'];
-        yield 'sv-SE one' => ['sv-SE', 1, '1 timme'];
-        yield 'sv-SE other' => ['sv-SE', 5, '5 timmar'];
-        yield 'nb-NO one' => ['nb-NO', 1, '1 time'];
-        yield 'nb-NO other' => ['nb-NO', 5, '5 timer'];
-        yield 'nn-NO one' => ['nn-NO', 1, '1 time'];
-        yield 'nn-NO other' => ['nn-NO', 5, '5 timar'];
-        yield 'is-IS one' => ['is-IS', 1, '1 klukkustund'];
-        yield 'is-IS other' => ['is-IS', 5, '5 klukkustundir'];
-        yield 'is-IS twenty-one' => ['is-IS', 21, '21 klukkustund'];
+        yield 'da-DK one' => [
+            'da-DK',
+            1,
+            '1 time',
+        ];
+
+        yield 'da-DK other' => [
+            'da-DK',
+            5,
+            '5 timer',
+        ];
+
+        yield 'fi-FI one' => [
+            'fi-FI',
+            1,
+            '1 tunti',
+        ];
+
+        yield 'fi-FI other' => [
+            'fi-FI',
+            5,
+            '5 tuntia',
+        ];
+
+        yield 'sv-SE one' => [
+            'sv-SE',
+            1,
+            '1 timme',
+        ];
+
+        yield 'sv-SE other' => [
+            'sv-SE',
+            5,
+            '5 timmar',
+        ];
+
+        yield 'nb-NO one' => [
+            'nb-NO',
+            1,
+            '1 time',
+        ];
+
+        yield 'nb-NO other' => [
+            'nb-NO',
+            5,
+            '5 timer',
+        ];
+
+        yield 'nn-NO one' => [
+            'nn-NO',
+            1,
+            '1 time',
+        ];
+
+        yield 'nn-NO other' => [
+            'nn-NO',
+            5,
+            '5 timar',
+        ];
+
+        yield 'is-IS one' => [
+            'is-IS',
+            1,
+            '1 klukkustund',
+        ];
+
+        yield 'is-IS other' => [
+            'is-IS',
+            5,
+            '5 klukkustundir',
+        ];
+
+        yield 'is-IS twenty-one' => [
+            'is-IS',
+            21,
+            '21 klukkustund',
+        ];
     }
 
     #[DataProvider('shippedPluralMatrix')]
@@ -205,6 +269,7 @@ class TranslatorMessageFormatterTest extends TestCase
             defaultLocale: Locale::parse($locale),
             missingKeyMode: MissingKeyMode::STRICT,
         );
+
         $formatter = new TranslatorMessageFormatter(
             translator: new Translator(
                 config: $config,

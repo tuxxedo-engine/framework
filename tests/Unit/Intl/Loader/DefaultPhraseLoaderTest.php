@@ -26,7 +26,6 @@ class DefaultPhraseLoaderTest extends TestCase
     public function testLoadsFromEngineCataloguesWhenHostHasNoneForKey(): void
     {
         $scratchpad = new CatalogueScratchpad();
-
         $loader = new DefaultPhraseLoader(
             config: new IntlConfig(
                 rootDirectory: $scratchpad->root,

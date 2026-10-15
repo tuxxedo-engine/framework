@@ -244,6 +244,7 @@ class AcceptLanguageSourceTest extends TestCase
         $first = $source->detect();
 
         self::assertInstanceOf(StubHeaderContext::class, $request->headers);
+
         $request->headers->preferredLanguages = [
             'fi-FI',
         ];

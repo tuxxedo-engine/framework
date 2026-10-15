@@ -119,4 +119,11 @@ class Locale
             );
         }
     }
+
+    public function direction(): LocaleDirection
+    {
+        return \Locale::isRightToLeft($this->tag)
+            ? LocaleDirection::RTL
+            : LocaleDirection::LTR;
+    }
 }

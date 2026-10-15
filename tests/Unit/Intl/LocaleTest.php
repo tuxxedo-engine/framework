@@ -13,8 +13,10 @@ declare(strict_types=1);
 
 namespace Unit\Intl;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleDirection;
 use Tuxxedo\Intl\TranslationException;
 
 class LocaleTest extends TestCase
@@ -180,5 +182,59 @@ class LocaleTest extends TestCase
         self::assertFalse(
             (new \ReflectionMethod(Locale::class, '__construct'))->isPublic(),
         );
+    }
+
+    /**
+     * @return iterable<string, array{string, LocaleDirection}>
+     */
+    public static function directionMatrix(): iterable
+    {
+        yield 'en-US' => [
+            'en-US',
+            LocaleDirection::LTR,
+        ];
+
+        yield 'da-DK' => [
+            'da-DK',
+            LocaleDirection::LTR,
+        ];
+
+        yield 'bare ar' => [
+            'ar',
+            LocaleDirection::RTL,
+        ];
+
+        yield 'ar-EG' => [
+            'ar-EG',
+            LocaleDirection::RTL,
+        ];
+
+        yield 'he-IL' => [
+            'he-IL',
+            LocaleDirection::RTL,
+        ];
+
+        yield 'fa' => [
+            'fa',
+            LocaleDirection::RTL,
+        ];
+
+        yield 'az-Arab' => [
+            'az-Arab',
+            LocaleDirection::RTL,
+        ];
+
+        yield 'az-Latn' => [
+            'az-Latn',
+            LocaleDirection::LTR,
+        ];
+    }
+
+    #[DataProvider('directionMatrix')]
+    public function testDirectionFollowsTheLocaleScript(
+        string $tag,
+        LocaleDirection $expected,
+    ): void {
+        self::assertSame($expected, Locale::parse($tag)->direction());
     }
 }

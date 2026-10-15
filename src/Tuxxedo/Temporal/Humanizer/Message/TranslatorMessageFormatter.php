@@ -69,6 +69,7 @@ class TranslatorMessageFormatter implements MessageFormatterInterface
             HumanizedStyle::SHORT => 'temporal.humanizer.duration.short.part',
             HumanizedStyle::NARROW => 'temporal.humanizer.duration.narrow.part',
         };
+
         $separatorKey = match ($style) { // @codeCoverageIgnore
             HumanizedStyle::LONG => 'temporal.humanizer.duration.long.separator',
             HumanizedStyle::SHORT => 'temporal.humanizer.duration.short.separator',

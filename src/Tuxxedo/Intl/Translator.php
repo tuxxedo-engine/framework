@@ -24,6 +24,12 @@ class Translator implements TranslatorInterface
 
     private readonly ?Locale $localeOverride;
 
+    public Locale $locale {
+        get {
+            return $this->localeOverride ?? $this->resolver->currentLocale();
+        }
+    }
+
     public function __construct(
         private readonly IntlConfigInterface $config,
         PhraseLoaderInterface $loader,
@@ -33,6 +39,7 @@ class Translator implements TranslatorInterface
         $this->loader = new CachingLoader(
             loader: $loader,
         );
+
         $this->localeOverride = null;
     }
 
@@ -41,7 +48,8 @@ class Translator implements TranslatorInterface
         array $replacements = [],
         ?Locale $locale = null,
     ): string {
-        $effective = $locale ?? $this->currentLocale();
+        $effective = $locale ?? $this->locale;
+
         $value = $this->resolveKey(
             key: $key,
             locale: $effective,
@@ -66,8 +74,9 @@ class Translator implements TranslatorInterface
         array $replacements = [],
         ?Locale $locale = null,
     ): string {
-        $effective = $locale ?? $this->currentLocale();
+        $effective = $locale ?? $this->locale;
         $value = null;
+
         $path = self::splitKey(
             key: $key,
         );
@@ -115,7 +124,7 @@ class Translator implements TranslatorInterface
     ): bool {
         return $this->resolveKey(
             key: $key,
-            locale: $locale ?? $this->currentLocale(),
+            locale: $locale ?? $this->locale,
         ) !== null;
     }
 
@@ -128,11 +137,6 @@ class Translator implements TranslatorInterface
                 'localeOverride' => $locale,
             ],
         );
-    }
-
-    private function currentLocale(): Locale
-    {
-        return $this->localeOverride ?? $this->resolver->currentLocale();
     }
 
     /**
@@ -318,11 +322,10 @@ class Translator implements TranslatorInterface
 
                     if ($name !== '' && \array_key_exists($name, $replacements)) {
                         $value = $replacements[$name];
+                        $position = $closing + 1;
                         $buffer .= $value === null
                             ? ''
                             : (string) $value;
-
-                        $position = $closing + 1;
 
                         continue;
                     }

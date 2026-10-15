@@ -71,6 +71,7 @@ class TranslatorTest extends TestCase
     public function testTranslatesSimpleKey(): void
     {
         $config = $this->makeConfig();
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -306,6 +307,7 @@ class TranslatorTest extends TestCase
         $config = $this->makeConfig(
             missingKeyMode: MissingKeyMode::PASSTHROUGH,
         );
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -326,6 +328,7 @@ class TranslatorTest extends TestCase
         $config = $this->makeConfig(
             missingKeyMode: MissingKeyMode::MARKER,
         );
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -346,6 +349,7 @@ class TranslatorTest extends TestCase
         $config = $this->makeConfig(
             missingKeyMode: MissingKeyMode::STRICT,
         );
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -365,6 +369,7 @@ class TranslatorTest extends TestCase
         $config = $this->makeConfig(
             defaultLocale: Locale::parse('en-US'),
         );
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -391,6 +396,7 @@ class TranslatorTest extends TestCase
         $config = $this->makeConfig(
             defaultLocale: Locale::parse('en-US'),
         );
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -423,6 +429,7 @@ class TranslatorTest extends TestCase
         $config = $this->makeConfig(
             defaultLocale: Locale::parse('en-US'),
         );
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -451,6 +458,7 @@ class TranslatorTest extends TestCase
                 key: 'common.greeting',
             ),
         );
+
         self::assertSame(
             'Hello',
             $translator->translate(
@@ -462,6 +470,7 @@ class TranslatorTest extends TestCase
     public function testPluralSelectsOneSibling(): void
     {
         $config = $this->makeConfig();
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -493,6 +502,7 @@ class TranslatorTest extends TestCase
     public function testPluralSelectsOtherSibling(): void
     {
         $config = $this->makeConfig();
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -526,6 +536,7 @@ class TranslatorTest extends TestCase
         $config = $this->makeConfig(
             missingKeyMode: MissingKeyMode::PASSTHROUGH,
         );
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -555,6 +566,7 @@ class TranslatorTest extends TestCase
         $config = $this->makeConfig(
             missingKeyMode: MissingKeyMode::STRICT,
         );
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -583,6 +595,7 @@ class TranslatorTest extends TestCase
         $config = $this->makeConfig(
             missingKeyMode: MissingKeyMode::MARKER,
         );
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -612,6 +625,7 @@ class TranslatorTest extends TestCase
         $config = $this->makeConfig(
             missingKeyMode: MissingKeyMode::PASSTHROUGH,
         );
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -632,6 +646,7 @@ class TranslatorTest extends TestCase
         $config = $this->makeConfig(
             missingKeyMode: MissingKeyMode::PASSTHROUGH,
         );
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -658,6 +673,7 @@ class TranslatorTest extends TestCase
         $config = $this->makeConfig(
             missingKeyMode: MissingKeyMode::PASSTHROUGH,
         );
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -684,6 +700,7 @@ class TranslatorTest extends TestCase
         $config = $this->makeConfig(
             defaultLocale: Locale::parse('en-US'),
         );
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -714,6 +731,7 @@ class TranslatorTest extends TestCase
         $config = $this->makeConfig(
             defaultLocale: Locale::parse('en-US'),
         );
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -741,6 +759,7 @@ class TranslatorTest extends TestCase
         $config = $this->makeConfig(
             defaultLocale: Locale::parse('en-US'),
         );
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -773,6 +792,7 @@ class TranslatorTest extends TestCase
         $config = $this->makeConfig(
             defaultLocale: Locale::parse('en-US'),
         );
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -799,6 +819,7 @@ class TranslatorTest extends TestCase
         $config = $this->makeConfig(
             defaultLocale: Locale::parse('en-US'),
         );
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -833,6 +854,7 @@ class TranslatorTest extends TestCase
         $config = $this->makeConfig(
             defaultLocale: Locale::parse('en-US'),
         );
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -878,6 +900,7 @@ class TranslatorTest extends TestCase
             missingKeyMode: MissingKeyMode::STRICT,
             defaultLocale: Locale::parse('en-US'),
         );
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -900,6 +923,7 @@ class TranslatorTest extends TestCase
             missingKeyMode: MissingKeyMode::STRICT,
             defaultLocale: Locale::parse('en-US'),
         );
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -920,6 +944,7 @@ class TranslatorTest extends TestCase
         $config = $this->makeConfig(
             defaultLocale: Locale::parse('en-US'),
         );
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -958,6 +983,7 @@ class TranslatorTest extends TestCase
         $config = $this->makeConfig(
             missingKeyMode: MissingKeyMode::STRICT,
         );
+
         $translator = $this->makeTranslator(
             config: $config,
             loader: $this->stubLoader(
@@ -982,10 +1008,12 @@ class TranslatorTest extends TestCase
                 ],
             ),
         );
+
         $translator = $this->makeTranslator(
             config: $this->makeConfig(),
             loader: $loader,
         );
+
         $fork = $translator->withLocale(Locale::parse('en-US'));
 
         self::assertSame('Hello', $translator->translate('common.greeting'));
@@ -1007,5 +1035,21 @@ class TranslatorTest extends TestCase
                 ],
             ),
         );
+    }
+
+    public function testLocaleIsTheResolverLocaleUnlessOverridden(): void
+    {
+        $translator = $this->makeTranslator(
+            config: $this->makeConfig(
+                defaultLocale: Locale::parse('da-DK'),
+            ),
+            loader: $this->stubLoader(
+                catalogues: [],
+            ),
+        );
+
+        self::assertSame('da-DK', $translator->locale->tag);
+        self::assertSame('sv-SE', $translator->withLocale(Locale::parse('sv-SE'))->locale->tag);
+        self::assertSame('da-DK', $translator->locale->tag);
     }
 }

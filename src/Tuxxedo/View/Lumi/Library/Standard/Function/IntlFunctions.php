@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Library\Standard\Function;
 
 use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleDirection;
 use Tuxxedo\Intl\TranslatorInterface;
 use Tuxxedo\View\Lumi\Library\Attribute\LumiFunction;
 
@@ -60,5 +61,50 @@ class IntlFunctions
                 ? Locale::parse($locale)
                 : null,
         );
+    }
+
+    #[LumiFunction('locale')]
+    public function locale(
+        ?string $locale = null,
+    ): Locale {
+        return $locale !== null
+            ? Locale::parse($locale)
+            : $this->translator->locale;
+    }
+
+    #[LumiFunction('locale_is_rtl')]
+    public function localeIsRtl(
+        ?string $locale = null,
+    ): bool {
+        $direction = $locale !== null
+            ? Locale::parse($locale)->direction()
+            : $this->translator->locale->direction();
+
+        return $direction === LocaleDirection::RTL;
+    }
+
+    #[LumiFunction('locale_is_ltr')]
+    public function localeIsLtr(
+        ?string $locale = null,
+    ): bool {
+        $direction = $locale !== null
+            ? Locale::parse($locale)->direction()
+            : $this->translator->locale->direction();
+
+        return $direction === LocaleDirection::LTR;
+    }
+
+    /**
+     * @return 'ltr'|'rtl'
+     */
+    #[LumiFunction('locale_direction')]
+    public function localeDirection(
+        ?string $locale = null,
+    ): string {
+        $direction = $locale !== null
+            ? Locale::parse($locale)->direction()
+            : $this->translator->locale->direction();
+
+        return $direction->value;
     }
 }

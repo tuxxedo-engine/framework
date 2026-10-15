@@ -19,6 +19,7 @@ use Tuxxedo\Intl\Config\IntlConfig;
 use Tuxxedo\Intl\Locale;
 use Tuxxedo\Intl\PluralSelector;
 use Tuxxedo\Intl\Resolver\StaticLocaleResolver;
+use Tuxxedo\Intl\TranslationException;
 use Tuxxedo\Intl\Translator;
 use Tuxxedo\View\Lumi\Library\Standard\Function\IntlFunctions;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableDiscoverer;
@@ -234,5 +235,66 @@ class IntlFunctionsTest extends TestCase
 
         self::assertContains('translate', $names);
         self::assertNotContains('t', $names);
+    }
+
+    public function testLocaleWithoutTagIsTheTranslatorLocale(): void
+    {
+        $functions = $this->makeFunctions(
+            catalogues: [],
+        );
+
+        self::assertSame('en-US', $functions->locale()->tag);
+        self::assertTrue($functions->localeIsLtr());
+        self::assertFalse($functions->localeIsRtl());
+        self::assertSame('ltr', $functions->localeDirection());
+    }
+
+    public function testLocaleWithTagParsesIt(): void
+    {
+        $functions = $this->makeFunctions(
+            catalogues: [],
+        );
+
+        self::assertSame('da-DK', $functions->locale('da_dk')->tag);
+        self::assertTrue($functions->localeIsLtr('da-DK'));
+        self::assertTrue($functions->localeIsRtl('ar'));
+        self::assertFalse($functions->localeIsLtr('he-IL'));
+        self::assertSame('rtl', $functions->localeDirection('fa'));
+        self::assertSame('ltr', $functions->localeDirection('fi-FI'));
+    }
+
+    public function testLocaleFollowsTranslatorLocaleOverride(): void
+    {
+        $config = new IntlConfig(
+            defaultLocale: Locale::parse('en-US'),
+        );
+
+        $functions = new IntlFunctions(
+            translator: (new Translator(
+                config: $config,
+                loader: new InMemoryPhraseLoader(
+                    catalogues: [],
+                ),
+                resolver: new StaticLocaleResolver(
+                    config: $config,
+                ),
+                pluralSelector: new PluralSelector(),
+            ))->withLocale(Locale::parse('ar-EG')),
+        );
+
+        self::assertSame('ar-EG', $functions->locale()->tag);
+        self::assertTrue($functions->localeIsRtl());
+        self::assertSame('rtl', $functions->localeDirection());
+    }
+
+    public function testInvalidTagThrows(): void
+    {
+        $functions = $this->makeFunctions(
+            catalogues: [],
+        );
+
+        self::expectException(TranslationException::class);
+
+        $functions->localeIsRtl('not a locale');
     }
 }
