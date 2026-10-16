@@ -1052,4 +1052,121 @@ class TranslatorTest extends TestCase
         self::assertSame('sv-SE', $translator->withLocale(Locale::parse('sv-SE'))->locale->tag);
         self::assertSame('da-DK', $translator->locale->tag);
     }
+
+    public function testRtlLocaleIsolatesReplacementValues(): void
+    {
+        $translator = $this->makeTranslator(
+            config: $this->makeConfig(),
+            loader: $this->stubLoader(
+                catalogues: [
+                    'ar' => [
+                        'common' => [
+                            'greeting' => 'مرحبا {name}، رابط: {url}',
+                        ],
+                    ],
+                ],
+            ),
+        );
+
+        self::assertSame(
+            "مرحبا \u{2068}Kalle\u{2069}، رابط: \u{2068}https://example.com\u{2069}",
+            $translator->translate(
+                key: 'common.greeting',
+                replacements: [
+                    'name' => 'Kalle',
+                    'url' => 'https://example.com',
+                ],
+                locale: Locale::parse('ar'),
+            ),
+        );
+    }
+
+    public function testRtlLocaleDoesNotIsolateEmptyReplacementValues(): void
+    {
+        $translator = $this->makeTranslator(
+            config: $this->makeConfig(),
+            loader: $this->stubLoader(
+                catalogues: [
+                    'he-IL' => [
+                        'common' => [
+                            'pair' => '[{first}][{second}]',
+                        ],
+                    ],
+                ],
+            ),
+        );
+
+        self::assertSame(
+            '[][]',
+            $translator->translate(
+                key: 'common.pair',
+                replacements: [
+                    'first' => null,
+                    'second' => '',
+                ],
+                locale: Locale::parse('he-IL'),
+            ),
+        );
+    }
+
+    public function testRtlLocaleIsolatesPluralReplacementValues(): void
+    {
+        $translator = $this->makeTranslator(
+            config: $this->makeConfig(),
+            loader: $this->stubLoader(
+                catalogues: [
+                    'ar' => [
+                        'common' => [
+                            'items' => [
+                                'zero' => 'لا عناصر',
+                                'one' => 'عنصر واحد',
+                                'two' => 'عنصران',
+                                'few' => '{count} عناصر',
+                                'many' => '{count} عنصرًا',
+                                'other' => '{count} عنصر',
+                            ],
+                        ],
+                    ],
+                ],
+            ),
+        );
+
+        self::assertSame(
+            "\u{2068}3\u{2069} عناصر",
+            $translator->plural(
+                key: 'common.items',
+                count: 3,
+                replacements: [
+                    'count' => 3,
+                ],
+                locale: Locale::parse('ar'),
+            ),
+        );
+    }
+
+    public function testLtrLocaleDoesNotIsolateReplacementValues(): void
+    {
+        $translator = $this->makeTranslator(
+            config: $this->makeConfig(),
+            loader: $this->stubLoader(
+                catalogues: [
+                    'en-US' => [
+                        'common' => [
+                            'greeting' => 'Hello {name}',
+                        ],
+                    ],
+                ],
+            ),
+        );
+
+        self::assertSame(
+            'Hello Kalle',
+            $translator->translate(
+                key: 'common.greeting',
+                replacements: [
+                    'name' => 'Kalle',
+                ],
+            ),
+        );
+    }
 }

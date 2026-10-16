@@ -65,6 +65,7 @@ class Translator implements TranslatorInterface
         return self::interpolate(
             template: $value,
             replacements: $replacements,
+            isolate: $effective->direction() === LocaleDirection::RTL,
         );
     }
 
@@ -115,6 +116,7 @@ class Translator implements TranslatorInterface
         return self::interpolate(
             template: $value,
             replacements: $replacements,
+            isolate: $effective->direction() === LocaleDirection::RTL,
         );
     }
 
@@ -295,6 +297,7 @@ class Translator implements TranslatorInterface
     private static function interpolate(
         string $template,
         array $replacements,
+        bool $isolate,
     ): string {
         $length = \strlen($template);
         $buffer = '';
@@ -323,9 +326,14 @@ class Translator implements TranslatorInterface
                     if ($name !== '' && \array_key_exists($name, $replacements)) {
                         $value = $replacements[$name];
                         $position = $closing + 1;
-                        $buffer .= $value === null
+
+                        $string = $value === null
                             ? ''
                             : (string) $value;
+
+                        $buffer .= $isolate && $string !== ''
+                            ? "\u{2068}" . $string . "\u{2069}"
+                            : $string;
 
                         continue;
                     }
