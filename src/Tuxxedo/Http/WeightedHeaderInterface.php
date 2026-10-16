@@ -16,7 +16,7 @@ namespace Tuxxedo\Http;
 interface WeightedHeaderInterface extends HeaderInterface
 {
     /**
-     * @return string[]
+     * @return list<string>
      */
     public function getWeightedOrder(): array;
 

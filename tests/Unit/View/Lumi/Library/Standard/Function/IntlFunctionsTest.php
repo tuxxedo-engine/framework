@@ -226,7 +226,7 @@ class IntlFunctionsTest extends TestCase
                 self::assertSame(
                     [
                         '_',
-                't',
+                        't',
                     ],
                     $entry->aliases,
                 );

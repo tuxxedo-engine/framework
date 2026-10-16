@@ -421,6 +421,19 @@ class EnvironmentHeaderContextTest extends TestCase
         );
     }
 
+    public function testPreferredLanguagesExcludesNotAcceptableLanguages(): void
+    {
+        $_SERVER['HTTP_ACCEPT_LANGUAGE'] = 'da;q=0, sv;q=0.5, nb';
+
+        self::assertSame(
+            [
+                'nb',
+                'sv',
+            ],
+            (new EnvironmentHeaderContext())->preferredLanguages,
+        );
+    }
+
     public function testPreferredLanguageReturnsNullWhenHeaderMissing(): void
     {
         self::assertNull(

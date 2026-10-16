@@ -78,6 +78,18 @@ class WeightedHeaderTest extends TestCase
                 'text/html',
             ],
         ];
+
+        yield [
+            'da;q=0, en;q=0.5',
+            [
+                'en',
+            ],
+        ];
+
+        yield [
+            'da;q=0.0, en;q=0',
+            [],
+        ];
     }
 
     /**
@@ -90,7 +102,7 @@ class WeightedHeaderTest extends TestCase
     ): void {
         $header = new WeightedHeader('Accept', $value);
 
-        self::assertSame($expected, \array_values($header->getWeightedOrder()));
+        self::assertSame($expected, $header->getWeightedOrder());
     }
 
     public function testGetWeightedPairsSingleValue(): void

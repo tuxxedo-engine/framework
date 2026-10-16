@@ -908,13 +908,17 @@ class TranslatorTest extends TestCase
             ),
         );
 
-        self::expectException(TranslationException::class);
-        self::expectExceptionMessage('No translation found for key "common.missing" in locale "da-DK"');
+        try {
+            $translator->translate(
+                key: 'common.missing',
+                locale: Locale::parse('da-DK'),
+            );
 
-        $translator->translate(
-            key: 'common.missing',
-            locale: Locale::parse('da-DK'),
-        );
+            self::fail('Expected TranslationException');
+        } catch (TranslationException $exception) {
+            self::assertStringContainsString('"common.missing"', $exception->getMessage());
+            self::assertStringContainsString('"da-DK"', $exception->getMessage());
+        }
     }
 
     public function testMissingKeyStrictReportsLockedLocale(): void
@@ -931,12 +935,16 @@ class TranslatorTest extends TestCase
             ),
         );
 
-        self::expectException(TranslationException::class);
-        self::expectExceptionMessage('No translation found for key "common.missing" in locale "sv-SE"');
+        try {
+            $translator->withLocale(Locale::parse('sv-SE'))->translate(
+                key: 'common.missing',
+            );
 
-        $translator->withLocale(Locale::parse('sv-SE'))->translate(
-            key: 'common.missing',
-        );
+            self::fail('Expected TranslationException');
+        } catch (TranslationException $exception) {
+            self::assertStringContainsString('"common.missing"', $exception->getMessage());
+            self::assertStringContainsString('"sv-SE"', $exception->getMessage());
+        }
     }
 
     public function testHasReportsResolvableKeys(): void

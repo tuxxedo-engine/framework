@@ -52,10 +52,15 @@ readonly class WeightedHeader extends Header implements WeightedHeaderInterface
                 : ($a[2] <=> $b[2]),
         );
 
-        return \array_filter(
-            \array_column($parsed, 0),
-            static fn (?string $value): bool => $value !== null,
-        );
+        $order = [];
+
+        foreach ($parsed as [$value, $weight]) {
+            if ($weight > 0.0) {
+                $order[] = $value;
+            }
+        }
+
+        return $order;
     }
 
     public function getWeightedPairs(): array
