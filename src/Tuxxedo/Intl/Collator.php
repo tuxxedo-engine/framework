@@ -41,4 +41,55 @@ class Collator implements CollatorInterface
 
         return $result;
     }
+
+    public function sort(
+        array $values,
+        ?LocaleInterface $locale = null,
+    ): array {
+        \uasort(
+            $values,
+            fn (mixed $first, mixed $second): int => $this->compareValues(
+                first: $first,
+                second: $second,
+                locale: $locale,
+            ),
+        );
+
+        return $values;
+    }
+
+    public function sortKeys(
+        array $values,
+        ?LocaleInterface $locale = null,
+    ): array {
+        \uksort(
+            $values,
+            fn (int|string $first, int|string $second): int => $this->compareValues(
+                first: $first,
+                second: $second,
+                locale: $locale,
+            ),
+        );
+
+        return $values;
+    }
+
+    /**
+     * @throws TranslationException
+     */
+    private function compareValues(
+        mixed $first,
+        mixed $second,
+        ?LocaleInterface $locale,
+    ): int {
+        if (\is_string($first) && \is_string($second)) {
+            return $this->compare(
+                first: $first,
+                second: $second,
+                locale: $locale,
+            );
+        }
+
+        return $first <=> $second;
+    }
 }

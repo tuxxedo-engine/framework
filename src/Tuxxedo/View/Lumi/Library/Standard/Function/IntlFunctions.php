@@ -146,6 +146,44 @@ class IntlFunctions
     }
 
     /**
+     * @param array<mixed> $array
+     * @return array<mixed>
+     *
+     * @throws TranslationException
+     */
+    #[LumiFunction('locale_sort')]
+    public function localeSort(
+        array $array,
+        ?string $locale = null,
+    ): array {
+        return $this->collator->sort(
+            values: $array,
+            locale: $locale !== null
+                ? Locale::parse($locale)
+                : $this->translator->locale,
+        );
+    }
+
+    /**
+     * @param array<mixed> $array
+     * @return array<mixed>
+     *
+     * @throws TranslationException
+     */
+    #[LumiFunction('locale_ksort')]
+    public function localeKsort(
+        array $array,
+        ?string $locale = null,
+    ): array {
+        return $this->collator->sortKeys(
+            values: $array,
+            locale: $locale !== null
+                ? Locale::parse($locale)
+                : $this->translator->locale,
+        );
+    }
+
+    /**
      * @throws TranslationException
      */
     private function latinSortKey(

@@ -299,6 +299,65 @@ class IntlFunctionsTest extends TestCase
         $functions->localeIsRtl('not a locale');
     }
 
+    public function testLocaleSortUsesTheTranslatorLocaleUnlessGiven(): void
+    {
+        $functions = $this->makeFunctions(
+            catalogues: [],
+        );
+
+        $names = [
+            'Zoë',
+            'Åse',
+            'anna',
+        ];
+
+        self::assertSame(
+            [
+                2 => 'anna',
+                1 => 'Åse',
+                0 => 'Zoë',
+            ],
+            $functions->localeSort($names),
+        );
+
+        self::assertSame(
+            [
+                2 => 'anna',
+                0 => 'Zoë',
+                1 => 'Åse',
+            ],
+            $functions->localeSort($names, 'da-DK'),
+        );
+    }
+
+    public function testLocaleKsortUsesTheTranslatorLocaleUnlessGiven(): void
+    {
+        $functions = $this->makeFunctions(
+            catalogues: [],
+        );
+
+        $values = [
+            'Åse' => 1,
+            'Zoë' => 2,
+        ];
+
+        self::assertSame(
+            [
+                'Åse' => 1,
+                'Zoë' => 2,
+            ],
+            $functions->localeKsort($values),
+        );
+
+        self::assertSame(
+            [
+                'Zoë' => 2,
+                'Åse' => 1,
+            ],
+            $functions->localeKsort($values, 'da-DK'),
+        );
+    }
+
     public function testLocaleAllListsDefaultAndSupportedLocales(): void
     {
         $functions = $this->makeFunctions(

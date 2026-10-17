@@ -39,4 +39,91 @@ class CollatorTest extends TestCase
         self::assertGreaterThan(0, $collator->compare('ö', 'z', $swedish));
         self::assertGreaterThan(0, $collator->compare('ö', 'z', $swedish));
     }
+
+    public function testSortOrdersStringsByLocaleAndKeepsKeys(): void
+    {
+        $collator = new Collator();
+        $names = [
+            'Zoë',
+            'Åse',
+            'anna',
+            'Bo',
+            'Émile',
+        ];
+
+        self::assertSame(
+            [
+                2 => 'anna',
+                1 => 'Åse',
+                3 => 'Bo',
+                4 => 'Émile',
+                0 => 'Zoë',
+            ],
+            $collator->sort($names, Locale::parse('en-US')),
+        );
+
+        self::assertSame(
+            [
+                2 => 'anna',
+                3 => 'Bo',
+                4 => 'Émile',
+                0 => 'Zoë',
+                1 => 'Åse',
+            ],
+            $collator->sort($names, Locale::parse('da-DK')),
+        );
+    }
+
+    public function testSortComparesNonStringValuesNumerically(): void
+    {
+        self::assertSame(
+            [
+                1 => 1,
+                2 => 2,
+                0 => 10,
+            ],
+            (new Collator())->sort(
+                [
+                    10,
+                    1,
+                    2,
+                ],
+            ),
+        );
+    }
+
+    public function testSortKeysOrdersStringKeysByLocale(): void
+    {
+        self::assertSame(
+            [
+                'anna' => 3,
+                'émile' => 1,
+                'Zoë' => 2,
+            ],
+            (new Collator())->sortKeys(
+                [
+                    'émile' => 1,
+                    'Zoë' => 2,
+                    'anna' => 3,
+                ],
+                Locale::parse('en-US'),
+            ),
+        );
+    }
+
+    public function testSortKeysComparesIntegerKeysNumerically(): void
+    {
+        self::assertSame(
+            [
+                2 => 'b',
+                10 => 'a',
+            ],
+            (new Collator())->sortKeys(
+                [
+                    10 => 'a',
+                    2 => 'b',
+                ],
+            ),
+        );
+    }
 }

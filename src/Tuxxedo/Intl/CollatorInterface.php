@@ -27,4 +27,32 @@ interface CollatorInterface
         string $second,
         ?LocaleInterface $locale = null,
     ): int;
+
+    /**
+     * @template TKey of array-key
+     * @template TValue
+     *
+     * @param array<TKey, TValue> $values
+     * @return array<TKey, TValue>
+     *
+     * @throws TranslationException
+     */
+    public function sort(
+        array $values,
+        ?LocaleInterface $locale = null,
+    ): array;
+
+    /**
+     * @template TKey of array-key
+     * @template TValue
+     *
+     * @param array<TKey, TValue> $values
+     * @return array<TKey, TValue>
+     *
+     * @throws TranslationException
+     */
+    public function sortKeys(
+        array $values,
+        ?LocaleInterface $locale = null,
+    ): array;
 }
