@@ -22,12 +22,13 @@ class CollatorTest extends TestCase
     public function testRootCollationIgnoresCaseAndKeepsAccentsNextToTheirBaseLetter(): void
     {
         $collator = new Collator();
+        $neutral = Locale::parse('und');
 
-        self::assertLessThan(0, $collator->compare('apple', 'Banana'));
-        self::assertLessThan(0, $collator->compare('Catalan', 'Čeština'));
-        self::assertLessThan(0, $collator->compare('Čeština', 'Dansk'));
-        self::assertGreaterThan(0, $collator->compare('Dansk', 'Čeština'));
-        self::assertSame(0, $collator->compare('Dansk', 'Dansk'));
+        self::assertLessThan(0, $collator->compare('apple', 'Banana', $neutral));
+        self::assertLessThan(0, $collator->compare('Catalan', 'Čeština', $neutral));
+        self::assertLessThan(0, $collator->compare('Čeština', 'Dansk', $neutral));
+        self::assertGreaterThan(0, $collator->compare('Dansk', 'Čeština', $neutral));
+        self::assertSame(0, $collator->compare('Dansk', 'Dansk', $neutral));
     }
 
     public function testLocaleSpecificCollationDiffersFromRoot(): void
@@ -35,7 +36,7 @@ class CollatorTest extends TestCase
         $collator = new Collator();
         $swedish = Locale::parse('sv-SE');
 
-        self::assertLessThan(0, $collator->compare('ö', 'z'));
+        self::assertLessThan(0, $collator->compare('ö', 'z', Locale::parse('und')));
         self::assertGreaterThan(0, $collator->compare('ö', 'z', $swedish));
         self::assertGreaterThan(0, $collator->compare('ö', 'z', $swedish));
     }
@@ -88,6 +89,7 @@ class CollatorTest extends TestCase
                     1,
                     2,
                 ],
+                Locale::parse('und'),
             ),
         );
     }
@@ -123,6 +125,7 @@ class CollatorTest extends TestCase
                     10 => 'a',
                     2 => 'b',
                 ],
+                Locale::parse('und'),
             ),
         );
     }

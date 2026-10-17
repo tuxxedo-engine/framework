@@ -66,13 +66,13 @@ class ArrayFunctionsTest extends TestCase
         self::assertSame('olleh', $this->functions->reverse('hello'));
     }
 
-    public function testReverseReversesArray(): void
+    public function testReverseReversesArrayAndKeepsKeys(): void
     {
         self::assertSame(
             [
-                3,
-                2,
-                1,
+                2 => 3,
+                1 => 2,
+                0 => 1,
             ],
             $this->functions->reverse(
                 [

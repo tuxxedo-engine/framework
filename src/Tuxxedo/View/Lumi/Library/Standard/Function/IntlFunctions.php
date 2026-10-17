@@ -127,6 +127,7 @@ class IntlFunctions
     public function localeAll(): array
     {
         $entries = [];
+        $neutral = Locale::parse('und');
 
         foreach ($this->translator->supportedLocales as $locale) {
             $entries[] = [
@@ -142,6 +143,7 @@ class IntlFunctions
             fn (array $a, array $b): int => $this->collator->compare(
                 first: $a[0],
                 second: $b[0],
+                locale: $neutral,
             ),
         );
 

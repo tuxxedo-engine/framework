@@ -18,6 +18,7 @@ use Fixture\Collection\StringTestEnum;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Collection\Collection;
 use Tuxxedo\Collection\CollectionException;
+use Tuxxedo\Intl\Locale;
 
 class CollectionTest extends TestCase
 {
@@ -302,6 +303,79 @@ class CollectionTest extends TestCase
                 'foo',
             ],
         );
+    }
+
+    public function testLocaleSortOrdersByLocaleAndKeepsKeys(): void
+    {
+        $collection = $this->strings('Zoë', 'Åse', 'anna', 'Bo');
+
+        $collection->localeSort(Locale::parse('en-US'));
+
+        self::assertSame(
+            $collection->toArray(),
+            [
+                2 => 'anna',
+                1 => 'Åse',
+                3 => 'Bo',
+                0 => 'Zoë',
+            ],
+        );
+
+        $collection->localeSort(Locale::parse('da-DK'));
+
+        self::assertSame($collection->values(), ['anna', 'Bo', 'Zoë', 'Åse']);
+
+        $collection->reverse();
+
+        self::assertSame($collection->values(), ['Åse', 'Zoë', 'Bo', 'anna']);
+    }
+
+    public function testLocaleSortKeysOrdersKeysByLocale(): void
+    {
+        $collection = new Collection(
+            [
+                'Zoë' => 1,
+                'Åse' => 2,
+                'anna' => 3,
+            ],
+        );
+
+        $collection->localeSortKeys(Locale::parse('en-US'));
+
+        self::assertSame($collection->keys(), ['anna', 'Åse', 'Zoë']);
+
+        $collection->localeSortKeys(Locale::parse('da-DK'));
+
+        self::assertSame($collection->keys(), ['anna', 'Zoë', 'Åse']);
+    }
+
+    public function testSortWithUsesTheComparatorAndKeepsKeys(): void
+    {
+        $collection = $this->strings('bb', 'a', 'ccc');
+
+        $collection->sortWith(
+            static fn (string $first, string $second): int => \strlen($second) <=> \strlen($first),
+        );
+
+        self::assertSame(
+            $collection->toArray(),
+            [
+                2 => 'ccc',
+                0 => 'bb',
+                1 => 'a',
+            ],
+        );
+    }
+
+    public function testSortKeysWithUsesTheComparator(): void
+    {
+        $collection = $this->intRange(1, 3);
+
+        $collection->sortKeysWith(
+            static fn (int $first, int $second): int => $second <=> $first,
+        );
+
+        self::assertSame($collection->keys(), [2, 1, 0]);
     }
 
     public function testEnumRanges(): void

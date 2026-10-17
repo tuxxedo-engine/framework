@@ -15,8 +15,6 @@ namespace Tuxxedo\Intl;
 
 class Collator implements CollatorInterface
 {
-    private const string ROOT = 'und';
-
     /**
      * @var array<string, \Collator>
      */
@@ -25,16 +23,15 @@ class Collator implements CollatorInterface
     public function compare(
         string $first,
         string $second,
-        ?LocaleInterface $locale = null,
+        LocaleInterface $locale,
     ): int {
-        $tag = $locale->tag ?? self::ROOT;
-        $collator = $this->collators[$tag] ??= new \Collator($tag);
+        $collator = $this->collators[$locale->tag] ??= new \Collator($locale->tag);
         $result = $collator->compare($first, $second);
 
         if ($result === false) {
             // @codeCoverageIgnoreStart
             throw TranslationException::fromCollationFailure(
-                tag: $tag,
+                tag: $locale->tag,
             );
             // @codeCoverageIgnoreEnd
         }
@@ -44,7 +41,7 @@ class Collator implements CollatorInterface
 
     public function sort(
         array $values,
-        ?LocaleInterface $locale = null,
+        LocaleInterface $locale,
     ): array {
         \uasort(
             $values,
@@ -60,7 +57,7 @@ class Collator implements CollatorInterface
 
     public function sortKeys(
         array $values,
-        ?LocaleInterface $locale = null,
+        LocaleInterface $locale,
     ): array {
         \uksort(
             $values,
@@ -80,7 +77,7 @@ class Collator implements CollatorInterface
     private function compareValues(
         mixed $first,
         mixed $second,
-        ?LocaleInterface $locale,
+        LocaleInterface $locale,
     ): int {
         if (\is_string($first) && \is_string($second)) {
             return $this->compare(

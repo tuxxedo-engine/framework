@@ -13,6 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Collection;
 
+use Tuxxedo\Intl\Collator;
+use Tuxxedo\Intl\CollatorInterface;
+use Tuxxedo\Intl\LocaleInterface;
+
 /**
  * @template TKey of array-key
  * @template TValue
@@ -25,6 +29,8 @@ class Collection implements CollectionInterface
      * @var array<TKey, TValue>
      */
     protected array $collection;
+
+    protected ?CollatorInterface $collator = null;
 
     /**
      * @param array<TKey, TValue> $collection
@@ -267,6 +273,44 @@ class Collection implements CollectionInterface
         return $this;
     }
 
+    public function localeSort(
+        LocaleInterface $locale,
+    ): static {
+        $this->collection = $this->collator()->sort(
+            values: $this->collection,
+            locale: $locale,
+        );
+
+        return $this;
+    }
+
+    public function localeSortKeys(
+        LocaleInterface $locale,
+    ): static {
+        $this->collection = $this->collator()->sortKeys(
+            values: $this->collection,
+            locale: $locale,
+        );
+
+        return $this;
+    }
+
+    public function sortWith(
+        \Closure $comparator,
+    ): static {
+        \uasort($this->collection, $comparator);
+
+        return $this;
+    }
+
+    public function sortKeysWith(
+        \Closure $comparator,
+    ): static {
+        \uksort($this->collection, $comparator);
+
+        return $this;
+    }
+
     public function reverse(): static
     {
         $this->collection = \array_reverse(
@@ -314,5 +358,10 @@ class Collection implements CollectionInterface
     public function toImmutable(): ImmutableCollection
     {
         return new ImmutableCollection($this->collection);
+    }
+
+    private function collator(): CollatorInterface
+    {
+        return $this->collator ??= new Collator();
     }
 }

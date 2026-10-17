@@ -52,7 +52,10 @@ class ArrayFunctions
         array|string $input,
     ): array|string {
         if (\is_array($input)) {
-            return \array_reverse($input);
+            return \array_reverse(
+                array: $input,
+                preserve_keys: true,
+            );
         }
 
         return \strrev($input);

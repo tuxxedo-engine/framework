@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Collection;
 
+use Tuxxedo\Intl\LocaleInterface;
+use Tuxxedo\Intl\TranslationException;
+
 /**
  * @template TKey of array-key
  * @template TValue
@@ -56,6 +59,34 @@ interface CollectionInterface extends \Countable, \Iterator, \ArrayAccess
     public function sort(): static;
 
     public function sortKeys(): static;
+
+    /**
+     * @throws TranslationException
+     */
+    public function localeSort(
+        LocaleInterface $locale,
+    ): static;
+
+    /**
+     * @throws TranslationException
+     */
+    public function localeSortKeys(
+        LocaleInterface $locale,
+    ): static;
+
+    /**
+     * @param \Closure(TValue, TValue): int $comparator
+     */
+    public function sortWith(
+        \Closure $comparator,
+    ): static;
+
+    /**
+     * @param \Closure(TKey, TKey): int $comparator
+     */
+    public function sortKeysWith(
+        \Closure $comparator,
+    ): static;
 
     public function reverse(): static;
 

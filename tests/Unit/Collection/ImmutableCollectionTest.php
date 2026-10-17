@@ -18,6 +18,7 @@ use PHPUnit\Framework\TestCase;
 use Tuxxedo\Collection\Collection;
 use Tuxxedo\Collection\CollectionException;
 use Tuxxedo\Collection\ImmutableCollection;
+use Tuxxedo\Intl\Locale;
 
 class ImmutableCollectionTest extends TestCase
 {
@@ -97,6 +98,64 @@ class ImmutableCollectionTest extends TestCase
 
         self::assertFalse($ints === $sortedInts);
         self::assertSame($ints->key(), $sortedInts->key());
+    }
+
+    public function testImmutableLocaleSort(): void
+    {
+        $strings = new ImmutableCollection(
+            [
+                'Zoë',
+                'Åse',
+                'anna',
+            ],
+        );
+
+        $sorted = $strings->localeSort(Locale::parse('da-DK'));
+
+        self::assertFalse($strings === $sorted);
+        self::assertSame($strings->values(), ['Zoë', 'Åse', 'anna']);
+        self::assertSame($sorted->values(), ['anna', 'Zoë', 'Åse']);
+    }
+
+    public function testImmutableLocaleSortKeys(): void
+    {
+        $strings = new ImmutableCollection(
+            [
+                'Zoë' => 1,
+                'Åse' => 2,
+                'anna' => 3,
+            ],
+        );
+
+        $sorted = $strings->localeSortKeys(Locale::parse('en-US'));
+
+        self::assertFalse($strings === $sorted);
+        self::assertSame($strings->keys(), ['Zoë', 'Åse', 'anna']);
+        self::assertSame($sorted->keys(), ['anna', 'Åse', 'Zoë']);
+    }
+
+    public function testImmutableSortWith(): void
+    {
+        $ints = $this->intRange(1, 3);
+        $sorted = $ints->sortWith(
+            static fn (int $first, int $second): int => $second <=> $first,
+        );
+
+        self::assertFalse($ints === $sorted);
+        self::assertSame($ints->values(), [1, 2, 3]);
+        self::assertSame($sorted->values(), [3, 2, 1]);
+    }
+
+    public function testImmutableSortKeysWith(): void
+    {
+        $ints = $this->intRange(1, 3);
+        $sorted = $ints->sortKeysWith(
+            static fn (int $first, int $second): int => $second <=> $first,
+        );
+
+        self::assertFalse($ints === $sorted);
+        self::assertSame($ints->keys(), [0, 1, 2]);
+        self::assertSame($sorted->keys(), [2, 1, 0]);
     }
 
     public function testImmutableReverse(): void

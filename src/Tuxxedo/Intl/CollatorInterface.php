@@ -25,7 +25,7 @@ interface CollatorInterface
     public function compare(
         string $first,
         string $second,
-        ?LocaleInterface $locale = null,
+        LocaleInterface $locale,
     ): int;
 
     /**
@@ -39,7 +39,7 @@ interface CollatorInterface
      */
     public function sort(
         array $values,
-        ?LocaleInterface $locale = null,
+        LocaleInterface $locale,
     ): array;
 
     /**
@@ -53,6 +53,6 @@ interface CollatorInterface
      */
     public function sortKeys(
         array $values,
-        ?LocaleInterface $locale = null,
+        LocaleInterface $locale,
     ): array;
 }

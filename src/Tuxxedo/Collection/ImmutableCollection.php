@@ -13,6 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Collection;
 
+use Tuxxedo\Intl\Collator;
+use Tuxxedo\Intl\CollatorInterface;
+use Tuxxedo\Intl\LocaleInterface;
+
 /**
  * @template TKey of array-key
  * @template TValue
@@ -25,6 +29,8 @@ class ImmutableCollection implements CollectionInterface
      * @var array<TKey, TValue>
      */
     protected array $collection;
+
+    protected ?CollatorInterface $collator = null;
 
     /**
      * @param array<TKey, TValue> $collection
@@ -197,6 +203,56 @@ class ImmutableCollection implements CollectionInterface
     }
 
     #[\NoDiscard]
+    public function localeSort(
+        LocaleInterface $locale,
+    ): static {
+        $collection = clone $this;
+
+        $collection->collection = $this->collator()->sort(
+            values: $collection->collection,
+            locale: $locale,
+        );
+
+        return $collection;
+    }
+
+    #[\NoDiscard]
+    public function localeSortKeys(
+        LocaleInterface $locale,
+    ): static {
+        $collection = clone $this;
+
+        $collection->collection = $this->collator()->sortKeys(
+            values: $collection->collection,
+            locale: $locale,
+        );
+
+        return $collection;
+    }
+
+    #[\NoDiscard]
+    public function sortWith(
+        \Closure $comparator,
+    ): static {
+        $collection = clone $this;
+
+        \uasort($collection->collection, $comparator);
+
+        return $collection;
+    }
+
+    #[\NoDiscard]
+    public function sortKeysWith(
+        \Closure $comparator,
+    ): static {
+        $collection = clone $this;
+
+        \uksort($collection->collection, $comparator);
+
+        return $collection;
+    }
+
+    #[\NoDiscard]
     public function reverse(): static
     {
         $collection = clone $this;
@@ -250,5 +306,10 @@ class ImmutableCollection implements CollectionInterface
     public function toMutable(): Collection
     {
         return new Collection($this->collection);
+    }
+
+    private function collator(): CollatorInterface
+    {
+        return $this->collator ??= new Collator();
     }
 }
