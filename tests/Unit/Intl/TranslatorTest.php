@@ -21,6 +21,7 @@ use Tuxxedo\Intl\Config\IntlConfig;
 use Tuxxedo\Intl\Config\IntlConfigInterface;
 use Tuxxedo\Intl\Loader\PhraseLoaderInterface;
 use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleInterface;
 use Tuxxedo\Intl\MissingKeyMode;
 use Tuxxedo\Intl\PluralSelector;
 use Tuxxedo\Intl\Resolver\LocaleResolverInterface;
@@ -1059,6 +1060,55 @@ class TranslatorTest extends TestCase
         self::assertSame('da-DK', $translator->locale->tag);
         self::assertSame('sv-SE', $translator->withLocale(Locale::parse('sv-SE'))->locale->tag);
         self::assertSame('da-DK', $translator->locale->tag);
+    }
+
+    public function testSupportedLocalesStartWithDefaultAndKeepConfigOrder(): void
+    {
+        $translator = $this->makeTranslator(
+            config: new IntlConfig(
+                defaultLocale: Locale::parse('da-DK'),
+                supportedLocales: [
+                    Locale::parse('en-US'),
+                    Locale::parse('da-DK'),
+                    Locale::parse('sv-SE'),
+                ],
+            ),
+            loader: $this->stubLoader(
+                catalogues: [],
+            ),
+        );
+
+        self::assertSame(
+            [
+                'da-DK',
+                'en-US',
+                'sv-SE',
+            ],
+            \array_map(
+                static fn (LocaleInterface $locale): string => $locale->tag,
+                $translator->supportedLocales,
+            ),
+        );
+    }
+
+    public function testSupportedLocalesWithoutAllowListIsTheDefaultLocale(): void
+    {
+        $translator = $this->makeTranslator(
+            config: $this->makeConfig(),
+            loader: $this->stubLoader(
+                catalogues: [],
+            ),
+        );
+
+        self::assertSame(
+            [
+                'en-US',
+            ],
+            \array_map(
+                static fn (LocaleInterface $locale): string => $locale->tag,
+                $translator->supportedLocales,
+            ),
+        );
     }
 
     public function testRtlLocaleIsolatesReplacementValues(): void

@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Fixture\Intl;
 
 use Tuxxedo\Intl\Loader\PhraseLoaderInterface;
-use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleInterface;
 
 class InMemoryPhraseLoader implements PhraseLoaderInterface
 {
@@ -27,7 +27,7 @@ class InMemoryPhraseLoader implements PhraseLoaderInterface
     }
 
     public function load(
-        Locale $locale,
+        LocaleInterface $locale,
         string $group,
     ): ?array {
         return $this->catalogues[$locale->tag][$group] ?? null;

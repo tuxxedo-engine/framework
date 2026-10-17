@@ -18,5 +18,5 @@ use Tuxxedo\Router\Pattern\TypePatternInterface;
 class LanguageCode implements TypePatternInterface
 {
     public private(set) string $name = 'language-code';
-    public private(set) string $regex = '[a-z]{2}(-[A-Z]{2})?';
+    public private(set) string $regex = '[a-zA-Z]{2,3}(?:-[a-zA-Z]{4})?(?:-(?:[a-zA-Z]{2}|\d{3}))?';
 }

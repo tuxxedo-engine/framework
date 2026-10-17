@@ -19,9 +19,12 @@ use Tuxxedo\Container\Lifecycle;
 #[DefaultImplementation(class: LocaleSourceRegistry::class, lifecycle: Lifecycle::SINGLETON)]
 interface LocaleSourceRegistryInterface
 {
+    /**
+     * @param LocaleSourceInterface|(\Closure(): LocaleSourceInterface) $source
+     */
     public function register(
         SourcePriority $priority,
-        LocaleSourceInterface $source,
+        LocaleSourceInterface|\Closure $source,
     ): void;
 
     /**

@@ -13,20 +13,30 @@ declare(strict_types=1);
 
 namespace Unit\Http\Response;
 
+use Fixture\Router\RouteDiscoverer\Support\TestStickyPrefix;
 use PHPUnit\Framework\TestCase;
+use Support\Http\Request\Context\StubHeaderContext;
+use Support\Http\Request\Context\StubInputContext;
+use Support\Http\Request\Context\StubUploadedFilesContext;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Http\Cookie;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\HttpVersion;
+use Tuxxedo\Http\Method;
+use Tuxxedo\Http\Request\Request;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseCode;
 use Tuxxedo\Http\Response\Stream\JsonStreamFormat;
 use Tuxxedo\Http\Response\Stream\SseEvent;
 use Tuxxedo\Http\Response\Stream\Stream;
 use Tuxxedo\Http\Response\Stream\StreamInterface;
+use Tuxxedo\Router\ArgumentKind;
+use Tuxxedo\Router\ArgumentNode;
+use Tuxxedo\Router\DispatchableRoute;
 use Tuxxedo\Router\Route;
+use Tuxxedo\Router\RouteArgument;
 use Tuxxedo\Router\StaticRouter;
 use Tuxxedo\Temporal\Instant;
 use Tuxxedo\Temporal\TimeZone;
@@ -725,6 +735,80 @@ class ResponseTest extends TestCase
         Response::redirectRoute('missing')->toResponse(
             $this->makeContainerWithRoute('home'),
         );
+    }
+
+    private function makeContainerWithStickyRoute(): Container
+    {
+        $route = new Route(
+            method: Method::GET,
+            path: '/{?tenant}/home',
+            controller: self::class,
+            action: 'index',
+            name: 'home',
+            arguments: [
+                new RouteArgument(
+                    node: new ArgumentNode(
+                        name: 'tenant',
+                        kind: ArgumentKind::TYPED_IMPLICIT,
+                        optional: true,
+                        prefixed: true,
+                    ),
+                    mappedName: null,
+                    nativeType: 'string',
+                    allowsNull: false,
+                    defaultValue: null,
+                ),
+            ],
+            stickyPrefix: TestStickyPrefix::class,
+        );
+
+        return (new Container())
+            ->singleton(
+                class: new StaticRouter(
+                    routes: [
+                        $route,
+                    ],
+                ),
+            )
+            ->singleton(
+                class: new Request(
+                    route: new DispatchableRoute(
+                        route: $route,
+                        arguments: [
+                            'tenant' => 'acme',
+                        ],
+                    ),
+                    headers: new StubHeaderContext(),
+                    cookies: new StubInputContext(),
+                    get: new StubInputContext(),
+                    post: new StubInputContext(),
+                    files: new StubUploadedFilesContext(),
+                    method: Method::GET,
+                ),
+            );
+    }
+
+    public function testRedirectRouteKeepsStickyPrefixArguments(): void
+    {
+        $response = Response::redirectRoute('home')->toResponse(
+            $this->makeContainerWithStickyRoute(),
+        );
+
+        self::assertSame('/acme/home', $response->headers[0]->value);
+    }
+
+    public function testRedirectRouteDropsStickyArgumentPassedAsNull(): void
+    {
+        $response = Response::redirectRoute(
+            name: 'home',
+            arguments: [
+                'tenant' => null,
+            ],
+        )->toResponse(
+            $this->makeContainerWithStickyRoute(),
+        );
+
+        self::assertSame('/home', $response->headers[0]->value);
     }
 
     public function testStreamCsvWithClosureReturnsStreamBody(): void

@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Intl\Source;
 
 use Tuxxedo\Intl\Config\IntlConfigInterface;
-use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleInterface;
 
 class DefaultLocaleSource implements LocaleSourceInterface
 {
@@ -23,7 +23,7 @@ class DefaultLocaleSource implements LocaleSourceInterface
     ) {
     }
 
-    public function detect(): ?Locale
+    public function detect(): ?LocaleInterface
     {
         return $this->config->defaultLocale;
     }

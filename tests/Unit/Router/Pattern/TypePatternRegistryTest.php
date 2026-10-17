@@ -377,4 +377,94 @@ class TypePatternRegistryTest extends TestCase
 
         self::assertSame($shouldMatch, $matched);
     }
+
+    /**
+     * @return \Generator<string, array{0: string, 1: bool}>
+     */
+    public static function providesLanguageCodeMatchCases(): \Generator
+    {
+        yield 'language-code: language' => [
+            'da',
+            true,
+        ];
+
+        yield 'language-code: three letter language' => [
+            'fil',
+            true,
+        ];
+
+        yield 'language-code: language and region' => [
+            'cs-CZ',
+            true,
+        ];
+
+        yield 'language-code: lower case region' => [
+            'cs-cz',
+            true,
+        ];
+
+        yield 'language-code: upper case language' => [
+            'CS-CZ',
+            true,
+        ];
+
+        yield 'language-code: language script region' => [
+            'zh-Hant-TW',
+            true,
+        ];
+
+        yield 'language-code: language and script' => [
+            'sr-latn',
+            true,
+        ];
+
+        yield 'language-code: numeric region' => [
+            'es-419',
+            true,
+        ];
+
+        yield 'language-code: single letter rejected' => [
+            'd',
+            false,
+        ];
+
+        yield 'language-code: four letter language rejected' => [
+            'dans',
+            false,
+        ];
+
+        yield 'language-code: underscore rejected' => [
+            'cs_CZ',
+            false,
+        ];
+
+        yield 'language-code: trailing hyphen rejected' => [
+            'cs-',
+            false,
+        ];
+
+        yield 'language-code: two regions rejected' => [
+            'cs-CZ-SK',
+            false,
+        ];
+
+        yield 'language-code: empty rejected' => [
+            '',
+            false,
+        ];
+    }
+
+    #[DataProvider('providesLanguageCodeMatchCases')]
+    public function testLanguageCodePatternRegexMatchesExpected(
+        string $value,
+        bool $shouldMatch,
+    ): void {
+        $pattern = TypePatternRegistry::createDefault()->get('language-code');
+
+        self::assertNotNull($pattern);
+
+        $matched = \preg_match('/^' . $pattern->regex . '$/', $value) === 1;
+
+        self::assertSame($shouldMatch, $matched);
+    }
 }

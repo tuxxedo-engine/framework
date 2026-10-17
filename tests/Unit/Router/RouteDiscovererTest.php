@@ -15,6 +15,7 @@ namespace Unit\Router;
 
 use Fixture\Router\RouteDiscoverer\Support\AnotherMiddleware;
 use Fixture\Router\RouteDiscoverer\Support\TestMiddleware;
+use Fixture\Router\RouteDiscoverer\Support\TestStickyPrefix;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Container\Container;
@@ -761,6 +762,19 @@ class RouteDiscovererTest extends TestCase
         self::assertSame('locale', $argument->node->name);
         self::assertTrue($argument->node->prefixed);
         self::assertSame('en', $argument->defaultValue);
+        self::assertNull($routes[0]->stickyPrefix);
+    }
+
+    public function testStickyPrefixIsRecordedOnTheRoute(): void
+    {
+        $routes = $this->discoverAll(
+            $this->createDiscoverer('StickyPrefix'),
+        );
+
+        self::assertCount(1, $routes);
+        self::assertSame('/{tenant:[a-z]+}/home', $routes[0]->path);
+        self::assertSame(TestStickyPrefix::class, $routes[0]->stickyPrefix);
+        self::assertTrue($routes[0]->arguments[0]->node->prefixed);
     }
 
     public function testRoutePrefixOverridesPath(): void

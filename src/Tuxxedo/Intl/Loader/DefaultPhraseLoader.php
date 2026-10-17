@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Intl\Loader;
 
 use Tuxxedo\Intl\Config\IntlConfigInterface;
-use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleInterface;
 
 class DefaultPhraseLoader implements PhraseLoaderInterface
 {
@@ -38,7 +38,7 @@ class DefaultPhraseLoader implements PhraseLoaderInterface
     }
 
     public function load(
-        Locale $locale,
+        LocaleInterface $locale,
         string $group,
     ): ?array {
         return $this->loader->load(

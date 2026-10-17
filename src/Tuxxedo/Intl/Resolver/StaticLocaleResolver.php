@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Intl\Resolver;
 
 use Tuxxedo\Intl\Config\IntlConfigInterface;
-use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleInterface;
 
 class StaticLocaleResolver implements LocaleResolverInterface
 {
@@ -23,7 +23,7 @@ class StaticLocaleResolver implements LocaleResolverInterface
     ) {
     }
 
-    public function currentLocale(): Locale
+    public function currentLocale(): LocaleInterface
     {
         return $this->config->defaultLocale;
     }

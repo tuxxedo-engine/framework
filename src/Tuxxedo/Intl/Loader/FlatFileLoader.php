@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Intl\Loader;
 
-use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleInterface;
 use Tuxxedo\Intl\TranslationException;
 
 class FlatFileLoader implements PhraseLoaderInterface
@@ -24,7 +24,7 @@ class FlatFileLoader implements PhraseLoaderInterface
     }
 
     public function load(
-        Locale $locale,
+        LocaleInterface $locale,
         string $group,
     ): ?array {
         if (\preg_match('/^[A-Za-z0-9_-]+$/', $group) !== 1) {

@@ -22,11 +22,30 @@ class Translator implements TranslatorInterface
 {
     private readonly CachingLoader $loader;
 
-    private readonly ?Locale $localeOverride;
+    private readonly ?LocaleInterface $localeOverride;
 
-    public Locale $locale {
+    public LocaleInterface $locale {
         get {
             return $this->localeOverride ?? $this->resolver->currentLocale();
+        }
+    }
+
+    /**
+     * @var list<LocaleInterface>
+     */
+    public array $supportedLocales {
+        get {
+            $locales = [
+                $this->config->defaultLocale,
+            ];
+
+            foreach ($this->config->supportedLocales as $supported) {
+                if ($supported->tag !== $this->config->defaultLocale->tag) {
+                    $locales[] = $supported;
+                }
+            }
+
+            return $locales;
         }
     }
 
@@ -46,7 +65,7 @@ class Translator implements TranslatorInterface
     public function translate(
         string $key,
         array $replacements = [],
-        ?Locale $locale = null,
+        ?LocaleInterface $locale = null,
     ): string {
         $effective = $locale ?? $this->locale;
 
@@ -65,7 +84,7 @@ class Translator implements TranslatorInterface
         return self::interpolate(
             template: $value,
             replacements: $replacements,
-            isolate: $effective->direction() === LocaleDirection::RTL,
+            isolate: $effective->direction === LocaleDirection::RTL,
         );
     }
 
@@ -73,7 +92,7 @@ class Translator implements TranslatorInterface
         string $key,
         int $count,
         array $replacements = [],
-        ?Locale $locale = null,
+        ?LocaleInterface $locale = null,
     ): string {
         $effective = $locale ?? $this->locale;
         $value = null;
@@ -116,13 +135,13 @@ class Translator implements TranslatorInterface
         return self::interpolate(
             template: $value,
             replacements: $replacements,
-            isolate: $effective->direction() === LocaleDirection::RTL,
+            isolate: $effective->direction === LocaleDirection::RTL,
         );
     }
 
     public function has(
         string $key,
-        ?Locale $locale = null,
+        ?LocaleInterface $locale = null,
     ): bool {
         return $this->resolveKey(
             key: $key,
@@ -131,7 +150,7 @@ class Translator implements TranslatorInterface
     }
 
     public function withLocale(
-        Locale $locale,
+        LocaleInterface $locale,
     ): self {
         return clone (
             $this,
@@ -142,10 +161,10 @@ class Translator implements TranslatorInterface
     }
 
     /**
-     * @return iterable<int, Locale>
+     * @return iterable<int, LocaleInterface>
      */
     private function candidateLocales(
-        Locale $locale,
+        LocaleInterface $locale,
     ): iterable {
         $seen = [];
 
@@ -188,7 +207,7 @@ class Translator implements TranslatorInterface
 
     private function resolveKey(
         string $key,
-        Locale $locale,
+        LocaleInterface $locale,
     ): ?string {
         $path = self::splitKey(
             key: $key,
@@ -217,7 +236,7 @@ class Translator implements TranslatorInterface
      * @param list<string> $segments
      */
     private function lookupIn(
-        Locale $locale,
+        LocaleInterface $locale,
         string $group,
         array $segments,
     ): ?string {
@@ -263,7 +282,7 @@ class Translator implements TranslatorInterface
 
     private function applyMissingKey(
         string $key,
-        Locale $locale,
+        LocaleInterface $locale,
     ): string {
         return match ($this->config->missingKeyMode) {
             MissingKeyMode::STRICT => throw TranslationException::fromMissingKey(
@@ -278,7 +297,7 @@ class Translator implements TranslatorInterface
     private function applyMissingPluralSibling(
         string $key,
         CldrCategory $category,
-        Locale $locale,
+        LocaleInterface $locale,
     ): string {
         return match ($this->config->missingKeyMode) {
             MissingKeyMode::STRICT => throw TranslationException::fromMissingPluralSibling(

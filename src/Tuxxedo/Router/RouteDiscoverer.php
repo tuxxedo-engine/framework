@@ -429,6 +429,10 @@ class RouteDiscoverer implements RouteDiscovererInterface
             return;
         }
 
+        $stickyPrefix = $prefix instanceof StickyPrefixInterface
+            ? $prefix::class
+            : null;
+
         if (\sizeof($route->methods) > 0) {
             $emittedMethods = [];
 
@@ -449,6 +453,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
                     priority: $route->priority,
                     regexPath: $regexPath,
                     arguments: $arguments,
+                    stickyPrefix: $stickyPrefix,
                 );
             }
         } else {
@@ -462,6 +467,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
                 priority: $route->priority,
                 regexPath: $regexPath,
                 arguments: $arguments,
+                stickyPrefix: $stickyPrefix,
             );
         }
     }

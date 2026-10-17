@@ -15,7 +15,7 @@ namespace Tuxxedo\Intl\Loader;
 
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
-use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleInterface;
 use Tuxxedo\Intl\TranslationException;
 
 #[DefaultImplementation(class: DefaultPhraseLoader::class, lifecycle: Lifecycle::SINGLETON)]
@@ -27,7 +27,7 @@ interface PhraseLoaderInterface
      * @throws TranslationException
      */
     public function load(
-        Locale $locale,
+        LocaleInterface $locale,
         string $group,
     ): ?array;
 }

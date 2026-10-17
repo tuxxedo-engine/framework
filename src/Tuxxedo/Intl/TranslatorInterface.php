@@ -19,7 +19,14 @@ use Tuxxedo\Container\Lifecycle;
 #[DefaultImplementation(class: Translator::class, lifecycle: Lifecycle::SINGLETON)]
 interface TranslatorInterface
 {
-    public Locale $locale {
+    public LocaleInterface $locale {
+        get;
+    }
+
+    /**
+     * @var list<LocaleInterface>
+     */
+    public array $supportedLocales {
         get;
     }
 
@@ -31,7 +38,7 @@ interface TranslatorInterface
     public function translate(
         string $key,
         array $replacements = [],
-        ?Locale $locale = null,
+        ?LocaleInterface $locale = null,
     ): string;
 
     /**
@@ -43,15 +50,15 @@ interface TranslatorInterface
         string $key,
         int $count,
         array $replacements = [],
-        ?Locale $locale = null,
+        ?LocaleInterface $locale = null,
     ): string;
 
     public function has(
         string $key,
-        ?Locale $locale = null,
+        ?LocaleInterface $locale = null,
     ): bool;
 
     public function withLocale(
-        Locale $locale,
+        LocaleInterface $locale,
     ): self;
 }

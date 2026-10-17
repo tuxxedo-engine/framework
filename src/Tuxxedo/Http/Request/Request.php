@@ -549,4 +549,9 @@ class Request implements RequestInterface
     {
         return $this->method === Method::QUERY;
     }
+
+    public function hasRoute(): bool
+    {
+        return isset($this->route);
+    }
 }

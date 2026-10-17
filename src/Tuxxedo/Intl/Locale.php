@@ -13,9 +13,71 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Intl;
 
-class Locale
+class Locale implements LocaleInterface
 {
     public readonly string $tag;
+
+    private ?string $languageNameCache = null;
+
+    private ?string $scriptNameCache = null;
+
+    private ?string $regionNameCache = null;
+
+    private ?string $displayNameCache = null;
+
+    private ?LocaleDirection $directionCache = null;
+
+    public string $languageName {
+        get {
+            return $this->languageNameCache ??= self::capitalize(
+                name: \Locale::getDisplayLanguage($this->tag, $this->tag),
+                tag: $this->tag,
+            );
+        }
+    }
+
+    public ?string $scriptName {
+        get {
+            if ($this->script === null) {
+                return null;
+            }
+
+            return $this->scriptNameCache ??= self::capitalize(
+                name: \Locale::getDisplayScript($this->tag, $this->tag),
+                tag: $this->tag,
+            );
+        }
+    }
+
+    public ?string $regionName {
+        get {
+            if ($this->region === null) {
+                return null;
+            }
+
+            return $this->regionNameCache ??= self::capitalize(
+                name: \Locale::getDisplayRegion($this->tag, $this->tag),
+                tag: $this->tag,
+            );
+        }
+    }
+
+    public string $displayName {
+        get {
+            return $this->displayNameCache ??= self::capitalize(
+                name: \Locale::getDisplayName($this->tag, $this->tag),
+                tag: $this->tag,
+            );
+        }
+    }
+
+    public LocaleDirection $direction {
+        get {
+            return $this->directionCache ??= \Locale::isRightToLeft($this->tag)
+                ? LocaleDirection::RTL
+                : LocaleDirection::LTR;
+        }
+    }
 
     /**
      * @param non-empty-string $language
@@ -120,10 +182,21 @@ class Locale
         }
     }
 
-    public function direction(): LocaleDirection
-    {
-        return \Locale::isRightToLeft($this->tag)
-            ? LocaleDirection::RTL
-            : LocaleDirection::LTR;
+    /**
+     * @throws TranslationException
+     */
+    private static function capitalize(
+        string|false $name,
+        string $tag,
+    ): string {
+        if ($name === false) {
+            // @codeCoverageIgnoreStart
+            throw TranslationException::fromDisplayNameFailure(
+                tag: $tag,
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        return \mb_ucfirst($name);
     }
 }

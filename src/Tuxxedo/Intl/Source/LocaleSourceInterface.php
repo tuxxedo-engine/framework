@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Intl\Source;
 
-use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleInterface;
 
 interface LocaleSourceInterface
 {
-    public function detect(): ?Locale;
+    public function detect(): ?LocaleInterface;
 }

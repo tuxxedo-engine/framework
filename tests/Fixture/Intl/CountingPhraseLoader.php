@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Fixture\Intl;
 
 use Tuxxedo\Intl\Loader\PhraseLoaderInterface;
-use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleInterface;
 
 class CountingPhraseLoader implements PhraseLoaderInterface
 {
@@ -26,7 +26,7 @@ class CountingPhraseLoader implements PhraseLoaderInterface
     }
 
     public function load(
-        Locale $locale,
+        LocaleInterface $locale,
         string $group,
     ): ?array {
         ++$this->calls;

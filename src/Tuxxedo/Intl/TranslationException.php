@@ -30,7 +30,7 @@ class TranslationException extends Exception
 
     public static function fromMissingKey(
         string $key,
-        Locale $locale,
+        LocaleInterface $locale,
     ): self {
         return new self(
             message: \sprintf(
@@ -67,7 +67,7 @@ class TranslationException extends Exception
      * @codeCoverageIgnore
      */
     public static function fromPluralSelectionFailure(
-        Locale $locale,
+        LocaleInterface $locale,
         int $count,
     ): self {
         return new self(
@@ -75,6 +75,48 @@ class TranslationException extends Exception
                 'Unable to select a plural category for %d in locale %s',
                 $count,
                 self::formatQuoted($locale->tag),
+            ),
+        );
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public static function fromDisplayNameFailure(
+        string $tag,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unable to resolve a display name for locale %s',
+                self::formatQuoted($tag),
+            ),
+        );
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public static function fromCollationFailure(
+        string $tag,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unable to collate strings for locale %s',
+                self::formatQuoted($tag),
+            ),
+        );
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public static function fromTransliterationFailure(
+        string $input,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unable to transliterate %s to Latin',
+                self::formatQuoted($input),
             ),
         );
     }
@@ -119,7 +161,7 @@ class TranslationException extends Exception
     public static function fromMissingPluralSibling(
         string $key,
         CldrCategory $category,
-        Locale $locale,
+        LocaleInterface $locale,
     ): self {
         return new self(
             message: \sprintf(

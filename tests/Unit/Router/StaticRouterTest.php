@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Unit\Router;
 
+use Fixture\Router\RouteDiscoverer\Support\TestOtherStickyPrefix;
+use Fixture\Router\RouteDiscoverer\Support\TestStickyPrefix;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Support\Http\Request\Context\StubBodyContext;
 use Support\Http\Request\Context\StubHeaderContext;
@@ -21,11 +24,16 @@ use Support\Http\Request\Context\StubUploadedFilesContext;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Request;
+use Tuxxedo\Router\ArgumentKind;
+use Tuxxedo\Router\ArgumentNode;
+use Tuxxedo\Router\DispatchableRoute;
 use Tuxxedo\Router\DispatchableRouteInterface;
 use Tuxxedo\Router\Route;
+use Tuxxedo\Router\RouteArgument;
 use Tuxxedo\Router\RouteInterface;
 use Tuxxedo\Router\RoutePriority;
 use Tuxxedo\Router\StaticRouter;
+use Tuxxedo\Router\StickyPrefixInterface;
 
 class StaticRouterTest extends TestCase
 {
@@ -60,6 +68,66 @@ class StaticRouterTest extends TestCase
     ): StaticRouter {
         return new StaticRouter(
             routes: $routes,
+        );
+    }
+
+    /**
+     * @param class-string<StickyPrefixInterface>|null $stickyPrefix
+     */
+    private function makeTenantRoute(
+        string $name,
+        ?string $stickyPrefix,
+        bool $optionalTenant = false,
+    ): Route {
+        return new Route(
+            method: Method::GET,
+            path: $optionalTenant
+                ? '/{?tenant}/projects/{id}'
+                : '/{tenant}/projects/{id}',
+            controller: self::class,
+            action: 'index',
+            name: $name,
+            arguments: [
+                new RouteArgument(
+                    node: new ArgumentNode(
+                        name: 'tenant',
+                        kind: ArgumentKind::TYPED_IMPLICIT,
+                        optional: $optionalTenant,
+                        prefixed: true,
+                    ),
+                    mappedName: null,
+                    nativeType: 'string',
+                    allowsNull: false,
+                    defaultValue: null,
+                ),
+                new RouteArgument(
+                    node: new ArgumentNode(
+                        name: 'id',
+                        kind: ArgumentKind::TYPED_IMPLICIT,
+                    ),
+                    mappedName: null,
+                    nativeType: 'string',
+                    allowsNull: false,
+                    defaultValue: null,
+                ),
+            ],
+            stickyPrefix: $stickyPrefix,
+        );
+    }
+
+    private function currentTenantRoute(
+        string $tenant = 'acme',
+    ): DispatchableRoute {
+        return new DispatchableRoute(
+            route: $this->makeTenantRoute(
+                name: 'projects.current',
+                stickyPrefix: TestStickyPrefix::class,
+                optionalTenant: true,
+            ),
+            arguments: [
+                'tenant' => $tenant,
+                'id' => '42',
+            ],
         );
     }
 
@@ -634,6 +702,186 @@ class StaticRouterTest extends TestCase
 
         self::assertNotNull($dispatchable);
         self::assertSame($postRoute, $dispatchable->route);
+    }
+
+    public function testFindByNameFillsStickyPrefixArgumentsFromCurrentRoute(): void
+    {
+        $router = $this->makeRouter(
+            routes: [
+                $this->makeTenantRoute(
+                    name: 'projects.show',
+                    stickyPrefix: TestStickyPrefix::class,
+                ),
+            ],
+        );
+
+        $dispatchable = $router->findByName(
+            name: 'projects.show',
+            arguments: [
+                'id' => '7',
+            ],
+            current: $this->currentTenantRoute(),
+        );
+
+        self::assertNotNull($dispatchable);
+        self::assertSame('/acme/projects/7', $dispatchable->asUrl());
+    }
+
+    public function testFindByNameDoesNotCarryNonPrefixedArguments(): void
+    {
+        $router = $this->makeRouter(
+            routes: [
+                $this->makeTenantRoute(
+                    name: 'projects.show',
+                    stickyPrefix: TestStickyPrefix::class,
+                ),
+            ],
+        );
+
+        $dispatchable = $router->findByName(
+            name: 'projects.show',
+            current: $this->currentTenantRoute(),
+        );
+
+        self::assertNotNull($dispatchable);
+        self::assertSame(
+            [
+                'tenant' => 'acme',
+            ],
+            $dispatchable->arguments,
+        );
+    }
+
+    public function testFindByNameExplicitArgumentWinsOverStickyValue(): void
+    {
+        $router = $this->makeRouter(
+            routes: [
+                $this->makeTenantRoute(
+                    name: 'projects.show',
+                    stickyPrefix: TestStickyPrefix::class,
+                ),
+            ],
+        );
+
+        $dispatchable = $router->findByName(
+            name: 'projects.show',
+            arguments: [
+                'tenant' => 'globex',
+                'id' => '7',
+            ],
+            current: $this->currentTenantRoute(),
+        );
+
+        self::assertNotNull($dispatchable);
+        self::assertSame('/globex/projects/7', $dispatchable->asUrl());
+    }
+
+    public function testFindByNameExplicitNullDropsStickyArgument(): void
+    {
+        $router = $this->makeRouter(
+            routes: [
+                $this->makeTenantRoute(
+                    name: 'projects.show',
+                    stickyPrefix: TestStickyPrefix::class,
+                    optionalTenant: true,
+                ),
+            ],
+        );
+
+        $dispatchable = $router->findByName(
+            name: 'projects.show',
+            arguments: [
+                'tenant' => null,
+                'id' => '7',
+            ],
+            current: $this->currentTenantRoute(),
+        );
+
+        self::assertNotNull($dispatchable);
+        self::assertSame('/projects/7', $dispatchable->asUrl());
+    }
+
+    public function testFindByNameSkipsEmptyStickyValue(): void
+    {
+        $router = $this->makeRouter(
+            routes: [
+                $this->makeTenantRoute(
+                    name: 'projects.show',
+                    stickyPrefix: TestStickyPrefix::class,
+                    optionalTenant: true,
+                ),
+            ],
+        );
+
+        $dispatchable = $router->findByName(
+            name: 'projects.show',
+            arguments: [
+                'id' => '7',
+            ],
+            current: $this->currentTenantRoute(
+                tenant: '',
+            ),
+        );
+
+        self::assertNotNull($dispatchable);
+        self::assertSame('/projects/7', $dispatchable->asUrl());
+    }
+
+    /**
+     * @return \Generator<string, array{0: class-string<StickyPrefixInterface>|null, 1: bool}>
+     */
+    public static function providesNonMatchingStickyContexts(): \Generator
+    {
+        yield 'different sticky prefix class' => [
+            TestOtherStickyPrefix::class,
+            true,
+        ];
+
+        yield 'target route is not sticky' => [
+            null,
+            true,
+        ];
+
+        yield 'no current route' => [
+            TestStickyPrefix::class,
+            false,
+        ];
+    }
+
+    /**
+     * @param class-string<StickyPrefixInterface>|null $stickyPrefix
+     */
+    #[DataProvider('providesNonMatchingStickyContexts')]
+    public function testFindByNameDoesNotFillWithoutMatchingStickyContext(
+        ?string $stickyPrefix,
+        bool $withCurrent,
+    ): void {
+        $router = $this->makeRouter(
+            routes: [
+                $this->makeTenantRoute(
+                    name: 'projects.show',
+                    stickyPrefix: $stickyPrefix,
+                ),
+            ],
+        );
+
+        $dispatchable = $router->findByName(
+            name: 'projects.show',
+            arguments: [
+                'id' => '7',
+            ],
+            current: $withCurrent
+                ? $this->currentTenantRoute()
+                : null,
+        );
+
+        self::assertNotNull($dispatchable);
+        self::assertSame(
+            [
+                'id' => '7',
+            ],
+            $dispatchable->arguments,
+        );
     }
 
     public function testFindByPathMethodNotAllowedWhenStaticPathExistsForDifferentMethod(): void

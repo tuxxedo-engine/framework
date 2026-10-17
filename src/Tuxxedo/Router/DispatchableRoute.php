@@ -63,7 +63,7 @@ readonly class DispatchableRoute implements DispatchableRouteInterface
                     }
                 }
 
-                if ($value === null) {
+                if ($value === null || $value === '') {
                     return '';
                 }
 

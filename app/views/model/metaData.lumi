@@ -2,7 +2,7 @@
 
 {% block buttons %}
     <a href="{! route('model.index') | escape_attr !}" class="btn">
-        Back
+        {{ t('model.action.back') }}
     </a>
 {% endblock %}
 
@@ -10,41 +10,41 @@
     <table>
         <tbody>
             <tr>
-                <td><strong>Model</strong></td>
+                <td><strong>{{ t('model.meta.model') }}</strong></td>
                 <td>{{ metaData.model }}</td>
             </tr>
             <tr>
-                <td><strong>Table</strong></td>
+                <td><strong>{{ t('model.meta.table') }}</strong></td>
                 <td>{{ metaData.table }}</td>
             </tr>
             {% if metaData.key !== null && is_a(metaData.key, '\Tuxxedo\Model\MetaData\ModelPrimaryKey') %}
                 <tr>
-                    <td><strong>Primary key column</strong></td>
-                    <td>{{ metaData.key.column }} (declared on property: {{ metaData.key.property }})</td>
+                    <td><strong>{{ t('model.meta.primaryKeyColumn') }}</strong></td>
+                    <td>{{ t('model.meta.primaryKeyDeclaredOn', ['column': metaData.key.column, 'property': metaData.key.property]) }}</td>
                 </tr>
                 <tr>
-                    <td><strong>Primary key auto increment?</strong></td>
-                    <td>{% if metaData.key.autoIncrement %}Yes{% else %}No{% endif %}</td>
+                    <td><strong>{{ t('model.meta.primaryKeyAutoIncrement') }}</strong></td>
+                    <td>{% if metaData.key.autoIncrement %}{{ t('model.answer.yes') }}{% else %}{{ t('model.answer.no') }}{% endif %}</td>
                 </tr>
             {% endif %}
             <tr>
-                <td><strong>Is Model marked as readonly?</strong></td>
-                <td>{% if metaData.readonly %}Yes{% else %}No{% endif %}</td>
+                <td><strong>{{ t('model.meta.readonly') }}</strong></td>
+                <td>{% if metaData.readonly %}{{ t('model.answer.yes') }}{% else %}{{ t('model.answer.no') }}{% endif %}</td>
             </tr>
             <tr>
-                <td><strong>Database Connection</strong></td>
-                <td>{% if metaData.connection !== null %}On named connection: {{ metaData.connection }}{% else %}On the models manager connection{% endif %}</td>
+                <td><strong>{{ t('model.meta.connection') }}</strong></td>
+                <td>{% if metaData.connection !== null %}{{ t('model.meta.namedConnection', ['connection': metaData.connection]) }}{% else %}{{ t('model.meta.managerConnection') }}{% endif %}</td>
             </tr>
         </tbody>
     </table>
 
     {% if metaData.key !== null && is_a(metaData.key, '\Tuxxedo\Model\MetaData\ModelCompositeKey') %}
-        <h3>Composite Key</h3>
+        <h3>{{ t('model.heading.compositeKey') }}</h3>
         <table>
             <thead>
                 <tr>
-                    <th>Property</th>
-                    <th>Column</th>
+                    <th>{{ t('model.column.property') }}</th>
+                    <th>{{ t('model.column.column') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -59,15 +59,15 @@
     {% endif %}
 
     {% if metaData.columns | count > 0 %}
-        <h3>Columns</h3>
+        <h3>{{ t('model.heading.columns') }}</h3>
         <table>
             <thead>
                 <tr>
-                    <th>Property</th>
-                    <th>Column</th>
-                    <th>Nullable</th>
-                    <th>Unique</th>
-                    <th>Readonly</th>
+                    <th>{{ t('model.column.property') }}</th>
+                    <th>{{ t('model.column.column') }}</th>
+                    <th>{{ t('model.column.nullable') }}</th>
+                    <th>{{ t('model.column.unique') }}</th>
+                    <th>{{ t('model.column.readonly') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -75,9 +75,9 @@
                     <tr>
                         <td>{{ column.property }}</td>
                         <td>{{ column.column }}</td>
-                        <td>{% if column.nullable %}Yes{% else %}No{% endif %}</td>
-                        <td>{% if column.unique %}Yes{% else %}No{% endif %}</td>
-                        <td>{% if column.readonly %}Yes{% else %}No{% endif %}</td>
+                        <td>{% if column.nullable %}{{ t('model.answer.yes') }}{% else %}{{ t('model.answer.no') }}{% endif %}</td>
+                        <td>{% if column.unique %}{{ t('model.answer.yes') }}{% else %}{{ t('model.answer.no') }}{% endif %}</td>
+                        <td>{% if column.readonly %}{{ t('model.answer.yes') }}{% else %}{{ t('model.answer.no') }}{% endif %}</td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -85,11 +85,11 @@
     {% endif %}
 
     {% if metaData.identifiers | count > 0 %}
-        <h3>Identifiers</h3>
+        <h3>{{ t('model.heading.identifiers') }}</h3>
         <table>
             <thead>
                 <tr>
-                    <th>Column</th>
+                    <th>{{ t('model.column.column') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -103,13 +103,13 @@
     {% endif %}
 
     {% if metaData.relations | count > 0 %}
-        <h3>Relations</h3>
+        <h3>{{ t('model.heading.relations') }}</h3>
         <table>
             <thead>
                 <tr>
-                    <th>Property</th>
-                    <th>Related Class</th>
-                    <th>Nullable</th>
+                    <th>{{ t('model.column.property') }}</th>
+                    <th>{{ t('model.column.relatedClass') }}</th>
+                    <th>{{ t('model.column.nullable') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -117,7 +117,7 @@
                     <tr>
                         <td>{{ relation.property }}</td>
                         <td>{{ relation.relatedClass }}</td>
-                        <td>{% if relation.nullable %}Yes{% else %}No{% endif %}</td>
+                        <td>{% if relation.nullable %}{{ t('model.answer.yes') }}{% else %}{{ t('model.answer.no') }}{% endif %}</td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -125,14 +125,14 @@
     {% endif %}
 
     {% if metaData.morphToRelations | count > 0 %}
-        <h3>MorphTo Relations</h3>
+        <h3>{{ t('model.heading.morphToRelations') }}</h3>
         <table>
             <thead>
                 <tr>
-                    <th>Property</th>
-                    <th>Type Column</th>
-                    <th>Id Column</th>
-                    <th>Nullable</th>
+                    <th>{{ t('model.column.property') }}</th>
+                    <th>{{ t('model.column.typeColumn') }}</th>
+                    <th>{{ t('model.column.idColumn') }}</th>
+                    <th>{{ t('model.column.nullable') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -141,7 +141,7 @@
                         <td>{{ morph.property }}</td>
                         <td>{{ morph.typeColumn }}</td>
                         <td>{{ morph.idColumn }}</td>
-                        <td>{% if morph.nullable %}Yes{% else %}No{% endif %}</td>
+                        <td>{% if morph.nullable %}{{ t('model.answer.yes') }}{% else %}{{ t('model.answer.no') }}{% endif %}</td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -149,16 +149,16 @@
     {% endif %}
 
     {% if metaData.aggregates | count > 0 %}
-        <h3>Aggregates</h3>
+        <h3>{{ t('model.heading.aggregates') }}</h3>
         <table>
             <thead>
                 <tr>
-                    <th>Property</th>
-                    <th>Alias</th>
-                    <th>Relation</th>
-                    <th>Function</th>
-                    <th>Column</th>
-                    <th>Slot Type</th>
+                    <th>{{ t('model.column.property') }}</th>
+                    <th>{{ t('model.column.alias') }}</th>
+                    <th>{{ t('model.column.relation') }}</th>
+                    <th>{{ t('model.column.function') }}</th>
+                    <th>{{ t('model.column.column') }}</th>
+                    <th>{{ t('model.column.slotType') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -177,12 +177,12 @@
     {% endif %}
 
     {% if metaData.behaviors | count > 0 %}
-        <h3>Behaviors</h3>
+        <h3>{{ t('model.heading.behaviors') }}</h3>
         <table>
             <thead>
                 <tr>
-                    <th>Property</th>
-                    <th>Behavior Class</th>
+                    <th>{{ t('model.column.property') }}</th>
+                    <th>{{ t('model.column.behaviorClass') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -197,11 +197,11 @@
     {% endif %}
 
     {% if metaData.uniques | count > 0 %}
-        <h3>Uniques</h3>
+        <h3>{{ t('model.heading.uniques') }}</h3>
         <table>
             <thead>
                 <tr>
-                    <th>Columns</th>
+                    <th>{{ t('model.column.columns') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -215,11 +215,11 @@
     {% endif %}
 
     {% if metaData.indexes | count > 0 %}
-        <h3>Indexes</h3>
+        <h3>{{ t('model.heading.indexes') }}</h3>
         <table>
             <thead>
                 <tr>
-                    <th>Columns</th>
+                    <th>{{ t('model.column.columns') }}</th>
                 </tr>
             </thead>
             <tbody>

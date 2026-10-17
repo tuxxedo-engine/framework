@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Intl\Loader;
 
-use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleInterface;
 
 class ChainLoader implements PhraseLoaderInterface
 {
@@ -29,7 +29,7 @@ class ChainLoader implements PhraseLoaderInterface
     }
 
     public function load(
-        Locale $locale,
+        LocaleInterface $locale,
         string $group,
     ): ?array {
         foreach ($this->loaders as $loader) {

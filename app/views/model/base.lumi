@@ -17,6 +17,52 @@
         gap: 8px;
     }
 
+    .dropdown {
+        position: relative;
+    }
+
+    .dropdown > summary {
+        list-style: none;
+        cursor: pointer;
+    }
+
+    .dropdown > summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .dropdown > summary::after {
+        content: "\25BE";
+        margin-left: 8px;
+        font-size: 10px;
+    }
+
+    .dropdown .menu {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 6px);
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 100%;
+        padding: 6px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        backdrop-filter: blur(8px);
+    }
+
+    .dropdown .menu .btn {
+        white-space: nowrap;
+    }
+
+    .dropdown .menu .btn.active {
+        color: var(--fg);
+        background: rgba(163, 200, 222, 0.14);
+        border-color: rgba(163, 200, 222, 0.40);
+        cursor: default;
+    }
+
     .btn {
         display: inline-flex;
         align-items: center;
@@ -184,16 +230,72 @@
     nav.pagination .status {
         color: var(--dim);
     }
+
+    form .errors {
+        padding: 10px 12px;
+        border: 1px solid #b4555d;
+        border-radius: 4px;
+        background: rgba(180, 85, 93, 0.14);
+        color: var(--fg);
+        font: 13px/1.5 var(--sans);
+    }
+
+    form .errors ul {
+        margin: 6px 0 0 0;
+        padding-left: 18px;
+    }
 {% endblock %}
 
 {% block main %}
     <main>
         <header>
-            <h1>Model Playground</h1>
+            <h1>{{ t('model.title') }}</h1>
             <div class="toolbar">
                 {% yield buttons %}
+                <details class="dropdown">
+                    <summary class="btn" lang="{! locale().tag | escape_attr !}">{{ locale().displayName }}</summary>
+                    <div class="menu">
+                        {% for language in locale_all() %}
+                            {% if language.tag === locale().tag %}
+                                <span class="btn active" lang="{! language.tag | escape_attr !}" aria-current="true">{{ language.displayName }}</span>
+                            {% else %}
+                                {% set tag = language.tag | lower %}
+                                <a href="{! route(['language': tag]) | escape_attr !}" class="btn" lang="{! language.tag | escape_attr !}">{{ language.displayName }}</a>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </details>
             </div>
         </header>
         {% yield content %}
     </main>
+    <script>
+        document.addEventListener(
+            'click',
+            function (event) {
+                document.querySelectorAll('details.dropdown[open]').forEach(
+                    function (dropdown) {
+                        if (!dropdown.contains(event.target)) {
+                            dropdown.removeAttribute('open');
+                        }
+                    }
+                );
+            }
+        );
+
+        document.addEventListener(
+            'keydown',
+            function (event) {
+                if (event.key !== 'Escape') {
+                    return;
+                }
+
+                document.querySelectorAll('details.dropdown[open]').forEach(
+                    function (dropdown) {
+                        dropdown.removeAttribute('open');
+                    }
+                );
+            }
+        );
+    </script>
 {% endblock %}

@@ -2,13 +2,13 @@
 
 {% block buttons %}
     <a href="{! route('model.new') | escape_attr !}" class="btn">
-        New
+        {{ t('model.action.new') }}
     </a>
     <a href="{! route('model.table') | escape_attr !}" class="btn">
-        Table
+        {{ t('model.action.table') }}
     </a>
     <a href="{! route('model.metaData') | escape_attr !}" class="btn">
-        Meta Data
+        {{ t('model.action.metaData') }}
     </a>
 {% endblock %}
 
@@ -17,7 +17,7 @@
         <thead>
             <tr>
                 <th>#</th>
-                <th>Name</th>
+                <th>{{ t('model.field.name') }}</th>
                 <th>&nbsp;</th>
             </tr>
         </thead>
@@ -27,9 +27,9 @@
                     <td>{{ user.id }}</td>
                     <td>{{ user.name }}</td>
                     <td class="actions">
-                        <a href="{! route('model.show', ['id': user.id]) | escape_attr !}">Show</a>
-                        <a href="{! route('model.update', ['id': user.id]) | escape_attr !}">Edit</a>
-                        <a href="{! route('model.delete', ['id': user.id]) | escape_attr !}">Delete</a>
+                        <a href="{! route('model.show', ['id': user.id]) | escape_attr !}">{{ t('model.action.show') }}</a>
+                        <a href="{! route('model.update', ['id': user.id]) | escape_attr !}">{{ t('model.action.edit') }}</a>
+                        <a href="{! route('model.delete', ['id': user.id]) | escape_attr !}">{{ t('model.action.delete') }}</a>
                     </td>
                 </tr>
             {% endfor %}
@@ -40,15 +40,15 @@
         <div class="links">
             {% if paginator.hasPreviousPage %}
                 <a href="{! route('model.list.page', ['page': paginator.previousPage]) | escape_attr !}" class="btn">
-                    Previous
+                    {{ t('model.action.previous') }}
                 </a>
             {% endif %}
             {% if paginator.hasNextPage %}
                 <a href="{! route('model.list.page', ['page': paginator.nextPage]) | escape_attr !}" class="btn">
-                    Next
+                    {{ t('model.action.next') }}
                 </a>
             {% endif %}
         </div>
-        <span class="status">Page {{ paginator.page }} of {{ paginator.totalPages }} ({{ paginator.totalCount }} total)</span>
+        <span class="status">{{ t('model.list.page', ['page': paginator.page, 'pages': paginator.totalPages]) }} ({{ plural('model.list.total', paginator.totalCount, ['count': paginator.totalCount]) }})</span>
     </nav>
 {% endblock %}

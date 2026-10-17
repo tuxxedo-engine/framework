@@ -235,6 +235,77 @@ class LocaleTest extends TestCase
         string $tag,
         LocaleDirection $expected,
     ): void {
-        self::assertSame($expected, Locale::parse($tag)->direction());
+        self::assertSame($expected, Locale::parse($tag)->direction);
+    }
+
+    /**
+     * @return iterable<string, array{string, string, string|null, string|null, string}>
+     */
+    public static function nameMatrix(): iterable
+    {
+        yield 'en-US' => [
+            'en-US',
+            'English',
+            null,
+            'United States',
+            'English (United States)',
+        ];
+
+        yield 'cs-CZ' => [
+            'cs-CZ',
+            'Čeština',
+            null,
+            'Česko',
+            'Čeština (Česko)',
+        ];
+
+        yield 'da-DK' => [
+            'da-DK',
+            'Dansk',
+            null,
+            'Danmark',
+            'Dansk (Danmark)',
+        ];
+
+        yield 'bare da' => [
+            'da',
+            'Dansk',
+            null,
+            null,
+            'Dansk',
+        ];
+
+        yield 'en-Latn-US' => [
+            'en-Latn-US',
+            'English',
+            'Latin',
+            'United States',
+            'English (Latin, United States)',
+        ];
+    }
+
+    #[DataProvider('nameMatrix')]
+    public function testNamesAreInTheLocalesOwnLanguageWithUppercaseFirstLetter(
+        string $tag,
+        string $languageName,
+        ?string $scriptName,
+        ?string $regionName,
+        string $displayName,
+    ): void {
+        $locale = Locale::parse($tag);
+
+        self::assertSame($languageName, $locale->languageName);
+        self::assertSame($scriptName, $locale->scriptName);
+        self::assertSame($regionName, $locale->regionName);
+        self::assertSame($displayName, $locale->displayName);
+    }
+
+    public function testNamesAreStableAcrossReads(): void
+    {
+        $locale = Locale::parse('cs-CZ');
+
+        self::assertSame($locale->displayName, $locale->displayName);
+        self::assertSame($locale->languageName, $locale->languageName);
+        self::assertSame($locale->direction, $locale->direction);
     }
 }

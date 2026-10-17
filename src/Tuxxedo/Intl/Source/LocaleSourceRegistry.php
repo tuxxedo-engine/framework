@@ -16,7 +16,7 @@ namespace Tuxxedo\Intl\Source;
 class LocaleSourceRegistry implements LocaleSourceRegistryInterface
 {
     /**
-     * @var list<array{SourcePriority, LocaleSourceInterface}>
+     * @var list<array{SourcePriority, LocaleSourceInterface|(\Closure(): LocaleSourceInterface)}>
      */
     private array $entries = [];
 
@@ -27,7 +27,7 @@ class LocaleSourceRegistry implements LocaleSourceRegistryInterface
 
     public function register(
         SourcePriority $priority,
-        LocaleSourceInterface $source,
+        LocaleSourceInterface|\Closure $source,
     ): void {
         $this->entries[] = [
             $priority,
@@ -46,21 +46,31 @@ class LocaleSourceRegistry implements LocaleSourceRegistryInterface
             return $this->sorted;
         }
 
-        $entries = $this->entries;
+        $entries = [];
+
+        foreach ($this->entries as $index => [$priority, $source]) {
+            if ($source instanceof \Closure) {
+                $source = $source();
+
+                $this->entries[$index] = [
+                    $priority,
+                    $source,
+                ];
+            }
+
+            $entries[] = [
+                $priority,
+                $source,
+            ];
+        }
 
         \usort(
             $entries,
             static fn (array $a, array $b): int => $a[0]->value <=> $b[0]->value,
         );
 
-        $sources = [];
+        $this->sorted = \array_column($entries, 1);
 
-        foreach ($entries as $entry) {
-            $sources[] = $entry[1];
-        }
-
-        $this->sorted = $sources;
-
-        return $sources;
+        return $this->sorted;
     }
 }

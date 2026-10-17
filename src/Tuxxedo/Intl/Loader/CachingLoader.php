@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Intl\Loader;
 
-use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleInterface;
 
 class CachingLoader implements PhraseLoaderInterface
 {
@@ -28,7 +28,7 @@ class CachingLoader implements PhraseLoaderInterface
     }
 
     public function load(
-        Locale $locale,
+        LocaleInterface $locale,
         string $group,
     ): ?array {
         $tag = $locale->tag;

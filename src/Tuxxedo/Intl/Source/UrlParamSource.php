@@ -15,6 +15,7 @@ namespace Tuxxedo\Intl\Source;
 
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleInterface;
 use Tuxxedo\Intl\TranslationException;
 
 class UrlParamSource extends AbstractMemoizedLocaleSource
@@ -25,7 +26,7 @@ class UrlParamSource extends AbstractMemoizedLocaleSource
     ) {
     }
 
-    protected function resolve(): ?Locale
+    protected function resolve(): ?LocaleInterface
     {
         if (!$this->request->get->has($this->parameterName)) {
             return null;

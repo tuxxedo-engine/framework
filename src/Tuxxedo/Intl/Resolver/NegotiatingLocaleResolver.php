@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Intl\Resolver;
 
 use Tuxxedo\Intl\Config\IntlConfigInterface;
-use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleInterface;
 use Tuxxedo\Intl\Source\LocaleSourceRegistryInterface;
 
 class NegotiatingLocaleResolver implements LocaleResolverInterface
@@ -25,7 +25,7 @@ class NegotiatingLocaleResolver implements LocaleResolverInterface
     ) {
     }
 
-    public function currentLocale(): Locale
+    public function currentLocale(): LocaleInterface
     {
         foreach ($this->sources->sortedSources() as $source) {
             $candidate = $source->detect();
@@ -43,7 +43,7 @@ class NegotiatingLocaleResolver implements LocaleResolverInterface
     }
 
     private function isAllowed(
-        Locale $locale,
+        LocaleInterface $locale,
     ): bool {
         if ($this->config->supportedLocales === []) {
             return true;

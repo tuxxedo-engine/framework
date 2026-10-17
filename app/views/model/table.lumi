@@ -2,7 +2,7 @@
 
 {% block buttons %}
     <a href="{! route('model.index') | escape_attr !}" class="btn">
-        Back
+        {{ t('model.action.back') }}
     </a>
 {% endblock %}
 

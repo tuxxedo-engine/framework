@@ -15,10 +15,10 @@ namespace Tuxxedo\Intl\Resolver;
 
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
-use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleInterface;
 
 #[DefaultImplementation(class: StaticLocaleResolver::class, lifecycle: Lifecycle::SINGLETON)]
 interface LocaleResolverInterface
 {
-    public function currentLocale(): Locale;
+    public function currentLocale(): LocaleInterface;
 }

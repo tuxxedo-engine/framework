@@ -15,6 +15,7 @@ namespace Tuxxedo\Intl\Source;
 
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleInterface;
 use Tuxxedo\Intl\TranslationException;
 
 class CookieSource extends AbstractMemoizedLocaleSource
@@ -25,7 +26,7 @@ class CookieSource extends AbstractMemoizedLocaleSource
     ) {
     }
 
-    protected function resolve(): ?Locale
+    protected function resolve(): ?LocaleInterface
     {
         if (!$this->request->cookies->has($this->cookieName)) {
             return null;

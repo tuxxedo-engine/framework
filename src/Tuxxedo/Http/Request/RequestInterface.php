@@ -190,4 +190,6 @@ interface RequestInterface
     public function isPatch(): bool;
 
     public function isQuery(): bool;
+
+    public function hasRoute(): bool;
 }

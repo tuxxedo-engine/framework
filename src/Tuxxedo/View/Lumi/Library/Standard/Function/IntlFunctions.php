@@ -13,15 +13,22 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Library\Standard\Function;
 
+use Tuxxedo\Intl\Collator;
+use Tuxxedo\Intl\CollatorInterface;
 use Tuxxedo\Intl\Locale;
 use Tuxxedo\Intl\LocaleDirection;
+use Tuxxedo\Intl\LocaleInterface;
+use Tuxxedo\Intl\TranslationException;
 use Tuxxedo\Intl\TranslatorInterface;
 use Tuxxedo\View\Lumi\Library\Attribute\LumiFunction;
 
 class IntlFunctions
 {
+    private ?\Transliterator $transliterator = null;
+
     public function __construct(
         private readonly TranslatorInterface $translator,
+        private readonly CollatorInterface $collator = new Collator(),
     ) {
     }
 
@@ -66,7 +73,7 @@ class IntlFunctions
     #[LumiFunction('locale')]
     public function locale(
         ?string $locale = null,
-    ): Locale {
+    ): LocaleInterface {
         return $locale !== null
             ? Locale::parse($locale)
             : $this->translator->locale;
@@ -77,8 +84,8 @@ class IntlFunctions
         ?string $locale = null,
     ): bool {
         $direction = $locale !== null
-            ? Locale::parse($locale)->direction()
-            : $this->translator->locale->direction();
+            ? Locale::parse($locale)->direction
+            : $this->translator->locale->direction;
 
         return $direction === LocaleDirection::RTL;
     }
@@ -88,8 +95,8 @@ class IntlFunctions
         ?string $locale = null,
     ): bool {
         $direction = $locale !== null
-            ? Locale::parse($locale)->direction()
-            : $this->translator->locale->direction();
+            ? Locale::parse($locale)->direction
+            : $this->translator->locale->direction;
 
         return $direction === LocaleDirection::LTR;
     }
@@ -102,9 +109,59 @@ class IntlFunctions
         ?string $locale = null,
     ): string {
         $direction = $locale !== null
-            ? Locale::parse($locale)->direction()
-            : $this->translator->locale->direction();
+            ? Locale::parse($locale)->direction
+            : $this->translator->locale->direction;
 
         return $direction->value;
+    }
+
+    /**
+     * @return list<LocaleInterface>
+     *
+     * @throws TranslationException
+     */
+    #[LumiFunction('locale_all')]
+    public function localeAll(): array
+    {
+        $entries = [];
+
+        foreach ($this->translator->supportedLocales as $locale) {
+            $entries[] = [
+                $this->latinSortKey(
+                    name: $locale->displayName,
+                ),
+                $locale,
+            ];
+        }
+
+        \usort(
+            $entries,
+            fn (array $a, array $b): int => $this->collator->compare(
+                first: $a[0],
+                second: $b[0],
+            ),
+        );
+
+        return \array_column($entries, 1);
+    }
+
+    /**
+     * @throws TranslationException
+     */
+    private function latinSortKey(
+        string $name,
+    ): string {
+        $this->transliterator ??= \Transliterator::create('Any-Latin');
+        $latin = $this->transliterator?->transliterate($name) ?? false;
+
+        if ($latin === false) {
+            // @codeCoverageIgnoreStart
+            throw TranslationException::fromTransliterationFailure(
+                input: $name,
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        return $latin;
     }
 }

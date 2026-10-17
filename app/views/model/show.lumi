@@ -2,7 +2,7 @@
 
 {% block buttons %}
     <a href="{! route('model.index') | escape_attr !}" class="btn">
-        Back
+        {{ t('model.action.back') }}
     </a>
 {% endblock %}
 
@@ -10,11 +10,11 @@
     <table>
         <tbody>
             <tr>
-                <td><strong>ID</strong></td>
+                <td><strong>{{ t('model.field.id') }}</strong></td>
                 <td>{{ user.id }}</td>
             </tr>
             <tr>
-                <td><strong>Name</strong></td>
+                <td><strong>{{ t('model.field.name') }}</strong></td>
                 <td>{{ user.name }}</td>
             </tr>
         </tbody>

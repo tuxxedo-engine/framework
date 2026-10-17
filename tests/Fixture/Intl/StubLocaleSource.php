@@ -13,17 +13,17 @@ declare(strict_types=1);
 
 namespace Fixture\Intl;
 
-use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleInterface;
 use Tuxxedo\Intl\Source\LocaleSourceInterface;
 
 class StubLocaleSource implements LocaleSourceInterface
 {
     public function __construct(
-        private readonly ?Locale $locale,
+        private readonly ?LocaleInterface $locale,
     ) {
     }
 
-    public function detect(): ?Locale
+    public function detect(): ?LocaleInterface
     {
         return $this->locale;
     }

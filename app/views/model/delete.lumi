@@ -2,13 +2,13 @@
 
 {% block buttons %}
     <a href="{! route('model.index') | escape_attr !}" class="btn">
-        Back
+        {{ t('model.action.back') }}
     </a>
 {% endblock %}
 
 {% block content %}
     <form action="{! route() | escape_attr !}" method="post">
-        <p>Please confirm whether you really wish to delete user #{{ user.id }}</p>
-        <input type="submit" value="Confirm">
+        <p>{{ t('model.delete.confirm', ['id': user.id]) }}</p>
+        <input type="submit" value="{! t('model.action.confirm') | escape_attr !}">
     </form>
 {% endblock %}

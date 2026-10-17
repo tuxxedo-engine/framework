@@ -24,7 +24,7 @@ class PluralSelector
      * @throws TranslationException
      */
     public function select(
-        Locale $locale,
+        LocaleInterface $locale,
         int $count,
     ): CldrCategory {
         $formatter = $this->formatters[$locale->tag] ??= new \MessageFormatter(

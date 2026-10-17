@@ -24,6 +24,7 @@ readonly class Route implements RouteInterface
      * @param class-string $controller
      * @param array<(\Closure(): MiddlewareInterface)> $middleware
      * @param RouteArgumentInterface[] $arguments
+     * @param class-string<StickyPrefixInterface>|null $stickyPrefix
      */
     public function __construct(
         Method|string|null $method,
@@ -35,6 +36,7 @@ readonly class Route implements RouteInterface
         public RoutePriority $priority = RoutePriority::NORMAL,
         public ?string $regexPath = null,
         public array $arguments = [],
+        public ?string $stickyPrefix = null,
     ) {
         if (\is_string($method)) {
             $method = Method::from($method);

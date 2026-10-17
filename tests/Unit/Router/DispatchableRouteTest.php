@@ -190,6 +190,32 @@ class DispatchableRouteTest extends TestCase
         self::assertSame('/posts', $dispatchable->asUrl());
     }
 
+    public function testAsUrlOmitsOptionalArgumentMatchedAsEmptyString(): void
+    {
+        $route = $this->makeRoute(
+            path: '/{?language}/posts/{id}',
+            arguments: [
+                $this->makeArgument(
+                    name: 'language',
+                    optional: true,
+                ),
+                $this->makeArgument(
+                    name: 'id',
+                ),
+            ],
+        );
+
+        $dispatchable = new DispatchableRoute(
+            route: $route,
+            arguments: [
+                'language' => '',
+                'id' => '7',
+            ],
+        );
+
+        self::assertSame('/posts/7', $dispatchable->asUrl());
+    }
+
     public function testAsUrlIncludesOptionalArgumentWhenProvided(): void
     {
         $route = $this->makeRoute(

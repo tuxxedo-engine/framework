@@ -2,16 +2,26 @@
 
 {% block buttons %}
     <a href="{! route('model.index') | escape_attr !}" class="btn">
-        Back
+        {{ t('model.action.back') }}
     </a>
 {% endblock %}
 
 {% block content %}
     <form action="{! route() | escape_attr !}" method="post">
+        {% if errors | count > 0 %}
+            <div class="errors">
+                <strong>{{ t('model.form.errors') }}</strong>
+                <ul>
+                    {% for error in errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
         <div class="field">
-            <label for="name">Name</label>
+            <label for="name">{{ t('model.field.name') }}</label>
             <input type="text" id="name" name="name" value="{! user.name | escape_attr !}">
         </div>
-        <input type="submit" value="Update">
+        <input type="submit" value="{! t('model.action.update') | escape_attr !}">
     </form>
 {% endblock %}

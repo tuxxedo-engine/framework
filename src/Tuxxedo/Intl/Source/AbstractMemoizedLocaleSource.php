@@ -13,14 +13,14 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Intl\Source;
 
-use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleInterface;
 
 abstract class AbstractMemoizedLocaleSource implements LocaleSourceInterface
 {
     private bool $detected = false;
-    private ?Locale $detectedLocale = null;
+    private ?LocaleInterface $detectedLocale = null;
 
-    public function detect(): ?Locale
+    public function detect(): ?LocaleInterface
     {
         if (!$this->detected) {
             $this->detectedLocale = $this->resolve();
@@ -30,5 +30,5 @@ abstract class AbstractMemoizedLocaleSource implements LocaleSourceInterface
         return $this->detectedLocale;
     }
 
-    abstract protected function resolve(): ?Locale;
+    abstract protected function resolve(): ?LocaleInterface;
 }

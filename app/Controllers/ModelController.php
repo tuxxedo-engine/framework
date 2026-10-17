@@ -16,6 +16,7 @@ namespace App\Controllers;
 use App\Models\User;
 use App\Repositories\UserRepositoryInterface;
 use App\Subscribers\Events\UserCreatedEvent;
+use App\Support\LocalePrefix;
 use Tuxxedo\Event\EventsManagerInterface;
 use Tuxxedo\Http\Kernel\Resolver\Model;
 use Tuxxedo\Http\Request\RequestInterface;
@@ -27,14 +28,17 @@ use Tuxxedo\Router\Attribute\Argument;
 use Tuxxedo\Router\Attribute\Controller;
 use Tuxxedo\Router\Attribute\Index;
 use Tuxxedo\Router\Attribute\Route;
+use Tuxxedo\Validator\Message\MessageFormatterInterface;
+use Tuxxedo\Validator\ValidationException;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewInterface;
 
-#[Controller(path: '/model/')]
+#[Controller(path: '/model/', prefix: LocalePrefix::class)]
 readonly class ModelController
 {
     public function __construct(
         private ModelsManagerInterface $modelsManager,
+        private MessageFormatterInterface $messageFormatter,
     ) {
     }
 
@@ -62,24 +66,37 @@ readonly class ModelController
         RequestInterface $request,
         EventsManagerInterface $eventsManager,
     ): ViewInterface|ResponseInterface {
+        $name = '';
+        $errors = [];
+
         if ($request->isPost()) {
+            $name = $request->post->string('name');
+
             $user = new User();
-            $user->name = $request->post->string('name');
+            $user->name = $name;
 
-            $user = $this->modelsManager->save($user);
+            try {
+                $user = $this->modelsManager->save($user);
 
-            $eventsManager->fire(
-                event: new UserCreatedEvent(
-                    createdAt: new \DateTimeImmutable('now'),
-                    model: $user,
-                ),
-            );
+                $eventsManager->fire(
+                    event: new UserCreatedEvent(
+                        createdAt: new \DateTimeImmutable('now'),
+                        model: $user,
+                    ),
+                );
 
-            return Response::redirect('/model/');
+                return Response::redirectRoute('model.list');
+            } catch (ValidationException $exception) {
+                $errors = $this->formatViolations($exception);
+            }
         }
 
         return new View(
             'model/new',
+            [
+                'name' => $name,
+                'errors' => $errors,
+            ],
         );
     }
 
@@ -88,19 +105,25 @@ readonly class ModelController
         RequestInterface $request,
         #[Model('id')] User $user,
     ): ViewInterface|ResponseInterface {
+        $errors = [];
 
         if ($request->isPost()) {
             $user->name = $request->post->string('name');
 
-            (void) $this->modelsManager->save($user);
+            try {
+                (void) $this->modelsManager->save($user);
 
-            return Response::redirectRoute('model.list');
+                return Response::redirectRoute('model.list');
+            } catch (ValidationException $exception) {
+                $errors = $this->formatViolations($exception);
+            }
         }
 
         return new View(
             'model/update',
             [
                 'user' => $user,
+                'errors' => $errors,
             ],
         );
     }
@@ -156,5 +179,20 @@ readonly class ModelController
                 'user' => $user,
             ],
         );
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function formatViolations(
+        ValidationException $exception,
+    ): array {
+        $errors = [];
+
+        foreach ($exception->violations as $violation) {
+            $errors[] = $this->messageFormatter->format($violation);
+        }
+
+        return $errors;
     }
 }

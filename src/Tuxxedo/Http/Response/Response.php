@@ -19,6 +19,7 @@ use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\HttpVersion;
+use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Stream\JsonStreamFormat;
 use Tuxxedo\Http\Response\Stream\SseEventInterface;
 use Tuxxedo\Http\Response\Stream\Stream;
@@ -218,7 +219,7 @@ class Response implements ResponseInterface, ResponsableInterface
     }
 
     /**
-     * @param array<string, scalar> $arguments
+     * @param array<string, scalar|null> $arguments
      * @param HeaderInterface[] $headers
      */
     #[\NoDiscard]
@@ -236,8 +237,19 @@ class Response implements ResponseInterface, ResponsableInterface
         );
 
         $response->responseResolver(
-            function (ResponseInterface $response, RouterInterface $router) use ($name, $arguments): ResponseInterface {
-                $route = $router->findByName($name, \array_map(\strval(...), $arguments)) ?? throw HttpException::fromInternalServerError();
+            function (ResponseInterface $response, RouterInterface $router, ?RequestInterface $request) use ($name, $arguments): ResponseInterface {
+                $route = $router->findByName(
+                    name: $name,
+                    arguments: \array_map(
+                        static fn (mixed $value): ?string => $value === null
+                            ? null
+                            : \strval($value),
+                        $arguments,
+                    ),
+                    current: $request !== null && $request->hasRoute()
+                        ? $request->route
+                        : null,
+                ) ?? throw HttpException::fromInternalServerError();
 
                 return $response->withHeader(
                     header: new Header('Location', $route->asUrl() ?? throw HttpException::fromInternalServerError()),

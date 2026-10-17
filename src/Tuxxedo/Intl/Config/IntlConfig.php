@@ -16,6 +16,7 @@ namespace Tuxxedo\Intl\Config;
 use Tuxxedo\Config\Attribute\ConfigNamespace;
 use Tuxxedo\Container\DefaultInitializer;
 use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleInterface;
 use Tuxxedo\Intl\MissingKeyMode;
 
 #[ConfigNamespace('intl')]
@@ -29,10 +30,10 @@ use Tuxxedo\Intl\MissingKeyMode;
 readonly class IntlConfig implements IntlConfigInterface
 {
     /**
-     * @param list<Locale> $supportedLocales
+     * @param list<LocaleInterface> $supportedLocales
      */
     public function __construct(
-        public Locale $defaultLocale,
+        public LocaleInterface $defaultLocale,
         public ?string $rootDirectory = null,
         public array $supportedLocales = [],
         public MissingKeyMode $missingKeyMode = MissingKeyMode::PASSTHROUGH,

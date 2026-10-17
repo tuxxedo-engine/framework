@@ -15,7 +15,7 @@ namespace Tuxxedo\Intl\Config;
 
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
-use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleInterface;
 use Tuxxedo\Intl\MissingKeyMode;
 
 #[DefaultImplementation(class: IntlConfig::class, lifecycle: Lifecycle::SINGLETON)]
@@ -25,12 +25,12 @@ interface IntlConfigInterface
         get;
     }
 
-    public Locale $defaultLocale {
+    public LocaleInterface $defaultLocale {
         get;
     }
 
     /**
-     * @var list<Locale>
+     * @var list<LocaleInterface>
      */
     public array $supportedLocales {
         get;

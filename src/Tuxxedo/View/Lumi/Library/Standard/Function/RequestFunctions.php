@@ -44,8 +44,8 @@ class RequestFunctions
     }
 
     /**
-     * @param string|array<string, string>|null $name
-     * @param array<string, string> $args
+     * @param string|array<string, string|null>|null $name
+     * @param array<string, string|null> $args
      */
     #[LumiFunction('route')]
     public function route(
@@ -63,14 +63,23 @@ class RequestFunctions
             if ($args !== []) {
                 return (new DispatchableRoute(
                     route: $currentRoute->route,
-                    arguments: \array_merge($currentRoute->arguments, $args),
+                    arguments: \array_filter(
+                        \array_merge($currentRoute->arguments, $args),
+                        static fn (?string $value): bool => $value !== null,
+                    ),
                 ))->asUrl() ?? throw HttpException::fromInternalServerError();
             }
 
             return $currentRoute->asUrl() ?? throw HttpException::fromInternalServerError();
         }
 
-        return $this->router->findByName($name, $args)?->asUrl() ?? throw RouterException::fromInvalidNamedRoute(
+        return $this->router->findByName(
+            name: $name,
+            arguments: $args,
+            current: $this->request->hasRoute()
+                ? $this->request->route
+                : null,
+        )?->asUrl() ?? throw RouterException::fromInvalidNamedRoute(
             name: $name,
         );
     }

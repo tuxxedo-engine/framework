@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Unit\View\Lumi\Library\Standard\Function;
 
+use Fixture\Router\RouteDiscoverer\Support\TestStickyPrefix;
 use PHPUnit\Framework\TestCase;
 use Support\Http\Request\Context\StubBodyContext;
 use Support\Http\Request\Context\StubHeaderContext;
@@ -20,8 +21,11 @@ use Support\Http\Request\Context\StubInputContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Tuxxedo\Http\Request\Request;
 use Tuxxedo\Http\Url\Url;
+use Tuxxedo\Router\ArgumentKind;
+use Tuxxedo\Router\ArgumentNode;
 use Tuxxedo\Router\DispatchableRoute;
 use Tuxxedo\Router\Route;
+use Tuxxedo\Router\RouteArgument;
 use Tuxxedo\Router\RouterException;
 use Tuxxedo\Router\StaticRouter;
 use Tuxxedo\View\Lumi\Library\Standard\Function\RequestFunctions;
@@ -58,6 +62,34 @@ class RequestFunctionsTest extends TestCase
                 routes: [],
             ),
             url: new Url($baseUrl),
+        );
+    }
+
+    private function makeStickyRoute(
+        string $name,
+        string $path,
+    ): Route {
+        return new Route(
+            method: null,
+            path: $path,
+            controller: self::class,
+            action: 'index',
+            name: $name,
+            arguments: [
+                new RouteArgument(
+                    node: new ArgumentNode(
+                        name: 'tenant',
+                        kind: ArgumentKind::TYPED_IMPLICIT,
+                        optional: true,
+                        prefixed: true,
+                    ),
+                    mappedName: null,
+                    nativeType: 'string',
+                    allowsNull: false,
+                    defaultValue: null,
+                ),
+            ],
+            stickyPrefix: TestStickyPrefix::class,
         );
     }
 
@@ -153,6 +185,70 @@ class RequestFunctionsTest extends TestCase
             $functions->route(
                 name: [
                     'extra' => 'value',
+                ],
+            ),
+        );
+    }
+
+    public function testRouteKeepsStickyPrefixArgumentsForNamedRoute(): void
+    {
+        $billing = $this->makeStickyRoute(
+            name: 'billing',
+            path: '/{?tenant}/billing',
+        );
+
+        $functions = $this->makeFunctions(
+            request: $this->makeRequest(
+                route: new DispatchableRoute(
+                    route: $this->makeStickyRoute(
+                        name: 'home',
+                        path: '/{?tenant}/home',
+                    ),
+                    arguments: [
+                        'tenant' => 'acme',
+                    ],
+                ),
+            ),
+            router: new StaticRouter(
+                routes: [
+                    $billing,
+                ],
+            ),
+        );
+
+        self::assertSame('/acme/billing', $functions->route('billing'));
+        self::assertSame(
+            '/billing',
+            $functions->route(
+                name: 'billing',
+                args: [
+                    'tenant' => null,
+                ],
+            ),
+        );
+    }
+
+    public function testRouteDropsArgumentPassedAsNullForCurrentRoute(): void
+    {
+        $functions = $this->makeFunctions(
+            request: $this->makeRequest(
+                route: new DispatchableRoute(
+                    route: $this->makeStickyRoute(
+                        name: 'home',
+                        path: '/{?tenant}/home',
+                    ),
+                    arguments: [
+                        'tenant' => 'acme',
+                    ],
+                ),
+            ),
+        );
+
+        self::assertSame(
+            '/home',
+            $functions->route(
+                name: [
+                    'tenant' => null,
                 ],
             ),
         );

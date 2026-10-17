@@ -62,4 +62,11 @@ interface RouteInterface
     public array $arguments {
         get;
     }
+
+    /**
+     * @var class-string<StickyPrefixInterface>|null
+     */
+    public ?string $stickyPrefix {
+        get;
+    }
 }

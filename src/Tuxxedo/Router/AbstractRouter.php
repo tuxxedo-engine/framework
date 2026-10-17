@@ -114,6 +114,7 @@ abstract class AbstractRouter implements RouterInterface
         string $name,
         array $arguments = [],
         Method|string|null $method = null,
+        ?DispatchableRouteInterface $current = null,
     ): ?DispatchableRouteInterface {
         if (\is_string($method)) {
             $method = Method::from($method);
@@ -139,7 +140,11 @@ abstract class AbstractRouter implements RouterInterface
 
             return new DispatchableRoute(
                 route: $route,
-                arguments: $arguments,
+                arguments: self::withStickyArguments(
+                    route: $route,
+                    arguments: $arguments,
+                    current: $current,
+                ),
             );
         }
 
@@ -148,6 +153,39 @@ abstract class AbstractRouter implements RouterInterface
         }
 
         return null; // @codeCoverageIgnore
+    }
+
+    /**
+     * @param array<string, string|null> $arguments
+     * @return array<string, string>
+     */
+    private static function withStickyArguments(
+        RouteInterface $route,
+        array $arguments,
+        ?DispatchableRouteInterface $current,
+    ): array {
+        if (
+            $current !== null &&
+            $route->stickyPrefix !== null &&
+            $route->stickyPrefix === $current->route->stickyPrefix
+        ) {
+            foreach ($route->arguments as $argument) {
+                $name = $argument->node->name;
+
+                if (
+                    $argument->node->prefixed &&
+                    !\array_key_exists($name, $arguments) &&
+                    ($current->arguments[$name] ?? '') !== ''
+                ) {
+                    $arguments[$name] = $current->arguments[$name];
+                }
+            }
+        }
+
+        return \array_filter(
+            $arguments,
+            static fn (?string $value): bool => $value !== null,
+        );
     }
 
     private function indexIfNeeded(): void

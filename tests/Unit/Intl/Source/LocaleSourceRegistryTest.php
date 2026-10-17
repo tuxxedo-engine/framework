@@ -182,4 +182,51 @@ class LocaleSourceRegistryTest extends TestCase
 
         self::assertSame($first, $registry->sortedSources());
     }
+
+    public function testLazySourcesAreCreatedOnFirstSortAndOnlyOnce(): void
+    {
+        $calls = 0;
+        $lazy = new StubLocaleSource(
+            locale: Locale::parse('da-DK'),
+        );
+
+        $normal = new StubLocaleSource(
+            locale: Locale::parse('en-US'),
+        );
+
+        $registry = new LocaleSourceRegistry();
+
+        $registry->register(
+            priority: SourcePriority::HIGHEST,
+            source: static function () use (&$calls, $lazy): StubLocaleSource {
+                ++$calls;
+
+                return $lazy;
+            },
+        );
+
+        self::assertSame(0, $calls);
+
+        self::assertSame(
+            [
+                $lazy,
+            ],
+            $registry->sortedSources(),
+        );
+
+        $registry->register(
+            priority: SourcePriority::NORMAL,
+            source: $normal,
+        );
+
+        self::assertSame(
+            [
+                $lazy,
+                $normal,
+            ],
+            $registry->sortedSources(),
+        );
+
+        self::assertSame(1, $calls);
+    }
 }

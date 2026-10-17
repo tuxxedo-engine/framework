@@ -16,6 +16,7 @@ namespace Tuxxedo\Intl\Source;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Intl\Config\IntlConfigInterface;
 use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleInterface;
 use Tuxxedo\Intl\TranslationException;
 
 class AcceptLanguageSource extends AbstractMemoizedLocaleSource
@@ -26,7 +27,7 @@ class AcceptLanguageSource extends AbstractMemoizedLocaleSource
     ) {
     }
 
-    protected function resolve(): ?Locale
+    protected function resolve(): ?LocaleInterface
     {
         $supported = $this->supportedLocales();
 
@@ -57,7 +58,7 @@ class AcceptLanguageSource extends AbstractMemoizedLocaleSource
     }
 
     /**
-     * @return list<Locale>
+     * @return list<LocaleInterface>
      */
     private function supportedLocales(): array
     {
@@ -72,12 +73,12 @@ class AcceptLanguageSource extends AbstractMemoizedLocaleSource
     }
 
     /**
-     * @param list<Locale> $supported
+     * @param list<LocaleInterface> $supported
      */
     private static function match(
-        Locale $locale,
+        LocaleInterface $locale,
         array $supported,
-    ): ?Locale {
+    ): ?LocaleInterface {
         foreach ($supported as $candidate) {
             if ($candidate->tag === $locale->tag) {
                 return $candidate;

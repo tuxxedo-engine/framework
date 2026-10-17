@@ -17,6 +17,7 @@ use Fixture\Intl\InMemoryPhraseLoader;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Intl\Config\IntlConfig;
 use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleInterface;
 use Tuxxedo\Intl\PluralSelector;
 use Tuxxedo\Intl\Resolver\StaticLocaleResolver;
 use Tuxxedo\Intl\TranslationException;
@@ -296,5 +297,63 @@ class IntlFunctionsTest extends TestCase
         self::expectException(TranslationException::class);
 
         $functions->localeIsRtl('not a locale');
+    }
+
+    public function testLocaleAllListsDefaultAndSupportedLocales(): void
+    {
+        $functions = $this->makeFunctions(
+            catalogues: [],
+        );
+
+        self::assertSame(
+            [
+                'da-DK',
+                'en-US',
+            ],
+            \array_map(
+                static fn (LocaleInterface $locale): string => $locale->tag,
+                $functions->localeAll(),
+            ),
+        );
+    }
+
+    public function testLocaleAllSortsByTheLatinSpellingOfTheOwnLanguageName(): void
+    {
+        $config = new IntlConfig(
+            defaultLocale: Locale::parse('en-US'),
+            supportedLocales: [
+                Locale::parse('sv-SE'),
+                Locale::parse('ru-RU'),
+                Locale::parse('cs-CZ'),
+                Locale::parse('el-GR'),
+            ],
+        );
+
+        $functions = new IntlFunctions(
+            translator: new Translator(
+                config: $config,
+                loader: new InMemoryPhraseLoader(
+                    catalogues: [],
+                ),
+                resolver: new StaticLocaleResolver(
+                    config: $config,
+                ),
+                pluralSelector: new PluralSelector(),
+            ),
+        );
+
+        self::assertSame(
+            [
+                'cs-CZ',
+                'el-GR',
+                'en-US',
+                'ru-RU',
+                'sv-SE',
+            ],
+            \array_map(
+                static fn (LocaleInterface $locale): string => $locale->tag,
+                $functions->localeAll(),
+            ),
+        );
     }
 }

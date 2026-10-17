@@ -121,6 +121,16 @@ class RequestTest extends TestCase
         self::assertSame($route, $new->route);
     }
 
+    public function testHasRouteIsFalseByDefault(): void
+    {
+        self::assertFalse($this->makeRequest()->hasRoute());
+    }
+
+    public function testHasRouteIsTrueOnceRouted(): void
+    {
+        self::assertTrue($this->makeRequest()->withRoute(new StubDispatchableRoute())->hasRoute());
+    }
+
     public function testWithRoutePreservesContexts(): void
     {
         $headers = new StubHeaderContext();

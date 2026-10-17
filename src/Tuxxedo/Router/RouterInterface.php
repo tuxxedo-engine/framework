@@ -40,7 +40,7 @@ interface RouterInterface
     ): ?DispatchableRouteInterface;
 
     /**
-     * @param array<string, string> $arguments
+     * @param array<string, string|null> $arguments
      *
      * @throws HttpException
      */
@@ -48,5 +48,6 @@ interface RouterInterface
         string $name,
         array $arguments = [],
         Method|string|null $method = null,
+        ?DispatchableRouteInterface $current = null,
     ): ?DispatchableRouteInterface;
 }
