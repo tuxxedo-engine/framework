@@ -17,7 +17,7 @@ return [
     'orderShipped.intro' => 'Good news! Your order #{order} is on its way.',
     'orderShipped.items.one' => '{count} item',
     'orderShipped.items.other' => '{count} items',
-    'orderShipped.total' => 'Total: ${amount}',
+    'orderShipped.total' => 'Total: {amount}',
     'orderShipped.shippedAt' => 'Shipped: {date}',
     'orderShipped.track' => 'Track your package',
     'orderShipped.footer' => 'You are receiving this email because you placed an order with the Engine demo shop.',

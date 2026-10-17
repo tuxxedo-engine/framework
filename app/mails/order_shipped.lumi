@@ -11,7 +11,7 @@
 
     <ul>
         <li>{{ plural('mail.orderShipped.items', itemCount, ['count': itemCount]) }}</li>
-        <li>{{ t('mail.orderShipped.total', ['amount': locale_number(total, 2)]) }}</li>
+        <li>{{ t('mail.orderShipped.total', ['amount': locale_currency(total, currency)]) }}</li>
         <li>{{ t('mail.orderShipped.shippedAt', ['date': shippedAt | locale_date_long]) }}</li>
     </ul>
 

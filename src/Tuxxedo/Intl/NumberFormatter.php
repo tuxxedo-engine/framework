@@ -20,6 +20,11 @@ class NumberFormatter implements NumberFormatterInterface
      */
     private array $formatters = [];
 
+    /**
+     * @var array<string, \NumberFormatter>
+     */
+    private array $currencyFormatters = [];
+
     public function format(
         int|float $value,
         LocaleInterface $locale,
@@ -27,13 +32,44 @@ class NumberFormatter implements NumberFormatterInterface
     ): string {
         $formatter = $this->formatters[$locale->tag] ??= self::createFormatter(
             locale: $locale,
+            style: \NumberFormatter::DECIMAL,
         );
 
-        $formatter->setAttribute(\NumberFormatter::ROUNDING_MODE, \NumberFormatter::ROUND_HALFUP);
         $formatter->setAttribute(\NumberFormatter::MIN_FRACTION_DIGITS, $decimals);
         $formatter->setAttribute(\NumberFormatter::MAX_FRACTION_DIGITS, $decimals);
 
         $result = $formatter->format($value);
+
+        if ($result === false) {
+            // @codeCoverageIgnoreStart
+            throw TranslationException::fromNumberFormatFailure(
+                tag: $locale->tag,
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        return $result;
+    }
+
+    public function formatCurrency(
+        int|float $amount,
+        string $currency,
+        LocaleInterface $locale,
+    ): string {
+        $code = \strtoupper($currency);
+
+        if (\preg_match('/^[A-Z]{3}$/', $code) !== 1) {
+            throw TranslationException::fromInvalidCurrency(
+                currency: $currency,
+            );
+        }
+
+        $formatter = $this->currencyFormatters[$locale->tag] ??= self::createFormatter(
+            locale: $locale,
+            style: \NumberFormatter::CURRENCY,
+        );
+
+        $result = $formatter->formatCurrency($amount, $code);
 
         if ($result === false) {
             // @codeCoverageIgnoreStart
@@ -51,16 +87,21 @@ class NumberFormatter implements NumberFormatterInterface
      */
     private static function createFormatter(
         LocaleInterface $locale,
+        int $style,
     ): \NumberFormatter {
         try {
-            return new \NumberFormatter(
+            $formatter = new \NumberFormatter(
                 locale: $locale->tag,
-                style: \NumberFormatter::DECIMAL,
+                style: $style,
             );
         } catch (\ValueError) {
             throw TranslationException::fromUnsupportedLocale(
                 tag: $locale->tag,
             );
         }
+
+        $formatter->setAttribute(\NumberFormatter::ROUNDING_MODE, \NumberFormatter::ROUND_HALFUP);
+
+        return $formatter;
     }
 }

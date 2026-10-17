@@ -118,6 +118,24 @@ class TranslationException extends Exception
         );
     }
 
+    public static function fromInvalidCurrency(
+        string $currency,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Currency %s is not a three-letter ISO 4217 code',
+                self::formatQuoted($currency),
+            ),
+        );
+    }
+
+    public static function fromMissingCurrency(): self
+    {
+        return new self(
+            message: 'No currency given and the "tuxxedo.currency" directive is not set',
+        );
+    }
+
     /**
      * @codeCoverageIgnore
      */

@@ -174,6 +174,7 @@ readonly class MailController
                     orderNumber: '10427',
                     itemCount: $request->post->int('itemCount'),
                     total: 1234.5,
+                    currency: 'EUR',
                     shippedAt: Instant::now(),
                     trackingUrl: 'https://example.com/track/10427',
                 ),

@@ -35,6 +35,7 @@ class OrderShippedMail extends Message implements LocalizedMessageInterface, Tim
         public readonly string $orderNumber,
         public readonly int $itemCount,
         public readonly float $total,
+        public readonly string $currency,
         public readonly InstantInterface $shippedAt,
         public readonly string $trackingUrl,
     ) {

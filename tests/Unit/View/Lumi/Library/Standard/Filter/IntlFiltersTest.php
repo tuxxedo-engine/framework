@@ -20,6 +20,7 @@ use Tuxxedo\Intl\Config\IntlConfig;
 use Tuxxedo\Intl\Locale;
 use Tuxxedo\Intl\PluralSelector;
 use Tuxxedo\Intl\Resolver\StaticLocaleResolver;
+use Tuxxedo\Intl\TranslationException;
 use Tuxxedo\Intl\Translator;
 use Tuxxedo\Temporal\Instant;
 use Tuxxedo\Temporal\LocalDate;
@@ -163,5 +164,36 @@ class IntlFiltersTest extends TestCase
         );
 
         self::assertSame('15.10.26 14:30', $filters->localeDateShort($context, Instant::parse('2026-10-15T12:30:00Z')));
+    }
+
+    public function testCurrencyFilterFollowsTheCurrencyAndLocaleDirectives(): void
+    {
+        $filters = $this->makeFilters(
+            catalogues: [],
+        );
+
+        self::assertSame(
+            "234,50\u{00A0}€",
+            $filters->currency(
+                new StubRuntimeContext(
+                    directives: [
+                        'tuxxedo.currency' => 'EUR',
+                        'tuxxedo.locale' => 'pt-PT',
+                    ],
+                ),
+                234.5,
+            ),
+        );
+    }
+
+    public function testCurrencyFilterThrowsWithoutCurrencyDirective(): void
+    {
+        $filters = $this->makeFilters(
+            catalogues: [],
+        );
+
+        $this->expectException(TranslationException::class);
+
+        $filters->currency(new StubRuntimeContext(), 1234.5);
     }
 }

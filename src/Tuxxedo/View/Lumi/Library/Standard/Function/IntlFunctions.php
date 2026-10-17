@@ -260,6 +260,30 @@ class IntlFunctions
 
     /**
      * @throws TranslationException
+     */
+    #[LumiFunction('locale_currency', aliases: ['currency'])]
+    public function localeCurrency(
+        #[Context]
+        RuntimeContextInterface $context,
+        int|float $amount,
+        ?string $currency = null,
+        ?string $locale = null,
+    ): string {
+        return $this->numberFormatter->formatCurrency(
+            amount: $amount,
+            currency: self::resolveCurrency(
+                context: $context,
+                currency: $currency,
+            ),
+            locale: $this->resolveLocale(
+                context: $context,
+                locale: $locale,
+            ),
+        );
+    }
+
+    /**
+     * @throws TranslationException
      * @throws TemporalException
      */
     #[LumiFunction('locale_date_long')]
@@ -345,6 +369,28 @@ class IntlFunctions
         }
 
         return $this->translator->locale;
+    }
+
+    /**
+     * @throws TranslationException
+     */
+    private static function resolveCurrency(
+        RuntimeContextInterface $context,
+        ?string $currency,
+    ): string {
+        if ($currency !== null) {
+            return $currency;
+        }
+
+        $directive = $context->hasDirective('tuxxedo.currency')
+            ? $context->directive('tuxxedo.currency')
+            : null;
+
+        if ($directive === null) {
+            throw TranslationException::fromMissingCurrency();
+        }
+
+        return (string) $directive;
     }
 
     /**

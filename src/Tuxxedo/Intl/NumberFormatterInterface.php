@@ -27,4 +27,13 @@ interface NumberFormatterInterface
         LocaleInterface $locale,
         int $decimals = 0,
     ): string;
+
+    /**
+     * @throws TranslationException
+     */
+    public function formatCurrency(
+        int|float $amount,
+        string $currency,
+        LocaleInterface $locale,
+    ): string;
 }

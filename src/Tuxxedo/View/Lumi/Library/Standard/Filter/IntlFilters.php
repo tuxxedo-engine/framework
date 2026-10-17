@@ -18,6 +18,8 @@ use Tuxxedo\Intl\DateFormatterInterface;
 use Tuxxedo\Intl\DateStyle;
 use Tuxxedo\Intl\Locale;
 use Tuxxedo\Intl\LocaleInterface;
+use Tuxxedo\Intl\NumberFormatter;
+use Tuxxedo\Intl\NumberFormatterInterface;
 use Tuxxedo\Intl\TranslationException;
 use Tuxxedo\Intl\TranslatorInterface;
 use Tuxxedo\Intl\Transliteration;
@@ -40,6 +42,7 @@ class IntlFilters
         private readonly TranslatorInterface $translator,
         private readonly DateFormatterInterface $dateFormatter = new DateFormatter(),
         private readonly TransliteratorInterface $transliterator = new Transliterator(),
+        private readonly NumberFormatterInterface $numberFormatter = new NumberFormatter(),
     ) {
     }
 
@@ -54,6 +57,22 @@ class IntlFilters
     ): string {
         return $this->translator->translate(
             key: $value,
+            locale: $this->resolveLocale($context),
+        );
+    }
+
+    /**
+     * @throws TranslationException
+     */
+    #[LumiFilter('currency')]
+    public function currency(
+        #[Context]
+        RuntimeContextInterface $context,
+        int|float $value,
+    ): string {
+        return $this->numberFormatter->formatCurrency(
+            amount: $value,
+            currency: self::resolveCurrency($context),
             locale: $this->resolveLocale($context),
         );
     }
@@ -132,6 +151,23 @@ class IntlFilters
         }
 
         return $this->translator->locale;
+    }
+
+    /**
+     * @throws TranslationException
+     */
+    private static function resolveCurrency(
+        RuntimeContextInterface $context,
+    ): string {
+        $directive = $context->hasDirective('tuxxedo.currency')
+            ? $context->directive('tuxxedo.currency')
+            : null;
+
+        if ($directive === null) {
+            throw TranslationException::fromMissingCurrency();
+        }
+
+        return (string) $directive;
     }
 
     /**

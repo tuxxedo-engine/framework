@@ -453,6 +453,41 @@ class IntlFunctionsTest extends TestCase
         self::assertSame('1,235', $functions->localeNumber(new StubRuntimeContext(), 1234.5));
     }
 
+    public function testLocaleCurrencyUsesTheArgumentThenTheCurrencyDirective(): void
+    {
+        $functions = $this->makeFunctions(
+            catalogues: [],
+        );
+
+        $context = new StubRuntimeContext(
+            directives: [
+                'tuxxedo.currency' => 'EUR',
+            ],
+        );
+
+        self::assertSame('€1,234.50', $functions->localeCurrency($context, 1234.5));
+        self::assertSame('$1,234.50', $functions->localeCurrency($context, 1234.5, 'USD'));
+        self::assertSame("€\u{00A0}1.234,50", $functions->localeCurrency($context, 1234.5, null, 'pt-BR'));
+    }
+
+    public function testLocaleCurrencyThrowsWithoutCurrency(): void
+    {
+        $functions = $this->makeFunctions(
+            catalogues: [],
+        );
+
+        try {
+            $functions->localeCurrency(new StubRuntimeContext(), 1234.5);
+
+            self::fail('Expected TranslationException');
+        } catch (TranslationException $exception) {
+            self::assertStringContainsString(
+                'tuxxedo.currency',
+                $exception->getMessage(),
+            );
+        }
+    }
+
     public function testLocaleDateUsesTheTranslatorLocaleUnlessGiven(): void
     {
         $functions = $this->makeFunctions(
