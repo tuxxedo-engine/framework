@@ -13,15 +13,9 @@ declare(strict_types=1);
 
 namespace App\Support;
 
-use Tuxxedo\Router\PrefixDefaultsInterface;
 use Tuxxedo\Router\StickyPrefixInterface;
 
-class LocalePrefix implements PrefixDefaultsInterface, StickyPrefixInterface
+class LocalePrefix implements StickyPrefixInterface
 {
     public private(set) string $path = '/{?language<language-code>}';
-
-    public function getDefaultValue(string $argument): mixed
-    {
-        return null;
-    }
 }

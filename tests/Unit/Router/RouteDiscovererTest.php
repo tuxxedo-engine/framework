@@ -700,6 +700,64 @@ class RouteDiscovererTest extends TestCase
         self::assertSame([], $routes);
     }
 
+    public function testMissingParameterForPathArgumentThrowsInStrictMode(): void
+    {
+        try {
+            $this->discoverAll(
+                $this->createDiscoverer(
+                    scenario: 'MissingParameter',
+                    strictMode: true,
+                ),
+            );
+
+            self::fail('Expected RouterException');
+        } catch (RouterException $exception) {
+            self::assertStringContainsString(
+                'has a path argument {id} that does not match any parameter',
+                $exception->getMessage(),
+            );
+        }
+    }
+
+    /**
+     * @return \Generator<array{0: bool}>
+     */
+    public static function strictModeDataProvider(): \Generator
+    {
+        yield [
+            true,
+        ];
+
+        yield [
+            false,
+        ];
+    }
+
+    #[DataProvider('strictModeDataProvider')]
+    public function testUnconsumedPrefixArgumentKeepsRouteAndIsNotPassedToAction(
+        bool $strictMode,
+    ): void {
+        $routes = $this->discoverAll(
+            $this->createDiscoverer(
+                scenario: 'PrefixUnconsumed',
+                strictMode: $strictMode,
+            ),
+        );
+
+        self::assertCount(1, $routes);
+        self::assertSame('/{tenant:[a-z]+}/home', $routes[0]->path);
+        self::assertSame(TestStickyPrefix::class, $routes[0]->stickyPrefix);
+        self::assertCount(1, $routes[0]->arguments);
+
+        $argument = $routes[0]->arguments[0];
+
+        self::assertSame('tenant', $argument->node->name);
+        self::assertTrue($argument->node->prefixed);
+        self::assertTrue($argument->resolverConsumed);
+        self::assertNull($argument->mappedName);
+        self::assertNull($argument->defaultValue);
+    }
+
     public function testRouteArgumentConsumerAttributeSatisfiesNodeWithSentinelArgument(): void
     {
         $routes = $this->discoverAll(
@@ -761,6 +819,7 @@ class RouteDiscovererTest extends TestCase
 
         self::assertSame('locale', $argument->node->name);
         self::assertTrue($argument->node->prefixed);
+        self::assertTrue($argument->resolverConsumed);
         self::assertSame('en', $argument->defaultValue);
         self::assertNull($routes[0]->stickyPrefix);
     }

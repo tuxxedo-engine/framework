@@ -615,11 +615,10 @@ class RouteDiscoverer implements RouteDiscovererInterface
                 );
             }
 
-            if (
-                $node->prefixed &&
-                $prefix instanceof PrefixDefaultsInterface
-            ) {
-                $defaultValue = $prefix->getDefaultValue($node->name);
+            if ($node->prefixed) {
+                $defaultValue = $prefix instanceof PrefixDefaultsInterface
+                    ? $prefix->getDefaultValue($node->name)
+                    : null;
 
                 return new RouteArgument(
                     node: $node,
@@ -627,8 +626,17 @@ class RouteDiscoverer implements RouteDiscovererInterface
                     nativeType: \get_debug_type($defaultValue),
                     allowsNull: $defaultValue === null,
                     defaultValue: $defaultValue,
+                    resolverConsumed: true,
                 );
             }
+
+            $this->handleError(
+                static fn (): RouterException => RouterException::fromArgumentHasNoMatchingParameter(
+                    className: $method->getDeclaringClass()->getName(),
+                    method: $method->getName(),
+                    argument: $node->name,
+                ),
+            );
 
             return null;
         }
