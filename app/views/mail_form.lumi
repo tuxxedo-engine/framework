@@ -73,4 +73,5 @@
         <label><strong>Items:</strong> <input type="number" name="itemCount" value="3" min="0"></label>
     </p>
     <input type="submit" value="Send order shipped template">
+    <input type="submit" value="Preview in browser" formaction="/mail/localized/preview" formtarget="_blank">
 </form>

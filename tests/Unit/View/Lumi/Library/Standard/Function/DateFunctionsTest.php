@@ -193,8 +193,20 @@ class DateFunctionsTest extends TestCase
     ): void {
         self::assertSame(
             $expected,
-            $this->functionsWithSystemClock()->dateDuration($value, $style),
+            $this->functionsWithSystemClock()->dateDuration(new StubRuntimeContext(), $value, $style),
         );
+    }
+
+    public function testDateDurationFollowsTheLocaleDirective(): void
+    {
+        $context = new StubRuntimeContext(
+            directives: [
+                'tuxxedo.locale' => 'da-DK',
+            ],
+        );
+
+        self::assertSame('2 timer', $this->functionsWithSystemClock()->dateDuration($context, 7200));
+        self::assertSame('0 sekunder', $this->functionsWithSystemClock()->dateDuration($context, 0));
     }
 
     public function testDateLocalShiftsInstantIntoStringTimeZone(): void

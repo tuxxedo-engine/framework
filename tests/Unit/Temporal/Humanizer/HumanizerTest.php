@@ -323,6 +323,19 @@ class HumanizerTest extends TestCase
         );
     }
 
+    public function testWithLocaleReturnsALocalizedCopy(): void
+    {
+        $humanizer = $this->humanizer();
+        $moment = Instant::parse(input: '2026-07-16T09:00:00Z');
+        $danish = $humanizer->withLocale(Locale::parse('da-DK'));
+
+        self::assertNotSame($humanizer, $danish);
+        self::assertSame('for 3 timer siden', $danish->diffForHumans(moment: $moment));
+        self::assertSame('2 timer', $danish->formatDuration(duration: Duration::fromHours(hours: 2)));
+        self::assertSame('3 hours ago', $humanizer->diffForHumans(moment: $moment));
+        self::assertSame('3 hours ago', $danish->withLocale(null)->diffForHumans(moment: $moment));
+    }
+
     private function humanizer(): Humanizer
     {
         return new Humanizer(

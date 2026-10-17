@@ -15,6 +15,7 @@ namespace Tuxxedo\Temporal\Humanizer\Message;
 
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
+use Tuxxedo\Intl\LocaleInterface;
 use Tuxxedo\Temporal\HumanizedStyle;
 use Tuxxedo\Temporal\Humanizer\RelativeDirection;
 use Tuxxedo\Temporal\Humanizer\RelativeUnit;
@@ -22,6 +23,10 @@ use Tuxxedo\Temporal\Humanizer\RelativeUnit;
 #[DefaultImplementation(class: TranslatorMessageFormatter::class, lifecycle: Lifecycle::SINGLETON)]
 interface MessageFormatterInterface
 {
+    public function withLocale(
+        ?LocaleInterface $locale,
+    ): static;
+
     public function forJustNow(): string;
 
     public function forRelativeMoment(

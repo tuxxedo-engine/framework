@@ -175,6 +175,23 @@ class LumiMailTemplateRenderTest extends TestCase
         );
     }
 
+    public function testRenderHumanizesInTheLocaleOfALocalizedMessage(): void
+    {
+        $this->writeTemplate(
+            name: 'stub',
+            contents: '{{ date_duration(7200) }}',
+        );
+
+        self::assertSame(
+            '2 timer',
+            $this->createRender()->render(
+                message: new StubLocalizedTemplateMessage(
+                    locale: Locale::parse('da-DK'),
+                ),
+            )->body,
+        );
+    }
+
     public function testRenderUsesTheTimeZoneOfATimeZonedMessage(): void
     {
         $this->writeTemplate(

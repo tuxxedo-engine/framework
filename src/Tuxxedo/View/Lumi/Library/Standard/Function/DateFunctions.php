@@ -13,11 +13,13 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Library\Standard\Function;
 
+use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\TranslationException;
 use Tuxxedo\Temporal\ClockInterface;
 use Tuxxedo\Temporal\Duration;
 use Tuxxedo\Temporal\DurationInterface;
 use Tuxxedo\Temporal\HumanizedStyle;
-use Tuxxedo\Temporal\Humanizer\Humanizer;
+use Tuxxedo\Temporal\Humanizer\HumanizerInterface;
 use Tuxxedo\Temporal\InstantInterface;
 use Tuxxedo\Temporal\LocalDateInterface;
 use Tuxxedo\Temporal\LocalTimeInterface;
@@ -31,9 +33,14 @@ use Tuxxedo\View\Lumi\Runtime\RuntimeContextInterface;
 
 class DateFunctions
 {
+    /**
+     * @var array<string, HumanizerInterface>
+     */
+    private array $localizedHumanizers = [];
+
     public function __construct(
         private readonly ClockInterface $clock,
-        private readonly Humanizer $humanizer,
+        private readonly HumanizerInterface $humanizer,
     ) {
     }
 
@@ -51,12 +58,17 @@ class DateFunctions
         );
     }
 
+    /**
+     * @throws TranslationException
+     */
     #[LumiFunction('date_duration')]
     public function dateDuration(
+        #[Context]
+        RuntimeContextInterface $context,
         DurationInterface|int|string $value,
         string $style = 'long',
     ): string {
-        return $this->humanizer->formatDuration(
+        return $this->localizedHumanizer($context)->formatDuration(
             duration: self::coerceDuration($value),
             style: match (\strtolower($style)) {
                 'short' => HumanizedStyle::SHORT,
@@ -140,6 +152,25 @@ class DateFunctions
         }
 
         return Duration::fromIso8601DurationString($value);
+    }
+
+    /**
+     * @throws TranslationException
+     */
+    private function localizedHumanizer(
+        RuntimeContextInterface $context,
+    ): HumanizerInterface {
+        $directive = $context->hasDirective('tuxxedo.locale')
+            ? $context->directive('tuxxedo.locale')
+            : null;
+
+        if ($directive === null) {
+            return $this->humanizer;
+        }
+
+        $tag = (string) $directive;
+
+        return $this->localizedHumanizers[$tag] ??= $this->humanizer->withLocale(Locale::parse($tag));
     }
 
     /**

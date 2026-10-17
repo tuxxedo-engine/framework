@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Library\Standard\Filter;
 
-use Tuxxedo\Temporal\Humanizer\Humanizer;
+use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\TranslationException;
+use Tuxxedo\Temporal\Humanizer\HumanizerInterface;
 use Tuxxedo\Temporal\InstantInterface;
 use Tuxxedo\Temporal\LocalDateInterface;
 use Tuxxedo\Temporal\LocalTimeInterface;
@@ -27,16 +29,26 @@ use Tuxxedo\View\Lumi\Runtime\RuntimeContextInterface;
 
 class DateFilters
 {
+    /**
+     * @var array<string, HumanizerInterface>
+     */
+    private array $localizedHumanizers = [];
+
     public function __construct(
-        private readonly Humanizer $humanizer,
+        private readonly HumanizerInterface $humanizer,
     ) {
     }
 
+    /**
+     * @throws TranslationException
+     */
     #[LumiFilter('date_ago')]
     public function dateAgo(
+        #[Context]
+        RuntimeContextInterface $context,
         InstantInterface|\DateTimeInterface|int|string $value,
     ): string {
-        return $this->humanizer->diffForHumans(TemporalCoercion::toInstant($value));
+        return $this->localizedHumanizer($context)->diffForHumans(TemporalCoercion::toInstant($value));
     }
 
     #[LumiFilter('date_iso')]
@@ -101,6 +113,25 @@ class DateFilters
             value: $value,
             pattern: 'H:i:s',
         );
+    }
+
+    /**
+     * @throws TranslationException
+     */
+    private function localizedHumanizer(
+        RuntimeContextInterface $context,
+    ): HumanizerInterface {
+        $directive = $context->hasDirective('tuxxedo.locale')
+            ? $context->directive('tuxxedo.locale')
+            : null;
+
+        if ($directive === null) {
+            return $this->humanizer;
+        }
+
+        $tag = (string) $directive;
+
+        return $this->localizedHumanizers[$tag] ??= $this->humanizer->withLocale(Locale::parse($tag));
     }
 
     /**

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Temporal\Humanizer\Message;
 
+use Tuxxedo\Intl\LocaleInterface;
 use Tuxxedo\Intl\TranslatorInterface;
 use Tuxxedo\Temporal\HumanizedStyle;
 use Tuxxedo\Temporal\Humanizer\RelativeDirection;
@@ -22,13 +23,26 @@ class TranslatorMessageFormatter implements MessageFormatterInterface
 {
     public function __construct(
         private readonly TranslatorInterface $translator,
+        private readonly ?LocaleInterface $locale = null,
     ) {
+    }
+
+    public function withLocale(
+        ?LocaleInterface $locale,
+    ): static {
+        return clone (
+            $this,
+            [
+                'locale' => $locale,
+            ],
+        );
     }
 
     public function forJustNow(): string
     {
         return $this->translator->translate(
             key: 'temporal.humanizer.justNow',
+            locale: $this->locale,
         );
     }
 
@@ -53,6 +67,7 @@ class TranslatorMessageFormatter implements MessageFormatterInterface
 
         return $this->translator->plural(
             key: $prefix . $unitName,
+            locale: $this->locale,
             count: $count,
             replacements: [
                 'count' => $count,
@@ -82,6 +97,7 @@ class TranslatorMessageFormatter implements MessageFormatterInterface
             $rendered[] = $style === HumanizedStyle::LONG
                 ? $this->translator->translate(
                     key: $partKey,
+                    locale: $this->locale,
                     replacements: [
                         'count' => $count,
                         'word' => $this->unitWord(
@@ -92,6 +108,7 @@ class TranslatorMessageFormatter implements MessageFormatterInterface
                 )
                 : $this->translator->translate(
                     key: $partKey,
+                    locale: $this->locale,
                     replacements: [
                         'count' => $count,
                         'letter' => $this->shortUnitLetter(
@@ -103,6 +120,7 @@ class TranslatorMessageFormatter implements MessageFormatterInterface
 
         $separator = $this->translator->translate(
             key: $separatorKey,
+            locale: $this->locale,
         );
 
         return \join($separator, $rendered);
@@ -118,6 +136,7 @@ class TranslatorMessageFormatter implements MessageFormatterInterface
 
         return $this->translator->translate(
             key: $key,
+            locale: $this->locale,
         );
     }
 
@@ -137,6 +156,7 @@ class TranslatorMessageFormatter implements MessageFormatterInterface
 
         return $this->translator->plural(
             key: $key,
+            locale: $this->locale,
             count: $count,
         );
     }
@@ -156,6 +176,7 @@ class TranslatorMessageFormatter implements MessageFormatterInterface
 
         return $this->translator->translate(
             key: $key,
+            locale: $this->locale,
         );
     }
 }

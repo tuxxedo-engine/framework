@@ -296,4 +296,41 @@ class TranslatorMessageFormatterTest extends TestCase
             ),
         );
     }
+
+    public function testWithLocaleOverridesAndNullRestoresTheTranslatorLocale(): void
+    {
+        $config = new IntlConfig(
+            defaultLocale: Locale::parse('en-US'),
+            missingKeyMode: MissingKeyMode::STRICT,
+        );
+
+        $formatter = new TranslatorMessageFormatter(
+            translator: new Translator(
+                config: $config,
+                loader: new FlatFileLoader(
+                    rootDirectory: CatalogueInspector::RESOURCES_ROOT,
+                ),
+                resolver: new StaticLocaleResolver(
+                    config: $config,
+                ),
+                pluralSelector: new PluralSelector(),
+            ),
+        );
+
+        $danish = $formatter->withLocale(Locale::parse('da-DK'));
+
+        self::assertNotSame($formatter, $danish);
+        self::assertSame('just now', $formatter->forJustNow());
+        self::assertSame('lige nu', $danish->forJustNow());
+        self::assertSame(
+            'for 3 timer siden',
+            $danish->forRelativeMoment(
+                count: 3,
+                unit: RelativeUnit::HOURS,
+                direction: RelativeDirection::PAST,
+            ),
+        );
+        self::assertSame('0 sekunder', $danish->forZeroDuration(HumanizedStyle::LONG));
+        self::assertSame('just now', $danish->withLocale(null)->forJustNow());
+    }
 }

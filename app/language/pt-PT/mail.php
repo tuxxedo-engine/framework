@@ -19,7 +19,7 @@ return [
     'orderShipped.items.many' => '{count} de artigos',
     'orderShipped.items.other' => '{count} artigos',
     'orderShipped.total' => 'Total: {amount}',
-    'orderShipped.shippedAt' => 'Enviada em: {date}',
+    'orderShipped.shippedAt' => 'Enviada em: {date} ({ago})',
     'orderShipped.track' => 'Seguir a encomenda',
     'orderShipped.footer' => 'Recebeu este email porque fez uma encomenda na loja de demonstração do Engine.',
 ];

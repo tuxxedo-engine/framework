@@ -211,7 +211,7 @@ class Instant implements InstantInterface
     }
 
     public function diffForHumans(
-        Humanizer\Humanizer $humanizer,
+        Humanizer\HumanizerInterface $humanizer,
         ?InstantInterface $reference = null,
     ): string {
         return $humanizer->diffForHumans(moment: $this, reference: $reference);

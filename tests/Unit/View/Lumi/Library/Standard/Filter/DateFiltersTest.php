@@ -76,7 +76,7 @@ class DateFiltersTest extends TestCase
         $filters = $this->filtersAt('2026-07-16T12:00:00Z');
         $moment = Instant::parse('2026-07-16T12:00:00Z')->minus(Duration::fromHours(3));
 
-        self::assertSame('3 hours ago', $filters->dateAgo($moment));
+        self::assertSame('3 hours ago', $filters->dateAgo(new StubRuntimeContext(), $moment));
     }
 
     public function testDateAgoHumanizesFutureInstant(): void
@@ -84,14 +84,29 @@ class DateFiltersTest extends TestCase
         $filters = $this->filtersAt('2026-07-16T12:00:00Z');
         $moment = Instant::parse('2026-07-16T12:00:00Z')->plus(Duration::fromMinutes(5));
 
-        self::assertSame('in 5 minutes', $filters->dateAgo($moment));
+        self::assertSame('in 5 minutes', $filters->dateAgo(new StubRuntimeContext(), $moment));
     }
 
     public function testDateAgoHumanizesCoercedStringInput(): void
     {
         $filters = $this->filtersAt('2026-07-16T12:00:00Z');
 
-        self::assertSame('1 hour ago', $filters->dateAgo('2026-07-16T11:00:00Z'));
+        self::assertSame('1 hour ago', $filters->dateAgo(new StubRuntimeContext(), '2026-07-16T11:00:00Z'));
+    }
+
+    public function testDateAgoFollowsTheLocaleDirective(): void
+    {
+        $filters = $this->filtersAt('2026-07-16T12:00:00Z');
+        $moment = Instant::parse('2026-07-16T09:00:00Z');
+
+        $danish = new StubRuntimeContext(
+            directives: [
+                'tuxxedo.locale' => 'da-DK',
+            ],
+        );
+
+        self::assertSame('for 3 timer siden', $filters->dateAgo($danish, $moment));
+        self::assertSame('3 hours ago', $filters->dateAgo(new StubRuntimeContext(), $moment));
     }
 
     /**

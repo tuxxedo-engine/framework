@@ -18,7 +18,7 @@ return [
     'orderShipped.items.one' => '{count} item',
     'orderShipped.items.other' => '{count} items',
     'orderShipped.total' => 'Total: {amount}',
-    'orderShipped.shippedAt' => 'Shipped: {date}',
+    'orderShipped.shippedAt' => 'Shipped: {date} ({ago})',
     'orderShipped.track' => 'Track your package',
     'orderShipped.footer' => 'You are receiving this email because you placed an order with the Engine demo shop.',
 ];

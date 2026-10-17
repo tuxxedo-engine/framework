@@ -15,16 +15,22 @@ namespace App\Controllers;
 
 use App\Mail\OrderShippedMail;
 use App\Mail\WelcomeMail;
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Request\Middleware\Csrf;
 use Tuxxedo\Http\Request\RequestInterface;
+use Tuxxedo\Http\Response\Response;
+use Tuxxedo\Http\Response\ResponseCode;
+use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Intl\Locale;
 use Tuxxedo\Intl\TranslatorInterface;
+use Tuxxedo\Mail\Config\MailManagerConfigInterface;
 use Tuxxedo\Mail\MailException;
 use Tuxxedo\Mail\MailManagerInterface;
 use Tuxxedo\Mail\Message;
 use Tuxxedo\Router\Attribute\Controller;
 use Tuxxedo\Router\Attribute\Middleware;
 use Tuxxedo\Router\Attribute\Route;
+use Tuxxedo\Temporal\Duration;
 use Tuxxedo\Temporal\Instant;
 use Tuxxedo\Temporal\TemporalException;
 use Tuxxedo\Temporal\TimeZone;
@@ -43,6 +49,8 @@ readonly class MailController
     public function __construct(
         private MailManagerInterface $mailManager,
         private TranslatorInterface $translator,
+        private MailManagerConfigInterface $mailConfig,
+        private ContainerInterface $container,
     ) {
     }
 
@@ -141,38 +149,10 @@ readonly class MailController
     public function sendLocalized(
         RequestInterface $request,
     ): ViewInterface {
-        $to = $request->post->string('to');
-        $language = $request->post->string('language');
-        $recipientName = $request->post->string('recipientName');
-
-        if (!\in_array($language, self::MAIL_LANGUAGES, true)) {
-            $language = self::MAIL_LANGUAGES[0];
-        }
+        $mail = $this->orderShippedMail($request);
 
         try {
-            $timeZone = TimeZone::parse($request->post->string('timeZone'));
-        } catch (TemporalException) {
-            $timeZone = TimeZone::utc();
-        }
-
-        try {
-            $this->mailManager->send(
-                new OrderShippedMail(
-                    translator: $this->translator,
-                    to: $to,
-                    locale: Locale::parse($language),
-                    timeZone: $timeZone,
-                    recipientName: $recipientName !== ''
-                        ? $recipientName
-                        : 'friend',
-                    orderNumber: '10427',
-                    itemCount: $request->post->int('itemCount'),
-                    total: 1234.5,
-                    currency: 'EUR',
-                    shippedAt: Instant::now(),
-                    trackingUrl: 'https://example.com/track/10427',
-                ),
-            );
+            $this->mailManager->send($mail);
         } catch (MailException $e) {
             return new View(
                 name: 'mail_form',
@@ -189,11 +169,63 @@ readonly class MailController
                 'resultSuccess' => true,
                 'resultMessage' => \sprintf(
                     'Order shipped template (%s, %s) dispatched to %s',
-                    $language,
-                    $timeZone->name,
-                    $to,
+                    $mail->locale->tag,
+                    $mail->timeZone->name,
+                    $request->post->string('to'),
                 ),
             ],
+        );
+    }
+
+    #[Route\Post(path: '/localized/preview')]
+    #[Middleware(Csrf::class)]
+    public function previewLocalized(
+        RequestInterface $request,
+    ): ResponseInterface {
+        $render = $this->mailConfig->template?->createTemplateRender($this->container);
+
+        if ($render === null) {
+            return Response::text(
+                text: 'No mail template renderer is configured',
+                responseCode: ResponseCode::INTERNAL_SERVER_ERROR,
+            );
+        }
+
+        return Response::html(
+            html: $render->render($this->orderShippedMail($request))->body ?? '',
+        );
+    }
+
+    private function orderShippedMail(
+        RequestInterface $request,
+    ): OrderShippedMail {
+        $language = $request->post->string('language');
+        $recipientName = $request->post->string('recipientName');
+
+        if (!\in_array($language, self::MAIL_LANGUAGES, true)) {
+            $language = self::MAIL_LANGUAGES[0];
+        }
+
+        try {
+            $timeZone = TimeZone::parse($request->post->string('timeZone'));
+        } catch (TemporalException) {
+            $timeZone = TimeZone::utc();
+        }
+
+        return new OrderShippedMail(
+            translator: $this->translator,
+            to: $request->post->string('to'),
+            locale: Locale::parse($language),
+            timeZone: $timeZone,
+            recipientName: $recipientName !== ''
+                ? $recipientName
+                : 'friend',
+            orderNumber: '10427',
+            itemCount: $request->post->int('itemCount'),
+            total: 1234.5,
+            currency: 'EUR',
+            shippedAt: Instant::now()->minus(Duration::fromHours(3)),
+            trackingUrl: 'https://example.com/track/10427',
         );
     }
 }

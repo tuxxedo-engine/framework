@@ -13,13 +13,14 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Temporal\Humanizer;
 
+use Tuxxedo\Intl\LocaleInterface;
 use Tuxxedo\Temporal\ClockInterface;
 use Tuxxedo\Temporal\DurationInterface;
 use Tuxxedo\Temporal\HumanizedStyle;
 use Tuxxedo\Temporal\Humanizer\Message\MessageFormatterInterface;
 use Tuxxedo\Temporal\InstantInterface;
 
-class Humanizer
+class Humanizer implements HumanizerInterface
 {
     private const int JUST_NOW_CUTOFF_SECONDS = 60;
 
@@ -37,6 +38,17 @@ class Humanizer
         private readonly ClockInterface $clock,
         private readonly MessageFormatterInterface $messageFormatter,
     ) {
+    }
+
+    public function withLocale(
+        ?LocaleInterface $locale,
+    ): static {
+        return clone (
+            $this,
+            [
+                'messageFormatter' => $this->messageFormatter->withLocale($locale),
+            ],
+        );
     }
 
     public function diffForHumans(
