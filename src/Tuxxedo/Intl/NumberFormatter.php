@@ -15,8 +15,6 @@ namespace Tuxxedo\Intl;
 
 class NumberFormatter implements NumberFormatterInterface
 {
-    private const string ROOT = 'root';
-
     /**
      * @var array<string, \NumberFormatter>
      */
@@ -24,13 +22,11 @@ class NumberFormatter implements NumberFormatterInterface
 
     public function format(
         int|float $value,
+        LocaleInterface $locale,
         int $decimals = 0,
-        ?LocaleInterface $locale = null,
     ): string {
-        $tag = $locale->tag ?? self::ROOT;
-        $formatter = $this->formatters[$tag] ??= new \NumberFormatter(
-            locale: $tag,
-            style: \NumberFormatter::DECIMAL,
+        $formatter = $this->formatters[$locale->tag] ??= self::createFormatter(
+            locale: $locale,
         );
 
         $formatter->setAttribute(\NumberFormatter::ROUNDING_MODE, \NumberFormatter::ROUND_HALFUP);
@@ -42,11 +38,29 @@ class NumberFormatter implements NumberFormatterInterface
         if ($result === false) {
             // @codeCoverageIgnoreStart
             throw TranslationException::fromNumberFormatFailure(
-                tag: $tag,
+                tag: $locale->tag,
             );
             // @codeCoverageIgnoreEnd
         }
 
         return $result;
+    }
+
+    /**
+     * @throws TranslationException
+     */
+    private static function createFormatter(
+        LocaleInterface $locale,
+    ): \NumberFormatter {
+        try {
+            return new \NumberFormatter(
+                locale: $locale->tag,
+                style: \NumberFormatter::DECIMAL,
+            );
+        } catch (\ValueError) {
+            throw TranslationException::fromUnsupportedLocale(
+                tag: $locale->tag,
+            );
+        }
     }
 }

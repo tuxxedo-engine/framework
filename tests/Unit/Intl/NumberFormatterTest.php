@@ -17,11 +17,12 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Intl\Locale;
 use Tuxxedo\Intl\NumberFormatter;
+use Tuxxedo\Intl\TranslationException;
 
 class NumberFormatterTest extends TestCase
 {
     /**
-     * @return \Generator<string, array{0: int|float, 1: int, 2: string|null, 3: string}>
+     * @return \Generator<string, array{0: int|float, 1: int, 2: string, 3: string}>
      */
     public static function providesFormatCases(): \Generator
     {
@@ -66,30 +67,21 @@ class NumberFormatterTest extends TestCase
             'en-US',
             '3',
         ];
-
-        yield 'root without locale' => [
-            1234567.891,
-            2,
-            null,
-            '1,234,567.89',
-        ];
     }
 
     #[DataProvider('providesFormatCases')]
     public function testFormatFollowsTheLocale(
         int|float $value,
         int $decimals,
-        ?string $locale,
+        string $locale,
         string $expected,
     ): void {
         self::assertSame(
             $expected,
             (new NumberFormatter())->format(
                 value: $value,
+                locale: Locale::parse($locale),
                 decimals: $decimals,
-                locale: $locale !== null
-                    ? Locale::parse($locale)
-                    : null,
             ),
         );
     }
@@ -99,7 +91,14 @@ class NumberFormatterTest extends TestCase
         $formatter = new NumberFormatter();
         $danish = Locale::parse('da-DK');
 
-        self::assertSame('1.234,50', $formatter->format(1234.5, 2, $danish));
-        self::assertSame('1.235', $formatter->format(1234.5, 0, $danish));
+        self::assertSame('1.234,50', $formatter->format(1234.5, $danish, 2));
+        self::assertSame('1.235', $formatter->format(1234.5, $danish, 0));
+    }
+
+    public function testLocaleWithoutIcuDataThrowsTranslationException(): void
+    {
+        self::expectException(TranslationException::class);
+
+        (new NumberFormatter())->format(1, Locale::parse('und'));
     }
 }

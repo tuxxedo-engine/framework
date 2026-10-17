@@ -107,6 +107,17 @@ class TranslationException extends Exception
         );
     }
 
+    public static function fromUnsupportedLocale(
+        string $tag,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'ICU has no data for locale %s',
+                self::formatQuoted($tag),
+            ),
+        );
+    }
+
     /**
      * @codeCoverageIgnore
      */

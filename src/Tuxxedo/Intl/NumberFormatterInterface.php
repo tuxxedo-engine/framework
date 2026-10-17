@@ -24,7 +24,7 @@ interface NumberFormatterInterface
      */
     public function format(
         int|float $value,
+        LocaleInterface $locale,
         int $decimals = 0,
-        ?LocaleInterface $locale = null,
     ): string;
 }

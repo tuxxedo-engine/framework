@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Middleware\LocaleUrlMiddleware;
 use App\Models\User;
 use App\Repositories\UserRepositoryInterface;
 use App\Subscribers\Events\UserCreatedEvent;
@@ -27,6 +28,7 @@ use Tuxxedo\Pagination\Paginator;
 use Tuxxedo\Router\Attribute\Argument;
 use Tuxxedo\Router\Attribute\Controller;
 use Tuxxedo\Router\Attribute\Index;
+use Tuxxedo\Router\Attribute\Middleware;
 use Tuxxedo\Router\Attribute\Route;
 use Tuxxedo\Validator\Message\MessageFormatterInterface;
 use Tuxxedo\Validator\ValidationException;
@@ -34,6 +36,7 @@ use Tuxxedo\View\View;
 use Tuxxedo\View\ViewInterface;
 
 #[Controller(path: '/model/', prefix: LocalePrefix::class)]
+#[Middleware(LocaleUrlMiddleware::class)]
 readonly class ModelController
 {
     public function __construct(

@@ -38,6 +38,7 @@
         section.environment dd { font-family: var(--mono); font-size: 13px; margin: 0; word-break: break-word; }
         {% block extra_css %}{% endblock %}
     </style>
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
 <div class="backdrop" aria-hidden="true">

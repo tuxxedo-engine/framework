@@ -197,10 +197,10 @@ class IntlFunctions
     ): string {
         return $this->numberFormatter->format(
             value: $number,
-            decimals: $decimals,
             locale: $locale !== null
                 ? Locale::parse($locale)
                 : $this->translator->locale,
+            decimals: $decimals,
         );
     }
 

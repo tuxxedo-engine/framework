@@ -15,7 +15,7 @@ namespace Tuxxedo\Intl;
 
 class Collator implements CollatorInterface
 {
-    private const string ROOT = 'root';
+    private const string ROOT = 'und';
 
     /**
      * @var array<string, \Collator>

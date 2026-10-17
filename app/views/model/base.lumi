@@ -1,5 +1,13 @@
 {% layout 'layout/base' %}
 
+{% block extra_head %}
+    {% for language in locale_all() %}
+        {% set tag = language.tag | lower %}
+        <link rel="alternate" hreflang="{! language.tag | escape_attr !}" href="{! url(route(['language': tag])) | escape_attr !}">
+    {% endfor %}
+    <link rel="alternate" hreflang="x-default" href="{! url(route(['language': null])) | escape_attr !}">
+{% endblock %}
+
 {% block extra_css %}
     a {
         color: var(--path);
