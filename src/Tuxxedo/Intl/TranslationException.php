@@ -110,6 +110,20 @@ class TranslationException extends Exception
     /**
      * @codeCoverageIgnore
      */
+    public static function fromNumberFormatFailure(
+        string $tag,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unable to format a number for locale %s',
+                self::formatQuoted($tag),
+            ),
+        );
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromTransliterationFailure(
         string $input,
     ): self {

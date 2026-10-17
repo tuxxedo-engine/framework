@@ -358,6 +358,17 @@ class IntlFunctionsTest extends TestCase
         );
     }
 
+    public function testLocaleNumberUsesTheTranslatorLocaleUnlessGiven(): void
+    {
+        $functions = $this->makeFunctions(
+            catalogues: [],
+        );
+
+        self::assertSame('1,234,567.89', $functions->localeNumber(1234567.891, 2));
+        self::assertSame('1.234.567,89', $functions->localeNumber(1234567.891, 2, 'da-DK'));
+        self::assertSame('1,235', $functions->localeNumber(1234.5));
+    }
+
     public function testLocaleAllListsDefaultAndSupportedLocales(): void
     {
         $functions = $this->makeFunctions(

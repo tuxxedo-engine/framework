@@ -18,6 +18,8 @@ use Tuxxedo\Intl\CollatorInterface;
 use Tuxxedo\Intl\Locale;
 use Tuxxedo\Intl\LocaleDirection;
 use Tuxxedo\Intl\LocaleInterface;
+use Tuxxedo\Intl\NumberFormatter;
+use Tuxxedo\Intl\NumberFormatterInterface;
 use Tuxxedo\Intl\TranslationException;
 use Tuxxedo\Intl\TranslatorInterface;
 use Tuxxedo\View\Lumi\Library\Attribute\LumiFunction;
@@ -29,6 +31,7 @@ class IntlFunctions
     public function __construct(
         private readonly TranslatorInterface $translator,
         private readonly CollatorInterface $collator = new Collator(),
+        private readonly NumberFormatterInterface $numberFormatter = new NumberFormatter(),
     ) {
     }
 
@@ -177,6 +180,24 @@ class IntlFunctions
     ): array {
         return $this->collator->sortKeys(
             values: $array,
+            locale: $locale !== null
+                ? Locale::parse($locale)
+                : $this->translator->locale,
+        );
+    }
+
+    /**
+     * @throws TranslationException
+     */
+    #[LumiFunction('locale_number')]
+    public function localeNumber(
+        int|float $number,
+        int $decimals = 0,
+        ?string $locale = null,
+    ): string {
+        return $this->numberFormatter->format(
+            value: $number,
+            decimals: $decimals,
             locale: $locale !== null
                 ? Locale::parse($locale)
                 : $this->translator->locale,
