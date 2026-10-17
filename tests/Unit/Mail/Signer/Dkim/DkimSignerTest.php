@@ -392,6 +392,27 @@ class DkimSignerTest extends TestCase
         self::assertNotSame('', $tags['b']);
     }
 
+    public function testDomainTagIsIdnaEncoded(): void
+    {
+        $signer = new DkimSigner(
+            selector: 'my-selector',
+            domain: 'münchen.example',
+            privateKey: self::$rsaPrivateKey,
+        );
+
+        $result = $signer->process(
+            serialized: self::newSerialized(),
+        );
+
+        $tags = self::parseTags(
+            headerValue: self::extractDkimHeader(
+                headers: $result->headers,
+            ),
+        );
+
+        self::assertSame('xn--mnchen-3ya.example', $tags['d']);
+    }
+
     public function testCustomSignedHeadersAreReflectedInHeaderTag(): void
     {
         $signer = new DkimSigner(

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Unit\Mail;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Mail\Address;
 use Tuxxedo\Mail\MailException;
@@ -213,6 +214,139 @@ class AddressTest extends TestCase
         );
 
         self::assertTrue($address->isInternationalized());
+    }
+
+    public function testEncodedDomainPassesAsciiDomainThrough(): void
+    {
+        $address = new Address(
+            email: 'kalle@example.com',
+        );
+
+        self::assertSame('example.com', $address->encodedDomain);
+        self::assertSame('kalle@example.com', $address->toRfc5321());
+    }
+
+    /**
+     * @return \Generator<array{0: string, 1: string}>
+     */
+    public static function idnaDomainDataProvider(): \Generator
+    {
+        yield [
+            'münchen.example',
+            'xn--mnchen-3ya.example',
+        ];
+
+        yield [
+            'straße.de',
+            'xn--strae-oqa.de',
+        ];
+
+        yield [
+            'Ærø.dk',
+            'xn--r-3fa9c.dk',
+        ];
+    }
+
+    #[DataProvider('idnaDomainDataProvider')]
+    public function testEncodedDomainIsIdnaEncodedAndDomainIsKept(
+        string $domain,
+        string $encodedDomain,
+    ): void {
+        $address = new Address(
+            email: 'kalle@' . $domain,
+        );
+
+        self::assertSame($domain, $address->domain);
+        self::assertSame($encodedDomain, $address->encodedDomain);
+        self::assertSame('kalle@' . $encodedDomain, $address->toRfc5321());
+    }
+
+    public function testAddressLiteralDomainIsAccepted(): void
+    {
+        $address = new Address(
+            email: 'kalle@[192.0.2.1]',
+        );
+
+        self::assertSame('[192.0.2.1]', $address->encodedDomain);
+    }
+
+    /**
+     * @return \Generator<array{0: string}>
+     */
+    public static function invalidDomainDataProvider(): \Generator
+    {
+        yield [
+            'kalle@example..com',
+        ];
+
+        yield [
+            'kalle@-example.com',
+        ];
+
+        yield [
+            'kalle@example-.com',
+        ];
+
+        yield [
+            'kalle@example.com.',
+        ];
+
+        yield [
+            'kalle@ex_ample.com',
+        ];
+
+        yield [
+            'kalle@' . \str_repeat('a', 64) . '.com',
+        ];
+    }
+
+    #[DataProvider('invalidDomainDataProvider')]
+    public function testConstructorRejectsInvalidDomain(
+        string $email,
+    ): void {
+        try {
+            new Address(
+                email: $email,
+            );
+
+            self::fail('Expected MailException');
+        } catch (MailException $exception) {
+            self::assertStringContainsString(
+                'is not a valid host name or address literal',
+                $exception->getMessage(),
+            );
+        }
+    }
+
+    public function testConstructorRejectsDomainThatFailsIdnaEncoding(): void
+    {
+        try {
+            new Address(
+                email: 'kalle@ex_ämple.com',
+            );
+
+            self::fail('Expected MailException');
+        } catch (MailException $exception) {
+            self::assertStringContainsString(
+                'via IDNA',
+                $exception->getMessage(),
+            );
+        }
+    }
+
+    public function testRequiresSmtpUtf8OnlyForNonAsciiLocalPart(): void
+    {
+        self::assertFalse(
+            (new Address(
+                email: 'kalle@exämple.com',
+            ))->requiresSmtpUtf8(),
+        );
+
+        self::assertTrue(
+            (new Address(
+                email: 'kållê@example.com',
+            ))->requiresSmtpUtf8(),
+        );
     }
 
     public function testParseAcceptsBareEmail(): void

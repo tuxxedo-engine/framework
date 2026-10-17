@@ -31,7 +31,15 @@ interface AddressInterface
         get;
     }
 
+    public string $encodedDomain {
+        get;
+    }
+
+    public function toRfc5321(): string;
+
     public function toRfc5322(): string;
 
     public function isInternationalized(): bool;
+
+    public function requiresSmtpUtf8(): bool;
 }

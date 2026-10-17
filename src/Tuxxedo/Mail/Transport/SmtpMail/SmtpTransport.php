@@ -17,6 +17,7 @@ use Tuxxedo\Mail\AddressInterface;
 use Tuxxedo\Mail\MailException;
 use Tuxxedo\Mail\MessageInterface;
 use Tuxxedo\Mail\Result\SendResult;
+use Tuxxedo\Mail\Serializer\Render\IdnaEncoder;
 use Tuxxedo\Mail\Serializer\SerializedMessageInterface;
 use Tuxxedo\Mail\Transport\MailTransportInterface;
 use Tuxxedo\Mail\Transport\SmtpMail\Config\SmtpTransportConfigInterface;
@@ -259,7 +260,7 @@ class SmtpTransport implements MailTransportInterface
             readTimeout: $this->config->readTimeout,
             verifyPeer: $this->config->verifyPeer,
             caFile: $this->config->caFile,
-            ehloDomain: $this->config->ehloDomain ?? self::resolveDefaultEhloDomain(),
+            ehloDomain: IdnaEncoder::encode($this->config->ehloDomain ?? self::resolveDefaultEhloDomain()),
             unixSocket: $this->config->unixSocket,
         );
 

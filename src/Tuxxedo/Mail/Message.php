@@ -416,7 +416,7 @@ class Message implements MessageInterface
         return \sprintf(
             '<%s@%s>',
             \bin2hex(\random_bytes(16)),
-            $from->domain,
+            $from->encodedDomain,
         );
     }
 }

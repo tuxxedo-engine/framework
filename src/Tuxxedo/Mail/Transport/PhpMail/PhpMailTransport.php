@@ -136,7 +136,7 @@ class PhpMailTransport implements MailTransportInterface
             $strippedHeaders,
         ] = self::extractRoutingHeaders($serialized->headers);
 
-        $envelopeFrom = $message->returnPath?->email;
+        $envelopeFrom = $message->returnPath?->toRfc5321();
         $delivered = $this->mailer->send(
             to: $to,
             subject: $subject,

@@ -15,6 +15,7 @@ namespace Tuxxedo\Mail\Signer\Dkim;
 
 use Tuxxedo\Mail\MailException;
 use Tuxxedo\Mail\Middleware\MailWireMiddlewareInterface;
+use Tuxxedo\Mail\Serializer\Render\IdnaEncoder;
 use Tuxxedo\Mail\Serializer\SerializedMessage;
 use Tuxxedo\Mail\Serializer\SerializedMessageInterface;
 use Tuxxedo\Security\Crypto\CryptoException;
@@ -59,7 +60,7 @@ class DkimSigner implements MailWireMiddlewareInterface
             algorithm: $this->algorithm,
             headerCanonicalization: $this->headerCanonicalization,
             bodyCanonicalization: $this->bodyCanonicalization,
-            domain: $this->domain,
+            domain: IdnaEncoder::encode($this->domain),
             selector: $this->selector,
             signedHeaders: $this->signedHeaders,
             bh: $bodyHash,

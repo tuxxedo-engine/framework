@@ -87,7 +87,7 @@ class SendMailTransport implements MailTransportInterface
         SerializedMessageInterface $serialized,
     ): void {
         $message = $serialized->source;
-        $envelopeFrom = ($message->returnPath ?? $message->from)->email;
+        $envelopeFrom = ($message->returnPath ?? $message->from)->toRfc5321();
 
         $arguments = [
             ...$this->config->arguments,

@@ -132,6 +132,27 @@ class SendMailTransportTest extends TestCase
         self::assertNotContains('sender@example.com', $runner->commands[0]->arguments);
     }
 
+    public function testSendUsesIdnaEncodedEnvelopeFrom(): void
+    {
+        $runner = new RecordingProcessRunner();
+        $transport = new SendMailTransport(
+            config: new SendMailTransportConfig(),
+            processRunner: $runner,
+        );
+
+        $transport->send(
+            $this->serialize(
+                $this->makeMessage(
+                    returnPath: new Address(
+                        email: 'bounces@münchen.example',
+                    ),
+                ),
+            ),
+        );
+
+        self::assertContains('bounces@xn--mnchen-3ya.example', $runner->commands[0]->arguments);
+    }
+
     public function testSendPassesConfiguredArgumentsIncludingOverrides(): void
     {
         $runner = new RecordingProcessRunner();

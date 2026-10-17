@@ -149,6 +149,35 @@ class PhpMailTransportTest extends TestCase
         );
     }
 
+    public function testSendPassesIdnaEncodedEnvelopeFrom(): void
+    {
+        $mailer = new RecordingPhpMailer();
+        $transport = new PhpMailTransport(
+            mailer: $mailer,
+        );
+
+        $serialized = $this->serialize(
+            new Message(
+                from: new Address(
+                    email: 'from@example.com',
+                ),
+                to: 'to@example.com',
+                subject: 'Envelope',
+                body: 'body',
+                returnPath: new Address(
+                    email: 'bounces@münchen.example',
+                ),
+            ),
+        );
+
+        $transport->send($serialized);
+
+        self::assertSame(
+            'bounces@xn--mnchen-3ya.example',
+            $mailer->sent[0]['envelopeFrom'],
+        );
+    }
+
     public function testSendPassesNullEnvelopeFromWhenNoReturnPath(): void
     {
         $mailer = new RecordingPhpMailer();

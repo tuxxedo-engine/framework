@@ -94,7 +94,9 @@ class SmtpSession
         );
 
         $mailFrom = $this->buildMailFromCommand(
+            serialized: $serialized,
             envelopeFrom: $envelopeFrom,
+            recipients: $recipients,
             size: $size,
         );
 
@@ -131,7 +133,7 @@ class SmtpSession
 
         foreach ($recipients as $recipient) {
             $this->sendCommand(
-                command: \sprintf('RCPT TO:<%s>', $recipient->email),
+                command: \sprintf('RCPT TO:<%s>', $recipient->toRfc5321()),
             );
         }
 
@@ -153,7 +155,7 @@ class SmtpSession
         ];
 
         foreach ($recipients as $recipient) {
-            $commands[] = \sprintf('RCPT TO:<%s>', $recipient->email);
+            $commands[] = \sprintf('RCPT TO:<%s>', $recipient->toRfc5321());
         }
 
         $this->socket->writeRaw(
@@ -231,7 +233,9 @@ class SmtpSession
         );
 
         $mailFrom = $this->buildMailFromCommand(
+            serialized: $serialized,
             envelopeFrom: $envelopeFrom,
+            recipients: $recipients,
             size: $size,
         );
 
@@ -250,7 +254,7 @@ class SmtpSession
 
         foreach ($recipients as $recipient) {
             $this->socket->writeCommand(
-                command: \sprintf('RCPT TO:<%s>', $recipient->email),
+                command: \sprintf('RCPT TO:<%s>', $recipient->toRfc5321()),
             );
 
             $response = $this->socket->readResponse();
@@ -721,11 +725,18 @@ class SmtpSession
         }
     }
 
+    /**
+     * @param list<AddressInterface> $recipients
+     *
+     * @throws MailException
+     */
     private function buildMailFromCommand(
+        SerializedMessageInterface $serialized,
         AddressInterface $envelopeFrom,
+        array $recipients,
         int $size,
     ): string {
-        $command = \sprintf('MAIL FROM:<%s>', $envelopeFrom->email);
+        $command = \sprintf('MAIL FROM:<%s>', $envelopeFrom->toRfc5321());
 
         if ($this->advertisedSizeLimit() !== null) {
             $command .= ' SIZE=' . $size;
@@ -735,7 +746,42 @@ class SmtpSession
             $command .= ' BODY=8BITMIME';
         }
 
+        if (
+            self::requiresSmtpUtf8(
+                serialized: $serialized,
+                envelopeFrom: $envelopeFrom,
+                recipients: $recipients,
+            )
+        ) {
+            if (!$this->capabilities->supports('SMTPUTF8')) {
+                throw MailException::fromSmtpUtf8NotAdvertised();
+            }
+
+            $command .= ' SMTPUTF8';
+        }
+
         return $command;
+    }
+
+    /**
+     * @param list<AddressInterface> $recipients
+     */
+    private static function requiresSmtpUtf8(
+        SerializedMessageInterface $serialized,
+        AddressInterface $envelopeFrom,
+        array $recipients,
+    ): bool {
+        if ($envelopeFrom->requiresSmtpUtf8()) {
+            return true;
+        }
+
+        foreach ($recipients as $recipient) {
+            if ($recipient->requiresSmtpUtf8()) {
+                return true;
+            }
+        }
+
+        return \preg_match('/[^\x00-\x7F]/', $serialized->headers) === 1;
     }
 
     private function advertisedSizeLimit(): ?int

@@ -23,6 +23,7 @@ class Address implements AddressInterface
 
     public readonly string $localPart;
     public readonly string $domain;
+    public readonly string $encodedDomain;
 
     /**
      * @throws MailException
@@ -62,8 +63,17 @@ class Address implements AddressInterface
             throw MailException::fromInvalidDisplayName();
         }
 
+        $encodedDomain = IdnaEncoder::encode($matches[2]);
+
+        if (!self::isValidEncodedDomain($encodedDomain)) {
+            throw MailException::fromInvalidDomain(
+                domain: $matches[2],
+            );
+        }
+
         $this->localPart = $matches[1];
         $this->domain = $matches[2];
+        $this->encodedDomain = $encodedDomain;
     }
 
     /**
@@ -114,9 +124,14 @@ class Address implements AddressInterface
         );
     }
 
+    public function toRfc5321(): string
+    {
+        return $this->localPart . '@' . $this->encodedDomain;
+    }
+
     public function toRfc5322(): string
     {
-        $email = $this->localPart . '@' . IdnaEncoder::encode($this->domain);
+        $email = $this->toRfc5321();
 
         if ($this->displayName === null) {
             return $email;
@@ -150,5 +165,20 @@ class Address implements AddressInterface
     public function isInternationalized(): bool
     {
         return \preg_match('/[^\x00-\x7F]/', $this->email) === 1;
+    }
+
+    public function requiresSmtpUtf8(): bool
+    {
+        return \preg_match('/[^\x00-\x7F]/', $this->localPart) === 1;
+    }
+
+    private static function isValidEncodedDomain(
+        string $domain,
+    ): bool {
+        if (\preg_match('/^\[[^\[\]\\\\\s]+\]$/', $domain) === 1) {
+            return true;
+        }
+
+        return \preg_match('/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$/i', $domain) === 1;
     }
 }

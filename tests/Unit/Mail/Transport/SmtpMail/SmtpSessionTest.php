@@ -101,6 +101,7 @@ class SmtpSessionTest extends TestCase
 
     private function serialized(
         string $body = 'body',
+        string $headers = 'Subject: test',
     ): SerializedMessageInterface {
         return new SerializedMessage(
             source: new Message(
@@ -111,15 +112,16 @@ class SmtpSessionTest extends TestCase
                 subject: 'test',
                 body: 'body',
             ),
-            headers: 'Subject: test',
+            headers: $headers,
             body: $body,
         );
     }
 
-    private function envelopeFrom(): Address
-    {
+    private function envelopeFrom(
+        string $email = 'from@example.com',
+    ): Address {
         return new Address(
-            email: 'from@example.com',
+            email: $email,
         );
     }
 
@@ -129,6 +131,18 @@ class SmtpSessionTest extends TestCase
         return new Address(
             email: $email,
         );
+    }
+
+    private function mailFromCommand(
+        ScriptedSmtpSocket $socket,
+    ): ?string {
+        foreach ($socket->writtenCommands as $command) {
+            if (\str_starts_with($command, 'MAIL FROM:')) {
+                return $command;
+            }
+        }
+
+        return null;
     }
 
     public function testOpenSendsGreetingAndEhloAndParsesCapabilities(): void
@@ -1144,5 +1158,124 @@ class SmtpSessionTest extends TestCase
             'BODY=8BITMIME',
             $mailFromCommand,
         );
+    }
+
+    public function testEnvelopeUsesIdnaEncodedDomainsWithoutSmtpUtf8(): void
+    {
+        [$session, $socket] = $this->openSession(
+            additionalResponses: [
+                $this->response(250, 'OK'),
+                $this->response(250, 'OK'),
+                $this->response(354, 'Start mail input'),
+                $this->response(250, 'Message accepted'),
+            ],
+        );
+
+        $session->sendMessage(
+            serialized: $this->serialized(),
+            envelopeFrom: $this->envelopeFrom('from@münchen.example'),
+            recipients: [
+                $this->recipient('to@straße.de'),
+            ],
+        );
+
+        self::assertSame(
+            'MAIL FROM:<from@xn--mnchen-3ya.example>',
+            $this->mailFromCommand($socket),
+        );
+
+        self::assertContains(
+            'RCPT TO:<to@xn--strae-oqa.de>',
+            $socket->writtenCommands,
+        );
+    }
+
+    public function testNonAsciiLocalPartAddsSmtpUtf8WhenAdvertised(): void
+    {
+        [$session, $socket] = $this->openSession(
+            ehloExtensions: [
+                'mail.test hello',
+                'SMTPUTF8',
+            ],
+            additionalResponses: [
+                $this->response(250, 'OK'),
+                $this->response(250, 'OK'),
+                $this->response(354, 'Start mail input'),
+                $this->response(250, 'Message accepted'),
+            ],
+        );
+
+        $session->sendMessage(
+            serialized: $this->serialized(),
+            envelopeFrom: $this->envelopeFrom(),
+            recipients: [
+                $this->recipient('søren@example.com'),
+            ],
+        );
+
+        self::assertSame(
+            'MAIL FROM:<from@example.com> SMTPUTF8',
+            $this->mailFromCommand($socket),
+        );
+
+        self::assertContains(
+            'RCPT TO:<søren@example.com>',
+            $socket->writtenCommands,
+        );
+    }
+
+    public function testNonAsciiLocalPartInHeadersAddsSmtpUtf8WhenAdvertised(): void
+    {
+        [$session, $socket] = $this->openSession(
+            ehloExtensions: [
+                'mail.test hello',
+                'SMTPUTF8',
+            ],
+            additionalResponses: [
+                $this->response(250, 'OK'),
+                $this->response(250, 'OK'),
+                $this->response(354, 'Start mail input'),
+                $this->response(250, 'Message accepted'),
+            ],
+        );
+
+        $session->sendMessage(
+            serialized: $this->serialized(
+                headers: "From: søren@example.com\r\nSubject: test",
+            ),
+            envelopeFrom: $this->envelopeFrom(),
+            recipients: [
+                $this->recipient(),
+            ],
+        );
+
+        self::assertSame(
+            'MAIL FROM:<from@example.com> SMTPUTF8',
+            $this->mailFromCommand($socket),
+        );
+    }
+
+    public function testNonAsciiLocalPartThrowsWhenSmtpUtf8NotAdvertised(): void
+    {
+        [$session, $socket] = $this->openSession();
+
+        try {
+            $session->sendMessageWithResult(
+                serialized: $this->serialized(),
+                envelopeFrom: $this->envelopeFrom('søren@example.com'),
+                recipients: [
+                    $this->recipient(),
+                ],
+            );
+
+            self::fail('Expected MailException');
+        } catch (MailException $exception) {
+            self::assertStringContainsString(
+                'did not advertise SMTPUTF8',
+                $exception->getMessage(),
+            );
+        }
+
+        self::assertNull($this->mailFromCommand($socket));
     }
 }

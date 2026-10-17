@@ -33,14 +33,16 @@ class IdnaEncoder
             // @codeCoverageIgnoreEnd
         }
 
-        $encoded = \idn_to_ascii($domain, \IDNA_DEFAULT, \INTL_IDNA_VARIANT_UTS46);
+        $encoded = \idn_to_ascii(
+            $domain,
+            \IDNA_NONTRANSITIONAL_TO_ASCII | \IDNA_CHECK_BIDI | \IDNA_USE_STD3_RULES,
+            \INTL_IDNA_VARIANT_UTS46,
+        );
 
         if ($encoded === false) {
-            // @codeCoverageIgnoreStart
             throw MailException::fromIdnaConversionFailure(
                 domain: $domain,
             );
-            // @codeCoverageIgnoreEnd
         }
 
         return $encoded;

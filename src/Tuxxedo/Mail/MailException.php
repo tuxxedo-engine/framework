@@ -54,6 +54,17 @@ class MailException extends Exception
         );
     }
 
+    public static function fromInvalidDomain(
+        string $domain,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Email domain "%s" is not a valid host name or address literal',
+                $domain,
+            ),
+        );
+    }
+
     public static function fromInvalidDisplayName(): self
     {
         return new self(
@@ -208,9 +219,6 @@ class MailException extends Exception
         );
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     public static function fromIdnaConversionFailure(
         string $domain,
     ): self {
@@ -410,6 +418,13 @@ class MailException extends Exception
     {
         return new self(
             message: 'SMTP server did not advertise STARTTLS but the configured TLS mode requires it',
+        );
+    }
+
+    public static function fromSmtpUtf8NotAdvertised(): self
+    {
+        return new self(
+            message: 'SMTP server did not advertise SMTPUTF8 but the message has an address with a non-ASCII local-part',
         );
     }
 
