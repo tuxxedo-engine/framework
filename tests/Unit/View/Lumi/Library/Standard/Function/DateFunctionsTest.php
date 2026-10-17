@@ -15,6 +15,7 @@ namespace Unit\View\Lumi\Library\Standard\Function;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Support\View\Lumi\Runtime\StubRuntimeContext;
 use Tuxxedo\Intl\Config\IntlConfig;
 use Tuxxedo\Intl\Loader\FlatFileLoader;
 use Tuxxedo\Intl\Locale;
@@ -99,6 +100,7 @@ class DateFunctionsTest extends TestCase
         self::assertSame(
             '2026-07-16',
             $this->functionsWithSystemClock()->date(
+                context: new StubRuntimeContext(),
                 format: 'Y-m-d',
                 value: Instant::parse('2026-07-16T12:00:00Z'),
             ),
@@ -110,6 +112,7 @@ class DateFunctionsTest extends TestCase
         self::assertSame(
             '16/07/2026',
             $this->functionsWithSystemClock()->date(
+                context: new StubRuntimeContext(),
                 format: 'd/m/Y',
                 value: LocalDate::of(year: 2026, month: 7, day: 16),
             ),
@@ -118,20 +121,20 @@ class DateFunctionsTest extends TestCase
 
     public function testDateFormatsWithExplicitUnixTimestamp(): void
     {
-        self::assertSame('1970-01-01', $this->functionsWithSystemClock()->date('Y-m-d', 0));
+        self::assertSame('1970-01-01', $this->functionsWithSystemClock()->date(new StubRuntimeContext(), 'Y-m-d', 0));
     }
 
     public function testDateUsesInjectedClockWhenNoValueProvided(): void
     {
         self::assertSame(
             '89-07-02 (14:02:00)',
-            $this->functionsAt('1989-07-02T14:02:00+01:00')->date('y-m-d (H:i:s)'),
+            $this->functionsAt('1989-07-02T14:02:00+01:00')->date(new StubRuntimeContext(), 'y-m-d (H:i:s)'),
         );
     }
 
     public function testDateUsesSystemClockWhenNoDependenciesInjected(): void
     {
-        self::assertMatchesRegularExpression('/^\d{4}$/', $this->functionsWithSystemClock()->date('Y'));
+        self::assertMatchesRegularExpression('/^\d{4}$/', $this->functionsWithSystemClock()->date(new StubRuntimeContext(), 'Y'));
     }
 
     /**
@@ -199,6 +202,7 @@ class DateFunctionsTest extends TestCase
         self::assertSame(
             '2026-07-16 14:00:00',
             $this->functionsWithSystemClock()->dateLocal(
+                context: new StubRuntimeContext(),
                 value: Instant::parse('2026-07-16T12:00:00Z'),
                 timeZone: 'Europe/Copenhagen',
             ),
@@ -210,6 +214,7 @@ class DateFunctionsTest extends TestCase
         self::assertSame(
             '2026-07-16 14:00:00',
             $this->functionsWithSystemClock()->dateLocal(
+                context: new StubRuntimeContext(),
                 value: Instant::parse('2026-07-16T12:00:00Z'),
                 timeZone: TimeZone::parse('Europe/Copenhagen'),
             ),
@@ -221,6 +226,7 @@ class DateFunctionsTest extends TestCase
         self::assertSame(
             '14:00',
             $this->functionsWithSystemClock()->dateLocal(
+                context: new StubRuntimeContext(),
                 value: Instant::parse('2026-07-16T12:00:00Z'),
                 timeZone: 'Europe/Copenhagen',
                 format: 'H:i',
@@ -238,6 +244,7 @@ class DateFunctionsTest extends TestCase
             self::assertSame(
                 '2026-07-16 12:00:00',
                 $this->functionsWithSystemClock()->dateLocal(
+                    context: new StubRuntimeContext(),
                     value: Instant::parse('2026-07-16T12:00:00Z'),
                 ),
             );
@@ -251,6 +258,7 @@ class DateFunctionsTest extends TestCase
         self::assertSame(
             '2026-07-16 14:00:00',
             $this->functionsWithSystemClock()->dateLocal(
+                context: new StubRuntimeContext(),
                 value: '2026-07-16T12:00:00Z',
                 timeZone: 'Europe/Copenhagen',
             ),
@@ -261,7 +269,7 @@ class DateFunctionsTest extends TestCase
     {
         self::assertSame(
             '2026-07-16 12:34:56',
-            $this->functionsAt('2026-07-16T12:34:56Z')->dateNow(),
+            $this->functionsAt('2026-07-16T12:34:56Z')->dateNow(new StubRuntimeContext()),
         );
     }
 
@@ -269,21 +277,53 @@ class DateFunctionsTest extends TestCase
     {
         self::assertSame(
             '2026',
-            $this->functionsAt('2026-07-16T12:34:56Z')->dateNow('Y'),
+            $this->functionsAt('2026-07-16T12:34:56Z')->dateNow(new StubRuntimeContext(), 'Y'),
         );
     }
 
     public function testDateNowFallsBackToSystemClock(): void
     {
-        self::assertMatchesRegularExpression('/^\d{4}$/', $this->functionsWithSystemClock()->dateNow('Y'));
+        self::assertMatchesRegularExpression('/^\d{4}$/', $this->functionsWithSystemClock()->dateNow(new StubRuntimeContext(), 'Y'));
     }
 
     public function testDateTodayRendersIsoDate(): void
     {
         self::assertSame(
             '2026-07-16',
-            $this->functionsAt('2026-07-16T12:34:56Z')->dateToday(),
+            $this->functionsAt('2026-07-16T12:34:56Z')->dateToday(new StubRuntimeContext()),
         );
+    }
+
+    public function testTimeZoneDirectiveAppliesToNowHelpersAndInstants(): void
+    {
+        $context = new StubRuntimeContext(
+            directives: [
+                'tuxxedo.timezone' => 'Europe/Copenhagen',
+            ],
+        );
+
+        $functions = $this->functionsAt('2026-07-16T22:30:00Z');
+
+        self::assertSame('2026-07-17 00:30:00', $functions->dateNow($context));
+        self::assertSame('00:30:00', $functions->timeNow($context));
+        self::assertSame('2026-07-17', $functions->dateToday($context));
+        self::assertSame('14:00', $functions->date($context, 'H:i', Instant::parse('2026-07-16T12:00:00Z')));
+        self::assertSame('2026-07-16', $functions->date($context, 'Y-m-d', LocalDate::of(year: 2026, month: 7, day: 16)));
+    }
+
+    public function testDateLocalPrefersTheArgumentThenTheTimeZoneDirective(): void
+    {
+        $context = new StubRuntimeContext(
+            directives: [
+                'tuxxedo.timezone' => 'Europe/Copenhagen',
+            ],
+        );
+
+        $functions = $this->functionsWithSystemClock();
+        $value = Instant::parse('2026-07-16T12:00:00Z');
+
+        self::assertSame('14:00', $functions->dateLocal($context, $value, null, 'H:i'));
+        self::assertSame('08:00', $functions->dateLocal($context, $value, 'America/New_York', 'H:i'));
     }
 
     public function testNowReturnsUnixTimestampString(): void
@@ -303,7 +343,7 @@ class DateFunctionsTest extends TestCase
     {
         self::assertSame(
             '12:34:56',
-            $this->functionsAt('2026-07-16T12:34:56Z')->timeNow(),
+            $this->functionsAt('2026-07-16T12:34:56Z')->timeNow(new StubRuntimeContext()),
         );
     }
 
@@ -311,12 +351,12 @@ class DateFunctionsTest extends TestCase
     {
         self::assertSame(
             '12:34',
-            $this->functionsAt('2026-07-16T12:34:56Z')->timeNow('H:i'),
+            $this->functionsAt('2026-07-16T12:34:56Z')->timeNow(new StubRuntimeContext(), 'H:i'),
         );
     }
 
     public function testTimeNowFallsBackToSystemClock(): void
     {
-        self::assertMatchesRegularExpression('/^\d{2}:\d{2}:\d{2}$/', $this->functionsWithSystemClock()->timeNow());
+        self::assertMatchesRegularExpression('/^\d{2}:\d{2}:\d{2}$/', $this->functionsWithSystemClock()->timeNow(new StubRuntimeContext()));
     }
 }

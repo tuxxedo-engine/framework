@@ -14,14 +14,18 @@ declare(strict_types=1);
 namespace Unit\Mail\Lumi;
 
 use PHPUnit\Framework\TestCase;
+use Support\Mail\StubLocalizedTemplateMessage;
 use Support\Mail\StubTemplateMessage;
+use Support\Mail\StubTimeZonedTemplateMessage;
 use Tuxxedo\Container\Container;
+use Tuxxedo\Intl\Locale;
 use Tuxxedo\Mail\Address;
 use Tuxxedo\Mail\BodyType;
 use Tuxxedo\Mail\Lumi\Config\LumiMailTemplateConfig;
 use Tuxxedo\Mail\MailException;
 use Tuxxedo\Mail\MailTemplateRenderInterface;
 use Tuxxedo\Mail\Message;
+use Tuxxedo\Temporal\TimeZone;
 
 class LumiMailTemplateRenderTest extends TestCase
 {
@@ -142,6 +146,49 @@ class LumiMailTemplateRenderTest extends TestCase
         self::assertSame(
             'Hi kalle!',
             $result->body,
+        );
+    }
+
+    public function testRenderUsesTheLocaleOfALocalizedMessage(): void
+    {
+        $this->writeTemplate(
+            name: 'stub',
+            contents: '{{ locale().tag }}',
+        );
+
+        $render = $this->createRender();
+
+        self::assertSame(
+            'pt-BR',
+            $render->render(
+                message: new StubLocalizedTemplateMessage(
+                    locale: Locale::parse('pt-BR'),
+                ),
+            )->body,
+        );
+
+        self::assertSame(
+            'en-US',
+            $render->render(
+                message: new StubTemplateMessage(),
+            )->body,
+        );
+    }
+
+    public function testRenderUsesTheTimeZoneOfATimeZonedMessage(): void
+    {
+        $this->writeTemplate(
+            name: 'stub',
+            contents: '{{ date(\'H:i\', 0) }}',
+        );
+
+        self::assertSame(
+            '01:00',
+            $this->createRender()->render(
+                message: new StubTimeZonedTemplateMessage(
+                    timeZone: TimeZone::parse('Europe/Copenhagen'),
+                ),
+            )->body,
         );
     }
 

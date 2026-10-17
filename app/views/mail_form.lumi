@@ -37,3 +37,42 @@
     </p>
     <input type="submit" value="Send welcome template">
 </form>
+
+<hr>
+
+<h3>Localized template (OrderShippedMail via LocalizedMessageInterface)</h3>
+<form action="/mail/localized" method="post">
+    {! csrf_field() !}
+    <p>
+        <label><strong>To:</strong> <input type="email" name="to" value="user@example.com" required></label>
+    </p>
+    <p>
+        <label><strong>Recipient name:</strong> <input type="text" name="recipientName" value="Kalle"></label>
+    </p>
+    <p>
+        <label>
+            <strong>Mail language:</strong>
+            <select name="language">
+                <option value="en-US">{{ locale('en-US').displayName }}</option>
+                <option value="pt-PT">{{ locale('pt-PT').displayName }}</option>
+                <option value="pt-BR">{{ locale('pt-BR').displayName }}</option>
+            </select>
+        </label>
+    </p>
+    <p>
+        <label>
+            <strong>Recipient time zone:</strong>
+            <select name="timeZone">
+                <option value="UTC">UTC</option>
+                <option value="Europe/Copenhagen">Europe/Copenhagen</option>
+                <option value="Europe/Lisbon">Europe/Lisbon</option>
+                <option value="America/Sao_Paulo">America/Sao_Paulo</option>
+                <option value="America/New_York">America/New_York</option>
+            </select>
+        </label>
+    </p>
+    <p>
+        <label><strong>Items:</strong> <input type="number" name="itemCount" value="3" min="0"></label>
+    </p>
+    <input type="submit" value="Send order shipped template">
+</form>

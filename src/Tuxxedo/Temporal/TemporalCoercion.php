@@ -39,6 +39,7 @@ class TemporalCoercion
 
     public static function toDateTime(
         InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
+        ?TimeZoneInterface $timeZone = null,
     ): \DateTimeImmutable {
         if ($value instanceof LocalDateInterface) {
             return $value->atStartOfDay(TimeZone::utc())->toDateTime();
@@ -55,21 +56,38 @@ class TemporalCoercion
             )->toDateTime();
         }
 
-        return self::toInstant($value)->toDateTime();
+        return self::toZonedInstant(
+            value: $value,
+            timeZone: $timeZone,
+        )->toDateTime();
     }
 
     public static function format(
         InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
         string $pattern,
+        ?TimeZoneInterface $timeZone = null,
     ): string {
         if (
-            $value instanceof InstantInterface ||
             $value instanceof LocalDateInterface ||
             $value instanceof LocalTimeInterface
         ) {
             return $value->format($pattern);
         }
 
-        return self::toInstant($value)->format($pattern);
+        return self::toZonedInstant(
+            value: $value,
+            timeZone: $timeZone,
+        )->format($pattern);
+    }
+
+    private static function toZonedInstant(
+        InstantInterface|\DateTimeInterface|int|string $value,
+        ?TimeZoneInterface $timeZone,
+    ): InstantInterface {
+        $instant = self::toInstant($value);
+
+        return $timeZone !== null
+            ? $instant->withTimeZone($timeZone)
+            : $instant;
     }
 }

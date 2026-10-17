@@ -15,6 +15,7 @@ namespace Unit\View\Lumi\Library\Standard\Filter;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Support\View\Lumi\Runtime\StubRuntimeContext;
 use Tuxxedo\Intl\Config\IntlConfig;
 use Tuxxedo\Intl\Loader\FlatFileLoader;
 use Tuxxedo\Intl\Locale;
@@ -146,7 +147,7 @@ class DateFiltersTest extends TestCase
     {
         self::assertSame(
             'Thursday, July 16, 2026 12:00 PM',
-            $this->filtersAt('2026-07-16T12:00:00Z')->dateLong(Instant::parse('2026-07-16T12:00:00Z')),
+            $this->filtersAt('2026-07-16T12:00:00Z')->dateLong(new StubRuntimeContext(), Instant::parse('2026-07-16T12:00:00Z')),
         );
     }
 
@@ -154,7 +155,7 @@ class DateFiltersTest extends TestCase
     {
         self::assertSame(
             '2026-07-16 12:00',
-            $this->filtersAt('2026-07-16T12:00:00Z')->dateShort(Instant::parse('2026-07-16T12:00:00Z')),
+            $this->filtersAt('2026-07-16T12:00:00Z')->dateShort(new StubRuntimeContext(), Instant::parse('2026-07-16T12:00:00Z')),
         );
     }
 
@@ -162,7 +163,22 @@ class DateFiltersTest extends TestCase
     {
         self::assertSame(
             '2026-07-16 12:00',
-            $this->filtersAt('2026-07-16T12:00:00Z')->dateShort('2026-07-16T12:00:00Z'),
+            $this->filtersAt('2026-07-16T12:00:00Z')->dateShort(new StubRuntimeContext(), '2026-07-16T12:00:00Z'),
+        );
+    }
+
+    public function testDateShortFollowsTheTimeZoneDirective(): void
+    {
+        self::assertSame(
+            '2026-07-16 14:00',
+            $this->filtersAt('2026-07-16T12:00:00Z')->dateShort(
+                new StubRuntimeContext(
+                    directives: [
+                        'tuxxedo.timezone' => 'Europe/Copenhagen',
+                    ],
+                ),
+                Instant::parse('2026-07-16T12:00:00Z'),
+            ),
         );
     }
 

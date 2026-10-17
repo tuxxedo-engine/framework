@@ -18,8 +18,12 @@ use Tuxxedo\Temporal\InstantInterface;
 use Tuxxedo\Temporal\LocalDateInterface;
 use Tuxxedo\Temporal\LocalTimeInterface;
 use Tuxxedo\Temporal\TemporalCoercion;
+use Tuxxedo\Temporal\TemporalException;
 use Tuxxedo\Temporal\TimeZone;
+use Tuxxedo\Temporal\TimeZoneInterface;
+use Tuxxedo\View\Lumi\Library\Attribute\Context;
 use Tuxxedo\View\Lumi\Library\Attribute\LumiFilter;
+use Tuxxedo\View\Lumi\Runtime\RuntimeContextInterface;
 
 class DateFilters
 {
@@ -52,21 +56,27 @@ class DateFilters
 
     #[LumiFilter('date_long')]
     public function dateLong(
+        #[Context]
+        RuntimeContextInterface $context,
         InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
     ): string {
         return TemporalCoercion::format(
             value: $value,
             pattern: 'l, F j, Y g:i A',
+            timeZone: self::resolveDirectiveTimeZone($context),
         );
     }
 
     #[LumiFilter('date_short')]
     public function dateShort(
+        #[Context]
+        RuntimeContextInterface $context,
         InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
     ): string {
         return TemporalCoercion::format(
             value: $value,
             pattern: 'Y-m-d H:i',
+            timeZone: self::resolveDirectiveTimeZone($context),
         );
     }
 
@@ -91,5 +101,20 @@ class DateFilters
             value: $value,
             pattern: 'H:i:s',
         );
+    }
+
+    /**
+     * @throws TemporalException
+     */
+    private static function resolveDirectiveTimeZone(
+        RuntimeContextInterface $context,
+    ): ?TimeZoneInterface {
+        $directive = $context->hasDirective('tuxxedo.timezone')
+            ? $context->directive('tuxxedo.timezone')
+            : null;
+
+        return $directive !== null
+            ? TimeZone::parse((string) $directive)
+            : null;
     }
 }

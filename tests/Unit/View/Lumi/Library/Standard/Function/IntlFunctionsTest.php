@@ -15,6 +15,7 @@ namespace Unit\View\Lumi\Library\Standard\Function;
 
 use Fixture\Intl\InMemoryPhraseLoader;
 use PHPUnit\Framework\TestCase;
+use Support\View\Lumi\Runtime\StubRuntimeContext;
 use Tuxxedo\Intl\Config\IntlConfig;
 use Tuxxedo\Intl\Locale;
 use Tuxxedo\Intl\LocaleInterface;
@@ -22,6 +23,7 @@ use Tuxxedo\Intl\PluralSelector;
 use Tuxxedo\Intl\Resolver\StaticLocaleResolver;
 use Tuxxedo\Intl\TranslationException;
 use Tuxxedo\Intl\Translator;
+use Tuxxedo\Temporal\Instant;
 use Tuxxedo\Temporal\LocalDate;
 use Tuxxedo\Temporal\LocalTime;
 use Tuxxedo\View\Lumi\Library\Standard\Function\IntlFunctions;
@@ -73,6 +75,7 @@ class IntlFunctionsTest extends TestCase
         self::assertSame(
             'Hello world',
             $functions->translate(
+                context: new StubRuntimeContext(),
                 key: 'common.greeting',
             ),
         );
@@ -93,6 +96,7 @@ class IntlFunctionsTest extends TestCase
         self::assertSame(
             'Hello Kalle',
             $functions->translate(
+                context: new StubRuntimeContext(),
                 key: 'common.greeting',
                 replacements: [
                     'name' => 'Kalle',
@@ -121,10 +125,85 @@ class IntlFunctionsTest extends TestCase
         self::assertSame(
             'Hej',
             $functions->translate(
+                context: new StubRuntimeContext(),
                 key: 'common.greeting',
                 locale: 'da-DK',
             ),
         );
+    }
+
+    public function testLocaleDirectiveOverridesTheTranslatorLocale(): void
+    {
+        $functions = $this->makeFunctions(
+            catalogues: [
+                'en-US' => [
+                    'common' => [
+                        'greeting' => 'Hello',
+                    ],
+                ],
+                'da-DK' => [
+                    'common' => [
+                        'greeting' => 'Hej',
+                    ],
+                ],
+            ],
+        );
+
+        $context = new StubRuntimeContext(
+            directives: [
+                'tuxxedo.locale' => 'da-DK',
+            ],
+        );
+
+        self::assertSame('Hej', $functions->translate($context, 'common.greeting'));
+        self::assertSame('da-DK', $functions->locale($context)->tag);
+        self::assertSame('1.234,5', $functions->localeNumber($context, 1234.5, 1));
+        self::assertSame('15.10.2026', $functions->localeDateShort($context, LocalDate::of(2026, 10, 15)));
+    }
+
+    public function testExplicitLocaleArgumentWinsOverTheLocaleDirective(): void
+    {
+        $functions = $this->makeFunctions(
+            catalogues: [],
+        );
+
+        $context = new StubRuntimeContext(
+            directives: [
+                'tuxxedo.locale' => 'da-DK',
+            ],
+        );
+
+        self::assertSame('cs-CZ', $functions->locale($context, 'cs-CZ')->tag);
+    }
+
+    public function testLocaleDateFollowsTheTimeZoneDirective(): void
+    {
+        $functions = $this->makeFunctions(
+            catalogues: [],
+        );
+
+        $context = new StubRuntimeContext(
+            directives: [
+                'tuxxedo.timezone' => 'Europe/Copenhagen',
+            ],
+        );
+
+        self::assertSame('15.10.26 14:30', $functions->localeDateShort($context, Instant::parse('2026-10-15T12:30:00Z'), 'cs-CZ'));
+    }
+
+    public function testNullLocaleDirectiveFallsBackToTheTranslatorLocale(): void
+    {
+        $functions = $this->makeFunctions(
+            catalogues: [],
+        );
+
+        $context = new StubRuntimeContext(
+            directives: [
+                'tuxxedo.locale' => null,
+            ],
+        );
+
+        self::assertSame('en-US', $functions->locale($context)->tag);
     }
 
     public function testPluralSelectsOneCategory(): void
@@ -145,6 +224,7 @@ class IntlFunctionsTest extends TestCase
         self::assertSame(
             '1 item',
             $functions->plural(
+                context: new StubRuntimeContext(),
                 key: 'cart.items',
                 count: 1,
                 replacements: [
@@ -172,6 +252,7 @@ class IntlFunctionsTest extends TestCase
         self::assertSame(
             '3 items',
             $functions->plural(
+                context: new StubRuntimeContext(),
                 key: 'cart.items',
                 count: 3,
                 replacements: [
@@ -207,6 +288,7 @@ class IntlFunctionsTest extends TestCase
         self::assertSame(
             '3 varer',
             $functions->plural(
+                context: new StubRuntimeContext(),
                 key: 'cart.items',
                 count: 3,
                 replacements: [
@@ -246,10 +328,10 @@ class IntlFunctionsTest extends TestCase
             catalogues: [],
         );
 
-        self::assertSame('en-US', $functions->locale()->tag);
-        self::assertTrue($functions->localeIsLtr());
-        self::assertFalse($functions->localeIsRtl());
-        self::assertSame('ltr', $functions->localeDirection());
+        self::assertSame('en-US', $functions->locale(new StubRuntimeContext())->tag);
+        self::assertTrue($functions->localeIsLtr(new StubRuntimeContext()));
+        self::assertFalse($functions->localeIsRtl(new StubRuntimeContext()));
+        self::assertSame('ltr', $functions->localeDirection(new StubRuntimeContext()));
     }
 
     public function testLocaleWithTagParsesIt(): void
@@ -258,12 +340,12 @@ class IntlFunctionsTest extends TestCase
             catalogues: [],
         );
 
-        self::assertSame('da-DK', $functions->locale('da_dk')->tag);
-        self::assertTrue($functions->localeIsLtr('da-DK'));
-        self::assertTrue($functions->localeIsRtl('ar'));
-        self::assertFalse($functions->localeIsLtr('he-IL'));
-        self::assertSame('rtl', $functions->localeDirection('fa'));
-        self::assertSame('ltr', $functions->localeDirection('fi-FI'));
+        self::assertSame('da-DK', $functions->locale(new StubRuntimeContext(), 'da_dk')->tag);
+        self::assertTrue($functions->localeIsLtr(new StubRuntimeContext(), 'da-DK'));
+        self::assertTrue($functions->localeIsRtl(new StubRuntimeContext(), 'ar'));
+        self::assertFalse($functions->localeIsLtr(new StubRuntimeContext(), 'he-IL'));
+        self::assertSame('rtl', $functions->localeDirection(new StubRuntimeContext(), 'fa'));
+        self::assertSame('ltr', $functions->localeDirection(new StubRuntimeContext(), 'fi-FI'));
     }
 
     public function testLocaleFollowsTranslatorLocaleOverride(): void
@@ -285,9 +367,9 @@ class IntlFunctionsTest extends TestCase
             ))->withLocale(Locale::parse('ar-EG')),
         );
 
-        self::assertSame('ar-EG', $functions->locale()->tag);
-        self::assertTrue($functions->localeIsRtl());
-        self::assertSame('rtl', $functions->localeDirection());
+        self::assertSame('ar-EG', $functions->locale(new StubRuntimeContext())->tag);
+        self::assertTrue($functions->localeIsRtl(new StubRuntimeContext()));
+        self::assertSame('rtl', $functions->localeDirection(new StubRuntimeContext()));
     }
 
     public function testInvalidTagThrows(): void
@@ -298,7 +380,7 @@ class IntlFunctionsTest extends TestCase
 
         self::expectException(TranslationException::class);
 
-        $functions->localeIsRtl('not a locale');
+        $functions->localeIsRtl(new StubRuntimeContext(), 'not a locale');
     }
 
     public function testLocaleSortUsesTheTranslatorLocaleUnlessGiven(): void
@@ -319,7 +401,7 @@ class IntlFunctionsTest extends TestCase
                 1 => 'Åse',
                 0 => 'Zoë',
             ],
-            $functions->localeSort($names),
+            $functions->localeSort(new StubRuntimeContext(), $names),
         );
 
         self::assertSame(
@@ -328,7 +410,7 @@ class IntlFunctionsTest extends TestCase
                 0 => 'Zoë',
                 1 => 'Åse',
             ],
-            $functions->localeSort($names, 'da-DK'),
+            $functions->localeSort(new StubRuntimeContext(), $names, 'da-DK'),
         );
     }
 
@@ -348,7 +430,7 @@ class IntlFunctionsTest extends TestCase
                 'Åse' => 1,
                 'Zoë' => 2,
             ],
-            $functions->localeKsort($values),
+            $functions->localeKsort(new StubRuntimeContext(), $values),
         );
 
         self::assertSame(
@@ -356,7 +438,7 @@ class IntlFunctionsTest extends TestCase
                 'Zoë' => 2,
                 'Åse' => 1,
             ],
-            $functions->localeKsort($values, 'da-DK'),
+            $functions->localeKsort(new StubRuntimeContext(), $values, 'da-DK'),
         );
     }
 
@@ -366,9 +448,9 @@ class IntlFunctionsTest extends TestCase
             catalogues: [],
         );
 
-        self::assertSame('1,234,567.89', $functions->localeNumber(1234567.891, 2));
-        self::assertSame('1.234.567,89', $functions->localeNumber(1234567.891, 2, 'da-DK'));
-        self::assertSame('1,235', $functions->localeNumber(1234.5));
+        self::assertSame('1,234,567.89', $functions->localeNumber(new StubRuntimeContext(), 1234567.891, 2));
+        self::assertSame('1.234.567,89', $functions->localeNumber(new StubRuntimeContext(), 1234567.891, 2, 'da-DK'));
+        self::assertSame('1,235', $functions->localeNumber(new StubRuntimeContext(), 1234.5));
     }
 
     public function testLocaleDateUsesTheTranslatorLocaleUnlessGiven(): void
@@ -379,11 +461,11 @@ class IntlFunctionsTest extends TestCase
 
         $value = new \DateTimeImmutable('2026-10-15 14:30:00', new \DateTimeZone('Europe/Copenhagen'));
 
-        self::assertSame('čtvrtek 15. října 2026 v 14:30', $functions->localeDateLong($value, 'cs-CZ'));
-        self::assertSame('15.10.26 14:30', $functions->localeDateShort($value, 'cs-CZ'));
-        self::assertSame('Thursday, October 15, 2026', $functions->localeDateLong(LocalDate::of(2026, 10, 15)));
-        self::assertSame('10/15/26', $functions->localeDateShort(LocalDate::of(2026, 10, 15)));
-        self::assertSame('09.05', $functions->localeDateShort(LocalTime::of(9, 5), 'da-DK'));
+        self::assertSame('čtvrtek 15. října 2026 v 14:30', $functions->localeDateLong(new StubRuntimeContext(), $value, 'cs-CZ'));
+        self::assertSame('15.10.26 14:30', $functions->localeDateShort(new StubRuntimeContext(), $value, 'cs-CZ'));
+        self::assertSame('Thursday, October 15, 2026', $functions->localeDateLong(new StubRuntimeContext(), LocalDate::of(2026, 10, 15)));
+        self::assertSame('10/15/26', $functions->localeDateShort(new StubRuntimeContext(), LocalDate::of(2026, 10, 15)));
+        self::assertSame('09.05', $functions->localeDateShort(new StubRuntimeContext(), LocalTime::of(9, 5), 'da-DK'));
     }
 
     public function testAsciiAndRomanizeTransliterate(): void

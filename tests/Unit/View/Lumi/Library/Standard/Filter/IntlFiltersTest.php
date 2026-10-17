@@ -15,6 +15,7 @@ namespace Unit\View\Lumi\Library\Standard\Filter;
 
 use Fixture\Intl\InMemoryPhraseLoader;
 use PHPUnit\Framework\TestCase;
+use Support\View\Lumi\Runtime\StubRuntimeContext;
 use Tuxxedo\Intl\Config\IntlConfig;
 use Tuxxedo\Intl\Locale;
 use Tuxxedo\Intl\PluralSelector;
@@ -69,6 +70,7 @@ class IntlFiltersTest extends TestCase
         self::assertSame(
             'Hello world',
             $filters->translate(
+                context: new StubRuntimeContext(),
                 value: 'common.greeting',
             ),
         );
@@ -105,9 +107,9 @@ class IntlFiltersTest extends TestCase
 
         $instant = Instant::parse('2026-10-15T12:30:00+00:00');
 
-        self::assertSame('torsdag den 15. oktober 2026 kl. 12.30', $filters->localeDateLong($instant));
-        self::assertSame('15.10.2026', $filters->localeDateShort(LocalDate::of(2026, 10, 15)));
-        self::assertSame('14.30', $filters->localeDateShort(LocalTime::of(14, 30)));
+        self::assertSame('torsdag den 15. oktober 2026 kl. 12.30', $filters->localeDateLong(new StubRuntimeContext(), $instant));
+        self::assertSame('15.10.2026', $filters->localeDateShort(new StubRuntimeContext(), LocalDate::of(2026, 10, 15)));
+        self::assertSame('14.30', $filters->localeDateShort(new StubRuntimeContext(), LocalTime::of(14, 30)));
     }
 
     public function testAsciiAndRomanizeTransliterate(): void
@@ -118,5 +120,48 @@ class IntlFiltersTest extends TestCase
 
         self::assertSame('Moskva', $filters->ascii('Москва'));
         self::assertSame('Elláda', $filters->romanize('Ελλάδα'));
+    }
+
+    public function testLocaleDirectiveOverridesTheTranslatorLocale(): void
+    {
+        $filters = $this->makeFilters(
+            catalogues: [
+                'en-US' => [
+                    'common' => [
+                        'greeting' => 'Hello',
+                    ],
+                ],
+                'pt-BR' => [
+                    'common' => [
+                        'greeting' => 'Olá',
+                    ],
+                ],
+            ],
+        );
+
+        $context = new StubRuntimeContext(
+            directives: [
+                'tuxxedo.locale' => 'pt-BR',
+            ],
+        );
+
+        self::assertSame('Olá', $filters->translate($context, 'common.greeting'));
+        self::assertSame('15/10/2026', $filters->localeDateShort($context, LocalDate::of(2026, 10, 15)));
+    }
+
+    public function testLocaleDateFollowsTheLocaleAndTimeZoneDirectives(): void
+    {
+        $filters = $this->makeFilters(
+            catalogues: [],
+        );
+
+        $context = new StubRuntimeContext(
+            directives: [
+                'tuxxedo.locale' => 'cs-CZ',
+                'tuxxedo.timezone' => 'Europe/Copenhagen',
+            ],
+        );
+
+        self::assertSame('15.10.26 14:30', $filters->localeDateShort($context, Instant::parse('2026-10-15T12:30:00Z')));
     }
 }

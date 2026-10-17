@@ -32,7 +32,12 @@ use Tuxxedo\Temporal\InstantInterface;
 use Tuxxedo\Temporal\LocalDateInterface;
 use Tuxxedo\Temporal\LocalTimeInterface;
 use Tuxxedo\Temporal\TemporalCoercion;
+use Tuxxedo\Temporal\TemporalException;
+use Tuxxedo\Temporal\TimeZone;
+use Tuxxedo\Temporal\TimeZoneInterface;
+use Tuxxedo\View\Lumi\Library\Attribute\Context;
 use Tuxxedo\View\Lumi\Library\Attribute\LumiFunction;
+use Tuxxedo\View\Lumi\Runtime\RuntimeContextInterface;
 
 class IntlFunctions
 {
@@ -47,9 +52,13 @@ class IntlFunctions
 
     /**
      * @param array<string, scalar|null> $replacements
+     *
+     * @throws TranslationException
      */
     #[LumiFunction('translate', aliases: ['_', 't'])]
     public function translate(
+        #[Context]
+        RuntimeContextInterface $context,
         string $key,
         array $replacements = [],
         ?string $locale = null,
@@ -57,17 +66,22 @@ class IntlFunctions
         return $this->translator->translate(
             key: $key,
             replacements: $replacements,
-            locale: $locale !== null
-                ? Locale::parse($locale)
-                : null,
+            locale: $this->resolveLocale(
+                context: $context,
+                locale: $locale,
+            ),
         );
     }
 
     /**
      * @param array<string, scalar|null> $replacements
+     *
+     * @throws TranslationException
      */
     #[LumiFunction('plural')]
     public function plural(
+        #[Context]
+        RuntimeContextInterface $context,
         string $key,
         int $count,
         array $replacements = [],
@@ -77,55 +91,73 @@ class IntlFunctions
             key: $key,
             count: $count,
             replacements: $replacements,
-            locale: $locale !== null
-                ? Locale::parse($locale)
-                : null,
+            locale: $this->resolveLocale(
+                context: $context,
+                locale: $locale,
+            ),
         );
     }
 
+    /**
+     * @throws TranslationException
+     */
     #[LumiFunction('locale')]
     public function locale(
+        #[Context]
+        RuntimeContextInterface $context,
         ?string $locale = null,
     ): LocaleInterface {
-        return $locale !== null
-            ? Locale::parse($locale)
-            : $this->translator->locale;
+        return $this->resolveLocale(
+            context: $context,
+            locale: $locale,
+        );
     }
 
+    /**
+     * @throws TranslationException
+     */
     #[LumiFunction('locale_is_rtl')]
     public function localeIsRtl(
+        #[Context]
+        RuntimeContextInterface $context,
         ?string $locale = null,
     ): bool {
-        $direction = $locale !== null
-            ? Locale::parse($locale)->direction
-            : $this->translator->locale->direction;
-
-        return $direction === LocaleDirection::RTL;
+        return $this->resolveLocale(
+            context: $context,
+            locale: $locale,
+        )->direction === LocaleDirection::RTL;
     }
 
+    /**
+     * @throws TranslationException
+     */
     #[LumiFunction('locale_is_ltr')]
     public function localeIsLtr(
+        #[Context]
+        RuntimeContextInterface $context,
         ?string $locale = null,
     ): bool {
-        $direction = $locale !== null
-            ? Locale::parse($locale)->direction
-            : $this->translator->locale->direction;
-
-        return $direction === LocaleDirection::LTR;
+        return $this->resolveLocale(
+            context: $context,
+            locale: $locale,
+        )->direction === LocaleDirection::LTR;
     }
 
     /**
      * @return 'ltr'|'rtl'
+     *
+     * @throws TranslationException
      */
     #[LumiFunction('locale_direction')]
     public function localeDirection(
+        #[Context]
+        RuntimeContextInterface $context,
         ?string $locale = null,
     ): string {
-        $direction = $locale !== null
-            ? Locale::parse($locale)->direction
-            : $this->translator->locale->direction;
-
-        return $direction->value;
+        return $this->resolveLocale(
+            context: $context,
+            locale: $locale,
+        )->direction->value;
     }
 
     /**
@@ -169,14 +201,17 @@ class IntlFunctions
      */
     #[LumiFunction('locale_sort')]
     public function localeSort(
+        #[Context]
+        RuntimeContextInterface $context,
         array $array,
         ?string $locale = null,
     ): array {
         return $this->collator->sort(
             values: $array,
-            locale: $locale !== null
-                ? Locale::parse($locale)
-                : $this->translator->locale,
+            locale: $this->resolveLocale(
+                context: $context,
+                locale: $locale,
+            ),
         );
     }
 
@@ -188,14 +223,17 @@ class IntlFunctions
      */
     #[LumiFunction('locale_ksort')]
     public function localeKsort(
+        #[Context]
+        RuntimeContextInterface $context,
         array $array,
         ?string $locale = null,
     ): array {
         return $this->collator->sortKeys(
             values: $array,
-            locale: $locale !== null
-                ? Locale::parse($locale)
-                : $this->translator->locale,
+            locale: $this->resolveLocale(
+                context: $context,
+                locale: $locale,
+            ),
         );
     }
 
@@ -204,45 +242,62 @@ class IntlFunctions
      */
     #[LumiFunction('locale_number')]
     public function localeNumber(
+        #[Context]
+        RuntimeContextInterface $context,
         int|float $number,
         int $decimals = 0,
         ?string $locale = null,
     ): string {
         return $this->numberFormatter->format(
             value: $number,
-            locale: $locale !== null
-                ? Locale::parse($locale)
-                : $this->translator->locale,
+            locale: $this->resolveLocale(
+                context: $context,
+                locale: $locale,
+            ),
             decimals: $decimals,
         );
     }
 
     /**
      * @throws TranslationException
+     * @throws TemporalException
      */
     #[LumiFunction('locale_date_long')]
     public function localeDateLong(
+        #[Context]
+        RuntimeContextInterface $context,
         InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
         ?string $locale = null,
     ): string {
         return $this->formatDate(
             value: $value,
-            locale: $locale,
+            locale: $this->resolveLocale(
+                context: $context,
+                locale: $locale,
+            ),
+            timeZone: self::resolveDirectiveTimeZone($context),
             dateStyle: DateStyle::FULL,
         );
     }
 
     /**
      * @throws TranslationException
+     * @throws TemporalException
      */
     #[LumiFunction('locale_date_short')]
     public function localeDateShort(
+        #[Context]
+        RuntimeContextInterface $context,
         InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
         ?string $locale = null,
     ): string {
         return $this->formatDate(
             value: $value,
-            locale: $locale,
+            locale: $this->resolveLocale(
+                context: $context,
+                locale: $locale,
+            ),
+            timeZone: self::resolveDirectiveTimeZone($context),
             dateStyle: DateStyle::SHORT,
         );
     }
@@ -273,16 +328,55 @@ class IntlFunctions
     /**
      * @throws TranslationException
      */
+    private function resolveLocale(
+        RuntimeContextInterface $context,
+        ?string $locale,
+    ): LocaleInterface {
+        if ($locale !== null) {
+            return Locale::parse($locale);
+        }
+
+        $directive = $context->hasDirective('tuxxedo.locale')
+            ? $context->directive('tuxxedo.locale')
+            : null;
+
+        if ($directive !== null) {
+            return Locale::parse((string) $directive);
+        }
+
+        return $this->translator->locale;
+    }
+
+    /**
+     * @throws TemporalException
+     */
+    private static function resolveDirectiveTimeZone(
+        RuntimeContextInterface $context,
+    ): ?TimeZoneInterface {
+        $directive = $context->hasDirective('tuxxedo.timezone')
+            ? $context->directive('tuxxedo.timezone')
+            : null;
+
+        return $directive !== null
+            ? TimeZone::parse((string) $directive)
+            : null;
+    }
+
+    /**
+     * @throws TranslationException
+     */
     private function formatDate(
         InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
-        ?string $locale,
+        LocaleInterface $locale,
+        ?TimeZoneInterface $timeZone,
         DateStyle $dateStyle,
     ): string {
         return $this->dateFormatter->format(
-            value: TemporalCoercion::toDateTime($value),
-            locale: $locale !== null
-                ? Locale::parse($locale)
-                : $this->translator->locale,
+            value: TemporalCoercion::toDateTime(
+                value: $value,
+                timeZone: $timeZone,
+            ),
+            locale: $locale,
             dateStyle: $value instanceof LocalTimeInterface
                 ? DateStyle::NONE
                 : $dateStyle,
@@ -291,5 +385,4 @@ class IntlFunctions
                 : DateStyle::SHORT,
         );
     }
-
 }

@@ -16,6 +16,8 @@ namespace Tuxxedo\View\Lumi\Library\Standard\Filter;
 use Tuxxedo\Intl\DateFormatter;
 use Tuxxedo\Intl\DateFormatterInterface;
 use Tuxxedo\Intl\DateStyle;
+use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\LocaleInterface;
 use Tuxxedo\Intl\TranslationException;
 use Tuxxedo\Intl\TranslatorInterface;
 use Tuxxedo\Intl\Transliteration;
@@ -25,7 +27,12 @@ use Tuxxedo\Temporal\InstantInterface;
 use Tuxxedo\Temporal\LocalDateInterface;
 use Tuxxedo\Temporal\LocalTimeInterface;
 use Tuxxedo\Temporal\TemporalCoercion;
+use Tuxxedo\Temporal\TemporalException;
+use Tuxxedo\Temporal\TimeZone;
+use Tuxxedo\Temporal\TimeZoneInterface;
+use Tuxxedo\View\Lumi\Library\Attribute\Context;
 use Tuxxedo\View\Lumi\Library\Attribute\LumiFilter;
+use Tuxxedo\View\Lumi\Runtime\RuntimeContextInterface;
 
 class IntlFilters
 {
@@ -36,37 +43,53 @@ class IntlFilters
     ) {
     }
 
+    /**
+     * @throws TranslationException
+     */
     #[LumiFilter('translate', aliases: ['t'])]
     public function translate(
+        #[Context]
+        RuntimeContextInterface $context,
         string $value,
     ): string {
         return $this->translator->translate(
             key: $value,
+            locale: $this->resolveLocale($context),
         );
     }
 
     /**
      * @throws TranslationException
+     * @throws TemporalException
      */
     #[LumiFilter('locale_date_long')]
     public function localeDateLong(
+        #[Context]
+        RuntimeContextInterface $context,
         InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
     ): string {
         return $this->formatDate(
             value: $value,
+            locale: $this->resolveLocale($context),
+            timeZone: self::resolveDirectiveTimeZone($context),
             dateStyle: DateStyle::FULL,
         );
     }
 
     /**
      * @throws TranslationException
+     * @throws TemporalException
      */
     #[LumiFilter('locale_date_short')]
     public function localeDateShort(
+        #[Context]
+        RuntimeContextInterface $context,
         InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
     ): string {
         return $this->formatDate(
             value: $value,
+            locale: $this->resolveLocale($context),
+            timeZone: self::resolveDirectiveTimeZone($context),
             dateStyle: DateStyle::SHORT,
         );
     }
@@ -97,13 +120,50 @@ class IntlFilters
     /**
      * @throws TranslationException
      */
+    private function resolveLocale(
+        RuntimeContextInterface $context,
+    ): LocaleInterface {
+        $directive = $context->hasDirective('tuxxedo.locale')
+            ? $context->directive('tuxxedo.locale')
+            : null;
+
+        if ($directive !== null) {
+            return Locale::parse((string) $directive);
+        }
+
+        return $this->translator->locale;
+    }
+
+    /**
+     * @throws TemporalException
+     */
+    private static function resolveDirectiveTimeZone(
+        RuntimeContextInterface $context,
+    ): ?TimeZoneInterface {
+        $directive = $context->hasDirective('tuxxedo.timezone')
+            ? $context->directive('tuxxedo.timezone')
+            : null;
+
+        return $directive !== null
+            ? TimeZone::parse((string) $directive)
+            : null;
+    }
+
+    /**
+     * @throws TranslationException
+     */
     private function formatDate(
         InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
+        LocaleInterface $locale,
+        ?TimeZoneInterface $timeZone,
         DateStyle $dateStyle,
     ): string {
         return $this->dateFormatter->format(
-            value: TemporalCoercion::toDateTime($value),
-            locale: $this->translator->locale,
+            value: TemporalCoercion::toDateTime(
+                value: $value,
+                timeZone: $timeZone,
+            ),
+            locale: $locale,
             dateStyle: $value instanceof LocalTimeInterface
                 ? DateStyle::NONE
                 : $dateStyle,

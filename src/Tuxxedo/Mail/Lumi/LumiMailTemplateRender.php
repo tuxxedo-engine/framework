@@ -14,9 +14,11 @@ declare(strict_types=1);
 namespace Tuxxedo\Mail\Lumi;
 
 use Tuxxedo\Mail\Attribute\MailTemplate;
+use Tuxxedo\Mail\LocalizedMessageInterface;
 use Tuxxedo\Mail\MailException;
 use Tuxxedo\Mail\MailTemplateRenderInterface;
 use Tuxxedo\Mail\MessageInterface;
+use Tuxxedo\Mail\TimeZonedMessageInterface;
 use Tuxxedo\View\Lumi\LumiViewRenderInterface;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewException;
@@ -48,6 +50,7 @@ class LumiMailTemplateRender implements MailTemplateRenderInterface
                     name: $template->name,
                     scope: $scope,
                 ),
+                directives: $this->directivesFor($message),
             );
         } catch (ViewException $exception) {
             throw MailException::fromMailTemplateRenderFailed(
@@ -61,5 +64,31 @@ class LumiMailTemplateRender implements MailTemplateRenderInterface
             body: $body,
             bodyType: $template->bodyType,
         );
+    }
+
+    /**
+     * @return array<string, string|int|float|bool|null>|null
+     */
+    private function directivesFor(
+        MessageInterface $message,
+    ): ?array {
+        $directives = [];
+
+        if ($message instanceof LocalizedMessageInterface) {
+            $directives['tuxxedo.locale'] = $message->locale->tag;
+        }
+
+        if ($message instanceof TimeZonedMessageInterface) {
+            $directives['tuxxedo.timezone'] = $message->timeZone->name;
+        }
+
+        if ($directives === []) {
+            return null;
+        }
+
+        return [
+            ...$this->viewRender->runtime->directives,
+            ...$directives,
+        ];
     }
 }

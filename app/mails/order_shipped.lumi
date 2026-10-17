@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="{! locale().tag | escape_attr !}" dir="{! locale_direction() !}">
+<head>
+    <meta charset="utf-8">
+    <title>{{ t('mail.orderShipped.subject', ['order': orderNumber]) }}</title>
+</head>
+<body style="font-family: -apple-system, sans-serif; max-width: 640px; margin: 0 auto; padding: 24px;">
+    <h1 style="color: #333;">{{ t('mail.orderShipped.greeting', ['name': recipientName]) }}</h1>
+
+    <p>{{ t('mail.orderShipped.intro', ['order': orderNumber]) }}</p>
+
+    <ul>
+        <li>{{ plural('mail.orderShipped.items', itemCount, ['count': itemCount]) }}</li>
+        <li>{{ t('mail.orderShipped.total', ['amount': locale_number(total, 2)]) }}</li>
+        <li>{{ t('mail.orderShipped.shippedAt', ['date': shippedAt | locale_date_long]) }}</li>
+    </ul>
+
+    <p>
+        <a href="{! trackingUrl | escape_attr !}" style="display: inline-block; padding: 12px 24px; background: #0066cc; color: #fff; text-decoration: none; border-radius: 4px;">
+            {{ t('mail.orderShipped.track') }}
+        </a>
+    </p>
+
+    <hr style="border: none; border-top: 1px solid #ddd; margin: 24px 0;">
+
+    <p style="color: #999; font-size: 12px;">{{ t('mail.orderShipped.footer') }}</p>
+</body>
+</html>

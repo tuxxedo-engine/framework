@@ -22,9 +22,12 @@ use Tuxxedo\Temporal\InstantInterface;
 use Tuxxedo\Temporal\LocalDateInterface;
 use Tuxxedo\Temporal\LocalTimeInterface;
 use Tuxxedo\Temporal\TemporalCoercion;
+use Tuxxedo\Temporal\TemporalException;
 use Tuxxedo\Temporal\TimeZone;
 use Tuxxedo\Temporal\TimeZoneInterface;
+use Tuxxedo\View\Lumi\Library\Attribute\Context;
 use Tuxxedo\View\Lumi\Library\Attribute\LumiFunction;
+use Tuxxedo\View\Lumi\Runtime\RuntimeContextInterface;
 
 class DateFunctions
 {
@@ -36,12 +39,15 @@ class DateFunctions
 
     #[LumiFunction('date', aliases: ['time'])]
     public function date(
+        #[Context]
+        RuntimeContextInterface $context,
         string $format,
         InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string|null $value = null,
     ): string {
         return TemporalCoercion::format(
             value: $value ?? $this->clock->now(),
             pattern: $format,
+            timeZone: self::resolveDirectiveTimeZone($context),
         );
     }
 
@@ -62,26 +68,45 @@ class DateFunctions
 
     #[LumiFunction('date_local')]
     public function dateLocal(
+        #[Context]
+        RuntimeContextInterface $context,
         InstantInterface|\DateTimeInterface|int|string $value,
         TimeZoneInterface|string|null $timeZone = null,
         string $format = 'Y-m-d H:i:s',
     ): string {
         return TemporalCoercion::toInstant($value)
-            ->withTimeZone(self::resolveTimeZone($timeZone))
+            ->withTimeZone(
+                self::resolveTimeZone(
+                    context: $context,
+                    argument: $timeZone,
+                ),
+            )
             ->format($format);
     }
 
     #[LumiFunction('date_now')]
     public function dateNow(
+        #[Context]
+        RuntimeContextInterface $context,
         string $format = 'Y-m-d H:i:s',
     ): string {
-        return $this->clock->now()->format($format);
+        return TemporalCoercion::format(
+            value: $this->clock->now(),
+            pattern: $format,
+            timeZone: self::resolveDirectiveTimeZone($context),
+        );
     }
 
     #[LumiFunction('date_today')]
-    public function dateToday(): string
-    {
-        return $this->clock->now()->format('Y-m-d');
+    public function dateToday(
+        #[Context]
+        RuntimeContextInterface $context,
+    ): string {
+        return TemporalCoercion::format(
+            value: $this->clock->now(),
+            pattern: 'Y-m-d',
+            timeZone: self::resolveDirectiveTimeZone($context),
+        );
     }
 
     #[LumiFunction('now')]
@@ -92,9 +117,15 @@ class DateFunctions
 
     #[LumiFunction('time_now')]
     public function timeNow(
+        #[Context]
+        RuntimeContextInterface $context,
         string $format = 'H:i:s',
     ): string {
-        return $this->clock->now()->format($format);
+        return TemporalCoercion::format(
+            value: $this->clock->now(),
+            pattern: $format,
+            timeZone: self::resolveDirectiveTimeZone($context),
+        );
     }
 
     private static function coerceDuration(
@@ -111,7 +142,11 @@ class DateFunctions
         return Duration::fromIso8601DurationString($value);
     }
 
+    /**
+     * @throws TemporalException
+     */
     private static function resolveTimeZone(
+        RuntimeContextInterface $context,
         TimeZoneInterface|string|null $argument,
     ): TimeZoneInterface {
         if ($argument instanceof TimeZoneInterface) {
@@ -122,6 +157,21 @@ class DateFunctions
             return TimeZone::parse($argument);
         }
 
-        return TimeZone::parse(\date_default_timezone_get());
+        return self::resolveDirectiveTimeZone($context) ?? TimeZone::parse(\date_default_timezone_get());
+    }
+
+    /**
+     * @throws TemporalException
+     */
+    private static function resolveDirectiveTimeZone(
+        RuntimeContextInterface $context,
+    ): ?TimeZoneInterface {
+        $directive = $context->hasDirective('tuxxedo.timezone')
+            ? $context->directive('tuxxedo.timezone')
+            : null;
+
+        return $directive !== null
+            ? TimeZone::parse((string) $directive)
+            : null;
     }
 }
