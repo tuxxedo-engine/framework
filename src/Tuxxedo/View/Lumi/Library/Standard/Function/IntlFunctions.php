@@ -15,14 +15,18 @@ namespace Tuxxedo\View\Lumi\Library\Standard\Function;
 
 use Tuxxedo\Intl\Collator;
 use Tuxxedo\Intl\CollatorInterface;
-use Tuxxedo\Intl\DateFormatter;
-use Tuxxedo\Intl\DateFormatterInterface;
-use Tuxxedo\Intl\DateStyle;
 use Tuxxedo\Intl\Locale;
 use Tuxxedo\Intl\LocaleDirection;
 use Tuxxedo\Intl\LocaleInterface;
 use Tuxxedo\Intl\NumberFormatter;
 use Tuxxedo\Intl\NumberFormatterInterface;
+use Tuxxedo\Intl\Temporal\DateFormatter;
+use Tuxxedo\Intl\Temporal\DateFormatterInterface;
+use Tuxxedo\Intl\Temporal\DateStyle;
+use Tuxxedo\Intl\Temporal\TimeZoneEntryInterface;
+use Tuxxedo\Intl\Temporal\TimeZoneGroupInterface;
+use Tuxxedo\Intl\Temporal\TimeZoneList;
+use Tuxxedo\Intl\Temporal\TimeZoneListInterface;
 use Tuxxedo\Intl\TranslationException;
 use Tuxxedo\Intl\TranslatorInterface;
 use Tuxxedo\Intl\Transliteration;
@@ -47,6 +51,7 @@ class IntlFunctions
         private readonly NumberFormatterInterface $numberFormatter = new NumberFormatter(),
         private readonly DateFormatterInterface $dateFormatter = new DateFormatter(),
         private readonly TransliteratorInterface $transliterator = new Transliterator(),
+        private readonly TimeZoneListInterface $timeZoneList = new TimeZoneList(),
     ) {
     }
 
@@ -323,6 +328,68 @@ class IntlFunctions
             ),
             timeZone: self::resolveDirectiveTimeZone($context),
             dateStyle: DateStyle::SHORT,
+        );
+    }
+
+    /**
+     * @return list<TimeZoneEntryInterface>
+     *
+     * @throws TranslationException
+     */
+    #[LumiFunction('timezone_all')]
+    public function timezoneAll(
+        #[Context]
+        RuntimeContextInterface $context,
+        ?string $country = null,
+        ?string $locale = null,
+    ): array {
+        return $this->timeZoneList->all(
+            locale: $this->resolveLocale(
+                context: $context,
+                locale: $locale,
+            ),
+            country: $country,
+        );
+    }
+
+    /**
+     * @return list<TimeZoneGroupInterface>
+     *
+     * @throws TranslationException
+     */
+    #[LumiFunction('timezone_groups')]
+    public function timezoneGroups(
+        #[Context]
+        RuntimeContextInterface $context,
+        ?string $locale = null,
+    ): array {
+        return $this->timeZoneList->grouped(
+            locale: $this->resolveLocale(
+                context: $context,
+                locale: $locale,
+            ),
+        );
+    }
+
+    /**
+     * @param list<string> $names
+     * @return list<TimeZoneEntryInterface>
+     *
+     * @throws TranslationException
+     */
+    #[LumiFunction('timezone_list')]
+    public function timezoneList(
+        #[Context]
+        RuntimeContextInterface $context,
+        array $names,
+        ?string $locale = null,
+    ): array {
+        return $this->timeZoneList->of(
+            names: $names,
+            locale: $this->resolveLocale(
+                context: $context,
+                locale: $locale,
+            ),
         );
     }
 

@@ -78,6 +78,47 @@ class ArrayFunctionsTest extends TestCase
         self::assertSame("\xFFba", $this->functions->reverse("ab\xFF"));
     }
 
+    public function testSliceReindexesListsAndKeepsStringKeys(): void
+    {
+        self::assertSame(
+            [
+                'b',
+                'c',
+            ],
+            $this->functions->slice(
+                [
+                    'a',
+                    'b',
+                    'c',
+                    'd',
+                ],
+                1,
+                2,
+            ),
+        );
+
+        self::assertSame(
+            [
+                'y' => 2,
+                'z' => 3,
+            ],
+            $this->functions->slice(
+                [
+                    'x' => 1,
+                    'y' => 2,
+                    'z' => 3,
+                ],
+                -2,
+            ),
+        );
+    }
+
+    public function testSliceCutsStringsByGrapheme(): void
+    {
+        self::assertSame("A\u{030A}se", $this->functions->slice("A\u{030A}se Øst", 0, 3));
+        self::assertSame('Øst', $this->functions->slice('Åse Øst', -3));
+    }
+
     public function testReverseReversesArrayAndKeepsKeys(): void
     {
         self::assertSame(

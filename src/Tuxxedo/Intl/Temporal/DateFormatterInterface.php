@@ -11,10 +11,12 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Intl;
+namespace Tuxxedo\Intl\Temporal;
 
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
+use Tuxxedo\Intl\LocaleInterface;
+use Tuxxedo\Intl\TranslationException;
 
 #[DefaultImplementation(class: DateFormatter::class, lifecycle: Lifecycle::SINGLETON)]
 interface DateFormatterInterface

@@ -1,0 +1,80 @@
+{% layout 'layout/base' %}
+
+{% block extra_css %}
+    {% include 'support/form_css' %}
+
+    section.picker {
+        margin-top: 32px;
+    }
+
+    section.picker h2 {
+        margin: 0 0 6px 0;
+        font: 600 15px/1.3 var(--sans);
+    }
+
+    section.picker p {
+        margin: 0 0 12px 0;
+        color: var(--dim);
+        font-size: 13px;
+    }
+
+    section.picker select {
+        width: 100%;
+        max-width: 640px;
+    }
+{% endblock %}
+
+{% block main %}
+    <main>
+        <header>
+            <h1>Time zone pickers</h1>
+        </header>
+
+        <form method="get" action="/timezones/">
+            <div class="field">
+                <label for="locale">Language</label>
+                <select id="locale" name="locale">
+                    {% for tag in pickerLocales %}
+                        {% if tag === pickerLocale %}
+                            <option value="{! tag | escape_attr !}" selected>{{ locale(tag).displayName }}</option>
+                        {% else %}
+                            <option value="{! tag | escape_attr !}">{{ locale(tag).displayName }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="field">
+                <label for="country">Country (optional, e.g. PT, BR, US)</label>
+                <input type="text" id="country" name="country" value="{! countryInput | escape_attr !}" maxlength="2">
+            </div>
+            <input type="submit" value="Show">
+        </form>
+
+        <section class="picker">
+            <h2>Every zone, by offset</h2>
+            <select name="flat" aria-label="Every zone, by offset">
+                {% for zone in timezone_all(country, pickerLocale) %}
+                    <option value="{! zone.name | escape_attr !}">(UTC{{ zone.offset }}) {{ zone.displayName }}</option>
+                {% endfor %}
+            </select>
+        </section>
+
+        <section class="picker">
+            <h2>Grouped</h2>
+            <select name="grouped" aria-label="Grouped">
+                {% for group in timezone_groups(pickerLocale) %}
+                    <option value="{! group.name | escape_attr !}">(UTC{{ group.offset }}) {{ group.displayName }}: {{ join(slice(group.cities, 0, 3), ', ') }}</option>
+                {% endfor %}
+            </select>
+        </section>
+
+        <section class="picker">
+            <h2>Fixed list</h2>
+            <select name="fixed" aria-label="Fixed list">
+                {% for zone in timezone_list(['Europe/Copenhagen', 'Europe/Lisbon', 'America/Sao_Paulo', 'America/New_York', 'Asia/Tokyo'], pickerLocale) %}
+                    <option value="{! zone.name | escape_attr !}">{{ zone.city }} (UTC{{ zone.offset }})</option>
+                {% endfor %}
+            </select>
+        </section>
+    </main>
+{% endblock %}

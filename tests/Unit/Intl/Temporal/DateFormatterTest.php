@@ -11,13 +11,13 @@
 
 declare(strict_types=1);
 
-namespace Unit\Intl;
+namespace Unit\Intl\Temporal;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Intl\DateFormatter;
-use Tuxxedo\Intl\DateStyle;
 use Tuxxedo\Intl\Locale;
+use Tuxxedo\Intl\Temporal\DateFormatter;
+use Tuxxedo\Intl\Temporal\DateStyle;
 
 class DateFormatterTest extends TestCase
 {

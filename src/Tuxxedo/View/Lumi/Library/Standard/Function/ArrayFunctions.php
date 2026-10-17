@@ -58,16 +58,42 @@ class ArrayFunctions
             );
         }
 
-        if (\preg_match_all('/\X/u', $input, $matches) === false) {
-            return \join(
-                '',
-                \array_reverse(\mb_str_split($input)),
-            );
+        return \join(
+            '',
+            \array_reverse(self::graphemes($input)),
+        );
+    }
+
+    /**
+     * @param mixed[]|string $input
+     * @return mixed[]|string
+     */
+    #[LumiFunction('slice')]
+    public function slice(
+        array|string $input,
+        int $offset,
+        ?int $length = null,
+    ): array|string {
+        if (\is_array($input)) {
+            return \array_slice($input, $offset, $length);
         }
 
         return \join(
             '',
-            \array_reverse($matches[0]),
+            \array_slice(self::graphemes($input), $offset, $length),
         );
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function graphemes(
+        string $value,
+    ): array {
+        if (\preg_match_all('/\X/u', $value, $matches) === false) {
+            return \mb_str_split($value);
+        }
+
+        return $matches[0];
     }
 }

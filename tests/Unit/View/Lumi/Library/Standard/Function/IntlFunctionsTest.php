@@ -470,6 +470,43 @@ class IntlFunctionsTest extends TestCase
         self::assertSame("€\u{00A0}1.234,50", $functions->localeCurrency($context, 1234.5, null, 'pt-BR'));
     }
 
+    public function testTimeZoneFunctionsFollowTheLocaleDirective(): void
+    {
+        $functions = $this->makeFunctions(
+            catalogues: [],
+        );
+
+        $context = new StubRuntimeContext(
+            directives: [
+                'tuxxedo.locale' => 'da-DK',
+            ],
+        );
+
+        $listed = $functions->timezoneList(
+            $context,
+            [
+                'Europe/Lisbon',
+                'Europe/Copenhagen',
+            ],
+        );
+
+        self::assertSame('Lissabon', $listed[0]->city);
+        self::assertSame('København', $listed[1]->city);
+
+        $danish = $functions->timezoneAll($context, 'DK');
+
+        self::assertCount(1, $danish);
+        self::assertSame('Danmark-tid', $danish[0]->displayName);
+
+        $cities = [];
+
+        foreach ($functions->timezoneGroups($context) as $group) {
+            $cities[] = $group->cities[0];
+        }
+
+        self::assertContains('København', $cities);
+    }
+
     public function testLocaleCurrencyThrowsWithoutCurrency(): void
     {
         $functions = $this->makeFunctions(

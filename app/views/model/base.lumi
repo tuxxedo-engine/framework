@@ -160,63 +160,7 @@
         -moz-tab-size: 4;
     }
 
-    form {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        max-width: 480px;
-        padding: 20px 20px 22px;
-        margin: 8px 0 0 0;
-        background: rgba(0, 0, 0, 0.22);
-        border: 1px solid var(--line);
-        border-radius: 6px;
-    }
-
-    form .field {
-        display: flex;
-        flex-direction:
-        column; gap: 6px;
-    }
-
-    form label, form .field > strong {
-        color: var(--dim);
-        font: 500 11px/1.2 var(--mono);
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-    }
-
-    form input[type="text"] {
-        background: rgba(0, 0, 0, 0.34);
-        border: 1px solid var(--line);
-        color: var(--fg);
-        padding: 9px 11px;
-        border-radius: 4px;
-        font: 13px/1.4 var(--mono);
-        transition: border-color .15s ease, background .15s ease;
-    }
-
-    form input[type="text"]:focus {
-        outline: none;
-        border-color: var(--path);
-        background: rgba(0, 0, 0, 0.44);
-    }
-
-    form input[type="submit"] {
-        align-self: flex-start;
-        background: var(--path);
-        color: #101318;
-        border: 1px solid transparent;
-        padding: 9px 22px;
-        border-radius: 6px;
-        font: 600 13px/1 var(--sans);
-        letter-spacing: 0.01em;
-        cursor: pointer;
-        transition: background .15s ease, color .15s ease;
-    }
-
-    form input[type="submit"]:hover {
-        background: #d5e7f2;
-    }
+{% include 'support/form_css' %}
 
     nav.pagination {
         display: flex;
@@ -237,20 +181,6 @@
 
     nav.pagination .status {
         color: var(--dim);
-    }
-
-    form .errors {
-        padding: 10px 12px;
-        border: 1px solid #b4555d;
-        border-radius: 4px;
-        background: rgba(180, 85, 93, 0.14);
-        color: var(--fg);
-        font: 13px/1.5 var(--sans);
-    }
-
-    form .errors ul {
-        margin: 6px 0 0 0;
-        padding-left: 18px;
     }
 {% endblock %}
 

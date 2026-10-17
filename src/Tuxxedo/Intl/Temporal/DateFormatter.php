@@ -11,7 +11,10 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Intl;
+namespace Tuxxedo\Intl\Temporal;
+
+use Tuxxedo\Intl\LocaleInterface;
+use Tuxxedo\Intl\TranslationException;
 
 class DateFormatter implements DateFormatterInterface
 {

@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Intl;
+namespace Tuxxedo\Intl\Temporal;
 
 enum DateStyle: string
 {

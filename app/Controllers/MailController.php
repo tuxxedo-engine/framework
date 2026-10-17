@@ -26,6 +26,7 @@ use Tuxxedo\Router\Attribute\Controller;
 use Tuxxedo\Router\Attribute\Middleware;
 use Tuxxedo\Router\Attribute\Route;
 use Tuxxedo\Temporal\Instant;
+use Tuxxedo\Temporal\TemporalException;
 use Tuxxedo\Temporal\TimeZone;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewInterface;
@@ -37,14 +38,6 @@ readonly class MailController
         'en-US',
         'pt-PT',
         'pt-BR',
-    ];
-
-    private const array MAIL_TIME_ZONES = [
-        'UTC',
-        'Europe/Copenhagen',
-        'Europe/Lisbon',
-        'America/Sao_Paulo',
-        'America/New_York',
     ];
 
     public function __construct(
@@ -150,15 +143,16 @@ readonly class MailController
     ): ViewInterface {
         $to = $request->post->string('to');
         $language = $request->post->string('language');
-        $timeZone = $request->post->string('timeZone');
         $recipientName = $request->post->string('recipientName');
 
         if (!\in_array($language, self::MAIL_LANGUAGES, true)) {
             $language = self::MAIL_LANGUAGES[0];
         }
 
-        if (!\in_array($timeZone, self::MAIL_TIME_ZONES, true)) {
-            $timeZone = self::MAIL_TIME_ZONES[0];
+        try {
+            $timeZone = TimeZone::parse($request->post->string('timeZone'));
+        } catch (TemporalException) {
+            $timeZone = TimeZone::utc();
         }
 
         try {
@@ -167,7 +161,7 @@ readonly class MailController
                     translator: $this->translator,
                     to: $to,
                     locale: Locale::parse($language),
-                    timeZone: TimeZone::parse($timeZone),
+                    timeZone: $timeZone,
                     recipientName: $recipientName !== ''
                         ? $recipientName
                         : 'friend',
@@ -196,7 +190,7 @@ readonly class MailController
                 'resultMessage' => \sprintf(
                     'Order shipped template (%s, %s) dispatched to %s',
                     $language,
-                    $timeZone,
+                    $timeZone->name,
                     $to,
                 ),
             ],

@@ -129,6 +129,38 @@ class TranslationException extends Exception
         );
     }
 
+    public static function fromUnknownTimeZone(
+        string $name,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unknown time zone %s',
+                self::formatQuoted($name),
+            ),
+        );
+    }
+
+    public static function fromInvalidCountry(
+        string $country,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Country %s is not a two-letter ISO 3166-1 code',
+                self::formatQuoted($country),
+            ),
+        );
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public static function fromUnavailableTimeZoneData(): self
+    {
+        return new self(
+            message: 'ICU time zone data (zoneStrings / metaZones) is not available',
+        );
+    }
+
     public static function fromMissingCurrency(): self
     {
         return new self(
