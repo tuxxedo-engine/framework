@@ -386,6 +386,17 @@ class IntlFunctionsTest extends TestCase
         self::assertSame('09.05', $functions->localeDateShort(LocalTime::of(9, 5), 'da-DK'));
     }
 
+    public function testAsciiAndRomanizeTransliterate(): void
+    {
+        $functions = $this->makeFunctions(
+            catalogues: [],
+        );
+
+        self::assertSame('AEro Ost', $functions->ascii('Ærø Øst'));
+        self::assertSame('Ellada', $functions->ascii('Ελλάδα'));
+        self::assertSame('Elláda', $functions->romanize('Ελλάδα'));
+    }
+
     public function testLocaleAllListsDefaultAndSupportedLocales(): void
     {
         $functions = $this->makeFunctions(

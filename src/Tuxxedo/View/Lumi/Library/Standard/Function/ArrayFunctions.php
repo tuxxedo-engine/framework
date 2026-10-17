@@ -58,6 +58,16 @@ class ArrayFunctions
             );
         }
 
-        return \strrev($input);
+        if (\preg_match_all('/\X/u', $input, $matches) === false) {
+            return \join(
+                '',
+                \array_reverse(\mb_str_split($input)),
+            );
+        }
+
+        return \join(
+            '',
+            \array_reverse($matches[0]),
+        );
     }
 }

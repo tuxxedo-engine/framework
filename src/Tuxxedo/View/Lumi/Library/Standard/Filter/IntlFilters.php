@@ -18,6 +18,9 @@ use Tuxxedo\Intl\DateFormatterInterface;
 use Tuxxedo\Intl\DateStyle;
 use Tuxxedo\Intl\TranslationException;
 use Tuxxedo\Intl\TranslatorInterface;
+use Tuxxedo\Intl\Transliteration;
+use Tuxxedo\Intl\Transliterator;
+use Tuxxedo\Intl\TransliteratorInterface;
 use Tuxxedo\Temporal\InstantInterface;
 use Tuxxedo\Temporal\LocalDateInterface;
 use Tuxxedo\Temporal\LocalTimeInterface;
@@ -29,6 +32,7 @@ class IntlFilters
     public function __construct(
         private readonly TranslatorInterface $translator,
         private readonly DateFormatterInterface $dateFormatter = new DateFormatter(),
+        private readonly TransliteratorInterface $transliterator = new Transliterator(),
     ) {
     }
 
@@ -64,6 +68,29 @@ class IntlFilters
         return $this->formatDate(
             value: $value,
             dateStyle: DateStyle::SHORT,
+        );
+    }
+
+    /**
+     * @throws TranslationException
+     */
+    #[LumiFilter('ascii')]
+    public function ascii(
+        string $value,
+    ): string {
+        return $this->transliterator->transliterate($value);
+    }
+
+    /**
+     * @throws TranslationException
+     */
+    #[LumiFilter('romanize')]
+    public function romanize(
+        string $value,
+    ): string {
+        return $this->transliterator->transliterate(
+            value: $value,
+            transliteration: Transliteration::LATIN,
         );
     }
 

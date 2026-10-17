@@ -119,6 +119,18 @@ class StringFunctionsTest extends TestCase
         self::assertSame('こんに', $this->functions->truncate('こんにちは', 3));
     }
 
+    public function testTruncateKeepsGraphemeClustersWhole(): void
+    {
+        self::assertSame("A\u{030A}", $this->functions->truncate("A\u{030A}se", 1));
+        self::assertSame("\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}", $this->functions->truncate("\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467} hi", 1));
+        self::assertSame("\u{1F44D}\u{1F3FD}", $this->functions->truncate("\u{1F44D}\u{1F3FD}ok", 1));
+    }
+
+    public function testTruncateKeepsInvalidUtf8Intact(): void
+    {
+        self::assertSame("\xFFab", $this->functions->truncate("\xFFab", 3));
+    }
+
     public function testPadPadsOnBothSides(): void
     {
         self::assertSame('  hi  ', $this->functions->pad('hi', 6));
@@ -147,6 +159,28 @@ class StringFunctionsTest extends TestCase
     public function testRightPadUsesCustomPadString(): void
     {
         self::assertSame('hi***', $this->functions->rightPad('hi', 5, '*'));
+    }
+
+    public function testPadPutsTheExtraPaddingOnTheRight(): void
+    {
+        self::assertSame('-hi--', $this->functions->pad('hi', 5, '-'));
+    }
+
+    public function testPadCountsGraphemes(): void
+    {
+        self::assertSame("A\u{030A}se..", $this->functions->rightPad("A\u{030A}se", 5, '.'));
+        self::assertSame("a\u{1F44D}\u{1F3FD}\u{1F44D}\u{1F3FD}", $this->functions->rightPad('a', 3, "\u{1F44D}\u{1F3FD}"));
+    }
+
+    public function testPadCyclesMultiGraphemePadString(): void
+    {
+        self::assertSame('abahi', $this->functions->leftPad('hi', 5, 'ab'));
+    }
+
+    public function testPadReturnsStringUnchangedWhenLongEnoughOrPadStringEmpty(): void
+    {
+        self::assertSame('hello', $this->functions->rightPad('hello', 3));
+        self::assertSame('hi', $this->functions->pad('hi', 6, ''));
     }
 
     public function testNumberFormatsWithDefaults(): void

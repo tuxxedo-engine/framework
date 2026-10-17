@@ -109,4 +109,14 @@ class IntlFiltersTest extends TestCase
         self::assertSame('15.10.2026', $filters->localeDateShort(LocalDate::of(2026, 10, 15)));
         self::assertSame('14.30', $filters->localeDateShort(LocalTime::of(14, 30)));
     }
+
+    public function testAsciiAndRomanizeTransliterate(): void
+    {
+        $filters = $this->makeFilters(
+            catalogues: [],
+        );
+
+        self::assertSame('Moskva', $filters->ascii('Москва'));
+        self::assertSame('Elláda', $filters->romanize('Ελλάδα'));
+    }
 }

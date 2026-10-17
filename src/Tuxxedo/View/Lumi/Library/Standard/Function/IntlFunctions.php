@@ -25,6 +25,9 @@ use Tuxxedo\Intl\NumberFormatter;
 use Tuxxedo\Intl\NumberFormatterInterface;
 use Tuxxedo\Intl\TranslationException;
 use Tuxxedo\Intl\TranslatorInterface;
+use Tuxxedo\Intl\Transliteration;
+use Tuxxedo\Intl\Transliterator;
+use Tuxxedo\Intl\TransliteratorInterface;
 use Tuxxedo\Temporal\InstantInterface;
 use Tuxxedo\Temporal\LocalDateInterface;
 use Tuxxedo\Temporal\LocalTimeInterface;
@@ -33,13 +36,12 @@ use Tuxxedo\View\Lumi\Library\Attribute\LumiFunction;
 
 class IntlFunctions
 {
-    private ?\Transliterator $transliterator = null;
-
     public function __construct(
         private readonly TranslatorInterface $translator,
         private readonly CollatorInterface $collator = new Collator(),
         private readonly NumberFormatterInterface $numberFormatter = new NumberFormatter(),
         private readonly DateFormatterInterface $dateFormatter = new DateFormatter(),
+        private readonly TransliteratorInterface $transliterator = new Transliterator(),
     ) {
     }
 
@@ -139,8 +141,9 @@ class IntlFunctions
 
         foreach ($this->translator->supportedLocales as $locale) {
             $entries[] = [
-                $this->latinSortKey(
-                    name: $locale->displayName,
+                $this->transliterator->transliterate(
+                    value: $locale->displayName,
+                    transliteration: Transliteration::LATIN,
                 ),
                 $locale,
             ];
@@ -247,6 +250,29 @@ class IntlFunctions
     /**
      * @throws TranslationException
      */
+    #[LumiFunction('ascii')]
+    public function ascii(
+        string $value,
+    ): string {
+        return $this->transliterator->transliterate($value);
+    }
+
+    /**
+     * @throws TranslationException
+     */
+    #[LumiFunction('romanize')]
+    public function romanize(
+        string $value,
+    ): string {
+        return $this->transliterator->transliterate(
+            value: $value,
+            transliteration: Transliteration::LATIN,
+        );
+    }
+
+    /**
+     * @throws TranslationException
+     */
     private function formatDate(
         InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
         ?string $locale,
@@ -266,23 +292,4 @@ class IntlFunctions
         );
     }
 
-    /**
-     * @throws TranslationException
-     */
-    private function latinSortKey(
-        string $name,
-    ): string {
-        $this->transliterator ??= \Transliterator::create('Any-Latin');
-        $latin = $this->transliterator?->transliterate($name) ?? false;
-
-        if ($latin === false) {
-            // @codeCoverageIgnoreStart
-            throw TranslationException::fromTransliterationFailure(
-                input: $name,
-            );
-            // @codeCoverageIgnoreEnd
-        }
-
-        return $latin;
-    }
 }

@@ -149,13 +149,29 @@ class TranslationException extends Exception
     /**
      * @codeCoverageIgnore
      */
-    public static function fromTransliterationFailure(
-        string $input,
+    public static function fromUnavailableTransliteration(
+        string $rules,
     ): self {
         return new self(
             message: \sprintf(
-                'Unable to transliterate %s to Latin',
+                'ICU has no transliterator for %s',
+                self::formatQuoted($rules),
+            ),
+        );
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public static function fromTransliterationFailure(
+        string $input,
+        string $rules,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unable to transliterate %s using %s',
                 self::formatQuoted($input),
+                self::formatQuoted($rules),
             ),
         );
     }

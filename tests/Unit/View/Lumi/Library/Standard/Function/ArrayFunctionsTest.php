@@ -66,6 +66,18 @@ class ArrayFunctionsTest extends TestCase
         self::assertSame('olleh', $this->functions->reverse('hello'));
     }
 
+    public function testReverseKeepsGraphemeClustersWhole(): void
+    {
+        self::assertSame("esA\u{030A}", $this->functions->reverse("A\u{030A}se"));
+        self::assertSame("ko\u{1F44D}\u{1F3FD}", $this->functions->reverse("\u{1F44D}\u{1F3FD}ok"));
+        self::assertSame('esÅ', $this->functions->reverse('Åse'));
+    }
+
+    public function testReverseFallsBackToCodePointsForInvalidUtf8(): void
+    {
+        self::assertSame("\xFFba", $this->functions->reverse("ab\xFF"));
+    }
+
     public function testReverseReversesArrayAndKeepsKeys(): void
     {
         self::assertSame(

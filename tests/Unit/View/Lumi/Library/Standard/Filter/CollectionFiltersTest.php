@@ -81,4 +81,16 @@ class CollectionFiltersTest extends TestCase
     {
         self::assertSame(5, $this->filters->length('héllo'));
     }
+
+    public function testLengthCountsGraphemes(): void
+    {
+        self::assertSame(1, $this->filters->length("\u{1F44D}\u{1F3FD}"));
+        self::assertSame(1, $this->filters->length("A\u{030A}"));
+        self::assertSame(1, $this->filters->length("\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}"));
+    }
+
+    public function testLengthFallsBackToCodePointsForInvalidUtf8(): void
+    {
+        self::assertSame(3, $this->filters->length("\xFFab"));
+    }
 }

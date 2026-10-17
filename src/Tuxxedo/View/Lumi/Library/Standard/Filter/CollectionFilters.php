@@ -42,6 +42,10 @@ class CollectionFilters
             return \sizeof($value);
         }
 
-        return \mb_strlen($value);
+        $length = \preg_match_all('/\X/u', $value);
+
+        return $length !== false
+            ? $length
+            : \mb_strlen($value);
     }
 }

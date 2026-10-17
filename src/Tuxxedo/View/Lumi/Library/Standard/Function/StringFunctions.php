@@ -72,7 +72,10 @@ class StringFunctions
         string $value,
         int $position,
     ): string {
-        return \mb_substr($value, 0, $position);
+        return \join(
+            '',
+            \array_slice(self::graphemes($value), 0, $position),
+        );
     }
 
     #[LumiFunction('pad')]
@@ -81,7 +84,12 @@ class StringFunctions
         int $length,
         string $padString = ' ',
     ): string {
-        return \mb_str_pad($string, $length, $padString, \STR_PAD_BOTH);
+        return self::padGraphemes(
+            string: $string,
+            length: $length,
+            padString: $padString,
+            mode: \STR_PAD_BOTH,
+        );
     }
 
     #[LumiFunction('leftPad')]
@@ -90,7 +98,12 @@ class StringFunctions
         int $length,
         string $padString = ' ',
     ): string {
-        return \mb_str_pad($string, $length, $padString, \STR_PAD_LEFT);
+        return self::padGraphemes(
+            string: $string,
+            length: $length,
+            padString: $padString,
+            mode: \STR_PAD_LEFT,
+        );
     }
 
     #[LumiFunction('rightPad')]
@@ -99,7 +112,12 @@ class StringFunctions
         int $length,
         string $padString = ' ',
     ): string {
-        return \mb_str_pad($string, $length, $padString, \STR_PAD_RIGHT);
+        return self::padGraphemes(
+            string: $string,
+            length: $length,
+            padString: $padString,
+            mode: \STR_PAD_RIGHT,
+        );
     }
 
     #[LumiFunction('number')]
@@ -110,5 +128,58 @@ class StringFunctions
         string $thousandsSeparator = ',',
     ): string {
         return \number_format($number, $decimals, $decimalSeparator, $thousandsSeparator);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function graphemes(
+        string $value,
+    ): array {
+        if (\preg_match_all('/\X/u', $value, $matches) === false) {
+            return \mb_str_split($value);
+        }
+
+        return $matches[0];
+    }
+
+    private static function padGraphemes(
+        string $string,
+        int $length,
+        string $padString,
+        int $mode,
+    ): string {
+        $missing = $length - \sizeof(self::graphemes($string));
+        $padGraphemes = self::graphemes($padString);
+
+        if ($missing <= 0 || $padGraphemes === []) {
+            return $string;
+        }
+
+        $left = match ($mode) {
+            \STR_PAD_LEFT => $missing,
+            \STR_PAD_BOTH => \intdiv($missing, 2),
+            default => 0,
+        };
+
+        return self::repeatGraphemes($padGraphemes, $left) .
+            $string .
+            self::repeatGraphemes($padGraphemes, $missing - $left);
+    }
+
+    /**
+     * @param non-empty-list<string> $graphemes
+     */
+    private static function repeatGraphemes(
+        array $graphemes,
+        int $count,
+    ): string {
+        $result = '';
+
+        for ($i = 0; $i < $count; $i++) {
+            $result .= $graphemes[$i % \sizeof($graphemes)];
+        }
+
+        return $result;
     }
 }
