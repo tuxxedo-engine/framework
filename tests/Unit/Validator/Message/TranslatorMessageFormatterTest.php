@@ -353,6 +353,32 @@ class TranslatorMessageFormatterTest extends TestCase
         );
     }
 
+    public function testFormatIsolatesPathAndValueForRightToLeftLocale(): void
+    {
+        $formatter = new TranslatorMessageFormatter(
+            translator: $this->makeTranslator(
+                catalogues: [
+                    'ar' => [
+                        'fixture' => [
+                            'always-fail' => 'الحقل {path} رفض القيمة {value}',
+                        ],
+                    ],
+                ],
+            )->withLocale(Locale::parse('ar')),
+        );
+
+        self::assertSame(
+            "الحقل \u{2068}email\u{2069} رفض القيمة \u{2068}nope@example.com\u{2069}",
+            $formatter->format(
+                violation: new Violation(
+                    code: FixtureViolationCode::ALWAYS_FAIL,
+                    propertyPath: 'email',
+                    invalidValue: 'nope@example.com',
+                ),
+            ),
+        );
+    }
+
     /**
      * @return iterable<string, array{string}>
      */
