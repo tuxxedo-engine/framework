@@ -22,6 +22,8 @@ use Tuxxedo\Intl\PluralSelector;
 use Tuxxedo\Intl\Resolver\StaticLocaleResolver;
 use Tuxxedo\Intl\TranslationException;
 use Tuxxedo\Intl\Translator;
+use Tuxxedo\Temporal\LocalDate;
+use Tuxxedo\Temporal\LocalTime;
 use Tuxxedo\View\Lumi\Library\Standard\Function\IntlFunctions;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableDiscoverer;
 
@@ -367,6 +369,21 @@ class IntlFunctionsTest extends TestCase
         self::assertSame('1,234,567.89', $functions->localeNumber(1234567.891, 2));
         self::assertSame('1.234.567,89', $functions->localeNumber(1234567.891, 2, 'da-DK'));
         self::assertSame('1,235', $functions->localeNumber(1234.5));
+    }
+
+    public function testLocaleDateUsesTheTranslatorLocaleUnlessGiven(): void
+    {
+        $functions = $this->makeFunctions(
+            catalogues: [],
+        );
+
+        $value = new \DateTimeImmutable('2026-10-15 14:30:00', new \DateTimeZone('Europe/Copenhagen'));
+
+        self::assertSame('čtvrtek 15. října 2026 v 14:30', $functions->localeDateLong($value, 'cs-CZ'));
+        self::assertSame('15.10.26 14:30', $functions->localeDateShort($value, 'cs-CZ'));
+        self::assertSame('Thursday, October 15, 2026', $functions->localeDateLong(LocalDate::of(2026, 10, 15)));
+        self::assertSame('10/15/26', $functions->localeDateShort(LocalDate::of(2026, 10, 15)));
+        self::assertSame('09.05', $functions->localeDateShort(LocalTime::of(9, 5), 'da-DK'));
     }
 
     public function testLocaleAllListsDefaultAndSupportedLocales(): void

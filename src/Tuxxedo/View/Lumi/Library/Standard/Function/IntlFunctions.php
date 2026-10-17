@@ -15,6 +15,9 @@ namespace Tuxxedo\View\Lumi\Library\Standard\Function;
 
 use Tuxxedo\Intl\Collator;
 use Tuxxedo\Intl\CollatorInterface;
+use Tuxxedo\Intl\DateFormatter;
+use Tuxxedo\Intl\DateFormatterInterface;
+use Tuxxedo\Intl\DateStyle;
 use Tuxxedo\Intl\Locale;
 use Tuxxedo\Intl\LocaleDirection;
 use Tuxxedo\Intl\LocaleInterface;
@@ -22,6 +25,10 @@ use Tuxxedo\Intl\NumberFormatter;
 use Tuxxedo\Intl\NumberFormatterInterface;
 use Tuxxedo\Intl\TranslationException;
 use Tuxxedo\Intl\TranslatorInterface;
+use Tuxxedo\Temporal\InstantInterface;
+use Tuxxedo\Temporal\LocalDateInterface;
+use Tuxxedo\Temporal\LocalTimeInterface;
+use Tuxxedo\Temporal\TemporalCoercion;
 use Tuxxedo\View\Lumi\Library\Attribute\LumiFunction;
 
 class IntlFunctions
@@ -32,6 +39,7 @@ class IntlFunctions
         private readonly TranslatorInterface $translator,
         private readonly CollatorInterface $collator = new Collator(),
         private readonly NumberFormatterInterface $numberFormatter = new NumberFormatter(),
+        private readonly DateFormatterInterface $dateFormatter = new DateFormatter(),
     ) {
     }
 
@@ -203,6 +211,58 @@ class IntlFunctions
                 ? Locale::parse($locale)
                 : $this->translator->locale,
             decimals: $decimals,
+        );
+    }
+
+    /**
+     * @throws TranslationException
+     */
+    #[LumiFunction('locale_date_long')]
+    public function localeDateLong(
+        InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
+        ?string $locale = null,
+    ): string {
+        return $this->formatDate(
+            value: $value,
+            locale: $locale,
+            dateStyle: DateStyle::FULL,
+        );
+    }
+
+    /**
+     * @throws TranslationException
+     */
+    #[LumiFunction('locale_date_short')]
+    public function localeDateShort(
+        InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
+        ?string $locale = null,
+    ): string {
+        return $this->formatDate(
+            value: $value,
+            locale: $locale,
+            dateStyle: DateStyle::SHORT,
+        );
+    }
+
+    /**
+     * @throws TranslationException
+     */
+    private function formatDate(
+        InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
+        ?string $locale,
+        DateStyle $dateStyle,
+    ): string {
+        return $this->dateFormatter->format(
+            value: TemporalCoercion::toDateTime($value),
+            locale: $locale !== null
+                ? Locale::parse($locale)
+                : $this->translator->locale,
+            dateStyle: $value instanceof LocalTimeInterface
+                ? DateStyle::NONE
+                : $dateStyle,
+            timeStyle: $value instanceof LocalDateInterface
+                ? DateStyle::NONE
+                : DateStyle::SHORT,
         );
     }
 

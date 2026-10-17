@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 return [
     'title' => 'Hřiště modelů',
+    'renderedAt' => 'Vygenerováno: {date}',
 
     'action.new' => 'Nový',
     'action.table' => 'Tabulka',

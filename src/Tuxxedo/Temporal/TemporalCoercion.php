@@ -37,6 +37,27 @@ class TemporalCoercion
         return Instant::parse($value);
     }
 
+    public static function toDateTime(
+        InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
+    ): \DateTimeImmutable {
+        if ($value instanceof LocalDateInterface) {
+            return $value->atStartOfDay(TimeZone::utc())->toDateTime();
+        }
+
+        if ($value instanceof LocalTimeInterface) {
+            return $value->onDate(
+                date: LocalDate::of(
+                    year: 1970,
+                    month: 1,
+                    day: 1,
+                ),
+                timeZone: TimeZone::utc(),
+            )->toDateTime();
+        }
+
+        return self::toInstant($value)->toDateTime();
+    }
+
     public static function format(
         InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
         string $pattern,

@@ -135,6 +135,20 @@ class TranslationException extends Exception
     /**
      * @codeCoverageIgnore
      */
+    public static function fromDateFormatFailure(
+        string $tag,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unable to format a date for locale %s',
+                self::formatQuoted($tag),
+            ),
+        );
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
     public static function fromTransliterationFailure(
         string $input,
     ): self {

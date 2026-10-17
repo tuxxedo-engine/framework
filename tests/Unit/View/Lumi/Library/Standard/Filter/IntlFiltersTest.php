@@ -20,6 +20,9 @@ use Tuxxedo\Intl\Locale;
 use Tuxxedo\Intl\PluralSelector;
 use Tuxxedo\Intl\Resolver\StaticLocaleResolver;
 use Tuxxedo\Intl\Translator;
+use Tuxxedo\Temporal\Instant;
+use Tuxxedo\Temporal\LocalDate;
+use Tuxxedo\Temporal\LocalTime;
 use Tuxxedo\View\Lumi\Library\Standard\Filter\IntlFilters;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableDiscoverer;
 
@@ -30,10 +33,11 @@ class IntlFiltersTest extends TestCase
      */
     private function makeFilters(
         array $catalogues,
+        string $defaultLocale = 'en-US',
     ): IntlFilters {
         $config = new IntlConfig(
             rootDirectory: '/unused',
-            defaultLocale: Locale::parse('en-US'),
+            defaultLocale: Locale::parse($defaultLocale),
         );
 
         return new IntlFilters(
@@ -90,5 +94,19 @@ class IntlFiltersTest extends TestCase
 
         self::assertContains('translate', $names);
         self::assertNotContains('t', $names);
+    }
+
+    public function testLocaleDateFiltersUseTheTranslatorLocale(): void
+    {
+        $filters = $this->makeFilters(
+            catalogues: [],
+            defaultLocale: 'da-DK',
+        );
+
+        $instant = Instant::parse('2026-10-15T12:30:00+00:00');
+
+        self::assertSame('torsdag den 15. oktober 2026 kl. 12.30', $filters->localeDateLong($instant));
+        self::assertSame('15.10.2026', $filters->localeDateShort(LocalDate::of(2026, 10, 15)));
+        self::assertSame('14.30', $filters->localeDateShort(LocalTime::of(14, 30)));
     }
 }

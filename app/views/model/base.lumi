@@ -276,6 +276,9 @@
             </div>
         </header>
         {% yield content %}
+        <footer>
+            <small>{{ t('model.renderedAt', ['date': date_now('c') | locale_date_long]) }}</small>
+        </footer>
     </main>
     <script>
         document.addEventListener(

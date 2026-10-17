@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 return [
     'title' => 'Model Playground',
+    'renderedAt' => 'Rendered: {date}',
 
     'action.new' => 'New',
     'action.table' => 'Table',
