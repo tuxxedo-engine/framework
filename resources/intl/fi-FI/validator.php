@@ -44,6 +44,8 @@ return [
     'date-time.invalid-format' => 'Arvo kohdassa "{path}" ei ole kelvollinen päivämäärä/aika',
     'duration.invalid-format' => 'Arvo kohdassa "{path}" ei ole kelvollinen ISO 8601 -kesto ({reason})',
     'time-zone.unknown' => 'Arvo kohdassa "{path}" ({received}) ei ole tunnettu aikavyöhyke',
+    'time-zone-identifier.not-identifier' => 'Arvo kohdassa "{path}" ({value}) ei ole nimetty aikavyöhyke',
+    'time-zone-country.not-in-country' => 'Arvo kohdassa "{path}" ({value}) ei ole aikavyöhyke maassa {country}',
     'instant.not-before' => 'Arvon kohdassa "{path}" on oltava aiemmin kuin {anchor}',
     'instant.not-after' => 'Arvon kohdassa "{path}" on oltava myöhemmin kuin {anchor}',
     'period.inverted' => 'Jakso kohdassa "{path}" on käänteinen: loppu ({end}) on ennen alkua ({start})',
@@ -65,6 +67,9 @@ return [
     'credit-card.invalid-checksum' => 'Arvolla kohdassa "{path}" on virheellinen luottokortin tarkistussumma',
     'country-code.not-recognized' => 'Arvo kohdassa "{path}" ({value}) ei ole tunnettu ISO 3166-1 alpha-2 -maakoodi',
     'language-code.not-recognized' => 'Arvo kohdassa "{path}" ({value}) ei ole tunnettu ISO 639-1 -kielikoodi',
+    'currency-code.not-recognized' => 'Arvo kohdassa "{path}" ({value}) ei ole tunnettu ISO 4217 -valuuttakoodi',
+    'locale.invalid' => 'Arvo kohdassa "{path}" ({value}) ei ole kelvollinen kielitunniste',
+    'supported-locale.not-supported' => 'Arvo kohdassa "{path}" ({value}) ei ole tuettu kieli',
     'enum.wrong-instance' => 'Arvon kohdassa "{path}" on oltava {expected}-instanssi, saatiin {received}',
     'fallback' => 'Validointi epäonnistui kohdassa "{path}" ({code})',
 ];

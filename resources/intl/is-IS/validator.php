@@ -44,6 +44,8 @@ return [
     'date-time.invalid-format' => 'Gildið á "{path}" er ekki gild dagsetning/tími',
     'duration.invalid-format' => 'Gildið á "{path}" er ekki gilt ISO 8601-tímabil ({reason})',
     'time-zone.unknown' => 'Gildið á "{path}" ({received}) er ekki þekkt tímabelti',
+    'time-zone-identifier.not-identifier' => 'Gildið á "{path}" ({value}) er ekki nefnt tímabelti',
+    'time-zone-country.not-in-country' => 'Gildið á "{path}" ({value}) er ekki tímabelti í {country}',
     'instant.not-before' => 'Gildið á "{path}" verður að vera fyrir {anchor}',
     'instant.not-after' => 'Gildið á "{path}" verður að vera eftir {anchor}',
     'period.inverted' => 'Tímabilið á "{path}" er öfugt: lok ({end}) eru á undan upphafi ({start})',
@@ -65,6 +67,9 @@ return [
     'credit-card.invalid-checksum' => 'Gildið á "{path}" hefur ógilda kreditkortavartölu',
     'country-code.not-recognized' => 'Gildið á "{path}" ({value}) er ekki þekktur ISO 3166-1 alpha-2-landskóði',
     'language-code.not-recognized' => 'Gildið á "{path}" ({value}) er ekki þekktur ISO 639-1-tungumálakóði',
+    'currency-code.not-recognized' => 'Gildið á "{path}" ({value}) er ekki þekktur ISO 4217-gjaldmiðilskóði',
+    'locale.invalid' => 'Gildið á "{path}" ({value}) er ekki gilt tungumálsauðkenni',
+    'supported-locale.not-supported' => 'Gildið á "{path}" ({value}) er ekki stutt tungumál',
     'enum.wrong-instance' => 'Gildið á "{path}" verður að vera tilvik af {expected}, fékk {received}',
     'fallback' => 'Staðfesting mistókst á "{path}" ({code})',
 ];

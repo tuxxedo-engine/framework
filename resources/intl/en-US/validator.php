@@ -44,6 +44,8 @@ return [
     'date-time.invalid-format' => 'Value at "{path}" is not a valid date/time',
     'duration.invalid-format' => 'Value at "{path}" is not a valid ISO 8601 duration ({reason})',
     'time-zone.unknown' => 'Value at "{path}" ({received}) is not a recognized time zone',
+    'time-zone-identifier.not-identifier' => 'Value at "{path}" ({value}) is not a named time zone',
+    'time-zone-country.not-in-country' => 'Value at "{path}" ({value}) is not a time zone in {country}',
     'instant.not-before' => 'Value at "{path}" must be before {anchor}',
     'instant.not-after' => 'Value at "{path}" must be after {anchor}',
     'period.inverted' => 'Period at "{path}" is inverted: end ({end}) precedes start ({start})',
@@ -65,6 +67,9 @@ return [
     'credit-card.invalid-checksum' => 'Value at "{path}" has an invalid credit card checksum',
     'country-code.not-recognized' => 'Value at "{path}" ({value}) is not a recognized ISO 3166-1 alpha-2 country code',
     'language-code.not-recognized' => 'Value at "{path}" ({value}) is not a recognized ISO 639-1 language code',
+    'currency-code.not-recognized' => 'Value at "{path}" ({value}) is not a recognized ISO 4217 currency code',
+    'locale.invalid' => 'Value at "{path}" ({value}) is not a valid locale tag',
+    'supported-locale.not-supported' => 'Value at "{path}" ({value}) is not a supported language',
     'enum.wrong-instance' => 'Value at "{path}" must be an instance of {expected}, got {received}',
     'fallback' => 'Validation failed at "{path}" ({code})',
 ];

@@ -29,4 +29,15 @@ class ValidatorException extends Exception
             ),
         );
     }
+
+    public static function fromInvalidCountryCode(
+        string $country,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Country "%s" is not a two-letter ISO 3166-1 code',
+                $country,
+            ),
+        );
+    }
 }

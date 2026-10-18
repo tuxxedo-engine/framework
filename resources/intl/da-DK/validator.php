@@ -44,6 +44,8 @@ return [
     'date-time.invalid-format' => 'Værdien ved "{path}" er ikke en gyldig dato/tid',
     'duration.invalid-format' => 'Værdien ved "{path}" er ikke en gyldig ISO 8601-varighed ({reason})',
     'time-zone.unknown' => 'Værdien ved "{path}" ({received}) er ikke en kendt tidszone',
+    'time-zone-identifier.not-identifier' => 'Værdien ved "{path}" ({value}) er ikke en navngiven tidszone',
+    'time-zone-country.not-in-country' => 'Værdien ved "{path}" ({value}) er ikke en tidszone i {country}',
     'instant.not-before' => 'Værdien ved "{path}" skal være før {anchor}',
     'instant.not-after' => 'Værdien ved "{path}" skal være efter {anchor}',
     'period.inverted' => 'Perioden ved "{path}" er omvendt: slut ({end}) ligger før start ({start})',
@@ -65,6 +67,9 @@ return [
     'credit-card.invalid-checksum' => 'Værdien ved "{path}" har en ugyldig kreditkortkontrolsum',
     'country-code.not-recognized' => 'Værdien ved "{path}" ({value}) er ikke en kendt ISO 3166-1 alpha-2-landekode',
     'language-code.not-recognized' => 'Værdien ved "{path}" ({value}) er ikke en kendt ISO 639-1-sprogkode',
+    'currency-code.not-recognized' => 'Værdien ved "{path}" ({value}) er ikke en kendt ISO 4217-valutakode',
+    'locale.invalid' => 'Værdien ved "{path}" ({value}) er ikke et gyldigt sprogkode-tag',
+    'supported-locale.not-supported' => 'Værdien ved "{path}" ({value}) er ikke et understøttet sprog',
     'enum.wrong-instance' => 'Værdien ved "{path}" skal være en instans af {expected}, fik {received}',
     'fallback' => 'Validering fejlede ved "{path}" ({code})',
 ];

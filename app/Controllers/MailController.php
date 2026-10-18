@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Input\OrderShippedMailInput;
 use App\Mail\OrderShippedMail;
 use App\Mail\WelcomeMail;
 use Tuxxedo\Container\ContainerInterface;
@@ -32,25 +33,23 @@ use Tuxxedo\Router\Attribute\Middleware;
 use Tuxxedo\Router\Attribute\Route;
 use Tuxxedo\Temporal\Duration;
 use Tuxxedo\Temporal\Instant;
-use Tuxxedo\Temporal\TemporalException;
 use Tuxxedo\Temporal\TimeZone;
+use Tuxxedo\Validator\Message\MessageFormatterInterface;
+use Tuxxedo\Validator\ValidationException;
+use Tuxxedo\Validator\ValidatorInterface;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewInterface;
 
 #[Controller(path: '/mail')]
 readonly class MailController
 {
-    private const array MAIL_LANGUAGES = [
-        'en-US',
-        'pt-PT',
-        'pt-BR',
-    ];
-
     public function __construct(
         private MailManagerInterface $mailManager,
         private TranslatorInterface $translator,
         private MailManagerConfigInterface $mailConfig,
         private ContainerInterface $container,
+        private ValidatorInterface $validator,
+        private MessageFormatterInterface $messageFormatter,
     ) {
     }
 
@@ -149,10 +148,20 @@ readonly class MailController
     public function sendLocalized(
         RequestInterface $request,
     ): ViewInterface {
-        $mail = $this->orderShippedMail($request);
-
         try {
-            $this->mailManager->send($mail);
+            $input = $this->orderShippedInput($request);
+
+            $this->mailManager->send(
+                $this->orderShippedMail($input),
+            );
+        } catch (ValidationException $e) {
+            return new View(
+                name: 'mail_form',
+                scope: [
+                    'resultSuccess' => false,
+                    'resultMessage' => \join(' ', $this->formatViolations($e)),
+                ],
+            );
         } catch (MailException $e) {
             return new View(
                 name: 'mail_form',
@@ -168,10 +177,11 @@ readonly class MailController
             scope: [
                 'resultSuccess' => true,
                 'resultMessage' => \sprintf(
-                    'Order shipped template (%s, %s) dispatched to %s',
-                    $mail->locale->tag,
-                    $mail->timeZone->name,
-                    $request->post->string('to'),
+                    'Order shipped template (%s, %s, %s) dispatched to %s',
+                    $input->language,
+                    $input->timeZone,
+                    $input->currency,
+                    $input->to,
                 ),
             ],
         );
@@ -191,41 +201,72 @@ readonly class MailController
             );
         }
 
+        try {
+            $input = $this->orderShippedInput($request);
+        } catch (ValidationException $e) {
+            return Response::text(
+                text: \join(\PHP_EOL, $this->formatViolations($e)),
+                responseCode: ResponseCode::UNPROCESSABLE_ENTITY,
+            );
+        }
+
         return Response::html(
-            html: $render->render($this->orderShippedMail($request))->body ?? '',
+            html: $render->render($this->orderShippedMail($input))->body ?? '',
         );
     }
 
-    private function orderShippedMail(
+    /**
+     * @throws ValidationException
+     */
+    private function orderShippedInput(
         RequestInterface $request,
+    ): OrderShippedMailInput {
+        $input = new OrderShippedMailInput(
+            to: $request->post->string('to'),
+            recipientName: $request->post->string('recipientName'),
+            language: $request->post->string('language'),
+            timeZone: $request->post->string('timeZone'),
+            currency: $request->post->string('currency'),
+            itemCount: $request->post->int('itemCount'),
+        );
+
+        $this->validator->validateOrThrow($input);
+
+        return $input;
+    }
+
+    private function orderShippedMail(
+        OrderShippedMailInput $input,
     ): OrderShippedMail {
-        $language = $request->post->string('language');
-        $recipientName = $request->post->string('recipientName');
-
-        if (!\in_array($language, self::MAIL_LANGUAGES, true)) {
-            $language = self::MAIL_LANGUAGES[0];
-        }
-
-        try {
-            $timeZone = TimeZone::parse($request->post->string('timeZone'));
-        } catch (TemporalException) {
-            $timeZone = TimeZone::utc();
-        }
-
         return new OrderShippedMail(
             translator: $this->translator,
-            to: $request->post->string('to'),
-            locale: Locale::parse($language),
-            timeZone: $timeZone,
-            recipientName: $recipientName !== ''
-                ? $recipientName
+            to: $input->to,
+            locale: Locale::parse($input->language),
+            timeZone: TimeZone::parse($input->timeZone),
+            recipientName: $input->recipientName !== ''
+                ? $input->recipientName
                 : 'friend',
             orderNumber: '10427',
-            itemCount: $request->post->int('itemCount'),
+            itemCount: $input->itemCount,
             total: 1234.5,
-            currency: 'EUR',
+            currency: \strtoupper($input->currency),
             shippedAt: Instant::now()->minus(Duration::fromHours(3)),
             trackingUrl: 'https://example.com/track/10427',
         );
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function formatViolations(
+        ValidationException $exception,
+    ): array {
+        $errors = [];
+
+        foreach ($exception->violations as $violation) {
+            $errors[] = $this->messageFormatter->format($violation);
+        }
+
+        return $errors;
     }
 }

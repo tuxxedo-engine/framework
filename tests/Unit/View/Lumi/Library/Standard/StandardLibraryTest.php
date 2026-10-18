@@ -27,7 +27,12 @@ class StandardLibraryTest extends TestCase
     {
         foreach (StandardLibrary::functions() as $className) {
             foreach (CallableDiscoverer::discoverFunctions($className) as $metadata) {
-                foreach ([$metadata->name, ...$metadata->aliases] as $name) {
+                $names = [
+                    $metadata->name,
+                    ...$metadata->aliases,
+                ];
+
+                foreach ($names as $name) {
                     yield 'function ' . $name => [
                         $name,
                     ];
@@ -37,7 +42,12 @@ class StandardLibraryTest extends TestCase
 
         foreach (StandardLibrary::filters() as $className) {
             foreach (CallableDiscoverer::discoverFilters($className) as $metadata) {
-                foreach ([$metadata->name, ...$metadata->aliases] as $name) {
+                $names = [
+                    $metadata->name,
+                    ...$metadata->aliases,
+                ];
+
+                foreach ($names as $name) {
                     yield 'filter ' . $name => [
                         $name,
                     ];
