@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Validator\Rule\SuffixedWith;
 
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Intl\Normalize;
 use Tuxxedo\Validator\CommonViolationCode;
 use Tuxxedo\Validator\RuleInterface;
 use Tuxxedo\Validator\ValidationContextInterface;
@@ -26,6 +27,7 @@ class SuffixedWithRule implements RuleInterface
 {
     public function __construct(
         public readonly string $suffix,
+        public readonly Normalize $normalize = Normalize::CANONICAL,
     ) {
     }
 
@@ -50,7 +52,7 @@ class SuffixedWithRule implements RuleInterface
             );
         }
 
-        if (!\str_ends_with($value, $this->suffix)) {
+        if (!\str_ends_with($this->normalize->apply($value), $this->normalize->apply($this->suffix))) {
             return new Violation(
                 code: SuffixedWithViolationCode::MISSING_SUFFIX,
                 propertyPath: $context->currentPath,

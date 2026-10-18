@@ -16,6 +16,7 @@ namespace Unit\Validator\Rule\NotEqualTo;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Support\Validator\RuleTestingTrait;
+use Tuxxedo\Intl\Normalize;
 use Tuxxedo\Validator\Rule\NotEqualTo\NotEqualToRule;
 use Tuxxedo\Validator\Rule\NotEqualTo\NotEqualToViolationCode;
 use Tuxxedo\Validator\Rule\NotEqualTo\NotEqualToViolationContext;
@@ -96,5 +97,27 @@ class NotEqualToRuleTest extends TestCase
         self::assertNotNull($result);
         self::assertInstanceOf(NotEqualToViolationContext::class, $result->context);
         self::assertSame('admin', $result->context->disallowed);
+    }
+
+    public function testStringsAreComparedAfterNormalization(): void
+    {
+        self::assertNotNull(
+            $this->runRule(
+                rule: new NotEqualToRule(
+                    disallowed: 'Café',
+                ),
+                value: "Cafe\u{0301}",
+            ),
+        );
+
+        self::assertNull(
+            $this->runRule(
+                rule: new NotEqualToRule(
+                    disallowed: 'Café',
+                    normalize: Normalize::NONE,
+                ),
+                value: "Cafe\u{0301}",
+            ),
+        );
     }
 }

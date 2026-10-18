@@ -57,6 +57,7 @@ return [
     'ipv6.invalid-format' => 'Value at "{path}" is not a valid IPv6 address',
     'alpha.not-alpha' => 'Value at "{path}" must contain only letters',
     'alpha-numeric.not-alphanumeric' => 'Value at "{path}" must contain only letters and digits',
+    'not-suspicious.suspicious' => 'Value at "{path}" contains characters that can be mistaken for others',
     'iban.invalid-format' => 'Value at "{path}" is not a valid IBAN',
     'iban.invalid-checksum' => 'Value at "{path}" has an invalid IBAN checksum',
     'credit-card.invalid-format' => 'Value at "{path}" is not a valid credit card number',

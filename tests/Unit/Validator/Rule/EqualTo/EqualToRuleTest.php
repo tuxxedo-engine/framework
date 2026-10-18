@@ -16,6 +16,7 @@ namespace Unit\Validator\Rule\EqualTo;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Support\Validator\RuleTestingTrait;
+use Tuxxedo\Intl\Normalize;
 use Tuxxedo\Validator\Rule\EqualTo\EqualToRule;
 use Tuxxedo\Validator\Rule\EqualTo\EqualToViolationCode;
 use Tuxxedo\Validator\Rule\EqualTo\EqualToViolationContext;
@@ -102,5 +103,27 @@ class EqualToRuleTest extends TestCase
         self::assertNotNull($result);
         self::assertInstanceOf(EqualToViolationContext::class, $result->context);
         self::assertSame(42, $result->context->expected);
+    }
+
+    public function testStringsAreComparedAfterNormalization(): void
+    {
+        self::assertNull(
+            $this->runRule(
+                rule: new EqualToRule(
+                    expected: 'Café',
+                ),
+                value: "Cafe\u{0301}",
+            ),
+        );
+
+        self::assertNotNull(
+            $this->runRule(
+                rule: new EqualToRule(
+                    expected: 'Café',
+                    normalize: Normalize::NONE,
+                ),
+                value: "Cafe\u{0301}",
+            ),
+        );
     }
 }

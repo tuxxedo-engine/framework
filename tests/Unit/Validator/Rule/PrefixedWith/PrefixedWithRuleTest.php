@@ -16,6 +16,7 @@ namespace Unit\Validator\Rule\PrefixedWith;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Support\Validator\RuleTestingTrait;
+use Tuxxedo\Intl\Normalize;
 use Tuxxedo\Validator\CommonViolationCode;
 use Tuxxedo\Validator\Rule\PrefixedWith\PrefixedWithRule;
 use Tuxxedo\Validator\Rule\PrefixedWith\PrefixedWithViolationCode;
@@ -91,5 +92,27 @@ class PrefixedWithRuleTest extends TestCase
         self::assertNotNull($result);
         self::assertInstanceOf(PrefixedWithViolationContext::class, $result->context);
         self::assertSame('foo-', $result->context->prefix);
+    }
+
+    public function testStringsAreComparedAfterNormalization(): void
+    {
+        self::assertNull(
+            $this->runRule(
+                rule: new PrefixedWithRule(
+                    prefix: 'Café',
+                ),
+                value: "Cafe\u{0301} noir",
+            ),
+        );
+
+        self::assertNotNull(
+            $this->runRule(
+                rule: new PrefixedWithRule(
+                    prefix: 'Café',
+                    normalize: Normalize::NONE,
+                ),
+                value: "Cafe\u{0301} noir",
+            ),
+        );
     }
 }

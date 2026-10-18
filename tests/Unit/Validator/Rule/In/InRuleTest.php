@@ -17,6 +17,7 @@ use Fixture\Validator\FixtureStatus;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Support\Validator\RuleTestingTrait;
+use Tuxxedo\Intl\Normalize;
 use Tuxxedo\Validator\Rule\In\InRule;
 use Tuxxedo\Validator\Rule\In\InViolationCode;
 use Tuxxedo\Validator\Rule\In\InViolationContext;
@@ -142,6 +143,44 @@ class InRuleTest extends TestCase
                 'blue',
             ],
             $result->context->allowed,
+        );
+    }
+
+    public function testStringsAreComparedAfterNormalization(): void
+    {
+        self::assertNull(
+            $this->runRule(
+                rule: new InRule(
+                    values: [
+                        'Café',
+                        42,
+                    ],
+                ),
+                value: "Cafe\u{0301}",
+            ),
+        );
+
+        self::assertNull(
+            $this->runRule(
+                rule: new InRule(
+                    values: [
+                        'admin',
+                    ],
+                    normalize: Normalize::COMPATIBLE,
+                ),
+                value: "\u{FF41}\u{FF44}\u{FF4D}\u{FF49}\u{FF4E}",
+            ),
+        );
+
+        self::assertNotNull(
+            $this->runRule(
+                rule: new InRule(
+                    values: [
+                        'admin',
+                    ],
+                ),
+                value: "\u{FF41}\u{FF44}\u{FF4D}\u{FF49}\u{FF4E}",
+            ),
         );
     }
 }

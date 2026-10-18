@@ -16,6 +16,7 @@ namespace Unit\Validator\Rule\SuffixedWith;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Support\Validator\RuleTestingTrait;
+use Tuxxedo\Intl\Normalize;
 use Tuxxedo\Validator\CommonViolationCode;
 use Tuxxedo\Validator\Rule\SuffixedWith\SuffixedWithRule;
 use Tuxxedo\Validator\Rule\SuffixedWith\SuffixedWithViolationCode;
@@ -91,5 +92,27 @@ class SuffixedWithRuleTest extends TestCase
         self::assertNotNull($result);
         self::assertInstanceOf(SuffixedWithViolationContext::class, $result->context);
         self::assertSame('.txt', $result->context->suffix);
+    }
+
+    public function testStringsAreComparedAfterNormalization(): void
+    {
+        self::assertNull(
+            $this->runRule(
+                rule: new SuffixedWithRule(
+                    suffix: 'Café',
+                ),
+                value: "Le Cafe\u{0301}",
+            ),
+        );
+
+        self::assertNotNull(
+            $this->runRule(
+                rule: new SuffixedWithRule(
+                    suffix: 'Café',
+                    normalize: Normalize::NONE,
+                ),
+                value: "Le Cafe\u{0301}",
+            ),
+        );
     }
 }

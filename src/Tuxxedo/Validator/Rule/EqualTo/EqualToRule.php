@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Validator\Rule\EqualTo;
 
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Intl\Normalize;
 use Tuxxedo\Validator\RuleInterface;
 use Tuxxedo\Validator\ValidationContextInterface;
 use Tuxxedo\Validator\Violation;
@@ -24,6 +25,7 @@ class EqualToRule implements RuleInterface
 {
     public function __construct(
         public readonly int|float|string|bool|null $expected,
+        public readonly Normalize $normalize = Normalize::CANONICAL,
     ) {
     }
 
@@ -32,7 +34,11 @@ class EqualToRule implements RuleInterface
         ValidationContextInterface $context,
         ContainerInterface $container,
     ): ?ViolationInterface {
-        if ($value === $this->expected) {
+        if (\is_string($value) && \is_string($this->expected)) {
+            if ($this->normalize->apply($value) === $this->normalize->apply($this->expected)) {
+                return null;
+            }
+        } elseif ($value === $this->expected) {
             return null;
         }
 

@@ -16,6 +16,7 @@ namespace Unit\Validator\Rule\Contains;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Support\Validator\RuleTestingTrait;
+use Tuxxedo\Intl\Normalize;
 use Tuxxedo\Validator\CommonViolationCode;
 use Tuxxedo\Validator\Rule\Contains\ContainsRule;
 use Tuxxedo\Validator\Rule\Contains\ContainsViolationCode;
@@ -91,5 +92,27 @@ class ContainsRuleTest extends TestCase
         self::assertNotNull($result);
         self::assertInstanceOf(ContainsViolationContext::class, $result->context);
         self::assertSame('x', $result->context->needle);
+    }
+
+    public function testStringsAreComparedAfterNormalization(): void
+    {
+        self::assertNull(
+            $this->runRule(
+                rule: new ContainsRule(
+                    needle: 'Café',
+                ),
+                value: "Le Cafe\u{0301} noir",
+            ),
+        );
+
+        self::assertNotNull(
+            $this->runRule(
+                rule: new ContainsRule(
+                    needle: 'Café',
+                    normalize: Normalize::NONE,
+                ),
+                value: "Le Cafe\u{0301} noir",
+            ),
+        );
     }
 }

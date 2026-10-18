@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Validator\Rule\NotIn;
 
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Intl\Normalize;
 use Tuxxedo\Validator\RuleInterface;
 use Tuxxedo\Validator\ValidationContextInterface;
 use Tuxxedo\Validator\Violation;
@@ -32,6 +33,7 @@ class NotInRule implements RuleInterface
      */
     public function __construct(
         array $values,
+        public readonly Normalize $normalize = Normalize::CANONICAL,
     ) {
         $this->values = $values;
     }
@@ -41,10 +43,21 @@ class NotInRule implements RuleInterface
         ValidationContextInterface $context,
         ContainerInterface $container,
     ): ?ViolationInterface {
-        $normalized = self::normalize($this->values);
+        $disallowed = self::unwrap($this->values);
         $probe = $value instanceof \BackedEnum ? $value->value : $value;
+        $comparable = $disallowed;
 
-        if (!\in_array($probe, $normalized, true)) {
+        if (\is_string($probe)) {
+            $probe = $this->normalize->apply($probe);
+            $comparable = \array_map(
+                fn (string|int $entry): string|int => \is_string($entry)
+                    ? $this->normalize->apply($entry)
+                    : $entry,
+                $disallowed,
+            );
+        }
+
+        if (!\in_array($probe, $comparable, true)) {
             return null;
         }
 
@@ -53,7 +66,7 @@ class NotInRule implements RuleInterface
             propertyPath: $context->currentPath,
             invalidValue: $value,
             context: new NotInViolationContext(
-                disallowed: $normalized,
+                disallowed: $disallowed,
             ),
         );
     }
@@ -62,15 +75,15 @@ class NotInRule implements RuleInterface
      * @param list<string|int|\BackedEnum> $values
      * @return list<string|int>
      */
-    private static function normalize(
+    private static function unwrap(
         array $values,
     ): array {
-        $normalized = [];
+        $unwrapped = [];
 
         foreach ($values as $entry) {
-            $normalized[] = $entry instanceof \BackedEnum ? $entry->value : $entry;
+            $unwrapped[] = $entry instanceof \BackedEnum ? $entry->value : $entry;
         }
 
-        return $normalized;
+        return $unwrapped;
     }
 }

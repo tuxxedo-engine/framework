@@ -57,6 +57,7 @@ return [
     'ipv6.invalid-format' => 'Værdien ved "{path}" er ikke en gyldig IPv6-adresse',
     'alpha.not-alpha' => 'Værdien ved "{path}" må kun indeholde bogstaver',
     'alpha-numeric.not-alphanumeric' => 'Værdien ved "{path}" må kun indeholde bogstaver og cifre',
+    'not-suspicious.suspicious' => 'Værdien ved "{path}" indeholder tegn, der kan forveksles med andre',
     'iban.invalid-format' => 'Værdien ved "{path}" er ikke et gyldigt IBAN',
     'iban.invalid-checksum' => 'Værdien ved "{path}" har en ugyldig IBAN-kontrolsum',
     'credit-card.invalid-format' => 'Værdien ved "{path}" er ikke et gyldigt kreditkortnummer',

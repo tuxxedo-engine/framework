@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Validator\Rule\PrefixedWith;
 
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Intl\Normalize;
 use Tuxxedo\Validator\CommonViolationCode;
 use Tuxxedo\Validator\RuleInterface;
 use Tuxxedo\Validator\ValidationContextInterface;
@@ -26,6 +27,7 @@ class PrefixedWithRule implements RuleInterface
 {
     public function __construct(
         public readonly string $prefix,
+        public readonly Normalize $normalize = Normalize::CANONICAL,
     ) {
     }
 
@@ -50,7 +52,7 @@ class PrefixedWithRule implements RuleInterface
             );
         }
 
-        if (!\str_starts_with($value, $this->prefix)) {
+        if (!\str_starts_with($this->normalize->apply($value), $this->normalize->apply($this->prefix))) {
             return new Violation(
                 code: PrefixedWithViolationCode::MISSING_PREFIX,
                 propertyPath: $context->currentPath,

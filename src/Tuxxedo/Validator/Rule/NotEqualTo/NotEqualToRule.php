@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Validator\Rule\NotEqualTo;
 
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Intl\Normalize;
 use Tuxxedo\Validator\RuleInterface;
 use Tuxxedo\Validator\ValidationContextInterface;
 use Tuxxedo\Validator\Violation;
@@ -24,6 +25,7 @@ class NotEqualToRule implements RuleInterface
 {
     public function __construct(
         public readonly int|float|string|bool|null $disallowed,
+        public readonly Normalize $normalize = Normalize::CANONICAL,
     ) {
     }
 
@@ -32,7 +34,11 @@ class NotEqualToRule implements RuleInterface
         ValidationContextInterface $context,
         ContainerInterface $container,
     ): ?ViolationInterface {
-        if ($value !== $this->disallowed) {
+        $equal = \is_string($value) && \is_string($this->disallowed)
+            ? $this->normalize->apply($value) === $this->normalize->apply($this->disallowed)
+            : $value === $this->disallowed;
+
+        if (!$equal) {
             return null;
         }
 

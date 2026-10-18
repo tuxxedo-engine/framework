@@ -57,6 +57,7 @@ return [
     'ipv6.invalid-format' => 'Gildið á "{path}" er ekki gild IPv6-tala',
     'alpha.not-alpha' => 'Gildið á "{path}" má aðeins innihalda bókstafi',
     'alpha-numeric.not-alphanumeric' => 'Gildið á "{path}" má aðeins innihalda bókstafi og tölustafi',
+    'not-suspicious.suspicious' => 'Gildið á "{path}" inniheldur stafi sem auðvelt er að rugla saman við aðra',
     'iban.invalid-format' => 'Gildið á "{path}" er ekki gilt IBAN',
     'iban.invalid-checksum' => 'Gildið á "{path}" hefur ógilda IBAN-vartölu',
     'credit-card.invalid-format' => 'Gildið á "{path}" er ekki gilt kreditkortanúmer',

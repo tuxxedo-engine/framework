@@ -17,6 +17,7 @@ use Fixture\Validator\FixtureStatus;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Support\Validator\RuleTestingTrait;
+use Tuxxedo\Intl\Normalize;
 use Tuxxedo\Validator\Rule\NotIn\NotInRule;
 use Tuxxedo\Validator\Rule\NotIn\NotInViolationCode;
 use Tuxxedo\Validator\Rule\NotIn\NotInViolationContext;
@@ -104,6 +105,34 @@ class NotInRuleTest extends TestCase
                 'admin',
             ],
             $result->context->disallowed,
+        );
+    }
+
+    public function testStringsAreComparedAfterNormalization(): void
+    {
+        self::assertNotNull(
+            $this->runRule(
+                rule: new NotInRule(
+                    values: [
+                        'admin',
+                        42,
+                    ],
+                    normalize: Normalize::COMPATIBLE,
+                ),
+                value: "\u{FF41}\u{FF44}\u{FF4D}\u{FF49}\u{FF4E}",
+            ),
+        );
+
+        self::assertNull(
+            $this->runRule(
+                rule: new NotInRule(
+                    values: [
+                        'Café',
+                    ],
+                    normalize: Normalize::NONE,
+                ),
+                value: "Cafe\u{0301}",
+            ),
         );
     }
 }

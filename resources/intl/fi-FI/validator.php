@@ -57,6 +57,7 @@ return [
     'ipv6.invalid-format' => 'Arvo kohdassa "{path}" ei ole kelvollinen IPv6-osoite',
     'alpha.not-alpha' => 'Arvo kohdassa "{path}" saa sisältää vain kirjaimia',
     'alpha-numeric.not-alphanumeric' => 'Arvo kohdassa "{path}" saa sisältää vain kirjaimia ja numeroita',
+    'not-suspicious.suspicious' => 'Arvo kohdassa "{path}" sisältää merkkejä, jotka voi sekoittaa muihin',
     'iban.invalid-format' => 'Arvo kohdassa "{path}" ei ole kelvollinen IBAN',
     'iban.invalid-checksum' => 'Arvolla kohdassa "{path}" on virheellinen IBAN-tarkistussumma',
     'credit-card.invalid-format' => 'Arvo kohdassa "{path}" ei ole kelvollinen luottokortin numero',

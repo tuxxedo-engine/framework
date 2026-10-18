@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Validator\Rule\Contains;
 
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Intl\Normalize;
 use Tuxxedo\Validator\CommonViolationCode;
 use Tuxxedo\Validator\RuleInterface;
 use Tuxxedo\Validator\ValidationContextInterface;
@@ -26,6 +27,7 @@ class ContainsRule implements RuleInterface
 {
     public function __construct(
         public readonly string $needle,
+        public readonly Normalize $normalize = Normalize::CANONICAL,
     ) {
     }
 
@@ -50,7 +52,7 @@ class ContainsRule implements RuleInterface
             );
         }
 
-        if (!\str_contains($value, $this->needle)) {
+        if (!\str_contains($this->normalize->apply($value), $this->normalize->apply($this->needle))) {
             return new Violation(
                 code: ContainsViolationCode::MISSING_SUBSTRING,
                 propertyPath: $context->currentPath,
