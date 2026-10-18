@@ -21,19 +21,13 @@ use Tuxxedo\Router\RouterException;
 use Tuxxedo\Router\RouterInterface;
 use Tuxxedo\View\Lumi\Library\Attribute\LumiFunction;
 
-class RequestFunctions
+class RouteFunctions
 {
     public function __construct(
         private readonly RequestInterface $request,
         private readonly RouterInterface $router,
         private readonly UrlInterface $url,
     ) {
-    }
-
-    #[LumiFunction('request')]
-    public function request(): RequestInterface
-    {
-        return $this->request;
     }
 
     #[LumiFunction('url')]

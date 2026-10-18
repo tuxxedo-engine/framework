@@ -37,6 +37,7 @@ class HttpErrorHandler implements ErrorHandlerInterface
             },
             scope: [
                 'exception' => $exception,
+                'uri' => $request->uri,
             ],
             responseCode: $exception->responseCode,
         );

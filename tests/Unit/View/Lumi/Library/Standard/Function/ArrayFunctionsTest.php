@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Unit\View\Lumi\Library\Standard\Function;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\View\Lumi\Library\Standard\Function\ArrayFunctions;
 
@@ -135,5 +136,179 @@ class ArrayFunctionsTest extends TestCase
                 ],
             ),
         );
+    }
+
+    /**
+     * @return \Generator<string, array{0: iterable<mixed>|string, 1: mixed, 2: mixed}>
+     */
+    public static function firstLastDataProvider(): \Generator
+    {
+        yield 'list' => [
+            [
+                'a',
+                'b',
+                'c',
+            ],
+            'a',
+            'c',
+        ];
+
+        yield 'keyed array' => [
+            [
+                'x' => 1,
+                'y' => 2,
+            ],
+            1,
+            2,
+        ];
+
+        yield 'empty array' => [
+            [],
+            null,
+            null,
+        ];
+
+        yield 'string by grapheme' => [
+            "A\u{030A}se",
+            "A\u{030A}",
+            'e',
+        ];
+
+        yield 'invalid UTF-8 string' => [
+            "\xFFab",
+            "\xFF",
+            'b',
+        ];
+
+        yield 'empty string' => [
+            '',
+            null,
+            null,
+        ];
+
+        yield 'traversable' => [
+            new \ArrayIterator(
+                [
+                    'p' => 'first',
+                    'q' => 'last',
+                ],
+            ),
+            'first',
+            'last',
+        ];
+
+        yield 'empty traversable' => [
+            new \ArrayIterator([]),
+            null,
+            null,
+        ];
+    }
+
+    /**
+     * @param iterable<mixed>|string $input
+     */
+    #[DataProvider('firstLastDataProvider')]
+    public function testFirstAndLast(
+        iterable|string $input,
+        mixed $first,
+        mixed $last,
+    ): void {
+        self::assertSame($first, $this->functions->first($input));
+        self::assertSame($last, $this->functions->last($input));
+    }
+
+    public function testFirstOnlyReadsTheFirstItemOfAGenerator(): void
+    {
+        $generator = (static function (): \Generator {
+            yield 'a';
+
+            self::fail('Read past the first item');
+        })();
+
+        self::assertSame('a', $this->functions->first($generator));
+    }
+
+    /**
+     * @return \Generator<string, array{0: iterable<mixed>|string, 1: mixed, 2: mixed}>
+     */
+    public static function firstLastKeyDataProvider(): \Generator
+    {
+        yield 'list' => [
+            [
+                'a',
+                'b',
+                'c',
+            ],
+            0,
+            2,
+        ];
+
+        yield 'keyed array' => [
+            [
+                'x' => 1,
+                'y' => 2,
+            ],
+            'x',
+            'y',
+        ];
+
+        yield 'empty array' => [
+            [],
+            null,
+            null,
+        ];
+
+        yield 'string by grapheme' => [
+            "A\u{030A}se",
+            0,
+            2,
+        ];
+
+        yield 'empty string' => [
+            '',
+            null,
+            null,
+        ];
+
+        yield 'traversable' => [
+            new \ArrayIterator(
+                [
+                    'p' => 'first',
+                    'q' => 'last',
+                ],
+            ),
+            'p',
+            'q',
+        ];
+
+        yield 'empty traversable' => [
+            new \ArrayIterator([]),
+            null,
+            null,
+        ];
+    }
+
+    /**
+     * @param iterable<mixed>|string $input
+     */
+    #[DataProvider('firstLastKeyDataProvider')]
+    public function testFirstKeyAndLastKey(
+        iterable|string $input,
+        mixed $firstKey,
+        mixed $lastKey,
+    ): void {
+        self::assertSame($firstKey, $this->functions->firstKey($input));
+        self::assertSame($lastKey, $this->functions->lastKey($input));
+    }
+
+    public function testFirstKeyOnlyReadsTheFirstItemOfAGenerator(): void
+    {
+        $generator = (static function (): \Generator {
+            yield 'k' => 'a';
+
+            self::fail('Read past the first item');
+        })();
+
+        self::assertSame('k', $this->functions->firstKey($generator));
     }
 }

@@ -29,8 +29,7 @@ use Tuxxedo\View\Lumi\Library\Standard\Function\IntlFunctions;
 use Tuxxedo\View\Lumi\Library\Standard\Function\JsonFunctions;
 use Tuxxedo\View\Lumi\Library\Standard\Function\MailFunctions;
 use Tuxxedo\View\Lumi\Library\Standard\Function\MathFunctions;
-use Tuxxedo\View\Lumi\Library\Standard\Function\RequestFunctions;
-use Tuxxedo\View\Lumi\Library\Standard\Function\SessionFunctions;
+use Tuxxedo\View\Lumi\Library\Standard\Function\RouteFunctions;
 use Tuxxedo\View\Lumi\Library\Standard\Function\StringFunctions;
 use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
 
@@ -67,8 +66,7 @@ class StandardLibrary
             JsonFunctions::class,
             MailFunctions::class,
             MathFunctions::class,
-            RequestFunctions::class,
-            SessionFunctions::class,
+            RouteFunctions::class,
             StringFunctions::class,
         ];
     }
@@ -118,16 +116,6 @@ class StandardLibrary
         $configurator->addFunction(
             name: 'random',
             mappedName: 'random_int',
-        );
-
-        $configurator->addFunction(
-            name: 'first',
-            mappedName: 'array_first',
-        );
-
-        $configurator->addFunction(
-            name: 'last',
-            mappedName: 'array_last',
         );
 
         $configurator->addFunction(

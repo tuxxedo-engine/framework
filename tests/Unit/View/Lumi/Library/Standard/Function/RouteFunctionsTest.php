@@ -28,9 +28,9 @@ use Tuxxedo\Router\Route;
 use Tuxxedo\Router\RouteArgument;
 use Tuxxedo\Router\RouterException;
 use Tuxxedo\Router\StaticRouter;
-use Tuxxedo\View\Lumi\Library\Standard\Function\RequestFunctions;
+use Tuxxedo\View\Lumi\Library\Standard\Function\RouteFunctions;
 
-class RequestFunctionsTest extends TestCase
+class RouteFunctionsTest extends TestCase
 {
     private function makeRequest(
         ?DispatchableRoute $route = null,
@@ -55,8 +55,8 @@ class RequestFunctionsTest extends TestCase
         ?Request $request = null,
         ?StaticRouter $router = null,
         string $baseUrl = 'https://example.com/',
-    ): RequestFunctions {
-        return new RequestFunctions(
+    ): RouteFunctions {
+        return new RouteFunctions(
             request: $request ?? $this->makeRequest(),
             router: $router ?? new StaticRouter(
                 routes: [],
@@ -90,18 +90,6 @@ class RequestFunctionsTest extends TestCase
                 ),
             ],
             stickyPrefix: TestStickyPrefix::class,
-        );
-    }
-
-    public function testRequestReturnsRequest(): void
-    {
-        $request = $this->makeRequest();
-
-        self::assertSame(
-            $request,
-            $this->makeFunctions(
-                request: $request,
-            )->request(),
         );
     }
 
