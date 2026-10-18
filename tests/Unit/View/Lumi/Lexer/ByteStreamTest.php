@@ -316,10 +316,135 @@ class ByteStreamTest extends TestCase
         self::assertNull($stream->findSequenceOutsideQuotes('}}}'));
     }
 
+    public function testFindSequenceReturnsNullWhenSequenceIsCutOffAtEnd(): void
+    {
+        $stream = ByteStream::createFromString('foo }');
+
+        self::assertNull($stream->findSequenceOutsideQuotes('}}'));
+    }
+
     public function testFindSequenceReturnsNullWhenSequenceOnlyInsideQuotes(): void
     {
         $stream = ByteStream::createFromString('"}} only inside"');
 
         self::assertNull($stream->findSequenceOutsideQuotes('}}'));
+    }
+
+    public function testCreateFromStringSetsLengthInBytes(): void
+    {
+        $stream = ByteStream::createFromString('æøå');
+
+        self::assertSame(6, $stream->length);
+    }
+
+    public function testPeekCharacterReturnsFullMultibyteCharacter(): void
+    {
+        $stream = ByteStream::createFromString('æb');
+
+        self::assertSame('æ', $stream->peekCharacter());
+        self::assertSame(0, $stream->position);
+    }
+
+    public function testPeekCharacterReturnsEmptyStringAtEof(): void
+    {
+        $stream = ByteStream::createFromString('');
+
+        self::assertSame('', $stream->peekCharacter());
+    }
+
+    public function testPeekCharacterReturnsTruncatedSequenceAtEnd(): void
+    {
+        $stream = ByteStream::createFromString("\xE2\x82");
+
+        self::assertSame("\xE2\x82", $stream->peekCharacter());
+    }
+
+    public function testConsumeCharacterAdvancesByCharacterBytes(): void
+    {
+        $stream = ByteStream::createFromString('€b');
+
+        self::assertSame('€', $stream->consumeCharacter());
+        self::assertSame(3, $stream->position);
+        self::assertSame('b', $stream->consumeCharacter());
+        self::assertTrue($stream->eof());
+    }
+
+    public function testConsumeCharacterNewlineIncrementsLine(): void
+    {
+        $stream = ByteStream::createFromString("\nhello");
+
+        $stream->consumeCharacter();
+
+        self::assertSame(2, $stream->line);
+    }
+
+    public function testConsumeCharacterThrowsAtEof(): void
+    {
+        $stream = ByteStream::createFromString('');
+
+        self::expectException(LexerException::class);
+
+        $stream->consumeCharacter();
+    }
+
+    public function testConsumeReturnsSingleByteOfMultibyteCharacter(): void
+    {
+        $stream = ByteStream::createFromString('æ');
+
+        self::assertSame("\xC3", $stream->consume());
+        self::assertSame(1, $stream->position);
+    }
+
+    public function testConsumeWhitespaceSkipsUnicodeWhitespace(): void
+    {
+        $stream = ByteStream::createFromString("\u{00A0} \u{2003}\nx");
+
+        $stream->consumeWhitespace();
+
+        self::assertSame(7, $stream->position);
+        self::assertSame(2, $stream->line);
+    }
+
+    public function testConsumeWhitespaceStopsAtMultibyteNonWhitespace(): void
+    {
+        $stream = ByteStream::createFromString(' æ');
+
+        $stream->consumeWhitespace();
+
+        self::assertSame(1, $stream->position);
+    }
+
+    public function testPeekWithSkipWhitespaceSkipsUnicodeWhitespace(): void
+    {
+        $stream = ByteStream::createFromString("\u{00A0}abc");
+
+        self::assertSame(
+            'ab',
+            $stream->peek(
+                length: 2,
+                skipWhitespace: true,
+            ),
+        );
+    }
+
+    public function testFindSequenceReturnsByteOffsetAfterMultibyteText(): void
+    {
+        $stream = ByteStream::createFromString('æø }}');
+
+        self::assertSame(5, $stream->findSequenceOutsideQuotes('}}'));
+    }
+
+    public function testFindSequenceTreatsEscapedQuoteOutsideStringAsText(): void
+    {
+        $stream = ByteStream::createFromString('\\" }} "x" }}');
+
+        self::assertSame(3, $stream->findSequenceOutsideQuotes('}}'));
+    }
+
+    public function testFindSequenceIgnoresOtherQuoteCharacterInsideString(): void
+    {
+        $stream = ByteStream::createFromString('"it\'s }}" }}');
+
+        self::assertSame(10, $stream->findSequenceOutsideQuotes('}}'));
     }
 }

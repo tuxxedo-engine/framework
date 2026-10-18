@@ -41,12 +41,16 @@ interface ByteStreamInterface
         bool $skipWhitespace = false,
     ): string;
 
+    public function peekCharacter(): string;
+
     public function findSequenceOutsideQuotes(
         string $sequence,
         int $offset = 0,
     ): ?int;
 
     public function consume(): string;
+
+    public function consumeCharacter(): string;
 
     public function consumeSequence(
         string $sequence,

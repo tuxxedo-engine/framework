@@ -32,7 +32,7 @@ class ByteStream implements ByteStreamInterface
             $input,
         );
 
-        $this->length = \mb_strlen($this->input);
+        $this->length = \strlen($this->input);
     }
 
     public function __clone()
@@ -68,24 +68,22 @@ class ByteStream implements ByteStreamInterface
         int $length,
         bool $skipWhitespace = false,
     ): string {
-        $input = $this->input;
         $position = $this->position;
 
         if ($skipWhitespace) {
-            $len = \mb_strlen($input);
-
-            while ($position < $len) {
-                $char = \mb_substr($input, $position, 1);
-
-                if (\preg_match('/\s/u', $char) !== 1) {
-                    break;
-                }
-
-                $position++;
-            }
+            $position += $this->whitespaceLength($position);
         }
 
-        return \mb_substr($input, $position, $length);
+        return \substr($this->input, $position, $length);
+    }
+
+    public function peekCharacter(): string
+    {
+        if ($this->eof()) {
+            return '';
+        }
+
+        return \substr($this->input, $this->position, $this->characterLength($this->position));
     }
 
     public function findSequenceOutsideQuotes(
@@ -93,20 +91,21 @@ class ByteStream implements ByteStreamInterface
         int $offset = 0,
     ): ?int {
         $quoteChar = null;
-        $escaped = false;
-        $sequenceLength = \mb_strlen($sequence);
+        $sequenceLength = \strlen($sequence);
+        $lastStart = $this->length - $sequenceLength;
+        $stops = '\\"\'' . $sequence[0];
 
         for ($i = $this->position + $offset; $i < $this->length; $i++) {
-            $char = \mb_substr($this->input, $i, 1);
+            $i += \strcspn($this->input, $quoteChar === null ? $stops : '\\' . $quoteChar, $i);
 
-            if ($escaped) {
-                $escaped = false;
-
-                continue;
+            if ($i >= $this->length) {
+                return null;
             }
 
+            $char = $this->input[$i];
+
             if ($char === '\\') {
-                $escaped = true;
+                $i++;
 
                 continue;
             }
@@ -121,16 +120,12 @@ class ByteStream implements ByteStreamInterface
                 continue;
             }
 
-            if ($quoteChar === null) {
-                if ($i + $sequenceLength > $this->length) {
-                    return null;
-                }
+            if ($i > $lastStart) {
+                return null;
+            }
 
-                $chunk = \mb_substr($this->input, $i, $sequenceLength);
-
-                if ($chunk === $sequence) {
-                    return $i - $this->position;
-                }
+            if (\substr_compare($this->input, $sequence, $i, $sequenceLength) === 0) {
+                return $i - $this->position;
             }
         }
 
@@ -143,8 +138,24 @@ class ByteStream implements ByteStreamInterface
             throw LexerException::fromTokenStreamEof();
         }
 
-        $char = \mb_substr($this->input, $this->position, 1);
+        $char = $this->input[$this->position];
         $this->position++;
+
+        if ($char === "\n") {
+            $this->line++;
+        }
+
+        return $char;
+    }
+
+    public function consumeCharacter(): string
+    {
+        if ($this->eof()) {
+            throw LexerException::fromTokenStreamEof();
+        }
+
+        $char = $this->peekCharacter();
+        $this->position += \strlen($char);
 
         if ($char === "\n") {
             $this->line++;
@@ -156,23 +167,73 @@ class ByteStream implements ByteStreamInterface
     public function consumeSequence(
         string $sequence,
     ): void {
-        if ($this->peek(\mb_strlen($sequence)) !== $sequence) {
+        $length = \strlen($sequence);
+
+        if (\substr($this->input, $this->position, $length) !== $sequence) {
             throw LexerException::fromUnexpectedSequenceFound(
                 sequence: $sequence,
                 line: $this->line,
             );
         }
 
-        $this->position += \mb_strlen($sequence);
+        $this->position += $length;
         $this->line += \substr_count($sequence, "\n");
     }
 
     public function consumeWhitespace(): bool
     {
-        while (!$this->eof() && \preg_match('/\s/u', $this->peek(1)) === 1) {
-            $this->consume();
+        $length = $this->whitespaceLength($this->position);
+
+        if ($length > 0) {
+            $this->line += \substr_count($this->input, "\n", $this->position, $length);
+            $this->position += $length;
         }
 
         return !$this->eof();
+    }
+
+    private function characterLength(
+        int $position,
+    ): int {
+        $byte = \ord($this->input[$position]);
+
+        $length = match (true) {
+            $byte >= 0xF0 => 4,
+            $byte >= 0xE0 => 3,
+            $byte >= 0xC0 => 2,
+            default => 1,
+        };
+
+        return \min($length, $this->length - $position);
+    }
+
+    private function whitespaceLength(
+        int $position,
+    ): int {
+        $start = $position;
+
+        while ($position < $this->length) {
+            $ascii = \strspn($this->input, " \t\n\r\v\f", $position);
+
+            if ($ascii > 0) {
+                $position += $ascii;
+
+                continue;
+            }
+
+            if (\ord($this->input[$position]) < 0x80) {
+                break;
+            }
+
+            $length = $this->characterLength($position);
+
+            if (\preg_match('/^\s$/u', \substr($this->input, $position, $length)) !== 1) {
+                break;
+            }
+
+            $position += $length;
+        }
+
+        return $position - $start;
     }
 }

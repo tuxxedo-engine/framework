@@ -68,15 +68,15 @@ class ExpressionLexer implements ExpressionLexerInterface
         $stream = ByteStream::createFromString($operand);
 
         while (!$stream->eof()) {
-            $char = $stream->peek(1);
+            $char = $stream->peekCharacter();
 
             if ($inQuote) {
-                $buffer .= $stream->consume();
+                $buffer .= $stream->consumeCharacter();
 
                 if ($char === $quoteChar) {
                     $slashes = 0;
 
-                    for ($i = \mb_strlen($buffer) - 2; $i >= 0; $i--) {
+                    for ($i = \strlen($buffer) - 2; $i >= 0; $i--) {
                         if ($buffer[$i] === '\\') {
                             $slashes++;
                         } else {
@@ -88,7 +88,7 @@ class ExpressionLexer implements ExpressionLexerInterface
                         $inQuote = false;
                         $tokens[] = new LiteralToken(
                             line: $line,
-                            op1: \mb_substr($buffer, 1, -1),
+                            op1: \substr($buffer, 1, -1),
                             op2: Type::STRING->name,
                         );
 
@@ -109,7 +109,7 @@ class ExpressionLexer implements ExpressionLexerInterface
 
                 $inQuote = true;
                 $quoteChar = $char;
-                $buffer .= $stream->consume();
+                $buffer .= $stream->consumeCharacter();
 
                 continue;
             }
@@ -133,13 +133,13 @@ class ExpressionLexer implements ExpressionLexerInterface
                     $this->isStartOfNumber($buffer[0], $stream)
                 )
             ) {
-                $buffer .= $stream->consume();
+                $buffer .= $stream->consumeCharacter();
 
                 while (!$stream->eof()) {
-                    $next = $stream->peek(1);
+                    $next = $stream->peekCharacter();
 
                     if (\preg_match('/^[0-9eE.+-]$/', $next) === 1) {
-                        $buffer .= $stream->consume();
+                        $buffer .= $stream->consumeCharacter();
                     } else {
                         break;
                     }
@@ -171,7 +171,7 @@ class ExpressionLexer implements ExpressionLexerInterface
             }
 
             if (\preg_match('/^\p{L}|\p{N}|_$/u', $char) === 1) {
-                $buffer .= $stream->consume();
+                $buffer .= $stream->consumeCharacter();
 
                 continue;
             }
@@ -187,7 +187,7 @@ class ExpressionLexer implements ExpressionLexerInterface
                 $lastValid = null;
 
                 while (!$stream->eof()) {
-                    $buffer .= $stream->consume();
+                    $buffer .= $stream->consumeCharacter();
 
                     if (
                         \in_array($buffer, $this->operators, true) ||
@@ -196,7 +196,7 @@ class ExpressionLexer implements ExpressionLexerInterface
                         $lastValid = $buffer;
                     }
 
-                    $next = $stream->peek(1);
+                    $next = $stream->peekCharacter();
                     $isNextSymbol = \preg_match('/^[^\p{L}\p{N}\s]$/u', $next) === 1;
 
                     if (!$isNextSymbol || !$this->isSymbolPrefix($buffer . $next)) {

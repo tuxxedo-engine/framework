@@ -594,4 +594,69 @@ class ExpressionLexerTest extends TestCase
             expectedOp1: '>',
         );
     }
+
+    public function testLexUnicodeIdentifier(): void
+    {
+        $tokens = $this->lexer->lex(
+            startingLine: 1,
+            operand: 'brugerÆøå',
+        );
+
+        self::assertCount(1, $tokens);
+
+        $this->assertIdentifierToken(
+            token: $tokens[0],
+            expectedOp1: 'brugerÆøå',
+        );
+    }
+
+    public function testLexStringWithEscapedQuoteAfterMultibyteText(): void
+    {
+        $tokens = $this->lexer->lex(
+            startingLine: 1,
+            operand: '"æ\"bar"',
+        );
+
+        self::assertCount(1, $tokens);
+
+        $this->assertLiteralToken(
+            token: $tokens[0],
+            expectedOp1: 'æ\"bar',
+            expectedOp2: Type::STRING->name,
+        );
+    }
+
+    public function testLexUnicodeWhitespaceSeparatesIdentifiers(): void
+    {
+        $tokens = $this->lexer->lex(
+            startingLine: 1,
+            operand: "foo\u{00A0}bar",
+        );
+
+        self::assertCount(2, $tokens);
+
+        $this->assertIdentifierToken(
+            token: $tokens[0],
+            expectedOp1: 'foo',
+        );
+
+        $this->assertIdentifierToken(
+            token: $tokens[1],
+            expectedOp1: 'bar',
+        );
+    }
+
+    public function testLexThrowsOnUnknownMultibyteSymbol(): void
+    {
+        try {
+            $this->lexer->lex(
+                startingLine: 1,
+                operand: '€',
+            );
+
+            self::fail('Expected a LexerException');
+        } catch (LexerException $exception) {
+            self::assertStringContainsString('"€"', $exception->getMessage());
+        }
+    }
 }

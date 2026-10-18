@@ -408,4 +408,36 @@ class LexerTest extends TestCase
             expectedOp2: TextContext::RAW->name,
         );
     }
+
+    public function testEscapedStartingSequenceAfterMultibyteTextIsEmittedAsLiteralText(): void
+    {
+        $lexer = Lexer::createWithoutDefaultHandlers(
+            handlers: [
+                new IfOpenHandler(),
+            ],
+        );
+
+        $stream = $lexer->tokenizeByString('æø\\{if x}');
+
+        self::assertCount(1, $stream->tokens);
+        self::assertInstanceOf(TextToken::class, $stream->tokens[0]);
+        self::assertSame('æø{if x}', $stream->tokens[0]->op1);
+    }
+
+    public function testMultibyteTextAroundTokensIsPreserved(): void
+    {
+        $lexer = Lexer::createWithoutDefaultHandlers(
+            handlers: [
+                new IfOpenHandler(),
+            ],
+        );
+
+        $stream = $lexer->tokenizeByString("Grüße 日本\n{if x}");
+
+        self::assertCount(2, $stream->tokens);
+        self::assertInstanceOf(TextToken::class, $stream->tokens[0]);
+        self::assertSame("Grüße 日本\n", $stream->tokens[0]->op1);
+        self::assertInstanceOf(IfOpenToken::class, $stream->tokens[1]);
+        self::assertSame(2, $stream->tokens[1]->line);
+    }
 }

@@ -30,6 +30,7 @@ class Lexer implements LexerInterface
      */
     private readonly array $sequences;
     private readonly int $maxTokenLength;
+    private readonly string $sequenceStarts;
 
     /**
      * @param TokenHandlerInterface[] $handlers
@@ -43,6 +44,7 @@ class Lexer implements LexerInterface
     ) {
         $maxTokenLength = 0;
         $sequences = [];
+        $sequenceStarts = '';
 
         foreach ($handlers as $handler) {
             $sequence = $handler->getStartingSequence();
@@ -54,11 +56,16 @@ class Lexer implements LexerInterface
             }
 
             $sequences[$sequence] = $handler;
-            $maxTokenLength = \max($maxTokenLength, \mb_strlen($sequence));
+            $maxTokenLength = \max($maxTokenLength, \strlen($sequence));
+
+            if ($sequence !== '' && !\str_contains($sequenceStarts, $sequence[0])) {
+                $sequenceStarts .= $sequence[0];
+            }
         }
 
         $this->maxTokenLength = $maxTokenLength;
         $this->sequences = $sequences;
+        $this->sequenceStarts = $sequenceStarts;
     }
 
     /**
@@ -210,6 +217,18 @@ class Lexer implements LexerInterface
         $line = $stream->line;
 
         while (!$stream->eof()) {
+            $skip = \strcspn($stream->input, $this->sequenceStarts, $stream->position);
+
+            if ($skip > 0) {
+                $chunk = $stream->peek($skip);
+
+                $stream->consumeSequence($chunk);
+
+                $buffer .= $chunk;
+
+                continue;
+            }
+
             for ($i = 1; $i <= $this->maxTokenLength && !$stream->eof(); $i++) {
                 $peek = $stream->peek($i);
 
@@ -301,10 +320,8 @@ class Lexer implements LexerInterface
                 $buffered = $buffer->op1;
 
                 if (\array_key_exists($token->op1, $this->sequences)) {
-                    $length = \mb_strlen($buffered);
-
-                    if ($buffer->op1[$length - 1] === '\\') {
-                        $buffered = \mb_substr($buffered, 0, -1);
+                    if (\str_ends_with($buffered, '\\')) {
+                        $buffered = \substr($buffered, 0, -1);
                     }
                 }
 
