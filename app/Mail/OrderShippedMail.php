@@ -17,6 +17,7 @@ use Tuxxedo\Intl\LocaleInterface;
 use Tuxxedo\Intl\TranslatorInterface;
 use Tuxxedo\Mail\Attribute\MailTemplate;
 use Tuxxedo\Mail\BodyType;
+use Tuxxedo\Mail\CurrencyDenominatedMessageInterface;
 use Tuxxedo\Mail\LocalizedMessageInterface;
 use Tuxxedo\Mail\Message;
 use Tuxxedo\Mail\TimeZonedMessageInterface;
@@ -24,7 +25,7 @@ use Tuxxedo\Temporal\InstantInterface;
 use Tuxxedo\Temporal\TimeZoneInterface;
 
 #[MailTemplate('order_shipped', bodyType: BodyType::HTML)]
-class OrderShippedMail extends Message implements LocalizedMessageInterface, TimeZonedMessageInterface
+class OrderShippedMail extends Message implements LocalizedMessageInterface, TimeZonedMessageInterface, CurrencyDenominatedMessageInterface
 {
     public function __construct(
         TranslatorInterface $translator,

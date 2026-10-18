@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Unit\Mail\Lumi;
 
 use PHPUnit\Framework\TestCase;
+use Support\Mail\StubCurrencyDenominatedTemplateMessage;
 use Support\Mail\StubLocalizedTemplateMessage;
 use Support\Mail\StubTemplateMessage;
 use Support\Mail\StubTimeZonedTemplateMessage;
@@ -187,6 +188,23 @@ class LumiMailTemplateRenderTest extends TestCase
             $this->createRender()->render(
                 message: new StubLocalizedTemplateMessage(
                     locale: Locale::parse('da-DK'),
+                ),
+            )->body,
+        );
+    }
+
+    public function testRenderUsesTheCurrencyOfACurrencyDenominatedMessage(): void
+    {
+        $this->writeTemplate(
+            name: 'stub',
+            contents: '{{ 1234.5 | currency }}',
+        );
+
+        self::assertSame(
+            '$1,234.50',
+            $this->createRender()->render(
+                message: new StubCurrencyDenominatedTemplateMessage(
+                    currency: 'USD',
                 ),
             )->body,
         );

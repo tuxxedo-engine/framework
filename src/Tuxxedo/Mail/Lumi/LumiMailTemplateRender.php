@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Mail\Lumi;
 
 use Tuxxedo\Mail\Attribute\MailTemplate;
+use Tuxxedo\Mail\CurrencyDenominatedMessageInterface;
 use Tuxxedo\Mail\LocalizedMessageInterface;
 use Tuxxedo\Mail\MailException;
 use Tuxxedo\Mail\MailTemplateRenderInterface;
@@ -80,6 +81,10 @@ class LumiMailTemplateRender implements MailTemplateRenderInterface
 
         if ($message instanceof TimeZonedMessageInterface) {
             $directives['tuxxedo.timezone'] = $message->timeZone->name;
+        }
+
+        if ($message instanceof CurrencyDenominatedMessageInterface) {
+            $directives['tuxxedo.currency'] = $message->currency;
         }
 
         if ($directives === []) {
