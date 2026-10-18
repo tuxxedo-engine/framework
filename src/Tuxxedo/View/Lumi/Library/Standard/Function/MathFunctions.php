@@ -17,14 +17,14 @@ use Tuxxedo\View\Lumi\Library\Attribute\LumiFunction;
 
 class MathFunctions
 {
-    #[LumiFunction('isEven')]
+    #[LumiFunction('is_even')]
     public function isEven(
         int $input,
     ): bool {
         return $input % 2 === 0;
     }
 
-    #[LumiFunction('isOdd')]
+    #[LumiFunction('is_odd')]
     public function isOdd(
         int $input,
     ): bool {

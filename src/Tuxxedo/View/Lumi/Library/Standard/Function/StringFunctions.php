@@ -92,7 +92,7 @@ class StringFunctions
         );
     }
 
-    #[LumiFunction('leftPad')]
+    #[LumiFunction('left_pad')]
     public function leftPad(
         string $string,
         int $length,
@@ -106,7 +106,7 @@ class StringFunctions
         );
     }
 
-    #[LumiFunction('rightPad')]
+    #[LumiFunction('right_pad')]
     public function rightPad(
         string $string,
         int $length,

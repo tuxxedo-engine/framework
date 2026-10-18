@@ -48,7 +48,7 @@ class ConfigFunctions
         return $context->directive($directive);
     }
 
-    #[LumiFunction('hasDirective')]
+    #[LumiFunction('has_directive')]
     public function hasDirective(
         #[Context]
         RuntimeContextInterface $context,

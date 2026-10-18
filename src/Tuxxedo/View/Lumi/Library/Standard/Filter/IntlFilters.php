@@ -64,8 +64,8 @@ class IntlFilters
     /**
      * @throws TranslationException
      */
-    #[LumiFilter('currency')]
-    public function currency(
+    #[LumiFilter('locale_currency', aliases: ['currency'])]
+    public function localeCurrency(
         #[Context]
         RuntimeContextInterface $context,
         int|float $value,

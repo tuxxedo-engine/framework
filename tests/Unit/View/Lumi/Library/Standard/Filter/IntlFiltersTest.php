@@ -174,7 +174,7 @@ class IntlFiltersTest extends TestCase
 
         self::assertSame(
             "234,50\u{00A0}€",
-            $filters->currency(
+            $filters->localeCurrency(
                 new StubRuntimeContext(
                     directives: [
                         'tuxxedo.currency' => 'EUR',
@@ -194,6 +194,6 @@ class IntlFiltersTest extends TestCase
 
         $this->expectException(TranslationException::class);
 
-        $filters->currency(new StubRuntimeContext(), 1234.5);
+        $filters->localeCurrency(new StubRuntimeContext(), 1234.5);
     }
 }

@@ -24,7 +24,7 @@ class JsonFunctions
         return \json_encode($value, \JSON_THROW_ON_ERROR);
     }
 
-    #[LumiFunction('jsonPretty')]
+    #[LumiFunction('json_pretty')]
     public function jsonPretty(
         mixed $value,
     ): string {

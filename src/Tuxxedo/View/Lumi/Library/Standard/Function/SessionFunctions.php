@@ -30,13 +30,13 @@ class SessionFunctions
         return $this->session->raw($name);
     }
 
-    #[LumiFunction('sessionId')]
+    #[LumiFunction('session_id')]
     public function sessionId(): string
     {
         return $this->session->getIdentifier();
     }
 
-    #[LumiFunction('hasSession')]
+    #[LumiFunction('has_session')]
     public function hasSession(
         string $name,
     ): bool {
