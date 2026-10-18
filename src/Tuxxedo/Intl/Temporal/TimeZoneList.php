@@ -27,9 +27,68 @@ class TimeZoneList implements TimeZoneListInterface
      */
     private array $zoneStrings = [];
 
+    /**
+     * @var array<string, list<string>>
+     */
+    private array $names = [];
+
+    /**
+     * @var array<string, \IntlTimeZone>
+     */
+    private array $timeZones = [];
+
+    /**
+     * @var array<string, string>
+     */
+    private array $canonicalIds = [];
+
+    /**
+     * @var array<string, list<array{0: string, 1: string|null, 2: string|null}>>
+     */
+    private array $metazoneHistories = [];
+
+    /**
+     * @var array<string, array<string, array{displayName: string, city: string}>>
+     */
+    private array $localeData = [];
+
+    /**
+     * @var array<string, array<string, string>>
+     */
+    private array $groupNames = [];
+
     public function __construct(
         private readonly CollatorInterface $collator = new Collator(),
     ) {
+    }
+
+    public function names(
+        ?string $country = null,
+    ): array {
+        $key = $country !== null
+            ? self::countryCode($country)
+            : '';
+
+        if (!isset($this->names[$key])) {
+            $names = [];
+            $enumeration = \IntlTimeZone::createTimeZoneIDEnumeration(
+                \IntlTimeZone::TYPE_CANONICAL_LOCATION,
+                $key !== ''
+                    ? $key
+                    : null,
+            );
+
+            /** @var string $id */
+            foreach ($enumeration as $id) {
+                $names[] = (string) \IntlTimeZone::getIanaID($id);
+            }
+
+            \sort($names);
+
+            $this->names[$key] = $names;
+        }
+
+        return $this->names[$key];
     }
 
     public function all(
@@ -39,7 +98,7 @@ class TimeZoneList implements TimeZoneListInterface
     ): array {
         return $this->sortByOffset(
             entries: $this->entries(
-                names: self::identifiers($country),
+                names: $this->names($country),
                 locale: $locale,
                 at: $at ?? new \DateTimeImmutable(),
             ),
@@ -55,29 +114,29 @@ class TimeZoneList implements TimeZoneListInterface
         $buckets = [];
 
         $entries = $this->entries(
-            names: \DateTimeZone::listIdentifiers(),
+            names: $this->names(),
             locale: $locale,
             at: $at,
         );
 
         foreach ($entries as $entry) {
             $key = $entry->metazone !== null
-                ? $entry->metazone . '|' . self::seasonalOffsets($entry->name, $at)
+                ? $entry->metazone . '|' . $this->seasonalOffsets($entry->name, $at)
                 : 'zone|' . $entry->name;
 
             $buckets[$key][] = $entry;
         }
 
         $readerZones = $locale->region !== null && \preg_match('/^[A-Z]{2}$/', $locale->region) === 1
-            ? \DateTimeZone::listIdentifiers(\DateTimeZone::PER_COUNTRY, $locale->region)
+            ? $this->names($locale->region)
             : [];
 
         $groups = [];
 
-        foreach ($buckets as $entries) {
-            $representative = $this->representative($entries);
-            $members = $this->orderMembers(
-                entries: $entries,
+        foreach ($buckets as $members) {
+            $representative = $this->representative($members);
+            $ordered = $this->orderMembers(
+                entries: $members,
                 representative: $representative,
                 readerZones: $readerZones,
                 locale: $locale,
@@ -85,15 +144,16 @@ class TimeZoneList implements TimeZoneListInterface
 
             $groups[] = new TimeZoneGroup(
                 name: $representative->name,
-                displayName: self::canonicalId($representative->name) !== null
-                    ? self::icuDisplayName($representative->name, \IntlTimeZone::DISPLAY_LONG_GENERIC, $locale)
-                    : $representative->displayName,
+                displayName: $this->groupName(
+                    name: $representative->name,
+                    locale: $locale,
+                ),
                 offset: $representative->offset,
                 cities: \array_map(
                     static fn (TimeZoneEntryInterface $member): string => $member->city,
-                    $members,
+                    $ordered,
                 ),
-                zones: $members,
+                zones: $ordered,
             );
         }
 
@@ -124,17 +184,11 @@ class TimeZoneList implements TimeZoneListInterface
     }
 
     /**
-     * @return list<string>
-     *
      * @throws TranslationException
      */
-    private static function identifiers(
-        ?string $country,
-    ): array {
-        if ($country === null) {
-            return \DateTimeZone::listIdentifiers();
-        }
-
+    private static function countryCode(
+        string $country,
+    ): string {
         $code = \strtoupper($country);
 
         if (\preg_match('/^[A-Z]{2}$/', $code) !== 1) {
@@ -143,7 +197,7 @@ class TimeZoneList implements TimeZoneListInterface
             );
         }
 
-        return \DateTimeZone::listIdentifiers(\DateTimeZone::PER_COUNTRY, $code);
+        return $code;
     }
 
     /**
@@ -178,80 +232,127 @@ class TimeZoneList implements TimeZoneListInterface
         LocaleInterface $locale,
         \DateTimeInterface $at,
     ): TimeZoneEntryInterface {
-        $offset = self::offsetAt(
+        $canonical = $this->canonicalId($name);
+        $data = $this->localeData[$locale->tag][$name] ??= $this->buildLocaleData(
             name: $name,
-            at: $at,
+            canonical: $canonical,
+            locale: $locale,
         );
-
-        $canonical = self::canonicalId($name);
-        $city = ($canonical !== null ? $this->exemplarCity($canonical, $locale) : null) ?? self::cityFromName($name);
 
         return new TimeZoneEntry(
             name: $name,
-            displayName: $canonical !== null
-                ? self::icuDisplayName($name, \IntlTimeZone::DISPLAY_GENERIC_LOCATION, $locale)
-                : $city,
-            city: $city,
-            offset: $offset,
+            displayName: $data['displayName'],
+            city: $data['city'],
+            offset: $this->offsetAt(
+                name: $name,
+                timestamp: $at->getTimestamp(),
+            ),
             region: \str_contains($name, '/')
                 ? \explode('/', $name, 2)[0]
                 : '',
-            metazone: $canonical !== null
-                ? $this->metazone($canonical, $at)
-                : null,
+            metazone: $this->metazone(
+                canonical: $canonical,
+                at: $at,
+            ),
         );
     }
 
     /**
+     * @return array{displayName: string, city: string}
+     *
      * @throws TranslationException
      */
-    private static function offsetAt(
+    private function buildLocaleData(
         string $name,
-        \DateTimeInterface $at,
-    ): string {
-        return \DateTimeImmutable::createFromInterface($at)
-            ->setTimezone(self::timeZone($name))
-            ->format('P');
+        string $canonical,
+        LocaleInterface $locale,
+    ): array {
+        $city = self::lookup(
+            $this->zoneStrings($locale),
+            'zoneStrings',
+            \str_replace('/', ':', $canonical),
+            'ec',
+        );
+
+        return [
+            'displayName' => $this->timeZone($name)->getDisplayName(false, \IntlTimeZone::DISPLAY_GENERIC_LOCATION, $locale->tag),
+            'city' => \is_string($city)
+                ? $city
+                : self::cityFromName($name),
+        ];
     }
 
     /**
      * @throws TranslationException
      */
-    private static function seasonalOffsets(
+    private function groupName(
         string $name,
-        \DateTimeInterface $at,
+        LocaleInterface $locale,
     ): string {
-        $timeZone = self::timeZone($name);
-        $year = $at->format('Y');
-
-        return (new \DateTimeImmutable($year . '-01-15 12:00:00', $timeZone))->format('P') .
-            '/' .
-            (new \DateTimeImmutable($year . '-07-15 12:00:00', $timeZone))->format('P');
+        return $this->groupNames[$locale->tag][$name] ??= $this->timeZone($name)->getDisplayName(false, \IntlTimeZone::DISPLAY_LONG_GENERIC, $locale->tag);
     }
 
     /**
      * @throws TranslationException
      */
-    private static function timeZone(
+    private function canonicalId(
         string $name,
-    ): \DateTimeZone {
-        try {
-            return new \DateTimeZone($name);
-        } catch (\Exception) {
-            throw TranslationException::fromUnknownTimeZone(
-                name: $name,
-            );
+    ): string {
+        if (!isset($this->canonicalIds[$name])) {
+            $canonical = \IntlTimeZone::getCanonicalID($name, $isSystemId);
+
+            if ($isSystemId !== true) {
+                throw TranslationException::fromUnknownTimeZone(
+                    name: $name,
+                );
+            }
+
+            $this->canonicalIds[$name] = $canonical;
         }
+
+        return $this->canonicalIds[$name];
     }
 
-    private static function canonicalId(
+    private function timeZone(
         string $name,
-    ): ?string {
-        $canonical = \IntlTimeZone::getCanonicalID($name, $isSystemId);
+    ): \IntlTimeZone {
+        return $this->timeZones[$name] ??= \IntlTimeZone::createTimeZone($name);
+    }
 
-        return $isSystemId === true
-            ? $canonical
-            : null;
+    private function offsetAt(
+        string $name,
+        int $timestamp,
+    ): string {
+        $rawOffset = 0;
+        $dstOffset = 0;
+
+        $this->timeZone($name)->getOffset((float) ($timestamp * 1000), false, $rawOffset, $dstOffset);
+
+        /**
+         * @var int $rawOffset
+         * @var int $dstOffset
+         */
+        $seconds = \intdiv($rawOffset + $dstOffset, 1000);
+
+        return \sprintf(
+            '%s%02d:%02d',
+            $seconds < 0
+                ? '-'
+                : '+',
+            \intdiv(\abs($seconds), 3600),
+            \intdiv(\abs($seconds) % 3600, 60),
+        );
+    }
+
+    private function seasonalOffsets(
+        string $name,
+        \DateTimeInterface $at,
+    ): string {
+        $year = (int) $at->format('Y');
+
+        return $this->offsetAt($name, (int) \gmmktime(12, 0, 0, 1, 15, $year)) .
+            '/' .
+            $this->offsetAt($name, (int) \gmmktime(12, 0, 0, 7, 15, $year));
     }
 
     private static function cityFromName(
@@ -262,33 +363,6 @@ class TimeZoneList implements TimeZoneListInterface
         return \str_replace('_', ' ', $segments[\sizeof($segments) - 1]);
     }
 
-    private static function icuDisplayName(
-        string $name,
-        int $style,
-        LocaleInterface $locale,
-    ): string {
-        return \IntlTimeZone::createTimeZone($name)->getDisplayName(false, $style, $locale->tag);
-    }
-
-    /**
-     * @throws TranslationException
-     */
-    private function exemplarCity(
-        string $canonical,
-        LocaleInterface $locale,
-    ): ?string {
-        $city = self::lookup(
-            $this->zoneStrings($locale),
-            'zoneStrings',
-            \str_replace('/', ':', $canonical),
-            'ec',
-        );
-
-        return \is_string($city)
-            ? $city
-            : null;
-    }
-
     /**
      * @throws TranslationException
      */
@@ -296,28 +370,10 @@ class TimeZoneList implements TimeZoneListInterface
         string $canonical,
         \DateTimeInterface $at,
     ): ?string {
-        $history = self::lookup(
-            $this->metaZones(),
-            'metazoneInfo',
-            \str_replace('/', ':', $canonical),
-        );
+        $moment = \gmdate('Y-m-d H:i', $at->getTimestamp());
 
-        if (!$history instanceof \ResourceBundle) {
-            return null;
-        }
-
-        $moment = \DateTimeImmutable::createFromInterface($at)
-            ->setTimezone(new \DateTimeZone('UTC'))
-            ->format('Y-m-d H:i');
-
-        /** @var \ResourceBundle $period */
-        foreach ($history as $period) {
-            /** @var string $metazone */
-            $metazone = $period->get(0);
-            $from = $period->get(1);
-            $to = $period->get(2);
-
-            if (!\is_string($from) || !\is_string($to)) {
+        foreach ($this->metazoneHistory($canonical) as [$metazone, $from, $to]) {
+            if ($from === null || $to === null) {
                 return $metazone;
             }
 
@@ -327,6 +383,48 @@ class TimeZoneList implements TimeZoneListInterface
         }
 
         return null;
+    }
+
+    /**
+     * @return list<array{0: string, 1: string|null, 2: string|null}>
+     *
+     * @throws TranslationException
+     */
+    private function metazoneHistory(
+        string $canonical,
+    ): array {
+        if (!isset($this->metazoneHistories[$canonical])) {
+            $history = [];
+            $periods = self::lookup(
+                $this->metaZones(),
+                'metazoneInfo',
+                \str_replace('/', ':', $canonical),
+            );
+
+            if ($periods instanceof \ResourceBundle) {
+                /** @var \ResourceBundle $period */
+                foreach ($periods as $period) {
+                    /** @var string $metazone */
+                    $metazone = $period->get(0);
+                    $from = $period->get(1);
+                    $to = $period->get(2);
+
+                    $history[] = [
+                        $metazone,
+                        \is_string($from)
+                            ? $from
+                            : null,
+                        \is_string($to)
+                            ? $to
+                            : null,
+                    ];
+                }
+            }
+
+            $this->metazoneHistories[$canonical] = $history;
+        }
+
+        return $this->metazoneHistories[$canonical];
     }
 
     /**
@@ -352,7 +450,7 @@ class TimeZoneList implements TimeZoneListInterface
 
         if (\is_string($golden)) {
             foreach ($entries as $entry) {
-                if ($entry->name === $golden || self::canonicalId($entry->name) === $golden) {
+                if ($entry->name === $golden || $this->canonicalId($entry->name) === $golden) {
                     return $entry;
                 }
             }

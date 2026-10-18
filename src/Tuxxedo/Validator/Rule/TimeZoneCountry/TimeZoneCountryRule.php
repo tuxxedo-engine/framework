@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Tuxxedo\Validator\Rule\TimeZoneCountry;
 
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Intl\Temporal\TimeZoneListInterface;
+use Tuxxedo\Intl\TranslationException;
 use Tuxxedo\Temporal\TimeZoneInterface;
 use Tuxxedo\Validator\CommonViolationCode;
 use Tuxxedo\Validator\RuleInterface;
@@ -45,6 +47,9 @@ class TimeZoneCountryRule implements RuleInterface
         $this->country = $code;
     }
 
+    /**
+     * @throws TranslationException
+     */
     public function check(
         mixed $value,
         ValidationContextInterface $context,
@@ -70,7 +75,7 @@ class TimeZoneCountryRule implements RuleInterface
             ? $value->name
             : $value;
 
-        if (!\in_array($name, \DateTimeZone::listIdentifiers(\DateTimeZone::PER_COUNTRY, $this->country), true)) {
+        if (!\in_array($name, $container->resolve(TimeZoneListInterface::class)->names($this->country), true)) {
             return new Violation(
                 code: TimeZoneCountryViolationCode::NOT_IN_COUNTRY,
                 propertyPath: $context->currentPath,

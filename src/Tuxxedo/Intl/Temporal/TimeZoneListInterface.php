@@ -22,6 +22,15 @@ use Tuxxedo\Intl\TranslationException;
 interface TimeZoneListInterface
 {
     /**
+     * @return list<string>
+     *
+     * @throws TranslationException
+     */
+    public function names(
+        ?string $country = null,
+    ): array;
+
+    /**
      * @return list<TimeZoneEntryInterface>
      *
      * @throws TranslationException

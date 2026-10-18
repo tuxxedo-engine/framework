@@ -40,4 +40,14 @@ class ValidatorException extends Exception
             ),
         );
     }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public static function fromUnavailableLanguageData(): self
+    {
+        return new self(
+            message: 'ICU language data (ICUDATA-lang) is not available',
+        );
+    }
 }

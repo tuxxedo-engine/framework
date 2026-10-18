@@ -36,8 +36,18 @@ class TimeZoneIdentifierRuleTest extends TestCase
             null,
         ];
 
-        yield 'utc' => [
+        yield 'utc is not a location zone' => [
             'UTC',
+            TimeZoneIdentifierViolationCode::NOT_IDENTIFIER,
+        ];
+
+        yield 'old ICU canonical name' => [
+            'Asia/Calcutta',
+            TimeZoneIdentifierViolationCode::NOT_IDENTIFIER,
+        ];
+
+        yield 'current IANA name' => [
+            'Asia/Kolkata',
             null,
         ];
 

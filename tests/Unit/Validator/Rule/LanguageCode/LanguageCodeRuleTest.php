@@ -40,6 +40,21 @@ class LanguageCodeRuleTest extends TestCase
             null,
         ];
 
+        yield 'code ICU still lists' => [
+            'sh',
+            null,
+        ];
+
+        yield 'code ICU no longer lists' => [
+            'bh',
+            LanguageCodeViolationCode::NOT_RECOGNIZED,
+        ];
+
+        yield 'three-letter code' => [
+            'fil',
+            LanguageCodeViolationCode::NOT_RECOGNIZED,
+        ];
+
         yield 'made-up code' => [
             'zz',
             LanguageCodeViolationCode::NOT_RECOGNIZED,

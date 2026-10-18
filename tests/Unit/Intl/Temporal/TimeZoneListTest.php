@@ -121,21 +121,64 @@ class TimeZoneListTest extends TestCase
         self::assertSame('+11:00', $entries[1]->offset);
     }
 
-    public function testZoneUnknownToIcuGetsNamesFromTheIdentifier(): void
+    public function testOfRejectsZonesUnknownToIcu(): void
     {
-        $entry = (new TimeZoneList())->of(
-            names: [
-                '+02:00',
-            ],
-            locale: Locale::parse('en-US'),
-            at: $this->january(),
-        )[0];
+        try {
+            (new TimeZoneList())->of(
+                names: [
+                    '+02:00',
+                ],
+                locale: Locale::parse('en-US'),
+            );
 
-        self::assertSame('+02:00', $entry->displayName);
-        self::assertSame('+02:00', $entry->city);
-        self::assertSame('+02:00', $entry->offset);
-        self::assertSame('', $entry->region);
-        self::assertNull($entry->metazone);
+            self::fail('Expected TranslationException');
+        } catch (TranslationException $exception) {
+            self::assertStringContainsString(
+                'Unknown time zone',
+                $exception->getMessage(),
+            );
+        }
+    }
+
+    public function testNamesAreIcuLocationZonesWithIanaIdentifiers(): void
+    {
+        $list = new TimeZoneList();
+        $names = $list->names();
+
+        self::assertContains('Asia/Kolkata', $names);
+        self::assertContains('Europe/Kyiv', $names);
+        self::assertNotContains('Asia/Calcutta', $names);
+        self::assertNotContains('UTC', $names);
+        self::assertSame(
+            [
+                'Europe/Copenhagen',
+            ],
+            $list->names('dk'),
+        );
+    }
+
+    public function testNamesRejectMalformedCountry(): void
+    {
+        $this->expectException(TranslationException::class);
+
+        (new TimeZoneList())->names('Denmark');
+    }
+
+    public function testRepeatedCallsReturnTheSameEntries(): void
+    {
+        $list = new TimeZoneList();
+        $locale = Locale::parse('da-DK');
+
+        self::assertEquals(
+            $list->all(
+                locale: $locale,
+                at: $this->january(),
+            ),
+            $list->all(
+                locale: $locale,
+                at: $this->january(),
+            ),
+        );
     }
 
     public function testOfKeepsTheGivenOrder(): void
@@ -214,7 +257,7 @@ class TimeZoneListTest extends TestCase
             at: $this->january(),
         );
 
-        self::assertSame(\sizeof(\DateTimeZone::listIdentifiers()), \sizeof($entries));
+        self::assertSame(\sizeof((new TimeZoneList())->names()), \sizeof($entries));
 
         for ($i = 1, $size = \sizeof($entries); $i < $size; $i++) {
             self::assertLessThanOrEqual(

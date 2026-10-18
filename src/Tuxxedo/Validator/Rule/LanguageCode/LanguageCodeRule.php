@@ -17,6 +17,7 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Validator\CommonViolationCode;
 use Tuxxedo\Validator\RuleInterface;
 use Tuxxedo\Validator\ValidationContextInterface;
+use Tuxxedo\Validator\ValidatorException;
 use Tuxxedo\Validator\Violation;
 use Tuxxedo\Validator\ViolationInterface;
 use Tuxxedo\Validator\WrongTypeViolationContext;
@@ -25,195 +26,13 @@ use Tuxxedo\Validator\WrongTypeViolationContext;
 class LanguageCodeRule implements RuleInterface
 {
     /**
-     * @var list<string>
+     * @var list<string>|null
      */
-    private const array CODES = [
-        'aa',
-        'ab',
-        'ae',
-        'af',
-        'ak',
-        'am',
-        'an',
-        'ar',
-        'as',
-        'av',
-        'ay',
-        'az',
-        'ba',
-        'be',
-        'bg',
-        'bh',
-        'bi',
-        'bm',
-        'bn',
-        'bo',
-        'br',
-        'bs',
-        'ca',
-        'ce',
-        'ch',
-        'co',
-        'cr',
-        'cs',
-        'cu',
-        'cv',
-        'cy',
-        'da',
-        'de',
-        'dv',
-        'dz',
-        'ee',
-        'el',
-        'en',
-        'eo',
-        'es',
-        'et',
-        'eu',
-        'fa',
-        'ff',
-        'fi',
-        'fj',
-        'fo',
-        'fr',
-        'fy',
-        'ga',
-        'gd',
-        'gl',
-        'gn',
-        'gu',
-        'gv',
-        'ha',
-        'he',
-        'hi',
-        'ho',
-        'hr',
-        'ht',
-        'hu',
-        'hy',
-        'hz',
-        'ia',
-        'id',
-        'ie',
-        'ig',
-        'ii',
-        'ik',
-        'io',
-        'is',
-        'it',
-        'iu',
-        'ja',
-        'jv',
-        'ka',
-        'kg',
-        'ki',
-        'kj',
-        'kk',
-        'kl',
-        'km',
-        'kn',
-        'ko',
-        'kr',
-        'ks',
-        'ku',
-        'kv',
-        'kw',
-        'ky',
-        'la',
-        'lb',
-        'lg',
-        'li',
-        'ln',
-        'lo',
-        'lt',
-        'lu',
-        'lv',
-        'mg',
-        'mh',
-        'mi',
-        'mk',
-        'ml',
-        'mn',
-        'mr',
-        'ms',
-        'mt',
-        'my',
-        'na',
-        'nb',
-        'nd',
-        'ne',
-        'ng',
-        'nl',
-        'nn',
-        'no',
-        'nr',
-        'nv',
-        'ny',
-        'oc',
-        'oj',
-        'om',
-        'or',
-        'os',
-        'pa',
-        'pi',
-        'pl',
-        'ps',
-        'pt',
-        'qu',
-        'rm',
-        'rn',
-        'ro',
-        'ru',
-        'rw',
-        'sa',
-        'sc',
-        'sd',
-        'se',
-        'sg',
-        'si',
-        'sk',
-        'sl',
-        'sm',
-        'sn',
-        'so',
-        'sq',
-        'sr',
-        'ss',
-        'st',
-        'su',
-        'sv',
-        'sw',
-        'ta',
-        'te',
-        'tg',
-        'th',
-        'ti',
-        'tk',
-        'tl',
-        'tn',
-        'to',
-        'tr',
-        'ts',
-        'tt',
-        'tw',
-        'ty',
-        'ug',
-        'uk',
-        'ur',
-        'uz',
-        've',
-        'vi',
-        'vo',
-        'wa',
-        'wo',
-        'xh',
-        'yi',
-        'yo',
-        'za',
-        'zh',
-        'zu',
-    ];
+    private ?array $codes = null;
 
+    /**
+     * @throws ValidatorException
+     */
     public function check(
         mixed $value,
         ValidationContextInterface $context,
@@ -235,7 +54,7 @@ class LanguageCodeRule implements RuleInterface
             );
         }
 
-        if (!\in_array(\strtolower($value), self::CODES, true)) {
+        if (!\in_array(\strtolower($value), $this->codes(), true)) {
             return new Violation(
                 code: LanguageCodeViolationCode::NOT_RECOGNIZED,
                 propertyPath: $context->currentPath,
@@ -244,5 +63,35 @@ class LanguageCodeRule implements RuleInterface
         }
 
         return null;
+    }
+
+    /**
+     * @return list<string>
+     *
+     * @throws ValidatorException
+     */
+    private function codes(): array
+    {
+        if ($this->codes === null) {
+            $languages = \ResourceBundle::create('en', 'ICUDATA-lang')?->get('Languages');
+
+            if (!$languages instanceof \ResourceBundle) {
+                // @codeCoverageIgnoreStart
+                throw ValidatorException::fromUnavailableLanguageData();
+                // @codeCoverageIgnoreEnd
+            }
+
+            $codes = [];
+
+            foreach ($languages as $code => $name) {
+                if (\is_string($code) && \preg_match('/^[a-z]{2}$/', $code) === 1) {
+                    $codes[] = $code;
+                }
+            }
+
+            $this->codes = $codes;
+        }
+
+        return $this->codes;
     }
 }

@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Tuxxedo\Validator\Rule\TimeZoneIdentifier;
 
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Intl\Temporal\TimeZoneListInterface;
+use Tuxxedo\Intl\TranslationException;
 use Tuxxedo\Temporal\TimeZoneInterface;
 use Tuxxedo\Validator\CommonViolationCode;
 use Tuxxedo\Validator\RuleInterface;
@@ -25,6 +27,9 @@ use Tuxxedo\Validator\WrongTypeViolationContext;
 #[\Attribute(\Attribute::TARGET_PROPERTY | \Attribute::TARGET_PARAMETER | \Attribute::IS_REPEATABLE)]
 class TimeZoneIdentifierRule implements RuleInterface
 {
+    /**
+     * @throws TranslationException
+     */
     public function check(
         mixed $value,
         ValidationContextInterface $context,
@@ -50,7 +55,7 @@ class TimeZoneIdentifierRule implements RuleInterface
             ? $value->name
             : $value;
 
-        if (!\in_array($name, \DateTimeZone::listIdentifiers(), true)) {
+        if (!\in_array($name, $container->resolve(TimeZoneListInterface::class)->names(), true)) {
             return new Violation(
                 code: TimeZoneIdentifierViolationCode::NOT_IDENTIFIER,
                 propertyPath: $context->currentPath,
