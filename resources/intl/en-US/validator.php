@@ -14,6 +14,7 @@ declare(strict_types=1);
 return [
     'common.wrong-type' => 'Value at "{path}" must be {expected}, got {received}',
     'common.null-value' => 'Value at "{path}" may not be null',
+    'common.invalid-encoding' => 'Value at "{path}" is not valid text',
     'email.invalid-format' => 'Value at "{path}" is not a valid email address',
     'url.invalid-format' => 'Value at "{path}" is not a valid URL',
     'url.disallowed-scheme' => 'URL at "{path}" uses scheme "{scheme}", allowed schemes are: {allowed}',

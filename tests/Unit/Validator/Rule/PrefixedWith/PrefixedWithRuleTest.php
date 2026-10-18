@@ -115,4 +115,27 @@ class PrefixedWithRuleTest extends TestCase
             ),
         );
     }
+
+    public function testInvalidEncodingIsReported(): void
+    {
+        self::assertSame(
+            CommonViolationCode::INVALID_ENCODING,
+            $this->runRule(
+                rule: new PrefixedWithRule(
+                    prefix: 'Café',
+                ),
+                value: "Caf\xFF noir",
+            )?->code,
+        );
+
+        self::assertSame(
+            CommonViolationCode::INVALID_ENCODING,
+            $this->runRule(
+                rule: new PrefixedWithRule(
+                    prefix: "Caf\xFF",
+                ),
+                value: 'Café noir',
+            )?->code,
+        );
+    }
 }

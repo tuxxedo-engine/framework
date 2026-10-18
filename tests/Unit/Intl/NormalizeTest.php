@@ -20,7 +20,7 @@ use Tuxxedo\Intl\Normalize;
 class NormalizeTest extends TestCase
 {
     /**
-     * @return \Generator<string, array{0: Normalize, 1: string, 2: string}>
+     * @return \Generator<string, array{0: Normalize, 1: string, 2: string|null}>
      */
     public static function providesCases(): \Generator
     {
@@ -60,8 +60,14 @@ class NormalizeTest extends TestCase
             'Café',
         ];
 
-        yield 'invalid UTF-8 is returned as is' => [
+        yield 'invalid UTF-8 fails with null' => [
             Normalize::CANONICAL,
+            "ab\xFF",
+            null,
+        ];
+
+        yield 'none never fails' => [
+            Normalize::NONE,
             "ab\xFF",
             "ab\xFF",
         ];
@@ -71,7 +77,7 @@ class NormalizeTest extends TestCase
     public function testApply(
         Normalize $normalize,
         string $value,
-        string $expected,
+        ?string $expected,
     ): void {
         self::assertSame($expected, $normalize->apply($value));
     }

@@ -14,6 +14,7 @@ declare(strict_types=1);
 return [
     'common.wrong-type' => 'Arvon kohdassa "{path}" on oltava {expected}, saatiin {received}',
     'common.null-value' => 'Arvo kohdassa "{path}" ei saa olla null',
+    'common.invalid-encoding' => 'Arvo kohdassa "{path}" ei ole kelvollista tekstiä',
     'email.invalid-format' => 'Arvo kohdassa "{path}" ei ole kelvollinen sähköpostiosoite',
     'url.invalid-format' => 'Arvo kohdassa "{path}" ei ole kelvollinen URL',
     'url.disallowed-scheme' => 'URL kohdassa "{path}" käyttää skeemaa "{scheme}", sallitut skeemat ovat: {allowed}',

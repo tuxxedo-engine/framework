@@ -15,6 +15,7 @@ namespace Tuxxedo\Validator\Rule\EqualTo;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Intl\Normalize;
+use Tuxxedo\Validator\CommonViolationCode;
 use Tuxxedo\Validator\RuleInterface;
 use Tuxxedo\Validator\ValidationContextInterface;
 use Tuxxedo\Validator\Violation;
@@ -35,7 +36,18 @@ class EqualToRule implements RuleInterface
         ContainerInterface $container,
     ): ?ViolationInterface {
         if (\is_string($value) && \is_string($this->expected)) {
-            if ($this->normalize->apply($value) === $this->normalize->apply($this->expected)) {
+            $normalizedValue = $this->normalize->apply($value);
+            $normalizedExpected = $this->normalize->apply($this->expected);
+
+            if ($normalizedValue === null || $normalizedExpected === null) {
+                return new Violation(
+                    code: CommonViolationCode::INVALID_ENCODING,
+                    propertyPath: $context->currentPath,
+                    invalidValue: $value,
+                );
+            }
+
+            if ($normalizedValue === $normalizedExpected) {
                 return null;
             }
         } elseif ($value === $this->expected) {

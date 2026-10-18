@@ -115,4 +115,27 @@ class ContainsRuleTest extends TestCase
             ),
         );
     }
+
+    public function testInvalidEncodingIsReported(): void
+    {
+        self::assertSame(
+            CommonViolationCode::INVALID_ENCODING,
+            $this->runRule(
+                rule: new ContainsRule(
+                    needle: 'Café',
+                ),
+                value: "Le Caf\xFF",
+            )?->code,
+        );
+
+        self::assertSame(
+            CommonViolationCode::INVALID_ENCODING,
+            $this->runRule(
+                rule: new ContainsRule(
+                    needle: "Caf\xFF",
+                ),
+                value: 'Le Café',
+            )?->code,
+        );
+    }
 }

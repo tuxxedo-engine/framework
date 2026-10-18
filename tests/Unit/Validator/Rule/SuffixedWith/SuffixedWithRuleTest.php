@@ -115,4 +115,27 @@ class SuffixedWithRuleTest extends TestCase
             ),
         );
     }
+
+    public function testInvalidEncodingIsReported(): void
+    {
+        self::assertSame(
+            CommonViolationCode::INVALID_ENCODING,
+            $this->runRule(
+                rule: new SuffixedWithRule(
+                    suffix: 'Café',
+                ),
+                value: "Le Caf\xFF",
+            )?->code,
+        );
+
+        self::assertSame(
+            CommonViolationCode::INVALID_ENCODING,
+            $this->runRule(
+                rule: new SuffixedWithRule(
+                    suffix: "Caf\xFF",
+                ),
+                value: 'Le Café',
+            )?->code,
+        );
+    }
 }

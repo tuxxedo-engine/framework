@@ -18,6 +18,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Support\Validator\RuleTestingTrait;
 use Tuxxedo\Intl\Normalize;
+use Tuxxedo\Validator\CommonViolationCode;
 use Tuxxedo\Validator\Rule\NotIn\NotInRule;
 use Tuxxedo\Validator\Rule\NotIn\NotInViolationCode;
 use Tuxxedo\Validator\Rule\NotIn\NotInViolationContext;
@@ -133,6 +134,33 @@ class NotInRuleTest extends TestCase
                 ),
                 value: "Cafe\u{0301}",
             ),
+        );
+    }
+
+    public function testInvalidEncodingIsReported(): void
+    {
+        self::assertSame(
+            CommonViolationCode::INVALID_ENCODING,
+            $this->runRule(
+                rule: new NotInRule(
+                    values: [
+                        'Café',
+                    ],
+                ),
+                value: "Caf\xFF",
+            )?->code,
+        );
+
+        self::assertSame(
+            CommonViolationCode::INVALID_ENCODING,
+            $this->runRule(
+                rule: new NotInRule(
+                    values: [
+                        "Caf\xFF",
+                    ],
+                ),
+                value: 'Café',
+            )?->code,
         );
     }
 }

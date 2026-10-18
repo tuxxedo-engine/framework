@@ -14,6 +14,7 @@ declare(strict_types=1);
 return [
     'common.wrong-type' => 'Värdet vid "{path}" måste vara {expected}, fick {received}',
     'common.null-value' => 'Värdet vid "{path}" får inte vara null',
+    'common.invalid-encoding' => 'Värdet vid "{path}" är inte giltig text',
     'email.invalid-format' => 'Värdet vid "{path}" är inte en giltig e-postadress',
     'url.invalid-format' => 'Värdet vid "{path}" är inte en giltig URL',
     'url.disallowed-scheme' => 'URL:en vid "{path}" använder schemat "{scheme}", tillåtna scheman är: {allowed}',

@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Support\Validator\RuleTestingTrait;
 use Tuxxedo\Intl\Normalize;
+use Tuxxedo\Validator\CommonViolationCode;
 use Tuxxedo\Validator\Rule\EqualTo\EqualToRule;
 use Tuxxedo\Validator\Rule\EqualTo\EqualToViolationCode;
 use Tuxxedo\Validator\Rule\EqualTo\EqualToViolationContext;
@@ -124,6 +125,29 @@ class EqualToRuleTest extends TestCase
                 ),
                 value: "Cafe\u{0301}",
             ),
+        );
+    }
+
+    public function testInvalidEncodingIsReported(): void
+    {
+        self::assertSame(
+            CommonViolationCode::INVALID_ENCODING,
+            $this->runRule(
+                rule: new EqualToRule(
+                    expected: 'Café',
+                ),
+                value: "Caf\xFF",
+            )?->code,
+        );
+
+        self::assertSame(
+            CommonViolationCode::INVALID_ENCODING,
+            $this->runRule(
+                rule: new EqualToRule(
+                    expected: "Caf\xFF",
+                ),
+                value: 'Café',
+            )?->code,
         );
     }
 }

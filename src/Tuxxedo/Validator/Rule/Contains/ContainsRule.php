@@ -52,7 +52,18 @@ class ContainsRule implements RuleInterface
             );
         }
 
-        if (!\str_contains($this->normalize->apply($value), $this->normalize->apply($this->needle))) {
+        $normalizedValue = $this->normalize->apply($value);
+        $normalizedNeedle = $this->normalize->apply($this->needle);
+
+        if ($normalizedValue === null || $normalizedNeedle === null) {
+            return new Violation(
+                code: CommonViolationCode::INVALID_ENCODING,
+                propertyPath: $context->currentPath,
+                invalidValue: $value,
+            );
+        }
+
+        if (!\str_contains($normalizedValue, $normalizedNeedle)) {
             return new Violation(
                 code: ContainsViolationCode::MISSING_SUBSTRING,
                 propertyPath: $context->currentPath,

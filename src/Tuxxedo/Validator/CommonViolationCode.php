@@ -17,4 +17,5 @@ enum CommonViolationCode: string implements ViolationCodeInterface
 {
     case WRONG_TYPE = 'validator.common.wrong-type';
     case NULL_VALUE = 'validator.common.null-value';
+    case INVALID_ENCODING = 'validator.common.invalid-encoding';
 }

@@ -14,6 +14,7 @@ declare(strict_types=1);
 return [
     'common.wrong-type' => 'Gildið á "{path}" verður að vera {expected}, fékk {received}',
     'common.null-value' => 'Gildið á "{path}" má ekki vera null',
+    'common.invalid-encoding' => 'Gildið á "{path}" er ekki gildur texti',
     'email.invalid-format' => 'Gildið á "{path}" er ekki gilt netfang',
     'url.invalid-format' => 'Gildið á "{path}" er ekki gild vefslóð',
     'url.disallowed-scheme' => 'Vefslóðin á "{path}" notar skemað "{scheme}", leyfð skemu eru: {allowed}',

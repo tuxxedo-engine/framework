@@ -14,6 +14,7 @@ declare(strict_types=1);
 return [
     'common.wrong-type' => 'Verdien ved "{path}" må vere {expected}, fekk {received}',
     'common.null-value' => 'Verdien ved "{path}" kan ikkje vere null',
+    'common.invalid-encoding' => 'Verdien ved "{path}" er ikkje gyldig tekst',
     'email.invalid-format' => 'Verdien ved "{path}" er ikkje ei gyldig e-postadresse',
     'url.invalid-format' => 'Verdien ved "{path}" er ikkje ein gyldig URL',
     'url.disallowed-scheme' => 'URL-en ved "{path}" brukar skjemaet "{scheme}", tillatne skjema er: {allowed}',

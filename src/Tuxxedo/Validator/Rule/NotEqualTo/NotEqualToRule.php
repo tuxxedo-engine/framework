@@ -15,6 +15,7 @@ namespace Tuxxedo\Validator\Rule\NotEqualTo;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Intl\Normalize;
+use Tuxxedo\Validator\CommonViolationCode;
 use Tuxxedo\Validator\RuleInterface;
 use Tuxxedo\Validator\ValidationContextInterface;
 use Tuxxedo\Validator\Violation;
@@ -34,11 +35,22 @@ class NotEqualToRule implements RuleInterface
         ValidationContextInterface $context,
         ContainerInterface $container,
     ): ?ViolationInterface {
-        $equal = \is_string($value) && \is_string($this->disallowed)
-            ? $this->normalize->apply($value) === $this->normalize->apply($this->disallowed)
-            : $value === $this->disallowed;
+        if (\is_string($value) && \is_string($this->disallowed)) {
+            $normalizedValue = $this->normalize->apply($value);
+            $normalizedDisallowed = $this->normalize->apply($this->disallowed);
 
-        if (!$equal) {
+            if ($normalizedValue === null || $normalizedDisallowed === null) {
+                return new Violation(
+                    code: CommonViolationCode::INVALID_ENCODING,
+                    propertyPath: $context->currentPath,
+                    invalidValue: $value,
+                );
+            }
+
+            if ($normalizedValue !== $normalizedDisallowed) {
+                return null;
+            }
+        } elseif ($value !== $this->disallowed) {
             return null;
         }
 

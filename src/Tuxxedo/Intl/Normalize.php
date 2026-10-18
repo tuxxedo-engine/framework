@@ -21,7 +21,7 @@ enum Normalize: string
 
     public function apply(
         string $value,
-    ): string {
+    ): ?string {
         $form = match ($this) {
             self::NONE => null,
             self::CANONICAL => \Normalizer::FORM_C,
@@ -36,6 +36,6 @@ enum Normalize: string
 
         return \is_string($normalized)
             ? $normalized
-            : $value;
+            : null;
     }
 }

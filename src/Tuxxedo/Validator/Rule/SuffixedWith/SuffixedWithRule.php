@@ -52,7 +52,18 @@ class SuffixedWithRule implements RuleInterface
             );
         }
 
-        if (!\str_ends_with($this->normalize->apply($value), $this->normalize->apply($this->suffix))) {
+        $normalizedValue = $this->normalize->apply($value);
+        $normalizedSuffix = $this->normalize->apply($this->suffix);
+
+        if ($normalizedValue === null || $normalizedSuffix === null) {
+            return new Violation(
+                code: CommonViolationCode::INVALID_ENCODING,
+                propertyPath: $context->currentPath,
+                invalidValue: $value,
+            );
+        }
+
+        if (!\str_ends_with($normalizedValue, $normalizedSuffix)) {
             return new Violation(
                 code: SuffixedWithViolationCode::MISSING_SUFFIX,
                 propertyPath: $context->currentPath,

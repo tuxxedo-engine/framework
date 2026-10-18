@@ -52,7 +52,18 @@ class PrefixedWithRule implements RuleInterface
             );
         }
 
-        if (!\str_starts_with($this->normalize->apply($value), $this->normalize->apply($this->prefix))) {
+        $normalizedValue = $this->normalize->apply($value);
+        $normalizedPrefix = $this->normalize->apply($this->prefix);
+
+        if ($normalizedValue === null || $normalizedPrefix === null) {
+            return new Violation(
+                code: CommonViolationCode::INVALID_ENCODING,
+                propertyPath: $context->currentPath,
+                invalidValue: $value,
+            );
+        }
+
+        if (!\str_starts_with($normalizedValue, $normalizedPrefix)) {
             return new Violation(
                 code: PrefixedWithViolationCode::MISSING_PREFIX,
                 propertyPath: $context->currentPath,

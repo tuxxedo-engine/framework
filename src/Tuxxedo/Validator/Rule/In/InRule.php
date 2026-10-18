@@ -15,6 +15,7 @@ namespace Tuxxedo\Validator\Rule\In;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Intl\Normalize;
+use Tuxxedo\Validator\CommonViolationCode;
 use Tuxxedo\Validator\RuleInterface;
 use Tuxxedo\Validator\ValidationContextInterface;
 use Tuxxedo\Validator\Violation;
@@ -49,12 +50,21 @@ class InRule implements RuleInterface
 
         if (\is_string($probe)) {
             $probe = $this->normalize->apply($probe);
-            $comparable = \array_map(
-                fn (string|int $entry): string|int => \is_string($entry)
+            $comparable = [];
+
+            foreach ($allowed as $entry) {
+                $comparable[] = \is_string($entry)
                     ? $this->normalize->apply($entry)
-                    : $entry,
-                $allowed,
-            );
+                    : $entry;
+            }
+
+            if ($probe === null || \in_array(null, $comparable, true)) {
+                return new Violation(
+                    code: CommonViolationCode::INVALID_ENCODING,
+                    propertyPath: $context->currentPath,
+                    invalidValue: $value,
+                );
+            }
         }
 
         if (\in_array($probe, $comparable, true)) {
