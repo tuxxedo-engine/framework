@@ -66,16 +66,45 @@ class DateFilters
         return TemporalCoercion::toInstant($value)->toIso8601();
     }
 
+    #[LumiFilter('date_full')]
+    public function dateFull(
+        #[Context]
+        RuntimeContextInterface $context,
+        InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
+    ): string {
+        return self::formatPreset(
+            context: $context,
+            value: $value,
+            datePattern: 'l, F j, Y',
+            timePattern: 'g:i A',
+        );
+    }
+
     #[LumiFilter('date_long')]
     public function dateLong(
         #[Context]
         RuntimeContextInterface $context,
         InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
     ): string {
-        return TemporalCoercion::format(
+        return self::formatPreset(
+            context: $context,
             value: $value,
-            pattern: 'l, F j, Y g:i A',
-            timeZone: self::resolveDirectiveTimeZone($context),
+            datePattern: 'F j, Y',
+            timePattern: 'g:i A',
+        );
+    }
+
+    #[LumiFilter('date_medium')]
+    public function dateMedium(
+        #[Context]
+        RuntimeContextInterface $context,
+        InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
+    ): string {
+        return self::formatPreset(
+            context: $context,
+            value: $value,
+            datePattern: 'M j, Y',
+            timePattern: 'g:i A',
         );
     }
 
@@ -85,10 +114,11 @@ class DateFilters
         RuntimeContextInterface $context,
         InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
     ): string {
-        return TemporalCoercion::format(
+        return self::formatPreset(
+            context: $context,
             value: $value,
-            pattern: 'Y-m-d H:i',
-            timeZone: self::resolveDirectiveTimeZone($context),
+            datePattern: 'Y-m-d',
+            timePattern: 'H:i',
         );
     }
 
@@ -112,6 +142,26 @@ class DateFilters
         return TemporalCoercion::format(
             value: $value,
             pattern: 'H:i:s',
+        );
+    }
+
+    /**
+     * @throws TemporalException
+     */
+    private static function formatPreset(
+        RuntimeContextInterface $context,
+        InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
+        string $datePattern,
+        string $timePattern,
+    ): string {
+        return TemporalCoercion::format(
+            value: $value,
+            pattern: match (true) {
+                $value instanceof LocalDateInterface => $datePattern,
+                $value instanceof LocalTimeInterface => $timePattern,
+                default => $datePattern . ' ' . $timePattern,
+            },
+            timeZone: self::resolveDirectiveTimeZone($context),
         );
     }
 

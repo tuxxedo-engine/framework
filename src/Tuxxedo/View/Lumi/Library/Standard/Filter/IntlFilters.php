@@ -81,6 +81,24 @@ class IntlFilters
      * @throws TranslationException
      * @throws TemporalException
      */
+    #[LumiFilter('locale_date_full')]
+    public function localeDateFull(
+        #[Context]
+        RuntimeContextInterface $context,
+        InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
+    ): string {
+        return $this->formatDate(
+            value: $value,
+            locale: $this->resolveLocale($context),
+            timeZone: self::resolveDirectiveTimeZone($context),
+            dateStyle: DateStyle::FULL,
+        );
+    }
+
+    /**
+     * @throws TranslationException
+     * @throws TemporalException
+     */
     #[LumiFilter('locale_date_long')]
     public function localeDateLong(
         #[Context]
@@ -91,7 +109,25 @@ class IntlFilters
             value: $value,
             locale: $this->resolveLocale($context),
             timeZone: self::resolveDirectiveTimeZone($context),
-            dateStyle: DateStyle::FULL,
+            dateStyle: DateStyle::LONG,
+        );
+    }
+
+    /**
+     * @throws TranslationException
+     * @throws TemporalException
+     */
+    #[LumiFilter('locale_date_medium')]
+    public function localeDateMedium(
+        #[Context]
+        RuntimeContextInterface $context,
+        InstantInterface|LocalDateInterface|LocalTimeInterface|\DateTimeInterface|int|string $value,
+    ): string {
+        return $this->formatDate(
+            value: $value,
+            locale: $this->resolveLocale($context),
+            timeZone: self::resolveDirectiveTimeZone($context),
+            dateStyle: DateStyle::MEDIUM,
         );
     }
 

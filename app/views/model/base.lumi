@@ -207,7 +207,7 @@
         </header>
         {% yield content %}
         <footer>
-            <small>{{ t('model.renderedAt', ['date': date_now('c') | locale_date_long]) }}</small>
+            <small>{{ t('model.renderedAt', ['date': date_now('c') | locale_date_full]) }}</small>
         </footer>
     </main>
     <script>

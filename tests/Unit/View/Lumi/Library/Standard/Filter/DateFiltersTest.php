@@ -158,12 +158,31 @@ class DateFiltersTest extends TestCase
         self::assertSame($expected, $this->filtersAt('2026-07-16T12:00:00Z')->dateIso($value));
     }
 
-    public function testDateLongFormatsInstantWithLongPreset(): void
+    public function testDateFullFormatsInstantWithFullPreset(): void
     {
         self::assertSame(
             'Thursday, July 16, 2026 12:00 PM',
-            $this->filtersAt('2026-07-16T12:00:00Z')->dateLong(new StubRuntimeContext(), Instant::parse('2026-07-16T12:00:00Z')),
+            $this->filtersAt('2026-07-16T12:00:00Z')->dateFull(new StubRuntimeContext(), Instant::parse('2026-07-16T12:00:00Z')),
         );
+    }
+
+    public function testDateLongAndMediumFormatInstantWithTheirPresets(): void
+    {
+        $filters = $this->filtersAt('2026-07-16T12:00:00Z');
+        $instant = Instant::parse('2026-07-16T12:00:00Z');
+
+        self::assertSame('July 16, 2026 12:00 PM', $filters->dateLong(new StubRuntimeContext(), $instant));
+        self::assertSame('Jul 16, 2026 12:00 PM', $filters->dateMedium(new StubRuntimeContext(), $instant));
+    }
+
+    public function testPresetsShowOnlyTheDateOrTimePartForLocalValues(): void
+    {
+        $filters = $this->filtersAt('2026-07-16T12:00:00Z');
+
+        self::assertSame('Thursday, July 16, 2026', $filters->dateFull(new StubRuntimeContext(), LocalDate::of(2026, 7, 16)));
+        self::assertSame('2026-07-16', $filters->dateShort(new StubRuntimeContext(), LocalDate::of(2026, 7, 16)));
+        self::assertSame('2:30 PM', $filters->dateLong(new StubRuntimeContext(), LocalTime::of(14, 30)));
+        self::assertSame('14:30', $filters->dateShort(new StubRuntimeContext(), LocalTime::of(14, 30)));
     }
 
     public function testDateShortFormatsInstantWithShortPreset(): void

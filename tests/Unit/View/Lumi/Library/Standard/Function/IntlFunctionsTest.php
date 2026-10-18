@@ -533,11 +533,13 @@ class IntlFunctionsTest extends TestCase
 
         $value = new \DateTimeImmutable('2026-10-15 14:30:00', new \DateTimeZone('Europe/Copenhagen'));
 
-        self::assertSame('čtvrtek 15. října 2026 v 14:30', $functions->localeDateLong(new StubRuntimeContext(), $value, 'cs-CZ'));
+        self::assertSame('čtvrtek 15. října 2026 v 14:30', $functions->localeDateFull(new StubRuntimeContext(), $value, 'cs-CZ'));
         self::assertSame('15.10.26 14:30', $functions->localeDateShort(new StubRuntimeContext(), $value, 'cs-CZ'));
-        self::assertSame('Thursday, October 15, 2026', $functions->localeDateLong(new StubRuntimeContext(), LocalDate::of(2026, 10, 15)));
+        self::assertSame('Thursday, October 15, 2026', $functions->localeDateFull(new StubRuntimeContext(), LocalDate::of(2026, 10, 15)));
         self::assertSame('10/15/26', $functions->localeDateShort(new StubRuntimeContext(), LocalDate::of(2026, 10, 15)));
         self::assertSame('09.05', $functions->localeDateShort(new StubRuntimeContext(), LocalTime::of(9, 5), 'da-DK'));
+        self::assertSame('15. oktober 2026', $functions->localeDateLong(new StubRuntimeContext(), LocalDate::of(2026, 10, 15), 'da-DK'));
+        self::assertSame('15. okt. 2026', $functions->localeDateMedium(new StubRuntimeContext(), LocalDate::of(2026, 10, 15), 'da-DK'));
     }
 
     public function testAsciiAndRomanizeTransliterate(): void

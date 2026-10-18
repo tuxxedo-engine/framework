@@ -108,9 +108,11 @@ class IntlFiltersTest extends TestCase
 
         $instant = Instant::parse('2026-10-15T12:30:00+00:00');
 
-        self::assertSame('torsdag den 15. oktober 2026 kl. 12.30', $filters->localeDateLong(new StubRuntimeContext(), $instant));
+        self::assertSame('torsdag den 15. oktober 2026 kl. 12.30', $filters->localeDateFull(new StubRuntimeContext(), $instant));
         self::assertSame('15.10.2026', $filters->localeDateShort(new StubRuntimeContext(), LocalDate::of(2026, 10, 15)));
         self::assertSame('14.30', $filters->localeDateShort(new StubRuntimeContext(), LocalTime::of(14, 30)));
+        self::assertSame('15. oktober 2026', $filters->localeDateLong(new StubRuntimeContext(), LocalDate::of(2026, 10, 15)));
+        self::assertSame('15. okt. 2026', $filters->localeDateMedium(new StubRuntimeContext(), LocalDate::of(2026, 10, 15)));
     }
 
     public function testAsciiAndRomanizeTransliterate(): void
