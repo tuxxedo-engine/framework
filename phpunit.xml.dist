@@ -44,5 +44,7 @@
     <env name="TUXXEDO_TEST_MAILPIT_TLS_SMTP_PORT" value=""/>
     <env name="TUXXEDO_TEST_MAILPIT_TLS_API_URL" value=""/>
     <env name="TUXXEDO_TEST_MAILPIT_TLS_CA_FILE" value=""/>
+    <env name="TUXXEDO_TEST_REDIS_HOST" value=""/>
+    <env name="TUXXEDO_TEST_REDIS_PORT" value=""/>
   </php>
 </phpunit>

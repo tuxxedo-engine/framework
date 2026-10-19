@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Application;
 
+use Tuxxedo\Cache\CacheManagerInterface;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionManagerInterface;
@@ -63,6 +64,14 @@ interface AbstractConfiguratorInterface
         get;
     }
 
+    public ?CacheManagerInterface $cacheManager {
+        get;
+    }
+
+    public bool $useDefaultCache {
+        get;
+    }
+
     /**
      * @var list<string>
      */
@@ -108,6 +117,12 @@ interface AbstractConfiguratorInterface
     public function withDefaultMailManager(
         ?\Closure $customizer = null,
     ): static;
+
+    public function withCache(
+        CacheManagerInterface $cacheManager,
+    ): static;
+
+    public function withDefaultCache(): static;
 
     public function withServiceFile(
         string $file,

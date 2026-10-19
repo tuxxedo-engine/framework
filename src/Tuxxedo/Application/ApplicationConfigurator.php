@@ -327,6 +327,7 @@ class ApplicationConfigurator extends AbstractConfigurator implements Applicatio
         $this->registerConnectionManager($container);
         $this->registerStorage($container);
         $this->registerMailManager($container);
+        $this->registerCache($container);
 
         $container->singletonLazy(
             KernelInterface::class,

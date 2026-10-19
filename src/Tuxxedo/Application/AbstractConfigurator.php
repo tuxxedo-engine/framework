@@ -13,6 +13,11 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Application;
 
+use Tuxxedo\Cache\CacheException;
+use Tuxxedo\Cache\CacheInterface;
+use Tuxxedo\Cache\CacheManager;
+use Tuxxedo\Cache\CacheManagerInterface;
+use Tuxxedo\Cache\Config\CacheConfigInterface;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\Config\ConnectionManagerConfigInterface;
@@ -42,6 +47,8 @@ abstract class AbstractConfigurator implements AbstractConfiguratorInterface
     public private(set) ?MailManagerInterface $mailManager = null;
     public private(set) bool $useDefaultMailManager = false;
     public private(set) ?\Closure $mailManagerCustomizer = null;
+    public private(set) ?CacheManagerInterface $cacheManager = null;
+    public private(set) bool $useDefaultCache = false;
 
     /**
      * @var list<string>
@@ -136,6 +143,23 @@ abstract class AbstractConfigurator implements AbstractConfiguratorInterface
         $this->useDefaultMailManager = true;
         $this->mailManagerCustomizer = $customizer;
         $this->mailManager = null;
+
+        return $this;
+    }
+
+    public function withCache(
+        CacheManagerInterface $cacheManager,
+    ): static {
+        $this->cacheManager = $cacheManager;
+        $this->useDefaultCache = false;
+
+        return $this;
+    }
+
+    public function withDefaultCache(): static
+    {
+        $this->useDefaultCache = true;
+        $this->cacheManager = null;
 
         return $this;
     }
@@ -293,6 +317,49 @@ abstract class AbstractConfigurator implements AbstractConfiguratorInterface
 
                 return $configurator->build();
             },
+        );
+    }
+
+    protected function registerCache(
+        ContainerInterface $container,
+    ): void {
+        if ($this->cacheManager !== null) {
+            $cacheManager = $this->cacheManager;
+
+            $container->singletonLazy(
+                CacheManagerInterface::class,
+                static fn (): CacheManagerInterface => $cacheManager,
+            );
+
+            $container->alias(
+                CacheInterface::class,
+                CacheManagerInterface::class,
+            );
+
+            return;
+        }
+
+        if (!$this->useDefaultCache) {
+            return;
+        }
+
+        $container->singletonLazy(
+            CacheManagerInterface::class,
+            static function (ContainerInterface $container): CacheManagerInterface {
+                if (!$container->isBound(CacheConfigInterface::class)) {
+                    throw CacheException::fromMissingConfig();
+                }
+
+                return CacheManager::createFromConfig(
+                    container: $container,
+                    config: $container->resolve(CacheConfigInterface::class),
+                );
+            },
+        );
+
+        $container->alias(
+            CacheInterface::class,
+            CacheManagerInterface::class,
         );
     }
 

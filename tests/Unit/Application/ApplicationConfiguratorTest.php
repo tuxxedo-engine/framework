@@ -15,6 +15,8 @@ namespace Unit\Application;
 
 use Fixture\Application\ApplicationConfigurator\ServiceMarker;
 use PHPUnit\Framework\TestCase;
+use Support\Cache\InMemoryCacheDriver;
+use Support\Cache\InMemoryCacheDriverConfig;
 use Support\Database\StubConnectionManager;
 use Support\Env\Source\StubEnvSource;
 use Support\File\Storage\StubStorage;
@@ -24,6 +26,11 @@ use Support\Http\Response\StubResponseEmitter;
 use Support\Mail\Transport\RecordingMailTransport;
 use Tuxxedo\Application\ApplicationConfigurator;
 use Tuxxedo\Application\Environment;
+use Tuxxedo\Cache\Cache;
+use Tuxxedo\Cache\CacheException;
+use Tuxxedo\Cache\CacheManager;
+use Tuxxedo\Cache\CacheManagerInterface;
+use Tuxxedo\Cache\Config\CacheConfig;
 use Tuxxedo\Config\Config;
 use Tuxxedo\Config\ConfigException;
 use Tuxxedo\Container\Container;
@@ -51,6 +58,7 @@ use Tuxxedo\Mail\MailManager;
 use Tuxxedo\Mail\MailManagerInterface;
 use Tuxxedo\Mail\Transport\FileMail\Config\FileMailTransportConfig;
 use Tuxxedo\Mail\Transport\FileMail\FileMailTransport;
+use Tuxxedo\Mapper\Mapper;
 use Tuxxedo\Router\DynamicRouter;
 use Tuxxedo\Router\RouteDiscoverer;
 use Tuxxedo\Router\RouterInterface;
@@ -480,6 +488,53 @@ class ApplicationConfiguratorTest extends TestCase
         self::assertNull($configurator->storage);
     }
 
+    public function testWithCacheStoresInstanceAndReturnsFluentSelf(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $cacheManager = $this->makeCacheManager();
+
+        $result = $configurator->withCache(
+            cacheManager: $cacheManager,
+        );
+
+        self::assertSame($cacheManager, $configurator->cacheManager);
+        self::assertSame($configurator, $result);
+    }
+
+    public function testWithCacheClearsDefaultCacheState(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $configurator->withDefaultCache();
+
+        $configurator->withCache(
+            cacheManager: $this->makeCacheManager(),
+        );
+
+        self::assertFalse($configurator->useDefaultCache);
+    }
+
+    public function testWithDefaultCacheEnablesUseDefaultCacheAndReturnsFluentSelf(): void
+    {
+        $configurator = new ApplicationConfigurator();
+
+        $result = $configurator->withDefaultCache();
+
+        self::assertTrue($configurator->useDefaultCache);
+        self::assertSame($configurator, $result);
+    }
+
+    public function testWithDefaultCacheClearsExplicitCacheManager(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $configurator->withCache(
+            cacheManager: $this->makeCacheManager(),
+        );
+
+        $configurator->withDefaultCache();
+
+        self::assertNull($configurator->cacheManager);
+    }
+
     public function testWithMiddlewareWrapsInstanceInClosure(): void
     {
         $configurator = new ApplicationConfigurator();
@@ -770,6 +825,16 @@ class ApplicationConfiguratorTest extends TestCase
         $result = $configurator->withoutServiceFiles();
 
         self::assertSame($configurator, $result);
+    }
+
+    private function makeCacheManager(): CacheManager
+    {
+        return new CacheManager(
+            root: new Cache(
+                driver: new InMemoryCacheDriver(),
+                mapper: new Mapper(),
+            ),
+        );
     }
 
     private function makeMinimalConfigurator(): ApplicationConfigurator
@@ -1422,6 +1487,75 @@ class ApplicationConfiguratorTest extends TestCase
         $container = $configurator->container;
 
         self::assertFalse($container->isBound(StorageInterface::class));
+    }
+
+    public function testBuildRegistersCacheFromUserSuppliedInstance(): void
+    {
+        $cacheManager = $this->makeCacheManager();
+
+        $configurator = $this->makeMinimalConfigurator()
+            ->withCache(
+                cacheManager: $cacheManager,
+            );
+
+        $configurator->build();
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        self::assertSame(
+            $cacheManager,
+            $container->resolve(CacheManagerInterface::class),
+        );
+    }
+
+    public function testBuildRegistersCacheFromDefault(): void
+    {
+        $configurator = $this->makeMinimalConfigurator()
+            ->withDefaultCache();
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        $container->singleton(
+            new CacheConfig(
+                default: new InMemoryCacheDriverConfig(),
+            ),
+        );
+
+        $configurator->build();
+
+        self::assertInstanceOf(
+            CacheManager::class,
+            $container->resolve(CacheManagerInterface::class),
+        );
+    }
+
+    public function testBuildThrowsOnDefaultCacheWithoutConfig(): void
+    {
+        $configurator = $this->makeMinimalConfigurator()
+            ->withDefaultCache();
+
+        $configurator->build();
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        self::expectException(CacheException::class);
+
+        $container->resolve(CacheManagerInterface::class);
+    }
+
+    public function testBuildDoesNotRegisterCacheWhenNotConfigured(): void
+    {
+        $configurator = $this->makeMinimalConfigurator();
+
+        $configurator->build();
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        self::assertFalse($container->isBound(CacheManagerInterface::class));
     }
 
     public function testBuildRegistersMailManagerFromUserSuppliedInstance(): void

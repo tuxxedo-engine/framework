@@ -39,6 +39,16 @@ jobs:
           - 1025:1025
           - 8025:8025
 
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
       mailpit-auth:
         image: axllent/mailpit
         ports:
@@ -72,6 +82,8 @@ jobs:
       TUXXEDO_TEST_MAILPIT_AUTH_SMTP_PORT: '1026'
       TUXXEDO_TEST_MAILPIT_TLS_HOST: '127.0.0.1'
       TUXXEDO_TEST_MAILPIT_TLS_SMTP_PORT: '1027'
+      TUXXEDO_TEST_REDIS_HOST: '127.0.0.1'
+      TUXXEDO_TEST_REDIS_PORT: '6379'
 
     steps:
       - name: Checkout code
@@ -82,7 +94,8 @@ jobs:
         with:
           php-version: '8.5'
           coverage: xdebug
-          extensions: filter, mbstring, mysqli, openssl, pdo, pdo_mysql, pdo_pgsql, pdo_sqlite, pgsql, session, sodium, sqlite3, fileinfo, intl
+          extensions: filter, mbstring, mysqli, openssl, pdo, pdo_mysql, pdo_pgsql, pdo_sqlite, pgsql, session, sodium, sqlite3, fileinfo, intl, apcu, redis
+          ini-values: apc.enable_cli=1
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress

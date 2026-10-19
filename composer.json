@@ -40,6 +40,7 @@
     "test:parallel": "vendor/bin/paratest --processes=auto"
   },
   "suggest": {
+    "ext-apcu": "For the APCu cache driver",
     "ext-fileinfo": "For better file type detection in uploaded files",
     "ext-mysqli": "For database connections to mysql",
     "ext-openssl": "For crypto support in JWT, Email signing, and SMTP over TLS",
@@ -48,6 +49,7 @@
     "ext-pdo-pgsql": "For database connections to postgres using PDO",
     "ext-pdo-sqlite": "For database connections to sqlite using PDO",
     "ext-pgsql": "For database connections to postgres",
+    "ext-redis": "For the Redis cache driver",
     "ext-session": "For session support",
     "ext-sodium": "For crypto support in JWT, and Email signing",
     "ext-sqlite3": "For database connections to sqlite",
