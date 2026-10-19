@@ -42,7 +42,7 @@
   "suggest": {
     "ext-fileinfo": "For better file type detection in uploaded files",
     "ext-mysqli": "For database connections to mysql",
-    "ext-openssl": "For crypto support in JWT, and Email signing",
+    "ext-openssl": "For crypto support in JWT, Email signing, and SMTP over TLS",
     "ext-pdo": "For database connections using PDO",
     "ext-pdo-mysql": "For database connections to mysql using PDO",
     "ext-pdo-pgsql": "For database connections to postgres using PDO",
