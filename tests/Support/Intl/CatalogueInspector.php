@@ -27,6 +27,7 @@ class CatalogueInspector
         'nb-NO',
         'nn-NO',
         'is-IS',
+        'fo-FO',
     ];
 
     /**

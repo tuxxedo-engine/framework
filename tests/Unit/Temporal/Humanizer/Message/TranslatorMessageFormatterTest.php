@@ -257,6 +257,18 @@ class TranslatorMessageFormatterTest extends TestCase
             21,
             '21 klukkustund',
         ];
+
+        yield 'fo-FO one' => [
+            'fo-FO',
+            1,
+            '1 tími',
+        ];
+
+        yield 'fo-FO other' => [
+            'fo-FO',
+            5,
+            '5 tímar',
+        ];
     }
 
     #[DataProvider('shippedPluralMatrix')]
