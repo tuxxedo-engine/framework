@@ -52,6 +52,34 @@ class CacheException extends Exception
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
+    public static function fromDriverError(
+        string $driver,
+        string $operation,
+        string $key,
+        \Throwable $previous,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cache driver "%s" failed to %s key "%s": %s',
+                $driver,
+                $operation,
+                $key,
+                $previous->getMessage(),
+            ),
+            previous: $previous,
+        );
+    }
+
+    public static function fromInvalidNamespace(): self
+    {
+        return new self(
+            message: 'Invalid cache driver configuration: the namespace must not be empty',
+        );
+    }
+
     public static function fromInvalidSeparator(
         string $separator,
     ): self {

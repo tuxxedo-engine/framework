@@ -24,7 +24,7 @@ interface CacheDriverConfigInterface
         get;
     }
 
-    public ?string $namespace {
+    public string $namespace {
         get;
     }
 }

@@ -13,14 +13,21 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Cache\Driver\Apcu\Config;
 
+use Tuxxedo\Cache\CacheException;
 use Tuxxedo\Cache\Driver\Apcu\ApcuCacheDriver;
 
 class ApcuCacheDriverConfig implements ApcuCacheDriverConfigInterface
 {
     public private(set) string $driverClass = ApcuCacheDriver::class;
 
+    /**
+     * @throws CacheException
+     */
     public function __construct(
-        public readonly ?string $namespace = null,
+        public readonly string $namespace,
     ) {
+        if ($namespace === '') {
+            throw CacheException::fromInvalidNamespace();
+        }
     }
 }

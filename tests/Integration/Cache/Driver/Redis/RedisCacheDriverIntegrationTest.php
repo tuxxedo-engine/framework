@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Integration\Cache\Driver\Redis;
 
 use Integration\Cache\Driver\AbstractCacheDriverIntegrationTestCase;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use Support\Cache\RedisServerProbe;
 use Support\Cache\RedisTestEnv;
 use Tuxxedo\Cache\CacheException;
@@ -22,6 +23,7 @@ use Tuxxedo\Cache\Driver\Redis\Config\RedisCacheDriverConfig;
 use Tuxxedo\Cache\Driver\Redis\RedisCacheDriver;
 use Tuxxedo\Container\Container;
 
+#[RequiresPhpExtension('redis')]
 class RedisCacheDriverIntegrationTest extends AbstractCacheDriverIntegrationTestCase
 {
     protected function skipReason(): ?string
@@ -83,6 +85,7 @@ class RedisCacheDriverIntegrationTest extends AbstractCacheDriverIntegrationTest
     {
         $driver = new RedisCacheDriver(
             new RedisCacheDriverConfig(
+                namespace: $this->namespace,
                 host: RedisTestEnv::host(),
                 port: RedisTestEnv::port(),
                 timeout: 0.5,
@@ -99,6 +102,7 @@ class RedisCacheDriverIntegrationTest extends AbstractCacheDriverIntegrationTest
     {
         $driver = new RedisCacheDriver(
             new RedisCacheDriverConfig(
+                namespace: $this->namespace,
                 host: RedisTestEnv::host(),
                 port: RedisTestEnv::port(),
                 password: 'not-the-password',
@@ -114,6 +118,7 @@ class RedisCacheDriverIntegrationTest extends AbstractCacheDriverIntegrationTest
     {
         $driver = new RedisCacheDriver(
             new RedisCacheDriverConfig(
+                namespace: $this->namespace,
                 host: RedisTestEnv::host(),
                 port: RedisTestEnv::port(),
                 username: 'tuxxedo-unknown-user',
@@ -130,6 +135,7 @@ class RedisCacheDriverIntegrationTest extends AbstractCacheDriverIntegrationTest
     {
         $driver = new RedisCacheDriver(
             new RedisCacheDriverConfig(
+                namespace: $this->namespace,
                 host: RedisTestEnv::host(),
                 port: RedisTestEnv::port(),
                 database: 99,
@@ -164,10 +170,20 @@ class RedisCacheDriverIntegrationTest extends AbstractCacheDriverIntegrationTest
         }
     }
 
+    public function testConfigRejectsEmptyNamespace(): void
+    {
+        self::expectException(CacheException::class);
+
+        new RedisCacheDriverConfig(
+            namespace: '',
+        );
+    }
+
     public function testUnreachableServerThrowsOnFirstUse(): void
     {
         $driver = new RedisCacheDriver(
             new RedisCacheDriverConfig(
+                namespace: $this->namespace,
                 host: RedisTestEnv::host(),
                 port: 1,
                 timeout: 0.5,

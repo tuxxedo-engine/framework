@@ -13,13 +13,18 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Cache\Driver\Redis\Config;
 
+use Tuxxedo\Cache\CacheException;
 use Tuxxedo\Cache\Driver\Redis\RedisCacheDriver;
 
 class RedisCacheDriverConfig implements RedisCacheDriverConfigInterface
 {
     public private(set) string $driverClass = RedisCacheDriver::class;
 
+    /**
+     * @throws CacheException
+     */
     public function __construct(
+        public readonly string $namespace,
         public readonly string $host = '127.0.0.1',
         public readonly int $port = 6379,
         public readonly int $database = 0,
@@ -29,7 +34,9 @@ class RedisCacheDriverConfig implements RedisCacheDriverConfigInterface
         public readonly bool $persistent = false,
         public readonly bool $tls = false,
         public readonly bool $tlsVerifyPeer = true,
-        public readonly ?string $namespace = null,
     ) {
+        if ($namespace === '') {
+            throw CacheException::fromInvalidNamespace();
+        }
     }
 }

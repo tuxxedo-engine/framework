@@ -23,6 +23,7 @@ use Tuxxedo\Temporal\DurationInterface;
 class ApcuCacheDriver implements CacheDriverInterface
 {
     private const string NAME = 'apcu';
+    private const int CAS_ATTEMPTS = 100;
 
     public readonly string $namespace;
 
@@ -50,7 +51,7 @@ class ApcuCacheDriver implements CacheDriverInterface
             // @codeCoverageIgnoreEnd
         }
 
-        $this->namespace = $config->namespace ?? '';
+        $this->namespace = $config->namespace;
     }
 
     public static function create(
@@ -75,22 +76,47 @@ class ApcuCacheDriver implements CacheDriverInterface
     /**
      * @throws CacheException
      */
-    private function counterResult(
+    private function incrementBy(
         string $key,
-        mixed $result,
-        bool $success,
+        int $delta,
+        ?DurationInterface $ttl,
         string $operation,
     ): int {
-        if ($success && \is_int($result)) {
-            return $result;
-        }
+        $fullKey = $this->namespace . $key;
 
-        if (\apcu_exists($this->namespace . $key) === true) {
-            throw CacheException::fromTypeMismatch(
-                key: $key,
-                expected: 'int',
-                actual: \get_debug_type(\apcu_fetch($this->namespace . $key)),
-            );
+        for ($attempt = 0; $attempt < self::CAS_ATTEMPTS; $attempt++) {
+            $success = false;
+            $current = \apcu_fetch($fullKey, $success);
+
+            if ($success !== true) {
+                if (\apcu_add($fullKey, $delta, $this->ttlSeconds($ttl)) === true) {
+                    return $delta;
+                }
+
+                continue; // @codeCoverageIgnore
+            }
+
+            if (!\is_int($current)) {
+                throw CacheException::fromTypeMismatch(
+                    key: $key,
+                    expected: 'int',
+                    actual: \get_debug_type($current),
+                );
+            }
+
+            if (
+                ($delta > 0 && $current > \PHP_INT_MAX - $delta) ||
+                ($delta < 0 && $current < \PHP_INT_MIN - $delta)
+            ) {
+                throw CacheException::fromCounterOverflow(
+                    key: $key,
+                    operation: $operation,
+                );
+            }
+
+            if (\apcu_cas($fullKey, $current, $current + $delta)) {
+                return $current + $delta;
+            }
         }
 
         // @codeCoverageIgnoreStart
@@ -162,24 +188,10 @@ class ApcuCacheDriver implements CacheDriverInterface
         int $by,
         ?DurationInterface $ttl,
     ): int {
-        $success = false;
-        $result = \apcu_inc($this->namespace . $key, $by, $success, $this->ttlSeconds($ttl));
-
-        /** @var bool $success */
-
-        if ($success && \is_int($result) && $result < \PHP_INT_MIN + $by) {
-            \apcu_dec($this->namespace . $key, $by);
-
-            throw CacheException::fromCounterOverflow(
-                key: $key,
-                operation: 'increment',
-            );
-        }
-
-        return $this->counterResult(
+        return $this->incrementBy(
             key: $key,
-            result: $result,
-            success: $success,
+            delta: $by,
+            ttl: $ttl,
             operation: 'increment',
         );
     }
@@ -189,24 +201,10 @@ class ApcuCacheDriver implements CacheDriverInterface
         int $by,
         ?DurationInterface $ttl,
     ): int {
-        $success = false;
-        $result = \apcu_dec($this->namespace . $key, $by, $success, $this->ttlSeconds($ttl));
-
-        /** @var bool $success */
-
-        if ($success && \is_int($result) && $result > \PHP_INT_MAX - $by) {
-            \apcu_inc($this->namespace . $key, $by);
-
-            throw CacheException::fromCounterOverflow(
-                key: $key,
-                operation: 'decrement',
-            );
-        }
-
-        return $this->counterResult(
+        return $this->incrementBy(
             key: $key,
-            result: $result,
-            success: $success,
+            delta: -$by,
+            ttl: $ttl,
             operation: 'decrement',
         );
     }
@@ -220,17 +218,9 @@ class ApcuCacheDriver implements CacheDriverInterface
     public function clear(
         string $prefix,
     ): void {
-        $fullPrefix = $this->namespace . $prefix;
-
-        if ($fullPrefix === '') {
-            \apcu_clear_cache();
-
-            return;
-        }
-
         \apcu_delete(
             new \APCUIterator(
-                '/\A' . \preg_quote($fullPrefix, '/') . '/',
+                '/\A' . \preg_quote($this->namespace . $prefix, '/') . '/',
                 \APC_ITER_KEY,
             ),
         );

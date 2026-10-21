@@ -14,19 +14,18 @@ declare(strict_types=1);
 namespace Integration\Cache\Driver\Apcu;
 
 use Integration\Cache\Driver\AbstractCacheDriverIntegrationTestCase;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
+use Tuxxedo\Cache\CacheException;
 use Tuxxedo\Cache\Driver\Apcu\ApcuCacheDriver;
 use Tuxxedo\Cache\Driver\Apcu\Config\ApcuCacheDriverConfig;
 use Tuxxedo\Cache\Driver\CacheDriverInterface;
 use Tuxxedo\Container\Container;
 
+#[RequiresPhpExtension('apcu')]
 class ApcuCacheDriverIntegrationTest extends AbstractCacheDriverIntegrationTestCase
 {
     protected function skipReason(): ?string
     {
-        if (!\extension_loaded('apcu')) {
-            return 'ext-apcu is not loaded';
-        }
-
         if (!\apcu_enabled()) {
             return 'APCu is disabled (set apc.enable_cli=1)';
         }
@@ -61,17 +60,12 @@ class ApcuCacheDriverIntegrationTest extends AbstractCacheDriverIntegrationTestC
         self::assertTrue($driver->exists('name'));
     }
 
-    public function testClearWithoutNamespaceClearsEverything(): void
+    public function testConfigRejectsEmptyNamespace(): void
     {
-        $driver = $this->createDriver('');
+        self::expectException(CacheException::class);
 
-        $this->cache->set(
-            key: 'name',
-            value: 'Kalle',
+        new ApcuCacheDriverConfig(
+            namespace: '',
         );
-
-        $driver->clear('');
-
-        self::assertFalse($this->cache->has('name'));
     }
 }

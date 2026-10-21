@@ -20,7 +20,7 @@ class InMemoryCacheDriverConfig implements CacheDriverConfigInterface
     public private(set) string $driverClass = InMemoryCacheDriver::class;
 
     public function __construct(
-        public readonly ?string $namespace = null,
+        public readonly string $namespace = 'test:',
     ) {
     }
 }

@@ -43,7 +43,7 @@ class RedisCacheDriver implements CacheDriverInterface
             // @codeCoverageIgnoreEnd
         }
 
-        $this->namespace = $config->namespace ?? '';
+        $this->namespace = $config->namespace;
     }
 
     public static function create(
@@ -270,29 +270,68 @@ class RedisCacheDriver implements CacheDriverInterface
         // @codeCoverageIgnoreEnd
     }
 
+    /**
+     * @template T
+     *
+     * @param \Closure(): T $callback
+     * @return T
+     *
+     * @throws CacheException
+     */
+    private function guard(
+        string $operation,
+        string $key,
+        \Closure $callback,
+    ): mixed {
+        try {
+            return $callback();
+        } catch (\RedisException $exception) {
+            // @codeCoverageIgnoreStart
+            throw CacheException::fromDriverError(
+                driver: self::NAME,
+                operation: $operation,
+                key: $key,
+                previous: $exception,
+            );
+            // @codeCoverageIgnoreEnd
+        }
+    }
+
     public function fetch(
         string $key,
         array $allowedClasses,
     ): int|float|string|bool|array|object|null {
-        $payload = $this->redis()->get($this->namespace . $key);
-
-        if (!\is_string($payload)) {
-            return null;
-        }
-
-        return $this->decode(
+        return $this->guard(
+            operation: 'fetch',
             key: $key,
-            payload: $payload,
-            allowedClasses: $allowedClasses,
+            callback: function () use ($key, $allowedClasses): int|float|string|bool|array|object|null {
+                $payload = $this->redis()->get($this->namespace . $key);
+
+                if (!\is_string($payload)) {
+                    return null;
+                }
+
+                return $this->decode(
+                    key: $key,
+                    payload: $payload,
+                    allowedClasses: $allowedClasses,
+                );
+            },
         );
     }
 
     public function exists(
         string $key,
     ): bool {
-        $count = $this->redis()->exists($this->namespace . $key);
+        return $this->guard(
+            operation: 'check',
+            key: $key,
+            callback: function () use ($key): bool {
+                $count = $this->redis()->exists($this->namespace . $key);
 
-        return \is_int($count) && $count > 0;
+                return \is_int($count) && $count > 0;
+            },
+        );
     }
 
     public function store(
@@ -300,10 +339,14 @@ class RedisCacheDriver implements CacheDriverInterface
         int|float|string|bool|array|object $value,
         ?DurationInterface $ttl,
     ): void {
-        $stored = $this->redis()->set(
-            $this->namespace . $key,
-            $this->encode($value),
-            $this->withTtl([], $ttl),
+        $stored = $this->guard(
+            operation: 'store',
+            key: $key,
+            callback: fn (): mixed => $this->redis()->set(
+                $this->namespace . $key,
+                $this->encode($value),
+                $this->withTtl([], $ttl),
+            ),
         );
 
         if ($stored !== true) {
@@ -323,16 +366,20 @@ class RedisCacheDriver implements CacheDriverInterface
         int|float|string|bool|array|object $value,
         ?DurationInterface $ttl,
     ): bool {
-        return $this->redis()->set(
-            $this->namespace . $key,
-            $this->encode($value),
-            $this->withTtl(
-                [
-                    'nx',
-                ],
-                $ttl,
-            ),
-        ) === true;
+        return $this->guard(
+            operation: 'add',
+            key: $key,
+            callback: fn (): bool => $this->redis()->set(
+                $this->namespace . $key,
+                $this->encode($value),
+                $this->withTtl(
+                    [
+                        'nx',
+                    ],
+                    $ttl,
+                ),
+            ) === true,
+        );
     }
 
     public function increment(
@@ -340,11 +387,15 @@ class RedisCacheDriver implements CacheDriverInterface
         int $by,
         ?DurationInterface $ttl,
     ): int {
-        return $this->incrementBy(
-            key: $key,
-            delta: $by,
-            ttl: $ttl,
+        return $this->guard(
             operation: 'increment',
+            key: $key,
+            callback: fn (): int => $this->incrementBy(
+                key: $key,
+                delta: $by,
+                ttl: $ttl,
+                operation: 'increment',
+            ),
         );
     }
 
@@ -353,33 +404,47 @@ class RedisCacheDriver implements CacheDriverInterface
         int $by,
         ?DurationInterface $ttl,
     ): int {
-        return $this->incrementBy(
-            key: $key,
-            delta: -$by,
-            ttl: $ttl,
+        return $this->guard(
             operation: 'decrement',
+            key: $key,
+            callback: fn (): int => $this->incrementBy(
+                key: $key,
+                delta: -$by,
+                ttl: $ttl,
+                operation: 'decrement',
+            ),
         );
     }
 
     public function remove(
         string $key,
     ): void {
-        $this->redis()->unlink($this->namespace . $key);
+        $this->guard(
+            operation: 'remove',
+            key: $key,
+            callback: fn (): mixed => $this->redis()->unlink($this->namespace . $key),
+        );
     }
 
     public function clear(
         string $prefix,
     ): void {
-        $redis = $this->redis();
-        $pattern = \addcslashes($this->namespace . $prefix, '*?[]\\') . '*';
-        $iterator = null;
+        $this->guard(
+            operation: 'clear',
+            key: $prefix . '*',
+            callback: function () use ($prefix): void {
+                $redis = $this->redis();
+                $pattern = \addcslashes($this->namespace . $prefix, '*?[]\\') . '*';
+                $iterator = null;
 
-        do {
-            $keys = $redis->scan($iterator, $pattern, self::SCAN_BATCH);
+                do {
+                    $keys = $redis->scan($iterator, $pattern, self::SCAN_BATCH);
 
-            if (\is_array($keys) && $keys !== []) {
-                $redis->unlink($keys);
-            }
-        } while ($iterator > 0);
+                    if (\is_array($keys) && $keys !== []) {
+                        $redis->unlink($keys);
+                    }
+                } while ($iterator > 0);
+            },
+        );
     }
 }
