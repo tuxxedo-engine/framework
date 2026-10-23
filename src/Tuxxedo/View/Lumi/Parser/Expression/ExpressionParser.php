@@ -19,6 +19,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayItemNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
+use Tuxxedo\View\Lumi\Syntax\Node\CallDispatch;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\FilterCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FilterOrBitwiseOrNode;
@@ -233,6 +234,21 @@ class ExpressionParser implements ExpressionParserInterface
                 );
             }
 
+            if ($token->op1 === CharacterSymbol::RANGE->symbol()) {
+                $stream->consume();
+
+                return new FunctionCallNode(
+                    name: new IdentifierNode(
+                        name: 'range',
+                    ),
+                    arguments: [
+                        $left,
+                        $this->parseExpression($stream, Precedence::RANGE),
+                    ],
+                    dispatch: CallDispatch::NATIVE,
+                );
+            }
+
             if ($token->op1 === CharacterSymbol::LEFT_PARENTHESIS->symbol()) {
                 $stream->consume();
 
@@ -387,6 +403,17 @@ class ExpressionParser implements ExpressionParserInterface
 
                 if ($operator === BinarySymbol::BITWISE_OR) {
                     if ($right instanceof LiteralNode) {
+                        return new BinaryOpNode(
+                            left: $left,
+                            right: $right,
+                            operator: $operator,
+                        );
+                    }
+
+                    if (
+                        $right instanceof FunctionCallNode &&
+                        $right->dispatch === CallDispatch::NATIVE
+                    ) {
                         return new BinaryOpNode(
                             left: $left,
                             right: $right,

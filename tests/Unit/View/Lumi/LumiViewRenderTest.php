@@ -13,8 +13,10 @@ declare(strict_types=1);
 
 namespace Unit\View\Lumi;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Support\View\Lumi\Runtime\StubLumiEngine;
+use Tuxxedo\View\Lumi\LumiEngine;
 use Tuxxedo\View\Lumi\LumiViewRender;
 use Tuxxedo\View\Lumi\Runtime\Loader;
 use Tuxxedo\View\Lumi\Runtime\Runtime;
@@ -109,12 +111,13 @@ class LumiViewRenderTest extends TestCase
      */
     private function createRuntime(
         array $directives = [],
+        RuntimeFunctionPolicy $functionPolicy = RuntimeFunctionPolicy::ALLOW_ALL,
     ): Runtime {
         return new Runtime(
             engine: $this->engine,
             instanceResolver: static fn (string $class): object => new $class(),
             directives: $directives,
-            functionPolicy: RuntimeFunctionPolicy::ALLOW_ALL,
+            functionPolicy: $functionPolicy,
         );
     }
 
@@ -495,5 +498,180 @@ class LumiViewRenderTest extends TestCase
         } finally {
             \error_reporting($previous);
         }
+    }
+
+    /**
+     * @param array<string, mixed> $scope
+     */
+    private function renderCompiledSource(
+        string $source,
+        RuntimeFunctionPolicy $functionPolicy,
+        array $scope = [],
+    ): string {
+        $this->writeView('compiled');
+        $this->writeCachedFile(
+            'compiled',
+            LumiEngine::createDefault()->compileString($source),
+        );
+
+        return $this->createRender(
+            runtime: $this->createRuntime(
+                functionPolicy: $functionPolicy,
+            ),
+        )->render(
+            view: new View(
+                name: 'compiled',
+                scope: $scope,
+            ),
+        );
+    }
+
+    /**
+     * @return \Generator<string, array{0: string, 1: array<string, mixed>, 2: string}>
+     */
+    public static function rangeTemplateDataProvider(): \Generator
+    {
+        yield 'ascending integers' => [
+            '{% for i in 1..5 %}{! i !}{% endfor %}',
+            [],
+            '12345',
+        ];
+
+        yield 'descending integers' => [
+            '{% for i in 5..1 %}{! i !}{% endfor %}',
+            [],
+            '54321',
+        ];
+
+        yield 'negative bounds' => [
+            '{% for i in -2..2 %}{! i !},{% endfor %}',
+            [],
+            '-2,-1,0,1,2,',
+        ];
+
+        yield 'equal bounds' => [
+            '{% for i in 3..3 %}{! i !}{% endfor %}',
+            [],
+            '3',
+        ];
+
+        yield 'letters' => [
+            '{% for c in \'a\'..\'e\' %}{! c !}{% endfor %}',
+            [],
+            'abcde',
+        ];
+
+        yield 'floats' => [
+            '{% for x in 0.5..2 %}{! x !};{% endfor %}',
+            [],
+            '0.5;1.5;',
+        ];
+
+        yield 'variable bounds' => [
+            '{% for i in first..last %}{! i !}{% endfor %}',
+            [
+                'first' => 2,
+                'last' => 4,
+            ],
+            '234',
+        ];
+
+        yield 'arithmetic end' => [
+            '{% for i in 0..n - 1 %}{! i !}{% endfor %}',
+            [
+                'n' => 3,
+            ],
+            '012',
+        ];
+
+        yield 'nested ranges' => [
+            '{% for i in 1..2 %}{% for j in 1..2 %}{! i ~ j !},{% endfor %}{% endfor %}',
+            [],
+            '11,12,21,22,',
+        ];
+
+        yield 'key and value' => [
+            '{% for v, k in 7..9 %}{! k !}={! v !},{% endfor %}',
+            [],
+            '0=7,1=8,2=9,',
+        ];
+
+        yield 'indexed group' => [
+            '{! (10..20)[3] !}',
+            [],
+            '13',
+        ];
+
+        yield 'assigned range' => [
+            '{% set pages = 1..3 %}{% for p in pages %}{! p !}{% endfor %}',
+            [],
+            '123',
+        ];
+
+        yield 'ternary branch' => [
+            '{% for i in up ? 1..3 : 3..1 %}{! i !}{% endfor %}',
+            [
+                'up' => false,
+            ],
+            '321',
+        ];
+    }
+
+    /**
+     * @return \Generator<string, array{0: RuntimeFunctionPolicy, 1: string, 2: array<string, mixed>, 3: string}>
+     */
+    public static function rangePolicyDataProvider(): \Generator
+    {
+        foreach (RuntimeFunctionPolicy::cases() as $policy) {
+            foreach (self::rangeTemplateDataProvider() as $name => [$source, $scope, $expected]) {
+                yield $policy->name . ': ' . $name => [
+                    $policy,
+                    $source,
+                    $scope,
+                    $expected,
+                ];
+            }
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $scope
+     */
+    #[DataProvider('rangePolicyDataProvider')]
+    public function testRangeRendersUnderEveryFunctionPolicy(
+        RuntimeFunctionPolicy $functionPolicy,
+        string $source,
+        array $scope,
+        string $expected,
+    ): void {
+        self::assertSame(
+            $expected,
+            $this->renderCompiledSource(
+                source: $source,
+                functionPolicy: $functionPolicy,
+                scope: $scope,
+            ),
+        );
+    }
+
+    public function testExplicitRangeCallStillFollowsFunctionPolicy(): void
+    {
+        self::expectException(ViewException::class);
+
+        $this->renderCompiledSource(
+            source: '{% for i in range(1, 3) %}{! i !}{% endfor %}',
+            functionPolicy: RuntimeFunctionPolicy::DISALLOW_ALL,
+        );
+    }
+
+    public function testExplicitRangeCallRendersWhenFunctionsAreAllowed(): void
+    {
+        self::assertSame(
+            '123',
+            $this->renderCompiledSource(
+                source: '{% for i in range(1, 3) %}{! i !}{% endfor %}',
+                functionPolicy: RuntimeFunctionPolicy::ALLOW_ALL,
+            ),
+        );
     }
 }

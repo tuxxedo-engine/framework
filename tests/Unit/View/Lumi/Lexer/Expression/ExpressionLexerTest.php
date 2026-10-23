@@ -13,10 +13,15 @@ declare(strict_types=1);
 
 namespace Unit\View\Lumi\Lexer\Expression;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Support\View\Lumi\Lexer\TokenAssertionsTrait;
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexer;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
+use Tuxxedo\View\Lumi\Syntax\Token\CharacterToken;
+use Tuxxedo\View\Lumi\Syntax\Token\IdentifierToken;
+use Tuxxedo\View\Lumi\Syntax\Token\LiteralToken;
+use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
 class ExpressionLexerTest extends TestCase
@@ -658,5 +663,331 @@ class ExpressionLexerTest extends TestCase
         } catch (LexerException $exception) {
             self::assertStringContainsString('"€"', $exception->getMessage());
         }
+    }
+
+    /**
+     * @return \Generator<string, array{0: string, 1: list<array{0: class-string<TokenInterface>, 1: string, 2: string|null}>}>
+     */
+    public static function rangeDataProvider(): \Generator
+    {
+        yield 'integers' => [
+            '1..10',
+            [
+                [
+                    LiteralToken::class,
+                    '1',
+                    Type::INT->name,
+                ],
+                [
+                    CharacterToken::class,
+                    '..',
+                    null,
+                ],
+                [
+                    LiteralToken::class,
+                    '10',
+                    Type::INT->name,
+                ],
+            ],
+        ];
+
+        yield 'integers with spaces' => [
+            '1 .. 10',
+            [
+                [
+                    LiteralToken::class,
+                    '1',
+                    Type::INT->name,
+                ],
+                [
+                    CharacterToken::class,
+                    '..',
+                    null,
+                ],
+                [
+                    LiteralToken::class,
+                    '10',
+                    Type::INT->name,
+                ],
+            ],
+        ];
+
+        yield 'float start' => [
+            '1.5..3',
+            [
+                [
+                    LiteralToken::class,
+                    '1.5',
+                    Type::FLOAT->name,
+                ],
+                [
+                    CharacterToken::class,
+                    '..',
+                    null,
+                ],
+                [
+                    LiteralToken::class,
+                    '3',
+                    Type::INT->name,
+                ],
+            ],
+        ];
+
+        yield 'float end' => [
+            '1..2.5',
+            [
+                [
+                    LiteralToken::class,
+                    '1',
+                    Type::INT->name,
+                ],
+                [
+                    CharacterToken::class,
+                    '..',
+                    null,
+                ],
+                [
+                    LiteralToken::class,
+                    '2.5',
+                    Type::FLOAT->name,
+                ],
+            ],
+        ];
+
+        yield 'leading dot float start' => [
+            '.5..2',
+            [
+                [
+                    LiteralToken::class,
+                    '.5',
+                    Type::FLOAT->name,
+                ],
+                [
+                    CharacterToken::class,
+                    '..',
+                    null,
+                ],
+                [
+                    LiteralToken::class,
+                    '2',
+                    Type::INT->name,
+                ],
+            ],
+        ];
+
+        yield 'scientific float start' => [
+            '1e3..2',
+            [
+                [
+                    LiteralToken::class,
+                    '1e3',
+                    Type::FLOAT->name,
+                ],
+                [
+                    CharacterToken::class,
+                    '..',
+                    null,
+                ],
+                [
+                    LiteralToken::class,
+                    '2',
+                    Type::INT->name,
+                ],
+            ],
+        ];
+
+        yield 'negative start' => [
+            '-1..5',
+            [
+                [
+                    LiteralToken::class,
+                    '-1',
+                    Type::INT->name,
+                ],
+                [
+                    CharacterToken::class,
+                    '..',
+                    null,
+                ],
+                [
+                    LiteralToken::class,
+                    '5',
+                    Type::INT->name,
+                ],
+            ],
+        ];
+
+        yield 'negative end' => [
+            '5..-1',
+            [
+                [
+                    LiteralToken::class,
+                    '5',
+                    Type::INT->name,
+                ],
+                [
+                    CharacterToken::class,
+                    '..',
+                    null,
+                ],
+                [
+                    LiteralToken::class,
+                    '-1',
+                    Type::INT->name,
+                ],
+            ],
+        ];
+
+        yield 'identifiers' => [
+            'a..b',
+            [
+                [
+                    IdentifierToken::class,
+                    'a',
+                    null,
+                ],
+                [
+                    CharacterToken::class,
+                    '..',
+                    null,
+                ],
+                [
+                    IdentifierToken::class,
+                    'b',
+                    null,
+                ],
+            ],
+        ];
+
+        yield 'strings' => [
+            "'a'..'z'",
+            [
+                [
+                    LiteralToken::class,
+                    'a',
+                    Type::STRING->name,
+                ],
+                [
+                    CharacterToken::class,
+                    '..',
+                    null,
+                ],
+                [
+                    LiteralToken::class,
+                    'z',
+                    Type::STRING->name,
+                ],
+            ],
+        ];
+
+        yield 'property access start' => [
+            'user.first..10',
+            [
+                [
+                    IdentifierToken::class,
+                    'user',
+                    null,
+                ],
+                [
+                    CharacterToken::class,
+                    '.',
+                    null,
+                ],
+                [
+                    IdentifierToken::class,
+                    'first',
+                    null,
+                ],
+                [
+                    CharacterToken::class,
+                    '..',
+                    null,
+                ],
+                [
+                    LiteralToken::class,
+                    '10',
+                    Type::INT->name,
+                ],
+            ],
+        ];
+
+        yield 'three dots take the longest symbol then a leading dot float' => [
+            '1...5',
+            [
+                [
+                    LiteralToken::class,
+                    '1',
+                    Type::INT->name,
+                ],
+                [
+                    CharacterToken::class,
+                    '..',
+                    null,
+                ],
+                [
+                    LiteralToken::class,
+                    '.5',
+                    Type::FLOAT->name,
+                ],
+            ],
+        ];
+
+        yield 'trailing dot float without range' => [
+            '1.',
+            [
+                [
+                    LiteralToken::class,
+                    '1.',
+                    Type::FLOAT->name,
+                ],
+            ],
+        ];
+
+        yield 'single dot stays property access' => [
+            'a.b',
+            [
+                [
+                    IdentifierToken::class,
+                    'a',
+                    null,
+                ],
+                [
+                    CharacterToken::class,
+                    '.',
+                    null,
+                ],
+                [
+                    IdentifierToken::class,
+                    'b',
+                    null,
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @param list<array{0: class-string<TokenInterface>, 1: string, 2: string|null}> $expected
+     */
+    #[DataProvider('rangeDataProvider')]
+    public function testLexRange(
+        string $operand,
+        array $expected,
+    ): void {
+        $tokens = $this->lexer->lex(
+            startingLine: 1,
+            operand: $operand,
+        );
+
+        self::assertSame(
+            $expected,
+            \array_map(
+                static fn (TokenInterface $token): array => [
+                    $token::class,
+                    $token->op1,
+                    $token->op2,
+                ],
+                $tokens,
+            ),
+        );
     }
 }

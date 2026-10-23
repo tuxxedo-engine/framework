@@ -24,6 +24,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ArrayItemNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
+use Tuxxedo\View\Lumi\Syntax\Node\CallDispatch;
 use Tuxxedo\View\Lumi\Syntax\Node\ConcatNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\FilterCallNode;
@@ -79,6 +80,14 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
             foreach ($node->arguments as $argument) {
                 $arguments[] = $compiler->compileNode($argument, $stream);
             }
+        }
+
+        if ($node->dispatch === CallDispatch::NATIVE) {
+            return \sprintf(
+                '\\%s(%s)',
+                $node->name->name,
+                \join(', ', $arguments),
+            );
         }
 
         return \sprintf(

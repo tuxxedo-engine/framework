@@ -23,6 +23,7 @@ readonly class FunctionCallNode implements IterableExpressionNodeInterface
     public function __construct(
         public ExpressionNodeInterface $name,
         public array $arguments,
+        public CallDispatch $dispatch = CallDispatch::RUNTIME,
     ) {
         $this->scopes = [
             NodeScope::EXPRESSION,

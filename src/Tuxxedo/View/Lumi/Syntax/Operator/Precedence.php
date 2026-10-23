@@ -22,6 +22,7 @@ enum Precedence: int
     case SHIFT = 45;
     case BITWISE_AND = 40;
     case BITWISE_XOR = 35;
+    case RANGE = 32;
     case BITWISE_OR = 30;
     case COMPARISON = 25;
     case EQUALITY = 20;

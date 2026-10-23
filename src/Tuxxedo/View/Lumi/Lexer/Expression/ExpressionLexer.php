@@ -138,6 +138,10 @@ class ExpressionLexer implements ExpressionLexerInterface
                 while (!$stream->eof()) {
                     $next = $stream->peekCharacter();
 
+                    if ($next === '.' && $stream->peek(2) === '..') {
+                        break;
+                    }
+
                     if (\preg_match('/^[0-9eE.+-]$/', $next) === 1) {
                         $buffer .= $stream->consumeCharacter();
                     } else {
@@ -318,7 +322,7 @@ class ExpressionLexer implements ExpressionLexerInterface
 
     private function isSymbolPrefix(string $prefix): bool
     {
-        foreach ($this->operators as $op) {
+        foreach ([...$this->operators, ...$this->characterSymbols] as $op) {
             if (\str_starts_with($op, $prefix)) {
                 return true;
             }

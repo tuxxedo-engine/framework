@@ -39,3 +39,12 @@
         <li><strong>{{ k }}</strong>: {{ v }}</li>
     {% endfor %}
 </ul>
+
+<ul>
+    {% for page in 1..5 %}
+        <li>Page {{ page }}</li>
+    {% endfor %}
+</ul>
+
+<p>{{ 10..1 | join(', ') }}</p>
+<p>{{ 'a'..'e' | join('') }}</p>

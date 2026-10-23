@@ -13,11 +13,13 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Parser\Handler;
 
+use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Lexer\TokenStream;
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
+use Tuxxedo\View\Lumi\Syntax\Token\DoToken;
 use Tuxxedo\View\Lumi\Syntax\Token\EndWhileToken;
 use Tuxxedo\View\Lumi\Syntax\Token\WhileToken;
 
@@ -39,9 +41,17 @@ class WhileParserHandler extends AbstractWhileParserHandler
             stream: $stream,
         );
 
+        $endPosition = $this->findEndWhilePosition(
+            stream: $stream,
+            position: $stream->position,
+            open: [
+                WhileToken::class,
+            ],
+        ) ?? throw LexerException::fromTokenStreamEof();
+
         $bodyTokens = [];
 
-        while (!$stream->currentIs(EndWhileToken::class)) {
+        while ($stream->position < $endPosition) {
             $bodyTokens[] = $stream->current();
 
             $stream->consume();
@@ -64,5 +74,59 @@ class WhileParserHandler extends AbstractWhileParserHandler
                 body: $body,
             ),
         ];
+    }
+
+    /**
+     * @param list<class-string<DoToken|WhileToken>> $open
+     */
+    private function findEndWhilePosition(
+        TokenStreamInterface $stream,
+        int $position,
+        array $open,
+    ): ?int {
+        $total = \sizeof($stream->tokens);
+
+        for (; $position < $total; $position++) {
+            $token = $stream->tokens[$position];
+
+            if ($token instanceof DoToken) {
+                $open[] = DoToken::class;
+
+                continue;
+            }
+
+            if ($token instanceof EndWhileToken) {
+                if (\array_pop($open) !== WhileToken::class) {
+                    return null;
+                }
+
+                if (\sizeof($open) === 0) {
+                    return $position;
+                }
+
+                continue;
+            }
+
+            if ($token instanceof WhileToken) {
+                $asHeader = $this->findEndWhilePosition(
+                    stream: $stream,
+                    position: $position + 1,
+                    open: [
+                        ...$open,
+                        WhileToken::class,
+                    ],
+                );
+
+                if ($asHeader !== null) {
+                    return $asHeader;
+                }
+
+                if (\array_pop($open) !== DoToken::class) {
+                    return null;
+                }
+            }
+        }
+
+        return null;
     }
 }

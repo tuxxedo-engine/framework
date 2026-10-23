@@ -29,6 +29,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ArrayItemNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
+use Tuxxedo\View\Lumi\Syntax\Node\CallDispatch;
 use Tuxxedo\View\Lumi\Syntax\Node\ConcatNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\FilterCallNode;
@@ -3704,6 +3705,158 @@ class ExpressionCompilerProviderTest extends TestCase
             new FunctionCallNode(
                 name: LiteralNode::createString('upper'),
                 arguments: [],
+            ),
+        );
+    }
+
+    /**
+     * @return \Generator<string, array{0: list<ExpressionNodeInterface>, 1: string}>
+     */
+    public static function nativeFunctionCallDataProvider(): \Generator
+    {
+        yield 'integers' => [
+            [
+                LiteralNode::createInt(1),
+                LiteralNode::createInt(10),
+            ],
+            '\range(1, 10)',
+        ];
+
+        yield 'negative integer' => [
+            [
+                LiteralNode::createInt(5),
+                LiteralNode::createInt(-1),
+            ],
+            '\range(5, -1)',
+        ];
+
+        yield 'floats' => [
+            [
+                LiteralNode::createFloat(0.5),
+                LiteralNode::createFloat(2.5),
+            ],
+            '\range(0.5, 2.5)',
+        ];
+
+        yield 'strings' => [
+            [
+                LiteralNode::createString('a'),
+                LiteralNode::createString('z'),
+            ],
+            '\range(\'a\', \'z\')',
+        ];
+
+        yield 'identifiers' => [
+            [
+                new IdentifierNode(
+                    name: 'first',
+                ),
+                new IdentifierNode(
+                    name: 'last',
+                ),
+            ],
+            '\range($__lumiVariables[\'first\'], $__lumiVariables[\'last\'])',
+        ];
+
+        yield 'property access' => [
+            [
+                LiteralNode::createInt(1),
+                new PropertyAccessNode(
+                    accessor: new IdentifierNode(
+                        name: 'paginator',
+                    ),
+                    property: 'pages',
+                ),
+            ],
+            '\range(1, $this->propertyAccess($__lumiVariables[\'paginator\'])->pages)',
+        ];
+
+        yield 'nested native call' => [
+            [
+                new FunctionCallNode(
+                    name: new IdentifierNode(
+                        name: 'range',
+                    ),
+                    arguments: [
+                        LiteralNode::createInt(1),
+                        LiteralNode::createInt(2),
+                    ],
+                    dispatch: CallDispatch::NATIVE,
+                ),
+                LiteralNode::createInt(3),
+            ],
+            '\range(\range(1, 2), 3)',
+        ];
+    }
+
+    /**
+     * @param list<ExpressionNodeInterface> $arguments
+     */
+    #[DataProvider('nativeFunctionCallDataProvider')]
+    public function testCompileNativeFunctionCallBypassesRuntimeDispatch(
+        array $arguments,
+        string $expected,
+    ): void {
+        self::assertSame(
+            $expected,
+            $this->compiler->compileExpression(
+                new FunctionCallNode(
+                    name: new IdentifierNode(
+                        name: 'range',
+                    ),
+                    arguments: $arguments,
+                    dispatch: CallDispatch::NATIVE,
+                ),
+            ),
+        );
+    }
+
+    public function testCompileRuntimeFunctionCallIsTheDefaultDispatch(): void
+    {
+        $node = new FunctionCallNode(
+            name: new IdentifierNode(
+                name: 'range',
+            ),
+            arguments: [
+                LiteralNode::createInt(1),
+                LiteralNode::createInt(3),
+            ],
+        );
+
+        self::assertSame(CallDispatch::RUNTIME, $node->dispatch);
+        self::assertSame('$this->functionCall(\'range\', [1, 3])', $this->compiler->compileExpression($node));
+    }
+
+    public function testCompileGroupWrapsNativeFunctionCallInParentheses(): void
+    {
+        self::assertSame(
+            '(\range(1, 3))',
+            $this->compiler->compileExpression(
+                new GroupNode(
+                    operand: new FunctionCallNode(
+                        name: new IdentifierNode(
+                            name: 'range',
+                        ),
+                        arguments: [
+                            LiteralNode::createInt(1),
+                            LiteralNode::createInt(3),
+                        ],
+                        dispatch: CallDispatch::NATIVE,
+                    ),
+                ),
+            ),
+        );
+    }
+
+    public function testCompileNativeFunctionCallThrowsWhenNameIsNotIdentifier(): void
+    {
+        self::expectException(CompilerException::class);
+
+        $this->compiler->compileExpression(
+            new FunctionCallNode(
+                name: LiteralNode::createString('range'),
+                arguments: [],
+                dispatch: CallDispatch::NATIVE,
             ),
         );
     }

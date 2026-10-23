@@ -20,6 +20,7 @@ use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
+use Tuxxedo\View\Lumi\Syntax\Node\CallDispatch;
 use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ConcatNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ConditionalBranchNode;
@@ -27,6 +28,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ConditionalNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DeclareNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
+use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
@@ -894,5 +896,46 @@ class SccpOptimizerTest extends TestCase
         self::assertSame('hello-', $result->stream->nodes[0]->operand->operands[0]->operand);
         self::assertSame($name, $result->stream->nodes[0]->operand->operands[1]);
         self::assertTrue($result->changed);
+    }
+
+    public function testNativeRangeCallWithConstantBoundsIsNotFolded(): void
+    {
+        $range = new FunctionCallNode(
+            name: new IdentifierNode(
+                name: 'range',
+            ),
+            arguments: [
+                LiteralNode::createInt(1),
+                LiteralNode::createInt(3),
+            ],
+            dispatch: CallDispatch::NATIVE,
+        );
+
+        $assignment = new AssignmentNode(
+            name: new IdentifierNode(
+                name: 'pages',
+            ),
+            value: $range,
+            operator: AssignmentSymbol::ASSIGN,
+        );
+
+        $echo = new EchoNode(
+            operand: new IdentifierNode(
+                name: 'pages',
+            ),
+        );
+
+        $result = $this->optimize(
+            nodes: [
+                $assignment,
+                $echo,
+            ],
+        );
+
+        self::assertCount(2, $result->stream->nodes);
+        self::assertInstanceOf(AssignmentNode::class, $result->stream->nodes[0]);
+        self::assertSame($range, $result->stream->nodes[0]->value);
+        self::assertInstanceOf(EchoNode::class, $result->stream->nodes[1]);
+        self::assertInstanceOf(IdentifierNode::class, $result->stream->nodes[1]->operand);
     }
 }

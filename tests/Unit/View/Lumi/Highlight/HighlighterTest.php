@@ -32,6 +32,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BreakNode;
+use Tuxxedo\View\Lumi\Syntax\Node\CallDispatch;
 use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ConcatNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ConditionalBranchNode;
@@ -1642,6 +1643,38 @@ class HighlighterTest extends TestCase
                         LiteralNode::createInt(1),
                         LiteralNode::createInt(2),
                     ],
+                ),
+            ),
+        );
+    }
+
+    #[DataProvider('provideThemes')]
+    public function testHighlightNativeFunctionCallMatchesRuntimeFunctionCall(
+        ThemeInterface $theme,
+    ): void {
+        $arguments = [
+            LiteralNode::createInt(1),
+            LiteralNode::createInt(10),
+        ];
+
+        self::assertSame(
+            $this->highlight(
+                theme: $theme,
+                node: new FunctionCallNode(
+                    name: new IdentifierNode(
+                        name: 'range',
+                    ),
+                    arguments: $arguments,
+                ),
+            ),
+            $this->highlight(
+                theme: $theme,
+                node: new FunctionCallNode(
+                    name: new IdentifierNode(
+                        name: 'range',
+                    ),
+                    arguments: $arguments,
+                    dispatch: CallDispatch::NATIVE,
                 ),
             ),
         );

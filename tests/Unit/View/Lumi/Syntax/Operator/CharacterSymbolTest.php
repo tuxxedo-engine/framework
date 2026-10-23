@@ -68,6 +68,11 @@ class CharacterSymbolTest extends TestCase
             CharacterSymbol::QUESTION,
             '?',
         ];
+
+        yield [
+            CharacterSymbol::RANGE,
+            '..',
+        ];
     }
 
     #[DataProvider('provideSymbolVariants')]
@@ -90,6 +95,7 @@ class CharacterSymbolTest extends TestCase
                 '.',
                 ':',
                 '?',
+                '..',
             ],
             CharacterSymbol::all(),
         );
@@ -146,6 +152,11 @@ class CharacterSymbolTest extends TestCase
         yield [
             CharacterSymbol::QUESTION,
             Precedence::TERNARY,
+        ];
+
+        yield [
+            CharacterSymbol::RANGE,
+            Precedence::RANGE,
         ];
     }
 

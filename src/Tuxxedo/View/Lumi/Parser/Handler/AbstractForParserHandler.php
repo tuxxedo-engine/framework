@@ -86,9 +86,19 @@ abstract class AbstractForParserHandler implements ParserHandlerInterface
             );
         }
 
+        $depth = 0;
         $bodyTokens = [];
 
-        while (!$stream->currentIs($endTokenClassName)) {
+        while (
+            $depth > 0 ||
+            !$stream->currentIs($endTokenClassName)
+        ) {
+            if ($stream->currentIs($this->tokenClassName)) {
+                $depth++;
+            } elseif ($stream->currentIs($endTokenClassName)) {
+                $depth--;
+            }
+
             $bodyTokens[] = $stream->current();
 
             $stream->consume();
