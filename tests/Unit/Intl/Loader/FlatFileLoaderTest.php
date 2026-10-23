@@ -378,4 +378,87 @@ class FlatFileLoaderTest extends TestCase
             );
         }
     }
+
+    public function testSourceOfReturnsCatalogueFileForStringLeaf(): void
+    {
+        $file = $this->scratchpad->write(
+            localeTag: 'en-US',
+            group: 'common',
+            returnExpression: "['error.mail' => ['noSubject' => 'No subject']]",
+        );
+
+        $loader = new FlatFileLoader(
+            rootDirectory: $this->scratchpad->root,
+        );
+
+        self::assertSame(
+            $file,
+            $loader->sourceOf(
+                locale: Locale::parse('en-US'),
+                group: 'common',
+                segments: [
+                    'error',
+                    'mail',
+                    'noSubject',
+                ],
+            ),
+        );
+    }
+
+    public function testSourceOfReturnsNullForBranchMissingKeyOrMissingFile(): void
+    {
+        $this->scratchpad->write(
+            localeTag: 'en-US',
+            group: 'common',
+            returnExpression: "['error' => ['mail' => 'No subject']]",
+        );
+
+        $loader = new FlatFileLoader(
+            rootDirectory: $this->scratchpad->root,
+        );
+
+        $locale = Locale::parse('en-US');
+
+        self::assertNull(
+            $loader->sourceOf(
+                locale: $locale,
+                group: 'common',
+                segments: [
+                    'error',
+                ],
+            ),
+        );
+
+        self::assertNull(
+            $loader->sourceOf(
+                locale: $locale,
+                group: 'common',
+                segments: [
+                    'error',
+                    'mail',
+                    'noSubject',
+                ],
+            ),
+        );
+
+        self::assertNull(
+            $loader->sourceOf(
+                locale: $locale,
+                group: 'common',
+                segments: [
+                    'missing',
+                ],
+            ),
+        );
+
+        self::assertNull(
+            $loader->sourceOf(
+                locale: $locale,
+                group: 'validation',
+                segments: [
+                    'error',
+                ],
+            ),
+        );
+    }
 }

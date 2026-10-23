@@ -55,6 +55,26 @@ class MergingLoader implements PhraseLoaderInterface
         return $merged;
     }
 
+    public function sourceOf(
+        LocaleInterface $locale,
+        string $group,
+        array $segments,
+    ): ?string {
+        foreach ($this->loaders as $loader) {
+            $source = $loader->sourceOf(
+                locale: $locale,
+                group: $group,
+                segments: $segments,
+            );
+
+            if ($source !== null) {
+                return $source;
+            }
+        }
+
+        return null;
+    }
+
     /**
      * @param array<string, mixed> $base
      * @param array<string, mixed> $override

@@ -93,4 +93,68 @@ class ChainLoaderTest extends TestCase
             ),
         );
     }
+
+    public function testSourceOfUsesFirstLoaderWithTheGroup(): void
+    {
+        $loader = new ChainLoader(
+            new InMemoryPhraseLoader(
+                catalogues: [],
+                source: 'empty.php',
+            ),
+            new InMemoryPhraseLoader(
+                catalogues: [
+                    'en-US' => [
+                        'common' => [
+                            'greeting' => 'Hello from second',
+                        ],
+                    ],
+                ],
+                source: 'second.php',
+            ),
+            new InMemoryPhraseLoader(
+                catalogues: [
+                    'en-US' => [
+                        'common' => [
+                            'greeting' => 'Hello from third',
+                            'farewell' => 'Goodbye from third',
+                        ],
+                    ],
+                ],
+                source: 'third.php',
+            ),
+        );
+
+        $locale = Locale::parse('en-US');
+
+        self::assertSame(
+            'second.php',
+            $loader->sourceOf(
+                locale: $locale,
+                group: 'common',
+                segments: [
+                    'greeting',
+                ],
+            ),
+        );
+
+        self::assertNull(
+            $loader->sourceOf(
+                locale: $locale,
+                group: 'common',
+                segments: [
+                    'farewell',
+                ],
+            ),
+        );
+
+        self::assertNull(
+            $loader->sourceOf(
+                locale: $locale,
+                group: 'missing',
+                segments: [
+                    'greeting',
+                ],
+            ),
+        );
+    }
 }

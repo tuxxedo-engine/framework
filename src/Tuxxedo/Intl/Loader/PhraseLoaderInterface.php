@@ -30,4 +30,15 @@ interface PhraseLoaderInterface
         LocaleInterface $locale,
         string $group,
     ): ?array;
+
+    /**
+     * @param list<string> $segments
+     *
+     * @throws TranslationException
+     */
+    public function sourceOf(
+        LocaleInterface $locale,
+        string $group,
+        array $segments,
+    ): ?string;
 }

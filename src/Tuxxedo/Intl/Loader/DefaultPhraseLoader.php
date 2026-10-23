@@ -46,4 +46,16 @@ class DefaultPhraseLoader implements PhraseLoaderInterface
             group: $group,
         );
     }
+
+    public function sourceOf(
+        LocaleInterface $locale,
+        string $group,
+        array $segments,
+    ): ?string {
+        return $this->loader->sourceOf(
+            locale: $locale,
+            group: $group,
+            segments: $segments,
+        );
+    }
 }

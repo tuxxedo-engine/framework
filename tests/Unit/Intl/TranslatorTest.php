@@ -19,6 +19,7 @@ use PHPUnit\Framework\TestCase;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Intl\Config\IntlConfig;
 use Tuxxedo\Intl\Config\IntlConfigInterface;
+use Tuxxedo\Intl\Loader\MergingLoader;
 use Tuxxedo\Intl\Loader\PhraseLoaderInterface;
 use Tuxxedo\Intl\Locale;
 use Tuxxedo\Intl\LocaleInterface;
@@ -1001,6 +1002,62 @@ class TranslatorTest extends TestCase
         );
 
         self::assertFalse($translator->has('common.missing'));
+    }
+
+    public function testSourceOfReportsTheCatalogueTheKeyResolvedFrom(): void
+    {
+        $config = $this->makeConfig(
+            defaultLocale: Locale::parse('en-US'),
+        );
+
+        $translator = $this->makeTranslator(
+            config: $config,
+            loader: new MergingLoader(
+                new InMemoryPhraseLoader(
+                    catalogues: [
+                        'da-DK' => [
+                            'common' => [
+                                'farewell' => 'Farvel',
+                            ],
+                        ],
+                    ],
+                    source: 'da-DK/common.php',
+                ),
+                new InMemoryPhraseLoader(
+                    catalogues: [
+                        'en-US' => [
+                            'common' => [
+                                'greeting' => 'Hello',
+                                'items' => [
+                                    'one' => '{count} item',
+                                    'other' => '{count} items',
+                                ],
+                            ],
+                        ],
+                    ],
+                    source: 'en-US/common.php',
+                ),
+            ),
+        );
+
+        $danish = Locale::parse('da-DK');
+
+        self::assertSame('en-US/common.php', $translator->sourceOf('common.greeting'));
+        self::assertSame('en-US/common.php', $translator->sourceOf('common.items.one'));
+        self::assertSame('da-DK/common.php', $translator->sourceOf('common.farewell', $danish));
+        self::assertSame('en-US/common.php', $translator->sourceOf('common.greeting', $danish));
+        self::assertNull($translator->sourceOf('common.items'));
+        self::assertNull($translator->sourceOf('common.missing'));
+        self::assertNull($translator->sourceOf('common.farewell'));
+        self::assertNull($translator->sourceOf(''));
+    }
+
+    public function testSourceOfReportsShippedCatalogueFile(): void
+    {
+        self::assertSame(
+            \dirname(__DIR__, 3) . '/resources/intl/en-US/validator.php',
+            (new Container())->resolve(TranslatorInterface::class)->sourceOf('validator.common.wrong-type'),
+        );
     }
 
     public function testLoadsEachCatalogueOnceAcrossLookupsAndForks(): void

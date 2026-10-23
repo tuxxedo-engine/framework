@@ -102,7 +102,7 @@ class Translator implements TranslatorInterface
         );
 
         if ($path !== null) {
-            foreach ($this->candidateLocales(locale: $effective) as $candidate) {
+            foreach ($this->candidateLocales($effective) as $candidate) {
                 $value = $this->lookupIn(
                     locale: $candidate,
                     group: $path[0],
@@ -147,6 +147,37 @@ class Translator implements TranslatorInterface
             key: $key,
             locale: $locale ?? $this->locale,
         ) !== null;
+    }
+
+    public function sourceOf(
+        string $key,
+        ?LocaleInterface $locale = null,
+    ): ?string {
+        $path = self::splitKey(
+            key: $key,
+        );
+
+        if ($path === null) {
+            return null;
+        }
+
+        foreach ($this->candidateLocales($locale ?? $this->locale) as $candidate) {
+            $found = $this->lookupIn(
+                locale: $candidate,
+                group: $path[0],
+                segments: $path[1],
+            ) !== null;
+
+            if ($found) {
+                return $this->loader->sourceOf(
+                    locale: $candidate,
+                    group: $path[0],
+                    segments: $path[1],
+                );
+            }
+        }
+
+        return null;
     }
 
     public function withLocale(
@@ -217,7 +248,7 @@ class Translator implements TranslatorInterface
             return null;
         }
 
-        foreach ($this->candidateLocales(locale: $locale) as $candidate) {
+        foreach ($this->candidateLocales($locale) as $candidate) {
             $value = $this->lookupIn(
                 locale: $candidate,
                 group: $path[0],

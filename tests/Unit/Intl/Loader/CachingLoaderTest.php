@@ -141,4 +141,31 @@ class CachingLoaderTest extends TestCase
 
         self::assertSame(3, $inner->calls);
     }
+
+    public function testSourceOfDelegatesToInnerLoader(): void
+    {
+        $loader = new CachingLoader(
+            loader: new InMemoryPhraseLoader(
+                catalogues: [
+                    'en-US' => [
+                        'common' => [
+                            'greeting' => 'Hello',
+                        ],
+                    ],
+                ],
+                source: 'common.php',
+            ),
+        );
+
+        self::assertSame(
+            'common.php',
+            $loader->sourceOf(
+                locale: Locale::parse('en-US'),
+                group: 'common',
+                segments: [
+                    'greeting',
+                ],
+            ),
+        );
+    }
 }

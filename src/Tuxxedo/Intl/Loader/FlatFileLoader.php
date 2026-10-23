@@ -31,7 +31,10 @@ class FlatFileLoader implements PhraseLoaderInterface
             return null;
         }
 
-        $file = $this->rootDirectory . '/' . $locale->tag . '/' . $group . '.php';
+        $file = $this->file(
+            locale: $locale,
+            group: $group,
+        );
 
         if (!\is_file($file)) {
             return null;
@@ -49,6 +52,43 @@ class FlatFileLoader implements PhraseLoaderInterface
             file: $file,
             source: $contents,
         );
+    }
+
+    public function sourceOf(
+        LocaleInterface $locale,
+        string $group,
+        array $segments,
+    ): ?string {
+        $cursor = $this->load(
+            locale: $locale,
+            group: $group,
+        );
+
+        if ($cursor === null) {
+            return null;
+        }
+
+        foreach ($segments as $segment) {
+            if (!\is_array($cursor) || !\array_key_exists($segment, $cursor)) {
+                return null;
+            }
+
+            $cursor = $cursor[$segment];
+        }
+
+        return \is_string($cursor)
+            ? $this->file(
+                locale: $locale,
+                group: $group,
+            )
+            : null;
+    }
+
+    private function file(
+        LocaleInterface $locale,
+        string $group,
+    ): string {
+        return $this->rootDirectory . '/' . $locale->tag . '/' . $group . '.php';
     }
 
     /**

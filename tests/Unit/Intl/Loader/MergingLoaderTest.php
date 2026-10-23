@@ -123,4 +123,65 @@ class MergingLoaderTest extends TestCase
             ),
         );
     }
+
+    public function testSourceOfPrefersEarlierLoaderPerKey(): void
+    {
+        $loader = new MergingLoader(
+            new InMemoryPhraseLoader(
+                catalogues: [
+                    'en-US' => [
+                        'common' => [
+                            'greeting' => 'Host hello',
+                        ],
+                    ],
+                ],
+                source: 'host.php',
+            ),
+            new InMemoryPhraseLoader(
+                catalogues: [
+                    'en-US' => [
+                        'common' => [
+                            'greeting' => 'Engine hello',
+                            'farewell' => 'Engine goodbye',
+                        ],
+                    ],
+                ],
+                source: 'engine.php',
+            ),
+        );
+
+        $locale = Locale::parse('en-US');
+
+        self::assertSame(
+            'host.php',
+            $loader->sourceOf(
+                locale: $locale,
+                group: 'common',
+                segments: [
+                    'greeting',
+                ],
+            ),
+        );
+
+        self::assertSame(
+            'engine.php',
+            $loader->sourceOf(
+                locale: $locale,
+                group: 'common',
+                segments: [
+                    'farewell',
+                ],
+            ),
+        );
+
+        self::assertNull(
+            $loader->sourceOf(
+                locale: $locale,
+                group: 'common',
+                segments: [
+                    'missing',
+                ],
+            ),
+        );
+    }
 }

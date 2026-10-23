@@ -118,4 +118,47 @@ class DefaultPhraseLoaderTest extends TestCase
         self::assertIsArray($catalogue);
         self::assertArrayHasKey('email', $catalogue);
     }
+
+    public function testSourceOfReportsHostOrEngineCatalogueFile(): void
+    {
+        $scratchpad = new CatalogueScratchpad();
+        $file = $scratchpad->write(
+            localeTag: 'en-US',
+            group: 'validator',
+            returnExpression: "['common.wrong-type' => 'Host override']",
+        );
+
+        $loader = new DefaultPhraseLoader(
+            config: new IntlConfig(
+                rootDirectory: $scratchpad->root,
+                defaultLocale: Locale::parse('en-US'),
+            ),
+        );
+
+        $locale = Locale::parse('en-US');
+
+        self::assertSame(
+            $file,
+            $loader->sourceOf(
+                locale: $locale,
+                group: 'validator',
+                segments: [
+                    'common',
+                    'wrong-type',
+                ],
+            ),
+        );
+
+        self::assertSame(
+            \dirname(__DIR__, 4) . '/resources/intl/en-US/validator.php',
+            $loader->sourceOf(
+                locale: $locale,
+                group: 'validator',
+                segments: [
+                    'common',
+                    'null-value',
+                ],
+            ),
+        );
+    }
 }

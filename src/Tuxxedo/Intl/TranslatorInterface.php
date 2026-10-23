@@ -58,6 +58,14 @@ interface TranslatorInterface
         ?LocaleInterface $locale = null,
     ): bool;
 
+    /**
+     * @throws TranslationException
+     */
+    public function sourceOf(
+        string $key,
+        ?LocaleInterface $locale = null,
+    ): ?string;
+
     public function withLocale(
         LocaleInterface $locale,
     ): self;

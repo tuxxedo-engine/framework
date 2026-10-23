@@ -23,6 +23,7 @@ class InMemoryPhraseLoader implements PhraseLoaderInterface
      */
     public function __construct(
         private readonly array $catalogues,
+        private readonly ?string $source = null,
     ) {
     }
 
@@ -31,5 +32,25 @@ class InMemoryPhraseLoader implements PhraseLoaderInterface
         string $group,
     ): ?array {
         return $this->catalogues[$locale->tag][$group] ?? null;
+    }
+
+    public function sourceOf(
+        LocaleInterface $locale,
+        string $group,
+        array $segments,
+    ): ?string {
+        $cursor = $this->catalogues[$locale->tag][$group] ?? null;
+
+        foreach ($segments as $segment) {
+            if (!\is_array($cursor) || !\array_key_exists($segment, $cursor)) {
+                return null;
+            }
+
+            $cursor = $cursor[$segment];
+        }
+
+        return \is_string($cursor)
+            ? $this->source
+            : null;
     }
 }

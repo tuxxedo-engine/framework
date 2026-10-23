@@ -45,4 +45,27 @@ class ChainLoader implements PhraseLoaderInterface
 
         return null;
     }
+
+    public function sourceOf(
+        LocaleInterface $locale,
+        string $group,
+        array $segments,
+    ): ?string {
+        foreach ($this->loaders as $loader) {
+            $catalogue = $loader->load(
+                locale: $locale,
+                group: $group,
+            );
+
+            if ($catalogue !== null) {
+                return $loader->sourceOf(
+                    locale: $locale,
+                    group: $group,
+                    segments: $segments,
+                );
+            }
+        }
+
+        return null;
+    }
 }
