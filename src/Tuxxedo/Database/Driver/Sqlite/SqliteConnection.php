@@ -77,7 +77,15 @@ class SqliteConnection extends AbstractConnection
         ContainerInterface $container,
         ConnectionConfigInterface $config,
     ): self {
-        /** @var SqliteConnectionConfigInterface $config */
+        if (!$config instanceof SqliteConnectionConfigInterface) {
+            // @codeCoverageIgnoreStart
+            throw DatabaseException::fromInvalidConnectionConfig(
+                driver: self::class,
+                expected: SqliteConnectionConfigInterface::class,
+                actual: $config::class,
+            );
+            // @codeCoverageIgnoreEnd
+        }
 
         return new self($container, $config);
     }

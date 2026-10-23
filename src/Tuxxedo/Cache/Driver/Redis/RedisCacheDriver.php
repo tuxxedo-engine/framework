@@ -50,7 +50,15 @@ class RedisCacheDriver implements CacheDriverInterface
         ContainerInterface $container,
         CacheDriverConfigInterface $config,
     ): self {
-        /** @var RedisCacheDriverConfigInterface $config */
+        if (!$config instanceof RedisCacheDriverConfigInterface) {
+            // @codeCoverageIgnoreStart
+            throw CacheException::fromInvalidDriverConfig(
+                driver: self::NAME,
+                expected: RedisCacheDriverConfigInterface::class,
+                actual: $config::class,
+            );
+            // @codeCoverageIgnoreEnd
+        }
 
         return new self($config);
     }

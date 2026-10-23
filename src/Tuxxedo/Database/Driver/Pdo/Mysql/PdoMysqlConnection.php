@@ -23,13 +23,24 @@ use Tuxxedo\Database\Driver\Pdo\Mysql\Config\PdoMysqlConnectionConfigInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Dialect\Mysql\MysqlDialect;
 
+/**
+ * @extends AbstractPdoConnection<PdoMysqlConnectionConfigInterface>
+ */
 class PdoMysqlConnection extends AbstractPdoConnection
 {
     public static function create(
         ContainerInterface $container,
         ConnectionConfigInterface $config,
     ): self {
-        /** @var PdoMysqlConnectionConfigInterface $config */
+        if (!$config instanceof PdoMysqlConnectionConfigInterface) {
+            // @codeCoverageIgnoreStart
+            throw DatabaseException::fromInvalidConnectionConfig(
+                driver: self::class,
+                expected: PdoMysqlConnectionConfigInterface::class,
+                actual: $config::class,
+            );
+            // @codeCoverageIgnoreEnd
+        }
 
         return new self($container, $config);
     }
@@ -42,8 +53,6 @@ class PdoMysqlConnection extends AbstractPdoConnection
     protected function getDsn(
         PdoConnectionConfigInterface $config,
     ): string {
-        /** @var PdoMysqlConnectionConfigInterface $config */
-
         if ($config->dsn !== '') {
             return $config->dsn;
         }
@@ -88,8 +97,6 @@ class PdoMysqlConnection extends AbstractPdoConnection
     protected function getPdoOptions(
         PdoConnectionConfigInterface $config,
     ): array {
-        /** @var PdoMysqlConnectionConfigInterface $config */
-
         $options = [];
 
         if ($config->timeout !== null) {

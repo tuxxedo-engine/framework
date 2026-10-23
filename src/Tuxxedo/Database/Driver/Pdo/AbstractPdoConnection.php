@@ -22,6 +22,9 @@ use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Parser\StatementParser;
 use Tuxxedo\Database\Query\Parser\StatementParserInterface;
 
+/**
+ * @template TConfig of PdoConnectionConfigInterface
+ */
 abstract class AbstractPdoConnection extends AbstractConnection
 {
     public readonly string $name;
@@ -33,6 +36,9 @@ abstract class AbstractPdoConnection extends AbstractConnection
 
     public readonly StatementParserInterface $statementParser;
 
+    /**
+     * @param TConfig $config
+     */
     final protected function __construct(
         private readonly ContainerInterface $container,
         PdoConnectionConfigInterface $config,
@@ -68,12 +74,16 @@ abstract class AbstractPdoConnection extends AbstractConnection
         }
     }
 
+    /**
+     * @param TConfig $config
+     */
     protected function postConnectHook(
         PdoConnectionConfigInterface $config,
     ): void {
     }
 
     /**
+     * @param TConfig $config
      * @return array<\PDO::ATTR_*|\PDO::*_ATTR_*, mixed>
      */
     abstract protected function getPdoOptions(
@@ -82,6 +92,9 @@ abstract class AbstractPdoConnection extends AbstractConnection
 
     abstract protected function getDriverDialect(): DialectInterface;
 
+    /**
+     * @param TConfig $config
+     */
     abstract protected function getDsn(
         PdoConnectionConfigInterface $config,
     ): string;

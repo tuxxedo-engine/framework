@@ -58,7 +58,15 @@ class ApcuCacheDriver implements CacheDriverInterface
         ContainerInterface $container,
         CacheDriverConfigInterface $config,
     ): self {
-        /** @var ApcuCacheDriverConfigInterface $config */
+        if (!$config instanceof ApcuCacheDriverConfigInterface) {
+            // @codeCoverageIgnoreStart
+            throw CacheException::fromInvalidDriverConfig(
+                driver: self::NAME,
+                expected: ApcuCacheDriverConfigInterface::class,
+                actual: $config::class,
+            );
+            // @codeCoverageIgnoreEnd
+        }
 
         return new self($config);
     }

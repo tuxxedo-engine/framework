@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Cache;
 
+use Tuxxedo\Cache\Config\CacheDriverConfigInterface;
 use Tuxxedo\Exception;
 
 class CacheException extends Exception
@@ -70,6 +71,27 @@ class CacheException extends Exception
                 $previous->getMessage(),
             ),
             previous: $previous,
+        );
+    }
+
+    /**
+     * @param class-string<CacheDriverConfigInterface> $expected
+     * @param class-string<CacheDriverConfigInterface> $actual
+     *
+     * @codeCoverageIgnore
+     */
+    public static function fromInvalidDriverConfig(
+        string $driver,
+        string $expected,
+        string $actual,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unable to create cache driver "%s": expected a configuration implementing "%s", got "%s"',
+                $driver,
+                self::formatShortClass($expected),
+                self::formatShortClass($actual),
+            ),
         );
     }
 

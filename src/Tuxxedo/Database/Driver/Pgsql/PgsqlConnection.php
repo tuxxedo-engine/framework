@@ -153,7 +153,15 @@ class PgsqlConnection extends AbstractConnection
         ContainerInterface $container,
         ConnectionConfigInterface $config,
     ): self {
-        /** @var PgsqlConnectionConfigInterface $config */
+        if (!$config instanceof PgsqlConnectionConfigInterface) {
+            // @codeCoverageIgnoreStart
+            throw DatabaseException::fromInvalidConnectionConfig(
+                driver: self::class,
+                expected: PgsqlConnectionConfigInterface::class,
+                actual: $config::class,
+            );
+            // @codeCoverageIgnoreEnd
+        }
 
         return new self($container, $config);
     }

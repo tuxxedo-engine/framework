@@ -22,13 +22,24 @@ use Tuxxedo\Database\Driver\Pdo\Pgsql\Config\PdoPgsqlConnectionConfigInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Dialect\Pgsql\PgsqlDialect;
 
+/**
+ * @extends AbstractPdoConnection<PdoPgsqlConnectionConfigInterface>
+ */
 class PdoPgsqlConnection extends AbstractPdoConnection
 {
     public static function create(
         ContainerInterface $container,
         ConnectionConfigInterface $config,
     ): self {
-        /** @var PdoPgsqlConnectionConfigInterface $config */
+        if (!$config instanceof PdoPgsqlConnectionConfigInterface) {
+            // @codeCoverageIgnoreStart
+            throw DatabaseException::fromInvalidConnectionConfig(
+                driver: self::class,
+                expected: PdoPgsqlConnectionConfigInterface::class,
+                actual: $config::class,
+            );
+            // @codeCoverageIgnoreEnd
+        }
 
         return new self($container, $config);
     }
@@ -43,8 +54,6 @@ class PdoPgsqlConnection extends AbstractPdoConnection
     protected function getDsn(
         PdoConnectionConfigInterface $config,
     ): string {
-        /** @var PdoPgsqlConnectionConfigInterface $config */
-
         if ($config->dsn !== '') {
             return $config->dsn;
         }
@@ -104,8 +113,6 @@ class PdoPgsqlConnection extends AbstractPdoConnection
     protected function postConnectHook(
         PdoConnectionConfigInterface $config,
     ): void {
-        /** @var PdoPgsqlConnectionConfigInterface $config */
-
         if ($config->charset === '') {
             return;
         }

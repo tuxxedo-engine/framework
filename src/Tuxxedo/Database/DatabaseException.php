@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database;
 
+use Tuxxedo\Database\Config\ConnectionConfigInterface;
+use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Exception;
 
 class DatabaseException extends Exception
@@ -55,6 +57,28 @@ class DatabaseException extends Exception
     {
         return new self(
             message: 'Unable to find connection: no write connection is available',
+        );
+    }
+
+    /**
+     * @param class-string<ConnectionInterface> $driver
+     * @param class-string<ConnectionConfigInterface> $expected
+     * @param class-string<ConnectionConfigInterface> $actual
+     *
+     * @codeCoverageIgnore
+     */
+    public static function fromInvalidConnectionConfig(
+        string $driver,
+        string $expected,
+        string $actual,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unable to create connection "%s": expected a configuration implementing "%s", got "%s"',
+                self::formatShortClass($driver),
+                self::formatShortClass($expected),
+                self::formatShortClass($actual),
+            ),
         );
     }
 

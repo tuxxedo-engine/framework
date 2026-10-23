@@ -133,7 +133,15 @@ class MysqlConnection extends AbstractConnection
         ContainerInterface $container,
         ConnectionConfigInterface $config,
     ): self {
-        /** @var MysqlConnectionConfigInterface $config */
+        if (!$config instanceof MysqlConnectionConfigInterface) {
+            // @codeCoverageIgnoreStart
+            throw DatabaseException::fromInvalidConnectionConfig(
+                driver: self::class,
+                expected: MysqlConnectionConfigInterface::class,
+                actual: $config::class,
+            );
+            // @codeCoverageIgnoreEnd
+        }
 
         return new self($container, $config);
     }

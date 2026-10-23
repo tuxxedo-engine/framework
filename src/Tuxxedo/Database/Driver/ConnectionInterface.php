@@ -40,6 +40,9 @@ use Tuxxedo\Database\SqlException;
 
 interface ConnectionInterface
 {
+    /**
+     * @throws DatabaseException
+     */
     public static function create(
         ContainerInterface $container,
         ConnectionConfigInterface $config,

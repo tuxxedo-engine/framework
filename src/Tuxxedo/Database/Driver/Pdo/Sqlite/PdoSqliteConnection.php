@@ -22,13 +22,24 @@ use Tuxxedo\Database\Driver\Pdo\Sqlite\Config\PdoSqliteConnectionConfigInterface
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Dialect\Sqlite\SqliteDialect;
 
+/**
+ * @extends AbstractPdoConnection<PdoSqliteConnectionConfigInterface>
+ */
 class PdoSqliteConnection extends AbstractPdoConnection
 {
     public static function create(
         ContainerInterface $container,
         ConnectionConfigInterface $config,
     ): self {
-        /** @var PdoSqliteConnectionConfigInterface $config */
+        if (!$config instanceof PdoSqliteConnectionConfigInterface) {
+            // @codeCoverageIgnoreStart
+            throw DatabaseException::fromInvalidConnectionConfig(
+                driver: self::class,
+                expected: PdoSqliteConnectionConfigInterface::class,
+                actual: $config::class,
+            );
+            // @codeCoverageIgnoreEnd
+        }
 
         return new self($container, $config);
     }
@@ -41,8 +52,6 @@ class PdoSqliteConnection extends AbstractPdoConnection
     protected function getDsn(
         PdoConnectionConfigInterface $config,
     ): string {
-        /** @var PdoSqliteConnectionConfigInterface $config */
-
         if ($config->dsn !== '') {
             return $config->dsn;
         }
@@ -56,8 +65,6 @@ class PdoSqliteConnection extends AbstractPdoConnection
     protected function getPdoOptions(
         PdoConnectionConfigInterface $config,
     ): array {
-        /** @var PdoSqliteConnectionConfigInterface $config */
-
         if ($config->timeout === null) {
             return [];
         }
