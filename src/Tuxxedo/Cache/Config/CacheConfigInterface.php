@@ -29,11 +29,4 @@ interface CacheConfigInterface
     public ?string $separator {
         get;
     }
-
-    /**
-     * @var list<class-string>
-     */
-    public array $allowedClasses {
-        get;
-    }
 }

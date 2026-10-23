@@ -138,7 +138,6 @@ class ApcuCacheDriver implements CacheDriverInterface
 
     public function fetch(
         string $key,
-        array $allowedClasses,
     ): int|float|string|bool|array|object|null {
         $success = false;
         $value = \apcu_fetch($this->namespace . $key, $success);

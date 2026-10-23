@@ -23,13 +23,11 @@ class Cache implements CacheInterface
     private const int MAX_KEY_LENGTH = 255;
 
     /**
-     * @param list<class-string> $allowedClasses
      */
     public function __construct(
         public readonly CacheDriverInterface $driver,
         public readonly MapperInterface $mapper,
         public readonly string $prefix = '',
-        public readonly array $allowedClasses = [],
     ) {
     }
 
@@ -72,38 +70,7 @@ class Cache implements CacheInterface
     private function read(
         string $key,
     ): int|float|string|bool|array|object|null {
-        $value = $this->driver->fetch(
-            key: $this->key($key),
-            allowedClasses: $this->allowedClasses,
-        );
-
-        $this->assertAllowedObjects($key, $value);
-
-        return $value;
-    }
-
-    /**
-     * @throws CacheException
-     */
-    private function assertAllowedObjects(
-        string $key,
-        mixed $value,
-    ): void {
-        if (\is_array($value)) {
-            foreach ($value as $item) {
-                $this->assertAllowedObjects($key, $item);
-            }
-
-            return;
-        }
-
-        if (\is_object($value) && !\in_array($value::class, $this->allowedClasses, true)) {
-            throw CacheException::fromTypeMismatch(
-                key: $this->prefix . $key,
-                expected: 'an allowed class',
-                actual: $value::class,
-            );
-        }
+        return $this->driver->fetch($this->key($key));
     }
 
     /**
@@ -150,22 +117,14 @@ class Cache implements CacheInterface
             return $encoded;
         }
 
-        if ($value instanceof \BackedEnum) {
-            return $value->value;
-        }
-
-        if ($value instanceof \UnitEnum) {
-            return $value->name;
+        if ($value instanceof \Closure) {
+            throw CacheException::fromUnsupportedValue(
+                key: $this->prefix . $key,
+                type: \Closure::class,
+            );
         }
 
         if (\is_object($value)) {
-            if (!\in_array($value::class, $this->allowedClasses, true)) {
-                throw CacheException::fromUnsupportedValue(
-                    key: $this->prefix . $key,
-                    type: $value::class,
-                );
-            }
-
             return $value;
         }
 
@@ -197,9 +156,11 @@ class Cache implements CacheInterface
         string $enum,
         mixed $value,
     ): \UnitEnum {
-        $case = \is_int($value) || \is_string($value)
-            ? EnumHydrator::hydrate($enum, (string) $value)
-            : null;
+        $case = match (true) {
+            $value instanceof $enum => $value,
+            \is_int($value), \is_string($value) => EnumHydrator::hydrate($enum, (string) $value),
+            default => null,
+        };
 
         if (!$case instanceof $enum) {
             throw CacheException::fromTypeMismatch(
@@ -544,18 +505,10 @@ class Cache implements CacheInterface
         $this->assertTtl($key, $ttl);
 
         $value = $factory();
-        $encoded = $this->encode($key, $value);
-
-        if ($encoded !== $value) {
-            throw CacheException::fromUnsupportedValue(
-                key: $this->prefix . $key,
-                type: 'enum',
-            );
-        }
 
         $this->driver->store(
             key: $this->key($key),
-            value: $encoded,
+            value: $this->encode($key, $value),
             ttl: $ttl,
         );
 

@@ -22,11 +22,4 @@ interface CacheScopeInterface
     public ?CacheDriverConfigInterface $driver {
         get;
     }
-
-    /**
-     * @var list<class-string>
-     */
-    public array $allowedClasses {
-        get;
-    }
 }

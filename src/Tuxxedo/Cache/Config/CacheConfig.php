@@ -21,7 +21,6 @@ class CacheConfig implements CacheConfigInterface
 {
     /**
      * @param list<CacheScopeInterface> $scopes
-     * @param list<class-string> $allowedClasses
      *
      * @throws CacheException
      */
@@ -29,7 +28,6 @@ class CacheConfig implements CacheConfigInterface
         public readonly CacheDriverConfigInterface $default,
         public readonly array $scopes = [],
         public readonly ?string $separator = ':',
-        public readonly array $allowedClasses = [],
     ) {
         $this->validate();
     }

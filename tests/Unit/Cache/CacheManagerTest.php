@@ -40,9 +40,6 @@ class CacheManagerTest extends TestCase
                 scopes: [
                     new CacheScope(
                         name: 'reports',
-                        allowedClasses: [
-                            Money::class,
-                        ],
                     ),
                     new CacheScope(
                         name: 'local',
@@ -509,7 +506,7 @@ class CacheManagerTest extends TestCase
         );
     }
 
-    public function testObjectRoutesToScopeWithItsAllowList(): void
+    public function testObjectRoutesToScope(): void
     {
         $money = new Money(
             amount: 100,
@@ -526,19 +523,6 @@ class CacheManagerTest extends TestCase
             $this->manager->object(
                 key: 'reports:balance',
                 class: Money::class,
-            ),
-        );
-    }
-
-    public function testRootRejectsObjectAllowedOnlyInScope(): void
-    {
-        self::expectException(CacheException::class);
-
-        $this->manager->set(
-            key: 'balance',
-            value: new Money(
-                amount: 100,
-                currency: 'DKK',
             ),
         );
     }

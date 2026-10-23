@@ -58,21 +58,14 @@ abstract class AbstractCacheDriverIntegrationTestCase extends TestCase
         }
     }
 
-    /**
-     * @param list<class-string> $allowedClasses
-     */
     protected function createCache(
         CacheDriverInterface $driver,
         string $prefix,
-        array $allowedClasses = [
-            Money::class,
-        ],
     ): Cache {
         return new Cache(
             driver: $driver,
             mapper: new Mapper(),
             prefix: $prefix,
-            allowedClasses: $allowedClasses,
         );
     }
 
@@ -203,27 +196,6 @@ abstract class AbstractCacheDriverIntegrationTestCase extends TestCase
 
         self::assertInstanceOf(Money::class, $balance);
         self::assertSame(100, $balance->amount);
-    }
-
-    public function testReadRejectsObjectOutsideReaderAllowList(): void
-    {
-        $this->cache->set(
-            key: 'balance',
-            value: new Money(
-                amount: 100,
-                currency: 'DKK',
-            ),
-        );
-
-        $reader = $this->createCache(
-            driver: $this->driver,
-            prefix: '',
-            allowedClasses: [],
-        );
-
-        self::expectException(CacheException::class);
-
-        $reader->string('balance');
     }
 
     public function testMissingKeyReadsAsNull(): void

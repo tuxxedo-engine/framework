@@ -29,14 +29,12 @@ interface CacheDriverInterface
     ): self;
 
     /**
-     * @param list<class-string> $allowedClasses
      * @return int|float|string|bool|array<mixed>|object|null
      *
      * @throws CacheException
      */
     public function fetch(
         string $key,
-        array $allowedClasses,
     ): int|float|string|bool|array|object|null;
 
     /**

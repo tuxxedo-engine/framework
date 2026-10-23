@@ -15,13 +15,9 @@ namespace Tuxxedo\Cache\Config;
 
 class CacheScope implements CacheScopeInterface
 {
-    /**
-     * @param list<class-string> $allowedClasses
-     */
     public function __construct(
         public readonly string $name,
         public readonly ?CacheDriverConfigInterface $driver = null,
-        public readonly array $allowedClasses = [],
     ) {
     }
 }

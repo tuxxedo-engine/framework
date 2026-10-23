@@ -18,6 +18,7 @@ use Fixture\Cache\Cache\Cache\Plan;
 use Fixture\Cache\Cache\Cache\Priority;
 use Fixture\Cache\Cache\Cache\Profile;
 use Fixture\Cache\Cache\Cache\Suit;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Support\Cache\InMemoryCacheDriver;
 use Tuxxedo\Cache\Cache;
@@ -43,9 +44,6 @@ class CacheTest extends TestCase
         $this->cache = new Cache(
             driver: $this->driver,
             mapper: new Mapper(),
-            allowedClasses: [
-                Money::class,
-            ],
         );
     }
 
@@ -247,24 +245,42 @@ class CacheTest extends TestCase
         );
     }
 
-    public function testSetStoresBackedEnumAsBackingValue(): void
-    {
-        $this->cache->set(
-            key: 'plan',
-            value: Plan::PRO,
-        );
-
-        self::assertSame('pro', $this->cache->string('plan'));
-    }
-
-    public function testSetStoresPureEnumAsCaseName(): void
+    public function testSetStoresEnumCaseAsIs(): void
     {
         $this->cache->set(
             key: 'suit',
             value: Suit::HEARTS,
         );
 
-        self::assertSame('HEARTS', $this->cache->string('suit'));
+        self::assertSame(Suit::HEARTS, $this->driver->entries['suit']['value']);
+    }
+
+    public function testStringThrowsOnStoredEnum(): void
+    {
+        $this->cache->set(
+            key: 'plan',
+            value: Plan::PRO,
+        );
+
+        self::expectException(CacheException::class);
+
+        $this->cache->string('plan');
+    }
+
+    public function testEnumHydratesStoredBackingValue(): void
+    {
+        $this->cache->set(
+            key: 'plan',
+            value: 'pro',
+        );
+
+        self::assertSame(
+            Plan::PRO,
+            $this->cache->enum(
+                key: 'plan',
+                enum: Plan::class,
+            ),
+        );
     }
 
     public function testArrayOfStringReturnsStoredArray(): void
@@ -441,7 +457,7 @@ class CacheTest extends TestCase
         );
     }
 
-    public function testObjectReturnsAllowedObject(): void
+    public function testObjectReturnsStoredObject(): void
     {
         $money = new Money(
             amount: 100,
@@ -487,28 +503,36 @@ class CacheTest extends TestCase
         );
     }
 
-    public function testSetThrowsOnObjectOutsideAllowList(): void
+    public function testSetStoresAnyObject(): void
+    {
+        $profile = new Profile();
+
+        $this->cache->set(
+            key: 'profile',
+            value: $profile,
+        );
+
+        self::assertSame(
+            $profile,
+            $this->cache->object(
+                key: 'profile',
+                class: Profile::class,
+            ),
+        );
+    }
+
+    public function testSetThrowsOnClosure(): void
     {
         try {
             $this->cache->set(
-                key: 'profile',
-                value: new Profile(),
+                key: 'callback',
+                value: static fn (): int => 1,
             );
+
+            self::fail('Expected CacheException');
         } catch (CacheException $exception) {
-            self::assertStringContainsString(Profile::class, $exception->getMessage());
+            self::assertStringContainsString('Closure', $exception->getMessage());
         }
-    }
-
-    public function testSetThrowsOnObjectOutsideAllowListInsideArray(): void
-    {
-        self::expectException(CacheException::class);
-
-        $this->cache->set(
-            key: 'profiles',
-            value: [
-                new Profile(),
-            ],
-        );
     }
 
     public function testSetThrowsOnNullInsideArray(): void
@@ -525,7 +549,7 @@ class CacheTest extends TestCase
         }
     }
 
-    public function testReadThrowsOnStoredObjectOutsideAllowList(): void
+    public function testStringThrowsOnStoredObject(): void
     {
         $this->driver->store(
             key: 'profile',
@@ -538,7 +562,7 @@ class CacheTest extends TestCase
         $this->cache->string('profile');
     }
 
-    public function testReadThrowsOnStoredObjectOutsideAllowListInsideArray(): void
+    public function testArrayOfStringThrowsOnStoredObjects(): void
     {
         $this->driver->store(
             key: 'profiles',
@@ -709,13 +733,41 @@ class CacheTest extends TestCase
         );
     }
 
-    public function testRememberThrowsOnEnumValue(): void
+    /**
+     * @return \Generator<string, array{0: Plan}>
+     */
+    public static function rememberedPlanDataProvider(): \Generator
     {
-        self::expectException(CacheException::class);
+        yield 'pro' => [
+            Plan::PRO,
+        ];
+    }
 
-        $this->cache->remember(
+    #[DataProvider('rememberedPlanDataProvider')]
+    public function testRememberReturnsSameEnumCaseOnMissAndHit(
+        Plan $plan,
+    ): void {
+        $factory = static fn (): Plan => $plan;
+
+        $miss = $this->cache->remember(
             key: 'plan',
-            factory: static fn (): Plan => Plan::PRO,
+            factory: $factory,
+        );
+
+        $hit = $this->cache->remember(
+            key: 'plan',
+            factory: $factory,
+        );
+
+        self::assertSame(
+            [
+                Plan::PRO,
+                Plan::PRO,
+            ],
+            [
+                $miss,
+                $hit,
+            ],
         );
     }
 

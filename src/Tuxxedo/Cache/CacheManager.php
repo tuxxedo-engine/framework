@@ -55,7 +55,6 @@ class CacheManager implements CacheManagerInterface
                     : $defaultDriver,
                 mapper: $mapper,
                 prefix: $scope->name . ($config->separator ?? ''),
-                allowedClasses: $scope->allowedClasses,
             );
         }
 
@@ -63,7 +62,6 @@ class CacheManager implements CacheManagerInterface
             root: new Cache(
                 driver: $defaultDriver,
                 mapper: $mapper,
-                allowedClasses: $config->allowedClasses,
             ),
             scopes: $scopes,
             separator: $config->separator,

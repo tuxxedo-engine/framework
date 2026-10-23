@@ -158,7 +158,6 @@ class RedisCacheDriver implements CacheDriverInterface
     }
 
     /**
-     * @param list<class-string> $allowedClasses
      * @return int|float|string|bool|array<mixed>|object
      *
      * @throws CacheException
@@ -166,18 +165,12 @@ class RedisCacheDriver implements CacheDriverInterface
     private function decode(
         string $key,
         string $payload,
-        array $allowedClasses,
     ): int|float|string|bool|array|object {
         if (\preg_match('/\A-?[0-9]+\z/', $payload) === 1 && (string) (int) $payload === $payload) {
             return (int) $payload;
         }
 
-        $value = @\unserialize(
-            $payload,
-            [
-                'allowed_classes' => $allowedClasses !== [] ? $allowedClasses : false,
-            ],
-        );
+        $value = @\unserialize($payload);
 
         if (
             ($value === false && $payload !== 'b:0;') ||
@@ -307,12 +300,11 @@ class RedisCacheDriver implements CacheDriverInterface
 
     public function fetch(
         string $key,
-        array $allowedClasses,
     ): int|float|string|bool|array|object|null {
         return $this->guard(
             operation: 'fetch',
             key: $key,
-            callback: function () use ($key, $allowedClasses): int|float|string|bool|array|object|null {
+            callback: function () use ($key): int|float|string|bool|array|object|null {
                 $payload = $this->redis()->get($this->namespace . $key);
 
                 if (!\is_string($payload)) {
@@ -322,7 +314,6 @@ class RedisCacheDriver implements CacheDriverInterface
                 return $this->decode(
                     key: $key,
                     payload: $payload,
-                    allowedClasses: $allowedClasses,
                 );
             },
         );
