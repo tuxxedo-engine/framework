@@ -40,7 +40,7 @@ class LayoutParserHandler implements ParserHandlerInterface
     ): array {
         $layout = $stream->expect($this->tokenClassName);
 
-        if (\sizeof($parser->state->stateStack) !== 1) {
+        if ($parser->state->nestingDepth !== 1) {
             throw ParserException::fromLayoutModeMustBeRoot(
                 line: $layout->line,
             );

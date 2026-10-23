@@ -17,11 +17,14 @@ use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Parser\Handler\ParserHandlerInterface;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 
-class StateLeakingHandler implements ParserHandlerInterface
+class NestingDepthRecordingHandler implements ParserHandlerInterface
 {
-    public const string LEAKED_KEY = 'state-leak-test-key';
-
     public private(set) string $tokenClassName = FooToken::class;
+
+    /**
+     * @var list<int>
+     */
+    public private(set) array $depths = [];
 
     public function parse(
         ParserInterface $parser,
@@ -29,10 +32,7 @@ class StateLeakingHandler implements ParserHandlerInterface
     ): array {
         $stream->consume();
 
-        $parser->state->set(
-            key: self::LEAKED_KEY,
-            value: true,
-        );
+        $this->depths[] = $parser->state->nestingDepth;
 
         return [
             new FooNode(),

@@ -70,45 +70,10 @@ class ParserException extends LumiException
         );
     }
 
-    public static function fromUnexpectedConditionExit(): self
+    public static function fromUnexpectedNestingExit(): self
     {
         return new self(
-            message: 'Cannot exit conditional: no active conditional context found',
-        );
-    }
-
-    public static function fromUnexpectedStackExit(): self
-    {
-        return new self(
-            message: 'Cannot pop state stack, as the stack is empty',
-        );
-    }
-
-    public static function fromMissingStateKey(
-        string $key,
-    ): self {
-        return new self(
-            message: \sprintf(
-                'State key "%s" is not defined',
-                $key,
-            ),
-        );
-    }
-
-    public static function fromUnexpectedStateType(
-        string $key,
-        string $type,
-        string $expectedType,
-    ): self {
-        return new self(
-            message: \sprintf(
-                'Unexpected state value for key %s, %s',
-                self::formatQuoted($key),
-                self::formatExpectedGot(
-                    expected: $expectedType,
-                    got: $type,
-                ),
-            ),
+            message: 'Cannot exit nesting level: no active nesting level found',
         );
     }
 

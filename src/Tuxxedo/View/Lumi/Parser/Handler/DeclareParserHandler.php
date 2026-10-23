@@ -40,7 +40,7 @@ class DeclareParserHandler implements ParserHandlerInterface
     ): array {
         $directive = $stream->expect($this->tokenClassName);
 
-        if (\sizeof($parser->state->stateStack) !== 1) {
+        if ($parser->state->nestingDepth !== 1) {
             throw ParserException::fromDeclareTokensCannotBeNested(
                 line: $directive->line,
             );

@@ -62,8 +62,7 @@ class ConditionParserHandler implements ParserHandlerInterface
             startingLine: $stream->tokens[$stream->position - 1]->line,
         );
 
-        $parser->state->enterCondition();
-
+        $depth = 1;
         $bodyTokens = [];
         $elseTokens = [];
         $branches = [];
@@ -71,7 +70,7 @@ class ConditionParserHandler implements ParserHandlerInterface
 
         while (!$stream->eof()) {
             if ($stream->currentIs(IfToken::class)) {
-                $parser->state->enterCondition();
+                $depth++;
 
                 if ($parsingElse) {
                     $elseTokens[] = $stream->current();
@@ -85,9 +84,9 @@ class ConditionParserHandler implements ParserHandlerInterface
             }
 
             if ($stream->currentIs(EndIfToken::class)) {
-                $parser->state->leaveCondition();
+                $depth--;
 
-                if ($parser->state->conditionDepth === 0) {
+                if ($depth === 0) {
                     $stream->consume();
 
                     break;
@@ -105,7 +104,7 @@ class ConditionParserHandler implements ParserHandlerInterface
             }
 
             if ($stream->currentIs(ElseIfToken::class)) {
-                if ($parser->state->conditionDepth > 1) {
+                if ($depth > 1) {
                     if ($parsingElse) {
                         $elseTokens[] = $stream->current();
                     } else {
@@ -137,18 +136,26 @@ class ConditionParserHandler implements ParserHandlerInterface
                 );
 
                 $branchBodyTokens = [];
+                $branchDepth = 0;
 
                 while (
-                    !$stream->currentIs(ElseIfToken::class) &&
-                    !$stream->currentIs(ElseToken::class) &&
-                    !$stream->currentIs(EndIfToken::class)
+                    $branchDepth > 0 ||
+                    (
+                        !$stream->currentIs(ElseIfToken::class) &&
+                        !$stream->currentIs(ElseToken::class) &&
+                        !$stream->currentIs(EndIfToken::class)
+                    )
                 ) {
+                    if ($stream->currentIs(IfToken::class)) {
+                        $branchDepth++;
+                    } elseif ($stream->currentIs(EndIfToken::class)) {
+                        $branchDepth--;
+                    }
+
                     $branchBodyTokens[] = $stream->current();
 
                     $stream->consume();
                 }
-
-                $parser->state->enterCondition();
 
                 $branches[] = new ConditionalBranchNode(
                     operand: $branchCondition,
@@ -159,13 +166,11 @@ class ConditionParserHandler implements ParserHandlerInterface
                     )->nodes,
                 );
 
-                $parser->state->leaveCondition();
-
                 continue;
             }
 
             if ($stream->currentIs(ElseToken::class)) {
-                if ($parser->state->conditionDepth > 1) {
+                if ($depth > 1) {
                     if ($parsingElse) {
                         $elseTokens[] = $stream->current();
                     } else {
@@ -194,27 +199,19 @@ class ConditionParserHandler implements ParserHandlerInterface
         }
 
         if (\sizeof($bodyTokens) > 0) {
-            $parser->state->enterCondition();
-
             $body = $parser->parse(
                 stream: new TokenStream(
                     tokens: $bodyTokens,
                 ),
             )->nodes;
-
-            $parser->state->leaveCondition();
         }
 
         if (\sizeof($elseTokens) > 0) {
-            $parser->state->enterCondition();
-
             $elseBody = $parser->parse(
                 stream: new TokenStream(
                     tokens: $elseTokens,
                 ),
             )->nodes;
-
-            $parser->state->leaveCondition();
         }
 
         return [

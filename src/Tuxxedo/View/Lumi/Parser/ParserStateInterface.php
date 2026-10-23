@@ -19,21 +19,7 @@ interface ParserStateInterface
         get;
     }
 
-    public int $conditionDepth {
-        get;
-    }
-
-    /**
-     * @var array<string, string|int|bool>
-     */
-    public array $state {
-        get;
-    }
-
-    /**
-     * @var ParserStatePropertiesInterface[]
-     */
-    public array $stateStack {
+    public int $nestingDepth {
         get;
     }
 
@@ -44,54 +30,10 @@ interface ParserStateInterface
      */
     public function leaveLoop(): void;
 
-    public function enterCondition(): void;
+    public function enterNesting(): void;
 
     /**
      * @throws ParserException
      */
-    public function leaveCondition(): void;
-
-    public function pushState(): void;
-
-    public function popState(): void;
-
-    public function isCleanState(
-        bool $checkLoops = true,
-        bool $checkConditions = true,
-        bool $checkCustom = true,
-    ): bool;
-
-    public function set(
-        string $key,
-        string|int|bool $value,
-    ): self;
-
-    public function has(
-        string $key,
-    ): bool;
-
-    public function clear(
-        string $key,
-    ): self;
-
-    /**
-     * @throws ParserException
-     */
-    public function string(
-        string $key,
-    ): string;
-
-    /**
-     * @throws ParserException
-     */
-    public function int(
-        string $key,
-    ): int;
-
-    /**
-     * @throws ParserException
-     */
-    public function bool(
-        string $key,
-    ): bool;
+    public function leaveNesting(): void;
 }

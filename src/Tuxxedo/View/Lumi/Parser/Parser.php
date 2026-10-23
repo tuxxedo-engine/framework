@@ -171,14 +171,14 @@ class Parser implements ParserInterface
                 );
             }
 
-            $this->state->pushState();
+            $this->state->enterNesting();
 
             $nodes = \array_merge(
                 $nodes,
                 $this->handlers[$token::class]->parse($this, $stream),
             );
 
-            $this->state->popState();
+            $this->state->leaveNesting();
         }
 
         return new NodeStream(

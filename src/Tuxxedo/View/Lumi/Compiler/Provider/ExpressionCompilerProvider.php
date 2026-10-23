@@ -138,10 +138,13 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         CompilerInterface $compiler,
         NodeStreamInterface $stream,
     ): string {
-        $nullSafe = $node->operator === BinarySymbol::NULL_SAFE_ACCESS ||
-            $node->operator === BinarySymbol::NULL_COALESCE;
+        $ownsNullSafeFlag = !$compiler->state->hasFlag(CompilerStateFlag::NULL_SAFE_ACCESS) &&
+            (
+                $node->operator === BinarySymbol::NULL_SAFE_ACCESS ||
+                $node->operator === BinarySymbol::NULL_COALESCE
+            );
 
-        if ($nullSafe) {
+        if ($ownsNullSafeFlag) {
             $compiler->state->flag(CompilerStateFlag::NULL_SAFE_ACCESS);
         }
 
@@ -152,7 +155,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
             $compiler->compileNode($node->right, $stream),
         );
 
-        if ($nullSafe) {
+        if ($ownsNullSafeFlag) {
             $compiler->state->removeFlag(CompilerStateFlag::NULL_SAFE_ACCESS);
         }
 

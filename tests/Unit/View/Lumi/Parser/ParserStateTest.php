@@ -53,279 +53,47 @@ class ParserStateTest extends TestCase
         $this->state->leaveLoop();
     }
 
-    public function testEnterConditionIncrementsDepth(): void
+    public function testFreshStateHasNoDepth(): void
     {
-        $this->state->enterCondition();
-
-        self::assertSame(1, $this->state->conditionDepth);
-
-        $this->state->enterCondition();
-
-        self::assertSame(2, $this->state->conditionDepth);
+        self::assertSame(0, $this->state->loopDepth);
+        self::assertSame(0, $this->state->nestingDepth);
     }
 
-    public function testLeaveConditionDecrementsDepth(): void
+    public function testEnterNestingIncrementsDepth(): void
     {
-        $this->state->enterCondition();
-        $this->state->enterCondition();
-        $this->state->leaveCondition();
+        $this->state->enterNesting();
 
-        self::assertSame(1, $this->state->conditionDepth);
+        self::assertSame(1, $this->state->nestingDepth);
+
+        $this->state->enterNesting();
+
+        self::assertSame(2, $this->state->nestingDepth);
     }
 
-    public function testLeaveConditionThrowsWhenAtZeroDepth(): void
+    public function testLeaveNestingDecrementsDepth(): void
     {
-        self::expectException(ParserException::class);
+        $this->state->enterNesting();
+        $this->state->enterNesting();
+        $this->state->leaveNesting();
 
-        $this->state->leaveCondition();
+        self::assertSame(1, $this->state->nestingDepth);
     }
 
-    public function testPushStateSnapshotsAndResets(): void
-    {
-        $this->state->enterCondition();
-        $this->state->set(
-            key: 'flag',
-            value: true,
-        );
-
-        $this->state->pushState();
-
-        self::assertCount(1, $this->state->stateStack);
-        self::assertSame(0, $this->state->conditionDepth);
-        self::assertSame([], $this->state->state);
-    }
-
-    public function testPopStateRestoresSnapshot(): void
-    {
-        $this->state->enterCondition();
-        $this->state->set(
-            key: 'flag',
-            value: true,
-        );
-
-        $this->state->pushState();
-
-        $this->state->set(
-            key: 'inner',
-            value: 'overlay',
-        );
-        $this->state->enterCondition();
-
-        $this->state->popState();
-
-        self::assertSame([], $this->state->stateStack);
-        self::assertSame(1, $this->state->conditionDepth);
-        self::assertTrue($this->state->has('flag'));
-        self::assertFalse($this->state->has('inner'));
-    }
-
-    public function testPopStateThrowsWhenStackIsEmpty(): void
+    public function testLeaveNestingThrowsWhenAtZeroDepth(): void
     {
         self::expectException(ParserException::class);
 
-        $this->state->popState();
+        $this->state->leaveNesting();
     }
 
-    public function testSetReturnsSelfForChaining(): void
-    {
-        self::assertSame(
-            $this->state,
-            $this->state->set(
-                key: 'flag',
-                value: true,
-            ),
-        );
-    }
-
-    public function testHasReturnsFalseForMissingKey(): void
-    {
-        self::assertFalse($this->state->has('missing'));
-    }
-
-    public function testHasReturnsTrueForExistingKey(): void
-    {
-        $this->state->set(
-            key: 'flag',
-            value: true,
-        );
-
-        self::assertTrue($this->state->has('flag'));
-    }
-
-    public function testClearRemovesKey(): void
-    {
-        $this->state->set(
-            key: 'flag',
-            value: true,
-        );
-
-        $this->state->clear('flag');
-
-        self::assertFalse($this->state->has('flag'));
-    }
-
-    public function testClearReturnsSelfForChaining(): void
-    {
-        $this->state->set(
-            key: 'flag',
-            value: true,
-        );
-
-        self::assertSame(
-            $this->state,
-            $this->state->clear('flag'),
-        );
-    }
-
-    public function testStringReturnsValue(): void
-    {
-        $this->state->set(
-            key: 'name',
-            value: 'engine',
-        );
-
-        self::assertSame('engine', $this->state->string('name'));
-    }
-
-    public function testStringThrowsOnMissingKey(): void
-    {
-        self::expectException(ParserException::class);
-
-        $this->state->string('missing');
-    }
-
-    public function testStringThrowsOnNonStringType(): void
-    {
-        $this->state->set(
-            key: 'count',
-            value: 5,
-        );
-
-        self::expectException(ParserException::class);
-
-        $this->state->string('count');
-    }
-
-    public function testIntReturnsValue(): void
-    {
-        $this->state->set(
-            key: 'count',
-            value: 42,
-        );
-
-        self::assertSame(42, $this->state->int('count'));
-    }
-
-    public function testIntThrowsOnMissingKey(): void
-    {
-        self::expectException(ParserException::class);
-
-        $this->state->int('missing');
-    }
-
-    public function testIntThrowsOnNonIntType(): void
-    {
-        $this->state->set(
-            key: 'name',
-            value: 'engine',
-        );
-
-        self::expectException(ParserException::class);
-
-        $this->state->int('name');
-    }
-
-    public function testBoolReturnsValue(): void
-    {
-        $this->state->set(
-            key: 'flag',
-            value: true,
-        );
-
-        self::assertTrue($this->state->bool('flag'));
-    }
-
-    public function testBoolThrowsOnMissingKey(): void
-    {
-        self::expectException(ParserException::class);
-
-        $this->state->bool('missing');
-    }
-
-    public function testBoolThrowsOnNonBoolType(): void
-    {
-        $this->state->set(
-            key: 'count',
-            value: 5,
-        );
-
-        self::expectException(ParserException::class);
-
-        $this->state->bool('count');
-    }
-
-    public function testIsCleanStateReturnsTrueOnFreshState(): void
-    {
-        self::assertTrue($this->state->isCleanState());
-    }
-
-    public function testIsCleanStateReturnsFalseWhenLoopActive(): void
+    public function testLoopAndNestingDepthsAreIndependent(): void
     {
         $this->state->enterLoop();
+        $this->state->enterNesting();
+        $this->state->enterNesting();
+        $this->state->leaveLoop();
 
-        self::assertFalse($this->state->isCleanState());
-    }
-
-    public function testIsCleanStateReturnsFalseWhenConditionActive(): void
-    {
-        $this->state->enterCondition();
-
-        self::assertFalse($this->state->isCleanState());
-    }
-
-    public function testIsCleanStateReturnsFalseWhenCustomStateSet(): void
-    {
-        $this->state->set(
-            key: 'flag',
-            value: true,
-        );
-
-        self::assertFalse($this->state->isCleanState());
-    }
-
-    public function testIsCleanStateIgnoresLoopWhenCheckLoopsDisabled(): void
-    {
-        $this->state->enterLoop();
-
-        self::assertTrue(
-            $this->state->isCleanState(
-                checkLoops: false,
-            ),
-        );
-    }
-
-    public function testIsCleanStateIgnoresConditionWhenCheckConditionsDisabled(): void
-    {
-        $this->state->enterCondition();
-
-        self::assertTrue(
-            $this->state->isCleanState(
-                checkConditions: false,
-            ),
-        );
-    }
-
-    public function testIsCleanStateIgnoresCustomWhenCheckCustomDisabled(): void
-    {
-        $this->state->set(
-            key: 'flag',
-            value: true,
-        );
-
-        self::assertTrue(
-            $this->state->isCleanState(
-                checkCustom: false,
-            ),
-        );
+        self::assertSame(0, $this->state->loopDepth);
+        self::assertSame(2, $this->state->nestingDepth);
     }
 }

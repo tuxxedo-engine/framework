@@ -36,7 +36,7 @@ class DeclareParserHandlerTest extends TestCase
         $this->handler = new DeclareParserHandler();
         $this->parser = Parser::createWithoutDefaultHandlers();
 
-        $this->parser->state->pushState();
+        $this->parser->state->enterNesting();
     }
 
     public function testParsesDeclareWithStringValue(): void
@@ -105,7 +105,7 @@ class DeclareParserHandlerTest extends TestCase
 
     public function testThrowsOnNestedDeclare(): void
     {
-        $this->parser->state->pushState();
+        $this->parser->state->enterNesting();
 
         self::expectException(ParserException::class);
 

@@ -32,7 +32,7 @@ class YieldParserHandlerTest extends TestCase
         $this->handler = new YieldParserHandler();
         $this->parser = Parser::createWithoutDefaultHandlers();
 
-        $this->parser->state->pushState();
+        $this->parser->state->enterNesting();
     }
 
     public function testParsesYieldToken(): void

@@ -1295,6 +1295,70 @@ class ExpressionCompilerProviderTest extends TestCase
         );
     }
 
+    public function testCompileNestedNullCoalesceKeepsOuterNullSafeFlag(): void
+    {
+        $output = $this->compiler->compileExpression(
+            new BinaryOpNode(
+                left: new GroupNode(
+                    operand: new BinaryOpNode(
+                        left: new IdentifierNode(
+                            name: 'a',
+                        ),
+                        right: new IdentifierNode(
+                            name: 'b',
+                        ),
+                        operator: BinarySymbol::NULL_COALESCE,
+                    ),
+                ),
+                right: new PropertyAccessNode(
+                    accessor: new IdentifierNode(
+                        name: 'c',
+                    ),
+                    property: 'name',
+                ),
+                operator: BinarySymbol::NULL_COALESCE,
+            ),
+        );
+
+        self::assertSame(
+            '($__lumiVariables[\'a\'] ?? $__lumiVariables[\'b\']) ?? $this->propertyAccess($__lumiVariables[\'c\'], true)?->name',
+            $output,
+        );
+    }
+
+    public function testCompileNullSafeFlagIsClearedAfterNestedNullCoalesce(): void
+    {
+        $output = $this->compiler->compileExpression(
+            new BinaryOpNode(
+                left: new GroupNode(
+                    operand: new BinaryOpNode(
+                        left: new IdentifierNode(
+                            name: 'a',
+                        ),
+                        right: new IdentifierNode(
+                            name: 'b',
+                        ),
+                        operator: BinarySymbol::NULL_COALESCE,
+                    ),
+                ),
+                right: new PropertyAccessNode(
+                    accessor: new IdentifierNode(
+                        name: 'c',
+                    ),
+                    property: 'name',
+                ),
+                operator: BinarySymbol::ADD,
+            ),
+        );
+
+        self::assertSame(
+            '($__lumiVariables[\'a\'] ?? $__lumiVariables[\'b\']) + $this->propertyAccess($__lumiVariables[\'c\'])->name',
+            $output,
+        );
+
+        self::assertFalse($this->compiler->state->hasFlag(CompilerStateFlag::NULL_SAFE_ACCESS));
+    }
+
     public function testCompileBinaryOpNonNullSafeOperatorDoesNotMarkPropertyAccessAsNullSafe(): void
     {
         $output = $this->compiler->compileExpression(

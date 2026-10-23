@@ -28,6 +28,7 @@ use Tuxxedo\View\Lumi\Syntax\Token\EndToken;
 use Tuxxedo\View\Lumi\Syntax\Token\IdentifierToken;
 use Tuxxedo\View\Lumi\Syntax\Token\IfToken;
 use Tuxxedo\View\Lumi\Syntax\Token\TextToken;
+use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
 class ConditionParserHandlerTest extends TestCase
 {
@@ -38,6 +39,49 @@ class ConditionParserHandlerTest extends TestCase
     protected function setUp(): void
     {
         $this->handler = new ConditionParserHandler();
+    }
+
+    /**
+     * @param class-string<IfToken|ElseIfToken> $tokenClassName
+     * @return TokenInterface[]
+     */
+    private function header(
+        string $tokenClassName,
+        string $condition,
+        int $line,
+    ): array {
+        return [
+            new $tokenClassName(
+                line: $line,
+            ),
+            new IdentifierToken(
+                line: $line,
+                op1: $condition,
+            ),
+            new EndToken(
+                line: $line,
+            ),
+        ];
+    }
+
+    private function text(
+        string $text,
+        int $line,
+    ): TextToken {
+        return new TextToken(
+            line: $line,
+            op1: $text,
+        );
+    }
+
+    private function nestingParser(): Parser
+    {
+        return Parser::createWithoutDefaultHandlers(
+            handlers: [
+                new TextParserHandler(),
+                new ConditionParserHandler(),
+            ],
+        );
     }
 
     public function testParsesIfWithBody(): void
@@ -843,6 +887,294 @@ class ConditionParserHandlerTest extends TestCase
         $this->assertTextNode(
             node: $nodes[0]->else[1],
             expectedText: 'C',
+        );
+    }
+
+    public function testParsesNestedIfInsideElseIfBranch(): void
+    {
+        $nodes = $this->handler->parse(
+            parser: $this->nestingParser(),
+            stream: new TokenStream(
+                tokens: [
+                    ...$this->header(
+                        tokenClassName: IfToken::class,
+                        condition: 'a',
+                        line: 1,
+                    ),
+                    $this->text(
+                        text: 'A',
+                        line: 2,
+                    ),
+                    ...$this->header(
+                        tokenClassName: ElseIfToken::class,
+                        condition: 'b',
+                        line: 3,
+                    ),
+                    ...$this->header(
+                        tokenClassName: IfToken::class,
+                        condition: 'c',
+                        line: 4,
+                    ),
+                    $this->text(
+                        text: 'C',
+                        line: 5,
+                    ),
+                    new EndIfToken(
+                        line: 6,
+                    ),
+                    $this->text(
+                        text: 'B',
+                        line: 7,
+                    ),
+                    new EndIfToken(
+                        line: 8,
+                    ),
+                ],
+            ),
+        );
+
+        self::assertCount(1, $nodes);
+
+        $this->assertConditionalNode(
+            node: $nodes[0],
+            expectedBodyCount: 1,
+            expectedBranchCount: 1,
+            expectedElseCount: 0,
+        );
+
+        self::assertInstanceOf(ConditionalNode::class, $nodes[0]);
+
+        $branch = $nodes[0]->branches[0];
+
+        self::assertCount(2, $branch->body);
+
+        $this->assertConditionalNode(
+            node: $branch->body[0],
+            expectedBodyCount: 1,
+            expectedBranchCount: 0,
+            expectedElseCount: 0,
+        );
+
+        $this->assertTextNode(
+            node: $branch->body[1],
+            expectedText: 'B',
+        );
+    }
+
+    public function testParsesNestedIfWithElseAndElseIfInsideElseIfBranch(): void
+    {
+        $nodes = $this->handler->parse(
+            parser: $this->nestingParser(),
+            stream: new TokenStream(
+                tokens: [
+                    ...$this->header(
+                        tokenClassName: IfToken::class,
+                        condition: 'a',
+                        line: 1,
+                    ),
+                    ...$this->header(
+                        tokenClassName: ElseIfToken::class,
+                        condition: 'b',
+                        line: 2,
+                    ),
+                    ...$this->header(
+                        tokenClassName: IfToken::class,
+                        condition: 'c',
+                        line: 3,
+                    ),
+                    $this->text(
+                        text: 'C',
+                        line: 4,
+                    ),
+                    ...$this->header(
+                        tokenClassName: ElseIfToken::class,
+                        condition: 'd',
+                        line: 5,
+                    ),
+                    $this->text(
+                        text: 'D',
+                        line: 6,
+                    ),
+                    new ElseToken(
+                        line: 7,
+                    ),
+                    $this->text(
+                        text: 'E',
+                        line: 8,
+                    ),
+                    new EndIfToken(
+                        line: 9,
+                    ),
+                    new EndIfToken(
+                        line: 10,
+                    ),
+                ],
+            ),
+        );
+
+        self::assertCount(1, $nodes);
+
+        $this->assertConditionalNode(
+            node: $nodes[0],
+            expectedBodyCount: 0,
+            expectedBranchCount: 1,
+            expectedElseCount: 0,
+        );
+
+        self::assertInstanceOf(ConditionalNode::class, $nodes[0]);
+
+        $branch = $nodes[0]->branches[0];
+
+        self::assertCount(1, $branch->body);
+
+        $this->assertConditionalNode(
+            node: $branch->body[0],
+            expectedBodyCount: 1,
+            expectedBranchCount: 1,
+            expectedElseCount: 1,
+        );
+    }
+
+    public function testElseAfterElseIfBranchWithNestedIfBelongsToOuterIf(): void
+    {
+        $nodes = $this->handler->parse(
+            parser: $this->nestingParser(),
+            stream: new TokenStream(
+                tokens: [
+                    ...$this->header(
+                        tokenClassName: IfToken::class,
+                        condition: 'a',
+                        line: 1,
+                    ),
+                    ...$this->header(
+                        tokenClassName: ElseIfToken::class,
+                        condition: 'b',
+                        line: 2,
+                    ),
+                    ...$this->header(
+                        tokenClassName: IfToken::class,
+                        condition: 'c',
+                        line: 3,
+                    ),
+                    new EndIfToken(
+                        line: 4,
+                    ),
+                    new ElseToken(
+                        line: 5,
+                    ),
+                    $this->text(
+                        text: 'E',
+                        line: 6,
+                    ),
+                    new EndIfToken(
+                        line: 7,
+                    ),
+                ],
+            ),
+        );
+
+        self::assertCount(1, $nodes);
+
+        $this->assertConditionalNode(
+            node: $nodes[0],
+            expectedBodyCount: 0,
+            expectedBranchCount: 1,
+            expectedElseCount: 1,
+        );
+
+        self::assertInstanceOf(ConditionalNode::class, $nodes[0]);
+
+        $branch = $nodes[0]->branches[0];
+
+        self::assertCount(1, $branch->body);
+
+        $this->assertConditionalNode(
+            node: $branch->body[0],
+            expectedBodyCount: 0,
+            expectedBranchCount: 0,
+            expectedElseCount: 0,
+        );
+
+        $this->assertTextNode(
+            node: $nodes[0]->else[0],
+            expectedText: 'E',
+        );
+    }
+
+    public function testParsesThreeLevelNestedIf(): void
+    {
+        $nodes = $this->handler->parse(
+            parser: $this->nestingParser(),
+            stream: new TokenStream(
+                tokens: [
+                    ...$this->header(
+                        tokenClassName: IfToken::class,
+                        condition: 'a',
+                        line: 1,
+                    ),
+                    ...$this->header(
+                        tokenClassName: IfToken::class,
+                        condition: 'b',
+                        line: 2,
+                    ),
+                    ...$this->header(
+                        tokenClassName: IfToken::class,
+                        condition: 'c',
+                        line: 3,
+                    ),
+                    $this->text(
+                        text: 'C',
+                        line: 4,
+                    ),
+                    new EndIfToken(
+                        line: 5,
+                    ),
+                    new EndIfToken(
+                        line: 6,
+                    ),
+                    $this->text(
+                        text: 'tail',
+                        line: 7,
+                    ),
+                    new EndIfToken(
+                        line: 8,
+                    ),
+                ],
+            ),
+        );
+
+        self::assertCount(1, $nodes);
+
+        $this->assertConditionalNode(
+            node: $nodes[0],
+            expectedBodyCount: 2,
+            expectedBranchCount: 0,
+            expectedElseCount: 0,
+        );
+
+        self::assertInstanceOf(ConditionalNode::class, $nodes[0]);
+
+        $middle = $nodes[0]->body[0];
+
+        $this->assertConditionalNode(
+            node: $middle,
+            expectedBodyCount: 1,
+            expectedBranchCount: 0,
+            expectedElseCount: 0,
+        );
+
+        self::assertInstanceOf(ConditionalNode::class, $middle);
+
+        $this->assertConditionalNode(
+            node: $middle->body[0],
+            expectedBodyCount: 1,
+            expectedBranchCount: 0,
+            expectedElseCount: 0,
+        );
+
+        $this->assertTextNode(
+            node: $nodes[0]->body[1],
+            expectedText: 'tail',
         );
     }
 }

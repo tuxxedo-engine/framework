@@ -20,7 +20,7 @@ use Fixture\View\Lumi\Parser\Parser\FooHandler;
 use Fixture\View\Lumi\Parser\Parser\FooNode;
 use Fixture\View\Lumi\Parser\Parser\FooToken;
 use Fixture\View\Lumi\Parser\Parser\MultiNodeHandler;
-use Fixture\View\Lumi\Parser\Parser\StateLeakingHandler;
+use Fixture\View\Lumi\Parser\Parser\NestingDepthRecordingHandler;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\View\Lumi\Lexer\TokenStream;
 use Tuxxedo\View\Lumi\Parser\Expression\ExpressionParser;
@@ -197,13 +197,14 @@ class ParserTest extends TestCase
         );
     }
 
-    public function testHandlerStateChangesDoNotLeakBetweenInvocations(): void
+    public function testEachHandlerInvocationRunsOneNestingLevelDeeper(): void
     {
         $state = new ParserState();
+        $handler = new NestingDepthRecordingHandler();
 
         $parser = Parser::createWithoutDefaultHandlers(
             handlers: [
-                new StateLeakingHandler(),
+                $handler,
             ],
             state: $state,
         );
@@ -221,8 +222,15 @@ class ParserTest extends TestCase
             ),
         );
 
-        self::assertFalse($state->has(StateLeakingHandler::LEAKED_KEY));
-        self::assertSame([], $state->stateStack);
+        self::assertSame(
+            [
+                1,
+                1,
+            ],
+            $handler->depths,
+        );
+
+        self::assertSame(0, $state->nestingDepth);
     }
 
     public function testCreateDefaultHandlersReturnsParserHandlerInstances(): void

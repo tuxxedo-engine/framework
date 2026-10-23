@@ -38,7 +38,7 @@ class LayoutParserHandlerTest extends TestCase
         $this->handler = new LayoutParserHandler();
         $this->parser = Parser::createWithoutDefaultHandlers();
 
-        $this->parser->state->pushState();
+        $this->parser->state->enterNesting();
     }
 
     public function testParsesLayoutWithFile(): void
@@ -153,7 +153,7 @@ class LayoutParserHandlerTest extends TestCase
 
     public function testThrowsWhenNotAtRootScope(): void
     {
-        $this->parser->state->pushState();
+        $this->parser->state->enterNesting();
 
         self::expectException(ParserException::class);
 
