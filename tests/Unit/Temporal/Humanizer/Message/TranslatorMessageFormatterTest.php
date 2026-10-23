@@ -160,7 +160,7 @@ class TranslatorMessageFormatterTest extends TestCase
     public function testShippedCatalogueMatchesEnglishKeysAndPlaceholders(
         string $locale,
     ): void {
-        $english = CatalogueInspector::leaves('en-US', 'temporal');
+        $english = CatalogueInspector::leaves(CatalogueInspector::SOURCE_LOCALE, 'temporal');
         $translated = CatalogueInspector::leaves($locale, 'temporal');
 
         self::assertNotSame([], $translated);
