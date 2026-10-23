@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Config;
 
 use Tuxxedo\Version;
+use Tuxxedo\View\Lumi\Library\Function\PhpFunctionInterface;
 use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableDiscoverer;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadataInterface;
@@ -42,14 +43,7 @@ class LumiHashBuilder
         \hash_update($ctx, $configurator->functionPolicy->name);
         \hash_update($ctx, self::GROUP);
 
-        foreach ($configurator->filterClasses as $className) {
-            \hash_update($ctx, $className);
-            \hash_update($ctx, self::SEPARATOR);
-        }
-
-        \hash_update($ctx, self::GROUP);
-
-        foreach ($configurator->functionClasses as $className) {
+        foreach ($configurator->libraryClasses as $className) {
             \hash_update($ctx, $className);
             \hash_update($ctx, self::SEPARATOR);
         }
@@ -63,21 +57,11 @@ class LumiHashBuilder
 
         \hash_update($ctx, self::GROUP);
 
-        foreach ($configurator->phpFunctions as $key => $handler) {
-            \hash_update($ctx, $key);
-            \hash_update($ctx, self::SEPARATOR);
-            \hash_update($ctx, $handler->name);
-            \hash_update($ctx, self::SEPARATOR);
-            \hash_update($ctx, $handler->mappedName ?? '');
-            \hash_update($ctx, self::SEPARATOR);
+        self::updatePhpFunctions($ctx, $configurator->phpFunctions);
 
-            foreach ($handler->aliases as $alias) {
-                \hash_update($ctx, $alias);
-                \hash_update($ctx, self::ITEM);
-            }
+        \hash_update($ctx, self::GROUP);
 
-            \hash_update($ctx, self::SEPARATOR);
-        }
+        self::updatePhpFunctions($ctx, $configurator->phpFilters);
 
         \hash_update($ctx, self::GROUP);
 
@@ -123,13 +107,11 @@ class LumiHashBuilder
         $filterMetadata = [];
         $functionMetadata = [];
 
-        foreach ($configurator->filterClasses as $className) {
+        foreach ($configurator->libraryClasses as $className) {
             foreach (CallableDiscoverer::discoverFilters($className) as $entry) {
                 $filterMetadata[] = $entry;
             }
-        }
 
-        foreach ($configurator->functionClasses as $className) {
             foreach (CallableDiscoverer::discoverFunctions($className) as $entry) {
                 $functionMetadata[] = $entry;
             }
@@ -140,6 +122,30 @@ class LumiHashBuilder
             filterMetadata: $filterMetadata,
             functionMetadata: $functionMetadata,
         );
+    }
+
+    /**
+     * @param array<string, PhpFunctionInterface> $handlers
+     */
+    private static function updatePhpFunctions(
+        \HashContext $ctx,
+        array $handlers,
+    ): void {
+        foreach ($handlers as $key => $handler) {
+            \hash_update($ctx, $key);
+            \hash_update($ctx, self::SEPARATOR);
+            \hash_update($ctx, $handler->name);
+            \hash_update($ctx, self::SEPARATOR);
+            \hash_update($ctx, $handler->mappedName ?? '');
+            \hash_update($ctx, self::SEPARATOR);
+
+            foreach ($handler->aliases as $alias) {
+                \hash_update($ctx, $alias);
+                \hash_update($ctx, self::ITEM);
+            }
+
+            \hash_update($ctx, self::SEPARATOR);
+        }
     }
 
     /**

@@ -25,7 +25,7 @@ class StandardLibraryTest extends TestCase
      */
     public static function callableNameDataProvider(): \Generator
     {
-        foreach (StandardLibrary::functions() as $className) {
+        foreach (StandardLibrary::classes() as $className) {
             foreach (CallableDiscoverer::discoverFunctions($className) as $metadata) {
                 $names = [
                     $metadata->name,
@@ -38,9 +38,7 @@ class StandardLibraryTest extends TestCase
                     ];
                 }
             }
-        }
 
-        foreach (StandardLibrary::filters() as $className) {
             foreach (CallableDiscoverer::discoverFilters($className) as $metadata) {
                 $names = [
                     $metadata->name,

@@ -17,7 +17,10 @@ use PHPUnit\Framework\TestCase;
 use Support\View\Lumi\Parser\ExpressionParserHelper;
 use Support\View\Lumi\Parser\NodeAssertionsTrait;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
+use Tuxxedo\View\Lumi\Syntax\Node\FilterCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FilterOrBitwiseOrNode;
+use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
+use Tuxxedo\View\Lumi\Syntax\Node\MethodCallNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
@@ -173,5 +176,60 @@ class FilterExpressionTest extends TestCase
             node: $node->right,
             expectedName: 'b',
         );
+    }
+
+    public function testParsesFilterCallWithArguments(): void
+    {
+        $node = $this->helper->parse('a | wrap(\'[\', b)');
+
+        self::assertInstanceOf(FilterCallNode::class, $node);
+        self::assertSame('wrap', $node->name);
+        self::assertCount(2, $node->arguments);
+
+        $this->assertIdentifierNode(
+            node: $node->left,
+            expectedName: 'a',
+        );
+
+        $this->assertLiteralNode(
+            node: $node->arguments[0],
+            expectedOperand: '[',
+            expectedType: Type::STRING,
+        );
+
+        $this->assertIdentifierNode(
+            node: $node->arguments[1],
+            expectedName: 'b',
+        );
+    }
+
+    public function testFilterCallChainIsLeftAssociative(): void
+    {
+        $node = $this->helper->parse('a | trim | truncate(20)');
+
+        self::assertInstanceOf(FilterCallNode::class, $node);
+        self::assertSame('truncate', $node->name);
+        self::assertInstanceOf(FilterOrBitwiseOrNode::class, $node->left);
+
+        $this->assertIdentifierNode(
+            node: $node->left->right,
+            expectedName: 'trim',
+        );
+    }
+
+    public function testGroupedCallRightIsFilterOrBitwiseOr(): void
+    {
+        $node = $this->helper->parse('a | (f(1))');
+
+        self::assertInstanceOf(FilterOrBitwiseOrNode::class, $node);
+        self::assertInstanceOf(GroupNode::class, $node->right);
+    }
+
+    public function testMethodCallRightIsFilterOrBitwiseOr(): void
+    {
+        $node = $this->helper->parse('a | obj.meth(1)');
+
+        self::assertInstanceOf(FilterOrBitwiseOrNode::class, $node);
+        self::assertInstanceOf(MethodCallNode::class, $node->right);
     }
 }

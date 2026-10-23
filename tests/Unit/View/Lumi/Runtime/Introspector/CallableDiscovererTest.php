@@ -13,10 +13,13 @@ declare(strict_types=1);
 
 namespace Unit\View\Lumi\Runtime\Introspector;
 
+use Fixture\View\Lumi\Runtime\Introspector\StubArityClass;
+use Fixture\View\Lumi\Runtime\Introspector\StubContextOnlyFilterClass;
 use Fixture\View\Lumi\Runtime\Introspector\StubFilterClass;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableDiscoverer;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadataInterface;
+use Tuxxedo\View\Lumi\Runtime\Introspector\IntrospectorException;
 
 class CallableDiscovererTest extends TestCase
 {
@@ -59,6 +62,46 @@ class CallableDiscovererTest extends TestCase
             ],
             $withContext->aliases,
         );
+    }
+
+    public function testDiscoveredFilterArgumentBoundsExcludeContext(): void
+    {
+        $wrap = $this->findByName(CallableDiscoverer::discoverFilters(StubArityClass::class), 'stub_wrap');
+
+        self::assertNotNull($wrap);
+        self::assertSame(2, $wrap->minimumArguments);
+        self::assertSame(3, $wrap->maximumArguments);
+    }
+
+    public function testDiscoveredVariadicFilterHasNoMaximumArguments(): void
+    {
+        $join = $this->findByName(CallableDiscoverer::discoverFilters(StubArityClass::class), 'stub_join');
+
+        self::assertNotNull($join);
+        self::assertSame(0, $join->minimumArguments);
+        self::assertNull($join->maximumArguments);
+    }
+
+    public function testMethodWithBothAttributesIsDiscoveredAsFunctionAndFilter(): void
+    {
+        $function = $this->findByName(CallableDiscoverer::discoverFunctions(StubArityClass::class), 'stub_wrap');
+        $filter = $this->findByName(CallableDiscoverer::discoverFilters(StubArityClass::class), 'stub_wrap');
+
+        self::assertNotNull($function);
+        self::assertNotNull($filter);
+        self::assertSame('wrap', $function->methodName);
+        self::assertSame('wrap', $filter->methodName);
+    }
+
+    public function testDiscoverFiltersRejectsFilterWithoutValueParameter(): void
+    {
+        try {
+            CallableDiscoverer::discoverFilters(StubContextOnlyFilterClass::class);
+
+            self::fail('Expected IntrospectorException');
+        } catch (IntrospectorException $exception) {
+            self::assertStringContainsString('stub_context_only', $exception->getMessage());
+        }
     }
 
     /**

@@ -44,4 +44,12 @@ interface CallableMetadataInterface
     public array $aliases {
         get;
     }
+
+    public int $minimumArguments {
+        get;
+    }
+
+    public ?int $maximumArguments {
+        get;
+    }
 }

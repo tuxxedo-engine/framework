@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Unit\View\Lumi\Runtime\Introspector;
 
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\View\Lumi\Library\Function\PhpFunction;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadata;
 use Tuxxedo\View\Lumi\Runtime\Introspector\IntrospectorException;
 use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospector;
@@ -80,6 +81,49 @@ class RuntimeIntrospectorTest extends TestCase
         );
 
         self::assertTrue($introspector->hasAnyFilters());
+    }
+
+    public function testHasAnyFiltersIsTrueWhenOnlyPhpFiltersRegistered(): void
+    {
+        $introspector = new RuntimeIntrospector(
+            phpFilters: [
+                'unique' => new PhpFunction(
+                    name: 'unique',
+                    mappedName: 'array_unique',
+                ),
+            ],
+        );
+
+        self::assertTrue($introspector->hasAnyFilters());
+        self::assertFalse($introspector->hasFilter('unique'));
+    }
+
+    public function testGetPhpFilterIsCaseInsensitive(): void
+    {
+        $handler = new PhpFunction(
+            name: 'unique',
+            mappedName: 'array_unique',
+        );
+
+        $introspector = new RuntimeIntrospector(
+            phpFilters: [
+                'Unique' => $handler,
+            ],
+        );
+
+        self::assertTrue($introspector->hasPhpFilter('UNIQUE'));
+        self::assertSame($handler, $introspector->getPhpFilter('unique'));
+    }
+
+    public function testGetPhpFilterThrowsForUnknownName(): void
+    {
+        $introspector = new RuntimeIntrospector();
+
+        self::assertFalse($introspector->hasPhpFilter('unique'));
+
+        self::expectException(IntrospectorException::class);
+
+        $introspector->getPhpFilter('unique');
     }
 
     public function testGetFunctionByCanonicalName(): void

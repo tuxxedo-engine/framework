@@ -13,24 +13,6 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Library\Standard;
 
-use Tuxxedo\View\Lumi\Library\Standard\Filter\CollectionFilters;
-use Tuxxedo\View\Lumi\Library\Standard\Filter\DateFilters;
-use Tuxxedo\View\Lumi\Library\Standard\Filter\DebugFilters;
-use Tuxxedo\View\Lumi\Library\Standard\Filter\EscapeFilters;
-use Tuxxedo\View\Lumi\Library\Standard\Filter\IntlFilters;
-use Tuxxedo\View\Lumi\Library\Standard\Filter\JsonFilters;
-use Tuxxedo\View\Lumi\Library\Standard\Filter\StringFilters;
-use Tuxxedo\View\Lumi\Library\Standard\Function\ArrayFunctions;
-use Tuxxedo\View\Lumi\Library\Standard\Function\ConfigFunctions;
-use Tuxxedo\View\Lumi\Library\Standard\Function\CsrfFunctions;
-use Tuxxedo\View\Lumi\Library\Standard\Function\DateFunctions;
-use Tuxxedo\View\Lumi\Library\Standard\Function\DebugFunctions;
-use Tuxxedo\View\Lumi\Library\Standard\Function\IntlFunctions;
-use Tuxxedo\View\Lumi\Library\Standard\Function\JsonFunctions;
-use Tuxxedo\View\Lumi\Library\Standard\Function\MailFunctions;
-use Tuxxedo\View\Lumi\Library\Standard\Function\MathFunctions;
-use Tuxxedo\View\Lumi\Library\Standard\Function\RouteFunctions;
-use Tuxxedo\View\Lumi\Library\Standard\Function\StringFunctions;
 use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
 
 class StandardLibrary
@@ -38,36 +20,21 @@ class StandardLibrary
     /**
      * @return list<class-string>
      */
-    public static function filters(): array
+    public static function classes(): array
     {
         return [
-            CollectionFilters::class,
-            DateFilters::class,
-            DebugFilters::class,
-            EscapeFilters::class,
-            IntlFilters::class,
-            JsonFilters::class,
-            StringFilters::class,
-        ];
-    }
-
-    /**
-     * @return list<class-string>
-     */
-    public static function functions(): array
-    {
-        return [
-            ArrayFunctions::class,
-            ConfigFunctions::class,
-            CsrfFunctions::class,
-            DateFunctions::class,
-            DebugFunctions::class,
-            IntlFunctions::class,
-            JsonFunctions::class,
-            MailFunctions::class,
-            MathFunctions::class,
-            RouteFunctions::class,
-            StringFunctions::class,
+            CollectionLibrary::class,
+            ConfigLibrary::class,
+            CsrfLibrary::class,
+            DateLibrary::class,
+            DebugLibrary::class,
+            EscapeLibrary::class,
+            IntlLibrary::class,
+            JsonLibrary::class,
+            MailLibrary::class,
+            MathLibrary::class,
+            RouteLibrary::class,
+            StringLibrary::class,
         ];
     }
 
@@ -129,6 +96,52 @@ class StandardLibrary
         );
 
         $configurator->addFunction(
+            name: 'values',
+            mappedName: 'array_values',
+        );
+    }
+
+    public static function registerPhpFilters(
+        LumiConfiguratorInterface $configurator,
+    ): void {
+        $configurator->addFilter(
+            name: 'count',
+            aliases: [
+                'sizeof',
+            ],
+        );
+
+        $configurator->addFilter(
+            name: 'abs',
+        );
+
+        $configurator->addFilter(
+            name: 'ceil',
+        );
+
+        $configurator->addFilter(
+            name: 'floor',
+        );
+
+        $configurator->addFilter(
+            name: 'max',
+        );
+
+        $configurator->addFilter(
+            name: 'min',
+        );
+
+        $configurator->addFilter(
+            name: 'unique',
+            mappedName: 'array_unique',
+        );
+
+        $configurator->addFilter(
+            name: 'keys',
+            mappedName: 'array_keys',
+        );
+
+        $configurator->addFilter(
             name: 'values',
             mappedName: 'array_values',
         );

@@ -47,8 +47,8 @@ class LumiHashBuilderTest extends TestCase
     {
         $configurator = $this->makeConfigurator();
 
-        $configurator->withFilterClass(StubFilterClass::class);
-        $configurator->withFunctionClass(StubFunctionClass::class);
+        $configurator->withLibraryClass(StubFilterClass::class);
+        $configurator->withLibraryClass(StubFunctionClass::class);
 
         $filterMetadata = CallableDiscoverer::discoverFilters(StubFilterClass::class);
         $functionMetadata = CallableDiscoverer::discoverFunctions(StubFunctionClass::class);
@@ -66,7 +66,7 @@ class LumiHashBuilderTest extends TestCase
     public function testHashIsDeterministicForTheSameConfigurator(): void
     {
         $configurator = $this->makeConfigurator();
-        $configurator->withFilterClass(StubFilterClass::class);
+        $configurator->withLibraryClass(StubFilterClass::class);
 
         self::assertSame(
             LumiHashBuilder::fromConfiguratorStandalone($configurator),
@@ -74,12 +74,12 @@ class LumiHashBuilderTest extends TestCase
         );
     }
 
-    public function testHashChangesWhenFilterClassIsAdded(): void
+    public function testHashChangesWhenFilterLibraryClassIsAdded(): void
     {
         $base = $this->makeConfigurator();
         $modified = $this->makeConfigurator();
 
-        $modified->withFilterClass(StubFilterClass::class);
+        $modified->withLibraryClass(StubFilterClass::class);
 
         self::assertNotSame(
             LumiHashBuilder::fromConfiguratorStandalone($base),
@@ -87,12 +87,12 @@ class LumiHashBuilderTest extends TestCase
         );
     }
 
-    public function testHashChangesWhenFunctionClassIsAdded(): void
+    public function testHashChangesWhenFunctionLibraryClassIsAdded(): void
     {
         $base = $this->makeConfigurator();
         $modified = $this->makeConfigurator();
 
-        $modified->withFunctionClass(StubFunctionClass::class);
+        $modified->withLibraryClass(StubFunctionClass::class);
 
         self::assertNotSame(
             LumiHashBuilder::fromConfiguratorStandalone($base),
@@ -106,6 +106,21 @@ class LumiHashBuilderTest extends TestCase
         $modified = $this->makeConfigurator();
 
         $modified->addFunction(
+            name: 'abs',
+        );
+
+        self::assertNotSame(
+            LumiHashBuilder::fromConfiguratorStandalone($base),
+            LumiHashBuilder::fromConfiguratorStandalone($modified),
+        );
+    }
+
+    public function testHashChangesWhenPhpFilterIsAdded(): void
+    {
+        $base = $this->makeConfigurator();
+        $modified = $this->makeConfigurator();
+
+        $modified->addFilter(
             name: 'abs',
         );
 

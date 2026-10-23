@@ -28,6 +28,8 @@ interface CallableDiscovererInterface
      * @param class-string $className
      *
      * @return list<CallableMetadataInterface>
+     *
+     * @throws IntrospectorException
      */
     public static function discoverFilters(
         string $className,

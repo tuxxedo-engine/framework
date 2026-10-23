@@ -46,3 +46,13 @@
 <pre><code>number(12345.6789, 1, ',', '.')</code> = <code>{{ number(12345.6789, 1, ',', '.') | json }}</code></pre>
 <pre><code>cut('Tuxxedo Engine', 7)</code> = <code>truncate('Tuxxedo Engine', 7)</code> = <code>{{ cut('Tuxxedo Engine', 7) | dump }}</code></pre>
 <pre><code>reverse('enignE odexxuT')</code> = <code>{{ reverse('enignE odexxuT') | dump }}</code></pre>
+
+<h1>Piping</h1>
+<pre><code>truncate('Tuxxedo Engine', 7)</code> = <code>'Tuxxedo Engine' | truncate(7)</code> = <code>{{ 'Tuxxedo Engine' | truncate(7) | dump }}</code></pre>
+<pre><code>join(sort(['Tuxxedo', 'Engine']), ' ')</code> = <code>['Tuxxedo', 'Engine'] | sort | join(' ')</code> = <code>{{ ['Tuxxedo', 'Engine'] | sort | join(' ') | json }}</code></pre>
+<pre><code>number(12345.6789, 1, ',', '.')</code> = <code>12345.6789 | number(1, ',', '.')</code> = <code>{{ 12345.6789 | number(1, ',', '.') | json }}</code></pre>
+<pre><code>replace('Tuxxedo Moottori', 'Moottori', 'Engine')</code> = <code>'Tuxxedo Moottori' | replace('Moottori', 'Engine') | upper</code> = <code>{{ 'Tuxxedo Moottori' | replace('Moottori', 'Engine') | upper | json }}</code></pre>
+<pre><code>keys(unique(['PHP', 'Tuxxedo', 'Tuxxedo']))</code> = <code>['PHP', 'Tuxxedo', 'Tuxxedo'] | unique | keys</code> = <code>{{ ['PHP', 'Tuxxedo', 'Tuxxedo'] | unique | keys | json }}</code></pre>
+<pre><code>count(['PHP', 'Tuxxedo'])</code> = <code>['PHP', 'Tuxxedo'] | count</code> = <code>{{ ['PHP', 'Tuxxedo'] | count }}</code></pre>
+<pre><code>max(1, 3, 2)</code> = <code>1 | max(3, 2)</code> = <code>{{ 1 | max(3, 2) }}</code></pre>
+<pre><code>5 | (2)</code> (grouped, bitwise OR) = <code>{{ 5 | (2) }}</code></pre>

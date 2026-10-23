@@ -16,6 +16,7 @@ namespace Tuxxedo\View\Lumi\Compiler\Provider;
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Compiler\CompilerStateFlag;
+use Tuxxedo\View\Lumi\Library\Function\PhpFunctionInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadataInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
@@ -25,6 +26,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ConcatNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\FilterCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FilterOrBitwiseOrNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
@@ -305,6 +307,9 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         );
     }
 
+    /**
+     * @throws CompilerException
+     */
     private function compileFilterOrBitwiseOr(
         FilterOrBitwiseOrNode $node,
         CompilerInterface $compiler,
@@ -316,6 +321,14 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
                 return $this->emitDirectFilterCall(
                     compiler: $compiler,
                     metadata: $compiler->introspector->getFilter($name),
+                    valueNode: $node->left,
+                );
+            }
+
+            if ($compiler->introspector->hasPhpFilter($name)) {
+                return $this->emitPhpFilterCall(
+                    compiler: $compiler,
+                    handler: $compiler->introspector->getPhpFilter($name),
                     valueNode: $node->left,
                 );
             }
@@ -342,13 +355,85 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         );
     }
 
+    /**
+     * @throws CompilerException
+     */
+    private function compileFilterCall(
+        FilterCallNode $node,
+        CompilerInterface $compiler,
+    ): string {
+        $name = \mb_strtolower($node->name);
+
+        if ($compiler->introspector->hasFilter($name)) {
+            return $this->emitDirectFilterCall(
+                compiler: $compiler,
+                metadata: $compiler->introspector->getFilter($name),
+                valueNode: $node->left,
+                argumentNodes: $node->arguments,
+            );
+        }
+
+        if ($compiler->introspector->hasPhpFilter($name)) {
+            return $this->emitPhpFilterCall(
+                compiler: $compiler,
+                handler: $compiler->introspector->getPhpFilter($name),
+                valueNode: $node->left,
+                argumentNodes: $node->arguments,
+            );
+        }
+
+        if (!$compiler->introspector->hasAnyFilters()) {
+            return \sprintf(
+                '$this->filter(%s, \'%s\', [%s])',
+                $compiler->compileExpression($node->left),
+                $compiler->escaper->js($name),
+                \join(
+                    ', ',
+                    \array_map(
+                        $compiler->compileExpression(...),
+                        $node->arguments,
+                    ),
+                ),
+            );
+        }
+
+        throw CompilerException::fromUnknownFilterCall($node->name);
+    }
+
+    /**
+     * @param ExpressionNodeInterface[] $argumentNodes
+     *
+     * @throws CompilerException
+     */
     private function emitDirectFilterCall(
         CompilerInterface $compiler,
         CallableMetadataInterface $metadata,
         ExpressionNodeInterface $valueNode,
+        array $argumentNodes = [],
     ): string {
+        $given = 1 + \sizeof($argumentNodes);
+
+        if (
+            $given < $metadata->minimumArguments ||
+            (
+                $metadata->maximumArguments !== null &&
+                $given > $metadata->maximumArguments
+            )
+        ) {
+            throw CompilerException::fromFilterArgumentCount(
+                filter: $metadata->name,
+                given: $given,
+                minimum: $metadata->minimumArguments,
+                maximum: $metadata->maximumArguments,
+            );
+        }
+
         $arguments = [
             $compiler->compileExpression($valueNode),
+            ...\array_map(
+                $compiler->compileExpression(...),
+                $argumentNodes,
+            ),
         ];
 
         if ($metadata->contextParameterIndex !== null) {
@@ -364,6 +449,66 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
             $metadata->className,
             $metadata->methodName,
             \join(', ', $arguments),
+        );
+    }
+
+    /**
+     * @param ExpressionNodeInterface[] $argumentNodes
+     *
+     * @throws CompilerException
+     */
+    private function emitPhpFilterCall(
+        CompilerInterface $compiler,
+        PhpFunctionInterface $handler,
+        ExpressionNodeInterface $valueNode,
+        array $argumentNodes = [],
+    ): string {
+        $function = $handler->mappedName ?? $handler->name;
+
+        if (!\function_exists($function)) {
+            // @codeCoverageIgnoreStart
+            throw CompilerException::fromUnknownFilterFunction(
+                filter: $handler->name,
+                function: $function,
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        $reflector = new \ReflectionFunction($function);
+        $given = 1 + \sizeof($argumentNodes);
+        $minimum = $reflector->getNumberOfRequiredParameters();
+        $maximum = $reflector->isVariadic()
+            ? null
+            : $reflector->getNumberOfParameters();
+
+        if (
+            $given < $minimum ||
+            (
+                $maximum !== null &&
+                $given > $maximum
+            )
+        ) {
+            throw CompilerException::fromFilterArgumentCount(
+                filter: $handler->name,
+                given: $given,
+                minimum: $minimum,
+                maximum: $maximum,
+            );
+        }
+
+        return \sprintf(
+            '\\%s(%s)',
+            $function,
+            \join(
+                ', ',
+                [
+                    $compiler->compileExpression($valueNode),
+                    ...\array_map(
+                        $compiler->compileExpression(...),
+                        $argumentNodes,
+                    ),
+                ],
+            ),
         );
     }
 
@@ -437,6 +582,11 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         yield new NodeCompilerHandler(
             nodeClassName: FilterOrBitwiseOrNode::class,
             handler: $this->compileFilterOrBitwiseOr(...),
+        );
+
+        yield new NodeCompilerHandler(
+            nodeClassName: FilterCallNode::class,
+            handler: $this->compileFilterCall(...),
         );
     }
 }

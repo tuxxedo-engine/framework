@@ -183,6 +183,7 @@ class Runtime implements RuntimeInterface
     public function filter(
         mixed $value,
         string $filter,
+        array $arguments = [],
     ): mixed {
         if (!isset($this->renderer)) {
             throw RuntimeException::fromCannotCallCustomFunctionWithRender();
@@ -195,6 +196,7 @@ class Runtime implements RuntimeInterface
         return $dispatcher(
             [
                 $value,
+                ...$arguments,
             ],
             $this,
         );

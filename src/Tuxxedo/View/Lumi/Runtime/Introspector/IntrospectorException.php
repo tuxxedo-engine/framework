@@ -28,6 +28,24 @@ class IntrospectorException extends LumiException
         );
     }
 
+    /**
+     * @param class-string $className
+     */
+    public static function fromFilterWithoutValueParameter(
+        string $name,
+        string $className,
+        string $methodName,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Filter "%s" (%s::%s()) has no parameter to receive the piped value',
+                $name,
+                self::formatShortClass($className),
+                $methodName,
+            ),
+        );
+    }
+
     public static function fromUnknownFilter(
         string $name,
     ): self {

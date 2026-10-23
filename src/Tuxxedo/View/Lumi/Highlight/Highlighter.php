@@ -38,6 +38,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ContinueNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DeclareNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
+use Tuxxedo\View\Lumi\Syntax\Node\FilterCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FilterOrBitwiseOrNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ForNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
@@ -136,6 +137,7 @@ class Highlighter implements HighlighterInterface
             $node instanceof DeclareNode => $this->highlightDeclareNode($node),
             $node instanceof DoWhileNode => $this->highlightDoWhileNode($node),
             $node instanceof EchoNode => $this->highlightEchoNode($node),
+            $node instanceof FilterCallNode => $this->highlightFilterCallNode($node),
             $node instanceof FilterOrBitwiseOrNode => $this->highlightFilterOrBitwiseOrNode($node),
             $node instanceof ForNode => $this->highlightForNode($node),
             $node instanceof FunctionCallNode => $this->highlightFunctionCallNode($node),
@@ -435,6 +437,28 @@ class Highlighter implements HighlighterInterface
                 ? ' !}'
                 : ' }}',
         );
+    }
+
+    private function highlightFilterCallNode(
+        FilterCallNode $node,
+    ): string {
+        $arguments = [];
+
+        foreach ($node->arguments as $argument) {
+            $arguments[] = $this->highlightNode($argument);
+        }
+
+        $arguments = \join(
+            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::COMMA) . ' ',
+            $arguments,
+        );
+
+        return $this->highlightNode($node->left) . ' ' .
+            $this->dye(ColorSlot::PIPE, BinarySymbol::BITWISE_OR) . ' ' .
+            $this->dye(ColorSlot::FILTER_NAME, $node->name) .
+            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::LEFT_PARENTHESIS) .
+            $arguments .
+            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::RIGHT_PARENTHESIS);
     }
 
     private function highlightFilterOrBitwiseOrNode(

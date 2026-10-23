@@ -40,6 +40,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ContinueNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DeclareNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
+use Tuxxedo\View\Lumi\Syntax\Node\FilterCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FilterOrBitwiseOrNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ForNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
@@ -1797,6 +1798,76 @@ class HighlighterTest extends TestCase
                     right: new IdentifierNode(
                         name: 'upper',
                     ),
+                ),
+            ),
+        );
+    }
+
+    #[DataProvider('provideThemes')]
+    public function testHighlightFilterCallNodeWithArguments(
+        ThemeInterface $theme,
+    ): void {
+        $expected = $this->dye(
+            theme: $theme,
+            slot: ColorSlot::IDENTIFIER,
+            text: 'name',
+        ) .
+            ' ' .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::PIPE,
+                text: BinarySymbol::BITWISE_OR->symbol(),
+            ) .
+            ' ' .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::FILTER_NAME,
+                text: 'wrap',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: '(',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::IDENTIFIER,
+                text: 'a',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: ',',
+            ) .
+            ' ' .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::IDENTIFIER,
+                text: 'b',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: ')',
+            );
+
+        self::assertSame(
+            $expected,
+            $this->highlight(
+                theme: $theme,
+                node: new FilterCallNode(
+                    left: new IdentifierNode(
+                        name: 'name',
+                    ),
+                    name: 'wrap',
+                    arguments: [
+                        new IdentifierNode(
+                            name: 'a',
+                        ),
+                        new IdentifierNode(
+                            name: 'b',
+                        ),
+                    ],
                 ),
             ),
         );

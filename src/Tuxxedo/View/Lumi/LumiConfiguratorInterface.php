@@ -58,14 +58,7 @@ interface LumiConfiguratorInterface
     /**
      * @var list<class-string>
      */
-    public array $filterClasses {
-        get;
-    }
-
-    /**
-     * @var list<class-string>
-     */
-    public array $functionClasses {
+    public array $libraryClasses {
         get;
     }
 
@@ -95,6 +88,13 @@ interface LumiConfiguratorInterface
      * @var array<string, PhpFunctionInterface>
      */
     public array $phpFunctions {
+        get;
+    }
+
+    /**
+     * @var array<string, PhpFunctionInterface>
+     */
+    public array $phpFilters {
         get;
     }
 
@@ -151,20 +151,23 @@ interface LumiConfiguratorInterface
         array $aliases = [],
     ): self;
 
+    /**
+     * @param string[] $aliases
+     * @param callable-string|null $mappedName
+     */
+    public function addFilter(
+        string $name,
+        ?string $mappedName = null,
+        array $aliases = [],
+    ): self;
+
     public function allowAllFunctions(): self;
     public function disallowAllFunctions(): self;
 
     /**
      * @param class-string $className
      */
-    public function withFilterClass(
-        string $className,
-    ): self;
-
-    /**
-     * @param class-string $className
-     */
-    public function withFunctionClass(
+    public function withLibraryClass(
         string $className,
     ): self;
 

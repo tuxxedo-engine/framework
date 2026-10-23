@@ -60,19 +60,19 @@ class LumiConfigurator implements LumiConfiguratorInterface
      */
     public private(set) array $phpFunctions = [];
 
+    /**
+     * @var array<string, PhpFunctionInterface>
+     */
+    public private(set) array $phpFilters = [];
+
     public private(set) RuntimeFunctionPolicy $functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY;
 
     /**
      * @var list<class-string>
      */
-    public private(set) array $functionClasses = [];
+    public private(set) array $libraryClasses = [];
 
     public private(set) array $instanceCallClasses = [];
-
-    /**
-     * @var list<class-string>
-     */
-    public private(set) array $filterClasses = [];
 
     /**
      * @var array<string, ThemeInterface>
@@ -249,6 +249,30 @@ class LumiConfigurator implements LumiConfiguratorInterface
         return $this;
     }
 
+    /**
+     * @param string[] $aliases
+     * @param callable-string|null $mappedName
+     */
+    public function addFilter(
+        string $name,
+        ?string $mappedName = null,
+        array $aliases = [],
+    ): self {
+        $handler = new PhpFunction(
+            name: $name,
+            aliases: $aliases,
+            mappedName: $mappedName,
+        );
+
+        $this->phpFilters[\strtolower($name)] = $handler;
+
+        foreach ($aliases as $alias) {
+            $this->phpFilters[\strtolower($alias)] = $handler;
+        }
+
+        return $this;
+    }
+
     public function allowAllFunctions(): self
     {
         $this->functionPolicy = RuntimeFunctionPolicy::ALLOW_ALL;
@@ -267,21 +291,10 @@ class LumiConfigurator implements LumiConfiguratorInterface
     /**
      * @param class-string $className
      */
-    public function withFilterClass(
+    public function withLibraryClass(
         string $className,
     ): self {
-        $this->filterClasses[] = $className;
-
-        return $this;
-    }
-
-    /**
-     * @param class-string $className
-     */
-    public function withFunctionClass(
-        string $className,
-    ): self {
-        $this->functionClasses[] = $className;
+        $this->libraryClasses[] = $className;
 
         if ($this->functionPolicy === RuntimeFunctionPolicy::DISALLOW_ALL) {
             $this->functionPolicy = RuntimeFunctionPolicy::CUSTOM_ONLY;
@@ -378,15 +391,12 @@ class LumiConfigurator implements LumiConfiguratorInterface
     public function build(): LumiViewRenderInterface
     {
         if ($this->withStandardLibrary) {
-            foreach (StandardLibrary::filters() as $className) {
-                $this->withFilterClass($className);
-            }
-
-            foreach (StandardLibrary::functions() as $className) {
-                $this->withFunctionClass($className);
+            foreach (StandardLibrary::classes() as $className) {
+                $this->withLibraryClass($className);
             }
 
             StandardLibrary::registerPhpFunctions($this);
+            StandardLibrary::registerPhpFilters($this);
         }
 
         $compiler = null;
@@ -401,6 +411,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
         $introspector = new RuntimeIntrospector(
             functions: $functionMetadata,
             filters: $filterMetadata,
+            phpFilters: $this->phpFilters,
         );
 
         if ($this->defaultDirectives !== DefaultDirectives::defaults()) {
@@ -460,9 +471,12 @@ class LumiConfigurator implements LumiConfiguratorInterface
                 phpFunctions: $this->phpFunctions,
                 functionPolicy: $this->functionPolicy,
                 instanceCallClasses: $this->instanceCallClasses,
-                filterDispatchers: self::buildDispatcherTable(
-                    metadata: $filterMetadata,
-                    instanceResolver: $instanceResolver,
+                filterDispatchers: \array_merge(
+                    self::buildPhpDispatcherTable($this->phpFilters),
+                    self::buildDispatcherTable(
+                        metadata: $filterMetadata,
+                        instanceResolver: $instanceResolver,
+                    ),
                 ),
                 functionDispatchers: self::buildDispatcherTable(
                     metadata: $functionMetadata,
@@ -499,6 +513,28 @@ class LumiConfigurator implements LumiConfiguratorInterface
             foreach ($entry->aliases as $alias) {
                 $table[\strtolower($alias)] = $dispatcher;
             }
+        }
+
+        return $table;
+    }
+
+    /**
+     * @param array<string, PhpFunctionInterface> $handlers
+     *
+     * @return array<string, \Closure(mixed[], RuntimeInterface): mixed>
+     */
+    private static function buildPhpDispatcherTable(
+        array $handlers,
+    ): array {
+        $table = [];
+
+        foreach ($handlers as $key => $handler) {
+            $callable = $handler->mappedName ?? $handler->name;
+
+            $table[$key] = static function (array $arguments, RuntimeInterface $runtime) use ($callable): mixed {
+                /** @var callable-string $callable */
+                return \call_user_func_array($callable, $arguments);
+            };
         }
 
         return $table;
@@ -548,7 +584,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
     {
         $metadata = [];
 
-        foreach ($this->filterClasses as $className) {
+        foreach ($this->libraryClasses as $className) {
             foreach (CallableDiscoverer::discoverFilters($className) as $entry) {
                 $metadata[] = $entry;
             }
@@ -564,7 +600,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
     {
         $metadata = [];
 
-        foreach ($this->functionClasses as $className) {
+        foreach ($this->libraryClasses as $className) {
             foreach (CallableDiscoverer::discoverFunctions($className) as $entry) {
                 $metadata[] = $entry;
             }

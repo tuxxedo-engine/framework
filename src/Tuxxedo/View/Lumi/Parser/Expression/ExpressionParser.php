@@ -20,6 +20,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ArrayItemNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\FilterCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FilterOrBitwiseOrNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
@@ -365,6 +366,17 @@ class ExpressionParser implements ExpressionParserInterface
                             left: $left,
                             right: $right,
                             operator: $operator,
+                        );
+                    }
+
+                    if (
+                        $right instanceof FunctionCallNode &&
+                        $right->name instanceof IdentifierNode
+                    ) {
+                        return new FilterCallNode(
+                            left: $left,
+                            name: $right->name->name,
+                            arguments: $right->arguments,
                         );
                     }
 

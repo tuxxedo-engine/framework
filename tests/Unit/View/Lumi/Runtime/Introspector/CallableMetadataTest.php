@@ -68,4 +68,17 @@ class CallableMetadataTest extends TestCase
 
         self::assertSame([], $metadata->aliases);
     }
+
+    public function testArgumentBoundsDefaultToUnbounded(): void
+    {
+        $metadata = new CallableMetadata(
+            name: 'date',
+            className: \stdClass::class,
+            methodName: 'call',
+            wantsContext: true,
+        );
+
+        self::assertSame(0, $metadata->minimumArguments);
+        self::assertNull($metadata->maximumArguments);
+    }
 }

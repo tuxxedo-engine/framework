@@ -571,6 +571,32 @@ class RuntimeTest extends TestCase
         self::assertNotNull($filter->lastContext);
     }
 
+    public function testFilterPassesArgumentsAfterThePipedValue(): void
+    {
+        $runtime = $this->createRuntime(
+            filterDispatchers: [
+                'wrap' => static fn (array $arguments, RuntimeInterface $runtime): array => $arguments,
+            ],
+        );
+        $this->attachRenderer($runtime);
+
+        self::assertSame(
+            [
+                'a',
+                'b',
+                'c',
+            ],
+            $runtime->filter(
+                value: 'a',
+                filter: 'wrap',
+                arguments: [
+                    'b',
+                    'c',
+                ],
+            ),
+        );
+    }
+
     public function testPropertyAccessReturnsObject(): void
     {
         $runtime = $this->createRuntime();

@@ -26,6 +26,8 @@ readonly class CallableMetadata implements CallableMetadataInterface
         public bool $wantsContext,
         public ?int $contextParameterIndex = null,
         public array $aliases = [],
+        public int $minimumArguments = 0,
+        public ?int $maximumArguments = null,
     ) {
     }
 }

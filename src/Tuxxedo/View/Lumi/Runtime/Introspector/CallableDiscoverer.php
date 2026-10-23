@@ -36,6 +36,8 @@ class CallableDiscoverer implements CallableDiscovererInterface
                     wantsContext: $index !== null,
                     contextParameterIndex: $index,
                     aliases: \array_values($instance->aliases),
+                    minimumArguments: self::countMinimumArguments($method),
+                    maximumArguments: self::countMaximumArguments($method),
                 );
             }
         }
@@ -52,6 +54,15 @@ class CallableDiscoverer implements CallableDiscovererInterface
             foreach ($method->getAttributes(LumiFilter::class) as $attribute) {
                 $instance = $attribute->newInstance();
                 $index = self::findContextParameterIndex($method);
+                $maximumArguments = self::countMaximumArguments($method);
+
+                if ($maximumArguments === 0) {
+                    throw IntrospectorException::fromFilterWithoutValueParameter(
+                        name: $instance->name,
+                        className: $className,
+                        methodName: $method->getName(),
+                    );
+                }
 
                 $metadata[] = new CallableMetadata(
                     name: $instance->name,
@@ -60,6 +71,8 @@ class CallableDiscoverer implements CallableDiscovererInterface
                     wantsContext: $index !== null,
                     contextParameterIndex: $index,
                     aliases: \array_values($instance->aliases),
+                    minimumArguments: self::countMinimumArguments($method),
+                    maximumArguments: $maximumArguments,
                 );
             }
         }
@@ -77,5 +90,40 @@ class CallableDiscoverer implements CallableDiscovererInterface
         }
 
         return null;
+    }
+
+    private static function countMinimumArguments(
+        \ReflectionMethod $method,
+    ): int {
+        $count = 0;
+
+        foreach ($method->getParameters() as $parameter) {
+            if (
+                !$parameter->isOptional() &&
+                $parameter->getAttributes(Context::class) === []
+            ) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    private static function countMaximumArguments(
+        \ReflectionMethod $method,
+    ): ?int {
+        if ($method->isVariadic()) {
+            return null;
+        }
+
+        $count = 0;
+
+        foreach ($method->getParameters() as $parameter) {
+            if ($parameter->getAttributes(Context::class) === []) {
+                $count++;
+            }
+        }
+
+        return $count;
     }
 }

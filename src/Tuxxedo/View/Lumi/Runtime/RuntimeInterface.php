@@ -132,11 +132,14 @@ interface RuntimeInterface
     ): ?object;
 
     /**
+     * @param mixed[] $arguments
+     *
      * @throws RuntimeException
      */
     public function filter(
         mixed $value,
         string $filter,
+        array $arguments = [],
     ): mixed;
 
     /**

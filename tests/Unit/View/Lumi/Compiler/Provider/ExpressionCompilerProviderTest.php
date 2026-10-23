@@ -20,6 +20,7 @@ use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Compiler\CompilerInterface;
 use Tuxxedo\View\Lumi\Compiler\CompilerStateFlag;
 use Tuxxedo\View\Lumi\Compiler\Provider\ExpressionCompilerProvider;
+use Tuxxedo\View\Lumi\Library\Function\PhpFunction;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadata;
 use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospector;
@@ -30,6 +31,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ConcatNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\FilterCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FilterOrBitwiseOrNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
@@ -2720,6 +2722,333 @@ class ExpressionCompilerProviderTest extends TestCase
             '$this->resolveInstance(\\stdClass::class)->trim($this->resolveInstance(\\stdClass::class)->upper($__lumiVariables[\'name\']))',
             $output,
         );
+    }
+
+    private function createFilterCompiler(
+        CallableMetadata ...$filters,
+    ): CompilerInterface {
+        $compiler = Compiler::createWithoutDefaultProviders(
+            providers: [
+                new ExpressionCompilerProvider(),
+            ],
+            introspector: new RuntimeIntrospector(
+                filters: \array_values($filters),
+            ),
+        );
+        $compiler->state->enter(NodeScope::STATEMENT);
+
+        return $compiler;
+    }
+
+    public function testCompileFilterCallWithKnownFilterEmitsDirectDispatchWithArguments(): void
+    {
+        $compiler = $this->createFilterCompiler(
+            new CallableMetadata(
+                name: 'wrap',
+                className: \stdClass::class,
+                methodName: 'wrap',
+                wantsContext: true,
+                contextParameterIndex: 0,
+                minimumArguments: 2,
+                maximumArguments: 3,
+            ),
+        );
+
+        $output = $compiler->compileExpression(
+            new FilterCallNode(
+                left: new IdentifierNode(
+                    name: 'name',
+                ),
+                name: 'Wrap',
+                arguments: [
+                    LiteralNode::createString('['),
+                    LiteralNode::createString(']'),
+                ],
+            ),
+        );
+
+        self::assertSame(
+            '$this->resolveInstance(\\stdClass::class)->wrap(new \\Tuxxedo\\View\\Lumi\\Runtime\\RuntimeContext($this), $__lumiVariables[\'name\'], \'[\', \']\')',
+            $output,
+        );
+    }
+
+    public function testCompileFilterCallWithVariadicFilterAcceptsAnyArgumentCount(): void
+    {
+        $compiler = $this->createFilterCompiler(
+            new CallableMetadata(
+                name: 'join',
+                className: \stdClass::class,
+                methodName: 'join',
+                wantsContext: false,
+            ),
+        );
+
+        $output = $compiler->compileExpression(
+            new FilterCallNode(
+                left: new IdentifierNode(
+                    name: 'a',
+                ),
+                name: 'join',
+                arguments: [
+                    new IdentifierNode(
+                        name: 'b',
+                    ),
+                    new IdentifierNode(
+                        name: 'c',
+                    ),
+                ],
+            ),
+        );
+
+        self::assertSame(
+            '$this->resolveInstance(\\stdClass::class)->join($__lumiVariables[\'a\'], $__lumiVariables[\'b\'], $__lumiVariables[\'c\'])',
+            $output,
+        );
+    }
+
+    public function testCompileFilterCallThrowsOnTooManyArguments(): void
+    {
+        $compiler = $this->createFilterCompiler(
+            new CallableMetadata(
+                name: 'first',
+                className: \stdClass::class,
+                methodName: 'first',
+                wantsContext: false,
+                minimumArguments: 1,
+                maximumArguments: 1,
+            ),
+        );
+
+        try {
+            $compiler->compileExpression(
+                new FilterCallNode(
+                    left: new IdentifierNode(
+                        name: 'items',
+                    ),
+                    name: 'first',
+                    arguments: [
+                        new IdentifierNode(
+                            name: 'other',
+                        ),
+                    ],
+                ),
+            );
+
+            self::fail('Expected CompilerException');
+        } catch (CompilerException $exception) {
+            self::assertStringContainsString('"first" accepts 1 argument including the piped value, 2 given', $exception->getMessage());
+        }
+    }
+
+    public function testCompileFilterOrBitwiseOrThrowsWhenFilterRequiresArguments(): void
+    {
+        $compiler = $this->createFilterCompiler(
+            new CallableMetadata(
+                name: 'plural',
+                className: \stdClass::class,
+                methodName: 'plural',
+                wantsContext: true,
+                contextParameterIndex: 0,
+                minimumArguments: 2,
+                maximumArguments: 4,
+            ),
+        );
+
+        try {
+            $compiler->compileExpression(
+                new FilterOrBitwiseOrNode(
+                    left: new IdentifierNode(
+                        name: 'key',
+                    ),
+                    right: new IdentifierNode(
+                        name: 'plural',
+                    ),
+                ),
+            );
+
+            self::fail('Expected CompilerException');
+        } catch (CompilerException $exception) {
+            self::assertStringContainsString('"plural" accepts 2 to 4 arguments including the piped value, 1 given', $exception->getMessage());
+        }
+    }
+
+    public function testCompileFilterOrBitwiseOrThrowsWhenVariadicFilterLacksRequiredArguments(): void
+    {
+        $compiler = $this->createFilterCompiler(
+            new CallableMetadata(
+                name: 'between',
+                className: \stdClass::class,
+                methodName: 'between',
+                wantsContext: false,
+                minimumArguments: 2,
+            ),
+        );
+
+        try {
+            $compiler->compileExpression(
+                new FilterOrBitwiseOrNode(
+                    left: new IdentifierNode(
+                        name: 'value',
+                    ),
+                    right: new IdentifierNode(
+                        name: 'between',
+                    ),
+                ),
+            );
+
+            self::fail('Expected CompilerException');
+        } catch (CompilerException $exception) {
+            self::assertStringContainsString('"between" accepts at least 2 arguments including the piped value, 1 given', $exception->getMessage());
+        }
+    }
+
+    public function testCompileFilterCallWithUnknownFilterThrows(): void
+    {
+        try {
+            $this->compiler->compileExpression(
+                new FilterCallNode(
+                    left: new IdentifierNode(
+                        name: 'flags',
+                    ),
+                    name: 'mask',
+                    arguments: [
+                        LiteralNode::createString('x'),
+                    ],
+                ),
+            );
+
+            self::fail('Expected CompilerException');
+        } catch (CompilerException $exception) {
+            self::assertStringContainsString('x | (mask(...))', $exception->getMessage());
+        }
+    }
+
+    public function testCompileFilterCallDefersToRuntimeWhenNoIntrospectionAvailable(): void
+    {
+        $compiler = Compiler::createWithoutDefaultProviders(
+            providers: [
+                new ExpressionCompilerProvider(),
+            ],
+        );
+        $compiler->state->enter(NodeScope::STATEMENT);
+
+        $output = $compiler->compileExpression(
+            new FilterCallNode(
+                left: new IdentifierNode(
+                    name: 'name',
+                ),
+                name: 'pad',
+                arguments: [
+                    LiteralNode::createString('x'),
+                ],
+            ),
+        );
+
+        self::assertSame(
+            '$this->filter($__lumiVariables[\'name\'], \'pad\', [\'x\'])',
+            $output,
+        );
+    }
+
+    public function testCompileFilterOrBitwiseOrWithPhpFilterEmitsNativeCall(): void
+    {
+        $compiler = Compiler::createWithoutDefaultProviders(
+            providers: [
+                new ExpressionCompilerProvider(),
+            ],
+            introspector: new RuntimeIntrospector(
+                phpFilters: [
+                    'unique' => new PhpFunction(
+                        name: 'unique',
+                        mappedName: 'array_unique',
+                    ),
+                ],
+            ),
+        );
+        $compiler->state->enter(NodeScope::STATEMENT);
+
+        $output = $compiler->compileExpression(
+            new FilterOrBitwiseOrNode(
+                left: new IdentifierNode(
+                    name: 'items',
+                ),
+                right: new IdentifierNode(
+                    name: 'unique',
+                ),
+            ),
+        );
+
+        self::assertSame('\\array_unique($__lumiVariables[\'items\'])', $output);
+    }
+
+    public function testCompileFilterCallWithVariadicPhpFilterAcceptsExtraArguments(): void
+    {
+        $compiler = Compiler::createWithoutDefaultProviders(
+            providers: [
+                new ExpressionCompilerProvider(),
+            ],
+            introspector: new RuntimeIntrospector(
+                phpFilters: [
+                    'max' => new PhpFunction('max'),
+                ],
+            ),
+        );
+        $compiler->state->enter(NodeScope::STATEMENT);
+
+        $output = $compiler->compileExpression(
+            new FilterCallNode(
+                left: new IdentifierNode(
+                    name: 'a',
+                ),
+                name: 'max',
+                arguments: [
+                    new IdentifierNode(
+                        name: 'b',
+                    ),
+                    new IdentifierNode(
+                        name: 'c',
+                    ),
+                ],
+            ),
+        );
+
+        self::assertSame('\\max($__lumiVariables[\'a\'], $__lumiVariables[\'b\'], $__lumiVariables[\'c\'])', $output);
+    }
+
+    public function testCompileFilterCallWithPhpFilterChecksNativeArity(): void
+    {
+        $compiler = Compiler::createWithoutDefaultProviders(
+            providers: [
+                new ExpressionCompilerProvider(),
+            ],
+            introspector: new RuntimeIntrospector(
+                phpFilters: [
+                    'abs' => new PhpFunction(
+                        name: 'abs',
+                    ),
+                ],
+            ),
+        );
+        $compiler->state->enter(NodeScope::STATEMENT);
+
+        try {
+            $compiler->compileExpression(
+                new FilterCallNode(
+                    left: new IdentifierNode(
+                        name: 'number',
+                    ),
+                    name: 'abs',
+                    arguments: [
+                        LiteralNode::createString('x'),
+                    ],
+                ),
+            );
+
+            self::fail('Expected CompilerException');
+        } catch (CompilerException $exception) {
+            self::assertStringContainsString('"abs" accepts 1 argument including the piped value, 2 given', $exception->getMessage());
+        }
     }
 
     public function testCompileArrayAccessEmitsArrayBracketKey(): void

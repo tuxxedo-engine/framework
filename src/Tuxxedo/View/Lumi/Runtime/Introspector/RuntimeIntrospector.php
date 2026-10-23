@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime\Introspector;
 
+use Tuxxedo\View\Lumi\Library\Function\PhpFunctionInterface;
+
 readonly class RuntimeIntrospector implements RuntimeIntrospectorInterface
 {
     /**
@@ -26,13 +28,21 @@ readonly class RuntimeIntrospector implements RuntimeIntrospectorInterface
     private array $filterLookup;
 
     /**
+     * @var array<string, PhpFunctionInterface>
+     */
+    private array $phpFilterLookup;
+
+    /**
      * @param list<CallableMetadataInterface> $functions
      * @param list<CallableMetadataInterface> $filters
+     * @param array<string, PhpFunctionInterface> $phpFilters
      */
     public function __construct(
         array $functions = [],
         array $filters = [],
+        array $phpFilters = [],
     ) {
+        $this->phpFilterLookup = \array_change_key_case($phpFilters);
         $this->functionLookup = self::buildLookup($functions);
         $this->filterLookup = self::buildLookup($filters);
     }
@@ -82,9 +92,30 @@ readonly class RuntimeIntrospector implements RuntimeIntrospectorInterface
         return $this->filterLookup[$key];
     }
 
+    public function hasPhpFilter(
+        string $name,
+    ): bool {
+        return isset($this->phpFilterLookup[\strtolower($name)]);
+    }
+
+    public function getPhpFilter(
+        string $name,
+    ): PhpFunctionInterface {
+        $key = \strtolower($name);
+
+        if (!isset($this->phpFilterLookup[$key])) {
+            throw IntrospectorException::fromUnknownFilter(
+                name: $name,
+            );
+        }
+
+        return $this->phpFilterLookup[$key];
+    }
+
     public function hasAnyFilters(): bool
     {
-        return \sizeof($this->filterLookup) > 0;
+        return \sizeof($this->filterLookup) > 0 ||
+            \sizeof($this->phpFilterLookup) > 0;
     }
 
     /**

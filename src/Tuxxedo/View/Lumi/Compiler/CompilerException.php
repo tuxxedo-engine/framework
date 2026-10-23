@@ -119,4 +119,56 @@ class CompilerException extends LumiException
             message: 'Function calls must only use identifiers',
         );
     }
+
+    public static function fromUnknownFilterCall(
+        string $filter,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot pipe into "%s(...)": "%s" is not a filter; group the call for a bitwise OR, e.g. x | (%s(...))',
+                $filter,
+                $filter,
+                $filter,
+            ),
+        );
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public static function fromUnknownFilterFunction(
+        string $filter,
+        string $function,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Filter "%s" maps to the PHP function "%s", which does not exist',
+                $filter,
+                $function,
+            ),
+        );
+    }
+
+    public static function fromFilterArgumentCount(
+        string $filter,
+        int $given,
+        int $minimum,
+        ?int $maximum,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Filter "%s" accepts %s %s including the piped value, %d given',
+                $filter,
+                match (true) {
+                    $maximum === null => 'at least ' . $minimum,
+                    $maximum === $minimum => (string) $minimum,
+                    default => $minimum . ' to ' . $maximum,
+                },
+                $maximum === 1
+                    ? 'argument'
+                    : 'arguments',
+                $given,
+            ),
+        );
+    }
 }

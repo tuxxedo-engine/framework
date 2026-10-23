@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Runtime\Introspector;
 
+use Tuxxedo\View\Lumi\Library\Function\PhpFunctionInterface;
+
 interface RuntimeIntrospectorInterface
 {
     public function hasFunction(
@@ -38,6 +40,17 @@ interface RuntimeIntrospectorInterface
     public function getFilter(
         string $name,
     ): CallableMetadataInterface;
+
+    public function hasPhpFilter(
+        string $name,
+    ): bool;
+
+    /**
+     * @throws IntrospectorException
+     */
+    public function getPhpFilter(
+        string $name,
+    ): PhpFunctionInterface;
 
     public function hasAnyFilters(): bool;
 }

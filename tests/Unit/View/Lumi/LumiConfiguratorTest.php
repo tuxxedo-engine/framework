@@ -429,6 +429,54 @@ class LumiConfiguratorTest extends TestCase
         self::assertArrayHasKey('strlen', $configurator->phpFunctions);
     }
 
+    public function testAddFilterRegistersPhpFilterWithAliases(): void
+    {
+        $configurator = $this->makeConfigurator();
+
+        $configurator->addFilter(
+            name: 'Unique',
+            mappedName: 'array_unique',
+            aliases: [
+                'distinct',
+            ],
+        );
+
+        self::assertArrayHasKey('unique', $configurator->phpFilters);
+        self::assertArrayHasKey('distinct', $configurator->phpFilters);
+        self::assertSame('array_unique', $configurator->phpFilters['unique']->mappedName);
+        self::assertArrayNotHasKey('unique', $configurator->phpFunctions);
+    }
+
+    public function testBuildRegistersPhpFiltersIntoIntrospectorAndDispatcherTable(): void
+    {
+        $configurator = $this->makeConfigurator();
+        $configurator->withoutStandardLibrary();
+        $configurator->addFilter(
+            name: 'unique',
+            mappedName: 'array_unique',
+        );
+
+        $render = $configurator->build();
+
+        self::assertTrue($render->runtime->engine->compiler->introspector->hasPhpFilter('unique'));
+        self::assertSame(
+            [
+                0 => 'a',
+                2 => 'b',
+            ],
+            $render->runtime->filterDispatchers['unique'](
+                [
+                    [
+                        'a',
+                        'a',
+                        'b',
+                    ],
+                ],
+                $render->runtime,
+            ),
+        );
+    }
+
     public function testAddFunctionResetsDisallowAllToCustomOnly(): void
     {
         $configurator = $this->makeConfigurator();
@@ -449,12 +497,12 @@ class LumiConfiguratorTest extends TestCase
         self::assertSame(RuntimeFunctionPolicy::ALLOW_ALL, $configurator->functionPolicy);
     }
 
-    public function testWithFunctionClassResetsDisallowAllToCustomOnly(): void
+    public function testWithLibraryClassResetsDisallowAllToCustomOnly(): void
     {
         $configurator = $this->makeConfigurator();
 
         $configurator->disallowAllFunctions();
-        $configurator->withFunctionClass(StubFunctionClass::class);
+        $configurator->withLibraryClass(StubFunctionClass::class);
 
         self::assertSame(RuntimeFunctionPolicy::CUSTOM_ONLY, $configurator->functionPolicy);
     }
@@ -690,10 +738,10 @@ class LumiConfiguratorTest extends TestCase
         self::assertFalse($configurator->validate());
     }
 
-    public function testWithFunctionClassRegistersAttributedMethodsIntoIntrospector(): void
+    public function testWithLibraryClassRegistersFunctionMethodsIntoIntrospector(): void
     {
         $configurator = $this->makeConfigurator();
-        $configurator->withFunctionClass(StubFunctionClass::class);
+        $configurator->withLibraryClass(StubFunctionClass::class);
 
         $render = $configurator->build();
         $introspector = $render->runtime->engine->compiler->introspector;
@@ -708,10 +756,10 @@ class LumiConfiguratorTest extends TestCase
         self::assertSame(0, $withContext->contextParameterIndex);
     }
 
-    public function testWithFilterClassRegistersAttributedMethodsIntoIntrospector(): void
+    public function testWithLibraryClassRegistersFilterMethodsIntoIntrospector(): void
     {
         $configurator = $this->makeConfigurator();
-        $configurator->withFilterClass(StubFilterClass::class);
+        $configurator->withLibraryClass(StubFilterClass::class);
 
         $render = $configurator->build();
         $introspector = $render->runtime->engine->compiler->introspector;
@@ -729,7 +777,7 @@ class LumiConfiguratorTest extends TestCase
     public function testBuildInstancesTableStartsEmptyForFilterClasses(): void
     {
         $configurator = $this->makeConfigurator();
-        $configurator->withFilterClass(StubFilterClass::class);
+        $configurator->withLibraryClass(StubFilterClass::class);
 
         $render = $configurator->build();
 
@@ -739,7 +787,7 @@ class LumiConfiguratorTest extends TestCase
     public function testBuildInstancesTableStartsEmptyForFunctionClasses(): void
     {
         $configurator = $this->makeConfigurator();
-        $configurator->withFunctionClass(StubFunctionClass::class);
+        $configurator->withLibraryClass(StubFunctionClass::class);
 
         $render = $configurator->build();
 
@@ -749,7 +797,7 @@ class LumiConfiguratorTest extends TestCase
     public function testBuildInstanceResolverResolvesDiscoveredFilterClass(): void
     {
         $configurator = $this->makeConfigurator();
-        $configurator->withFilterClass(StubFilterClass::class);
+        $configurator->withLibraryClass(StubFilterClass::class);
 
         $render = $configurator->build();
         $resolver = $render->runtime->instanceResolver;
@@ -760,7 +808,7 @@ class LumiConfiguratorTest extends TestCase
     public function testBuildInstanceResolverResolvesDiscoveredFunctionClass(): void
     {
         $configurator = $this->makeConfigurator();
-        $configurator->withFunctionClass(StubFunctionClass::class);
+        $configurator->withLibraryClass(StubFunctionClass::class);
 
         $render = $configurator->build();
         $resolver = $render->runtime->instanceResolver;
@@ -771,7 +819,7 @@ class LumiConfiguratorTest extends TestCase
     public function testBuildFilterDispatcherSplicesContextArgument(): void
     {
         $configurator = $this->makeConfigurator();
-        $configurator->withFilterClass(StubFilterClass::class);
+        $configurator->withLibraryClass(StubFilterClass::class);
 
         $render = $configurator->build();
         $dispatcher = $render->runtime->filterDispatchers['stub_context'];
@@ -790,7 +838,7 @@ class LumiConfiguratorTest extends TestCase
     public function testBuildFunctionDispatcherSplicesContextArgument(): void
     {
         $configurator = $this->makeConfigurator();
-        $configurator->withFunctionClass(StubFunctionClass::class);
+        $configurator->withLibraryClass(StubFunctionClass::class);
 
         $render = $configurator->build();
         $dispatcher = $render->runtime->functionDispatchers['stub_context'];

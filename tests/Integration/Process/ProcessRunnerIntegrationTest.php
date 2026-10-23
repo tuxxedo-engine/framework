@@ -168,6 +168,7 @@ class ProcessRunnerIntegrationTest extends TestCase
         $result = $this->runPhp(
             script: "echo getenv('TUXXEDO_TEST_VAR');",
             environment: [
+                ...\getenv(),
                 'TUXXEDO_TEST_VAR' => 'from-parent',
             ],
         );
