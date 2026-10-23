@@ -18,6 +18,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
+use Tuxxedo\View\Lumi\Syntax\Node\TernaryNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 
 class Variable implements VariableInterface
@@ -144,10 +145,13 @@ class Variable implements VariableInterface
 
         if (
             $dereferenced instanceof IdentifierNode ||
-            $dereferenced instanceof BinaryOpNode
+            $dereferenced instanceof BinaryOpNode ||
+            $dereferenced instanceof TernaryNode
         ) {
             if ($dereferenced instanceof BinaryOpNode) {
                 $computedValue = $scope->evaluator->binaryOp($scope, $dereferenced);
+            } elseif ($dereferenced instanceof TernaryNode) {
+                $computedValue = $scope->evaluator->expression($scope, $dereferenced);
             } else {
                 $computedValue = $scope->evaluator->dereference($scope, $value);
             }

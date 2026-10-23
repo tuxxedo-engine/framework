@@ -20,6 +20,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
+use Tuxxedo\View\Lumi\Syntax\Node\TernaryNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
@@ -111,6 +112,11 @@ interface EvaluatorInterface
     public function unaryOp(
         ScopeInterface $scope,
         UnaryOpNode $node,
+    ): ?ExpressionNodeInterface;
+
+    public function ternary(
+        ScopeInterface $scope,
+        TernaryNode $node,
     ): ?ExpressionNodeInterface;
 
     public function assignment(

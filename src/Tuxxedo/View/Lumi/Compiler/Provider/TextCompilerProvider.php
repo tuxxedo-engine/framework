@@ -28,6 +28,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\LayoutNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LumiNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
+use Tuxxedo\View\Lumi\Syntax\Node\TernaryNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\YieldNode;
@@ -305,6 +306,11 @@ class TextCompilerProvider implements CompilerProviderInterface
 
         if ($node instanceof GroupNode) {
             return $this->canDisableAutoEscapeFor($node->operand);
+        }
+
+        if ($node instanceof TernaryNode) {
+            return $this->canDisableAutoEscapeFor($node->then ?? $node->condition) &&
+                $this->canDisableAutoEscapeFor($node->else);
         }
 
         return false;

@@ -26,6 +26,7 @@ enum CharacterSymbol implements SymbolInterface, ExpressionSymbolInterface
     case COMMA;
     case DOT;
     case COLON;
+    case QUESTION;
 
     public static function all(): array
     {
@@ -73,6 +74,7 @@ enum CharacterSymbol implements SymbolInterface, ExpressionSymbolInterface
             self::COMMA => ',',
             self::DOT => '.',
             self::COLON => ':',
+            self::QUESTION => '?',
         };
     }
 
@@ -80,6 +82,7 @@ enum CharacterSymbol implements SymbolInterface, ExpressionSymbolInterface
     {
         return match ($this) {
             self::LEFT_PARENTHESIS, self::LEFT_SQUARE_BRACKET, self::DOT => Precedence::ACCESS,
+            self::QUESTION => Precedence::TERNARY,
             default => Precedence::LOWEST,
         };
     }

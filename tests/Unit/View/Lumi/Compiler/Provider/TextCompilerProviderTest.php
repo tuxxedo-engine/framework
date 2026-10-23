@@ -35,6 +35,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\LayoutNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LumiNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
+use Tuxxedo\View\Lumi\Syntax\Node\TernaryNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\YieldNode;
@@ -442,6 +443,64 @@ class TextCompilerProviderTest extends TestCase
             operand: new GroupNode(
                 operand: new LiteralNode(
                     operand: '42',
+                    type: Type::INT,
+                ),
+            ),
+        );
+
+        $output = $this->compiler->compileNode(
+            node: $node,
+            stream: new NodeStream(
+                nodes: [
+                    $node,
+                ],
+            ),
+        );
+
+        self::assertSame('<?= /* expr */; ?>', $output);
+    }
+
+    public function testCompilesEchoNodeWithTernaryOfNonStringLiteralsBypassesAutoescape(): void
+    {
+        $node = new EchoNode(
+            operand: new TernaryNode(
+                condition: new IdentifierNode(
+                    name: 'flag',
+                ),
+                then: new LiteralNode(
+                    operand: '1',
+                    type: Type::INT,
+                ),
+                else: new LiteralNode(
+                    operand: '2',
+                    type: Type::INT,
+                ),
+            ),
+        );
+
+        $output = $this->compiler->compileNode(
+            node: $node,
+            stream: new NodeStream(
+                nodes: [
+                    $node,
+                ],
+            ),
+        );
+
+        self::assertSame('<?= /* expr */; ?>', $output);
+    }
+
+    public function testCompilesEchoNodeWithShortTernaryOfNonStringLiteralsBypassesAutoescape(): void
+    {
+        $node = new EchoNode(
+            operand: new TernaryNode(
+                condition: new LiteralNode(
+                    operand: '0',
+                    type: Type::INT,
+                ),
+                then: null,
+                else: new LiteralNode(
+                    operand: '2',
                     type: Type::INT,
                 ),
             ),

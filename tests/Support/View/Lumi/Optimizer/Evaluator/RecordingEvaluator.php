@@ -22,6 +22,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
+use Tuxxedo\View\Lumi\Syntax\Node\TernaryNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
@@ -191,6 +192,13 @@ class RecordingEvaluator implements EvaluatorInterface
         $this->lastUnaryOpNode = $node;
 
         return $this->unaryOpReturn;
+    }
+
+    public function ternary(
+        ScopeInterface $scope,
+        TernaryNode $node,
+    ): ?ExpressionNodeInterface {
+        return $this->evaluator->ternary($scope, $node);
     }
 
     public function assignment(

@@ -30,6 +30,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\TernaryNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
@@ -65,6 +66,7 @@ class SccpOptimizer extends AbstractOptimizer
                 ],
                 $node instanceof EchoNode => $this->optimizeEcho($stream, $node),
                 $node instanceof GroupNode => $this->optimizeGroup($stream, $node),
+                $node instanceof TernaryNode => $this->optimizeTernary($stream, $node),
                 $node instanceof TextNode => parent::optimizeText($stream, $node),
                 $node instanceof UnaryOpNode => $this->optimizeUnaryOp($node),
                 default => [
@@ -267,6 +269,28 @@ class SccpOptimizer extends AbstractOptimizer
         return [
             LiteralNode::createString($literal),
         ];
+    }
+
+    /**
+     * @return NodeInterface[]
+     */
+    private function optimizeTernary(
+        NodeStreamInterface $stream,
+        TernaryNode $node,
+    ): array {
+        $branch = $this->evaluator->ternary($this->scope, $node);
+
+        if ($branch === null) {
+            return [
+                $node,
+            ];
+        }
+
+        return $this->optimizeNode(
+            stream: $stream,
+            node: $branch,
+            context: OptimizerContext::EXPRESSION,
+        );
     }
 
     /**

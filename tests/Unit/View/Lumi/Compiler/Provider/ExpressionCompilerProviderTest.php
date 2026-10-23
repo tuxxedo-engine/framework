@@ -40,6 +40,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\MethodCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
 use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
+use Tuxxedo\View\Lumi\Syntax\Node\TernaryNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
@@ -2720,6 +2721,50 @@ class ExpressionCompilerProviderTest extends TestCase
 
         self::assertSame(
             '$this->resolveInstance(\\stdClass::class)->trim($this->resolveInstance(\\stdClass::class)->upper($__lumiVariables[\'name\']))',
+            $output,
+        );
+    }
+
+    public function testCompileTernaryEmitsParenthesizedTernary(): void
+    {
+        $output = $this->compiler->compileExpression(
+            new TernaryNode(
+                condition: new IdentifierNode(
+                    name: 'flag',
+                ),
+                then: LiteralNode::createString('yes'),
+                else: new TernaryNode(
+                    condition: new IdentifierNode(
+                        name: 'other',
+                    ),
+                    then: LiteralNode::createString('maybe'),
+                    else: LiteralNode::createString('no'),
+                ),
+            ),
+        );
+
+        self::assertSame(
+            '(($__lumiVariables[\'flag\']) ? (\'yes\') : ((($__lumiVariables[\'other\']) ? (\'maybe\') : (\'no\'))))',
+            $output,
+        );
+    }
+
+    public function testCompileShortTernaryEmitsElvis(): void
+    {
+        $output = $this->compiler->compileExpression(
+            new TernaryNode(
+                condition: new IdentifierNode(
+                    name: 'nickname',
+                ),
+                then: null,
+                else: new IdentifierNode(
+                    name: 'name',
+                ),
+            ),
+        );
+
+        self::assertSame(
+            '(($__lumiVariables[\'nickname\']) ?: ($__lumiVariables[\'name\']))',
             $output,
         );
     }

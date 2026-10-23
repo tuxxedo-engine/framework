@@ -23,6 +23,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
+use Tuxxedo\View\Lumi\Syntax\Node\TernaryNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 
@@ -37,7 +38,7 @@ class VariableTest extends TestCase
 
     private function assignNode(
         string $name,
-        LiteralNode|IdentifierNode|BinaryOpNode $value,
+        LiteralNode|IdentifierNode|BinaryOpNode|TernaryNode $value,
         AssignmentSymbol $operator = AssignmentSymbol::ASSIGN,
     ): AssignmentNode {
         return new AssignmentNode(
@@ -115,6 +116,51 @@ class VariableTest extends TestCase
         );
 
         self::assertSame(42, $variable->computedValue);
+    }
+
+    public function testFromNewAssignWithConstantTernaryStoresComputedValue(): void
+    {
+        $scope = $this->makeScope();
+        $variable = Variable::fromNewAssign(
+            scope: $scope,
+            node: $this->assignNode(
+                name: 'foo',
+                value: new TernaryNode(
+                    condition: LiteralNode::createBool(false),
+                    then: LiteralNode::createInt(1),
+                    else: LiteralNode::createInt(2),
+                ),
+            ),
+            name: new IdentifierNode(
+                name: 'foo',
+            ),
+        );
+
+        self::assertSame(Lattice::CONST, $variable->lattice);
+        self::assertSame(2, $variable->computedValue);
+    }
+
+    public function testFromNewAssignWithUnknownTernaryIsVarying(): void
+    {
+        $scope = $this->makeScope();
+        $variable = Variable::fromNewAssign(
+            scope: $scope,
+            node: $this->assignNode(
+                name: 'foo',
+                value: new TernaryNode(
+                    condition: new IdentifierNode(
+                        name: 'missing',
+                    ),
+                    then: LiteralNode::createInt(1),
+                    else: LiteralNode::createInt(2),
+                ),
+            ),
+            name: new IdentifierNode(
+                name: 'foo',
+            ),
+        );
+
+        self::assertSame(Lattice::VARYING, $variable->lattice);
     }
 
     public function testFromNewAssignStoresValueNode(): void

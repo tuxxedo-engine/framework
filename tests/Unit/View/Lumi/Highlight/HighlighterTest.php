@@ -53,6 +53,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\LumiNode;
 use Tuxxedo\View\Lumi\Syntax\Node\MethodCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
+use Tuxxedo\View\Lumi\Syntax\Node\TernaryNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
@@ -1797,6 +1798,98 @@ class HighlighterTest extends TestCase
                     ),
                     right: new IdentifierNode(
                         name: 'upper',
+                    ),
+                ),
+            ),
+        );
+    }
+
+    #[DataProvider('provideThemes')]
+    public function testHighlightTernaryNode(
+        ThemeInterface $theme,
+    ): void {
+        $expected = $this->dye(
+            theme: $theme,
+            slot: ColorSlot::IDENTIFIER,
+            text: 'a',
+        ) .
+            ' ' .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::OPERATOR,
+                text: '?',
+            ) .
+            ' ' .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::IDENTIFIER,
+                text: 'b',
+            ) .
+            ' ' .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::OPERATOR,
+                text: ':',
+            ) .
+            ' ' .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::IDENTIFIER,
+                text: 'c',
+            );
+
+        self::assertSame(
+            $expected,
+            $this->highlight(
+                theme: $theme,
+                node: new TernaryNode(
+                    condition: new IdentifierNode(
+                        name: 'a',
+                    ),
+                    then: new IdentifierNode(
+                        name: 'b',
+                    ),
+                    else: new IdentifierNode(
+                        name: 'c',
+                    ),
+                ),
+            ),
+        );
+    }
+
+    #[DataProvider('provideThemes')]
+    public function testHighlightShortTernaryNode(
+        ThemeInterface $theme,
+    ): void {
+        $expected = $this->dye(
+            theme: $theme,
+            slot: ColorSlot::IDENTIFIER,
+            text: 'a',
+        ) .
+            ' ' .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::OPERATOR,
+                text: '?:',
+            ) .
+            ' ' .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::IDENTIFIER,
+                text: 'c',
+            );
+
+        self::assertSame(
+            $expected,
+            $this->highlight(
+                theme: $theme,
+                node: new TernaryNode(
+                    condition: new IdentifierNode(
+                        name: 'a',
+                    ),
+                    then: null,
+                    else: new IdentifierNode(
+                        name: 'c',
                     ),
                 ),
             ),

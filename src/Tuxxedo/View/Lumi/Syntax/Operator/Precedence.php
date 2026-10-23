@@ -29,5 +29,6 @@ enum Precedence: int
     case LOGICAL_XOR = 14;
     case LOGICAL_OR = 13;
     case NULL_COALESCE = 12;
+    case TERNARY = 10;
     case LOWEST = 0;
 }

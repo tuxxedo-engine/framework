@@ -63,6 +63,11 @@ class CharacterSymbolTest extends TestCase
             CharacterSymbol::COLON,
             ':',
         ];
+
+        yield [
+            CharacterSymbol::QUESTION,
+            '?',
+        ];
     }
 
     #[DataProvider('provideSymbolVariants')]
@@ -84,6 +89,7 @@ class CharacterSymbolTest extends TestCase
                 ',',
                 '.',
                 ':',
+                '?',
             ],
             CharacterSymbol::all(),
         );
@@ -136,6 +142,11 @@ class CharacterSymbolTest extends TestCase
             CharacterSymbol::COLON,
             Precedence::LOWEST,
         ];
+
+        yield [
+            CharacterSymbol::QUESTION,
+            Precedence::TERNARY,
+        ];
     }
 
     #[DataProvider('providePrecedenceVariants')]
@@ -167,7 +178,7 @@ class CharacterSymbolTest extends TestCase
             CharacterSymbol::is(
                 new CharacterToken(
                     line: 1,
-                    op1: '?',
+                    op1: '#',
                 ),
             ),
         );
@@ -232,7 +243,7 @@ class CharacterSymbolTest extends TestCase
         CharacterSymbol::from(
             new CharacterToken(
                 line: 1,
-                op1: '?',
+                op1: '#',
             ),
         );
     }

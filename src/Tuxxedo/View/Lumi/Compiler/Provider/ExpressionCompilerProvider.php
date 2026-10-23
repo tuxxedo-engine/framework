@@ -35,6 +35,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\MethodCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
 use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
+use Tuxxedo\View\Lumi\Syntax\Node\TernaryNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Type;
@@ -183,6 +184,26 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
             $compiler->escaper->js($node->name->name),
             $node->operator->compile(),
             $compiler->compileExpression($node->value),
+        );
+    }
+
+    private function compileTernary(
+        TernaryNode $node,
+        CompilerInterface $compiler,
+    ): string {
+        if ($node->then === null) {
+            return \sprintf(
+                '((%s) ?: (%s))',
+                $compiler->compileExpression($node->condition),
+                $compiler->compileExpression($node->else),
+            );
+        }
+
+        return \sprintf(
+            '((%s) ? (%s) : (%s))',
+            $compiler->compileExpression($node->condition),
+            $compiler->compileExpression($node->then),
+            $compiler->compileExpression($node->else),
         );
     }
 
@@ -587,6 +608,11 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         yield new NodeCompilerHandler(
             nodeClassName: FilterCallNode::class,
             handler: $this->compileFilterCall(...),
+        );
+
+        yield new NodeCompilerHandler(
+            nodeClassName: TernaryNode::class,
+            handler: $this->compileTernary(...),
         );
     }
 }

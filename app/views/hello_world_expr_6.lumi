@@ -34,3 +34,6 @@
 
 {% set n = 2 %}
 {{ 1 - -n }}
+{{ true ? 'yes' : 'no' }}
+{{ null ?: 'fallback' }}
+{{ n > 1 ? 'many' : n > 0 ? 'one' : 'none' }}

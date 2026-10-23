@@ -51,6 +51,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\LumiNode;
 use Tuxxedo\View\Lumi\Syntax\Node\MethodCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
+use Tuxxedo\View\Lumi\Syntax\Node\TernaryNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
@@ -149,6 +150,7 @@ class Highlighter implements HighlighterInterface
             $node instanceof LumiNode => $this->highlightLumiNode($node),
             $node instanceof MethodCallNode => $this->highlightMethodCallNode($node),
             $node instanceof PropertyAccessNode => $this->highlightPropertyAccessNode($node),
+            $node instanceof TernaryNode => $this->highlightTernaryNode($node),
             $node instanceof TextNode => $this->highlightTextNode($node),
             $node instanceof UnaryOpNode => $this->highlightUnaryOpNode($node),
             $node instanceof WhileNode => $this->highlightWhileNode($node),
@@ -631,6 +633,22 @@ class Highlighter implements HighlighterInterface
         return $this->highlightNode($node->accessor) .
             $this->dye(ColorSlot::DELIMITER, $operator) .
             $this->dye(ColorSlot::MEMBER_NAME, $node->property);
+    }
+
+    private function highlightTernaryNode(
+        TernaryNode $node,
+    ): string {
+        if ($node->then === null) {
+            return $this->highlightNode($node->condition) . ' ' .
+                $this->dye(ColorSlot::OPERATOR, CharacterSymbol::QUESTION->symbol() . CharacterSymbol::COLON->symbol()) . ' ' .
+                $this->highlightNode($node->else);
+        }
+
+        return $this->highlightNode($node->condition) . ' ' .
+            $this->dye(ColorSlot::OPERATOR, CharacterSymbol::QUESTION) . ' ' .
+            $this->highlightNode($node->then) . ' ' .
+            $this->dye(ColorSlot::OPERATOR, CharacterSymbol::COLON) . ' ' .
+            $this->highlightNode($node->else);
     }
 
     private function highlightTextNode(

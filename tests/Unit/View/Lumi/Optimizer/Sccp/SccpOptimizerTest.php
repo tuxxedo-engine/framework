@@ -31,6 +31,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\TernaryNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
@@ -247,6 +248,91 @@ class SccpOptimizerTest extends TestCase
         self::assertInstanceOf(TextNode::class, $result->stream->nodes[0]);
         self::assertSame('42', $result->stream->nodes[0]->text);
         self::assertTrue($result->changed);
+    }
+
+    public function testEchoOfTernaryWithTrueConditionFoldsToThenBranch(): void
+    {
+        $result = $this->optimize(
+            nodes: [
+                new EchoNode(
+                    operand: new TernaryNode(
+                        condition: LiteralNode::createBool(true),
+                        then: LiteralNode::createInt(1),
+                        else: LiteralNode::createInt(2),
+                    ),
+                ),
+            ],
+        );
+
+        self::assertCount(1, $result->stream->nodes);
+        self::assertInstanceOf(TextNode::class, $result->stream->nodes[0]);
+        self::assertSame('1', $result->stream->nodes[0]->text);
+        self::assertTrue($result->changed);
+    }
+
+    public function testEchoOfShortTernaryWithTruthyConditionFoldsToCondition(): void
+    {
+        $result = $this->optimize(
+            nodes: [
+                new EchoNode(
+                    operand: new TernaryNode(
+                        condition: LiteralNode::createInt(5),
+                        then: null,
+                        else: LiteralNode::createInt(2),
+                    ),
+                ),
+            ],
+        );
+
+        self::assertCount(1, $result->stream->nodes);
+        self::assertInstanceOf(TextNode::class, $result->stream->nodes[0]);
+        self::assertSame('5', $result->stream->nodes[0]->text);
+    }
+
+    public function testEchoOfTernaryWithFalseConditionKeepsNonConstantElseBranch(): void
+    {
+        $result = $this->optimize(
+            nodes: [
+                new EchoNode(
+                    operand: new TernaryNode(
+                        condition: LiteralNode::createBool(false),
+                        then: LiteralNode::createInt(1),
+                        else: new IdentifierNode(
+                            name: 'name',
+                        ),
+                    ),
+                ),
+            ],
+        );
+
+        self::assertCount(1, $result->stream->nodes);
+        self::assertInstanceOf(EchoNode::class, $result->stream->nodes[0]);
+        self::assertInstanceOf(IdentifierNode::class, $result->stream->nodes[0]->operand);
+        self::assertTrue($result->changed);
+    }
+
+    public function testEchoOfTernaryWithUnknownConditionIsUnchanged(): void
+    {
+        $ternary = new TernaryNode(
+            condition: new IdentifierNode(
+                name: 'flag',
+            ),
+            then: LiteralNode::createInt(1),
+            else: LiteralNode::createInt(2),
+        );
+
+        $result = $this->optimize(
+            nodes: [
+                new EchoNode(
+                    operand: $ternary,
+                ),
+            ],
+        );
+
+        self::assertCount(1, $result->stream->nodes);
+        self::assertInstanceOf(EchoNode::class, $result->stream->nodes[0]);
+        self::assertSame($ternary, $result->stream->nodes[0]->operand);
+        self::assertFalse($result->changed);
     }
 
     public function testEchoOfBoolLiteralIsConvertedToText(): void

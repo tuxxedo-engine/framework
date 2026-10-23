@@ -28,6 +28,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\MethodCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
+use Tuxxedo\View\Lumi\Syntax\Node\TernaryNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\Associativity;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
@@ -208,6 +209,30 @@ class ExpressionParser implements ExpressionParserInterface
         ExpressionNodeInterface $left,
     ): ExpressionNodeInterface {
         if ($token instanceof CharacterToken) {
+            if ($token->op1 === CharacterSymbol::QUESTION->symbol()) {
+                $stream->consume();
+
+                $then = null;
+
+                if (
+                    $stream->eof() ||
+                    !$stream->currentIs(CharacterToken::class, CharacterSymbol::COLON->symbol())
+                ) {
+                    $then = $this->parseExpression($stream, Precedence::LOWEST);
+                }
+
+                $this->expectCharacter(
+                    stream: $stream,
+                    character: CharacterSymbol::COLON,
+                );
+
+                return new TernaryNode(
+                    condition: $left,
+                    then: $then,
+                    else: $this->parseExpression($stream, Precedence::TERNARY->value - 1),
+                );
+            }
+
             if ($token->op1 === CharacterSymbol::LEFT_PARENTHESIS->symbol()) {
                 $stream->consume();
 

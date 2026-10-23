@@ -24,6 +24,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
+use Tuxxedo\View\Lumi\Syntax\Node\TernaryNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
@@ -1020,6 +1021,100 @@ class EvaluatorTest extends TestCase
                 scope: $this->scope,
                 node: new IdentifierNode(
                     name: 'missing',
+                ),
+            ),
+        );
+    }
+
+    public function testTernaryWithFalseConditionReturnsElseBranch(): void
+    {
+        $else = new IdentifierNode(
+            name: 'fallback',
+        );
+
+        self::assertSame(
+            $else,
+            $this->evaluator->ternary(
+                scope: $this->scope,
+                node: new TernaryNode(
+                    condition: LiteralNode::createBool(false),
+                    then: LiteralNode::createInt(1),
+                    else: $else,
+                ),
+            ),
+        );
+    }
+
+    public function testShortTernaryWithTruthyConditionReturnsCondition(): void
+    {
+        $condition = LiteralNode::createString('set');
+
+        self::assertSame(
+            $condition,
+            $this->evaluator->ternary(
+                scope: $this->scope,
+                node: new TernaryNode(
+                    condition: $condition,
+                    then: null,
+                    else: LiteralNode::createString('unset'),
+                ),
+            ),
+        );
+    }
+
+    public function testTernaryWithUnknownConditionReturnsNull(): void
+    {
+        self::assertNull(
+            $this->evaluator->ternary(
+                scope: $this->scope,
+                node: new TernaryNode(
+                    condition: new IdentifierNode(
+                        name: 'missing',
+                    ),
+                    then: LiteralNode::createInt(1),
+                    else: LiteralNode::createInt(2),
+                ),
+            ),
+        );
+    }
+
+    public function testExpressionWithTernaryFoldsComparisonCondition(): void
+    {
+        $this->assign(
+            name: 'score',
+            value: LiteralNode::createInt(95),
+        );
+
+        $result = $this->evaluator->expression(
+            scope: $this->scope,
+            node: new TernaryNode(
+                condition: new BinaryOpNode(
+                    left: new IdentifierNode(
+                        name: 'score',
+                    ),
+                    right: LiteralNode::createInt(90),
+                    operator: BinarySymbol::GREATER,
+                ),
+                then: LiteralNode::createString('A'),
+                else: LiteralNode::createString('B'),
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame('A', $result->operand);
+    }
+
+    public function testExpressionWithUnknownTernaryReturnsNull(): void
+    {
+        self::assertNull(
+            $this->evaluator->expression(
+                scope: $this->scope,
+                node: new TernaryNode(
+                    condition: new IdentifierNode(
+                        name: 'missing',
+                    ),
+                    then: LiteralNode::createInt(1),
+                    else: LiteralNode::createInt(2),
                 ),
             ),
         );
