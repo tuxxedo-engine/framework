@@ -17,6 +17,7 @@ use Fixture\Cache\Cache\Cache\Money;
 use Fixture\Cache\Cache\Cache\Plan;
 use Fixture\Cache\Cache\Cache\Profile;
 use PHPUnit\Framework\TestCase;
+use Support\Cache\InMemoryCacheDriver;
 use Support\Cache\InMemoryCacheDriverConfig;
 use Tuxxedo\Cache\Cache;
 use Tuxxedo\Cache\CacheException;
@@ -24,6 +25,7 @@ use Tuxxedo\Cache\CacheManager;
 use Tuxxedo\Cache\Config\CacheConfig;
 use Tuxxedo\Cache\Config\CacheScope;
 use Tuxxedo\Container\Container;
+use Tuxxedo\Mapper\Mapper;
 
 class CacheManagerTest extends TestCase
 {
@@ -197,6 +199,65 @@ class CacheManagerTest extends TestCase
         $this->manager->clear();
 
         self::assertFalse($this->manager->has('local:counter'));
+    }
+
+    public function testClearSkipsScopesSharingTheRootDriver(): void
+    {
+        /** @var Cache $root */
+        $root = $this->manager->root;
+
+        /** @var Cache $local */
+        $local = $this->manager->scopes['local'];
+
+        /** @var InMemoryCacheDriver $sharedDriver */
+        $sharedDriver = $root->driver;
+
+        /** @var InMemoryCacheDriver $localDriver */
+        $localDriver = $local->driver;
+
+        $this->manager->clear();
+
+        self::assertSame(
+            [
+                '',
+            ],
+            $sharedDriver->clearedPrefixes,
+        );
+
+        self::assertSame(
+            [
+                'local:',
+            ],
+            $localDriver->clearedPrefixes,
+        );
+    }
+
+    public function testClearWithoutIsolatedScopesClearsEveryScope(): void
+    {
+        $driver = new InMemoryCacheDriver();
+        $manager = new CacheManager(
+            root: new Cache(
+                driver: $driver,
+                mapper: new Mapper(),
+            ),
+            scopes: [
+                'reports' => new Cache(
+                    driver: $driver,
+                    mapper: new Mapper(),
+                    prefix: 'reports:',
+                ),
+            ],
+        );
+
+        $manager->clear();
+
+        self::assertSame(
+            [
+                'reports:',
+                '',
+            ],
+            $driver->clearedPrefixes,
+        );
     }
 
     public function testCustomSeparatorRoutesToScope(): void

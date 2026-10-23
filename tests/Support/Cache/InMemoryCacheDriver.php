@@ -29,6 +29,11 @@ class InMemoryCacheDriver implements CacheDriverInterface
      */
     public array $entries = [];
 
+    /**
+     * @var list<string>
+     */
+    public array $clearedPrefixes = [];
+
     public ClockInterface $clock;
 
     public function __construct(
@@ -172,6 +177,8 @@ class InMemoryCacheDriver implements CacheDriverInterface
     public function clear(
         string $prefix,
     ): void {
+        $this->clearedPrefixes[] = $prefix;
+
         foreach (\array_keys($this->entries) as $key) {
             if (\str_starts_with((string) $key, $prefix)) {
                 unset($this->entries[$key]);

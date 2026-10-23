@@ -22,11 +22,13 @@ class CacheManager implements CacheManagerInterface
 {
     /**
      * @param array<array-key, CacheInterface> $scopes
+     * @param list<array-key>|null $isolatedScopes
      */
     public function __construct(
         public readonly CacheInterface $root,
         public readonly array $scopes = [],
         public readonly ?string $separator = ':',
+        public readonly ?array $isolatedScopes = null,
     ) {
     }
 
@@ -40,8 +42,13 @@ class CacheManager implements CacheManagerInterface
         $mapper = $container->resolve(MapperInterface::class);
         $defaultDriver = ($config->default->driverClass)::create($container, $config->default);
         $scopes = [];
+        $isolatedScopes = [];
 
         foreach ($config->scopes as $scope) {
+            if ($scope->driver !== null) {
+                $isolatedScopes[] = $scope->name;
+            }
+
             $scopes[$scope->name] = new Cache(
                 driver: $scope->driver !== null
                     ? ($scope->driver->driverClass)::create($container, $scope->driver)
@@ -60,6 +67,7 @@ class CacheManager implements CacheManagerInterface
             ),
             scopes: $scopes,
             separator: $config->separator,
+            isolatedScopes: $isolatedScopes,
         );
     }
 
@@ -295,8 +303,13 @@ class CacheManager implements CacheManagerInterface
 
     public function clear(): void
     {
-        foreach ($this->scopes as $scope) {
-            $scope->clear();
+        foreach ($this->scopes as $name => $scope) {
+            if (
+                $this->isolatedScopes === null ||
+                \in_array($name, $this->isolatedScopes, true)
+            ) {
+                $scope->clear();
+            }
         }
 
         $this->root->clear();
