@@ -108,6 +108,28 @@ class CacheTest extends TestCase
         }
     }
 
+    public function testExceptionMessagesNameTheScopedKey(): void
+    {
+        $cache = new Cache(
+            driver: $this->driver,
+            mapper: new Mapper(),
+            prefix: 'rateLimit:',
+        );
+
+        $cache->set(
+            key: 'attempts',
+            value: 'three',
+        );
+
+        try {
+            $cache->int('attempts');
+
+            self::fail('Expected CacheException');
+        } catch (CacheException $exception) {
+            self::assertStringContainsString('"rateLimit:attempts"', $exception->getMessage());
+        }
+    }
+
     public function testFloatReturnsStoredValue(): void
     {
         $this->cache->set(

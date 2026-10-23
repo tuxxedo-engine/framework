@@ -60,7 +60,7 @@ class Cache implements CacheInterface
         ?DurationInterface $ttl,
     ): void {
         if ($ttl !== null && !$ttl->isPositive()) {
-            throw CacheException::fromInvalidTtl($key);
+            throw CacheException::fromInvalidTtl($this->prefix . $key);
         }
     }
 
@@ -99,7 +99,7 @@ class Cache implements CacheInterface
 
         if (\is_object($value) && !\in_array($value::class, $this->allowedClasses, true)) {
             throw CacheException::fromTypeMismatch(
-                key: $key,
+                key: $this->prefix . $key,
                 expected: 'an allowed class',
                 actual: $value::class,
             );
@@ -122,7 +122,7 @@ class Cache implements CacheInterface
 
         if (!\is_array($value)) {
             throw CacheException::fromTypeMismatch(
-                key: $key,
+                key: $this->prefix . $key,
                 expected: 'array',
                 actual: \get_debug_type($value),
             );
@@ -161,7 +161,7 @@ class Cache implements CacheInterface
         if (\is_object($value)) {
             if (!\in_array($value::class, $this->allowedClasses, true)) {
                 throw CacheException::fromUnsupportedValue(
-                    key: $key,
+                    key: $this->prefix . $key,
                     type: $value::class,
                 );
             }
@@ -179,7 +179,7 @@ class Cache implements CacheInterface
         }
 
         throw CacheException::fromUnsupportedValue(
-            key: $key,
+            key: $this->prefix . $key,
             type: \get_debug_type($value),
         );
     }
@@ -203,7 +203,7 @@ class Cache implements CacheInterface
 
         if (!$case instanceof $enum) {
             throw CacheException::fromTypeMismatch(
-                key: $key,
+                key: $this->prefix . $key,
                 expected: $enum,
                 actual: \get_debug_type($value),
             );
@@ -222,7 +222,7 @@ class Cache implements CacheInterface
         if (!\enum_exists($enum)) {
             // @codeCoverageIgnoreStart
             throw CacheException::fromInvalidEnum(
-                key: $key,
+                key: $this->prefix . $key,
                 enum: $enum,
             );
             // @codeCoverageIgnoreEnd
@@ -244,7 +244,7 @@ class Cache implements CacheInterface
         foreach ($values as $value) {
             if (!$predicate($value)) {
                 throw CacheException::fromTypeMismatch(
-                    key: $key,
+                    key: $this->prefix . $key,
                     expected: 'array<' . $type . '>',
                     actual: 'array<' . \get_debug_type($value) . '>',
                 );
@@ -266,7 +266,7 @@ class Cache implements CacheInterface
 
         if ($value !== null && !\is_string($value)) {
             throw CacheException::fromTypeMismatch(
-                key: $key,
+                key: $this->prefix . $key,
                 expected: 'string',
                 actual: \get_debug_type($value),
             );
@@ -282,7 +282,7 @@ class Cache implements CacheInterface
 
         if ($value !== null && !\is_int($value)) {
             throw CacheException::fromTypeMismatch(
-                key: $key,
+                key: $this->prefix . $key,
                 expected: 'int',
                 actual: \get_debug_type($value),
             );
@@ -298,7 +298,7 @@ class Cache implements CacheInterface
 
         if ($value !== null && !\is_float($value)) {
             throw CacheException::fromTypeMismatch(
-                key: $key,
+                key: $this->prefix . $key,
                 expected: 'float',
                 actual: \get_debug_type($value),
             );
@@ -314,7 +314,7 @@ class Cache implements CacheInterface
 
         if ($value !== null && !\is_bool($value)) {
             throw CacheException::fromTypeMismatch(
-                key: $key,
+                key: $this->prefix . $key,
                 expected: 'bool',
                 actual: \get_debug_type($value),
             );
@@ -459,7 +459,7 @@ class Cache implements CacheInterface
 
         if (!$value instanceof $class) {
             throw CacheException::fromTypeMismatch(
-                key: $key,
+                key: $this->prefix . $key,
                 expected: $class,
                 actual: \get_debug_type($value),
             );
@@ -548,7 +548,7 @@ class Cache implements CacheInterface
 
         if ($encoded !== $value) {
             throw CacheException::fromUnsupportedValue(
-                key: $key,
+                key: $this->prefix . $key,
                 type: 'enum',
             );
         }
@@ -569,7 +569,7 @@ class Cache implements CacheInterface
     ): int {
         if ($by <= 0) {
             throw CacheException::fromInvalidStep(
-                key: $key,
+                key: $this->prefix . $key,
                 by: $by,
             );
         }
@@ -590,7 +590,7 @@ class Cache implements CacheInterface
     ): int {
         if ($by <= 0) {
             throw CacheException::fromInvalidStep(
-                key: $key,
+                key: $this->prefix . $key,
                 by: $by,
             );
         }
