@@ -49,13 +49,13 @@ class DceOptimizer extends AbstractOptimizer
 
             return match (true) {
                 $node instanceof AssignmentNode => $this->optimizeAssignment($node),
-                $node instanceof BreakNode => $this->optimizeLoopStatement($stream),
+                $node instanceof BreakNode => $this->optimizeLoopStatement($stream, $node),
                 $node instanceof BlockNode => [
                     parent::optimizeBlockBody($node),
                 ],
                 $node instanceof CommentNode => $this->optimizeComment($node),
                 $node instanceof ConditionalNode => $this->optimizeConditional($node),
-                $node instanceof ContinueNode => $this->optimizeLoopStatement($stream),
+                $node instanceof ContinueNode => $this->optimizeLoopStatement($stream, $node),
                 $node instanceof DirectiveNodeInterface => parent::optimizeDirective($node),
                 $node instanceof DoWhileNode => $this->optimizeDoWhile($node),
                 $node instanceof ForNode => [
@@ -224,15 +224,18 @@ class DceOptimizer extends AbstractOptimizer
     }
 
     /**
-     * @return NodeInterface[]
+     * @return array{0: BreakNode|ContinueNode}
      */
     protected function optimizeLoopStatement(
         NodeStreamInterface $stream,
+        BreakNode|ContinueNode $node,
     ): array {
         while (!$stream->eof()) {
             $stream->consume();
         }
 
-        return [];
+        return [
+            $node,
+        ];
     }
 }

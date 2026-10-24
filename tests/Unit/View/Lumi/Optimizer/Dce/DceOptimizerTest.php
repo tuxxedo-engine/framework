@@ -764,10 +764,12 @@ class DceOptimizerTest extends TestCase
             text: 'kept',
         );
 
+        $break = new BreakNode();
+
         $result = $this->optimize(
             nodes: [
                 $kept,
-                new BreakNode(),
+                $break,
                 new TextNode(
                     text: 'dropped-1',
                 ),
@@ -780,6 +782,7 @@ class DceOptimizerTest extends TestCase
         self::assertSame(
             [
                 $kept,
+                $break,
             ],
             $result->stream->nodes,
         );
@@ -792,10 +795,12 @@ class DceOptimizerTest extends TestCase
             text: 'kept',
         );
 
+        $continue = new ContinueNode();
+
         $result = $this->optimize(
             nodes: [
                 $kept,
-                new ContinueNode(),
+                $continue,
                 new TextNode(
                     text: 'dropped',
                 ),
@@ -805,10 +810,73 @@ class DceOptimizerTest extends TestCase
         self::assertSame(
             [
                 $kept,
+                $continue,
             ],
             $result->stream->nodes,
         );
         self::assertTrue($result->changed);
+    }
+
+    public function testTrailingLoopStatementIsKeptWithoutChange(): void
+    {
+        $break = new BreakNode();
+        $continue = new ContinueNode();
+
+        foreach ([$break, $continue] as $statement) {
+            $kept = new TextNode(
+                text: 'kept',
+            );
+
+            $result = $this->optimize(
+                nodes: [
+                    $kept,
+                    $statement,
+                ],
+            );
+
+            self::assertSame(
+                [
+                    $kept,
+                    $statement,
+                ],
+                $result->stream->nodes,
+            );
+            self::assertFalse($result->changed);
+        }
+    }
+
+    public function testLoopStatementInsideConditionalBodyIsKept(): void
+    {
+        $break = new BreakNode();
+
+        $result = $this->optimize(
+            nodes: [
+                new WhileNode(
+                    operand: new IdentifierNode(
+                        name: 'running',
+                    ),
+                    body: [
+                        new ConditionalNode(
+                            operand: new IdentifierNode(
+                                name: 'done',
+                            ),
+                            body: [
+                                $break,
+                            ],
+                        ),
+                        new TextNode(
+                            text: 'kept',
+                        ),
+                    ],
+                ),
+            ],
+        );
+
+        self::assertCount(1, $result->stream->nodes);
+        self::assertInstanceOf(WhileNode::class, $result->stream->nodes[0]);
+        self::assertCount(2, $result->stream->nodes[0]->body);
+        self::assertInstanceOf(ConditionalNode::class, $result->stream->nodes[0]->body[0]);
+        self::assertSame($break, $result->stream->nodes[0]->body[0]->body[0]);
     }
 
     public function testAssignmentNodeIsPreserved(): void
