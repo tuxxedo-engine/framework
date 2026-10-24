@@ -171,6 +171,8 @@ class Compiler implements CompilerInterface
     public function compile(
         NodeStreamInterface $stream,
     ): string {
+        $this->state->reset();
+
         $stream = $this->optimizerPipeline->run(
             stream: $stream,
         );

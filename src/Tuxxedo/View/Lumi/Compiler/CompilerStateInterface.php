@@ -32,6 +32,8 @@ interface CompilerStateInterface
         get;
     }
 
+    public function reset(): void;
+
     public function hasFlag(
         CompilerStateFlag $flag,
     ): bool;

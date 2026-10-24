@@ -19,6 +19,7 @@ use PHPUnit\Framework\TestCase;
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Compiler\CompilerState;
 use Tuxxedo\View\Lumi\Compiler\CompilerStateFlag;
+use Tuxxedo\View\Lumi\Library\Directive\MutableDirectives;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
 
 class CompilerStateTest extends TestCase
@@ -156,5 +157,73 @@ class CompilerStateTest extends TestCase
         self::assertTrue(
             $this->state->directives->asBool('lumi.autoescape'),
         );
+    }
+
+    public function testResetClearsExpectsAndFlags(): void
+    {
+        $this->state->enter(NodeScope::STATEMENT);
+        $this->state->flag(CompilerStateFlag::NULL_SAFE_ACCESS);
+
+        $this->state->reset();
+
+        self::assertNull($this->state->expects);
+        self::assertSame(0, $this->state->flags);
+    }
+
+    public function testResetRestoresDefaultDirectives(): void
+    {
+        $this->state->directives->set(
+            directive: 'lumi.autoescape',
+            value: false,
+        );
+
+        $this->state->reset();
+
+        self::assertTrue(
+            $this->state->directives->asBool('lumi.autoescape'),
+        );
+    }
+
+    public function testResetRestoresConstructorDirectives(): void
+    {
+        $directives = new MutableDirectives(
+            directives: [
+                'theme' => 'dark',
+            ],
+        );
+
+        $state = new CompilerState(
+            directives: $directives,
+        );
+
+        $state->directives->set(
+            directive: 'theme',
+            value: 'light',
+        );
+
+        $state->reset();
+
+        self::assertSame('dark', $state->directives->asString('theme'));
+    }
+
+    public function testConstructorDirectivesAreNotSharedWithCaller(): void
+    {
+        $directives = new MutableDirectives(
+            directives: [
+                'theme' => 'dark',
+            ],
+        );
+
+        $state = new CompilerState(
+            directives: $directives,
+        );
+
+        $state->directives->set(
+            directive: 'theme',
+            value: 'light',
+        );
+
+        self::assertNotSame($directives, $state->directives);
+        self::assertSame('dark', $directives->asString('theme'));
     }
 }

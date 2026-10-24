@@ -39,7 +39,9 @@ use Tuxxedo\View\Lumi\Optimizer\OptimizerPipeline;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospector;
 use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospectorInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\DeclareNode;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
+use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
@@ -490,6 +492,73 @@ class CompilerTest extends TestCase
         );
 
         self::assertSame(1, $optimizer->callCount);
+    }
+
+    public function testCompileDoesNotLeakDeclaredDirectivesIntoNextCompile(): void
+    {
+        $compiler = Compiler::createWithDefaultProviders();
+
+        $unescaped = $compiler->compile(
+            stream: new NodeStream(
+                nodes: [
+                    new DeclareNode(
+                        directive: LiteralNode::createString('lumi.autoescape'),
+                        value: LiteralNode::createBool(false),
+                    ),
+                    new EchoNode(
+                        operand: new IdentifierNode('name'),
+                    ),
+                ],
+            ),
+        );
+
+        $escaped = $compiler->compile(
+            stream: new NodeStream(
+                nodes: [
+                    new EchoNode(
+                        operand: new IdentifierNode('name'),
+                    ),
+                ],
+            ),
+        );
+
+        self::assertStringNotContainsString('escape_html', $unescaped);
+        self::assertStringContainsString('escape_html', $escaped);
+        self::assertTrue($compiler->state->directives->asBool('lumi.autoescape'));
+    }
+
+    public function testCompileRecoversStateAfterFailedCompile(): void
+    {
+        $compiler = Compiler::createWithDefaultProviders(
+            providers: [
+                new OutOfScopeProvider(),
+            ],
+        );
+
+        try {
+            $compiler->compile(
+                stream: new NodeStream(
+                    nodes: [
+                        new OutOfScopeNode(),
+                    ],
+                ),
+            );
+
+            self::fail('Expected CompilerException');
+        } catch (CompilerException) {
+        }
+
+        $output = $compiler->compile(
+            stream: new NodeStream(
+                nodes: [
+                    new EchoNode(
+                        operand: new IdentifierNode('name'),
+                    ),
+                ],
+            ),
+        );
+
+        self::assertStringContainsString('name', $output);
     }
 
     public function testCompileExpressionDelegatesToExpressionCompiler(): void

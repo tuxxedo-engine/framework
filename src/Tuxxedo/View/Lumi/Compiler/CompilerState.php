@@ -22,13 +22,22 @@ use Tuxxedo\View\Lumi\Syntax\Node\NodeScope;
 class CompilerState implements CompilerStateInterface
 {
     public private(set) ?NodeScope $expects = null;
-    public readonly DirectivesInterface&MutableDirectivesInterface $directives;
+    public private(set) DirectivesInterface&MutableDirectivesInterface $directives;
     public private(set) int $flags = 0;
+    private readonly DirectivesInterface&MutableDirectivesInterface $defaultDirectives;
 
     public function __construct(
         (DirectivesInterface&MutableDirectivesInterface)|null $directives = null,
     ) {
-        $this->directives = $directives ?? MutableDirectives::createWithDefaults();
+        $this->defaultDirectives = $directives ?? MutableDirectives::createWithDefaults();
+        $this->directives = clone $this->defaultDirectives;
+    }
+
+    public function reset(): void
+    {
+        $this->expects = null;
+        $this->directives = clone $this->defaultDirectives;
+        $this->flags = 0;
     }
 
     public function hasFlag(
