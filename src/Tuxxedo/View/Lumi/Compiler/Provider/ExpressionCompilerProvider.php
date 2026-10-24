@@ -57,7 +57,17 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         LiteralNode $node,
     ): string {
         return match ($node->type) {
-            Type::STRING => '\'' . \str_replace('\'', '\\\'', $node->operand) . '\'',
+            Type::STRING => '\'' . \str_replace(
+                [
+                    '\\',
+                    '\'',
+                ],
+                [
+                    '\\\\',
+                    '\\\'',
+                ],
+                $node->operand,
+            ) . '\'',
             default => $node->operand,
         };
     }

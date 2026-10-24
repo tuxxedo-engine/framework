@@ -175,11 +175,21 @@ class Highlighter implements HighlighterInterface
     private function literalString(
         string $operand,
     ): string {
-        $quote = \str_contains($operand, '\"')
+        $quote = \str_contains($operand, '\'') && !\str_contains($operand, '"')
             ? '"'
             : '\'';
 
-        return $quote . $operand . $quote;
+        return $quote . \str_replace(
+            [
+                '\\',
+                $quote,
+            ],
+            [
+                '\\\\',
+                '\\' . $quote,
+            ],
+            $operand,
+        ) . $quote;
     }
 
     private function highlightArrayAccessNode(

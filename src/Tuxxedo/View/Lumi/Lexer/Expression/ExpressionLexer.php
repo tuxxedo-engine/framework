@@ -88,7 +88,10 @@ class ExpressionLexer implements ExpressionLexerInterface
                         $inQuote = false;
                         $tokens[] = new LiteralToken(
                             line: $line,
-                            op1: \substr($buffer, 1, -1),
+                            op1: self::unescapeString(
+                                value: \substr($buffer, 1, -1),
+                                quote: $quoteChar,
+                            ),
                             op2: Type::STRING->name,
                         );
 
@@ -239,6 +242,17 @@ class ExpressionLexer implements ExpressionLexerInterface
         }
 
         return $tokens;
+    }
+
+    private static function unescapeString(
+        string $value,
+        string $quote,
+    ): string {
+        return (string) \preg_replace(
+            '/\\\\([\\\\' . \preg_quote($quote, '/') . '])/',
+            '$1',
+            $value,
+        );
     }
 
     private function classifyToken(

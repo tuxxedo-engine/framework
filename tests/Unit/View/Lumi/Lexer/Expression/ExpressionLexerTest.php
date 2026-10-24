@@ -108,7 +108,7 @@ class ExpressionLexerTest extends TestCase
 
         $this->assertLiteralToken(
             token: $tokens[0],
-            expectedOp1: 'foo\"bar',
+            expectedOp1: 'foo"bar',
             expectedOp2: Type::STRING->name,
         );
     }
@@ -124,7 +124,7 @@ class ExpressionLexerTest extends TestCase
 
         $this->assertLiteralToken(
             token: $tokens[0],
-            expectedOp1: 'foo\\\\',
+            expectedOp1: 'foo\\',
             expectedOp2: Type::STRING->name,
         );
     }
@@ -626,7 +626,7 @@ class ExpressionLexerTest extends TestCase
 
         $this->assertLiteralToken(
             token: $tokens[0],
-            expectedOp1: 'æ\"bar',
+            expectedOp1: 'æ"bar',
             expectedOp2: Type::STRING->name,
         );
     }
@@ -988,6 +988,61 @@ class ExpressionLexerTest extends TestCase
                 ],
                 $tokens,
             ),
+        );
+    }
+
+    /**
+     * @return \Generator<string, array{0: string, 1: string}>
+     */
+    public static function stringEscapeDataProvider(): \Generator
+    {
+        yield 'escaped single quote in single quotes' => [
+            '\'it\\\'s\'',
+            'it\'s',
+        ];
+
+        yield 'escaped double quote in double quotes' => [
+            '"a \\"quoted\\" string"',
+            'a "quoted" string',
+        ];
+
+        yield 'escaped backslash' => [
+            '\'back\\\\slash\'',
+            'back\\slash',
+        ];
+
+        yield 'trailing escaped backslash' => [
+            '\'ends with \\\\\'',
+            'ends with \\',
+        ];
+
+        yield 'other quote is not an escape in single quotes' => [
+            '\'say \\"hi\\"\'',
+            'say \\"hi\\"',
+        ];
+
+        yield 'unknown escapes stay literal' => [
+            '\'tab\\there\\n\'',
+            'tab\\there\\n',
+        ];
+    }
+
+    #[DataProvider('stringEscapeDataProvider')]
+    public function testLexStringUnescapesQuoteAndBackslash(
+        string $operand,
+        string $expected,
+    ): void {
+        $tokens = $this->lexer->lex(
+            startingLine: 1,
+            operand: $operand,
+        );
+
+        self::assertCount(1, $tokens);
+
+        $this->assertLiteralToken(
+            token: $tokens[0],
+            expectedOp1: $expected,
+            expectedOp2: Type::STRING->name,
         );
     }
 }

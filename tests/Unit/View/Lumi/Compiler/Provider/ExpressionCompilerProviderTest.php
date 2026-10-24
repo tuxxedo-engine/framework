@@ -250,7 +250,7 @@ class ExpressionCompilerProviderTest extends TestCase
 
         yield [
             'don\\\'t',
-            '\'don\\\\\'t\'',
+            '\'don\\\\\\\'t\'',
         ];
 
         yield [
@@ -260,7 +260,12 @@ class ExpressionCompilerProviderTest extends TestCase
 
         yield [
             'back\\slash',
-            '\'back\\slash\'',
+            '\'back\\\\slash\'',
+        ];
+
+        yield [
+            'trailing\\',
+            '\'trailing\\\\\'',
         ];
 
         yield [
@@ -275,7 +280,7 @@ class ExpressionCompilerProviderTest extends TestCase
     }
 
     #[DataProvider('provideStringLiteralEscapingVariants')]
-    public function testCompileLiteralStringEscapesOnlySingleQuotes(
+    public function testCompileLiteralStringEscapesBackslashesAndSingleQuotes(
         string $operand,
         string $expected,
     ): void {

@@ -132,14 +132,26 @@ class HighlighterTest extends TestCase
         ThemeInterface $theme,
         string $operand,
     ): string {
-        $quote = \str_contains($operand, '\"')
+        $quote = \str_contains($operand, '\'') && !\str_contains($operand, '"')
             ? '"'
             : '\'';
+
+        $escaped = \str_replace(
+            [
+                '\\',
+                $quote,
+            ],
+            [
+                '\\\\',
+                '\\' . $quote,
+            ],
+            $operand,
+        );
 
         return $this->dye(
             theme: $theme,
             slot: ColorSlot::STRING,
-            text: $this->escaper->html($quote . $operand . $quote),
+            text: $this->escaper->html($quote . $escaped . $quote),
         );
     }
 
@@ -390,10 +402,10 @@ class HighlighterTest extends TestCase
     }
 
     #[DataProvider('provideThemes')]
-    public function testHighlightLiteralStringNodeUsesDoubleQuotesWhenContainsEscapedDoubleQuote(
+    public function testHighlightLiteralStringNodeUsesDoubleQuotesWhenContainsSingleQuote(
         ThemeInterface $theme,
     ): void {
-        $operand = 'has\\"quote';
+        $operand = 'it\'s';
 
         self::assertSame(
             $this->expectedLiteralString(
@@ -405,6 +417,28 @@ class HighlighterTest extends TestCase
                 node: LiteralNode::createString($operand),
             ),
         );
+    }
+
+    #[DataProvider('provideThemes')]
+    public function testHighlightLiteralStringNodeRendersReadableLiterals(
+        ThemeInterface $theme,
+    ): void {
+        $cases = [
+            'it\'s' => '"it\'s"',
+            'say "hi"' => '\'say "hi"\'',
+            'it\'s "both"' => '\'it\\\'s "both"\'',
+            'back\\slash' => '\'back\\\\slash\'',
+        ];
+
+        foreach ($cases as $operand => $literal) {
+            self::assertStringContainsString(
+                $this->escaper->html($literal),
+                $this->highlight(
+                    theme: $theme,
+                    node: LiteralNode::createString($operand),
+                ),
+            );
+        }
     }
 
     #[DataProvider('provideThemes')]
