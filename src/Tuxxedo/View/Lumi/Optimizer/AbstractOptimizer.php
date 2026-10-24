@@ -23,9 +23,12 @@ use Tuxxedo\View\Lumi\Optimizer\Scope\ScopeInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
+use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ForNode;
+use Tuxxedo\View\Lumi\Syntax\Node\LayoutNode;
+use Tuxxedo\View\Lumi\Syntax\Node\LumiNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
@@ -67,9 +70,30 @@ abstract class AbstractOptimizer implements OptimizerInterface
         NodeStreamInterface $stream,
     ): NodeStreamInterface {
         $nodes = [];
+        $eatLeadingNewline = false;
 
         while (!$stream->eof()) {
-            $optimizedNodes = $this->optimizeNode($stream, $stream->consume());
+            $node = $stream->consume();
+
+            if ($eatLeadingNewline && $node instanceof TextNode) {
+                $eatLeadingNewline = false;
+                $stripped = self::withoutLeadingNewline(
+                    nodes: [
+                        $node,
+                    ],
+                );
+
+                if (\sizeof($stripped) === 0) {
+                    continue;
+                }
+
+                $node = $stripped[0];
+            }
+
+            $optimizedNodes = $this->optimizeNode($stream, $node);
+
+            $eatLeadingNewline = self::closesWithPhpTag($node) &&
+                !self::closesWithPhpTag($optimizedNodes[\array_key_last($optimizedNodes) ?? -1] ?? null);
 
             if (\sizeof($optimizedNodes) > 0) {
                 \array_push($nodes, ...$optimizedNodes);
@@ -79,6 +103,47 @@ abstract class AbstractOptimizer implements OptimizerInterface
         return new NodeStream(
             nodes: $nodes,
         );
+    }
+
+    /**
+     * @param NodeInterface[] $nodes
+     * @return NodeInterface[]
+     */
+    protected static function withoutLeadingNewline(
+        array $nodes,
+    ): array {
+        $nodes = \array_values($nodes);
+
+        if (!isset($nodes[0]) || !$nodes[0] instanceof TextNode) {
+            return $nodes;
+        }
+
+        $text = (string) \preg_replace('/^\r?\n/', '', $nodes[0]->text);
+
+        if ($text === $nodes[0]->text) {
+            return $nodes;
+        }
+
+        if ($text === '') {
+            return \array_slice($nodes, 1);
+        }
+
+        $nodes[0] = new TextNode(
+            text: $text,
+            context: $nodes[0]->context,
+        );
+
+        return $nodes;
+    }
+
+    private static function closesWithPhpTag(
+        ?NodeInterface $node,
+    ): bool {
+        return $node !== null &&
+            !$node instanceof TextNode &&
+            !$node instanceof CommentNode &&
+            !$node instanceof LayoutNode &&
+            !$node instanceof LumiNode;
     }
 
     /**

@@ -353,6 +353,89 @@ class ScopeTest extends TestCase
         self::assertFalse($scope->variables['foo']->hasComputedValue());
     }
 
+    public function testAliasOfSelfReferencingAssignmentUsesValueAtAssignmentTime(): void
+    {
+        $scope = new Scope();
+
+        $scope->assign(
+            node: $this->makeAssignment(
+                name: 'n',
+                value: LiteralNode::createInt(4),
+            ),
+        );
+
+        $scope->assign(
+            node: new AssignmentNode(
+                name: new IdentifierNode(
+                    name: 'n',
+                ),
+                value: new BinaryOpNode(
+                    left: new IdentifierNode(
+                        name: 'n',
+                    ),
+                    right: LiteralNode::createInt(2),
+                    operator: BinarySymbol::ADD,
+                ),
+                operator: AssignmentSymbol::ASSIGN,
+            ),
+        );
+
+        $scope->assign(
+            node: $this->makeAssignment(
+                name: 'm',
+                value: new IdentifierNode(
+                    name: 'n',
+                ),
+            ),
+        );
+
+        self::assertSame(6, $scope->variables['n']->computedValue);
+        self::assertSame(6, $scope->variables['m']->computedValue);
+        self::assertInstanceOf(LiteralNode::class, $scope->variables['n']->value);
+    }
+
+    public function testAliasOfVaryingExpressionStaysVaryingAfterOperandBecomesConstant(): void
+    {
+        $scope = new Scope();
+
+        $scope->assign(
+            node: new AssignmentNode(
+                name: new IdentifierNode(
+                    name: 'x',
+                ),
+                value: new BinaryOpNode(
+                    left: new IdentifierNode(
+                        name: 'unknown',
+                    ),
+                    right: LiteralNode::createInt(1),
+                    operator: BinarySymbol::ADD,
+                ),
+                operator: AssignmentSymbol::ASSIGN,
+            ),
+        );
+
+        $scope->assign(
+            node: $this->makeAssignment(
+                name: 'unknown',
+                value: LiteralNode::createInt(5),
+            ),
+        );
+
+        $scope->assign(
+            node: $this->makeAssignment(
+                name: 'z',
+                value: new IdentifierNode(
+                    name: 'x',
+                ),
+            ),
+        );
+
+        self::assertSame(Lattice::VARYING, $scope->variables['x']->lattice);
+        self::assertNull($scope->variables['x']->value);
+        self::assertSame(Lattice::VARYING, $scope->variables['z']->lattice);
+        self::assertFalse($scope->variables['z']->hasComputedValue());
+    }
+
     public function testAssignWithNonIdentifierLhsIsNoOp(): void
     {
         $scope = new Scope();

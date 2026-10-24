@@ -822,6 +822,130 @@ class DceOptimizerTest extends TestCase
         self::assertSame($kept, $result->stream->nodes[0] instanceof DoWhileNode);
     }
 
+    private static function renderedText(
+        OptimizerResultInterface $result,
+    ): string {
+        $text = '';
+
+        foreach ($result->stream->nodes as $node) {
+            self::assertInstanceOf(TextNode::class, $node);
+
+            $text .= $node->text;
+        }
+
+        return $text;
+    }
+
+    /**
+     * @return \Generator<string, array{0: list<NodeInterface>, 1: string}>
+     */
+    public static function inlinedBodyNewlineDataProvider(): \Generator
+    {
+        yield 'if true keeps body without the newlines its tags ate' => [
+            [
+                new ConditionalNode(
+                    operand: LiteralNode::createBool(true),
+                    body: [
+                        new TextNode(
+                            text: "\n    A\n",
+                        ),
+                    ],
+                ),
+                new TextNode(
+                    text: "\nB",
+                ),
+            ],
+            "    A\nB",
+        ];
+
+        yield 'if false selects else and eats like else and endif' => [
+            [
+                new ConditionalNode(
+                    operand: LiteralNode::createBool(false),
+                    body: [
+                        new TextNode(
+                            text: "\nA",
+                        ),
+                    ],
+                    else: [
+                        new TextNode(
+                            text: "\nE\n",
+                        ),
+                    ],
+                ),
+                new TextNode(
+                    text: "\nB",
+                ),
+            ],
+            "E\nB",
+        ];
+
+        yield 'if false without else eats the following newline' => [
+            [
+                new TextNode(
+                    text: 'x',
+                ),
+                new ConditionalNode(
+                    operand: LiteralNode::createBool(false),
+                    body: [
+                        new TextNode(
+                            text: 'A',
+                        ),
+                    ],
+                ),
+                new TextNode(
+                    text: "\nB",
+                ),
+            ],
+            'xB',
+        ];
+
+        yield 'while false eats the following newline' => [
+            [
+                new WhileNode(
+                    operand: LiteralNode::createBool(false),
+                    body: [
+                        new TextNode(
+                            text: 'A',
+                        ),
+                    ],
+                ),
+                new TextNode(
+                    text: "\nB",
+                ),
+            ],
+            'B',
+        ];
+
+        yield 'unwrapped do while false eats like do and while' => [
+            [
+                new DoWhileNode(
+                    operand: LiteralNode::createBool(false),
+                    body: [
+                        new TextNode(
+                            text: "\nA\n",
+                        ),
+                    ],
+                ),
+                new TextNode(
+                    text: "\nB",
+                ),
+            ],
+            "A\nB",
+        ];
+    }
+
+    /**
+     * @param list<NodeInterface> $nodes
+     */
+    #[DataProvider('inlinedBodyNewlineDataProvider')]
+    public function testInlinedBodiesKeepPhpNewlineEating(
+        array $nodes,
+        string $expected,
+    ): void {
+        self::assertSame($expected, self::renderedText($this->optimize($nodes)));
+    }
+
     public function testDoWhileWithLiteralTrueOperandIsKept(): void
     {
         $result = $this->optimize(

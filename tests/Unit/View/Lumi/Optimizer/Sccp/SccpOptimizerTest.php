@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Unit\View\Lumi\Optimizer\Sccp;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerResultInterface;
 use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpOptimizer;
@@ -630,6 +631,136 @@ class SccpOptimizerTest extends TestCase
         self::assertCount(1, $result->stream->nodes);
         self::assertInstanceOf(TextNode::class, $result->stream->nodes[0]);
         self::assertSame('-4', $result->stream->nodes[0]->text);
+    }
+
+    private static function renderedText(
+        OptimizerResultInterface $result,
+    ): string {
+        $text = '';
+
+        foreach ($result->stream->nodes as $node) {
+            self::assertInstanceOf(TextNode::class, $node);
+
+            $text .= $node->text;
+        }
+
+        return $text;
+    }
+
+    /**
+     * @return \Generator<string, array{0: list<NodeInterface>, 1: string}>
+     */
+    public static function foldedEchoNewlineDataProvider(): \Generator
+    {
+        yield 'folded echo eats the following newline' => [
+            [
+                new EchoNode(
+                    operand: LiteralNode::createInt(1),
+                ),
+                new TextNode(
+                    text: "\nnext",
+                ),
+            ],
+            '1next',
+        ];
+
+        yield 'folded echo eats only one newline' => [
+            [
+                new EchoNode(
+                    operand: LiteralNode::createInt(1),
+                ),
+                new TextNode(
+                    text: "\n\nnext",
+                ),
+            ],
+            "1\nnext",
+        ];
+
+        yield 'folded echo eats a CRLF' => [
+            [
+                new EchoNode(
+                    operand: LiteralNode::createInt(1),
+                ),
+                new TextNode(
+                    text: "\r\nnext",
+                ),
+            ],
+            '1next',
+        ];
+
+        yield 'removed empty echo eats the following newline' => [
+            [
+                new TextNode(
+                    text: 'a',
+                ),
+                new EchoNode(
+                    operand: LiteralNode::createString(''),
+                ),
+                new TextNode(
+                    text: "\nb",
+                ),
+            ],
+            'ab',
+        ];
+
+        yield 'adjacent folded echoes only eat after the last' => [
+            [
+                new EchoNode(
+                    operand: LiteralNode::createInt(1),
+                ),
+                new EchoNode(
+                    operand: LiteralNode::createInt(2),
+                ),
+                new TextNode(
+                    text: "\nx",
+                ),
+            ],
+            '12x',
+        ];
+
+        yield 'text that is only a newline disappears' => [
+            [
+                new EchoNode(
+                    operand: LiteralNode::createInt(1),
+                ),
+                new TextNode(
+                    text: "\n",
+                ),
+            ],
+            '1',
+        ];
+    }
+
+    /**
+     * @param list<NodeInterface> $nodes
+     */
+    #[DataProvider('foldedEchoNewlineDataProvider')]
+    public function testFoldedEchoKeepsPhpNewlineEating(
+        array $nodes,
+        string $expected,
+    ): void {
+        self::assertSame($expected, self::renderedText($this->optimize($nodes)));
+    }
+
+    public function testKeptEchoLeavesFollowingNewline(): void
+    {
+        $text = new TextNode(
+            text: "\nnext",
+        );
+
+        $result = $this->optimize(
+            nodes: [
+                new EchoNode(
+                    operand: new IdentifierNode(
+                        name: 'unknown',
+                    ),
+                ),
+                $text,
+            ],
+        );
+
+        self::assertCount(2, $result->stream->nodes);
+        self::assertSame($text, $result->stream->nodes[1]);
     }
 
     public function testEchoOfNonFoldableExpressionIsKeptAsIs(): void

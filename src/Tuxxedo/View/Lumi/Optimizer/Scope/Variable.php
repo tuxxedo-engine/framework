@@ -104,14 +104,6 @@ class Variable implements VariableInterface
             return;
         }
 
-        if (
-            $this->value instanceof IdentifierNode &&
-            $value instanceof IdentifierNode &&
-            $this->value->name === $value->name
-        ) {
-            return;
-        }
-
         unset($this->computedValue);
 
         $dereferenced = $scope->evaluator->dereference($scope, $value);
@@ -119,35 +111,31 @@ class Variable implements VariableInterface
         if ($dereferenced instanceof LiteralNode) {
             $this->lattice = Lattice::CONST;
             $this->computedValue = $scope->evaluator->castNodeToValue($dereferenced);
-            $this->value = $value;
+            $this->value = $dereferenced;
 
             return;
         }
 
-        $this->value = $value;
+        $computedValue = null;
 
-        if (
-            $dereferenced instanceof IdentifierNode ||
-            $dereferenced instanceof BinaryOpNode ||
-            $dereferenced instanceof TernaryNode
-        ) {
-            if ($dereferenced instanceof BinaryOpNode) {
-                $computedValue = $scope->evaluator->binaryOp($scope, $dereferenced);
-            } elseif ($dereferenced instanceof TernaryNode) {
-                $computedValue = $scope->evaluator->expression($scope, $dereferenced);
-            } else {
-                $computedValue = $scope->evaluator->dereference($scope, $value);
-            }
+        if ($dereferenced instanceof BinaryOpNode) {
+            $computedValue = $scope->evaluator->binaryOp($scope, $dereferenced);
+        } elseif ($dereferenced instanceof TernaryNode) {
+            $computedValue = $scope->evaluator->expression($scope, $dereferenced);
+        } elseif ($dereferenced instanceof IdentifierNode) {
+            $computedValue = $scope->evaluator->dereference($scope, $value);
+        }
 
-            if ($computedValue instanceof LiteralNode) {
-                $this->lattice = Lattice::CONST;
-                $this->computedValue = $scope->evaluator->castNodeToValue($computedValue);
+        if ($computedValue instanceof LiteralNode) {
+            $this->lattice = Lattice::CONST;
+            $this->computedValue = $scope->evaluator->castNodeToValue($computedValue);
+            $this->value = $computedValue;
 
-                return;
-            }
+            return;
         }
 
         $this->lattice = Lattice::VARYING;
+        $this->value = null;
     }
 
     private function mutateCompound(

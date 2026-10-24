@@ -118,7 +118,7 @@ class DceOptimizer extends AbstractOptimizer
             }
 
             if ($ifEvaluation === EvaluatorResult::IS_TRUE) {
-                return $node->body;
+                return parent::withoutLeadingNewline($node->body);
             }
 
             $newElse = null;
@@ -141,7 +141,7 @@ class DceOptimizer extends AbstractOptimizer
             $newIf = \array_search(true, $eliminationBranches, true);
 
             if ($newIf === false) {
-                return $node->else;
+                return parent::withoutLeadingNewline($node->else);
             }
 
             $branches = [];
@@ -174,11 +174,11 @@ class DceOptimizer extends AbstractOptimizer
         $evaluation = $this->evaluator->checkExpression($this->scope, $node->operand);
 
         if ($evaluation === EvaluatorResult::IS_FALSE) {
-            return $node->else;
+            return parent::withoutLeadingNewline($node->else);
         }
 
         if ($evaluation === EvaluatorResult::IS_TRUE) {
-            return $node->body;
+            return parent::withoutLeadingNewline($node->body);
         }
 
         return [
@@ -216,7 +216,7 @@ class DceOptimizer extends AbstractOptimizer
             $this->evaluator->checkExpression($this->scope, $node->operand) === EvaluatorResult::IS_FALSE &&
             !$this->hasLoopStatement($node->body)
         ) {
-            return $node->body;
+            return parent::withoutLeadingNewline($node->body);
         }
 
         return [
