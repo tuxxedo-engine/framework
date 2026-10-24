@@ -218,7 +218,7 @@ abstract class AbstractOptimizer implements OptimizerInterface
                 Type::STRING => $node->value->operand,
                 Type::INT => \intval($node->value->operand),
                 Type::FLOAT => \floatval($node->value->operand),
-                Type::BOOL => $node->value->operand === 'true',
+                Type::BOOL => \strtolower($node->value->operand) === 'true',
                 Type::NULL => null,
             },
         );

@@ -123,6 +123,75 @@ class EvaluatorTest extends TestCase
         );
     }
 
+    /**
+     * @return \Generator<string, array{0: string, 1: bool}>
+     */
+    public static function boolSpellingDataProvider(): \Generator
+    {
+        yield 'true' => [
+            'true',
+            true,
+        ];
+
+        yield 'True' => [
+            'True',
+            true,
+        ];
+
+        yield 'TRUE' => [
+            'TRUE',
+            true,
+        ];
+
+        yield 'tRuE' => [
+            'tRuE',
+            true,
+        ];
+
+        yield 'false' => [
+            'false',
+            false,
+        ];
+
+        yield 'False' => [
+            'False',
+            false,
+        ];
+
+        yield 'FALSE' => [
+            'FALSE',
+            false,
+        ];
+    }
+
+    #[DataProvider('boolSpellingDataProvider')]
+    public function testBoolLiteralSpellingIsCaseInsensitive(
+        string $operand,
+        bool $expected,
+    ): void {
+        $node = new LiteralNode(
+            operand: $operand,
+            type: Type::BOOL,
+        );
+
+        self::assertSame($expected, $this->evaluator->castValue(Type::BOOL, $operand));
+        self::assertSame($expected, $this->evaluator->toBool($node));
+        self::assertSame($expected, $this->evaluator->isTruthy($this->scope, $node));
+        self::assertSame(!$expected, $this->evaluator->isFalsy($this->scope, $node));
+        self::assertSame(
+            $expected
+                ? EvaluatorResult::IS_TRUE
+                : EvaluatorResult::IS_FALSE,
+            $this->evaluator->isTrue($this->scope, $node),
+        );
+        self::assertSame(
+            $expected
+                ? EvaluatorResult::IS_FALSE
+                : EvaluatorResult::IS_TRUE,
+            $this->evaluator->isFalse($this->scope, $node),
+        );
+    }
+
     public function testCastValueWithNullReturnsNullRegardlessOfOperand(): void
     {
         self::assertNull(

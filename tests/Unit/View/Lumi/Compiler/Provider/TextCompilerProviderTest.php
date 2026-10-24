@@ -16,6 +16,7 @@ namespace Unit\View\Lumi\Compiler\Provider;
 use Fixture\View\Lumi\Compiler\Compiler\FooNode;
 use Fixture\View\Lumi\Compiler\Compiler\FooProvider;
 use Fixture\View\Lumi\Compiler\Compiler\LiteralNodeStubProvider;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Support\View\Lumi\Compiler\RecordingExpressionCompiler;
 use Tuxxedo\View\Lumi\Compiler\Compiler;
@@ -298,6 +299,57 @@ class TextCompilerProviderTest extends TestCase
             'darkmode',
             $this->compiler->state->directives->asString('theme'),
         );
+    }
+
+    /**
+     * @return \Generator<string, array{0: string, 1: bool}>
+     */
+    public static function boolDeclareSpellingDataProvider(): \Generator
+    {
+        yield 'lowercase true' => [
+            'true',
+            true,
+        ];
+
+        yield 'uppercase TRUE' => [
+            'TRUE',
+            true,
+        ];
+
+        yield 'mixed False' => [
+            'False',
+            false,
+        ];
+
+        yield 'uppercase FALSE' => [
+            'FALSE',
+            false,
+        ];
+    }
+
+    #[DataProvider('boolDeclareSpellingDataProvider')]
+    public function testCompilesDeclareNodeWithBoolValueIgnoresCase(
+        string $operand,
+        bool $expected,
+    ): void {
+        $node = new DeclareNode(
+            directive: LiteralNode::createString('lumi.autoescape'),
+            value: new LiteralNode(
+                operand: $operand,
+                type: Type::BOOL,
+            ),
+        );
+
+        $this->compiler->compileNode(
+            node: $node,
+            stream: new NodeStream(
+                nodes: [
+                    $node,
+                ],
+            ),
+        );
+
+        self::assertSame($expected, $this->compiler->state->directives->asBool('lumi.autoescape'));
     }
 
     public function testCompilesDeclareNodeWithIntValue(): void

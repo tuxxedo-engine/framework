@@ -38,7 +38,7 @@ class Evaluator implements EvaluatorInterface
             Type::STRING => $value,
             Type::INT => \intval($value),
             Type::FLOAT => \floatval($value),
-            Type::BOOL => $value === 'true',
+            Type::BOOL => \strtolower($value) === 'true',
             Type::NULL => null,
         };
     }
@@ -125,7 +125,7 @@ class Evaluator implements EvaluatorInterface
         LiteralNode $node,
     ): bool {
         if ($node->type === Type::BOOL) {
-            return $node->operand === 'true'
+            return \strtolower($node->operand) === 'true'
                 ? true
                 : false;
         } elseif ($node->type === Type::NULL) {
@@ -149,7 +149,7 @@ class Evaluator implements EvaluatorInterface
 
         if (
             $node->type === Type::BOOL &&
-            $node->operand === 'true'
+            \strtolower($node->operand) === 'true'
         ) {
             return EvaluatorResult::IS_TRUE;
         }
@@ -171,7 +171,7 @@ class Evaluator implements EvaluatorInterface
 
         if (
             $node->type === Type::BOOL &&
-            $node->operand === 'false'
+            \strtolower($node->operand) === 'false'
         ) {
             return EvaluatorResult::IS_TRUE;
         }
@@ -192,7 +192,7 @@ class Evaluator implements EvaluatorInterface
         }
 
         if ($node->type === Type::BOOL) {
-            return $node->operand === 'true';
+            return \strtolower($node->operand) === 'true';
         }
 
         return $this->toBool($node);
@@ -211,7 +211,7 @@ class Evaluator implements EvaluatorInterface
         }
 
         if ($node->type === Type::BOOL) {
-            return $node->operand === 'false';
+            return \strtolower($node->operand) === 'false';
         }
 
         return !$this->toBool($node);

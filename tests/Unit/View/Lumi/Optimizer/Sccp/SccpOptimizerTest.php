@@ -40,6 +40,7 @@ use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 use Tuxxedo\View\Lumi\Syntax\TextContext;
+use Tuxxedo\View\Lumi\Syntax\Type;
 
 class SccpOptimizerTest extends TestCase
 {
@@ -561,6 +562,52 @@ class SccpOptimizerTest extends TestCase
         );
 
         self::assertFalse($second->changed);
+    }
+
+    public function testEchoOfUppercaseBoolLiteralsFoldsLikeLowercase(): void
+    {
+        $result = $this->optimize(
+            nodes: [
+                new EchoNode(
+                    operand: new BinaryOpNode(
+                        left: new LiteralNode(
+                            operand: 'TRUE',
+                            type: Type::BOOL,
+                        ),
+                        right: new LiteralNode(
+                            operand: 'True',
+                            type: Type::BOOL,
+                        ),
+                        operator: BinarySymbol::AND,
+                    ),
+                ),
+            ],
+        );
+
+        self::assertCount(1, $result->stream->nodes);
+        self::assertInstanceOf(TextNode::class, $result->stream->nodes[0]);
+        self::assertSame('1', $result->stream->nodes[0]->text);
+    }
+
+    public function testUppercaseFalseDeclareDisablesAutoescape(): void
+    {
+        $result = $this->optimize(
+            nodes: [
+                new DeclareNode(
+                    directive: LiteralNode::createString('lumi.autoescape'),
+                    value: new LiteralNode(
+                        operand: 'FALSE',
+                        type: Type::BOOL,
+                    ),
+                ),
+                new EchoNode(
+                    operand: LiteralNode::createString('<b>'),
+                ),
+            ],
+        );
+
+        self::assertCount(2, $result->stream->nodes);
+        self::assertInstanceOf(TextNode::class, $result->stream->nodes[1]);
     }
 
     public function testEchoOfNonFoldableExpressionIsKeptAsIs(): void
