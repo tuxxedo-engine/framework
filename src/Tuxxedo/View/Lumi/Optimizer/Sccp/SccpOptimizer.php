@@ -160,11 +160,13 @@ class SccpOptimizer extends AbstractOptimizer
             $operand[0] instanceof ExpressionNodeInterface
         ) {
             if ($operand[0] instanceof LiteralNode) {
-                return [
-                    new TextNode(
-                        text: (string) $this->evaluator->castNodeToValue($operand[0]),
+                return $this->optimizeEcho(
+                    stream: $stream,
+                    node: new EchoNode(
+                        operand: $operand[0],
+                        context: $node->context,
                     ),
-                ];
+                );
             }
 
             return [

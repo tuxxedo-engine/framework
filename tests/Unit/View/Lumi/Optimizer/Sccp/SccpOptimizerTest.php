@@ -452,6 +452,117 @@ class SccpOptimizerTest extends TestCase
         self::assertTrue($result->changed);
     }
 
+    private function stringConcat(
+        string $left,
+        string $right,
+    ): BinaryOpNode {
+        return new BinaryOpNode(
+            left: LiteralNode::createString($left),
+            right: LiteralNode::createString($right),
+            operator: BinarySymbol::CONCAT,
+        );
+    }
+
+    public function testEchoOfFoldedStringConcatStaysEscapedEchoWhenAutoescapeIsEnabled(): void
+    {
+        $result = $this->optimize(
+            nodes: [
+                new EchoNode(
+                    operand: $this->stringConcat(
+                        left: '<b>',
+                        right: '"x" & \'y\'',
+                    ),
+                ),
+            ],
+        );
+
+        self::assertCount(1, $result->stream->nodes);
+        self::assertInstanceOf(EchoNode::class, $result->stream->nodes[0]);
+        self::assertSame(TextContext::NONE, $result->stream->nodes[0]->context);
+        self::assertInstanceOf(LiteralNode::class, $result->stream->nodes[0]->operand);
+        self::assertSame('<b>"x" & \'y\'', $result->stream->nodes[0]->operand->operand);
+        self::assertTrue($result->changed);
+    }
+
+    public function testEchoOfFoldedStringConcatBecomesTextWhenAutoescapeIsDisabled(): void
+    {
+        $result = $this->optimize(
+            nodes: [
+                new DeclareNode(
+                    directive: LiteralNode::createString('lumi.autoescape'),
+                    value: LiteralNode::createBool(false),
+                ),
+                new EchoNode(
+                    operand: $this->stringConcat(
+                        left: '<b>',
+                        right: 'x',
+                    ),
+                ),
+            ],
+        );
+
+        self::assertCount(2, $result->stream->nodes);
+        self::assertInstanceOf(TextNode::class, $result->stream->nodes[1]);
+        self::assertSame('<b>x', $result->stream->nodes[1]->text);
+    }
+
+    public function testEchoOfFoldedEmptyStringConcatIsRemoved(): void
+    {
+        $result = $this->optimize(
+            nodes: [
+                new EchoNode(
+                    operand: $this->stringConcat(
+                        left: '',
+                        right: '',
+                    ),
+                ),
+            ],
+        );
+
+        self::assertSame([], $result->stream->nodes);
+    }
+
+    public function testRawEchoOfFoldedStringConcatKeepsRawContext(): void
+    {
+        $result = $this->optimize(
+            nodes: [
+                new EchoNode(
+                    operand: $this->stringConcat(
+                        left: '<b>',
+                        right: 'x',
+                    ),
+                    context: TextContext::RAW,
+                ),
+            ],
+        );
+
+        self::assertCount(1, $result->stream->nodes);
+        self::assertInstanceOf(EchoNode::class, $result->stream->nodes[0]);
+        self::assertSame(TextContext::RAW, $result->stream->nodes[0]->context);
+    }
+
+    public function testEchoOfFoldedStringConcatIsStableAcrossPasses(): void
+    {
+        $first = $this->optimize(
+            nodes: [
+                new EchoNode(
+                    operand: $this->stringConcat(
+                        left: '<b>',
+                        right: 'x',
+                    ),
+                ),
+            ],
+        );
+
+        $second = $this->optimizer->optimize(
+            stream: new NodeStream(
+                nodes: $first->stream->nodes,
+            ),
+        );
+
+        self::assertFalse($second->changed);
+    }
+
     public function testEchoOfNonFoldableExpressionIsKeptAsIs(): void
     {
         $echo = new EchoNode(
