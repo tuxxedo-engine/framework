@@ -15,6 +15,8 @@ namespace Unit\View\Lumi\Optimizer\Dce;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
+use Tuxxedo\View\Lumi\Library\Directive\MutableDirectives;
 use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerResultInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
@@ -52,11 +54,13 @@ class DceOptimizerTest extends TestCase
      */
     private function optimize(
         array $nodes,
+        ?DirectivesInterface $directives = null,
     ): OptimizerResultInterface {
         return $this->optimizer->optimize(
             stream: new NodeStream(
                 nodes: $nodes,
             ),
+            directives: $directives ?? MutableDirectives::createWithDefaults(),
         );
     }
 
@@ -135,6 +139,34 @@ class DceOptimizerTest extends TestCase
         self::assertCount(2, $result->stream->nodes);
         self::assertSame($declare, $result->stream->nodes[0]);
         self::assertSame($comment, $result->stream->nodes[1]);
+    }
+
+    public function testCommentNodeIsKeptWhenPassedDirectivesDisableStripComments(): void
+    {
+        $directives = MutableDirectives::createWithDefaults();
+
+        $directives->set(
+            directive: 'lumi.strip_comments',
+            value: false,
+        );
+
+        $comment = new CommentNode(
+            text: 'kept',
+        );
+
+        $result = $this->optimize(
+            nodes: [
+                $comment,
+            ],
+            directives: $directives,
+        );
+
+        self::assertSame(
+            [
+                $comment,
+            ],
+            $result->stream->nodes,
+        );
     }
 
     public function testAdjacentTextNodesWithNoneContextAreMerged(): void

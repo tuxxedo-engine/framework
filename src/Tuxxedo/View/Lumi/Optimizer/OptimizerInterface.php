@@ -13,11 +13,13 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Optimizer;
 
+use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 
 interface OptimizerInterface
 {
     public function optimize(
         NodeStreamInterface $stream,
+        DirectivesInterface $directives,
     ): OptimizerResultInterface;
 }

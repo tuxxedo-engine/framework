@@ -15,6 +15,7 @@ namespace Unit\View\Lumi\Optimizer;
 
 use Fixture\View\Lumi\RecordingOptimizer;
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\View\Lumi\Library\Directive\MutableDirectives;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerPipeline;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
@@ -32,7 +33,13 @@ class OptimizerPipelineTest extends TestCase
             ],
         );
 
-        self::assertSame($stream, $pipeline->run($stream));
+        self::assertSame(
+            $stream,
+            $pipeline->run(
+                stream: $stream,
+                directives: MutableDirectives::createWithDefaults(),
+            ),
+        );
     }
 
     public function testSingleOptimizerRunsAtLeastOnce(): void
@@ -52,6 +59,7 @@ class OptimizerPipelineTest extends TestCase
                     ),
                 ],
             ),
+            directives: MutableDirectives::createWithDefaults(),
         );
 
         self::assertSame(1, $optimizer->callCount);
@@ -76,6 +84,7 @@ class OptimizerPipelineTest extends TestCase
                     ),
                 ],
             ),
+            directives: MutableDirectives::createWithDefaults(),
         );
 
         self::assertSame(4, $optimizer->callCount);
@@ -100,6 +109,7 @@ class OptimizerPipelineTest extends TestCase
                     ),
                 ],
             ),
+            directives: MutableDirectives::createWithDefaults(),
         );
 
         self::assertSame(1, $first->callCount);
@@ -125,6 +135,7 @@ class OptimizerPipelineTest extends TestCase
                     ),
                 ],
             ),
+            directives: MutableDirectives::createWithDefaults(),
         );
 
         self::assertCount(1, $result->nodes);
@@ -144,5 +155,37 @@ class OptimizerPipelineTest extends TestCase
         );
 
         self::assertSame($optimizers, $pipeline->optimizers);
+    }
+
+    public function testDirectivesArePassedToEveryOptimizer(): void
+    {
+        $first = new RecordingOptimizer();
+        $second = new RecordingOptimizer();
+        $directives = new MutableDirectives(
+            directives: [
+                'lumi.autoescape' => false,
+            ],
+        );
+
+        $pipeline = new OptimizerPipeline(
+            optimizers: [
+                $first,
+                $second,
+            ],
+        );
+
+        $pipeline->run(
+            stream: new NodeStream(
+                nodes: [
+                    new TextNode(
+                        text: 'x',
+                    ),
+                ],
+            ),
+            directives: $directives,
+        );
+
+        self::assertSame($directives, $first->directives);
+        self::assertSame($directives, $second->directives);
     }
 }

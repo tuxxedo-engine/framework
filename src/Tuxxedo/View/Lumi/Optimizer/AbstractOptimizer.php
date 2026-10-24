@@ -63,9 +63,13 @@ abstract class AbstractOptimizer implements OptimizerInterface
         $this->blankState();
     }
 
-    private function blankState(): void
-    {
-        $this->directives = MutableDirectives::createWithDefaults();
+    private function blankState(
+        ?DirectivesInterface $directives = null,
+    ): void {
+        $this->directives = $directives !== null
+            ? new MutableDirectives($directives->directives)
+            : MutableDirectives::createWithDefaults();
+
         $this->context = OptimizerContext::NONE;
         $this->scope = new Scope(
             evaluator: $this->evaluator,
@@ -231,11 +235,12 @@ abstract class AbstractOptimizer implements OptimizerInterface
 
     public function optimize(
         NodeStreamInterface $stream,
+        DirectivesInterface $directives,
     ): OptimizerResultInterface {
+        $this->blankState($directives);
+
         $oldStream = clone $stream;
         $stream = static::optimizer($stream);
-
-        $this->blankState();
 
         return OptimizerResult::create(
             oldStream: $oldStream,

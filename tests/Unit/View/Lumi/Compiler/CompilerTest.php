@@ -35,6 +35,7 @@ use Tuxxedo\View\Lumi\Compiler\Provider\LoopCompilerProvider;
 use Tuxxedo\View\Lumi\Compiler\Provider\TextCompilerProvider;
 use Tuxxedo\View\Lumi\Highlight\Highlighter;
 use Tuxxedo\View\Lumi\Highlight\HighlighterInterface;
+use Tuxxedo\View\Lumi\Library\Directive\MutableDirectives;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerPipeline;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospector;
@@ -559,6 +560,40 @@ class CompilerTest extends TestCase
         );
 
         self::assertStringContainsString('name', $output);
+    }
+
+    public function testCompilePassesStateDirectivesToOptimizerPipeline(): void
+    {
+        $optimizer = new RecordingOptimizer();
+
+        $compiler = Compiler::createWithoutDefaultProviders(
+            providers: [
+                new FooProvider(),
+            ],
+            state: new CompilerState(
+                directives: new MutableDirectives(
+                    directives: [
+                        'lumi.autoescape' => false,
+                    ],
+                ),
+            ),
+            optimizerPipeline: new OptimizerPipeline(
+                optimizers: [
+                    $optimizer,
+                ],
+            ),
+        );
+
+        $compiler->compile(
+            stream: new NodeStream(
+                nodes: [
+                    new FooNode(),
+                ],
+            ),
+        );
+
+        self::assertNotNull($optimizer->directives);
+        self::assertFalse($optimizer->directives->asBool('lumi.autoescape'));
     }
 
     public function testCompileExpressionDelegatesToExpressionCompiler(): void

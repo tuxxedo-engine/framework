@@ -15,6 +15,8 @@ namespace Unit\View\Lumi\Optimizer\Sccp;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
+use Tuxxedo\View\Lumi\Library\Directive\MutableDirectives;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerResultInterface;
 use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpOptimizer;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
@@ -58,11 +60,13 @@ class SccpOptimizerTest extends TestCase
      */
     private function optimize(
         array $nodes,
+        ?DirectivesInterface $directives = null,
     ): OptimizerResultInterface {
         return $this->optimizer->optimize(
             stream: new NodeStream(
                 nodes: $nodes,
             ),
+            directives: $directives ?? MutableDirectives::createWithDefaults(),
         );
     }
 
@@ -302,6 +306,75 @@ class SccpOptimizerTest extends TestCase
         self::assertInstanceOf(TextNode::class, $result->stream->nodes[1]);
         self::assertSame('hello', $result->stream->nodes[1]->text);
         self::assertTrue($result->changed);
+    }
+
+    public function testEchoOfStringLiteralIsConvertedToTextWhenPassedDirectivesDisableAutoescape(): void
+    {
+        $directives = MutableDirectives::createWithDefaults();
+
+        $directives->set(
+            directive: 'lumi.autoescape',
+            value: false,
+        );
+
+        $result = $this->optimize(
+            nodes: [
+                new EchoNode(
+                    operand: LiteralNode::createString('hello'),
+                ),
+            ],
+            directives: $directives,
+        );
+
+        self::assertCount(1, $result->stream->nodes);
+        self::assertInstanceOf(TextNode::class, $result->stream->nodes[0]);
+        self::assertSame('hello', $result->stream->nodes[0]->text);
+    }
+
+    public function testDeclareDoesNotMutatePassedDirectives(): void
+    {
+        $directives = MutableDirectives::createWithDefaults();
+
+        $this->optimize(
+            nodes: [
+                new DeclareNode(
+                    directive: LiteralNode::createString('lumi.autoescape'),
+                    value: LiteralNode::createBool(false),
+                ),
+            ],
+            directives: $directives,
+        );
+
+        self::assertTrue($directives->asBool('lumi.autoescape'));
+    }
+
+    public function testDeclaredDirectivesDoNotLeakIntoNextOptimize(): void
+    {
+        $this->optimize(
+            nodes: [
+                new DeclareNode(
+                    directive: LiteralNode::createString('lumi.autoescape'),
+                    value: LiteralNode::createBool(false),
+                ),
+            ],
+        );
+
+        $echo = new EchoNode(
+            operand: LiteralNode::createString('hello'),
+        );
+
+        $result = $this->optimize(
+            nodes: [
+                $echo,
+            ],
+        );
+
+        self::assertSame(
+            [
+                $echo,
+            ],
+            $result->stream->nodes,
+        );
     }
 
     public function testEchoOfIntLiteralIsConvertedToText(): void
@@ -557,10 +630,8 @@ class SccpOptimizerTest extends TestCase
             ],
         );
 
-        $second = $this->optimizer->optimize(
-            stream: new NodeStream(
-                nodes: $first->stream->nodes,
-            ),
+        $second = $this->optimize(
+            nodes: $first->stream->nodes,
         );
 
         self::assertFalse($second->changed);

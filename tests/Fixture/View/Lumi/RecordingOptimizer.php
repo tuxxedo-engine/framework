@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Fixture\View\Lumi;
 
+use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerInterface;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerResult;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerResultInterface;
@@ -23,6 +24,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 class RecordingOptimizer implements OptimizerInterface
 {
     public int $callCount = 0;
+    public ?DirectivesInterface $directives = null;
 
     public function __construct(
         public int $changeCount = 0,
@@ -31,8 +33,10 @@ class RecordingOptimizer implements OptimizerInterface
 
     public function optimize(
         NodeStreamInterface $stream,
+        DirectivesInterface $directives,
     ): OptimizerResultInterface {
         $this->callCount++;
+        $this->directives = $directives;
 
         if ($this->callCount <= $this->changeCount) {
             return OptimizerResult::create(

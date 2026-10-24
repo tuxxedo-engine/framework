@@ -175,6 +175,7 @@ class Compiler implements CompilerInterface
 
         $stream = $this->optimizerPipeline->run(
             stream: $stream,
+            directives: $this->state->directives,
         );
 
         $source = '';

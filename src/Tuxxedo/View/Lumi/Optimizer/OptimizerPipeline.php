@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Optimizer;
 
+use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 
 readonly class OptimizerPipeline implements OptimizerPipelineInterface
@@ -27,11 +28,13 @@ readonly class OptimizerPipeline implements OptimizerPipelineInterface
 
     public function run(
         NodeStreamInterface $stream,
+        DirectivesInterface $directives,
     ): NodeStreamInterface {
         foreach ($this->optimizers as $optimizer) {
             do {
                 $result = $optimizer->optimize(
                     stream: $stream,
+                    directives: $directives,
                 );
 
                 $stream = $result->stream;

@@ -27,6 +27,7 @@ use Tuxxedo\View\Lumi\Highlight\Theme\LumiDark;
 use Tuxxedo\View\Lumi\Highlight\Theme\LumiLight;
 use Tuxxedo\View\Lumi\Highlight\Theme\ThemeInterface;
 use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
+use Tuxxedo\View\Lumi\Library\Directive\DirectivesInterface;
 use Tuxxedo\View\Lumi\LumiConfigurator;
 use Tuxxedo\View\Lumi\LumiEngine;
 use Tuxxedo\View\Lumi\LumiException;
@@ -259,6 +260,7 @@ readonly class LumiController
     private function visualizeSccpPass(
         string &$buffer,
         NodeStreamInterface $nodeStream,
+        DirectivesInterface $directives,
     ): NodeStreamInterface {
         $pass = 1;
         $optimizer = new SccpOptimizer();
@@ -272,7 +274,11 @@ readonly class LumiController
 
             $buffer .= '<pre>';
 
-            $result = $optimizer->optimize($stream);
+            $result = $optimizer->optimize(
+                stream: $stream,
+                directives: $directives,
+            );
+
             $stream = $result->stream;
             $copy = clone $stream;
 
@@ -291,6 +297,7 @@ readonly class LumiController
     private function visualizeDcePass(
         string &$buffer,
         NodeStreamInterface $nodeStream,
+        DirectivesInterface $directives,
     ): NodeStreamInterface {
         $pass = 1;
         $optimizer = new DceOptimizer();
@@ -304,7 +311,11 @@ readonly class LumiController
 
             $buffer .= '<pre>';
 
-            $result = $optimizer->optimize($stream);
+            $result = $optimizer->optimize(
+                stream: $stream,
+                directives: $directives,
+            );
+
             $stream = $result->stream;
             $copy = clone $stream;
 
@@ -493,11 +504,19 @@ readonly class LumiController
 
         if (isset($nodeStream) && !isset($exception)) {
             if ($request->get->bool('sccp')) {
-                $nodeStream = $this->visualizeSccpPass($buffer, $nodeStream);
+                $nodeStream = $this->visualizeSccpPass(
+                    buffer: $buffer,
+                    nodeStream: $nodeStream,
+                    directives: $engine->compiler->state->directives,
+                );
             }
 
             if ($request->get->bool('dce')) {
-                $nodeStream = $this->visualizeDcePass($buffer, $nodeStream);
+                $nodeStream = $this->visualizeDcePass(
+                    buffer: $buffer,
+                    nodeStream: $nodeStream,
+                    directives: $engine->compiler->state->directives,
+                );
             }
 
             $buffer .= '<h3>Compiled Source</h3>';
