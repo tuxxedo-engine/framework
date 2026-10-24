@@ -94,6 +94,16 @@ class Variable implements VariableInterface
         ExpressionNodeInterface $value,
         AssignmentSymbol $operator = AssignmentSymbol::ASSIGN,
     ): void {
+        if ($operator !== AssignmentSymbol::ASSIGN) {
+            $this->mutateCompound(
+                scope: $scope,
+                value: $value,
+                operator: $operator,
+            );
+
+            return;
+        }
+
         if (
             $this->value instanceof IdentifierNode &&
             $value instanceof IdentifierNode &&
@@ -107,35 +117,8 @@ class Variable implements VariableInterface
         $dereferenced = $scope->evaluator->dereference($scope, $value);
 
         if ($dereferenced instanceof LiteralNode) {
-            if (
-                $this->value !== null &&
-                $operator !== AssignmentSymbol::ASSIGN
-            ) {
-                $computedValue = $scope->evaluator->assignment(
-                    scope: $scope,
-                    node: new AssignmentNode(
-                        name: new IdentifierNode(
-                            name: $this->name,
-                        ),
-                        value: $dereferenced,
-                        operator: $operator,
-                    ),
-                );
-
-                if (
-                    $computedValue !== null &&
-                    $computedValue instanceof LiteralNode
-                ) {
-                    $this->lattice = Lattice::CONST;
-                    $this->computedValue = $scope->evaluator->castNodeToValue($computedValue);
-                } else {
-                    $this->lattice = Lattice::VARYING;
-                }
-            } else {
-                $this->lattice = Lattice::CONST;
-                $this->computedValue = $scope->evaluator->castNodeToValue($dereferenced);
-            }
-
+            $this->lattice = Lattice::CONST;
+            $this->computedValue = $scope->evaluator->castNodeToValue($dereferenced);
             $this->value = $value;
 
             return;
@@ -165,6 +148,44 @@ class Variable implements VariableInterface
         }
 
         $this->lattice = Lattice::VARYING;
+    }
+
+    private function mutateCompound(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $value,
+        AssignmentSymbol $operator,
+    ): void {
+        $computed = null;
+
+        if ($this->hasComputedValue()) {
+            $right = $scope->evaluator->expression($scope, $value);
+
+            if ($right instanceof LiteralNode) {
+                $computed = $scope->evaluator->assignment(
+                    scope: $scope,
+                    node: new AssignmentNode(
+                        name: new IdentifierNode(
+                            name: $this->name,
+                        ),
+                        value: $right,
+                        operator: $operator,
+                    ),
+                );
+            }
+        }
+
+        unset($this->computedValue);
+
+        if ($computed instanceof LiteralNode) {
+            $this->lattice = Lattice::CONST;
+            $this->computedValue = $scope->evaluator->castNodeToValue($computed);
+            $this->value = $computed;
+
+            return;
+        }
+
+        $this->lattice = Lattice::VARYING;
+        $this->value = null;
     }
 
     public function hasComputedValue(): bool

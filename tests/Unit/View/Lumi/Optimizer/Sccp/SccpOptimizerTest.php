@@ -182,6 +182,71 @@ class SccpOptimizerTest extends TestCase
         self::assertTrue($result->changed);
     }
 
+    public function testCompoundAssignmentChainIsFoldedToRuntimeValues(): void
+    {
+        $assign = static fn (AssignmentSymbol $operator, LiteralNode $value): AssignmentNode => new AssignmentNode(
+            name: new IdentifierNode(
+                name: 'n',
+            ),
+            value: $value,
+            operator: $operator,
+        );
+
+        $result = $this->optimize(
+            nodes: [
+                $assign(AssignmentSymbol::ASSIGN, LiteralNode::createInt(0)),
+                $assign(AssignmentSymbol::ADD, LiteralNode::createInt(5)),
+                $assign(AssignmentSymbol::SUBTRACT, LiteralNode::createInt(1)),
+                $assign(AssignmentSymbol::MULTIPLY, LiteralNode::createInt(3)),
+            ],
+        );
+
+        $values = [];
+
+        foreach ($result->stream->nodes as $node) {
+            self::assertInstanceOf(AssignmentNode::class, $node);
+            self::assertSame(AssignmentSymbol::ASSIGN, $node->operator);
+            self::assertInstanceOf(LiteralNode::class, $node->value);
+
+            $values[] = $node->value->operand;
+        }
+
+        self::assertSame(
+            [
+                '0',
+                '5',
+                '4',
+                '12',
+            ],
+            $values,
+        );
+    }
+
+    public function testCompoundAssignmentOnUnknownVariableIsNotFolded(): void
+    {
+        $compound = new AssignmentNode(
+            name: new IdentifierNode(
+                name: 'fromScope',
+            ),
+            value: LiteralNode::createInt(1),
+            operator: AssignmentSymbol::SUBTRACT,
+        );
+
+        $result = $this->optimize(
+            nodes: [
+                $compound,
+            ],
+        );
+
+        self::assertSame(
+            [
+                $compound,
+            ],
+            $result->stream->nodes,
+        );
+        self::assertFalse($result->changed);
+    }
+
     public function testEchoOfEmptyStringLiteralIsRemoved(): void
     {
         $result = $this->optimize(

@@ -484,7 +484,7 @@ class VariableTest extends TestCase
         self::assertSame(5, $variable->computedValue);
     }
 
-    public function testMutateWithCompoundAddOnUnsetPreviousValueSkipsComputation(): void
+    public function testMutateWithCompoundAddOnVaryingPreviousValueStaysVarying(): void
     {
         $scope = $this->makeScope();
         $variable = Variable::fromVarying(
@@ -498,8 +498,9 @@ class VariableTest extends TestCase
             operator: AssignmentSymbol::ADD,
         );
 
-        self::assertSame(Lattice::CONST, $variable->lattice);
-        self::assertSame(7, $variable->computedValue);
+        self::assertSame(Lattice::VARYING, $variable->lattice);
+        self::assertFalse($variable->hasComputedValue());
+        self::assertNull($variable->value);
     }
 
     public function testMutateWithDereferenceReturningIdentifierBecomesVarying(): void

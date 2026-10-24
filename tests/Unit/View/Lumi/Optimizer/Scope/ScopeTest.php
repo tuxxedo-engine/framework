@@ -13,15 +13,19 @@ declare(strict_types=1);
 
 namespace Unit\View\Lumi\Optimizer\Scope;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\View\Lumi\Optimizer\Evaluator\Evaluator;
 use Tuxxedo\View\Lumi\Optimizer\Scope\Lattice;
 use Tuxxedo\View\Lumi\Optimizer\Scope\Scope;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
+use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
+use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 
 class ScopeTest extends TestCase
 {
@@ -150,6 +154,203 @@ class ScopeTest extends TestCase
         );
 
         self::assertSame(8, $scope->variables['foo']->computedValue);
+    }
+
+    /**
+     * @return \Generator<string, array{0: LiteralNode, 1: list<array{0: AssignmentSymbol, 1: ExpressionNodeInterface}>, 2: int|string}>
+     */
+    public static function compoundChainDataProvider(): \Generator
+    {
+        yield 'arithmetic' => [
+            LiteralNode::createInt(0),
+            [
+                [
+                    AssignmentSymbol::ADD,
+                    LiteralNode::createInt(5),
+                ],
+                [
+                    AssignmentSymbol::SUBTRACT,
+                    LiteralNode::createInt(1),
+                ],
+                [
+                    AssignmentSymbol::MULTIPLY,
+                    LiteralNode::createInt(3),
+                ],
+                [
+                    AssignmentSymbol::DIVIDE,
+                    LiteralNode::createInt(2),
+                ],
+                [
+                    AssignmentSymbol::MODULUS,
+                    LiteralNode::createInt(4),
+                ],
+                [
+                    AssignmentSymbol::EXPONENTIATE,
+                    LiteralNode::createInt(3),
+                ],
+            ],
+            8,
+        ];
+
+        yield 'bitwise' => [
+            LiteralNode::createInt(12),
+            [
+                [
+                    AssignmentSymbol::BITWISE_AND,
+                    LiteralNode::createInt(10),
+                ],
+                [
+                    AssignmentSymbol::BITWISE_OR,
+                    LiteralNode::createInt(1),
+                ],
+                [
+                    AssignmentSymbol::BITWISE_XOR,
+                    LiteralNode::createInt(3),
+                ],
+                [
+                    AssignmentSymbol::BITWISE_SHIFT_LEFT,
+                    LiteralNode::createInt(2),
+                ],
+                [
+                    AssignmentSymbol::BITWISE_SHIFT_RIGHT,
+                    LiteralNode::createInt(1),
+                ],
+            ],
+            20,
+        ];
+
+        yield 'concat with expression operand' => [
+            LiteralNode::createString('a'),
+            [
+                [
+                    AssignmentSymbol::CONCAT,
+                    new BinaryOpNode(
+                        left: LiteralNode::createString('b'),
+                        right: LiteralNode::createString('c'),
+                        operator: BinarySymbol::CONCAT,
+                    ),
+                ],
+                [
+                    AssignmentSymbol::CONCAT,
+                    LiteralNode::createString('d'),
+                ],
+            ],
+            'abcd',
+        ];
+
+        yield 'self reference' => [
+            LiteralNode::createInt(3),
+            [
+                [
+                    AssignmentSymbol::ADD,
+                    new IdentifierNode(
+                        name: 'foo',
+                    ),
+                ],
+                [
+                    AssignmentSymbol::MULTIPLY,
+                    new IdentifierNode(
+                        name: 'foo',
+                    ),
+                ],
+            ],
+            36,
+        ];
+    }
+
+    /**
+     * @param list<array{0: AssignmentSymbol, 1: ExpressionNodeInterface}> $steps
+     */
+    #[DataProvider('compoundChainDataProvider')]
+    public function testCompoundAssignmentChainComputesRuntimeValue(
+        LiteralNode $initial,
+        array $steps,
+        int|string $expected,
+    ): void {
+        $scope = new Scope();
+
+        $scope->assign(
+            node: $this->makeAssignment(
+                name: 'foo',
+                value: $initial,
+            ),
+        );
+
+        foreach ($steps as [$operator, $value]) {
+            $scope->assign(
+                node: new AssignmentNode(
+                    name: new IdentifierNode(
+                        name: 'foo',
+                    ),
+                    value: $value,
+                    operator: $operator,
+                ),
+            );
+        }
+
+        self::assertSame(Lattice::CONST, $scope->variables['foo']->lattice);
+        self::assertSame($expected, $scope->variables['foo']->computedValue);
+        self::assertInstanceOf(LiteralNode::class, $scope->variables['foo']->value);
+    }
+
+    public function testCompoundAssignmentOnUnknownVariableIsVarying(): void
+    {
+        $scope = new Scope();
+
+        $scope->assign(
+            node: $this->makeAssignment(
+                name: 'foo',
+                value: LiteralNode::createInt(1),
+                operator: AssignmentSymbol::SUBTRACT,
+            ),
+        );
+
+        self::assertSame(Lattice::VARYING, $scope->variables['foo']->lattice);
+        self::assertFalse($scope->variables['foo']->hasComputedValue());
+    }
+
+    public function testCompoundAssignmentOnVaryingVariableStaysVarying(): void
+    {
+        $scope = new Scope();
+
+        $scope->create('foo');
+
+        $scope->assign(
+            node: $this->makeAssignment(
+                name: 'foo',
+                value: LiteralNode::createInt(1),
+                operator: AssignmentSymbol::ADD,
+            ),
+        );
+
+        self::assertSame(Lattice::VARYING, $scope->variables['foo']->lattice);
+        self::assertFalse($scope->variables['foo']->hasComputedValue());
+        self::assertNull($scope->variables['foo']->value);
+    }
+
+    public function testCompoundAssignmentWithUnknownOperandIsVarying(): void
+    {
+        $scope = new Scope();
+
+        $scope->assign(
+            node: $this->makeAssignment(
+                name: 'foo',
+                value: LiteralNode::createInt(1),
+            ),
+        );
+
+        $scope->assign(
+            node: $this->makeAssignment(
+                name: 'foo',
+                value: new IdentifierNode(
+                    name: 'unknown',
+                ),
+                operator: AssignmentSymbol::ADD,
+            ),
+        );
+
+        self::assertSame(Lattice::VARYING, $scope->variables['foo']->lattice);
+        self::assertFalse($scope->variables['foo']->hasComputedValue());
     }
 
     public function testAssignWithNonIdentifierLhsIsNoOp(): void

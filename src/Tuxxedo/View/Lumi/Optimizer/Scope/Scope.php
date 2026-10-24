@@ -38,10 +38,13 @@ class Scope implements ScopeInterface
             return;
         }
 
-        if (
-            $node->operator !== AssignmentSymbol::ASSIGN &&
-            \array_key_exists($node->name->name, $this->variables)
-        ) {
+        if ($node->operator !== AssignmentSymbol::ASSIGN) {
+            if (!\array_key_exists($node->name->name, $this->variables)) {
+                $this->create($node->name);
+
+                return;
+            }
+
             $this->variables[$node->name->name]->mutate(
                 scope: $this,
                 value: $node->value,
