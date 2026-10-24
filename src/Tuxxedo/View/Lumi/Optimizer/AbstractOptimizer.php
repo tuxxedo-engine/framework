@@ -18,6 +18,7 @@ use Tuxxedo\View\Lumi\Library\Directive\MutableDirectives;
 use Tuxxedo\View\Lumi\Library\Directive\MutableDirectivesInterface;
 use Tuxxedo\View\Lumi\Optimizer\Evaluator\Evaluator;
 use Tuxxedo\View\Lumi\Optimizer\Evaluator\EvaluatorInterface;
+use Tuxxedo\View\Lumi\Optimizer\Evaluator\EvaluatorResult;
 use Tuxxedo\View\Lumi\Optimizer\Scope\Scope;
 use Tuxxedo\View\Lumi\Optimizer\Scope\ScopeInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
@@ -28,6 +29,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
 use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\ForNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LayoutNode;
@@ -365,6 +367,53 @@ abstract class AbstractOptimizer implements OptimizerInterface
         return [
             $node,
         ];
+    }
+
+    /**
+     * @param array<ExpressionNodeInterface|null> $conditions
+     * @param array<NodeInterface[]> $bodies
+     * @return array<NodeInterface[]>
+     */
+    protected function optimizeConditionalBodies(
+        array $conditions,
+        array $bodies,
+    ): array {
+        $entry = $this->scope;
+        $reachable = [];
+        $taken = false;
+
+        foreach ($conditions as $index => $condition) {
+            $evaluation = $condition !== null
+                ? $this->evaluator->checkExpression($entry, $condition)
+                : EvaluatorResult::IS_TRUE;
+
+            $reachable[$index] = !$taken && $evaluation !== EvaluatorResult::IS_FALSE;
+            $taken = $taken || $evaluation === EvaluatorResult::IS_TRUE;
+        }
+
+        $optimized = [];
+        $paths = [];
+
+        try {
+            foreach ($bodies as $index => $body) {
+                $this->scope = clone $entry;
+
+                $optimized[$index] = $this->optimizeNodes(
+                    nodes: $body,
+                    context: OptimizerContext::CONDITION,
+                );
+
+                if ($reachable[$index] ?? true) {
+                    $paths[] = $this->scope;
+                }
+            }
+        } finally {
+            $this->scope = $entry;
+        }
+
+        $entry->join(...$paths);
+
+        return $optimized;
     }
 
     /**

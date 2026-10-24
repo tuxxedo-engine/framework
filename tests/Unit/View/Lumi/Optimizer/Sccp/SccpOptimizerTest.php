@@ -910,8 +910,12 @@ class SccpOptimizerTest extends TestCase
         );
 
         $read = new EchoNode(
-            operand: new IdentifierNode(
-                name: 'c',
+            operand: new BinaryOpNode(
+                left: new IdentifierNode(
+                    name: 'c',
+                ),
+                right: LiteralNode::createInt(1),
+                operator: BinarySymbol::ADD,
             ),
         );
 
@@ -952,8 +956,12 @@ class SccpOptimizerTest extends TestCase
         );
 
         $read = new EchoNode(
-            operand: new IdentifierNode(
-                name: 'c',
+            operand: new BinaryOpNode(
+                left: new IdentifierNode(
+                    name: 'c',
+                ),
+                right: LiteralNode::createInt(1),
+                operator: BinarySymbol::ADD,
             ),
         );
 
@@ -981,8 +989,12 @@ class SccpOptimizerTest extends TestCase
         UnarySymbol $operator,
     ): void {
         $read = new EchoNode(
-            operand: new IdentifierNode(
-                name: 'c',
+            operand: new BinaryOpNode(
+                left: new IdentifierNode(
+                    name: 'c',
+                ),
+                right: LiteralNode::createInt(1),
+                operator: BinarySymbol::ADD,
             ),
         );
 
@@ -1567,5 +1579,192 @@ class SccpOptimizerTest extends TestCase
         self::assertSame($range, $result->stream->nodes[0]->value);
         self::assertInstanceOf(EchoNode::class, $result->stream->nodes[1]);
         self::assertInstanceOf(IdentifierNode::class, $result->stream->nodes[1]->operand);
+    }
+
+    public function testAssignmentInUnresolvedBranchMakesVariableVarying(): void
+    {
+        $read = new EchoNode(
+            operand: new BinaryOpNode(
+                left: new IdentifierNode(
+                    name: 'c',
+                ),
+                right: LiteralNode::createInt(1),
+                operator: BinarySymbol::ADD,
+            ),
+        );
+
+        $result = $this->optimize(
+            nodes: [
+                new AssignmentNode(
+                    name: new IdentifierNode(
+                        name: 'c',
+                    ),
+                    value: LiteralNode::createInt(0),
+                    operator: AssignmentSymbol::ASSIGN,
+                ),
+                new ConditionalNode(
+                    operand: new IdentifierNode(
+                        name: 'flag',
+                    ),
+                    body: [
+                        new AssignmentNode(
+                            name: new IdentifierNode(
+                                name: 'c',
+                            ),
+                            value: LiteralNode::createInt(5),
+                            operator: AssignmentSymbol::ASSIGN,
+                        ),
+                    ],
+                ),
+                $read,
+            ],
+        );
+
+        self::assertCount(3, $result->stream->nodes);
+        self::assertSame($read, $result->stream->nodes[2]);
+    }
+
+    public function testAssignmentAgreeingOnEveryBranchStaysConstant(): void
+    {
+        $result = $this->optimize(
+            nodes: [
+                new ConditionalNode(
+                    operand: new IdentifierNode(
+                        name: 'flag',
+                    ),
+                    body: [
+                        new AssignmentNode(
+                            name: new IdentifierNode(
+                                name: 'c',
+                            ),
+                            value: LiteralNode::createInt(5),
+                            operator: AssignmentSymbol::ASSIGN,
+                        ),
+                    ],
+                    else: [
+                        new AssignmentNode(
+                            name: new IdentifierNode(
+                                name: 'c',
+                            ),
+                            value: LiteralNode::createInt(5),
+                            operator: AssignmentSymbol::ASSIGN,
+                        ),
+                    ],
+                ),
+                new EchoNode(
+                    operand: new BinaryOpNode(
+                        left: new IdentifierNode(
+                            name: 'c',
+                        ),
+                        right: LiteralNode::createInt(1),
+                        operator: BinarySymbol::ADD,
+                    ),
+                ),
+            ],
+        );
+
+        self::assertCount(2, $result->stream->nodes);
+        self::assertInstanceOf(TextNode::class, $result->stream->nodes[1]);
+        self::assertSame('6', $result->stream->nodes[1]->text);
+    }
+
+    public function testAssignmentInTakenBranchStaysConstant(): void
+    {
+        $result = $this->optimize(
+            nodes: [
+                new AssignmentNode(
+                    name: new IdentifierNode(
+                        name: 'c',
+                    ),
+                    value: LiteralNode::createInt(0),
+                    operator: AssignmentSymbol::ASSIGN,
+                ),
+                new ConditionalNode(
+                    operand: LiteralNode::createBool(true),
+                    body: [
+                        new AssignmentNode(
+                            name: new IdentifierNode(
+                                name: 'c',
+                            ),
+                            value: LiteralNode::createInt(5),
+                            operator: AssignmentSymbol::ASSIGN,
+                        ),
+                    ],
+                    else: [
+                        new AssignmentNode(
+                            name: new IdentifierNode(
+                                name: 'c',
+                            ),
+                            value: LiteralNode::createInt(9),
+                            operator: AssignmentSymbol::ASSIGN,
+                        ),
+                    ],
+                ),
+                new EchoNode(
+                    operand: new BinaryOpNode(
+                        left: new IdentifierNode(
+                            name: 'c',
+                        ),
+                        right: LiteralNode::createInt(1),
+                        operator: BinarySymbol::ADD,
+                    ),
+                ),
+            ],
+        );
+
+        self::assertCount(3, $result->stream->nodes);
+        self::assertInstanceOf(TextNode::class, $result->stream->nodes[2]);
+        self::assertSame('6', $result->stream->nodes[2]->text);
+    }
+
+    public function testBranchConditionIsFoldedAgainstScopeBeforeTheConditional(): void
+    {
+        $result = $this->optimize(
+            nodes: [
+                new AssignmentNode(
+                    name: new IdentifierNode(
+                        name: 'c',
+                    ),
+                    value: LiteralNode::createInt(0),
+                    operator: AssignmentSymbol::ASSIGN,
+                ),
+                new ConditionalNode(
+                    operand: new IdentifierNode(
+                        name: 'flag',
+                    ),
+                    body: [
+                        new AssignmentNode(
+                            name: new IdentifierNode(
+                                name: 'c',
+                            ),
+                            value: LiteralNode::createInt(1),
+                            operator: AssignmentSymbol::ASSIGN,
+                        ),
+                    ],
+                    branches: [
+                        new ConditionalBranchNode(
+                            operand: new BinaryOpNode(
+                                left: new IdentifierNode(
+                                    name: 'c',
+                                ),
+                                right: LiteralNode::createInt(0),
+                                operator: BinarySymbol::STRICT_EQUAL_IMPLICIT,
+                            ),
+                            body: [
+                                new TextNode(
+                                    text: 'zero',
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+        );
+
+        self::assertCount(2, $result->stream->nodes);
+        self::assertInstanceOf(ConditionalNode::class, $result->stream->nodes[1]);
+        self::assertInstanceOf(LiteralNode::class, $result->stream->nodes[1]->branches[0]->operand);
+        self::assertSame(Type::BOOL, $result->stream->nodes[1]->branches[0]->operand->type);
+        self::assertSame('true', $result->stream->nodes[1]->branches[0]->operand->operand);
     }
 }

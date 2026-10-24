@@ -683,4 +683,144 @@ class ScopeTest extends TestCase
         self::assertArrayHasKey('foo', $left->variables);
         self::assertSame(Lattice::CONST, $left->variables['foo']->lattice);
     }
+
+    public function testCloneCopiesVariablesIndependently(): void
+    {
+        $scope = new Scope();
+        $scope->assign(
+            node: $this->makeAssignment(
+                name: 'foo',
+                value: LiteralNode::createInt(1),
+            ),
+        );
+
+        $copy = clone $scope;
+        $copy->assign(
+            node: $this->makeAssignment(
+                name: 'foo',
+                value: LiteralNode::createInt(1),
+                operator: AssignmentSymbol::ADD,
+            ),
+        );
+
+        self::assertNotSame($scope->variables['foo'], $copy->variables['foo']);
+        self::assertSame($copy, $copy->variables['foo']->scope);
+        self::assertSame(1, $scope->variables['foo']->computedValue);
+        self::assertSame(2, $copy->variables['foo']->computedValue);
+    }
+
+    public function testCloneKeepsVaryingAndUndefinedLattices(): void
+    {
+        $scope = new Scope();
+        $scope->create('varying');
+
+        $scope->get('undefined');
+
+        $copy = clone $scope;
+
+        self::assertSame(Lattice::VARYING, $copy->variables['varying']->lattice);
+        self::assertSame(Lattice::UNDEF, $copy->variables['undefined']->lattice);
+    }
+
+    public function testJoinKeepsConstantWhenAllPathsAgree(): void
+    {
+        $scope = new Scope();
+        $left = clone $scope;
+        $right = clone $scope;
+
+        $left->assign(
+            node: $this->makeAssignment(
+                name: 'foo',
+                value: LiteralNode::createInt(5),
+            ),
+        );
+
+        $right->assign(
+            node: $this->makeAssignment(
+                name: 'foo',
+                value: LiteralNode::createInt(5),
+            ),
+        );
+
+        $scope->join($left, $right);
+
+        self::assertSame(Lattice::CONST, $scope->variables['foo']->lattice);
+        self::assertSame(5, $scope->variables['foo']->computedValue);
+        self::assertSame($scope, $scope->variables['foo']->scope);
+    }
+
+    public function testJoinMarksVaryingWhenPathsDisagree(): void
+    {
+        $scope = new Scope();
+        $left = clone $scope;
+        $right = clone $scope;
+
+        $left->assign(
+            node: $this->makeAssignment(
+                name: 'foo',
+                value: LiteralNode::createInt(1),
+            ),
+        );
+
+        $right->assign(
+            node: $this->makeAssignment(
+                name: 'foo',
+                value: LiteralNode::createInt(2),
+            ),
+        );
+
+        $scope->join($left, $right);
+
+        self::assertSame(Lattice::VARYING, $scope->variables['foo']->lattice);
+    }
+
+    public function testJoinMarksVaryingWhenDefinedOnlyOnSomePaths(): void
+    {
+        $scope = new Scope();
+        $left = clone $scope;
+        $right = clone $scope;
+
+        $left->assign(
+            node: $this->makeAssignment(
+                name: 'foo',
+                value: LiteralNode::createInt(1),
+            ),
+        );
+
+        $scope->join($left, $right);
+
+        self::assertSame(Lattice::VARYING, $scope->variables['foo']->lattice);
+    }
+
+    public function testJoinMarksVaryingWhenAnyPathIsVarying(): void
+    {
+        $scope = new Scope();
+        $scope->assign(
+            node: $this->makeAssignment(
+                name: 'foo',
+                value: LiteralNode::createInt(1),
+            ),
+        );
+
+        $left = clone $scope;
+        $right = clone $scope;
+        $right->create('foo');
+
+        $scope->join($left, $right);
+
+        self::assertSame(Lattice::VARYING, $scope->variables['foo']->lattice);
+    }
+
+    public function testJoinRemovesVariableUndefinedOnAllPaths(): void
+    {
+        $scope = new Scope();
+        $left = clone $scope;
+        $right = clone $scope;
+
+        $left->get('foo');
+
+        $scope->join($left, $right);
+
+        self::assertArrayNotHasKey('foo', $scope->variables);
+    }
 }

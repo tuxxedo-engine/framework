@@ -17,6 +17,7 @@ use Tuxxedo\View\Lumi\Optimizer\Evaluator\Evaluator;
 use Tuxxedo\View\Lumi\Optimizer\Evaluator\EvaluatorInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
+use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 
 class Scope implements ScopeInterface
@@ -29,6 +30,13 @@ class Scope implements ScopeInterface
         ?EvaluatorInterface $evaluator = null,
     ) {
         $this->evaluator = $evaluator ?? new Evaluator();
+    }
+
+    public function __clone(): void
+    {
+        foreach ($this->variables as $name => $variable) {
+            $this->variables[$name] = Variable::fromCopy($this, $variable);
+        }
     }
 
     public function assign(
@@ -89,6 +97,43 @@ class Scope implements ScopeInterface
         return \array_key_exists($name, $this->variables);
     }
 
+    public function join(
+        ScopeInterface ...$paths,
+    ): void {
+        $names = [];
+
+        foreach ($paths as $path) {
+            foreach ($path->variables as $variable) {
+                $names[$variable->name] = true;
+            }
+        }
+
+        foreach (\array_keys($names) as $name) {
+            $undefined = true;
+            $constant = $paths[0]->variables[$name] ?? null;
+
+            foreach ($paths as $path) {
+                $variable = $path->variables[$name] ?? null;
+
+                if (($variable->lattice ?? Lattice::UNDEF) !== Lattice::UNDEF) {
+                    $undefined = false;
+                }
+
+                if ($constant !== null && !self::isSameConstant($constant, $variable)) {
+                    $constant = null;
+                }
+            }
+
+            if ($undefined) {
+                unset($this->variables[$name]);
+            } elseif ($constant !== null) {
+                $this->variables[$name] = Variable::fromCopy($this, $constant);
+            } else {
+                $this->variables[$name] = Variable::fromVarying($this, $name);
+            }
+        }
+    }
+
     public function merge(
         ScopeInterface $scope,
     ): self {
@@ -99,5 +144,18 @@ class Scope implements ScopeInterface
         }
 
         return $this;
+    }
+
+    private static function isSameConstant(
+        VariableInterface $constant,
+        ?VariableInterface $variable,
+    ): bool {
+        return $variable !== null &&
+            $constant->lattice === Lattice::CONST &&
+            $variable->lattice === Lattice::CONST &&
+            $constant->value instanceof LiteralNode &&
+            $variable->value instanceof LiteralNode &&
+            $constant->value->type === $variable->value->type &&
+            $constant->value->operand === $variable->value->operand;
     }
 }

@@ -46,6 +46,10 @@ interface ScopeInterface
         IdentifierNode|string $name,
     ): bool;
 
+    public function join(
+        ScopeInterface ...$paths,
+    ): void;
+
     public function merge(
         ScopeInterface $scope,
     ): self;

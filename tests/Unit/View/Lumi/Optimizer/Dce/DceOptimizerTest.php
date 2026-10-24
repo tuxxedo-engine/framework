@@ -1387,4 +1387,90 @@ class DceOptimizerTest extends TestCase
             $result->stream->nodes,
         );
     }
+
+    public function testAssignmentInUnresolvedBranchKeepsLaterConditional(): void
+    {
+        $later = new ConditionalNode(
+            operand: new IdentifierNode(
+                name: 'c',
+            ),
+            body: [
+                new TextNode(
+                    text: 'nonzero',
+                ),
+            ],
+        );
+
+        $result = $this->optimize(
+            nodes: [
+                new AssignmentNode(
+                    name: new IdentifierNode(
+                        name: 'c',
+                    ),
+                    value: LiteralNode::createInt(0),
+                    operator: AssignmentSymbol::ASSIGN,
+                ),
+                new ConditionalNode(
+                    operand: new IdentifierNode(
+                        name: 'flag',
+                    ),
+                    body: [
+                        new AssignmentNode(
+                            name: new IdentifierNode(
+                                name: 'c',
+                            ),
+                            value: LiteralNode::createInt(5),
+                            operator: AssignmentSymbol::ASSIGN,
+                        ),
+                    ],
+                ),
+                $later,
+            ],
+        );
+
+        self::assertCount(3, $result->stream->nodes);
+        self::assertSame($later, $result->stream->nodes[2]);
+    }
+
+    public function testAssignmentInInlinedBranchFlowsIntoLaterConditional(): void
+    {
+        $result = $this->optimize(
+            nodes: [
+                new AssignmentNode(
+                    name: new IdentifierNode(
+                        name: 'c',
+                    ),
+                    value: LiteralNode::createInt(0),
+                    operator: AssignmentSymbol::ASSIGN,
+                ),
+                new ConditionalNode(
+                    operand: LiteralNode::createBool(true),
+                    body: [
+                        new AssignmentNode(
+                            name: new IdentifierNode(
+                                name: 'c',
+                            ),
+                            value: LiteralNode::createInt(5),
+                            operator: AssignmentSymbol::ASSIGN,
+                        ),
+                    ],
+                ),
+                new ConditionalNode(
+                    operand: new IdentifierNode(
+                        name: 'c',
+                    ),
+                    body: [
+                        new TextNode(
+                            text: 'nonzero',
+                        ),
+                    ],
+                ),
+            ],
+        );
+
+        self::assertCount(3, $result->stream->nodes);
+        self::assertInstanceOf(AssignmentNode::class, $result->stream->nodes[1]);
+        self::assertInstanceOf(TextNode::class, $result->stream->nodes[2]);
+        self::assertSame('nonzero', $result->stream->nodes[2]->text);
+    }
 }

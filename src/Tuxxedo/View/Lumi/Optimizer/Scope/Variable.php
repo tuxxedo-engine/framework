@@ -75,6 +75,27 @@ class Variable implements VariableInterface
         );
     }
 
+    public static function fromCopy(
+        ScopeInterface $scope,
+        VariableInterface $variable,
+    ): static {
+        if ($variable->lattice === Lattice::CONST && $variable->value instanceof LiteralNode) {
+            return new static(
+                scope: $scope,
+                name: $variable->name,
+                value: $variable->value,
+            );
+        }
+
+        return new static(
+            scope: $scope,
+            name: $variable->name,
+            lattice: $variable->lattice === Lattice::UNDEF
+                ? Lattice::UNDEF
+                : Lattice::VARYING,
+        );
+    }
+
     public static function fromExisting(
         ScopeInterface $scope,
         VariableInterface $variable,

@@ -313,77 +313,65 @@ class SccpOptimizer extends AbstractOptimizer
         NodeStreamInterface $stream,
         ConditionalNode $node,
     ): array {
-        $branches = [];
-        $condition = $this->optimizeNode(
-            stream: $stream,
-            node: $node->operand,
-            context: OptimizerContext::EXPRESSION,
-        );
+        $operand = $this->optimizeCondition($stream, $node->operand);
+        $branchOperands = [];
+        $branchBodies = [];
 
         foreach ($node->branches as $branch) {
-            $optimizedBranch = $this->optimizeNode(
-                stream: $stream,
-                node: $branch->operand,
-                context: OptimizerContext::EXPRESSION,
-            );
-
-            if (
-                \sizeof($optimizedBranch) === 1 &&
-                $optimizedBranch[0] !== $branch->operand &&
-                $optimizedBranch[0] instanceof ExpressionNodeInterface
-            ) {
-                $branches[] = new ConditionalBranchNode(
-                    operand: $optimizedBranch[0],
-                    body: parent::optimizeNodes(
-                        nodes: $branch->body,
-                        context: OptimizerContext::CONDITION,
-                    ),
-                );
-            } else {
-                $branches[] = new ConditionalBranchNode(
-                    operand: $branch->operand,
-                    body: parent::optimizeNodes(
-                        nodes: $branch->body,
-                        context: OptimizerContext::CONDITION,
-                    ),
-                );
-            }
+            $branchOperands[] = $this->optimizeCondition($stream, $branch->operand);
+            $branchBodies[] = $branch->body;
         }
 
-        if (
-            \sizeof($condition) === 1 &&
-            $condition[0] !== $node->operand &&
-            $condition[0] instanceof ExpressionNodeInterface
-        ) {
-            return [
-                new ConditionalNode(
-                    operand: $condition[0],
-                    body: parent::optimizeNodes(
-                        nodes: $node->body,
-                        context: OptimizerContext::CONDITION,
-                    ),
-                    else: parent::optimizeNodes(
-                        nodes: $node->else,
-                        context: OptimizerContext::CONDITION,
-                    ),
-                    branches: $branches,
-                ),
-            ];
+        $bodies = parent::optimizeConditionalBodies(
+            conditions: [
+                $operand,
+                ...$branchOperands,
+                null,
+            ],
+            bodies: [
+                $node->body,
+                ...$branchBodies,
+                $node->else,
+            ],
+        );
+
+        $branches = [];
+
+        foreach ($branchOperands as $index => $branchOperand) {
+            $branches[] = new ConditionalBranchNode(
+                operand: $branchOperand,
+                body: $bodies[$index + 1],
+            );
         }
 
         return [
             new ConditionalNode(
-                operand: $node->operand,
-                body: parent::optimizeNodes(
-                    nodes: $node->body,
-                    context: OptimizerContext::CONDITION,
-                ),
-                else: parent::optimizeNodes(
-                    nodes: $node->else,
-                    context: OptimizerContext::CONDITION,
-                ),
+                operand: $operand,
+                body: $bodies[0],
+                else: $bodies[\sizeof($branchOperands) + 1],
                 branches: $branches,
             ),
         ];
+    }
+
+    private function optimizeCondition(
+        NodeStreamInterface $stream,
+        ExpressionNodeInterface $operand,
+    ): ExpressionNodeInterface {
+        $condition = $this->optimizeNode(
+            stream: $stream,
+            node: $operand,
+            context: OptimizerContext::EXPRESSION,
+        );
+
+        if (
+            \sizeof($condition) === 1 &&
+            $condition[0] !== $operand &&
+            $condition[0] instanceof ExpressionNodeInterface
+        ) {
+            return $condition[0];
+        }
+
+        return $operand;
     }
 }

@@ -108,6 +108,37 @@ class DceOptimizer extends AbstractOptimizer
     private function optimizeConditional(
         ConditionalNode $node,
     ): array {
+        $nodes = $this->resolveConditional($node);
+        $branchOperands = [];
+        $branchBodies = [];
+
+        foreach ($node->branches as $branch) {
+            $branchOperands[] = $branch->operand;
+            $branchBodies[] = $branch->body;
+        }
+
+        parent::optimizeConditionalBodies(
+            conditions: [
+                $node->operand,
+                ...$branchOperands,
+                null,
+            ],
+            bodies: [
+                $node->body,
+                ...$branchBodies,
+                $node->else,
+            ],
+        );
+
+        return $nodes;
+    }
+
+    /**
+     * @return NodeInterface[]
+     */
+    private function resolveConditional(
+        ConditionalNode $node,
+    ): array {
         if (\sizeof($node->branches) > 0) {
             $ifEvaluation = $this->evaluator->checkExpression($this->scope, $node->operand);
 
