@@ -37,6 +37,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\TernaryNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
+use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
@@ -761,6 +762,45 @@ class SccpOptimizerTest extends TestCase
 
         self::assertCount(2, $result->stream->nodes);
         self::assertSame($text, $result->stream->nodes[1]);
+    }
+
+    public function testLoopCarriedVariableIsNotFoldedInsideLoopBody(): void
+    {
+        $echo = new EchoNode(
+            operand: new IdentifierNode(
+                name: 'x',
+            ),
+        );
+
+        $result = $this->optimize(
+            nodes: [
+                new AssignmentNode(
+                    name: new IdentifierNode(
+                        name: 'x',
+                    ),
+                    value: LiteralNode::createInt(5),
+                    operator: AssignmentSymbol::ASSIGN,
+                ),
+                new WhileNode(
+                    operand: new IdentifierNode(
+                        name: 'x',
+                    ),
+                    body: [
+                        $echo,
+                        new UnaryOpNode(
+                            operand: new IdentifierNode(
+                                name: 'x',
+                            ),
+                            operator: UnarySymbol::DECREMENT_POST,
+                        ),
+                    ],
+                ),
+            ],
+        );
+
+        self::assertCount(2, $result->stream->nodes);
+        self::assertInstanceOf(WhileNode::class, $result->stream->nodes[1]);
+        self::assertSame($echo, $result->stream->nodes[1]->body[0]);
     }
 
     public function testEchoOfNonFoldableExpressionIsKeptAsIs(): void

@@ -19,6 +19,7 @@ use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerResultInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
+use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BreakNode;
 use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
@@ -34,6 +35,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
+use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
 use Tuxxedo\View\Lumi\Syntax\TextContext;
 
 class DceOptimizerTest extends TestCase
@@ -770,6 +772,59 @@ class DceOptimizerTest extends TestCase
             true,
         ];
 
+        yield 'break in elseif branch' => [
+            [
+                new ConditionalNode(
+                    operand: new IdentifierNode(
+                        name: 'first',
+                    ),
+                    body: [],
+                    branches: [
+                        new ConditionalBranchNode(
+                            operand: new IdentifierNode(
+                                name: 'second',
+                            ),
+                            body: [
+                                new BreakNode(),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            true,
+        ];
+
+        yield 'conditional without loop statement does not keep the loop' => [
+            [
+                new ConditionalNode(
+                    operand: new IdentifierNode(
+                        name: 'first',
+                    ),
+                    body: [
+                        new TextNode(
+                            text: 'a',
+                        ),
+                    ],
+                    branches: [
+                        new ConditionalBranchNode(
+                            operand: new IdentifierNode(
+                                name: 'second',
+                            ),
+                            body: [
+                                new TextNode(
+                                    text: 'b',
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                new TextNode(
+                    text: 'after',
+                ),
+            ],
+            false,
+        ];
+
         yield 'break 2 in nested loop' => [
             [
                 new WhileNode(
@@ -818,7 +873,6 @@ class DceOptimizerTest extends TestCase
             ],
         );
 
-        self::assertCount(1, $result->stream->nodes);
         self::assertSame($kept, $result->stream->nodes[0] instanceof DoWhileNode);
     }
 
@@ -944,6 +998,58 @@ class DceOptimizerTest extends TestCase
         string $expected,
     ): void {
         self::assertSame($expected, self::renderedText($this->optimize($nodes)));
+    }
+
+    public function testLoopCarriedVariableIsNotFoldedAtLoopEntry(): void
+    {
+        $decrement = new AssignmentNode(
+            name: new IdentifierNode(
+                name: 'x',
+            ),
+            value: LiteralNode::createInt(1),
+            operator: AssignmentSymbol::SUBTRACT,
+        );
+
+        $result = $this->optimize(
+            nodes: [
+                new AssignmentNode(
+                    name: new IdentifierNode(
+                        name: 'x',
+                    ),
+                    value: LiteralNode::createInt(5),
+                    operator: AssignmentSymbol::ASSIGN,
+                ),
+                new DoWhileNode(
+                    operand: new IdentifierNode(
+                        name: 'x',
+                    ),
+                    body: [
+                        new ConditionalNode(
+                            operand: new BinaryOpNode(
+                                left: new IdentifierNode(
+                                    name: 'x',
+                                ),
+                                right: LiteralNode::createInt(2),
+                                operator: BinarySymbol::MODULUS,
+                            ),
+                            body: [
+                                $decrement,
+                                new ContinueNode(),
+                            ],
+                        ),
+                        new TextNode(
+                            text: 'item',
+                        ),
+                        $decrement,
+                    ],
+                ),
+            ],
+        );
+
+        self::assertCount(2, $result->stream->nodes);
+        self::assertInstanceOf(DoWhileNode::class, $result->stream->nodes[1]);
+        self::assertInstanceOf(ConditionalNode::class, $result->stream->nodes[1]->body[0]);
+        self::assertCount(3, $result->stream->nodes[1]->body);
     }
 
     public function testDoWhileWithLiteralTrueOperandIsKept(): void

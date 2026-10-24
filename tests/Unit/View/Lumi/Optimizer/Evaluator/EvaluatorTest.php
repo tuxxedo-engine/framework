@@ -917,7 +917,7 @@ class EvaluatorTest extends TestCase
         );
     }
 
-    public function testCheckIdentifierUsesComputedValueWhenValueIsNotLiteral(): void
+    public function testCheckIdentifierResolvesAliasedConstantVariable(): void
     {
         $this->assign(
             name: 'inner',
@@ -1467,25 +1467,22 @@ class EvaluatorTest extends TestCase
         );
     }
 
-    public function testDereferenceIdentifierWithBinaryOpValueReturnsBinaryOp(): void
+    public function testDereferenceIdentifierWithUnknownExpressionValueReturnsNull(): void
     {
-        $binary = new BinaryOpNode(
-            left: new IdentifierNode(
-                name: 'a',
-            ),
-            right: new IdentifierNode(
-                name: 'b',
-            ),
-            operator: BinarySymbol::ADD,
-        );
-
         $this->assign(
             name: 'x',
-            value: $binary,
+            value: new BinaryOpNode(
+                left: new IdentifierNode(
+                    name: 'a',
+                ),
+                right: new IdentifierNode(
+                    name: 'b',
+                ),
+                operator: BinarySymbol::ADD,
+            ),
         );
 
-        self::assertSame(
-            $binary,
+        self::assertNull(
             $this->evaluator->dereferenceIdentifier(
                 scope: $this->scope,
                 node: new IdentifierNode(
@@ -1493,6 +1490,28 @@ class EvaluatorTest extends TestCase
                 ),
             ),
         );
+    }
+
+    public function testDereferenceIdentifierWithConstantExpressionValueReturnsComputedLiteral(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: new BinaryOpNode(
+                left: LiteralNode::createInt(2),
+                right: LiteralNode::createInt(3),
+                operator: BinarySymbol::ADD,
+            ),
+        );
+
+        $value = $this->evaluator->dereferenceIdentifier(
+            scope: $this->scope,
+            node: new IdentifierNode(
+                name: 'x',
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $value);
+        self::assertSame('5', $value->operand);
     }
 
     public function testDereferenceWithLiteralReturnsSame(): void

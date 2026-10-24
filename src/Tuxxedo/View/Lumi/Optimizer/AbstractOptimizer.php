@@ -22,16 +22,22 @@ use Tuxxedo\View\Lumi\Optimizer\Scope\Scope;
 use Tuxxedo\View\Lumi\Optimizer\Scope\ScopeInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
+use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
 use Tuxxedo\View\Lumi\Syntax\Node\CommentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DirectiveNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ForNode;
+use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LayoutNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LumiNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
+use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\WhileNode;
+use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 use Tuxxedo\View\Lumi\Syntax\TextContext;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
@@ -144,6 +150,58 @@ abstract class AbstractOptimizer implements OptimizerInterface
             !$node instanceof CommentNode &&
             !$node instanceof LayoutNode &&
             !$node instanceof LumiNode;
+    }
+
+    /**
+     * @param NodeInterface[] $nodes
+     */
+    private function markAssignedAsVarying(
+        array $nodes,
+    ): void {
+        foreach ($nodes as $node) {
+            if (
+                $node instanceof AssignmentNode ||
+                (
+                    $node instanceof UnaryOpNode &&
+                    \in_array(
+                        $node->operator,
+                        [
+                            UnarySymbol::INCREMENT_PRE,
+                            UnarySymbol::INCREMENT_POST,
+                            UnarySymbol::DECREMENT_PRE,
+                            UnarySymbol::DECREMENT_POST,
+                        ],
+                        true,
+                    )
+                )
+            ) {
+                $target = $node instanceof AssignmentNode
+                    ? $node->name
+                    : $node->operand;
+
+                while ($target instanceof PropertyAccessNode || $target instanceof ArrayAccessNode) {
+                    $target = $target instanceof PropertyAccessNode
+                        ? $target->accessor
+                        : $target->array;
+                }
+
+                if ($target instanceof IdentifierNode) {
+                    $this->scope->create($target);
+                }
+            }
+
+            $children = [];
+
+            foreach (\get_object_vars($node) as $property) {
+                foreach (\is_array($property) ? $property : [$property] as $child) {
+                    if ($child instanceof NodeInterface) {
+                        $children[] = $child;
+                    }
+                }
+            }
+
+            $this->markAssignedAsVarying($children);
+        }
     }
 
     /**
@@ -320,6 +378,7 @@ abstract class AbstractOptimizer implements OptimizerInterface
     protected function optimizeForBody(
         ForNode $node,
     ): ForNode {
+        $this->markAssignedAsVarying($node->body);
         $this->scope->create($node->value);
 
         if ($node->key !== null) {
@@ -349,6 +408,7 @@ abstract class AbstractOptimizer implements OptimizerInterface
     protected function optimizeDoWhileBody(
         DoWhileNode $node,
     ): DoWhileNode {
+        $this->markAssignedAsVarying($node->body);
         $this->pushScope(inherit: true);
 
         $nodes = $this->optimizeNodes(
@@ -370,6 +430,7 @@ abstract class AbstractOptimizer implements OptimizerInterface
     protected function optimizeWhileBody(
         WhileNode $node,
     ): WhileNode {
+        $this->markAssignedAsVarying($node->body);
         $this->pushScope(inherit: true);
 
         $nodes = $this->optimizeNodes(
