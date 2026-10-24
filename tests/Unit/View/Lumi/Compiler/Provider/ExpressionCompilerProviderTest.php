@@ -1208,7 +1208,7 @@ class ExpressionCompilerProviderTest extends TestCase
             ),
         );
 
-        self::assertSame('$__lumiVariables[\'a\'] + $__lumiVariables[\'b\'] * $__lumiVariables[\'c\']', $output);
+        self::assertSame('($__lumiVariables[\'a\'] + $__lumiVariables[\'b\']) * $__lumiVariables[\'c\']', $output);
     }
 
     public function testCompileBinaryOpNullSafeAccessClearsFlagAfterCompilation(): void
@@ -1492,6 +1492,130 @@ class ExpressionCompilerProviderTest extends TestCase
         self::assertSame('!true', $output);
     }
 
+    /**
+     * @return \Generator<string, array{0: ExpressionNodeInterface, 1: string}>
+     */
+    public static function precedencePreservingDataProvider(): \Generator
+    {
+        yield 'xor inside or keeps Lumi grouping' => [
+            new BinaryOpNode(
+                left: new IdentifierNode(
+                    name: 'a',
+                ),
+                right: new BinaryOpNode(
+                    left: new IdentifierNode(
+                        name: 'b',
+                    ),
+                    right: new IdentifierNode(
+                        name: 'c',
+                    ),
+                    operator: BinarySymbol::XOR,
+                ),
+                operator: BinarySymbol::OR,
+            ),
+            '$__lumiVariables[\'a\'] || ($__lumiVariables[\'b\'] xor $__lumiVariables[\'c\'])',
+        ];
+
+        yield 'null coalesce as right operand of concat' => [
+            new BinaryOpNode(
+                left: LiteralNode::createString('x'),
+                right: new BinaryOpNode(
+                    left: new IdentifierNode(
+                        name: 'a',
+                    ),
+                    right: new IdentifierNode(
+                        name: 'b',
+                    ),
+                    operator: BinarySymbol::NULL_COALESCE,
+                ),
+                operator: BinarySymbol::CONCAT,
+            ),
+            '\'x\' . ($__lumiVariables[\'a\'] ?? $__lumiVariables[\'b\'])',
+        ];
+
+        yield 'negated negation' => [
+            new UnaryOpNode(
+                operand: new UnaryOpNode(
+                    operand: new IdentifierNode(
+                        name: 'n',
+                    ),
+                    operator: UnarySymbol::NEGATE,
+                ),
+                operator: UnarySymbol::NEGATE,
+            ),
+            '-(-$__lumiVariables[\'n\'])',
+        ];
+
+        yield 'negation of negative literal' => [
+            new UnaryOpNode(
+                operand: LiteralNode::createInt(-2),
+                operator: UnarySymbol::NEGATE,
+            ),
+            '-(-2)',
+        ];
+
+        yield 'negation of binary operand' => [
+            new UnaryOpNode(
+                operand: new BinaryOpNode(
+                    left: LiteralNode::createInt(2),
+                    right: LiteralNode::createInt(2),
+                    operator: BinarySymbol::EXPONENTIATE,
+                ),
+                operator: UnarySymbol::NEGATE,
+            ),
+            '-(2 ** 2)',
+        ];
+
+        yield 'negative literal as binary operand' => [
+            new BinaryOpNode(
+                left: LiteralNode::createInt(5),
+                right: LiteralNode::createInt(-2),
+                operator: BinarySymbol::SUBTRACT,
+            ),
+            '5 - (-2)',
+        ];
+
+        yield 'concat operand inside binary' => [
+            new BinaryOpNode(
+                left: new ConcatNode(
+                    operands: [
+                        LiteralNode::createString('a'),
+                        new IdentifierNode(
+                            name: 'b',
+                        ),
+                    ],
+                ),
+                right: LiteralNode::createString('c'),
+                operator: BinarySymbol::NULL_COALESCE,
+            ),
+            '(\'a\' . $__lumiVariables[\'b\']) ?? \'c\'',
+        ];
+
+        yield 'binary operand inside concat' => [
+            new ConcatNode(
+                operands: [
+                    LiteralNode::createString('x'),
+                    new BinaryOpNode(
+                        left: new IdentifierNode(
+                            name: 'a',
+                        ),
+                        right: LiteralNode::createInt(1),
+                        operator: BinarySymbol::ADD,
+                    ),
+                ],
+            ),
+            '\'x\' . ($__lumiVariables[\'a\'] + 1)',
+        ];
+    }
+
+    #[DataProvider('precedencePreservingDataProvider')]
+    public function testCompileParenthesizesNestedOperandsToKeepLumiPrecedence(
+        ExpressionNodeInterface $node,
+        string $expected,
+    ): void {
+        self::assertSame($expected, $this->compiler->compileExpression($node));
+    }
+
     public function testCompileUnaryOpAppliesOperatorToGroupedOperand(): void
     {
         $output = $this->compiler->compileExpression(
@@ -1528,7 +1652,7 @@ class ExpressionCompilerProviderTest extends TestCase
             ),
         );
 
-        self::assertSame('!!$__lumiVariables[\'flag\']', $output);
+        self::assertSame('!(!$__lumiVariables[\'flag\'])', $output);
     }
 
     public function testCompileUnaryOpComposesPreAndPost(): void
@@ -1545,7 +1669,7 @@ class ExpressionCompilerProviderTest extends TestCase
             ),
         );
 
-        self::assertSame('-$__lumiVariables[\'count\']++', $output);
+        self::assertSame('-($__lumiVariables[\'count\']++)', $output);
     }
 
     private function compileNode(

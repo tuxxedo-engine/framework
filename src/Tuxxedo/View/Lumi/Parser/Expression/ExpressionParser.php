@@ -401,6 +401,28 @@ class ExpressionParser implements ExpressionParserInterface
                     rightBindingPower: $next,
                 );
 
+                if (
+                    $operator === BinarySymbol::EXPONENTIATE &&
+                    $left instanceof LiteralNode &&
+                    (
+                        $left->type === Type::INT ||
+                        $left->type === Type::FLOAT
+                    ) &&
+                    \str_starts_with($left->operand, '-')
+                ) {
+                    return new UnaryOpNode(
+                        operand: new BinaryOpNode(
+                            left: new LiteralNode(
+                                operand: \substr($left->operand, 1),
+                                type: $left->type,
+                            ),
+                            right: $right,
+                            operator: $operator,
+                        ),
+                        operator: UnarySymbol::NEGATE,
+                    );
+                }
+
                 if ($operator === BinarySymbol::BITWISE_OR) {
                     if ($right instanceof LiteralNode) {
                         return new BinaryOpNode(

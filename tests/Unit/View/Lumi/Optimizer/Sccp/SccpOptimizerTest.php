@@ -610,6 +610,28 @@ class SccpOptimizerTest extends TestCase
         self::assertInstanceOf(TextNode::class, $result->stream->nodes[1]);
     }
 
+    public function testEchoOfNegatedExponentiationFoldsLikePhp(): void
+    {
+        $result = $this->optimize(
+            nodes: [
+                new EchoNode(
+                    operand: new UnaryOpNode(
+                        operand: new BinaryOpNode(
+                            left: LiteralNode::createInt(2),
+                            right: LiteralNode::createInt(2),
+                            operator: BinarySymbol::EXPONENTIATE,
+                        ),
+                        operator: UnarySymbol::NEGATE,
+                    ),
+                ),
+            ],
+        );
+
+        self::assertCount(1, $result->stream->nodes);
+        self::assertInstanceOf(TextNode::class, $result->stream->nodes[0]);
+        self::assertSame('-4', $result->stream->nodes[0]->text);
+    }
+
     public function testEchoOfNonFoldableExpressionIsKeptAsIs(): void
     {
         $echo = new EchoNode(

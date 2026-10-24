@@ -148,11 +148,26 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
             $compiler->state->flag(CompilerStateFlag::NULL_SAFE_ACCESS);
         }
 
+        $left = $compiler->compileNode($node->left, $stream);
+        $right = $compiler->compileNode($node->right, $stream);
+
+        if ($node->operator !== BinarySymbol::NULL_SAFE_ACCESS) {
+            $left = self::parenthesizeOperand(
+                operand: $node->left,
+                compiled: $left,
+            );
+
+            $right = self::parenthesizeOperand(
+                operand: $node->right,
+                compiled: $right,
+            );
+        }
+
         $output = \sprintf(
             '%s %s %s',
-            $compiler->compileNode($node->left, $stream),
+            $left,
             $node->operator->compile(),
-            $compiler->compileNode($node->right, $stream),
+            $right,
         );
 
         if ($ownsNullSafeFlag) {
@@ -236,7 +251,9 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         return \join(
             ' . ',
             \array_map(
-                $compiler->compileExpression(...),
+                static fn (ExpressionNodeInterface $operand): string => $operand instanceof BinaryOpNode
+                    ? '(' . $compiler->compileExpression($operand) . ')'
+                    : $compiler->compileExpression($operand),
                 $node->operands,
             ),
         );
@@ -336,8 +353,30 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         return \sprintf(
             '%s%s',
             $node->operator->symbol(),
-            $compiler->compileExpression($node->operand),
+            self::parenthesizeOperand(
+                operand: $node->operand,
+                compiled: $compiler->compileExpression($node->operand),
+            ),
         );
+    }
+
+    private static function parenthesizeOperand(
+        ExpressionNodeInterface $operand,
+        string $compiled,
+    ): string {
+        if (
+            $operand instanceof BinaryOpNode ||
+            $operand instanceof UnaryOpNode ||
+            $operand instanceof ConcatNode ||
+            (
+                $operand instanceof LiteralNode &&
+                \str_starts_with($operand->operand, '-')
+            )
+        ) {
+            return '(' . $compiled . ')';
+        }
+
+        return $compiled;
     }
 
     /**

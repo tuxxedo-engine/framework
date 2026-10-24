@@ -17,7 +17,11 @@ use PHPUnit\Framework\TestCase;
 use Support\View\Lumi\Parser\ExpressionParserHelper;
 use Support\View\Lumi\Parser\NodeAssertionsTrait;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
+use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
+use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
+use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
+use Tuxxedo\View\Lumi\Syntax\Type;
 
 class BinaryArithmeticExpressionTest extends TestCase
 {
@@ -181,6 +185,103 @@ class BinaryArithmeticExpressionTest extends TestCase
         $this->assertIdentifierNode(
             node: $node->right,
             expectedName: 'b',
+        );
+    }
+
+    public function testNegativeLiteralBaseOfExponentiationBindsLikePhp(): void
+    {
+        $node = $this->helper->parse('-2 ** 2');
+
+        self::assertInstanceOf(UnaryOpNode::class, $node);
+        self::assertSame(UnarySymbol::NEGATE, $node->operator);
+
+        $this->assertBinaryOpNode(
+            node: $node->operand,
+            expectedOperator: BinarySymbol::EXPONENTIATE,
+        );
+
+        self::assertInstanceOf(BinaryOpNode::class, $node->operand);
+
+        $this->assertLiteralNode(
+            node: $node->operand->left,
+            expectedOperand: '2',
+            expectedType: Type::INT,
+        );
+    }
+
+    public function testNegativeFloatBaseOfExponentiationBindsLikePhp(): void
+    {
+        $node = $this->helper->parse('-2.5 ** 2');
+
+        self::assertInstanceOf(UnaryOpNode::class, $node);
+        self::assertInstanceOf(BinaryOpNode::class, $node->operand);
+
+        $this->assertLiteralNode(
+            node: $node->operand->left,
+            expectedOperand: '2.5',
+            expectedType: Type::FLOAT,
+        );
+    }
+
+    public function testNegativeLiteralBaseInsideRightAssociativeChain(): void
+    {
+        $node = $this->helper->parse('-2 ** 3 ** 2');
+
+        self::assertInstanceOf(UnaryOpNode::class, $node);
+        self::assertInstanceOf(BinaryOpNode::class, $node->operand);
+
+        $this->assertBinaryOpNode(
+            node: $node->operand->right,
+            expectedOperator: BinarySymbol::EXPONENTIATE,
+        );
+    }
+
+    public function testGroupedNegativeBaseKeepsNegativeLiteral(): void
+    {
+        $node = $this->helper->parse('(-2) ** 2');
+
+        $this->assertBinaryOpNode(
+            node: $node,
+            expectedOperator: BinarySymbol::EXPONENTIATE,
+        );
+
+        self::assertInstanceOf(BinaryOpNode::class, $node);
+        self::assertInstanceOf(GroupNode::class, $node->left);
+    }
+
+    public function testNegativeExponentStaysLiteral(): void
+    {
+        $node = $this->helper->parse('2 ** -2');
+
+        $this->assertBinaryOpNode(
+            node: $node,
+            expectedOperator: BinarySymbol::EXPONENTIATE,
+        );
+
+        self::assertInstanceOf(BinaryOpNode::class, $node);
+
+        $this->assertLiteralNode(
+            node: $node->right,
+            expectedOperand: '-2',
+            expectedType: Type::INT,
+        );
+    }
+
+    public function testNegativeLiteralWithOtherOperatorStaysLiteral(): void
+    {
+        $node = $this->helper->parse('-2 * 2');
+
+        $this->assertBinaryOpNode(
+            node: $node,
+            expectedOperator: BinarySymbol::MULTIPLY,
+        );
+
+        self::assertInstanceOf(BinaryOpNode::class, $node);
+
+        $this->assertLiteralNode(
+            node: $node->left,
+            expectedOperand: '-2',
+            expectedType: Type::INT,
         );
     }
 }
