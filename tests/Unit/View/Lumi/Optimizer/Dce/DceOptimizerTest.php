@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Unit\View\Lumi\Optimizer\Dce;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\View\Lumi\Optimizer\Dce\DceOptimizer;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerResultInterface;
@@ -737,6 +738,88 @@ class DceOptimizerTest extends TestCase
 
         self::assertCount(1, $result->stream->nodes);
         self::assertInstanceOf(DoWhileNode::class, $result->stream->nodes[0]);
+    }
+
+    /**
+     * @return \Generator<string, array{0: list<NodeInterface>, 1: bool}>
+     */
+    public static function doWhileFalseLoopStatementDataProvider(): \Generator
+    {
+        yield 'continue in body' => [
+            [
+                new TextNode(
+                    text: 'body',
+                ),
+                new ContinueNode(),
+            ],
+            true,
+        ];
+
+        yield 'break in nested conditional' => [
+            [
+                new ConditionalNode(
+                    operand: new IdentifierNode(
+                        name: 'cond',
+                    ),
+                    body: [],
+                    else: [
+                        new BreakNode(),
+                    ],
+                ),
+            ],
+            true,
+        ];
+
+        yield 'break 2 in nested loop' => [
+            [
+                new WhileNode(
+                    operand: new IdentifierNode(
+                        name: 'cond',
+                    ),
+                    body: [
+                        new BreakNode(
+                            count: 2,
+                        ),
+                    ],
+                ),
+            ],
+            true,
+        ];
+
+        yield 'break in nested loop targets the nested loop' => [
+            [
+                new WhileNode(
+                    operand: new IdentifierNode(
+                        name: 'cond',
+                    ),
+                    body: [
+                        new BreakNode(),
+                    ],
+                ),
+            ],
+            false,
+        ];
+    }
+
+    /**
+     * @param list<NodeInterface> $body
+     */
+    #[DataProvider('doWhileFalseLoopStatementDataProvider')]
+    public function testDoWhileWithLiteralFalseOperandKeepsLoopWhenBodyTargetsIt(
+        array $body,
+        bool $kept,
+    ): void {
+        $result = $this->optimize(
+            nodes: [
+                new DoWhileNode(
+                    operand: LiteralNode::createBool(false),
+                    body: $body,
+                ),
+            ],
+        );
+
+        self::assertCount(1, $result->stream->nodes);
+        self::assertSame($kept, $result->stream->nodes[0] instanceof DoWhileNode);
     }
 
     public function testDoWhileWithLiteralTrueOperandIsKept(): void

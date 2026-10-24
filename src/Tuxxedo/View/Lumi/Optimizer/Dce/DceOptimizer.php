@@ -213,7 +213,8 @@ class DceOptimizer extends AbstractOptimizer
 
         if (
             $node->operand instanceof LiteralNode &&
-            $this->evaluator->checkExpression($this->scope, $node->operand) === EvaluatorResult::IS_FALSE
+            $this->evaluator->checkExpression($this->scope, $node->operand) === EvaluatorResult::IS_FALSE &&
+            !$this->hasLoopStatement($node->body)
         ) {
             return $node->body;
         }
@@ -221,6 +222,52 @@ class DceOptimizer extends AbstractOptimizer
         return [
             $node,
         ];
+    }
+
+    /**
+     * @param NodeInterface[] $nodes
+     */
+    private function hasLoopStatement(
+        array $nodes,
+        int $depth = 1,
+    ): bool {
+        foreach ($nodes as $node) {
+            if ($node instanceof BreakNode || $node instanceof ContinueNode) {
+                if (($node->count ?? 1) >= $depth) {
+                    return true;
+                }
+
+                continue;
+            }
+
+            if ($node instanceof ConditionalNode) {
+                $bodies = [
+                    $node->body,
+                    $node->else,
+                ];
+
+                foreach ($node->branches as $branch) {
+                    $bodies[] = $branch->body;
+                }
+
+                foreach ($bodies as $body) {
+                    if ($this->hasLoopStatement($body, $depth)) {
+                        return true;
+                    }
+                }
+
+                continue;
+            }
+
+            if (
+                ($node instanceof ForNode || $node instanceof WhileNode || $node instanceof DoWhileNode) &&
+                $this->hasLoopStatement($node->body, $depth + 1)
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
