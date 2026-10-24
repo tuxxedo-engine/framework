@@ -35,19 +35,41 @@ class LumiViewRender implements LumiViewRenderInterface
 
         if ($disableErrorReporting) {
             $this->renderFrame = function (string $__lumiViewFileName, array $__lumiVariables): string {
+                $__lumiBufferLevel = \ob_get_level();
+
                 \ob_start();
 
                 $__lumiErrorReporting = \error_reporting(0);
-                require $__lumiViewFileName;
-                \error_reporting($__lumiErrorReporting);
+
+                try {
+                    require $__lumiViewFileName;
+                } catch (\Throwable $__lumiException) {
+                    while (\ob_get_level() > $__lumiBufferLevel) {
+                        \ob_end_clean();
+                    }
+
+                    throw $__lumiException;
+                } finally {
+                    \error_reporting($__lumiErrorReporting);
+                }
 
                 return !\is_bool($body = \ob_get_clean()) ? $body : '';
             };
         } else {
             $this->renderFrame = function (string $__lumiViewFileName, array $__lumiVariables): string {
+                $__lumiBufferLevel = \ob_get_level();
+
                 \ob_start();
 
-                require $__lumiViewFileName;
+                try {
+                    require $__lumiViewFileName;
+                } catch (\Throwable $__lumiException) {
+                    while (\ob_get_level() > $__lumiBufferLevel) {
+                        \ob_end_clean();
+                    }
+
+                    throw $__lumiException;
+                }
 
                 return !\is_bool($body = \ob_get_clean()) ? $body : '';
             };

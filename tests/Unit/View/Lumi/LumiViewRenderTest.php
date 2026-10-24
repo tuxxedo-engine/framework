@@ -447,6 +447,81 @@ class LumiViewRenderTest extends TestCase
         );
     }
 
+    /**
+     * @return \Generator<string, array{0: bool}>
+     */
+    public static function errorReportingFlagDataProvider(): \Generator
+    {
+        yield 'error reporting disabled' => [
+            true,
+        ];
+
+        yield 'error reporting enabled' => [
+            false,
+        ];
+    }
+
+    #[DataProvider('errorReportingFlagDataProvider')]
+    public function testRenderUnwindsOutputBuffersWhenCompiledFileThrows(
+        bool $disableErrorReporting,
+    ): void {
+        $this->writeView('partial_boom');
+        $this->writeCachedFile(
+            'partial_boom',
+            '<?php echo "partial output"; \ob_start(); echo "nested"; throw new \RuntimeException(\'kaboom\'); ?>',
+        );
+
+        $render = $this->createRender(
+            disableErrorReporting: $disableErrorReporting,
+        );
+
+        \ob_start();
+
+        $level = \ob_get_level();
+
+        try {
+            $render->render(
+                view: new View(
+                    name: 'partial_boom',
+                ),
+            );
+
+            self::fail('Expected a ViewException');
+        } catch (ViewException) {
+            self::assertSame($level, \ob_get_level());
+        } finally {
+            $leaked = \ob_get_clean();
+        }
+
+        self::assertSame('', $leaked);
+    }
+
+    public function testRenderRestoresErrorReportingWhenCompiledFileThrows(): void
+    {
+        $this->writeView('boom');
+        $this->writeCachedFile(
+            'boom',
+            '<?php throw new \RuntimeException(\'kaboom\'); ?>',
+        );
+
+        $render = $this->createRender();
+        $previous = \error_reporting();
+
+        try {
+            $render->render(
+                view: new View(
+                    name: 'boom',
+                ),
+            );
+
+            self::fail('Expected a ViewException');
+        } catch (ViewException) {
+            self::assertSame($previous, \error_reporting());
+        } finally {
+            \error_reporting($previous);
+        }
+    }
+
     public function testRenderDisablesErrorReportingWhenFlagIsTrue(): void
     {
         $this->writeView('reporting');
