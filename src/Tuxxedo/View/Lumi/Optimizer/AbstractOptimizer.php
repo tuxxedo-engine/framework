@@ -100,6 +100,13 @@ abstract class AbstractOptimizer implements OptimizerInterface
                 $node = $stripped[0];
             }
 
+            $this->markMutatedAsVarying(
+                nodes: [
+                    $node,
+                ],
+                assignments: false,
+            );
+
             $optimizedNodes = $this->optimizeNode($stream, $node);
 
             $eatLeadingNewline = self::closesWithPhpTag($node) &&
@@ -159,12 +166,13 @@ abstract class AbstractOptimizer implements OptimizerInterface
     /**
      * @param NodeInterface[] $nodes
      */
-    private function markAssignedAsVarying(
+    private function markMutatedAsVarying(
         array $nodes,
+        bool $assignments,
     ): void {
         foreach ($nodes as $node) {
             if (
-                $node instanceof AssignmentNode ||
+                ($assignments && $node instanceof AssignmentNode) ||
                 (
                     $node instanceof UnaryOpNode &&
                     \in_array(
@@ -204,7 +212,10 @@ abstract class AbstractOptimizer implements OptimizerInterface
                 }
             }
 
-            $this->markAssignedAsVarying($children);
+            $this->markMutatedAsVarying(
+                nodes: $children,
+                assignments: $assignments,
+            );
         }
     }
 
@@ -383,7 +394,11 @@ abstract class AbstractOptimizer implements OptimizerInterface
     protected function optimizeForBody(
         ForNode $node,
     ): ForNode {
-        $this->markAssignedAsVarying($node->body);
+        $this->markMutatedAsVarying(
+            nodes: $node->body,
+            assignments: true,
+        );
+
         $this->scope->create($node->value);
 
         if ($node->key !== null) {
@@ -413,7 +428,11 @@ abstract class AbstractOptimizer implements OptimizerInterface
     protected function optimizeDoWhileBody(
         DoWhileNode $node,
     ): DoWhileNode {
-        $this->markAssignedAsVarying($node->body);
+        $this->markMutatedAsVarying(
+            nodes: $node->body,
+            assignments: true,
+        );
+
         $this->pushScope(inherit: true);
 
         $nodes = $this->optimizeNodes(
@@ -435,7 +454,11 @@ abstract class AbstractOptimizer implements OptimizerInterface
     protected function optimizeWhileBody(
         WhileNode $node,
     ): WhileNode {
-        $this->markAssignedAsVarying($node->body);
+        $this->markMutatedAsVarying(
+            nodes: $node->body,
+            assignments: true,
+        );
+
         $this->pushScope(inherit: true);
 
         $nodes = $this->optimizeNodes(

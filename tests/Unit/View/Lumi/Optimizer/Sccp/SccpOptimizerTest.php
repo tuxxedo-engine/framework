@@ -874,6 +874,149 @@ class SccpOptimizerTest extends TestCase
         self::assertSame($echo, $result->stream->nodes[1]->body[0]);
     }
 
+    /**
+     * @return \Generator<string, array{0: UnarySymbol}>
+     */
+    public static function incrementDecrementSymbols(): \Generator
+    {
+        yield 'pre-increment' => [
+            UnarySymbol::INCREMENT_PRE,
+        ];
+
+        yield 'post-increment' => [
+            UnarySymbol::INCREMENT_POST,
+        ];
+
+        yield 'pre-decrement' => [
+            UnarySymbol::DECREMENT_PRE,
+        ];
+
+        yield 'post-decrement' => [
+            UnarySymbol::DECREMENT_POST,
+        ];
+    }
+
+    #[DataProvider('incrementDecrementSymbols')]
+    public function testEchoOfIncrementDecrementIsNotFoldedAndLaterReadsStayRuntime(
+        UnarySymbol $operator,
+    ): void {
+        $mutation = new EchoNode(
+            operand: new UnaryOpNode(
+                operand: new IdentifierNode(
+                    name: 'c',
+                ),
+                operator: $operator,
+            ),
+        );
+
+        $read = new EchoNode(
+            operand: new IdentifierNode(
+                name: 'c',
+            ),
+        );
+
+        $result = $this->optimize(
+            nodes: [
+                new AssignmentNode(
+                    name: new IdentifierNode(
+                        name: 'c',
+                    ),
+                    value: LiteralNode::createInt(0),
+                    operator: AssignmentSymbol::ASSIGN,
+                ),
+                $mutation,
+                $read,
+            ],
+        );
+
+        self::assertCount(3, $result->stream->nodes);
+        self::assertSame($mutation, $result->stream->nodes[1]);
+        self::assertSame($read, $result->stream->nodes[2]);
+    }
+
+    #[DataProvider('incrementDecrementSymbols')]
+    public function testIncrementDecrementInsideExpressionIsNotFolded(
+        UnarySymbol $operator,
+    ): void {
+        $mutation = new EchoNode(
+            operand: new BinaryOpNode(
+                left: new UnaryOpNode(
+                    operand: new IdentifierNode(
+                        name: 'c',
+                    ),
+                    operator: $operator,
+                ),
+                right: LiteralNode::createInt(1),
+                operator: BinarySymbol::ADD,
+            ),
+        );
+
+        $read = new EchoNode(
+            operand: new IdentifierNode(
+                name: 'c',
+            ),
+        );
+
+        $result = $this->optimize(
+            nodes: [
+                new AssignmentNode(
+                    name: new IdentifierNode(
+                        name: 'c',
+                    ),
+                    value: LiteralNode::createInt(0),
+                    operator: AssignmentSymbol::ASSIGN,
+                ),
+                $mutation,
+                $read,
+            ],
+        );
+
+        self::assertCount(3, $result->stream->nodes);
+        self::assertSame($mutation, $result->stream->nodes[1]);
+        self::assertSame($read, $result->stream->nodes[2]);
+    }
+
+    #[DataProvider('incrementDecrementSymbols')]
+    public function testIncrementDecrementInsideUnevaluatedOperandMarksVariableVarying(
+        UnarySymbol $operator,
+    ): void {
+        $read = new EchoNode(
+            operand: new IdentifierNode(
+                name: 'c',
+            ),
+        );
+
+        $result = $this->optimize(
+            nodes: [
+                new AssignmentNode(
+                    name: new IdentifierNode(
+                        name: 'c',
+                    ),
+                    value: LiteralNode::createInt(0),
+                    operator: AssignmentSymbol::ASSIGN,
+                ),
+                new EchoNode(
+                    operand: new BinaryOpNode(
+                        left: new IdentifierNode(
+                            name: 'name',
+                        ),
+                        right: new UnaryOpNode(
+                            operand: new IdentifierNode(
+                                name: 'c',
+                            ),
+                            operator: $operator,
+                        ),
+                        operator: BinarySymbol::CONCAT,
+                    ),
+                ),
+                $read,
+            ],
+        );
+
+        self::assertCount(3, $result->stream->nodes);
+        self::assertSame($read, $result->stream->nodes[2]);
+    }
+
     public function testEchoOfNonFoldableExpressionIsKeptAsIs(): void
     {
         $echo = new EchoNode(

@@ -15,12 +15,14 @@ namespace Tuxxedo\View\Lumi\Optimizer\Evaluator;
 
 use Tuxxedo\View\Lumi\Optimizer\Scope\Lattice;
 use Tuxxedo\View\Lumi\Optimizer\Scope\ScopeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
+use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TernaryNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
@@ -980,121 +982,50 @@ class Evaluator implements EvaluatorInterface
         ScopeInterface $scope,
         ExpressionNodeInterface $expression,
     ): ?ExpressionNodeInterface {
-        if (!$expression instanceof IdentifierNode) {
-            return null;
-        }
+        $this->markMutatedAsVarying($scope, $expression);
 
-        $variable = $scope->get($expression);
-
-        if (!$variable->hasComputedValue()) {
-            return null;
-        }
-
-        $numericValue = $this->castNodeToNumeric(
-            node: LiteralNode::createFromNativeType($variable->computedValue),
-        );
-
-        if ($numericValue === null) {
-            return null;
-        }
-
-        $value = LiteralNode::createFromNativeType(
-            value: 1 + $numericValue,
-        );
-
-        $variable->mutate($scope, $value);
-
-        return $value;
+        return null;
     }
 
     public function reduceIncrementPost(
         ScopeInterface $scope,
         ExpressionNodeInterface $expression,
     ): ?ExpressionNodeInterface {
-        if (!$expression instanceof IdentifierNode) {
-            return null;
-        }
+        $this->markMutatedAsVarying($scope, $expression);
 
-        $variable = $scope->get($expression);
-
-        if (!$variable->hasComputedValue()) {
-            return null;
-        }
-
-        $computedValue = LiteralNode::createFromNativeType($variable->computedValue);
-        $numericValue = $this->castNodeToNumeric($computedValue);
-
-        if ($numericValue === null) {
-            return null;
-        }
-
-        $value = LiteralNode::createFromNativeType(
-            value: 1 + $numericValue,
-        );
-
-        $variable->mutate($scope, $value);
-
-        return $computedValue;
+        return null;
     }
 
     public function reduceDecrementPre(
         ScopeInterface $scope,
         ExpressionNodeInterface $expression,
     ): ?ExpressionNodeInterface {
-        if (!$expression instanceof IdentifierNode) {
-            return null;
-        }
+        $this->markMutatedAsVarying($scope, $expression);
 
-        $variable = $scope->get($expression);
-
-        if (!$variable->hasComputedValue()) {
-            return null;
-        }
-
-        $numericValue = $this->castNodeToNumeric(
-            node: LiteralNode::createFromNativeType($variable->computedValue),
-        );
-
-        if ($numericValue === null) {
-            return null;
-        }
-
-        $value = LiteralNode::createFromNativeType(
-            value: $numericValue - 1,
-        );
-
-        $variable->mutate($scope, $value);
-
-        return $value;
+        return null;
     }
 
     public function reduceDecrementPost(
         ScopeInterface $scope,
         ExpressionNodeInterface $expression,
     ): ?ExpressionNodeInterface {
-        if (!$expression instanceof IdentifierNode) {
-            return null;
+        $this->markMutatedAsVarying($scope, $expression);
+
+        return null;
+    }
+
+    private function markMutatedAsVarying(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $expression,
+    ): void {
+        while ($expression instanceof PropertyAccessNode || $expression instanceof ArrayAccessNode) {
+            $expression = $expression instanceof PropertyAccessNode
+                ? $expression->accessor
+                : $expression->array;
         }
 
-        $variable = $scope->get($expression);
-
-        if (!$variable->hasComputedValue()) {
-            return null;
+        if ($expression instanceof IdentifierNode) {
+            $scope->create($expression);
         }
-
-        $computedValue = LiteralNode::createFromNativeType($variable->computedValue);
-        $numericValue = $this->castNodeToNumeric($computedValue);
-
-        if ($numericValue === null) {
-            return null;
-        }
-
-        $value = LiteralNode::createFromNativeType(
-            value: $numericValue - 1,
-        );
-
-        $variable->mutate($scope, $value);
-
-        return $computedValue;
     }
 }

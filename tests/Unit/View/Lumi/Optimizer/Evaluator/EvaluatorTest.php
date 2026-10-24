@@ -18,12 +18,15 @@ use PHPUnit\Framework\TestCase;
 use Support\View\Lumi\Optimizer\Evaluator\RecordingEvaluator;
 use Tuxxedo\View\Lumi\Optimizer\Evaluator\Evaluator;
 use Tuxxedo\View\Lumi\Optimizer\Evaluator\EvaluatorResult;
+use Tuxxedo\View\Lumi\Optimizer\Scope\Lattice;
 use Tuxxedo\View\Lumi\Optimizer\Scope\Scope;
+use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
+use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TernaryNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\AssignmentSymbol;
@@ -4970,112 +4973,35 @@ class EvaluatorTest extends TestCase
         self::assertSame('-1', $result->operand);
     }
 
-    public function testReduceIncrementPreReturnsIncrementedIntForIdentifier(): void
+    /**
+     * @return \Generator<string, array{0: UnarySymbol}>
+     */
+    public static function incrementDecrementSymbols(): \Generator
     {
+        yield 'pre-increment' => [
+            UnarySymbol::INCREMENT_PRE,
+        ];
+
+        yield 'post-increment' => [
+            UnarySymbol::INCREMENT_POST,
+        ];
+
+        yield 'pre-decrement' => [
+            UnarySymbol::DECREMENT_PRE,
+        ];
+
+        yield 'post-decrement' => [
+            UnarySymbol::DECREMENT_POST,
+        ];
+    }
+
+    #[DataProvider('incrementDecrementSymbols')]
+    public function testIncrementDecrementOfConstantIdentifierIsNotFolded(
+        UnarySymbol $operator,
+    ): void {
         $this->assign(
             name: 'x',
             value: LiteralNode::createInt(5),
-        );
-
-        $result = $this->evaluator->reduceIncrementPre(
-            scope: $this->scope,
-            expression: new IdentifierNode(
-                name: 'x',
-            ),
-        );
-
-        self::assertInstanceOf(LiteralNode::class, $result);
-        self::assertSame(Type::INT, $result->type);
-        self::assertSame('6', $result->operand);
-    }
-
-    public function testReduceIncrementPreReturnsIncrementedFloatForIdentifier(): void
-    {
-        $this->assign(
-            name: 'x',
-            value: LiteralNode::createFloat(1.5),
-        );
-
-        $result = $this->evaluator->reduceIncrementPre(
-            scope: $this->scope,
-            expression: new IdentifierNode(
-                name: 'x',
-            ),
-        );
-
-        self::assertInstanceOf(LiteralNode::class, $result);
-        self::assertSame(Type::FLOAT, $result->type);
-        self::assertSame('2.5', $result->operand);
-    }
-
-    public function testReduceIncrementPreMutatesVariableInScope(): void
-    {
-        $this->assign(
-            name: 'x',
-            value: LiteralNode::createInt(5),
-        );
-
-        $this->evaluator->reduceIncrementPre(
-            scope: $this->scope,
-            expression: new IdentifierNode(
-                name: 'x',
-            ),
-        );
-
-        self::assertSame(
-            6,
-            $this->scope->get(
-                name: new IdentifierNode(
-                    name: 'x',
-                ),
-            )->computedValue,
-        );
-    }
-
-    public function testReduceIncrementPreReturnsNullForLiteralOperand(): void
-    {
-        self::assertNull(
-            $this->evaluator->reduceIncrementPre(
-                scope: $this->scope,
-                expression: LiteralNode::createInt(5),
-            ),
-        );
-    }
-
-    public function testReduceIncrementPreReturnsNullForUnassignedIdentifier(): void
-    {
-        self::assertNull(
-            $this->evaluator->reduceIncrementPre(
-                scope: $this->scope,
-                expression: new IdentifierNode(
-                    name: 'missing',
-                ),
-            ),
-        );
-    }
-
-    public function testReduceIncrementPreReturnsNullForNonNumericIdentifier(): void
-    {
-        $this->assign(
-            name: 'x',
-            value: LiteralNode::createString('abc'),
-        );
-
-        self::assertNull(
-            $this->evaluator->reduceIncrementPre(
-                scope: $this->scope,
-                expression: new IdentifierNode(
-                    name: 'x',
-                ),
-            ),
-        );
-    }
-
-    public function testReduceIncrementPreViaReduceUnaryOpDispatch(): void
-    {
-        $this->assign(
-            name: 'x',
-            value: LiteralNode::createInt(10),
         );
 
         $result = $this->evaluator->unaryOp(
@@ -5084,104 +5010,126 @@ class EvaluatorTest extends TestCase
                 operand: new IdentifierNode(
                     name: 'x',
                 ),
-                operator: UnarySymbol::INCREMENT_PRE,
+                operator: $operator,
             ),
         );
 
-        self::assertInstanceOf(LiteralNode::class, $result);
-        self::assertSame(Type::INT, $result->type);
-        self::assertSame('11', $result->operand);
+        self::assertNull($result);
+        self::assertSame(Lattice::VARYING, $this->scope->get('x')->lattice);
     }
 
-    public function testReduceIncrementPostReturnsOriginalIntForIdentifier(): void
-    {
-        $this->assign(
-            name: 'x',
-            value: LiteralNode::createInt(5),
-        );
-
-        $result = $this->evaluator->reduceIncrementPost(
+    #[DataProvider('incrementDecrementSymbols')]
+    public function testIncrementDecrementOfUndefinedIdentifierMarksItVarying(
+        UnarySymbol $operator,
+    ): void {
+        $result = $this->evaluator->unaryOp(
             scope: $this->scope,
-            expression: new IdentifierNode(
-                name: 'x',
-            ),
-        );
-
-        self::assertInstanceOf(LiteralNode::class, $result);
-        self::assertSame(Type::INT, $result->type);
-        self::assertSame('5', $result->operand);
-    }
-
-    public function testReduceIncrementPostReturnsOriginalFloatForIdentifier(): void
-    {
-        $this->assign(
-            name: 'x',
-            value: LiteralNode::createFloat(1.5),
-        );
-
-        $result = $this->evaluator->reduceIncrementPost(
-            scope: $this->scope,
-            expression: new IdentifierNode(
-                name: 'x',
-            ),
-        );
-
-        self::assertInstanceOf(LiteralNode::class, $result);
-        self::assertSame(Type::FLOAT, $result->type);
-        self::assertSame('1.5', $result->operand);
-    }
-
-    public function testReduceIncrementPostMutatesVariableInScope(): void
-    {
-        $this->assign(
-            name: 'x',
-            value: LiteralNode::createInt(5),
-        );
-
-        $this->evaluator->reduceIncrementPost(
-            scope: $this->scope,
-            expression: new IdentifierNode(
-                name: 'x',
-            ),
-        );
-
-        self::assertSame(
-            6,
-            $this->scope->get(
-                name: new IdentifierNode(
-                    name: 'x',
-                ),
-            )->computedValue,
-        );
-    }
-
-    public function testReduceIncrementPostReturnsNullForLiteralOperand(): void
-    {
-        self::assertNull(
-            $this->evaluator->reduceIncrementPost(
-                scope: $this->scope,
-                expression: LiteralNode::createInt(5),
-            ),
-        );
-    }
-
-    public function testReduceIncrementPostReturnsNullForUnassignedIdentifier(): void
-    {
-        self::assertNull(
-            $this->evaluator->reduceIncrementPost(
-                scope: $this->scope,
-                expression: new IdentifierNode(
+            node: new UnaryOpNode(
+                operand: new IdentifierNode(
                     name: 'missing',
                 ),
+                operator: $operator,
+            ),
+        );
+
+        self::assertNull($result);
+        self::assertSame(Lattice::VARYING, $this->scope->get('missing')->lattice);
+    }
+
+    #[DataProvider('incrementDecrementSymbols')]
+    public function testIncrementDecrementOfArrayAccessMarksBaseVariableVarying(
+        UnarySymbol $operator,
+    ): void {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(5),
+        );
+
+        $result = $this->evaluator->unaryOp(
+            scope: $this->scope,
+            node: new UnaryOpNode(
+                operand: new ArrayAccessNode(
+                    array: new ArrayAccessNode(
+                        array: new IdentifierNode(
+                            name: 'x',
+                        ),
+                        key: LiteralNode::createInt(0),
+                    ),
+                    key: LiteralNode::createInt(1),
+                ),
+                operator: $operator,
+            ),
+        );
+
+        self::assertNull($result);
+        self::assertSame(Lattice::VARYING, $this->scope->get('x')->lattice);
+    }
+
+    #[DataProvider('incrementDecrementSymbols')]
+    public function testIncrementDecrementOfPropertyAccessMarksBaseVariableVarying(
+        UnarySymbol $operator,
+    ): void {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(5),
+        );
+
+        $result = $this->evaluator->unaryOp(
+            scope: $this->scope,
+            node: new UnaryOpNode(
+                operand: new PropertyAccessNode(
+                    accessor: new IdentifierNode(
+                        name: 'x',
+                    ),
+                    property: 'count',
+                ),
+                operator: $operator,
+            ),
+        );
+
+        self::assertNull($result);
+        self::assertSame(Lattice::VARYING, $this->scope->get('x')->lattice);
+    }
+
+    #[DataProvider('incrementDecrementSymbols')]
+    public function testIncrementDecrementOfLiteralReturnsNull(
+        UnarySymbol $operator,
+    ): void {
+        self::assertNull(
+            $this->evaluator->unaryOp(
+                scope: $this->scope,
+                node: new UnaryOpNode(
+                    operand: LiteralNode::createInt(5),
+                    operator: $operator,
+                ),
             ),
         );
     }
 
-    public function testReduceIncrementPostReturnsNullForNonNumericIdentifier(): void
+    public function testReduceIncrementPreReturnsNullAndMarksVarying(): void
     {
         $this->assign(
             name: 'x',
-            value: LiteralNode::createString('abc'),
+            value: LiteralNode::createInt(5),
+        );
+
+        self::assertNull(
+            $this->evaluator->reduceIncrementPre(
+                scope: $this->scope,
+                expression: new IdentifierNode(
+                    name: 'x',
+                ),
+            ),
+        );
+
+        self::assertSame(Lattice::VARYING, $this->scope->get('x')->lattice);
+    }
+
+    public function testReduceIncrementPostReturnsNullAndMarksVarying(): void
+    {
+        $this->assign(
+            name: 'x',
+            value: LiteralNode::createInt(5),
         );
 
         self::assertNull(
@@ -5192,127 +5140,15 @@ class EvaluatorTest extends TestCase
                 ),
             ),
         );
+
+        self::assertSame(Lattice::VARYING, $this->scope->get('x')->lattice);
     }
 
-    public function testReduceIncrementPostViaReduceUnaryOpDispatch(): void
-    {
-        $this->assign(
-            name: 'x',
-            value: LiteralNode::createInt(10),
-        );
-
-        $result = $this->evaluator->unaryOp(
-            scope: $this->scope,
-            node: new UnaryOpNode(
-                operand: new IdentifierNode(
-                    name: 'x',
-                ),
-                operator: UnarySymbol::INCREMENT_POST,
-            ),
-        );
-
-        self::assertInstanceOf(LiteralNode::class, $result);
-        self::assertSame(Type::INT, $result->type);
-        self::assertSame('10', $result->operand);
-        self::assertSame(
-            11,
-            $this->scope->get(
-                name: new IdentifierNode(
-                    name: 'x',
-                ),
-            )->computedValue,
-        );
-    }
-
-    public function testReduceDecrementPreReturnsDecrementedIntForIdentifier(): void
+    public function testReduceDecrementPreReturnsNullAndMarksVarying(): void
     {
         $this->assign(
             name: 'x',
             value: LiteralNode::createInt(5),
-        );
-
-        $result = $this->evaluator->reduceDecrementPre(
-            scope: $this->scope,
-            expression: new IdentifierNode(
-                name: 'x',
-            ),
-        );
-
-        self::assertInstanceOf(LiteralNode::class, $result);
-        self::assertSame(Type::INT, $result->type);
-        self::assertSame('4', $result->operand);
-    }
-
-    public function testReduceDecrementPreReturnsDecrementedFloatForIdentifier(): void
-    {
-        $this->assign(
-            name: 'x',
-            value: LiteralNode::createFloat(2.5),
-        );
-
-        $result = $this->evaluator->reduceDecrementPre(
-            scope: $this->scope,
-            expression: new IdentifierNode(
-                name: 'x',
-            ),
-        );
-
-        self::assertInstanceOf(LiteralNode::class, $result);
-        self::assertSame(Type::FLOAT, $result->type);
-        self::assertSame('1.5', $result->operand);
-    }
-
-    public function testReduceDecrementPreMutatesVariableInScope(): void
-    {
-        $this->assign(
-            name: 'x',
-            value: LiteralNode::createInt(5),
-        );
-
-        $this->evaluator->reduceDecrementPre(
-            scope: $this->scope,
-            expression: new IdentifierNode(
-                name: 'x',
-            ),
-        );
-
-        self::assertSame(
-            4,
-            $this->scope->get(
-                name: new IdentifierNode(
-                    name: 'x',
-                ),
-            )->computedValue,
-        );
-    }
-
-    public function testReduceDecrementPreReturnsNullForLiteralOperand(): void
-    {
-        self::assertNull(
-            $this->evaluator->reduceDecrementPre(
-                scope: $this->scope,
-                expression: LiteralNode::createInt(5),
-            ),
-        );
-    }
-
-    public function testReduceDecrementPreReturnsNullForUnassignedIdentifier(): void
-    {
-        self::assertNull(
-            $this->evaluator->reduceDecrementPre(
-                scope: $this->scope,
-                expression: new IdentifierNode(
-                    name: 'missing',
-                ),
-            ),
-        );
-    }
-
-    public function testReduceDecrementPreReturnsNullForNonNumericIdentifier(): void
-    {
-        $this->assign(
-            name: 'x',
-            value: LiteralNode::createString('abc'),
         );
 
         self::assertNull(
@@ -5323,119 +5159,15 @@ class EvaluatorTest extends TestCase
                 ),
             ),
         );
+
+        self::assertSame(Lattice::VARYING, $this->scope->get('x')->lattice);
     }
 
-    public function testReduceDecrementPreViaReduceUnaryOpDispatch(): void
-    {
-        $this->assign(
-            name: 'x',
-            value: LiteralNode::createInt(10),
-        );
-
-        $result = $this->evaluator->unaryOp(
-            scope: $this->scope,
-            node: new UnaryOpNode(
-                operand: new IdentifierNode(
-                    name: 'x',
-                ),
-                operator: UnarySymbol::DECREMENT_PRE,
-            ),
-        );
-
-        self::assertInstanceOf(LiteralNode::class, $result);
-        self::assertSame(Type::INT, $result->type);
-        self::assertSame('9', $result->operand);
-    }
-
-    public function testReduceDecrementPostReturnsOriginalIntForIdentifier(): void
+    public function testReduceDecrementPostReturnsNullAndMarksVarying(): void
     {
         $this->assign(
             name: 'x',
             value: LiteralNode::createInt(5),
-        );
-
-        $result = $this->evaluator->reduceDecrementPost(
-            scope: $this->scope,
-            expression: new IdentifierNode(
-                name: 'x',
-            ),
-        );
-
-        self::assertInstanceOf(LiteralNode::class, $result);
-        self::assertSame(Type::INT, $result->type);
-        self::assertSame('5', $result->operand);
-    }
-
-    public function testReduceDecrementPostReturnsOriginalFloatForIdentifier(): void
-    {
-        $this->assign(
-            name: 'x',
-            value: LiteralNode::createFloat(2.5),
-        );
-
-        $result = $this->evaluator->reduceDecrementPost(
-            scope: $this->scope,
-            expression: new IdentifierNode(
-                name: 'x',
-            ),
-        );
-
-        self::assertInstanceOf(LiteralNode::class, $result);
-        self::assertSame(Type::FLOAT, $result->type);
-        self::assertSame('2.5', $result->operand);
-    }
-
-    public function testReduceDecrementPostMutatesVariableInScope(): void
-    {
-        $this->assign(
-            name: 'x',
-            value: LiteralNode::createInt(5),
-        );
-
-        $this->evaluator->reduceDecrementPost(
-            scope: $this->scope,
-            expression: new IdentifierNode(
-                name: 'x',
-            ),
-        );
-
-        self::assertSame(
-            4,
-            $this->scope->get(
-                name: new IdentifierNode(
-                    name: 'x',
-                ),
-            )->computedValue,
-        );
-    }
-
-    public function testReduceDecrementPostReturnsNullForLiteralOperand(): void
-    {
-        self::assertNull(
-            $this->evaluator->reduceDecrementPost(
-                scope: $this->scope,
-                expression: LiteralNode::createInt(5),
-            ),
-        );
-    }
-
-    public function testReduceDecrementPostReturnsNullForUnassignedIdentifier(): void
-    {
-        self::assertNull(
-            $this->evaluator->reduceDecrementPost(
-                scope: $this->scope,
-                expression: new IdentifierNode(
-                    name: 'missing',
-                ),
-            ),
-        );
-    }
-
-    public function testReduceDecrementPostReturnsNullForNonNumericIdentifier(): void
-    {
-        $this->assign(
-            name: 'x',
-            value: LiteralNode::createString('abc'),
         );
 
         self::assertNull(
@@ -5446,36 +5178,8 @@ class EvaluatorTest extends TestCase
                 ),
             ),
         );
-    }
 
-    public function testReduceDecrementPostViaReduceUnaryOpDispatch(): void
-    {
-        $this->assign(
-            name: 'x',
-            value: LiteralNode::createInt(10),
-        );
-
-        $result = $this->evaluator->unaryOp(
-            scope: $this->scope,
-            node: new UnaryOpNode(
-                operand: new IdentifierNode(
-                    name: 'x',
-                ),
-                operator: UnarySymbol::DECREMENT_POST,
-            ),
-        );
-
-        self::assertInstanceOf(LiteralNode::class, $result);
-        self::assertSame(Type::INT, $result->type);
-        self::assertSame('10', $result->operand);
-        self::assertSame(
-            9,
-            $this->scope->get(
-                name: new IdentifierNode(
-                    name: 'x',
-                ),
-            )->computedValue,
-        );
+        self::assertSame(Lattice::VARYING, $this->scope->get('x')->lattice);
     }
 
     public function testReduceAssignmentSubtractCombinesLeftAndRight(): void
