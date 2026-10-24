@@ -17,14 +17,19 @@ use Fixture\View\Lumi\Lexer\Handler\BlockTokenHandler\SpyBlockHandler;
 use Fixture\View\Lumi\Lexer\Handler\BlockTokenHandler\SpyExpressionSeparatorOptionalBlockHandler;
 use Fixture\View\Lumi\Lexer\Handler\BlockTokenHandler\SpyExpressiveBlockHandler;
 use Fixture\View\Lumi\Lexer\Handler\BlockTokenHandler\SpyStandaloneBlockHandler;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\View\Lumi\Lexer\Expression\ExpressionLexer;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\BlockHandlerInterface;
 use Tuxxedo\View\Lumi\Lexer\Handler\Block\BlockHandlerState;
 use Tuxxedo\View\Lumi\Lexer\Handler\BlockTokenHandler;
+use Tuxxedo\View\Lumi\Lexer\Lexer;
 use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Lexer\LexerState;
 use Tuxxedo\View\Lumi\Lexer\LexerStateFlag;
+use Tuxxedo\View\Lumi\Syntax\TextContext;
+use Tuxxedo\View\Lumi\Syntax\Token\TextToken;
+use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 
 class BlockTokenHandlerTest extends TestCase
 {
@@ -395,5 +400,100 @@ class BlockTokenHandlerTest extends TestCase
         );
 
         self::assertSame(1, $spy->callCount);
+    }
+
+    /**
+     * @return \Generator<string, array{0: string}>
+     */
+    public static function rawModeContentDataProvider(): \Generator
+    {
+        yield 'unknown directive' => [
+            'nonsense here',
+        ];
+
+        yield 'expressive directive without expression' => [
+            'expressive',
+        ];
+
+        yield 'standalone directive with expression' => [
+            'standalone extra',
+        ];
+
+        yield 'malformed sequence' => [
+            '123 not a directive',
+        ];
+
+        yield 'empty sequence' => [
+            '',
+        ];
+    }
+
+    #[DataProvider('rawModeContentDataProvider')]
+    public function testTokenizeInRawModeIgnoresAnythingButTheEndDirective(
+        string $buffer,
+    ): void {
+        $standalone = new SpyStandaloneBlockHandler('standalone');
+        $expressive = new SpyExpressiveBlockHandler('expressive');
+        $handler = BlockTokenHandler::createWithoutDefaultHandlers(
+            handlers: [
+                $standalone,
+                $expressive,
+            ],
+        );
+
+        $this->state->flag(LexerStateFlag::TEXT_AS_RAW);
+        $this->state->setTextAsRawEndDirective('endraw');
+
+        self::assertSame(
+            [],
+            $handler->tokenize(
+                startingLine: 1,
+                buffer: $buffer,
+                expressionLexer: $this->expressionLexer,
+                state: $this->state,
+            ),
+        );
+
+        self::assertSame(0, $standalone->callCount);
+        self::assertSame(0, $expressive->callCount);
+    }
+
+    public function testTokenizeInRawModeMatchesEndDirectiveCaseInsensitively(): void
+    {
+        $spy = new SpyStandaloneBlockHandler('endraw');
+        $handler = BlockTokenHandler::createWithoutDefaultHandlers(
+            handlers: [
+                $spy,
+            ],
+        );
+
+        $this->state->flag(LexerStateFlag::TEXT_AS_RAW);
+        $this->state->setTextAsRawEndDirective('endraw');
+
+        $handler->tokenize(
+            startingLine: 1,
+            buffer: 'ENDRAW',
+            expressionLexer: $this->expressionLexer,
+            state: $this->state,
+        );
+
+        self::assertSame(1, $spy->callCount);
+    }
+
+    public function testRawBlockKeepsInvalidDirectivesAsText(): void
+    {
+        $stream = Lexer::createWithDefaultHandlers()->tokenizeByString(
+            '<pre>{% raw %}{% for %}{% nonsense here %}{{ unclosed {# x #}{% endraw %}</pre>',
+        );
+
+        $raw = \array_values(
+            \array_filter(
+                $stream->tokens,
+                static fn (TokenInterface $token): bool => $token instanceof TextToken && $token->op2 === TextContext::RAW->name,
+            ),
+        );
+
+        self::assertCount(1, $raw);
+        self::assertSame('{% for %}{% nonsense here %}{{ unclosed {# x #}', $raw[0]->op1);
     }
 }

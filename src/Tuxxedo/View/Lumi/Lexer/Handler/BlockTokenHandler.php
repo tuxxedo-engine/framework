@@ -148,6 +148,10 @@ class BlockTokenHandler implements TokenHandlerInterface
         $buffer = \mb_trim($buffer);
 
         if (\preg_match('/^([a-z_][a-z0-9_]*)((?:[\s(].*)?)$/i', $buffer, $matches) !== 1) {
+            if ($state->hasFlag(LexerStateFlag::TEXT_AS_RAW)) {
+                return [];
+            }
+
             throw LexerException::fromUnexpectedSequenceFound(
                 sequence: $buffer,
                 line: $startingLine,
@@ -155,6 +159,14 @@ class BlockTokenHandler implements TokenHandlerInterface
         }
 
         $directive = \mb_strtolower($matches[1]);
+
+        if (
+            $state->hasFlag(LexerStateFlag::TEXT_AS_RAW) &&
+            $directive !== $state->textAsRawEndDirective
+        ) {
+            return [];
+        }
+
         $rest = \mb_ltrim($matches[2]);
 
         if ($rest !== '') {
@@ -181,13 +193,6 @@ class BlockTokenHandler implements TokenHandlerInterface
                 sequence: $directive,
                 line: $startingLine,
             );
-        }
-
-        if (
-            $state->hasFlag(LexerStateFlag::TEXT_AS_RAW) &&
-            $directive !== $state->textAsRawEndDirective
-        ) {
-            return [];
         }
 
         return $this->handlers[$directive]->lex(
