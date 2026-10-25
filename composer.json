@@ -57,13 +57,13 @@
   },
   "autoload": {
     "psr-4": {
-      "App\\": "app/",
-      "Console\\": "console/",
       "Tuxxedo\\": "src/Tuxxedo/"
     }
   },
   "autoload-dev": {
     "psr-4": {
+      "App\\": "app/",
+      "Console\\": "console/",
       "Fixture\\": "tests/Fixture/",
       "Integration\\": "tests/Integration/",
       "Support\\": "tests/Support/",
