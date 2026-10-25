@@ -19,6 +19,7 @@ use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Model\ModelException;
 use Tuxxedo\Model\ModelsManagerInterface;
+use Tuxxedo\Model\Relation;
 use Tuxxedo\Reflection\ParameterReflectorInterface;
 use Tuxxedo\Router\Attribute\ArgumentConsumerInterface;
 
@@ -30,8 +31,12 @@ class Model implements DependencyResolverInterface, ArgumentConsumerInterface
 {
     public readonly array $routeArguments;
 
+    /**
+     * @param array<string, (\Closure(Relation<object>): Relation<object>)|null>|null $with
+     */
     public function __construct(
         private readonly string $argumentName,
+        private readonly ?array $with = null,
     ) {
         $this->routeArguments = [
             $this->argumentName,
@@ -66,7 +71,11 @@ class Model implements DependencyResolverInterface, ArgumentConsumerInterface
             throw HttpException::fromNotFound();
         }
 
-        $model = $container->resolve(ModelsManagerInterface::class)->findById($modelClass, $identifier);
+        $model = $container->resolve(ModelsManagerInterface::class)->findById(
+            class: $modelClass,
+            id: $identifier,
+            with: $this->with,
+        );
 
         if ($model === null && !$parameter->isNullable()) {
             throw HttpException::fromNotFound();

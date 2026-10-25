@@ -25,6 +25,7 @@ use Tuxxedo\Model\MetaData\MetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 use Tuxxedo\Model\ModelsManagerInterface;
 use Tuxxedo\Model\Query;
+use Tuxxedo\Model\Relation;
 use Tuxxedo\Model\ValidationScope;
 
 class StubModelsManager implements ModelsManagerInterface
@@ -54,7 +55,7 @@ class StubModelsManager implements ModelsManagerInterface
     }
 
     /**
-     * @var list<array{class: string, id: int|string}>
+     * @var list<array{class: string, id: int|string, with: array<string, (\Closure(Relation<object>): Relation<object>)|null>|null}>
      */
     public array $findByIdCalls = [];
 
@@ -79,6 +80,7 @@ class StubModelsManager implements ModelsManagerInterface
         $this->findByIdCalls[] = [
             'class' => $class,
             'id' => $id,
+            'with' => $with,
         ];
 
         /** @var TModel|null */

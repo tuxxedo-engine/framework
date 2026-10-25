@@ -27,6 +27,7 @@ use Tuxxedo\Http\Kernel\Resolver\Model;
 use Tuxxedo\Http\Request\Request;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Model\ModelException;
+use Tuxxedo\Model\Relation;
 use Tuxxedo\Router\ArgumentKind;
 use Tuxxedo\Router\ArgumentNode;
 use Tuxxedo\Router\DispatchableRoute;
@@ -141,10 +142,43 @@ class ModelTest extends TestCase
                 [
                     'class' => \stdClass::class,
                     'id' => '42',
+                    'with' => null,
                 ],
             ],
             $modelsManager->findByIdCalls,
         );
+    }
+
+    public function testResolvePassesEagerLoadsToManager(): void
+    {
+        $modelsManager = new StubModelsManager(
+            findByIdReturn: new \stdClass(),
+        );
+
+        $with = [
+            'posts' => null,
+            'comments' => static fn (Relation $relation): Relation => $relation,
+        ];
+
+        $resolver = new Model(
+            argumentName: 'id',
+            with: $with,
+        );
+
+        $resolver->resolve(
+            container: $this->containerWith(
+                modelsManager: $modelsManager,
+                routeArguments: [
+                    'id' => '42',
+                ],
+            ),
+            parameter: new StubParameterReflector(
+                defaultType: \stdClass::class,
+            ),
+        );
+
+        self::assertCount(1, $modelsManager->findByIdCalls);
+        self::assertSame($with, $modelsManager->findByIdCalls[0]['with']);
     }
 
     public function testResolveThrowsWhenParameterTypeIsMissingAndParameterIsNotNullable(): void
