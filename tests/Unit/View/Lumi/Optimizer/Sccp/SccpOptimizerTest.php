@@ -20,6 +20,7 @@ use Tuxxedo\View\Lumi\Library\Directive\MutableDirectives;
 use Tuxxedo\View\Lumi\Optimizer\OptimizerResultInterface;
 use Tuxxedo\View\Lumi\Optimizer\Sccp\SccpOptimizer;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
+use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BlockNode;
@@ -36,6 +37,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
+use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TernaryNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TextNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
@@ -981,6 +983,57 @@ class SccpOptimizerTest extends TestCase
 
         self::assertCount(3, $result->stream->nodes);
         self::assertSame($mutation, $result->stream->nodes[1]);
+        self::assertSame($read, $result->stream->nodes[2]);
+    }
+
+    #[DataProvider('incrementDecrementSymbols')]
+    public function testIncrementDecrementOfPathInsideUnevaluatedOperandMarksBaseVariableVarying(
+        UnarySymbol $operator,
+    ): void {
+        $read = new EchoNode(
+            operand: new BinaryOpNode(
+                left: new IdentifierNode(
+                    name: 'c',
+                ),
+                right: LiteralNode::createInt(1),
+                operator: BinarySymbol::ADD,
+            ),
+        );
+
+        $result = $this->optimize(
+            nodes: [
+                new AssignmentNode(
+                    name: new IdentifierNode(
+                        name: 'c',
+                    ),
+                    value: LiteralNode::createInt(0),
+                    operator: AssignmentSymbol::ASSIGN,
+                ),
+                new EchoNode(
+                    operand: new BinaryOpNode(
+                        left: new IdentifierNode(
+                            name: 'name',
+                        ),
+                        right: new UnaryOpNode(
+                            operand: new ArrayAccessNode(
+                                array: new PropertyAccessNode(
+                                    accessor: new IdentifierNode(
+                                        name: 'c',
+                                    ),
+                                    property: 'items',
+                                ),
+                                key: LiteralNode::createInt(0),
+                            ),
+                            operator: $operator,
+                        ),
+                        operator: BinarySymbol::CONCAT,
+                    ),
+                ),
+                $read,
+            ],
+        );
+
+        self::assertCount(3, $result->stream->nodes);
         self::assertSame($read, $result->stream->nodes[2]);
     }
 
