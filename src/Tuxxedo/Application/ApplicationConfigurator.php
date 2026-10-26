@@ -13,12 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Application;
 
-use Tuxxedo\Application\Config\AppConfigInterface;
 use Tuxxedo\Config\Config;
-use Tuxxedo\Config\ConfigException;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\Container;
-use Tuxxedo\Container\ContainerException;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Debug\Config\DebugConfigInterface;
 use Tuxxedo\Debug\DebugErrorHandler;
@@ -115,18 +112,6 @@ class ApplicationConfigurator extends AbstractConfigurator implements Applicatio
             container: $container,
             config: $config,
         );
-    }
-
-    private static function resolveAppConfig(
-        ContainerInterface $container,
-    ): AppConfigInterface {
-        try {
-            return $container->resolve(AppConfigInterface::class);
-        } catch (ContainerException $exception) {
-            throw ConfigException::fromMissingAppConfig(
-                previous: $exception,
-            );
-        }
     }
 
     public function withAppName(

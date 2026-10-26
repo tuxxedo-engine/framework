@@ -18,7 +18,11 @@ use Fixture\Console\ConsoleConfigurator\ServiceMarker;
 use PHPUnit\Framework\TestCase;
 use Support\Console\Kernel\RecordingErrorHandler;
 use Support\Console\Middleware\RecordingCommandMiddleware;
+use Support\Env\Source\StubEnvSource;
 use Tuxxedo\Application\Environment;
+use Tuxxedo\Config\Config;
+use Tuxxedo\Config\ConfigException;
+use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Console\Config\HelpConfig;
 use Tuxxedo\Console\Config\SuggestionPolicy;
 use Tuxxedo\Console\ConsoleConfigurator;
@@ -33,12 +37,18 @@ use Tuxxedo\Console\Kernel\KernelInterface;
 use Tuxxedo\Console\Output\ConsoleOutputInterface;
 use Tuxxedo\Console\Output\OutputInterface;
 use Tuxxedo\Container\Container;
+use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Env\Env;
+use Tuxxedo\Env\EnvInterface;
 use Tuxxedo\Intl\Config\IntlConfig;
 use Tuxxedo\Intl\Locale;
 
 class ConsoleConfiguratorTest extends TestCase
 {
     private const string SERVICE_FILE = __DIR__ . '/../../Fixture/Console/ConsoleConfigurator/service.php';
+    private const string CONFIG_FILE = __DIR__ . '/../../Fixture/Console/ConsoleConfigurator/app.php';
+    private const string CONFIG_DIRECTORY = __DIR__ . '/../../Fixture/Console/ConsoleConfigurator/directory';
+    private const string NO_APP_CONFIG_FILE = __DIR__ . '/../../Fixture/Console/ConsoleConfigurator/no-app-config.php';
 
     protected function setUp(): void
     {
@@ -56,6 +66,109 @@ class ConsoleConfiguratorTest extends TestCase
         );
 
         self::assertSame($container, $configurator->container);
+    }
+
+    public function testCreateFromConfigFilePopulatesAppMetadataFromConfig(): void
+    {
+        $configurator = ConsoleConfigurator::createFromConfigFile(self::CONFIG_FILE);
+
+        self::assertSame('TuxxedoConsoleApp', $configurator->appName);
+        self::assertSame('2.3.4', $configurator->appVersion);
+        self::assertSame(Environment::STAGING, $configurator->appEnvironment);
+    }
+
+    public function testCreateFromConfigFileInjectsContainerAndConfig(): void
+    {
+        $configurator = ConsoleConfigurator::createFromConfigFile(self::CONFIG_FILE);
+
+        self::assertInstanceOf(Container::class, $configurator->container);
+        self::assertInstanceOf(Config::class, $configurator->config);
+    }
+
+    public function testCreateFromConfigFileRegistersEnv(): void
+    {
+        $configurator = ConsoleConfigurator::createFromConfigFile(
+            file: self::CONFIG_FILE,
+            env: new Env(
+                new StubEnvSource([]),
+            ),
+        );
+
+        /** @var ContainerInterface $container */
+        $container = $configurator->container;
+
+        self::assertTrue($container->isBound(EnvInterface::class));
+    }
+
+    public function testCreateFromConfigFileThrowsConfigExceptionWhenAppConfigIsMissing(): void
+    {
+        self::expectException(ConfigException::class);
+
+        ConsoleConfigurator::createFromConfigFile(self::NO_APP_CONFIG_FILE);
+    }
+
+    public function testCreateFromConfigDirectoryPopulatesAppMetadataFromConfig(): void
+    {
+        $configurator = ConsoleConfigurator::createFromConfigDirectory(self::CONFIG_DIRECTORY);
+
+        self::assertSame('TuxxedoConsoleDirApp', $configurator->appName);
+        self::assertSame('5.6.7', $configurator->appVersion);
+        self::assertSame(Environment::DEVELOPMENT, $configurator->appEnvironment);
+    }
+
+    public function testCreateFromConfigDirectoryInjectsContainerAndConfig(): void
+    {
+        $configurator = ConsoleConfigurator::createFromConfigDirectory(self::CONFIG_DIRECTORY);
+
+        self::assertInstanceOf(Container::class, $configurator->container);
+        self::assertInstanceOf(Config::class, $configurator->config);
+    }
+
+    public function testCreateFromConfigDirectoryUsesGivenContainer(): void
+    {
+        $container = new Container();
+
+        $configurator = ConsoleConfigurator::createFromConfigDirectory(
+            directory: self::CONFIG_DIRECTORY,
+            container: $container,
+        );
+
+        self::assertSame($container, $configurator->container);
+    }
+
+    public function testCreateFromConfigDirectoryRegistersEnv(): void
+    {
+        $configurator = ConsoleConfigurator::createFromConfigDirectory(
+            directory: self::CONFIG_DIRECTORY,
+            env: new Env(
+                new StubEnvSource([]),
+            ),
+        );
+
+        /** @var ContainerInterface $container */
+        $container = $configurator->container;
+
+        self::assertTrue($container->isBound(EnvInterface::class));
+    }
+
+    public function testBuildBindsConfigInContainer(): void
+    {
+        $container = new Container();
+        $container->singleton(
+            new IntlConfig(
+                rootDirectory: \dirname(__DIR__, 3) . '/resources/intl',
+                defaultLocale: Locale::parse('en-US'),
+            ),
+        );
+
+        $configurator = ConsoleConfigurator::createFromConfigDirectory(
+            directory: self::CONFIG_DIRECTORY,
+            container: $container,
+        );
+
+        $configurator->build();
+
+        self::assertSame($configurator->config, $container->resolve(ConfigInterface::class));
     }
 
     public function testWithAppNameStoresName(): void

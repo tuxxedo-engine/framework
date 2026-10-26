@@ -15,6 +15,7 @@ namespace Tuxxedo\Console;
 
 use Tuxxedo\Application\AbstractConfigurator;
 use Tuxxedo\Application\Environment;
+use Tuxxedo\Config\Config;
 use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Console\Config\HelpConfig;
 use Tuxxedo\Console\Config\SuggestionPolicy;
@@ -36,6 +37,7 @@ use Tuxxedo\Console\Output\OutputInterface;
 use Tuxxedo\Console\Stream\PhpInputStream;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Env\EnvInterface;
 use Tuxxedo\File\FileCollectionFactory;
 use Tuxxedo\File\FileException;
 
@@ -113,6 +115,52 @@ class ConsoleConfigurator extends AbstractConfigurator implements ConsoleConfigu
         return new self(
             container: $container ?? new Container(),
         );
+    }
+
+    public static function createFromConfigFile(
+        string $file,
+        ?ContainerInterface $container = null,
+        ?EnvInterface $env = null,
+    ): self {
+        $container ??= new Container();
+
+        if ($env !== null) {
+            $container->singleton($env);
+        }
+
+        $config = Config::createFromFile($container, $file);
+        $appConfig = self::resolveAppConfig($container);
+
+        return new self(
+            container: $container,
+            config: $config,
+        )
+            ->withAppName($appConfig->name)
+            ->withAppVersion($appConfig->version)
+            ->withAppEnvironment($appConfig->environment);
+    }
+
+    public static function createFromConfigDirectory(
+        string $directory,
+        ?ContainerInterface $container = null,
+        ?EnvInterface $env = null,
+    ): self {
+        $container ??= new Container();
+
+        if ($env !== null) {
+            $container->singleton($env);
+        }
+
+        $config = Config::createFromDirectory($container, $directory);
+        $appConfig = self::resolveAppConfig($container);
+
+        return new self(
+            container: $container,
+            config: $config,
+        )
+            ->withAppName($appConfig->name)
+            ->withAppVersion($appConfig->version)
+            ->withAppEnvironment($appConfig->environment);
     }
 
     public function withDefaultCommandDiscovery(
@@ -294,6 +342,7 @@ class ConsoleConfigurator extends AbstractConfigurator implements ConsoleConfigu
         $container = $this->container ?? new Container();
 
         $container->singleton($container);
+        $container->singleton($this->config ?? Config::class);
         $container->singleton($output);
         $container->singletonLazy(
             class: OutputInterface::class,

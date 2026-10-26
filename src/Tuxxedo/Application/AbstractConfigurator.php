@@ -13,12 +13,15 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Application;
 
+use Tuxxedo\Application\Config\AppConfigInterface;
 use Tuxxedo\Cache\CacheException;
 use Tuxxedo\Cache\CacheInterface;
 use Tuxxedo\Cache\CacheManager;
 use Tuxxedo\Cache\CacheManagerInterface;
 use Tuxxedo\Cache\Config\CacheConfigInterface;
+use Tuxxedo\Config\ConfigException;
 use Tuxxedo\Config\ConfigInterface;
+use Tuxxedo\Container\ContainerException;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\Config\ConnectionManagerConfigInterface;
 use Tuxxedo\Database\ConnectionManager;
@@ -59,6 +62,18 @@ abstract class AbstractConfigurator implements AbstractConfiguratorInterface
         public private(set) ?ConfigInterface $config = null,
         public private(set) ?ContainerInterface $container = null,
     ) {
+    }
+
+    protected static function resolveAppConfig(
+        ContainerInterface $container,
+    ): AppConfigInterface {
+        try {
+            return $container->resolve(AppConfigInterface::class);
+        } catch (ContainerException $exception) {
+            throw ConfigException::fromMissingAppConfig(
+                previous: $exception,
+            );
+        }
     }
 
     public function withLumi(
