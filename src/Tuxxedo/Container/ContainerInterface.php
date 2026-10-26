@@ -117,9 +117,9 @@ interface ContainerInterface
     ): array;
 
     /**
-     * @template TReturnType
+     * @template TReturnType = mixed
      *
-     * @param \Closure(): TReturnType $callable
+     * @param \Closure(never ...): TReturnType $callable
      * @param array<array-key, mixed> $arguments
      * @return TReturnType
      */

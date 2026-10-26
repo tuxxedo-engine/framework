@@ -370,9 +370,7 @@ class ConsoleConfigurator extends AbstractConfigurator implements ConsoleConfigu
             $container->singleton($this->helpFormatter);
         }
 
-        foreach ($this->serviceFiles as $file) {
-            $container->callFile($file);
-        }
+        $this->loadServiceFiles($container);
 
         $discoverer = new CommandDiscoverer(
             container: $container,

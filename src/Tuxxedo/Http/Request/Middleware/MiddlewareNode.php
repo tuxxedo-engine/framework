@@ -20,7 +20,7 @@ use Tuxxedo\Http\Response\ResponseInterface;
 class MiddlewareNode implements MiddlewareInterface
 {
     /**
-     * @param \Closure(): MiddlewareInterface $current
+     * @param \Closure(never ...): MiddlewareInterface $current
      */
     public function __construct(
         private readonly ContainerInterface $container,

@@ -21,7 +21,7 @@ class RouteBuilderGroup implements RouteBuilderGroupInterface
 {
     /**
      * @param \Closure(RouteDefinition): void $sink
-     * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
+     * @param list<class-string<MiddlewareInterface>|\Closure(never ...): MiddlewareInterface> $middleware
      */
     public function __construct(
         private readonly \Closure $sink,
@@ -288,7 +288,7 @@ class RouteBuilderGroup implements RouteBuilderGroupInterface
 
     /**
      * @param class-string $controller
-     * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
+     * @param list<class-string<MiddlewareInterface>|\Closure(never ...): MiddlewareInterface> $middleware
      */
     private function push(
         ?Method $method,

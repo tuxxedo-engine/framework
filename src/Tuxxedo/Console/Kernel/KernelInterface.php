@@ -46,28 +46,28 @@ interface KernelInterface
     }
 
     /**
-     * @var array<\Closure(): CommandMiddlewareInterface>
+     * @var array<\Closure(never ...): CommandMiddlewareInterface>
      */
     public array $middleware {
         get;
     }
 
     /**
-     * @var array<class-string<\Throwable>, array<\Closure(): ConsoleErrorHandlerInterface>>
+     * @var array<class-string<\Throwable>, array<\Closure(never ...): ConsoleErrorHandlerInterface>>
      */
     public array $exceptionHandlers {
         get;
     }
 
     /**
-     * @var array<\Closure(): ConsoleErrorHandlerInterface>
+     * @var array<\Closure(never ...): ConsoleErrorHandlerInterface>
      */
     public array $defaultExceptionHandlers {
         get;
     }
 
     /**
-     * @param (\Closure(): CommandMiddlewareInterface)|CommandMiddlewareInterface $middleware
+     * @param (\Closure(never ...): CommandMiddlewareInterface)|CommandMiddlewareInterface $middleware
      */
     public function middleware(
         \Closure|CommandMiddlewareInterface $middleware,
@@ -75,7 +75,7 @@ interface KernelInterface
 
     /**
      * @param class-string<\Throwable> $exceptionClass
-     * @param (\Closure(): ConsoleErrorHandlerInterface)|ConsoleErrorHandlerInterface $handler
+     * @param (\Closure(never ...): ConsoleErrorHandlerInterface)|ConsoleErrorHandlerInterface $handler
      */
     public function whenException(
         string $exceptionClass,
@@ -83,7 +83,7 @@ interface KernelInterface
     ): static;
 
     /**
-     * @param (\Closure(): ConsoleErrorHandlerInterface)|ConsoleErrorHandlerInterface $handler
+     * @param (\Closure(never ...): ConsoleErrorHandlerInterface)|ConsoleErrorHandlerInterface $handler
      */
     public function defaultExceptionHandler(
         \Closure|ConsoleErrorHandlerInterface $handler,

@@ -347,6 +347,13 @@ class Container implements ContainerInterface
         return $tagged;
     }
 
+    /**
+     * @template TReturnType = mixed
+     *
+     * @param \Closure(never ...): TReturnType $callable
+     * @param array<array-key, mixed> $arguments
+     * @return TReturnType
+     */
     public function call(
         \Closure $callable,
         array $arguments = [],
@@ -362,6 +369,8 @@ class Container implements ContainerInterface
                         : $this->resolveParameter($parameter)
                 );
         }
+
+        /** @var \Closure(mixed ...): TReturnType $callable */
 
         return $callable(...$callArguments);
     }

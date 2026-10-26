@@ -19,7 +19,7 @@ use Tuxxedo\Container\ContainerInterface;
 readonly class MiddlewareNode implements CommandMiddlewareInterface
 {
     /**
-     * @param \Closure(): CommandMiddlewareInterface $current
+     * @param \Closure(never ...): CommandMiddlewareInterface $current
      */
     public function __construct(
         private ContainerInterface $container,

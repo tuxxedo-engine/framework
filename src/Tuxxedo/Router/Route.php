@@ -22,7 +22,7 @@ readonly class Route implements RouteInterface
 
     /**
      * @param class-string $controller
-     * @param array<(\Closure(): MiddlewareInterface)> $middleware
+     * @param array<(\Closure(never ...): MiddlewareInterface)> $middleware
      * @param RouteArgumentInterface[] $arguments
      * @param class-string<StickyPrefixInterface>|null $stickyPrefix
      */
