@@ -42,7 +42,7 @@ interface RouteInterface
     }
 
     /**
-     * @var array<(\Closure(never ...): MiddlewareInterface)>
+     * @var array<(\Closure(): MiddlewareInterface)>
      */
     public array $middleware {
         get;

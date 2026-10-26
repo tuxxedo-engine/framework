@@ -20,7 +20,7 @@ interface RouteBuilderGroupInterface
 {
     /**
      * @param class-string $controller
-     * @param list<class-string<MiddlewareInterface>|\Closure(never ...): MiddlewareInterface> $middleware
+     * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
      */
     public function get(
         string $uri,
@@ -33,7 +33,7 @@ interface RouteBuilderGroupInterface
 
     /**
      * @param class-string $controller
-     * @param list<class-string<MiddlewareInterface>|\Closure(never ...): MiddlewareInterface> $middleware
+     * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
      */
     public function post(
         string $uri,
@@ -46,7 +46,7 @@ interface RouteBuilderGroupInterface
 
     /**
      * @param class-string $controller
-     * @param list<class-string<MiddlewareInterface>|\Closure(never ...): MiddlewareInterface> $middleware
+     * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
      */
     public function put(
         string $uri,
@@ -59,7 +59,7 @@ interface RouteBuilderGroupInterface
 
     /**
      * @param class-string $controller
-     * @param list<class-string<MiddlewareInterface>|\Closure(never ...): MiddlewareInterface> $middleware
+     * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
      */
     public function patch(
         string $uri,
@@ -72,7 +72,7 @@ interface RouteBuilderGroupInterface
 
     /**
      * @param class-string $controller
-     * @param list<class-string<MiddlewareInterface>|\Closure(never ...): MiddlewareInterface> $middleware
+     * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
      */
     public function delete(
         string $uri,
@@ -85,7 +85,7 @@ interface RouteBuilderGroupInterface
 
     /**
      * @param class-string $controller
-     * @param list<class-string<MiddlewareInterface>|\Closure(never ...): MiddlewareInterface> $middleware
+     * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
      */
     public function options(
         string $uri,
@@ -98,7 +98,7 @@ interface RouteBuilderGroupInterface
 
     /**
      * @param class-string $controller
-     * @param list<class-string<MiddlewareInterface>|\Closure(never ...): MiddlewareInterface> $middleware
+     * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
      */
     public function head(
         string $uri,
@@ -111,7 +111,7 @@ interface RouteBuilderGroupInterface
 
     /**
      * @param class-string $controller
-     * @param list<class-string<MiddlewareInterface>|\Closure(never ...): MiddlewareInterface> $middleware
+     * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
      */
     public function connect(
         string $uri,
@@ -124,7 +124,7 @@ interface RouteBuilderGroupInterface
 
     /**
      * @param class-string $controller
-     * @param list<class-string<MiddlewareInterface>|\Closure(never ...): MiddlewareInterface> $middleware
+     * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
      */
     public function trace(
         string $uri,
@@ -137,7 +137,7 @@ interface RouteBuilderGroupInterface
 
     /**
      * @param class-string $controller
-     * @param list<class-string<MiddlewareInterface>|\Closure(never ...): MiddlewareInterface> $middleware
+     * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
      */
     public function query(
         string $uri,
@@ -150,7 +150,7 @@ interface RouteBuilderGroupInterface
 
     /**
      * @param class-string $controller
-     * @param list<class-string<MiddlewareInterface>|\Closure(never ...): MiddlewareInterface> $middleware
+     * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
      */
     public function any(
         string $uri,
@@ -162,7 +162,7 @@ interface RouteBuilderGroupInterface
     ): static;
 
     /**
-     * @param list<class-string<MiddlewareInterface>|\Closure(never ...): MiddlewareInterface> $middleware
+     * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
      * @param \Closure(RouteBuilderGroupInterface): void $callback
      */
     public function group(

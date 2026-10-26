@@ -203,7 +203,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
     }
 
     /**
-     * @param array<\Closure(never ...): MiddlewareInterface> $middleware
+     * @param array<\Closure(): MiddlewareInterface> $middleware
      * @param \ReflectionClass<object> $reflector
      * @param string[] $namedRoutes
      * @return \Generator<RouteInterface>
@@ -284,7 +284,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
 
     /**
      * @param \ReflectionClass<object>|\ReflectionMethod $reflector
-     * @return array<\Closure(never ...): MiddlewareInterface>
+     * @return array<\Closure(): MiddlewareInterface>
      */
     private function getMiddleware(
         \ReflectionClass|\ReflectionMethod $reflector,
@@ -381,7 +381,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
     }
 
     /**
-     * @param array<(\Closure(never ...): MiddlewareInterface)> $middleware
+     * @param array<(\Closure(): MiddlewareInterface)> $middleware
      * @param ArgumentNode[] $nodes
      * @param class-string $className
      * @return \Generator<RouteInterface>

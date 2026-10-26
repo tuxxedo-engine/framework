@@ -127,7 +127,7 @@ class CommandDiscoverer implements CommandDiscovererInterface
     /**
      * @param \ReflectionClass<object>|\ReflectionMethod $reflector
      *
-     * @return array<\Closure(never ...): CommandMiddlewareInterface>
+     * @return array<\Closure(): CommandMiddlewareInterface>
      */
     private function getMiddleware(
         \ReflectionClass|\ReflectionMethod $reflector,

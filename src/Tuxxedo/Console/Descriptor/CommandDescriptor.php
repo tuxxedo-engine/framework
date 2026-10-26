@@ -23,7 +23,7 @@ class CommandDescriptor implements CommandDescriptorInterface
      * @param list<OptionDescriptorInterface> $options
      * @param list<FlagDescriptorInterface> $flags
      * @param class-string $className
-     * @param array<\Closure(never ...): CommandMiddlewareInterface> $middleware
+     * @param array<\Closure(): CommandMiddlewareInterface> $middleware
      */
     public function __construct(
         public readonly array $path,

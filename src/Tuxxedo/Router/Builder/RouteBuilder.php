@@ -322,7 +322,7 @@ class RouteBuilder implements RouteBuilderInterface
 
     /**
      * @param class-string $controller
-     * @param list<class-string<MiddlewareInterface>|\Closure(never ...): MiddlewareInterface> $middleware
+     * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
      */
     private function addDefinition(
         ?Method $method,
@@ -519,8 +519,8 @@ class RouteBuilder implements RouteBuilderInterface
     }
 
     /**
-     * @param list<class-string<MiddlewareInterface>|\Closure(never ...): MiddlewareInterface> $middleware
-     * @return list<\Closure(never ...): MiddlewareInterface>
+     * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
+     * @return list<\Closure(): MiddlewareInterface>
      */
     private function normalizeMiddleware(
         array $middleware,

@@ -177,7 +177,7 @@ class Kernel implements KernelInterface
     }
 
     /**
-     * @param array<(\Closure(never ...): MiddlewareInterface)> $middlewares
+     * @param array<(\Closure(): MiddlewareInterface)> $middlewares
      */
     private function pipeline(
         array $middlewares,

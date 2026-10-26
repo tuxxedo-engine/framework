@@ -108,7 +108,7 @@ interface ConsoleConfiguratorInterface extends AbstractConfiguratorInterface
 
     /**
      * @param class-string<\Throwable> $exceptionClass
-     * @param (\Closure(never ...): ConsoleErrorHandlerInterface)|ConsoleErrorHandlerInterface $handler
+     * @param (\Closure(): ConsoleErrorHandlerInterface)|ConsoleErrorHandlerInterface $handler
      */
     public function withExceptionHandler(
         string $exceptionClass,
@@ -118,7 +118,7 @@ interface ConsoleConfiguratorInterface extends AbstractConfiguratorInterface
     public function withoutExceptionHandlers(): self;
 
     /**
-     * @param (\Closure(never ...): ConsoleErrorHandlerInterface)|ConsoleErrorHandlerInterface $handler
+     * @param (\Closure(): ConsoleErrorHandlerInterface)|ConsoleErrorHandlerInterface $handler
      */
     public function withDefaultExceptionHandler(
         \Closure|ConsoleErrorHandlerInterface $handler,
@@ -127,7 +127,7 @@ interface ConsoleConfiguratorInterface extends AbstractConfiguratorInterface
     public function withoutDefaultExceptionHandlers(): self;
 
     /**
-     * @param (\Closure(never ...): CommandMiddlewareInterface)|CommandMiddlewareInterface $middleware
+     * @param (\Closure(): CommandMiddlewareInterface)|CommandMiddlewareInterface $middleware
      */
     public function withMiddleware(
         \Closure|CommandMiddlewareInterface $middleware,

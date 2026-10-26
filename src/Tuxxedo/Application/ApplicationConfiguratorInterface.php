@@ -53,21 +53,21 @@ interface ApplicationConfiguratorInterface extends AbstractConfiguratorInterface
     }
 
     /**
-     * @var array<(\Closure(never ...): MiddlewareInterface)>
+     * @var array<(\Closure(): MiddlewareInterface)>
      */
     public array $middleware {
         get;
     }
 
     /**
-     * @var array<class-string<\Throwable>, array<\Closure(never ...): ErrorHandlerInterface>>
+     * @var array<class-string<\Throwable>, array<\Closure(): ErrorHandlerInterface>>
      */
     public array $exceptionHandlers {
         get;
     }
 
     /**
-     * @var array<(\Closure(never ...): ErrorHandlerInterface)>
+     * @var array<(\Closure(): ErrorHandlerInterface)>
      */
     public array $defaultExceptionHandlers {
         get;
@@ -102,7 +102,7 @@ interface ApplicationConfiguratorInterface extends AbstractConfiguratorInterface
     public function withoutMiddleware(): self;
 
     /**
-     * @param (\Closure(never ...): MiddlewareInterface)|MiddlewareInterface $middleware
+     * @param (\Closure(): MiddlewareInterface)|MiddlewareInterface $middleware
      */
     public function withMiddleware(
         \Closure|MiddlewareInterface $middleware,
@@ -112,7 +112,7 @@ interface ApplicationConfiguratorInterface extends AbstractConfiguratorInterface
 
     /**
      * @param class-string<\Throwable> $exceptionClass
-     * @param (\Closure(never ...): ErrorHandlerInterface)|ErrorHandlerInterface $handler
+     * @param (\Closure(): ErrorHandlerInterface)|ErrorHandlerInterface $handler
      */
     public function withExceptionHandler(
         string $exceptionClass,
@@ -122,7 +122,7 @@ interface ApplicationConfiguratorInterface extends AbstractConfiguratorInterface
     public function withoutDefaultExceptionHandlers(): self;
 
     /**
-     * @param (\Closure(never ...): ErrorHandlerInterface)|ErrorHandlerInterface $handler
+     * @param (\Closure(): ErrorHandlerInterface)|ErrorHandlerInterface $handler
      */
     public function withDefaultExceptionHandler(
         \Closure|ErrorHandlerInterface $handler,

@@ -65,7 +65,7 @@ interface CommandDescriptorInterface
     }
 
     /**
-     * @var array<\Closure(never ...): CommandMiddlewareInterface>
+     * @var array<\Closure(): CommandMiddlewareInterface>
      */
     public array $middleware {
         get;
