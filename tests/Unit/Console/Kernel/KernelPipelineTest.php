@@ -127,6 +127,29 @@ class KernelPipelineTest extends TestCase
         );
     }
 
+    public function testGlobalMiddlewareRegisteredAsClassStringIsResolvedAndInvoked(): void
+    {
+        $recording = new RecordingCommandMiddleware();
+        $kernel = $this->makeKernel(
+            commandClasses: [
+                SimpleCommand::class,
+            ],
+        );
+
+        $kernel->container->singleton($recording);
+        $kernel->middleware(RecordingCommandMiddleware::class);
+
+        $exitCode = $kernel->run(
+            argv: [
+                'bin/console',
+                'demo:simple',
+            ],
+        );
+
+        self::assertSame(ExitCode::SUCCESS, $exitCode);
+        self::assertSame(1, $recording->callCount);
+    }
+
     public function testDescriptorWrapperMiddlewareIsInvokedFromMethodAttribute(): void
     {
         $recording = new RecordingCommandMiddleware();

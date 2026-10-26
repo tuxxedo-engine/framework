@@ -254,6 +254,22 @@ class ConsoleConfiguratorTest extends TestCase
         );
     }
 
+    public function testWithExceptionHandlerKeepsClassStringAsIs(): void
+    {
+        $configurator = ConsoleConfigurator::create()
+            ->withExceptionHandler(
+                exceptionClass: \RuntimeException::class,
+                handler: RecordingErrorHandler::class,
+            );
+
+        self::assertSame(
+            [
+                RecordingErrorHandler::class,
+            ],
+            $configurator->exceptionHandlers[\RuntimeException::class],
+        );
+    }
+
     public function testWithoutExceptionHandlersClearsAll(): void
     {
         $configurator = ConsoleConfigurator::create()
@@ -281,6 +297,19 @@ class ConsoleConfiguratorTest extends TestCase
         );
     }
 
+    public function testWithDefaultExceptionHandlerKeepsClassStringAsIs(): void
+    {
+        $configurator = ConsoleConfigurator::create()
+            ->withDefaultExceptionHandler(RecordingErrorHandler::class);
+
+        self::assertSame(
+            [
+                RecordingErrorHandler::class,
+            ],
+            $configurator->defaultExceptionHandlers,
+        );
+    }
+
     public function testWithoutDefaultExceptionHandlersClearsAll(): void
     {
         $configurator = ConsoleConfigurator::create()
@@ -288,6 +317,19 @@ class ConsoleConfiguratorTest extends TestCase
             ->withoutDefaultExceptionHandlers();
 
         self::assertSame([], $configurator->defaultExceptionHandlers);
+    }
+
+    public function testWithMiddlewareKeepsClassStringAsIs(): void
+    {
+        $configurator = ConsoleConfigurator::create()
+            ->withMiddleware(RecordingCommandMiddleware::class);
+
+        self::assertSame(
+            [
+                RecordingCommandMiddleware::class,
+            ],
+            $configurator->middleware,
+        );
     }
 
     public function testWithMiddlewareAppends(): void

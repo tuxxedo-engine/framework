@@ -197,9 +197,9 @@ class ApplicationConfigurator extends AbstractConfigurator implements Applicatio
     }
 
     public function withMiddleware(
-        \Closure|MiddlewareInterface $middleware,
+        \Closure|string|MiddlewareInterface $middleware,
     ): self {
-        if (!$middleware instanceof \Closure) {
+        if ($middleware instanceof MiddlewareInterface) {
             $middleware = static fn (): MiddlewareInterface => $middleware;
         }
 
@@ -217,9 +217,9 @@ class ApplicationConfigurator extends AbstractConfigurator implements Applicatio
 
     public function withExceptionHandler(
         string $exceptionClass,
-        \Closure|ErrorHandlerInterface $handler,
+        \Closure|string|ErrorHandlerInterface $handler,
     ): self {
-        if (!$handler instanceof \Closure) {
+        if ($handler instanceof ErrorHandlerInterface) {
             $handler = static fn (): ErrorHandlerInterface => $handler;
         }
 
@@ -237,9 +237,9 @@ class ApplicationConfigurator extends AbstractConfigurator implements Applicatio
     }
 
     public function withDefaultExceptionHandler(
-        \Closure|ErrorHandlerInterface $handler,
+        \Closure|string|ErrorHandlerInterface $handler,
     ): self {
-        if (!$handler instanceof \Closure) {
+        if ($handler instanceof ErrorHandlerInterface) {
             $handler = static fn (): ErrorHandlerInterface => $handler;
         }
 

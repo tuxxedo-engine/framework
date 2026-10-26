@@ -14,11 +14,13 @@ declare(strict_types=1);
 namespace Unit\Http\Kernel;
 
 use PHPUnit\Framework\TestCase;
+use Support\Http\Kernel\RecordingErrorHandler;
 use Support\Http\Kernel\StubDispatcher;
 use Support\Http\Request\Context\StubBodyContext;
 use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
+use Support\Http\Request\Middleware\RecordingMiddleware;
 use Support\Http\Response\StubResponseEmitter;
 use Tuxxedo\Config\Config;
 use Tuxxedo\Container\Container;
@@ -117,6 +119,18 @@ class KernelTest extends TestCase
         self::assertSame($instance, ($kernel->middleware[0])());
     }
 
+    public function testMiddlewareResolvesClassStringThroughContainer(): void
+    {
+        $kernel = $this->makeKernel();
+        $instance = new RecordingMiddleware();
+
+        $kernel->container->singleton($instance);
+        $kernel->middleware(RecordingMiddleware::class);
+
+        self::assertCount(1, $kernel->middleware);
+        self::assertSame($instance, ($kernel->middleware[0])());
+    }
+
     public function testMiddlewareReturnsSelf(): void
     {
         $kernel = $this->makeKernel();
@@ -164,6 +178,17 @@ class KernelTest extends TestCase
 
         self::assertInstanceOf(\Closure::class, $stored);
         self::assertSame($instance, $stored());
+    }
+
+    public function testWhenExceptionResolvesClassStringThroughContainer(): void
+    {
+        $kernel = $this->makeKernel();
+        $instance = new RecordingErrorHandler();
+
+        $kernel->container->singleton($instance);
+        $kernel->whenException(\RuntimeException::class, RecordingErrorHandler::class);
+
+        self::assertSame($instance, ($kernel->exceptionHandlers[\RuntimeException::class][0])());
     }
 
     public function testDefaultExceptionHandlerRegistersHandler(): void
@@ -429,6 +454,18 @@ class KernelTest extends TestCase
 
         self::assertCount(1, $kernel->defaultExceptionHandlers);
         self::assertInstanceOf(\Closure::class, $kernel->defaultExceptionHandlers[0]);
+        self::assertSame($instance, ($kernel->defaultExceptionHandlers[0])());
+    }
+
+    public function testDefaultExceptionHandlerResolvesClassStringThroughContainer(): void
+    {
+        $kernel = $this->makeKernel();
+        $instance = new RecordingErrorHandler();
+
+        $kernel->container->singleton($instance);
+        $kernel->defaultExceptionHandler(RecordingErrorHandler::class);
+
+        self::assertCount(1, $kernel->defaultExceptionHandlers);
         self::assertSame($instance, ($kernel->defaultExceptionHandlers[0])());
     }
 

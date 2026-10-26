@@ -72,21 +72,21 @@ interface ConsoleConfiguratorInterface extends AbstractConfiguratorInterface
     }
 
     /**
-     * @var list<\Closure|CommandMiddlewareInterface>
+     * @var list<\Closure|class-string<CommandMiddlewareInterface>|CommandMiddlewareInterface>
      */
     public array $middleware {
         get;
     }
 
     /**
-     * @var array<class-string<\Throwable>, list<\Closure|ConsoleErrorHandlerInterface>>
+     * @var array<class-string<\Throwable>, list<\Closure|class-string<ConsoleErrorHandlerInterface>|ConsoleErrorHandlerInterface>>
      */
     public array $exceptionHandlers {
         get;
     }
 
     /**
-     * @var list<\Closure|ConsoleErrorHandlerInterface>
+     * @var list<\Closure|class-string<ConsoleErrorHandlerInterface>|ConsoleErrorHandlerInterface>
      */
     public array $defaultExceptionHandlers {
         get;
@@ -108,29 +108,29 @@ interface ConsoleConfiguratorInterface extends AbstractConfiguratorInterface
 
     /**
      * @param class-string<\Throwable> $exceptionClass
-     * @param (\Closure(): ConsoleErrorHandlerInterface)|ConsoleErrorHandlerInterface $handler
+     * @param (\Closure(): ConsoleErrorHandlerInterface)|class-string<ConsoleErrorHandlerInterface>|ConsoleErrorHandlerInterface $handler
      */
     public function withExceptionHandler(
         string $exceptionClass,
-        \Closure|ConsoleErrorHandlerInterface $handler,
+        \Closure|string|ConsoleErrorHandlerInterface $handler,
     ): self;
 
     public function withoutExceptionHandlers(): self;
 
     /**
-     * @param (\Closure(): ConsoleErrorHandlerInterface)|ConsoleErrorHandlerInterface $handler
+     * @param (\Closure(): ConsoleErrorHandlerInterface)|class-string<ConsoleErrorHandlerInterface>|ConsoleErrorHandlerInterface $handler
      */
     public function withDefaultExceptionHandler(
-        \Closure|ConsoleErrorHandlerInterface $handler,
+        \Closure|string|ConsoleErrorHandlerInterface $handler,
     ): self;
 
     public function withoutDefaultExceptionHandlers(): self;
 
     /**
-     * @param (\Closure(): CommandMiddlewareInterface)|CommandMiddlewareInterface $middleware
+     * @param (\Closure(): CommandMiddlewareInterface)|class-string<CommandMiddlewareInterface>|CommandMiddlewareInterface $middleware
      */
     public function withMiddleware(
-        \Closure|CommandMiddlewareInterface $middleware,
+        \Closure|string|CommandMiddlewareInterface $middleware,
     ): self;
 
     public function withoutMiddleware(): self;

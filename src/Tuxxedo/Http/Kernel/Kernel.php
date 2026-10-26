@@ -48,9 +48,12 @@ class Kernel implements KernelInterface
     }
 
     public function middleware(
-        \Closure|MiddlewareInterface $middleware,
+        \Closure|string|MiddlewareInterface $middleware,
     ): static {
-        if (!$middleware instanceof \Closure) {
+        if (\is_string($middleware)) {
+            $container = $this->container;
+            $middleware = static fn (): MiddlewareInterface => $container->resolve($middleware);
+        } elseif (!$middleware instanceof \Closure) {
             $middleware = static fn (): MiddlewareInterface => $middleware;
         }
 
@@ -61,9 +64,12 @@ class Kernel implements KernelInterface
 
     public function whenException(
         string $exceptionClass,
-        \Closure|ErrorHandlerInterface $handler,
+        \Closure|string|ErrorHandlerInterface $handler,
     ): static {
-        if (!$handler instanceof \Closure) {
+        if (\is_string($handler)) {
+            $container = $this->container;
+            $handler = static fn (): ErrorHandlerInterface => $container->resolve($handler);
+        } elseif (!$handler instanceof \Closure) {
             $handler = static fn (): ErrorHandlerInterface => $handler;
         }
 
@@ -74,9 +80,12 @@ class Kernel implements KernelInterface
     }
 
     public function defaultExceptionHandler(
-        \Closure|ErrorHandlerInterface $handler,
+        \Closure|string|ErrorHandlerInterface $handler,
     ): static {
-        if (!$handler instanceof \Closure) {
+        if (\is_string($handler)) {
+            $container = $this->container;
+            $handler = static fn (): ErrorHandlerInterface => $container->resolve($handler);
+        } elseif (!$handler instanceof \Closure) {
             $handler = static fn (): ErrorHandlerInterface => $handler;
         }
 

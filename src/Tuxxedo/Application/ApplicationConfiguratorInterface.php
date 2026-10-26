@@ -53,21 +53,21 @@ interface ApplicationConfiguratorInterface extends AbstractConfiguratorInterface
     }
 
     /**
-     * @var array<(\Closure(): MiddlewareInterface)>
+     * @var array<(\Closure(): MiddlewareInterface)|class-string<MiddlewareInterface>>
      */
     public array $middleware {
         get;
     }
 
     /**
-     * @var array<class-string<\Throwable>, array<\Closure(): ErrorHandlerInterface>>
+     * @var array<class-string<\Throwable>, array<(\Closure(): ErrorHandlerInterface)|class-string<ErrorHandlerInterface>>>
      */
     public array $exceptionHandlers {
         get;
     }
 
     /**
-     * @var array<(\Closure(): ErrorHandlerInterface)>
+     * @var array<(\Closure(): ErrorHandlerInterface)|class-string<ErrorHandlerInterface>>
      */
     public array $defaultExceptionHandlers {
         get;
@@ -102,30 +102,30 @@ interface ApplicationConfiguratorInterface extends AbstractConfiguratorInterface
     public function withoutMiddleware(): self;
 
     /**
-     * @param (\Closure(): MiddlewareInterface)|MiddlewareInterface $middleware
+     * @param (\Closure(): MiddlewareInterface)|class-string<MiddlewareInterface>|MiddlewareInterface $middleware
      */
     public function withMiddleware(
-        \Closure|MiddlewareInterface $middleware,
+        \Closure|string|MiddlewareInterface $middleware,
     ): self;
 
     public function withoutExceptionHandlers(): self;
 
     /**
      * @param class-string<\Throwable> $exceptionClass
-     * @param (\Closure(): ErrorHandlerInterface)|ErrorHandlerInterface $handler
+     * @param (\Closure(): ErrorHandlerInterface)|class-string<ErrorHandlerInterface>|ErrorHandlerInterface $handler
      */
     public function withExceptionHandler(
         string $exceptionClass,
-        \Closure|ErrorHandlerInterface $handler,
+        \Closure|string|ErrorHandlerInterface $handler,
     ): self;
 
     public function withoutDefaultExceptionHandlers(): self;
 
     /**
-     * @param (\Closure(): ErrorHandlerInterface)|ErrorHandlerInterface $handler
+     * @param (\Closure(): ErrorHandlerInterface)|class-string<ErrorHandlerInterface>|ErrorHandlerInterface $handler
      */
     public function withDefaultExceptionHandler(
-        \Closure|ErrorHandlerInterface $handler,
+        \Closure|string|ErrorHandlerInterface $handler,
     ): self;
 
     public function withRouteFile(

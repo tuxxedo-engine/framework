@@ -52,17 +52,17 @@ class ConsoleConfigurator extends AbstractConfigurator implements ConsoleConfigu
     public private(set) ?string $discoveryBaseNamespace = null;
 
     /**
-     * @var array<class-string<\Throwable>, list<\Closure|ConsoleErrorHandlerInterface>>
+     * @var array<class-string<\Throwable>, list<\Closure|class-string<ConsoleErrorHandlerInterface>|ConsoleErrorHandlerInterface>>
      */
     public private(set) array $exceptionHandlers = [];
 
     /**
-     * @var list<\Closure|ConsoleErrorHandlerInterface>
+     * @var list<\Closure|class-string<ConsoleErrorHandlerInterface>|ConsoleErrorHandlerInterface>
      */
     public private(set) array $defaultExceptionHandlers = [];
 
     /**
-     * @var list<\Closure|CommandMiddlewareInterface>
+     * @var list<\Closure|class-string<CommandMiddlewareInterface>|CommandMiddlewareInterface>
      */
     public private(set) array $middleware = [];
 
@@ -192,7 +192,7 @@ class ConsoleConfigurator extends AbstractConfigurator implements ConsoleConfigu
 
     public function withExceptionHandler(
         string $exceptionClass,
-        \Closure|ConsoleErrorHandlerInterface $handler,
+        \Closure|string|ConsoleErrorHandlerInterface $handler,
     ): self {
         $this->exceptionHandlers[$exceptionClass] ??= [];
         $this->exceptionHandlers[$exceptionClass][] = $handler;
@@ -208,7 +208,7 @@ class ConsoleConfigurator extends AbstractConfigurator implements ConsoleConfigu
     }
 
     public function withDefaultExceptionHandler(
-        \Closure|ConsoleErrorHandlerInterface $handler,
+        \Closure|string|ConsoleErrorHandlerInterface $handler,
     ): self {
         $this->defaultExceptionHandlers[] = $handler;
 
@@ -223,7 +223,7 @@ class ConsoleConfigurator extends AbstractConfigurator implements ConsoleConfigu
     }
 
     public function withMiddleware(
-        \Closure|CommandMiddlewareInterface $middleware,
+        \Closure|string|CommandMiddlewareInterface $middleware,
     ): self {
         $this->middleware[] = $middleware;
 

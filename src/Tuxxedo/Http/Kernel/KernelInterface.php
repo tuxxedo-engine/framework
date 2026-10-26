@@ -84,26 +84,26 @@ interface KernelInterface
     }
 
     /**
-     * @param (\Closure(): MiddlewareInterface)|MiddlewareInterface $middleware
+     * @param (\Closure(): MiddlewareInterface)|class-string<MiddlewareInterface>|MiddlewareInterface $middleware
      */
     public function middleware(
-        \Closure|MiddlewareInterface $middleware,
+        \Closure|string|MiddlewareInterface $middleware,
     ): static;
 
     /**
      * @param class-string<\Throwable> $exceptionClass
-     * @param (\Closure(): ErrorHandlerInterface)|ErrorHandlerInterface $handler
+     * @param (\Closure(): ErrorHandlerInterface)|class-string<ErrorHandlerInterface>|ErrorHandlerInterface $handler
      */
     public function whenException(
         string $exceptionClass,
-        \Closure|ErrorHandlerInterface $handler,
+        \Closure|string|ErrorHandlerInterface $handler,
     ): static;
 
     /**
-     * @param (\Closure(): ErrorHandlerInterface)|ErrorHandlerInterface $handler
+     * @param (\Closure(): ErrorHandlerInterface)|class-string<ErrorHandlerInterface>|ErrorHandlerInterface $handler
      */
     public function defaultExceptionHandler(
-        \Closure|ErrorHandlerInterface $handler,
+        \Closure|string|ErrorHandlerInterface $handler,
     ): static;
 
     public function run(

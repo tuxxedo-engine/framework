@@ -20,6 +20,7 @@ use Support\Cache\InMemoryCacheDriverConfig;
 use Support\Database\StubConnectionManager;
 use Support\Env\Source\StubEnvSource;
 use Support\File\Storage\StubStorage;
+use Support\Http\Kernel\RecordingErrorHandler;
 use Support\Http\Kernel\StubDispatcher;
 use Support\Http\Request\Middleware\RecordingMiddleware;
 use Support\Http\Response\StubResponseEmitter;
@@ -561,6 +562,15 @@ class ApplicationConfiguratorTest extends TestCase
         self::assertSame($closure, $configurator->middleware[0]);
     }
 
+    public function testWithMiddlewareKeepsClassStringAsIs(): void
+    {
+        $configurator = new ApplicationConfigurator();
+
+        $configurator->withMiddleware(RecordingMiddleware::class);
+
+        self::assertSame(RecordingMiddleware::class, $configurator->middleware[0]);
+    }
+
     public function testWithMiddlewareAppendsMultipleEntries(): void
     {
         $configurator = new ApplicationConfigurator();
@@ -636,6 +646,18 @@ class ApplicationConfiguratorTest extends TestCase
         );
 
         self::assertSame($closure, $configurator->exceptionHandlers[\RuntimeException::class][0]);
+    }
+
+    public function testWithExceptionHandlerKeepsClassStringAsIs(): void
+    {
+        $configurator = new ApplicationConfigurator();
+
+        $configurator->withExceptionHandler(
+            exceptionClass: \RuntimeException::class,
+            handler: RecordingErrorHandler::class,
+        );
+
+        self::assertSame(RecordingErrorHandler::class, $configurator->exceptionHandlers[\RuntimeException::class][0]);
     }
 
     public function testWithExceptionHandlerAppendsMultipleHandlersUnderSameClass(): void
@@ -729,6 +751,15 @@ class ApplicationConfiguratorTest extends TestCase
         );
 
         self::assertSame($closure, $configurator->defaultExceptionHandlers[0]);
+    }
+
+    public function testWithDefaultExceptionHandlerKeepsClassStringAsIs(): void
+    {
+        $configurator = new ApplicationConfigurator();
+
+        $configurator->withDefaultExceptionHandler(RecordingErrorHandler::class);
+
+        self::assertSame(RecordingErrorHandler::class, $configurator->defaultExceptionHandlers[0]);
     }
 
     public function testWithDefaultExceptionHandlerAppendsMultipleEntries(): void

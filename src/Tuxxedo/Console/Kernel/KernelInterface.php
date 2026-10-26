@@ -67,26 +67,26 @@ interface KernelInterface
     }
 
     /**
-     * @param (\Closure(): CommandMiddlewareInterface)|CommandMiddlewareInterface $middleware
+     * @param (\Closure(): CommandMiddlewareInterface)|class-string<CommandMiddlewareInterface>|CommandMiddlewareInterface $middleware
      */
     public function middleware(
-        \Closure|CommandMiddlewareInterface $middleware,
+        \Closure|string|CommandMiddlewareInterface $middleware,
     ): static;
 
     /**
      * @param class-string<\Throwable> $exceptionClass
-     * @param (\Closure(): ConsoleErrorHandlerInterface)|ConsoleErrorHandlerInterface $handler
+     * @param (\Closure(): ConsoleErrorHandlerInterface)|class-string<ConsoleErrorHandlerInterface>|ConsoleErrorHandlerInterface $handler
      */
     public function whenException(
         string $exceptionClass,
-        \Closure|ConsoleErrorHandlerInterface $handler,
+        \Closure|string|ConsoleErrorHandlerInterface $handler,
     ): static;
 
     /**
-     * @param (\Closure(): ConsoleErrorHandlerInterface)|ConsoleErrorHandlerInterface $handler
+     * @param (\Closure(): ConsoleErrorHandlerInterface)|class-string<ConsoleErrorHandlerInterface>|ConsoleErrorHandlerInterface $handler
      */
     public function defaultExceptionHandler(
-        \Closure|ConsoleErrorHandlerInterface $handler,
+        \Closure|string|ConsoleErrorHandlerInterface $handler,
     ): static;
 
     /**

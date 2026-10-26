@@ -191,6 +191,51 @@ class KernelExceptionTest extends TestCase
         self::assertSame(ExitCode::CONFIG_ERROR, $exitCode);
     }
 
+    public function testPerClassExceptionHandlerRegisteredAsClassStringIsResolvedAndInvoked(): void
+    {
+        $handler = new RecordingErrorHandler(
+            returnedExitCode: ExitCode::CONFIG_ERROR,
+        );
+
+        $kernel = $this->makeKernel();
+        $kernel->container->singleton($handler);
+        $kernel->whenException(
+            exceptionClass: \RuntimeException::class,
+            handler: RecordingErrorHandler::class,
+        );
+
+        $exitCode = $kernel->run(
+            argv: [
+                'bin/console',
+                'demo:throw',
+            ],
+        );
+
+        self::assertSame(1, $handler->callCount);
+        self::assertSame(ExitCode::CONFIG_ERROR, $exitCode);
+    }
+
+    public function testDefaultExceptionHandlerRegisteredAsClassStringIsResolvedAndInvoked(): void
+    {
+        $handler = new RecordingErrorHandler(
+            returnedExitCode: ExitCode::SOFTWARE_ERROR,
+        );
+
+        $kernel = $this->makeKernel();
+        $kernel->container->singleton($handler);
+        $kernel->defaultExceptionHandler(RecordingErrorHandler::class);
+
+        $exitCode = $kernel->run(
+            argv: [
+                'bin/console',
+                'demo:throw',
+            ],
+        );
+
+        self::assertSame(1, $handler->callCount);
+        self::assertSame(ExitCode::SOFTWARE_ERROR, $exitCode);
+    }
+
     public function testDefaultExceptionHandlerRegisteredAsInstanceIsInvoked(): void
     {
         $handler = new RecordingErrorHandler(
