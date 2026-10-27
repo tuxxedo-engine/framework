@@ -19,6 +19,7 @@ use Tuxxedo\Database\Query\Dialect\Sqlite\SqliteDialect;
 use Tuxxedo\Model\Attribute\Column\Date;
 use Tuxxedo\Model\Attribute\Column\DateFormat;
 use Tuxxedo\Model\Attribute\Column\DateTime;
+use Tuxxedo\Model\Attribute\Column\DateTimeFormat;
 use Tuxxedo\Model\Attribute\Column\Time;
 use Tuxxedo\Model\Attribute\Column\TimeFormat;
 use Tuxxedo\Model\Attribute\Column\Timestamp;
@@ -38,7 +39,7 @@ class ColumnFormatTest extends TestCase
 
         yield [
             new DateTime(),
-            'Y-m-d',
+            'Y-m-d H:i:s',
         ];
 
         yield [
@@ -48,7 +49,12 @@ class ColumnFormatTest extends TestCase
 
         yield [
             new Timestamp(),
-            'Y-m-d',
+            'Y-m-d H:i:s',
+        ];
+
+        yield [
+            new DateTime(format: DateTimeFormat::ISO_8601),
+            'Y-m-d\TH:i:sP',
         ];
 
         yield [

@@ -25,6 +25,7 @@ use Tuxxedo\Model\Attribute\Column\Char;
 use Tuxxedo\Model\Attribute\Column\Date;
 use Tuxxedo\Model\Attribute\Column\DateFormat;
 use Tuxxedo\Model\Attribute\Column\DateTime;
+use Tuxxedo\Model\Attribute\Column\DateTimeFormat;
 use Tuxxedo\Model\Attribute\Column\Decimal;
 use Tuxxedo\Model\Attribute\Column\Double;
 use Tuxxedo\Model\Attribute\Column\Enumeration;
@@ -246,18 +247,18 @@ class ColumnRuleProviderTest extends TestCase
         self::assertSame('Y-m', $rules[0]->format);
     }
 
-    public function testDateTimeResolvesDateFormatEnumToStringFormat(): void
+    public function testDateTimeResolvesDateTimeFormatEnumToStringFormat(): void
     {
         $rules = \iterator_to_array(
             (new DateTime(
-                format: DateFormat::US,
+                format: DateTimeFormat::ISO_8601,
             ))->toRules(),
             false,
         );
 
         self::assertCount(1, $rules);
         self::assertInstanceOf(DateTimeRule::class, $rules[0]);
-        self::assertSame('m/d/Y', $rules[0]->format);
+        self::assertSame('Y-m-d\TH:i:sP', $rules[0]->format);
     }
 
     public function testDateTimePassesRawStringFormatThroughToDateTimeRule(): void
@@ -302,11 +303,11 @@ class ColumnRuleProviderTest extends TestCase
         self::assertSame('H:i', $rules[0]->format);
     }
 
-    public function testTimestampResolvesDateFormatEnumToStringFormat(): void
+    public function testTimestampResolvesDateTimeFormatEnumToStringFormat(): void
     {
         $rules = \iterator_to_array(
             (new Timestamp(
-                format: DateFormat::UNIX,
+                format: DateTimeFormat::UNIX,
             ))->toRules(),
             false,
         );

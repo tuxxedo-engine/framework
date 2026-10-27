@@ -316,7 +316,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
             values: [
                 'id' => 1,
                 'name' => 'Alice',
-                'createdAt' => '2026-07-16',
+                'createdAt' => '2026-07-16 10:30:45',
             ],
         );
 
@@ -571,7 +571,7 @@ abstract class AbstractHydratorIntegrationTestCase extends AbstractModelIntegrat
                 'post_id' => 1,
                 'user_id' => 1,
                 'body' => '',
-                'deletedAt' => '2026-07-16',
+                'deletedAt' => '2026-07-16 10:30:45',
             ],
         );
 

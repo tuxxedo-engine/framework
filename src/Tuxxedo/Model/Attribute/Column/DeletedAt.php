@@ -24,7 +24,7 @@ readonly class DeletedAt extends DateTime
      * @param class-string<CoercerInterface>|null $coercer
      */
     public function __construct(
-        DateFormat|string $format = DateFormat::DEFAULT,
+        DateTimeFormat|string $format = DateTimeFormat::DEFAULT,
         ?string $name = null,
         ?string $coercer = InstantCoercer::class,
         bool $nullable = true,

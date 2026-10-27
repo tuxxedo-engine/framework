@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\Hydrator\Coercer;
 
-use Tuxxedo\Model\Attribute\Column\DateFormat;
+use Tuxxedo\Model\Attribute\Column\DateTimeFormat;
 use Tuxxedo\Model\ModelException;
 use Tuxxedo\Temporal\Instant;
 use Tuxxedo\Temporal\InstantInterface;
@@ -24,10 +24,10 @@ class InstantCoercer implements CoercerInterface
     private readonly string $formatString;
 
     public function __construct(
-        DateFormat|string $format = DateFormat::DEFAULT,
+        DateTimeFormat|string $format = DateTimeFormat::DEFAULT,
         private readonly ?TimeZoneInterface $forceTimeZone = null,
     ) {
-        $this->formatString = $format instanceof DateFormat
+        $this->formatString = $format instanceof DateTimeFormat
             ? $format->value
             : $format;
     }

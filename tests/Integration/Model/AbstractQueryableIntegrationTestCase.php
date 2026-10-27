@@ -58,7 +58,7 @@ abstract class AbstractQueryableIntegrationTestCase extends AbstractModelIntegra
             id: 10,
             title: 'First',
             status: 'published',
-            publishedAt: '2026-01-01',
+            publishedAt: '2026-01-01 00:00:00',
             viewCount: 100,
             rating: '4.50',
         );
@@ -76,7 +76,7 @@ abstract class AbstractQueryableIntegrationTestCase extends AbstractModelIntegra
             id: 12,
             title: 'Third',
             status: 'published',
-            publishedAt: '2026-01-05',
+            publishedAt: '2026-01-05 00:00:00',
             viewCount: 200,
             rating: '5.00',
         );
@@ -85,7 +85,7 @@ abstract class AbstractQueryableIntegrationTestCase extends AbstractModelIntegra
             id: 13,
             title: 'Fourth',
             status: 'archived',
-            publishedAt: '2026-01-03',
+            publishedAt: '2026-01-03 00:00:00',
             viewCount: 10,
             rating: '2.00',
         );

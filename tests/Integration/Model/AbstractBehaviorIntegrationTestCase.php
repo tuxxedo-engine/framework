@@ -183,7 +183,7 @@ abstract class AbstractBehaviorIntegrationTestCase extends AbstractModelIntegrat
         $this->seedComment(
             id: 1,
             body: 'hello',
-            createdAt: '2026-01-01',
+            createdAt: '2026-01-01 00:00:00',
             deletedAt: null,
         );
 
@@ -210,8 +210,8 @@ abstract class AbstractBehaviorIntegrationTestCase extends AbstractModelIntegrat
         $this->seedComment(
             id: 2,
             body: 'gone',
-            createdAt: '2026-01-01',
-            deletedAt: '2026-01-02',
+            createdAt: '2026-01-01 00:00:00',
+            deletedAt: '2026-01-02 00:00:00',
         );
 
         $result = $this->modelsManager->findById(
@@ -229,8 +229,8 @@ abstract class AbstractBehaviorIntegrationTestCase extends AbstractModelIntegrat
         $this->seedComment(
             id: 3,
             body: 'gone',
-            createdAt: '2026-01-01',
-            deletedAt: '2026-01-02',
+            createdAt: '2026-01-01 00:00:00',
+            deletedAt: '2026-01-02 00:00:00',
         );
 
         $result = $this->modelsManager->findById(
@@ -250,15 +250,15 @@ abstract class AbstractBehaviorIntegrationTestCase extends AbstractModelIntegrat
         $this->seedComment(
             id: 4,
             body: 'alive',
-            createdAt: '2026-01-01',
+            createdAt: '2026-01-01 00:00:00',
             deletedAt: null,
         );
 
         $this->seedComment(
             id: 5,
             body: 'dead',
-            createdAt: '2026-01-01',
-            deletedAt: '2026-01-02',
+            createdAt: '2026-01-01 00:00:00',
+            deletedAt: '2026-01-02 00:00:00',
         );
 
         $comments = \iterator_to_array(
@@ -276,7 +276,7 @@ abstract class AbstractBehaviorIntegrationTestCase extends AbstractModelIntegrat
         $this->seedComment(
             id: 6,
             body: 'nuke',
-            createdAt: '2026-01-01',
+            createdAt: '2026-01-01 00:00:00',
             deletedAt: null,
         );
 
@@ -301,8 +301,8 @@ abstract class AbstractBehaviorIntegrationTestCase extends AbstractModelIntegrat
         $this->seedComment(
             id: 7,
             body: 'ghost',
-            createdAt: '2026-01-01',
-            deletedAt: '2026-01-02',
+            createdAt: '2026-01-01 00:00:00',
+            deletedAt: '2026-01-02 00:00:00',
         );
 
         $this->expectException(ModelException::class);

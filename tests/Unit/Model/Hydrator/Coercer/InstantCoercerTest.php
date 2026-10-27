@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Unit\Model\Hydrator\Coercer;
 
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Model\Attribute\Column\DateFormat;
+use Tuxxedo\Model\Attribute\Column\DateTimeFormat;
 use Tuxxedo\Model\Hydrator\Coercer\InstantCoercer;
 use Tuxxedo\Model\ModelException;
 use Tuxxedo\Temporal\Instant;
@@ -33,9 +33,19 @@ class InstantCoercerTest extends TestCase
         self::assertSame('2026-07-16 10:30:45', $instant->format('Y-m-d H:i:s'));
     }
 
-    public function testHydrateWithDateFormatEnumProducesInstant(): void
+    public function testHydrateWithDefaultFormatAcceptsSqlDateTime(): void
     {
-        $coercer = new InstantCoercer(format: DateFormat::UNIX);
+        $coercer = new InstantCoercer();
+
+        $instant = $coercer->hydrate(value: '2026-07-16 10:30:45');
+
+        self::assertInstanceOf(InstantInterface::class, $instant);
+        self::assertSame('2026-07-16 10:30:45', $coercer->dehydrate($instant));
+    }
+
+    public function testHydrateWithDateTimeFormatEnumProducesInstant(): void
+    {
+        $coercer = new InstantCoercer(format: DateTimeFormat::UNIX);
 
         $instant = $coercer->hydrate(value: '1721126400');
 

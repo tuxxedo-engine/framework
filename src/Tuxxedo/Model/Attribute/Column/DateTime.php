@@ -38,7 +38,7 @@ readonly class DateTime implements ColumnInterface, ColumnFormatInterface, RuleP
      * @param class-string<BehaviorInterface>|null $behavior
      */
     public function __construct(
-        public DateFormat|string $format = DateFormat::DEFAULT,
+        public DateTimeFormat|string $format = DateTimeFormat::DEFAULT,
         public ?string $name = null,
         public ?string $coercer = InstantCoercer::class,
         public ?string $behavior = null,
@@ -59,7 +59,7 @@ readonly class DateTime implements ColumnInterface, ColumnFormatInterface, RuleP
     public function getFormat(
         DialectInterface $dialect,
     ): string {
-        return $this->format instanceof DateFormat
+        return $this->format instanceof DateTimeFormat
                 ? $this->format->value
                 : $this->format;
     }
@@ -67,7 +67,7 @@ readonly class DateTime implements ColumnInterface, ColumnFormatInterface, RuleP
     public function toRules(): iterable
     {
         yield new DateTimeRule(
-            format: $this->format instanceof DateFormat
+            format: $this->format instanceof DateTimeFormat
                 ? $this->format->value
                 : $this->format,
         );
