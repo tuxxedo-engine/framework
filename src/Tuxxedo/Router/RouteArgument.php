@@ -13,8 +13,14 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Router;
 
+use Tuxxedo\Http\HttpException;
+use Tuxxedo\Reflection\EnumHydrator;
+
 readonly class RouteArgument implements RouteArgumentInterface
 {
+    /**
+     * @param class-string<\UnitEnum>|null $enumClass
+     */
     public function __construct(
         public ArgumentNode $node,
         public ?string $mappedName,
@@ -22,6 +28,7 @@ readonly class RouteArgument implements RouteArgumentInterface
         public bool $allowsNull,
         public mixed $defaultValue,
         public bool $resolverConsumed = false,
+        public ?string $enumClass = null,
     ) {
     }
 
@@ -36,6 +43,21 @@ readonly class RouteArgument implements RouteArgumentInterface
 
         if ($value === null && $this->allowsNull) {
             return null;
+        }
+
+        if ($this->enumClass !== null) {
+            if ($value instanceof \UnitEnum) {
+                return $value;
+            }
+
+            if (!\is_string($value)) {
+                throw HttpException::fromNotFound();
+            }
+
+            return EnumHydrator::hydrate(
+                enumClass: $this->enumClass,
+                value: $value,
+            ) ?? throw HttpException::fromNotFound();
         }
 
         \settype($value, $this->nativeType);

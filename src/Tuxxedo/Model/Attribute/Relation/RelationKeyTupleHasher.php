@@ -31,6 +31,6 @@ class RelationKeyTupleHasher
                 : (string) $value;
         }
 
-        return \implode(self::SEPARATOR, $parts);
+        return \join(self::SEPARATOR, $parts);
     }
 }

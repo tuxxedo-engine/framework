@@ -13,7 +13,12 @@ declare(strict_types=1);
 
 namespace Unit\Router;
 
+use Fixture\Router\RouteDiscoverer\Support\TestIntEnum;
+use Fixture\Router\RouteDiscoverer\Support\TestStringEnum;
+use Fixture\Router\RouteDiscoverer\Support\TestUnitEnum;
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Http\HttpException;
+use Tuxxedo\Http\Response\ResponseCode;
 use Tuxxedo\Router\ArgumentKind;
 use Tuxxedo\Router\ArgumentNode;
 use Tuxxedo\Router\RouteArgument;
@@ -113,6 +118,33 @@ class RouteArgumentTest extends TestCase
         );
 
         self::assertSame(42, $argument->defaultValue);
+    }
+
+    public function testConstructorDefaultsEnumClassToNull(): void
+    {
+        $argument = new RouteArgument(
+            node: $this->makeNode(),
+            mappedName: null,
+            nativeType: 'int',
+            allowsNull: false,
+            defaultValue: null,
+        );
+
+        self::assertNull($argument->enumClass);
+    }
+
+    public function testConstructorExposesEnumClass(): void
+    {
+        $argument = new RouteArgument(
+            node: $this->makeNode(),
+            mappedName: null,
+            nativeType: TestStringEnum::class,
+            allowsNull: false,
+            defaultValue: null,
+            enumClass: TestStringEnum::class,
+        );
+
+        self::assertSame(TestStringEnum::class, $argument->enumClass);
     }
 
     public function testImplementsRouteArgumentInterface(): void
@@ -311,5 +343,167 @@ class RouteArgumentTest extends TestCase
                 [],
             ),
         );
+    }
+
+    public function testGetValueHydratesStringBackedEnum(): void
+    {
+        $argument = new RouteArgument(
+            node: $this->makeNode(
+                name: 'feed',
+            ),
+            mappedName: null,
+            nativeType: TestStringEnum::class,
+            allowsNull: false,
+            defaultValue: null,
+            enumClass: TestStringEnum::class,
+        );
+
+        self::assertSame(
+            TestStringEnum::BEST_SELLERS,
+            $argument->getValue(
+                [
+                    'feed' => 'best.sellers',
+                ],
+            ),
+        );
+    }
+
+    public function testGetValueHydratesIntBackedEnum(): void
+    {
+        $argument = new RouteArgument(
+            node: $this->makeNode(
+                name: 'level',
+            ),
+            mappedName: null,
+            nativeType: TestIntEnum::class,
+            allowsNull: false,
+            defaultValue: null,
+            enumClass: TestIntEnum::class,
+        );
+
+        self::assertSame(
+            TestIntEnum::MINUS_ONE,
+            $argument->getValue(
+                [
+                    'level' => '-1',
+                ],
+            ),
+        );
+    }
+
+    public function testGetValueHydratesUnitEnumByCaseName(): void
+    {
+        $argument = new RouteArgument(
+            node: $this->makeNode(
+                name: 'unit',
+            ),
+            mappedName: null,
+            nativeType: TestUnitEnum::class,
+            allowsNull: false,
+            defaultValue: null,
+            enumClass: TestUnitEnum::class,
+        );
+
+        self::assertSame(
+            TestUnitEnum::BETA,
+            $argument->getValue(
+                [
+                    'unit' => 'BETA',
+                ],
+            ),
+        );
+    }
+
+    public function testGetValueReturnsEnumDefaultWhenOptionalAndMissing(): void
+    {
+        $argument = new RouteArgument(
+            node: $this->makeNode(
+                name: 'feed',
+                optional: true,
+            ),
+            mappedName: null,
+            nativeType: TestStringEnum::class,
+            allowsNull: false,
+            defaultValue: TestStringEnum::NEWEST,
+            enumClass: TestStringEnum::class,
+        );
+
+        self::assertSame(
+            TestStringEnum::NEWEST,
+            $argument->getValue(
+                [],
+            ),
+        );
+    }
+
+    public function testGetValueReturnsNullForNullableEnumWhenOptionalAndMissing(): void
+    {
+        $argument = new RouteArgument(
+            node: $this->makeNode(
+                name: 'unit',
+                optional: true,
+            ),
+            mappedName: null,
+            nativeType: TestUnitEnum::class,
+            allowsNull: true,
+            defaultValue: null,
+            enumClass: TestUnitEnum::class,
+        );
+
+        self::assertNull(
+            $argument->getValue(
+                [],
+            ),
+        );
+    }
+
+    public function testGetValueThrowsNotFoundForUnknownEnumValue(): void
+    {
+        $argument = new RouteArgument(
+            node: $this->makeNode(
+                name: 'feed',
+            ),
+            mappedName: null,
+            nativeType: TestStringEnum::class,
+            allowsNull: false,
+            defaultValue: null,
+            enumClass: TestStringEnum::class,
+        );
+
+        try {
+            $argument->getValue(
+                [
+                    'feed' => 'NEWEST',
+                ],
+            );
+
+            self::fail('Expected HttpException was not thrown');
+        } catch (HttpException $exception) {
+            self::assertSame(ResponseCode::NOT_FOUND, $exception->responseCode);
+        }
+    }
+
+    public function testGetValueThrowsNotFoundForMissingEnumValue(): void
+    {
+        $argument = new RouteArgument(
+            node: $this->makeNode(
+                name: 'feed',
+            ),
+            mappedName: null,
+            nativeType: TestStringEnum::class,
+            allowsNull: false,
+            defaultValue: null,
+            enumClass: TestStringEnum::class,
+        );
+
+        try {
+            $argument->getValue(
+                [],
+            );
+
+            self::fail('Expected HttpException was not thrown');
+        } catch (HttpException $exception) {
+            self::assertSame(ResponseCode::NOT_FOUND, $exception->responseCode);
+        }
     }
 }

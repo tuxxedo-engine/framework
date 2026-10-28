@@ -30,6 +30,7 @@ class PathCompiler implements PathCompilerInterface
     public function compile(
         string $path,
         ?PrefixInterface $prefix = null,
+        array $enumArguments = [],
     ): CompiledPathInterface {
         $prefixedArguments = [];
 
@@ -53,7 +54,7 @@ class PathCompiler implements PathCompilerInterface
 
         $regexBody = \preg_replace_callback(
             self::ARGUMENT_REGEX,
-            static function (array $matches) use (&$nodes, $prefixedArguments, $patterns): string {
+            static function (array $matches) use (&$nodes, $prefixedArguments, $patterns, $enumArguments): string {
                 $slash = $matches[1];
                 $optional = $matches[2] === '?';
                 $name = $matches[3];
@@ -83,9 +84,13 @@ class PathCompiler implements PathCompilerInterface
                     prefixed: \in_array($name, $prefixedArguments, true),
                 );
 
-                $pattern = $regexConstraint
-                    ?? $patterns->get($typeConstraint ?? '')->regex
-                    ?? '[^/]+';
+                if ($kind === ArgumentKind::TYPED_IMPLICIT && \array_key_exists($name, $enumArguments)) {
+                    $pattern = self::getEnumPattern($enumArguments[$name]);
+                } else {
+                    $pattern = $regexConstraint ??
+                        $patterns->get($typeConstraint ?? '')->regex ??
+                        '[^/]+';
+                }
 
                 $segment = '(?<' . $name . '>' . $pattern . ')';
 
@@ -100,5 +105,25 @@ class PathCompiler implements PathCompilerInterface
             regexPath: '#^' . $regexBody . '$#',
             argumentNodes: $nodes,
         );
+    }
+
+    /**
+     * @param class-string<\UnitEnum> $enumClass
+     */
+    private static function getEnumPattern(
+        string $enumClass,
+    ): string {
+        $cases = [];
+
+        foreach ($enumClass::cases() as $case) {
+            $cases[] = \preg_quote(
+                str: $case instanceof \BackedEnum
+                    ? (string) $case->value
+                    : $case->name,
+                delimiter: '#',
+            );
+        }
+
+        return \join('|', $cases);
     }
 }

@@ -16,6 +16,8 @@ namespace Unit\Router;
 use Fixture\Router\RouteDiscoverer\Support\AnotherMiddleware;
 use Fixture\Router\RouteDiscoverer\Support\TestMiddleware;
 use Fixture\Router\RouteDiscoverer\Support\TestStickyPrefix;
+use Fixture\Router\RouteDiscoverer\Support\TestStringEnum;
+use Fixture\Router\RouteDiscoverer\Support\TestUnitEnum;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Container\Container;
@@ -670,6 +672,59 @@ class RouteDiscovererTest extends TestCase
         self::assertSame('null', $routes[0]->arguments[0]->nativeType);
     }
 
+    public function testEnumParameterRecordsEnumClassAndConstrainsRegex(): void
+    {
+        $routes = $this->discoverAll(
+            $this->createDiscoverer('EnumArgument'),
+        );
+
+        self::assertCount(3, $routes);
+        self::assertSame('/feeds/{feed}', $routes[0]->path);
+
+        $argument = $routes[0]->arguments[0];
+
+        self::assertSame(TestStringEnum::class, $argument->nativeType);
+        self::assertSame(TestStringEnum::class, $argument->enumClass);
+        self::assertFalse($argument->allowsNull);
+        self::assertSame('#^/feeds/(?<feed>newest|best\.sellers)$#', $routes[0]->regexPath);
+    }
+
+    public function testOptionalNullableEnumParameterAllowsNullAndConstrainsRegex(): void
+    {
+        $routes = $this->discoverAll(
+            $this->createDiscoverer('EnumArgument'),
+        );
+
+        self::assertSame('/units/{?unit}', $routes[1]->path);
+
+        $argument = $routes[1]->arguments[0];
+
+        self::assertSame(TestUnitEnum::class, $argument->enumClass);
+        self::assertTrue($argument->allowsNull);
+        self::assertNull($argument->defaultValue);
+        self::assertSame('#^/units(?:/(?<unit>ALPHA|BETA))?$#', $routes[1]->regexPath);
+    }
+
+    public function testEnumParameterKeepsExplicitRegexConstraint(): void
+    {
+        $routes = $this->discoverAll(
+            $this->createDiscoverer('EnumArgument'),
+        );
+
+        self::assertSame('/explicit/{feed:[a-z.]+}', $routes[2]->path);
+        self::assertSame(TestStringEnum::class, $routes[2]->arguments[0]->enumClass);
+        self::assertSame('#^/explicit/(?<feed>[a-z.]+)$#', $routes[2]->regexPath);
+    }
+
+    public function testBuiltinParameterLeavesEnumClassNull(): void
+    {
+        $routes = $this->discoverAll(
+            $this->createDiscoverer('TypedImplicit'),
+        );
+
+        self::assertNull($routes[0]->arguments[0]->enumClass);
+    }
+
     public function testUnsupportedTypeThrowsInStrictMode(): void
     {
         self::expectException(RouterException::class);
@@ -686,6 +741,27 @@ class RouteDiscovererTest extends TestCase
     {
         $routes = $this->discoverAll(
             $this->createDiscoverer('UnsupportedType'),
+        );
+
+        self::assertSame([], $routes);
+    }
+
+    public function testUnionTypeThrowsInStrictMode(): void
+    {
+        self::expectException(RouterException::class);
+
+        $this->discoverAll(
+            $this->createDiscoverer(
+                scenario: 'UnionType',
+                strictMode: true,
+            ),
+        );
+    }
+
+    public function testUnionTypeSkipsInNonStrictMode(): void
+    {
+        $routes = $this->discoverAll(
+            $this->createDiscoverer('UnionType'),
         );
 
         self::assertSame([], $routes);

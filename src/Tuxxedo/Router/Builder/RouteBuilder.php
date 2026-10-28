@@ -302,6 +302,21 @@ class RouteBuilder implements RouteBuilderInterface
                 nodes: $compiled->argumentNodes,
             );
 
+            $enumArguments = [];
+
+            foreach ($arguments as $argument) {
+                if ($argument->enumClass !== null) {
+                    $enumArguments[$argument->node->name] = $argument->enumClass;
+                }
+            }
+
+            if (\sizeof($enumArguments) > 0) {
+                $compiled = $this->pathCompiler->compile(
+                    path: $definition->uri,
+                    enumArguments: $enumArguments,
+                );
+            }
+
             $routes[] = new Route(
                 method: $definition->method,
                 path: $definition->uri,
@@ -424,10 +439,12 @@ class RouteBuilder implements RouteBuilderInterface
         }
 
         $allowsNull = false;
+        $enumClass = null;
         $nativeType = $this->extractNativeType(
             method: $method,
             parameter: $parameter,
             allowsNull: $allowsNull,
+            enumClass: $enumClass,
         );
 
         $mappedName = $parameter->getName() !== $node->name
@@ -442,6 +459,7 @@ class RouteBuilder implements RouteBuilderInterface
             defaultValue: $parameter->isDefaultValueAvailable()
                 ? $parameter->getDefaultValue()
                 : null,
+            enumClass: $enumClass,
         );
     }
 
@@ -475,13 +493,17 @@ class RouteBuilder implements RouteBuilderInterface
     }
 
     /**
+     * @param-out class-string<\UnitEnum>|null $enumClass
+     *
      * @throws RouterException
      */
     private function extractNativeType(
         \ReflectionMethod $method,
         \ReflectionParameter $parameter,
         bool &$allowsNull,
+        ?string &$enumClass,
     ): string {
+        $enumClass = null;
         $type = $parameter->getType();
 
         if ($type === null) {
@@ -505,6 +527,17 @@ class RouteBuilder implements RouteBuilderInterface
             $allowsNull = $type->allowsNull();
 
             return $type->getName();
+        }
+
+        $typeName = $type instanceof \ReflectionNamedType
+            ? $type->getName()
+            : null;
+
+        if ($typeName !== null && \is_subclass_of($typeName, \UnitEnum::class)) {
+            $allowsNull = $type->allowsNull();
+            $enumClass = $typeName;
+
+            return $enumClass;
         }
 
         if ($type->allowsNull()) {

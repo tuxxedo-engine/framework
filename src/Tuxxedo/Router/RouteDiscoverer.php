@@ -429,6 +429,22 @@ class RouteDiscoverer implements RouteDiscovererInterface
             return;
         }
 
+        $enumArguments = [];
+
+        foreach ($arguments as $argument) {
+            if ($argument->enumClass !== null) {
+                $enumArguments[$argument->node->name] = $argument->enumClass;
+            }
+        }
+
+        if (\sizeof($enumArguments) > 0) {
+            $regexPath = $this->pathCompiler->compile(
+                path: $path,
+                prefix: $prefix,
+                enumArguments: $enumArguments,
+            )->regexPath;
+        }
+
         $stickyPrefix = $prefix instanceof StickyPrefixInterface
             ? $prefix::class
             : null;
@@ -528,11 +544,16 @@ class RouteDiscoverer implements RouteDiscovererInterface
         return null;
     }
 
+    /**
+     * @param-out class-string<\UnitEnum>|null $enumClass
+     */
     private function getNativeType(
         \ReflectionMethod $method,
         \ReflectionParameter $parameter,
         bool &$allowsNull = false,
+        ?string &$enumClass = null,
     ): ?string {
+        $enumClass = null;
         $type = $parameter->getType();
 
         if ($type === null) {
@@ -564,6 +585,17 @@ class RouteDiscoverer implements RouteDiscovererInterface
             $allowsNull = $type->allowsNull();
 
             return $type->getName();
+        }
+
+        $typeName = $type instanceof \ReflectionNamedType
+            ? $type->getName()
+            : null;
+
+        if ($typeName !== null && \is_subclass_of($typeName, \UnitEnum::class)) {
+            $allowsNull = $type->allowsNull();
+            $enumClass = $typeName;
+
+            return $enumClass;
         } elseif ($type->allowsNull()) {
             return 'null';
         }
@@ -658,10 +690,12 @@ class RouteDiscoverer implements RouteDiscovererInterface
         }
 
         $allowsNull = false;
+        $enumClass = null;
         $nativeType = $this->getNativeType(
             method: $method,
             parameter: $parameter,
             allowsNull: $allowsNull,
+            enumClass: $enumClass,
         );
 
         if ($nativeType === null) {
@@ -684,6 +718,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
                         ? $prefix->getDefaultValue($node->name)
                         : null
                 ),
+            enumClass: $enumClass,
         );
     }
 }

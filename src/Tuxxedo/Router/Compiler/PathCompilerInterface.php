@@ -20,8 +20,12 @@ use Tuxxedo\Router\PrefixInterface;
 #[DefaultImplementation(class: PathCompiler::class, lifecycle: Lifecycle::SINGLETON)]
 interface PathCompilerInterface
 {
+    /**
+     * @param array<string, class-string<\UnitEnum>> $enumArguments
+     */
     public function compile(
         string $path,
         ?PrefixInterface $prefix = null,
+        array $enumArguments = [],
     ): CompiledPathInterface;
 }

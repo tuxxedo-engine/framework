@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Unit\Router\Compiler;
 
+use Fixture\Router\RouteDiscoverer\Support\TestIntEnum;
+use Fixture\Router\RouteDiscoverer\Support\TestStringEnum;
+use Fixture\Router\RouteDiscoverer\Support\TestUnitEnum;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Router\ArgumentKind;
 use Tuxxedo\Router\Compiler\PathCompiler;
@@ -139,5 +142,68 @@ class PathCompilerTest extends TestCase
 
         self::assertStringStartsWith('#^', $compiled->regexPath);
         self::assertStringEndsWith('$#', $compiled->regexPath);
+    }
+
+    public function testEnumArgumentConstrainsImplicitArgumentToBackedValues(): void
+    {
+        $compiled = $this->compiler()->compile(
+            path: '/feeds/{feed}',
+            enumArguments: [
+                'feed' => TestStringEnum::class,
+            ],
+        );
+
+        self::assertSame('#^/feeds/(?<feed>newest|best\.sellers)$#', $compiled->regexPath);
+        self::assertMatchesRegularExpression($compiled->regexPath, '/feeds/best.sellers');
+        self::assertDoesNotMatchRegularExpression($compiled->regexPath, '/feeds/bestXsellers');
+        self::assertDoesNotMatchRegularExpression($compiled->regexPath, '/feeds/oldest');
+    }
+
+    public function testEnumArgumentQuotesIntBackedValues(): void
+    {
+        $compiled = $this->compiler()->compile(
+            path: '/levels/{level}',
+            enumArguments: [
+                'level' => TestIntEnum::class,
+            ],
+        );
+
+        self::assertSame('#^/levels/(?<level>1|\-1)$#', $compiled->regexPath);
+    }
+
+    public function testEnumArgumentUsesCaseNamesForUnitEnums(): void
+    {
+        $compiled = $this->compiler()->compile(
+            path: '/units/{?unit}',
+            enumArguments: [
+                'unit' => TestUnitEnum::class,
+            ],
+        );
+
+        self::assertSame('#^/units(?:/(?<unit>ALPHA|BETA))?$#', $compiled->regexPath);
+    }
+
+    public function testEnumArgumentDoesNotOverrideRegexConstraint(): void
+    {
+        $compiled = $this->compiler()->compile(
+            path: '/feeds/{feed:[a-z]+}',
+            enumArguments: [
+                'feed' => TestStringEnum::class,
+            ],
+        );
+
+        self::assertSame('#^/feeds/(?<feed>[a-z]+)$#', $compiled->regexPath);
+    }
+
+    public function testEnumArgumentDoesNotOverrideTypeConstraint(): void
+    {
+        $compiled = $this->compiler()->compile(
+            path: '/feeds/{feed<no-such-type>}',
+            enumArguments: [
+                'feed' => TestStringEnum::class,
+            ],
+        );
+
+        self::assertSame('#^/feeds/(?<feed>[^/]+)$#', $compiled->regexPath);
     }
 }

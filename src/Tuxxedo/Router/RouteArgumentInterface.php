@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Router;
 
+use Tuxxedo\Http\HttpException;
+
 interface RouteArgumentInterface
 {
     public ArgumentNode $node {
@@ -40,7 +42,16 @@ interface RouteArgumentInterface
     }
 
     /**
+     * @var class-string<\UnitEnum>|null
+     */
+    public ?string $enumClass {
+        get;
+    }
+
+    /**
      * @param string[] $matches
+     *
+     * @throws HttpException
      */
     public function getValue(
         array $matches,

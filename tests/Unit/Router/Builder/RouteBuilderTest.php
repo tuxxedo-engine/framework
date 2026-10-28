@@ -16,6 +16,7 @@ namespace Unit\Router\Builder;
 use Fixture\Router\Builder\SimpleController;
 use Fixture\Router\Builder\UserController;
 use Fixture\Router\RouteDiscoverer\Discovery\DuplicateArgument\DuplicateArgumentController;
+use Fixture\Router\RouteDiscoverer\Discovery\EnumArgument\EnumArgumentController;
 use Fixture\Router\RouteDiscoverer\Discovery\Labeled\LabeledController;
 use Fixture\Router\RouteDiscoverer\Discovery\MissingParameter\MissingParameterController;
 use Fixture\Router\RouteDiscoverer\Discovery\MultiParam\MultiParamController;
@@ -23,10 +24,13 @@ use Fixture\Router\RouteDiscoverer\Discovery\NoType\NoTypeController;
 use Fixture\Router\RouteDiscoverer\Discovery\NullableClassType\NullableClassTypeController;
 use Fixture\Router\RouteDiscoverer\Discovery\Optional\OptionalController;
 use Fixture\Router\RouteDiscoverer\Discovery\OptionalNoDefault\OptionalNoDefaultController;
+use Fixture\Router\RouteDiscoverer\Discovery\UnionType\UnionTypeController;
 use Fixture\Router\RouteDiscoverer\Discovery\UnsupportedNativeType\UnsupportedNativeTypeController;
 use Fixture\Router\RouteDiscoverer\Discovery\UnsupportedType\UnsupportedTypeController;
 use Fixture\Router\RouteDiscoverer\Support\AnotherMiddleware;
 use Fixture\Router\RouteDiscoverer\Support\TestMiddleware;
+use Fixture\Router\RouteDiscoverer\Support\TestStringEnum;
+use Fixture\Router\RouteDiscoverer\Support\TestUnitEnum;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Http\Method;
@@ -640,6 +644,23 @@ class RouteBuilderTest extends TestCase
         }
     }
 
+    public function testUnionParameterThrowsUnsupportedType(): void
+    {
+        $builder = $this->builder()->get(
+            uri: '/items/{value}',
+            controller: UnionTypeController::class,
+            action: 'show',
+        );
+
+        try {
+            $builder->build();
+
+            self::fail('Expected RouterException was not thrown');
+        } catch (RouterException $exception) {
+            self::assertStringContainsString('unsupported type', $exception->getMessage());
+        }
+    }
+
     public function testLaterParameterIsFoundAfterSkippingUnrelatedEarlierOnes(): void
     {
         $routes = $this->builder()->get(
@@ -663,6 +684,45 @@ class RouteBuilderTest extends TestCase
 
         self::assertCount(1, $routes[0]->arguments);
         self::assertSame('null', $routes[0]->arguments[0]->nativeType);
+    }
+
+    public function testEnumParameterRecordsEnumClassAndConstrainsRegex(): void
+    {
+        $routes = $this->builder()->get(
+            uri: '/feeds/{feed}',
+            controller: EnumArgumentController::class,
+            action: 'feed',
+        )->build();
+
+        self::assertCount(1, $routes[0]->arguments);
+        self::assertSame(TestStringEnum::class, $routes[0]->arguments[0]->nativeType);
+        self::assertSame(TestStringEnum::class, $routes[0]->arguments[0]->enumClass);
+        self::assertSame('#^/feeds/(?<feed>newest|best\.sellers)$#', $routes[0]->regexPath);
+    }
+
+    public function testOptionalNullableEnumParameterAllowsNullAndConstrainsRegex(): void
+    {
+        $routes = $this->builder()->get(
+            uri: '/units/{?unit}',
+            controller: EnumArgumentController::class,
+            action: 'unit',
+        )->build();
+
+        self::assertSame(TestUnitEnum::class, $routes[0]->arguments[0]->enumClass);
+        self::assertTrue($routes[0]->arguments[0]->allowsNull);
+        self::assertSame('#^/units(?:/(?<unit>ALPHA|BETA))?$#', $routes[0]->regexPath);
+    }
+
+    public function testBuiltinParameterLeavesEnumClassNull(): void
+    {
+        $routes = $this->builder()->get(
+            uri: '/users/{id}',
+            controller: UserController::class,
+            action: 'show',
+        )->build();
+
+        self::assertNull($routes[0]->arguments[0]->enumClass);
+        self::assertSame('#^/users/(?<id>[^/]+)$#', $routes[0]->regexPath);
     }
 
     public function testGroupExercisesEveryVerb(): void
