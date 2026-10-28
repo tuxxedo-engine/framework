@@ -579,7 +579,7 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
-     * @param (\Closure(SelectStatementInterface): void)|null $callback
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
      */
     #[\NoDiscard]
     public function whereHas(
@@ -593,7 +593,7 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
-     * @param (\Closure(SelectStatementInterface): void)|null $callback
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
      */
     #[\NoDiscard]
     public function whereDoesntHave(
@@ -918,7 +918,7 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
-     * @param (\Closure(SelectStatementInterface): void)|null $callback
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
      */
     private function buildRelationExistsSubquery(
         string $relationName,
@@ -931,8 +931,25 @@ abstract class AbstractQueryable implements QueryableInterface
             );
         }
 
-        $manager = $this->manager;
-        $parentMetaData = $manager->metaData->getModel($this->modelClass);
+        return $this->buildRelationExistsChain(
+            manager: $this->manager,
+            parentMetaData: $this->manager->metaData->getModel($this->modelClass),
+            relationName: $relationName,
+            callback: $callback,
+            includeDeleted: $includeDeleted,
+        );
+    }
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
+    private function buildRelationExistsChain(
+        ModelsManagerInterface $manager,
+        ModelMetaDataInterface $parentMetaData,
+        string $relationName,
+        ?\Closure $callback,
+        bool $includeDeleted,
+    ): RelationSubqueryInterface {
         $root = null;
         $innermost = null;
 
@@ -959,8 +976,8 @@ abstract class AbstractQueryable implements QueryableInterface
         }
 
         /**
-         * @var SelectStatementInterface $root
-         * @var SelectStatementInterface $innermost
+         * @var RelationSubqueryInterface $root
+         * @var RelationSubqueryInterface $innermost
          */
         if ($callback !== null) {
             $callback($innermost);
@@ -969,13 +986,30 @@ abstract class AbstractQueryable implements QueryableInterface
         return $root;
     }
 
+    private function createRelationSubquery(
+        ModelsManagerInterface $manager,
+        ModelMetaDataInterface $metaData,
+    ): RelationSubquery {
+        return RelationSubquery::createForRelation(
+            table: $metaData->table,
+            connection: $manager->connection,
+            existsFactory: fn (string $relationName, ?\Closure $callback, bool $includeDeleted): SelectStatementInterface => $this->buildRelationExistsChain(
+                manager: $manager,
+                parentMetaData: $metaData,
+                relationName: $relationName,
+                callback: $callback,
+                includeDeleted: $includeDeleted,
+            ),
+        );
+    }
+
     private function buildSingleRelationExistsSubquery(
         ModelsManagerInterface $manager,
         ModelMetaDataInterface $parentMetaData,
         ModelMetaDataInterface $targetMetaData,
         ModelRelationInterface $relation,
         bool $includeDeleted,
-    ): SelectStatementInterface {
+    ): RelationSubqueryInterface {
         $attribute = $relation->attribute;
 
         if ($attribute instanceof HasMany || $attribute instanceof HasOne) {
@@ -1061,7 +1095,7 @@ abstract class AbstractQueryable implements QueryableInterface
         ModelMetaDataInterface $parentMetaData,
         ModelMetaDataInterface $targetMetaData,
         ModelRelationInterface $relation,
-    ): SelectStatementInterface {
+    ): RelationSubqueryInterface {
         $foreignKeyColumns = $relation->foreignKeyColumns;
         $referencedKeyColumns = $relation->referencedKeyColumns;
 
@@ -1074,7 +1108,7 @@ abstract class AbstractQueryable implements QueryableInterface
             // @codeCoverageIgnoreEnd
         }
 
-        $subquery = $manager->connection->select($targetMetaData->table);
+        $subquery = $this->createRelationSubquery($manager, $targetMetaData);
 
         foreach ($foreignKeyColumns as $index => $foreignColumn) {
             $localColumn = $referencedKeyColumns[$index];
@@ -1092,7 +1126,7 @@ abstract class AbstractQueryable implements QueryableInterface
         ModelMetaDataInterface $parentMetaData,
         ModelMetaDataInterface $targetMetaData,
         ModelRelationInterface $relation,
-    ): SelectStatementInterface {
+    ): RelationSubqueryInterface {
         $foreignKeyColumns = $relation->foreignKeyColumns;
         $referencedKeyColumns = $relation->referencedKeyColumns;
 
@@ -1105,7 +1139,7 @@ abstract class AbstractQueryable implements QueryableInterface
             // @codeCoverageIgnoreEnd
         }
 
-        $subquery = $manager->connection->select($targetMetaData->table);
+        $subquery = $this->createRelationSubquery($manager, $targetMetaData);
 
         foreach ($referencedKeyColumns as $index => $ownerColumn) {
             $foreignColumn = $foreignKeyColumns[$index];
@@ -1124,7 +1158,7 @@ abstract class AbstractQueryable implements QueryableInterface
         ModelMetaDataInterface $targetMetaData,
         ModelRelationInterface $relation,
         BelongsToMany $attribute,
-    ): SelectStatementInterface {
+    ): RelationSubqueryInterface {
         $parentPkColumns = $this->resolvePkColumns($parentMetaData);
         $targetPkColumns = $this->resolvePkColumns($targetMetaData);
         $pivotSourceColumns = $relation->pivotSourceColumns;
@@ -1139,7 +1173,7 @@ abstract class AbstractQueryable implements QueryableInterface
             // @codeCoverageIgnoreEnd
         }
 
-        $subquery = $manager->connection->select($targetMetaData->table)
+        $subquery = $this->createRelationSubquery($manager, $targetMetaData)
             ->innerJoin(
                 table: $attribute->table,
                 first: $attribute->table . '.' . $pivotTargetColumns[0],
@@ -1171,12 +1205,12 @@ abstract class AbstractQueryable implements QueryableInterface
         ModelMetaDataInterface $targetMetaData,
         HasManyThrough|HasOneThrough $attribute,
         bool $includeDeleted,
-    ): SelectStatementInterface {
+    ): RelationSubqueryInterface {
         $throughMetaData = $manager->metaData->getModel($attribute->through);
         $localKey = $attribute->localKey ?? $this->requirePrimaryKeyColumn($parentMetaData);
         $secondLocalKey = $attribute->secondLocalKey ?? $this->requirePrimaryKeyColumn($throughMetaData);
 
-        $subquery = $manager->connection->select($targetMetaData->table)
+        $subquery = $this->createRelationSubquery($manager, $targetMetaData)
             ->innerJoin(
                 table: $throughMetaData->table,
                 first: $targetMetaData->table . '.' . $attribute->secondKey,
@@ -1200,7 +1234,7 @@ abstract class AbstractQueryable implements QueryableInterface
         ModelMetaDataInterface $targetMetaData,
         ModelRelationInterface $relation,
         MorphOne|MorphMany $attribute,
-    ): SelectStatementInterface {
+    ): RelationSubqueryInterface {
         $foreignKeyColumns = $relation->foreignKeyColumns;
         $referencedKeyColumns = $relation->referencedKeyColumns;
 
@@ -1218,7 +1252,7 @@ abstract class AbstractQueryable implements QueryableInterface
             typeMap: $attribute->typeMap,
         );
 
-        $subquery = $manager->connection->select($targetMetaData->table)
+        $subquery = $this->createRelationSubquery($manager, $targetMetaData)
             ->where(
                 column: $targetMetaData->table . '.' . $attribute->typeColumn,
                 value: $typeValue,
@@ -1241,7 +1275,7 @@ abstract class AbstractQueryable implements QueryableInterface
         ModelMetaDataInterface $targetMetaData,
         ModelRelationInterface $relation,
         MorphToMany $attribute,
-    ): SelectStatementInterface {
+    ): RelationSubqueryInterface {
         $parentPkColumns = $this->resolvePkColumns($parentMetaData);
         $targetPkColumns = $this->resolvePkColumns($targetMetaData);
         $pivotSourceColumns = $relation->pivotSourceColumns;
@@ -1261,7 +1295,7 @@ abstract class AbstractQueryable implements QueryableInterface
             typeMap: $attribute->typeMap,
         );
 
-        $subquery = $manager->connection->select($targetMetaData->table)
+        $subquery = $this->createRelationSubquery($manager, $targetMetaData)
             ->innerJoin(
                 table: $attribute->table,
                 first: $attribute->table . '.' . $pivotTargetColumns[0],

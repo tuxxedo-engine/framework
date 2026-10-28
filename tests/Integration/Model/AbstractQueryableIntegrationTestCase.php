@@ -21,6 +21,7 @@ use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 use Tuxxedo\Model\ModelException;
 use Tuxxedo\Model\Relation;
+use Tuxxedo\Model\RelationSubqueryInterface;
 
 abstract class AbstractQueryableIntegrationTestCase extends AbstractModelIntegrationTestCase
 {
@@ -1069,6 +1070,132 @@ abstract class AbstractQueryableIntegrationTestCase extends AbstractModelIntegra
 
         (void) $this->alicePosts()->whereHas(
             relationName: 'comments.nonExistent',
+        );
+    }
+
+    public function testWhereHasCallbackConstrainsTheSameRelatedRow(): void
+    {
+        $this->seedComment(
+            id: 101,
+            postId: 10,
+            userId: 1,
+            body: 'meh',
+        );
+
+        $sameComment = $this->alicePosts()->whereHas(
+            relationName: 'comments',
+            callback: static function (RelationSubqueryInterface $comments): void {
+                $comments
+                    ->where(
+                        column: 'body',
+                        value: 'nice',
+                    )
+                    ->whereHas(
+                        relationName: 'author',
+                        callback: static function (RelationSubqueryInterface $author): void {
+                            $author->where(
+                                column: 'name',
+                                value: 'Alice',
+                            );
+                        },
+                    );
+            },
+        );
+
+        self::assertSame(
+            0,
+            $sameComment->count(),
+        );
+
+        $anyComment = $this->alicePosts()
+            ->whereHas(
+                relationName: 'comments',
+                callback: static function (RelationSubqueryInterface $comments): void {
+                    $comments->where(
+                        column: 'body',
+                        value: 'nice',
+                    );
+                },
+            )
+            ->whereHas(
+                relationName: 'comments.author',
+                callback: static function (RelationSubqueryInterface $author): void {
+                    $author->where(
+                        column: 'name',
+                        value: 'Alice',
+                    );
+                },
+            );
+
+        self::assertSame(
+            1,
+            $anyComment->count(),
+        );
+    }
+
+    public function testWhereHasCallbackNestsAcrossSeveralLevels(): void
+    {
+        $filtered = $this->alicePosts()->whereHas(
+            relationName: 'comments',
+            callback: static function (RelationSubqueryInterface $comments): void {
+                $comments->whereHas(
+                    relationName: 'author',
+                    callback: static function (RelationSubqueryInterface $author): void {
+                        $author->whereHas(
+                            relationName: 'country',
+                            callback: static function (RelationSubqueryInterface $country): void {
+                                $country->where(
+                                    column: 'code',
+                                    value: 'SE',
+                                );
+                            },
+                        );
+                    },
+                );
+            },
+        );
+
+        self::assertSame(
+            1,
+            $filtered->count(),
+        );
+    }
+
+    public function testWhereHasCallbackSupportsNestedWhereDoesntHave(): void
+    {
+        $withoutBobAuthor = static function (RelationSubqueryInterface $comments): void {
+            $comments->whereDoesntHave(
+                relationName: 'author',
+                callback: static function (RelationSubqueryInterface $author): void {
+                    $author->where(
+                        column: 'name',
+                        value: 'Bob',
+                    );
+                },
+            );
+        };
+
+        self::assertSame(
+            0,
+            $this->alicePosts()->whereHas(
+                relationName: 'comments',
+                callback: $withoutBobAuthor,
+            )->count(),
+        );
+
+        $this->seedComment(
+            id: 101,
+            postId: 11,
+            userId: 1,
+            body: 'meh',
+        );
+
+        self::assertSame(
+            1,
+            $this->alicePosts()->whereHas(
+                relationName: 'comments',
+                callback: $withoutBobAuthor,
+            )->count(),
         );
     }
 
