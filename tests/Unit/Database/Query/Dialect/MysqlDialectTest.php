@@ -17,11 +17,13 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Database\Query\Dialect\Mysql\MysqlDialect;
 use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
+use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Table\Column\IntegerColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\VarcharColumn;
 use Tuxxedo\Database\Query\Statement\Table\ForeignKeyAction;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddColumn;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddForeignKey;
+use Tuxxedo\Database\Query\Statement\Table\Operation\AddFullTextIndex;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddIndex;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddPrimaryKey;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddUnique;
@@ -113,6 +115,110 @@ class MysqlDialectTest extends TestCase
     ): void {
         self::assertFalse(
             (new MysqlDialect())->interpretBoolean($value),
+        );
+    }
+
+    public function testConditionOperatorRendersOperatorsVerbatim(): void
+    {
+        $dialect = new MysqlDialect();
+
+        foreach (ConditionOperator::cases() as $operator) {
+            self::assertSame($operator->value, $dialect->conditionOperator($operator));
+        }
+    }
+
+    public function testFullTextConditionRendersBooleanModePrefixMatch(): void
+    {
+        self::assertSame(
+            'MATCH (`articles`.`search_text`, `articles`.`title`) AGAINST (\'+mint* +ice*\' IN BOOLEAN MODE)',
+            (new MysqlDialect())->fullTextCondition(
+                columns: [
+                    'articles.search_text',
+                    'articles.title',
+                ],
+                terms: [
+                    'mint',
+                    'ice',
+                ],
+            ),
+        );
+    }
+
+    public function testFullTextConditionWithoutTermsMatchesNothing(): void
+    {
+        self::assertSame(
+            '1 = 0',
+            (new MysqlDialect())->fullTextCondition(
+                columns: [
+                    'search_text',
+                ],
+                terms: [],
+            ),
+        );
+    }
+
+    public function testCreateFullTextIndexDisablesStopwordsForTheSession(): void
+    {
+        self::assertSame(
+            [
+                'SET SESSION innodb_ft_enable_stopword = OFF',
+                'CREATE FULLTEXT INDEX `articles_search_text_ft` ON `articles` (`search_text`)',
+                'SET SESSION innodb_ft_enable_stopword = DEFAULT',
+            ],
+            self::sqlOf(
+                (new MysqlDialect())->createFullTextIndex(
+                    table: 'articles',
+                    name: 'articles_search_text_ft',
+                    columns: [
+                        'search_text',
+                    ],
+                ),
+            ),
+        );
+    }
+
+    public function testAlterTableAddFullTextIndexUsesDefaultName(): void
+    {
+        self::assertSame(
+            [
+                'SET SESSION innodb_ft_enable_stopword = OFF',
+                'CREATE FULLTEXT INDEX `articles_title_summary_ft` ON `articles` (`title`, `summary`)',
+                'SET SESSION innodb_ft_enable_stopword = DEFAULT',
+            ],
+            self::sqlOf(
+                (new MysqlDialect())->alterTable(
+                    table: 'articles',
+                    operations: [
+                        new AddFullTextIndex(
+                            columns: [
+                                'title',
+                                'summary',
+                            ],
+                        ),
+                    ],
+                ),
+            ),
+        );
+    }
+
+    public function testIndexExistsBuildsCatalogQuery(): void
+    {
+        $result = (new MysqlDialect())->indexExists(
+            table: 'articles',
+            name: 'articles_search_text_ft',
+        );
+
+        self::assertSame(
+            'SELECT EXISTS(SELECT 1 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = :table AND index_name = :name)',
+            $result->sql,
+        );
+
+        self::assertSame(
+            [
+                'table' => 'articles',
+                'name' => 'articles_search_text_ft',
+            ],
+            $result->parameters,
         );
     }
 
@@ -564,6 +670,7 @@ class MysqlDialectTest extends TestCase
             'SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = :table)',
             $result->sql,
         );
+
         self::assertSame(
             [
                 'table' => 'widgets',
@@ -583,6 +690,7 @@ class MysqlDialectTest extends TestCase
             'SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = :table AND column_name = :column)',
             $result->sql,
         );
+
         self::assertSame(
             [
                 'table' => 'widgets',
@@ -600,6 +708,7 @@ class MysqlDialectTest extends TestCase
             'SELECT schema_name FROM information_schema.schemata ORDER BY schema_name',
             $result->sql,
         );
+
         self::assertSame(
             [],
             $result->parameters,
@@ -614,6 +723,7 @@ class MysqlDialectTest extends TestCase
             'SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() ORDER BY table_name',
             $result->sql,
         );
+
         self::assertSame(
             [],
             $result->parameters,

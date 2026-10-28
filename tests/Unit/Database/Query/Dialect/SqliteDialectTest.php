@@ -17,10 +17,12 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Database\Query\Dialect\Sqlite\SqliteDialect;
 use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
+use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Table\Column\IntegerColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\VarcharColumn;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddColumn;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddForeignKey;
+use Tuxxedo\Database\Query\Statement\Table\Operation\AddFullTextIndex;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddIndex;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddPrimaryKey;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddUnique;
@@ -111,6 +113,87 @@ class SqliteDialectTest extends TestCase
     ): void {
         self::assertFalse(
             (new SqliteDialect())->interpretBoolean($value),
+        );
+    }
+
+    public function testConditionOperatorRendersOperatorsVerbatim(): void
+    {
+        $dialect = new SqliteDialect();
+
+        foreach (ConditionOperator::cases() as $operator) {
+            self::assertSame($operator->value, $dialect->conditionOperator($operator));
+        }
+    }
+
+    public function testFullTextConditionIsUnsupported(): void
+    {
+        try {
+            (new SqliteDialect())->fullTextCondition(
+                columns: [
+                    'search_text',
+                ],
+                terms: [
+                    'mint',
+                ],
+            );
+
+            self::fail('Expected SqlException');
+        } catch (SqlException $exception) {
+            self::assertStringContainsString('does not support full-text search', $exception->getMessage());
+        }
+    }
+
+    public function testCreateFullTextIndexIsUnsupported(): void
+    {
+        try {
+            (new SqliteDialect())->createFullTextIndex(
+                table: 'articles',
+                name: 'articles_search_text_ft',
+                columns: [
+                    'search_text',
+                ],
+            );
+
+            self::fail('Expected SqlException');
+        } catch (SqlException $exception) {
+            self::assertStringContainsString('does not support full-text search', $exception->getMessage());
+        }
+    }
+
+    public function testAlterTableAddFullTextIndexIsUnsupported(): void
+    {
+        $this->expectException(SqlException::class);
+
+        (new SqliteDialect())->alterTable(
+            table: 'articles',
+            operations: [
+                new AddFullTextIndex(
+                    columns: [
+                        'search_text',
+                    ],
+                ),
+            ],
+        );
+    }
+
+    public function testIndexExistsBuildsCatalogQuery(): void
+    {
+        $result = (new SqliteDialect())->indexExists(
+            table: 'articles',
+            name: 'articles_search_text_ft',
+        );
+
+        self::assertSame(
+            'SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = \'index\' AND tbl_name = :table AND name = :name)',
+            $result->sql,
+        );
+
+        self::assertSame(
+            [
+                'table' => 'articles',
+                'name' => 'articles_search_text_ft',
+            ],
+            $result->parameters,
         );
     }
 
@@ -389,6 +472,7 @@ class SqliteDialectTest extends TestCase
             'SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = \'table\' AND name = :table)',
             $result->sql,
         );
+
         self::assertSame(
             [
                 'table' => 'widgets',
@@ -408,6 +492,7 @@ class SqliteDialectTest extends TestCase
             'SELECT EXISTS(SELECT 1 FROM pragma_table_info(:table) WHERE name = :column)',
             $result->sql,
         );
+
         self::assertSame(
             [
                 'table' => 'widgets',
@@ -425,6 +510,7 @@ class SqliteDialectTest extends TestCase
             'SELECT name FROM pragma_database_list ORDER BY seq',
             $result->sql,
         );
+
         self::assertSame(
             [],
             $result->parameters,
@@ -439,6 +525,7 @@ class SqliteDialectTest extends TestCase
             'SELECT name FROM sqlite_master WHERE type = \'table\' AND name NOT LIKE \'sqlite_%\' ORDER BY name',
             $result->sql,
         );
+
         self::assertSame(
             [],
             $result->parameters,

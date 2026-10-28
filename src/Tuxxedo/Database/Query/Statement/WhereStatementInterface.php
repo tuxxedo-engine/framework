@@ -13,9 +13,11 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Statement;
 
+use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Query\Statement\Condition\BetweenOperator;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
+use Tuxxedo\Database\SqlException;
 
 interface WhereStatementInterface extends StatementInterface
 {
@@ -178,6 +180,28 @@ interface WhereStatementInterface extends StatementInterface
     public function orWhereNotLike(
         string $column,
         string $pattern,
+    ): static;
+
+    /**
+     * @param non-empty-list<string> $columns
+     *
+     * @throws DatabaseException
+     * @throws SqlException
+     */
+    public function whereFullText(
+        array $columns,
+        string $search,
+    ): static;
+
+    /**
+     * @param non-empty-list<string> $columns
+     *
+     * @throws DatabaseException
+     * @throws SqlException
+     */
+    public function orWhereFullText(
+        array $columns,
+        string $search,
     ): static;
 
     public function whereExists(

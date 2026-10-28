@@ -17,6 +17,7 @@ use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Driver\ResultSetInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
+use Tuxxedo\Database\Query\FullText\FullText;
 use Tuxxedo\Database\Query\Statement\Table\Column\BigIntegerColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\BlobColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\BooleanColumn;
@@ -65,6 +66,11 @@ class CreateTableStatement extends AbstractTableStatement implements CreateTable
      * @var list<list<string>>
      */
     private array $indexes = [];
+
+    /**
+     * @var list<non-empty-list<string>>
+     */
+    private array $fullTextIndexes = [];
 
     private bool $ifNotExists = false;
 
@@ -414,6 +420,20 @@ class CreateTableStatement extends AbstractTableStatement implements CreateTable
         return $this;
     }
 
+    public function fullTextIndex(
+        string ...$columns,
+    ): static {
+        $columns = \array_values($columns);
+
+        if ($columns === []) {
+            throw SqlException::fromFullTextWithoutColumns();
+        }
+
+        $this->fullTextIndexes[] = $columns;
+
+        return $this;
+    }
+
     protected function generateSql(
         DialectInterface $dialect,
     ): string {
@@ -518,6 +538,24 @@ class CreateTableStatement extends AbstractTableStatement implements CreateTable
                 ),
                 native: true,
             );
+        }
+
+        foreach ($this->fullTextIndexes as $fullTextColumns) {
+            $prepared = $resolvedConnection->dialect->createFullTextIndex(
+                table: $this->table,
+                name: FullText::indexName(
+                    table: $this->table,
+                    columns: $fullTextColumns,
+                ),
+                columns: $fullTextColumns,
+            );
+
+            foreach ($prepared as $statement) {
+                $resolvedConnection->query(
+                    sql: $statement->sql,
+                    native: true,
+                );
+            }
         }
 
         return $result;

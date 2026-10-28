@@ -22,6 +22,7 @@ use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddColumn;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddForeignKey;
+use Tuxxedo\Database\Query\Statement\Table\Operation\AddFullTextIndex;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddIndex;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddPrimaryKey;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddUnique;
@@ -111,6 +112,16 @@ class AlterTableStatement implements AlterTableStatementInterface
         $this->operations[] = new AddIndex(
             columns: $columns,
             name: $name,
+        );
+
+        return $this;
+    }
+
+    public function addFullTextIndex(
+        array $columns,
+    ): static {
+        $this->operations[] = new AddFullTextIndex(
+            columns: $columns,
         );
 
         return $this;

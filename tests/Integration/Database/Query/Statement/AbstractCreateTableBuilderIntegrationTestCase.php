@@ -1375,4 +1375,13 @@ abstract class AbstractCreateTableBuilderIntegrationTestCase extends AbstractBui
             table: 'widgets',
         )->execute();
     }
+
+    public function testFullTextIndexWithoutColumnsThrows(): void
+    {
+        $this->expectException(SqlException::class);
+
+        $this->connection->createTable(
+            table: 'widgets',
+        )->fullTextIndex();
+    }
 }

@@ -17,6 +17,7 @@ use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Dialect\NativeColumnTypeParserInterface;
 use Tuxxedo\Database\Query\Parser\StatementParserResult;
 use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
+use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AlterOperationInterface;
 
@@ -111,6 +112,36 @@ class StubDialect implements DialectInterface
         }
 
         return (bool) $value;
+    }
+
+    public function conditionOperator(
+        ConditionOperator $operator,
+    ): string {
+        return $operator->value;
+    }
+
+    public function fullTextCondition(
+        array $columns,
+        array $terms,
+    ): string {
+        return 'FULLTEXT(' . \join(', ', $columns) . ' : ' . \join(' ', $terms) . ')';
+    }
+
+    public function createFullTextIndex(
+        string $table,
+        string $name,
+        array $columns,
+    ): array {
+        return [];
+    }
+
+    public function indexExists(
+        string $table,
+        string $name,
+    ): StatementParserResultInterface {
+        return new StatementParserResult(
+            sql: 'SELECT 1',
+        );
     }
 
     public function alterTable(

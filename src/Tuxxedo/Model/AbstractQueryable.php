@@ -403,6 +403,30 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     #[\NoDiscard]
+    public function whereFullText(
+        array $columns,
+        string $search,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($columns, $search): void {
+                $statement->whereFullText($columns, $search);
+            },
+        );
+    }
+
+    #[\NoDiscard]
+    public function orWhereFullText(
+        array $columns,
+        string $search,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($columns, $search): void {
+                $statement->orWhereFullText($columns, $search);
+            },
+        );
+    }
+
+    #[\NoDiscard]
     public function innerJoin(
         string $table,
         string $first,

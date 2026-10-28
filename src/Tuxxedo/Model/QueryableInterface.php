@@ -199,6 +199,24 @@ interface QueryableInterface extends PagedInterface, \IteratorAggregate, \Counta
         string $pattern,
     ): static;
 
+    /**
+     * @param non-empty-list<string> $columns
+     */
+    #[\NoDiscard]
+    public function whereFullText(
+        array $columns,
+        string $search,
+    ): static;
+
+    /**
+     * @param non-empty-list<string> $columns
+     */
+    #[\NoDiscard]
+    public function orWhereFullText(
+        array $columns,
+        string $search,
+    ): static;
+
     #[\NoDiscard]
     public function innerJoin(
         string $table,

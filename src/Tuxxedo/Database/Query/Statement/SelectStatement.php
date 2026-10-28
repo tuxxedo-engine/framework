@@ -142,7 +142,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
                         ' %s %s %s',
                         $keyword,
                         $dialect->qualifiedIdentifier($condition->identifier),
-                        $condition->operator->value,
+                        $dialect->conditionOperator($condition->operator),
                     );
                 } elseif (
                     $condition->operator === ConditionOperator::IN ||
@@ -152,7 +152,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
                         ' %s %s %s (%s)',
                         $keyword,
                         $dialect->qualifiedIdentifier($condition->identifier),
-                        $condition->operator->value,
+                        $dialect->conditionOperator($condition->operator),
                         $condition->parameter,
                     );
                 } else {
@@ -160,7 +160,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
                         ' %s %s %s %s',
                         $keyword,
                         $dialect->qualifiedIdentifier($condition->identifier),
-                        $condition->operator->value,
+                        $dialect->conditionOperator($condition->operator),
                         $condition->parameter,
                     );
                 }

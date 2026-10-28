@@ -15,6 +15,7 @@ namespace Tuxxedo\Database\Query\Statement\Table;
 
 use Tuxxedo\Database\Query\Statement\StatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
+use Tuxxedo\Database\SqlException;
 
 interface CreateTableStatementInterface extends StatementInterface
 {
@@ -191,6 +192,13 @@ interface CreateTableStatementInterface extends StatementInterface
     ): static;
 
     public function index(
+        string ...$columns,
+    ): static;
+
+    /**
+     * @throws SqlException
+     */
+    public function fullTextIndex(
         string ...$columns,
     ): static;
 }

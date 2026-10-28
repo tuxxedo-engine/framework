@@ -16,8 +16,10 @@ namespace Tuxxedo\Database\Query\Dialect\Pgsql;
 use PgSql\Connection;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Dialect\NativeColumnTypeParserInterface;
+use Tuxxedo\Database\Query\FullText\FullText;
 use Tuxxedo\Database\Query\Parser\StatementParserResult;
 use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
+use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Table\Column\AbstractColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\BlobColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
@@ -28,6 +30,7 @@ use Tuxxedo\Database\Query\Statement\Table\Column\TinyIntegerColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\UuidColumn;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddColumn;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddForeignKey;
+use Tuxxedo\Database\Query\Statement\Table\Operation\AddFullTextIndex;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddIndex;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddPrimaryKey;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddUnique;
@@ -152,6 +155,77 @@ class PgsqlDialect implements DialectInterface
         return (bool) $value;
     }
 
+    public function conditionOperator(
+        ConditionOperator $operator,
+    ): string {
+        return match ($operator) {
+            ConditionOperator::LIKE => 'ILIKE',
+            ConditionOperator::NOT_LIKE => 'NOT ILIKE',
+            default => $operator->value,
+        };
+    }
+
+    public function fullTextCondition(
+        array $columns,
+        array $terms,
+    ): string {
+        if ($terms === []) {
+            return '1 = 0';
+        }
+
+        return \sprintf(
+            '%s @@ to_tsquery(\'simple\', \'%s\')',
+            $this->fullTextVector(
+                \array_map(
+                    fn (string $column): string => $this->qualifiedIdentifier($column),
+                    $columns,
+                ),
+            ),
+            \join(
+                ' & ',
+                \array_map(
+                    static fn (string $term): string => $term . ':*',
+                    $terms,
+                ),
+            ),
+        );
+    }
+
+    public function createFullTextIndex(
+        string $table,
+        string $name,
+        array $columns,
+    ): array {
+        return [
+            new StatementParserResult(
+                sql: \sprintf(
+                    'CREATE INDEX %s ON %s USING GIN (%s)',
+                    $this->identifier($name),
+                    $this->identifier($table),
+                    $this->fullTextVector(
+                        \array_map(
+                            fn (string $column): string => $this->identifier($column),
+                            $columns,
+                        ),
+                    ),
+                ),
+            ),
+        ];
+    }
+
+    public function indexExists(
+        string $table,
+        string $name,
+    ): StatementParserResultInterface {
+        return new StatementParserResult(
+            sql: 'SELECT EXISTS(SELECT 1 FROM pg_catalog.pg_indexes WHERE schemaname = current_schema() AND tablename = :table AND indexname = :name)',
+            parameters: [
+                'table' => $table,
+                'name' => $name,
+            ],
+        );
+    }
+
     public function alterTable(
         string $table,
         array $operations,
@@ -223,6 +297,23 @@ class PgsqlDialect implements DialectInterface
                     $tableId,
                     $this->joinColumns($operation->columns),
                 );
+
+                continue;
+            }
+
+            if ($operation instanceof AddFullTextIndex) {
+                $fullTextStatements = $this->createFullTextIndex(
+                    table: $table,
+                    name: FullText::indexName(
+                        table: $table,
+                        columns: $operation->columns,
+                    ),
+                    columns: $operation->columns,
+                );
+
+                foreach ($fullTextStatements as $fullTextStatement) {
+                    $statements[] = $fullTextStatement->sql;
+                }
 
                 continue;
             }
@@ -524,6 +615,24 @@ class PgsqlDialect implements DialectInterface
         }
 
         return $statements;
+    }
+
+    /**
+     * @param list<string> $renderedColumns
+     */
+    private function fullTextVector(
+        array $renderedColumns,
+    ): string {
+        return \sprintf(
+            'to_tsvector(\'simple\', %s)',
+            \join(
+                ' || \' \' || ',
+                \array_map(
+                    static fn (string $column): string => 'COALESCE(' . $column . ', \'\')',
+                    $renderedColumns,
+                ),
+            ),
+        );
     }
 
     /**

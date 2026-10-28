@@ -13,7 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Statement;
 
+use Tuxxedo\Database\DatabaseException;
+use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
+use Tuxxedo\Database\Query\FullText\FullText;
 use Tuxxedo\Database\Query\Statement\Condition\BetweenCondition;
 use Tuxxedo\Database\Query\Statement\Condition\BetweenConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\BetweenOperator;
@@ -25,6 +28,8 @@ use Tuxxedo\Database\Query\Statement\Condition\ConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Condition\ExistsCondition;
 use Tuxxedo\Database\Query\Statement\Condition\ExistsConditionInterface;
+use Tuxxedo\Database\Query\Statement\Condition\FullTextCondition;
+use Tuxxedo\Database\Query\Statement\Condition\FullTextConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\GroupCondition;
 use Tuxxedo\Database\Query\Statement\Condition\GroupConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\RawCondition;
@@ -40,7 +45,7 @@ use Tuxxedo\Database\SqlException;
 abstract class AbstractWhereStatement extends AbstractStatement implements WhereStatementInterface
 {
     /**
-     * @var list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|ExistsCondition|GroupCondition>
+     * @var list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|ExistsCondition|GroupCondition|FullTextCondition>
      */
     protected array $conditions = [];
 
@@ -48,6 +53,11 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
      * @var JoinInterface[]
      */
     protected array $joins = [];
+
+    /**
+     * @var \WeakMap<ConnectionInterface, array<string, true>>|null
+     */
+    private static ?\WeakMap $verifiedFullTextIndexes = null;
 
     private int $subqueryCounter = 0;
 
@@ -100,7 +110,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     /**
-     * @param list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|ExistsCondition|GroupCondition> $conditions
+     * @param list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|ExistsCondition|GroupCondition|FullTextCondition> $conditions
      */
     private function renderConditions(
         array $conditions,
@@ -120,7 +130,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     private function renderConditionBody(
-        ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|ExistsCondition|GroupCondition $condition,
+        ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|ExistsCondition|GroupCondition|FullTextCondition $condition,
         DialectInterface $dialect,
     ): string {
         if ($condition instanceof BetweenConditionInterface) {
@@ -137,7 +147,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
             return \sprintf(
                 ' %s %s %s',
                 $dialect->qualifiedIdentifier($condition->identifier),
-                $condition->operator->value,
+                $dialect->conditionOperator($condition->operator),
                 $dialect->qualifiedIdentifier($condition->other),
             );
         }
@@ -150,7 +160,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
             return \sprintf(
                 ' %s %s (%s)',
                 $dialect->qualifiedIdentifier($condition->identifier),
-                $condition->operator->value,
+                $dialect->conditionOperator($condition->operator),
                 $this->renderSubquery(
                     $condition->subquery,
                     $this->subqueryCounter++,
@@ -169,6 +179,13 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
                 ')';
         }
 
+        if ($condition instanceof FullTextConditionInterface) {
+            return ' ' . $dialect->fullTextCondition(
+                columns: $condition->columns,
+                terms: $condition->terms,
+            );
+        }
+
         if ($condition instanceof GroupConditionInterface) {
             return ($condition->negated ? ' NOT (' : ' (') . \ltrim($this->renderConditions($condition->conditions, $dialect)) . ')';
         }
@@ -180,7 +197,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
             return \sprintf(
                 ' %s %s',
                 $dialect->qualifiedIdentifier($condition->identifier),
-                $condition->operator->value,
+                $dialect->conditionOperator($condition->operator),
             );
         }
 
@@ -191,7 +208,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
             return \sprintf(
                 ' %s %s (%s)',
                 $dialect->qualifiedIdentifier($condition->identifier),
-                $condition->operator->value,
+                $dialect->conditionOperator($condition->operator),
                 $condition->parameter,
             );
         }
@@ -199,7 +216,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         return \sprintf(
             ' %s %s %s',
             $dialect->qualifiedIdentifier($condition->identifier),
-            $condition->operator->value,
+            $dialect->conditionOperator($condition->operator),
             $condition->parameter,
         );
     }
@@ -741,6 +758,28 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         return $this;
     }
 
+    public function whereFullText(
+        array $columns,
+        string $search,
+    ): static {
+        return $this->addFullTextCondition(
+            columns: $columns,
+            search: $search,
+            conjunction: ConditionConjunction::AND,
+        );
+    }
+
+    public function orWhereFullText(
+        array $columns,
+        string $search,
+    ): static {
+        return $this->addFullTextCondition(
+            columns: $columns,
+            search: $search,
+            conjunction: ConditionConjunction::OR,
+        );
+    }
+
     public function whereColumn(
         string $column,
         string $other,
@@ -956,5 +995,106 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         );
 
         return $this;
+    }
+
+    /**
+     * @param list<string> $columns
+     *
+     * @throws DatabaseException
+     * @throws SqlException
+     */
+    private function addFullTextCondition(
+        array $columns,
+        string $search,
+        ConditionConjunction $conjunction,
+    ): static {
+        if ($columns === []) {
+            throw SqlException::fromFullTextWithoutColumns(); // @codeCoverageIgnore
+        }
+
+        $this->verifyFullTextIndex($columns);
+
+        $this->conditions[] = new FullTextCondition(
+            conjunction: $conjunction,
+            columns: $columns,
+            terms: FullText::terms($search),
+        );
+
+        return $this;
+    }
+
+    /**
+     * @param non-empty-list<string> $columns
+     *
+     * @throws DatabaseException
+     * @throws SqlException
+     */
+    private function verifyFullTextIndex(
+        array $columns,
+    ): void {
+        $connection = $this->connection;
+
+        if ($connection === null) {
+            throw DatabaseException::fromNoConnectionAvailable();
+        }
+
+        $connection->dialect->fullTextCondition(
+            columns: $columns,
+            terms: [],
+        );
+
+        $table = null;
+        $names = [];
+
+        foreach ($columns as $column) {
+            $separator = \strrpos($column, '.');
+            $columnTable = $separator === false
+                ? $this->table
+                : \substr($column, 0, $separator);
+
+            if ($table !== null && $table !== $columnTable) {
+                throw SqlException::fromFullTextColumnsSpanTables(
+                    columns: $columns,
+                );
+            }
+
+            $table = $columnTable;
+            $names[] = $separator === false
+                ? $column
+                : \substr($column, $separator + 1);
+        }
+
+        /** @var string $table */
+        $index = FullText::indexName(
+            table: $table,
+            columns: $names,
+        );
+
+        self::$verifiedFullTextIndexes ??= new \WeakMap();
+        $verified = self::$verifiedFullTextIndexes[$connection] ?? [];
+
+        if (isset($verified[$table . '.' . $index])) {
+            return;
+        }
+
+        $prepared = $connection->dialect->indexExists(
+            table: $table,
+            name: $index,
+        );
+
+        $result = $connection->query(
+            sql: $prepared->sql,
+            parameters: $prepared->parameters,
+        );
+
+        if (!$connection->dialect->interpretBoolean($result->fetchRow()[0])) {
+            throw SqlException::fromFullTextIndexMissing(
+                table: $table,
+                index: $index,
+            );
+        }
+
+        $verified[$table . '.' . $index] = true;
+        self::$verifiedFullTextIndexes[$connection] = $verified;
     }
 }

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database;
 
+use Tuxxedo\Database\Query\FullText\FullText;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AlterOperationInterface;
 use Tuxxedo\Exception;
 
@@ -129,6 +130,67 @@ class SqlException extends Exception
             message: \sprintf(
                 'Cannot compile CREATE TABLE for `%s`: no columns have been declared',
                 $table,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $dialect
+     */
+    public static function fromFullTextUnsupported(
+        string $dialect,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Dialect "%s" does not support full-text search',
+                self::formatShortClass($dialect),
+            ),
+        );
+    }
+
+    public static function fromFullTextIndexMissing(
+        string $table,
+        string $index,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Full-text search on `%s` requires the full-text index `%s`',
+                $table,
+                $index,
+            ),
+        );
+    }
+
+    /**
+     * @param list<string> $columns
+     */
+    public static function fromFullTextColumnsSpanTables(
+        array $columns,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Full-text columns must belong to a single table, got: %s',
+                \join(', ', $columns),
+            ),
+        );
+    }
+
+    public static function fromFullTextWithoutColumns(): self
+    {
+        return new self(
+            message: 'Full-text search requires at least one column',
+        );
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public static function fromFullTextTransliteratorUnavailable(): self
+    {
+        return new self(
+            message: \sprintf(
+                'Unable to create the "%s" transliterator for full-text normalization',
+                FullText::TRANSLITERATION,
             ),
         );
     }

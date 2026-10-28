@@ -464,6 +464,69 @@ abstract class AbstractWhereClauseBuilderIntegrationTestCase extends AbstractBui
         );
     }
 
+    public function testWhereLikeIsCaseInsensitive(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        $matched = $this->runWhereMatch(
+            configureBuilder: static function (WhereStatementInterface $q): void {
+                $q->whereLike(
+                    column: 'name',
+                    pattern: '%ALICE%',
+                );
+            },
+        );
+
+        self::assertTrue(
+            $matched,
+        );
+    }
+
+    public function testWhereNotLikeIsCaseInsensitive(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        $matched = $this->runWhereMatch(
+            configureBuilder: static function (WhereStatementInterface $q): void {
+                $q
+                    ->where(
+                        column: 'name',
+                        value: 'Alice',
+                    )
+                    ->whereNotLike(
+                        column: 'name',
+                        pattern: '%ALICE%',
+                    );
+            },
+        );
+
+        self::assertFalse(
+            $matched,
+        );
+    }
+
+    public function testWhereWithLikeOperatorIsCaseInsensitive(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        $matched = $this->runWhereMatch(
+            configureBuilder: static function (WhereStatementInterface $q): void {
+                $q->where(
+                    column: 'email',
+                    value: '%ALICE%',
+                    operator: ConditionOperator::LIKE,
+                );
+            },
+        );
+
+        self::assertTrue(
+            $matched,
+        );
+    }
+
     public function testWhereNotLike(): void
     {
         $this->createUsersSchema();

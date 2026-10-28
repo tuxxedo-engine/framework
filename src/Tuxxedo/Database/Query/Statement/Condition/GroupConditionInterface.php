@@ -24,7 +24,7 @@ interface GroupConditionInterface
     }
 
     /**
-     * @var list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|ExistsCondition|GroupCondition>
+     * @var list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|ExistsCondition|GroupCondition|FullTextCondition>
      */
     public array $conditions {
         get;

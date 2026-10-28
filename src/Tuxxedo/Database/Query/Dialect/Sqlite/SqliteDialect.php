@@ -17,6 +17,7 @@ use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Dialect\NativeColumnTypeParserInterface;
 use Tuxxedo\Database\Query\Parser\StatementParserResult;
 use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
+use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Table\Column\BooleanColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\UuidColumn;
@@ -90,6 +91,44 @@ class SqliteDialect implements DialectInterface
         }
 
         return (bool) $value;
+    }
+
+    public function conditionOperator(
+        ConditionOperator $operator,
+    ): string {
+        return $operator->value;
+    }
+
+    public function fullTextCondition(
+        array $columns,
+        array $terms,
+    ): string {
+        throw SqlException::fromFullTextUnsupported(
+            dialect: self::class,
+        );
+    }
+
+    public function createFullTextIndex(
+        string $table,
+        string $name,
+        array $columns,
+    ): array {
+        throw SqlException::fromFullTextUnsupported(
+            dialect: self::class,
+        );
+    }
+
+    public function indexExists(
+        string $table,
+        string $name,
+    ): StatementParserResultInterface {
+        return new StatementParserResult(
+            sql: 'SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = \'index\' AND tbl_name = :table AND name = :name)',
+            parameters: [
+                'table' => $table,
+                'name' => $name,
+            ],
+        );
     }
 
     public function alterTable(

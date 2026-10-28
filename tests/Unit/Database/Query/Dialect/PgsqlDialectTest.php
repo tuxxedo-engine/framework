@@ -18,6 +18,7 @@ use PHPUnit\Framework\TestCase;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Dialect\Pgsql\PgsqlDialect;
 use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
+use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Table\Column\BooleanColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\IntegerColumn;
@@ -25,6 +26,7 @@ use Tuxxedo\Database\Query\Statement\Table\Column\VarcharColumn;
 use Tuxxedo\Database\Query\Statement\Table\ForeignKeyAction;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddColumn;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddForeignKey;
+use Tuxxedo\Database\Query\Statement\Table\Operation\AddFullTextIndex;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddIndex;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddPrimaryKey;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddUnique;
@@ -124,6 +126,118 @@ class PgsqlDialectTest extends TestCase
     ): void {
         self::assertFalse(
             (new PgsqlDialect())->interpretBoolean($value),
+        );
+    }
+
+    public function testConditionOperatorRendersLikeAsCaseInsensitive(): void
+    {
+        $dialect = new PgsqlDialect();
+
+        self::assertSame('ILIKE', $dialect->conditionOperator(ConditionOperator::LIKE));
+        self::assertSame('NOT ILIKE', $dialect->conditionOperator(ConditionOperator::NOT_LIKE));
+    }
+
+    public function testConditionOperatorRendersOtherOperatorsVerbatim(): void
+    {
+        $dialect = new PgsqlDialect();
+
+        foreach (ConditionOperator::cases() as $operator) {
+            if ($operator === ConditionOperator::LIKE || $operator === ConditionOperator::NOT_LIKE) {
+                continue;
+            }
+
+            self::assertSame($operator->value, $dialect->conditionOperator($operator));
+        }
+    }
+
+    public function testFullTextConditionRendersSimpleConfigurationPrefixMatch(): void
+    {
+        self::assertSame(
+            'to_tsvector(\'simple\', COALESCE("articles"."search_text", \'\') || \' \' || COALESCE("articles"."title", \'\')) @@ to_tsquery(\'simple\', \'mint:* & ice:*\')',
+            (new PgsqlDialect())->fullTextCondition(
+                columns: [
+                    'articles.search_text',
+                    'articles.title',
+                ],
+                terms: [
+                    'mint',
+                    'ice',
+                ],
+            ),
+        );
+    }
+
+    public function testFullTextConditionWithoutTermsMatchesNothing(): void
+    {
+        self::assertSame(
+            '1 = 0',
+            (new PgsqlDialect())->fullTextCondition(
+                columns: [
+                    'search_text',
+                ],
+                terms: [],
+            ),
+        );
+    }
+
+    public function testCreateFullTextIndexBuildsGinExpressionIndex(): void
+    {
+        self::assertSame(
+            [
+                'CREATE INDEX "articles_search_text_ft" ON "articles" USING GIN (to_tsvector(\'simple\', COALESCE("search_text", \'\')))',
+            ],
+            self::sqlOf(
+                (new PgsqlDialect())->createFullTextIndex(
+                    table: 'articles',
+                    name: 'articles_search_text_ft',
+                    columns: [
+                        'search_text',
+                    ],
+                ),
+            ),
+        );
+    }
+
+    public function testAlterTableAddFullTextIndexUsesDefaultName(): void
+    {
+        self::assertSame(
+            [
+                'CREATE INDEX "articles_title_summary_ft" ON "articles" USING GIN (to_tsvector(\'simple\', COALESCE("title", \'\') || \' \' || COALESCE("summary", \'\')))',
+            ],
+            self::sqlOf(
+                (new PgsqlDialect())->alterTable(
+                    table: 'articles',
+                    operations: [
+                        new AddFullTextIndex(
+                            columns: [
+                                'title',
+                                'summary',
+                            ],
+                        ),
+                    ],
+                ),
+            ),
+        );
+    }
+
+    public function testIndexExistsBuildsCatalogQuery(): void
+    {
+        $result = (new PgsqlDialect())->indexExists(
+            table: 'articles',
+            name: 'articles_search_text_ft',
+        );
+
+        self::assertSame(
+            'SELECT EXISTS(SELECT 1 FROM pg_catalog.pg_indexes WHERE schemaname = current_schema() AND tablename = :table AND indexname = :name)',
+            $result->sql,
+        );
+
+        self::assertSame(
+            [
+                'table' => 'articles',
+                'name' => 'articles_search_text_ft',
+            ],
+            $result->parameters,
         );
     }
 
@@ -701,6 +815,7 @@ class PgsqlDialectTest extends TestCase
             'SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = :table)',
             $result->sql,
         );
+
         self::assertSame(
             [
                 'table' => 'widgets',
@@ -720,6 +835,7 @@ class PgsqlDialectTest extends TestCase
             'SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = :table AND column_name = :column)',
             $result->sql,
         );
+
         self::assertSame(
             [
                 'table' => 'widgets',
@@ -737,6 +853,7 @@ class PgsqlDialectTest extends TestCase
             'SELECT datname FROM pg_database WHERE NOT datistemplate ORDER BY datname',
             $result->sql,
         );
+
         self::assertSame(
             [],
             $result->parameters,
@@ -751,6 +868,7 @@ class PgsqlDialectTest extends TestCase
             'SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = current_schema() ORDER BY tablename',
             $result->sql,
         );
+
         self::assertSame(
             [],
             $result->parameters,

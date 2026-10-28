@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Query\Dialect;
 
 use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
+use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AlterOperationInterface;
 use Tuxxedo\Database\SqlException;
@@ -53,6 +54,38 @@ interface DialectInterface
     public function interpretBoolean(
         mixed $value,
     ): bool;
+
+    public function conditionOperator(
+        ConditionOperator $operator,
+    ): string;
+
+    /**
+     * @param non-empty-list<string> $columns
+     * @param list<string> $terms
+     *
+     * @throws SqlException
+     */
+    public function fullTextCondition(
+        array $columns,
+        array $terms,
+    ): string;
+
+    /**
+     * @param non-empty-list<string> $columns
+     * @return list<StatementParserResultInterface>
+     *
+     * @throws SqlException
+     */
+    public function createFullTextIndex(
+        string $table,
+        string $name,
+        array $columns,
+    ): array;
+
+    public function indexExists(
+        string $table,
+        string $name,
+    ): StatementParserResultInterface;
 
     /**
      * @param list<AlterOperationInterface> $operations

@@ -1166,4 +1166,22 @@ class ModelException extends Exception
             ),
         );
     }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromSearchTextUnknownSource(
+        string $modelClass,
+        string $property,
+        string $source,
+    ): self {
+        return new self(
+            message: \sprintf(
+                '#[SearchText] on "%s::$%s" lists source "%s", which is not a property of the model',
+                $modelClass,
+                $property,
+                $source,
+            ),
+        );
+    }
 }

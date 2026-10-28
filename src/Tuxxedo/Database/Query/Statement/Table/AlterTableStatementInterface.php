@@ -57,6 +57,13 @@ interface AlterTableStatementInterface extends StatementInterface
         ?string $name = null,
     ): static;
 
+    /**
+     * @param non-empty-list<string> $columns
+     */
+    public function addFullTextIndex(
+        array $columns,
+    ): static;
+
     public function dropIndex(
         string $name,
     ): static;

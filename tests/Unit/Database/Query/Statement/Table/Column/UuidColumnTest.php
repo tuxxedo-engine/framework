@@ -19,6 +19,7 @@ use Tuxxedo\Database\Query\Dialect\NativeColumnTypeParserInterface;
 use Tuxxedo\Database\Query\Dialect\Pgsql\PgsqlDialect;
 use Tuxxedo\Database\Query\Dialect\Sqlite\SqliteDialect;
 use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
+use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\UuidColumn;
 
@@ -91,6 +92,34 @@ class UuidColumnTest extends TestCase
                 mixed $value,
             ): bool {
                 return (bool) $value;
+            }
+
+            public function conditionOperator(
+                ConditionOperator $operator,
+            ): string {
+                return $operator->value;
+            }
+
+            public function fullTextCondition(
+                array $columns,
+                array $terms,
+            ): string {
+                return '';
+            }
+
+            public function createFullTextIndex(
+                string $table,
+                string $name,
+                array $columns,
+            ): array {
+                return [];
+            }
+
+            public function indexExists(
+                string $table,
+                string $name,
+            ): StatementParserResultInterface {
+                throw new \LogicException('not used');
             }
 
             public function alterTable(

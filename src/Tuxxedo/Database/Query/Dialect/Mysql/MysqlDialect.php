@@ -15,14 +15,17 @@ namespace Tuxxedo\Database\Query\Dialect\Mysql;
 
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Dialect\NativeColumnTypeParserInterface;
+use Tuxxedo\Database\Query\FullText\FullText;
 use Tuxxedo\Database\Query\Parser\StatementParserResult;
 use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
+use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Table\Column\BooleanColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\EnumerationColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\JsonColumn;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddColumn;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddForeignKey;
+use Tuxxedo\Database\Query\Statement\Table\Operation\AddFullTextIndex;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddIndex;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddPrimaryKey;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AddUnique;
@@ -112,6 +115,75 @@ class MysqlDialect implements DialectInterface
         return (bool) $value;
     }
 
+    public function conditionOperator(
+        ConditionOperator $operator,
+    ): string {
+        return $operator->value;
+    }
+
+    public function fullTextCondition(
+        array $columns,
+        array $terms,
+    ): string {
+        if ($terms === []) {
+            return '1 = 0';
+        }
+
+        return \sprintf(
+            'MATCH (%s) AGAINST (\'%s\' IN BOOLEAN MODE)',
+            \join(
+                ', ',
+                \array_map(
+                    fn (string $column): string => $this->qualifiedIdentifier($column),
+                    $columns,
+                ),
+            ),
+            \join(
+                ' ',
+                \array_map(
+                    static fn (string $term): string => '+' . $term . '*',
+                    $terms,
+                ),
+            ),
+        );
+    }
+
+    public function createFullTextIndex(
+        string $table,
+        string $name,
+        array $columns,
+    ): array {
+        return [
+            new StatementParserResult(
+                sql: 'SET SESSION innodb_ft_enable_stopword = OFF',
+            ),
+            new StatementParserResult(
+                sql: \sprintf(
+                    'CREATE FULLTEXT INDEX %s ON %s (%s)',
+                    $this->identifier($name),
+                    $this->identifier($table),
+                    $this->joinColumns($columns),
+                ),
+            ),
+            new StatementParserResult(
+                sql: 'SET SESSION innodb_ft_enable_stopword = DEFAULT',
+            ),
+        ];
+    }
+
+    public function indexExists(
+        string $table,
+        string $name,
+    ): StatementParserResultInterface {
+        return new StatementParserResult(
+            sql: 'SELECT EXISTS(SELECT 1 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = :table AND index_name = :name)',
+            parameters: [
+                'table' => $table,
+                'name' => $name,
+            ],
+        );
+    }
+
     public function alterTable(
         string $table,
         array $operations,
@@ -172,6 +244,23 @@ class MysqlDialect implements DialectInterface
                     $tableId,
                     $this->joinColumns($operation->columns),
                 );
+
+                continue;
+            }
+
+            if ($operation instanceof AddFullTextIndex) {
+                $fullTextStatements = $this->createFullTextIndex(
+                    table: $table,
+                    name: FullText::indexName(
+                        table: $table,
+                        columns: $operation->columns,
+                    ),
+                    columns: $operation->columns,
+                );
+
+                foreach ($fullTextStatements as $fullTextStatement) {
+                    $extra[] = $fullTextStatement->sql;
+                }
 
                 continue;
             }
