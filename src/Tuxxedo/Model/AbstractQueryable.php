@@ -909,8 +909,49 @@ abstract class AbstractQueryable implements QueryableInterface
 
         $manager = $this->manager;
         $parentMetaData = $manager->metaData->getModel($this->modelClass);
-        $relation = $this->resolveRelation($parentMetaData, $relationName);
-        $targetMetaData = $manager->metaData->getModel($relation->relatedClass);
+        $root = null;
+        $innermost = null;
+
+        foreach (\explode('.', $relationName) as $segment) {
+            $relation = $this->resolveRelation($parentMetaData, $segment);
+            $targetMetaData = $manager->metaData->getModel($relation->relatedClass);
+
+            $subquery = $this->buildSingleRelationExistsSubquery(
+                manager: $manager,
+                parentMetaData: $parentMetaData,
+                targetMetaData: $targetMetaData,
+                relation: $relation,
+                includeDeleted: $includeDeleted,
+            );
+
+            if ($innermost === null) {
+                $root = $subquery;
+            } else {
+                $innermost->whereExists($subquery);
+            }
+
+            $innermost = $subquery;
+            $parentMetaData = $targetMetaData;
+        }
+
+        /**
+         * @var SelectStatementInterface $root
+         * @var SelectStatementInterface $innermost
+         */
+        if ($callback !== null) {
+            $callback($innermost);
+        }
+
+        return $root;
+    }
+
+    private function buildSingleRelationExistsSubquery(
+        ModelsManagerInterface $manager,
+        ModelMetaDataInterface $parentMetaData,
+        ModelMetaDataInterface $targetMetaData,
+        ModelRelationInterface $relation,
+        bool $includeDeleted,
+    ): SelectStatementInterface {
         $attribute = $relation->attribute;
 
         if ($attribute instanceof HasMany || $attribute instanceof HasOne) {
@@ -963,17 +1004,13 @@ abstract class AbstractQueryable implements QueryableInterface
             // @codeCoverageIgnoreStart
             throw ModelException::fromRelationNotFoundOnModel(
                 modelClass: $parentMetaData->model,
-                property: $relationName,
+                property: $relation->property,
             );
             // @codeCoverageIgnoreEnd
         }
 
         if (!$includeDeleted) {
             $manager->applySoftDeleteFilter($subquery, $targetMetaData);
-        }
-
-        if ($callback !== null) {
-            $callback($subquery);
         }
 
         return $subquery;

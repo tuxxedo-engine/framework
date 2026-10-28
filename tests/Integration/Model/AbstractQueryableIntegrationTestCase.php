@@ -997,6 +997,81 @@ abstract class AbstractQueryableIntegrationTestCase extends AbstractModelIntegra
         );
     }
 
+    public function testWhereHasNestedRelationPathAppliesConstraintToInnermostRelation(): void
+    {
+        $filtered = $this->alicePosts()->whereHas(
+            relationName: 'comments.author',
+            callback: static function (SelectStatementInterface $statement): void {
+                $statement->where(
+                    column: 'name',
+                    value: 'Bob',
+                );
+            },
+        );
+
+        self::assertSame(
+            1,
+            $filtered->count(),
+        );
+    }
+
+    public function testWhereHasNestedRelationPathExcludesRowsWhenInnermostConstraintFails(): void
+    {
+        $filtered = $this->alicePosts()->whereHas(
+            relationName: 'comments.author',
+            callback: static function (SelectStatementInterface $statement): void {
+                $statement->where(
+                    column: 'name',
+                    value: 'Alice',
+                );
+            },
+        );
+
+        self::assertSame(
+            0,
+            $filtered->count(),
+        );
+    }
+
+    public function testWhereHasNestedRelationPathSupportsThreeSegments(): void
+    {
+        $filtered = $this->alicePosts()->whereHas(
+            relationName: 'comments.author.country',
+            callback: static function (SelectStatementInterface $statement): void {
+                $statement->where(
+                    column: 'code',
+                    value: 'SE',
+                );
+            },
+        );
+
+        self::assertSame(
+            1,
+            $filtered->count(),
+        );
+    }
+
+    public function testWhereDoesntHaveNestedRelationPathExcludesRowsWhoseNestedRelationExists(): void
+    {
+        $filtered = $this->alicePosts()->whereDoesntHave(
+            relationName: 'comments.author',
+        );
+
+        self::assertSame(
+            3,
+            $filtered->count(),
+        );
+    }
+
+    public function testWhereHasThrowsForUnknownNestedRelationSegment(): void
+    {
+        $this->expectException(ModelException::class);
+
+        (void) $this->alicePosts()->whereHas(
+            relationName: 'comments.nonExistent',
+        );
+    }
+
     public function testWhereHasThrowsForUnknownRelationName(): void
     {
         $this->expectException(ModelException::class);
