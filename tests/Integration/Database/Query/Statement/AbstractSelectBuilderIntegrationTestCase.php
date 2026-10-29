@@ -288,6 +288,81 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
         );
     }
 
+    public function testGroupByAndOrderByQualifiedColumnsAcrossJoin(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        $names = [];
+
+        foreach (
+            $this->connection->select(
+                table: 'users',
+            )
+                ->select('users.name')
+                ->innerJoin(
+                    table: 'posts',
+                    first: 'users.id',
+                    second: 'posts.user_id',
+                )
+                ->groupBy('users.name')
+                ->orderBy(
+                    column: 'users.name',
+                    direction: OrderDirection::DESC,
+                )
+                ->execute() as $row
+        ) {
+            $names[] = $row->properties['name'];
+        }
+
+        self::assertSame(
+            [
+                'Bob',
+                'Alice',
+            ],
+            $names,
+        );
+    }
+
+    public function testOrderByQualifiedColumnAcrossJoin(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        $titles = [];
+
+        foreach (
+            $this->connection->select(
+                table: 'users',
+            )
+                ->select('posts.title')
+                ->innerJoin(
+                    table: 'posts',
+                    first: 'users.id',
+                    second: 'posts.user_id',
+                )
+                ->orderBy(
+                    column: 'posts.title',
+                )
+                ->execute() as $row
+        ) {
+            $titles[] = $row->properties['title'];
+        }
+
+        self::assertSame(
+            [
+                'Another Bob post',
+                'Post by Alice',
+                'Post by Bob',
+            ],
+            $titles,
+        );
+    }
+
     public function testGroupByWithHaving(): void
     {
         $this->createUsersSchema();

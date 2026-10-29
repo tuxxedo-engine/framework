@@ -105,7 +105,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
 
         if (\sizeof($this->groupBy) > 0) {
             $renderedGroupBy = \array_map(
-                static fn (string $column): string => $dialect->identifier($column),
+                static fn (string $column): string => $dialect->qualifiedIdentifier($column),
                 $this->groupBy,
             );
 
@@ -169,7 +169,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
 
         if (\sizeof($this->orderBy) > 0) {
             $clauses = \array_map(
-                static fn (string $column, OrderDirection $direction): string => $dialect->identifier($column) . ' ' . $direction->name,
+                static fn (string $column, OrderDirection $direction): string => $dialect->qualifiedIdentifier($column) . ' ' . $direction->name,
                 \array_keys($this->orderBy),
                 \array_values($this->orderBy),
             );
