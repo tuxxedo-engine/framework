@@ -290,6 +290,20 @@ class MysqlNativeColumnTypeParserTest extends TestCase
         );
     }
 
+    public function testEnumPropagatesPrimaryKey(): void
+    {
+        $column = $this->parser->parse(
+            description: $this->makeDescription(
+                nativeType: "enum('active','pending')",
+                nullable: false,
+                primary: true,
+            ),
+        );
+
+        self::assertInstanceOf(EnumerationColumn::class, $column);
+        self::assertTrue($column->primaryKey);
+    }
+
     public function testPropagatesNameAndFlags(): void
     {
         $column = $this->parser->parse(

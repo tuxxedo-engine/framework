@@ -641,6 +641,14 @@ class MysqlModelSchemaProvider implements ModelSchemaProvider
             ')';
     }
 
+    public function enumKeyedRecordsSchemaSql(): string
+    {
+        return 'CREATE TABLE enum_keyed_records (' .
+            'status ENUM(\'draft\', \'published\', \'archived\') NOT NULL PRIMARY KEY, ' .
+            'label VARCHAR(255) NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
     public function aggregateOwnersSchemaSql(): string
     {
         return 'CREATE TABLE aggregate_owners (' .

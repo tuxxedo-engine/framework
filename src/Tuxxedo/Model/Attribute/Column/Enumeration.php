@@ -42,6 +42,7 @@ readonly class Enumeration implements ColumnInterface, ColumnEnumInterface, Rule
         public ?string $coercer = EnumCoercer::class,
         public ?string $behavior = null,
         public bool $nullable = false,
+        public bool $primaryKey = false,
         public bool $unique = false,
         public ?string $default = null,
     ) {
@@ -70,6 +71,7 @@ readonly class Enumeration implements ColumnInterface, ColumnEnumInterface, Rule
                 $this->enum::cases(),
             ),
             nullable: $this->nullable,
+            primaryKey: $this->primaryKey,
             unique: $this->unique,
             default: $this->default,
         );

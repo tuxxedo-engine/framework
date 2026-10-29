@@ -99,6 +99,7 @@ interface CreateTableStatementInterface extends StatementInterface
         string $name,
         array|string $values,
         bool $nullable = false,
+        bool $primaryKey = false,
         bool $unique = false,
         string|null $default = null,
     ): ColumnInterface;

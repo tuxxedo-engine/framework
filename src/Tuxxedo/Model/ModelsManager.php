@@ -2316,7 +2316,7 @@ class ModelsManager implements ModelsManagerInterface
     #[\NoDiscard]
     public function findById(
         string $class,
-        int|string $id,
+        int|string|\BackedEnum $id,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
         ?array $with = null,
@@ -2336,7 +2336,12 @@ class ModelsManager implements ModelsManagerInterface
                     $criteria($statement);
                 }
 
-                $statement->where($metaData->key->column, $id);
+                $statement->where(
+                    column: $metaData->key->column,
+                    value: $id instanceof \BackedEnum
+                        ? $id->value
+                        : $id,
+                );
             },
             includeDeleted: $includeDeleted,
             with: $with,
@@ -2356,7 +2361,7 @@ class ModelsManager implements ModelsManagerInterface
     #[\NoDiscard]
     public function fetchById(
         string $class,
-        int|string $id,
+        int|string|\BackedEnum $id,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
         ?array $with = null,
@@ -2520,7 +2525,11 @@ class ModelsManager implements ModelsManagerInterface
             );
         }
 
-        $value = PropertyReflector::createFromObject($metaData->model, $metaData->key->property)->getValue($model);
+        $value = $this->dehydrateColumnValue(
+            metaData: $metaData,
+            property: $metaData->key->property,
+            value: PropertyReflector::createFromObject($metaData->model, $metaData->key->property)->getValue($model),
+        );
 
         if (!\is_int($value) && !\is_string($value)) {
             throw ModelException::fromPropertyValueMustBeIdentifierType(
@@ -2570,7 +2579,7 @@ class ModelsManager implements ModelsManagerInterface
     #[\NoDiscard]
     public function existsById(
         string $class,
-        int|string $id,
+        int|string|\BackedEnum $id,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
     ): bool {
@@ -2589,7 +2598,12 @@ class ModelsManager implements ModelsManagerInterface
                     $criteria($statement);
                 }
 
-                $statement->where($metaData->key->column, $id);
+                $statement->where(
+                    column: $metaData->key->column,
+                    value: $id instanceof \BackedEnum
+                        ? $id->value
+                        : $id,
+                );
             },
             includeDeleted: $includeDeleted,
         );

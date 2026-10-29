@@ -29,6 +29,7 @@ class EnumerationColumn extends AbstractColumn
         string $name,
         array|string $values,
         bool $nullable = false,
+        bool $primaryKey = false,
         bool $unique = false,
         string|null $default = null,
     ) {
@@ -46,6 +47,7 @@ class EnumerationColumn extends AbstractColumn
         parent::__construct(
             name: $name,
             nullable: $nullable,
+            primaryKey: $primaryKey,
             unique: $unique,
             default: $default,
         );

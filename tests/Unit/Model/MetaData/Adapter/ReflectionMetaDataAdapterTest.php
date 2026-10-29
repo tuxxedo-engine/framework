@@ -20,6 +20,7 @@ use Fixture\Model\ClassLevelUnique;
 use Fixture\Model\ColumnLevelUnique;
 use Fixture\Model\Comment;
 use Fixture\Model\Country;
+use Fixture\Model\EnumKeyedRecord;
 use Fixture\Model\Post;
 use Fixture\Model\PostStatus;
 use Fixture\Model\Profile;
@@ -80,6 +81,25 @@ class ReflectionMetaDataAdapterTest extends TestCase
         $meta = $this->adapter->getModel(OnConnectionAuditModel::class);
 
         self::assertSame('audit', $meta->connection);
+    }
+
+    public function testEnumerationColumnCanBeThePrimaryKey(): void
+    {
+        $meta = $this->adapter->getModel(EnumKeyedRecord::class);
+
+        self::assertInstanceOf(
+            ModelPrimaryKeyInterface::class,
+            $meta->key,
+        );
+
+        self::assertSame(
+            'status',
+            $meta->key->property,
+        );
+
+        self::assertFalse(
+            $meta->key->autoIncrement,
+        );
     }
 
     public function testUserPrimaryKeyDetectedAsAutoIncrementIdColumn(): void

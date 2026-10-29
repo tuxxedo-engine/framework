@@ -305,6 +305,11 @@ abstract class AbstractModelIntegrationTestCase extends TestCase
         $this->executeSchema($this->schemaProvider->uuidV4ExplicitsSchemaSql());
     }
 
+    protected function createEnumKeyedRecordsTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->enumKeyedRecordsSchemaSql());
+    }
+
     protected function createAggregateOwnersTable(): void
     {
         $this->executeSchema($this->schemaProvider->aggregateOwnersSchemaSql());

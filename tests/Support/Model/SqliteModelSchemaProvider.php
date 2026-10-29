@@ -641,6 +641,14 @@ class SqliteModelSchemaProvider implements ModelSchemaProvider
             ')';
     }
 
+    public function enumKeyedRecordsSchemaSql(): string
+    {
+        return 'CREATE TABLE enum_keyed_records (' .
+            'status TEXT NOT NULL PRIMARY KEY, ' .
+            'label TEXT NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
     public function aggregateOwnersSchemaSql(): string
     {
         return 'CREATE TABLE aggregate_owners (' .

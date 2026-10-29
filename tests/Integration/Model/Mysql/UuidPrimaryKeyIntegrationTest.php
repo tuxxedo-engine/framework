@@ -15,8 +15,30 @@ namespace Integration\Model\Mysql;
 
 use Integration\Model\AbstractUuidPrimaryKeyIntegrationTestCase;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
+use Support\Database\DatabaseServerProbe;
+use Support\Database\MysqlConnectionFactory;
+use Support\Model\ModelSchemaProvider;
+use Support\Model\ModelsManagerFactory;
+use Support\Model\MysqlModelSchemaProvider;
+use Tuxxedo\Model\ModelsManagerInterface;
 
 #[RequiresPhpExtension('mysqli')]
 class UuidPrimaryKeyIntegrationTest extends AbstractUuidPrimaryKeyIntegrationTestCase
 {
+    protected function realDatabaseSkipReason(): ?string
+    {
+        return DatabaseServerProbe::mysqlUnavailableReason();
+    }
+
+    protected function createModelsManager(): ModelsManagerInterface
+    {
+        return ModelsManagerFactory::createFromConnection(
+            connection: MysqlConnectionFactory::create(),
+        );
+    }
+
+    protected function schemaProvider(): ModelSchemaProvider
+    {
+        return new MysqlModelSchemaProvider();
+    }
 }

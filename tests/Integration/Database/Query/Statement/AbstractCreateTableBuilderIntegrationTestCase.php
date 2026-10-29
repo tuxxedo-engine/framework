@@ -349,6 +349,41 @@ abstract class AbstractCreateTableBuilderIntegrationTestCase extends AbstractBui
         );
     }
 
+    public function testCreateTableWithEnumerationPrimaryKeyEnforcesUniqueness(): void
+    {
+        $table = $this->connection->createTable(
+            table: 'widgets',
+        );
+
+        $table->enumeration(
+            name: 'status',
+            values: Status::class,
+            primaryKey: true,
+        );
+
+        $table->execute();
+
+        $this->connection->insert(
+            table: 'widgets',
+        )
+            ->set(
+                column: 'status',
+                value: Status::ACTIVE->value,
+            )
+            ->execute();
+
+        $this->expectException(DatabaseException::class);
+
+        $this->connection->insert(
+            table: 'widgets',
+        )
+            ->set(
+                column: 'status',
+                value: Status::ACTIVE->value,
+            )
+            ->execute();
+    }
+
     public function testCreateTableWithIntegerColumn(): void
     {
         $table = $this->connection->createTable(

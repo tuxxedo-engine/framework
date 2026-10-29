@@ -55,7 +55,7 @@ class StubModelsManager implements ModelsManagerInterface
     }
 
     /**
-     * @var list<array{class: string, id: int|string, with: array<string, (\Closure(Relation<object>): Relation<object>)|null>|null}>
+     * @var list<array{class: string, id: int|string|\BackedEnum, with: array<string, (\Closure(Relation<object>): Relation<object>)|null>|null}>
      */
     public array $findByIdCalls = [];
 
@@ -72,7 +72,7 @@ class StubModelsManager implements ModelsManagerInterface
      */
     public function findById(
         string $class,
-        int|string $id,
+        int|string|\BackedEnum $id,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
         ?array $with = null,
@@ -135,7 +135,7 @@ class StubModelsManager implements ModelsManagerInterface
 
     public function fetchById(
         string $class,
-        int|string $id,
+        int|string|\BackedEnum $id,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
         ?array $with = null,
@@ -189,7 +189,7 @@ class StubModelsManager implements ModelsManagerInterface
 
     public function existsById(
         string $class,
-        int|string $id,
+        int|string|\BackedEnum $id,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
     ): bool {

@@ -138,7 +138,7 @@ interface ModelsManagerInterface
     #[\NoDiscard]
     public function findById(
         string $class,
-        int|string $id,
+        int|string|\BackedEnum $id,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
         ?array $with = null,
@@ -157,7 +157,7 @@ interface ModelsManagerInterface
     #[\NoDiscard]
     public function fetchById(
         string $class,
-        int|string $id,
+        int|string|\BackedEnum $id,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
         ?array $with = null,
@@ -250,7 +250,7 @@ interface ModelsManagerInterface
     #[\NoDiscard]
     public function existsById(
         string $class,
-        int|string $id,
+        int|string|\BackedEnum $id,
         ?\Closure $criteria = null,
         bool $includeDeleted = false,
     ): bool;

@@ -230,6 +230,7 @@ class CreateTableStatement extends AbstractTableStatement implements CreateTable
         string $name,
         array|string $values,
         bool $nullable = false,
+        bool $primaryKey = false,
         bool $unique = false,
         string|null $default = null,
     ): ColumnInterface {
@@ -237,6 +238,7 @@ class CreateTableStatement extends AbstractTableStatement implements CreateTable
             name: $name,
             values: $values,
             nullable: $nullable,
+            primaryKey: $primaryKey,
             unique: $unique,
             default: $default,
         );

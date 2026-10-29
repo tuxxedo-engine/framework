@@ -149,6 +149,8 @@ interface ModelSchemaProvider
 
     public function uuidV4ExplicitsSchemaSql(): string;
 
+    public function enumKeyedRecordsSchemaSql(): string;
+
     public function aggregateOwnersSchemaSql(): string;
 
     public function aggregateOrdersSchemaSql(): string;

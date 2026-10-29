@@ -15,8 +15,30 @@ namespace Integration\Model\Pgsql;
 
 use Integration\Model\AbstractUuidPrimaryKeyIntegrationTestCase;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
+use Support\Database\DatabaseServerProbe;
+use Support\Database\PgsqlConnectionFactory;
+use Support\Model\ModelSchemaProvider;
+use Support\Model\ModelsManagerFactory;
+use Support\Model\PgsqlModelSchemaProvider;
+use Tuxxedo\Model\ModelsManagerInterface;
 
 #[RequiresPhpExtension('pgsql')]
 class UuidPrimaryKeyIntegrationTest extends AbstractUuidPrimaryKeyIntegrationTestCase
 {
+    protected function realDatabaseSkipReason(): ?string
+    {
+        return DatabaseServerProbe::pgsqlUnavailableReason();
+    }
+
+    protected function createModelsManager(): ModelsManagerInterface
+    {
+        return ModelsManagerFactory::createFromConnection(
+            connection: PgsqlConnectionFactory::create(),
+        );
+    }
+
+    protected function schemaProvider(): ModelSchemaProvider
+    {
+        return new PgsqlModelSchemaProvider();
+    }
 }

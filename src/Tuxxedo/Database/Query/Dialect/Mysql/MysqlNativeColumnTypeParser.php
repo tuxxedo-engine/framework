@@ -238,6 +238,7 @@ class MysqlNativeColumnTypeParser implements NativeColumnTypeParserInterface
             name: $description->name,
             values: $values,
             nullable: $description->nullable,
+            primaryKey: $description->primary,
             default: $description->default,
         );
     }
