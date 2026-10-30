@@ -456,9 +456,12 @@ class Response implements ResponseInterface, ResponsableInterface
     public function withHttpVersion(
         HttpVersion $httpVersion,
     ): static {
-        $this->httpVersion = $httpVersion;
-
-        return $this;
+        return clone (
+            $this,
+            [
+                'httpVersion' => $httpVersion,
+            ],
+        );
     }
 
     public function hasHeader(
