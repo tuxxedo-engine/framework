@@ -24,6 +24,7 @@ class RedisCacheDriver implements CacheDriverInterface
 {
     private const string NAME = 'redis';
     private const int SCAN_BATCH = 1000;
+    private const int PX_LIMIT = 2_147_483_647;
 
     public readonly string $namespace;
     private ?\Redis $redis = null;
@@ -201,8 +202,16 @@ class RedisCacheDriver implements CacheDriverInterface
         array $options,
         ?DurationInterface $ttl,
     ): array {
-        if ($ttl !== null) {
-            $options['px'] = $this->ttlMilliseconds($ttl);
+        if ($ttl === null) {
+            return $options;
+        }
+
+        $milliseconds = $this->ttlMilliseconds($ttl);
+
+        if ($milliseconds <= self::PX_LIMIT) {
+            $options['px'] = $milliseconds;
+        } else {
+            $options['ex'] = \intdiv($milliseconds + 999, 1000);
         }
 
         return $options;
@@ -219,6 +228,8 @@ class RedisCacheDriver implements CacheDriverInterface
     ): int {
         $redis = $this->redis();
         $fullKey = $this->namespace . $key;
+
+        $redis->clearLastError();
 
         if ($ttl === null) {
             $result = $redis->incrBy($fullKey, $delta);
@@ -267,6 +278,7 @@ class RedisCacheDriver implements CacheDriverInterface
             driver: self::NAME,
             operation: $operation,
             key: $key,
+            reason: $redis->getLastError(),
         );
         // @codeCoverageIgnoreEnd
     }
@@ -341,11 +353,17 @@ class RedisCacheDriver implements CacheDriverInterface
         $stored = $this->guard(
             operation: 'store',
             key: $key,
-            callback: fn (): mixed => $this->redis()->set(
-                $this->namespace . $key,
-                $this->encode($value),
-                $this->withTtl([], $ttl),
-            ),
+            callback: function () use ($key, $value, $ttl): mixed {
+                $redis = $this->redis();
+
+                $redis->clearLastError();
+
+                return $redis->set(
+                    $this->namespace . $key,
+                    $this->encode($value),
+                    $this->withTtl([], $ttl),
+                );
+            },
         );
 
         if ($stored !== true) {
@@ -354,6 +372,7 @@ class RedisCacheDriver implements CacheDriverInterface
                 driver: self::NAME,
                 operation: 'store',
                 key: $key,
+                reason: $this->redis()->getLastError(),
             );
             // @codeCoverageIgnoreEnd
         }

@@ -440,4 +440,29 @@ abstract class AbstractCacheDriverIntegrationTestCase extends TestCase
 
         self::assertNull($this->cache->int('window'));
     }
+
+    public function testValueWithTtlBeyondThirtyTwoBitMillisecondsIsStored(): void
+    {
+        $this->cache->set(
+            key: 'name',
+            value: 'Kalle',
+            ttl: Duration::fromHours(30 * 24),
+        );
+
+        self::assertSame(
+            'Kalle',
+            $this->cache->string('name'),
+        );
+    }
+
+    public function testIncrementWithTtlBeyondThirtyTwoBitMillisecondsCreatesKey(): void
+    {
+        self::assertSame(
+            1,
+            $this->cache->increment(
+                key: 'window',
+                ttl: Duration::fromHours(30 * 24),
+            ),
+        );
+    }
 }

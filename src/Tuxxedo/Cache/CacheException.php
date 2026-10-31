@@ -42,14 +42,19 @@ class CacheException extends Exception
         string $driver,
         string $operation,
         string $key,
+        ?string $reason = null,
     ): self {
+        $message = \sprintf(
+            'Cache driver "%s" failed to %s key "%s"',
+            $driver,
+            $operation,
+            $key,
+        );
+
         return new self(
-            message: \sprintf(
-                'Cache driver "%s" failed to %s key "%s"',
-                $driver,
-                $operation,
-                $key,
-            ),
+            message: $reason === null || $reason === ''
+                ? $message
+                : $message . ': ' . $reason,
         );
     }
 

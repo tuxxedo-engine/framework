@@ -1944,9 +1944,6 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
         );
     }
 
-    /**
-     * @return list<string>
-     */
     private function seedDuplicateAlice(): void
     {
         $this->connection->query(
@@ -1955,6 +1952,9 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
         );
     }
 
+    /**
+     * @return list<string>
+     */
     private function names(
         SelectStatementInterface $statement,
     ): array {
