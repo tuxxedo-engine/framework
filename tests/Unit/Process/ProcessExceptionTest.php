@@ -27,6 +27,16 @@ class ProcessExceptionTest extends TestCase
         self::assertStringContainsString('/nonexistent/binary', $exception->getMessage());
     }
 
+    public function testFromLaunchFailureAppendsReason(): void
+    {
+        $exception = ProcessException::fromLaunchFailure(
+            binary: '/nonexistent/binary',
+            reason: 'CreateProcess failed, error code: 2',
+        );
+
+        self::assertStringContainsString('"/nonexistent/binary": CreateProcess failed, error code: 2', $exception->getMessage());
+    }
+
     public function testFromTimeoutMentionsSeconds(): void
     {
         $exception = ProcessException::fromTimeout(

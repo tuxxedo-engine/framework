@@ -48,6 +48,8 @@ class ProcessRunner implements ProcessRunnerInterface
             ...$command->arguments,
         ];
 
+        \error_clear_last();
+
         $process = @\proc_open(
             $argv,
             $descriptors,
@@ -63,6 +65,7 @@ class ProcessRunner implements ProcessRunnerInterface
 
             throw ProcessException::fromLaunchFailure(
                 binary: $command->binary,
+                reason: \error_get_last()['message'] ?? null,
             );
         }
 

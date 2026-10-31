@@ -113,6 +113,21 @@ class ProcessRunnerIntegrationTest extends TestCase
         (new ProcessRunner())->run($command);
     }
 
+    public function testLaunchFailureExplainsWhy(): void
+    {
+        try {
+            (new ProcessRunner())->run(
+                new ProcessCommand(
+                    binary: '/definitely/not/a/real/binary/xyz',
+                ),
+            );
+
+            self::fail('Expected ProcessException was not thrown');
+        } catch (ProcessException $exception) {
+            self::assertStringContainsString('"/definitely/not/a/real/binary/xyz": ', $exception->getMessage());
+        }
+    }
+
     public function testRunCleansUpStdinTempFileOnLaunchFailure(): void
     {
         $command = new ProcessCommand(

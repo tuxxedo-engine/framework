@@ -19,12 +19,19 @@ class ProcessException extends Exception
 {
     public static function fromLaunchFailure(
         string $binary,
+        ?string $reason = null,
     ): self {
         return new self(
-            message: \sprintf(
-                'Failed to launch process "%s"',
-                $binary,
-            ),
+            message: $reason === null
+                ? \sprintf(
+                    'Failed to launch process "%s"',
+                    $binary,
+                )
+                : \sprintf(
+                    'Failed to launch process "%s": %s',
+                    $binary,
+                    $reason,
+                ),
         );
     }
 
