@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\Attribute\Aggregate;
 
+use Tuxxedo\Database\Query\Statement\Aggregate\AggregateFunction;
+
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
 class CountAggregate extends RelationAggregate
 {
@@ -22,7 +24,7 @@ class CountAggregate extends RelationAggregate
     ) {
         parent::__construct(
             relation: $relation,
-            function: RelationAggregateFunction::COUNT,
+            function: AggregateFunction::COUNT,
             alias: $alias,
         );
     }

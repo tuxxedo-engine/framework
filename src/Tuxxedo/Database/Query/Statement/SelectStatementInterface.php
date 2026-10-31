@@ -17,6 +17,7 @@ use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Hydrator\HydratableInterface;
 use Tuxxedo\Database\Hydrator\HydratorInterface;
+use Tuxxedo\Database\Query\Statement\Aggregate\AggregateFunction;
 use Tuxxedo\Database\Query\Statement\Condition\BetweenOperator;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
@@ -26,6 +27,52 @@ interface SelectStatementInterface extends WhereStatementInterface
 {
     public function select(
         string ...$columns,
+    ): static;
+
+    public function alias(
+        string $alias,
+    ): static;
+
+    public function selectAs(
+        string $column,
+        string $alias,
+    ): static;
+
+    /**
+     * @throws SqlException
+     */
+    public function selectAggregate(
+        AggregateFunction $function,
+        ?string $column = null,
+        ?string $alias = null,
+        bool $distinct = false,
+    ): static;
+
+    public function selectRaw(
+        string $sql,
+        ?string $alias = null,
+    ): static;
+
+    /**
+     * @throws SqlException
+     */
+    public function havingAggregate(
+        AggregateFunction $function,
+        ?string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        bool $distinct = false,
+    ): static;
+
+    /**
+     * @throws SqlException
+     */
+    public function orHavingAggregate(
+        AggregateFunction $function,
+        ?string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        bool $distinct = false,
     ): static;
 
     public function selectSubquery(

@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\MetaData;
 
-use Tuxxedo\Model\Attribute\Aggregate\RelationAggregateFunction;
+use Tuxxedo\Database\Query\Statement\Aggregate\AggregateFunction;
 
 interface ModelRelationAggregateInterface
 {
@@ -29,7 +29,7 @@ interface ModelRelationAggregateInterface
         get;
     }
 
-    public RelationAggregateFunction $function {
+    public AggregateFunction $function {
         get;
     }
 

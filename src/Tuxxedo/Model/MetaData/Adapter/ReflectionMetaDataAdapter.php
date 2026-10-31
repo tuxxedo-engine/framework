@@ -1806,7 +1806,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
 
             foreach ($attributes as $attribute) {
                 $function = $attribute->function;
-                $sqlFn = $function->sqlFunction();
+                $sqlFn = $function->value;
 
                 if ($function->requiresColumn() && $attribute->column === null) {
                     throw ModelException::fromAggregateMissingColumn(

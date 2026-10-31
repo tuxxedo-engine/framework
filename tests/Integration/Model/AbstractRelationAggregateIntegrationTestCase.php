@@ -18,6 +18,7 @@ use Fixture\Model\Aggregate\AggregateOrder;
 use Fixture\Model\Aggregate\AggregateOwner;
 use Fixture\Model\Aggregate\AggregatePolyTag;
 use Fixture\Model\Aggregate\AggregateTag;
+use Tuxxedo\Database\Query\Statement\Join\JoinConditionInterface;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Model\ModelException;
 use Tuxxedo\Model\RelationSubqueryInterface;
@@ -589,6 +590,82 @@ abstract class AbstractRelationAggregateIntegrationTestCase extends AbstractMode
                     ->where('label', 'one')
                     ->orWhereDoesntHave('orders')
                     ->orderBy('id'),
+            ),
+        );
+    }
+
+    public function testStartsWithFiltersOnModelQueries(): void
+    {
+        self::assertSame(
+            [
+                'empty',
+            ],
+            $this->labels(
+                $this->modelsManager
+                    ->query(AggregateOwner::class)
+                    ->whereStartsWith('label', 'EM'),
+            ),
+        );
+
+        self::assertSame(
+            [
+                'one',
+                'empty',
+            ],
+            $this->labels(
+                $this->modelsManager
+                    ->query(AggregateOwner::class)
+                    ->where('label', 'one')
+                    ->orWhereStartsWith('label', 'em')
+                    ->orderBy('id'),
+            ),
+        );
+
+        self::assertSame(
+            [
+                'one',
+                'two',
+                'empty',
+            ],
+            $this->labels(
+                $this->modelsManager
+                    ->query(AggregateOwner::class)
+                    ->whereColumnStartsWith('label', 'label')
+                    ->orderBy('id'),
+            ),
+        );
+
+        self::assertSame(
+            [
+                'two',
+            ],
+            $this->labels(
+                $this->modelsManager
+                    ->query(AggregateOwner::class)
+                    ->where('label', 'two')
+                    ->orWhereColumnStartsWith('label', 'id'),
+            ),
+        );
+    }
+
+    public function testModelJoinWithAliasAndOnCallback(): void
+    {
+        self::assertSame(
+            [
+                'two',
+            ],
+            $this->labels(
+                $this->modelsManager
+                    ->query(AggregateOwner::class)
+                    ->innerJoin(
+                        table: 'aggregate_orders',
+                        alias: 'o',
+                        on: static function (JoinConditionInterface $on): void {
+                            $on
+                                ->whereColumn('o.owner_id', 'aggregate_owners.id')
+                                ->where('o.amount', 200);
+                        },
+                    ),
             ),
         );
     }

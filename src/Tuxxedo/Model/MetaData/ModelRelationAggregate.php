@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\MetaData;
 
-use Tuxxedo\Model\Attribute\Aggregate\RelationAggregateFunction;
+use Tuxxedo\Database\Query\Statement\Aggregate\AggregateFunction;
 
 readonly class ModelRelationAggregate implements ModelRelationAggregateInterface
 {
@@ -24,7 +24,7 @@ readonly class ModelRelationAggregate implements ModelRelationAggregateInterface
         public string $property,
         public string $alias,
         public string $relation,
-        public RelationAggregateFunction $function,
+        public AggregateFunction $function,
         public ?string $column,
         public string $slotType,
     ) {

@@ -128,6 +128,13 @@ class StubDialect implements DialectInterface
         return $expression . ' ' . $direction->name;
     }
 
+    public function startsWith(
+        string $subject,
+        string $prefix,
+    ): string {
+        return $subject . ' STARTS WITH ' . $prefix;
+    }
+
     public function fullTextCondition(
         array $columns,
         array $terms,

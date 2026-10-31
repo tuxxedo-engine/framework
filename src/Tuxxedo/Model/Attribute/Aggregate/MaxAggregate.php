@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\Attribute\Aggregate;
 
+use Tuxxedo\Database\Query\Statement\Aggregate\AggregateFunction;
+
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
 class MaxAggregate extends RelationAggregate
 {
@@ -23,7 +25,7 @@ class MaxAggregate extends RelationAggregate
     ) {
         parent::__construct(
             relation: $relation,
-            function: RelationAggregateFunction::MAX,
+            function: AggregateFunction::MAX,
             column: $column,
             alias: $alias,
         );

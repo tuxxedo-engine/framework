@@ -189,6 +189,7 @@ class StubConnection implements ConnectionInterface
 
     public function select(
         string $table,
+        ?string $alias = null,
     ): SelectStatementInterface {
         throw new \LogicException('StubConnection: select not implemented');
     }

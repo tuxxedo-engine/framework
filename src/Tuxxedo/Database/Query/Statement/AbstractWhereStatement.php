@@ -22,6 +22,8 @@ use Tuxxedo\Database\Query\Statement\Condition\BetweenConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\BetweenOperator;
 use Tuxxedo\Database\Query\Statement\Condition\ColumnCondition;
 use Tuxxedo\Database\Query\Statement\Condition\ColumnConditionInterface;
+use Tuxxedo\Database\Query\Statement\Condition\ColumnStartsWithCondition;
+use Tuxxedo\Database\Query\Statement\Condition\ColumnStartsWithConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\Condition;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionConjunction;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionInterface;
@@ -34,20 +36,23 @@ use Tuxxedo\Database\Query\Statement\Condition\GroupCondition;
 use Tuxxedo\Database\Query\Statement\Condition\GroupConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\RawCondition;
 use Tuxxedo\Database\Query\Statement\Condition\RawConditionInterface;
+use Tuxxedo\Database\Query\Statement\Condition\StartsWithCondition;
+use Tuxxedo\Database\Query\Statement\Condition\StartsWithConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\SubqueryComparisonCondition;
 use Tuxxedo\Database\Query\Statement\Condition\SubqueryComparisonConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\SubqueryCondition;
 use Tuxxedo\Database\Query\Statement\Condition\SubqueryConditionInterface;
 use Tuxxedo\Database\Query\Statement\Join\Join;
+use Tuxxedo\Database\Query\Statement\Join\JoinCondition;
+use Tuxxedo\Database\Query\Statement\Join\JoinConditionInterface;
 use Tuxxedo\Database\Query\Statement\Join\JoinInterface;
-use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
 use Tuxxedo\Database\Query\Statement\Join\JoinType;
 use Tuxxedo\Database\SqlException;
 
 abstract class AbstractWhereStatement extends AbstractStatement implements WhereStatementInterface
 {
     /**
-     * @var list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|SubqueryComparisonCondition|ExistsCondition|GroupCondition|FullTextCondition>
+     * @var list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|SubqueryComparisonCondition|ExistsCondition|GroupCondition|FullTextCondition|ColumnStartsWithCondition|StartsWithCondition>
      */
     protected array $conditions = [];
 
@@ -83,24 +88,11 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
                 JoinType::CROSS => 'CROSS JOIN',
             };
 
-            if ($join->type === JoinType::CROSS || $join->operator === null) {
-                $sql .= \sprintf(
-                    ' %s %s',
-                    $type,
-                    $dialect->identifier($join->identifier),
-                );
+            $sql .= ' ' . $type . ' ' . $this->tableReference($dialect, $join->identifier, $join->alias);
 
-                continue;
+            if (\sizeof($join->conditions) > 0) {
+                $sql .= ' ON' . $this->renderConditions($join->conditions, $dialect);
             }
-
-            $sql .= \sprintf(
-                ' %s %s ON %s %s %s',
-                $type,
-                $dialect->identifier($join->identifier),
-                $dialect->qualifiedIdentifier($join->first),
-                $join->operator->value,
-                $dialect->qualifiedIdentifier($join->second),
-            );
         }
 
         if (\sizeof($this->conditions) > 0) {
@@ -112,7 +104,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     /**
-     * @param list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|SubqueryComparisonCondition|ExistsCondition|GroupCondition|FullTextCondition> $conditions
+     * @param list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|SubqueryComparisonCondition|ExistsCondition|GroupCondition|FullTextCondition|ColumnStartsWithCondition|StartsWithCondition> $conditions
      */
     private function renderConditions(
         array $conditions,
@@ -132,7 +124,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     private function renderConditionBody(
-        ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|SubqueryComparisonCondition|ExistsCondition|GroupCondition|FullTextCondition $condition,
+        ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|SubqueryComparisonCondition|ExistsCondition|GroupCondition|FullTextCondition|ColumnStartsWithCondition|StartsWithCondition $condition,
         DialectInterface $dialect,
     ): string {
         if ($condition instanceof BetweenConditionInterface) {
@@ -142,6 +134,22 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
                 $condition->operator->value,
                 $condition->from,
                 $condition->to,
+            );
+        }
+
+        if ($condition instanceof ColumnStartsWithConditionInterface) {
+            return ' ' . $dialect->startsWith(
+                $dialect->qualifiedIdentifier($condition->identifier),
+                $dialect->qualifiedIdentifier($condition->prefix),
+            );
+        }
+
+        if ($condition instanceof StartsWithConditionInterface) {
+            return \sprintf(
+                " %s %s %s ESCAPE '!'",
+                $dialect->qualifiedIdentifier($condition->identifier),
+                $dialect->conditionOperator(ConditionOperator::LIKE),
+                $condition->parameter,
             );
         }
 
@@ -557,76 +565,121 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
 
     public function innerJoin(
         string $table,
-        string $first,
-        string $second,
-        JoinOperator|string $operator = JoinOperator::EQUALS,
+        ?string $first = null,
+        ?string $second = null,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        ?string $alias = null,
+        ?\Closure $on = null,
     ): static {
-        if (\is_string($operator)) {
-            $operator = JoinOperator::fromInput($operator);
-        }
-
-        $this->joins[] = new Join(
+        return $this->buildJoin(
             type: JoinType::INNER,
-            identifier: $table,
+            table: $table,
             first: $first,
             second: $second,
             operator: $operator,
+            alias: $alias,
+            on: $on,
         );
-
-        return $this;
     }
 
     public function leftJoin(
         string $table,
-        string $first,
-        string $second,
-        JoinOperator|string $operator = JoinOperator::EQUALS,
+        ?string $first = null,
+        ?string $second = null,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        ?string $alias = null,
+        ?\Closure $on = null,
     ): static {
-        if (\is_string($operator)) {
-            $operator = JoinOperator::fromInput($operator);
-        }
-
-        $this->joins[] = new Join(
+        return $this->buildJoin(
             type: JoinType::LEFT,
-            identifier: $table,
+            table: $table,
             first: $first,
             second: $second,
             operator: $operator,
+            alias: $alias,
+            on: $on,
         );
-
-        return $this;
     }
 
     public function rightJoin(
         string $table,
-        string $first,
-        string $second,
-        JoinOperator|string $operator = JoinOperator::EQUALS,
+        ?string $first = null,
+        ?string $second = null,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        ?string $alias = null,
+        ?\Closure $on = null,
     ): static {
-        if (\is_string($operator)) {
-            $operator = JoinOperator::fromInput($operator);
-        }
-
-        $this->joins[] = new Join(
+        return $this->buildJoin(
             type: JoinType::RIGHT,
-            identifier: $table,
+            table: $table,
             first: $first,
             second: $second,
             operator: $operator,
+            alias: $alias,
+            on: $on,
+        );
+    }
+
+    public function crossJoin(
+        string $table,
+        ?string $alias = null,
+    ): static {
+        $this->joins[] = new Join(
+            type: JoinType::CROSS,
+            identifier: $table,
+            alias: $alias,
         );
 
         return $this;
     }
 
-    public function crossJoin(
-        string $table,
+    public function whereColumnStartsWith(
+        string $column,
+        string $prefixColumn,
     ): static {
-        $this->joins[] = new Join(
-            type: JoinType::CROSS,
-            identifier: $table,
-            first: '',
-            second: '',
-            operator: null,
+        $this->conditions[] = new ColumnStartsWithCondition(
+            conjunction: ConditionConjunction::AND,
+            identifier: $column,
+            prefix: $prefixColumn,
+        );
+
+        return $this;
+    }
+
+    public function orWhereColumnStartsWith(
+        string $column,
+        string $prefixColumn,
+    ): static {
+        $this->conditions[] = new ColumnStartsWithCondition(
+            conjunction: ConditionConjunction::OR,
+            identifier: $column,
+            prefix: $prefixColumn,
+        );
+
+        return $this;
+    }
+
+    public function whereStartsWith(
+        string $column,
+        string $prefix,
+    ): static {
+        $this->conditions[] = $this->buildStartsWith(
+            column: $column,
+            prefix: $prefix,
+            conjunction: ConditionConjunction::AND,
+        );
+
+        return $this;
+    }
+
+    public function orWhereStartsWith(
+        string $column,
+        string $prefix,
+    ): static {
+        $this->conditions[] = $this->buildStartsWith(
+            column: $column,
+            prefix: $prefix,
+            conjunction: ConditionConjunction::OR,
         );
 
         return $this;
@@ -988,6 +1041,104 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
             operator: $operator,
             parameter: ':' . $parameterKey,
         );
+    }
+
+    /**
+     * @param (\Closure(JoinConditionInterface): void)|null $on
+     *
+     * @throws SqlException
+     */
+    private function buildJoin(
+        JoinType $type,
+        string $table,
+        ?string $first,
+        ?string $second,
+        ConditionOperator|string $operator,
+        ?string $alias,
+        ?\Closure $on,
+    ): static {
+        if (\is_string($operator)) {
+            $operator = ConditionOperator::fromInput($operator);
+        }
+
+        if ($on !== null) {
+            if ($first !== null || $second !== null) {
+                throw SqlException::fromInvalidJoinCondition(
+                    table: $table,
+                );
+            }
+
+            $before = \sizeof($this->conditions);
+
+            $on(new JoinCondition($this));
+
+            $conditions = \array_slice($this->conditions, $before);
+            $this->conditions = \array_slice($this->conditions, 0, $before);
+        } elseif ($first !== null && $second !== null) {
+            $conditions = [
+                new ColumnCondition(
+                    conjunction: ConditionConjunction::AND,
+                    identifier: $first,
+                    operator: $operator,
+                    other: $second,
+                ),
+            ];
+        } else {
+            $conditions = [];
+        }
+
+        if (\sizeof($conditions) === 0) {
+            throw SqlException::fromInvalidJoinCondition(
+                table: $table,
+            );
+        }
+
+        $this->joins[] = new Join(
+            type: $type,
+            identifier: $table,
+            alias: $alias,
+            conditions: $conditions,
+        );
+
+        return $this;
+    }
+
+    private function buildStartsWith(
+        string $column,
+        string $prefix,
+        ConditionConjunction $conjunction,
+    ): StartsWithCondition {
+        $parameterKey = 'where_' . $this->nextParameterOffset();
+
+        $this->parameters[$parameterKey] = \str_replace(
+            [
+                '!',
+                '%',
+                '_',
+            ],
+            [
+                '!!',
+                '!%',
+                '!_',
+            ],
+            $prefix,
+        ) . '%';
+
+        return new StartsWithCondition(
+            conjunction: $conjunction,
+            identifier: $column,
+            parameter: ':' . $parameterKey,
+        );
+    }
+
+    protected function tableReference(
+        DialectInterface $dialect,
+        string $table,
+        ?string $alias,
+    ): string {
+        return $alias === null
+            ? $dialect->identifier($table)
+            : $dialect->identifier($table) . ' AS ' . $dialect->identifier($alias);
     }
 
     private function buildExists(

@@ -173,6 +173,13 @@ class PgsqlDialect implements DialectInterface
         return $expression . ' ' . $direction->name . ' NULLS LAST';
     }
 
+    public function startsWith(
+        string $subject,
+        string $prefix,
+    ): string {
+        return $subject . ' ILIKE (' . $prefix . " || '%')";
+    }
+
     public function fullTextCondition(
         array $columns,
         array $terms,

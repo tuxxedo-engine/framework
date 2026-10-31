@@ -172,6 +172,7 @@ interface ConnectionInterface
 
     public function select(
         string $table,
+        ?string $alias = null,
     ): SelectStatementInterface;
 
     public function insert(

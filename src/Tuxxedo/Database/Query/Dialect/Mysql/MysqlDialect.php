@@ -129,6 +129,13 @@ class MysqlDialect implements DialectInterface
         return $expression . ' IS NULL, ' . $expression . ' ' . $direction->name;
     }
 
+    public function startsWith(
+        string $subject,
+        string $prefix,
+    ): string {
+        return $subject . ' LIKE CONCAT(' . $prefix . ", '%')";
+    }
+
     public function fullTextCondition(
         array $columns,
         array $terms,

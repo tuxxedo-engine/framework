@@ -108,6 +108,13 @@ class UuidColumnTest extends TestCase
                 return '';
             }
 
+            public function startsWith(
+                string $subject,
+                string $prefix,
+            ): string {
+                return '';
+            }
+
             public function fullTextCondition(
                 array $columns,
                 array $terms,

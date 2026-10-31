@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\Attribute\Aggregate;
 
+use Tuxxedo\Database\Query\Statement\Aggregate\AggregateFunction;
+
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
 class SumAggregate extends RelationAggregate
 {
@@ -23,7 +25,7 @@ class SumAggregate extends RelationAggregate
     ) {
         parent::__construct(
             relation: $relation,
-            function: RelationAggregateFunction::SUM,
+            function: AggregateFunction::SUM,
             column: $column,
             alias: $alias,
         );

@@ -13,12 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model;
 
+use Tuxxedo\Database\Query\Statement\Aggregate\AggregateFunction;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
-use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
+use Tuxxedo\Database\Query\Statement\Join\JoinConditionInterface;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
-use Tuxxedo\Model\Attribute\Aggregate\RelationAggregateFunction;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
 use Tuxxedo\Model\Attribute\Relation\HasMany;
@@ -426,44 +426,80 @@ abstract class AbstractQueryable implements QueryableInterface
         );
     }
 
+    /**
+     * @param (\Closure(JoinConditionInterface): void)|null $on
+     */
     #[\NoDiscard]
     public function innerJoin(
         string $table,
-        string $first,
-        string $second,
-        JoinOperator|string $operator = JoinOperator::EQUALS,
+        ?string $first = null,
+        ?string $second = null,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        ?string $alias = null,
+        ?\Closure $on = null,
     ): static {
         return $this->extend(
-            criterion: static function (WhereStatementInterface $statement) use ($table, $first, $second, $operator): void {
-                $statement->innerJoin($table, $first, $second, $operator);
+            criterion: static function (WhereStatementInterface $statement) use ($table, $first, $second, $operator, $alias, $on): void {
+                $statement->innerJoin(
+                    table: $table,
+                    first: $first,
+                    second: $second,
+                    operator: $operator,
+                    alias: $alias,
+                    on: $on,
+                );
             },
         );
     }
 
+    /**
+     * @param (\Closure(JoinConditionInterface): void)|null $on
+     */
     #[\NoDiscard]
     public function leftJoin(
         string $table,
-        string $first,
-        string $second,
-        JoinOperator|string $operator = JoinOperator::EQUALS,
+        ?string $first = null,
+        ?string $second = null,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        ?string $alias = null,
+        ?\Closure $on = null,
     ): static {
         return $this->extend(
-            criterion: static function (WhereStatementInterface $statement) use ($table, $first, $second, $operator): void {
-                $statement->leftJoin($table, $first, $second, $operator);
+            criterion: static function (WhereStatementInterface $statement) use ($table, $first, $second, $operator, $alias, $on): void {
+                $statement->leftJoin(
+                    table: $table,
+                    first: $first,
+                    second: $second,
+                    operator: $operator,
+                    alias: $alias,
+                    on: $on,
+                );
             },
         );
     }
 
+    /**
+     * @param (\Closure(JoinConditionInterface): void)|null $on
+     */
     #[\NoDiscard]
     public function rightJoin(
         string $table,
-        string $first,
-        string $second,
-        JoinOperator|string $operator = JoinOperator::EQUALS,
+        ?string $first = null,
+        ?string $second = null,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        ?string $alias = null,
+        ?\Closure $on = null,
     ): static {
         return $this->extend(
-            criterion: static function (WhereStatementInterface $statement) use ($table, $first, $second, $operator): void {
-                $statement->rightJoin($table, $first, $second, $operator);
+            criterion: static function (WhereStatementInterface $statement) use ($table, $first, $second, $operator, $alias, $on): void {
+                $statement->rightJoin(
+                    table: $table,
+                    first: $first,
+                    second: $second,
+                    operator: $operator,
+                    alias: $alias,
+                    on: $on,
+                );
             },
         );
     }
@@ -471,10 +507,59 @@ abstract class AbstractQueryable implements QueryableInterface
     #[\NoDiscard]
     public function crossJoin(
         string $table,
+        ?string $alias = null,
     ): static {
         return $this->extend(
-            criterion: static function (WhereStatementInterface $statement) use ($table): void {
-                $statement->crossJoin($table);
+            criterion: static function (WhereStatementInterface $statement) use ($table, $alias): void {
+                $statement->crossJoin($table, $alias);
+            },
+        );
+    }
+
+    #[\NoDiscard]
+    public function whereColumnStartsWith(
+        string $column,
+        string $prefixColumn,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $prefixColumn): void {
+                $statement->whereColumnStartsWith($column, $prefixColumn);
+            },
+        );
+    }
+
+    #[\NoDiscard]
+    public function orWhereColumnStartsWith(
+        string $column,
+        string $prefixColumn,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $prefixColumn): void {
+                $statement->orWhereColumnStartsWith($column, $prefixColumn);
+            },
+        );
+    }
+
+    #[\NoDiscard]
+    public function whereStartsWith(
+        string $column,
+        string $prefix,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $prefix): void {
+                $statement->whereStartsWith($column, $prefix);
+            },
+        );
+    }
+
+    #[\NoDiscard]
+    public function orWhereStartsWith(
+        string $column,
+        string $prefix,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $prefix): void {
+                $statement->orWhereStartsWith($column, $prefix);
             },
         );
     }
@@ -664,7 +749,7 @@ abstract class AbstractQueryable implements QueryableInterface
         ?\Closure $callback = null,
     ): static {
         return $this->withAggregate(
-            function: RelationAggregateFunction::COUNT,
+            function: AggregateFunction::COUNT,
             relationName: $relationName,
             column: null,
             alias: $alias,
@@ -683,7 +768,7 @@ abstract class AbstractQueryable implements QueryableInterface
         ?\Closure $callback = null,
     ): static {
         return $this->withAggregate(
-            function: RelationAggregateFunction::SUM,
+            function: AggregateFunction::SUM,
             relationName: $relationName,
             column: $column,
             alias: $alias,
@@ -702,7 +787,7 @@ abstract class AbstractQueryable implements QueryableInterface
         ?\Closure $callback = null,
     ): static {
         return $this->withAggregate(
-            function: RelationAggregateFunction::AVG,
+            function: AggregateFunction::AVG,
             relationName: $relationName,
             column: $column,
             alias: $alias,
@@ -721,7 +806,7 @@ abstract class AbstractQueryable implements QueryableInterface
         ?\Closure $callback = null,
     ): static {
         return $this->withAggregate(
-            function: RelationAggregateFunction::MIN,
+            function: AggregateFunction::MIN,
             relationName: $relationName,
             column: $column,
             alias: $alias,
@@ -740,7 +825,7 @@ abstract class AbstractQueryable implements QueryableInterface
         ?\Closure $callback = null,
     ): static {
         return $this->withAggregate(
-            function: RelationAggregateFunction::MAX,
+            function: AggregateFunction::MAX,
             relationName: $relationName,
             column: $column,
             alias: $alias,
@@ -758,7 +843,7 @@ abstract class AbstractQueryable implements QueryableInterface
         ?\Closure $callback = null,
     ): static {
         return $this->orderByAggregate(
-            function: RelationAggregateFunction::COUNT,
+            function: AggregateFunction::COUNT,
             relationName: $relationName,
             column: null,
             direction: $direction,
@@ -777,7 +862,7 @@ abstract class AbstractQueryable implements QueryableInterface
         ?\Closure $callback = null,
     ): static {
         return $this->orderByAggregate(
-            function: RelationAggregateFunction::SUM,
+            function: AggregateFunction::SUM,
             relationName: $relationName,
             column: $column,
             direction: $direction,
@@ -796,7 +881,7 @@ abstract class AbstractQueryable implements QueryableInterface
         ?\Closure $callback = null,
     ): static {
         return $this->orderByAggregate(
-            function: RelationAggregateFunction::AVG,
+            function: AggregateFunction::AVG,
             relationName: $relationName,
             column: $column,
             direction: $direction,
@@ -815,7 +900,7 @@ abstract class AbstractQueryable implements QueryableInterface
         ?\Closure $callback = null,
     ): static {
         return $this->orderByAggregate(
-            function: RelationAggregateFunction::MIN,
+            function: AggregateFunction::MIN,
             relationName: $relationName,
             column: $column,
             direction: $direction,
@@ -834,7 +919,7 @@ abstract class AbstractQueryable implements QueryableInterface
         ?\Closure $callback = null,
     ): static {
         return $this->orderByAggregate(
-            function: RelationAggregateFunction::MAX,
+            function: AggregateFunction::MAX,
             relationName: $relationName,
             column: $column,
             direction: $direction,
@@ -846,7 +931,7 @@ abstract class AbstractQueryable implements QueryableInterface
      * @param (\Closure(RelationSubqueryInterface): void)|null $callback
      */
     private function withAggregate(
-        RelationAggregateFunction $function,
+        AggregateFunction $function,
         string $relationName,
         ?string $column,
         ?string $alias,
@@ -908,7 +993,7 @@ abstract class AbstractQueryable implements QueryableInterface
      * @param (\Closure(RelationSubqueryInterface): void)|null $callback
      */
     private function orderByAggregate(
-        RelationAggregateFunction $function,
+        AggregateFunction $function,
         string $relationName,
         ?string $column,
         OrderDirection|string $direction,
@@ -944,7 +1029,7 @@ abstract class AbstractQueryable implements QueryableInterface
      * @param (\Closure(RelationSubqueryInterface): void)|null $callback
      */
     private function buildAggregateSubquery(
-        RelationAggregateFunction $function,
+        AggregateFunction $function,
         string $relationName,
         ?string $column,
         ?\Closure $callback,
@@ -978,10 +1063,11 @@ abstract class AbstractQueryable implements QueryableInterface
             includeDeleted: false,
         );
 
-        $subquery->select(
-            $function === RelationAggregateFunction::COUNT
-                ? 'COUNT(*)'
-                : $function->sqlFunction() . '(' . $targetMetaData->table . '.' . $column . ')',
+        $subquery->selectAggregate(
+            function: $function,
+            column: $function->requiresColumn()
+                ? $targetMetaData->table . '.' . $column
+                : null,
         );
 
         return $subquery;
@@ -1002,17 +1088,17 @@ abstract class AbstractQueryable implements QueryableInterface
             );
         }
 
-        return $this->buildRelationExistsSubquery($relationName, $callback, $includeDeleted)->select('COUNT(*)');
+        return $this->buildRelationExistsSubquery($relationName, $callback, $includeDeleted)->selectAggregate(AggregateFunction::COUNT);
     }
 
     private function defaultAggregateAliasFor(
-        RelationAggregateFunction $function,
+        AggregateFunction $function,
         string $relationName,
         ?string $column,
     ): string {
-        return $function === RelationAggregateFunction::COUNT
-            ? $relationName . '_count'
-            : $relationName . '_' . $function->value . '_' . ($column ?? '');
+        return $function->requiresColumn()
+            ? $relationName . '_' . \strtolower($function->value) . '_' . ($column ?? '')
+            : $relationName . '_count';
     }
 
     /**

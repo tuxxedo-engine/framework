@@ -155,11 +155,16 @@ abstract class AbstractConnection implements ConnectionInterface
 
     public function select(
         string $table,
+        ?string $alias = null,
     ): SelectStatementInterface {
-        return new SelectStatement(
+        $statement = new SelectStatement(
             table: $table,
             connection: $this,
         );
+
+        return $alias === null
+            ? $statement
+            : $statement->alias($alias);
     }
 
     public function insert(

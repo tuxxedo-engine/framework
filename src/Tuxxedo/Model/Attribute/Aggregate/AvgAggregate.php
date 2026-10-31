@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\Attribute\Aggregate;
 
+use Tuxxedo\Database\Query\Statement\Aggregate\AggregateFunction;
+
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
 class AvgAggregate extends RelationAggregate
 {
@@ -23,7 +25,7 @@ class AvgAggregate extends RelationAggregate
     ) {
         parent::__construct(
             relation: $relation,
-            function: RelationAggregateFunction::AVG,
+            function: AggregateFunction::AVG,
             column: $column,
             alias: $alias,
         );

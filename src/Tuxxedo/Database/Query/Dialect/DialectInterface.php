@@ -65,6 +65,11 @@ interface DialectInterface
         OrderDirection $direction,
     ): string;
 
+    public function startsWith(
+        string $subject,
+        string $prefix,
+    ): string;
+
     /**
      * @param non-empty-list<string> $columns
      * @param list<string> $terms

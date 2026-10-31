@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Fixture\Model\Broken;
 
+use Tuxxedo\Database\Query\Statement\Aggregate\AggregateFunction;
 use Tuxxedo\Model\Attribute\Aggregate\RelationAggregate;
-use Tuxxedo\Model\Attribute\Aggregate\RelationAggregateFunction;
 use Tuxxedo\Model\Attribute\Column\Integer;
 use Tuxxedo\Model\Attribute\Relation\HasMany;
 use Tuxxedo\Model\Attribute\Table;
@@ -32,6 +32,6 @@ class AggregateCountUnexpectedColumn
     #[HasMany(related: AggregateValidTarget::class, foreignKey: 'owner_id')]
     public ?Relation $items = null;
 
-    #[RelationAggregate(relation: 'items', function: RelationAggregateFunction::COUNT, column: 'amount')]
+    #[RelationAggregate(relation: 'items', function: AggregateFunction::COUNT, column: 'amount')]
     public ?int $itemsCount = null;
 }

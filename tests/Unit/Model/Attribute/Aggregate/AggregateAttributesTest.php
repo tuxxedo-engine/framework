@@ -14,12 +14,12 @@ declare(strict_types=1);
 namespace Unit\Model\Attribute\Aggregate;
 
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Database\Query\Statement\Aggregate\AggregateFunction;
 use Tuxxedo\Model\Attribute\Aggregate\AvgAggregate;
 use Tuxxedo\Model\Attribute\Aggregate\CountAggregate;
 use Tuxxedo\Model\Attribute\Aggregate\MaxAggregate;
 use Tuxxedo\Model\Attribute\Aggregate\MinAggregate;
 use Tuxxedo\Model\Attribute\Aggregate\RelationAggregate;
-use Tuxxedo\Model\Attribute\Aggregate\RelationAggregateFunction;
 use Tuxxedo\Model\Attribute\Aggregate\SumAggregate;
 
 class AggregateAttributesTest extends TestCase
@@ -28,13 +28,13 @@ class AggregateAttributesTest extends TestCase
     {
         $attribute = new RelationAggregate(
             relation: 'tags',
-            function: RelationAggregateFunction::COUNT,
+            function: AggregateFunction::COUNT,
             column: null,
             alias: 'my_count',
         );
 
         self::assertSame('tags', $attribute->relation);
-        self::assertSame(RelationAggregateFunction::COUNT, $attribute->function);
+        self::assertSame(AggregateFunction::COUNT, $attribute->function);
         self::assertNull($attribute->column);
         self::assertSame('my_count', $attribute->alias);
     }
@@ -44,7 +44,7 @@ class AggregateAttributesTest extends TestCase
         $attribute = new CountAggregate(relation: 'tags');
 
         self::assertInstanceOf(RelationAggregate::class, $attribute);
-        self::assertSame(RelationAggregateFunction::COUNT, $attribute->function);
+        self::assertSame(AggregateFunction::COUNT, $attribute->function);
         self::assertSame('tags', $attribute->relation);
         self::assertNull($attribute->column);
         self::assertNull($attribute->alias);
@@ -59,7 +59,7 @@ class AggregateAttributesTest extends TestCase
         );
 
         self::assertInstanceOf(RelationAggregate::class, $attribute);
-        self::assertSame(RelationAggregateFunction::SUM, $attribute->function);
+        self::assertSame(AggregateFunction::SUM, $attribute->function);
         self::assertSame('orders', $attribute->relation);
         self::assertSame('amount', $attribute->column);
         self::assertSame('total', $attribute->alias);
@@ -72,7 +72,7 @@ class AggregateAttributesTest extends TestCase
             column: 'amount',
         );
 
-        self::assertSame(RelationAggregateFunction::AVG, $attribute->function);
+        self::assertSame(AggregateFunction::AVG, $attribute->function);
         self::assertSame('amount', $attribute->column);
     }
 
@@ -83,7 +83,7 @@ class AggregateAttributesTest extends TestCase
             column: 'length',
         );
 
-        self::assertSame(RelationAggregateFunction::MIN, $attribute->function);
+        self::assertSame(AggregateFunction::MIN, $attribute->function);
         self::assertSame('length', $attribute->column);
     }
 
@@ -94,7 +94,7 @@ class AggregateAttributesTest extends TestCase
             column: 'length',
         );
 
-        self::assertSame(RelationAggregateFunction::MAX, $attribute->function);
+        self::assertSame(AggregateFunction::MAX, $attribute->function);
         self::assertSame('length', $attribute->column);
     }
 }

@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace Integration\Database\Query\Statement;
 
 use Fixture\Database\HydratableTestUser;
+use Tuxxedo\Database\Query\Statement\Aggregate\AggregateFunction;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
+use Tuxxedo\Database\Query\Statement\Join\JoinConditionInterface;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\SelectStatement;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
@@ -47,6 +49,29 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
         self::assertCount(
             3,
             $result,
+        );
+    }
+
+    public function testSelectExplicitStar(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        $row = $this->connection->select(
+            table: 'users',
+        )
+            ->select('*')
+            ->execute()
+            ->fetchAssoc();
+
+        self::assertArrayHasKey(
+            'id',
+            $row,
+        );
+
+        self::assertArrayHasKey(
+            'email',
+            $row,
         );
     }
 
@@ -86,7 +111,7 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
         $row = $this->connection->select(
             table: 'users',
         )
-            ->select('COUNT(*)')
+            ->selectAggregate(AggregateFunction::COUNT)
             ->execute()
             ->fetchRow();
 
@@ -393,6 +418,372 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
         );
     }
 
+    public function testAliasesWithAggregateAndGroupBy(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        $rows = [];
+
+        foreach (
+            $this->connection->select(
+                table: 'users',
+                alias: 'u',
+            )
+                ->selectAs('u.name', 'user_name')
+                ->selectAggregate(
+                    function: AggregateFunction::COUNT,
+                    column: 'p.id',
+                    alias: 'post_count',
+                    distinct: true,
+                )
+                ->innerJoin(
+                    table: 'posts',
+                    first: 'p.user_id',
+                    second: 'u.id',
+                    alias: 'p',
+                )
+                ->groupBy('u.name')
+                ->orderBy('u.name')
+                ->execute() as $row
+        ) {
+            $rows[] = [
+                $row->properties['user_name'],
+                $row->properties['post_count'],
+            ];
+        }
+
+        self::assertEquals(
+            [
+                [
+                    'Alice',
+                    1,
+                ],
+                [
+                    'Bob',
+                    2,
+                ],
+            ],
+            $rows,
+        );
+    }
+
+    public function testSelfJoinOnColumnStartsWith(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        self::assertSame(
+            [
+                'Alice',
+                'Bob',
+            ],
+            $this->names(
+                $this->connection->select(
+                    table: 'users',
+                    alias: 'u',
+                )
+                    ->selectAs('u.name', 'name')
+                    ->innerJoin(
+                        table: 'users',
+                        alias: 'v',
+                        on: static function (JoinConditionInterface $on): void {
+                            $on->whereColumnStartsWith('v.email', 'u.name');
+                        },
+                    )
+                    ->orderBy('u.name'),
+            ),
+        );
+    }
+
+    public function testWhereColumnStartsWithIsCaseInsensitive(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        self::assertSame(
+            [
+                'Alice',
+                'Bob',
+            ],
+            $this->names(
+                $this->connection->select(
+                    table: 'users',
+                )
+                    ->whereColumnStartsWith('email', 'name')
+                    ->orderBy('name'),
+            ),
+        );
+
+        self::assertSame(
+            [
+                'Alice',
+                'Bob',
+                'Charlie',
+            ],
+            $this->names(
+                $this->connection->select(
+                    table: 'users',
+                )
+                    ->where('name', 'Charlie')
+                    ->orWhereColumnStartsWith('email', 'name')
+                    ->orderBy('name'),
+            ),
+        );
+    }
+
+    public function testWhereStartsWithEscapesWildcards(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        self::assertSame(
+            [
+                'Post by Alice',
+                'Post by Bob',
+            ],
+            $this->titles(static fn (SelectStatementInterface $select): SelectStatementInterface => $select->whereStartsWith('posts.title', 'post by')),
+        );
+
+        self::assertSame(
+            [],
+            $this->titles(static fn (SelectStatementInterface $select): SelectStatementInterface => $select->whereStartsWith('posts.title', 'Post_by')),
+        );
+
+        self::assertSame(
+            [
+                'Another Bob post',
+                'Post by Alice',
+            ],
+            $this->titles(
+                static fn (SelectStatementInterface $select): SelectStatementInterface => $select
+                    ->where('posts.title', 'Another Bob post')
+                    ->orWhereStartsWith('posts.title', 'Post by A'),
+            ),
+        );
+    }
+
+    public function testJoinOnCallbackUsesWhereVocabulary(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        self::assertSame(
+            [
+                'Alice',
+                'Bob',
+            ],
+            $this->names(
+                $this->connection->select(
+                    table: 'users',
+                )
+                    ->select('users.name')
+                    ->innerJoin(
+                        table: 'posts',
+                        on: static function (JoinConditionInterface $on): void {
+                            $on
+                                ->whereColumn('posts.user_id', 'users.id')
+                                ->whereGroup(
+                                    static function (JoinConditionInterface $titles): void {
+                                        $titles
+                                            ->where('posts.title', 'Post by Alice')
+                                            ->orWhere('posts.title', 'Another Bob post');
+                                    },
+                                )
+                                ->whereNotNull('posts.title')
+                                ->whereIn(
+                                    'posts.user_id',
+                                    [
+                                        1,
+                                        2,
+                                    ],
+                                );
+                        },
+                    )
+                    ->orderBy('users.name'),
+            ),
+        );
+    }
+
+    public function testLeftJoinOnCallbackKeepsUnmatchedRows(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        $result = $this->connection->select(
+            table: 'users',
+        )
+            ->select('users.name')
+            ->leftJoin(
+                table: 'posts',
+                on: static function (JoinConditionInterface $on): void {
+                    $on
+                        ->whereColumn('posts.user_id', 'users.id')
+                        ->orWhereGroup(
+                            static function (JoinConditionInterface $never): void {
+                                $never
+                                    ->whereNull('posts.id')
+                                    ->orWhereColumn('posts.title', 'users.name')
+                                    ->whereStartsWith('posts.title', 'zz')
+                                    ->orWhereStartsWith('posts.title', 'yy')
+                                    ->whereColumnStartsWith('posts.title', 'users.email')
+                                    ->orWhereColumnStartsWith('posts.title', 'users.email');
+                            },
+                        );
+                },
+            )
+            ->execute();
+
+        self::assertCount(
+            4,
+            $result,
+        );
+    }
+
+    public function testJoinNeedsExactlyOneConditionForm(): void
+    {
+        foreach (
+            [
+                static fn (SelectStatementInterface $select): SelectStatementInterface => $select->innerJoin(
+                    table: 'posts',
+                ),
+                static fn (SelectStatementInterface $select): SelectStatementInterface => $select->innerJoin(
+                    table: 'posts',
+                    first: 'posts.user_id',
+                    second: 'users.id',
+                    on: static function (JoinConditionInterface $on): void {
+                        $on->whereColumn('posts.user_id', 'users.id');
+                    },
+                ),
+                static fn (SelectStatementInterface $select): SelectStatementInterface => $select->innerJoin(
+                    table: 'posts',
+                    on: static function (JoinConditionInterface $on): void {
+                    },
+                ),
+            ] as $join
+        ) {
+            try {
+                $join(
+                    $this->connection->select(
+                        table: 'users',
+                    ),
+                );
+
+                self::fail('Expected SqlException for an invalid join condition');
+            } catch (SqlException $exception) {
+                self::assertStringContainsString('posts', $exception->getMessage());
+            }
+        }
+    }
+
+    public function testCrossJoinWithAlias(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        self::assertCount(
+            9,
+            $this->connection->select(
+                table: 'users',
+            )
+                ->crossJoin(
+                    table: 'posts',
+                    alias: 'p',
+                )
+                ->execute(),
+        );
+    }
+
+    public function testSelectRawWithAlias(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        $row = $this->connection->select(
+            table: 'users',
+        )
+            ->selectRaw('1 + 1', 'two')
+            ->limit(1)
+            ->execute()
+            ->fetch();
+
+        self::assertEquals(2, $row->properties['two']);
+    }
+
+    public function testHavingAggregateRendersTheAggregate(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        $grouped = fn (): SelectStatementInterface => $this->connection->select(
+            table: 'users',
+        )
+            ->select('users.name')
+            ->innerJoin(
+                table: 'posts',
+                first: 'posts.user_id',
+                second: 'users.id',
+            )
+            ->groupBy('users.name')
+            ->orderBy('users.name');
+
+        self::assertSame(
+            [
+                'Bob',
+            ],
+            $this->names(
+                $grouped()->havingAggregate(AggregateFunction::COUNT, 'posts.id', 2, '>='),
+            ),
+        );
+
+        self::assertSame(
+            [
+                'Alice',
+                'Bob',
+            ],
+            $this->names(
+                $grouped()
+                    ->havingAggregate(AggregateFunction::COUNT, 'posts.id', 2, '>=')
+                    ->orHavingAggregate(AggregateFunction::COUNT, 'posts.id', 1, distinct: true),
+            ),
+        );
+    }
+
+    public function testAggregateWithoutColumnOnlyAllowsPlainCount(): void
+    {
+        foreach (
+            [
+                static fn (SelectStatementInterface $select): SelectStatementInterface => $select->selectAggregate(AggregateFunction::SUM),
+                static fn (SelectStatementInterface $select): SelectStatementInterface => $select->selectAggregate(AggregateFunction::COUNT, distinct: true),
+                static fn (SelectStatementInterface $select): SelectStatementInterface => $select->havingAggregate(AggregateFunction::MAX, null, 1),
+            ] as $aggregate
+        ) {
+            try {
+                $aggregate(
+                    $this->connection->select(
+                        table: 'users',
+                    ),
+                );
+
+                self::fail('Expected SqlException for an aggregate without a column');
+            } catch (SqlException $exception) {
+                self::assertStringContainsString('needs a column', $exception->getMessage());
+            }
+        }
+    }
+
     public function testNestedSubqueryParametersDoNotCollide(): void
     {
         $this->createUsersSchema();
@@ -650,7 +1041,8 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
         $result = $this->connection->select(
             table: 'users',
         )
-            ->select('name', 'COUNT(*)')
+            ->select('name')
+            ->selectAggregate(AggregateFunction::COUNT)
             ->groupBy('name')
             ->having(
                 column: 'name',
@@ -1523,10 +1915,28 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
         return $this->connection->select(
             table: 'posts',
         )
-            ->select('COUNT(*)')
+            ->selectAggregate(AggregateFunction::COUNT)
             ->whereColumn(
                 column: 'posts.user_id',
                 other: 'users.id',
             );
+    }
+
+    /**
+     * @param \Closure(SelectStatementInterface): SelectStatementInterface $configure
+     * @return list<string>
+     */
+    private function titles(
+        \Closure $configure,
+    ): array {
+        return $this->names(
+            $configure(
+                $this->connection->select(
+                    table: 'posts',
+                )
+                    ->selectAs('posts.title', 'name'),
+            )
+                ->orderBy('posts.title'),
+        );
     }
 }

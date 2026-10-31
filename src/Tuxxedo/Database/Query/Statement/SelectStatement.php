@@ -16,6 +16,9 @@ namespace Tuxxedo\Database\Query\Statement;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Hydrator\HydratorInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
+use Tuxxedo\Database\Query\Statement\Aggregate\AggregateFunction;
+use Tuxxedo\Database\Query\Statement\Condition\AggregateCondition;
+use Tuxxedo\Database\Query\Statement\Condition\AggregateConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\BetweenCondition;
 use Tuxxedo\Database\Query\Statement\Condition\BetweenConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\BetweenOperator;
@@ -24,13 +27,16 @@ use Tuxxedo\Database\Query\Statement\Condition\ConditionConjunction;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
+use Tuxxedo\Database\SqlException;
 
 class SelectStatement extends AbstractWhereStatement implements SelectStatementInterface
 {
     private bool $distinct = false;
 
+    private ?string $alias = null;
+
     /**
-     * @var string[]
+     * @var list<array{kind: 'column'|'aggregate'|'raw', expression: string|null, function: AggregateFunction|null, distinct: bool, alias: string|null}>
      */
     private array $columns = [];
 
@@ -50,7 +56,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
     private array $groupBy = [];
 
     /**
-     * @var ConditionInterface[]|BetweenCondition[]
+     * @var ConditionInterface[]|BetweenCondition[]|AggregateCondition[]
      */
     private array $havingConditions = [];
 
@@ -60,17 +66,18 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
     protected function generateSql(
         DialectInterface $dialect,
     ): string {
-        $renderedColumns = \array_map(
-            static fn (string $column): string => $column === '*' || (\str_contains($column, '(') && \str_contains($column, ')'))
-                ? $column
-                : $dialect->qualifiedIdentifier($column),
-            $this->columns,
-        );
+        $renderedColumns = [];
+
+        foreach ($this->columns as $column) {
+            $renderedColumns[] = $this->renderColumn($dialect, $column);
+        }
+
+        $allColumns = \sizeof($this->joins) > 0
+            ? $dialect->identifier($this->alias ?? $this->table) . '.*'
+            : '*';
 
         if (\sizeof($this->selectSubqueries) > 0 && \sizeof($renderedColumns) === 0) {
-            $renderedColumns[] = \sizeof($this->joins) > 0
-                ? $dialect->identifier($this->table) . '.*'
-                : '*';
+            $renderedColumns[] = $allColumns;
         }
 
         foreach ($this->selectSubqueries as $index => $entry) {
@@ -89,9 +96,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
 
         $columns = \sizeof($renderedColumns) > 0
             ? \join(', ', $renderedColumns)
-            : (\sizeof($this->joins) > 0
-                ? $dialect->identifier($this->table) . '.*'
-                : '*');
+            : $allColumns;
 
         $sql = \sprintf(
             'SELECT %s%s FROM %s%s',
@@ -99,7 +104,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
                 ? 'DISTINCT '
                 : '',
             $columns,
-            $dialect->identifier($this->table),
+            $this->tableReference($dialect, $this->table, $this->alias),
             $this->generateWhereSql($dialect),
         );
 
@@ -120,6 +125,18 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
                 $keyword = $index === 0
                     ? 'HAVING' :
                     $condition->conjunction->name;
+
+                if ($condition instanceof AggregateConditionInterface) {
+                    $sql .= \sprintf(
+                        ' %s %s %s %s',
+                        $keyword,
+                        $this->renderAggregate($dialect, $condition->function, $condition->column, $condition->distinct),
+                        $dialect->conditionOperator($condition->operator),
+                        $condition->parameter,
+                    );
+
+                    continue;
+                }
 
                 if ($condition instanceof BetweenConditionInterface) {
                     $sql .= \sprintf(
@@ -213,12 +230,75 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
         return $sql;
     }
 
+    public function alias(
+        string $alias,
+    ): static {
+        $this->alias = $alias;
+
+        return $this;
+    }
+
     public function select(
         string ...$columns,
     ): static {
         foreach ($columns as $column) {
-            $this->columns[] = $column;
+            $this->columns[] = [
+                'kind' => 'column',
+                'expression' => $column,
+                'function' => null,
+                'distinct' => false,
+                'alias' => null,
+            ];
         }
+
+        return $this;
+    }
+
+    public function selectAs(
+        string $column,
+        string $alias,
+    ): static {
+        $this->columns[] = [
+            'kind' => 'column',
+            'expression' => $column,
+            'function' => null,
+            'distinct' => false,
+            'alias' => $alias,
+        ];
+
+        return $this;
+    }
+
+    public function selectAggregate(
+        AggregateFunction $function,
+        ?string $column = null,
+        ?string $alias = null,
+        bool $distinct = false,
+    ): static {
+        self::guardAggregateColumn($function, $column, $distinct);
+
+        $this->columns[] = [
+            'kind' => 'aggregate',
+            'expression' => $column,
+            'function' => $function,
+            'distinct' => $distinct,
+            'alias' => $alias,
+        ];
+
+        return $this;
+    }
+
+    public function selectRaw(
+        string $sql,
+        ?string $alias = null,
+    ): static {
+        $this->columns[] = [
+            'kind' => 'raw',
+            'expression' => $sql,
+            'function' => null,
+            'distinct' => false,
+            'alias' => $alias,
+        ];
 
         return $this;
     }
@@ -290,6 +370,40 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
         }
 
         return $this;
+    }
+
+    public function havingAggregate(
+        AggregateFunction $function,
+        ?string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        bool $distinct = false,
+    ): static {
+        return $this->addAggregateHaving(
+            function: $function,
+            column: $column,
+            value: $value,
+            operator: $operator,
+            distinct: $distinct,
+            conjunction: ConditionConjunction::AND,
+        );
+    }
+
+    public function orHavingAggregate(
+        AggregateFunction $function,
+        ?string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        bool $distinct = false,
+    ): static {
+        return $this->addAggregateHaving(
+            function: $function,
+            column: $column,
+            value: $value,
+            operator: $operator,
+            distinct: $distinct,
+            conjunction: ConditionConjunction::OR,
+        );
     }
 
     public function having(
@@ -558,5 +672,87 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
         ?ConnectionInterface $connection = null,
     ): \Generator {
         yield from $this->execute($connection)->fetchAll($class, $hydrator);
+    }
+
+    /**
+     * @param array{kind: 'column'|'aggregate'|'raw', expression: string|null, function: AggregateFunction|null, distinct: bool, alias: string|null} $column
+     */
+    private function renderColumn(
+        DialectInterface $dialect,
+        array $column,
+    ): string {
+        $expression = $column['expression'] ?? '';
+
+        $sql = match ($column['kind']) {
+            'raw' => $expression,
+            'aggregate' => $this->renderAggregate($dialect, $column['function'] ?? AggregateFunction::COUNT, $column['expression'], $column['distinct']),
+            'column' => $expression === '*'
+                ? '*'
+                : $dialect->qualifiedIdentifier($expression),
+        };
+
+        return $column['alias'] === null
+            ? $sql
+            : $sql . ' AS ' . $dialect->identifier($column['alias']);
+    }
+
+    private function renderAggregate(
+        DialectInterface $dialect,
+        AggregateFunction $function,
+        ?string $column,
+        bool $distinct,
+    ): string {
+        if ($column === null) {
+            return $function->value . '(*)';
+        }
+
+        return $function->value . '(' . ($distinct ? 'DISTINCT ' : '') . $dialect->qualifiedIdentifier($column) . ')';
+    }
+
+    /**
+     * @throws SqlException
+     */
+    private static function guardAggregateColumn(
+        AggregateFunction $function,
+        ?string $column,
+        bool $distinct,
+    ): void {
+        if ($column === null && ($function->requiresColumn() || $distinct)) {
+            throw SqlException::fromAggregateRequiresColumn(
+                function: $function,
+            );
+        }
+    }
+
+    /**
+     * @throws SqlException
+     */
+    private function addAggregateHaving(
+        AggregateFunction $function,
+        ?string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator,
+        bool $distinct,
+        ConditionConjunction $conjunction,
+    ): static {
+        self::guardAggregateColumn($function, $column, $distinct);
+
+        if (\is_string($operator)) {
+            $operator = ConditionOperator::fromInput($operator);
+        }
+
+        $parameterKey = 'having_' . \sizeof($this->havingConditions);
+
+        $this->parameters[$parameterKey] = $value;
+        $this->havingConditions[] = new AggregateCondition(
+            conjunction: $conjunction,
+            function: $function,
+            column: $column,
+            distinct: $distinct,
+            operator: $operator,
+            parameter: ':' . $parameterKey,
+        );
+
+        return $this;
     }
 }

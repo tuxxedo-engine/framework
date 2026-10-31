@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Model;
 
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
-use Tuxxedo\Database\Query\Statement\Join\JoinOperator;
+use Tuxxedo\Database\Query\Statement\Join\JoinConditionInterface;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
@@ -217,33 +217,73 @@ interface QueryableInterface extends PagedInterface, \IteratorAggregate, \Counta
         string $search,
     ): static;
 
+    /**
+     * @param (\Closure(JoinConditionInterface): void)|null $on
+     */
     #[\NoDiscard]
     public function innerJoin(
         string $table,
-        string $first,
-        string $second,
-        JoinOperator|string $operator = JoinOperator::EQUALS,
+        ?string $first = null,
+        ?string $second = null,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        ?string $alias = null,
+        ?\Closure $on = null,
     ): static;
 
+    /**
+     * @param (\Closure(JoinConditionInterface): void)|null $on
+     */
     #[\NoDiscard]
     public function leftJoin(
         string $table,
-        string $first,
-        string $second,
-        JoinOperator|string $operator = JoinOperator::EQUALS,
+        ?string $first = null,
+        ?string $second = null,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        ?string $alias = null,
+        ?\Closure $on = null,
     ): static;
 
+    /**
+     * @param (\Closure(JoinConditionInterface): void)|null $on
+     */
     #[\NoDiscard]
     public function rightJoin(
         string $table,
-        string $first,
-        string $second,
-        JoinOperator|string $operator = JoinOperator::EQUALS,
+        ?string $first = null,
+        ?string $second = null,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        ?string $alias = null,
+        ?\Closure $on = null,
     ): static;
 
     #[\NoDiscard]
     public function crossJoin(
         string $table,
+        ?string $alias = null,
+    ): static;
+
+    #[\NoDiscard]
+    public function whereColumnStartsWith(
+        string $column,
+        string $prefixColumn,
+    ): static;
+
+    #[\NoDiscard]
+    public function orWhereColumnStartsWith(
+        string $column,
+        string $prefixColumn,
+    ): static;
+
+    #[\NoDiscard]
+    public function whereStartsWith(
+        string $column,
+        string $prefix,
+    ): static;
+
+    #[\NoDiscard]
+    public function orWhereStartsWith(
+        string $column,
+        string $prefix,
     ): static;
 
     #[\NoDiscard]

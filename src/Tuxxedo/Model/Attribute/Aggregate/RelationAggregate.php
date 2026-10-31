@@ -13,12 +13,14 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\Attribute\Aggregate;
 
+use Tuxxedo\Database\Query\Statement\Aggregate\AggregateFunction;
+
 #[\Attribute(flags: \Attribute::TARGET_PROPERTY)]
 class RelationAggregate
 {
     public function __construct(
         public readonly string $relation,
-        public readonly RelationAggregateFunction $function,
+        public readonly AggregateFunction $function,
         public readonly ?string $column = null,
         public readonly ?string $alias = null,
     ) {

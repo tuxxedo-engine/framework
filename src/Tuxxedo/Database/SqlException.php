@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Database;
 
 use Tuxxedo\Database\Query\FullText\FullText;
+use Tuxxedo\Database\Query\Statement\Aggregate\AggregateFunction;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AlterOperationInterface;
 use Tuxxedo\Exception;
@@ -131,6 +132,28 @@ class SqlException extends Exception
             message: \sprintf(
                 'Operator `%s` cannot compare a subquery to a value; use a scalar comparison operator',
                 $operator->value,
+            ),
+        );
+    }
+
+    public static function fromInvalidJoinCondition(
+        string $table,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Join on `%s` needs either `first` and `second` columns or a non-empty `on` callback, not both or neither',
+                $table,
+            ),
+        );
+    }
+
+    public static function fromAggregateRequiresColumn(
+        AggregateFunction $function,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Aggregate `%s` needs a column; only a plain COUNT may count rows without one',
+                $function->value,
             ),
         );
     }

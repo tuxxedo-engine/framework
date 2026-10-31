@@ -16,6 +16,7 @@ namespace Integration\Database\Query\Statement;
 use PHPUnit\Framework\TestCase;
 use Support\Database\SqliteConnectionFactory;
 use Tuxxedo\Database\Driver\ConnectionInterface;
+use Tuxxedo\Database\Query\Statement\Aggregate\AggregateFunction;
 
 class SelectStatementSubqueryTest extends TestCase
 {
@@ -34,7 +35,7 @@ class SelectStatementSubqueryTest extends TestCase
     public function testSelectSubqueryRendersAliasedAggregate(): void
     {
         $subquery = $this->connection->select('tags')
-            ->select('COUNT(*)')
+            ->selectAggregate(AggregateFunction::COUNT)
             ->whereColumn(
                 column: 'tags.owner_id',
                 other: 'owners.id',
@@ -57,7 +58,7 @@ class SelectStatementSubqueryTest extends TestCase
     public function testSelectSubqueryPrependsStarWhenNoBaseColumns(): void
     {
         $subquery = $this->connection->select('tags')
-            ->select('COUNT(*)');
+            ->selectAggregate(AggregateFunction::COUNT);
 
         $statement = $this->connection->select('owners')
             ->selectSubquery(
@@ -74,7 +75,7 @@ class SelectStatementSubqueryTest extends TestCase
     public function testSelectSubqueryPrependsQualifiedStarWhenJoinsPresentAndNoBaseColumns(): void
     {
         $subquery = $this->connection->select('tags')
-            ->select('COUNT(*)');
+            ->selectAggregate(AggregateFunction::COUNT);
 
         $statement = $this->connection->select('owners')
             ->innerJoin(
@@ -96,7 +97,7 @@ class SelectStatementSubqueryTest extends TestCase
     public function testSelectSubqueryNamespacesParameters(): void
     {
         $subquery = $this->connection->select('tags')
-            ->select('COUNT(*)')
+            ->selectAggregate(AggregateFunction::COUNT)
             ->where(
                 column: 'tags.kind',
                 value: 'topic',
@@ -122,7 +123,7 @@ class SelectStatementSubqueryTest extends TestCase
     public function testSelectSubqueryDoesNotCollideWithWhereExists(): void
     {
         $selectSub = $this->connection->select('tags')
-            ->select('COUNT(*)')
+            ->selectAggregate(AggregateFunction::COUNT)
             ->where(
                 column: 'tags.kind',
                 value: 'topic',
