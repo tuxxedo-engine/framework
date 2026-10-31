@@ -18,6 +18,13 @@ use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 interface RelationSubqueryInterface extends SelectStatementInterface
 {
     /**
+     * @param \Closure(RelationSubqueryInterface): void $callback
+     */
+    public function whereScoped(
+        \Closure $callback,
+    ): static;
+
+    /**
      * @param (\Closure(RelationSubqueryInterface): void)|null $callback
      *
      * @throws ModelException
@@ -34,6 +41,28 @@ interface RelationSubqueryInterface extends SelectStatementInterface
      * @throws ModelException
      */
     public function whereDoesntHave(
+        string $relationName,
+        ?\Closure $callback = null,
+        bool $includeDeleted = false,
+    ): static;
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     *
+     * @throws ModelException
+     */
+    public function orWhereHas(
+        string $relationName,
+        ?\Closure $callback = null,
+        bool $includeDeleted = false,
+    ): static;
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     *
+     * @throws ModelException
+     */
+    public function orWhereDoesntHave(
         string $relationName,
         ?\Closure $callback = null,
         bool $includeDeleted = false,

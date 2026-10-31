@@ -14,8 +14,11 @@ declare(strict_types=1);
 namespace Integration\Database\Query\Statement;
 
 use Fixture\Database\HydratableTestUser;
+use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\SelectStatement;
+use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
+use Tuxxedo\Database\SqlException;
 
 abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereClauseBuilderIntegrationTestCase
 {
@@ -236,6 +239,268 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
             3,
             $result,
         );
+    }
+
+    public function testOrderByPutsNullsLastAscending(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        self::assertSame(
+            [
+                'Alice',
+                'Bob',
+                'Charlie',
+            ],
+            $this->names(
+                $this->connection->select(
+                    table: 'users',
+                )
+                    ->orderBy(
+                        column: 'email',
+                    ),
+            ),
+        );
+    }
+
+    public function testOrderByPutsNullsLastDescending(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        self::assertSame(
+            [
+                'Bob',
+                'Alice',
+                'Charlie',
+            ],
+            $this->names(
+                $this->connection->select(
+                    table: 'users',
+                )
+                    ->orderBy(
+                        column: 'email',
+                        direction: OrderDirection::DESC,
+                    ),
+            ),
+        );
+    }
+
+    public function testOrderBySubqueryOrdersByCorrelatedValue(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        self::assertSame(
+            [
+                'Bob',
+                'Alice',
+                'Charlie',
+            ],
+            $this->names(
+                $this->connection->select(
+                    table: 'users',
+                )
+                    ->orderBySubquery(
+                        subquery: $this->postCount(),
+                        direction: OrderDirection::DESC,
+                    )
+                    ->orderBy(
+                        column: 'id',
+                    ),
+            ),
+        );
+    }
+
+    public function testOrderBySameColumnTwiceKeepsLastDirection(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        self::assertSame(
+            [
+                'Charlie',
+                'Bob',
+                'Alice',
+            ],
+            $this->names(
+                $this->connection->select(
+                    table: 'users',
+                )
+                    ->orderBy(
+                        column: 'name',
+                    )
+                    ->orderBy(
+                        column: 'name',
+                        direction: OrderDirection::DESC,
+                    ),
+            ),
+        );
+    }
+
+    public function testOrderBySubqueryAcceptsStringDirection(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        self::assertSame(
+            [
+                'Bob',
+                'Alice',
+                'Charlie',
+            ],
+            $this->names(
+                $this->connection->select(
+                    table: 'users',
+                )
+                    ->orderBySubquery(
+                        subquery: $this->postCount(),
+                        direction: 'desc',
+                    ),
+            ),
+        );
+    }
+
+    public function testOrderBySubqueryKeepsCallOrderWithPlainColumns(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        self::assertSame(
+            [
+                'Charlie',
+                'Bob',
+                'Alice',
+            ],
+            $this->names(
+                $this->connection->select(
+                    table: 'users',
+                )
+                    ->orderBy(
+                        column: 'name',
+                        direction: OrderDirection::DESC,
+                    )
+                    ->orderBySubquery(
+                        subquery: $this->postCount(),
+                    ),
+            ),
+        );
+    }
+
+    public function testNestedSubqueryParametersDoNotCollide(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        $anyBobPost = $this->connection->select(
+            table: 'posts',
+        )
+            ->where(
+                column: 'posts.title',
+                value: 'Post by Bob',
+            );
+
+        $alicesPost = $this->connection->select(
+            table: 'posts',
+        )
+            ->where(
+                column: 'posts.title',
+                value: 'Post by Alice',
+            )
+            ->whereColumn(
+                column: 'posts.user_id',
+                other: 'users.id',
+            )
+            ->whereExists($anyBobPost);
+
+        self::assertSame(
+            [
+                'Alice',
+            ],
+            $this->names(
+                $this->connection->select(
+                    table: 'users',
+                )
+                    ->whereExists($alicesPost),
+            ),
+        );
+    }
+
+    public function testWhereSubqueryComparesSubqueryToValue(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        self::assertSame(
+            [
+                'Bob',
+            ],
+            $this->names(
+                $this->connection->select(
+                    table: 'users',
+                )
+                    ->whereSubquery(
+                        subquery: $this->postCount(),
+                        value: 2,
+                        operator: '>=',
+                    ),
+            ),
+        );
+    }
+
+    public function testOrWhereSubqueryCombinesWithOr(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        self::assertSame(
+            [
+                'Bob',
+                'Charlie',
+            ],
+            $this->names(
+                $this->connection->select(
+                    table: 'users',
+                )
+                    ->where(
+                        column: 'name',
+                        value: 'Charlie',
+                    )
+                    ->orWhereSubquery(
+                        subquery: $this->postCount(),
+                        value: 2,
+                    )
+                    ->orderBy(
+                        column: 'name',
+                    ),
+            ),
+        );
+    }
+
+    public function testWhereSubqueryRejectsListOperator(): void
+    {
+        $this->expectException(SqlException::class);
+
+        $this->connection->select(
+            table: 'users',
+        )
+            ->whereSubquery(
+                subquery: $this->postCount(),
+                value: 2,
+                operator: ConditionOperator::IN,
+            );
     }
 
     public function testGroupBySingleColumn(): void
@@ -1050,7 +1315,7 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
     {
         $this->createUsersSchema();
 
-        $this->expectException(\Tuxxedo\Database\SqlException::class);
+        $this->expectException(SqlException::class);
 
         $this->connection->select(
             table: 'users',
@@ -1224,7 +1489,7 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
         $this->createUsersSchema();
         $this->createPostsSchema();
 
-        $this->expectException(\Tuxxedo\Database\SqlException::class);
+        $this->expectException(SqlException::class);
 
         $this->connection->select(
             table: 'users',
@@ -1234,5 +1499,34 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
             second: 'posts.user_id',
             operator: 'nonsense',
         );
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function names(
+        SelectStatementInterface $statement,
+    ): array {
+        $names = [];
+
+        foreach ($statement->execute() as $row) {
+            /** @var string $name */
+            $name = $row->properties['name'];
+            $names[] = $name;
+        }
+
+        return $names;
+    }
+
+    private function postCount(): SelectStatementInterface
+    {
+        return $this->connection->select(
+            table: 'posts',
+        )
+            ->select('COUNT(*)')
+            ->whereColumn(
+                column: 'posts.user_id',
+                other: 'users.id',
+            );
     }
 }

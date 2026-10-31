@@ -204,6 +204,24 @@ interface WhereStatementInterface extends StatementInterface
         string $search,
     ): static;
 
+    /**
+     * @throws SqlException
+     */
+    public function whereSubquery(
+        SelectStatementInterface $subquery,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static;
+
+    /**
+     * @throws SqlException
+     */
+    public function orWhereSubquery(
+        SelectStatementInterface $subquery,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static;
+
     public function whereExists(
         SelectStatementInterface $subquery,
     ): static;

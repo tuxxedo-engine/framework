@@ -66,10 +66,10 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
-     * @param (\Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string, direction: OrderDirection}>, ?int, ?int): iterable<int, TModel>)|null $loaderBuilder
+     * @param (\Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string|SelectStatementInterface, direction: OrderDirection}>, ?int, ?int): iterable<int, TModel>)|null $loaderBuilder
      * @param (\Closure(list<\Closure(WhereStatementInterface): void>): int)|null $countBuilder
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
-     * @param list<array{column: string, direction: OrderDirection}> $orderBy
+     * @param list<array{column: string|SelectStatementInterface, direction: OrderDirection}> $orderBy
      * @param ?class-string<TModel> $modelClass
      */
     protected function __construct(
@@ -86,7 +86,7 @@ abstract class AbstractQueryable implements QueryableInterface
 
     /**
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
-     * @param list<array{column: string, direction: OrderDirection}> $orderBy
+     * @param list<array{column: string|SelectStatementInterface, direction: OrderDirection}> $orderBy
      */
     abstract protected function cloneWith(
         array $criteriaStack,
@@ -586,9 +586,29 @@ abstract class AbstractQueryable implements QueryableInterface
         string $relationName,
         ?\Closure $callback = null,
         bool $includeDeleted = false,
+        ConditionOperator|string $operator = ConditionOperator::GREATER_THAN_OR_EQUAL,
+        int $count = 1,
     ): static {
-        return $this->whereExists(
-            $this->buildRelationExistsSubquery($relationName, $callback, $includeDeleted),
+        if (\is_string($operator)) {
+            $operator = ConditionOperator::fromInput($operator);
+        }
+
+        if ($operator === ConditionOperator::GREATER_THAN_OR_EQUAL && $count === 1) {
+            return $this->whereExists(
+                $this->buildRelationExistsSubquery($relationName, $callback, $includeDeleted),
+            );
+        }
+
+        $subquery = $this->buildRelationCountSubquery($relationName, $callback, $includeDeleted);
+
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($subquery, $count, $operator): void {
+                $statement->whereSubquery(
+                    subquery: $subquery,
+                    value: $count,
+                    operator: $operator,
+                );
+            },
         );
     }
 
@@ -606,80 +626,231 @@ abstract class AbstractQueryable implements QueryableInterface
         );
     }
 
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
+    #[\NoDiscard]
+    public function orWhereHas(
+        string $relationName,
+        ?\Closure $callback = null,
+        bool $includeDeleted = false,
+    ): static {
+        return $this->orWhereExists(
+            $this->buildRelationExistsSubquery($relationName, $callback, $includeDeleted),
+        );
+    }
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
+    #[\NoDiscard]
+    public function orWhereDoesntHave(
+        string $relationName,
+        ?\Closure $callback = null,
+        bool $includeDeleted = false,
+    ): static {
+        return $this->orWhereNotExists(
+            $this->buildRelationExistsSubquery($relationName, $callback, $includeDeleted),
+        );
+    }
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
     #[\NoDiscard]
     public function withCount(
         string $relationName,
         ?string $alias = null,
+        ?\Closure $callback = null,
     ): static {
         return $this->withAggregate(
             function: RelationAggregateFunction::COUNT,
             relationName: $relationName,
             column: null,
             alias: $alias,
+            callback: $callback,
         );
     }
 
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
     #[\NoDiscard]
     public function withSum(
         string $relationName,
         string $column,
         ?string $alias = null,
+        ?\Closure $callback = null,
     ): static {
         return $this->withAggregate(
             function: RelationAggregateFunction::SUM,
             relationName: $relationName,
             column: $column,
             alias: $alias,
+            callback: $callback,
         );
     }
 
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
     #[\NoDiscard]
     public function withAvg(
         string $relationName,
         string $column,
         ?string $alias = null,
+        ?\Closure $callback = null,
     ): static {
         return $this->withAggregate(
             function: RelationAggregateFunction::AVG,
             relationName: $relationName,
             column: $column,
             alias: $alias,
+            callback: $callback,
         );
     }
 
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
     #[\NoDiscard]
     public function withMin(
         string $relationName,
         string $column,
         ?string $alias = null,
+        ?\Closure $callback = null,
     ): static {
         return $this->withAggregate(
             function: RelationAggregateFunction::MIN,
             relationName: $relationName,
             column: $column,
             alias: $alias,
+            callback: $callback,
         );
     }
 
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
     #[\NoDiscard]
     public function withMax(
         string $relationName,
         string $column,
         ?string $alias = null,
+        ?\Closure $callback = null,
     ): static {
         return $this->withAggregate(
             function: RelationAggregateFunction::MAX,
             relationName: $relationName,
             column: $column,
             alias: $alias,
+            callback: $callback,
         );
     }
 
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
+    #[\NoDiscard]
+    public function orderByCount(
+        string $relationName,
+        OrderDirection|string $direction = OrderDirection::ASC,
+        ?\Closure $callback = null,
+    ): static {
+        return $this->orderByAggregate(
+            function: RelationAggregateFunction::COUNT,
+            relationName: $relationName,
+            column: null,
+            direction: $direction,
+            callback: $callback,
+        );
+    }
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
+    #[\NoDiscard]
+    public function orderBySum(
+        string $relationName,
+        string $column,
+        OrderDirection|string $direction = OrderDirection::ASC,
+        ?\Closure $callback = null,
+    ): static {
+        return $this->orderByAggregate(
+            function: RelationAggregateFunction::SUM,
+            relationName: $relationName,
+            column: $column,
+            direction: $direction,
+            callback: $callback,
+        );
+    }
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
+    #[\NoDiscard]
+    public function orderByAvg(
+        string $relationName,
+        string $column,
+        OrderDirection|string $direction = OrderDirection::ASC,
+        ?\Closure $callback = null,
+    ): static {
+        return $this->orderByAggregate(
+            function: RelationAggregateFunction::AVG,
+            relationName: $relationName,
+            column: $column,
+            direction: $direction,
+            callback: $callback,
+        );
+    }
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
+    #[\NoDiscard]
+    public function orderByMin(
+        string $relationName,
+        string $column,
+        OrderDirection|string $direction = OrderDirection::ASC,
+        ?\Closure $callback = null,
+    ): static {
+        return $this->orderByAggregate(
+            function: RelationAggregateFunction::MIN,
+            relationName: $relationName,
+            column: $column,
+            direction: $direction,
+            callback: $callback,
+        );
+    }
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
+    #[\NoDiscard]
+    public function orderByMax(
+        string $relationName,
+        string $column,
+        OrderDirection|string $direction = OrderDirection::ASC,
+        ?\Closure $callback = null,
+    ): static {
+        return $this->orderByAggregate(
+            function: RelationAggregateFunction::MAX,
+            relationName: $relationName,
+            column: $column,
+            direction: $direction,
+            callback: $callback,
+        );
+    }
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
     private function withAggregate(
         RelationAggregateFunction $function,
         string $relationName,
         ?string $column,
         ?string $alias,
+        ?\Closure $callback,
     ): static {
         $methodName = 'with' . \ucfirst(\strtolower($function->value));
 
@@ -689,34 +860,8 @@ abstract class AbstractQueryable implements QueryableInterface
             );
         }
 
-        $manager = $this->manager;
-        $parentMetaData = $manager->metaData->getModel($this->modelClass);
-
-        foreach ($parentMetaData->morphToRelations as $morphTo) {
-            if ($morphTo->property === $relationName) {
-                throw ModelException::fromAggregateOnMorphToViaQueryable(
-                    modelClass: $parentMetaData->model,
-                    relation: $relationName,
-                    method: $methodName,
-                );
-            }
-        }
-
-        $relation = $this->resolveRelation($parentMetaData, $relationName);
-        $targetMetaData = $manager->metaData->getModel($relation->relatedClass);
-
-        $subquery = $this->buildRelationExistsSubquery(
-            relationName: $relationName,
-            callback: null,
-            includeDeleted: false,
-        );
-
-        $subquery->select(
-            $function === RelationAggregateFunction::COUNT
-                ? 'COUNT(*)'
-                : $function->sqlFunction() . '(' . $targetMetaData->table . '.' . $column . ')',
-        );
-
+        $parentMetaData = $this->manager->metaData->getModel($this->modelClass);
+        $subquery = $this->buildAggregateSubquery($function, $relationName, $column, $callback, $methodName);
         $matchingSlotAlias = null;
 
         foreach ($parentMetaData->aggregates as $aggregate) {
@@ -757,6 +902,107 @@ abstract class AbstractQueryable implements QueryableInterface
                 );
             },
         );
+    }
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
+    private function orderByAggregate(
+        RelationAggregateFunction $function,
+        string $relationName,
+        ?string $column,
+        OrderDirection|string $direction,
+        ?\Closure $callback,
+    ): static {
+        if (\is_string($direction)) {
+            $direction = OrderDirection::from($direction);
+        }
+
+        $subquery = $this->buildAggregateSubquery(
+            function: $function,
+            relationName: $relationName,
+            column: $column,
+            callback: $callback,
+            methodName: 'orderBy' . \ucfirst(\strtolower($function->value)),
+        );
+
+        $orderBy = $this->orderBy;
+        $orderBy[] = [
+            'column' => $subquery,
+            'direction' => $direction,
+        ];
+
+        return $this->cloneWith(
+            criteriaStack: $this->criteriaStack,
+            orderBy: $orderBy,
+            limit: $this->limit,
+            offset: $this->offset,
+        );
+    }
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
+    private function buildAggregateSubquery(
+        RelationAggregateFunction $function,
+        string $relationName,
+        ?string $column,
+        ?\Closure $callback,
+        string $methodName,
+    ): SelectStatementInterface {
+        if ($this->manager === null || $this->modelClass === null) {
+            throw ModelException::fromChainMethodRequiresModelContext(
+                method: $methodName,
+            );
+        }
+
+        $manager = $this->manager;
+        $parentMetaData = $manager->metaData->getModel($this->modelClass);
+
+        foreach ($parentMetaData->morphToRelations as $morphTo) {
+            if ($morphTo->property === $relationName) {
+                throw ModelException::fromAggregateOnMorphToViaQueryable(
+                    modelClass: $parentMetaData->model,
+                    relation: $relationName,
+                    method: $methodName,
+                );
+            }
+        }
+
+        $relation = $this->resolveRelation($parentMetaData, $relationName);
+        $targetMetaData = $manager->metaData->getModel($relation->relatedClass);
+
+        $subquery = $this->buildRelationExistsSubquery(
+            relationName: $relationName,
+            callback: $callback,
+            includeDeleted: false,
+        );
+
+        $subquery->select(
+            $function === RelationAggregateFunction::COUNT
+                ? 'COUNT(*)'
+                : $function->sqlFunction() . '(' . $targetMetaData->table . '.' . $column . ')',
+        );
+
+        return $subquery;
+    }
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
+    private function buildRelationCountSubquery(
+        string $relationName,
+        ?\Closure $callback,
+        bool $includeDeleted,
+    ): SelectStatementInterface {
+        if (\str_contains($relationName, '.')) {
+            throw ModelException::fromRelationCountOnNestedPath(
+                modelClass: $this->modelClass ?? static::class,
+                relation: $relationName,
+            );
+        }
+
+        return $this->buildRelationExistsSubquery($relationName, $callback, $includeDeleted)->select('COUNT(*)');
     }
 
     private function defaultAggregateAliasFor(
@@ -980,7 +1226,7 @@ abstract class AbstractQueryable implements QueryableInterface
          * @var RelationSubqueryInterface $innermost
          */
         if ($callback !== null) {
-            $callback($innermost);
+            $innermost->whereScoped($callback);
         }
 
         return $root;

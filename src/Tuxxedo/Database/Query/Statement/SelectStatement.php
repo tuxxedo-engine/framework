@@ -40,7 +40,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
     private array $selectSubqueries = [];
 
     /**
-     * @var array<string, OrderDirection>
+     * @var list<array{expression: string|SelectStatementInterface, direction: OrderDirection}>
      */
     private array $orderBy = [];
 
@@ -168,11 +168,27 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
         }
 
         if (\sizeof($this->orderBy) > 0) {
-            $clauses = \array_map(
-                static fn (string $column, OrderDirection $direction): string => $dialect->qualifiedIdentifier($column) . ' ' . $direction->name,
-                \array_keys($this->orderBy),
-                \array_values($this->orderBy),
-            );
+            $clauses = [];
+
+            foreach ($this->orderBy as $index => $entry) {
+                $expression = $entry['expression'];
+
+                if ($expression instanceof SelectStatementInterface) {
+                    if (!$expression instanceof AbstractStatement) {
+                        continue; // @codeCoverageIgnore
+                    }
+
+                    $expression = '(' . $this->renderSubqueryWithPrefix(
+                        subquery: $expression,
+                        prefix: 'osq_' . $index . '_',
+                        dialect: $dialect,
+                    ) . ')';
+                } else {
+                    $expression = $dialect->qualifiedIdentifier($expression);
+                }
+
+                $clauses[] = $dialect->orderTerm($expression, $entry['direction']);
+            }
 
             $sql .= \sprintf(
                 ' ORDER BY %s',
@@ -234,7 +250,34 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
             $direction = OrderDirection::fromInput($direction);
         }
 
-        $this->orderBy[$column] = $direction;
+        foreach ($this->orderBy as $index => $entry) {
+            if ($entry['expression'] === $column) {
+                $this->orderBy[$index]['direction'] = $direction;
+
+                return $this;
+            }
+        }
+
+        $this->orderBy[] = [
+            'expression' => $column,
+            'direction' => $direction,
+        ];
+
+        return $this;
+    }
+
+    public function orderBySubquery(
+        SelectStatementInterface $subquery,
+        OrderDirection|string $direction = OrderDirection::ASC,
+    ): static {
+        if (\is_string($direction)) {
+            $direction = OrderDirection::fromInput($direction);
+        }
+
+        $this->orderBy[] = [
+            'expression' => $subquery,
+            'direction' => $direction,
+        ];
 
         return $this;
     }

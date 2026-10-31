@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Database;
 
 use Tuxxedo\Database\Query\FullText\FullText;
+use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AlterOperationInterface;
 use Tuxxedo\Exception;
 
@@ -119,6 +120,17 @@ class SqlException extends Exception
                 'Unknown operator `%s` for enum `%s`',
                 $value,
                 $enum,
+            ),
+        );
+    }
+
+    public static function fromUnsupportedSubqueryComparisonOperator(
+        ConditionOperator $operator,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Operator `%s` cannot compare a subquery to a value; use a scalar comparison operator',
+                $operator->value,
             ),
         );
     }

@@ -40,6 +40,11 @@ interface SelectStatementInterface extends WhereStatementInterface
         OrderDirection|string $direction = OrderDirection::ASC,
     ): static;
 
+    public function orderBySubquery(
+        SelectStatementInterface $subquery,
+        OrderDirection|string $direction = OrderDirection::ASC,
+    ): static;
+
     public function groupBy(
         string ...$columns,
     ): static;

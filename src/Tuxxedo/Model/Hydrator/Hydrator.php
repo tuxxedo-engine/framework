@@ -15,6 +15,7 @@ namespace Tuxxedo\Model\Hydrator;
 
 use Tuxxedo\Database\Hydrator\HydratorInterface as DatabaseHydratorInterface;
 use Tuxxedo\Database\Query\Statement\CountStatementInterface;
+use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
@@ -311,9 +312,7 @@ class Hydrator implements HydratorInterface
                         $extra($statement);
                     }
 
-                    foreach ($orderBy as $spec) {
-                        $statement->orderBy($spec['column'], $spec['direction']);
-                    }
+                    self::applyOrderBy($statement, $orderBy);
 
                     if ($limit !== null) {
                         $statement->limit($limit, $offset);
@@ -413,9 +412,7 @@ class Hydrator implements HydratorInterface
                         $extra($statement);
                     }
 
-                    foreach ($orderBy as $spec) {
-                        $statement->orderBy($spec['column'], $spec['direction']);
-                    }
+                    self::applyOrderBy($statement, $orderBy);
 
                     if ($limit !== null) {
                         $statement->limit($limit, $offset);
@@ -553,9 +550,7 @@ class Hydrator implements HydratorInterface
                         $extra($statement);
                     }
 
-                    foreach ($orderBy as $spec) {
-                        $statement->orderBy($spec['column'], $spec['direction']);
-                    }
+                    self::applyOrderBy($statement, $orderBy);
 
                     if ($limit !== null) {
                         $statement->limit($limit, $offset);
@@ -845,9 +840,7 @@ class Hydrator implements HydratorInterface
                         $extra($statement);
                     }
 
-                    foreach ($orderBy as $spec) {
-                        $statement->orderBy($spec['column'], $spec['direction']);
-                    }
+                    self::applyOrderBy($statement, $orderBy);
 
                     if ($limit !== null) {
                         $statement->limit($limit, $offset);
@@ -954,9 +947,7 @@ class Hydrator implements HydratorInterface
                         $extra($statement);
                     }
 
-                    foreach ($orderBy as $spec) {
-                        $statement->orderBy($spec['column'], $spec['direction']);
-                    }
+                    self::applyOrderBy($statement, $orderBy);
 
                     if ($limit !== null) {
                         $statement->limit($limit, $offset);
@@ -1667,9 +1658,7 @@ class Hydrator implements HydratorInterface
                         $extra($statement);
                     }
 
-                    foreach ($orderBy as $spec) {
-                        $statement->orderBy($spec['column'], $spec['direction']);
-                    }
+                    self::applyOrderBy($statement, $orderBy);
 
                     if ($limit !== null) {
                         $statement->limit($limit, $offset);
@@ -1925,9 +1914,7 @@ class Hydrator implements HydratorInterface
                         $extra($statement);
                     }
 
-                    foreach ($orderBy as $spec) {
-                        $statement->orderBy($spec['column'], $spec['direction']);
-                    }
+                    self::applyOrderBy($statement, $orderBy);
 
                     if ($limit !== null) {
                         $statement->limit($limit, $offset);
@@ -2152,9 +2139,7 @@ class Hydrator implements HydratorInterface
                     $extra($statement);
                 }
 
-                foreach ($orderBy as $spec) {
-                    $statement->orderBy($spec['column'], $spec['direction']);
-                }
+                self::applyOrderBy($statement, $orderBy);
 
                 if ($limit !== null) {
                     $statement->limit($limit, $offset);
@@ -2761,9 +2746,7 @@ class Hydrator implements HydratorInterface
                         $extra($statement);
                     }
 
-                    foreach ($orderBy as $spec) {
-                        $statement->orderBy($spec['column'], $spec['direction']);
-                    }
+                    self::applyOrderBy($statement, $orderBy);
 
                     if ($limit !== null) {
                         $statement->limit($limit, $offset);
@@ -3031,9 +3014,7 @@ class Hydrator implements HydratorInterface
                         $extra($statement);
                     }
 
-                    foreach ($orderBy as $spec) {
-                        $statement->orderBy($spec['column'], $spec['direction']);
-                    }
+                    self::applyOrderBy($statement, $orderBy);
 
                     if ($limit !== null) {
                         $statement->limit($limit, $offset);
@@ -3382,5 +3363,21 @@ class Hydrator implements HydratorInterface
             referencedClass: $metaData->model,
         );
         // @codeCoverageIgnoreEnd
+    }
+
+    /**
+     * @param list<array{column: string|SelectStatementInterface, direction: OrderDirection}> $orderBy
+     */
+    private static function applyOrderBy(
+        SelectStatementInterface $statement,
+        array $orderBy,
+    ): void {
+        foreach ($orderBy as $spec) {
+            if ($spec['column'] instanceof SelectStatementInterface) {
+                $statement->orderBySubquery($spec['column'], $spec['direction']);
+            } else {
+                $statement->orderBy($spec['column'], $spec['direction']);
+            }
+        }
     }
 }

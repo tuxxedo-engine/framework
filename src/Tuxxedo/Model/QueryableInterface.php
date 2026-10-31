@@ -286,6 +286,8 @@ interface QueryableInterface extends PagedInterface, \IteratorAggregate, \Counta
         string $relationName,
         ?\Closure $callback = null,
         bool $includeDeleted = false,
+        ConditionOperator|string $operator = ConditionOperator::GREATER_THAN_OR_EQUAL,
+        int $count = 1,
     ): static;
 
     /**
@@ -298,38 +300,132 @@ interface QueryableInterface extends PagedInterface, \IteratorAggregate, \Counta
         bool $includeDeleted = false,
     ): static;
 
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
+    #[\NoDiscard]
+    public function orWhereHas(
+        string $relationName,
+        ?\Closure $callback = null,
+        bool $includeDeleted = false,
+    ): static;
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
+    #[\NoDiscard]
+    public function orWhereDoesntHave(
+        string $relationName,
+        ?\Closure $callback = null,
+        bool $includeDeleted = false,
+    ): static;
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
     #[\NoDiscard]
     public function withCount(
         string $relationName,
         ?string $alias = null,
+        ?\Closure $callback = null,
     ): static;
 
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
     #[\NoDiscard]
     public function withSum(
         string $relationName,
         string $column,
         ?string $alias = null,
+        ?\Closure $callback = null,
     ): static;
 
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
     #[\NoDiscard]
     public function withAvg(
         string $relationName,
         string $column,
         ?string $alias = null,
+        ?\Closure $callback = null,
     ): static;
 
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
     #[\NoDiscard]
     public function withMin(
         string $relationName,
         string $column,
         ?string $alias = null,
+        ?\Closure $callback = null,
     ): static;
 
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
     #[\NoDiscard]
     public function withMax(
         string $relationName,
         string $column,
         ?string $alias = null,
+        ?\Closure $callback = null,
+    ): static;
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
+    #[\NoDiscard]
+    public function orderByCount(
+        string $relationName,
+        OrderDirection|string $direction = OrderDirection::ASC,
+        ?\Closure $callback = null,
+    ): static;
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
+    #[\NoDiscard]
+    public function orderBySum(
+        string $relationName,
+        string $column,
+        OrderDirection|string $direction = OrderDirection::ASC,
+        ?\Closure $callback = null,
+    ): static;
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
+    #[\NoDiscard]
+    public function orderByAvg(
+        string $relationName,
+        string $column,
+        OrderDirection|string $direction = OrderDirection::ASC,
+        ?\Closure $callback = null,
+    ): static;
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
+    #[\NoDiscard]
+    public function orderByMin(
+        string $relationName,
+        string $column,
+        OrderDirection|string $direction = OrderDirection::ASC,
+        ?\Closure $callback = null,
+    ): static;
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
+    #[\NoDiscard]
+    public function orderByMax(
+        string $relationName,
+        string $column,
+        OrderDirection|string $direction = OrderDirection::ASC,
+        ?\Closure $callback = null,
     ): static;
 
     /**

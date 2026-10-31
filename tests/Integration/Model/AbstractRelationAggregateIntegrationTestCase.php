@@ -18,7 +18,9 @@ use Fixture\Model\Aggregate\AggregateOrder;
 use Fixture\Model\Aggregate\AggregateOwner;
 use Fixture\Model\Aggregate\AggregatePolyTag;
 use Fixture\Model\Aggregate\AggregateTag;
+use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Model\ModelException;
+use Tuxxedo\Model\RelationSubqueryInterface;
 
 abstract class AbstractRelationAggregateIntegrationTestCase extends AbstractModelIntegrationTestCase
 {
@@ -206,6 +208,391 @@ abstract class AbstractRelationAggregateIntegrationTestCase extends AbstractMode
         self::assertSame(100, $byId[$this->ownerTwoId]->notesLengthSum);
     }
 
+    public function testWithCountCallbackOnlyCountsMatchingRows(): void
+    {
+        $owners = \iterator_to_array($this->modelsManager
+            ->query(AggregateOwner::class)
+            ->withCount(
+                relationName: 'orders',
+                callback: static function (RelationSubqueryInterface $orders): void {
+                    $orders->where('aggregate_orders.amount', 20, '>=');
+                },
+            )
+            ->fetchAll());
+
+        $byId = $this->indexById($owners);
+
+        self::assertSame(2, $byId[$this->ownerOneId]->ordersCount);
+        self::assertSame(2, $byId[$this->ownerTwoId]->ordersCount);
+        self::assertSame(0, $byId[$this->ownerEmptyId]->ordersCount);
+    }
+
+    public function testWithMinCallbackOnlyAggregatesMatchingRows(): void
+    {
+        $owners = \iterator_to_array($this->modelsManager
+            ->query(AggregateOwner::class)
+            ->withMin(
+                relationName: 'orders',
+                column: 'amount',
+                callback: static function (RelationSubqueryInterface $orders): void {
+                    $orders->where('aggregate_orders.amount', 15, '>=');
+                },
+            )
+            ->fetchAll());
+
+        $byId = $this->indexById($owners);
+
+        self::assertSame(20, $byId[$this->ownerOneId]->ordersMin);
+        self::assertSame(100, $byId[$this->ownerTwoId]->ordersMin);
+        self::assertNull($byId[$this->ownerEmptyId]->ordersMin);
+    }
+
+    public function testOrderByCountOrdersByRelationCount(): void
+    {
+        self::assertSame(
+            [
+                'one',
+                'two',
+                'empty',
+            ],
+            $this->labels(
+                $this->modelsManager
+                    ->query(AggregateOwner::class)
+                    ->orderByCount(
+                        relationName: 'orders',
+                        direction: OrderDirection::DESC,
+                    ),
+            ),
+        );
+    }
+
+    public function testOrderByMinWithCallbackPutsMissingValuesLast(): void
+    {
+        $atLeastFifty = static function (RelationSubqueryInterface $orders): void {
+            $orders->where('aggregate_orders.amount', 50, '>=');
+        };
+
+        foreach ([OrderDirection::ASC, OrderDirection::DESC] as $direction) {
+            self::assertSame(
+                [
+                    'two',
+                    'one',
+                    'empty',
+                ],
+                $this->labels(
+                    $this->modelsManager
+                        ->query(AggregateOwner::class)
+                        ->orderByMin(
+                            relationName: 'orders',
+                            column: 'amount',
+                            direction: $direction,
+                            callback: $atLeastFifty,
+                        )
+                        ->orderBy('id'),
+                ),
+            );
+        }
+    }
+
+    public function testOrderByAvgOrdersByRelationAverage(): void
+    {
+        self::assertSame(
+            [
+                'one',
+                'two',
+                'empty',
+            ],
+            $this->labels(
+                $this->modelsManager
+                    ->query(AggregateOwner::class)
+                    ->orderByAvg(
+                        relationName: 'orders',
+                        column: 'amount',
+                    ),
+            ),
+        );
+    }
+
+    public function testOrderByMaxAcceptsStringDirection(): void
+    {
+        self::assertSame(
+            [
+                'two',
+                'one',
+                'empty',
+            ],
+            $this->labels(
+                $this->modelsManager
+                    ->query(AggregateOwner::class)
+                    ->orderByMax(
+                        relationName: 'orders',
+                        column: 'amount',
+                        direction: 'DESC',
+                    ),
+            ),
+        );
+    }
+
+    public function testOrderByAggregateOnLoadedRelation(): void
+    {
+        $owner = $this->modelsManager->fetchById(
+            class: AggregateOwner::class,
+            id: $this->ownerOneId,
+        );
+
+        self::assertNotNull($owner->orders);
+
+        $amounts = [];
+
+        foreach (
+            $owner->orders
+                ->orderByMax(
+                    relationName: 'owner',
+                    column: 'id',
+                )
+                ->orderBy('amount', OrderDirection::DESC) as $order
+        ) {
+            $amounts[] = $order->amount;
+        }
+
+        self::assertSame(
+            [
+                30,
+                20,
+                10,
+            ],
+            $amounts,
+        );
+    }
+
+    public function testOrWhereInsideWhereHasCallbackStaysCorrelated(): void
+    {
+        self::assertSame(
+            [
+                'one',
+                'two',
+            ],
+            $this->labels(
+                $this->modelsManager
+                    ->query(AggregateOwner::class)
+                    ->whereHas(
+                        relationName: 'orders',
+                        callback: static function (RelationSubqueryInterface $orders): void {
+                            $orders
+                                ->where('aggregate_orders.amount', 10)
+                                ->orWhere('aggregate_orders.amount', 200);
+                        },
+                    )
+                    ->orderBy('id'),
+            ),
+        );
+    }
+
+    public function testWhereHasCallbackWithoutConditionsMatchesPlainWhereHas(): void
+    {
+        self::assertSame(
+            [
+                'one',
+                'two',
+            ],
+            $this->labels(
+                $this->modelsManager
+                    ->query(AggregateOwner::class)
+                    ->whereHas(
+                        relationName: 'orders',
+                        callback: static function (RelationSubqueryInterface $orders): void {
+                        },
+                    )
+                    ->orderBy('id'),
+            ),
+        );
+    }
+
+    public function testNestedOrWhereHasInsideRelationCallback(): void
+    {
+        self::assertSame(
+            [
+                $this->ownerOneId,
+                $this->ownerTwoId,
+            ],
+            $this->ownerIds(
+                $this->modelsManager
+                    ->query(AggregateOrder::class)
+                    ->whereHas(
+                        relationName: 'owner',
+                        callback: static function (RelationSubqueryInterface $owner): void {
+                            $owner
+                                ->where('aggregate_owners.label', 'one')
+                                ->orWhereHas(
+                                    relationName: 'tags',
+                                    callback: static function (RelationSubqueryInterface $tags): void {
+                                        $tags->where('aggregate_tags.label', 'gamma');
+                                    },
+                                );
+                        },
+                    ),
+            ),
+        );
+    }
+
+    public function testNestedOrWhereDoesntHaveInsideRelationCallback(): void
+    {
+        self::assertSame(
+            [
+                $this->ownerOneId,
+            ],
+            $this->ownerIds(
+                $this->modelsManager
+                    ->query(AggregateOrder::class)
+                    ->whereHas(
+                        relationName: 'owner',
+                        callback: static function (RelationSubqueryInterface $owner): void {
+                            $owner
+                                ->where('aggregate_owners.label', 'missing')
+                                ->orWhereDoesntHave(
+                                    relationName: 'tags',
+                                    callback: static function (RelationSubqueryInterface $tags): void {
+                                        $tags->where('aggregate_tags.label', 'gamma');
+                                    },
+                                );
+                        },
+                    ),
+            ),
+        );
+    }
+
+    public function testOrderBySumKeepsCallOrderWithPlainOrderBy(): void
+    {
+        self::assertSame(
+            [
+                'empty',
+                'one',
+                'two',
+            ],
+            $this->labels(
+                $this->modelsManager
+                    ->query(AggregateOwner::class)
+                    ->orderBy('label')
+                    ->orderBySum(
+                        relationName: 'orders',
+                        column: 'amount',
+                        direction: OrderDirection::DESC,
+                    ),
+            ),
+        );
+    }
+
+    public function testWhereHasWithCountThreshold(): void
+    {
+        self::assertSame(
+            [
+                'one',
+            ],
+            $this->labels(
+                $this->modelsManager
+                    ->query(AggregateOwner::class)
+                    ->whereHas(
+                        relationName: 'orders',
+                        count: 3,
+                    ),
+            ),
+        );
+
+        self::assertSame(
+            [
+                'two',
+                'empty',
+            ],
+            $this->labels(
+                $this->modelsManager
+                    ->query(AggregateOwner::class)
+                    ->whereHas(
+                        relationName: 'orders',
+                        operator: '<',
+                        count: 3,
+                    )
+                    ->orderBy('id'),
+            ),
+        );
+    }
+
+    public function testWhereHasCountThresholdAppliesCallback(): void
+    {
+        self::assertSame(
+            [
+                'one',
+                'two',
+            ],
+            $this->labels(
+                $this->modelsManager
+                    ->query(AggregateOwner::class)
+                    ->whereHas(
+                        relationName: 'orders',
+                        callback: static function (RelationSubqueryInterface $orders): void {
+                            $orders->where('aggregate_orders.amount', 20, '>=');
+                        },
+                        count: 2,
+                    )
+                    ->orderBy('id'),
+            ),
+        );
+    }
+
+    public function testWhereHasCountThresholdOnNestedPathThrows(): void
+    {
+        try {
+            (void) $this->modelsManager
+                ->query(AggregateOwner::class)
+                ->whereHas(
+                    relationName: 'orders.owner',
+                    count: 2,
+                );
+
+            self::fail('Expected ModelException for a count threshold on a nested path');
+        } catch (ModelException $exception) {
+            self::assertStringContainsString('nested paths are not supported', $exception->getMessage());
+        }
+    }
+
+    public function testOrWhereHasCombinesWithOr(): void
+    {
+        self::assertSame(
+            [
+                'two',
+                'empty',
+            ],
+            $this->labels(
+                $this->modelsManager
+                    ->query(AggregateOwner::class)
+                    ->where('label', 'empty')
+                    ->orWhereHas(
+                        relationName: 'orders',
+                        callback: static function (RelationSubqueryInterface $orders): void {
+                            $orders->where('aggregate_orders.amount', 100, '>=');
+                        },
+                    )
+                    ->orderBy('id'),
+            ),
+        );
+    }
+
+    public function testOrWhereDoesntHaveCombinesWithOr(): void
+    {
+        self::assertSame(
+            [
+                'one',
+                'empty',
+            ],
+            $this->labels(
+                $this->modelsManager
+                    ->query(AggregateOwner::class)
+                    ->where('label', 'one')
+                    ->orWhereDoesntHave('orders')
+                    ->orderBy('id'),
+            ),
+        );
+    }
+
     public function testWithoutAggregateCallLeavesSlotsNull(): void
     {
         $owners = \iterator_to_array($this->modelsManager
@@ -361,5 +748,39 @@ abstract class AbstractRelationAggregateIntegrationTestCase extends AbstractMode
         }
 
         return $indexed;
+    }
+
+    /**
+     * @param iterable<AggregateOwner> $owners
+     * @return list<string>
+     */
+    private function labels(
+        iterable $owners,
+    ): array {
+        $labels = [];
+
+        foreach ($owners as $owner) {
+            $labels[] = $owner->label;
+        }
+
+        return $labels;
+    }
+
+    /**
+     * @param iterable<AggregateOrder> $orders
+     * @return list<int>
+     */
+    private function ownerIds(
+        iterable $orders,
+    ): array {
+        $ids = [];
+
+        foreach ($orders as $order) {
+            $ids[$order->ownerId] = $order->ownerId;
+        }
+
+        \sort($ids);
+
+        return $ids;
     }
 }

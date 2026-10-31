@@ -34,6 +34,8 @@ use Tuxxedo\Database\Query\Statement\Condition\GroupCondition;
 use Tuxxedo\Database\Query\Statement\Condition\GroupConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\RawCondition;
 use Tuxxedo\Database\Query\Statement\Condition\RawConditionInterface;
+use Tuxxedo\Database\Query\Statement\Condition\SubqueryComparisonCondition;
+use Tuxxedo\Database\Query\Statement\Condition\SubqueryComparisonConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\SubqueryCondition;
 use Tuxxedo\Database\Query\Statement\Condition\SubqueryConditionInterface;
 use Tuxxedo\Database\Query\Statement\Join\Join;
@@ -45,7 +47,7 @@ use Tuxxedo\Database\SqlException;
 abstract class AbstractWhereStatement extends AbstractStatement implements WhereStatementInterface
 {
     /**
-     * @var list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|ExistsCondition|GroupCondition|FullTextCondition>
+     * @var list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|SubqueryComparisonCondition|ExistsCondition|GroupCondition|FullTextCondition>
      */
     protected array $conditions = [];
 
@@ -110,7 +112,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     /**
-     * @param list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|ExistsCondition|GroupCondition|FullTextCondition> $conditions
+     * @param list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|SubqueryComparisonCondition|ExistsCondition|GroupCondition|FullTextCondition> $conditions
      */
     private function renderConditions(
         array $conditions,
@@ -130,7 +132,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     private function renderConditionBody(
-        ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|ExistsCondition|GroupCondition|FullTextCondition $condition,
+        ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|SubqueryComparisonCondition|ExistsCondition|GroupCondition|FullTextCondition $condition,
         DialectInterface $dialect,
     ): string {
         if ($condition instanceof BetweenConditionInterface) {
@@ -166,6 +168,19 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
                     $this->subqueryCounter++,
                     $dialect,
                 ),
+            );
+        }
+
+        if ($condition instanceof SubqueryComparisonConditionInterface) {
+            return \sprintf(
+                ' (%s) %s %s',
+                $this->renderSubquery(
+                    $condition->subquery,
+                    $this->subqueryCounter++,
+                    $dialect,
+                ),
+                $dialect->conditionOperator($condition->operator),
+                $condition->parameter,
             );
         }
 
@@ -523,18 +538,21 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         DialectInterface $dialect,
     ): string {
         $sql = $subquery->generateSql($dialect);
+        $keys = [];
 
         foreach ($subquery->parameters as $key => $value) {
             $stringKey = (string) $key;
+            $keys[$stringKey] = true;
             $this->parameters[$prefix . $stringKey] = $value;
-            $sql = \preg_replace(
-                pattern: '/:' . \preg_quote($stringKey, '/') . '\b/',
-                replacement: ':' . $prefix . $stringKey,
-                subject: $sql,
-            ) ?? $sql;
         }
 
-        return $sql;
+        return \preg_replace_callback(
+            pattern: '/:([A-Za-z_][A-Za-z0-9_]*)/',
+            callback: static fn (array $match): string => isset($keys[$match[1]])
+                ? ':' . $prefix . $match[1]
+                : $match[0],
+            subject: $sql,
+        ) ?? $sql;
     }
 
     public function innerJoin(
@@ -847,6 +865,36 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         return $this;
     }
 
+    public function whereSubquery(
+        SelectStatementInterface $subquery,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static {
+        $this->conditions[] = $this->buildSubqueryComparison(
+            subquery: $subquery,
+            value: $value,
+            operator: $operator,
+            conjunction: ConditionConjunction::AND,
+        );
+
+        return $this;
+    }
+
+    public function orWhereSubquery(
+        SelectStatementInterface $subquery,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static {
+        $this->conditions[] = $this->buildSubqueryComparison(
+            subquery: $subquery,
+            value: $value,
+            operator: $operator,
+            conjunction: ConditionConjunction::OR,
+        );
+
+        return $this;
+    }
+
     public function whereExists(
         SelectStatementInterface $subquery,
     ): static {
@@ -898,6 +946,50 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     /**
      * @throws SqlException
      */
+    /**
+     * @throws SqlException
+     */
+    private function buildSubqueryComparison(
+        SelectStatementInterface $subquery,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator,
+        ConditionConjunction $conjunction,
+    ): SubqueryComparisonCondition {
+        if (\is_string($operator)) {
+            $operator = ConditionOperator::fromInput($operator);
+        }
+
+        if (
+            $operator === ConditionOperator::IN ||
+            $operator === ConditionOperator::NOT_IN ||
+            $operator === ConditionOperator::IS_NULL ||
+            $operator === ConditionOperator::IS_NOT_NULL
+        ) {
+            throw SqlException::fromUnsupportedSubqueryComparisonOperator(
+                operator: $operator,
+            );
+        }
+
+        if (!$subquery instanceof AbstractStatement) {
+            // @codeCoverageIgnoreStart
+            throw SqlException::fromSubqueryStatementMustExtendAbstractStatement(
+                actualType: \get_debug_type($subquery),
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        $parameterKey = 'where_' . $this->nextParameterOffset();
+
+        $this->parameters[$parameterKey] = $value;
+
+        return new SubqueryComparisonCondition(
+            conjunction: $conjunction,
+            subquery: $subquery,
+            operator: $operator,
+            parameter: ':' . $parameterKey,
+        );
+    }
+
     private function buildExists(
         SelectStatementInterface $subquery,
         ConditionConjunction $conjunction,

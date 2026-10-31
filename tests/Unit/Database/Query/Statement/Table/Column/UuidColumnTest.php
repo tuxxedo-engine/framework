@@ -20,6 +20,7 @@ use Tuxxedo\Database\Query\Dialect\Pgsql\PgsqlDialect;
 use Tuxxedo\Database\Query\Dialect\Sqlite\SqliteDialect;
 use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
+use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\UuidColumn;
 
@@ -98,6 +99,13 @@ class UuidColumnTest extends TestCase
                 ConditionOperator $operator,
             ): string {
                 return $operator->value;
+            }
+
+            public function orderTerm(
+                string $expression,
+                OrderDirection $direction,
+            ): string {
+                return '';
             }
 
             public function fullTextCondition(

@@ -18,6 +18,7 @@ use Tuxxedo\Database\Query\Dialect\NativeColumnTypeParserInterface;
 use Tuxxedo\Database\Query\Parser\StatementParserResult;
 use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
+use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AlterOperationInterface;
 
@@ -118,6 +119,13 @@ class StubDialect implements DialectInterface
         ConditionOperator $operator,
     ): string {
         return $operator->value;
+    }
+
+    public function orderTerm(
+        string $expression,
+        OrderDirection $direction,
+    ): string {
+        return $expression . ' ' . $direction->name;
     }
 
     public function fullTextCondition(

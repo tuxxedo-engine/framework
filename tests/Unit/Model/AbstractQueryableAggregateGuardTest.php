@@ -56,4 +56,23 @@ class AbstractQueryableAggregateGuardTest extends TestCase
             );
         }
     }
+
+    public function testOrderByCountRequiresModelContext(): void
+    {
+        $relation = Relation::createFromBuilder(
+            loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => [],
+            countBuilder: static fn (array $criteria): int => 0,
+        );
+
+        try {
+            (void) $relation->orderByCount(relationName: 'tags');
+
+            self::fail('Expected ModelException was not thrown');
+        } catch (ModelException $exception) {
+            self::assertStringContainsString(
+                'orderByCount',
+                $exception->getMessage(),
+            );
+        }
+    }
 }

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Model;
 
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
+use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 
 /**
@@ -35,11 +36,11 @@ class Relation extends AbstractQueryable implements RelationInterface
     public private(set) array $pendingRemoves = [];
 
     /**
-     * @param (\Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string, direction: OrderDirection}>, ?int, ?int): iterable<int, TModel>)|null $loaderBuilder
+     * @param (\Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string|SelectStatementInterface, direction: OrderDirection}>, ?int, ?int): iterable<int, TModel>)|null $loaderBuilder
      * @param (\Closure(list<\Closure(WhereStatementInterface): void>): int)|null $countBuilder
      * @param array<int, TModel>|null $prefetched
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
-     * @param list<array{column: string, direction: OrderDirection}> $orderBy
+     * @param list<array{column: string|SelectStatementInterface, direction: OrderDirection}> $orderBy
      * @param ?class-string<TModel> $modelClass
      */
     final private function __construct(
@@ -68,7 +69,7 @@ class Relation extends AbstractQueryable implements RelationInterface
     /**
      * @template TItem of object
      *
-     * @param \Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string, direction: OrderDirection}>, ?int, ?int): iterable<int, TItem> $loaderBuilder
+     * @param \Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string|SelectStatementInterface, direction: OrderDirection}>, ?int, ?int): iterable<int, TItem> $loaderBuilder
      * @param \Closure(list<\Closure(WhereStatementInterface): void>): int $countBuilder
      * @param ?class-string<TItem> $modelClass
      * @return self<TItem>
@@ -110,10 +111,10 @@ class Relation extends AbstractQueryable implements RelationInterface
      * @template TItem of object
      *
      * @param array<int, TItem> $prefetched
-     * @param \Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string, direction: OrderDirection}>, ?int, ?int): iterable<int, TItem> $loaderBuilder
+     * @param \Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string|SelectStatementInterface, direction: OrderDirection}>, ?int, ?int): iterable<int, TItem> $loaderBuilder
      * @param \Closure(list<\Closure(WhereStatementInterface): void>): int $countBuilder
      * @param list<\Closure(WhereStatementInterface): void> $initialCriteriaStack
-     * @param list<array{column: string, direction: OrderDirection}> $initialOrderBy
+     * @param list<array{column: string|SelectStatementInterface, direction: OrderDirection}> $initialOrderBy
      * @param ?class-string<TItem> $modelClass
      * @return self<TItem>
      */
@@ -143,7 +144,7 @@ class Relation extends AbstractQueryable implements RelationInterface
 
     /**
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
-     * @param list<array{column: string, direction: OrderDirection}> $orderBy
+     * @param list<array{column: string|SelectStatementInterface, direction: OrderDirection}> $orderBy
      */
     protected function cloneWith(
         array $criteriaStack,

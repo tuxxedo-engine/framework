@@ -243,7 +243,7 @@ class MessageSerializerTest extends TestCase
             ],
             bcc: [
                 new Address(
-                    email: 'bcc@example.com',
+                    email: 'blind.copy@example.com',
                 ),
             ],
             replyTo: [
@@ -267,7 +267,8 @@ class MessageSerializerTest extends TestCase
         self::assertStringContainsString('Return-Path: bounces@example.com', $result->headers);
         self::assertStringContainsString('To: to1@example.com, to2@example.com', $result->headers);
         self::assertStringContainsString('Cc: cc@example.com', $result->headers);
-        self::assertStringNotContainsString('bcc@example.com', $result->headers);
+        self::assertStringNotContainsString('Bcc:', $result->headers);
+        self::assertStringNotContainsString('blind.copy@example.com', $result->headers);
     }
 
     public function testNonAsciiSubjectEmitsEncodedWord(): void

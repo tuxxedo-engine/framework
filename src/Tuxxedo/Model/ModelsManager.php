@@ -2662,7 +2662,11 @@ class ModelsManager implements ModelsManagerInterface
                 }
 
                 foreach ($orderBy as $spec) {
-                    $statement->orderBy($spec['column'], $spec['direction']);
+                    if ($spec['column'] instanceof SelectStatementInterface) {
+                        $statement->orderBySubquery($spec['column'], $spec['direction']);
+                    } else {
+                        $statement->orderBy($spec['column'], $spec['direction']);
+                    }
                 }
 
                 if ($limit !== null) {

@@ -15,6 +15,7 @@ namespace Tuxxedo\Database\Query\Dialect;
 
 use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
+use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AlterOperationInterface;
 use Tuxxedo\Database\SqlException;
@@ -57,6 +58,11 @@ interface DialectInterface
 
     public function conditionOperator(
         ConditionOperator $operator,
+    ): string;
+
+    public function orderTerm(
+        string $expression,
+        OrderDirection $direction,
     ): string;
 
     /**

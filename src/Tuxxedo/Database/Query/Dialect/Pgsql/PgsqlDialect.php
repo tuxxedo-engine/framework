@@ -20,6 +20,7 @@ use Tuxxedo\Database\Query\FullText\FullText;
 use Tuxxedo\Database\Query\Parser\StatementParserResult;
 use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
+use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\Table\Column\AbstractColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\BlobColumn;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
@@ -163,6 +164,13 @@ class PgsqlDialect implements DialectInterface
             ConditionOperator::NOT_LIKE => 'NOT ILIKE',
             default => $operator->value,
         };
+    }
+
+    public function orderTerm(
+        string $expression,
+        OrderDirection $direction,
+    ): string {
+        return $expression . ' ' . $direction->name . ' NULLS LAST';
     }
 
     public function fullTextCondition(

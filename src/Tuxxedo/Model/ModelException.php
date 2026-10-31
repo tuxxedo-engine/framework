@@ -1152,6 +1152,22 @@ class ModelException extends Exception
     /**
      * @param class-string $modelClass
      */
+    public static function fromRelationCountOnNestedPath(
+        string $modelClass,
+        string $relation,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot count "%s" on "%s": a count threshold needs a single relation, nested paths are not supported',
+                $relation,
+                $modelClass,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
     public static function fromAggregateNoDeclaredSlot(
         string $modelClass,
         string $relation,
