@@ -2651,15 +2651,7 @@ class ModelsManager implements ModelsManagerInterface
 
         return Query::createFromBuilder(
             loaderBuilder: static function (array $criteria, array $orderBy, ?int $limit, ?int $offset) use ($manager, $class, $metaData, $includeDeleted): iterable {
-                $statement = $manager->connection->select($metaData->table);
-
-                foreach ($criteria as $extra) {
-                    $extra($statement);
-                }
-
-                if (!$includeDeleted) {
-                    $manager->applySoftDeleteFilter($statement, $metaData);
-                }
+                $statement = $manager->selectFor($metaData, $criteria, $includeDeleted);
 
                 foreach ($orderBy as $spec) {
                     if ($spec['column'] instanceof SelectStatementInterface) {
@@ -2697,7 +2689,29 @@ class ModelsManager implements ModelsManagerInterface
             manager: $this,
             modelClass: $class,
             with: $this->mergeAutoEagerWith($metaData, null),
+            statementBuilder: static fn (array $criteria): SelectStatementInterface => $manager->selectFor($metaData, $criteria, $includeDeleted),
         );
+    }
+
+    /**
+     * @param list<\Closure(WhereStatementInterface): void> $criteria
+     */
+    private function selectFor(
+        ModelMetaDataInterface $metaData,
+        array $criteria,
+        bool $includeDeleted,
+    ): SelectStatementInterface {
+        $statement = $this->connection->select($metaData->table);
+
+        foreach ($criteria as $extra) {
+            $extra($statement);
+        }
+
+        if (!$includeDeleted) {
+            $this->applySoftDeleteFilter($statement, $metaData);
+        }
+
+        return $statement;
     }
 
     #[\NoDiscard]

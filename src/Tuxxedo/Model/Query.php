@@ -35,6 +35,11 @@ class Query extends AbstractQueryable
     private readonly ?\Closure $eagerLoader;
 
     /**
+     * @var (\Closure(list<\Closure(WhereStatementInterface): void>): SelectStatementInterface)|null
+     */
+    private readonly ?\Closure $statementBuilder;
+
+    /**
      * @param (\Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string|SelectStatementInterface, direction: OrderDirection}>, ?int, ?int): iterable<int, TModel>)|null $loaderBuilder
      * @param (\Closure(list<\Closure(WhereStatementInterface): void>): int)|null $countBuilder
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
@@ -42,6 +47,7 @@ class Query extends AbstractQueryable
      * @param array<string, (\Closure(Relation<object>): Relation<object>)|null>|null $with
      * @param (\Closure(list<object>, array<string, (\Closure(Relation<object>): Relation<object>)|null>): void)|null $eagerLoader
      * @param ?class-string<TModel> $modelClass
+     * @param (\Closure(list<\Closure(WhereStatementInterface): void>): SelectStatementInterface)|null $statementBuilder
      */
     final private function __construct(
         ?\Closure $loaderBuilder = null,
@@ -54,6 +60,7 @@ class Query extends AbstractQueryable
         ?\Closure $eagerLoader = null,
         ?ModelsManagerInterface $manager = null,
         ?string $modelClass = null,
+        ?\Closure $statementBuilder = null,
     ) {
         parent::__construct(
             loaderBuilder: $loaderBuilder,
@@ -68,6 +75,7 @@ class Query extends AbstractQueryable
 
         $this->with = $with;
         $this->eagerLoader = $eagerLoader;
+        $this->statementBuilder = $statementBuilder;
     }
 
     /**
@@ -78,6 +86,7 @@ class Query extends AbstractQueryable
      * @param (\Closure(list<object>, array<string, (\Closure(Relation<object>): Relation<object>)|null>): void)|null $eagerLoader
      * @param array<string, (\Closure(Relation<object>): Relation<object>)|null>|null $with
      * @param ?class-string<TItem> $modelClass
+     * @param (\Closure(list<\Closure(WhereStatementInterface): void>): SelectStatementInterface)|null $statementBuilder
      * @return self<TItem>
      */
     public static function createFromBuilder(
@@ -87,6 +96,7 @@ class Query extends AbstractQueryable
         ?ModelsManagerInterface $manager = null,
         ?string $modelClass = null,
         ?array $with = null,
+        ?\Closure $statementBuilder = null,
     ): self {
         return new self(
             loaderBuilder: $loaderBuilder,
@@ -95,6 +105,7 @@ class Query extends AbstractQueryable
             eagerLoader: $eagerLoader,
             manager: $manager,
             modelClass: $modelClass,
+            statementBuilder: $statementBuilder,
         );
     }
 
@@ -118,6 +129,7 @@ class Query extends AbstractQueryable
             eagerLoader: $this->eagerLoader,
             manager: $this->manager,
             modelClass: $this->modelClass,
+            statementBuilder: $this->statementBuilder,
         );
     }
 
@@ -142,7 +154,23 @@ class Query extends AbstractQueryable
             eagerLoader: $this->eagerLoader,
             manager: $this->manager,
             modelClass: $this->modelClass,
+            statementBuilder: $this->statementBuilder,
         );
+    }
+
+    /**
+     * @throws ModelException
+     */
+    #[\NoDiscard]
+    public function toSelect(): SelectStatementInterface
+    {
+        if ($this->statementBuilder === null) {
+            throw ModelException::fromChainMethodRequiresModelContext(
+                method: 'toSelect',
+            );
+        }
+
+        return ($this->statementBuilder)($this->criteriaStack);
     }
 
     /**

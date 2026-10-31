@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Unit\Model;
 
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Model\ModelException;
 use Tuxxedo\Model\Query;
 use Tuxxedo\Model\Relation;
 
@@ -36,5 +37,24 @@ class QueryTest extends TestCase
             $query,
             $extended,
         );
+    }
+
+    public function testToSelectWithoutStatementBuilderThrows(): void
+    {
+        $query = Query::createFromBuilder(
+            loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => [],
+            countBuilder: static fn (array $criteria): int => 0,
+        );
+
+        try {
+            (void) $query->toSelect();
+
+            self::fail('Expected ModelException was not thrown');
+        } catch (ModelException $exception) {
+            self::assertStringContainsString(
+                'toSelect',
+                $exception->getMessage(),
+            );
+        }
     }
 }

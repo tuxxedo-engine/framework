@@ -14,9 +14,11 @@ declare(strict_types=1);
 namespace Integration\Model;
 
 use Fixture\Model\Category;
+use Fixture\Model\Comment;
 use Fixture\Model\Country;
 use Fixture\Model\Post;
 use Fixture\Model\User;
+use Tuxxedo\Database\Query\Statement\Aggregate\AggregateFunction;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
@@ -204,6 +206,19 @@ abstract class AbstractQueryableIntegrationTestCase extends AbstractModelIntegra
         )
             ->set(column: 'post_id', value: $postId)
             ->set(column: 'tag_id', value: $tagId)
+            ->execute();
+    }
+
+    private function seedDeletedComment(): void
+    {
+        $this->connection->insert(
+            table: 'comments',
+        )
+            ->set(column: 'id', value: 101)
+            ->set(column: 'post_id', value: 10)
+            ->set(column: 'user_id', value: 1)
+            ->set(column: 'body', value: 'gone')
+            ->set(column: 'deletedAt', value: '2026-01-02 00:00:00')
             ->execute();
     }
 
@@ -1157,6 +1172,101 @@ abstract class AbstractQueryableIntegrationTestCase extends AbstractModelIntegra
                     ->query(Category::class)
                     ->whereDoesntHave('children'),
             ),
+        );
+    }
+
+    public function testToSelectCarriesQueryConditions(): void
+    {
+        $row = $this->modelsManager
+            ->query(Post::class)
+            ->where('status', 'published')
+            ->toSelect()
+            ->selectAggregate(
+                function: AggregateFunction::COUNT,
+                alias: 'total',
+            )
+            ->execute()
+            ->fetchAssoc();
+
+        self::assertEquals(
+            2,
+            $row['total'],
+        );
+    }
+
+    public function testToSelectGroupsRows(): void
+    {
+        $result = $this->modelsManager
+            ->query(Post::class)
+            ->toSelect()
+            ->select('status')
+            ->selectAggregate(
+                function: AggregateFunction::COUNT,
+                alias: 'total',
+            )
+            ->groupBy('status')
+            ->execute();
+
+        $totals = [];
+
+        foreach ($result as $row) {
+            /** @var string $status */
+            $status = $row->properties['status'];
+            $totals[$status] = $row->properties['total'];
+        }
+
+        \ksort($totals);
+
+        self::assertEquals(
+            [
+                'archived' => 1,
+                'draft' => 1,
+                'published' => 2,
+            ],
+            $totals,
+        );
+    }
+
+    public function testToSelectAppliesSoftDeleteFilter(): void
+    {
+        $this->seedDeletedComment();
+
+        $row = $this->modelsManager
+            ->query(Comment::class)
+            ->toSelect()
+            ->selectAggregate(
+                function: AggregateFunction::COUNT,
+                alias: 'total',
+            )
+            ->execute()
+            ->fetchAssoc();
+
+        self::assertEquals(
+            1,
+            $row['total'],
+        );
+    }
+
+    public function testToSelectKeepsDeletedRowsWhenTheQueryIncludesThem(): void
+    {
+        $this->seedDeletedComment();
+
+        $row = $this->modelsManager
+            ->query(
+                class: Comment::class,
+                includeDeleted: true,
+            )
+            ->toSelect()
+            ->selectAggregate(
+                function: AggregateFunction::COUNT,
+                alias: 'total',
+            )
+            ->execute()
+            ->fetchAssoc();
+
+        self::assertEquals(
+            2,
+            $row['total'],
         );
     }
 
