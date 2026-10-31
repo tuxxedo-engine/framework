@@ -317,5 +317,6 @@ interface ModelsManagerInterface
     public function applySoftDeleteFilter(
         WhereStatementInterface $query,
         ModelMetaDataInterface $metaData,
+        ?string $alias = null,
     ): void;
 }

@@ -17,6 +17,7 @@ use Fixture\Model\Aggregate\AggregateNote;
 use Fixture\Model\Aggregate\AggregateOrder;
 use Fixture\Model\Aggregate\AggregateOwner;
 use Fixture\Model\Aggregate\AggregatePolyTag;
+use Fixture\Model\Aggregate\AggregateRegion;
 use Fixture\Model\Aggregate\AggregateTag;
 use Tuxxedo\Database\Query\Statement\Join\JoinConditionInterface;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
@@ -40,23 +41,37 @@ abstract class AbstractRelationAggregateIntegrationTestCase extends AbstractMode
         $this->createAggregateNotesTable();
         $this->createAggregatePolyTagsTable();
         $this->createAggregateOwnerPolyTagPivotTable();
+        $this->createAggregateRegionsTable();
 
         $this->seedFixtures();
     }
 
     private function seedFixtures(): void
     {
+        $regionNorth = new AggregateRegion();
+        $regionNorth->label = 'north';
+        $savedNorth = $this->modelsManager->save($regionNorth);
+        $regionNorthId = $savedNorth->id ?? throw new \LogicException('region north id missing');
+
+        $regionSouth = new AggregateRegion();
+        $regionSouth->label = 'south';
+        $savedSouth = $this->modelsManager->save($regionSouth);
+        $regionSouthId = $savedSouth->id ?? throw new \LogicException('region south id missing');
+
         $ownerOne = new AggregateOwner();
+        $ownerOne->regionId = $regionNorthId;
         $ownerOne->label = 'one';
         $savedOne = $this->modelsManager->save($ownerOne);
         $this->ownerOneId = $savedOne->id ?? throw new \LogicException('owner one id missing');
 
         $ownerTwo = new AggregateOwner();
+        $ownerTwo->regionId = $regionNorthId;
         $ownerTwo->label = 'two';
         $savedTwo = $this->modelsManager->save($ownerTwo);
         $this->ownerTwoId = $savedTwo->id ?? throw new \LogicException('owner two id missing');
 
         $ownerEmpty = new AggregateOwner();
+        $ownerEmpty->regionId = $regionSouthId;
         $ownerEmpty->label = 'empty';
         $savedEmpty = $this->modelsManager->save($ownerEmpty);
         $this->ownerEmptyId = $savedEmpty->id ?? throw new \LogicException('owner empty id missing');
@@ -539,20 +554,77 @@ abstract class AbstractRelationAggregateIntegrationTestCase extends AbstractMode
         );
     }
 
-    public function testWhereHasCountThresholdOnNestedPathThrows(): void
+    public function testWhereHasCountThresholdOnNestedPath(): void
     {
-        try {
-            (void) $this->modelsManager
-                ->query(AggregateOwner::class)
-                ->whereHas(
-                    relationName: 'orders.owner',
-                    count: 2,
-                );
+        self::assertSame(
+            [
+                'north',
+            ],
+            $this->regionLabels(
+                $this->modelsManager
+                    ->query(AggregateRegion::class)
+                    ->whereHas(
+                        relationName: 'owners.orders',
+                        count: 5,
+                    ),
+            ),
+        );
 
-            self::fail('Expected ModelException for a count threshold on a nested path');
-        } catch (ModelException $exception) {
-            self::assertStringContainsString('nested paths are not supported', $exception->getMessage());
-        }
+        self::assertSame(
+            [
+                'south',
+            ],
+            $this->regionLabels(
+                $this->modelsManager
+                    ->query(AggregateRegion::class)
+                    ->whereHas(
+                        relationName: 'owners.orders',
+                        operator: '<',
+                        count: 1,
+                    ),
+            ),
+        );
+    }
+
+    public function testWhereHasFiltersMorphManyByType(): void
+    {
+        $foreignNote = new AggregateNote();
+        $foreignNote->hostType = AggregateTag::class;
+        $foreignNote->hostId = $this->ownerEmptyId;
+        $foreignNote->length = 1;
+        (void) $this->modelsManager->save($foreignNote);
+
+        self::assertSame(
+            [
+                'one',
+                'two',
+            ],
+            $this->labels(
+                $this->modelsManager
+                    ->query(AggregateOwner::class)
+                    ->whereHas('notes')
+                    ->orderBy('id'),
+            ),
+        );
+    }
+
+    public function testWhereHasFiltersMorphToManyByType(): void
+    {
+        self::assertSame(
+            [
+                'two',
+            ],
+            $this->labels(
+                $this->modelsManager
+                    ->query(AggregateOwner::class)
+                    ->whereHas(
+                        relationName: 'polyTags',
+                        callback: static function (RelationSubqueryInterface $polyTags): void {
+                            $polyTags->where('aggregate_poly_tags.realm', 'size');
+                        },
+                    ),
+            ),
+        );
     }
 
     public function testOrWhereHasCombinesWithOr(): void
@@ -783,6 +855,343 @@ abstract class AbstractRelationAggregateIntegrationTestCase extends AbstractMode
         self::assertSame(3, $byId[$this->ownerOneId]->ordersCount);
     }
 
+    public function testWithCountOnNestedPathCountsLastSegmentRows(): void
+    {
+        $regions = $this->regionsByLabel(
+            $this->modelsManager
+                ->query(AggregateRegion::class)
+                ->withCount(relationName: 'owners.orders'),
+        );
+
+        self::assertSame(5, $regions['north']->ordersCount);
+        self::assertSame(0, $regions['south']->ordersCount);
+    }
+
+    public function testWithSumOnNestedPath(): void
+    {
+        $regions = $this->regionsByLabel(
+            $this->modelsManager
+                ->query(AggregateRegion::class)
+                ->withSum(relationName: 'owners.orders', column: 'amount'),
+        );
+
+        self::assertSame(360, $regions['north']->ordersTotal);
+        self::assertNull($regions['south']->ordersTotal);
+    }
+
+    public function testNestedPathCallbackFiltersLastSegment(): void
+    {
+        $regions = $this->regionsByLabel(
+            $this->modelsManager
+                ->query(AggregateRegion::class)
+                ->withSum(
+                    relationName: 'owners.orders',
+                    column: 'amount',
+                    callback: static function (RelationSubqueryInterface $orders): void {
+                        $orders->where('aggregate_orders.amount', 20, '>=');
+                    },
+                ),
+        );
+
+        self::assertSame(350, $regions['north']->ordersTotal);
+    }
+
+    public function testNestedPathCallbackFiltersMiddleSegment(): void
+    {
+        $regions = $this->regionsByLabel(
+            $this->modelsManager
+                ->query(AggregateRegion::class)
+                ->withSum(
+                    relationName: 'owners.orders',
+                    column: 'amount',
+                    callback: static function (RelationSubqueryInterface $orders): void {
+                        $orders->where('aggregate_owners.label', 'two');
+                    },
+                ),
+        );
+
+        self::assertSame(300, $regions['north']->ordersTotal);
+    }
+
+    public function testNestedPathCallbackWhereHasResolvesFromLastSegment(): void
+    {
+        $regions = $this->regionsByLabel(
+            $this->modelsManager
+                ->query(AggregateRegion::class)
+                ->withCount(
+                    relationName: 'owners.orders',
+                    callback: static function (RelationSubqueryInterface $orders): void {
+                        $orders->whereHas(
+                            relationName: 'owner',
+                            callback: static function (RelationSubqueryInterface $owner): void {
+                                $owner->where('aggregate_owners_2.label', 'one');
+                            },
+                        );
+                    },
+                ),
+        );
+
+        self::assertSame(3, $regions['north']->ordersCount);
+    }
+
+    public function testNestedPathExcludesSoftDeletedRows(): void
+    {
+        $order = new AggregateOrder();
+        $order->ownerId = $this->ownerOneId;
+        $order->amount = 1000;
+        $saved = $this->modelsManager->save($order);
+
+        self::assertTrue($this->modelsManager->delete($saved));
+
+        $regions = $this->regionsByLabel(
+            $this->modelsManager
+                ->query(AggregateRegion::class)
+                ->withSum(relationName: 'owners.orders', column: 'amount'),
+        );
+
+        self::assertSame(360, $regions['north']->ordersTotal);
+    }
+
+    public function testNestedPathThroughFirstSegmentWithRepeatedTable(): void
+    {
+        $regions = $this->regionsByLabel(
+            $this->modelsManager
+                ->query(AggregateRegion::class)
+                ->withCount(relationName: 'orders.owner'),
+        );
+
+        self::assertSame(5, $regions['north']->orderOwnersCount);
+        self::assertSame(0, $regions['south']->orderOwnersCount);
+    }
+
+    public function testWithCountDistinctOnNestedPath(): void
+    {
+        $regions = $this->regionsByLabel(
+            $this->modelsManager
+                ->query(AggregateRegion::class)
+                ->withCount(
+                    relationName: 'orders.owner',
+                    distinct: true,
+                ),
+        );
+
+        self::assertSame(2, $regions['north']->orderOwnersCount);
+    }
+
+    public function testWithCountDistinctOnRepeatedTable(): void
+    {
+        $owners = $this->indexById(
+            $this->modelsManager
+                ->query(AggregateOwner::class)
+                ->withCount(
+                    relationName: 'orders.owner',
+                    distinct: true,
+                )
+                ->fetchAll(),
+        );
+
+        self::assertSame(1, $owners[$this->ownerOneId]->orderOwnersCount);
+        self::assertSame(0, $owners[$this->ownerEmptyId]->orderOwnersCount);
+    }
+
+    public function testWithCountDistinctOnCompositeKeyThrows(): void
+    {
+        try {
+            (void) $this->modelsManager
+                ->query(AggregateOwner::class)
+                ->withCount(
+                    relationName: 'polyTags',
+                    distinct: true,
+                );
+
+            self::fail('Expected ModelException was not thrown');
+        } catch (ModelException $exception) {
+            self::assertStringContainsString(
+                'composite primary key',
+                $exception->getMessage(),
+            );
+        }
+    }
+
+    public function testNestedPathEndingInBelongsToMany(): void
+    {
+        $regions = $this->regionsByLabel(
+            $this->modelsManager
+                ->query(AggregateRegion::class)
+                ->withCount(relationName: 'owners.tags'),
+        );
+
+        self::assertSame(3, $regions['north']->tagsCount);
+        self::assertSame(0, $regions['south']->tagsCount);
+    }
+
+    public function testNestedPathEndingInMorphMany(): void
+    {
+        $regions = $this->regionsByLabel(
+            $this->modelsManager
+                ->query(AggregateRegion::class)
+                ->withSum(relationName: 'owners.notes', column: 'length'),
+        );
+
+        self::assertSame(120, $regions['north']->notesLength);
+    }
+
+    public function testNestedPathEndingInMorphToMany(): void
+    {
+        $regions = $this->regionsByLabel(
+            $this->modelsManager
+                ->query(AggregateRegion::class)
+                ->withSum(relationName: 'owners.polyTags', column: 'weight'),
+        );
+
+        self::assertSame(120, $regions['north']->polyTagsWeight);
+    }
+
+    public function testNestedPathJoinsBelongsToManySegment(): void
+    {
+        $order = $this->modelsManager
+            ->query(AggregateOrder::class)
+            ->withCount(relationName: 'owner.tags')
+            ->where('amount', 10)
+            ->first();
+
+        self::assertNotNull($order);
+        self::assertSame(2, $order->ownerTagsCount);
+    }
+
+    public function testNestedPathJoinsMorphManySegment(): void
+    {
+        $order = $this->modelsManager
+            ->query(AggregateOrder::class)
+            ->withSum(relationName: 'owner.notes', column: 'length')
+            ->where('amount', 100)
+            ->first();
+
+        self::assertNotNull($order);
+        self::assertSame(100, $order->ownerNotesLength);
+    }
+
+    public function testNestedPathJoinsMorphToManySegment(): void
+    {
+        $order = $this->modelsManager
+            ->query(AggregateOrder::class)
+            ->withSum(relationName: 'owner.polyTags', column: 'weight')
+            ->where('amount', 10)
+            ->first();
+
+        self::assertNotNull($order);
+        self::assertSame(20, $order->ownerPolyTagsWeight);
+    }
+
+    public function testNestedPathJoinsRepeatedTable(): void
+    {
+        $order = $this->modelsManager
+            ->query(AggregateOrder::class)
+            ->withCount(relationName: 'owner.orders')
+            ->where('amount', 200)
+            ->first();
+
+        self::assertNotNull($order);
+        self::assertSame(2, $order->siblingOrdersCount);
+    }
+
+    public function testNestedPathJoinsThroughSegment(): void
+    {
+        $owners = $this->indexById(
+            $this->modelsManager
+                ->query(AggregateOwner::class)
+                ->withCount(relationName: 'region.orders')
+                ->fetchAll(),
+        );
+
+        self::assertSame(5, $owners[$this->ownerOneId]->regionOrdersCount);
+        self::assertSame(0, $owners[$this->ownerEmptyId]->regionOrdersCount);
+    }
+
+    public function testThreeSegmentPath(): void
+    {
+        $order = $this->modelsManager
+            ->query(AggregateOrder::class)
+            ->withCount(relationName: 'owner.region.orders')
+            ->where('amount', 10)
+            ->first();
+
+        self::assertNotNull($order);
+        self::assertSame(5, $order->regionOrdersCount);
+    }
+
+    public function testNestedPathStartingWithBelongsToMany(): void
+    {
+        $tags = $this->modelsManager
+            ->query(AggregateTag::class)
+            ->withSum(relationName: 'owners.orders', column: 'amount');
+
+        $totals = [];
+
+        foreach ($tags as $tag) {
+            $totals[$tag->label] = $tag->ownerOrdersTotal;
+        }
+
+        self::assertSame(
+            [
+                'alpha' => 60,
+                'beta' => 60,
+                'gamma' => 300,
+            ],
+            $totals,
+        );
+    }
+
+    public function testOrderByCountOnNestedPath(): void
+    {
+        self::assertSame(
+            [
+                'north',
+                'south',
+            ],
+            $this->regionLabels(
+                $this->modelsManager
+                    ->query(AggregateRegion::class)
+                    ->orderByCount(
+                        relationName: 'owners.orders',
+                        direction: OrderDirection::DESC,
+                    ),
+            ),
+        );
+    }
+
+    public function testWithCountOnNestedMorphToSegmentThrows(): void
+    {
+        try {
+            (void) $this->modelsManager
+                ->query(AggregateOwner::class)
+                ->withCount(relationName: 'notes.host');
+
+            self::fail('Expected ModelException was not thrown');
+        } catch (ModelException $exception) {
+            self::assertStringContainsString(
+                'MorphTo aggregates are not supported',
+                $exception->getMessage(),
+            );
+        }
+    }
+
+    public function testNestedPathWithoutMatchingSlotSuggestsUnderscoredAlias(): void
+    {
+        try {
+            (void) $this->modelsManager
+                ->query(AggregateRegion::class)
+                ->withMax(relationName: 'owners.orders', column: 'amount');
+
+            self::fail('Expected ModelException was not thrown');
+        } catch (ModelException $exception) {
+            self::assertStringContainsString(
+                'owners_orders_max_amount',
+                $exception->getMessage(),
+            );
+        }
+    }
+
     private function seedOwnerTagPivot(
         int $ownerId,
         int $tagId,
@@ -838,6 +1247,38 @@ abstract class AbstractRelationAggregateIntegrationTestCase extends AbstractMode
 
         foreach ($owners as $owner) {
             $labels[] = $owner->label;
+        }
+
+        return $labels;
+    }
+
+    /**
+     * @param iterable<AggregateRegion> $regions
+     * @return array<string, AggregateRegion>
+     */
+    private function regionsByLabel(
+        iterable $regions,
+    ): array {
+        $indexed = [];
+
+        foreach ($regions as $region) {
+            $indexed[$region->label] = $region;
+        }
+
+        return $indexed;
+    }
+
+    /**
+     * @param iterable<AggregateRegion> $regions
+     * @return list<string>
+     */
+    private function regionLabels(
+        iterable $regions,
+    ): array {
+        $labels = [];
+
+        foreach ($regions as $region) {
+            $labels[] = $region->label;
         }
 
         return $labels;

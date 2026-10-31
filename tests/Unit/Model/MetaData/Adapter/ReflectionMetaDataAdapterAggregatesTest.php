@@ -13,8 +13,12 @@ declare(strict_types=1);
 
 namespace Unit\Model\MetaData\Adapter;
 
+use Fixture\Model\Aggregate\AggregateRegion;
 use Fixture\Model\Broken\AggregateCountUnexpectedColumn;
 use Fixture\Model\Broken\AggregateDuplicateAlias;
+use Fixture\Model\Broken\AggregateNestedNonRelation;
+use Fixture\Model\Broken\AggregateNestedOnMorphTo;
+use Fixture\Model\Broken\AggregateNestedUnknownRelation;
 use Fixture\Model\Broken\AggregateNonNullableSlot;
 use Fixture\Model\Broken\AggregateNonNumericSlot;
 use Fixture\Model\Broken\AggregateOnMorphTo;
@@ -22,6 +26,7 @@ use Fixture\Model\Broken\AggregateSumMissingColumn;
 use Fixture\Model\Broken\AggregateUnknownRelation;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Model\MetaData\Adapter\ReflectionMetaDataAdapter;
+use Tuxxedo\Model\MetaData\ModelRelationAggregateInterface;
 use Tuxxedo\Model\ModelException;
 
 class ReflectionMetaDataAdapterAggregatesTest extends TestCase
@@ -64,6 +69,43 @@ class ReflectionMetaDataAdapterAggregatesTest extends TestCase
     {
         $this->assertRejectsModelWithMessage(
             modelClass: AggregateOnMorphTo::class,
+            needle: 'MorphTo aggregates are not supported',
+        );
+    }
+
+    public function testAcceptsDottedAggregateRelationPath(): void
+    {
+        $relations = \array_map(
+            static fn (ModelRelationAggregateInterface $aggregate): string => $aggregate->relation,
+            $this->adapter->getModel(AggregateRegion::class)->aggregates,
+        );
+
+        self::assertContains(
+            'owners.orders',
+            $relations,
+        );
+    }
+
+    public function testRejectsDottedAggregateWithUnknownSegment(): void
+    {
+        $this->assertRejectsModelWithMessage(
+            modelClass: AggregateNestedUnknownRelation::class,
+            needle: 'references relation "items.missing"',
+        );
+    }
+
+    public function testRejectsDottedAggregateWithColumnSegment(): void
+    {
+        $this->assertRejectsModelWithMessage(
+            modelClass: AggregateNestedNonRelation::class,
+            needle: 'references relation "items.amount"',
+        );
+    }
+
+    public function testRejectsDottedAggregateThroughMorphTo(): void
+    {
+        $this->assertRejectsModelWithMessage(
+            modelClass: AggregateNestedOnMorphTo::class,
             needle: 'MorphTo aggregates are not supported',
         );
     }

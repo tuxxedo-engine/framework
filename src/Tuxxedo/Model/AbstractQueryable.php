@@ -21,9 +21,7 @@ use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
-use Tuxxedo\Model\Attribute\Relation\HasMany;
 use Tuxxedo\Model\Attribute\Relation\HasManyThrough;
-use Tuxxedo\Model\Attribute\Relation\HasOne;
 use Tuxxedo\Model\Attribute\Relation\HasOneThrough;
 use Tuxxedo\Model\Attribute\Relation\MorphMany;
 use Tuxxedo\Model\Attribute\Relation\MorphOne;
@@ -32,6 +30,8 @@ use Tuxxedo\Model\MetaData\ModelCompositeKeyInterface;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelPrimaryKeyInterface;
 use Tuxxedo\Model\MetaData\ModelRelationInterface;
+use Tuxxedo\Model\MetaData\ModelRelationLink;
+use Tuxxedo\Model\MetaData\ModelRelationLinkInterface;
 use Tuxxedo\Validator\Attribute\SkipCascade;
 
 /**
@@ -747,6 +747,7 @@ abstract class AbstractQueryable implements QueryableInterface
         string $relationName,
         ?string $alias = null,
         ?\Closure $callback = null,
+        bool $distinct = false,
     ): static {
         return $this->withAggregate(
             function: AggregateFunction::COUNT,
@@ -754,6 +755,7 @@ abstract class AbstractQueryable implements QueryableInterface
             column: null,
             alias: $alias,
             callback: $callback,
+            distinct: $distinct,
         );
     }
 
@@ -936,6 +938,7 @@ abstract class AbstractQueryable implements QueryableInterface
         ?string $column,
         ?string $alias,
         ?\Closure $callback,
+        bool $distinct = false,
     ): static {
         $methodName = 'with' . \ucfirst(\strtolower($function->value));
 
@@ -946,7 +949,15 @@ abstract class AbstractQueryable implements QueryableInterface
         }
 
         $parentMetaData = $this->manager->metaData->getModel($this->modelClass);
-        $subquery = $this->buildAggregateSubquery($function, $relationName, $column, $callback, $methodName);
+        $subquery = $this->buildAggregateSubquery(
+            function: $function,
+            relationName: $relationName,
+            column: $column,
+            callback: $callback,
+            methodName: $methodName,
+            distinct: $distinct,
+        );
+
         $matchingSlotAlias = null;
 
         foreach ($parentMetaData->aggregates as $aggregate) {
@@ -1034,6 +1045,7 @@ abstract class AbstractQueryable implements QueryableInterface
         ?string $column,
         ?\Closure $callback,
         string $methodName,
+        bool $distinct = false,
     ): SelectStatementInterface {
         if ($this->manager === null || $this->modelClass === null) {
             throw ModelException::fromChainMethodRequiresModelContext(
@@ -1041,36 +1053,37 @@ abstract class AbstractQueryable implements QueryableInterface
             );
         }
 
-        $manager = $this->manager;
-        $parentMetaData = $manager->metaData->getModel($this->modelClass);
-
-        foreach ($parentMetaData->morphToRelations as $morphTo) {
-            if ($morphTo->property === $relationName) {
-                throw ModelException::fromAggregateOnMorphToViaQueryable(
-                    modelClass: $parentMetaData->model,
-                    relation: $relationName,
-                    method: $methodName,
-                );
-            }
-        }
-
-        $relation = $this->resolveRelation($parentMetaData, $relationName);
-        $targetMetaData = $manager->metaData->getModel($relation->relatedClass);
-
-        $subquery = $this->buildRelationExistsSubquery(
+        $chain = $this->buildRelationJoinChain(
+            manager: $this->manager,
+            parentMetaData: $this->manager->metaData->getModel($this->modelClass),
             relationName: $relationName,
             callback: $callback,
             includeDeleted: false,
+            methodName: $methodName,
         );
 
-        $subquery->selectAggregate(
+        if ($function->requiresColumn()) {
+            $aggregateColumn = $chain['qualifier'] . '.' . $column;
+        } elseif ($distinct) {
+            $keyColumns = $this->resolvePkColumns($chain['target']);
+
+            if (\sizeof($keyColumns) !== 1) {
+                throw ModelException::fromRelationCountDistinctOnCompositeKey(
+                    modelClass: $this->modelClass,
+                    relation: $relationName,
+                );
+            }
+
+            $aggregateColumn = $chain['qualifier'] . '.' . $keyColumns[0];
+        } else {
+            $aggregateColumn = null;
+        }
+
+        return $chain['subquery']->selectAggregate(
             function: $function,
-            column: $function->requiresColumn()
-                ? $targetMetaData->table . '.' . $column
-                : null,
+            column: $aggregateColumn,
+            distinct: $distinct,
         );
-
-        return $subquery;
     }
 
     /**
@@ -1081,14 +1094,22 @@ abstract class AbstractQueryable implements QueryableInterface
         ?\Closure $callback,
         bool $includeDeleted,
     ): SelectStatementInterface {
-        if (\str_contains($relationName, '.')) {
-            throw ModelException::fromRelationCountOnNestedPath(
-                modelClass: $this->modelClass ?? static::class,
-                relation: $relationName,
+        if ($this->manager === null || $this->modelClass === null) {
+            throw ModelException::fromChainMethodRequiresModelContext(
+                method: 'whereHas',
             );
         }
 
-        return $this->buildRelationExistsSubquery($relationName, $callback, $includeDeleted)->selectAggregate(AggregateFunction::COUNT);
+        $chain = $this->buildRelationJoinChain(
+            manager: $this->manager,
+            parentMetaData: $this->manager->metaData->getModel($this->modelClass),
+            relationName: $relationName,
+            callback: $callback,
+            includeDeleted: $includeDeleted,
+            methodName: 'whereHas',
+        );
+
+        return $chain['subquery']->selectAggregate(AggregateFunction::COUNT);
     }
 
     private function defaultAggregateAliasFor(
@@ -1096,9 +1117,11 @@ abstract class AbstractQueryable implements QueryableInterface
         string $relationName,
         ?string $column,
     ): string {
+        $prefix = \str_replace('.', '_', $relationName);
+
         return $function->requiresColumn()
-            ? $relationName . '_' . \strtolower($function->value) . '_' . ($column ?? '')
-            : $relationName . '_count';
+            ? $prefix . '_' . \strtolower($function->value) . '_' . ($column ?? '')
+            : $prefix . '_count';
     }
 
     /**
@@ -1263,9 +1286,15 @@ abstract class AbstractQueryable implements QueryableInterface
             );
         }
 
+        $parentMetaData = $this->manager->metaData->getModel($this->modelClass);
+
         return $this->buildRelationExistsChain(
             manager: $this->manager,
-            parentMetaData: $this->manager->metaData->getModel($this->modelClass),
+            parentMetaData: $parentMetaData,
+            parentQualifier: $parentMetaData->table,
+            scope: [
+                $parentMetaData->table,
+            ],
             relationName: $relationName,
             callback: $callback,
             includeDeleted: $includeDeleted,
@@ -1273,11 +1302,14 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
+     * @param list<string> $scope
      * @param (\Closure(RelationSubqueryInterface): void)|null $callback
      */
     private function buildRelationExistsChain(
         ModelsManagerInterface $manager,
         ModelMetaDataInterface $parentMetaData,
+        string $parentQualifier,
+        array $scope,
         string $relationName,
         ?\Closure $callback,
         bool $includeDeleted,
@@ -1286,16 +1318,50 @@ abstract class AbstractQueryable implements QueryableInterface
         $innermost = null;
 
         foreach (\explode('.', $relationName) as $segment) {
-            $relation = $this->resolveRelation($parentMetaData, $segment);
-            $targetMetaData = $manager->metaData->getModel($relation->relatedClass);
-
-            $subquery = $this->buildSingleRelationExistsSubquery(
+            $link = $this->relationLink(
                 manager: $manager,
                 parentMetaData: $parentMetaData,
-                targetMetaData: $targetMetaData,
-                relation: $relation,
-                includeDeleted: $includeDeleted,
+                relation: $this->resolveRelation($parentMetaData, $segment),
             );
+
+            $targetQualifier = $this->allocateQualifier($link->target->table, $scope);
+            $throughQualifier = $link->throughTable !== null
+                ? $this->allocateQualifier($link->throughTable, $scope)
+                : null;
+
+            $subquery = $this->createRelationSubquery(
+                manager: $manager,
+                table: $link->target->table,
+                qualifier: $targetQualifier,
+                metaData: $link->target,
+                scope: $scope,
+            );
+
+            $ownerQualifier = $targetQualifier;
+
+            if ($link->throughTable !== null && $throughQualifier !== null) {
+                $this->joinLinkThrough($subquery, $link, $link->throughTable, $throughQualifier, $targetQualifier);
+
+                $ownerQualifier = $throughQualifier;
+            }
+
+            foreach ($link->filters as [$filterColumn, $filterValue]) {
+                $subquery->where(
+                    column: $ownerQualifier . '.' . $filterColumn,
+                    value: $filterValue,
+                );
+            }
+
+            foreach ($link->parentOn as [$ownerColumn, $parentColumn]) {
+                $subquery->whereColumn(
+                    column: $ownerQualifier . '.' . $ownerColumn,
+                    other: $parentQualifier . '.' . $parentColumn,
+                );
+            }
+
+            if (!$includeDeleted) {
+                $this->applyLinkSoftDeletes($manager, $subquery, $link, $targetQualifier, $throughQualifier);
+            }
 
             if ($innermost === null) {
                 $root = $subquery;
@@ -1304,12 +1370,13 @@ abstract class AbstractQueryable implements QueryableInterface
             }
 
             $innermost = $subquery;
-            $parentMetaData = $targetMetaData;
+            $parentMetaData = $link->target;
+            $parentQualifier = $targetQualifier;
         }
 
         /**
-         * @var RelationSubqueryInterface $root
-         * @var RelationSubqueryInterface $innermost
+         * @var RelationSubquery $root
+         * @var RelationSubquery $innermost
          */
         if ($callback !== null) {
             $innermost->whereScoped($callback);
@@ -1318,79 +1385,311 @@ abstract class AbstractQueryable implements QueryableInterface
         return $root;
     }
 
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     * @return array{subquery: RelationSubquery, target: ModelMetaDataInterface, qualifier: string}
+     */
+    private function buildRelationJoinChain(
+        ModelsManagerInterface $manager,
+        ModelMetaDataInterface $parentMetaData,
+        string $relationName,
+        ?\Closure $callback,
+        bool $includeDeleted,
+        string $methodName,
+    ): array {
+        $scope = [
+            $parentMetaData->table,
+        ];
+
+        $parentQualifier = $parentMetaData->table;
+        $steps = [];
+
+        foreach (\explode('.', $relationName) as $segment) {
+            foreach ($parentMetaData->morphToRelations as $morphTo) {
+                if ($morphTo->property === $segment) {
+                    throw ModelException::fromAggregateOnMorphToViaQueryable(
+                        modelClass: $parentMetaData->model,
+                        relation: $segment,
+                        method: $methodName,
+                    );
+                }
+            }
+
+            $link = $this->relationLink(
+                manager: $manager,
+                parentMetaData: $parentMetaData,
+                relation: $this->resolveRelation($parentMetaData, $segment),
+            );
+
+            $targetQualifier = $this->allocateQualifier($link->target->table, $scope);
+
+            $steps[] = [
+                'link' => $link,
+                'parentQualifier' => $parentQualifier,
+                'targetQualifier' => $targetQualifier,
+                'throughQualifier' => $link->throughTable !== null
+                    ? $this->allocateQualifier($link->throughTable, $scope)
+                    : null,
+            ];
+
+            $parentMetaData = $link->target;
+            $parentQualifier = $targetQualifier;
+        }
+
+        $first = $steps[0];
+
+        $subquery = $this->createRelationSubquery(
+            manager: $manager,
+            table: $first['link']->target->table,
+            qualifier: $first['targetQualifier'],
+            metaData: $parentMetaData,
+            scope: $scope,
+            factoryQualifier: $parentQualifier,
+        );
+
+        foreach ($steps as $index => $step) {
+            $link = $step['link'];
+            $targetQualifier = $step['targetQualifier'];
+            $throughQualifier = $step['throughQualifier'];
+            $ownerQualifier = $throughQualifier ?? $targetQualifier;
+
+            if ($index === 0) {
+                if ($link->throughTable !== null && $throughQualifier !== null) {
+                    $this->joinLinkThrough($subquery, $link, $link->throughTable, $throughQualifier, $targetQualifier);
+                }
+
+                foreach ($link->filters as [$filterColumn, $filterValue]) {
+                    $subquery->where(
+                        column: $ownerQualifier . '.' . $filterColumn,
+                        value: $filterValue,
+                    );
+                }
+
+                foreach ($link->parentOn as [$ownerColumn, $parentColumn]) {
+                    $subquery->whereColumn(
+                        column: $ownerQualifier . '.' . $ownerColumn,
+                        other: $step['parentQualifier'] . '.' . $parentColumn,
+                    );
+                }
+
+                continue;
+            }
+
+            $linkParentQualifier = $step['parentQualifier'];
+            $ownerTable = $link->throughTable ?? $link->target->table;
+
+            $subquery->innerJoin(
+                table: $ownerTable,
+                alias: $ownerQualifier !== $ownerTable ? $ownerQualifier : null,
+                on: static function (JoinConditionInterface $on) use ($link, $ownerQualifier, $linkParentQualifier): void {
+                    foreach ($link->parentOn as [$ownerColumn, $parentColumn]) {
+                        $on->whereColumn(
+                            column: $ownerQualifier . '.' . $ownerColumn,
+                            other: $linkParentQualifier . '.' . $parentColumn,
+                        );
+                    }
+
+                    foreach ($link->filters as [$filterColumn, $filterValue]) {
+                        $on->where(
+                            column: $ownerQualifier . '.' . $filterColumn,
+                            value: $filterValue,
+                        );
+                    }
+                },
+            );
+
+            if ($throughQualifier !== null) {
+                $subquery->innerJoin(
+                    table: $link->target->table,
+                    alias: $targetQualifier !== $link->target->table ? $targetQualifier : null,
+                    on: static function (JoinConditionInterface $on) use ($link, $throughQualifier, $targetQualifier): void {
+                        foreach ($link->throughOn as [$throughColumn, $targetColumn]) {
+                            $on->whereColumn(
+                                column: $throughQualifier . '.' . $throughColumn,
+                                other: $targetQualifier . '.' . $targetColumn,
+                            );
+                        }
+                    },
+                );
+            }
+        }
+
+        if (!$includeDeleted) {
+            foreach ($steps as $step) {
+                $this->applyLinkSoftDeletes($manager, $subquery, $step['link'], $step['targetQualifier'], $step['throughQualifier']);
+            }
+        }
+
+        if ($callback !== null) {
+            $subquery->whereScoped($callback);
+        }
+
+        return [
+            'subquery' => $subquery,
+            'target' => $parentMetaData,
+            'qualifier' => $parentQualifier,
+        ];
+    }
+
+    /**
+     * @param list<string> $scope
+     */
     private function createRelationSubquery(
         ModelsManagerInterface $manager,
+        string $table,
+        string $qualifier,
         ModelMetaDataInterface $metaData,
+        array $scope,
+        ?string $factoryQualifier = null,
     ): RelationSubquery {
-        return RelationSubquery::createForRelation(
-            table: $metaData->table,
+        $factoryQualifier ??= $qualifier;
+
+        $subquery = RelationSubquery::createForRelation(
+            table: $table,
             connection: $manager->connection,
             existsFactory: fn (string $relationName, ?\Closure $callback, bool $includeDeleted): SelectStatementInterface => $this->buildRelationExistsChain(
                 manager: $manager,
                 parentMetaData: $metaData,
+                parentQualifier: $factoryQualifier,
+                scope: $scope,
                 relationName: $relationName,
                 callback: $callback,
                 includeDeleted: $includeDeleted,
             ),
         );
+
+        if ($qualifier !== $table) {
+            $subquery->alias($qualifier);
+        }
+
+        return $subquery;
     }
 
-    private function buildSingleRelationExistsSubquery(
+    /**
+     * @param list<string> $scope
+     */
+    private function allocateQualifier(
+        string $table,
+        array &$scope,
+    ): string {
+        $qualifier = $table;
+        $occurrence = 1;
+
+        while (\in_array($qualifier, $scope, true)) {
+            $qualifier = $table . '_' . ++$occurrence;
+        }
+
+        $scope[] = $qualifier;
+
+        return $qualifier;
+    }
+
+    private function joinLinkThrough(
+        RelationSubquery $subquery,
+        ModelRelationLinkInterface $link,
+        string $throughTable,
+        string $throughQualifier,
+        string $targetQualifier,
+    ): void {
+        $subquery->innerJoin(
+            table: $throughTable,
+            alias: $throughQualifier !== $throughTable ? $throughQualifier : null,
+            on: static function (JoinConditionInterface $on) use ($link, $throughQualifier, $targetQualifier): void {
+                foreach ($link->throughOn as [$throughColumn, $targetColumn]) {
+                    $on->whereColumn(
+                        column: $throughQualifier . '.' . $throughColumn,
+                        other: $targetQualifier . '.' . $targetColumn,
+                    );
+                }
+            },
+        );
+    }
+
+    private function applyLinkSoftDeletes(
+        ModelsManagerInterface $manager,
+        WhereStatementInterface $subquery,
+        ModelRelationLinkInterface $link,
+        string $targetQualifier,
+        ?string $throughQualifier,
+    ): void {
+        $throughMetaData = $link->throughMetaData;
+
+        if ($throughMetaData !== null && $throughQualifier !== null) {
+            $manager->applySoftDeleteFilter($subquery, $throughMetaData, $throughQualifier);
+        }
+
+        $manager->applySoftDeleteFilter($subquery, $link->target, $targetQualifier);
+    }
+
+    private function relationLink(
         ModelsManagerInterface $manager,
         ModelMetaDataInterface $parentMetaData,
-        ModelMetaDataInterface $targetMetaData,
         ModelRelationInterface $relation,
-        bool $includeDeleted,
-    ): RelationSubqueryInterface {
+    ): ModelRelationLinkInterface {
         $attribute = $relation->attribute;
+        $targetMetaData = $manager->metaData->getModel($relation->relatedClass);
 
-        if ($attribute instanceof HasMany || $attribute instanceof HasOne) {
-            $subquery = $this->buildHasExistsSubquery(
-                manager: $manager,
-                parentMetaData: $parentMetaData,
-                targetMetaData: $targetMetaData,
-                relation: $relation,
+        if ($attribute instanceof HasManyThrough || $attribute instanceof HasOneThrough) {
+            $throughMetaData = $manager->metaData->getModel($attribute->through);
+
+            return new ModelRelationLink(
+                target: $targetMetaData,
+                parentOn: [
+                    [
+                        $attribute->firstKey,
+                        $attribute->localKey ?? $this->requirePrimaryKeyColumn($parentMetaData),
+                    ],
+                ],
+                throughTable: $throughMetaData->table,
+                throughMetaData: $throughMetaData,
+                throughOn: [
+                    [
+                        $attribute->secondLocalKey ?? $this->requirePrimaryKeyColumn($throughMetaData),
+                        $attribute->secondKey,
+                    ],
+                ],
             );
-        } elseif ($attribute instanceof BelongsTo) {
-            $subquery = $this->buildBelongsToExistsSubquery(
-                manager: $manager,
-                parentMetaData: $parentMetaData,
-                targetMetaData: $targetMetaData,
-                relation: $relation,
+        }
+
+        if ($attribute instanceof BelongsToMany || $attribute instanceof MorphToMany) {
+            $pivotSourceColumns = $relation->pivotSourceColumns;
+            $pivotTargetColumns = $relation->pivotTargetColumns;
+
+            if ($pivotSourceColumns === null || $pivotTargetColumns === null) {
+                // @codeCoverageIgnoreStart
+                throw ModelException::fromRelationNotFoundOnModel(
+                    modelClass: $parentMetaData->model,
+                    property: $relation->property,
+                );
+                // @codeCoverageIgnoreEnd
+            }
+
+            $parentKeyColumns = $this->resolvePkColumns($parentMetaData);
+            $targetKeyColumns = $this->resolvePkColumns($targetMetaData);
+
+            return new ModelRelationLink(
+                target: $targetMetaData,
+                parentOn: $this->pairColumns($pivotSourceColumns, $parentKeyColumns),
+                throughTable: $attribute->table,
+                throughOn: $this->pairColumns($pivotTargetColumns, $targetKeyColumns),
+                filters: $attribute instanceof MorphToMany
+                    ? [
+                        [
+                            $attribute->typeColumn,
+                            MorphTypeResolver::encode(
+                                class: $parentMetaData->model,
+                                typeMap: $attribute->typeMap,
+                            ),
+                        ],
+                    ]
+                    : [],
             );
-        } elseif ($attribute instanceof BelongsToMany) {
-            $subquery = $this->buildBelongsToManyExistsSubquery(
-                manager: $manager,
-                parentMetaData: $parentMetaData,
-                targetMetaData: $targetMetaData,
-                relation: $relation,
-                attribute: $attribute,
-            );
-        } elseif ($attribute instanceof HasManyThrough || $attribute instanceof HasOneThrough) {
-            $subquery = $this->buildHasThroughExistsSubquery(
-                manager: $manager,
-                parentMetaData: $parentMetaData,
-                targetMetaData: $targetMetaData,
-                attribute: $attribute,
-                includeDeleted: $includeDeleted,
-            );
-        } elseif ($attribute instanceof MorphOne || $attribute instanceof MorphMany) {
-            $subquery = $this->buildMorphExistsSubquery(
-                manager: $manager,
-                parentMetaData: $parentMetaData,
-                targetMetaData: $targetMetaData,
-                relation: $relation,
-                attribute: $attribute,
-            );
-        } elseif ($attribute instanceof MorphToMany) {
-            $subquery = $this->buildMorphToManyExistsSubquery(
-                manager: $manager,
-                parentMetaData: $parentMetaData,
-                targetMetaData: $targetMetaData,
-                relation: $relation,
-                attribute: $attribute,
-            );
-        } else {
+        }
+
+        $foreignKeyColumns = $relation->foreignKeyColumns;
+        $referencedKeyColumns = $relation->referencedKeyColumns;
+
+        if ($foreignKeyColumns === null || $referencedKeyColumns === null) {
             // @codeCoverageIgnoreStart
             throw ModelException::fromRelationNotFoundOnModel(
                 modelClass: $parentMetaData->model,
@@ -1399,11 +1698,44 @@ abstract class AbstractQueryable implements QueryableInterface
             // @codeCoverageIgnoreEnd
         }
 
-        if (!$includeDeleted) {
-            $manager->applySoftDeleteFilter($subquery, $targetMetaData);
+        return new ModelRelationLink(
+            target: $targetMetaData,
+            parentOn: $attribute instanceof BelongsTo
+                ? $this->pairColumns($referencedKeyColumns, $foreignKeyColumns)
+                : $this->pairColumns($foreignKeyColumns, $referencedKeyColumns),
+            filters: $attribute instanceof MorphOne || $attribute instanceof MorphMany
+                ? [
+                    [
+                        $attribute->typeColumn,
+                        MorphTypeResolver::encode(
+                            class: $parentMetaData->model,
+                            typeMap: $attribute->typeMap,
+                        ),
+                    ],
+                ]
+                : [],
+        );
+    }
+
+    /**
+     * @param non-empty-list<string> $columns
+     * @param non-empty-list<string> $otherColumns
+     * @return list<array{string, string}>
+     */
+    private function pairColumns(
+        array $columns,
+        array $otherColumns,
+    ): array {
+        $pairs = [];
+
+        foreach ($columns as $index => $column) {
+            $pairs[] = [
+                $column,
+                $otherColumns[$index],
+            ];
         }
 
-        return $subquery;
+        return $pairs;
     }
 
     private function resolveRelation(
@@ -1420,241 +1752,6 @@ abstract class AbstractQueryable implements QueryableInterface
             modelClass: $metaData->model,
             property: $relationName,
         );
-    }
-
-    private function buildHasExistsSubquery(
-        ModelsManagerInterface $manager,
-        ModelMetaDataInterface $parentMetaData,
-        ModelMetaDataInterface $targetMetaData,
-        ModelRelationInterface $relation,
-    ): RelationSubqueryInterface {
-        $foreignKeyColumns = $relation->foreignKeyColumns;
-        $referencedKeyColumns = $relation->referencedKeyColumns;
-
-        if ($foreignKeyColumns === null || $referencedKeyColumns === null) {
-            // @codeCoverageIgnoreStart
-            throw ModelException::fromRelationNotFoundOnModel(
-                modelClass: $parentMetaData->model,
-                property: $relation->property,
-            );
-            // @codeCoverageIgnoreEnd
-        }
-
-        $subquery = $this->createRelationSubquery($manager, $targetMetaData);
-
-        foreach ($foreignKeyColumns as $index => $foreignColumn) {
-            $localColumn = $referencedKeyColumns[$index];
-            $subquery->whereColumn(
-                column: $targetMetaData->table . '.' . $foreignColumn,
-                other: $parentMetaData->table . '.' . $localColumn,
-            );
-        }
-
-        return $subquery;
-    }
-
-    private function buildBelongsToExistsSubquery(
-        ModelsManagerInterface $manager,
-        ModelMetaDataInterface $parentMetaData,
-        ModelMetaDataInterface $targetMetaData,
-        ModelRelationInterface $relation,
-    ): RelationSubqueryInterface {
-        $foreignKeyColumns = $relation->foreignKeyColumns;
-        $referencedKeyColumns = $relation->referencedKeyColumns;
-
-        if ($foreignKeyColumns === null || $referencedKeyColumns === null) {
-            // @codeCoverageIgnoreStart
-            throw ModelException::fromRelationNotFoundOnModel(
-                modelClass: $parentMetaData->model,
-                property: $relation->property,
-            );
-            // @codeCoverageIgnoreEnd
-        }
-
-        $subquery = $this->createRelationSubquery($manager, $targetMetaData);
-
-        foreach ($referencedKeyColumns as $index => $ownerColumn) {
-            $foreignColumn = $foreignKeyColumns[$index];
-            $subquery->whereColumn(
-                column: $targetMetaData->table . '.' . $ownerColumn,
-                other: $parentMetaData->table . '.' . $foreignColumn,
-            );
-        }
-
-        return $subquery;
-    }
-
-    private function buildBelongsToManyExistsSubquery(
-        ModelsManagerInterface $manager,
-        ModelMetaDataInterface $parentMetaData,
-        ModelMetaDataInterface $targetMetaData,
-        ModelRelationInterface $relation,
-        BelongsToMany $attribute,
-    ): RelationSubqueryInterface {
-        $parentPkColumns = $this->resolvePkColumns($parentMetaData);
-        $targetPkColumns = $this->resolvePkColumns($targetMetaData);
-        $pivotSourceColumns = $relation->pivotSourceColumns;
-        $pivotTargetColumns = $relation->pivotTargetColumns;
-
-        if ($pivotSourceColumns === null || $pivotTargetColumns === null) {
-            // @codeCoverageIgnoreStart
-            throw ModelException::fromRelationNotFoundOnModel(
-                modelClass: $parentMetaData->model,
-                property: $relation->property,
-            );
-            // @codeCoverageIgnoreEnd
-        }
-
-        $subquery = $this->createRelationSubquery($manager, $targetMetaData)
-            ->innerJoin(
-                table: $attribute->table,
-                first: $attribute->table . '.' . $pivotTargetColumns[0],
-                second: $targetMetaData->table . '.' . $targetPkColumns[0],
-            );
-
-        $targetArity = \sizeof($pivotTargetColumns);
-
-        for ($index = 1; $index < $targetArity; $index++) {
-            $subquery->whereColumn(
-                column: $attribute->table . '.' . $pivotTargetColumns[$index],
-                other: $targetMetaData->table . '.' . $targetPkColumns[$index],
-            );
-        }
-
-        foreach ($pivotSourceColumns as $index => $pivotSourceColumn) {
-            $subquery->whereColumn(
-                column: $attribute->table . '.' . $pivotSourceColumn,
-                other: $parentMetaData->table . '.' . $parentPkColumns[$index],
-            );
-        }
-
-        return $subquery;
-    }
-
-    private function buildHasThroughExistsSubquery(
-        ModelsManagerInterface $manager,
-        ModelMetaDataInterface $parentMetaData,
-        ModelMetaDataInterface $targetMetaData,
-        HasManyThrough|HasOneThrough $attribute,
-        bool $includeDeleted,
-    ): RelationSubqueryInterface {
-        $throughMetaData = $manager->metaData->getModel($attribute->through);
-        $localKey = $attribute->localKey ?? $this->requirePrimaryKeyColumn($parentMetaData);
-        $secondLocalKey = $attribute->secondLocalKey ?? $this->requirePrimaryKeyColumn($throughMetaData);
-
-        $subquery = $this->createRelationSubquery($manager, $targetMetaData)
-            ->innerJoin(
-                table: $throughMetaData->table,
-                first: $targetMetaData->table . '.' . $attribute->secondKey,
-                second: $throughMetaData->table . '.' . $secondLocalKey,
-            )
-            ->whereColumn(
-                column: $throughMetaData->table . '.' . $attribute->firstKey,
-                other: $parentMetaData->table . '.' . $localKey,
-            );
-
-        if (!$includeDeleted) {
-            $manager->applySoftDeleteFilter($subquery, $throughMetaData);
-        }
-
-        return $subquery;
-    }
-
-    private function buildMorphExistsSubquery(
-        ModelsManagerInterface $manager,
-        ModelMetaDataInterface $parentMetaData,
-        ModelMetaDataInterface $targetMetaData,
-        ModelRelationInterface $relation,
-        MorphOne|MorphMany $attribute,
-    ): RelationSubqueryInterface {
-        $foreignKeyColumns = $relation->foreignKeyColumns;
-        $referencedKeyColumns = $relation->referencedKeyColumns;
-
-        if ($foreignKeyColumns === null || $referencedKeyColumns === null) {
-            // @codeCoverageIgnoreStart
-            throw ModelException::fromRelationNotFoundOnModel(
-                modelClass: $parentMetaData->model,
-                property: $relation->property,
-            );
-            // @codeCoverageIgnoreEnd
-        }
-
-        $typeValue = MorphTypeResolver::encode(
-            class: $parentMetaData->model,
-            typeMap: $attribute->typeMap,
-        );
-
-        $subquery = $this->createRelationSubquery($manager, $targetMetaData)
-            ->where(
-                column: $targetMetaData->table . '.' . $attribute->typeColumn,
-                value: $typeValue,
-            );
-
-        foreach ($foreignKeyColumns as $index => $foreignColumn) {
-            $localColumn = $referencedKeyColumns[$index];
-            $subquery->whereColumn(
-                column: $targetMetaData->table . '.' . $foreignColumn,
-                other: $parentMetaData->table . '.' . $localColumn,
-            );
-        }
-
-        return $subquery;
-    }
-
-    private function buildMorphToManyExistsSubquery(
-        ModelsManagerInterface $manager,
-        ModelMetaDataInterface $parentMetaData,
-        ModelMetaDataInterface $targetMetaData,
-        ModelRelationInterface $relation,
-        MorphToMany $attribute,
-    ): RelationSubqueryInterface {
-        $parentPkColumns = $this->resolvePkColumns($parentMetaData);
-        $targetPkColumns = $this->resolvePkColumns($targetMetaData);
-        $pivotSourceColumns = $relation->pivotSourceColumns;
-        $pivotTargetColumns = $relation->pivotTargetColumns;
-
-        if ($pivotSourceColumns === null || $pivotTargetColumns === null) {
-            // @codeCoverageIgnoreStart
-            throw ModelException::fromRelationNotFoundOnModel(
-                modelClass: $parentMetaData->model,
-                property: $relation->property,
-            );
-            // @codeCoverageIgnoreEnd
-        }
-
-        $typeValue = MorphTypeResolver::encode(
-            class: $parentMetaData->model,
-            typeMap: $attribute->typeMap,
-        );
-
-        $subquery = $this->createRelationSubquery($manager, $targetMetaData)
-            ->innerJoin(
-                table: $attribute->table,
-                first: $attribute->table . '.' . $pivotTargetColumns[0],
-                second: $targetMetaData->table . '.' . $targetPkColumns[0],
-            )
-            ->where(
-                column: $attribute->table . '.' . $attribute->typeColumn,
-                value: $typeValue,
-            );
-
-        $targetArity = \sizeof($pivotTargetColumns);
-
-        for ($index = 1; $index < $targetArity; $index++) {
-            $subquery->whereColumn(
-                column: $attribute->table . '.' . $pivotTargetColumns[$index],
-                other: $targetMetaData->table . '.' . $targetPkColumns[$index],
-            );
-        }
-
-        foreach ($pivotSourceColumns as $index => $pivotSourceColumn) {
-            $subquery->whereColumn(
-                column: $attribute->table . '.' . $pivotSourceColumn,
-                other: $parentMetaData->table . '.' . $parentPkColumns[$index],
-            );
-        }
-
-        return $subquery;
     }
 
     private function requirePrimaryKeyColumn(

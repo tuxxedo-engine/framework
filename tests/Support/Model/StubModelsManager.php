@@ -246,6 +246,7 @@ class StubModelsManager implements ModelsManagerInterface
     public function applySoftDeleteFilter(
         WhereStatementInterface $query,
         ModelMetaDataInterface $metaData,
+        ?string $alias = null,
     ): void {
         throw new \LogicException('Not implemented in stub');
     }

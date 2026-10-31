@@ -75,4 +75,26 @@ class AbstractQueryableAggregateGuardTest extends TestCase
             );
         }
     }
+
+    public function testWhereHasCountThresholdRequiresModelContext(): void
+    {
+        $relation = Relation::createFromBuilder(
+            loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => [],
+            countBuilder: static fn (array $criteria): int => 0,
+        );
+
+        try {
+            (void) $relation->whereHas(
+                relationName: 'tags',
+                count: 2,
+            );
+
+            self::fail('Expected ModelException was not thrown');
+        } catch (ModelException $exception) {
+            self::assertStringContainsString(
+                'whereHas',
+                $exception->getMessage(),
+            );
+        }
+    }
 }

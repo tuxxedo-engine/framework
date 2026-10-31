@@ -164,4 +164,6 @@ interface ModelSchemaProvider
     public function aggregatePolyTagsSchemaSql(): string;
 
     public function aggregateOwnerPolyTagPivotSchemaSql(): string;
+
+    public function aggregateRegionsSchemaSql(): string;
 }

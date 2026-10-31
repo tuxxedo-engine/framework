@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Integration\Model;
 
+use Fixture\Model\Category;
 use Fixture\Model\Country;
 use Fixture\Model\Post;
 use Fixture\Model\User;
@@ -204,6 +205,37 @@ abstract class AbstractQueryableIntegrationTestCase extends AbstractModelIntegra
             ->set(column: 'post_id', value: $postId)
             ->set(column: 'tag_id', value: $tagId)
             ->execute();
+    }
+
+    private function seedCategoryTree(): void
+    {
+        $this->createCategoriesTable();
+
+        foreach ([[1, null, 'root'], [2, 1, 'child'], [3, 2, 'grandchild']] as [$id, $parentId, $name]) {
+            $this->connection->insert(
+                table: 'categories',
+            )
+                ->set(column: 'id', value: $id)
+                ->set(column: 'parent_id', value: $parentId)
+                ->set(column: 'name', value: $name)
+                ->execute();
+        }
+    }
+
+    /**
+     * @param iterable<Category> $categories
+     * @return list<string>
+     */
+    private function categoryNames(
+        iterable $categories,
+    ): array {
+        $names = [];
+
+        foreach ($categories as $category) {
+            $names[] = $category->name;
+        }
+
+        return $names;
     }
 
     /**
@@ -1070,6 +1102,61 @@ abstract class AbstractQueryableIntegrationTestCase extends AbstractModelIntegra
 
         (void) $this->alicePosts()->whereHas(
             relationName: 'comments.nonExistent',
+        );
+    }
+
+    public function testWhereHasOnSelfReferencingRelationCorrelatesToOuterRow(): void
+    {
+        $this->seedCategoryTree();
+
+        self::assertSame(
+            [
+                'child',
+                'grandchild',
+            ],
+            $this->categoryNames(
+                $this->modelsManager
+                    ->query(Category::class)
+                    ->whereHas('parent')
+                    ->orderBy('id'),
+            ),
+        );
+    }
+
+    public function testWhereHasOnSelfReferencingRelationAliasesTheRelatedTable(): void
+    {
+        $this->seedCategoryTree();
+
+        self::assertSame(
+            [
+                'child',
+            ],
+            $this->categoryNames(
+                $this->modelsManager
+                    ->query(Category::class)
+                    ->whereHas(
+                        relationName: 'parent',
+                        callback: static function (RelationSubqueryInterface $parent): void {
+                            $parent->where('categories_2.name', 'root');
+                        },
+                    ),
+            ),
+        );
+    }
+
+    public function testWhereDoesntHaveOnSelfReferencingRelation(): void
+    {
+        $this->seedCategoryTree();
+
+        self::assertSame(
+            [
+                'grandchild',
+            ],
+            $this->categoryNames(
+                $this->modelsManager
+                    ->query(Category::class)
+                    ->whereDoesntHave('children'),
+            ),
         );
     }
 

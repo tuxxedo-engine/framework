@@ -653,6 +653,7 @@ class MysqlModelSchemaProvider implements ModelSchemaProvider
     {
         return 'CREATE TABLE aggregate_owners (' .
             'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'region_id INT NULL, ' .
             'label VARCHAR(64) NOT NULL DEFAULT \'\'' .
             ')';
     }
@@ -662,7 +663,8 @@ class MysqlModelSchemaProvider implements ModelSchemaProvider
         return 'CREATE TABLE aggregate_orders (' .
             'id INT AUTO_INCREMENT PRIMARY KEY, ' .
             'owner_id INT NOT NULL, ' .
-            'amount INT NOT NULL DEFAULT 0' .
+            'amount INT NOT NULL DEFAULT 0, ' .
+            'deleted_at VARCHAR(64) NULL' .
             ')';
     }
 
@@ -712,6 +714,14 @@ class MysqlModelSchemaProvider implements ModelSchemaProvider
             'poly_tag_realm VARCHAR(32) NOT NULL, ' .
             'poly_tag_code VARCHAR(32) NOT NULL, ' .
             'PRIMARY KEY (owner_type, owner_id, poly_tag_realm, poly_tag_code)' .
+            ')';
+    }
+
+    public function aggregateRegionsSchemaSql(): string
+    {
+        return 'CREATE TABLE aggregate_regions (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'label VARCHAR(64) NOT NULL DEFAULT \'\'' .
             ')';
     }
 }

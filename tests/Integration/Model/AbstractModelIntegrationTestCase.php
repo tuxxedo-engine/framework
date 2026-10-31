@@ -345,6 +345,11 @@ abstract class AbstractModelIntegrationTestCase extends TestCase
         $this->executeSchema($this->schemaProvider->aggregateOwnerPolyTagPivotSchemaSql());
     }
 
+    protected function createAggregateRegionsTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->aggregateRegionsSchemaSql());
+    }
+
     private function executeSchema(
         string $sql,
     ): void {

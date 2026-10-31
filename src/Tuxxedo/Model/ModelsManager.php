@@ -2882,6 +2882,7 @@ class ModelsManager implements ModelsManagerInterface
     public function applySoftDeleteFilter(
         WhereStatementInterface $query,
         ModelMetaDataInterface $metaData,
+        ?string $alias = null,
     ): void {
         $softDeleteBehaviors = $metaData->behaviorsOf(SoftDeleteBehaviorInterface::class);
 
@@ -2896,7 +2897,7 @@ class ModelsManager implements ModelsManagerInterface
             return; // @codeCoverageIgnore
         }
 
-        $query->whereNull($metaData->table . '.' . $column->column);
+        $query->whereNull(($alias ?? $metaData->table) . '.' . $column->column);
     }
 
     #[\NoDiscard]

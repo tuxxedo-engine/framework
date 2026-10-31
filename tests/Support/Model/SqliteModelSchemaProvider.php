@@ -653,6 +653,7 @@ class SqliteModelSchemaProvider implements ModelSchemaProvider
     {
         return 'CREATE TABLE aggregate_owners (' .
             'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
+            'region_id INTEGER NULL, ' .
             'label TEXT NOT NULL DEFAULT \'\'' .
             ')';
     }
@@ -662,7 +663,8 @@ class SqliteModelSchemaProvider implements ModelSchemaProvider
         return 'CREATE TABLE aggregate_orders (' .
             'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
             'owner_id INTEGER NOT NULL, ' .
-            'amount INTEGER NOT NULL DEFAULT 0' .
+            'amount INTEGER NOT NULL DEFAULT 0, ' .
+            'deleted_at TEXT NULL' .
             ')';
     }
 
@@ -712,6 +714,14 @@ class SqliteModelSchemaProvider implements ModelSchemaProvider
             'poly_tag_realm TEXT NOT NULL, ' .
             'poly_tag_code TEXT NOT NULL, ' .
             'PRIMARY KEY (owner_type, owner_id, poly_tag_realm, poly_tag_code)' .
+            ')';
+    }
+
+    public function aggregateRegionsSchemaSql(): string
+    {
+        return 'CREATE TABLE aggregate_regions (' .
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
+            'label TEXT NOT NULL DEFAULT \'\'' .
             ')';
     }
 }

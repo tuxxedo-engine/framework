@@ -13,9 +13,12 @@ declare(strict_types=1);
 
 namespace Fixture\Model\Aggregate;
 
+use Tuxxedo\Model\Attribute\Aggregate\SumAggregate;
 use Tuxxedo\Model\Attribute\Column\Integer;
 use Tuxxedo\Model\Attribute\Column\Varchar;
+use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
 use Tuxxedo\Model\Attribute\Table;
+use Tuxxedo\Model\Relation;
 
 #[Table(name: 'aggregate_tags')]
 class AggregateTag
@@ -25,4 +28,18 @@ class AggregateTag
 
     #[Varchar(length: 64)]
     public string $label = '';
+
+    /**
+     * @var Relation<AggregateOwner>|null
+     */
+    #[BelongsToMany(
+        related: AggregateOwner::class,
+        table: 'aggregate_owner_tag',
+        localKey: 'tag_id',
+        foreignKey: 'owner_id',
+    )]
+    public ?Relation $owners = null;
+
+    #[SumAggregate(relation: 'owners.orders', column: 'amount')]
+    public ?int $ownerOrdersTotal = null;
 }

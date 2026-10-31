@@ -368,6 +368,7 @@ interface QueryableInterface extends PagedInterface, \IteratorAggregate, \Counta
         string $relationName,
         ?string $alias = null,
         ?\Closure $callback = null,
+        bool $distinct = false,
     ): static;
 
     /**

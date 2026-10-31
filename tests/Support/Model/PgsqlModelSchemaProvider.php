@@ -653,6 +653,7 @@ class PgsqlModelSchemaProvider implements ModelSchemaProvider
     {
         return 'CREATE TABLE aggregate_owners (' .
             'id SERIAL PRIMARY KEY, ' .
+            'region_id INT NULL, ' .
             'label VARCHAR(64) NOT NULL DEFAULT \'\'' .
             ')';
     }
@@ -662,7 +663,8 @@ class PgsqlModelSchemaProvider implements ModelSchemaProvider
         return 'CREATE TABLE aggregate_orders (' .
             'id SERIAL PRIMARY KEY, ' .
             'owner_id INT NOT NULL, ' .
-            'amount INT NOT NULL DEFAULT 0' .
+            'amount INT NOT NULL DEFAULT 0, ' .
+            'deleted_at VARCHAR(64) NULL' .
             ')';
     }
 
@@ -712,6 +714,14 @@ class PgsqlModelSchemaProvider implements ModelSchemaProvider
             'poly_tag_realm VARCHAR(32) NOT NULL, ' .
             'poly_tag_code VARCHAR(32) NOT NULL, ' .
             'PRIMARY KEY (owner_type, owner_id, poly_tag_realm, poly_tag_code)' .
+            ')';
+    }
+
+    public function aggregateRegionsSchemaSql(): string
+    {
+        return 'CREATE TABLE aggregate_regions (' .
+            'id SERIAL PRIMARY KEY, ' .
+            'label VARCHAR(64) NOT NULL DEFAULT \'\'' .
             ')';
     }
 }

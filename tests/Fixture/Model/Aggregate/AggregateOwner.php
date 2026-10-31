@@ -20,6 +20,7 @@ use Tuxxedo\Model\Attribute\Aggregate\MinAggregate;
 use Tuxxedo\Model\Attribute\Aggregate\SumAggregate;
 use Tuxxedo\Model\Attribute\Column\Integer;
 use Tuxxedo\Model\Attribute\Column\Varchar;
+use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
 use Tuxxedo\Model\Attribute\Relation\HasMany;
 use Tuxxedo\Model\Attribute\Relation\MorphMany;
@@ -33,8 +34,14 @@ class AggregateOwner
     #[Integer(primaryKey: true, autoIncrement: true)]
     public ?int $id = null;
 
+    #[Integer(name: 'region_id')]
+    public ?int $regionId = null;
+
     #[Varchar(length: 64)]
     public string $label = '';
+
+    #[BelongsTo(related: AggregateRegion::class, foreignKey: 'region_id')]
+    public ?AggregateRegion $region = null;
 
     /**
      * @var Relation<AggregateOrder>|null
@@ -104,4 +111,10 @@ class AggregateOwner
 
     #[SumAggregate(relation: 'polyTags', column: 'weight')]
     public ?int $polyTagsWeight = null;
+
+    #[CountAggregate(relation: 'region.orders')]
+    public ?int $regionOrdersCount = null;
+
+    #[CountAggregate(relation: 'orders.owner')]
+    public ?int $orderOwnersCount = null;
 }

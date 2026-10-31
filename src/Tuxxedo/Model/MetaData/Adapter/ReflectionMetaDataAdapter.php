@@ -1825,33 +1825,14 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 }
 
                 $relationName = $attribute->relation;
-                $relationExists = false;
 
-                foreach ($relations as $relation) {
-                    if ($relation->property === $relationName) {
-                        $relationExists = true;
-
-                        break;
-                    }
-                }
-
-                if (!$relationExists) {
-                    foreach ($morphToRelations as $morphTo) {
-                        if ($morphTo->property === $relationName) {
-                            throw ModelException::fromAggregateOnMorphTo(
-                                modelClass: $class->name,
-                                property: $property->name,
-                                relation: $relationName,
-                            );
-                        }
-                    }
-
-                    throw ModelException::fromAggregateUnknownRelation(
-                        modelClass: $class->name,
-                        property: $property->name,
-                        relation: $relationName,
-                    );
-                }
+                $this->validateAggregateRelationPath(
+                    class: $class,
+                    property: $property->name,
+                    relationPath: $relationName,
+                    relations: $relations,
+                    morphToRelations: $morphToRelations,
+                );
 
                 if (!$property->isNullable()) {
                     throw ModelException::fromAggregateNotNullableSlot(
@@ -1897,6 +1878,84 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         }
 
         return $aggregates;
+    }
+
+    /**
+     * @param ModelRelationInterface[] $relations
+     * @param list<MorphToRelationMetaDataInterface> $morphToRelations
+     *
+     * @throws ModelException
+     */
+    private function validateAggregateRelationPath(
+        ClassReflector $class,
+        string $property,
+        string $relationPath,
+        array $relations,
+        array $morphToRelations,
+    ): void {
+        $segments = \explode('.', $relationPath);
+        $firstSegment = \array_shift($segments);
+        $relatedClass = null;
+
+        foreach ($relations as $relation) {
+            if ($relation->property === $firstSegment) {
+                $relatedClass = $relation->relatedClass;
+
+                break;
+            }
+        }
+
+        if ($relatedClass === null) {
+            foreach ($morphToRelations as $morphTo) {
+                if ($morphTo->property === $firstSegment) {
+                    throw ModelException::fromAggregateOnMorphTo(
+                        modelClass: $class->name,
+                        property: $property,
+                        relation: $relationPath,
+                    );
+                }
+            }
+
+            throw ModelException::fromAggregateUnknownRelation(
+                modelClass: $class->name,
+                property: $property,
+                relation: $relationPath,
+            );
+        }
+
+        foreach ($segments as $segment) {
+            $relatedReflection = new \ReflectionClass($relatedClass);
+            $segmentAttribute = null;
+
+            if ($relatedReflection->hasProperty($segment)) {
+                $segmentAttribute = $relatedReflection
+                    ->getProperty($segment)
+                    ->getAttributes(RelationAttributeInterface::class, \ReflectionAttribute::IS_INSTANCEOF)[0] ?? null;
+            }
+
+            if ($segmentAttribute === null) {
+                throw ModelException::fromAggregateUnknownRelation(
+                    modelClass: $class->name,
+                    property: $property,
+                    relation: $relationPath,
+                );
+            }
+
+            $segmentRelation = $segmentAttribute->newInstance();
+
+            if (
+                !$segmentRelation instanceof RelationInterface &&
+                !$segmentRelation instanceof InversePolymorphicRelationInterface
+            ) {
+                throw ModelException::fromAggregateOnMorphTo(
+                    modelClass: $class->name,
+                    property: $property,
+                    relation: $relationPath,
+                );
+            }
+
+            $relatedClass = $segmentRelation->related;
+        }
     }
 
     private function defaultAggregateAlias(

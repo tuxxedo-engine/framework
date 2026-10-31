@@ -1152,13 +1152,13 @@ class ModelException extends Exception
     /**
      * @param class-string $modelClass
      */
-    public static function fromRelationCountOnNestedPath(
+    public static function fromRelationCountDistinctOnCompositeKey(
         string $modelClass,
         string $relation,
     ): self {
         return new self(
             message: \sprintf(
-                'Cannot count "%s" on "%s": a count threshold needs a single relation, nested paths are not supported',
+                'Cannot count distinct "%s" on "%s": the related model has a composite primary key',
                 $relation,
                 $modelClass,
             ),
