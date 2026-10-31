@@ -311,6 +311,57 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
         );
     }
 
+    public function testDistinctOrderByPutsNullsLastAscending(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->seedDuplicateAlice();
+
+        self::assertSame(
+            [
+                'Alice',
+                'Bob',
+                'Charlie',
+            ],
+            $this->names(
+                $this->connection->select(
+                    table: 'users',
+                )
+                    ->distinct()
+                    ->select('name', 'email')
+                    ->orderBy(
+                        column: 'email',
+                    ),
+            ),
+        );
+    }
+
+    public function testDistinctOrderByPutsNullsLastDescending(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->seedDuplicateAlice();
+
+        self::assertSame(
+            [
+                'Bob',
+                'Alice',
+                'Charlie',
+            ],
+            $this->names(
+                $this->connection->select(
+                    table: 'users',
+                )
+                    ->distinct()
+                    ->select('name', 'email')
+                    ->orderBy(
+                        column: 'email',
+                        direction: OrderDirection::DESC,
+                    ),
+            ),
+        );
+    }
+
     public function testOrderBySubqueryOrdersByCorrelatedValue(): void
     {
         $this->createUsersSchema();
@@ -1896,6 +1947,14 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
     /**
      * @return list<string>
      */
+    private function seedDuplicateAlice(): void
+    {
+        $this->connection->query(
+            sql: "INSERT INTO users (name, email) VALUES ('Alice', 'alice@example.test')",
+            native: true,
+        );
+    }
+
     private function names(
         SelectStatementInterface $statement,
     ): array {
