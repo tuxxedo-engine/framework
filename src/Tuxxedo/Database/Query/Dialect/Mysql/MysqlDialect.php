@@ -133,7 +133,7 @@ class MysqlDialect implements DialectInterface
         string $subject,
         string $prefix,
     ): string {
-        return $subject . ' LIKE CONCAT(' . $prefix . ", '%')";
+        return $subject . ' LIKE CONCAT(REPLACE(REPLACE(REPLACE(' . $prefix . ", '!', '!!'), '%', '!%'), '_', '!_'), '%') ESCAPE '!'";
     }
 
     public function fullTextCondition(

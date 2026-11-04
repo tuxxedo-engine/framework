@@ -585,6 +585,39 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
         );
     }
 
+    public function testWhereColumnStartsWithTreatsPrefixLiterally(): void
+    {
+        $this->createUsersSchema();
+
+        foreach (
+            [
+                "('a_', 'ab@example.test')",
+                "('c%', 'cx@example.test')",
+                "('d!', 'd!x@example.test')",
+                "('e_', 'e_x@example.test')",
+            ] as $values
+        ) {
+            $this->connection->query(
+                sql: 'INSERT INTO users (name, email) VALUES ' . $values,
+                native: true,
+            );
+        }
+
+        self::assertSame(
+            [
+                'd!',
+                'e_',
+            ],
+            $this->names(
+                $this->connection->select(
+                    table: 'users',
+                )
+                    ->whereColumnStartsWith('email', 'name')
+                    ->orderBy('name'),
+            ),
+        );
+    }
+
     public function testWhereStartsWithEscapesWildcards(): void
     {
         $this->createUsersSchema();

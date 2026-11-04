@@ -177,7 +177,7 @@ class PgsqlDialect implements DialectInterface
         string $subject,
         string $prefix,
     ): string {
-        return $subject . ' ILIKE (' . $prefix . " || '%')";
+        return $subject . ' ILIKE (REPLACE(REPLACE(REPLACE(CAST(' . $prefix . " AS TEXT), '!', '!!'), '%', '!%'), '_', '!_') || '%') ESCAPE '!'";
     }
 
     public function fullTextCondition(

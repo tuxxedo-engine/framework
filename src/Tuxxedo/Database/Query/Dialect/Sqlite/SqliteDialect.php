@@ -111,7 +111,7 @@ class SqliteDialect implements DialectInterface
         string $subject,
         string $prefix,
     ): string {
-        return $subject . ' LIKE (' . $prefix . " || '%')";
+        return $subject . ' LIKE (REPLACE(REPLACE(REPLACE(' . $prefix . ", '!', '!!'), '%', '!%'), '_', '!_') || '%') ESCAPE '!'";
     }
 
     public function fullTextCondition(
