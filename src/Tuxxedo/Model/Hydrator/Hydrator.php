@@ -296,45 +296,13 @@ class Hydrator implements HydratorInterface
             $sourceValues[$sourceColumn] = $value;
         }
 
-        $manager = $this->modelsManager;
-        $targetTable = $manager->metaData->getModel($relatedClass)->table;
-
-        $relationInstance = Relation::createFromBuilder(
-            loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
-                $relatedClass,
-                static function (SelectStatementInterface $statement) use ($sourceColumns, $targetColumns, $sourceValues, $criteria, $orderBy, $limit, $offset): void {
-                    foreach ($sourceColumns as $index => $sourceColumn) {
-                        $targetColumn = $targetColumns[$index];
-                        $statement->where($targetColumn, $sourceValues[$sourceColumn]);
-                    }
-
-                    foreach ($criteria as $extra) {
-                        $extra($statement);
-                    }
-
-                    self::applyOrderBy($statement, $orderBy);
-
-                    if ($limit !== null) {
-                        $statement->limit($limit, $offset);
-                    }
-                },
-            ),
-            countBuilder: static function (array $criteria) use ($manager, $targetTable, $sourceColumns, $targetColumns, $sourceValues): int {
-                $statement = $manager->connection->count($targetTable);
-
+        $relationInstance = $this->createConstrainedRelation(
+            relatedClass: $relatedClass,
+            constrain: static function (WhereStatementInterface $statement) use ($sourceColumns, $targetColumns, $sourceValues): void {
                 foreach ($sourceColumns as $index => $sourceColumn) {
-                    $targetColumn = $targetColumns[$index];
-                    $statement->where($targetColumn, $sourceValues[$sourceColumn]);
+                    $statement->where($targetColumns[$index], $sourceValues[$sourceColumn]);
                 }
-
-                foreach ($criteria as $extra) {
-                    $extra($statement);
-                }
-
-                return $statement->count();
             },
-            manager: $manager,
-            modelClass: $relatedClass,
         );
 
         PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $relationInstance);
@@ -393,35 +361,9 @@ class Hydrator implements HydratorInterface
         $targetTable = $targetMetaData->table;
         $pivotTable = $attribute->table;
 
-        $relationInstance = Relation::createFromBuilder(
-            loaderBuilder: fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
-                $relatedClass,
-                function (SelectStatementInterface $statement) use ($pivotTable, $pivotSourceColumns, $pivotTargetColumns, $parentPkColumns, $targetPkColumns, $targetTable, $parentValues, $criteria, $orderBy, $limit, $offset): void {
-                    $this->applyBelongsToManyPivotJoin(
-                        statement: $statement,
-                        pivotTable: $pivotTable,
-                        pivotTargetColumns: $pivotTargetColumns,
-                        targetTable: $targetTable,
-                        targetPkColumns: $targetPkColumns,
-                        pivotSourceColumns: $pivotSourceColumns,
-                        parentPkColumns: $parentPkColumns,
-                        parentValues: $parentValues,
-                    );
-
-                    foreach ($criteria as $extra) {
-                        $extra($statement);
-                    }
-
-                    self::applyOrderBy($statement, $orderBy);
-
-                    if ($limit !== null) {
-                        $statement->limit($limit, $offset);
-                    }
-                },
-            ),
-            countBuilder: function (array $criteria) use ($manager, $pivotTable, $pivotSourceColumns, $pivotTargetColumns, $parentPkColumns, $targetPkColumns, $targetTable, $parentValues): int {
-                $statement = $manager->connection->count($targetTable);
-
+        $relationInstance = $this->createConstrainedRelation(
+            relatedClass: $relatedClass,
+            constrain: function (WhereStatementInterface $statement) use ($pivotTable, $pivotSourceColumns, $pivotTargetColumns, $parentPkColumns, $targetPkColumns, $targetTable, $parentValues): void {
                 $this->applyBelongsToManyPivotJoin(
                     statement: $statement,
                     pivotTable: $pivotTable,
@@ -432,15 +374,7 @@ class Hydrator implements HydratorInterface
                     parentPkColumns: $parentPkColumns,
                     parentValues: $parentValues,
                 );
-
-                foreach ($criteria as $extra) {
-                    $extra($statement);
-                }
-
-                return $statement->count();
             },
-            manager: $manager,
-            modelClass: $relatedClass,
         );
 
         PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $relationInstance);
@@ -535,45 +469,16 @@ class Hydrator implements HydratorInterface
         $secondKey = $attribute->secondKey;
         $firstKey = $attribute->firstKey;
 
-        $relationInstance = Relation::createFromBuilder(
-            loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
-                $relatedClass,
-                static function (SelectStatementInterface $statement) use ($manager, $throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue, $criteria, $orderBy, $limit, $offset): void {
-                    $statement->whereIn(
-                        column: $secondKey,
-                        values: $manager->connection->select($throughTable)
-                            ->select($throughSecondLocalKey)
-                            ->where($firstKey, $sourceValue),
-                    );
-
-                    foreach ($criteria as $extra) {
-                        $extra($statement);
-                    }
-
-                    self::applyOrderBy($statement, $orderBy);
-
-                    if ($limit !== null) {
-                        $statement->limit($limit, $offset);
-                    }
-                },
-            ),
-            countBuilder: static fn (array $criteria): int => $manager->count(
-                $relatedClass,
-                static function (CountStatementInterface $statement) use ($manager, $throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue, $criteria): void {
-                    $statement->whereIn(
-                        column: $secondKey,
-                        values: $manager->connection->select($throughTable)
-                            ->select($throughSecondLocalKey)
-                            ->where($firstKey, $sourceValue),
-                    );
-
-                    foreach ($criteria as $extra) {
-                        $extra($statement);
-                    }
-                },
-            ),
-            manager: $manager,
-            modelClass: $relatedClass,
+        $relationInstance = $this->createConstrainedRelation(
+            relatedClass: $relatedClass,
+            constrain: static function (WhereStatementInterface $statement) use ($manager, $throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue): void {
+                $statement->whereIn(
+                    column: $secondKey,
+                    values: $manager->connection->select($throughTable)
+                        ->select($throughSecondLocalKey)
+                        ->where($firstKey, $sourceValue),
+                );
+            },
         );
 
         PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $relationInstance);
@@ -821,48 +726,19 @@ class Hydrator implements HydratorInterface
             class: $metaData->model,
             typeMap: $attribute->typeMap,
         );
-        $manager = $this->modelsManager;
-        $targetTable = $manager->metaData->getModel($relatedClass)->table;
+
         $typeColumn = $attribute->typeColumn;
         $sourceValues = \array_values($sourceTuple);
 
-        $relationInstance = Relation::createFromBuilder(
-            loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
-                $relatedClass,
-                static function (SelectStatementInterface $statement) use ($typeColumn, $idColumns, $typeValue, $sourceValues, $criteria, $orderBy, $limit, $offset): void {
-                    $statement->where($typeColumn, $typeValue);
-
-                    foreach ($idColumns as $index => $idColumn) {
-                        $statement->where($idColumn, $sourceValues[$index]);
-                    }
-
-                    foreach ($criteria as $extra) {
-                        $extra($statement);
-                    }
-
-                    self::applyOrderBy($statement, $orderBy);
-
-                    if ($limit !== null) {
-                        $statement->limit($limit, $offset);
-                    }
-                },
-            ),
-            countBuilder: static function (array $criteria) use ($manager, $targetTable, $typeColumn, $idColumns, $typeValue, $sourceValues): int {
-                $statement = $manager->connection->count($targetTable)
-                    ->where($typeColumn, $typeValue);
+        $relationInstance = $this->createConstrainedRelation(
+            relatedClass: $relatedClass,
+            constrain: static function (WhereStatementInterface $statement) use ($typeColumn, $idColumns, $typeValue, $sourceValues): void {
+                $statement->where($typeColumn, $typeValue);
 
                 foreach ($idColumns as $index => $idColumn) {
                     $statement->where($idColumn, $sourceValues[$index]);
                 }
-
-                foreach ($criteria as $extra) {
-                    $extra($statement);
-                }
-
-                return $statement->count();
             },
-            manager: $manager,
-            modelClass: $relatedClass,
         );
 
         PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $relationInstance);
@@ -926,37 +802,9 @@ class Hydrator implements HydratorInterface
         $pivotTable = $attribute->table;
         $pivotTypeColumn = $attribute->typeColumn;
 
-        $relationInstance = Relation::createFromBuilder(
-            loaderBuilder: fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
-                $relatedClass,
-                function (SelectStatementInterface $statement) use ($pivotTable, $pivotSourceColumns, $pivotTargetColumns, $pivotTypeColumn, $parentPkColumns, $targetPkColumns, $targetTable, $parentValues, $typeValue, $criteria, $orderBy, $limit, $offset): void {
-                    $this->applyBelongsToManyPivotJoin(
-                        statement: $statement,
-                        pivotTable: $pivotTable,
-                        pivotTargetColumns: $pivotTargetColumns,
-                        targetTable: $targetTable,
-                        targetPkColumns: $targetPkColumns,
-                        pivotSourceColumns: $pivotSourceColumns,
-                        parentPkColumns: $parentPkColumns,
-                        parentValues: $parentValues,
-                    );
-
-                    $statement->where($pivotTable . '.' . $pivotTypeColumn, $typeValue);
-
-                    foreach ($criteria as $extra) {
-                        $extra($statement);
-                    }
-
-                    self::applyOrderBy($statement, $orderBy);
-
-                    if ($limit !== null) {
-                        $statement->limit($limit, $offset);
-                    }
-                },
-            ),
-            countBuilder: function (array $criteria) use ($manager, $pivotTable, $pivotSourceColumns, $pivotTargetColumns, $pivotTypeColumn, $parentPkColumns, $targetPkColumns, $targetTable, $parentValues, $typeValue): int {
-                $statement = $manager->connection->count($targetTable);
-
+        $relationInstance = $this->createConstrainedRelation(
+            relatedClass: $relatedClass,
+            constrain: function (WhereStatementInterface $statement) use ($pivotTable, $pivotSourceColumns, $pivotTargetColumns, $pivotTypeColumn, $parentPkColumns, $targetPkColumns, $targetTable, $parentValues, $typeValue): void {
                 $this->applyBelongsToManyPivotJoin(
                     statement: $statement,
                     pivotTable: $pivotTable,
@@ -969,15 +817,7 @@ class Hydrator implements HydratorInterface
                 );
 
                 $statement->where($pivotTable . '.' . $pivotTypeColumn, $typeValue);
-
-                foreach ($criteria as $extra) {
-                    $extra($statement);
-                }
-
-                return $statement->count();
             },
-            manager: $manager,
-            modelClass: $relatedClass,
         );
 
         PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $relationInstance);
@@ -1603,7 +1443,6 @@ class Hydrator implements HydratorInterface
             $relationInstance = $this->buildHasManyEagerRelation(
                 manager: $manager,
                 relatedClass: $relatedClass,
-                targetTable: $targetTable,
                 sourceColumns: $sourceColumns,
                 targetColumns: $targetColumns,
                 sourceValues: $tuple,
@@ -1627,7 +1466,6 @@ class Hydrator implements HydratorInterface
     private function buildHasManyEagerRelation(
         ModelsManagerInterface $manager,
         string $relatedClass,
-        string $targetTable,
         array $sourceColumns,
         array $targetColumns,
         ?array $sourceValues,
@@ -1644,47 +1482,15 @@ class Hydrator implements HydratorInterface
             // @codeCoverageIgnoreEnd
         }
 
-        return Relation::createFromPrefetchedWithBuilder(
-            prefetched: $prefetched,
-            loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
-                $relatedClass,
-                static function (SelectStatementInterface $statement) use ($sourceColumns, $targetColumns, $sourceValues, $criteria, $orderBy, $limit, $offset): void {
-                    foreach ($sourceColumns as $index => $sourceColumn) {
-                        $targetColumn = $targetColumns[$index];
-                        $statement->where($targetColumn, $sourceValues[$sourceColumn]);
-                    }
-
-                    foreach ($criteria as $extra) {
-                        $extra($statement);
-                    }
-
-                    self::applyOrderBy($statement, $orderBy);
-
-                    if ($limit !== null) {
-                        $statement->limit($limit, $offset);
-                    }
-                },
-            ),
-            countBuilder: static function (array $criteria) use ($manager, $targetTable, $sourceColumns, $targetColumns, $sourceValues): int {
-                $statement = $manager->connection->count($targetTable);
-
+        return $this->createConstrainedRelation(
+            relatedClass: $relatedClass,
+            constrain: static function (WhereStatementInterface $statement) use ($sourceColumns, $targetColumns, $sourceValues): void {
                 foreach ($sourceColumns as $index => $sourceColumn) {
-                    $targetColumn = $targetColumns[$index];
-                    $statement->where($targetColumn, $sourceValues[$sourceColumn]);
+                    $statement->where($targetColumns[$index], $sourceValues[$sourceColumn]);
                 }
-
-                foreach ($criteria as $extra) {
-                    $extra($statement);
-                }
-
-                return $statement->count();
             },
-            initialCriteriaStack: $shaped->criteriaStack ?? [],
-            initialOrderBy: $shaped->orderBy ?? [],
-            initialLimit: $shaped?->limit,
-            initialOffset: $shaped?->offset,
-            manager: $manager,
-            modelClass: $relatedClass,
+            prefetched: $prefetched,
+            shaped: $shaped,
         );
     }
 
@@ -1894,36 +1700,9 @@ class Hydrator implements HydratorInterface
             // @codeCoverageIgnoreEnd
         }
 
-        return Relation::createFromPrefetchedWithBuilder(
-            prefetched: $prefetched,
-            loaderBuilder: fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
-                $relatedClass,
-                function (SelectStatementInterface $statement) use ($pivotTable, $pivotSourceColumns, $pivotTargetColumns, $parentPkColumns, $targetPkColumns, $targetTable, $parentValues, $criteria, $orderBy, $limit, $offset): void {
-                    $this->applyBelongsToManyPivotJoin(
-                        statement: $statement,
-                        pivotTable: $pivotTable,
-                        pivotTargetColumns: $pivotTargetColumns,
-                        targetTable: $targetTable,
-                        targetPkColumns: $targetPkColumns,
-                        pivotSourceColumns: $pivotSourceColumns,
-                        parentPkColumns: $parentPkColumns,
-                        parentValues: $parentValues,
-                    );
-
-                    foreach ($criteria as $extra) {
-                        $extra($statement);
-                    }
-
-                    self::applyOrderBy($statement, $orderBy);
-
-                    if ($limit !== null) {
-                        $statement->limit($limit, $offset);
-                    }
-                },
-            ),
-            countBuilder: function (array $criteria) use ($manager, $pivotTable, $pivotSourceColumns, $pivotTargetColumns, $parentPkColumns, $targetPkColumns, $targetTable, $parentValues): int {
-                $statement = $manager->connection->count($targetTable);
-
+        return $this->createConstrainedRelation(
+            relatedClass: $relatedClass,
+            constrain: function (WhereStatementInterface $statement) use ($pivotTable, $pivotSourceColumns, $pivotTargetColumns, $parentPkColumns, $targetPkColumns, $targetTable, $parentValues): void {
                 $this->applyBelongsToManyPivotJoin(
                     statement: $statement,
                     pivotTable: $pivotTable,
@@ -1934,19 +1713,9 @@ class Hydrator implements HydratorInterface
                     parentPkColumns: $parentPkColumns,
                     parentValues: $parentValues,
                 );
-
-                foreach ($criteria as $extra) {
-                    $extra($statement);
-                }
-
-                return $statement->count();
             },
-            initialCriteriaStack: $shaped->criteriaStack ?? [],
-            initialOrderBy: $shaped->orderBy ?? [],
-            initialLimit: $shaped?->limit,
-            initialOffset: $shaped?->offset,
-            manager: $manager,
-            modelClass: $relatedClass,
+            prefetched: $prefetched,
+            shaped: $shaped,
         );
     }
 
@@ -2082,7 +1851,6 @@ class Hydrator implements HydratorInterface
             $relationInstance = $this->buildHasManyThroughEagerRelation(
                 manager: $manager,
                 relatedClass: $relatedClass,
-                targetTable: $targetTable,
                 throughTable: $throughTable,
                 throughSecondLocalKey: $throughSecondLocalKey,
                 secondKey: $secondKey,
@@ -2105,7 +1873,6 @@ class Hydrator implements HydratorInterface
     private function buildHasManyThroughEagerRelation(
         ModelsManagerInterface $manager,
         string $relatedClass,
-        string $targetTable,
         string $throughTable,
         string $throughSecondLocalKey,
         string $secondKey,
@@ -2124,50 +1891,18 @@ class Hydrator implements HydratorInterface
             // @codeCoverageIgnoreEnd
         }
 
-        return Relation::createFromPrefetchedWithBuilder(
+        return $this->createConstrainedRelation(
+            relatedClass: $relatedClass,
+            constrain: static function (WhereStatementInterface $statement) use ($manager, $throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue): void {
+                $statement->whereIn(
+                    column: $secondKey,
+                    values: $manager->connection->select($throughTable)
+                        ->select($throughSecondLocalKey)
+                        ->where($firstKey, $sourceValue),
+                );
+            },
             prefetched: $prefetched,
-            loaderBuilder: static function (array $criteria, array $orderBy, ?int $limit, ?int $offset) use ($manager, $targetTable, $throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue, $relatedClass): iterable {
-                $statement = $manager->connection->select($targetTable)
-                    ->whereIn(
-                        column: $secondKey,
-                        values: $manager->connection->select($throughTable)
-                            ->select($throughSecondLocalKey)
-                            ->where($firstKey, $sourceValue),
-                    );
-
-                foreach ($criteria as $extra) {
-                    $extra($statement);
-                }
-
-                self::applyOrderBy($statement, $orderBy);
-
-                if ($limit !== null) {
-                    $statement->limit($limit, $offset);
-                }
-
-                return $statement->fetchAll($relatedClass, $manager->hydrator);
-            },
-            countBuilder: static function (array $criteria) use ($manager, $targetTable, $throughTable, $throughSecondLocalKey, $secondKey, $firstKey, $sourceValue): int {
-                $statement = $manager->connection->count($targetTable)
-                    ->whereIn(
-                        column: $secondKey,
-                        values: $manager->connection->select($throughTable)
-                            ->select($throughSecondLocalKey)
-                            ->where($firstKey, $sourceValue),
-                    );
-
-                foreach ($criteria as $extra) {
-                    $extra($statement);
-                }
-
-                return $statement->count();
-            },
-            initialCriteriaStack: $shaped->criteriaStack ?? [],
-            initialOrderBy: $shaped->orderBy ?? [],
-            initialLimit: $shaped?->limit,
-            initialOffset: $shaped?->offset,
-            manager: $manager,
-            modelClass: $relatedClass,
+            shaped: $shaped,
         );
     }
 
@@ -2689,7 +2424,6 @@ class Hydrator implements HydratorInterface
             $relationInstance = $this->buildMorphManyEagerRelation(
                 manager: $manager,
                 relatedClass: $relatedClass,
-                targetTable: $targetTable,
                 typeColumn: $typeColumn,
                 idColumns: $idColumns,
                 typeValue: $typeValue,
@@ -2713,7 +2447,6 @@ class Hydrator implements HydratorInterface
     private function buildMorphManyEagerRelation(
         ModelsManagerInterface $manager,
         string $relatedClass,
-        string $targetTable,
         string $typeColumn,
         array $idColumns,
         string $typeValue,
@@ -2731,48 +2464,17 @@ class Hydrator implements HydratorInterface
             // @codeCoverageIgnoreEnd
         }
 
-        return Relation::createFromPrefetchedWithBuilder(
-            prefetched: $prefetched,
-            loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
-                $relatedClass,
-                static function (SelectStatementInterface $statement) use ($typeColumn, $idColumns, $typeValue, $sourceValues, $criteria, $orderBy, $limit, $offset): void {
-                    $statement->where($typeColumn, $typeValue);
-
-                    foreach ($idColumns as $index => $idColumn) {
-                        $statement->where($idColumn, $sourceValues[$index]);
-                    }
-
-                    foreach ($criteria as $extra) {
-                        $extra($statement);
-                    }
-
-                    self::applyOrderBy($statement, $orderBy);
-
-                    if ($limit !== null) {
-                        $statement->limit($limit, $offset);
-                    }
-                },
-            ),
-            countBuilder: static function (array $criteria) use ($manager, $targetTable, $typeColumn, $idColumns, $typeValue, $sourceValues): int {
-                $statement = $manager->connection->count($targetTable)
-                    ->where($typeColumn, $typeValue);
+        return $this->createConstrainedRelation(
+            relatedClass: $relatedClass,
+            constrain: static function (WhereStatementInterface $statement) use ($typeColumn, $idColumns, $typeValue, $sourceValues): void {
+                $statement->where($typeColumn, $typeValue);
 
                 foreach ($idColumns as $index => $idColumn) {
                     $statement->where($idColumn, $sourceValues[$index]);
                 }
-
-                foreach ($criteria as $extra) {
-                    $extra($statement);
-                }
-
-                return $statement->count();
             },
-            initialCriteriaStack: $shaped->criteriaStack ?? [],
-            initialOrderBy: $shaped->orderBy ?? [],
-            initialLimit: $shaped?->limit,
-            initialOffset: $shaped?->offset,
-            manager: $manager,
-            modelClass: $relatedClass,
+            prefetched: $prefetched,
+            shaped: $shaped,
         );
     }
 
@@ -2992,38 +2694,9 @@ class Hydrator implements HydratorInterface
             // @codeCoverageIgnoreEnd
         }
 
-        return Relation::createFromPrefetchedWithBuilder(
-            prefetched: $prefetched,
-            loaderBuilder: fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
-                $relatedClass,
-                function (SelectStatementInterface $statement) use ($pivotTable, $pivotSourceColumns, $pivotTargetColumns, $pivotTypeColumn, $parentPkColumns, $targetPkColumns, $targetTable, $typeValue, $parentValues, $criteria, $orderBy, $limit, $offset): void {
-                    $this->applyBelongsToManyPivotJoin(
-                        statement: $statement,
-                        pivotTable: $pivotTable,
-                        pivotTargetColumns: $pivotTargetColumns,
-                        targetTable: $targetTable,
-                        targetPkColumns: $targetPkColumns,
-                        pivotSourceColumns: $pivotSourceColumns,
-                        parentPkColumns: $parentPkColumns,
-                        parentValues: $parentValues,
-                    );
-
-                    $statement->where($pivotTable . '.' . $pivotTypeColumn, $typeValue);
-
-                    foreach ($criteria as $extra) {
-                        $extra($statement);
-                    }
-
-                    self::applyOrderBy($statement, $orderBy);
-
-                    if ($limit !== null) {
-                        $statement->limit($limit, $offset);
-                    }
-                },
-            ),
-            countBuilder: function (array $criteria) use ($manager, $pivotTable, $pivotSourceColumns, $pivotTargetColumns, $pivotTypeColumn, $parentPkColumns, $targetPkColumns, $targetTable, $typeValue, $parentValues): int {
-                $statement = $manager->connection->count($targetTable);
-
+        return $this->createConstrainedRelation(
+            relatedClass: $relatedClass,
+            constrain: function (WhereStatementInterface $statement) use ($pivotTable, $pivotSourceColumns, $pivotTargetColumns, $pivotTypeColumn, $parentPkColumns, $targetPkColumns, $targetTable, $parentValues, $typeValue): void {
                 $this->applyBelongsToManyPivotJoin(
                     statement: $statement,
                     pivotTable: $pivotTable,
@@ -3036,19 +2709,9 @@ class Hydrator implements HydratorInterface
                 );
 
                 $statement->where($pivotTable . '.' . $pivotTypeColumn, $typeValue);
-
-                foreach ($criteria as $extra) {
-                    $extra($statement);
-                }
-
-                return $statement->count();
             },
-            initialCriteriaStack: $shaped->criteriaStack ?? [],
-            initialOrderBy: $shaped->orderBy ?? [],
-            initialLimit: $shaped?->limit,
-            initialOffset: $shaped?->offset,
-            manager: $manager,
-            modelClass: $relatedClass,
+            prefetched: $prefetched,
+            shaped: $shaped,
         );
     }
 
@@ -3193,6 +2856,88 @@ class Hydrator implements HydratorInterface
             modelClass: $metaData->model,
         );
         // @codeCoverageIgnoreEnd
+    }
+
+    /**
+     * @param class-string $relatedClass
+     * @param \Closure(WhereStatementInterface): void $constrain
+     * @param list<object>|null $prefetched
+     * @param Relation<object>|null $shaped
+     * @return Relation<object>
+     */
+    private function createConstrainedRelation(
+        string $relatedClass,
+        \Closure $constrain,
+        ?array $prefetched = null,
+        ?Relation $shaped = null,
+    ): Relation {
+        $manager = $this->modelsManager;
+        $targetMetaData = $manager->metaData->getModel($relatedClass);
+
+        $loaderBuilder = static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => $manager->findAll(
+            $relatedClass,
+            static function (SelectStatementInterface $statement) use ($constrain, $criteria, $orderBy, $limit, $offset): void {
+                $constrain($statement);
+
+                foreach ($criteria as $extra) {
+                    $extra($statement);
+                }
+
+                self::applyOrderBy($statement, $orderBy);
+
+                if ($limit !== null) {
+                    $statement->limit($limit, $offset);
+                }
+            },
+        );
+
+        $countBuilder = static fn (array $criteria): int => $manager->count(
+            $relatedClass,
+            static function (CountStatementInterface $statement) use ($constrain, $criteria): void {
+                $constrain($statement);
+
+                foreach ($criteria as $extra) {
+                    $extra($statement);
+                }
+            },
+        );
+
+        $statementBuilder = static function (array $criteria) use ($manager, $targetMetaData, $constrain): SelectStatementInterface {
+            $statement = $manager->connection->select($targetMetaData->table);
+
+            $constrain($statement);
+
+            foreach ($criteria as $extra) {
+                $extra($statement);
+            }
+
+            $manager->applySoftDeleteFilter($statement, $targetMetaData);
+
+            return $statement;
+        };
+
+        if ($prefetched === null) {
+            return Relation::createFromBuilder(
+                loaderBuilder: $loaderBuilder,
+                countBuilder: $countBuilder,
+                manager: $manager,
+                modelClass: $relatedClass,
+                statementBuilder: $statementBuilder,
+            );
+        }
+
+        return Relation::createFromPrefetchedWithBuilder(
+            prefetched: $prefetched,
+            loaderBuilder: $loaderBuilder,
+            countBuilder: $countBuilder,
+            initialCriteriaStack: $shaped->criteriaStack ?? [],
+            initialOrderBy: $shaped->orderBy ?? [],
+            initialLimit: $shaped?->limit,
+            initialOffset: $shaped?->offset,
+            manager: $manager,
+            modelClass: $relatedClass,
+            statementBuilder: $statementBuilder,
+        );
     }
 
     /**

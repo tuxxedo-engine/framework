@@ -15,6 +15,7 @@ namespace Unit\Model;
 
 use Fixture\Model\Post;
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Model\ModelException;
 use Tuxxedo\Model\Relation;
 
 class RelationTest extends TestCase
@@ -100,6 +101,24 @@ class RelationTest extends TestCase
             $relation,
             $ordered,
         );
+    }
+
+    public function testToSelectWithoutStatementBuilderThrows(): void
+    {
+        $relation = Relation::createFromPrefetched(
+            values: [],
+        );
+
+        try {
+            (void) $relation->toSelect();
+
+            self::fail('Expected ModelException was not thrown');
+        } catch (ModelException $exception) {
+            self::assertStringContainsString(
+                'toSelect',
+                $exception->getMessage(),
+            );
+        }
     }
 
     public function testLoadBaseHandlesLoaderBuilderReturningArray(): void

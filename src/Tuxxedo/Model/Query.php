@@ -35,11 +35,6 @@ class Query extends AbstractQueryable
     private readonly ?\Closure $eagerLoader;
 
     /**
-     * @var (\Closure(list<\Closure(WhereStatementInterface): void>): SelectStatementInterface)|null
-     */
-    private readonly ?\Closure $statementBuilder;
-
-    /**
      * @param (\Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string|SelectStatementInterface, direction: OrderDirection}>, ?int, ?int): iterable<int, TModel>)|null $loaderBuilder
      * @param (\Closure(list<\Closure(WhereStatementInterface): void>): int)|null $countBuilder
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
@@ -71,11 +66,11 @@ class Query extends AbstractQueryable
             offset: $offset,
             manager: $manager,
             modelClass: $modelClass,
+            statementBuilder: $statementBuilder,
         );
 
         $this->with = $with;
         $this->eagerLoader = $eagerLoader;
-        $this->statementBuilder = $statementBuilder;
     }
 
     /**
@@ -156,21 +151,6 @@ class Query extends AbstractQueryable
             modelClass: $this->modelClass,
             statementBuilder: $this->statementBuilder,
         );
-    }
-
-    /**
-     * @throws ModelException
-     */
-    #[\NoDiscard]
-    public function toSelect(): SelectStatementInterface
-    {
-        if ($this->statementBuilder === null) {
-            throw ModelException::fromChainMethodRequiresModelContext(
-                method: 'toSelect',
-            );
-        }
-
-        return ($this->statementBuilder)($this->criteriaStack);
     }
 
     /**

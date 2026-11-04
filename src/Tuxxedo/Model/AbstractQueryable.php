@@ -71,6 +71,7 @@ abstract class AbstractQueryable implements QueryableInterface
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
      * @param list<array{column: string|SelectStatementInterface, direction: OrderDirection}> $orderBy
      * @param ?class-string<TModel> $modelClass
+     * @param (\Closure(list<\Closure(WhereStatementInterface): void>): SelectStatementInterface)|null $statementBuilder
      */
     protected function __construct(
         protected readonly ?\Closure $loaderBuilder = null,
@@ -81,6 +82,7 @@ abstract class AbstractQueryable implements QueryableInterface
         public readonly ?int $offset = null,
         protected readonly ?ModelsManagerInterface $manager = null,
         protected readonly ?string $modelClass = null,
+        protected readonly ?\Closure $statementBuilder = null,
     ) {
     }
 
@@ -94,6 +96,21 @@ abstract class AbstractQueryable implements QueryableInterface
         ?int $limit,
         ?int $offset,
     ): static;
+
+    /**
+     * @throws ModelException
+     */
+    #[\NoDiscard]
+    public function toSelect(): SelectStatementInterface
+    {
+        if ($this->statementBuilder === null) {
+            throw ModelException::fromChainMethodRequiresModelContext(
+                method: 'toSelect',
+            );
+        }
+
+        return ($this->statementBuilder)($this->criteriaStack);
+    }
 
     public function offsetExists(mixed $offset): bool
     {

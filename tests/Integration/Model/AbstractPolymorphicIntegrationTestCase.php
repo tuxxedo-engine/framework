@@ -462,6 +462,42 @@ abstract class AbstractPolymorphicIntegrationTestCase extends AbstractModelInteg
         );
     }
 
+    public function testLazyMorphManyToSelectKeepsTheTypedFilter(): void
+    {
+        $article = $this->modelsManager->fetchById(
+            class: Article::class,
+            id: 10,
+        );
+
+        self::assertInstanceOf(Relation::class, $article->comments);
+
+        $row = $article->comments
+            ->toSelect()
+            ->selectCount(alias: 'total')
+            ->execute()
+            ->fetchAssoc();
+
+        self::assertEquals(2, $row['total']);
+    }
+
+    public function testLazyMorphToManyToSelectKeepsThePivotJoin(): void
+    {
+        $article = $this->modelsManager->fetchById(
+            class: Article::class,
+            id: 11,
+        );
+
+        self::assertInstanceOf(Relation::class, $article->tags);
+
+        $row = $article->tags
+            ->toSelect()
+            ->selectCount(alias: 'total')
+            ->execute()
+            ->fetchAssoc();
+
+        self::assertEquals(1, $row['total']);
+    }
+
     public function testCascadeSaveAssignsTypeAndIdOnMorphManyChild(): void
     {
         $article = $this->modelsManager->fetchById(

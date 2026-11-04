@@ -1270,6 +1270,159 @@ abstract class AbstractQueryableIntegrationTestCase extends AbstractModelIntegra
         );
     }
 
+    public function testRelationToSelectCarriesTheRelationAndSoftDeleteFilter(): void
+    {
+        $this->seedDeletedComment();
+        $this->seedComment(
+            id: 102,
+            postId: 11,
+            userId: 1,
+            body: 'elsewhere',
+        );
+
+        $post = $this->modelsManager->fetchById(
+            class: Post::class,
+            id: 10,
+        );
+
+        self::assertInstanceOf(
+            Relation::class,
+            $post->comments,
+        );
+
+        $row = $post->comments
+            ->toSelect()
+            ->selectCount(alias: 'total')
+            ->execute()
+            ->fetchAssoc();
+
+        self::assertEquals(
+            1,
+            $row['total'],
+        );
+    }
+
+    public function testRelationTotalCountSkipsSoftDeletedRows(): void
+    {
+        $this->seedDeletedComment();
+
+        $post = $this->modelsManager->fetchById(
+            class: Post::class,
+            id: 10,
+        );
+
+        self::assertInstanceOf(
+            Relation::class,
+            $post->comments,
+        );
+
+        self::assertSame(
+            1,
+            $post->comments->totalCount,
+        );
+    }
+
+    public function testBelongsToManyRelationToSelectKeepsThePivotJoin(): void
+    {
+        $this->seedTag(
+            id: 201,
+            slug: 'sql',
+            name: 'SQL',
+        );
+
+        $this->seedPostTag(
+            postId: 11,
+            tagId: 201,
+        );
+
+        $post = $this->modelsManager->fetchById(
+            class: Post::class,
+            id: 10,
+        );
+
+        self::assertInstanceOf(
+            Relation::class,
+            $post->tags,
+        );
+
+        $row = $post->tags
+            ->toSelect()
+            ->selectCount(alias: 'total')
+            ->execute()
+            ->fetchAssoc();
+
+        self::assertEquals(
+            1,
+            $row['total'],
+        );
+    }
+
+    public function testHasManyThroughRelationToSelectCarriesRelationCriteria(): void
+    {
+        $country = $this->modelsManager->fetchById(
+            class: Country::class,
+            id: 1,
+        );
+
+        self::assertInstanceOf(
+            Relation::class,
+            $country->posts,
+        );
+
+        $row = $country->posts
+            ->where('status', 'published')
+            ->toSelect()
+            ->selectCount(alias: 'total')
+            ->execute()
+            ->fetchAssoc();
+
+        self::assertEquals(
+            2,
+            $row['total'],
+        );
+    }
+
+    public function testEagerLoadedRelationToSelectCarriesTheRelation(): void
+    {
+        $this->seedComment(
+            id: 102,
+            postId: 11,
+            userId: 1,
+            body: 'elsewhere',
+        );
+
+        $post = $this->modelsManager
+            ->query(Post::class)
+            ->where('id', 10)
+            ->with(
+                [
+                    'comments' => null,
+                ],
+            )
+            ->first();
+
+        self::assertInstanceOf(
+            Post::class,
+            $post,
+        );
+
+        self::assertInstanceOf(
+            Relation::class,
+            $post->comments,
+        );
+
+        $row = $post->comments
+            ->toSelect()
+            ->selectCount(alias: 'total')
+            ->execute()
+            ->fetchAssoc();
+
+        self::assertEquals(
+            1,
+            $row['total'],
+        );
+    }
+
     public function testWhereHasCallbackConstrainsTheSameRelatedRow(): void
     {
         $this->seedComment(

@@ -49,6 +49,12 @@ interface QueryableInterface extends PagedInterface, \IteratorAggregate, \Counta
     public function isMaterialized(): bool;
 
     /**
+     * @throws ModelException
+     */
+    #[\NoDiscard]
+    public function toSelect(): SelectStatementInterface;
+
+    /**
      * @param SelectStatementInterface|string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
      */
     #[\NoDiscard]
