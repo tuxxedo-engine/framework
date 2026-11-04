@@ -203,7 +203,7 @@ interface SelectStatementInterface extends WhereStatementInterface, SubqueryRend
     ): static;
 
     public function selectSubquery(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
         string $alias,
     ): static;
 
@@ -215,7 +215,7 @@ interface SelectStatementInterface extends WhereStatementInterface, SubqueryRend
     ): static;
 
     public function orderBySubquery(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
         OrderDirection|string $direction = OrderDirection::ASC,
     ): static;
 

@@ -260,18 +260,18 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     /**
-     * @param SelectStatementInterface|string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
+     * @param SubqueryRenderableInterface|string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
      */
     public function where(
         string $column,
-        SelectStatementInterface|string|int|float|bool|null|array $value,
+        SubqueryRenderableInterface|string|int|float|bool|null|array $value,
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static {
         if (\is_string($operator)) {
             $operator = ConditionOperator::fromInput($operator);
         }
 
-        if ($value instanceof SelectStatementInterface) {
+        if ($value instanceof SubqueryRenderableInterface) {
             $this->conditions[] = $this->buildSubqueryCondition(
                 column: $column,
                 operator: $operator,
@@ -308,18 +308,18 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     /**
-     * @param SelectStatementInterface|string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
+     * @param SubqueryRenderableInterface|string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
      */
     public function orWhere(
         string $column,
-        SelectStatementInterface|string|int|float|bool|null|array $value,
+        SubqueryRenderableInterface|string|int|float|bool|null|array $value,
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static {
         if (\is_string($operator)) {
             $operator = ConditionOperator::fromInput($operator);
         }
 
-        if ($value instanceof SelectStatementInterface) {
+        if ($value instanceof SubqueryRenderableInterface) {
             $this->conditions[] = $this->buildSubqueryCondition(
                 column: $column,
                 operator: $operator,
@@ -404,13 +404,13 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     /**
-     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
+     * @param SubqueryRenderableInterface|non-empty-array<string|int|float|bool|null> $values
      */
     public function whereIn(
         string $column,
-        SelectStatementInterface|array $values,
+        SubqueryRenderableInterface|array $values,
     ): static {
-        if ($values instanceof SelectStatementInterface) {
+        if ($values instanceof SubqueryRenderableInterface) {
             $this->conditions[] = $this->buildSubqueryCondition(
                 column: $column,
                 operator: ConditionOperator::IN,
@@ -435,13 +435,13 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     /**
-     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
+     * @param SubqueryRenderableInterface|non-empty-array<string|int|float|bool|null> $values
      */
     public function whereNotIn(
         string $column,
-        SelectStatementInterface|array $values,
+        SubqueryRenderableInterface|array $values,
     ): static {
-        if ($values instanceof SelectStatementInterface) {
+        if ($values instanceof SubqueryRenderableInterface) {
             $this->conditions[] = $this->buildSubqueryCondition(
                 column: $column,
                 operator: ConditionOperator::NOT_IN,
@@ -466,13 +466,13 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     /**
-     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
+     * @param SubqueryRenderableInterface|non-empty-array<string|int|float|bool|null> $values
      */
     public function orWhereIn(
         string $column,
-        SelectStatementInterface|array $values,
+        SubqueryRenderableInterface|array $values,
     ): static {
-        if ($values instanceof SelectStatementInterface) {
+        if ($values instanceof SubqueryRenderableInterface) {
             $this->conditions[] = $this->buildSubqueryCondition(
                 column: $column,
                 operator: ConditionOperator::IN,
@@ -497,13 +497,13 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     /**
-     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
+     * @param SubqueryRenderableInterface|non-empty-array<string|int|float|bool|null> $values
      */
     public function orWhereNotIn(
         string $column,
-        SelectStatementInterface|array $values,
+        SubqueryRenderableInterface|array $values,
     ): static {
-        if ($values instanceof SelectStatementInterface) {
+        if ($values instanceof SubqueryRenderableInterface) {
             $this->conditions[] = $this->buildSubqueryCondition(
                 column: $column,
                 operator: ConditionOperator::NOT_IN,
@@ -531,7 +531,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         string $column,
         ConditionOperator $operator,
         ConditionConjunction $conjunction,
-        SelectStatementInterface $values,
+        SubqueryRenderableInterface $values,
     ): SubqueryCondition {
         return new SubqueryCondition(
             conjunction: $conjunction,
@@ -926,7 +926,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     public function whereSubquery(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
         string|int|float|bool|null $value,
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static {
@@ -941,7 +941,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     public function orWhereSubquery(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
         string|int|float|bool|null $value,
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static {
@@ -956,7 +956,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     public function whereExists(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
     ): static {
         $this->conditions[] = $this->buildExists(
             subquery: $subquery,
@@ -968,7 +968,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     public function whereNotExists(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
     ): static {
         $this->conditions[] = $this->buildExists(
             subquery: $subquery,
@@ -980,7 +980,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     public function orWhereExists(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
     ): static {
         $this->conditions[] = $this->buildExists(
             subquery: $subquery,
@@ -992,7 +992,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     public function orWhereNotExists(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
     ): static {
         $this->conditions[] = $this->buildExists(
             subquery: $subquery,
@@ -1010,7 +1010,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
      * @throws SqlException
      */
     private function buildSubqueryComparison(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
         string|int|float|bool|null $value,
         ConditionOperator|string $operator,
         ConditionConjunction $conjunction,
@@ -1141,7 +1141,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     private function buildExists(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
         ConditionConjunction $conjunction,
         bool $negated,
     ): ExistsCondition {

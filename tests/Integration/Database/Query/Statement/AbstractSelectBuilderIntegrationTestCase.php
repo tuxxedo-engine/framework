@@ -15,6 +15,7 @@ namespace Integration\Database\Query\Statement;
 
 use Fixture\Database\HydratableTestUser;
 use Tuxxedo\Database\Query\Statement\Aggregate\AggregateFunction;
+use Tuxxedo\Database\Query\Statement\CompoundSelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Join\JoinConditionInterface;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
@@ -962,6 +963,295 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
 
         self::assertSame('Post by Alice', $row->properties['title']);
         self::assertArrayNotHasKey('name', $row->properties);
+    }
+
+    public function testUnionRemovesDuplicatesAndUnionAllKeepsThem(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        self::assertSame(
+            [
+                'Alice',
+                'Bob',
+                'Charlie',
+            ],
+            $this->names(
+                $this->connection->union(
+                    $this->usersNamed('Alice', 'Bob'),
+                    $this->usersNamed('Bob', 'Charlie'),
+                )
+                    ->orderBy('name'),
+            ),
+        );
+
+        self::assertSame(
+            [
+                'Alice',
+                'Bob',
+                'Bob',
+                'Charlie',
+            ],
+            $this->names(
+                $this->connection->unionAll(
+                    $this->usersNamed('Alice', 'Bob'),
+                    $this->usersNamed('Bob', 'Charlie'),
+                )
+                    ->orderBy('name'),
+            ),
+        );
+    }
+
+    public function testUnionChainsLeftToRight(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        self::assertSame(
+            [
+                'Alice',
+                'Bob',
+                'Bob',
+                'Charlie',
+                'Charlie',
+            ],
+            $this->names(
+                $this->connection->union(
+                    $this->usersNamed('Alice', 'Bob'),
+                    $this->usersNamed('Bob', 'Charlie'),
+                )
+                    ->unionAll($this->usersNamed('Bob', 'Charlie'))
+                    ->orderBy('name'),
+            ),
+        );
+
+        self::assertSame(
+            [
+                'Alice',
+                'Bob',
+                'Charlie',
+            ],
+            $this->names(
+                $this->connection->unionAll(
+                    $this->usersNamed('Alice', 'Bob'),
+                    $this->usersNamed('Bob', 'Charlie'),
+                )
+                    ->union($this->usersNamed('Bob'))
+                    ->orderBy('name'),
+            ),
+        );
+    }
+
+    public function testNestedUnionKeepsItsGrouping(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        self::assertSame(
+            [
+                'Alice',
+                'Alice',
+            ],
+            $this->names(
+                $this->connection->unionAll(
+                    $this->connection->union(
+                        $this->usersNamed('Alice'),
+                        $this->usersNamed('Alice'),
+                    ),
+                    $this->usersNamed('Alice'),
+                ),
+            ),
+        );
+    }
+
+    public function testUnionOrdersAndLimitsTheWholeResult(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        self::assertSame(
+            [
+                'Post by Alice',
+                'Charlie',
+            ],
+            $this->names(
+                $this->connection->unionAll(
+                    $this->usersNamed('Alice', 'Bob', 'Charlie'),
+                    $this->connection->select(
+                        table: 'posts',
+                    )
+                        ->selectAs('title', 'name'),
+                )
+                    ->orderBy('name', 'DESC')
+                    ->limit(2, 1),
+            ),
+        );
+    }
+
+    public function testUnionOrderByOnSameColumnReplacesDirection(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        self::assertSame(
+            [
+                'Charlie',
+                'Bob',
+                'Alice',
+            ],
+            $this->names(
+                $this->connection->union(
+                    $this->usersNamed('Alice', 'Bob'),
+                    $this->usersNamed('Charlie'),
+                )
+                    ->orderBy('name')
+                    ->orderBy('name', 'DESC'),
+            ),
+        );
+    }
+
+    public function testUnionMemberKeepsItsOwnOrderAndLimit(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        self::assertSame(
+            [
+                'Alice',
+                'Charlie',
+            ],
+            $this->names(
+                $this->connection->union(
+                    $this->usersNamed('Alice', 'Bob', 'Charlie')
+                        ->orderBy('name', 'DESC')
+                        ->limit(1),
+                    $this->usersNamed('Alice'),
+                )
+                    ->orderBy('name'),
+            ),
+        );
+    }
+
+    public function testUnionInsideSelectFrom(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        self::assertSame(
+            [
+                'Post by Alice',
+                'Post by Bob',
+            ],
+            $this->names(
+                $this->connection->selectFrom(
+                    subquery: $this->connection->unionAll(
+                        $this->usersNamed('Alice', 'Bob'),
+                        $this->connection->select(
+                            table: 'posts',
+                        )
+                            ->selectAs('title', 'name')
+                            ->where('user_id', 1, '>='),
+                    ),
+                    alias: 'u',
+                )
+                    ->selectAs('u.name', 'name')
+                    ->whereStartsWith('u.name', 'Post')
+                    ->orderBy('u.name'),
+            ),
+        );
+    }
+
+    public function testUnionInsideWhereIn(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        self::assertSame(
+            [
+                'Alice',
+                'Bob',
+            ],
+            $this->names(
+                $this->connection->select(
+                    table: 'users',
+                )
+                    ->selectAs('name', 'name')
+                    ->whereIn(
+                        column: 'id',
+                        values: $this->connection->union(
+                            $this->connection->select(
+                                table: 'posts',
+                            )
+                                ->select('user_id')
+                                ->where('title', 'Post by Alice'),
+                            $this->connection->select(
+                                table: 'posts',
+                            )
+                                ->select('user_id')
+                                ->where('title', 'Another Bob post'),
+                        ),
+                    )
+                    ->orderBy('name'),
+            ),
+        );
+    }
+
+    public function testUnionFetchesHydratedRows(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        $union = $this->connection->unionAll(
+            $this->connection->select(
+                table: 'users',
+            )
+                ->where('name', 'Alice'),
+            $this->connection->select(
+                table: 'users',
+            )
+                ->where('name', 'Bob'),
+        )
+            ->orderBy('name');
+
+        $user = $union->fetch(HydratableTestUser::class);
+
+        self::assertInstanceOf(
+            HydratableTestUser::class,
+            $user,
+        );
+
+        self::assertSame(
+            'Alice',
+            $user->name,
+        );
+
+        $names = [];
+
+        foreach ($union->fetchAll(HydratableTestUser::class) as $row) {
+            $names[] = $row->name;
+        }
+
+        self::assertSame(
+            [
+                'Alice',
+                'Bob',
+            ],
+            $names,
+        );
+
+        self::assertNull(
+            $this->connection->union(
+                $this->usersNamed('nobody'),
+                $this->usersNamed('nobody either'),
+            )
+                ->fetch(HydratableTestUser::class),
+        );
     }
 
     public function testAggregateShortcutsSelectTheirFunction(): void
@@ -2190,7 +2480,7 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
      * @return list<string>
      */
     private function names(
-        SelectStatementInterface $statement,
+        SelectStatementInterface|CompoundSelectStatementInterface $statement,
     ): array {
         $names = [];
 
@@ -2212,6 +2502,23 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
             ->whereColumn(
                 column: 'posts.user_id',
                 other: 'users.id',
+            );
+    }
+
+    private function usersNamed(
+        string $name,
+        string ...$names,
+    ): SelectStatementInterface {
+        return $this->connection->select(
+            table: 'users',
+        )
+            ->selectAs('name', 'name')
+            ->whereIn(
+                column: 'name',
+                values: [
+                    $name,
+                    ...$names,
+                ],
             );
     }
 

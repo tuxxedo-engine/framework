@@ -26,20 +26,20 @@ interface WhereStatementInterface extends StatementInterface
     public function hasJoinConstraints(): bool;
 
     /**
-     * @param SelectStatementInterface|string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
+     * @param SubqueryRenderableInterface|string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
      */
     public function where(
         string $column,
-        SelectStatementInterface|string|int|float|bool|null|array $value,
+        SubqueryRenderableInterface|string|int|float|bool|null|array $value,
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static;
 
     /**
-     * @param SelectStatementInterface|string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
+     * @param SubqueryRenderableInterface|string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
      */
     public function orWhere(
         string $column,
-        SelectStatementInterface|string|int|float|bool|null|array $value,
+        SubqueryRenderableInterface|string|int|float|bool|null|array $value,
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static;
 
@@ -60,35 +60,35 @@ interface WhereStatementInterface extends StatementInterface
     ): static;
 
     /**
-     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
+     * @param SubqueryRenderableInterface|non-empty-array<string|int|float|bool|null> $values
      */
     public function whereIn(
         string $column,
-        SelectStatementInterface|array $values,
+        SubqueryRenderableInterface|array $values,
     ): static;
 
     /**
-     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
+     * @param SubqueryRenderableInterface|non-empty-array<string|int|float|bool|null> $values
      */
     public function whereNotIn(
         string $column,
-        SelectStatementInterface|array $values,
+        SubqueryRenderableInterface|array $values,
     ): static;
 
     /**
-     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
+     * @param SubqueryRenderableInterface|non-empty-array<string|int|float|bool|null> $values
      */
     public function orWhereIn(
         string $column,
-        SelectStatementInterface|array $values,
+        SubqueryRenderableInterface|array $values,
     ): static;
 
     /**
-     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
+     * @param SubqueryRenderableInterface|non-empty-array<string|int|float|bool|null> $values
      */
     public function orWhereNotIn(
         string $column,
-        SelectStatementInterface|array $values,
+        SubqueryRenderableInterface|array $values,
     ): static;
 
     /**
@@ -250,7 +250,7 @@ interface WhereStatementInterface extends StatementInterface
      * @throws SqlException
      */
     public function whereSubquery(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
         string|int|float|bool|null $value,
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static;
@@ -259,25 +259,25 @@ interface WhereStatementInterface extends StatementInterface
      * @throws SqlException
      */
     public function orWhereSubquery(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
         string|int|float|bool|null $value,
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static;
 
     public function whereExists(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
     ): static;
 
     public function whereNotExists(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
     ): static;
 
     public function orWhereExists(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
     ): static;
 
     public function orWhereNotExists(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
     ): static;
 
     /**

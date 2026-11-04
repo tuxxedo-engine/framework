@@ -33,7 +33,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
 {
     private bool $distinct = false;
     private ?string $alias = null;
-    private ?SelectStatementInterface $fromSubquery = null;
+    private ?SubqueryRenderableInterface $fromSubquery = null;
 
     /**
      * @var list<array{kind: 'column'|'aggregate'|'raw', expression: string|null, function: AggregateFunction|null, distinct: bool, alias: string|null}>
@@ -41,12 +41,12 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
     private array $columns = [];
 
     /**
-     * @var list<array{subquery: SelectStatementInterface, alias: string}>
+     * @var list<array{subquery: SubqueryRenderableInterface, alias: string}>
      */
     private array $selectSubqueries = [];
 
     /**
-     * @var list<array{expression: string|SelectStatementInterface, direction: OrderDirection}>
+     * @var list<array{expression: string|SubqueryRenderableInterface, direction: OrderDirection}>
      */
     private array $orderBy = [];
 
@@ -64,7 +64,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
     private ?int $offset = null;
 
     public static function createFromSubquery(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
         string $alias,
         ?ConnectionInterface $connection = null,
     ): static {
@@ -199,7 +199,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
             foreach ($this->orderBy as $index => $entry) {
                 $expression = $entry['expression'];
 
-                if ($expression instanceof SelectStatementInterface) {
+                if ($expression instanceof SubqueryRenderableInterface) {
                     $expression = '(' . $this->mergeSubquery(
                         subquery: $expression,
                         prefix: 'osq_' . $index . '_',
@@ -512,7 +512,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
     }
 
     public function selectSubquery(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
         string $alias,
     ): static {
         $this->selectSubqueries[] = [
@@ -555,7 +555,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
     }
 
     public function orderBySubquery(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
         OrderDirection|string $direction = OrderDirection::ASC,
     ): static {
         if (\is_string($direction)) {

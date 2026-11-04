@@ -20,12 +20,14 @@ use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Driver\ResultSetInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Parser\StatementParserInterface;
+use Tuxxedo\Database\Query\Statement\CompoundSelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\CountStatementInterface;
 use Tuxxedo\Database\Query\Statement\DeleteStatementInterface;
 use Tuxxedo\Database\Query\Statement\ExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\InsertBulkStatementInterface;
 use Tuxxedo\Database\Query\Statement\InsertStatementInterface;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
+use Tuxxedo\Database\Query\Statement\SubqueryRenderableInterface;
 use Tuxxedo\Database\Query\Statement\Table\AlterTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\ColumnExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
@@ -195,10 +197,26 @@ class StubConnection implements ConnectionInterface
     }
 
     public function selectFrom(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
         string $alias,
     ): SelectStatementInterface {
         throw new \LogicException('StubConnection: selectFrom not implemented');
+    }
+
+    public function union(
+        SubqueryRenderableInterface $first,
+        SubqueryRenderableInterface $second,
+        SubqueryRenderableInterface ...$others,
+    ): CompoundSelectStatementInterface {
+        throw new \LogicException('StubConnection: union not implemented');
+    }
+
+    public function unionAll(
+        SubqueryRenderableInterface $first,
+        SubqueryRenderableInterface $second,
+        SubqueryRenderableInterface ...$others,
+    ): CompoundSelectStatementInterface {
+        throw new \LogicException('StubConnection: unionAll not implemented');
     }
 
     public function insert(

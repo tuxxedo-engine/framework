@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Driver;
 
 use Tuxxedo\Database\DatabaseException;
+use Tuxxedo\Database\Query\Statement\CompoundSelectStatement;
+use Tuxxedo\Database\Query\Statement\CompoundSelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\CountStatement;
 use Tuxxedo\Database\Query\Statement\CountStatementInterface;
 use Tuxxedo\Database\Query\Statement\DeleteStatement;
@@ -26,6 +28,7 @@ use Tuxxedo\Database\Query\Statement\InsertStatement;
 use Tuxxedo\Database\Query\Statement\InsertStatementInterface;
 use Tuxxedo\Database\Query\Statement\SelectStatement;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
+use Tuxxedo\Database\Query\Statement\SubqueryRenderableInterface;
 use Tuxxedo\Database\Query\Statement\Table\AlterTableStatement;
 use Tuxxedo\Database\Query\Statement\Table\AlterTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\ColumnExistsStatement;
@@ -168,7 +171,7 @@ abstract class AbstractConnection implements ConnectionInterface
     }
 
     public function selectFrom(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
         string $alias,
     ): SelectStatementInterface {
         return SelectStatement::createFromSubquery(
@@ -176,6 +179,30 @@ abstract class AbstractConnection implements ConnectionInterface
             alias: $alias,
             connection: $this,
         );
+    }
+
+    public function union(
+        SubqueryRenderableInterface $first,
+        SubqueryRenderableInterface $second,
+        SubqueryRenderableInterface ...$others,
+    ): CompoundSelectStatementInterface {
+        return (new CompoundSelectStatement(
+            first: $first,
+            connection: $this,
+        ))
+            ->union($second, ...$others);
+    }
+
+    public function unionAll(
+        SubqueryRenderableInterface $first,
+        SubqueryRenderableInterface $second,
+        SubqueryRenderableInterface ...$others,
+    ): CompoundSelectStatementInterface {
+        return (new CompoundSelectStatement(
+            first: $first,
+            connection: $this,
+        ))
+            ->unionAll($second, ...$others);
     }
 
     public function insert(

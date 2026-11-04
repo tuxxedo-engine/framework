@@ -19,12 +19,14 @@ use Tuxxedo\Database\ConnectionRole;
 use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Parser\StatementParserInterface;
+use Tuxxedo\Database\Query\Statement\CompoundSelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\CountStatementInterface;
 use Tuxxedo\Database\Query\Statement\DeleteStatementInterface;
 use Tuxxedo\Database\Query\Statement\ExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\InsertBulkStatementInterface;
 use Tuxxedo\Database\Query\Statement\InsertStatementInterface;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
+use Tuxxedo\Database\Query\Statement\SubqueryRenderableInterface;
 use Tuxxedo\Database\Query\Statement\Table\AlterTableStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\ColumnExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\Table\CreateTableStatementInterface;
@@ -176,9 +178,21 @@ interface ConnectionInterface
     ): SelectStatementInterface;
 
     public function selectFrom(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
         string $alias,
     ): SelectStatementInterface;
+
+    public function union(
+        SubqueryRenderableInterface $first,
+        SubqueryRenderableInterface $second,
+        SubqueryRenderableInterface ...$others,
+    ): CompoundSelectStatementInterface;
+
+    public function unionAll(
+        SubqueryRenderableInterface $first,
+        SubqueryRenderableInterface $second,
+        SubqueryRenderableInterface ...$others,
+    ): CompoundSelectStatementInterface;
 
     public function insert(
         string $table,

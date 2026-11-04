@@ -18,6 +18,7 @@ use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Join\JoinConditionInterface;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
+use Tuxxedo\Database\Query\Statement\SubqueryRenderableInterface;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
@@ -143,12 +144,12 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
-     * @param SelectStatementInterface|string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
+     * @param SubqueryRenderableInterface|string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
      */
     #[\NoDiscard]
     public function where(
         string $column,
-        SelectStatementInterface|string|int|float|bool|null|array $value,
+        SubqueryRenderableInterface|string|int|float|bool|null|array $value,
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static {
         return $this->extend(
@@ -159,12 +160,12 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
-     * @param SelectStatementInterface|string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
+     * @param SubqueryRenderableInterface|string|int|float|bool|null|non-empty-array<string|int|float|bool|null> $value
      */
     #[\NoDiscard]
     public function orWhere(
         string $column,
-        SelectStatementInterface|string|int|float|bool|null|array $value,
+        SubqueryRenderableInterface|string|int|float|bool|null|array $value,
         ConditionOperator|string $operator = ConditionOperator::EQUALS,
     ): static {
         return $this->extend(
@@ -219,12 +220,12 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
-     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
+     * @param SubqueryRenderableInterface|non-empty-array<string|int|float|bool|null> $values
      */
     #[\NoDiscard]
     public function whereIn(
         string $column,
-        SelectStatementInterface|array $values,
+        SubqueryRenderableInterface|array $values,
     ): static {
         return $this->extend(
             criterion: static function (WhereStatementInterface $statement) use ($column, $values): void {
@@ -234,12 +235,12 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
-     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
+     * @param SubqueryRenderableInterface|non-empty-array<string|int|float|bool|null> $values
      */
     #[\NoDiscard]
     public function whereNotIn(
         string $column,
-        SelectStatementInterface|array $values,
+        SubqueryRenderableInterface|array $values,
     ): static {
         return $this->extend(
             criterion: static function (WhereStatementInterface $statement) use ($column, $values): void {
@@ -249,12 +250,12 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
-     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
+     * @param SubqueryRenderableInterface|non-empty-array<string|int|float|bool|null> $values
      */
     #[\NoDiscard]
     public function orWhereIn(
         string $column,
-        SelectStatementInterface|array $values,
+        SubqueryRenderableInterface|array $values,
     ): static {
         return $this->extend(
             criterion: static function (WhereStatementInterface $statement) use ($column, $values): void {
@@ -264,12 +265,12 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
-     * @param SelectStatementInterface|non-empty-array<string|int|float|bool|null> $values
+     * @param SubqueryRenderableInterface|non-empty-array<string|int|float|bool|null> $values
      */
     #[\NoDiscard]
     public function orWhereNotIn(
         string $column,
-        SelectStatementInterface|array $values,
+        SubqueryRenderableInterface|array $values,
     ): static {
         return $this->extend(
             criterion: static function (WhereStatementInterface $statement) use ($column, $values): void {
@@ -638,7 +639,7 @@ abstract class AbstractQueryable implements QueryableInterface
 
     #[\NoDiscard]
     public function whereExists(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
     ): static {
         return $this->extend(
             criterion: static function (WhereStatementInterface $statement) use ($subquery): void {
@@ -649,7 +650,7 @@ abstract class AbstractQueryable implements QueryableInterface
 
     #[\NoDiscard]
     public function whereNotExists(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
     ): static {
         return $this->extend(
             criterion: static function (WhereStatementInterface $statement) use ($subquery): void {
@@ -660,7 +661,7 @@ abstract class AbstractQueryable implements QueryableInterface
 
     #[\NoDiscard]
     public function orWhereExists(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
     ): static {
         return $this->extend(
             criterion: static function (WhereStatementInterface $statement) use ($subquery): void {
@@ -671,7 +672,7 @@ abstract class AbstractQueryable implements QueryableInterface
 
     #[\NoDiscard]
     public function orWhereNotExists(
-        SelectStatementInterface $subquery,
+        SubqueryRenderableInterface $subquery,
     ): static {
         return $this->extend(
             criterion: static function (WhereStatementInterface $statement) use ($subquery): void {
