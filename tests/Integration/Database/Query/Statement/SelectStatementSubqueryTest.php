@@ -150,4 +150,47 @@ class SelectStatementSubqueryTest extends TestCase
         self::assertContains('paid', $result->parameters);
         self::assertSame(2, \sizeof($result->parameters));
     }
+
+    public function testRenderSubqueryPrefixesPlaceholdersAndParameters(): void
+    {
+        $rendered = $this->connection->select('tags')
+            ->where(
+                column: 'tags.kind',
+                value: 'topic',
+            )
+            ->renderSubquery(
+                dialect: $this->connection->dialect,
+                parameterPrefix: 'outer_',
+            );
+
+        self::assertStringContainsString(':outer_where_0', $rendered['sql']);
+        self::assertStringNotContainsString(' :where_0', $rendered['sql']);
+        self::assertSame(
+            [
+                'outer_where_0' => 'topic',
+            ],
+            $rendered['parameters'],
+        );
+    }
+
+    public function testRenderSubqueryLeavesParametersOfOuterStatementUntouched(): void
+    {
+        $statement = $this->connection->select('tags')
+            ->where(
+                column: 'tags.kind',
+                value: 'topic',
+            );
+
+        $statement->renderSubquery(
+            dialect: $this->connection->dialect,
+            parameterPrefix: 'outer_',
+        );
+
+        self::assertSame(
+            [
+                'topic',
+            ],
+            $statement->compile()->parameters,
+        );
+    }
 }

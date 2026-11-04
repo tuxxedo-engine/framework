@@ -98,20 +98,6 @@ class SqlException extends Exception
         );
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
-    public static function fromSubqueryStatementMustExtendAbstractStatement(
-        string $actualType,
-    ): self {
-        return new self(
-            message: \sprintf(
-                'Subquery statements must extend AbstractStatement, got `%s`',
-                $actualType,
-            ),
-        );
-    }
-
     public static function fromUnknownOperator(
         string $value,
         string $enum,

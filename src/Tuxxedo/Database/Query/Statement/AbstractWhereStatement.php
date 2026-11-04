@@ -171,7 +171,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
                 ' %s %s (%s)',
                 $dialect->qualifiedIdentifier($condition->identifier),
                 $dialect->conditionOperator($condition->operator),
-                $this->renderSubquery(
+                $this->renderConditionSubquery(
                     $condition->subquery,
                     $this->subqueryCounter++,
                     $dialect,
@@ -182,7 +182,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         if ($condition instanceof SubqueryComparisonConditionInterface) {
             return \sprintf(
                 ' (%s) %s %s',
-                $this->renderSubquery(
+                $this->renderConditionSubquery(
                     $condition->subquery,
                     $this->subqueryCounter++,
                     $dialect,
@@ -194,7 +194,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
 
         if ($condition instanceof ExistsConditionInterface) {
             return ($condition->negated ? ' NOT EXISTS (' : ' EXISTS (') .
-                $this->renderSubquery(
+                $this->renderConditionSubquery(
                     $condition->subquery,
                     $this->subqueryCounter++,
                     $dialect,
@@ -527,23 +527,12 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         return $this;
     }
 
-    /**
-     * @throws SqlException
-     */
     private function buildSubqueryCondition(
         string $column,
         ConditionOperator $operator,
         ConditionConjunction $conjunction,
         SelectStatementInterface $values,
     ): SubqueryCondition {
-        if (!$values instanceof AbstractStatement) {
-            // @codeCoverageIgnoreStart
-            throw SqlException::fromSubqueryStatementMustExtendAbstractStatement(
-                actualType: \get_debug_type($values),
-            );
-            // @codeCoverageIgnoreEnd
-        }
-
         return new SubqueryCondition(
             conjunction: $conjunction,
             identifier: $column,
@@ -552,39 +541,33 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         );
     }
 
-    private function renderSubquery(
-        AbstractStatement $subquery,
+    private function renderConditionSubquery(
+        SubqueryRenderableInterface $subquery,
         int $index,
         DialectInterface $dialect,
     ): string {
-        return $this->renderSubqueryWithPrefix(
+        return $this->mergeSubquery(
             subquery: $subquery,
             prefix: 'subq_' . $index . '_',
             dialect: $dialect,
         );
     }
 
-    protected function renderSubqueryWithPrefix(
-        AbstractStatement $subquery,
+    protected function mergeSubquery(
+        SubqueryRenderableInterface $subquery,
         string $prefix,
         DialectInterface $dialect,
     ): string {
-        $sql = $subquery->generateSql($dialect);
-        $keys = [];
+        $rendered = $subquery->renderSubquery(
+            dialect: $dialect,
+            parameterPrefix: $prefix,
+        );
 
-        foreach ($subquery->parameters as $key => $value) {
-            $stringKey = (string) $key;
-            $keys[$stringKey] = true;
-            $this->parameters[$prefix . $stringKey] = $value;
+        foreach ($rendered['parameters'] as $key => $value) {
+            $this->parameters[$key] = $value;
         }
 
-        return \preg_replace_callback(
-            pattern: '/:([A-Za-z_][A-Za-z0-9_]*)/',
-            callback: static fn (array $match): string => isset($keys[$match[1]])
-                ? ':' . $prefix . $match[1]
-                : $match[0],
-            subject: $sql,
-        ) ?? $sql;
+        return $rendered['sql'];
     }
 
     public function innerJoin(
@@ -1047,14 +1030,6 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
             );
         }
 
-        if (!$subquery instanceof AbstractStatement) {
-            // @codeCoverageIgnoreStart
-            throw SqlException::fromSubqueryStatementMustExtendAbstractStatement(
-                actualType: \get_debug_type($subquery),
-            );
-            // @codeCoverageIgnoreEnd
-        }
-
         $parameterKey = 'where_' . $this->nextParameterOffset();
 
         $this->parameters[$parameterKey] = $value;
@@ -1170,14 +1145,6 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         ConditionConjunction $conjunction,
         bool $negated,
     ): ExistsCondition {
-        if (!$subquery instanceof AbstractStatement) {
-            // @codeCoverageIgnoreStart
-            throw SqlException::fromSubqueryStatementMustExtendAbstractStatement(
-                actualType: \get_debug_type($subquery),
-            );
-            // @codeCoverageIgnoreEnd
-        }
-
         return new ExistsCondition(
             conjunction: $conjunction,
             negated: $negated,

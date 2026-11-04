@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Statement\Condition;
 
-use Tuxxedo\Database\Query\Statement\AbstractStatement;
+use Tuxxedo\Database\Query\Statement\SubqueryRenderableInterface;
 
 interface ExistsConditionInterface
 {
@@ -25,7 +25,7 @@ interface ExistsConditionInterface
         get;
     }
 
-    public AbstractStatement $subquery {
+    public SubqueryRenderableInterface $subquery {
         get;
     }
 }

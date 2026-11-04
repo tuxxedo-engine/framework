@@ -81,14 +81,8 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
         }
 
         foreach ($this->selectSubqueries as $index => $entry) {
-            $subquery = $entry['subquery'];
-
-            if (!$subquery instanceof AbstractStatement) {
-                continue; // @codeCoverageIgnore
-            }
-
-            $renderedColumns[] = '(' . $this->renderSubqueryWithPrefix(
-                subquery: $subquery,
+            $renderedColumns[] = '(' . $this->mergeSubquery(
+                subquery: $entry['subquery'],
                 prefix: 'ssq_' . $index . '_',
                 dialect: $dialect,
             ) . ') AS ' . $dialect->identifier($entry['alias']);
@@ -191,11 +185,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
                 $expression = $entry['expression'];
 
                 if ($expression instanceof SelectStatementInterface) {
-                    if (!$expression instanceof AbstractStatement) {
-                        continue; // @codeCoverageIgnore
-                    }
-
-                    $expression = '(' . $this->renderSubqueryWithPrefix(
+                    $expression = '(' . $this->mergeSubquery(
                         subquery: $expression,
                         prefix: 'osq_' . $index . '_',
                         dialect: $dialect,
@@ -672,6 +662,34 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
         ?ConnectionInterface $connection = null,
     ): \Generator {
         yield from $this->execute($connection)->fetchAll($class, $hydrator);
+    }
+
+    public function renderSubquery(
+        DialectInterface $dialect,
+        string $parameterPrefix,
+    ): array {
+        $sql = $this->generateSql($dialect);
+        $keys = [];
+        $parameters = [];
+
+        foreach ($this->parameters as $key => $value) {
+            $stringKey = (string) $key;
+            $keys[$stringKey] = true;
+            $parameters[$parameterPrefix . $stringKey] = $value;
+        }
+
+        $rewritten = \preg_replace_callback(
+            pattern: '/:([A-Za-z_][A-Za-z0-9_]*)/',
+            callback: static fn (array $match): string => isset($keys[$match[1]])
+                ? ':' . $parameterPrefix . $match[1]
+                : $match[0],
+            subject: $sql,
+        );
+
+        return [
+            'sql' => $rewritten ?? $sql,
+            'parameters' => $parameters,
+        ];
     }
 
     /**
