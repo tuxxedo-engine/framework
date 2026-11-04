@@ -31,6 +31,8 @@ class ResponseEmitter implements ResponseEmitterInterface
         $maxLength = null;
 
         if (!$this->sent && $sendHeaders) {
+            $sentNames = [];
+
             foreach ($response->headers as $header) {
                 if ($header instanceof CookieInterface) {
                     \setcookie(
@@ -43,10 +45,14 @@ class ResponseEmitter implements ResponseEmitterInterface
                         httponly: $header->httpOnly,
                     );
 
+                    $sentNames['set-cookie'] = true;
+
                     continue;
                 } elseif ($header->is('Content-Length')) {
                     $maxLength = (int) $header->value;
                 }
+
+                $name = \strtolower($header->name);
 
                 \header(
                     \sprintf(
@@ -54,7 +60,10 @@ class ResponseEmitter implements ResponseEmitterInterface
                         $header->name,
                         $header->value,
                     ),
+                    !isset($sentNames[$name]),
                 );
+
+                $sentNames[$name] = true;
             }
 
             \header(
