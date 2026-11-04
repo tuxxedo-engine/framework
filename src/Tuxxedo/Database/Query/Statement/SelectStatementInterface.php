@@ -48,6 +48,133 @@ interface SelectStatementInterface extends WhereStatementInterface, SubqueryRend
         bool $distinct = false,
     ): static;
 
+    /**
+     * @throws SqlException
+     */
+    public function selectCount(
+        ?string $column = null,
+        ?string $alias = null,
+        bool $distinct = false,
+    ): static;
+
+    public function selectSum(
+        string $column,
+        ?string $alias = null,
+        bool $distinct = false,
+    ): static;
+
+    public function selectAvg(
+        string $column,
+        ?string $alias = null,
+        bool $distinct = false,
+    ): static;
+
+    public function selectMin(
+        string $column,
+        ?string $alias = null,
+    ): static;
+
+    public function selectMax(
+        string $column,
+        ?string $alias = null,
+    ): static;
+
+    /**
+     * @throws SqlException
+     */
+    public function havingCount(
+        int $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        ?string $column = null,
+        bool $distinct = false,
+    ): static;
+
+    /**
+     * @throws SqlException
+     */
+    public function havingSum(
+        string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        bool $distinct = false,
+    ): static;
+
+    /**
+     * @throws SqlException
+     */
+    public function havingAvg(
+        string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        bool $distinct = false,
+    ): static;
+
+    /**
+     * @throws SqlException
+     */
+    public function havingMin(
+        string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static;
+
+    /**
+     * @throws SqlException
+     */
+    public function havingMax(
+        string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static;
+
+    /**
+     * @throws SqlException
+     */
+    public function orHavingCount(
+        int $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        ?string $column = null,
+        bool $distinct = false,
+    ): static;
+
+    /**
+     * @throws SqlException
+     */
+    public function orHavingSum(
+        string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        bool $distinct = false,
+    ): static;
+
+    /**
+     * @throws SqlException
+     */
+    public function orHavingAvg(
+        string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        bool $distinct = false,
+    ): static;
+
+    /**
+     * @throws SqlException
+     */
+    public function orHavingMin(
+        string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static;
+
+    /**
+     * @throws SqlException
+     */
+    public function orHavingMax(
+        string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static;
+
     public function selectRaw(
         string $sql,
         ?string $alias = null,

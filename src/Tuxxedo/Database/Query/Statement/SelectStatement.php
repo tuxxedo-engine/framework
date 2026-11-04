@@ -278,6 +278,209 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
         return $this;
     }
 
+    public function selectCount(
+        ?string $column = null,
+        ?string $alias = null,
+        bool $distinct = false,
+    ): static {
+        return $this->selectAggregate(
+            function: AggregateFunction::COUNT,
+            column: $column,
+            alias: $alias,
+            distinct: $distinct,
+        );
+    }
+
+    public function selectSum(
+        string $column,
+        ?string $alias = null,
+        bool $distinct = false,
+    ): static {
+        return $this->selectAggregate(
+            function: AggregateFunction::SUM,
+            column: $column,
+            alias: $alias,
+            distinct: $distinct,
+        );
+    }
+
+    public function selectAvg(
+        string $column,
+        ?string $alias = null,
+        bool $distinct = false,
+    ): static {
+        return $this->selectAggregate(
+            function: AggregateFunction::AVG,
+            column: $column,
+            alias: $alias,
+            distinct: $distinct,
+        );
+    }
+
+    public function selectMin(
+        string $column,
+        ?string $alias = null,
+    ): static {
+        return $this->selectAggregate(
+            function: AggregateFunction::MIN,
+            column: $column,
+            alias: $alias,
+        );
+    }
+
+    public function selectMax(
+        string $column,
+        ?string $alias = null,
+    ): static {
+        return $this->selectAggregate(
+            function: AggregateFunction::MAX,
+            column: $column,
+            alias: $alias,
+        );
+    }
+
+    public function havingCount(
+        int $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        ?string $column = null,
+        bool $distinct = false,
+    ): static {
+        return $this->havingAggregate(
+            function: AggregateFunction::COUNT,
+            column: $column,
+            value: $value,
+            operator: $operator,
+            distinct: $distinct,
+        );
+    }
+
+    public function havingSum(
+        string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        bool $distinct = false,
+    ): static {
+        return $this->havingAggregate(
+            function: AggregateFunction::SUM,
+            column: $column,
+            value: $value,
+            operator: $operator,
+            distinct: $distinct,
+        );
+    }
+
+    public function havingAvg(
+        string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        bool $distinct = false,
+    ): static {
+        return $this->havingAggregate(
+            function: AggregateFunction::AVG,
+            column: $column,
+            value: $value,
+            operator: $operator,
+            distinct: $distinct,
+        );
+    }
+
+    public function havingMin(
+        string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static {
+        return $this->havingAggregate(
+            function: AggregateFunction::MIN,
+            column: $column,
+            value: $value,
+            operator: $operator,
+        );
+    }
+
+    public function havingMax(
+        string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static {
+        return $this->havingAggregate(
+            function: AggregateFunction::MAX,
+            column: $column,
+            value: $value,
+            operator: $operator,
+        );
+    }
+
+    public function orHavingCount(
+        int $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        ?string $column = null,
+        bool $distinct = false,
+    ): static {
+        return $this->orHavingAggregate(
+            function: AggregateFunction::COUNT,
+            column: $column,
+            value: $value,
+            operator: $operator,
+            distinct: $distinct,
+        );
+    }
+
+    public function orHavingSum(
+        string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        bool $distinct = false,
+    ): static {
+        return $this->orHavingAggregate(
+            function: AggregateFunction::SUM,
+            column: $column,
+            value: $value,
+            operator: $operator,
+            distinct: $distinct,
+        );
+    }
+
+    public function orHavingAvg(
+        string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+        bool $distinct = false,
+    ): static {
+        return $this->orHavingAggregate(
+            function: AggregateFunction::AVG,
+            column: $column,
+            value: $value,
+            operator: $operator,
+            distinct: $distinct,
+        );
+    }
+
+    public function orHavingMin(
+        string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static {
+        return $this->orHavingAggregate(
+            function: AggregateFunction::MIN,
+            column: $column,
+            value: $value,
+            operator: $operator,
+        );
+    }
+
+    public function orHavingMax(
+        string $column,
+        string|int|float|bool|null $value,
+        ConditionOperator|string $operator = ConditionOperator::EQUALS,
+    ): static {
+        return $this->orHavingAggregate(
+            function: AggregateFunction::MAX,
+            column: $column,
+            value: $value,
+            operator: $operator,
+        );
+    }
+
     public function selectRaw(
         string $sql,
         ?string $alias = null,

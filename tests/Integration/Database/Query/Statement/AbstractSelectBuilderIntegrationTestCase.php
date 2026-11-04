@@ -812,6 +812,86 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
         );
     }
 
+    public function testAggregateShortcutsSelectTheirFunction(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        $row = $this->connection->select(
+            table: 'posts',
+        )
+            ->selectCount(alias: 'total')
+            ->selectCount('user_id', 'authors', distinct: true)
+            ->selectSum('id', 'id_sum')
+            ->selectAvg('id', 'id_avg')
+            ->selectMin('id', 'id_min')
+            ->selectMax('id', 'id_max')
+            ->execute()
+            ->fetch();
+
+        self::assertEquals(3, $row->properties['total']);
+        self::assertEquals(2, $row->properties['authors']);
+        self::assertEquals(6, $row->properties['id_sum']);
+        self::assertEquals(2.0, $row->properties['id_avg']);
+        self::assertEquals(1, $row->properties['id_min']);
+        self::assertEquals(3, $row->properties['id_max']);
+    }
+
+    public function testHavingShortcutsRenderTheirFunction(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        $grouped = fn (): SelectStatementInterface => $this->connection->select(
+            table: 'users',
+        )
+            ->select('users.name')
+            ->innerJoin(
+                table: 'posts',
+                first: 'posts.user_id',
+                second: 'users.id',
+            )
+            ->groupBy('users.name')
+            ->orderBy('users.name');
+
+        foreach (
+            [
+                $grouped()->havingCount(2, '>=', 'posts.id'),
+                $grouped()->havingSum('posts.id', 5),
+                $grouped()->havingAvg('posts.id', 2, '>'),
+                $grouped()->havingMin('posts.id', 2),
+                $grouped()->havingMax('posts.id', 3),
+            ] as $statement
+        ) {
+            self::assertSame(
+                [
+                    'Bob',
+                ],
+                $this->names($statement),
+            );
+        }
+
+        self::assertSame(
+            [
+                'Alice',
+                'Bob',
+            ],
+            $this->names(
+                $grouped()
+                    ->havingCount(99)
+                    ->orHavingSum('posts.id', 1)
+                    ->orHavingAvg('posts.id', 2, '>')
+                    ->orHavingMin('posts.id', 99)
+                    ->orHavingMax('posts.id', 99)
+                    ->orHavingCount(99, distinct: true, column: 'posts.id'),
+            ),
+        );
+    }
+
     public function testAggregateWithoutColumnOnlyAllowsPlainCount(): void
     {
         foreach (
@@ -819,6 +899,8 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
                 static fn (SelectStatementInterface $select): SelectStatementInterface => $select->selectAggregate(AggregateFunction::SUM),
                 static fn (SelectStatementInterface $select): SelectStatementInterface => $select->selectAggregate(AggregateFunction::COUNT, distinct: true),
                 static fn (SelectStatementInterface $select): SelectStatementInterface => $select->havingAggregate(AggregateFunction::MAX, null, 1),
+                static fn (SelectStatementInterface $select): SelectStatementInterface => $select->selectCount(distinct: true),
+                static fn (SelectStatementInterface $select): SelectStatementInterface => $select->havingCount(1, distinct: true),
             ] as $aggregate
         ) {
             try {

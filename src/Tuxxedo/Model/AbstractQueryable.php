@@ -1109,7 +1109,7 @@ abstract class AbstractQueryable implements QueryableInterface
             methodName: 'whereHas',
         );
 
-        return $chain['subquery']->selectAggregate(AggregateFunction::COUNT);
+        return $chain['subquery']->selectCount();
     }
 
     private function defaultAggregateAliasFor(
