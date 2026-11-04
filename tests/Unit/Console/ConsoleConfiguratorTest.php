@@ -16,10 +16,14 @@ namespace Unit\Console;
 use Fixture\Console\Commands\SimpleCommand;
 use Fixture\Console\ConsoleConfigurator\ServiceMarker;
 use PHPUnit\Framework\TestCase;
+use Support\Cache\InMemoryCacheDriverConfig;
 use Support\Console\Kernel\RecordingErrorHandler;
 use Support\Console\Middleware\RecordingCommandMiddleware;
 use Support\Env\Source\StubEnvSource;
 use Tuxxedo\Application\Environment;
+use Tuxxedo\Cache\CacheManager;
+use Tuxxedo\Cache\CacheManagerInterface;
+use Tuxxedo\Cache\Config\CacheConfig;
 use Tuxxedo\Config\Config;
 use Tuxxedo\Config\ConfigException;
 use Tuxxedo\Config\ConfigInterface;
@@ -154,6 +158,7 @@ class ConsoleConfiguratorTest extends TestCase
     public function testBuildBindsConfigInContainer(): void
     {
         $container = new Container();
+
         $container->singleton(
             new IntlConfig(
                 rootDirectory: \dirname(__DIR__, 3) . '/resources/intl',
@@ -417,9 +422,37 @@ class ConsoleConfiguratorTest extends TestCase
         self::assertSame('my-cli', $configurator->appNameHeaderLabel);
     }
 
+    public function testBuildRegistersCacheFromDefault(): void
+    {
+        $container = new Container();
+
+        $container->singleton(
+            new IntlConfig(
+                rootDirectory: \dirname(__DIR__, 3) . '/resources/intl',
+                defaultLocale: Locale::parse('en-US'),
+            ),
+        );
+
+        $container->singleton(
+            new CacheConfig(
+                default: new InMemoryCacheDriverConfig(),
+            ),
+        );
+
+        ConsoleConfigurator::create($container)
+            ->withDefaultCache()
+            ->build();
+
+        self::assertInstanceOf(
+            CacheManager::class,
+            $container->resolve(CacheManagerInterface::class),
+        );
+    }
+
     public function testBuildReturnsKernelAndBindsRuntimeServicesInContainer(): void
     {
         $container = new Container();
+
         $container->singleton(
             new IntlConfig(
                 rootDirectory: \dirname(__DIR__, 3) . '/resources/intl',

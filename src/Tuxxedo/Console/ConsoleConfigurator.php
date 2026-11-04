@@ -370,6 +370,11 @@ class ConsoleConfigurator extends AbstractConfigurator implements ConsoleConfigu
             $container->singleton($this->helpFormatter);
         }
 
+        $this->registerLumi($container);
+        $this->registerConnectionManager($container);
+        $this->registerStorage($container);
+        $this->registerMailManager($container);
+        $this->registerCache($container);
         $this->loadServiceFiles($container);
 
         $discoverer = new CommandDiscoverer(
