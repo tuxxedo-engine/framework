@@ -32,8 +32,8 @@ use Tuxxedo\Database\SqlException;
 class SelectStatement extends AbstractWhereStatement implements SelectStatementInterface
 {
     private bool $distinct = false;
-
     private ?string $alias = null;
+    private ?SelectStatementInterface $fromSubquery = null;
 
     /**
      * @var list<array{kind: 'column'|'aggregate'|'raw', expression: string|null, function: AggregateFunction|null, distinct: bool, alias: string|null}>
@@ -62,6 +62,21 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
 
     private ?int $limit = null;
     private ?int $offset = null;
+
+    public static function createFromSubquery(
+        SelectStatementInterface $subquery,
+        string $alias,
+        ?ConnectionInterface $connection = null,
+    ): static {
+        $statement = new static(
+            table: $alias,
+            connection: $connection,
+        );
+
+        $statement->fromSubquery = $subquery;
+
+        return $statement;
+    }
 
     protected function generateSql(
         DialectInterface $dialect,
@@ -98,7 +113,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
                 ? 'DISTINCT '
                 : '',
             $columns,
-            $this->tableReference($dialect, $this->table, $this->alias),
+            $this->renderFrom($dialect),
             $this->generateWhereSql($dialect),
         );
 
@@ -893,6 +908,20 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
             'sql' => $rewritten ?? $sql,
             'parameters' => $parameters,
         ];
+    }
+
+    private function renderFrom(
+        DialectInterface $dialect,
+    ): string {
+        if ($this->fromSubquery === null) {
+            return $this->tableReference($dialect, $this->table, $this->alias);
+        }
+
+        return '(' . $this->mergeSubquery(
+            subquery: $this->fromSubquery,
+            prefix: 'fsq_',
+            dialect: $dialect,
+        ) . ') AS ' . $dialect->identifier($this->alias ?? $this->table);
     }
 
     /**

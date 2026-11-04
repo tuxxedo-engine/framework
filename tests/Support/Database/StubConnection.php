@@ -194,6 +194,13 @@ class StubConnection implements ConnectionInterface
         throw new \LogicException('StubConnection: select not implemented');
     }
 
+    public function selectFrom(
+        SelectStatementInterface $subquery,
+        string $alias,
+    ): SelectStatementInterface {
+        throw new \LogicException('StubConnection: selectFrom not implemented');
+    }
+
     public function insert(
         string $table,
     ): InsertStatementInterface {

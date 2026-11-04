@@ -167,6 +167,17 @@ abstract class AbstractConnection implements ConnectionInterface
             : $statement->alias($alias);
     }
 
+    public function selectFrom(
+        SelectStatementInterface $subquery,
+        string $alias,
+    ): SelectStatementInterface {
+        return SelectStatement::createFromSubquery(
+            subquery: $subquery,
+            alias: $alias,
+            connection: $this,
+        );
+    }
+
     public function insert(
         string $table,
     ): InsertStatementInterface {

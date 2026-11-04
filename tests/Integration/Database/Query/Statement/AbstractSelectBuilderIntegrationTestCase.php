@@ -845,6 +845,125 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
         );
     }
 
+    public function testSelectFromFiltersOnAggregatedSubquery(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        $counts = $this->connection->select(
+            table: 'posts',
+        )
+            ->select('user_id')
+            ->selectCount(alias: 'post_count')
+            ->groupBy('user_id');
+
+        self::assertSame(
+            [
+                'Bob',
+            ],
+            $this->names(
+                $this->connection->selectFrom(
+                    subquery: $counts,
+                    alias: 'c',
+                )
+                    ->selectAs('u.name', 'name')
+                    ->innerJoin(
+                        table: 'users',
+                        first: 'u.id',
+                        second: 'c.user_id',
+                        alias: 'u',
+                    )
+                    ->where('c.post_count', 2, '>='),
+            ),
+        );
+    }
+
+    public function testSelectFromFiltersOnWindowFunction(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        $ranked = $this->connection->select(
+            table: 'posts',
+        )
+            ->select('title')
+            ->selectRaw('ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY id DESC)', 'rn');
+
+        self::assertSame(
+            [
+                'Another Bob post',
+                'Post by Alice',
+            ],
+            $this->names(
+                $this->connection->selectFrom(
+                    subquery: $ranked,
+                    alias: 'ranked',
+                )
+                    ->selectAs('ranked.title', 'name')
+                    ->where('ranked.rn', 1)
+                    ->orderBy('ranked.title'),
+            ),
+        );
+    }
+
+    public function testSelectFromKeepsParametersOfBothLevelsApart(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        $bobPosts = $this->connection->select(
+            table: 'posts',
+        )
+            ->where('user_id', 2);
+
+        self::assertSame(
+            [
+                'Another Bob post',
+            ],
+            $this->names(
+                $this->connection->selectFrom(
+                    subquery: $bobPosts,
+                    alias: 'p',
+                )
+                    ->selectAs('p.title', 'name')
+                    ->whereStartsWith('p.title', 'Another'),
+            ),
+        );
+    }
+
+    public function testSelectFromQualifiesStarWhenJoined(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        $row = $this->connection->selectFrom(
+            subquery: $this->connection->select(
+                table: 'posts',
+            )
+                ->where('user_id', 1),
+            alias: 'p',
+        )
+            ->innerJoin(
+                table: 'users',
+                first: 'u.id',
+                second: 'p.user_id',
+                alias: 'u',
+            )
+            ->execute()
+            ->fetch();
+
+        self::assertSame('Post by Alice', $row->properties['title']);
+        self::assertArrayNotHasKey('name', $row->properties);
+    }
+
     public function testAggregateShortcutsSelectTheirFunction(): void
     {
         $this->createUsersSchema();

@@ -175,6 +175,11 @@ interface ConnectionInterface
         ?string $alias = null,
     ): SelectStatementInterface;
 
+    public function selectFrom(
+        SelectStatementInterface $subquery,
+        string $alias,
+    ): SelectStatementInterface;
+
     public function insert(
         string $table,
     ): InsertStatementInterface;
