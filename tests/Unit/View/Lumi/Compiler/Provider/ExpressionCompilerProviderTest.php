@@ -1180,6 +1180,40 @@ class ExpressionCompilerProviderTest extends TestCase
         );
     }
 
+    public function testCompileInCallsRuntimeContains(): void
+    {
+        self::assertSame(
+            '$this->contains($__lumiVariables[\'role\'], $__lumiVariables[\'roles\'])',
+            $this->compiler->compileExpression(
+                new BinaryOpNode(
+                    left: new IdentifierNode(
+                        name: 'role',
+                    ),
+                    right: new IdentifierNode(
+                        name: 'roles',
+                    ),
+                    operator: BinarySymbol::IN,
+                ),
+            ),
+        );
+    }
+
+    public function testCompileNotInNegatesRuntimeContains(): void
+    {
+        self::assertSame(
+            '!$this->contains(\'@\', $__lumiVariables[\'email\'])',
+            $this->compiler->compileExpression(
+                new BinaryOpNode(
+                    left: LiteralNode::createString('@'),
+                    right: new IdentifierNode(
+                        name: 'email',
+                    ),
+                    operator: BinarySymbol::NOT_IN,
+                ),
+            ),
+        );
+    }
+
     public function testCompileBinaryOpAcceptsLiteralOperands(): void
     {
         $output = $this->compiler->compileExpression(

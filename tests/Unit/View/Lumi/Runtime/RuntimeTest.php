@@ -597,6 +597,96 @@ class RuntimeTest extends TestCase
         );
     }
 
+    public function testContainsSearchesArrayValuesStrictly(): void
+    {
+        $runtime = $this->createRuntime();
+
+        self::assertTrue(
+            $runtime->contains(
+                needle: 'admin',
+                haystack: [
+                    'user',
+                    'admin',
+                ],
+            ),
+        );
+
+        self::assertFalse(
+            $runtime->contains(
+                needle: '1',
+                haystack: [
+                    1,
+                    2,
+                ],
+            ),
+        );
+
+        self::assertFalse(
+            $runtime->contains(
+                needle: 'admin',
+                haystack: [
+                    'admin' => 'user',
+                ],
+            ),
+        );
+    }
+
+    public function testContainsSearchesStrings(): void
+    {
+        $runtime = $this->createRuntime();
+
+        self::assertTrue($runtime->contains('@', 'kalle@example.test'));
+        self::assertTrue($runtime->contains('', 'abc'));
+        self::assertTrue($runtime->contains(1, 'a1'));
+        self::assertFalse($runtime->contains('#', 'abc'));
+    }
+
+    public function testContainsThrowsForUnsearchableHaystack(): void
+    {
+        $runtime = $this->createRuntime();
+
+        foreach (
+            [
+                null,
+                42,
+                new \ArrayIterator(
+                    [
+                        'a',
+                    ],
+                ),
+            ] as $haystack
+        ) {
+            try {
+                $runtime->contains('a', $haystack);
+
+                self::fail('Expected RuntimeException');
+            } catch (RuntimeException $exception) {
+                self::assertStringContainsString(\get_debug_type($haystack), $exception->getMessage());
+            }
+        }
+    }
+
+    public function testContainsThrowsForNonStringOrIntNeedleInString(): void
+    {
+        $runtime = $this->createRuntime();
+
+        foreach (
+            [
+                1.5,
+                true,
+                null,
+            ] as $needle
+        ) {
+            try {
+                $runtime->contains($needle, 'a1.5');
+
+                self::fail('Expected RuntimeException');
+            } catch (RuntimeException $exception) {
+                self::assertStringContainsString(\get_debug_type($needle), $exception->getMessage());
+            }
+        }
+    }
+
     public function testPropertyAccessReturnsObject(): void
     {
         $runtime = $this->createRuntime();

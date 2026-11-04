@@ -16,6 +16,7 @@ namespace Tuxxedo\View\Lumi\Optimizer\Evaluator;
 use Tuxxedo\View\Lumi\Optimizer\Scope\Lattice;
 use Tuxxedo\View\Lumi\Optimizer\Scope\ScopeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
@@ -346,6 +347,8 @@ class Evaluator implements EvaluatorInterface
             BinarySymbol::LESS => $this->reduceLess(...),
             BinarySymbol::GREATER_EQUAL => $this->reduceGreaterEqual(...),
             BinarySymbol::LESS_EQUAL => $this->reduceLessEqual(...),
+            BinarySymbol::IN => $this->reduceIn(...),
+            BinarySymbol::NOT_IN => $this->reduceNotIn(...),
             BinarySymbol::AND => $this->reduceAnd(...),
             BinarySymbol::OR => $this->reduceOr(...),
             BinarySymbol::XOR => $this->reduceXor(...),
@@ -750,6 +753,66 @@ class Evaluator implements EvaluatorInterface
         }
 
         return LiteralNode::createBool($leftValue <= $rightValue);
+    }
+
+    public function reduceIn(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface {
+        $needle = $this->resolve($scope, $left);
+
+        if (!$needle instanceof LiteralNode) {
+            return null;
+        }
+
+        $value = $this->castNodeToValue($needle);
+
+        if ($right instanceof ArrayNode) {
+            $values = [];
+
+            foreach ($right->items as $item) {
+                if ($item->key !== null && !$item->key instanceof LiteralNode) {
+                    return null;
+                }
+
+                $resolved = $this->resolve($scope, $item->value);
+
+                if (!$resolved instanceof LiteralNode) {
+                    return null;
+                }
+
+                $values[] = $this->castNodeToValue($resolved);
+            }
+
+            return LiteralNode::createBool(\in_array($value, $values, true));
+        }
+
+        $haystack = $this->resolve($scope, $right);
+
+        if (
+            !$haystack instanceof LiteralNode ||
+            $haystack->type !== Type::STRING ||
+            (!\is_string($value) && !\is_int($value))
+        ) {
+            return null;
+        }
+
+        return LiteralNode::createBool(\str_contains($haystack->operand, (string) $value));
+    }
+
+    public function reduceNotIn(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface {
+        $result = $this->reduceIn($scope, $left, $right);
+
+        if (!$result instanceof LiteralNode) {
+            return null;
+        }
+
+        return LiteralNode::createBool(!$this->toBool($result));
     }
 
     public function reduceAnd(

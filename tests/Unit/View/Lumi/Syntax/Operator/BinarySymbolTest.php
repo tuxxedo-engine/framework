@@ -101,6 +101,16 @@ class BinarySymbolTest extends TestCase
         ];
 
         yield [
+            BinarySymbol::IN,
+            'in',
+        ];
+
+        yield [
+            BinarySymbol::NOT_IN,
+            'not in',
+        ];
+
+        yield [
             BinarySymbol::AND,
             '&&',
         ];
@@ -408,6 +418,16 @@ class BinarySymbolTest extends TestCase
 
         yield [
             BinarySymbol::LESS_EQUAL,
+            Precedence::COMPARISON,
+        ];
+
+        yield [
+            BinarySymbol::IN,
+            Precedence::COMPARISON,
+        ];
+
+        yield [
+            BinarySymbol::NOT_IN,
             Precedence::COMPARISON,
         ];
 

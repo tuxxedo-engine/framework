@@ -145,6 +145,14 @@ interface RuntimeInterface
     /**
      * @throws RuntimeException
      */
+    public function contains(
+        mixed $needle,
+        mixed $haystack,
+    ): bool;
+
+    /**
+     * @throws RuntimeException
+     */
     public function propertyAccess(
         mixed $instance,
         bool $nullSafe = false,

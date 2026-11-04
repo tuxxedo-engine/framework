@@ -202,6 +202,29 @@ class Runtime implements RuntimeInterface
         );
     }
 
+    public function contains(
+        mixed $needle,
+        mixed $haystack,
+    ): bool {
+        if (\is_array($haystack)) {
+            return \in_array($needle, $haystack, true);
+        }
+
+        if (!\is_string($haystack)) {
+            throw RuntimeException::fromInvalidContainsHaystack(
+                type: \get_debug_type($haystack),
+            );
+        }
+
+        if (!\is_string($needle) && !\is_int($needle)) {
+            throw RuntimeException::fromInvalidContainsNeedle(
+                type: \get_debug_type($needle),
+            );
+        }
+
+        return \str_contains($haystack, (string) $needle);
+    }
+
     public function propertyAccess(
         mixed $instance,
         bool $nullSafe = false,

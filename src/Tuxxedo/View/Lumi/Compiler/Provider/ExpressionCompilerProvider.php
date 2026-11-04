@@ -148,6 +148,17 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         CompilerInterface $compiler,
         NodeStreamInterface $stream,
     ): string {
+        if ($node->operator === BinarySymbol::IN || $node->operator === BinarySymbol::NOT_IN) {
+            return \sprintf(
+                '%s$this->contains(%s, %s)',
+                $node->operator === BinarySymbol::NOT_IN
+                    ? '!'
+                    : '',
+                $compiler->compileNode($node->left, $stream),
+                $compiler->compileNode($node->right, $stream),
+            );
+        }
+
         $ownsNullSafeFlag = !$compiler->state->hasFlag(CompilerStateFlag::NULL_SAFE_ACCESS) &&
             (
                 $node->operator === BinarySymbol::NULL_SAFE_ACCESS ||

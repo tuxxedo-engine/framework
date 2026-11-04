@@ -21,6 +21,8 @@ use Tuxxedo\View\Lumi\Optimizer\Evaluator\EvaluatorResult;
 use Tuxxedo\View\Lumi\Optimizer\Scope\Lattice;
 use Tuxxedo\View\Lumi\Optimizer\Scope\Scope;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ArrayItemNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
 use Tuxxedo\View\Lumi\Syntax\Node\AssignmentNode;
 use Tuxxedo\View\Lumi\Syntax\Node\BinaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
@@ -2895,6 +2897,183 @@ class EvaluatorTest extends TestCase
                 : 'false',
             $result->operand,
         );
+    }
+
+    private static function literalArray(
+        LiteralNode ...$values,
+    ): ArrayNode {
+        return new ArrayNode(
+            items: \array_map(
+                static fn (LiteralNode $value): ArrayItemNode => new ArrayItemNode(
+                    value: $value,
+                ),
+                $values,
+            ),
+        );
+    }
+
+    public function testReduceInFoldsLiteralArrayStrictly(): void
+    {
+        $haystack = self::literalArray(
+            LiteralNode::createString('admin'),
+            LiteralNode::createInt(1),
+        );
+
+        $found = $this->evaluator->reduceIn(
+            scope: $this->scope,
+            left: LiteralNode::createString('admin'),
+            right: $haystack,
+        );
+
+        $strict = $this->evaluator->reduceIn(
+            scope: $this->scope,
+            left: LiteralNode::createString('1'),
+            right: $haystack,
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $found);
+        self::assertSame('true', $found->operand);
+        self::assertInstanceOf(LiteralNode::class, $strict);
+        self::assertSame('false', $strict->operand);
+    }
+
+    public function testReduceInFoldsLiteralStrings(): void
+    {
+        $result = $this->evaluator->reduceIn(
+            scope: $this->scope,
+            left: LiteralNode::createString('@'),
+            right: LiteralNode::createString('kalle@example.test'),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame(Type::BOOL, $result->type);
+        self::assertSame('true', $result->operand);
+    }
+
+    public function testReduceInFoldsIntNeedleInString(): void
+    {
+        $result = $this->evaluator->reduceIn(
+            scope: $this->scope,
+            left: LiteralNode::createInt(1),
+            right: LiteralNode::createString('a1'),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame('true', $result->operand);
+    }
+
+    public function testReduceInLeavesUnknownOrInvalidOperandsToRuntime(): void
+    {
+        foreach (
+            [
+                [
+                    new IdentifierNode(
+                        name: 'role',
+                    ),
+                    self::literalArray(
+                        LiteralNode::createString('admin'),
+                    ),
+                ],
+                [
+                    LiteralNode::createString('admin'),
+                    new ArrayNode(
+                        items: [
+                            new ArrayItemNode(
+                                value: new IdentifierNode(
+                                    name: 'role',
+                                ),
+                            ),
+                        ],
+                    ),
+                ],
+                [
+                    LiteralNode::createString('admin'),
+                    new ArrayNode(
+                        items: [
+                            new ArrayItemNode(
+                                value: LiteralNode::createString('admin'),
+                                key: new IdentifierNode(
+                                    name: 'key',
+                                ),
+                            ),
+                        ],
+                    ),
+                ],
+                [
+                    LiteralNode::createFloat(1.5),
+                    LiteralNode::createString('a1.5'),
+                ],
+                [
+                    LiteralNode::createString('a'),
+                    new IdentifierNode(
+                        name: 'text',
+                    ),
+                ],
+            ] as [$needle, $haystack]
+        ) {
+            self::assertNull(
+                $this->evaluator->reduceIn(
+                    scope: $this->scope,
+                    left: $needle,
+                    right: $haystack,
+                ),
+            );
+        }
+    }
+
+    public function testReduceNotInNegatesAFold(): void
+    {
+        $result = $this->evaluator->reduceNotIn(
+            scope: $this->scope,
+            left: LiteralNode::createString('guest'),
+            right: self::literalArray(
+                LiteralNode::createString('admin'),
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $result);
+        self::assertSame('true', $result->operand);
+    }
+
+    public function testReduceNotInLeavesUnknownToRuntime(): void
+    {
+        self::assertNull(
+            $this->evaluator->reduceNotIn(
+                scope: $this->scope,
+                left: new IdentifierNode(
+                    name: 'role',
+                ),
+                right: self::literalArray(
+                    LiteralNode::createString('admin'),
+                ),
+            ),
+        );
+    }
+
+    public function testBinaryOpDispatchesMembershipOperators(): void
+    {
+        $in = $this->evaluator->binaryOp(
+            scope: $this->scope,
+            node: new BinaryOpNode(
+                left: LiteralNode::createString('b'),
+                right: LiteralNode::createString('abc'),
+                operator: BinarySymbol::IN,
+            ),
+        );
+
+        $notIn = $this->evaluator->binaryOp(
+            scope: $this->scope,
+            node: new BinaryOpNode(
+                left: LiteralNode::createString('b'),
+                right: LiteralNode::createString('abc'),
+                operator: BinarySymbol::NOT_IN,
+            ),
+        );
+
+        self::assertInstanceOf(LiteralNode::class, $in);
+        self::assertSame('true', $in->operand);
+        self::assertInstanceOf(LiteralNode::class, $notIn);
+        self::assertSame('false', $notIn->operand);
     }
 
     public function testReduceXorCoercesNonBooleanTruthyMismatchToTrue(): void

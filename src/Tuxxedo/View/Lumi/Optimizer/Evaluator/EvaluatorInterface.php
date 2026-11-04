@@ -210,6 +210,18 @@ interface EvaluatorInterface
         ExpressionNodeInterface $right,
     ): ?ExpressionNodeInterface;
 
+    public function reduceIn(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
+    public function reduceNotIn(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface;
+
     public function reduceAnd(
         ScopeInterface $scope,
         ExpressionNodeInterface $left,

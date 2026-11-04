@@ -25,6 +25,12 @@
 {{ true && false }}
 {{ true || false }}
 {{ true ^^ false }}
+{{ true and false }}
+{{ true or false }}
+{{ true xor false }}
+{{ 'b' in ['a', 'b'] }}
+{{ '@' in 'kalle@example.test' }}
+{{ 'c' not in ['a', 'b'] }}
 {{ 1 & 1 }}
 {{ 1 | 2 }}
 {{ 1 ^ 3 }}

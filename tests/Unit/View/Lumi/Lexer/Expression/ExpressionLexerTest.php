@@ -21,6 +21,7 @@ use Tuxxedo\View\Lumi\Lexer\LexerException;
 use Tuxxedo\View\Lumi\Syntax\Token\CharacterToken;
 use Tuxxedo\View\Lumi\Syntax\Token\IdentifierToken;
 use Tuxxedo\View\Lumi\Syntax\Token\LiteralToken;
+use Tuxxedo\View\Lumi\Syntax\Token\OperatorToken;
 use Tuxxedo\View\Lumi\Syntax\Token\TokenInterface;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
@@ -970,6 +971,279 @@ class ExpressionLexerTest extends TestCase
      */
     #[DataProvider('rangeDataProvider')]
     public function testLexRange(
+        string $operand,
+        array $expected,
+    ): void {
+        $tokens = $this->lexer->lex(
+            startingLine: 1,
+            operand: $operand,
+        );
+
+        self::assertSame(
+            $expected,
+            \array_map(
+                static fn (TokenInterface $token): array => [
+                    $token::class,
+                    $token->op1,
+                    $token->op2,
+                ],
+                $tokens,
+            ),
+        );
+    }
+
+    /**
+     * @return \Generator<string, array{0: string, 1: list<array{0: class-string<TokenInterface>, 1: string, 2: string|null}>}>
+     */
+    public static function wordOperatorDataProvider(): \Generator
+    {
+        yield 'and' => [
+            'a and b',
+            [
+                [
+                    IdentifierToken::class,
+                    'a',
+                    null,
+                ],
+                [
+                    OperatorToken::class,
+                    '&&',
+                    null,
+                ],
+                [
+                    IdentifierToken::class,
+                    'b',
+                    null,
+                ],
+            ],
+        ];
+
+        yield 'or' => [
+            'a or b',
+            [
+                [
+                    IdentifierToken::class,
+                    'a',
+                    null,
+                ],
+                [
+                    OperatorToken::class,
+                    '||',
+                    null,
+                ],
+                [
+                    IdentifierToken::class,
+                    'b',
+                    null,
+                ],
+            ],
+        ];
+
+        yield 'xor' => [
+            'a xor b',
+            [
+                [
+                    IdentifierToken::class,
+                    'a',
+                    null,
+                ],
+                [
+                    OperatorToken::class,
+                    '^^',
+                    null,
+                ],
+                [
+                    IdentifierToken::class,
+                    'b',
+                    null,
+                ],
+            ],
+        ];
+
+        yield 'in' => [
+            'x in list',
+            [
+                [
+                    IdentifierToken::class,
+                    'x',
+                    null,
+                ],
+                [
+                    OperatorToken::class,
+                    'in',
+                    null,
+                ],
+                [
+                    IdentifierToken::class,
+                    'list',
+                    null,
+                ],
+            ],
+        ];
+
+        yield 'not in' => [
+            'x not in list',
+            [
+                [
+                    IdentifierToken::class,
+                    'x',
+                    null,
+                ],
+                [
+                    OperatorToken::class,
+                    'not in',
+                    null,
+                ],
+                [
+                    IdentifierToken::class,
+                    'list',
+                    null,
+                ],
+            ],
+        ];
+
+        yield 'case insensitive' => [
+            'a AND x Not In list',
+            [
+                [
+                    IdentifierToken::class,
+                    'a',
+                    null,
+                ],
+                [
+                    OperatorToken::class,
+                    '&&',
+                    null,
+                ],
+                [
+                    IdentifierToken::class,
+                    'x',
+                    null,
+                ],
+                [
+                    OperatorToken::class,
+                    'not in',
+                    null,
+                ],
+                [
+                    IdentifierToken::class,
+                    'list',
+                    null,
+                ],
+            ],
+        ];
+
+        yield 'not alone stays an identifier' => [
+            'not',
+            [
+                [
+                    IdentifierToken::class,
+                    'not',
+                    null,
+                ],
+            ],
+        ];
+
+        yield 'property named in' => [
+            'obj.in',
+            [
+                [
+                    IdentifierToken::class,
+                    'obj',
+                    null,
+                ],
+                [
+                    CharacterToken::class,
+                    '.',
+                    null,
+                ],
+                [
+                    IdentifierToken::class,
+                    'in',
+                    null,
+                ],
+            ],
+        ];
+
+        yield 'null-safe property named and' => [
+            'obj?.and',
+            [
+                [
+                    IdentifierToken::class,
+                    'obj',
+                    null,
+                ],
+                [
+                    OperatorToken::class,
+                    '?.',
+                    null,
+                ],
+                [
+                    IdentifierToken::class,
+                    'and',
+                    null,
+                ],
+            ],
+        ];
+
+        yield 'property named not before in' => [
+            'obj.not in list',
+            [
+                [
+                    IdentifierToken::class,
+                    'obj',
+                    null,
+                ],
+                [
+                    CharacterToken::class,
+                    '.',
+                    null,
+                ],
+                [
+                    IdentifierToken::class,
+                    'not',
+                    null,
+                ],
+                [
+                    OperatorToken::class,
+                    'in',
+                    null,
+                ],
+                [
+                    IdentifierToken::class,
+                    'list',
+                    null,
+                ],
+            ],
+        ];
+
+        yield 'word prefix stays an identifier' => [
+            'index or order',
+            [
+                [
+                    IdentifierToken::class,
+                    'index',
+                    null,
+                ],
+                [
+                    OperatorToken::class,
+                    '||',
+                    null,
+                ],
+                [
+                    IdentifierToken::class,
+                    'order',
+                    null,
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @param list<array{0: class-string<TokenInterface>, 1: string, 2: string|null}> $expected
+     */
+    #[DataProvider('wordOperatorDataProvider')]
+    public function testLexWordOperators(
         string $operand,
         array $expected,
     ): void {

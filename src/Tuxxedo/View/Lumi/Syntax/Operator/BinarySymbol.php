@@ -33,6 +33,8 @@ enum BinarySymbol implements SymbolInterface, ExpressionSymbolInterface
     case LESS;
     case GREATER_EQUAL;
     case LESS_EQUAL;
+    case IN;
+    case NOT_IN;
     case AND;
     case OR;
     case XOR;
@@ -98,6 +100,8 @@ enum BinarySymbol implements SymbolInterface, ExpressionSymbolInterface
             self::LESS => '<',
             self::GREATER_EQUAL => '>=',
             self::LESS_EQUAL => '<=',
+            self::IN => 'in',
+            self::NOT_IN => 'not in',
             self::AND => '&&',
             self::OR => '||',
             self::XOR => '^^',
@@ -123,7 +127,7 @@ enum BinarySymbol implements SymbolInterface, ExpressionSymbolInterface
             self::BITWISE_AND => Precedence::BITWISE_AND,
             self::BITWISE_XOR => Precedence::BITWISE_XOR,
             self::BITWISE_OR => Precedence::BITWISE_OR,
-            self::GREATER, self::LESS, self::GREATER_EQUAL, self::LESS_EQUAL => Precedence::COMPARISON,
+            self::GREATER, self::LESS, self::GREATER_EQUAL, self::LESS_EQUAL, self::IN, self::NOT_IN => Precedence::COMPARISON,
             self::STRICT_EQUAL_IMPLICIT, self::STRICT_EQUAL_EXPLICIT, self::STRICT_NOT_EQUAL_IMPLICIT, self::STRICT_NOT_EQUAL_EXPLICIT => Precedence::EQUALITY,
             self::AND => Precedence::LOGICAL_AND,
             self::XOR => Precedence::LOGICAL_XOR,

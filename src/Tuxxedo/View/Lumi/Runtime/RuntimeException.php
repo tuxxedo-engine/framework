@@ -24,6 +24,28 @@ class RuntimeException extends LumiException
         );
     }
 
+    public static function fromInvalidContainsHaystack(
+        string $type,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot use "in" on a value of type "%s", only arrays and strings can be searched',
+                $type,
+            ),
+        );
+    }
+
+    public static function fromInvalidContainsNeedle(
+        string $type,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot search a string for a value of type "%s" with "in", the needle must be a string or an int',
+                $type,
+            ),
+        );
+    }
+
     public static function fromCannotCallCustomFunction(
         string $function,
     ): self {

@@ -343,6 +343,22 @@ class RecordingEvaluator implements EvaluatorInterface
         return null;
     }
 
+    public function reduceIn(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface {
+        return null;
+    }
+
+    public function reduceNotIn(
+        ScopeInterface $scope,
+        ExpressionNodeInterface $left,
+        ExpressionNodeInterface $right,
+    ): ?ExpressionNodeInterface {
+        return null;
+    }
+
     public function reduceXor(
         ScopeInterface $scope,
         ExpressionNodeInterface $left,

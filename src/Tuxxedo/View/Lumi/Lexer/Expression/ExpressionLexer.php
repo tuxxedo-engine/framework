@@ -105,7 +105,7 @@ class ExpressionLexer implements ExpressionLexerInterface
 
             if ($char === '"' || $char === "'") {
                 if ($buffer !== '') {
-                    $tokens[] = $this->classifyToken($line, $buffer);
+                    $tokens[] = $this->classifyToken($line, $buffer, self::lastToken($tokens));
                     $buffer = '';
                     $line = $startingLine + ($stream->line - 1);
                 }
@@ -121,7 +121,7 @@ class ExpressionLexer implements ExpressionLexerInterface
                 $stream->consumeWhitespace();
 
                 if ($buffer !== '') {
-                    $tokens[] = $this->classifyToken($line, $buffer);
+                    $tokens[] = $this->classifyToken($line, $buffer, self::lastToken($tokens));
                     $buffer = '';
                     $line = $startingLine + ($stream->line - 1);
                 }
@@ -184,7 +184,7 @@ class ExpressionLexer implements ExpressionLexerInterface
             }
 
             if ($buffer !== '') {
-                $tokens[] = $this->classifyToken($line, $buffer);
+                $tokens[] = $this->classifyToken($line, $buffer, self::lastToken($tokens));
                 $buffer = '';
                 $line = $startingLine + ($stream->line - 1);
             }
@@ -225,7 +225,7 @@ class ExpressionLexer implements ExpressionLexerInterface
         }
 
         if ($buffer !== '') {
-            $tokens[] = $this->classifyToken($line, $buffer);
+            $tokens[] = $this->classifyToken($line, $buffer, self::lastToken($tokens));
         }
 
         if ($inQuote) {
@@ -241,7 +241,68 @@ class ExpressionLexer implements ExpressionLexerInterface
             );
         }
 
-        return $tokens;
+        return self::foldNotIn($tokens);
+    }
+
+    /**
+     * @param TokenInterface[] $tokens
+     */
+    private static function lastToken(
+        array $tokens,
+    ): ?TokenInterface {
+        return \sizeof($tokens) > 0
+            ? $tokens[\array_key_last($tokens)]
+            : null;
+    }
+
+    private static function isPropertyAccessor(
+        ?TokenInterface $token,
+    ): bool {
+        return (
+            $token instanceof CharacterToken &&
+            $token->op1 === CharacterSymbol::DOT->symbol()
+        ) || (
+            $token instanceof OperatorToken &&
+            $token->op1 === BinarySymbol::NULL_SAFE_ACCESS->symbol()
+        );
+    }
+
+    /**
+     * @param TokenInterface[] $tokens
+     * @return TokenInterface[]
+     */
+    private static function foldNotIn(
+        array $tokens,
+    ): array {
+        $tokens = \array_values($tokens);
+        $folded = [];
+        $count = \sizeof($tokens);
+
+        for ($index = 0; $index < $count; $index++) {
+            $token = $tokens[$index];
+            $next = $tokens[$index + 1] ?? null;
+
+            if (
+                $token instanceof IdentifierToken &&
+                \mb_strtolower($token->op1) === 'not' &&
+                $next instanceof OperatorToken &&
+                $next->op1 === BinarySymbol::IN->symbol() &&
+                !self::isPropertyAccessor(self::lastToken($folded))
+            ) {
+                $folded[] = new OperatorToken(
+                    line: $token->line,
+                    op1: BinarySymbol::NOT_IN->symbol(),
+                );
+
+                $index++;
+
+                continue;
+            }
+
+            $folded[] = $token;
+        }
+
+        return $folded;
     }
 
     private static function unescapeString(
@@ -258,7 +319,25 @@ class ExpressionLexer implements ExpressionLexerInterface
     private function classifyToken(
         int $line,
         string $value,
+        ?TokenInterface $previous,
     ): TokenInterface {
+        $word = self::isPropertyAccessor($previous)
+            ? null
+            : match (\mb_strtolower($value)) {
+                'and' => BinarySymbol::AND,
+                'or' => BinarySymbol::OR,
+                'xor' => BinarySymbol::XOR,
+                'in' => BinarySymbol::IN,
+                default => null,
+            };
+
+        if ($word !== null) {
+            return new OperatorToken(
+                line: $line,
+                op1: $word->symbol(),
+            );
+        }
+
         if (\in_array(\mb_strtolower($value), ['true', 'false'], true)) {
             return new LiteralToken(
                 line: $line,
