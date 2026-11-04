@@ -132,6 +132,8 @@ class Translator implements TranslatorInterface
             );
         }
 
+        $replacements['count'] ??= $count;
+
         return self::interpolate(
             template: $value,
             replacements: $replacements,

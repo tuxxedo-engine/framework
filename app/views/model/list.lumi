@@ -49,6 +49,6 @@
                 </a>
             {% endif %}
         </div>
-        <span class="status">{{ t('model.list.page', ['page': paginator.page, 'pages': paginator.totalPages]) }} ({{ plural('model.list.total', paginator.totalCount, ['count': paginator.totalCount]) }})</span>
+        <span class="status">{{ t('model.list.page', ['page': paginator.page, 'pages': paginator.totalPages]) }} ({{ plural('model.list.total', paginator.totalCount) }})</span>
     </nav>
 {% endblock %}

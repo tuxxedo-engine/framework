@@ -533,6 +533,67 @@ class TranslatorTest extends TestCase
         );
     }
 
+    public function testPluralFillsCountWhenNotPassed(): void
+    {
+        $config = $this->makeConfig();
+
+        $translator = $this->makeTranslator(
+            config: $config,
+            loader: $this->stubLoader(
+                catalogues: [
+                    'en-US' => [
+                        'common' => [
+                            'items' => [
+                                'one' => '{count} item',
+                                'other' => '{count} items',
+                            ],
+                        ],
+                    ],
+                ],
+            ),
+        );
+
+        self::assertSame(
+            '5 items',
+            $translator->plural(
+                key: 'common.items',
+                count: 5,
+            ),
+        );
+    }
+
+    public function testPluralExplicitCountReplacementWins(): void
+    {
+        $config = $this->makeConfig();
+
+        $translator = $this->makeTranslator(
+            config: $config,
+            loader: $this->stubLoader(
+                catalogues: [
+                    'en-US' => [
+                        'common' => [
+                            'items' => [
+                                'one' => '{count} item',
+                                'other' => '{count} items',
+                            ],
+                        ],
+                    ],
+                ],
+            ),
+        );
+
+        self::assertSame(
+            '1 234 items',
+            $translator->plural(
+                key: 'common.items',
+                count: 1234,
+                replacements: [
+                    'count' => '1 234',
+                ],
+            ),
+        );
+    }
+
     public function testPluralMissingSiblingFallsThroughMissingBehaviour(): void
     {
         $config = $this->makeConfig(

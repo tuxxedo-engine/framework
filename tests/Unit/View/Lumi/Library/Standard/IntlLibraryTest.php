@@ -281,9 +281,6 @@ class IntlLibraryTest extends TestCase
                 context: new StubRuntimeContext(),
                 key: 'cart.items',
                 count: 3,
-                replacements: [
-                    'count' => 3,
-                ],
             ),
         );
     }
