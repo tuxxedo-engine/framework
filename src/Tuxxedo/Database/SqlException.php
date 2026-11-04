@@ -136,6 +136,17 @@ class SqlException extends Exception
         );
     }
 
+    public static function fromArrayValueRequiresInOperator(
+        ConditionOperator $operator,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Operator `%s` cannot compare against a list of values; use `IN` or `NOT IN`',
+                $operator->value,
+            ),
+        );
+    }
+
     public static function fromInvalidJoinCondition(
         string $table,
     ): self {

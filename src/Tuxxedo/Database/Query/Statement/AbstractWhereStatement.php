@@ -282,6 +282,16 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
             return $this;
         }
 
+        if (
+            \is_array($value) &&
+            $operator !== ConditionOperator::IN &&
+            $operator !== ConditionOperator::NOT_IN
+        ) {
+            throw SqlException::fromArrayValueRequiresInOperator(
+                operator: $operator,
+            );
+        }
+
         $parameterKey = 'where_' . $this->nextParameterOffset();
 
         $this->parameters[$parameterKey] = $value;
@@ -289,7 +299,9 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
             conjunction: ConditionConjunction::AND,
             identifier: $column,
             operator: $operator,
-            parameter: ':' . $parameterKey,
+            parameter: \is_array($value)
+                ? ':' . $parameterKey . '[]'
+                : ':' . $parameterKey,
         );
 
         return $this;
@@ -318,6 +330,16 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
             return $this;
         }
 
+        if (
+            \is_array($value) &&
+            $operator !== ConditionOperator::IN &&
+            $operator !== ConditionOperator::NOT_IN
+        ) {
+            throw SqlException::fromArrayValueRequiresInOperator(
+                operator: $operator,
+            );
+        }
+
         $parameterKey = 'where_' . $this->nextParameterOffset();
 
         $this->parameters[$parameterKey] = $value;
@@ -325,7 +347,9 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
             conjunction: ConditionConjunction::OR,
             identifier: $column,
             operator: $operator,
-            parameter: ':' . $parameterKey,
+            parameter: \is_array($value)
+                ? ':' . $parameterKey . '[]'
+                : ':' . $parameterKey,
         );
 
         return $this;

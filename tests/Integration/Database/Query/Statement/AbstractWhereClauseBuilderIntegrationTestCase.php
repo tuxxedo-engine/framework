@@ -331,6 +331,119 @@ abstract class AbstractWhereClauseBuilderIntegrationTestCase extends AbstractBui
         );
     }
 
+    public function testWhereWithInOperatorMatchesArray(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        $matched = $this->runWhereMatch(
+            configureBuilder: static function (WhereStatementInterface $q): void {
+                $q->where(
+                    column: 'name',
+                    value: [
+                        'Alice',
+                        'nobody',
+                    ],
+                    operator: ConditionOperator::IN,
+                );
+            },
+        );
+
+        self::assertTrue(
+            $matched,
+        );
+    }
+
+    public function testWhereWithNotInOperatorExcludesArray(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        $matched = $this->runWhereMatch(
+            configureBuilder: static function (WhereStatementInterface $q): void {
+                $q->where(
+                    column: 'name',
+                    value: [
+                        'Alice',
+                        'Bob',
+                        'Charlie',
+                    ],
+                    operator: ConditionOperator::NOT_IN,
+                );
+            },
+        );
+
+        self::assertFalse(
+            $matched,
+        );
+    }
+
+    public function testOrWhereWithInOperatorMatchesArray(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        $matched = $this->runWhereMatch(
+            configureBuilder: static function (WhereStatementInterface $q): void {
+                $q->where(
+                    column: 'name',
+                    value: 'nobody',
+                )
+                    ->orWhere(
+                        column: 'name',
+                        value: [
+                            'Alice',
+                        ],
+                        operator: ConditionOperator::IN,
+                    );
+            },
+        );
+
+        self::assertTrue(
+            $matched,
+        );
+    }
+
+    public function testWhereWithArrayAndComparisonOperatorThrows(): void
+    {
+        $this->createUsersSchema();
+
+        $this->expectException(SqlException::class);
+
+        $this->runWhereMatch(
+            configureBuilder: static function (WhereStatementInterface $q): void {
+                $q->where(
+                    column: 'name',
+                    value: [
+                        'Alice',
+                    ],
+                );
+            },
+        );
+    }
+
+    public function testOrWhereWithArrayAndComparisonOperatorThrows(): void
+    {
+        $this->createUsersSchema();
+
+        $this->expectException(SqlException::class);
+
+        $this->runWhereMatch(
+            configureBuilder: static function (WhereStatementInterface $q): void {
+                $q->where(
+                    column: 'name',
+                    value: 'nobody',
+                )
+                    ->orWhere(
+                        column: 'name',
+                        value: [
+                            'Alice',
+                        ],
+                    );
+            },
+        );
+    }
+
     public function testOrWhereNotIn(): void
     {
         $this->createUsersSchema();
