@@ -16,6 +16,7 @@ namespace Unit\Http\Response\Stream;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Http\Response\Stream\SseEvent;
 use Tuxxedo\Http\Response\Stream\SseEventInterface;
+use Tuxxedo\Http\Response\Stream\StreamException;
 
 class SseEventTest extends TestCase
 {
@@ -101,6 +102,26 @@ class SseEventTest extends TestCase
 
         SseEvent::json(
             data: NAN,
+        );
+    }
+
+    public function testCreateThrowsOnLineBreakInId(): void
+    {
+        self::expectException(StreamException::class);
+
+        SseEvent::create(
+            data: 'payload',
+            id: "evt\n1",
+        );
+    }
+
+    public function testCreateThrowsOnLineBreakInEvent(): void
+    {
+        self::expectException(StreamException::class);
+
+        SseEvent::create(
+            data: 'payload',
+            event: "update\rinjected",
         );
     }
 

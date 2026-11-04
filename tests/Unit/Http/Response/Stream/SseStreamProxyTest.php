@@ -268,6 +268,32 @@ class SseStreamProxyTest extends TestCase
         self::assertSame(": keepalive\n\n", $proxy->read());
     }
 
+    public function testReadSplitsMultiLineDataIntoDataLines(): void
+    {
+        $proxy = new SseStreamProxy(
+            generator: static function (): \Generator {
+                yield SseEvent::create(
+                    data: "a\nb\r\nc\rd",
+                );
+            },
+        );
+
+        self::assertSame("data: a\ndata: b\ndata: c\ndata: d\n\n", $proxy->read());
+    }
+
+    public function testReadSplitsMultiLineCommentIntoCommentLines(): void
+    {
+        $proxy = new SseStreamProxy(
+            generator: static function (): \Generator {
+                yield SseEvent::comment(
+                    comment: "first\nsecond",
+                );
+            },
+        );
+
+        self::assertSame(": first\n: second\n\n", $proxy->read());
+    }
+
     public function testContentsReturnsConcatenatedEvents(): void
     {
         $proxy = new SseStreamProxy(

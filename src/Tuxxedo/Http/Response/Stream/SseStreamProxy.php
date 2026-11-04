@@ -92,7 +92,7 @@ class SseStreamProxy implements StreamProxyInterface, PrefersHeadersInterface
         SseEventInterface $event,
     ): string {
         if ($event->comment !== null) {
-            return ': ' . $event->comment . "\n\n";
+            return $this->lines(':', $event->comment) . "\n";
         }
 
         $buffer = '';
@@ -109,8 +109,29 @@ class SseStreamProxy implements StreamProxyInterface, PrefersHeadersInterface
             $buffer .= 'retry: ' . $event->retry . "\n";
         }
 
-        $buffer .= 'data: ' . $event->data . "\n";
+        $buffer .= $this->lines('data:', $event->data ?? '');
 
         return $buffer . "\n";
+    }
+
+    private function lines(
+        string $field,
+        string $value,
+    ): string {
+        $buffer = '';
+        $normalized = \str_replace(
+            [
+                "\r\n",
+                "\r",
+            ],
+            "\n",
+            $value,
+        );
+
+        foreach (\explode("\n", $normalized) as $line) {
+            $buffer .= $field . ' ' . $line . "\n";
+        }
+
+        return $buffer;
     }
 }

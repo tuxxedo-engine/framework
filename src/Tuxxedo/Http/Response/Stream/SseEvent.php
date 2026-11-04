@@ -17,6 +17,8 @@ readonly class SseEvent implements SseEventInterface
 {
     /**
      * @param positive-int|null $retry
+     *
+     * @throws StreamException
      */
     final private function __construct(
         public readonly ?string $data = null,
@@ -25,10 +27,19 @@ readonly class SseEvent implements SseEventInterface
         public readonly ?int $retry = null,
         public readonly ?string $comment = null,
     ) {
+        if ($id !== null && \preg_match('/[\r\n]/', $id) === 1) {
+            throw StreamException::fromLineBreakInSseField('id');
+        }
+
+        if ($event !== null && \preg_match('/[\r\n]/', $event) === 1) {
+            throw StreamException::fromLineBreakInSseField('event');
+        }
     }
 
     /**
      * @param positive-int|null $retry
+     *
+     * @throws StreamException
      */
     public static function create(
         string $data,
@@ -46,6 +57,9 @@ readonly class SseEvent implements SseEventInterface
 
     /**
      * @param positive-int|null $retry
+     *
+     * @throws \JsonException
+     * @throws StreamException
      */
     public static function json(
         mixed $data,
