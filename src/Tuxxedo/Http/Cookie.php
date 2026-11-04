@@ -15,6 +15,9 @@ namespace Tuxxedo\Http;
 
 readonly class Cookie implements CookieInterface
 {
+    /**
+     * @throws CookieException
+     */
     final public function __construct(
         public string $name,
         public string $value,
@@ -23,7 +26,13 @@ readonly class Cookie implements CookieInterface
         public string $domain = '',
         public bool $secure = false,
         public bool $httpOnly = true,
+        public SameSite $sameSite = SameSite::LAX,
     ) {
+        self::guardSameSite(
+            name: $name,
+            secure: $secure,
+            sameSite: $sameSite,
+        );
     }
 
     public function is(
@@ -76,9 +85,18 @@ readonly class Cookie implements CookieInterface
         );
     }
 
+    /**
+     * @throws CookieException
+     */
     public function withSecure(
         bool $secure,
     ): static {
+        self::guardSameSite(
+            name: $this->name,
+            secure: $secure,
+            sameSite: $this->sameSite,
+        );
+
         return clone (
             $this,
             [
@@ -96,5 +114,38 @@ readonly class Cookie implements CookieInterface
                 'httpOnly' => $httpOnly,
             ],
         );
+    }
+
+    /**
+     * @throws CookieException
+     */
+    public function withSameSite(
+        SameSite $sameSite,
+    ): static {
+        self::guardSameSite(
+            name: $this->name,
+            secure: $this->secure,
+            sameSite: $sameSite,
+        );
+
+        return clone (
+            $this,
+            [
+                'sameSite' => $sameSite,
+            ],
+        );
+    }
+
+    /**
+     * @throws CookieException
+     */
+    private static function guardSameSite(
+        string $name,
+        bool $secure,
+        SameSite $sameSite,
+    ): void {
+        if ($sameSite === SameSite::NONE && !$secure) {
+            throw CookieException::fromSameSiteNoneRequiresSecure($name);
+        }
     }
 }

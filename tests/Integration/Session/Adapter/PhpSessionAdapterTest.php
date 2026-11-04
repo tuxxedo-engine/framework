@@ -204,4 +204,34 @@ class PhpSessionAdapterTest extends TestCase
 
         self::assertSame('bar', $adapter->getRaw('foo'));
     }
+
+    public function testSameSiteNoneWithoutSecureThrows(): void
+    {
+        $this->expectException(SessionException::class);
+
+        new PhpSessionAdapter(
+            startMode: SessionStartMode::LAZY,
+            sameSite: SameSite::NONE,
+        );
+    }
+
+    public function testSameSiteNoneWithSecureIsAccepted(): void
+    {
+        $adapter = new PhpSessionAdapter(
+            startMode: SessionStartMode::LAZY,
+            secure: true,
+            sameSite: SameSite::NONE,
+        );
+
+        self::assertFalse($adapter->isStarted());
+    }
+
+    public function testSessionConfigSameSiteNoneWithoutSecureThrows(): void
+    {
+        $this->expectException(SessionException::class);
+
+        new SessionConfig(
+            sameSite: SameSite::NONE,
+        );
+    }
 }

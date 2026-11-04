@@ -15,6 +15,8 @@ namespace Unit\Http;
 
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Http\Cookie;
+use Tuxxedo\Http\CookieException;
+use Tuxxedo\Http\SameSite;
 
 class CookieTest extends TestCase
 {
@@ -29,6 +31,7 @@ class CookieTest extends TestCase
         self::assertSame('', $cookie->domain);
         self::assertFalse($cookie->secure);
         self::assertTrue($cookie->httpOnly);
+        self::assertSame(SameSite::LAX, $cookie->sameSite);
     }
 
     public function testConstructorExplicit(): void
@@ -41,12 +44,14 @@ class CookieTest extends TestCase
             domain: 'example.com',
             secure: true,
             httpOnly: false,
+            sameSite: SameSite::STRICT,
         );
 
         self::assertSame('/admin', $cookie->path);
         self::assertSame('example.com', $cookie->domain);
         self::assertTrue($cookie->secure);
         self::assertFalse($cookie->httpOnly);
+        self::assertSame(SameSite::STRICT, $cookie->sameSite);
     }
 
     public function testIs(): void
@@ -125,5 +130,65 @@ class CookieTest extends TestCase
         self::assertFalse($updated->httpOnly);
         self::assertSame('session', $updated->name);
         self::assertTrue($cookie->httpOnly);
+    }
+
+    public function testWithSameSite(): void
+    {
+        $cookie = new Cookie('session', 'abc123', 0);
+        $updated = $cookie->withSameSite(SameSite::STRICT);
+
+        self::assertNotSame($cookie, $updated);
+        self::assertSame(SameSite::STRICT, $updated->sameSite);
+        self::assertSame('session', $updated->name);
+        self::assertSame(SameSite::LAX, $cookie->sameSite);
+    }
+
+    public function testSameSiteNoneWithSecureIsAccepted(): void
+    {
+        $cookie = new Cookie(
+            name: 'session',
+            value: 'abc123',
+            expires: 0,
+            secure: true,
+            sameSite: SameSite::NONE,
+        );
+
+        self::assertSame(SameSite::NONE, $cookie->sameSite);
+    }
+
+    public function testSameSiteNoneWithoutSecureThrows(): void
+    {
+        $this->expectException(CookieException::class);
+
+        new Cookie(
+            name: 'session',
+            value: 'abc123',
+            expires: 0,
+            sameSite: SameSite::NONE,
+        );
+    }
+
+    public function testWithSameSiteNoneOnInsecureCookieThrows(): void
+    {
+        $cookie = new Cookie('session', 'abc123', 0);
+
+        $this->expectException(CookieException::class);
+
+        $cookie->withSameSite(SameSite::NONE);
+    }
+
+    public function testWithSecureFalseOnSameSiteNoneCookieThrows(): void
+    {
+        $cookie = new Cookie(
+            name: 'session',
+            value: 'abc123',
+            expires: 0,
+            secure: true,
+            sameSite: SameSite::NONE,
+        );
+
+        $this->expectException(CookieException::class);
+
+        $cookie->withSecure(false);
     }
 }

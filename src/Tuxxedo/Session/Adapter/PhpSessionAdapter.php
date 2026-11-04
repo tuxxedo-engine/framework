@@ -23,6 +23,9 @@ class PhpSessionAdapter implements SessionAdapterInterface
 {
     private bool $started = false;
 
+    /**
+     * @throws SessionException
+     */
     final public function __construct(
         public readonly SessionStartMode $startMode,
         private readonly int $lifetime = 3600,
@@ -32,6 +35,10 @@ class PhpSessionAdapter implements SessionAdapterInterface
         private readonly bool $secure = false,
         private readonly SameSite $sameSite = SameSite::STRICT,
     ) {
+        if ($this->sameSite === SameSite::NONE && !$this->secure) {
+            throw SessionException::fromSameSiteNoneRequiresSecure();
+        }
+
         if ($this->startMode === SessionStartMode::AUTO) {
             $this->start();
         }

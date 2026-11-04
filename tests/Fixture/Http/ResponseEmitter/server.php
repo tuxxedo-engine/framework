@@ -15,6 +15,7 @@ use Tuxxedo\Http\Header;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseCode;
 use Tuxxedo\Http\Response\ResponseEmitter;
+use Tuxxedo\Http\SameSite;
 
 require __DIR__ . '/../../../../vendor/autoload.php';
 
@@ -53,6 +54,14 @@ $response = match ($path) {
                 name: 'last',
                 value: '4',
                 expires: 0,
+                sameSite: SameSite::STRICT,
+            ),
+            new Cookie(
+                name: 'cross',
+                value: '5',
+                expires: 0,
+                secure: true,
+                sameSite: SameSite::NONE,
             ),
         ],
     ),

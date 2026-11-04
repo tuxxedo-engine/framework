@@ -35,6 +35,10 @@ interface CookieInterface extends HeaderInterface
         get;
     }
 
+    public SameSite $sameSite {
+        get;
+    }
+
     public function withExpires(
         int $expires,
     ): static;
@@ -47,11 +51,21 @@ interface CookieInterface extends HeaderInterface
         string $domain,
     ): static;
 
+    /**
+     * @throws CookieException
+     */
     public function withSecure(
         bool $secure,
     ): static;
 
     public function withHttpOnly(
         bool $httpOnly,
+    ): static;
+
+    /**
+     * @throws CookieException
+     */
+    public function withSameSite(
+        SameSite $sameSite,
     ): static;
 }

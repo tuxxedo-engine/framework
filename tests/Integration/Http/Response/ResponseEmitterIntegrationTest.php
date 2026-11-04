@@ -93,6 +93,7 @@ class ResponseEmitterIntegrationTest extends TestCase
 
         self::assertSame(
             [
+                'cross=5',
                 'first=1',
                 'last=4',
                 'other=3',
@@ -100,6 +101,24 @@ class ResponseEmitterIntegrationTest extends TestCase
             ],
             $cookies,
         );
+    }
+
+    public function testCookiesCarryTheirSameSiteAttribute(): void
+    {
+        $response = self::request('/cookies');
+        $attributes = [];
+
+        foreach (self::values($response['headers'], 'set-cookie') as $value) {
+            $parts = \explode(';', $value);
+
+            if (\preg_match('/SameSite=(\w+)/i', $value, $matches) === 1) {
+                $attributes[$parts[0]] = $matches[1];
+            }
+        }
+
+        self::assertSame('Lax', $attributes['first=1'] ?? null);
+        self::assertSame('Strict', $attributes['last=4'] ?? null);
+        self::assertSame('None', $attributes['cross=5'] ?? null);
     }
 
     public function testStatusLineCarriesResponseCode(): void

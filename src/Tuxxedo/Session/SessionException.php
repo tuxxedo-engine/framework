@@ -79,4 +79,11 @@ class SessionException extends Exception
             ),
         );
     }
+
+    public static function fromSameSiteNoneRequiresSecure(): self
+    {
+        return new self(
+            message: 'Session cookie uses SameSite=None, which browsers only accept together with Secure',
+        );
+    }
 }

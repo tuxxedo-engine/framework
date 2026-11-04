@@ -15,10 +15,14 @@ namespace Tuxxedo\Session\Config;
 
 use Tuxxedo\Config\Attribute\ConfigNamespace;
 use Tuxxedo\Http\SameSite;
+use Tuxxedo\Session\SessionException;
 
 #[ConfigNamespace('session')]
 readonly class SessionConfig implements SessionConfigInterface
 {
+    /**
+     * @throws SessionException
+     */
     public function __construct(
         public int $lifetime = 3600,
         public string $path = '/',
@@ -27,5 +31,8 @@ readonly class SessionConfig implements SessionConfigInterface
         public bool $secure = false,
         public SameSite $sameSite = SameSite::STRICT,
     ) {
+        if ($sameSite === SameSite::NONE && !$secure) {
+            throw SessionException::fromSameSiteNoneRequiresSecure();
+        }
     }
 }

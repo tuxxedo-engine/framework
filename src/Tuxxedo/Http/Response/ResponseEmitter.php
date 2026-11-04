@@ -38,11 +38,14 @@ class ResponseEmitter implements ResponseEmitterInterface
                     \setcookie(
                         name: $header->name,
                         value: $header->value,
-                        expires_or_options: $header->expires,
-                        path: $header->path,
-                        domain: $header->domain,
-                        secure: $header->secure,
-                        httponly: $header->httpOnly,
+                        expires_or_options: [
+                            'expires' => $header->expires,
+                            'path' => $header->path,
+                            'domain' => $header->domain,
+                            'secure' => $header->secure,
+                            'httponly' => $header->httpOnly,
+                            'samesite' => $header->sameSite->value,
+                        ],
                     );
 
                     $sentNames['set-cookie'] = true;
