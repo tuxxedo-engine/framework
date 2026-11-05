@@ -19,6 +19,7 @@ readonly class ModelRelationAggregate implements ModelRelationAggregateInterface
 {
     /**
      * @param 'int'|'float' $slotType
+     * @param array<string, bool> $callbackParameters
      */
     public function __construct(
         public string $property,
@@ -27,6 +28,9 @@ readonly class ModelRelationAggregate implements ModelRelationAggregateInterface
         public AggregateFunction $function,
         public ?string $column,
         public string $slotType,
+        public ?\Closure $callback = null,
+        public array $callbackParameters = [],
+        public bool $callbackVariadic = false,
     ) {
     }
 }

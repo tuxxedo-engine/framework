@@ -76,6 +76,44 @@ class AbstractQueryableAggregateGuardTest extends TestCase
         }
     }
 
+    public function testWithAggregateRequiresModelContext(): void
+    {
+        $relation = Relation::createFromBuilder(
+            loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => [],
+            countBuilder: static fn (array $criteria): int => 0,
+        );
+
+        try {
+            (void) $relation->withAggregate('ordersCount');
+
+            self::fail('Expected ModelException was not thrown');
+        } catch (ModelException $exception) {
+            self::assertStringContainsString(
+                'withAggregate',
+                $exception->getMessage(),
+            );
+        }
+    }
+
+    public function testOrderByAggregateRequiresModelContext(): void
+    {
+        $relation = Relation::createFromBuilder(
+            loaderBuilder: static fn (array $criteria, array $orderBy, ?int $limit, ?int $offset): iterable => [],
+            countBuilder: static fn (array $criteria): int => 0,
+        );
+
+        try {
+            (void) $relation->orderByAggregate('ordersCount');
+
+            self::fail('Expected ModelException was not thrown');
+        } catch (ModelException $exception) {
+            self::assertStringContainsString(
+                'orderByAggregate',
+                $exception->getMessage(),
+            );
+        }
+    }
+
     public function testWhereHasCountThresholdRequiresModelContext(): void
     {
         $relation = Relation::createFromBuilder(

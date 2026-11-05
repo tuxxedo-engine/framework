@@ -837,6 +837,10 @@ abstract class AbstractRelationAggregateIntegrationTestCase extends AbstractMode
                 'orders_max_nonexistent_column',
                 $exception->getMessage(),
             );
+            self::assertStringContainsString(
+                'add a #[MaxAggregate] property',
+                $exception->getMessage(),
+            );
         }
     }
 
@@ -1187,6 +1191,232 @@ abstract class AbstractRelationAggregateIntegrationTestCase extends AbstractMode
         } catch (ModelException $exception) {
             self::assertStringContainsString(
                 'owners_orders_max_amount',
+                $exception->getMessage(),
+            );
+        }
+    }
+
+    public function testWithAggregateAppliesDeclaredClosure(): void
+    {
+        $owners = \iterator_to_array($this->modelsManager
+            ->query(AggregateOwner::class)
+            ->withAggregate('largeOrdersCount')
+            ->fetchAll());
+
+        $byId = $this->indexById($owners);
+
+        self::assertSame(2, $byId[$this->ownerOneId]->largeOrdersCount);
+        self::assertSame(2, $byId[$this->ownerTwoId]->largeOrdersCount);
+        self::assertSame(0, $byId[$this->ownerEmptyId]->largeOrdersCount);
+        self::assertNull($byId[$this->ownerOneId]->ordersCount);
+    }
+
+    public function testWithAggregateForwardsNamedArgumentsToFirstClassCallable(): void
+    {
+        $owners = \iterator_to_array($this->modelsManager
+            ->query(AggregateOwner::class)
+            ->withAggregate('ordersTotalAtLeast', minimum: 20)
+            ->fetchAll());
+
+        $byId = $this->indexById($owners);
+
+        self::assertSame(50, $byId[$this->ownerOneId]->ordersTotalAtLeast);
+        self::assertSame(300, $byId[$this->ownerTwoId]->ordersTotalAtLeast);
+        self::assertNull($byId[$this->ownerEmptyId]->ordersTotalAtLeast);
+    }
+
+    public function testWithAggregateUsesCallbackDefaultsWhenArgumentIsOmitted(): void
+    {
+        $defaults = $this->indexById(
+            $this->modelsManager
+                ->query(AggregateOwner::class)
+                ->withAggregate('ordersMaxBelow')
+                ->fetchAll(),
+        );
+
+        $raised = $this->indexById(
+            $this->modelsManager
+                ->query(AggregateOwner::class)
+                ->withAggregate('ordersMaxBelow', limit: 250)
+                ->fetchAll(),
+        );
+
+        self::assertSame(30, $defaults[$this->ownerOneId]->ordersMaxBelow);
+        self::assertNull($defaults[$this->ownerTwoId]->ordersMaxBelow);
+        self::assertSame(200, $raised[$this->ownerTwoId]->ordersMaxBelow);
+    }
+
+    public function testWithAggregateCombinesDeclaredAndRuntimeCallbacks(): void
+    {
+        $owners = \iterator_to_array($this->modelsManager
+            ->query(AggregateOwner::class)
+            ->withAggregate(
+                'ordersTotalAtLeast',
+                callback: static function (RelationSubqueryInterface $orders): void {
+                    $orders->where('aggregate_orders.amount', 150, '<=');
+                },
+                minimum: 20,
+            )
+            ->fetchAll());
+
+        $byId = $this->indexById($owners);
+
+        self::assertSame(50, $byId[$this->ownerOneId]->ordersTotalAtLeast);
+        self::assertSame(100, $byId[$this->ownerTwoId]->ordersTotalAtLeast);
+    }
+
+    public function testWithAggregateCollectsNamedArgumentsIntoVariadicCallback(): void
+    {
+        $owners = \iterator_to_array($this->modelsManager
+            ->query(AggregateOwner::class)
+            ->withAggregate(
+                'ordersAverageOf',
+                amount: 10,
+                high: 30,
+            )
+            ->fetchAll());
+
+        $byId = $this->indexById($owners);
+
+        self::assertEqualsWithDelta(20.0, $byId[$this->ownerOneId]->ordersAverageOf, 0.001);
+        self::assertNull($byId[$this->ownerTwoId]->ordersAverageOf);
+    }
+
+    public function testWithAggregateFillsSlotWithoutDeclaredCallback(): void
+    {
+        $owners = \iterator_to_array($this->modelsManager
+            ->query(AggregateOwner::class)
+            ->withAggregate('ordersMax')
+            ->fetchAll());
+
+        $byId = $this->indexById($owners);
+
+        self::assertSame(30, $byId[$this->ownerOneId]->ordersMax);
+        self::assertSame(200, $byId[$this->ownerTwoId]->ordersMax);
+    }
+
+    public function testWithCountSkipsSlotsWithDeclaredCallback(): void
+    {
+        $owners = \iterator_to_array($this->modelsManager
+            ->query(AggregateOwner::class)
+            ->withCount(relationName: 'orders')
+            ->fetchAll());
+
+        $byId = $this->indexById($owners);
+
+        self::assertSame(3, $byId[$this->ownerOneId]->ordersCount);
+        self::assertNull($byId[$this->ownerOneId]->largeOrdersCount);
+    }
+
+    public function testOrderByAggregateUsesDeclaredCallback(): void
+    {
+        self::assertSame(
+            [
+                'two',
+                'one',
+                'empty',
+            ],
+            $this->labels(
+                $this->modelsManager
+                    ->query(AggregateOwner::class)
+                    ->orderByAggregate(
+                        'ordersTotalAtLeast',
+                        OrderDirection::DESC,
+                        minimum: 25,
+                    )
+                    ->orderBy('id'),
+            ),
+        );
+    }
+
+    public function testWithAggregateOnLoadedRelation(): void
+    {
+        $region = $this->modelsManager
+            ->query(AggregateRegion::class)
+            ->where('label', 'north')
+            ->first();
+
+        self::assertNotNull($region);
+        self::assertNotNull($region->owners);
+
+        $totals = [];
+
+        foreach ($region->owners->withAggregate('ordersTotalAtLeast', minimum: 30)->orderBy('id') as $owner) {
+            $totals[$owner->label] = $owner->ordersTotalAtLeast;
+        }
+
+        self::assertSame(
+            [
+                'one' => 30,
+                'two' => 300,
+            ],
+            $totals,
+        );
+    }
+
+    public function testWithAggregateWithoutRequiredArgumentThrows(): void
+    {
+        try {
+            (void) $this->modelsManager
+                ->query(AggregateOwner::class)
+                ->withAggregate('ordersTotalAtLeast');
+
+            self::fail('Expected ModelException was not thrown');
+        } catch (ModelException $exception) {
+            self::assertStringContainsString(
+                'requires argument "minimum"',
+                $exception->getMessage(),
+            );
+        }
+    }
+
+    public function testWithAggregateWithUnknownArgumentThrows(): void
+    {
+        try {
+            (void) $this->modelsManager
+                ->query(AggregateOwner::class)
+                ->withAggregate('largeOrdersCount', minimum: 5);
+
+            self::fail('Expected ModelException was not thrown');
+        } catch (ModelException $exception) {
+            self::assertStringContainsString(
+                'got argument "minimum"',
+                $exception->getMessage(),
+            );
+        }
+    }
+
+    public function testWithAggregateWithPositionalArgumentThrows(): void
+    {
+        try {
+            (void) $this->modelsManager
+                ->query(AggregateOwner::class)
+                ->withAggregate(
+                    'ordersTotalAtLeast',
+                    null,
+                    20,
+                );
+
+            self::fail('Expected ModelException was not thrown');
+        } catch (ModelException $exception) {
+            self::assertStringContainsString(
+                'got argument "0"',
+                $exception->getMessage(),
+            );
+        }
+    }
+
+    public function testOrderByAggregateOnPropertyWithoutAggregateThrows(): void
+    {
+        try {
+            (void) $this->modelsManager
+                ->query(AggregateOwner::class)
+                ->orderByAggregate('label');
+
+            self::fail('Expected ModelException was not thrown');
+        } catch (ModelException $exception) {
+            self::assertStringContainsString(
+                'Cannot call orderByAggregate()',
                 $exception->getMessage(),
             );
         }

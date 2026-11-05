@@ -13,7 +13,13 @@ declare(strict_types=1);
 
 namespace Unit\Model\MetaData\Adapter;
 
+use Fixture\Model\Aggregate\AggregateOwner;
 use Fixture\Model\Aggregate\AggregateRegion;
+use Fixture\Model\Broken\AggregateCallbackIntersectionFirstParameter;
+use Fixture\Model\Broken\AggregateCallbackLooseFirstParameter;
+use Fixture\Model\Broken\AggregateCallbackVariadicSubquery;
+use Fixture\Model\Broken\AggregateCallbackWithoutParameters;
+use Fixture\Model\Broken\AggregateCallbackWrongFirstParameter;
 use Fixture\Model\Broken\AggregateCountUnexpectedColumn;
 use Fixture\Model\Broken\AggregateDuplicateAlias;
 use Fixture\Model\Broken\AggregateNestedNonRelation;
@@ -148,5 +154,88 @@ class ReflectionMetaDataAdapterAggregatesTest extends TestCase
             modelClass: AggregateDuplicateAlias::class,
             needle: 'collides with existing aggregate',
         );
+    }
+
+    public function testRejectsAggregateCallbackWithWrongFirstParameter(): void
+    {
+        $this->assertRejectsModelWithMessage(
+            modelClass: AggregateCallbackWrongFirstParameter::class,
+            needle: 'must take a RelationSubqueryInterface',
+        );
+    }
+
+    public function testRejectsAggregateCallbackWithoutParameters(): void
+    {
+        $this->assertRejectsModelWithMessage(
+            modelClass: AggregateCallbackWithoutParameters::class,
+            needle: 'must take a RelationSubqueryInterface',
+        );
+    }
+
+    public function testRejectsAggregateCallbackWithVariadicSubquery(): void
+    {
+        $this->assertRejectsModelWithMessage(
+            modelClass: AggregateCallbackVariadicSubquery::class,
+            needle: 'first, non-variadic parameter',
+        );
+    }
+
+    public function testRejectsAggregateCallbackWithIntersectionFirstParameter(): void
+    {
+        $this->assertRejectsModelWithMessage(
+            modelClass: AggregateCallbackIntersectionFirstParameter::class,
+            needle: 'must take a RelationSubqueryInterface',
+        );
+    }
+
+    public function testAcceptsAggregateCallbackWithLooseFirstParameter(): void
+    {
+        $properties = \array_map(
+            static fn (ModelRelationAggregateInterface $aggregate): string => $aggregate->property,
+            $this->adapter->getModel(AggregateCallbackLooseFirstParameter::class)->aggregates,
+        );
+
+        self::assertSame(
+            [
+                'untypedCount',
+                'mixedCount',
+                'unionCount',
+            ],
+            $properties,
+        );
+    }
+
+    public function testRecordsAggregateCallbackParameters(): void
+    {
+        $aggregates = [];
+
+        foreach ($this->adapter->getModel(AggregateOwner::class)->aggregates as $aggregate) {
+            $aggregates[$aggregate->property] = $aggregate;
+        }
+
+        self::assertNull($aggregates['ordersTotal']->callback);
+        self::assertSame([], $aggregates['ordersTotal']->callbackParameters);
+        self::assertNotNull($aggregates['largeOrdersCount']->callback);
+        self::assertSame([], $aggregates['largeOrdersCount']->callbackParameters);
+        self::assertSame(
+            [
+                'minimum' => true,
+            ],
+            $aggregates['ordersTotalAtLeast']->callbackParameters,
+        );
+        self::assertSame(
+            [
+                'limit' => false,
+            ],
+            $aggregates['ordersMaxBelow']->callbackParameters,
+        );
+        self::assertFalse($aggregates['ordersMaxBelow']->callbackVariadic);
+        self::assertSame(
+            [
+                'amount' => true,
+            ],
+            $aggregates['ordersAverageOf']->callbackParameters,
+        );
+        self::assertTrue($aggregates['ordersAverageOf']->callbackVariadic);
     }
 }

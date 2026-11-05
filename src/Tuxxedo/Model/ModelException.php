@@ -1172,13 +1172,85 @@ class ModelException extends Exception
         string $modelClass,
         string $relation,
         string $alias,
+        string $attribute,
     ): self {
         return new self(
             message: \sprintf(
-                'No relation aggregate declared on "%s" accepts alias "%s" for relation "%s"; add a #[CountAggregate]/#[SumAggregate]/etc. property or pass an explicit alias matching an existing one',
+                'No relation aggregate declared on "%s" accepts alias "%s" for relation "%s"; add a #[%s] property or pass an explicit alias matching an existing one',
                 $modelClass,
                 $alias,
                 $relation,
+                $attribute,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromAggregateCallbackSignature(
+        string $modelClass,
+        string $property,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Relation aggregate callback on "%s::$%s" must take a RelationSubqueryInterface as its first, non-variadic parameter',
+                $modelClass,
+                $property,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromAggregateUnknownSlot(
+        string $modelClass,
+        string $property,
+        string $method,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Cannot call %s() for "%s::$%s": the property has no relation aggregate attribute',
+                $method,
+                $modelClass,
+                $property,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromAggregateMissingArgument(
+        string $modelClass,
+        string $property,
+        string $argument,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Relation aggregate "%s::$%s" requires argument "%s" for its callback',
+                $modelClass,
+                $property,
+                $argument,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromAggregateUnknownArgument(
+        string $modelClass,
+        string $property,
+        string $argument,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Relation aggregate "%s::$%s" got argument "%s", which its callback does not accept; pass callback arguments by name',
+                $modelClass,
+                $property,
+                $argument,
             ),
         );
     }

@@ -59,6 +59,7 @@ use Tuxxedo\Model\MetaData\MorphToRelationMetaData;
 use Tuxxedo\Model\MetaData\MorphToRelationMetaDataInterface;
 use Tuxxedo\Model\ModelException;
 use Tuxxedo\Model\Relation;
+use Tuxxedo\Model\RelationSubqueryInterface;
 use Tuxxedo\Reflection\ClassReflector;
 use Tuxxedo\Reflection\PropertyReflectorInterface;
 
@@ -1865,6 +1866,16 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 }
 
                 $seenAliases[$alias] = $property->name;
+                $callbackParameters = [];
+                $callbackVariadic = false;
+
+                if ($attribute->callback !== null) {
+                    [$callbackParameters, $callbackVariadic] = $this->aggregateCallbackParameters(
+                        class: $class,
+                        property: $property->name,
+                        callback: $attribute->callback,
+                    );
+                }
 
                 $aggregates[] = new ModelRelationAggregate(
                     property: $property->name,
@@ -1873,6 +1884,9 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                     function: $function,
                     column: $attribute->column,
                     slotType: $builtin,
+                    callback: $attribute->callback,
+                    callbackParameters: $callbackParameters,
+                    callbackVariadic: $callbackVariadic,
                 );
             }
         }
@@ -1956,6 +1970,77 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
 
             $relatedClass = $segmentRelation->related;
         }
+    }
+
+    /**
+     * @return array{0: array<string, bool>, 1: bool}
+     *
+     * @throws ModelException
+     */
+    private function aggregateCallbackParameters(
+        ClassReflector $class,
+        string $property,
+        \Closure $callback,
+    ): array {
+        $parameters = (new \ReflectionFunction($callback))->getParameters();
+        $first = \array_shift($parameters);
+
+        if ($first === null || $first->isVariadic() || !$this->acceptsRelationSubquery($first->getType())) {
+            throw ModelException::fromAggregateCallbackSignature(
+                modelClass: $class->name,
+                property: $property,
+            );
+        }
+
+        $named = [];
+        $variadic = false;
+
+        foreach ($parameters as $parameter) {
+            if ($parameter->isVariadic()) {
+                $variadic = true;
+
+                continue;
+            }
+
+            $named[$parameter->name] = !$parameter->isOptional();
+        }
+
+        return [
+            $named,
+            $variadic,
+        ];
+    }
+
+    private function acceptsRelationSubquery(
+        ?\ReflectionType $type,
+    ): bool {
+        if ($type === null) {
+            return true;
+        }
+
+        $members = $type instanceof \ReflectionUnionType
+            ? $type->getTypes()
+            : [
+                $type,
+            ];
+
+        foreach ($members as $member) {
+            if (!$member instanceof \ReflectionNamedType) {
+                continue;
+            }
+
+            $name = $member->getName();
+
+            if (
+                $name === 'mixed' ||
+                $name === 'object' ||
+                (!$member->isBuiltin() && \is_a(RelationSubqueryInterface::class, $name, true))
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function defaultAggregateAlias(

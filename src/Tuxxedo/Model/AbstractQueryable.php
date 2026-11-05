@@ -30,6 +30,7 @@ use Tuxxedo\Model\Attribute\Relation\MorphToMany;
 use Tuxxedo\Model\MetaData\ModelCompositeKeyInterface;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 use Tuxxedo\Model\MetaData\ModelPrimaryKeyInterface;
+use Tuxxedo\Model\MetaData\ModelRelationAggregateInterface;
 use Tuxxedo\Model\MetaData\ModelRelationInterface;
 use Tuxxedo\Model\MetaData\ModelRelationLink;
 use Tuxxedo\Model\MetaData\ModelRelationLinkInterface;
@@ -767,7 +768,7 @@ abstract class AbstractQueryable implements QueryableInterface
         ?\Closure $callback = null,
         bool $distinct = false,
     ): static {
-        return $this->withAggregate(
+        return $this->withRelationAggregate(
             function: AggregateFunction::COUNT,
             relationName: $relationName,
             column: null,
@@ -787,7 +788,7 @@ abstract class AbstractQueryable implements QueryableInterface
         ?string $alias = null,
         ?\Closure $callback = null,
     ): static {
-        return $this->withAggregate(
+        return $this->withRelationAggregate(
             function: AggregateFunction::SUM,
             relationName: $relationName,
             column: $column,
@@ -806,7 +807,7 @@ abstract class AbstractQueryable implements QueryableInterface
         ?string $alias = null,
         ?\Closure $callback = null,
     ): static {
-        return $this->withAggregate(
+        return $this->withRelationAggregate(
             function: AggregateFunction::AVG,
             relationName: $relationName,
             column: $column,
@@ -825,7 +826,7 @@ abstract class AbstractQueryable implements QueryableInterface
         ?string $alias = null,
         ?\Closure $callback = null,
     ): static {
-        return $this->withAggregate(
+        return $this->withRelationAggregate(
             function: AggregateFunction::MIN,
             relationName: $relationName,
             column: $column,
@@ -844,7 +845,7 @@ abstract class AbstractQueryable implements QueryableInterface
         ?string $alias = null,
         ?\Closure $callback = null,
     ): static {
-        return $this->withAggregate(
+        return $this->withRelationAggregate(
             function: AggregateFunction::MAX,
             relationName: $relationName,
             column: $column,
@@ -862,7 +863,7 @@ abstract class AbstractQueryable implements QueryableInterface
         OrderDirection|string $direction = OrderDirection::ASC,
         ?\Closure $callback = null,
     ): static {
-        return $this->orderByAggregate(
+        return $this->orderByRelationAggregate(
             function: AggregateFunction::COUNT,
             relationName: $relationName,
             column: null,
@@ -881,7 +882,7 @@ abstract class AbstractQueryable implements QueryableInterface
         OrderDirection|string $direction = OrderDirection::ASC,
         ?\Closure $callback = null,
     ): static {
-        return $this->orderByAggregate(
+        return $this->orderByRelationAggregate(
             function: AggregateFunction::SUM,
             relationName: $relationName,
             column: $column,
@@ -900,7 +901,7 @@ abstract class AbstractQueryable implements QueryableInterface
         OrderDirection|string $direction = OrderDirection::ASC,
         ?\Closure $callback = null,
     ): static {
-        return $this->orderByAggregate(
+        return $this->orderByRelationAggregate(
             function: AggregateFunction::AVG,
             relationName: $relationName,
             column: $column,
@@ -919,7 +920,7 @@ abstract class AbstractQueryable implements QueryableInterface
         OrderDirection|string $direction = OrderDirection::ASC,
         ?\Closure $callback = null,
     ): static {
-        return $this->orderByAggregate(
+        return $this->orderByRelationAggregate(
             function: AggregateFunction::MIN,
             relationName: $relationName,
             column: $column,
@@ -938,7 +939,7 @@ abstract class AbstractQueryable implements QueryableInterface
         OrderDirection|string $direction = OrderDirection::ASC,
         ?\Closure $callback = null,
     ): static {
-        return $this->orderByAggregate(
+        return $this->orderByRelationAggregate(
             function: AggregateFunction::MAX,
             relationName: $relationName,
             column: $column,
@@ -950,7 +951,70 @@ abstract class AbstractQueryable implements QueryableInterface
     /**
      * @param (\Closure(RelationSubqueryInterface): void)|null $callback
      */
-    private function withAggregate(
+    #[\NoDiscard]
+    public function withAggregate(
+        string $property,
+        ?\Closure $callback = null,
+        mixed ...$arguments,
+    ): static {
+        $aggregate = $this->declaredAggregate(
+            property: $property,
+            arguments: $arguments,
+            methodName: 'withAggregate',
+        );
+
+        return $this->selectAggregateSubquery(
+            subquery: $this->buildAggregateSubquery(
+                function: $aggregate->function,
+                relationName: $aggregate->relation,
+                column: $aggregate->column,
+                callback: $this->declaredAggregateCallback(
+                    aggregate: $aggregate,
+                    callback: $callback,
+                    arguments: $arguments,
+                ),
+                methodName: 'withAggregate',
+            ),
+            alias: $aggregate->alias,
+        );
+    }
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
+    #[\NoDiscard]
+    public function orderByAggregate(
+        string $property,
+        OrderDirection|string $direction = OrderDirection::ASC,
+        ?\Closure $callback = null,
+        mixed ...$arguments,
+    ): static {
+        $aggregate = $this->declaredAggregate(
+            property: $property,
+            arguments: $arguments,
+            methodName: 'orderByAggregate',
+        );
+
+        return $this->orderByAggregateSubquery(
+            subquery: $this->buildAggregateSubquery(
+                function: $aggregate->function,
+                relationName: $aggregate->relation,
+                column: $aggregate->column,
+                callback: $this->declaredAggregateCallback(
+                    aggregate: $aggregate,
+                    callback: $callback,
+                    arguments: $arguments,
+                ),
+                methodName: 'orderByAggregate',
+            ),
+            direction: $direction,
+        );
+    }
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
+    private function withRelationAggregate(
         AggregateFunction $function,
         string $relationName,
         ?string $column,
@@ -980,6 +1044,7 @@ abstract class AbstractQueryable implements QueryableInterface
 
         foreach ($parentMetaData->aggregates as $aggregate) {
             if (
+                $aggregate->callback === null &&
                 $aggregate->relation === $relationName &&
                 $aggregate->function === $function &&
                 $aggregate->column === $column
@@ -1001,44 +1066,63 @@ abstract class AbstractQueryable implements QueryableInterface
                     relationName: $relationName,
                     column: $column,
                 ),
+                attribute: \ucfirst(\strtolower($function->value)) . 'Aggregate',
             );
         }
 
-        return $this->extend(
-            criterion: static function (WhereStatementInterface $statement) use ($subquery, $resolvedAlias): void {
-                if (!$statement instanceof SelectStatementInterface) {
-                    return; // @codeCoverageIgnore
-                }
-
-                $statement->selectSubquery(
-                    subquery: $subquery,
-                    alias: $resolvedAlias,
-                );
-            },
+        return $this->selectAggregateSubquery(
+            subquery: $subquery,
+            alias: $resolvedAlias,
         );
     }
 
     /**
      * @param (\Closure(RelationSubqueryInterface): void)|null $callback
      */
-    private function orderByAggregate(
+    private function orderByRelationAggregate(
         AggregateFunction $function,
         string $relationName,
         ?string $column,
         OrderDirection|string $direction,
         ?\Closure $callback,
     ): static {
+        return $this->orderByAggregateSubquery(
+            subquery: $this->buildAggregateSubquery(
+                function: $function,
+                relationName: $relationName,
+                column: $column,
+                callback: $callback,
+                methodName: 'orderBy' . \ucfirst(\strtolower($function->value)),
+            ),
+            direction: $direction,
+        );
+    }
+
+    private function selectAggregateSubquery(
+        SelectStatementInterface $subquery,
+        string $alias,
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($subquery, $alias): void {
+                if (!$statement instanceof SelectStatementInterface) {
+                    return; // @codeCoverageIgnore
+                }
+
+                $statement->selectSubquery(
+                    subquery: $subquery,
+                    alias: $alias,
+                );
+            },
+        );
+    }
+
+    private function orderByAggregateSubquery(
+        SelectStatementInterface $subquery,
+        OrderDirection|string $direction,
+    ): static {
         if (\is_string($direction)) {
             $direction = OrderDirection::from($direction);
         }
-
-        $subquery = $this->buildAggregateSubquery(
-            function: $function,
-            relationName: $relationName,
-            column: $column,
-            callback: $callback,
-            methodName: 'orderBy' . \ucfirst(\strtolower($function->value)),
-        );
 
         $orderBy = $this->orderBy;
         $orderBy[] = [
@@ -1052,6 +1136,89 @@ abstract class AbstractQueryable implements QueryableInterface
             limit: $this->limit,
             offset: $this->offset,
         );
+    }
+
+    /**
+     * @param array<int|string, mixed> $arguments
+     */
+    private function declaredAggregate(
+        string $property,
+        array $arguments,
+        string $methodName,
+    ): ModelRelationAggregateInterface {
+        if ($this->manager === null || $this->modelClass === null) {
+            throw ModelException::fromChainMethodRequiresModelContext(
+                method: $methodName,
+            );
+        }
+
+        $declared = null;
+
+        foreach ($this->manager->metaData->getModel($this->modelClass)->aggregates as $aggregate) {
+            if ($aggregate->property === $property) {
+                $declared = $aggregate;
+
+                break;
+            }
+        }
+
+        if ($declared === null) {
+            throw ModelException::fromAggregateUnknownSlot(
+                modelClass: $this->modelClass,
+                property: $property,
+                method: $methodName,
+            );
+        }
+
+        foreach (\array_keys($arguments) as $argument) {
+            if (
+                !\is_string($argument) ||
+                (!isset($declared->callbackParameters[$argument]) && !$declared->callbackVariadic)
+            ) {
+                throw ModelException::fromAggregateUnknownArgument(
+                    modelClass: $this->modelClass,
+                    property: $property,
+                    argument: (string) $argument,
+                );
+            }
+        }
+
+        foreach ($declared->callbackParameters as $parameter => $required) {
+            if ($required && !\array_key_exists($parameter, $arguments)) {
+                throw ModelException::fromAggregateMissingArgument(
+                    modelClass: $this->modelClass,
+                    property: $property,
+                    argument: $parameter,
+                );
+            }
+        }
+
+        return $declared;
+    }
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     * @param array<int|string, mixed> $arguments
+     * @return (\Closure(RelationSubqueryInterface): void)|null
+     */
+    private function declaredAggregateCallback(
+        ModelRelationAggregateInterface $aggregate,
+        ?\Closure $callback,
+        array $arguments,
+    ): ?\Closure {
+        $declared = $aggregate->callback;
+
+        if ($declared === null) {
+            return $callback;
+        }
+
+        return static function (RelationSubqueryInterface $subquery) use ($declared, $callback, $arguments): void {
+            $declared($subquery, ...$arguments);
+
+            if ($callback !== null) {
+                $callback($subquery);
+            }
+        };
     }
 
     /**

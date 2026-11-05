@@ -21,6 +21,7 @@ use Tuxxedo\Model\Attribute\Aggregate\MaxAggregate;
 use Tuxxedo\Model\Attribute\Aggregate\MinAggregate;
 use Tuxxedo\Model\Attribute\Aggregate\RelationAggregate;
 use Tuxxedo\Model\Attribute\Aggregate\SumAggregate;
+use Tuxxedo\Model\RelationSubqueryInterface;
 
 class AggregateAttributesTest extends TestCase
 {
@@ -96,5 +97,44 @@ class AggregateAttributesTest extends TestCase
 
         self::assertSame(AggregateFunction::MAX, $attribute->function);
         self::assertSame('length', $attribute->column);
+    }
+
+    public function testAggregateAttributesCarryCallback(): void
+    {
+        $callback = static function (RelationSubqueryInterface $rows): void {
+        };
+
+        $attributes = [
+            new CountAggregate(
+                relation: 'tags',
+                callback: $callback,
+            ),
+            new SumAggregate(
+                relation: 'orders',
+                column: 'amount',
+                callback: $callback,
+            ),
+            new AvgAggregate(
+                relation: 'orders',
+                column: 'amount',
+                callback: $callback,
+            ),
+            new MinAggregate(
+                relation: 'notes',
+                column: 'length',
+                callback: $callback,
+            ),
+            new MaxAggregate(
+                relation: 'notes',
+                column: 'length',
+                callback: $callback,
+            ),
+        ];
+
+        foreach ($attributes as $attribute) {
+            self::assertSame($callback, $attribute->callback);
+        }
+
+        self::assertNull(new CountAggregate(relation: 'tags')->callback);
     }
 }

@@ -43,4 +43,19 @@ interface ModelRelationAggregateInterface
     public string $slotType {
         get;
     }
+
+    public ?\Closure $callback {
+        get;
+    }
+
+    /**
+     * @var array<string, bool>
+     */
+    public array $callbackParameters {
+        get;
+    }
+
+    public bool $callbackVariadic {
+        get;
+    }
 }

@@ -22,12 +22,14 @@ class MaxAggregate extends RelationAggregate
         string $relation,
         string $column,
         ?string $alias = null,
+        ?\Closure $callback = null,
     ) {
         parent::__construct(
             relation: $relation,
             function: AggregateFunction::MAX,
             column: $column,
             alias: $alias,
+            callback: $callback,
         );
     }
 }

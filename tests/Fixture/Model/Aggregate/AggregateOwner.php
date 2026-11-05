@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Fixture\Model\Aggregate;
 
+use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Model\Attribute\Aggregate\AvgAggregate;
 use Tuxxedo\Model\Attribute\Aggregate\CountAggregate;
 use Tuxxedo\Model\Attribute\Aggregate\MaxAggregate;
@@ -27,6 +28,7 @@ use Tuxxedo\Model\Attribute\Relation\MorphMany;
 use Tuxxedo\Model\Attribute\Relation\MorphToMany;
 use Tuxxedo\Model\Attribute\Table;
 use Tuxxedo\Model\Relation;
+use Tuxxedo\Model\RelationSubqueryInterface;
 
 #[Table(name: 'aggregate_owners')]
 class AggregateOwner
@@ -117,4 +119,55 @@ class AggregateOwner
 
     #[CountAggregate(relation: 'orders.owner')]
     public ?int $orderOwnersCount = null;
+
+    #[CountAggregate(
+        relation: 'orders',
+        callback: static function (RelationSubqueryInterface $orders): void {
+            $orders->where('aggregate_orders.amount', 20, ConditionOperator::GREATER_THAN_OR_EQUAL);
+        },
+    )]
+    public ?int $largeOrdersCount = null;
+
+    #[SumAggregate(
+        relation: 'orders',
+        column: 'amount',
+        callback: self::amountAtLeast(...),
+    )]
+    public ?int $ordersTotalAtLeast = null;
+
+    #[MaxAggregate(
+        relation: 'orders',
+        column: 'amount',
+        callback: self::amountBelow(...),
+    )]
+    public ?int $ordersMaxBelow = null;
+
+    #[AvgAggregate(
+        relation: 'orders',
+        column: 'amount',
+        callback: static function (RelationSubqueryInterface $orders, int $amount, int ...$amounts): void {
+            $orders->whereIn(
+                'aggregate_orders.amount',
+                [
+                    $amount,
+                    ...\array_values($amounts),
+                ],
+            );
+        },
+    )]
+    public ?float $ordersAverageOf = null;
+
+    public static function amountAtLeast(
+        RelationSubqueryInterface $orders,
+        int $minimum,
+    ): void {
+        $orders->where('aggregate_orders.amount', $minimum, ConditionOperator::GREATER_THAN_OR_EQUAL);
+    }
+
+    public static function amountBelow(
+        RelationSubqueryInterface $orders,
+        int $limit = 100,
+    ): void {
+        $orders->where('aggregate_orders.amount', $limit, ConditionOperator::LESS_THAN);
+    }
 }

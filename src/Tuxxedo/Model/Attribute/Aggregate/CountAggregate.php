@@ -21,11 +21,13 @@ class CountAggregate extends RelationAggregate
     public function __construct(
         string $relation,
         ?string $alias = null,
+        ?\Closure $callback = null,
     ) {
         parent::__construct(
             relation: $relation,
             function: AggregateFunction::COUNT,
             alias: $alias,
+            callback: $callback,
         );
     }
 }

@@ -477,6 +477,27 @@ interface QueryableInterface extends PagedInterface, \IteratorAggregate, \Counta
     ): static;
 
     /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
+    #[\NoDiscard]
+    public function withAggregate(
+        string $property,
+        ?\Closure $callback = null,
+        mixed ...$arguments,
+    ): static;
+
+    /**
+     * @param (\Closure(RelationSubqueryInterface): void)|null $callback
+     */
+    #[\NoDiscard]
+    public function orderByAggregate(
+        string $property,
+        OrderDirection|string $direction = OrderDirection::ASC,
+        ?\Closure $callback = null,
+        mixed ...$arguments,
+    ): static;
+
+    /**
      * @param \Closure(WhereStatementInterface): void $callback
      * @return static
      */

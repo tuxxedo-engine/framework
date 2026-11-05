@@ -23,6 +23,7 @@ class RelationAggregate
         public readonly AggregateFunction $function,
         public readonly ?string $column = null,
         public readonly ?string $alias = null,
+        public readonly ?\Closure $callback = null,
     ) {
     }
 }
