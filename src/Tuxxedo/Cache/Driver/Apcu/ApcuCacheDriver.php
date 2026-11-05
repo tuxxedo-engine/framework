@@ -143,7 +143,7 @@ class ApcuCacheDriver implements CacheDriverInterface
         $value = \apcu_fetch($this->namespace . $key, $success);
 
         if (
-            !$success ||
+            $success !== true ||
             (
                 !\is_int($value) &&
                 !\is_float($value) &&
