@@ -16,6 +16,7 @@ namespace Tuxxedo\Mail\Transport\SmtpMail\Config;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Mail\Transport\MailTransportInterface;
 use Tuxxedo\Mail\Transport\SmtpMail\SmtpAuth;
+use Tuxxedo\Mail\Transport\SmtpMail\SmtpSocket;
 use Tuxxedo\Mail\Transport\SmtpMail\SmtpTls;
 use Tuxxedo\Mail\Transport\SmtpMail\SmtpTransport;
 use Tuxxedo\Mail\Transport\SmtpMail\SmtpTransportMode;
@@ -45,6 +46,9 @@ class SmtpTransportConfig implements SmtpTransportConfigInterface
     public function createTransport(
         ContainerInterface $container,
     ): MailTransportInterface {
-        return $container->resolve(SmtpTransport::class);
+        return new SmtpTransport(
+            config: $this,
+            socket: new SmtpSocket(),
+        );
     }
 }

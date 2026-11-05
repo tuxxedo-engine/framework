@@ -121,18 +121,13 @@ class MailConfiguratorTest extends TestCase
             transport: $transportConfig,
         );
 
-        $transport = new FileMailTransport(
-            config: $transportConfig,
-        );
-
         $container = new Container();
         $container->singleton($mailConfig);
-        $container->singleton($transport);
 
         $configurator = MailConfigurator::fromConfig($container);
 
-        self::assertSame(
-            $transport,
+        self::assertInstanceOf(
+            FileMailTransport::class,
             $configurator->transport,
         );
     }

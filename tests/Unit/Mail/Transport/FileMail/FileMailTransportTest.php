@@ -221,19 +221,18 @@ class FileMailTransportTest extends TestCase
         }
     }
 
-    public function testCreateTransportResolvesFileMailTransportFromContainer(): void
+    public function testCreateTransportWritesToItsOwnDirectory(): void
     {
-        $config = new FileMailTransportConfig(
+        $transport = (new FileMailTransportConfig(
             directory: $this->directory,
-        );
-
-        $container = new Container();
-        $container->singleton($config);
-
-        $transport = $config->createTransport(
-            container: $container,
+        ))->createTransport(
+            container: new Container(),
         );
 
         self::assertInstanceOf(FileMailTransport::class, $transport);
+
+        $transport->send($this->serialize($this->makeMessage()));
+
+        self::assertCount(1, $this->directoryFilenames());
     }
 }

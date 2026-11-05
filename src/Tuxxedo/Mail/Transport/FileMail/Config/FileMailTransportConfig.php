@@ -27,6 +27,6 @@ class FileMailTransportConfig implements FileMailTransportConfigInterface
     public function createTransport(
         ContainerInterface $container,
     ): MailTransportInterface {
-        return $container->resolve(FileMailTransport::class);
+        return new FileMailTransport($this);
     }
 }

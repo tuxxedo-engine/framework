@@ -16,6 +16,7 @@ namespace Tuxxedo\Mail\Transport\SendMail\Config;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Mail\Transport\MailTransportInterface;
 use Tuxxedo\Mail\Transport\SendMail\SendMailTransport;
+use Tuxxedo\Process\ProcessRunnerInterface;
 
 class SendMailTransportConfig implements SendMailTransportConfigInterface
 {
@@ -35,6 +36,9 @@ class SendMailTransportConfig implements SendMailTransportConfigInterface
     public function createTransport(
         ContainerInterface $container,
     ): MailTransportInterface {
-        return $container->resolve(SendMailTransport::class);
+        return new SendMailTransport(
+            config: $this,
+            processRunner: $container->resolve(ProcessRunnerInterface::class),
+        );
     }
 }

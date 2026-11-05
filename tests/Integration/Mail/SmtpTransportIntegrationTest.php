@@ -309,31 +309,38 @@ class SmtpTransportIntegrationTest extends TestCase
         );
     }
 
-    public function testConfigCreateTransportResolvesSmtpTransportFromContainer(): void
+    public function testConfigCreateTransportSendsWithItsOwnSettings(): void
     {
-        $container = new Container();
-        $container->singleton(
-            class: new SmtpTransportConfig(
-                host: MailpitTestEnv::host(),
-                port: MailpitTestEnv::smtpPort(),
-                tls: SmtpTls::NONE,
-                auth: SmtpAuth::NONE,
-            ),
-        );
-        $container->singleton(
-            class: new SmtpSocket(),
-        );
-
         $transport = (new SmtpTransportConfig(
             host: MailpitTestEnv::host(),
             port: MailpitTestEnv::smtpPort(),
+            tls: SmtpTls::NONE,
+            auth: SmtpAuth::NONE,
         ))->createTransport(
-            container: $container,
+            container: new Container(),
         );
 
         self::assertInstanceOf(
             SmtpTransport::class,
             $transport,
+        );
+
+        $manager = new MailManager(
+            transport: $transport,
+        );
+
+        $manager->send(
+            ...$this->makeNumberedMessages(
+                count: 1,
+                label: 'ownconfig',
+            ),
+        );
+
+        self::assertSame(
+            [
+                $this->markedSubject('ownconfig-1'),
+            ],
+            $this->sortedSubjectsMatchingMarker(),
         );
     }
 

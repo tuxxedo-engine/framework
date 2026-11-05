@@ -290,16 +290,33 @@ class SendMailTransportTest extends TestCase
         self::assertCount(3, $runner->commands);
     }
 
-    public function testCreateTransportResolvesSendMailTransportFromContainer(): void
+    public function testCreateTransportUsesItsOwnBinaryAndArguments(): void
     {
+        $runner = new RecordingProcessRunner();
         $container = new Container();
-        $container->singleton(new RecordingProcessRunner());
+        $container->singleton($runner);
 
-        $config = new SendMailTransportConfig();
-        $transport = $config->createTransport(
+        $transport = (new SendMailTransportConfig(
+            binary: '/opt/mail/sendmail',
+            arguments: [
+                '-t',
+            ],
+        ))->createTransport(
             container: $container,
         );
 
         self::assertInstanceOf(SendMailTransport::class, $transport);
+
+        $transport->send($this->serialize($this->makeMessage()));
+
+        self::assertSame('/opt/mail/sendmail', $runner->commands[0]->binary);
+        self::assertSame(
+            [
+                '-t',
+                '-f',
+                'sender@example.com',
+            ],
+            $runner->commands[0]->arguments,
+        );
     }
 }
