@@ -133,6 +133,17 @@ class SqlException extends Exception
         );
     }
 
+    public static function fromDuplicateCommonTableExpression(
+        string $name,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Common table expression `%s` is already defined on this statement',
+                $name,
+            ),
+        );
+    }
+
     public static function fromInvalidJoinCondition(
         string $table,
     ): self {

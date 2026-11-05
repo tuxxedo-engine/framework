@@ -39,4 +39,9 @@ class SqliteSchemaProvider implements SchemaProvider
     {
         return 'CREATE TABLE widgets (id INTEGER PRIMARY KEY)';
     }
+
+    public function nodesSchemaSql(): string
+    {
+        return 'CREATE TABLE nodes (id INTEGER PRIMARY KEY, parent_id INTEGER, name TEXT NOT NULL)';
+    }
 }

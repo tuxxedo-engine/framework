@@ -92,4 +92,25 @@ abstract class AbstractBuilderIntegrationTestCase extends TestCase
             native: true,
         );
     }
+
+    protected function createNodesSchema(): void
+    {
+        $this->connection->query(
+            sql: $this->schemaProvider()->nodesSchemaSql(),
+            native: true,
+        );
+    }
+
+    protected function seedNodes(): void
+    {
+        $this->connection->query(
+            sql: "INSERT INTO nodes (id, parent_id, name) VALUES (1, NULL, 'root'), (2, 1, 'a'), (3, 1, 'b'), (4, 2, 'a1'), (5, 4, 'a1x'), (6, NULL, 'loop1'), (7, 6, 'loop2')",
+            native: true,
+        );
+
+        $this->connection->query(
+            sql: 'UPDATE nodes SET parent_id = 7 WHERE id = 6',
+            native: true,
+        );
+    }
 }

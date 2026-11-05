@@ -19,6 +19,7 @@ use Tuxxedo\Database\Driver\ResultSetInterface;
 use Tuxxedo\Database\Hydrator\HydratorInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
+use Tuxxedo\Database\Query\Statement\CommonTable\CommonTableExpressions;
 use Tuxxedo\Database\Query\Statement\Compound\CompoundOperator;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 
@@ -37,6 +38,8 @@ class CompoundSelectStatement implements CompoundSelectStatementInterface
     private ?int $limit = null;
     private ?int $offset = null;
 
+    private readonly CommonTableExpressions $commonTableExpressions;
+
     public function __construct(
         SubqueryRenderableInterface $first,
         public readonly ?ConnectionInterface $connection = null,
@@ -47,6 +50,40 @@ class CompoundSelectStatement implements CompoundSelectStatementInterface
                 'statement' => $first,
             ],
         ];
+
+        $this->commonTableExpressions = new CommonTableExpressions();
+    }
+
+    public function with(
+        string $name,
+        SubqueryRenderableInterface $query,
+        array $columns = [],
+    ): static {
+        $this->commonTableExpressions->add(
+            name: $name,
+            query: $query,
+            columns: $columns,
+        );
+
+        return $this;
+    }
+
+    public function withRecursive(
+        string $name,
+        SubqueryRenderableInterface $anchor,
+        SubqueryRenderableInterface $recursive,
+        array $columns = [],
+        bool $distinct = false,
+    ): static {
+        $this->commonTableExpressions->add(
+            name: $name,
+            query: $anchor,
+            recursive: $recursive,
+            columns: $columns,
+            distinct: $distinct,
+        );
+
+        return $this;
     }
 
     public function union(
@@ -163,8 +200,13 @@ class CompoundSelectStatement implements CompoundSelectStatementInterface
         DialectInterface $dialect,
         string $parameterPrefix,
     ): array {
+        $with = $this->commonTableExpressions->render(
+            dialect: $dialect,
+            parameterPrefix: $parameterPrefix,
+        );
+
         $parts = [];
-        $parameters = [];
+        $parameters = $with['parameters'];
 
         foreach ($this->members as $index => $member) {
             $alias = 'cq_' . $index;
@@ -186,7 +228,7 @@ class CompoundSelectStatement implements CompoundSelectStatementInterface
             ];
         }
 
-        $sql = \join(' ', $parts);
+        $sql = $with['sql'] . \join(' ', $parts);
 
         if (\sizeof($this->orderBy) > 0) {
             $clauses = [];

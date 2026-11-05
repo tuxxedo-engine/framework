@@ -118,4 +118,91 @@ abstract class AbstractDeleteBuilderIntegrationTestCase extends AbstractWhereCla
         );
     }
 
+    public function testDeleteWithCommonTableExpressionFiltersRows(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        self::assertSame(
+            2,
+            $this->connection->delete(
+                table: 'posts',
+            )
+                ->with(
+                    name: 'bobs',
+                    query: $this->connection->select(
+                        table: 'users',
+                    )
+                        ->select('id')
+                        ->where('name', 'Bob'),
+                )
+                ->whereIn(
+                    column: 'user_id',
+                    values: $this->connection->select(
+                        table: 'bobs',
+                    )
+                        ->select('bobs.id'),
+                )
+                ->execute()
+                ->affectedRows,
+        );
+    }
+
+    public function testDeleteWithRecursiveRemovesSubtree(): void
+    {
+        $this->createNodesSchema();
+        $this->seedNodes();
+
+        $this->connection->delete(
+            table: 'nodes',
+        )
+            ->withRecursive(
+                name: 'tree',
+                anchor: $this->connection->select(
+                    table: 'nodes',
+                )
+                    ->select('id')
+                    ->where('id', 2),
+                recursive: $this->connection->select(
+                    table: 'nodes',
+                    alias: 'n',
+                )
+                    ->select('n.id')
+                    ->innerJoin(
+                        table: 'tree',
+                        first: 'tree.id',
+                        second: 'n.parent_id',
+                    ),
+            )
+            ->whereIn(
+                column: 'id',
+                values: $this->connection->select(
+                    table: 'tree',
+                )
+                    ->select('tree.id'),
+            )
+            ->execute();
+
+        $names = [];
+        $rows = $this->connection->query(
+            sql: 'SELECT name FROM nodes ORDER BY id',
+            native: true,
+        );
+
+        foreach ($rows as $row) {
+            $names[] = $row->properties['name'];
+        }
+
+        self::assertSame(
+            [
+                'root',
+                'b',
+                'loop1',
+                'loop2',
+            ],
+            $names,
+        );
+    }
 }

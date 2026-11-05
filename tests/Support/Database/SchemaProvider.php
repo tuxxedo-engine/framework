@@ -24,4 +24,6 @@ interface SchemaProvider
     public function countersSchemaSql(): string;
 
     public function widgetsSchemaSql(): string;
+
+    public function nodesSchemaSql(): string;
 }

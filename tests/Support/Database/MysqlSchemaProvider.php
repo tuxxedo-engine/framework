@@ -39,4 +39,9 @@ class MysqlSchemaProvider implements SchemaProvider
     {
         return 'CREATE TABLE widgets (id INT PRIMARY KEY)';
     }
+
+    public function nodesSchemaSql(): string
+    {
+        return 'CREATE TABLE nodes (id INT PRIMARY KEY, parent_id INT NULL, name VARCHAR(64) NOT NULL)';
+    }
 }

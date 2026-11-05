@@ -52,11 +52,44 @@ class UpdateStatement extends AbstractWhereStatement implements UpdateStatementI
         }
 
         return \sprintf(
-            'UPDATE %s SET %s%s',
+            '%sUPDATE %s SET %s%s',
+            $this->generateWithSql($dialect),
             $dialect->identifier($this->table),
             \join(', ', $clauses),
             $this->generateWhereSql($dialect),
         );
+    }
+
+    public function with(
+        string $name,
+        SubqueryRenderableInterface $query,
+        array $columns = [],
+    ): static {
+        $this->addCommonTableExpression(
+            name: $name,
+            query: $query,
+            columns: $columns,
+        );
+
+        return $this;
+    }
+
+    public function withRecursive(
+        string $name,
+        SubqueryRenderableInterface $anchor,
+        SubqueryRenderableInterface $recursive,
+        array $columns = [],
+        bool $distinct = false,
+    ): static {
+        $this->addCommonTableExpression(
+            name: $name,
+            query: $anchor,
+            recursive: $recursive,
+            columns: $columns,
+            distinct: $distinct,
+        );
+
+        return $this;
     }
 
     public function set(

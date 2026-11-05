@@ -23,7 +23,7 @@ use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\SqlException;
 
-interface SelectStatementInterface extends WhereStatementInterface, SubqueryRenderableInterface
+interface SelectStatementInterface extends WhereStatementInterface, SubqueryRenderableInterface, WithStatementInterface
 {
     public function select(
         string ...$columns,

@@ -23,7 +23,8 @@ class DeleteStatement extends AbstractWhereStatement implements DeleteStatementI
         DialectInterface $dialect,
     ): string {
         $sql = \sprintf(
-            'DELETE FROM %s%s',
+            '%sDELETE FROM %s%s',
+            $this->generateWithSql($dialect),
             $dialect->identifier($this->table),
             $this->generateWhereSql($dialect),
         );
@@ -36,6 +37,38 @@ class DeleteStatement extends AbstractWhereStatement implements DeleteStatementI
         }
 
         return $sql;
+    }
+
+    public function with(
+        string $name,
+        SubqueryRenderableInterface $query,
+        array $columns = [],
+    ): static {
+        $this->addCommonTableExpression(
+            name: $name,
+            query: $query,
+            columns: $columns,
+        );
+
+        return $this;
+    }
+
+    public function withRecursive(
+        string $name,
+        SubqueryRenderableInterface $anchor,
+        SubqueryRenderableInterface $recursive,
+        array $columns = [],
+        bool $distinct = false,
+    ): static {
+        $this->addCommonTableExpression(
+            name: $name,
+            query: $anchor,
+            recursive: $recursive,
+            columns: $columns,
+            distinct: $distinct,
+        );
+
+        return $this;
     }
 
     public function limit(

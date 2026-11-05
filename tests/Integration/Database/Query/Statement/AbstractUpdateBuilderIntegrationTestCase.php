@@ -272,4 +272,84 @@ abstract class AbstractUpdateBuilderIntegrationTestCase extends AbstractWhereCla
             $row['num'],
         );
     }
+
+    public function testUpdateWithCommonTableExpressionFiltersRows(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        self::assertSame(
+            2,
+            $this->connection->update(
+                table: 'posts',
+            )
+                ->set(
+                    column: 'title',
+                    value: 'Written by Bob',
+                )
+                ->with(
+                    name: 'bobs',
+                    query: $this->connection->select(
+                        table: 'users',
+                    )
+                        ->select('id')
+                        ->where('name', 'Bob'),
+                )
+                ->whereIn(
+                    column: 'user_id',
+                    values: $this->connection->select(
+                        table: 'bobs',
+                    )
+                        ->select('bobs.id'),
+                )
+                ->execute()
+                ->affectedRows,
+        );
+    }
+
+    public function testUpdateWithRecursiveUpdatesSubtree(): void
+    {
+        $this->createNodesSchema();
+        $this->seedNodes();
+
+        self::assertSame(
+            3,
+            $this->connection->update(
+                table: 'nodes',
+            )
+                ->set(
+                    column: 'name',
+                    value: 'moved',
+                )
+                ->withRecursive(
+                    name: 'tree',
+                    anchor: $this->connection->select(
+                        table: 'nodes',
+                    )
+                        ->select('id')
+                        ->where('id', 2),
+                    recursive: $this->connection->select(
+                        table: 'nodes',
+                        alias: 'n',
+                    )
+                        ->select('n.id')
+                        ->innerJoin(
+                            table: 'tree',
+                            first: 'tree.id',
+                            second: 'n.parent_id',
+                        ),
+                )
+                ->whereIn(
+                    column: 'id',
+                    values: $this->connection->select(
+                        table: 'tree',
+                    )
+                        ->select('tree.id'),
+                )
+                ->execute()
+                ->affectedRows,
+        );
+    }
 }

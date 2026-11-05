@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Statement;
 
-interface DeleteStatementInterface extends WhereStatementInterface
+interface DeleteStatementInterface extends WhereStatementInterface, WithStatementInterface
 {
     public function limit(
         int $limit,

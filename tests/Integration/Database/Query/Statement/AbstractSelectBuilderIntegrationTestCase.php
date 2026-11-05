@@ -2468,6 +2468,304 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
         );
     }
 
+    public function testWithNamesAQueryForTheMainSelect(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        self::assertSame(
+            [
+                'Bob',
+            ],
+            $this->names(
+                $this->connection->select(
+                    table: 'bobs',
+                )
+                    ->with(
+                        name: 'bobs',
+                        query: $this->usersNamed('Bob'),
+                    )
+                    ->selectAs('bobs.name', 'name'),
+            ),
+        );
+    }
+
+    public function testWithColumnListRenamesColumns(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        self::assertSame(
+            [
+                'Alice',
+            ],
+            $this->names(
+                $this->connection->select(
+                    table: 'people',
+                )
+                    ->with(
+                        name: 'people',
+                        query: $this->connection->select(
+                            table: 'users',
+                        )
+                            ->select('id', 'name'),
+                        columns: [
+                            'person_id',
+                            'person_name',
+                        ],
+                    )
+                    ->selectAs('people.person_name', 'name')
+                    ->where('people.person_id', 1),
+            ),
+        );
+    }
+
+    public function testWithChainsExpressionsThatReferenceEachOther(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        self::assertSame(
+            [
+                'Bob',
+            ],
+            $this->names(
+                $this->connection->select(
+                    table: 'narrowed',
+                )
+                    ->with(
+                        name: 'picked',
+                        query: $this->usersNamed('Alice', 'Bob'),
+                    )
+                    ->with(
+                        name: 'narrowed',
+                        query: $this->connection->select(
+                            table: 'picked',
+                        )
+                            ->where('picked.name', 'Bob'),
+                    )
+                    ->selectAs('narrowed.name', 'name')
+                    ->where('narrowed.name', 'Alice', '!='),
+            ),
+        );
+    }
+
+    public function testWithRecursiveWalksATree(): void
+    {
+        $this->createNodesSchema();
+        $this->seedNodes();
+
+        self::assertSame(
+            [
+                'a',
+                'a1',
+                'a1x',
+            ],
+            $this->names(
+                $this->subtree(2)
+                    ->selectAs('tree.name', 'name')
+                    ->orderBy('tree.depth'),
+            ),
+        );
+    }
+
+    public function testWithRecursiveCarriesComputedColumns(): void
+    {
+        $this->createNodesSchema();
+        $this->seedNodes();
+
+        $depths = [];
+
+        foreach ($this->subtree(1)->orderBy('tree.depth')->orderBy('tree.name')->execute() as $row) {
+            /** @var string $name */
+            $name = $row->properties['name'];
+
+            /** @var int|string $depth */
+            $depth = $row->properties['depth'];
+            $depths[$name] = (int) $depth;
+        }
+
+        self::assertSame(
+            [
+                'root' => 0,
+                'a' => 1,
+                'b' => 1,
+                'a1' => 2,
+                'a1x' => 3,
+            ],
+            $depths,
+        );
+    }
+
+    public function testWithRecursiveDistinctStopsAtCycles(): void
+    {
+        $this->createNodesSchema();
+        $this->seedNodes();
+
+        self::assertSame(
+            [
+                'loop1',
+                'loop2',
+            ],
+            $this->names(
+                $this->connection->select(
+                    table: 'tree',
+                )
+                    ->withRecursive(
+                        name: 'tree',
+                        anchor: $this->connection->select(
+                            table: 'nodes',
+                        )
+                            ->select('id', 'name')
+                            ->where('id', 6),
+                        recursive: $this->connection->select(
+                            table: 'nodes',
+                            alias: 'n',
+                        )
+                            ->select('n.id', 'n.name')
+                            ->innerJoin(
+                                table: 'tree',
+                                first: 'tree.id',
+                                second: 'n.parent_id',
+                            ),
+                        distinct: true,
+                    )
+                    ->selectAs('tree.name', 'name')
+                    ->orderBy('tree.name'),
+            ),
+        );
+    }
+
+    public function testWithInsideWhereInSubquery(): void
+    {
+        $this->createNodesSchema();
+        $this->seedNodes();
+
+        self::assertSame(
+            [
+                'a1',
+                'a1x',
+            ],
+            $this->names(
+                $this->connection->select(
+                    table: 'nodes',
+                )
+                    ->selectAs('nodes.name', 'name')
+                    ->whereIn(
+                        column: 'nodes.id',
+                        values: $this->subtree(4)
+                            ->select('tree.id'),
+                    )
+                    ->orderBy('nodes.name'),
+            ),
+        );
+    }
+
+    public function testWithOnUnionIsVisibleToEveryMember(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+
+        self::assertSame(
+            [
+                'Alice',
+                'Charlie',
+            ],
+            $this->names(
+                $this->connection->union(
+                    $this->connection->select(
+                        table: 'picked',
+                    )
+                        ->selectAs('picked.name', 'name')
+                        ->where('picked.name', 'Alice'),
+                    $this->connection->select(
+                        table: 'picked',
+                    )
+                        ->selectAs('picked.name', 'name')
+                        ->where('picked.name', 'Charlie'),
+                )
+                    ->with(
+                        name: 'picked',
+                        query: $this->usersNamed('Alice', 'Charlie'),
+                    )
+                    ->orderBy('name'),
+            ),
+        );
+    }
+
+    public function testWithRecursiveOnUnionKeepsParametersApart(): void
+    {
+        $this->createNodesSchema();
+        $this->seedNodes();
+
+        self::assertSame(
+            [
+                'a1x',
+                'b',
+            ],
+            $this->names(
+                $this->connection->unionAll(
+                    $this->connection->select(
+                        table: 'tree',
+                    )
+                        ->selectAs('tree.name', 'name')
+                        ->where('tree.depth', 2),
+                    $this->connection->select(
+                        table: 'nodes',
+                    )
+                        ->selectAs('nodes.name', 'name')
+                        ->where('nodes.id', 3),
+                )
+                    ->withRecursive(
+                        name: 'tree',
+                        anchor: $this->connection->select(
+                            table: 'nodes',
+                        )
+                            ->select('id', 'name')
+                            ->selectRaw('0', 'depth')
+                            ->where('id', 2),
+                        recursive: $this->connection->select(
+                            table: 'nodes',
+                            alias: 'n',
+                        )
+                            ->select('n.id', 'n.name')
+                            ->selectRaw('tree.depth + 1', 'depth')
+                            ->innerJoin(
+                                table: 'tree',
+                                first: 'tree.id',
+                                second: 'n.parent_id',
+                            ),
+                    )
+                    ->orderBy('name'),
+            ),
+        );
+    }
+
+    public function testWithDuplicateNameThrows(): void
+    {
+        $statement = $this->connection->select(
+            table: 'bobs',
+        )
+            ->with(
+                name: 'bobs',
+                query: $this->usersNamed('Bob'),
+            );
+
+        try {
+            $statement->with(
+                name: 'bobs',
+                query: $this->usersNamed('Alice'),
+            );
+
+            self::fail('Expected SqlException was not thrown');
+        } catch (SqlException $exception) {
+            self::assertStringContainsString(
+                '`bobs` is already defined',
+                $exception->getMessage(),
+            );
+        }
+    }
+
     private function seedDuplicateAlice(): void
     {
         $this->connection->query(
@@ -2519,6 +2817,34 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
                     $name,
                     ...$names,
                 ],
+            );
+    }
+
+    private function subtree(
+        int $rootId,
+    ): SelectStatementInterface {
+        return $this->connection->select(
+            table: 'tree',
+        )
+            ->withRecursive(
+                name: 'tree',
+                anchor: $this->connection->select(
+                    table: 'nodes',
+                )
+                    ->select('id', 'name')
+                    ->selectRaw('0', 'depth')
+                    ->where('id', $rootId),
+                recursive: $this->connection->select(
+                    table: 'nodes',
+                    alias: 'n',
+                )
+                    ->select('n.id', 'n.name')
+                    ->selectRaw('tree.depth + 1', 'depth')
+                    ->innerJoin(
+                        table: 'tree',
+                        first: 'tree.id',
+                        second: 'n.parent_id',
+                    ),
             );
     }
 

@@ -22,7 +22,7 @@ use Tuxxedo\Database\Query\Parser\StatementParserResultInterface;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\SqlException;
 
-interface CompoundSelectStatementInterface extends SubqueryRenderableInterface
+interface CompoundSelectStatementInterface extends SubqueryRenderableInterface, WithStatementInterface
 {
     public ?ConnectionInterface $connection {
         get;

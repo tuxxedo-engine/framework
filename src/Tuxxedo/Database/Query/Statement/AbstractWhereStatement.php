@@ -17,6 +17,7 @@ use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
 use Tuxxedo\Database\Query\FullText\FullText;
+use Tuxxedo\Database\Query\Statement\CommonTable\CommonTableExpressions;
 use Tuxxedo\Database\Query\Statement\Condition\BetweenCondition;
 use Tuxxedo\Database\Query\Statement\Condition\BetweenConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\BetweenOperator;
@@ -69,6 +70,53 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     private int $subqueryCounter = 0;
 
     protected int $parameterCounter = 0;
+
+    protected ?CommonTableExpressions $commonTableExpressions = null;
+
+    /**
+     * @param list<string> $columns
+     *
+     * @throws SqlException
+     */
+    protected function addCommonTableExpression(
+        string $name,
+        SubqueryRenderableInterface $query,
+        ?SubqueryRenderableInterface $recursive = null,
+        array $columns = [],
+        bool $distinct = false,
+    ): void {
+        $this->commonTableExpressions ??= new CommonTableExpressions();
+
+        $this->commonTableExpressions->add(
+            name: $name,
+            query: $query,
+            recursive: $recursive,
+            columns: $columns,
+            distinct: $distinct,
+        );
+    }
+
+    /**
+     * @throws SqlException
+     */
+    protected function generateWithSql(
+        DialectInterface $dialect,
+    ): string {
+        if ($this->commonTableExpressions === null) {
+            return '';
+        }
+
+        $rendered = $this->commonTableExpressions->render(
+            dialect: $dialect,
+            parameterPrefix: '',
+        );
+
+        foreach ($rendered['parameters'] as $key => $value) {
+            $this->parameters[$key] = $value;
+        }
+
+        return $rendered['sql'];
+    }
 
     protected function nextParameterOffset(): int
     {

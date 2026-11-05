@@ -108,7 +108,8 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
             : $allColumns;
 
         $sql = \sprintf(
-            'SELECT %s%s FROM %s%s',
+            '%sSELECT %s%s FROM %s%s',
+            $this->generateWithSql($dialect),
             $this->distinct
                 ? 'DISTINCT '
                 : '',
@@ -233,6 +234,38 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
         }
 
         return $sql;
+    }
+
+    public function with(
+        string $name,
+        SubqueryRenderableInterface $query,
+        array $columns = [],
+    ): static {
+        $this->addCommonTableExpression(
+            name: $name,
+            query: $query,
+            columns: $columns,
+        );
+
+        return $this;
+    }
+
+    public function withRecursive(
+        string $name,
+        SubqueryRenderableInterface $anchor,
+        SubqueryRenderableInterface $recursive,
+        array $columns = [],
+        bool $distinct = false,
+    ): static {
+        $this->addCommonTableExpression(
+            name: $name,
+            query: $anchor,
+            recursive: $recursive,
+            columns: $columns,
+            distinct: $distinct,
+        );
+
+        return $this;
     }
 
     public function alias(
