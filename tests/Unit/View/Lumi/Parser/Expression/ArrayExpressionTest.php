@@ -18,6 +18,7 @@ use Support\View\Lumi\Parser\ExpressionParserHelper;
 use Support\View\Lumi\Parser\NodeAssertionsTrait;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayItemNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
+use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
 class ArrayExpressionTest extends TestCase
@@ -75,14 +76,61 @@ class ArrayExpressionTest extends TestCase
         self::assertInstanceOf(ArrayItemNode::class, $node->items[2]);
         self::assertNotNull($node->items[2]->key);
 
-        $this->assertIdentifierNode(
+        $this->assertLiteralNode(
             node: $node->items[2]->key,
-            expectedName: 'name',
+            expectedOperand: 'name',
+            expectedType: Type::STRING,
         );
 
         $this->assertIdentifierNode(
             node: $node->items[2]->value,
             expectedName: 'value',
+        );
+    }
+
+    public function testParenthesizedKeyIsAnExpression(): void
+    {
+        $node = $this->helper->parse('[(name): value]');
+
+        self::assertInstanceOf(ArrayNode::class, $node);
+        self::assertNotNull($node->items[0]->key);
+
+        $this->assertGroupNode(
+            node: $node->items[0]->key,
+        );
+
+        self::assertInstanceOf(GroupNode::class, $node->items[0]->key);
+
+        $this->assertIdentifierNode(
+            node: $node->items[0]->key->operand,
+            expectedName: 'name',
+        );
+    }
+
+    public function testQuotedKeyStaysAStringKey(): void
+    {
+        $node = $this->helper->parse('[\'data-id\': value]');
+
+        self::assertInstanceOf(ArrayNode::class, $node);
+        self::assertNotNull($node->items[0]->key);
+
+        $this->assertLiteralNode(
+            node: $node->items[0]->key,
+            expectedOperand: 'data-id',
+            expectedType: Type::STRING,
+        );
+    }
+
+    public function testNonIdentifierKeyStaysAnExpression(): void
+    {
+        $node = $this->helper->parse('[user.name: value]');
+
+        self::assertInstanceOf(ArrayNode::class, $node);
+        self::assertNotNull($node->items[0]->key);
+
+        $this->assertPropertyAccessNode(
+            node: $node->items[0]->key,
+            expectedProperty: 'name',
         );
     }
 }

@@ -215,6 +215,10 @@ class ExpressionLexer implements ExpressionLexerInterface
                     $tokens[] = $this->classifySymbol($line, $lastValid);
                     $buffer = '';
                     $line = $startingLine + ($stream->line - 1);
+                } elseif (\str_starts_with($buffer, '{')) {
+                    throw LexerException::fromCurlyBraceInExpression(
+                        line: $line,
+                    );
                 } else {
                     throw LexerException::fromUnknownSymbol(
                         symbol: $buffer,

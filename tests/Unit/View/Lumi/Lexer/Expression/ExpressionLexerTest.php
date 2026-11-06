@@ -521,6 +521,23 @@ class ExpressionLexerTest extends TestCase
         );
     }
 
+    public function testLexHintsAtBracketsOnCurlyBrace(): void
+    {
+        try {
+            $this->lexer->lex(
+                startingLine: 3,
+                operand: '{key: value}',
+            );
+
+            self::fail('Expected LexerException was not thrown');
+        } catch (LexerException $exception) {
+            self::assertStringContainsString(
+                'did you mean [key: value]?',
+                $exception->getMessage(),
+            );
+        }
+    }
+
     public function testLexThrowsOnEmptyExpression(): void
     {
         self::expectException(LexerException::class);

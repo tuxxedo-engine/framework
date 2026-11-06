@@ -27,7 +27,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\FilterCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FilterOrBitwiseOrNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
-use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
+use Tuxxedo\View\Lumi\Syntax\Node\LiteralNode;
 use Tuxxedo\View\Lumi\Syntax\Node\NodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\TernaryNode;
@@ -379,7 +379,7 @@ class RangeExpressionTest extends TestCase
         $this->assertRangeNode($node->items[0]->value);
         $this->assertRangeNode($node->items[1]->value);
 
-        self::assertInstanceOf(IdentifierNode::class, $node->items[1]->key);
+        self::assertInstanceOf(LiteralNode::class, $node->items[1]->key);
     }
 
     public function testRangesInTernaryBranches(): void

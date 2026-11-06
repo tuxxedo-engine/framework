@@ -609,7 +609,9 @@ class ExpressionParser implements ExpressionParserInterface
 
             return new ArrayItemNode(
                 value: $this->parseExpression($stream, Precedence::LOWEST),
-                key: $expr,
+                key: $expr instanceof IdentifierNode
+                    ? LiteralNode::createString($expr->name)
+                    : $expr,
             );
         }
 

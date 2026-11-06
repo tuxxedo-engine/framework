@@ -135,6 +135,17 @@ class LexerException extends LumiException
         );
     }
 
+    public static function fromCurlyBraceInExpression(
+        int $line,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unexpected "{" in an expression on line %d; arrays use brackets, did you mean [key: value]?',
+                $line,
+            ),
+        );
+    }
+
     public static function fromTokenStreamEof(): self
     {
         return new self(
