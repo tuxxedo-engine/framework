@@ -264,4 +264,76 @@ class ParserException extends LumiException
             ),
         );
     }
+
+    public static function fromIncludeNamedArgumentsRequireBraces(
+        int $line,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Include statements with named arguments must be wrapped in parentheses on line %d',
+                $line,
+            ),
+        );
+    }
+
+    public static function fromIncludeUnknownArgument(
+        string $name,
+        int $line,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unknown include argument "%s" on line %d, expected "file" or "scope"',
+                $name,
+                $line,
+            ),
+        );
+    }
+
+    public static function fromIncludeDuplicateArgument(
+        string $name,
+        int $line,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Include argument "%s" is passed more than once on line %d',
+                $name,
+                $line,
+            ),
+        );
+    }
+
+    public static function fromIncludeMissingFile(
+        int $line,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Include statements must have a file argument on line %d',
+                $line,
+            ),
+        );
+    }
+
+    public static function fromDuplicateNamedArgument(
+        string $name,
+        int $line,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Syntax error%s: named argument "%s" is passed more than once',
+                self::formatLocation($line),
+                $name,
+            ),
+        );
+    }
+
+    public static function fromPositionalArgumentAfterNamedArgument(
+        int $line,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Syntax error%s: positional arguments cannot follow named arguments',
+                self::formatLocation($line),
+            ),
+        );
+    }
 }

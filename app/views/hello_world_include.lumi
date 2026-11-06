@@ -3,3 +3,6 @@
 {% include ( 'hello_world' ) %}
 {% include('hello_world', ['name': 'PHP']) %}
 {% include('hello_world', ['name': 'PHP',],) %}
+{% include(file: 'hello_world') %}
+{% include('hello_world', scope: ['name': 'PHP']) %}
+{% include(scope: ['name': 'PHP'], file: 'hello_world') %}

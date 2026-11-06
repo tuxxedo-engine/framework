@@ -38,6 +38,7 @@ use Tuxxedo\View\Lumi\Syntax\Node\ContinueNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DeclareNode;
 use Tuxxedo\View\Lumi\Syntax\Node\DoWhileNode;
 use Tuxxedo\View\Lumi\Syntax\Node\EchoNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\FilterCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FilterOrBitwiseOrNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ForNode;
@@ -451,19 +452,32 @@ class Highlighter implements HighlighterInterface
         );
     }
 
+    /**
+     * @param array<int|string, ExpressionNodeInterface> $arguments
+     */
+    private function highlightArguments(
+        array $arguments,
+    ): string {
+        $highlighted = [];
+
+        foreach ($arguments as $name => $argument) {
+            $prefix = \is_string($name)
+                ? $this->dye(ColorSlot::IDENTIFIER, $name) . $this->dye(ColorSlot::DELIMITER, CharacterSymbol::COLON) . ' '
+                : '';
+
+            $highlighted[] = $prefix . $this->highlightNode($argument);
+        }
+
+        return \join(
+            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::COMMA) . ' ',
+            $highlighted,
+        );
+    }
+
     private function highlightFilterCallNode(
         FilterCallNode $node,
     ): string {
-        $arguments = [];
-
-        foreach ($node->arguments as $argument) {
-            $arguments[] = $this->highlightNode($argument);
-        }
-
-        $arguments = \join(
-            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::COMMA) . ' ',
-            $arguments,
-        );
+        $arguments = $this->highlightArguments($node->arguments);
 
         return $this->highlightNode($node->left) . ' ' .
             $this->dye(ColorSlot::PIPE, BinarySymbol::BITWISE_OR) . ' ' .
@@ -515,19 +529,10 @@ class Highlighter implements HighlighterInterface
     private function highlightFunctionCallNode(
         FunctionCallNode $node,
     ): string {
-        $arguments = [];
         $name = $node->name instanceof IdentifierNode
             ? $this->dye(ColorSlot::FUNCTION_NAME, $node->name->name)
             : $this->highlightNode($node->name);
-
-        foreach ($node->arguments as $argument) {
-            $arguments[] = $this->highlightNode($argument);
-        }
-
-        $arguments = \join(
-            $this->dye(ColorSlot::DELIMITER, CharacterSymbol::COMMA) . ' ',
-            $arguments,
-        );
+        $arguments = $this->highlightArguments($node->arguments);
 
         return $name .
             $this->dye(ColorSlot::DELIMITER, CharacterSymbol::LEFT_PARENTHESIS) .
@@ -613,23 +618,15 @@ class Highlighter implements HighlighterInterface
     private function highlightMethodCallNode(
         MethodCallNode $node,
     ): string {
-        $arguments = [];
         $operator = $node->nullSafe
             ? BinarySymbol::NULL_SAFE_ACCESS->symbol()
             : CharacterSymbol::DOT->symbol();
-
-        foreach ($node->arguments as $argument) {
-            $arguments[] = $this->highlightNode($argument);
-        }
 
         return $this->highlightNode($node->caller) .
             $this->dye(ColorSlot::DELIMITER, $operator) .
             $this->dye(ColorSlot::MEMBER_NAME, $node->name) .
             $this->dye(ColorSlot::DELIMITER, CharacterSymbol::LEFT_PARENTHESIS) .
-            \join(
-                $this->dye(ColorSlot::DELIMITER, CharacterSymbol::COMMA) . ' ',
-                $arguments,
-            ) .
+            $this->highlightArguments($node->arguments) .
             $this->dye(ColorSlot::DELIMITER, CharacterSymbol::RIGHT_PARENTHESIS);
     }
 

@@ -505,6 +505,7 @@ class LumiConfigurator implements LumiConfiguratorInterface
                 className: $entry->className,
                 methodName: $entry->methodName,
                 contextIndex: $entry->contextParameterIndex,
+                contextName: $entry->contextParameterName,
                 instanceResolver: $instanceResolver,
             );
 
@@ -550,21 +551,23 @@ class LumiConfigurator implements LumiConfiguratorInterface
         string $className,
         string $methodName,
         ?int $contextIndex,
+        ?string $contextName,
         \Closure $instanceResolver,
     ): \Closure {
         $handler = null;
 
-        return static function (array $arguments, RuntimeInterface $runtime) use (&$handler, $instanceResolver, $className, $methodName, $contextIndex): mixed {
+        return static function (array $arguments, RuntimeInterface $runtime) use (&$handler, $instanceResolver, $className, $methodName, $contextIndex, $contextName): mixed {
             $handler ??= $instanceResolver($className);
 
             if ($contextIndex !== null) {
-                $arguments = [
-                    ...\array_slice($arguments, 0, $contextIndex),
-                    new RuntimeContext(
+                $arguments = self::injectContext(
+                    arguments: $arguments,
+                    context: new RuntimeContext(
                         runtime: $runtime,
                     ),
-                    ...\array_slice($arguments, $contextIndex),
-                ];
+                    contextIndex: $contextIndex,
+                    contextName: $contextName,
+                );
             }
 
             /** @var callable $callable */
@@ -575,6 +578,47 @@ class LumiConfigurator implements LumiConfiguratorInterface
 
             return \call_user_func_array($callable, $arguments);
         };
+    }
+
+    /**
+     * @param mixed[] $arguments
+     * @return mixed[]
+     */
+    private static function injectContext(
+        array $arguments,
+        RuntimeContext $context,
+        int $contextIndex,
+        ?string $contextName,
+    ): array {
+        $positional = [];
+        $named = [];
+
+        foreach ($arguments as $key => $argument) {
+            if (\is_int($key)) {
+                $positional[] = $argument;
+            } else {
+                $named[$key] = $argument;
+            }
+        }
+
+        if (
+            $contextIndex <= \sizeof($positional) ||
+            $contextName === null
+        ) {
+            return [
+                ...\array_slice($positional, 0, $contextIndex),
+                $context,
+                ...\array_slice($positional, $contextIndex),
+                ...$named,
+            ];
+        }
+
+        $named[$contextName] = $context;
+
+        return [
+            ...$positional,
+            ...$named,
+        ];
     }
 
     /**

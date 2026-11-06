@@ -16,6 +16,7 @@ namespace Unit\View\Lumi;
 use Fixture\View\Lumi\RecordingOptimizer;
 use Fixture\View\Lumi\Runtime\Introspector\StubFilterClass;
 use Fixture\View\Lumi\Runtime\Introspector\StubFunctionClass;
+use Fixture\View\Lumi\Runtime\Introspector\StubNamedArgumentClass;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Container\Container;
 use Tuxxedo\View\Lumi\Config\LumiConfig;
@@ -848,6 +849,85 @@ class LumiConfiguratorTest extends TestCase
             $dispatcher(
                 [
                     'hello',
+                ],
+                $render->runtime,
+            ),
+        );
+    }
+
+    public function testBuildFilterDispatcherPassesNamedArgumentsAfterSplicedContext(): void
+    {
+        $configurator = $this->makeConfigurator();
+        $configurator->withLibraryClass(StubFilterClass::class);
+
+        $render = $configurator->build();
+        $dispatcher = $render->runtime->filterDispatchers['stub_context'];
+
+        self::assertSame(
+            'hello:ctx',
+            $dispatcher(
+                [
+                    'value' => 'hello',
+                ],
+                $render->runtime,
+            ),
+        );
+    }
+
+    public function testBuildFilterDispatcherPassesContextByNameAfterNamedArguments(): void
+    {
+        $configurator = $this->makeConfigurator();
+        $configurator->withLibraryClass(StubNamedArgumentClass::class);
+
+        $render = $configurator->build();
+        $dispatcher = $render->runtime->filterDispatchers['stub_named'];
+
+        self::assertSame(
+            '<hello]:ctx',
+            $dispatcher(
+                [
+                    'hello',
+                    'suffix' => ']',
+                ],
+                $render->runtime,
+            ),
+        );
+    }
+
+    public function testBuildFunctionDispatcherPassesContextByNameWhenOptionalParametersAreSkipped(): void
+    {
+        $configurator = $this->makeConfigurator();
+        $configurator->withLibraryClass(StubNamedArgumentClass::class);
+
+        $render = $configurator->build();
+        $dispatcher = $render->runtime->functionDispatchers['stub_named'];
+
+        self::assertSame(
+            '<hello>:ctx',
+            $dispatcher(
+                [
+                    'hello',
+                ],
+                $render->runtime,
+            ),
+        );
+    }
+
+    public function testBuildFunctionDispatcherSplicesContextBetweenPositionalArguments(): void
+    {
+        $configurator = $this->makeConfigurator();
+        $configurator->withLibraryClass(StubNamedArgumentClass::class);
+
+        $render = $configurator->build();
+        $dispatcher = $render->runtime->functionDispatchers['stub_named'];
+
+        self::assertSame(
+            '[hello]:ctx',
+            $dispatcher(
+                [
+                    'hello',
+                    '[',
+                    ']',
                 ],
                 $render->runtime,
             ),

@@ -18,7 +18,7 @@ readonly class FilterCallNode implements IterableExpressionNodeInterface
     public array $scopes;
 
     /**
-     * @param ExpressionNodeInterface[] $arguments
+     * @param array<int|string, ExpressionNodeInterface> $arguments
      */
     public function __construct(
         public ExpressionNodeInterface $left,

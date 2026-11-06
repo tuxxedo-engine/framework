@@ -38,6 +38,8 @@ class CallableDiscoverer implements CallableDiscovererInterface
                     aliases: \array_values($instance->aliases),
                     minimumArguments: self::countMinimumArguments($method),
                     maximumArguments: self::countMaximumArguments($method),
+                    parameters: CallableParameter::listFromReflection($method),
+                    contextParameterName: self::findContextParameterName($method),
                 );
             }
         }
@@ -73,6 +75,8 @@ class CallableDiscoverer implements CallableDiscovererInterface
                     aliases: \array_values($instance->aliases),
                     minimumArguments: self::countMinimumArguments($method),
                     maximumArguments: $maximumArguments,
+                    parameters: CallableParameter::listFromReflection($method),
+                    contextParameterName: self::findContextParameterName($method),
                 );
             }
         }
@@ -86,6 +90,18 @@ class CallableDiscoverer implements CallableDiscovererInterface
         foreach ($method->getParameters() as $parameter) {
             if ($parameter->getAttributes(Context::class) !== []) {
                 return $parameter->getPosition();
+            }
+        }
+
+        return null;
+    }
+
+    private static function findContextParameterName(
+        \ReflectionMethod $method,
+    ): ?string {
+        foreach ($method->getParameters() as $parameter) {
+            if ($parameter->getAttributes(Context::class) !== []) {
+                return $parameter->getName();
             }
         }
 

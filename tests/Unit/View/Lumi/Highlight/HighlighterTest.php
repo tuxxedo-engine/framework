@@ -2583,4 +2583,191 @@ class HighlighterTest extends TestCase
             ),
         );
     }
+
+    private function expectedNamedArgument(
+        ThemeInterface $theme,
+        string $name,
+    ): string {
+        return $this->dye(
+            theme: $theme,
+            slot: ColorSlot::IDENTIFIER,
+            text: $name,
+        ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: ':',
+            ) .
+            ' ';
+    }
+
+    #[DataProvider('provideThemes')]
+    public function testHighlightFunctionCallNodeWithNamedArgument(
+        ThemeInterface $theme,
+    ): void {
+        $expected = $this->dye(
+            theme: $theme,
+            slot: ColorSlot::FUNCTION_NAME,
+            text: 'date_local',
+        ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: '(',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::IDENTIFIER,
+                text: 'when',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: ',',
+            ) .
+            ' ' .
+            $this->expectedNamedArgument(
+                theme: $theme,
+                name: 'format',
+            ) .
+            $this->expectedLiteralString(
+                theme: $theme,
+                operand: 'd.m.Y',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: ')',
+            );
+
+        self::assertSame(
+            $expected,
+            $this->highlight(
+                theme: $theme,
+                node: new FunctionCallNode(
+                    name: new IdentifierNode(
+                        name: 'date_local',
+                    ),
+                    arguments: [
+                        new IdentifierNode(
+                            name: 'when',
+                        ),
+                        'format' => LiteralNode::createString('d.m.Y'),
+                    ],
+                ),
+            ),
+        );
+    }
+
+    #[DataProvider('provideThemes')]
+    public function testHighlightMethodCallNodeWithNamedArgument(
+        ThemeInterface $theme,
+    ): void {
+        $expected = $this->dye(
+            theme: $theme,
+            slot: ColorSlot::IDENTIFIER,
+            text: 'user',
+        ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: '.',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::MEMBER_NAME,
+                text: 'format',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: '(',
+            ) .
+            $this->expectedNamedArgument(
+                theme: $theme,
+                name: 'style',
+            ) .
+            $this->expectedLiteralString(
+                theme: $theme,
+                operand: 'long',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: ')',
+            );
+
+        self::assertSame(
+            $expected,
+            $this->highlight(
+                theme: $theme,
+                node: new MethodCallNode(
+                    caller: new IdentifierNode(
+                        name: 'user',
+                    ),
+                    name: 'format',
+                    arguments: [
+                        'style' => LiteralNode::createString('long'),
+                    ],
+                ),
+            ),
+        );
+    }
+
+    #[DataProvider('provideThemes')]
+    public function testHighlightFilterCallNodeWithNamedArgument(
+        ThemeInterface $theme,
+    ): void {
+        $expected = $this->dye(
+            theme: $theme,
+            slot: ColorSlot::IDENTIFIER,
+            text: 'price',
+        ) .
+            ' ' .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::PIPE,
+                text: BinarySymbol::BITWISE_OR->symbol(),
+            ) .
+            ' ' .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::FILTER_NAME,
+                text: 'currency',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: '(',
+            ) .
+            $this->expectedNamedArgument(
+                theme: $theme,
+                name: 'locale',
+            ) .
+            $this->expectedLiteralString(
+                theme: $theme,
+                operand: 'fo-FO',
+            ) .
+            $this->dye(
+                theme: $theme,
+                slot: ColorSlot::DELIMITER,
+                text: ')',
+            );
+
+        self::assertSame(
+            $expected,
+            $this->highlight(
+                theme: $theme,
+                node: new FilterCallNode(
+                    left: new IdentifierNode(
+                        name: 'price',
+                    ),
+                    name: 'currency',
+                    arguments: [
+                        'locale' => LiteralNode::createString('fo-FO'),
+                    ],
+                ),
+            ),
+        );
+    }
 }

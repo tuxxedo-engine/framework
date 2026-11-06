@@ -15,6 +15,7 @@ namespace Unit\View\Lumi\Runtime\Introspector;
 
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadata;
+use Tuxxedo\View\Lumi\Runtime\Introspector\CallableParameter;
 
 class CallableMetadataTest extends TestCase
 {
@@ -80,5 +81,47 @@ class CallableMetadataTest extends TestCase
 
         self::assertSame(0, $metadata->minimumArguments);
         self::assertNull($metadata->maximumArguments);
+    }
+
+    public function testParametersAndContextParameterNameDefaultToEmpty(): void
+    {
+        $metadata = new CallableMetadata(
+            name: 'date',
+            className: \stdClass::class,
+            methodName: 'call',
+            wantsContext: false,
+        );
+
+        self::assertSame([], $metadata->parameters);
+        self::assertNull($metadata->contextParameterName);
+    }
+
+    public function testExposesParametersAndContextParameterName(): void
+    {
+        $parameter = new CallableParameter(
+            name: 'format',
+            position: 1,
+            optional: true,
+        );
+
+        $metadata = new CallableMetadata(
+            name: 'date',
+            className: \stdClass::class,
+            methodName: 'call',
+            wantsContext: true,
+            contextParameterIndex: 0,
+            parameters: [
+                $parameter,
+            ],
+            contextParameterName: 'context',
+        );
+
+        self::assertSame(
+            [
+                $parameter,
+            ],
+            $metadata->parameters,
+        );
+        self::assertSame('context', $metadata->contextParameterName);
     }
 }

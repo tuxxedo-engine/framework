@@ -171,4 +171,69 @@ class CompilerException extends LumiException
             ),
         );
     }
+
+    public static function fromUnknownNamedArgument(
+        string $kind,
+        string $callable,
+        string $name,
+    ): self {
+        return new self(
+            message: \sprintf(
+                '%s "%s" has no parameter named "%s"',
+                $kind,
+                $callable,
+                $name,
+            ),
+        );
+    }
+
+    public static function fromNamedArgumentAlreadyPassed(
+        string $kind,
+        string $callable,
+        string $name,
+    ): self {
+        return new self(
+            message: \sprintf(
+                '%s "%s" parameter "%s" is already passed positionally',
+                $kind,
+                $callable,
+                $name,
+            ),
+        );
+    }
+
+    public static function fromMissingArgument(
+        string $kind,
+        string $callable,
+        string $name,
+    ): self {
+        return new self(
+            message: \sprintf(
+                '%s "%s" is missing a value for required parameter "%s"',
+                $kind,
+                $callable,
+                $name,
+            ),
+        );
+    }
+
+    public static function fromTooManyPositionalArguments(
+        string $kind,
+        string $callable,
+        int $given,
+        int $maximum,
+    ): self {
+        return new self(
+            message: \sprintf(
+                '%s "%s" accepts at most %d positional %s, %d given',
+                $kind,
+                $callable,
+                $maximum,
+                $maximum === 1
+                    ? 'argument'
+                    : 'arguments',
+                $given,
+            ),
+        );
+    }
 }

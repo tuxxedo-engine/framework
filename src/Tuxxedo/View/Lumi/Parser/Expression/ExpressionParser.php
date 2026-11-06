@@ -500,7 +500,7 @@ class ExpressionParser implements ExpressionParserInterface
     }
 
     /**
-     * @return ExpressionNodeInterface[]
+     * @return array<int|string, ExpressionNodeInterface>
      */
     private function parseArgumentList(
         TokenStreamInterface $stream,
@@ -514,9 +514,9 @@ class ExpressionParser implements ExpressionParserInterface
             return [];
         }
 
-        $arguments = [
-            $this->parseExpression($stream, Precedence::LOWEST),
-        ];
+        $arguments = [];
+
+        $this->parseArgument($stream, $arguments);
 
         while (!$stream->eof()) {
             $token = $stream->current();
@@ -536,7 +536,7 @@ class ExpressionParser implements ExpressionParserInterface
                     break;
                 }
 
-                $arguments[] = $this->parseExpression($stream, Precedence::LOWEST);
+                $this->parseArgument($stream, $arguments);
 
                 continue;
             }
@@ -545,6 +545,45 @@ class ExpressionParser implements ExpressionParserInterface
         }
 
         return $arguments;
+    }
+
+    /**
+     * @param array<int|string, ExpressionNodeInterface> $arguments
+     *
+     * @throws ParserException
+     */
+    private function parseArgument(
+        TokenStreamInterface $stream,
+        array &$arguments,
+    ): void {
+        $token = $stream->current();
+
+        if (
+            $token instanceof IdentifierToken &&
+            $stream->peekIs(CharacterToken::class, CharacterSymbol::COLON->symbol())
+        ) {
+            $stream->consume();
+            $stream->consume();
+
+            if (\array_key_exists($token->op1, $arguments)) {
+                throw ParserException::fromDuplicateNamedArgument(
+                    name: $token->op1,
+                    line: $token->line,
+                );
+            }
+
+            $arguments[$token->op1] = $this->parseExpression($stream, Precedence::LOWEST);
+
+            return;
+        }
+
+        if (!\array_is_list($arguments)) {
+            throw ParserException::fromPositionalArgumentAfterNamedArgument(
+                line: $token->line,
+            );
+        }
+
+        $arguments[] = $this->parseExpression($stream, Precedence::LOWEST);
     }
 
     /**

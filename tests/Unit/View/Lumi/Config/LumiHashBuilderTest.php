@@ -21,6 +21,8 @@ use Tuxxedo\Container\Container;
 use Tuxxedo\View\Lumi\Config\LumiHashBuilder;
 use Tuxxedo\View\Lumi\LumiConfigurator;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableDiscoverer;
+use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadata;
+use Tuxxedo\View\Lumi\Runtime\Introspector\CallableParameter;
 
 class LumiHashBuilderTest extends TestCase
 {
@@ -166,6 +168,83 @@ class LumiHashBuilderTest extends TestCase
         self::assertNotSame(
             LumiHashBuilder::fromConfiguratorStandalone($base),
             LumiHashBuilder::fromConfiguratorStandalone($modified),
+        );
+    }
+
+    public function testHashChangesWhenFilterParameterIsRenamed(): void
+    {
+        $configurator = $this->makeConfigurator();
+
+        self::assertNotSame(
+            LumiHashBuilder::fromConfigurator(
+                configurator: $configurator,
+                filterMetadata: [
+                    $this->makeParameterMetadata('format'),
+                ],
+                functionMetadata: [],
+            ),
+            LumiHashBuilder::fromConfigurator(
+                configurator: $configurator,
+                filterMetadata: [
+                    $this->makeParameterMetadata('pattern'),
+                ],
+                functionMetadata: [],
+            ),
+        );
+    }
+
+    public function testHashChangesWhenContextParameterIsRenamed(): void
+    {
+        $configurator = $this->makeConfigurator();
+
+        self::assertNotSame(
+            LumiHashBuilder::fromConfigurator(
+                configurator: $configurator,
+                filterMetadata: [
+                    $this->makeParameterMetadata(
+                        parameterName: 'format',
+                        contextParameterName: 'context',
+                    ),
+                ],
+                functionMetadata: [],
+            ),
+            LumiHashBuilder::fromConfigurator(
+                configurator: $configurator,
+                filterMetadata: [
+                    $this->makeParameterMetadata(
+                        parameterName: 'format',
+                        contextParameterName: 'ctx',
+                    ),
+                ],
+                functionMetadata: [],
+            ),
+        );
+    }
+
+    private function makeParameterMetadata(
+        string $parameterName,
+        ?string $contextParameterName = null,
+    ): CallableMetadata {
+        return new CallableMetadata(
+            name: 'date_local',
+            className: \stdClass::class,
+            methodName: 'dateLocal',
+            wantsContext: $contextParameterName !== null,
+            contextParameterIndex: $contextParameterName !== null
+                ? 2
+                : null,
+            parameters: [
+                new CallableParameter(
+                    name: 'value',
+                    position: 0,
+                ),
+                new CallableParameter(
+                    name: $parameterName,
+                    position: 1,
+                    optional: true,
+                ),
+            ],
+            contextParameterName: $contextParameterName,
         );
     }
 

@@ -180,6 +180,15 @@ class LumiHashBuilder
             }
 
             \hash_update($ctx, self::SEPARATOR);
+            \hash_update($ctx, $entry->contextParameterName ?? '-');
+            \hash_update($ctx, self::SEPARATOR);
+
+            foreach ($entry->parameters as $parameter) {
+                \hash_update($ctx, $parameter->name);
+                \hash_update($ctx, self::ITEM);
+            }
+
+            \hash_update($ctx, self::SEPARATOR);
         }
     }
 }

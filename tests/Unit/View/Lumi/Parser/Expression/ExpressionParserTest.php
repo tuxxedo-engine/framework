@@ -19,7 +19,10 @@ use Support\View\Lumi\Parser\ExpressionParserHelper;
 use Support\View\Lumi\Parser\NodeAssertionsTrait;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
+use Tuxxedo\View\Lumi\Syntax\Node\FilterCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
+use Tuxxedo\View\Lumi\Syntax\Node\MethodCallNode;
+use Tuxxedo\View\Lumi\Syntax\Node\TernaryNode;
 use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Token\LiteralToken;
@@ -212,5 +215,150 @@ class ExpressionParserTest extends TestCase
             expectedOperand: '7',
             expectedType: Type::INT,
         );
+    }
+
+    public function testParsesNamedArgumentInFunctionCall(): void
+    {
+        $node = $this->helper->parse('date_local(when, format: \'d.m.Y\')');
+
+        $this->assertFunctionCallNode(
+            node: $node,
+            expectedArgumentCount: 2,
+        );
+
+        self::assertInstanceOf(FunctionCallNode::class, $node);
+        self::assertSame(
+            [
+                0,
+                'format',
+            ],
+            \array_keys($node->arguments),
+        );
+
+        $this->assertIdentifierNode(
+            node: $node->arguments[0],
+            expectedName: 'when',
+        );
+
+        $this->assertLiteralNode(
+            node: $node->arguments['format'],
+            expectedOperand: 'd.m.Y',
+            expectedType: Type::STRING,
+        );
+    }
+
+    public function testParsesOnlyNamedArgumentsInFunctionCall(): void
+    {
+        $node = $this->helper->parse('pick(b: 2, a: 1)');
+
+        self::assertInstanceOf(FunctionCallNode::class, $node);
+        self::assertSame(
+            [
+                'b',
+                'a',
+            ],
+            \array_keys($node->arguments),
+        );
+    }
+
+    public function testParsesNamedArgumentWithTrailingComma(): void
+    {
+        $node = $this->helper->parse('foo(a, b: 1,)');
+
+        self::assertInstanceOf(FunctionCallNode::class, $node);
+        self::assertSame(
+            [
+                0,
+                'b',
+            ],
+            \array_keys($node->arguments),
+        );
+    }
+
+    public function testParsesNamedArgumentInMethodCall(): void
+    {
+        $node = $this->helper->parse('user.format(style: \'long\')');
+
+        $this->assertMethodCallNode(
+            node: $node,
+            expectedName: 'format',
+            expectedArgumentCount: 1,
+        );
+
+        self::assertInstanceOf(MethodCallNode::class, $node);
+        self::assertArrayHasKey('style', $node->arguments);
+    }
+
+    public function testParsesNamedArgumentInNullSafeMethodCall(): void
+    {
+        $node = $this->helper->parse('user?.format(style: \'long\')');
+
+        self::assertInstanceOf(MethodCallNode::class, $node);
+        self::assertTrue($node->nullSafe);
+        self::assertArrayHasKey('style', $node->arguments);
+    }
+
+    public function testParsesNamedArgumentInFilterCall(): void
+    {
+        $node = $this->helper->parse('price | currency(locale: \'fo-FO\')');
+
+        self::assertInstanceOf(FilterCallNode::class, $node);
+        self::assertSame('currency', $node->name);
+        self::assertSame(
+            [
+                'locale',
+            ],
+            \array_keys($node->arguments),
+        );
+    }
+
+    public function testParsesTernaryAsPositionalArgument(): void
+    {
+        $node = $this->helper->parse('foo(a ? b : c)');
+
+        self::assertInstanceOf(FunctionCallNode::class, $node);
+        self::assertSame(
+            [
+                0,
+            ],
+            \array_keys($node->arguments),
+        );
+        self::assertInstanceOf(TernaryNode::class, $node->arguments[0]);
+    }
+
+    public function testParsesTernaryAsNamedArgumentValue(): void
+    {
+        $node = $this->helper->parse('foo(x: a ? b : c)');
+
+        self::assertInstanceOf(FunctionCallNode::class, $node);
+        self::assertInstanceOf(TernaryNode::class, $node->arguments['x']);
+    }
+
+    public function testParsesArrayWithBareKeyAsNamedArgumentValue(): void
+    {
+        $node = $this->helper->parse('foo(options: [key: 1])');
+
+        self::assertInstanceOf(FunctionCallNode::class, $node);
+
+        $this->assertArrayNode(
+            node: $node->arguments['options'],
+            expectedItemCount: 1,
+        );
+    }
+
+    public function testThrowsOnPositionalArgumentAfterNamedArgument(): void
+    {
+        self::expectException(ParserException::class);
+        self::expectExceptionMessage('positional arguments cannot follow named arguments');
+
+        $this->helper->parse('foo(a: 1, 2)');
+    }
+
+    public function testThrowsOnDuplicateNamedArgument(): void
+    {
+        self::expectException(ParserException::class);
+        self::expectExceptionMessage('named argument "a" is passed more than once');
+
+        $this->helper->parse('foo(a: 1, a: 2)');
     }
 }

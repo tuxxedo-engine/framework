@@ -18,6 +18,7 @@ readonly class CallableMetadata implements CallableMetadataInterface
     /**
      * @param class-string $className
      * @param list<string> $aliases
+     * @param list<CallableParameterInterface> $parameters
      */
     public function __construct(
         public string $name,
@@ -28,6 +29,8 @@ readonly class CallableMetadata implements CallableMetadataInterface
         public array $aliases = [],
         public int $minimumArguments = 0,
         public ?int $maximumArguments = null,
+        public array $parameters = [],
+        public ?string $contextParameterName = null,
     ) {
     }
 }

@@ -52,4 +52,15 @@ interface CallableMetadataInterface
     public ?int $maximumArguments {
         get;
     }
+
+    /**
+     * @var list<CallableParameterInterface>
+     */
+    public array $parameters {
+        get;
+    }
+
+    public ?string $contextParameterName {
+        get;
+    }
 }

@@ -18,6 +18,7 @@ use Tuxxedo\View\Lumi\Lexer\TokenStreamInterface;
 use Tuxxedo\View\Lumi\Parser\ParserException;
 use Tuxxedo\View\Lumi\Parser\ParserInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
+use Tuxxedo\View\Lumi\Syntax\Node\ExpressionNodeInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\FunctionCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IdentifierNode;
 use Tuxxedo\View\Lumi\Syntax\Node\IncludeNode;
@@ -81,15 +82,32 @@ class IncludeParserHandler implements ParserHandlerInterface
             );
         }
 
-        if ($include->op1 === 'braceless' && $argc > 1) {
-            throw ParserException::fromIncludeBracesRequired(
+        if ($include->op1 === 'braceless') {
+            if (!\array_is_list($expr->arguments)) {
+                throw ParserException::fromIncludeNamedArgumentsRequireBraces(
+                    line: $include->line,
+                );
+            }
+
+            if ($argc > 1) {
+                throw ParserException::fromIncludeBracesRequired(
+                    line: $include->line,
+                );
+            }
+        }
+
+        $arguments = $this->bindArguments(
+            arguments: $expr->arguments,
+            line: $include->line,
+        );
+
+        if ($arguments[0] === null) {
+            throw ParserException::fromIncludeMissingFile(
                 line: $include->line,
             );
         }
 
-        $scope = $expr->arguments[1] ?? null;
-
-        if ($scope !== null && !$scope instanceof ArrayNode) {
+        if ($arguments[1] !== null && !$arguments[1] instanceof ArrayNode) {
             throw ParserException::fromIncludeScopeMustBeAnArray(
                 line: $include->line,
             );
@@ -97,9 +115,51 @@ class IncludeParserHandler implements ParserHandlerInterface
 
         return [
             new IncludeNode(
-                file: $expr->arguments[0],
-                scope: $scope,
+                file: $arguments[0],
+                scope: $arguments[1],
             ),
         ];
+    }
+
+    /**
+     * @param array<int|string, ExpressionNodeInterface> $arguments
+     * @return array{0: ExpressionNodeInterface|null, 1: ExpressionNodeInterface|null}
+     *
+     * @throws ParserException
+     */
+    private function bindArguments(
+        array $arguments,
+        int $line,
+    ): array {
+        $bound = [
+            $arguments[0] ?? null,
+            $arguments[1] ?? null,
+        ];
+
+        foreach ($arguments as $name => $argument) {
+            if (\is_int($name)) {
+                continue;
+            }
+
+            $position = match ($name) {
+                'file' => 0,
+                'scope' => 1,
+                default => throw ParserException::fromIncludeUnknownArgument(
+                    name: $name,
+                    line: $line,
+                ),
+            };
+
+            if ($bound[$position] !== null) {
+                throw ParserException::fromIncludeDuplicateArgument(
+                    name: $name,
+                    line: $line,
+                );
+            }
+
+            $bound[$position] = $argument;
+        }
+
+        return $bound;
     }
 }

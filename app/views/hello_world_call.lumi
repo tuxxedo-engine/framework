@@ -56,3 +56,9 @@
 <pre><code>count(['PHP', 'Tuxxedo'])</code> = <code>['PHP', 'Tuxxedo'] | count</code> = <code>{{ ['PHP', 'Tuxxedo'] | count }}</code></pre>
 <pre><code>max(1, 3, 2)</code> = <code>1 | max(3, 2)</code> = <code>{{ 1 | max(3, 2) }}</code></pre>
 <pre><code>5 | (2)</code> (grouped, bitwise OR) = <code>{{ 5 | (2) }}</code></pre>
+
+<h1>Named arguments</h1>
+<pre><code>number(12345.6789, 1, '.', ' ')</code> = <code>number(12345.6789, decimals: 1, thousandsSeparator: ' ')</code> = <code>{{ number(12345.6789, decimals: 1, thousandsSeparator: ' ') | json }}</code></pre>
+<pre><code>number(12345.6789, 0, '.', ' ')</code> = <code>12345.6789 | number(thousandsSeparator: ' ')</code> = <code>{{ 12345.6789 | number(thousandsSeparator: ' ') | json }}</code></pre>
+<pre><code>join(['Tuxxedo', 'Engine'], ' ')</code> = <code>join(separator: ' ', value: ['Tuxxedo', 'Engine'])</code> = <code>{{ join(separator: ' ', value: ['Tuxxedo', 'Engine']) | json }}</code></pre>
+<pre><code>keys(['a': 1, 'b': 2, 'c': 1], 1)</code> = <code>keys(['a': 1, 'b': 2, 'c': 1], filter_value: 1)</code> = <code>{{ keys(['a': 1, 'b': 2, 'c': 1], filter_value: 1) | json }}</code></pre>

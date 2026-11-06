@@ -19,6 +19,8 @@ use Tuxxedo\View\Lumi\Compiler\CompilerStateFlag;
 use Tuxxedo\View\Lumi\Library\Function\PhpFunctionInterface;
 use Tuxxedo\View\Lumi\Parser\NodeStreamInterface;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadataInterface;
+use Tuxxedo\View\Lumi\Runtime\Introspector\CallableParameter;
+use Tuxxedo\View\Lumi\Runtime\Introspector\CallableParameterInterface;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayItemNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayNode;
@@ -84,26 +86,47 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
             throw CompilerException::fromFunctionCallNotIdentifier();
         }
 
-        $arguments = [];
+        [$positional, $named] = $this->splitArguments($node->arguments);
 
-        if (\sizeof($node->arguments) > 0) {
-            foreach ($node->arguments as $argument) {
-                $arguments[] = $compiler->compileNode($argument, $stream);
-            }
-        }
+        $positional = \array_map(
+            static fn (ExpressionNodeInterface $argument): string => $compiler->compileNode($argument, $stream),
+            $positional,
+        );
+
+        $named = \array_map(
+            static fn (ExpressionNodeInterface $argument): string => $compiler->compileNode($argument, $stream),
+            $named,
+        );
 
         if ($node->dispatch === CallDispatch::NATIVE) {
             return \sprintf(
                 '\\%s(%s)',
                 $node->name->name,
-                \join(', ', $arguments),
+                $this->joinCallArguments($positional, $named),
+            );
+        }
+
+        $name = \mb_strtolower($node->name->name);
+
+        if (
+            $named !== [] &&
+            $compiler->introspector->hasFunction($name)
+        ) {
+            $metadata = $compiler->introspector->getFunction($name);
+
+            $this->validateNamedArguments(
+                kind: 'Function',
+                callable: $metadata->name,
+                parameters: $metadata->parameters,
+                positionalCount: \sizeof($positional),
+                names: \array_keys($named),
             );
         }
 
         return \sprintf(
             '$this->functionCall(\'%s\', [%s])',
-            $compiler->escaper->js(\mb_strtolower($node->name->name)),
-            \join(', ', $arguments),
+            $compiler->escaper->js($name),
+            $this->joinArrayArguments($compiler, $positional, $named),
         );
     }
 
@@ -115,14 +138,19 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         CompilerInterface $compiler,
         NodeStreamInterface $stream,
     ): string {
-        $arguments = [];
         $caller = $compiler->compileNode($node->caller, $stream);
 
-        if (\sizeof($node->arguments) > 0) {
-            foreach ($node->arguments as $argument) {
-                $arguments[] = $compiler->compileNode($argument, $stream);
-            }
-        }
+        [$positional, $named] = $this->splitArguments($node->arguments);
+
+        $positional = \array_map(
+            static fn (ExpressionNodeInterface $argument): string => $compiler->compileNode($argument, $stream),
+            $positional,
+        );
+
+        $named = \array_map(
+            static fn (ExpressionNodeInterface $argument): string => $compiler->compileNode($argument, $stream),
+            $named,
+        );
 
         $nullSafe = $compiler->state->hasFlag(CompilerStateFlag::NULL_SAFE_ACCESS) || $node->nullSafe;
 
@@ -136,7 +164,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
                 ? '?'
                 : '',
             $node->name,
-            \join(', ', $arguments),
+            $this->joinCallArguments($positional, $named),
         );
     }
 
@@ -476,15 +504,21 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         }
 
         if (!$compiler->introspector->hasAnyFilters()) {
+            [$positional, $named] = $this->splitArguments($node->arguments);
+
             return \sprintf(
                 '$this->filter(%s, \'%s\', [%s])',
                 $compiler->compileExpression($node->left),
                 $compiler->escaper->js($name),
-                \join(
-                    ', ',
+                $this->joinArrayArguments(
+                    $compiler,
                     \array_map(
                         $compiler->compileExpression(...),
-                        $node->arguments,
+                        $positional,
+                    ),
+                    \array_map(
+                        $compiler->compileExpression(...),
+                        $named,
                     ),
                 ),
             );
@@ -494,7 +528,7 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
     }
 
     /**
-     * @param ExpressionNodeInterface[] $argumentNodes
+     * @param array<int|string, ExpressionNodeInterface> $argumentNodes
      *
      * @throws CompilerException
      */
@@ -504,9 +538,19 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
         ExpressionNodeInterface $valueNode,
         array $argumentNodes = [],
     ): string {
-        $given = 1 + \sizeof($argumentNodes);
+        [$positional, $named] = $this->splitArguments($argumentNodes);
 
-        if (
+        $given = 1 + \sizeof($positional);
+
+        if ($named !== []) {
+            $this->validateNamedArguments(
+                kind: 'Filter',
+                callable: $metadata->name,
+                parameters: $metadata->parameters,
+                positionalCount: $given,
+                names: \array_keys($named),
+            );
+        } elseif (
             $given < $metadata->minimumArguments ||
             (
                 $metadata->maximumArguments !== null &&
@@ -521,32 +565,46 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
             );
         }
 
-        $arguments = [
+        $positional = [
             $compiler->compileExpression($valueNode),
             ...\array_map(
                 $compiler->compileExpression(...),
-                $argumentNodes,
+                $positional,
             ),
         ];
 
+        $named = \array_map(
+            $compiler->compileExpression(...),
+            $named,
+        );
+
         if ($metadata->contextParameterIndex !== null) {
-            $arguments = [
-                ...\array_slice($arguments, 0, $metadata->contextParameterIndex),
-                'new \\Tuxxedo\\View\\Lumi\\Runtime\\RuntimeContext($this)',
-                ...\array_slice($arguments, $metadata->contextParameterIndex),
-            ];
+            $context = 'new \\Tuxxedo\\View\\Lumi\\Runtime\\RuntimeContext($this)';
+
+            if (
+                $metadata->contextParameterIndex <= \sizeof($positional) ||
+                $metadata->contextParameterName === null
+            ) {
+                $positional = [
+                    ...\array_slice($positional, 0, $metadata->contextParameterIndex),
+                    $context,
+                    ...\array_slice($positional, $metadata->contextParameterIndex),
+                ];
+            } else {
+                $named[$metadata->contextParameterName] = $context;
+            }
         }
 
         return \sprintf(
             '$this->resolveInstance(\\%s::class)->%s(%s)',
             $metadata->className,
             $metadata->methodName,
-            \join(', ', $arguments),
+            $this->joinCallArguments($positional, $named),
         );
     }
 
     /**
-     * @param ExpressionNodeInterface[] $argumentNodes
+     * @param array<int|string, ExpressionNodeInterface> $argumentNodes
      *
      * @throws CompilerException
      */
@@ -567,42 +625,187 @@ class ExpressionCompilerProvider implements CompilerProviderInterface
             // @codeCoverageIgnoreEnd
         }
 
-        $reflector = new \ReflectionFunction($function);
-        $given = 1 + \sizeof($argumentNodes);
-        $minimum = $reflector->getNumberOfRequiredParameters();
-        $maximum = $reflector->isVariadic()
-            ? null
-            : $reflector->getNumberOfParameters();
+        [$positional, $named] = $this->splitArguments($argumentNodes);
 
-        if (
-            $given < $minimum ||
-            (
-                $maximum !== null &&
-                $given > $maximum
-            )
-        ) {
-            throw CompilerException::fromFilterArgumentCount(
-                filter: $handler->name,
-                given: $given,
-                minimum: $minimum,
-                maximum: $maximum,
+        $reflector = new \ReflectionFunction($function);
+        $given = 1 + \sizeof($positional);
+
+        if ($named !== []) {
+            $this->validateNamedArguments(
+                kind: 'Filter',
+                callable: $handler->name,
+                parameters: CallableParameter::listFromReflection($reflector),
+                positionalCount: $given,
+                names: \array_keys($named),
             );
+        } else {
+            $minimum = $reflector->getNumberOfRequiredParameters();
+            $maximum = $reflector->isVariadic()
+                ? null
+                : $reflector->getNumberOfParameters();
+
+            if (
+                $given < $minimum ||
+                (
+                    $maximum !== null &&
+                    $given > $maximum
+                )
+            ) {
+                throw CompilerException::fromFilterArgumentCount(
+                    filter: $handler->name,
+                    given: $given,
+                    minimum: $minimum,
+                    maximum: $maximum,
+                );
+            }
         }
 
         return \sprintf(
             '\\%s(%s)',
             $function,
-            \join(
-                ', ',
+            $this->joinCallArguments(
                 [
                     $compiler->compileExpression($valueNode),
                     ...\array_map(
                         $compiler->compileExpression(...),
-                        $argumentNodes,
+                        $positional,
                     ),
                 ],
+                \array_map(
+                    $compiler->compileExpression(...),
+                    $named,
+                ),
             ),
         );
+    }
+
+    /**
+     * @param array<int|string, ExpressionNodeInterface> $arguments
+     * @return array{0: list<ExpressionNodeInterface>, 1: array<string, ExpressionNodeInterface>}
+     */
+    private function splitArguments(
+        array $arguments,
+    ): array {
+        $positional = [];
+        $named = [];
+
+        foreach ($arguments as $name => $argument) {
+            if (\is_int($name)) {
+                $positional[] = $argument;
+            } else {
+                $named[$name] = $argument;
+            }
+        }
+
+        return [
+            $positional,
+            $named,
+        ];
+    }
+
+    /**
+     * @param list<string> $positional
+     * @param array<string, string> $named
+     */
+    private function joinCallArguments(
+        array $positional,
+        array $named,
+    ): string {
+        foreach ($named as $name => $argument) {
+            $positional[] = $name . ': ' . $argument;
+        }
+
+        return \join(', ', $positional);
+    }
+
+    /**
+     * @param list<string> $positional
+     * @param array<string, string> $named
+     */
+    private function joinArrayArguments(
+        CompilerInterface $compiler,
+        array $positional,
+        array $named,
+    ): string {
+        foreach ($named as $name => $argument) {
+            $positional[] = '\'' . $compiler->escaper->js($name) . '\' => ' . $argument;
+        }
+
+        return \join(', ', $positional);
+    }
+
+    /**
+     * @param list<CallableParameterInterface> $parameters
+     * @param list<string> $names
+     *
+     * @throws CompilerException
+     */
+    private function validateNamedArguments(
+        string $kind,
+        string $callable,
+        array $parameters,
+        int $positionalCount,
+        array $names,
+    ): void {
+        $variadic = false;
+        $byName = [];
+
+        foreach ($parameters as $parameter) {
+            if ($parameter->variadic) {
+                $variadic = true;
+
+                continue;
+            }
+
+            $byName[$parameter->name] = $parameter;
+        }
+
+        if (!$variadic && $positionalCount > \sizeof($byName)) {
+            throw CompilerException::fromTooManyPositionalArguments(
+                kind: $kind,
+                callable: $callable,
+                given: $positionalCount,
+                maximum: \sizeof($byName),
+            );
+        }
+
+        foreach ($names as $name) {
+            $parameter = $byName[$name] ?? null;
+
+            if ($parameter === null) {
+                if ($variadic) {
+                    continue;
+                }
+
+                throw CompilerException::fromUnknownNamedArgument(
+                    kind: $kind,
+                    callable: $callable,
+                    name: $name,
+                );
+            }
+
+            if ($parameter->position < $positionalCount) {
+                throw CompilerException::fromNamedArgumentAlreadyPassed(
+                    kind: $kind,
+                    callable: $callable,
+                    name: $name,
+                );
+            }
+        }
+
+        foreach ($byName as $parameter) {
+            if (
+                !$parameter->optional &&
+                $parameter->position >= $positionalCount &&
+                !\in_array($parameter->name, $names, true)
+            ) {
+                throw CompilerException::fromMissingArgument(
+                    kind: $kind,
+                    callable: $callable,
+                    name: $parameter->name,
+                );
+            }
+        }
     }
 
     public function augment(): \Generator

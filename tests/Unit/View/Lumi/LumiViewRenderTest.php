@@ -729,6 +729,31 @@ class LumiViewRenderTest extends TestCase
         );
     }
 
+    public function testRenderPassesNamedArgumentsToRuntimeFunctionCall(): void
+    {
+        self::assertSame(
+            '007',
+            $this->renderCompiledSource(
+                source: '{! str_pad(\'7\', 3, pad_type: 0, pad_string: \'0\') !}',
+                functionPolicy: RuntimeFunctionPolicy::ALLOW_ALL,
+            ),
+        );
+    }
+
+    public function testRenderPassesNamedArgumentsToMethodCall(): void
+    {
+        self::assertSame(
+            '2026',
+            $this->renderCompiledSource(
+                source: '{! moment.format(format: \'Y\') !}',
+                functionPolicy: RuntimeFunctionPolicy::CUSTOM_ONLY,
+                scope: [
+                    'moment' => new \DateTimeImmutable('2026-01-02'),
+                ],
+            ),
+        );
+    }
+
     public function testExplicitRangeCallStillFollowsFunctionPolicy(): void
     {
         self::expectException(ViewException::class);

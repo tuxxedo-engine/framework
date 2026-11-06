@@ -19,6 +19,7 @@ use Fixture\View\Lumi\Runtime\Introspector\StubFilterClass;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableDiscoverer;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadataInterface;
+use Tuxxedo\View\Lumi\Runtime\Introspector\CallableParameterInterface;
 use Tuxxedo\View\Lumi\Runtime\Introspector\IntrospectorException;
 
 class CallableDiscovererTest extends TestCase
@@ -102,6 +103,108 @@ class CallableDiscovererTest extends TestCase
         } catch (IntrospectorException $exception) {
             self::assertStringContainsString('stub_context_only', $exception->getMessage());
         }
+    }
+
+    public function testDiscoveredFilterParametersSkipContextAndUseArgumentPositions(): void
+    {
+        $wrap = $this->findByName(CallableDiscoverer::discoverFilters(StubArityClass::class), 'stub_wrap');
+
+        self::assertNotNull($wrap);
+        self::assertSame(
+            [
+                [
+                    'value',
+                    0,
+                    false,
+                    false,
+                ],
+                [
+                    'prefix',
+                    1,
+                    false,
+                    false,
+                ],
+                [
+                    'suffix',
+                    2,
+                    true,
+                    false,
+                ],
+            ],
+            $this->describeParameters($wrap),
+        );
+    }
+
+    public function testDiscoveredFunctionCapturesParameters(): void
+    {
+        $wrap = $this->findByName(CallableDiscoverer::discoverFunctions(StubArityClass::class), 'stub_wrap');
+
+        self::assertNotNull($wrap);
+        self::assertSame(
+            [
+                'value',
+                'prefix',
+                'suffix',
+            ],
+            \array_map(
+                static fn (CallableParameterInterface $parameter): string => $parameter->name,
+                $wrap->parameters,
+            ),
+        );
+    }
+
+    public function testDiscoveredVariadicFilterMarksVariadicParameter(): void
+    {
+        $join = $this->findByName(CallableDiscoverer::discoverFilters(StubArityClass::class), 'stub_join');
+
+        self::assertNotNull($join);
+        self::assertSame(
+            [
+                [
+                    'values',
+                    0,
+                    true,
+                    true,
+                ],
+            ],
+            $this->describeParameters($join),
+        );
+    }
+
+    public function testDiscoveredFilterCapturesContextParameterName(): void
+    {
+        $withContext = $this->findByName(CallableDiscoverer::discoverFilters(StubFilterClass::class), 'stub_context');
+        $wrap = $this->findByName(CallableDiscoverer::discoverFunctions(StubArityClass::class), 'stub_wrap');
+
+        self::assertNotNull($withContext);
+        self::assertNotNull($wrap);
+        self::assertSame('context', $withContext->contextParameterName);
+        self::assertSame('context', $wrap->contextParameterName);
+    }
+
+    public function testDiscoveredFilterWithoutContextHasNullContextParameterName(): void
+    {
+        $upper = $this->findByName(CallableDiscoverer::discoverFilters(StubFilterClass::class), 'stub_upper');
+
+        self::assertNotNull($upper);
+        self::assertNull($upper->contextParameterName);
+    }
+
+    /**
+     * @return list<array{0: string, 1: int, 2: bool, 3: bool}>
+     */
+    private function describeParameters(
+        CallableMetadataInterface $metadata,
+    ): array {
+        return \array_map(
+            static fn (CallableParameterInterface $parameter): array => [
+                $parameter->name,
+                $parameter->position,
+                $parameter->optional,
+                $parameter->variadic,
+            ],
+            $metadata->parameters,
+        );
     }
 
     /**

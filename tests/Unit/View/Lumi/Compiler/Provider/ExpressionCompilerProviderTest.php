@@ -23,6 +23,7 @@ use Tuxxedo\View\Lumi\Compiler\Provider\ExpressionCompilerProvider;
 use Tuxxedo\View\Lumi\Library\Function\PhpFunction;
 use Tuxxedo\View\Lumi\Parser\NodeStream;
 use Tuxxedo\View\Lumi\Runtime\Introspector\CallableMetadata;
+use Tuxxedo\View\Lumi\Runtime\Introspector\CallableParameter;
 use Tuxxedo\View\Lumi\Runtime\Introspector\RuntimeIntrospector;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayAccessNode;
 use Tuxxedo\View\Lumi\Syntax\Node\ArrayItemNode;
@@ -4125,6 +4126,474 @@ class ExpressionCompilerProviderTest extends TestCase
                 value: LiteralNode::createString('Kalle'),
                 operator: AssignmentSymbol::ASSIGN,
             ),
+        );
+    }
+
+    private function createNamedArgumentCompiler(
+        RuntimeIntrospector $introspector = new RuntimeIntrospector(),
+    ): CompilerInterface {
+        $compiler = Compiler::createWithoutDefaultProviders(
+            providers: [
+                new ExpressionCompilerProvider(),
+            ],
+            introspector: $introspector,
+        );
+        $compiler->state->enter(NodeScope::STATEMENT);
+
+        return $compiler;
+    }
+
+    private function createWrapMetadata(
+        ?int $contextParameterIndex = null,
+        ?string $contextParameterName = null,
+    ): CallableMetadata {
+        return new CallableMetadata(
+            name: 'wrap',
+            className: \stdClass::class,
+            methodName: 'wrap',
+            wantsContext: $contextParameterIndex !== null,
+            contextParameterIndex: $contextParameterIndex,
+            minimumArguments: 1,
+            maximumArguments: 3,
+            parameters: [
+                new CallableParameter(
+                    name: 'value',
+                    position: 0,
+                ),
+                new CallableParameter(
+                    name: 'prefix',
+                    position: 1,
+                    optional: true,
+                ),
+                new CallableParameter(
+                    name: 'suffix',
+                    position: 2,
+                    optional: true,
+                ),
+            ],
+            contextParameterName: $contextParameterName,
+        );
+    }
+
+    public function testCompileFunctionCallEmitsNamedArgumentsAsArrayKeys(): void
+    {
+        $output = $this->createNamedArgumentCompiler()->compileExpression(
+            new FunctionCallNode(
+                name: new IdentifierNode(
+                    name: 'date_local',
+                ),
+                arguments: [
+                    new IdentifierNode(
+                        name: 'when',
+                    ),
+                    'format' => LiteralNode::createString('d.m.Y'),
+                ],
+            ),
+        );
+
+        self::assertSame(
+            '$this->functionCall(\'date_local\', [$__lumiVariables[\'when\'], \'format\' => \'d.m.Y\'])',
+            $output,
+        );
+    }
+
+    public function testCompileFunctionCallWithKnownFunctionAcceptsValidNamedArgument(): void
+    {
+        $compiler = $this->createNamedArgumentCompiler(
+            new RuntimeIntrospector(
+                functions: [
+                    $this->createWrapMetadata(),
+                ],
+            ),
+        );
+
+        $output = $compiler->compileExpression(
+            new FunctionCallNode(
+                name: new IdentifierNode(
+                    name: 'wrap',
+                ),
+                arguments: [
+                    LiteralNode::createString('x'),
+                    'suffix' => LiteralNode::createString(']'),
+                ],
+            ),
+        );
+
+        self::assertSame(
+            '$this->functionCall(\'wrap\', [\'x\', \'suffix\' => \']\'])',
+            $output,
+        );
+    }
+
+    public function testCompileFunctionCallWithKnownFunctionThrowsOnUnknownNamedArgument(): void
+    {
+        $compiler = $this->createNamedArgumentCompiler(
+            new RuntimeIntrospector(
+                functions: [
+                    $this->createWrapMetadata(),
+                ],
+            ),
+        );
+
+        self::expectException(CompilerException::class);
+        self::expectExceptionMessage('Function "wrap" has no parameter named "style"');
+
+        $compiler->compileExpression(
+            new FunctionCallNode(
+                name: new IdentifierNode(
+                    name: 'wrap',
+                ),
+                arguments: [
+                    LiteralNode::createString('x'),
+                    'style' => LiteralNode::createString('long'),
+                ],
+            ),
+        );
+    }
+
+    public function testCompileFunctionCallWithKnownFunctionThrowsOnMissingRequiredParameter(): void
+    {
+        $compiler = $this->createNamedArgumentCompiler(
+            new RuntimeIntrospector(
+                functions: [
+                    $this->createWrapMetadata(),
+                ],
+            ),
+        );
+
+        self::expectException(CompilerException::class);
+        self::expectExceptionMessage('Function "wrap" is missing a value for required parameter "value"');
+
+        $compiler->compileExpression(
+            new FunctionCallNode(
+                name: new IdentifierNode(
+                    name: 'wrap',
+                ),
+                arguments: [
+                    'suffix' => LiteralNode::createString(']'),
+                ],
+            ),
+        );
+    }
+
+    public function testCompileMethodCallEmitsNamedArgumentsAsPhpNamedArguments(): void
+    {
+        $output = $this->createNamedArgumentCompiler()->compileExpression(
+            new MethodCallNode(
+                caller: new IdentifierNode(
+                    name: 'user',
+                ),
+                name: 'format',
+                arguments: [
+                    LiteralNode::createString('a'),
+                    'style' => LiteralNode::createString('long'),
+                ],
+            ),
+        );
+
+        self::assertSame(
+            '$this->instanceCall($__lumiVariables[\'user\'])->format(\'a\', style: \'long\')',
+            $output,
+        );
+    }
+
+    public function testCompileFilterCallWithKnownFilterEmitsPhpNamedArguments(): void
+    {
+        $output = $this->createFilterCompiler($this->createWrapMetadata())->compileExpression(
+            new FilterCallNode(
+                left: new IdentifierNode(
+                    name: 'name',
+                ),
+                name: 'wrap',
+                arguments: [
+                    'suffix' => LiteralNode::createString(']'),
+                ],
+            ),
+        );
+
+        self::assertSame(
+            '$this->resolveInstance(\\stdClass::class)->wrap($__lumiVariables[\'name\'], suffix: \']\')',
+            $output,
+        );
+    }
+
+    public function testCompileFilterCallSplicesContextPositionallyBeforeNamedArguments(): void
+    {
+        $output = $this->createFilterCompiler(
+            $this->createWrapMetadata(
+                contextParameterIndex: 0,
+                contextParameterName: 'context',
+            ),
+        )->compileExpression(
+            new FilterCallNode(
+                left: new IdentifierNode(
+                    name: 'name',
+                ),
+                name: 'wrap',
+                arguments: [
+                    'suffix' => LiteralNode::createString(']'),
+                ],
+            ),
+        );
+
+        self::assertSame(
+            '$this->resolveInstance(\\stdClass::class)->wrap(new \\Tuxxedo\\View\\Lumi\\Runtime\\RuntimeContext($this), $__lumiVariables[\'name\'], suffix: \']\')',
+            $output,
+        );
+    }
+
+    public function testCompileFilterCallPassesContextByNameWhenPastPositionalArguments(): void
+    {
+        $output = $this->createFilterCompiler(
+            $this->createWrapMetadata(
+                contextParameterIndex: 3,
+                contextParameterName: 'context',
+            ),
+        )->compileExpression(
+            new FilterCallNode(
+                left: new IdentifierNode(
+                    name: 'name',
+                ),
+                name: 'wrap',
+                arguments: [
+                    'suffix' => LiteralNode::createString(']'),
+                ],
+            ),
+        );
+
+        self::assertSame(
+            '$this->resolveInstance(\\stdClass::class)->wrap($__lumiVariables[\'name\'], suffix: \']\', context: new \\Tuxxedo\\View\\Lumi\\Runtime\\RuntimeContext($this))',
+            $output,
+        );
+    }
+
+    public function testCompileFilterOrBitwiseOrPassesContextByNameWhenOptionalParametersAreSkipped(): void
+    {
+        $output = $this->createFilterCompiler(
+            $this->createWrapMetadata(
+                contextParameterIndex: 3,
+                contextParameterName: 'context',
+            ),
+        )->compileExpression(
+            new FilterOrBitwiseOrNode(
+                left: new IdentifierNode(
+                    name: 'name',
+                ),
+                right: new IdentifierNode(
+                    name: 'wrap',
+                ),
+            ),
+        );
+
+        self::assertSame(
+            '$this->resolveInstance(\\stdClass::class)->wrap($__lumiVariables[\'name\'], context: new \\Tuxxedo\\View\\Lumi\\Runtime\\RuntimeContext($this))',
+            $output,
+        );
+    }
+
+    public function testCompileFilterCallThrowsOnNamedArgumentAlreadyPassedPositionally(): void
+    {
+        $compiler = $this->createFilterCompiler($this->createWrapMetadata());
+
+        self::expectException(CompilerException::class);
+        self::expectExceptionMessage('Filter "wrap" parameter "value" is already passed positionally');
+
+        $compiler->compileExpression(
+            new FilterCallNode(
+                left: new IdentifierNode(
+                    name: 'name',
+                ),
+                name: 'wrap',
+                arguments: [
+                    'value' => LiteralNode::createString('x'),
+                ],
+            ),
+        );
+    }
+
+    public function testCompileFilterCallThrowsOnUnknownNamedArgument(): void
+    {
+        $compiler = $this->createFilterCompiler($this->createWrapMetadata());
+
+        self::expectException(CompilerException::class);
+        self::expectExceptionMessage('Filter "wrap" has no parameter named "context"');
+
+        $compiler->compileExpression(
+            new FilterCallNode(
+                left: new IdentifierNode(
+                    name: 'name',
+                ),
+                name: 'wrap',
+                arguments: [
+                    'context' => LiteralNode::createString('x'),
+                ],
+            ),
+        );
+    }
+
+    public function testCompileFilterCallThrowsOnTooManyPositionalArgumentsWithNamedArgument(): void
+    {
+        $compiler = $this->createFilterCompiler($this->createWrapMetadata());
+
+        self::expectException(CompilerException::class);
+        self::expectExceptionMessage('Filter "wrap" accepts at most 3 positional arguments, 4 given');
+
+        $compiler->compileExpression(
+            new FilterCallNode(
+                left: new IdentifierNode(
+                    name: 'name',
+                ),
+                name: 'wrap',
+                arguments: [
+                    LiteralNode::createString('['),
+                    LiteralNode::createString(']'),
+                    LiteralNode::createString('!'),
+                    'suffix' => LiteralNode::createString('?'),
+                ],
+            ),
+        );
+    }
+
+    public function testCompileFilterCallThrowsOnTooManyPositionalArgumentsUsingSingularWording(): void
+    {
+        $compiler = $this->createFilterCompiler(
+            new CallableMetadata(
+                name: 'upper',
+                className: \stdClass::class,
+                methodName: 'upper',
+                wantsContext: false,
+                parameters: [
+                    new CallableParameter(
+                        name: 'value',
+                        position: 0,
+                    ),
+                ],
+            ),
+        );
+
+        self::expectException(CompilerException::class);
+        self::expectExceptionMessage('Filter "upper" accepts at most 1 positional argument, 2 given');
+
+        $compiler->compileExpression(
+            new FilterCallNode(
+                left: new IdentifierNode(
+                    name: 'name',
+                ),
+                name: 'upper',
+                arguments: [
+                    LiteralNode::createString('extra'),
+                    'value' => LiteralNode::createString('x'),
+                ],
+            ),
+        );
+    }
+
+    public function testCompileFilterCallWithVariadicFilterAcceptsUnknownNamedArguments(): void
+    {
+        $output = $this->createFilterCompiler(
+            new CallableMetadata(
+                name: 'join',
+                className: \stdClass::class,
+                methodName: 'join',
+                wantsContext: false,
+                parameters: [
+                    new CallableParameter(
+                        name: 'values',
+                        position: 0,
+                        optional: true,
+                        variadic: true,
+                    ),
+                ],
+            ),
+        )->compileExpression(
+            new FilterCallNode(
+                left: new IdentifierNode(
+                    name: 'items',
+                ),
+                name: 'join',
+                arguments: [
+                    'glue' => LiteralNode::createString(','),
+                ],
+            ),
+        );
+
+        self::assertSame(
+            '$this->resolveInstance(\\stdClass::class)->join($__lumiVariables[\'items\'], glue: \',\')',
+            $output,
+        );
+    }
+
+    public function testCompileFilterCallWithPhpFilterEmitsPhpNamedArguments(): void
+    {
+        $compiler = $this->createNamedArgumentCompiler(
+            new RuntimeIntrospector(
+                phpFilters: [
+                    'trim' => new PhpFunction('trim'),
+                ],
+            ),
+        );
+
+        $output = $compiler->compileExpression(
+            new FilterCallNode(
+                left: new IdentifierNode(
+                    name: 'name',
+                ),
+                name: 'trim',
+                arguments: [
+                    'characters' => LiteralNode::createString('-'),
+                ],
+            ),
+        );
+
+        self::assertSame(
+            '\\trim($__lumiVariables[\'name\'], characters: \'-\')',
+            $output,
+        );
+    }
+
+    public function testCompileFilterCallWithPhpFilterThrowsOnUnknownNamedArgument(): void
+    {
+        $compiler = $this->createNamedArgumentCompiler(
+            new RuntimeIntrospector(
+                phpFilters: [
+                    'trim' => new PhpFunction('trim'),
+                ],
+            ),
+        );
+
+        self::expectException(CompilerException::class);
+        self::expectExceptionMessage('Filter "trim" has no parameter named "chars"');
+
+        $compiler->compileExpression(
+            new FilterCallNode(
+                left: new IdentifierNode(
+                    name: 'name',
+                ),
+                name: 'trim',
+                arguments: [
+                    'chars' => LiteralNode::createString('-'),
+                ],
+            ),
+        );
+    }
+
+    public function testCompileFilterCallWithoutKnownFiltersEmitsNamedArgumentsAsArrayKeys(): void
+    {
+        $output = $this->createNamedArgumentCompiler()->compileExpression(
+            new FilterCallNode(
+                left: new IdentifierNode(
+                    name: 'price',
+                ),
+                name: 'currency',
+                arguments: [
+                    'locale' => LiteralNode::createString('fo-FO'),
+                ],
+            ),
+        );
+
+        self::assertSame(
+            '$this->filter($__lumiVariables[\'price\'], \'currency\', [\'locale\' => \'fo-FO\'])',
+            $output,
         );
     }
 }
