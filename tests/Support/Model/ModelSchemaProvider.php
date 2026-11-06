@@ -151,6 +151,18 @@ interface ModelSchemaProvider
 
     public function enumKeyedRecordsSchemaSql(): string;
 
+    public function enumKeyedEntriesSchemaSql(): string;
+
+    public function enumKeyedNotesSchemaSql(): string;
+
+    public function enumKeyedCommentsSchemaSql(): string;
+
+    public function enumKeyedTagsSchemaSql(): string;
+
+    public function enumKeyedRecordTagSchemaSql(): string;
+
+    public function enumKeyedAttachmentsSchemaSql(): string;
+
     public function aggregateOwnersSchemaSql(): string;
 
     public function aggregateOrdersSchemaSql(): string;

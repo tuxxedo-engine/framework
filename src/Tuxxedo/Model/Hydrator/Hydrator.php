@@ -215,7 +215,7 @@ class Hydrator implements HydratorInterface
                 relationProperty: $relation->property,
             );
 
-            $sourceValue = PropertyReflector::createFromObject($model, $sourcePropertyName)->getValue($model);
+            $sourceValue = $this->keyValue(PropertyReflector::createFromObject($model, $sourcePropertyName)->getValue($model));
 
             if ($sourceValue === null) {
                 if (!$relation->nullable) {
@@ -268,7 +268,7 @@ class Hydrator implements HydratorInterface
                 relationProperty: $relation->property,
             );
 
-            $value = PropertyReflector::createFromObject($model, $sourcePropertyName)->getValue($model);
+            $value = $this->keyValue(PropertyReflector::createFromObject($model, $sourcePropertyName)->getValue($model));
 
             if ($value === null) {
                 PropertyReflector::createFromObject($model, $relation->property)->setValue(
@@ -386,7 +386,7 @@ class Hydrator implements HydratorInterface
         ModelRelationInterface $relation,
     ): void {
         $sourceProperty = PropertyReflector::createFromObject($model, $this->resolveSourceProperty($metaData, $relation));
-        $sourceValue = $sourceProperty->getValue($model);
+        $sourceValue = $this->keyValue($sourceProperty->getValue($model));
 
         if ($sourceValue === null) {
             if (!$relation->nullable) {
@@ -425,7 +425,7 @@ class Hydrator implements HydratorInterface
         ModelRelationInterface $relation,
     ): void {
         $sourceProperty = PropertyReflector::createFromObject($model, $this->resolveSourceProperty($metaData, $relation));
-        $sourceValue = $sourceProperty->getValue($model);
+        $sourceValue = $this->keyValue($sourceProperty->getValue($model));
         $relatedClass = $relation->relatedClass;
 
         if ($sourceValue === null) {
@@ -1761,7 +1761,7 @@ class Hydrator implements HydratorInterface
         $sourceValues = [];
 
         foreach ($parents as $parent) {
-            $value = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+            $value = $this->keyValue(PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent));
 
             if ($value === null) {
                 continue;
@@ -1822,7 +1822,7 @@ class Hydrator implements HydratorInterface
                 $targetRows = $targetQuery->fetchAll($relatedClass, $manager->hydrator);
 
                 foreach ($targetRows as $row) {
-                    $fk = PropertyReflector::createFromObject($row, $targetForeignProperty)->getValue($row);
+                    $fk = $this->keyValue(PropertyReflector::createFromObject($row, $targetForeignProperty)->getValue($row));
 
                     if (!\is_int($fk) && !\is_string($fk)) {
                         continue; // @codeCoverageIgnore
@@ -1834,7 +1834,7 @@ class Hydrator implements HydratorInterface
         }
 
         foreach ($parents as $parent) {
-            $sourceValue = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+            $sourceValue = $this->keyValue(PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent));
             /** @var list<object> $prefetched */
             $prefetched = [];
 
@@ -2120,7 +2120,7 @@ class Hydrator implements HydratorInterface
         $sourceValues = [];
 
         foreach ($parents as $parent) {
-            $value = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+            $value = $this->keyValue(PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent));
 
             if ($value === null) {
                 continue;
@@ -2182,7 +2182,7 @@ class Hydrator implements HydratorInterface
                 $targetRows = $targetQuery->fetchAll($relatedClass, $manager->hydrator);
 
                 foreach ($targetRows as $row) {
-                    $fk = PropertyReflector::createFromObject($row, $targetForeignProperty)->getValue($row);
+                    $fk = $this->keyValue(PropertyReflector::createFromObject($row, $targetForeignProperty)->getValue($row));
 
                     if (!\is_int($fk) && !\is_string($fk)) {
                         continue; // @codeCoverageIgnore
@@ -2194,7 +2194,7 @@ class Hydrator implements HydratorInterface
         }
 
         foreach ($parents as $parent) {
-            $sourceValue = PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent);
+            $sourceValue = $this->keyValue(PropertyReflector::createFromObject($parent, $sourcePropertyName)->getValue($parent));
             $target = null;
 
             if (\is_int($sourceValue) || \is_string($sourceValue)) {
@@ -2978,6 +2978,14 @@ class Hydrator implements HydratorInterface
         }
     }
 
+    private function keyValue(
+        mixed $value,
+    ): mixed {
+        return $value instanceof \BackedEnum
+            ? $value->value
+            : $value;
+    }
+
     /**
      * @param non-empty-list<string> $sourceColumns
      * @param array<string, string> $sourcePropertyNames
@@ -2993,7 +3001,7 @@ class Hydrator implements HydratorInterface
 
         foreach ($sourceColumns as $sourceColumn) {
             $propertyName = $sourcePropertyNames[$sourceColumn];
-            $value = PropertyReflector::createFromObject($model, $propertyName)->getValue($model);
+            $value = $this->keyValue(PropertyReflector::createFromObject($model, $propertyName)->getValue($model));
 
             if ($value === null) {
                 return null;
@@ -3032,7 +3040,7 @@ class Hydrator implements HydratorInterface
         foreach ($targetColumns as $index => $targetColumn) {
             $sourceColumn = $sourceColumns[$index];
             $propertyName = $targetPropertyNames[$targetColumn];
-            $value = PropertyReflector::createFromObject($model, $propertyName)->getValue($model);
+            $value = $this->keyValue(PropertyReflector::createFromObject($model, $propertyName)->getValue($model));
 
             if (!\is_int($value) && !\is_string($value)) {
                 return null; // @codeCoverageIgnore

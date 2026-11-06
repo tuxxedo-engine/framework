@@ -649,6 +649,60 @@ class PgsqlModelSchemaProvider implements ModelSchemaProvider
             ')';
     }
 
+    public function enumKeyedEntriesSchemaSql(): string
+    {
+        return 'CREATE TABLE enum_keyed_entries (' .
+            'id SERIAL PRIMARY KEY, ' .
+            'status VARCHAR(16) NOT NULL, ' .
+            'title VARCHAR(255) NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function enumKeyedNotesSchemaSql(): string
+    {
+        return 'CREATE TABLE enum_keyed_notes (' .
+            'id SERIAL PRIMARY KEY, ' .
+            'status VARCHAR(16) NOT NULL, ' .
+            'body VARCHAR(255) NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function enumKeyedCommentsSchemaSql(): string
+    {
+        return 'CREATE TABLE enum_keyed_comments (' .
+            'id SERIAL PRIMARY KEY, ' .
+            'entry_id INT NOT NULL, ' .
+            'body VARCHAR(255) NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function enumKeyedTagsSchemaSql(): string
+    {
+        return 'CREATE TABLE enum_keyed_tags (' .
+            'id SERIAL PRIMARY KEY, ' .
+            'name VARCHAR(64) NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function enumKeyedRecordTagSchemaSql(): string
+    {
+        return 'CREATE TABLE enum_keyed_record_tag (' .
+            'record_status VARCHAR(16) NOT NULL, ' .
+            'tag_id INT NOT NULL, ' .
+            'PRIMARY KEY (record_status, tag_id)' .
+            ')';
+    }
+
+    public function enumKeyedAttachmentsSchemaSql(): string
+    {
+        return 'CREATE TABLE enum_keyed_attachments (' .
+            'id SERIAL PRIMARY KEY, ' .
+            'host_type VARCHAR(128) NOT NULL, ' .
+            'host_id VARCHAR(16) NOT NULL, ' .
+            'name VARCHAR(255) NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
     public function aggregateOwnersSchemaSql(): string
     {
         return 'CREATE TABLE aggregate_owners (' .

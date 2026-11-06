@@ -649,6 +649,60 @@ class SqliteModelSchemaProvider implements ModelSchemaProvider
             ')';
     }
 
+    public function enumKeyedEntriesSchemaSql(): string
+    {
+        return 'CREATE TABLE enum_keyed_entries (' .
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
+            'status TEXT NOT NULL, ' .
+            'title TEXT NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function enumKeyedNotesSchemaSql(): string
+    {
+        return 'CREATE TABLE enum_keyed_notes (' .
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
+            'status TEXT NOT NULL, ' .
+            'body TEXT NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function enumKeyedCommentsSchemaSql(): string
+    {
+        return 'CREATE TABLE enum_keyed_comments (' .
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
+            'entry_id INTEGER NOT NULL, ' .
+            'body TEXT NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function enumKeyedTagsSchemaSql(): string
+    {
+        return 'CREATE TABLE enum_keyed_tags (' .
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
+            'name TEXT NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function enumKeyedRecordTagSchemaSql(): string
+    {
+        return 'CREATE TABLE enum_keyed_record_tag (' .
+            'record_status TEXT NOT NULL, ' .
+            'tag_id INTEGER NOT NULL, ' .
+            'PRIMARY KEY (record_status, tag_id)' .
+            ')';
+    }
+
+    public function enumKeyedAttachmentsSchemaSql(): string
+    {
+        return 'CREATE TABLE enum_keyed_attachments (' .
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
+            'host_type TEXT NOT NULL, ' .
+            'host_id TEXT NOT NULL, ' .
+            'name TEXT NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
     public function aggregateOwnersSchemaSql(): string
     {
         return 'CREATE TABLE aggregate_owners (' .

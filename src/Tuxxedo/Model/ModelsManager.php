@@ -28,6 +28,7 @@ use Tuxxedo\Model\Aggregate\AggregateSaveOrder;
 use Tuxxedo\Model\Aggregate\AggregateValidator;
 use Tuxxedo\Model\Aggregate\CollectedEntity;
 use Tuxxedo\Model\Aggregate\RelationLoadState;
+use Tuxxedo\Model\Attribute\Column\Enumeration;
 use Tuxxedo\Model\Attribute\ColumnInterface;
 use Tuxxedo\Model\Attribute\Relation\BelongsTo;
 use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
@@ -322,7 +323,10 @@ class ModelsManager implements ModelsManagerInterface
                 return; // @codeCoverageIgnore
             }
 
-            PropertyReflector::createFromObject($child, $childProperty)->setValue($child, $value);
+            PropertyReflector::createFromObject($child, $childProperty)->setValue(
+                $child,
+                $this->foreignKeyValue($childMetaData, $childProperty, $value),
+            );
         }
     }
 
@@ -365,7 +369,10 @@ class ModelsManager implements ModelsManagerInterface
                 return; // @codeCoverageIgnore
             }
 
-            PropertyReflector::createFromObject($child, $childProperty)->setValue($child, $value);
+            PropertyReflector::createFromObject($child, $childProperty)->setValue(
+                $child,
+                $this->foreignKeyValue($childMetaData, $childProperty, $value),
+            );
         }
     }
 
@@ -478,7 +485,10 @@ class ModelsManager implements ModelsManagerInterface
 
                 $foreignKeyProperty = $this->findPropertyForColumnOnMetadata($metaData, $sourceColumn);
 
-                PropertyReflector::createFromObject($entity, $foreignKeyProperty)->setValue($entity, $ownerValue);
+                PropertyReflector::createFromObject($entity, $foreignKeyProperty)->setValue(
+                    $entity,
+                    $this->foreignKeyValue($metaData, $foreignKeyProperty, $ownerValue),
+                );
             }
         }
 
@@ -506,7 +516,10 @@ class ModelsManager implements ModelsManagerInterface
 
             foreach ($morphTo->idColumns as $index => $idColumn) {
                 $idProperty = $this->findPropertyForColumnOnMetadata($metaData, $idColumn);
-                PropertyReflector::createFromObject($entity, $idProperty)->setValue($entity, $targetPkValues[$index]);
+                PropertyReflector::createFromObject($entity, $idProperty)->setValue(
+                    $entity,
+                    $this->foreignKeyValue($metaData, $idProperty, $targetPkValues[$index]),
+                );
             }
         }
     }
@@ -1474,6 +1487,39 @@ class ModelsManager implements ModelsManagerInterface
     /**
      * @throws ModelException
      */
+    private function foreignKeyValue(
+        ModelMetaDataInterface $metaData,
+        string $property,
+        mixed $value,
+    ): mixed {
+        $raw = $value instanceof \BackedEnum
+            ? $value->value
+            : $value;
+
+        foreach ($metaData->columns as $column) {
+            if ($column->property !== $property) {
+                continue;
+            }
+
+            $attribute = $column->attribute;
+
+            if (!$attribute instanceof Enumeration) {
+                break;
+            }
+
+            $enum = $attribute->enum;
+            $coercer = $this->getCoercerFor($attribute);
+
+            if ($value instanceof $enum || $coercer === null || !\is_scalar($raw)) {
+                return $value;
+            }
+
+            return $coercer->hydrate($raw);
+        }
+
+        return $raw;
+    }
+
     private function dehydrateColumnValue(
         ModelMetaDataInterface $metaData,
         string $property,

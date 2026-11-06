@@ -310,6 +310,36 @@ abstract class AbstractModelIntegrationTestCase extends TestCase
         $this->executeSchema($this->schemaProvider->enumKeyedRecordsSchemaSql());
     }
 
+    protected function createEnumKeyedEntriesTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->enumKeyedEntriesSchemaSql());
+    }
+
+    protected function createEnumKeyedNotesTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->enumKeyedNotesSchemaSql());
+    }
+
+    protected function createEnumKeyedCommentsTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->enumKeyedCommentsSchemaSql());
+    }
+
+    protected function createEnumKeyedTagsTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->enumKeyedTagsSchemaSql());
+    }
+
+    protected function createEnumKeyedRecordTagTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->enumKeyedRecordTagSchemaSql());
+    }
+
+    protected function createEnumKeyedAttachmentsTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->enumKeyedAttachmentsSchemaSql());
+    }
+
     protected function createAggregateOwnersTable(): void
     {
         $this->executeSchema($this->schemaProvider->aggregateOwnersSchemaSql());
