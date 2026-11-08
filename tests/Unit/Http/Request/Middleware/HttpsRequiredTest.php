@@ -19,6 +19,7 @@ use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Http\Request\Middleware\RecordingMiddleware;
+use Support\Serializer\SerializerManagerFactory;
 use Tuxxedo\Http\Request\Middleware\HttpsRequired;
 use Tuxxedo\Http\Request\Request;
 use Tuxxedo\Http\Response\ResponseCode;
@@ -33,6 +34,7 @@ class HttpsRequiredTest extends TestCase
         ?int $port = null,
     ): Request {
         return new Request(
+            serializerManager: SerializerManagerFactory::create(),
             headers: new StubHeaderContext(),
             cookies: new StubInputContext(),
             get: new StubInputContext(),

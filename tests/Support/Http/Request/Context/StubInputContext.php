@@ -139,31 +139,41 @@ class StubInputContext implements InputContextInterface
         throw HttpException::fromInternalServerError();
     }
 
-    public function mapTo(
-        string $name,
-        string|object $className,
+    public function map(
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
     ): object {
         throw HttpException::fromInternalServerError();
     }
 
-    public function mapToArrayOf(
-        string $name,
-        string|object $className,
+    public function mapList(
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
     ): array {
         throw HttpException::fromInternalServerError();
     }
 
-    public function jsonMapTo(
+    public function jsonMap(
         string $name,
-        string|object $className,
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
         int $flags = 0,
     ): object {
         throw HttpException::fromInternalServerError();
     }
 
-    public function jsonMapToArrayOf(
+    public function jsonMapList(
         string $name,
-        string|object $className,
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
         int $flags = 0,
     ): array {
         throw HttpException::fromInternalServerError();

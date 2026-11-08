@@ -21,6 +21,7 @@ use Support\Http\Request\Context\StubInputContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Http\Request\Middleware\RecordingMiddleware;
 use Support\Security\Csrf\StubCsrfManager;
+use Support\Serializer\SerializerManagerFactory;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Context\InputContextInterface;
@@ -39,6 +40,7 @@ class CsrfTest extends TestCase
         array $headers = [],
     ): Request {
         return new Request(
+            serializerManager: SerializerManagerFactory::create(),
             headers: new StubHeaderContext(
                 headers: $headers,
             ),

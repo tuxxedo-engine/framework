@@ -23,6 +23,7 @@ interface ArraySerializerInterface
      *
      * @param array<mixed> $data
      * @param class-string<TClassName> $className
+     * @param list<string>|null $only
      * @return TClassName
      *
      * @throws SerializerException
@@ -32,6 +33,8 @@ interface ArraySerializerInterface
     public function fromArray(
         array $data,
         string $className,
+        ?string $key = null,
+        ?array $only = null,
     ): object;
 
     /**
@@ -39,6 +42,7 @@ interface ArraySerializerInterface
      *
      * @param array<mixed> $data
      * @param class-string<TClassName> $className
+     * @param list<string>|null $only
      * @return list<TClassName>
      *
      * @throws SerializerException
@@ -48,6 +52,8 @@ interface ArraySerializerInterface
     public function fromArrayList(
         array $data,
         string $className,
+        ?string $key = null,
+        ?array $only = null,
     ): array;
 
     /**

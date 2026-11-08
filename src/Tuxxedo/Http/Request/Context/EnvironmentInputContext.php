@@ -15,15 +15,14 @@ namespace Tuxxedo\Http\Request\Context;
 
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\InputContext;
-use Tuxxedo\Mapper\Mapper;
-use Tuxxedo\Mapper\MapperInterface;
 use Tuxxedo\Reflection\EnumHydrator;
+use Tuxxedo\Serializer\SerializerManagerInterface;
 
 class EnvironmentInputContext implements InputContextInterface
 {
     public function __construct(
         private readonly InputContext $inputContext,
-        private readonly MapperInterface $mapper = new Mapper(),
+        private readonly SerializerManagerInterface $serializerManager,
     ) {
     }
 
@@ -360,79 +359,87 @@ class EnvironmentInputContext implements InputContextInterface
         return $enums;
     }
 
-    public function mapTo(
-        string $name,
-        string|object $className,
+    public function map(
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
     ): object {
-        if ($this->inputContext === InputContext::COOKIE) {
-            throw HttpException::fromInternalServerError();
-        }
+        $this->guardMappable();
 
-        return $this->mapper->mapArrayTo($this->rawArray($name), $className);
+        return $this->serializerManager->array($skipUnknownKeys)->fromArray(
+            data: $this->input(),
+            className: $className,
+            key: $key,
+            only: $only,
+        );
     }
 
-    public function mapToArrayOf(
-        string $name,
-        string|object $className,
+    public function mapList(
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
     ): array {
-        if ($this->inputContext === InputContext::COOKIE) {
-            throw HttpException::fromInternalServerError();
-        }
+        $this->guardMappable();
 
-        return $this->mapper->mapToArrayOf($this->rawArray($name), $className);
+        return $this->serializerManager->array($skipUnknownKeys)->fromArrayList(
+            data: $this->input(),
+            className: $className,
+            key: $key,
+            only: $only,
+        );
     }
 
-    public function jsonMapTo(
+    public function jsonMap(
         string $name,
-        string|object $className,
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
         int $flags = 0,
     ): object {
-        if ($this->inputContext === InputContext::COOKIE) {
-            throw HttpException::fromInternalServerError();
-        }
+        $this->guardMappable();
 
-        $value = \json_decode(
+        return $this->serializerManager->json(
+            skipUnknownKeys: $skipUnknownKeys,
+            flags: $flags,
+        )->decode(
             json: $this->string($name),
-            associative: true,
-            flags: $flags | \JSON_THROW_ON_ERROR,
-        );
-
-        if (!\is_array($value)) {
-            throw HttpException::fromInternalServerError();
-        }
-
-        return $this->mapper->mapArrayTo(
-            input: $value,
             className: $className,
-            skipInvalidProperties: true,
-            castType: true,
+            key: $key,
+            only: $only,
         );
     }
 
-    public function jsonMapToArrayOf(
+    public function jsonMapList(
         string $name,
-        string|object $className,
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
         int $flags = 0,
     ): array {
+        $this->guardMappable();
+
+        return $this->serializerManager->json(
+            skipUnknownKeys: $skipUnknownKeys,
+            flags: $flags,
+        )->decodeList(
+            json: $this->string($name),
+            className: $className,
+            key: $key,
+            only: $only,
+        );
+    }
+
+    /**
+     * @throws HttpException
+     */
+    private function guardMappable(): void
+    {
         if ($this->inputContext === InputContext::COOKIE) {
             throw HttpException::fromInternalServerError();
         }
-
-        $value = \json_decode(
-            json: $this->string($name),
-            associative: true,
-            flags: $flags | \JSON_THROW_ON_ERROR,
-        );
-
-        if (!\is_array($value)) {
-            throw HttpException::fromInternalServerError();
-        }
-
-        return $this->mapper->mapToArrayOf(
-            input: $value,
-            className: $className,
-            skipInvalidProperties: true,
-            castType: true,
-        );
     }
 }

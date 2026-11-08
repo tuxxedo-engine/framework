@@ -18,6 +18,7 @@ use PHPUnit\Framework\TestCase;
 use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
+use Support\Serializer\SerializerManagerFactory;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Http\Cookie;
 use Tuxxedo\Http\Header;
@@ -772,6 +773,7 @@ class ResponseTest extends TestCase
             )
             ->singleton(
                 class: new Request(
+                    serializerManager: SerializerManagerFactory::create(),
                     route: new DispatchableRoute(
                         route: $route,
                         arguments: [

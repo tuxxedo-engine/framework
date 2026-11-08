@@ -82,7 +82,7 @@ class CsvSerializer extends AbstractSerializer implements CsvSerializerInterface
                 }
 
                 if (\sizeof($fields) !== \sizeof($header)) {
-                    throw SerializerException::fromCsvColumnCount(
+                    throw SerializerInputException::fromCsvColumnCount(
                         row: \sizeof($data),
                         expected: \sizeof($header),
                         actual: \sizeof($fields),

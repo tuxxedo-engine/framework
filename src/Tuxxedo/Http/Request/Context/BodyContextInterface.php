@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Request\Context;
 
 use Tuxxedo\Http\HttpException;
-use Tuxxedo\Mapper\MapperException;
+use Tuxxedo\Serializer\SerializerException;
+use Tuxxedo\Validator\ValidationException;
+use Tuxxedo\Validator\ValidatorException;
 
 interface BodyContextInterface
 {
@@ -48,30 +50,40 @@ interface BodyContextInterface
     /**
      * @template TClassName of object
      *
-     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
+     * @param class-string<TClassName> $className
+     * @param list<string>|null $only
      * @return TClassName
      *
      * @throws HttpException
-     * @throws MapperException
-     * @throws \JsonException
+     * @throws SerializerException
+     * @throws ValidationException
+     * @throws ValidatorException
      */
-    public function jsonMapTo(
-        string|object $className,
+    public function jsonMap(
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
         int $flags = 0,
     ): object;
 
     /**
      * @template TClassName of object
      *
-     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
-     * @return TClassName[]
+     * @param class-string<TClassName> $className
+     * @param list<string>|null $only
+     * @return list<TClassName>
      *
      * @throws HttpException
-     * @throws MapperException
-     * @throws \JsonException
+     * @throws SerializerException
+     * @throws ValidationException
+     * @throws ValidatorException
      */
-    public function jsonMapToArrayOf(
-        string|object $className,
+    public function jsonMapList(
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
         int $flags = 0,
     ): array;
 }

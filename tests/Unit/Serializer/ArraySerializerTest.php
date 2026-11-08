@@ -33,6 +33,7 @@ use PHPUnit\Framework\TestCase;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Serializer\ArraySerializer;
 use Tuxxedo\Serializer\SerializerException;
+use Tuxxedo\Serializer\SerializerInputException;
 use Tuxxedo\Temporal\Instant;
 use Tuxxedo\Temporal\LocalDate;
 use Tuxxedo\Temporal\LocalTime;
@@ -648,6 +649,104 @@ class ArraySerializerTest extends TestCase
         } catch (ValidationException $exception) {
             self::assertCount(1, $exception->violations);
             self::assertSame('1', $exception->violations[0]->propertyPath);
+        }
+    }
+
+    public function testKeyAndOnlySelectTheMappedData(): void
+    {
+        $serializer = $this->serializer();
+        $data = [
+            'address' => [
+                'street' => 'Main 1',
+                'city' => 'Prague',
+                'zip' => '11000',
+            ],
+            'other' => 'ignored',
+        ];
+
+        $address = $serializer->fromArray(
+            data: $data,
+            className: Address::class,
+            key: 'address',
+            only: [
+                'street',
+                'city',
+            ],
+        );
+
+        self::assertEquals(new Address('Main 1', 'Prague'), $address);
+
+        $plain = $serializer->fromArray(
+            data: [
+                'count' => '2',
+                'text' => 'x',
+                'uninitialized' => 'set',
+            ],
+            className: Plain::class,
+            only: [
+                'count',
+                'uninitialized',
+            ],
+        );
+
+        self::assertSame(2, $plain->count);
+        self::assertSame('', $plain->text);
+    }
+
+    public function testListKeyAndOnlyApplyPerItem(): void
+    {
+        $addresses = $this->serializer()->fromArrayList(
+            data: [
+                'items' => [
+                    [
+                        'street' => 'A',
+                        'city' => 'B',
+                        'zip' => '1',
+                    ],
+                ],
+            ],
+            className: Address::class,
+            key: 'items',
+            only: [
+                'street',
+                'city',
+            ],
+        );
+
+        self::assertEquals(
+            [
+                new Address('A', 'B'),
+            ],
+            $addresses,
+        );
+    }
+
+    public function testMissingKeySelectsAnEmptyArray(): void
+    {
+        self::assertSame(
+            [],
+            $this->serializer()->fromArrayList(
+                data: [],
+                className: Address::class,
+                key: 'items',
+            ),
+        );
+    }
+
+    public function testNonArrayKeyIsAnInputError(): void
+    {
+        try {
+            $this->serializer()->fromArray(
+                data: [
+                    'address' => 'Main 1',
+                ],
+                className: Address::class,
+                key: 'address',
+            );
+
+            self::fail('Expected SerializerInputException was not thrown');
+        } catch (SerializerInputException $exception) {
+            self::assertStringContainsString('key "address"', $exception->getMessage());
         }
     }
 

@@ -19,6 +19,7 @@ use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Http\Request\Middleware\RecordingMiddleware;
+use Support\Serializer\SerializerManagerFactory;
 use Tuxxedo\Http\Request\Middleware\TrustProxy;
 use Tuxxedo\Http\Request\Middleware\TrustedHeader;
 use Tuxxedo\Http\Request\Request;
@@ -39,6 +40,7 @@ class TrustProxyTest extends TestCase
         bool $https = false,
     ): Request {
         return new Request(
+            serializerManager: SerializerManagerFactory::create(),
             headers: new StubHeaderContext(
                 headers: $headers,
             ),

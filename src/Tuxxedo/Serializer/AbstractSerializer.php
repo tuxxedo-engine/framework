@@ -186,6 +186,70 @@ abstract class AbstractSerializer
     }
 
     /**
+     * @param array<mixed> $data
+     * @return array<mixed>
+     *
+     * @throws SerializerInputException
+     */
+    protected static function select(
+        array $data,
+        ?string $key,
+        string $format,
+    ): array {
+        if ($key === null) {
+            return $data;
+        }
+
+        $selected = $data[$key] ?? [];
+
+        if (!\is_array($selected)) {
+            throw SerializerInputException::fromNonArrayKey(
+                format: $format,
+                key: $key,
+            );
+        }
+
+        return $selected;
+    }
+
+    /**
+     * @param array<mixed> $data
+     * @param list<string>|null $only
+     * @return array<mixed>
+     */
+    protected static function only(
+        array $data,
+        ?array $only,
+    ): array {
+        if ($only === null) {
+            return $data;
+        }
+
+        return \array_intersect_key($data, \array_flip($only));
+    }
+
+    /**
+     * @param list<mixed> $data
+     * @param list<string>|null $only
+     * @return list<mixed>
+     */
+    protected static function onlyEach(
+        array $data,
+        ?array $only,
+    ): array {
+        if ($only === null) {
+            return $data;
+        }
+
+        return \array_map(
+            static fn (mixed $item): mixed => \is_array($item)
+                ? self::only($item, $only)
+                : $item,
+            $data,
+        );
+    }
+
+    /**
      * @param list<ViolationInterface> $violations
      *
      * @throws ValidatorException

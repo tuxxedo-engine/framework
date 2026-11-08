@@ -21,6 +21,7 @@ use Support\Http\Request\Context\StubBodyContext;
 use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
+use Support\Serializer\SerializerManagerFactory;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Request;
 
@@ -50,6 +51,7 @@ class RequestQueryBodyHydrationTest extends TestCase
         $_SERVER['CONTENT_TYPE'] = 'application/x-www-form-urlencoded';
 
         new Request(
+            serializerManager: SerializerManagerFactory::create(),
             headers: new StubHeaderContext(),
             cookies: new StubInputContext(),
             get: new StubInputContext(),
@@ -74,6 +76,7 @@ class RequestQueryBodyHydrationTest extends TestCase
         $_SERVER['CONTENT_TYPE'] = 'application/x-www-form-urlencoded';
 
         new Request(
+            serializerManager: SerializerManagerFactory::create(),
             headers: new StubHeaderContext(),
             cookies: new StubInputContext(),
             get: new StubInputContext(),
@@ -100,6 +103,7 @@ class RequestQueryBodyHydrationTest extends TestCase
         $_SERVER['CONTENT_TYPE'] = 'application/x-www-form-urlencoded; charset=UTF-8';
 
         new Request(
+            serializerManager: SerializerManagerFactory::create(),
             headers: new StubHeaderContext(),
             cookies: new StubInputContext(),
             get: new StubInputContext(),

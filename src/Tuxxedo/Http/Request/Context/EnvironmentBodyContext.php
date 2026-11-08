@@ -14,17 +14,15 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Request\Context;
 
 use Tuxxedo\Http\HttpException;
-use Tuxxedo\Mapper\Mapper;
-use Tuxxedo\Mapper\MapperException;
-use Tuxxedo\Mapper\MapperInterface;
+use Tuxxedo\Serializer\SerializerManagerInterface;
 
 class EnvironmentBodyContext implements BodyContextInterface
 {
     public function __construct(
+        private readonly SerializerManagerInterface $serializerManager,
         private string $streamInputSource = 'php://input',
         private ?string $contentType = null,
         private ?int $contentLength = null,
-        private MapperInterface $mapper = new Mapper(),
     ) {
     }
 
@@ -142,72 +140,39 @@ class EnvironmentBodyContext implements BodyContextInterface
         );
     }
 
-    /**
-     * @template TClassName of object
-     *
-     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
-     * @return TClassName
-     *
-     * @throws HttpException
-     * @throws MapperException
-     * @throws \JsonException
-     */
-    public function jsonMapTo(
-        string|object $className,
+    public function jsonMap(
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
         int $flags = 0,
     ): object {
-        $value = $this->getJson(
+        return $this->serializerManager->json(
+            skipUnknownKeys: $skipUnknownKeys,
             flags: $flags,
+        )->decode(
+            json: $this->getRaw(),
+            className: $className,
+            key: $key,
+            only: $only,
         );
-
-        if (\is_array($value)) {
-            return $this->mapper->mapArrayTo(
-                input: $value,
-                className: $className,
-                skipInvalidProperties: true,
-                castType: true,
-            );
-        }
-
-        if (\is_object($value)) {
-            return $this->mapper->mapObjectTo(
-                input: $value,
-                className: $className,
-                skipInvalidProperties: true,
-                castType: true,
-            );
-        }
-
-        throw HttpException::fromInternalServerError();
     }
 
-    /**
-     * @template TClassName of object
-     *
-     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
-     * @return TClassName[]
-     *
-     * @throws HttpException
-     * @throws MapperException
-     * @throws \JsonException
-     */
-    public function jsonMapToArrayOf(
-        string|object $className,
+    public function jsonMapList(
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
         int $flags = 0,
     ): array {
-        $value = $this->getJson(
+        return $this->serializerManager->json(
+            skipUnknownKeys: $skipUnknownKeys,
             flags: $flags,
-        );
-
-        if (!\is_array($value)) {
-            throw HttpException::fromInternalServerError();
-        }
-
-        return $this->mapper->mapToArrayOf(
-            input: $value,
+        )->decodeList(
+            json: $this->getRaw(),
             className: $className,
-            skipInvalidProperties: true,
-            castType: true,
+            key: $key,
+            only: $only,
         );
     }
 }

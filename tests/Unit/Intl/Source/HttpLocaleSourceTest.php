@@ -18,6 +18,7 @@ use PHPUnit\Framework\TestCase;
 use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
+use Support\Serializer\SerializerManagerFactory;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Request;
 use Tuxxedo\Intl\Config\IntlConfig;
@@ -54,6 +55,7 @@ class HttpLocaleSourceTest extends TestCase
 
         return new HttpLocaleSource(
             request: new Request(
+                serializerManager: SerializerManagerFactory::create(),
                 route: new DispatchableRoute(
                     route: new Route(
                         method: Method::GET,

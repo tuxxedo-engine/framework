@@ -16,24 +16,20 @@ namespace App\Controllers;
 use App\Service\Entity\PersonOne;
 use App\Service\Entity\PersonTwo;
 use Tuxxedo\Http\Header;
+use Tuxxedo\Http\Kernel\Resolver\Payload;
 use Tuxxedo\Http\Method;
-use Tuxxedo\Http\Request\Attribute\JsonMapTo;
-use Tuxxedo\Http\Request\Attribute\JsonMapToArrayOf;
-use Tuxxedo\Http\Request\Attribute\MapTo;
-use Tuxxedo\Http\Request\Attribute\MapToArrayOf;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseInterface;
-use Tuxxedo\Mapper\Mapper;
-use Tuxxedo\Mapper\MapperInterface;
 use Tuxxedo\Router\Attribute\Route;
+use Tuxxedo\Serializer\SerializerManagerInterface;
 use Tuxxedo\View\View;
 use Tuxxedo\View\ViewInterface;
 
 readonly class MappingController
 {
     public function __construct(
-        private MapperInterface $mapper = new Mapper(),
+        private SerializerManagerInterface $serializers,
     ) {
     }
 
@@ -52,12 +48,9 @@ readonly class MappingController
         }
 
         return Response::json(
-            json: $request->post->mapTo(
-                'struct',
-                new class () {
-                    public string $name;
-                    public int $age;
-                },
+            json: $request->post->map(
+                className: PersonTwo::class,
+                key: 'struct',
             ),
         );
     }
@@ -67,16 +60,14 @@ readonly class MappingController
     {
         return Response::capture(
             callback: fn () => \var_dump(
-                $this->mapper->mapArrayTo(
-                    input: [
+                $this->serializers->array()->fromArray(
+                    data: [
                         'name' => 'Engine',
                     ],
-                    className: new class () {
-                        public string $name = '';
-                    },
+                    className: PersonOne::class,
                 ),
-                $this->mapper->mapToArrayOf(
-                    input: [
+                $this->serializers->array()->fromArrayList(
+                    data: [
                         [
                             'name' => 'foo',
                         ],
@@ -87,9 +78,7 @@ readonly class MappingController
                             'name' => 'baz',
                         ],
                     ],
-                    className: new class () {
-                        public string $name = '';
-                    },
+                    className: PersonOne::class,
                 ),
             ),
             headers: [
@@ -100,15 +89,7 @@ readonly class MappingController
 
     #[Route\Post(path: '/mapTwo')]
     public function mapTwo(
-        #[MapTo(
-            name: 'struct',
-            className: static function (): object {
-                return new class () {
-                    public string $name;
-                    public int $age;
-                };
-            },
-        )] object $one,
+        #[Payload(key: 'struct')] PersonTwo $one,
     ): ResponseInterface {
         return Response::capture(
             callback: fn () => \var_dump($one),
@@ -132,19 +113,11 @@ readonly class MappingController
     }
 
     /**
-     * @param array<object{name: string, age: int}> $one
+     * @param list<PersonTwo> $one
      */
     #[Route\Post(path: '/mapThree')]
     public function mapThree(
-        #[MapToArrayOf(
-            name: 'struct',
-            className: static function (): object {
-                return new class () {
-                    public string $name;
-                    public int $age;
-                };
-            },
-        )] array $one,
+        #[Payload(className: PersonTwo::class, key: 'struct')] array $one,
     ): ResponseInterface {
         return Response::capture(
             callback: fn () => \var_dump($one),
@@ -169,7 +142,7 @@ readonly class MappingController
 
     #[Route\Post(path: '/mapFour')]
     public function mapFour(
-        #[MapTo(name: 'struct', className: PersonOne::class)] object $one,
+        #[Payload(className: PersonOne::class, key: 'struct')] object $one,
     ): ResponseInterface {
         return Response::capture(
             callback: fn () => \var_dump($one),
@@ -192,7 +165,7 @@ readonly class MappingController
 
     #[Route\Post(path: '/mapFive')]
     public function mapFive(
-        #[MapTo(name: 'struct')] PersonOne $one,
+        #[Payload(key: 'struct')] PersonOne $one,
     ): ResponseInterface {
         return Response::capture(
             callback: fn () => \var_dump($one),
@@ -214,26 +187,21 @@ readonly class MappingController
     }
 
     #[Route\Post(path: '/mapSixA')]
-    public function mapSixA(
-        #[JsonMapTo(name: 'struct')] PersonTwo $person,
-    ): ResponseInterface {
+    public function mapSixA(RequestInterface $request): ResponseInterface
+    {
         return Response::capture(
-            callback: fn () => \var_dump($person),
+            callback: fn () => \var_dump($request->post->jsonMap('struct', PersonTwo::class)),
             headers: [
                 new Header('Content-Type', 'text/plain'),
             ],
         );
     }
 
-    /**
-     * @param PersonTwo[] $people
-     */
     #[Route\Post(path: '/mapSixB')]
-    public function mapSixB(
-        #[JsonMapToArrayOf(name: 'struct', className: PersonTwo::class)] array $people,
-    ): ResponseInterface {
+    public function mapSixB(RequestInterface $request): ResponseInterface
+    {
         return Response::capture(
-            callback: fn () => \var_dump($people),
+            callback: fn () => \var_dump($request->post->jsonMapList('struct', PersonTwo::class)),
             headers: [
                 new Header('Content-Type', 'text/plain'),
             ],

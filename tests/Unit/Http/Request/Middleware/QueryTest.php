@@ -19,6 +19,7 @@ use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Http\Request\Middleware\RecordingMiddleware;
+use Support\Serializer\SerializerManagerFactory;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Middleware\Query;
@@ -33,6 +34,7 @@ class QueryTest extends TestCase
         ?StubHeaderContext $headers = null,
     ): Request {
         return new Request(
+            serializerManager: SerializerManagerFactory::create(),
             headers: $headers ?? new StubHeaderContext(),
             cookies: new StubInputContext(),
             get: new StubInputContext(),

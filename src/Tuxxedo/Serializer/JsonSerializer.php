@@ -44,27 +44,51 @@ class JsonSerializer extends AbstractSerializer implements JsonSerializerInterfa
     public function decode(
         string $json,
         string $className,
+        ?string $key = null,
+        ?array $only = null,
     ): object {
         $data = $this->decodeJson($json);
 
-        if (!\is_array($data) || ($data !== [] && \array_is_list($data))) {
-            throw SerializerException::fromExpectedObject(self::FORMAT);
+        if (!\is_array($data)) {
+            throw SerializerInputException::fromExpectedObject(self::FORMAT);
         }
 
-        return $this->hydrateObject($data, $className);
+        $data = self::select(
+            data: $data,
+            key: $key,
+            format: self::FORMAT,
+        );
+
+        if ($data !== [] && \array_is_list($data)) {
+            throw SerializerInputException::fromExpectedObject(self::FORMAT);
+        }
+
+        return $this->hydrateObject(self::only($data, $only), $className);
     }
 
     public function decodeList(
         string $json,
         string $className,
+        ?string $key = null,
+        ?array $only = null,
     ): array {
         $data = $this->decodeJson($json);
 
-        if (!\is_array($data) || !\array_is_list($data)) {
-            throw SerializerException::fromExpectedList(self::FORMAT);
+        if (!\is_array($data)) {
+            throw SerializerInputException::fromExpectedList(self::FORMAT);
         }
 
-        return $this->hydrateList($data, $className);
+        $data = self::select(
+            data: $data,
+            key: $key,
+            format: self::FORMAT,
+        );
+
+        if (!\array_is_list($data)) {
+            throw SerializerInputException::fromExpectedList(self::FORMAT);
+        }
+
+        return $this->hydrateList(self::onlyEach($data, $only), $className);
     }
 
     public function encode(
@@ -104,7 +128,7 @@ class JsonSerializer extends AbstractSerializer implements JsonSerializerInterfa
                 flags: $this->flags | \JSON_THROW_ON_ERROR,
             );
         } catch (\JsonException $exception) {
-            throw SerializerException::fromMalformedInput(
+            throw SerializerInputException::fromMalformedInput(
                 format: self::FORMAT,
                 previous: $exception,
             );

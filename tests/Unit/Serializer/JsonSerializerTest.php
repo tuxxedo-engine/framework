@@ -25,6 +25,7 @@ use Tuxxedo\Container\Container;
 use Tuxxedo\Serializer\ArraySerializer;
 use Tuxxedo\Serializer\JsonSerializer;
 use Tuxxedo\Serializer\SerializerException;
+use Tuxxedo\Serializer\SerializerInputException;
 use Tuxxedo\Validator\ValidationException;
 use Tuxxedo\Validator\Validator;
 
@@ -130,6 +131,53 @@ class JsonSerializerTest extends TestCase
         yield 'null' => [
             'null',
         ];
+    }
+
+    public function testDecodeWithKeyAndOnly(): void
+    {
+        $serializer = $this->serializer();
+
+        $address = $serializer->decode(
+            json: '{"data":{"street":"A","city":"B","zip":"1"}}',
+            className: Address::class,
+            key: 'data',
+            only: [
+                'street',
+                'city',
+            ],
+        );
+
+        self::assertEquals(new Address('A', 'B'), $address);
+
+        $addresses = $serializer->decodeList(
+            json: '{"data":[{"street":"A","city":"B"}]}',
+            className: Address::class,
+            key: 'data',
+        );
+
+        self::assertCount(1, $addresses);
+    }
+
+    public function testDecodeWithKeyRequiresAnObjectThere(): void
+    {
+        try {
+            $this->serializer()->decode(
+                json: '{"data":[{"street":"A"}]}',
+                className: Address::class,
+                key: 'data',
+            );
+
+            self::fail('Expected SerializerInputException was not thrown');
+        } catch (SerializerInputException $exception) {
+            self::assertStringContainsString('JSON root must be an object', $exception->getMessage());
+        }
+    }
+
+    public function testDecodeListRequiresAnArrayRoot(): void
+    {
+        $this->expectException(SerializerInputException::class);
+
+        $this->serializer()->decodeList('"text"', Address::class);
     }
 
     public function testDecodeListAndEncodeList(): void

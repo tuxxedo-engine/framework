@@ -19,6 +19,7 @@ use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Http\Request\Middleware\RecordingMiddleware;
+use Support\Serializer\SerializerManagerFactory;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Request\Middleware\CacheControl;
@@ -31,6 +32,7 @@ class CacheControlTest extends TestCase
     private function makeRequest(): Request
     {
         return new Request(
+            serializerManager: SerializerManagerFactory::create(),
             headers: new StubHeaderContext(),
             cookies: new StubInputContext(),
             get: new StubInputContext(),

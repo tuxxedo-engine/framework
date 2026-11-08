@@ -16,9 +16,12 @@ namespace Unit\Http\Request\Context;
 use Fixture\Http\Request\Context\BodyContextFixture;
 use Fixture\Http\Request\Context\InputContextEnum;
 use PHPUnit\Framework\TestCase;
+use Support\Serializer\SerializerManagerFactory;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\InputContext;
 use Tuxxedo\Http\Request\Context\EnvironmentInputContext;
+use Tuxxedo\Serializer\SerializerInputException;
+use Tuxxedo\Validator\ValidationException;
 
 class EnvironmentInputContextTest extends TestCase
 {
@@ -40,6 +43,7 @@ class EnvironmentInputContextTest extends TestCase
         InputContext $inputContext = InputContext::GET,
     ): EnvironmentInputContext {
         return new EnvironmentInputContext(
+            serializerManager: SerializerManagerFactory::create(),
             inputContext: $inputContext,
         );
     }
@@ -534,152 +538,251 @@ class EnvironmentInputContextTest extends TestCase
         );
     }
 
-    public function testMapToMapsArrayValueToObject(): void
+    public function testMapMapsTheWholeInput(): void
     {
-        $_POST['user'] = [
+        $_POST = [
             'name' => 'John',
-            'age' => 30,
+            'age' => '30',
         ];
 
-        $result = $this->makeContext(
-            inputContext: InputContext::POST,
-        )->mapTo('user', BodyContextFixture::class);
+        $result = $this->makeContext(InputContext::POST)->map(BodyContextFixture::class);
 
-        self::assertInstanceOf(BodyContextFixture::class, $result);
         self::assertSame('John', $result->name);
         self::assertSame(30, $result->age);
     }
 
-    public function testMapToThrowsForCookieContext(): void
+    public function testMapWithKeyMapsASubArray(): void
     {
-        $_COOKIE['user'] = [
+        $_POST['user'] = [
             'name' => 'John',
+            'age' => '30',
         ];
 
-        $this->expectException(HttpException::class);
+        $result = $this->makeContext(InputContext::POST)->map(
+            className: BodyContextFixture::class,
+            key: 'user',
+        );
 
-        $this->makeContext(
-            inputContext: InputContext::COOKIE,
-        )->mapTo('user', BodyContextFixture::class);
+        self::assertSame('John', $result->name);
+        self::assertSame(30, $result->age);
     }
 
-    public function testMapToArrayOfMapsArrayOfArraysToObjects(): void
+    public function testMapWithOnlyPicksKeys(): void
+    {
+        $_GET = [
+            'name' => 'John',
+            'age' => '30',
+        ];
+
+        $result = $this->makeContext()->map(
+            className: BodyContextFixture::class,
+            only: [
+                'name',
+            ],
+        );
+
+        self::assertSame('John', $result->name);
+        self::assertSame(0, $result->age);
+    }
+
+    public function testMapWithKeyAndOnlyPicksInsideTheSubArray(): void
+    {
+        $_POST['user'] = [
+            'name' => 'John',
+            'age' => '30',
+        ];
+
+        $result = $this->makeContext(InputContext::POST)->map(
+            className: BodyContextFixture::class,
+            key: 'user',
+            only: [
+                'age',
+            ],
+        );
+
+        self::assertSame('', $result->name);
+        self::assertSame(30, $result->age);
+    }
+
+    public function testMapWithMissingKeyMapsAnEmptyArray(): void
+    {
+        $result = $this->makeContext(InputContext::POST)->map(
+            className: BodyContextFixture::class,
+            key: 'user',
+        );
+
+        self::assertSame('', $result->name);
+    }
+
+    public function testMapWithNonArrayKeyThrows(): void
+    {
+        $_POST['user'] = 'John';
+
+        $this->expectException(SerializerInputException::class);
+
+        $this->makeContext(InputContext::POST)->map(
+            className: BodyContextFixture::class,
+            key: 'user',
+        );
+    }
+
+    public function testMapRejectsUnknownKeysWhenNotSkipped(): void
+    {
+        $_GET = [
+            'name' => 'John',
+            'admin' => '1',
+        ];
+
+        try {
+            $this->makeContext()->map(
+                className: BodyContextFixture::class,
+                skipUnknownKeys: false,
+            );
+
+            self::fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $exception) {
+            self::assertSame('admin', $exception->violations[0]->propertyPath);
+        }
+    }
+
+    public function testMapThrowsForCookieContext(): void
+    {
+        $this->expectException(HttpException::class);
+
+        $this->makeContext(InputContext::COOKIE)->map(BodyContextFixture::class);
+    }
+
+    public function testMapListMapsAListUnderAKey(): void
     {
         $_POST['users'] = [
             [
                 'name' => 'John',
-                'age' => 30,
+                'age' => '30',
             ],
             [
                 'name' => 'Jane',
-                'age' => 25,
+                'age' => '25',
             ],
         ];
 
-        $result = $this->makeContext(
-            inputContext: InputContext::POST,
-        )->mapToArrayOf('users', BodyContextFixture::class);
+        $result = $this->makeContext(InputContext::POST)->mapList(
+            className: BodyContextFixture::class,
+            key: 'users',
+            only: [
+                'name',
+            ],
+        );
 
         self::assertCount(2, $result);
-        self::assertInstanceOf(BodyContextFixture::class, $result[0]);
-        self::assertSame('John', $result[0]->name);
         self::assertSame('Jane', $result[1]->name);
+        self::assertSame(0, $result[1]->age);
     }
 
-    public function testMapToArrayOfThrowsForCookieContext(): void
+    public function testMapListRequiresAList(): void
     {
-        $_COOKIE['users'] = [
-            [
-                'name' => 'John',
-            ],
+        $_POST['users'] = [
+            'name' => 'John',
         ];
 
-        $this->expectException(HttpException::class);
+        $this->expectException(SerializerInputException::class);
 
-        $this->makeContext(
-            inputContext: InputContext::COOKIE,
-        )->mapToArrayOf('users', BodyContextFixture::class);
+        $this->makeContext(InputContext::POST)->mapList(
+            className: BodyContextFixture::class,
+            key: 'users',
+        );
     }
 
-    public function testJsonMapToMapsJsonObjectToObject(): void
+    public function testMapListThrowsForCookieContext(): void
     {
-        $_POST['payload'] = '{"name":"John","age":30}';
+        $this->expectException(HttpException::class);
 
-        $result = $this->makeContext(
-            inputContext: InputContext::POST,
-        )->jsonMapTo('payload', BodyContextFixture::class);
+        $this->makeContext(InputContext::COOKIE)->mapList(BodyContextFixture::class);
+    }
 
-        self::assertInstanceOf(BodyContextFixture::class, $result);
+    public function testJsonMapMapsAJsonField(): void
+    {
+        $_POST['payload'] = '{"user":{"name":"John","age":30}}';
+
+        $result = $this->makeContext(InputContext::POST)->jsonMap(
+            name: 'payload',
+            className: BodyContextFixture::class,
+            key: 'user',
+        );
+
         self::assertSame('John', $result->name);
         self::assertSame(30, $result->age);
     }
 
-    public function testJsonMapToThrowsForCookieContext(): void
+    public function testJsonMapThrowsForCookieContext(): void
     {
         $_COOKIE['payload'] = '{"name":"John"}';
 
         $this->expectException(HttpException::class);
 
-        $this->makeContext(
-            inputContext: InputContext::COOKIE,
-        )->jsonMapTo('payload', BodyContextFixture::class);
+        $this->makeContext(InputContext::COOKIE)->jsonMap(
+            name: 'payload',
+            className: BodyContextFixture::class,
+        );
     }
 
-    public function testJsonMapToThrowsWhenJsonDecodesToScalar(): void
+    public function testJsonMapThrowsWhenJsonDecodesToScalar(): void
     {
         $_POST['payload'] = '"just a string"';
 
-        $this->expectException(HttpException::class);
+        $this->expectException(SerializerInputException::class);
 
-        $this->makeContext(
-            inputContext: InputContext::POST,
-        )->jsonMapTo('payload', BodyContextFixture::class);
+        $this->makeContext(InputContext::POST)->jsonMap(
+            name: 'payload',
+            className: BodyContextFixture::class,
+        );
     }
 
-    public function testJsonMapToThrowsForInvalidJson(): void
+    public function testJsonMapThrowsForInvalidJson(): void
     {
         $_POST['payload'] = '{not json';
 
-        $this->expectException(\JsonException::class);
+        $this->expectException(SerializerInputException::class);
 
-        $this->makeContext(
-            inputContext: InputContext::POST,
-        )->jsonMapTo('payload', BodyContextFixture::class);
+        $this->makeContext(InputContext::POST)->jsonMap(
+            name: 'payload',
+            className: BodyContextFixture::class,
+        );
     }
 
-    public function testJsonMapToArrayOfMapsJsonArrayToObjects(): void
+    public function testJsonMapListMapsAJsonArray(): void
     {
         $_POST['payload'] = '[{"name":"John","age":30},{"name":"Jane","age":25}]';
 
-        $result = $this->makeContext(
-            inputContext: InputContext::POST,
-        )->jsonMapToArrayOf('payload', BodyContextFixture::class);
+        $result = $this->makeContext(InputContext::POST)->jsonMapList(
+            name: 'payload',
+            className: BodyContextFixture::class,
+        );
 
         self::assertCount(2, $result);
-        self::assertInstanceOf(BodyContextFixture::class, $result[0]);
-        self::assertSame('John', $result[0]->name);
         self::assertSame('Jane', $result[1]->name);
     }
 
-    public function testJsonMapToArrayOfThrowsForCookieContext(): void
+    public function testJsonMapListThrowsForCookieContext(): void
     {
         $_COOKIE['payload'] = '[]';
 
         $this->expectException(HttpException::class);
 
-        $this->makeContext(
-            inputContext: InputContext::COOKIE,
-        )->jsonMapToArrayOf('payload', BodyContextFixture::class);
+        $this->makeContext(InputContext::COOKIE)->jsonMapList(
+            name: 'payload',
+            className: BodyContextFixture::class,
+        );
     }
 
-    public function testJsonMapToArrayOfThrowsWhenJsonDecodesToScalar(): void
+    public function testJsonMapListThrowsWhenJsonDecodesToScalar(): void
     {
         $_POST['payload'] = '"just a string"';
 
-        $this->expectException(HttpException::class);
+        $this->expectException(SerializerInputException::class);
 
-        $this->makeContext(
-            inputContext: InputContext::POST,
-        )->jsonMapToArrayOf('payload', BodyContextFixture::class);
+        $this->makeContext(InputContext::POST)->jsonMapList(
+            name: 'payload',
+            className: BodyContextFixture::class,
+        );
     }
 }

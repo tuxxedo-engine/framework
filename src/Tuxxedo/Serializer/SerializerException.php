@@ -31,20 +31,6 @@ class SerializerException extends Exception
         );
     }
 
-    public static function fromMalformedInput(
-        string $format,
-        \Throwable $previous,
-    ): self {
-        return new self(
-            message: \sprintf(
-                'Malformed %s input: %s',
-                $format,
-                $previous->getMessage(),
-            ),
-            previous: $previous,
-        );
-    }
-
     public static function fromUnencodableValue(
         string $format,
         \Throwable $previous,
@@ -56,28 +42,6 @@ class SerializerException extends Exception
                 $previous->getMessage(),
             ),
             previous: $previous,
-        );
-    }
-
-    public static function fromExpectedObject(
-        string $format,
-    ): self {
-        return new self(
-            message: \sprintf(
-                'The %s root must be an object',
-                $format,
-            ),
-        );
-    }
-
-    public static function fromExpectedList(
-        string $format,
-    ): self {
-        return new self(
-            message: \sprintf(
-                'The %s root must be a list',
-                $format,
-            ),
         );
     }
 
@@ -164,21 +128,6 @@ class SerializerException extends Exception
     {
         return new self(
             message: 'Could not open a memory buffer for CSV',
-        );
-    }
-
-    public static function fromCsvColumnCount(
-        int $row,
-        int $expected,
-        int $actual,
-    ): self {
-        return new self(
-            message: \sprintf(
-                'Malformed CSV input: row %d has %d fields, the header has %d',
-                $row,
-                $actual,
-                $expected,
-            ),
         );
     }
 

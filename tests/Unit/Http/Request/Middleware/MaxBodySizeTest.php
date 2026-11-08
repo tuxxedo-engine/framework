@@ -19,6 +19,7 @@ use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Http\Request\Middleware\RecordingMiddleware;
+use Support\Serializer\SerializerManagerFactory;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Request\Context\BodyContextInterface;
 use Tuxxedo\Http\Request\Context\EnvironmentBodyContext;
@@ -50,6 +51,7 @@ class MaxBodySizeTest extends TestCase
         ?BodyContextInterface $body = null,
     ): Request {
         return new Request(
+            serializerManager: SerializerManagerFactory::create(),
             headers: new StubHeaderContext(
                 headers: $headers,
             ),
@@ -67,6 +69,7 @@ class MaxBodySizeTest extends TestCase
         \file_put_contents($this->tempFile, $content);
 
         return new EnvironmentBodyContext(
+            serializerManager: SerializerManagerFactory::create(),
             streamInputSource: $this->tempFile,
         );
     }

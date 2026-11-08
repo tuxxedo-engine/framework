@@ -15,22 +15,40 @@ namespace Tuxxedo\Serializer;
 
 class ArraySerializer extends AbstractSerializer implements ArraySerializerInterface
 {
+    private const string FORMAT = 'array';
+
     public function fromArray(
         array $data,
         string $className,
+        ?string $key = null,
+        ?array $only = null,
     ): object {
-        return $this->hydrateObject($data, $className);
+        $data = self::select(
+            data: $data,
+            key: $key,
+            format: self::FORMAT,
+        );
+
+        return $this->hydrateObject(self::only($data, $only), $className);
     }
 
     public function fromArrayList(
         array $data,
         string $className,
+        ?string $key = null,
+        ?array $only = null,
     ): array {
+        $data = self::select(
+            data: $data,
+            key: $key,
+            format: self::FORMAT,
+        );
+
         if (!\array_is_list($data)) {
-            throw SerializerException::fromExpectedList('array');
+            throw SerializerInputException::fromExpectedList(self::FORMAT);
         }
 
-        return $this->hydrateList($data, $className);
+        return $this->hydrateList(self::onlyEach($data, $only), $className);
     }
 
     public function toArray(

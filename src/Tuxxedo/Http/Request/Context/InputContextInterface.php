@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Request\Context;
 
 use Tuxxedo\Http\HttpException;
-use Tuxxedo\Mapper\MapperException;
+use Tuxxedo\Serializer\SerializerException;
+use Tuxxedo\Validator\ValidationException;
+use Tuxxedo\Validator\ValidatorException;
 
 interface InputContextInterface
 {
@@ -128,58 +130,80 @@ interface InputContextInterface
     /**
      * @template TClassName of object
      *
-     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
+     * @param class-string<TClassName> $className
+     * @param list<string>|null $only
      * @return TClassName
      *
-     * @throws MapperException
+     * @throws HttpException
+     * @throws SerializerException
+     * @throws ValidationException
+     * @throws ValidatorException
      */
-    public function mapTo(
-        string $name,
-        string|object $className,
+    public function map(
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
     ): object;
 
     /**
      * @template TClassName of object
      *
-     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
-     * @return TClassName[]
+     * @param class-string<TClassName> $className
+     * @param list<string>|null $only
+     * @return list<TClassName>
      *
-     * @throws MapperException
+     * @throws HttpException
+     * @throws SerializerException
+     * @throws ValidationException
+     * @throws ValidatorException
      */
-    public function mapToArrayOf(
-        string $name,
-        string|object $className,
+    public function mapList(
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
     ): array;
 
     /**
      * @template TClassName of object
      *
-     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
+     * @param class-string<TClassName> $className
+     * @param list<string>|null $only
      * @return TClassName
      *
      * @throws HttpException
-     * @throws MapperException
-     * @throws \JsonException
+     * @throws SerializerException
+     * @throws ValidationException
+     * @throws ValidatorException
      */
-    public function jsonMapTo(
+    public function jsonMap(
         string $name,
-        string|object $className,
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
         int $flags = 0,
     ): object;
 
     /**
      * @template TClassName of object
      *
-     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
-     * @return TClassName[]
+     * @param class-string<TClassName> $className
+     * @param list<string>|null $only
+     * @return list<TClassName>
      *
      * @throws HttpException
-     * @throws MapperException
-     * @throws \JsonException
+     * @throws SerializerException
+     * @throws ValidationException
+     * @throws ValidatorException
      */
-    public function jsonMapToArrayOf(
+    public function jsonMapList(
         string $name,
-        string|object $className,
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
         int $flags = 0,
     ): array;
 }

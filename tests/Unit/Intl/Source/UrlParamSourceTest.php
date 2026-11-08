@@ -17,6 +17,7 @@ use PHPUnit\Framework\TestCase;
 use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
+use Support\Serializer\SerializerManagerFactory;
 use Tuxxedo\Http\Request\Request;
 use Tuxxedo\Intl\Source\UrlParamSource;
 
@@ -29,6 +30,7 @@ class UrlParamSourceTest extends TestCase
         array $query,
     ): Request {
         return new Request(
+            serializerManager: SerializerManagerFactory::create(),
             headers: new StubHeaderContext(),
             cookies: new StubInputContext(),
             get: new StubInputContext(

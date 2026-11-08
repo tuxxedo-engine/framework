@@ -25,6 +25,7 @@ use Tuxxedo\Http\Request\Context\HeaderContextInterface;
 use Tuxxedo\Http\Request\Context\InputContextInterface;
 use Tuxxedo\Http\Request\Context\UploadedFilesContextInterface;
 use Tuxxedo\Router\DispatchableRouteInterface;
+use Tuxxedo\Serializer\SerializerManagerInterface;
 use Tuxxedo\Temporal\ClockInterface;
 use Tuxxedo\Temporal\InstantInterface;
 use Tuxxedo\Temporal\SystemClock;
@@ -45,20 +46,20 @@ class Request implements RequestInterface
 
     public readonly InstantInterface $receivedAt;
 
+    public readonly InputContextInterface $cookies;
+    public readonly InputContextInterface $get;
+    public readonly InputContextInterface $post;
+    public readonly BodyContextInterface $body;
+
     public function __construct(
+        SerializerManagerInterface $serializerManager,
         ?DispatchableRouteInterface $route = null,
         public readonly HeaderContextInterface $headers = new EnvironmentHeaderContext(),
-        public readonly InputContextInterface $cookies = new EnvironmentInputContext(
-            inputContext: InputContext::COOKIE,
-        ),
-        public readonly InputContextInterface $get = new EnvironmentInputContext(
-            inputContext: InputContext::GET,
-        ),
-        public readonly InputContextInterface $post = new EnvironmentInputContext(
-            inputContext: InputContext::POST,
-        ),
+        ?InputContextInterface $cookies = null,
+        ?InputContextInterface $get = null,
+        ?InputContextInterface $post = null,
         public readonly UploadedFilesContextInterface $files = new EnvironmentUploadedFilesContext(),
-        public readonly BodyContextInterface $body = new EnvironmentBodyContext(),
+        ?BodyContextInterface $body = null,
         Method|string|null $method = null,
         ?string $path = null,
         ?string $uri = null,
@@ -71,6 +72,23 @@ class Request implements RequestInterface
         ?InstantInterface $receivedAt = null,
         ?ClockInterface $clock = null,
     ) {
+        $this->cookies = $cookies ?? new EnvironmentInputContext(
+            inputContext: InputContext::COOKIE,
+            serializerManager: $serializerManager,
+        );
+
+        $this->get = $get ?? new EnvironmentInputContext(
+            inputContext: InputContext::GET,
+            serializerManager: $serializerManager,
+        );
+
+        $this->post = $post ?? new EnvironmentInputContext(
+            inputContext: InputContext::POST,
+            serializerManager: $serializerManager,
+        );
+
+        $this->body = $body ?? new EnvironmentBodyContext($serializerManager);
+
         if ($route !== null) {
             $this->route = $route;
         }

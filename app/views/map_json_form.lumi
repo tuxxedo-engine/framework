@@ -5,7 +5,7 @@
     <p>
         <strong>Age:</strong> <input type="text" name="age">
     </p>
-    <input type="submit" value="mapTo">
+    <input type="submit" value="jsonMap">
 </form>
 
 <form action="/mapSixB" method="post" data-format="array-of">
@@ -15,7 +15,7 @@
     <p>
         <strong>Age:</strong> <input type="text" name="age">
     </p>
-    <input type="submit" value="mapToArrayOf">
+    <input type="submit" value="jsonMapList">
 </form>
 
 <script type="text/javascript">
@@ -37,7 +37,9 @@
                             let struct = {};
                             (new FormData(form)).forEach(
                                 function (value, key) {
-                                    struct[key] = value;
+                                    struct[key] = key === 'age'
+                                        ? Number(value)
+                                        : value;
                                 },
                             );
 

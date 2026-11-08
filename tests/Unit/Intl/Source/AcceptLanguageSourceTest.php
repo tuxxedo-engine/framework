@@ -17,6 +17,7 @@ use PHPUnit\Framework\TestCase;
 use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
+use Support\Serializer\SerializerManagerFactory;
 use Tuxxedo\Http\Request\Request;
 use Tuxxedo\Intl\Config\IntlConfig;
 use Tuxxedo\Intl\Locale;
@@ -34,6 +35,7 @@ class AcceptLanguageSourceTest extends TestCase
         $headers->preferredLanguages = $preferredLanguages;
 
         return new Request(
+            serializerManager: SerializerManagerFactory::create(),
             headers: $headers,
             cookies: new StubInputContext(),
             get: new StubInputContext(),

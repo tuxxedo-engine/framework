@@ -20,6 +20,7 @@ use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Http\Router\StubDispatchableRoute;
+use Support\Serializer\SerializerManagerFactory;
 use Tuxxedo\Http\HttpVersion;
 use Tuxxedo\Http\InputContext;
 use Tuxxedo\Http\Method;
@@ -75,6 +76,7 @@ class RequestTest extends TestCase
         ?Method $method = null,
     ): Request {
         return new Request(
+            serializerManager: SerializerManagerFactory::create(),
             route: $route,
             headers: $headers ?? new StubHeaderContext(),
             cookies: $cookies ?? new StubInputContext(),
@@ -713,6 +715,7 @@ class RequestTest extends TestCase
     public function testConstructorAcceptsMethodAsString(): void
     {
         $request = new Request(
+            serializerManager: SerializerManagerFactory::create(),
             headers: new StubHeaderContext(),
             cookies: new StubInputContext(),
             get: new StubInputContext(),
@@ -732,6 +735,7 @@ class RequestTest extends TestCase
         ];
 
         new Request(
+            serializerManager: SerializerManagerFactory::create(),
             headers: new StubHeaderContext(),
             cookies: new StubInputContext(),
             get: new StubInputContext(),
@@ -758,6 +762,7 @@ class RequestTest extends TestCase
         unset($_SERVER['CONTENT_TYPE'], $_SERVER['HTTP_CONTENT_TYPE']);
 
         new Request(
+            serializerManager: SerializerManagerFactory::create(),
             headers: new StubHeaderContext(),
             cookies: new StubInputContext(),
             get: new StubInputContext(),
@@ -784,6 +789,7 @@ class RequestTest extends TestCase
         $_SERVER['CONTENT_TYPE'] = 'application/json';
 
         new Request(
+            serializerManager: SerializerManagerFactory::create(),
             headers: new StubHeaderContext(),
             cookies: new StubInputContext(),
             get: new StubInputContext(),
@@ -810,6 +816,7 @@ class RequestTest extends TestCase
         $_SERVER['CONTENT_TYPE'] = 'application/x-www-form-urlencoded';
 
         new Request(
+            serializerManager: SerializerManagerFactory::create(),
             headers: new StubHeaderContext(),
             cookies: new StubInputContext(),
             get: new StubInputContext(),
@@ -838,6 +845,7 @@ class RequestTest extends TestCase
         $_SERVER['HTTP_CONTENT_TYPE'] = 'application/json';
 
         new Request(
+            serializerManager: SerializerManagerFactory::create(),
             headers: new StubHeaderContext(),
             cookies: new StubInputContext(),
             get: new StubInputContext(),
@@ -862,6 +870,7 @@ class RequestTest extends TestCase
 
         try {
             $request = new Request(
+                serializerManager: SerializerManagerFactory::create(),
                 headers: new StubHeaderContext(),
                 cookies: new StubInputContext(),
                 get: new StubInputContext(),
@@ -884,6 +893,7 @@ class RequestTest extends TestCase
 
         try {
             $request = new Request(
+                serializerManager: SerializerManagerFactory::create(),
                 headers: new StubHeaderContext(),
                 cookies: new StubInputContext(),
                 get: new StubInputContext(),
@@ -905,6 +915,7 @@ class RequestTest extends TestCase
 
         try {
             $request = new Request(
+                serializerManager: SerializerManagerFactory::create(),
                 headers: new StubHeaderContext(),
                 cookies: new StubInputContext(),
                 get: new StubInputContext(),
@@ -926,6 +937,7 @@ class RequestTest extends TestCase
 
         try {
             $request = new Request(
+                serializerManager: SerializerManagerFactory::create(),
                 headers: new StubHeaderContext(),
                 cookies: new StubInputContext(),
                 get: new StubInputContext(),

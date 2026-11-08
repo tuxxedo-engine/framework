@@ -20,6 +20,7 @@ use Support\Http\Request\Context\StubInputContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Model\StubModelsManager;
 use Support\Reflection\StubParameterReflector;
+use Support\Serializer\SerializerManagerFactory;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\HttpException;
@@ -65,6 +66,7 @@ class ModelTest extends TestCase
         array $routeArguments = [],
     ): RequestInterface {
         $request = new Request(
+            serializerManager: SerializerManagerFactory::create(),
             headers: new StubHeaderContext(),
             cookies: new StubInputContext(),
             get: new StubInputContext(),

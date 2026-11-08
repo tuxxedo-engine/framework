@@ -20,6 +20,7 @@ use Support\Http\Request\Context\StubInputContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Http\Request\Middleware\RecordingMiddleware;
 use Support\Security\Jwt\JwtKeyFixtures;
+use Support\Serializer\SerializerManagerFactory;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Middleware\Jwt;
@@ -44,6 +45,7 @@ class JwtTest extends TestCase
         array $headers = [],
     ): Request {
         return new Request(
+            serializerManager: SerializerManagerFactory::create(),
             headers: new StubHeaderContext(
                 headers: $headers,
             ),

@@ -15,8 +15,11 @@ namespace Unit\Http\Request\Context;
 
 use Fixture\Http\Request\Context\BodyContextFixture;
 use PHPUnit\Framework\TestCase;
+use Support\Serializer\SerializerManagerFactory;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Request\Context\EnvironmentBodyContext;
+use Tuxxedo\Serializer\SerializerInputException;
+use Tuxxedo\Validator\ValidationException;
 
 class EnvironmentBodyContextTest extends TestCase
 {
@@ -40,6 +43,7 @@ class EnvironmentBodyContextTest extends TestCase
         \file_put_contents($this->tempFile, $content);
 
         return new EnvironmentBodyContext(
+            serializerManager: SerializerManagerFactory::create(),
             streamInputSource: $this->tempFile,
         );
     }
@@ -55,7 +59,10 @@ class EnvironmentBodyContextTest extends TestCase
     {
         $this->expectException(HttpException::class);
 
-        (new EnvironmentBodyContext(streamInputSource: '/nonexistent/path'))->getStream();
+        new EnvironmentBodyContext(
+            serializerManager: SerializerManagerFactory::create(),
+            streamInputSource: '/nonexistent/path',
+        )->getStream();
     }
 
     public function testGetRawReadsStreamContent(): void
@@ -66,6 +73,7 @@ class EnvironmentBodyContextTest extends TestCase
     public function testSizeReturnsExplicitContentLengthWhenProvided(): void
     {
         $context = new EnvironmentBodyContext(
+            serializerManager: SerializerManagerFactory::create(),
             contentLength: 42,
         );
 
@@ -78,7 +86,7 @@ class EnvironmentBodyContextTest extends TestCase
         $_SERVER['CONTENT_LENGTH'] = '128';
 
         try {
-            self::assertSame(128, (new EnvironmentBodyContext())->size());
+            self::assertSame(128, (new EnvironmentBodyContext(SerializerManagerFactory::create()))->size());
         } finally {
             if ($previous === null) {
                 unset($_SERVER['CONTENT_LENGTH']);
@@ -94,7 +102,7 @@ class EnvironmentBodyContextTest extends TestCase
         unset($_SERVER['CONTENT_LENGTH']);
 
         try {
-            self::assertNull((new EnvironmentBodyContext())->size());
+            self::assertNull((new EnvironmentBodyContext(SerializerManagerFactory::create()))->size());
         } finally {
             if ($previous !== null) {
                 $_SERVER['CONTENT_LENGTH'] = $previous;
@@ -108,7 +116,7 @@ class EnvironmentBodyContextTest extends TestCase
         $_SERVER['CONTENT_LENGTH'] = '-1';
 
         try {
-            self::assertNull((new EnvironmentBodyContext())->size());
+            self::assertNull((new EnvironmentBodyContext(SerializerManagerFactory::create()))->size());
         } finally {
             if ($previous === null) {
                 unset($_SERVER['CONTENT_LENGTH']);
@@ -124,7 +132,7 @@ class EnvironmentBodyContextTest extends TestCase
         $_SERVER['CONTENT_LENGTH'] = 'not-a-number';
 
         try {
-            self::assertNull((new EnvironmentBodyContext())->size());
+            self::assertNull((new EnvironmentBodyContext(SerializerManagerFactory::create()))->size());
         } finally {
             if ($previous === null) {
                 unset($_SERVER['CONTENT_LENGTH']);
@@ -156,62 +164,71 @@ class EnvironmentBodyContextTest extends TestCase
         );
     }
 
-    public function testJsonMapToMapsObjectJson(): void
+    public function testJsonMapMapsObjectJson(): void
     {
-        $result = $this->makeContext('{"name":"John","age":30}')->jsonMapTo(
-            className: BodyContextFixture::class,
-        );
+        $result = $this->makeContext('{"name":"John","age":30}')->jsonMap(BodyContextFixture::class);
 
-        self::assertInstanceOf(BodyContextFixture::class, $result);
         self::assertSame('John', $result->name);
         self::assertSame(30, $result->age);
     }
 
-    public function testJsonMapToMapsFromJsonArray(): void
+    public function testJsonMapWithKeyAndOnly(): void
     {
-        $result = $this->makeContext('[]')->jsonMapTo(
+        $result = $this->makeContext('{"data":{"name":"John","age":30}}')->jsonMap(
             className: BodyContextFixture::class,
+            key: 'data',
+            only: [
+                'name',
+            ],
         );
 
-        self::assertInstanceOf(BodyContextFixture::class, $result);
+        self::assertSame('John', $result->name);
+        self::assertSame(0, $result->age);
     }
 
-    public function testJsonMapToThrowsForScalarJson(): void
+    public function testJsonMapMapsAnEmptyJsonArray(): void
     {
-        $this->expectException(HttpException::class);
-
-        $this->makeContext('"just a string"')->jsonMapTo(
-            className: BodyContextFixture::class,
+        self::assertInstanceOf(
+            BodyContextFixture::class,
+            $this->makeContext('[]')->jsonMap(BodyContextFixture::class),
         );
     }
 
-    public function testJsonMapToArrayOfMapsArrayJson(): void
+    public function testJsonMapThrowsForScalarJson(): void
     {
-        $result = $this->makeContext(
-            '[{"name":"John","age":30},{"name":"Jane","age":25}]',
-        )->jsonMapToArrayOf(
-            className: BodyContextFixture::class,
-        );
+        $this->expectException(SerializerInputException::class);
+
+        $this->makeContext('"just a string"')->jsonMap(BodyContextFixture::class);
+    }
+
+    public function testJsonMapIsStrict(): void
+    {
+        $this->expectException(ValidationException::class);
+
+        $this->makeContext('{"name":"John","age":"30"}')->jsonMap(BodyContextFixture::class);
+    }
+
+    public function testJsonMapListMapsArrayJson(): void
+    {
+        $result = $this->makeContext('[{"name":"John","age":30},{"name":"Jane","age":25}]')->jsonMapList(BodyContextFixture::class);
 
         self::assertCount(2, $result);
-        self::assertInstanceOf(BodyContextFixture::class, $result[0]);
         self::assertSame('John', $result[0]->name);
         self::assertSame('Jane', $result[1]->name);
     }
 
-    public function testJsonMapToArrayOfThrowsForNonArray(): void
+    public function testJsonMapListThrowsForNonList(): void
     {
-        $this->expectException(HttpException::class);
+        $this->expectException(SerializerInputException::class);
 
-        $this->makeContext('{"name":"John"}')->jsonMapToArrayOf(
-            className: BodyContextFixture::class,
-        );
+        $this->makeContext('{"name":"John"}')->jsonMapList(BodyContextFixture::class);
     }
 
     private function makeContextWithContentType(
         string $contentType,
     ): EnvironmentBodyContext {
         return new EnvironmentBodyContext(
+            serializerManager: SerializerManagerFactory::create(),
             contentType: $contentType,
         );
     }
@@ -252,14 +269,19 @@ class EnvironmentBodyContextTest extends TestCase
 
     public function testIsJsonReturnsFalseForMissingContentType(): void
     {
-        self::assertFalse((new EnvironmentBodyContext(contentType: ''))->isJson());
+        self::assertFalse(
+            new EnvironmentBodyContext(
+                serializerManager: SerializerManagerFactory::create(),
+                contentType: '',
+            )->isJson(),
+        );
     }
 
     public function testIsJsonReturnsFalseWhenServerContentTypeMissing(): void
     {
         unset($_SERVER['CONTENT_TYPE']);
 
-        self::assertFalse((new EnvironmentBodyContext())->isJson());
+        self::assertFalse((new EnvironmentBodyContext(SerializerManagerFactory::create()))->isJson());
     }
 
     public function testIsJsonReadsFromServerContentTypeWhenNoConstructorOverride(): void
@@ -267,7 +289,7 @@ class EnvironmentBodyContextTest extends TestCase
         $_SERVER['CONTENT_TYPE'] = 'application/json';
 
         try {
-            self::assertTrue((new EnvironmentBodyContext())->isJson());
+            self::assertTrue((new EnvironmentBodyContext(SerializerManagerFactory::create()))->isJson());
         } finally {
             unset($_SERVER['CONTENT_TYPE']);
         }
@@ -302,7 +324,12 @@ class EnvironmentBodyContextTest extends TestCase
 
     public function testIsXmlReturnsFalseForMissingContentType(): void
     {
-        self::assertFalse((new EnvironmentBodyContext(contentType: ''))->isXml());
+        self::assertFalse(
+            new EnvironmentBodyContext(
+                serializerManager: SerializerManagerFactory::create(),
+                contentType: '',
+            )->isXml(),
+        );
     }
 
     public function testIsFormReturnsTrueForUrlEncoded(): void
@@ -333,7 +360,12 @@ class EnvironmentBodyContextTest extends TestCase
 
     public function testIsFormReturnsFalseForMissingContentType(): void
     {
-        self::assertFalse((new EnvironmentBodyContext(contentType: ''))->isForm());
+        self::assertFalse(
+            new EnvironmentBodyContext(
+                serializerManager: SerializerManagerFactory::create(),
+                contentType: '',
+            )->isForm(),
+        );
     }
 
     public function testIsTextReturnsTrueForTextPlain(): void
@@ -366,6 +398,11 @@ class EnvironmentBodyContextTest extends TestCase
 
     public function testIsTextReturnsFalseForMissingContentType(): void
     {
-        self::assertFalse((new EnvironmentBodyContext(contentType: ''))->isText());
+        self::assertFalse(
+            new EnvironmentBodyContext(
+                serializerManager: SerializerManagerFactory::create(),
+                contentType: '',
+            )->isText(),
+        );
     }
 }

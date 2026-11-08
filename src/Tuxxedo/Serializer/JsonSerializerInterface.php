@@ -22,6 +22,7 @@ interface JsonSerializerInterface
      * @template TClassName of object
      *
      * @param class-string<TClassName> $className
+     * @param list<string>|null $only
      * @return TClassName
      *
      * @throws SerializerException
@@ -31,12 +32,15 @@ interface JsonSerializerInterface
     public function decode(
         string $json,
         string $className,
+        ?string $key = null,
+        ?array $only = null,
     ): object;
 
     /**
      * @template TClassName of object
      *
      * @param class-string<TClassName> $className
+     * @param list<string>|null $only
      * @return list<TClassName>
      *
      * @throws SerializerException
@@ -46,6 +50,8 @@ interface JsonSerializerInterface
     public function decodeList(
         string $json,
         string $className,
+        ?string $key = null,
+        ?array $only = null,
     ): array;
 
     /**

@@ -93,15 +93,21 @@ class StubBodyContext implements BodyContextInterface
         return null;
     }
 
-    public function jsonMapTo(
-        string|object $className,
+    public function jsonMap(
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
         int $flags = 0,
     ): object {
         throw HttpException::fromInternalServerError();
     }
 
-    public function jsonMapToArrayOf(
-        string|object $className,
+    public function jsonMapList(
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
         int $flags = 0,
     ): array {
         throw HttpException::fromInternalServerError();

@@ -19,6 +19,7 @@ use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Http\Request\Middleware\RecordingMiddleware;
+use Support\Serializer\SerializerManagerFactory;
 use Tuxxedo\Http\Request\Middleware\StrictTransportSecurity;
 use Tuxxedo\Http\Request\Request;
 use Tuxxedo\Http\Response\Response;
@@ -30,6 +31,7 @@ class StrictTransportSecurityTest extends TestCase
         bool $https,
     ): Request {
         return new Request(
+            serializerManager: SerializerManagerFactory::create(),
             headers: new StubHeaderContext(),
             cookies: new StubInputContext(),
             get: new StubInputContext(),
