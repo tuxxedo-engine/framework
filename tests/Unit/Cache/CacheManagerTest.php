@@ -25,7 +25,7 @@ use Tuxxedo\Cache\CacheManager;
 use Tuxxedo\Cache\Config\CacheConfig;
 use Tuxxedo\Cache\Config\CacheScope;
 use Tuxxedo\Container\Container;
-use Tuxxedo\Mapper\Mapper;
+use Tuxxedo\Serializer\ArraySerializer;
 
 class CacheManagerTest extends TestCase
 {
@@ -235,12 +235,16 @@ class CacheManagerTest extends TestCase
         $manager = new CacheManager(
             root: new Cache(
                 driver: $driver,
-                mapper: new Mapper(),
+                serializer: new ArraySerializer(
+                    skipValidation: true,
+                ),
             ),
             scopes: [
                 'reports' => new Cache(
                     driver: $driver,
-                    mapper: new Mapper(),
+                    serializer: new ArraySerializer(
+                        skipValidation: true,
+                    ),
                     prefix: 'reports:',
                 ),
             ],

@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace Tuxxedo\Cache;
 
 use Tuxxedo\Cache\Driver\CacheDriverInterface;
-use Tuxxedo\Mapper\MapperInterface;
 use Tuxxedo\Reflection\EnumHydrator;
+use Tuxxedo\Serializer\ArraySerializerInterface;
 use Tuxxedo\Temporal\DurationInterface;
 
 class Cache implements CacheInterface
@@ -26,7 +26,7 @@ class Cache implements CacheInterface
      */
     public function __construct(
         public readonly CacheDriverInterface $driver,
-        public readonly MapperInterface $mapper,
+        public readonly ArraySerializerInterface $serializer,
         public readonly string $prefix = '',
     ) {
     }
@@ -431,7 +431,7 @@ class Cache implements CacheInterface
 
     public function mapTo(
         string $key,
-        string|object $className,
+        string $className,
     ): ?object {
         $values = $this->readArray($key);
 
@@ -439,12 +439,12 @@ class Cache implements CacheInterface
             return null;
         }
 
-        return $this->mapper->mapArrayTo($values, $className);
+        return $this->serializer->fromArray($values, $className);
     }
 
     public function mapToArrayOf(
         string $key,
-        string|object $className,
+        string $className,
     ): ?array {
         $values = $this->readArray($key);
 
@@ -452,7 +452,7 @@ class Cache implements CacheInterface
             return null;
         }
 
-        return $this->mapper->mapToArrayOf($values, $className);
+        return $this->serializer->fromArrayList($values, $className);
     }
 
     public function set(

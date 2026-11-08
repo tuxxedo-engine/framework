@@ -59,11 +59,11 @@ use Tuxxedo\Mail\MailManager;
 use Tuxxedo\Mail\MailManagerInterface;
 use Tuxxedo\Mail\Transport\FileMail\Config\FileMailTransportConfig;
 use Tuxxedo\Mail\Transport\FileMail\FileMailTransport;
-use Tuxxedo\Mapper\Mapper;
 use Tuxxedo\Router\DynamicRouter;
 use Tuxxedo\Router\RouteDiscoverer;
 use Tuxxedo\Router\RouterInterface;
 use Tuxxedo\Router\StaticRouter;
+use Tuxxedo\Serializer\ArraySerializer;
 use Tuxxedo\View\Lumi\LumiConfigurator;
 use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
 use Tuxxedo\View\ViewRenderInterface;
@@ -863,7 +863,9 @@ class ApplicationConfiguratorTest extends TestCase
         return new CacheManager(
             root: new Cache(
                 driver: new InMemoryCacheDriver(),
-                mapper: new Mapper(),
+                serializer: new ArraySerializer(
+                    skipValidation: true,
+                ),
             ),
         );
     }

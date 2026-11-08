@@ -15,7 +15,8 @@ namespace Tuxxedo\Cache;
 
 use Tuxxedo\Cache\Config\CacheConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Mapper\MapperInterface;
+use Tuxxedo\Serializer\ArraySerializer;
+use Tuxxedo\Serializer\SerializerException;
 use Tuxxedo\Temporal\DurationInterface;
 
 class CacheManager implements CacheManagerInterface
@@ -34,12 +35,16 @@ class CacheManager implements CacheManagerInterface
 
     /**
      * @throws CacheException
+     * @throws SerializerException
      */
     public static function createFromConfig(
         ContainerInterface $container,
         CacheConfigInterface $config,
     ): self {
-        $mapper = $container->resolve(MapperInterface::class);
+        $serializer = new ArraySerializer(
+            skipValidation: true,
+        );
+
         $defaultDriver = ($config->default->driverClass)::create($container, $config->default);
         $scopes = [];
         $isolatedScopes = [];
@@ -53,7 +58,7 @@ class CacheManager implements CacheManagerInterface
                 driver: $scope->driver !== null
                     ? ($scope->driver->driverClass)::create($container, $scope->driver)
                     : $defaultDriver,
-                mapper: $mapper,
+                serializer: $serializer,
                 prefix: $scope->name . ($config->separator ?? ''),
             );
         }
@@ -61,7 +66,7 @@ class CacheManager implements CacheManagerInterface
         return new self(
             root: new Cache(
                 driver: $defaultDriver,
-                mapper: $mapper,
+                serializer: $serializer,
             ),
             scopes: $scopes,
             separator: $config->separator,
@@ -218,7 +223,7 @@ class CacheManager implements CacheManagerInterface
 
     public function mapTo(
         string $key,
-        string|object $className,
+        string $className,
     ): ?object {
         [$cache, $scopedKey] = $this->route($key);
 
@@ -227,7 +232,7 @@ class CacheManager implements CacheManagerInterface
 
     public function mapToArrayOf(
         string $key,
-        string|object $className,
+        string $className,
     ): ?array {
         [$cache, $scopedKey] = $this->route($key);
 

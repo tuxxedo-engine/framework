@@ -20,7 +20,7 @@ use PHPUnit\Framework\TestCase;
 use Tuxxedo\Cache\Cache;
 use Tuxxedo\Cache\CacheException;
 use Tuxxedo\Cache\Driver\CacheDriverInterface;
-use Tuxxedo\Mapper\Mapper;
+use Tuxxedo\Serializer\ArraySerializer;
 use Tuxxedo\Temporal\Duration;
 
 abstract class AbstractCacheDriverIntegrationTestCase extends TestCase
@@ -64,7 +64,9 @@ abstract class AbstractCacheDriverIntegrationTestCase extends TestCase
     ): Cache {
         return new Cache(
             driver: $driver,
-            mapper: new Mapper(),
+            serializer: new ArraySerializer(
+                skipValidation: true,
+            ),
             prefix: $prefix,
         );
     }

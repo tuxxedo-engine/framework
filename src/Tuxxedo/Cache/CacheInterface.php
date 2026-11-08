@@ -13,8 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Cache;
 
-use Tuxxedo\Mapper\MapperException;
+use Tuxxedo\Serializer\SerializerException;
 use Tuxxedo\Temporal\DurationInterface;
+use Tuxxedo\Validator\ValidationException;
 
 interface CacheInterface
 {
@@ -132,29 +133,31 @@ interface CacheInterface
     /**
      * @template TClassName of object
      *
-     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
+     * @param class-string<TClassName> $className
      * @return TClassName|null
      *
      * @throws CacheException
-     * @throws MapperException
+     * @throws SerializerException
+     * @throws ValidationException
      */
     public function mapTo(
         string $key,
-        string|object $className,
+        string $className,
     ): ?object;
 
     /**
      * @template TClassName of object
      *
-     * @param class-string<TClassName>|(\Closure(): TClassName)|TClassName $className
-     * @return TClassName[]|null
+     * @param class-string<TClassName> $className
+     * @return list<TClassName>|null
      *
      * @throws CacheException
-     * @throws MapperException
+     * @throws SerializerException
+     * @throws ValidationException
      */
     public function mapToArrayOf(
         string $key,
-        string|object $className,
+        string $className,
     ): ?array;
 
     /**

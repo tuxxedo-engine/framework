@@ -23,7 +23,7 @@ use PHPUnit\Framework\TestCase;
 use Support\Cache\InMemoryCacheDriver;
 use Tuxxedo\Cache\Cache;
 use Tuxxedo\Cache\CacheException;
-use Tuxxedo\Mapper\Mapper;
+use Tuxxedo\Serializer\ArraySerializer;
 use Tuxxedo\Temporal\Duration;
 use Tuxxedo\Temporal\FixedClock;
 use Tuxxedo\Temporal\Instant;
@@ -43,7 +43,9 @@ class CacheTest extends TestCase
 
         $this->cache = new Cache(
             driver: $this->driver,
-            mapper: new Mapper(),
+            serializer: new ArraySerializer(
+                skipValidation: true,
+            ),
         );
     }
 
@@ -110,7 +112,9 @@ class CacheTest extends TestCase
     {
         $cache = new Cache(
             driver: $this->driver,
-            mapper: new Mapper(),
+            serializer: new ArraySerializer(
+                skipValidation: true,
+            ),
             prefix: 'rateLimit:',
         );
 
@@ -901,7 +905,9 @@ class CacheTest extends TestCase
     {
         $cache = new Cache(
             driver: $this->driver,
-            mapper: new Mapper(),
+            serializer: new ArraySerializer(
+                skipValidation: true,
+            ),
             prefix: 'reports:',
         );
 
@@ -917,7 +923,9 @@ class CacheTest extends TestCase
     {
         $reports = new Cache(
             driver: $this->driver,
-            mapper: new Mapper(),
+            serializer: new ArraySerializer(
+                skipValidation: true,
+            ),
             prefix: 'reports:',
         );
 
@@ -983,7 +991,9 @@ class CacheTest extends TestCase
     {
         $cache = new Cache(
             driver: $this->driver,
-            mapper: new Mapper(),
+            serializer: new ArraySerializer(
+                skipValidation: true,
+            ),
             prefix: 'abcd:',
         );
 
