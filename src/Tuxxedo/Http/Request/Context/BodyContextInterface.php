@@ -86,4 +86,42 @@ interface BodyContextInterface
         bool $skipUnknownKeys = true,
         int $flags = 0,
     ): array;
+
+    /**
+     * @template TClassName of object
+     *
+     * @param class-string<TClassName> $className
+     * @param list<string>|null $only
+     * @return TClassName
+     *
+     * @throws HttpException
+     * @throws SerializerException
+     * @throws ValidationException
+     * @throws ValidatorException
+     */
+    public function xmlMap(
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
+    ): object;
+
+    /**
+     * @template TClassName of object
+     *
+     * @param class-string<TClassName> $className
+     * @param list<string>|null $only
+     * @return list<TClassName>
+     *
+     * @throws HttpException
+     * @throws SerializerException
+     * @throws ValidationException
+     * @throws ValidatorException
+     */
+    public function xmlMapList(
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
+    ): array;
 }

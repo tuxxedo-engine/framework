@@ -30,6 +30,10 @@ class PropertyMetaData
         public readonly ?string $listOf = null,
         public readonly ?string $mapOf = null,
         public readonly ?ValueConverterInterface $converter = null,
+        public readonly bool $xmlAttribute = false,
+        public readonly bool $xmlText = false,
+        public readonly ?string $xmlItem = null,
+        public readonly bool $xmlWrapped = true,
     ) {
     }
 }

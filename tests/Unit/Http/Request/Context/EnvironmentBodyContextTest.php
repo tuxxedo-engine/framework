@@ -224,6 +224,22 @@ class EnvironmentBodyContextTest extends TestCase
         $this->makeContext('{"name":"John"}')->jsonMapList(BodyContextFixture::class);
     }
 
+    public function testXmlMapMapsAnXmlDocument(): void
+    {
+        $result = $this->makeContext('<person><name>John</name><age>30</age></person>')->xmlMap(BodyContextFixture::class);
+
+        self::assertSame('John', $result->name);
+        self::assertSame(30, $result->age);
+    }
+
+    public function testXmlMapListMapsChildElements(): void
+    {
+        $result = $this->makeContext('<people><person><name>John</name></person><person><name>Jane</name></person></people>')->xmlMapList(BodyContextFixture::class);
+
+        self::assertCount(2, $result);
+        self::assertSame('Jane', $result[1]->name);
+    }
+
     private function makeContextWithContentType(
         string $contentType,
     ): EnvironmentBodyContext {

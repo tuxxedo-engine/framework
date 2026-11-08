@@ -147,6 +147,40 @@ class SerializerException extends Exception
         );
     }
 
+    public static function fromXmlCharacter(): self
+    {
+        return new self(
+            message: 'Value contains a character that is not allowed in XML',
+        );
+    }
+
+    public static function fromXmlName(
+        string $name,
+    ): self {
+        return new self(
+            message: \sprintf(
+                '"%s" is not a valid XML element or attribute name',
+                $name,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $className
+     */
+    public static function fromXmlUnsupportedValue(
+        string $className,
+        string $property,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Property "%s::$%s" holds a value that cannot be written as XML',
+                $className,
+                $property,
+            ),
+        );
+    }
+
     public static function fromInvalidValue(
         string $expected,
     ): self {

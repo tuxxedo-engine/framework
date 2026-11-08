@@ -113,6 +113,24 @@ class StubBodyContext implements BodyContextInterface
         throw HttpException::fromInternalServerError();
     }
 
+    public function xmlMap(
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
+    ): object {
+        throw HttpException::fromInternalServerError();
+    }
+
+    public function xmlMapList(
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
+    ): array {
+        throw HttpException::fromInternalServerError();
+    }
+
     private function mediaType(): ?string
     {
         if ($this->contentType === null) {

@@ -66,6 +66,41 @@ class SerializerInputException extends SerializerException
         );
     }
 
+    public static function fromMalformedXml(
+        string $reason,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Malformed XML input: %s',
+                $reason,
+            ),
+        );
+    }
+
+    public static function fromEmptyXml(): self
+    {
+        return new self(
+            message: 'XML input is empty',
+        );
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public static function fromXmlWithoutRoot(): self
+    {
+        return new self(
+            message: 'XML input has no root element',
+        );
+    }
+
+    public static function fromXmlDoctype(): self
+    {
+        return new self(
+            message: 'XML input must not contain a DOCTYPE',
+        );
+    }
+
     public static function fromNonArrayKey(
         string $format,
         string $key,

@@ -136,6 +136,35 @@ class PayloadTest extends TestCase
         self::assertSame('Jane', $result[1]->name);
     }
 
+    public function testXmlBodyIsMappedLeniently(): void
+    {
+        $result = $this->resolve(
+            payload: new Payload(),
+            contentType: 'application/xml',
+            body: '<person><name>John</name><age>30</age></person>',
+        );
+
+        self::assertInstanceOf(BodyContextFixture::class, $result);
+        self::assertSame(30, $result->age);
+    }
+
+    public function testXmlListForArrayParameters(): void
+    {
+        $result = $this->resolve(
+            payload: new Payload(
+                className: BodyContextFixture::class,
+                key: 'people',
+            ),
+            contentType: 'text/xml',
+            body: '<root><people><person><name>John</name></person></people></root>',
+            defaultType: null,
+            builtinType: 'array',
+        );
+
+        self::assertIsArray($result);
+        self::assertCount(1, $result);
+    }
+
     public function testFormBodyIsMappedLeniently(): void
     {
         $_POST = [

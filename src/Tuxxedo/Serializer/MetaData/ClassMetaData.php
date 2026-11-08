@@ -22,6 +22,7 @@ class ClassMetaData
     public function __construct(
         public readonly \ReflectionClass $reflection,
         public readonly array $properties,
+        public readonly string $xmlRoot,
     ) {
     }
 }

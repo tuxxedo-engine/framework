@@ -48,4 +48,13 @@ interface SerializerManagerInterface
         string $separator = ',',
         string $enclosure = '"',
     ): CsvSerializerInterface;
+
+    /**
+     * @throws SerializerException
+     */
+    public function xml(
+        bool $skipUnknownKeys = true,
+        bool $skipValidation = false,
+        ?string $indent = null,
+    ): XmlSerializerInterface;
 }

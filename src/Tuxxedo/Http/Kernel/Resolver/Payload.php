@@ -77,6 +77,22 @@ class Payload implements DependencyResolverInterface
                     );
             }
 
+            if ($request->body->isXml()) {
+                return $list
+                    ? $request->body->xmlMapList(
+                        className: $className,
+                        key: $this->key,
+                        only: $this->only,
+                        skipUnknownKeys: $this->skipUnknownKeys,
+                    )
+                    : $request->body->xmlMap(
+                        className: $className,
+                        key: $this->key,
+                        only: $this->only,
+                        skipUnknownKeys: $this->skipUnknownKeys,
+                    );
+            }
+
             if ($request->body->isForm()) {
                 return $list
                     ? $request->post->mapList(

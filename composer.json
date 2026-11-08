@@ -53,6 +53,7 @@
     "ext-session": "For session support",
     "ext-sodium": "For crypto support in JWT, and Email signing",
     "ext-sqlite3": "For database connections to sqlite",
+    "ext-xmlreader": "For reading XML in the serializer",
     "ext-zlib": "For DEFLATE payload compression in JWE"
   },
   "autoload": {

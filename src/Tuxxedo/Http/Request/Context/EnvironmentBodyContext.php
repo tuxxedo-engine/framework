@@ -106,6 +106,34 @@ class EnvironmentBodyContext implements BodyContextInterface
         return \str_starts_with($mediaType, 'text/');
     }
 
+    public function xmlMap(
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
+    ): object {
+        return $this->serializerManager->xml($skipUnknownKeys)->decode(
+            xml: $this->getRaw(),
+            className: $className,
+            key: $key,
+            only: $only,
+        );
+    }
+
+    public function xmlMapList(
+        string $className,
+        ?string $key = null,
+        ?array $only = null,
+        bool $skipUnknownKeys = true,
+    ): array {
+        return $this->serializerManager->xml($skipUnknownKeys)->decodeList(
+            xml: $this->getRaw(),
+            className: $className,
+            key: $key,
+            only: $only,
+        );
+    }
+
     private function mediaType(): ?string
     {
         $contentType = $this->contentType ?? ($_SERVER['CONTENT_TYPE'] ?? null);

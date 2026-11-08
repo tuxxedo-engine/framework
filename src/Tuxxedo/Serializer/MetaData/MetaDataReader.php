@@ -19,6 +19,10 @@ use Tuxxedo\Serializer\Attribute\Ignore;
 use Tuxxedo\Serializer\Attribute\ListOf;
 use Tuxxedo\Serializer\Attribute\MapOf;
 use Tuxxedo\Serializer\Attribute\Name;
+use Tuxxedo\Serializer\Attribute\XmlAttribute;
+use Tuxxedo\Serializer\Attribute\XmlList;
+use Tuxxedo\Serializer\Attribute\XmlRoot;
+use Tuxxedo\Serializer\Attribute\XmlText;
 use Tuxxedo\Serializer\KeyCase;
 use Tuxxedo\Serializer\SerializerException;
 use Tuxxedo\Serializer\ValueConverterInterface;
@@ -117,9 +121,18 @@ class MetaDataReader implements MetaDataReaderInterface
             );
         }
 
+        $xmlRoot = $case === null
+            ? $reflection->getShortName()
+            : $case->apply($reflection->getShortName());
+
+        foreach ($reflection->getAttributes(XmlRoot::class) as $attribute) {
+            $xmlRoot = $attribute->newInstance()->name;
+        }
+
         return $this->cache[$className] = new ClassMetaData(
             reflection: $reflection,
             properties: \array_values($properties),
+            xmlRoot: $xmlRoot,
         );
     }
 
@@ -191,6 +204,15 @@ class MetaDataReader implements MetaDataReaderInterface
             $converter = $attribute->newInstance();
         }
 
+        $xmlItem = null;
+        $xmlWrapped = true;
+
+        foreach ($reflector->getAttributes(XmlList::class) as $attribute) {
+            $xmlList = $attribute->newInstance();
+            $xmlItem = $xmlList->item;
+            $xmlWrapped = $xmlList->wrapped;
+        }
+
         return new PropertyMetaData(
             name: $reflector->name,
             key: $key,
@@ -204,6 +226,10 @@ class MetaDataReader implements MetaDataReaderInterface
             listOf: $listOf,
             mapOf: $mapOf,
             converter: $converter,
+            xmlAttribute: \sizeof($reflector->getAttributes(XmlAttribute::class)) > 0,
+            xmlText: \sizeof($reflector->getAttributes(XmlText::class)) > 0,
+            xmlItem: $xmlItem,
+            xmlWrapped: $xmlWrapped,
         );
     }
 }

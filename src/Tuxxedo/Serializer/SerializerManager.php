@@ -74,4 +74,18 @@ class SerializerManager implements SerializerManagerInterface
             metaData: $this->metaData,
         );
     }
+
+    public function xml(
+        bool $skipUnknownKeys = true,
+        bool $skipValidation = false,
+        ?string $indent = null,
+    ): XmlSerializerInterface {
+        return new XmlSerializer(
+            validator: $this->validator,
+            skipUnknownKeys: $skipUnknownKeys,
+            skipValidation: $skipValidation,
+            indent: $indent,
+            metaData: $this->metaData,
+        );
+    }
 }
