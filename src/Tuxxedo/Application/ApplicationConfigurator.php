@@ -31,6 +31,7 @@ use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Response\ResponseEmitter;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Url\Url;
+use Tuxxedo\Http\Url\UrlException;
 use Tuxxedo\Http\Url\UrlInterface;
 use Tuxxedo\Router\DynamicRouter;
 use Tuxxedo\Router\RouterInterface;
@@ -56,7 +57,9 @@ class ApplicationConfigurator extends AbstractConfigurator implements Applicatio
         public private(set) string $appName = '',
         public private(set) string $appVersion = '',
         public private(set) Environment $appEnvironment = Environment::PRODUCTION,
-        public private(set) string $appUrl = '',
+        public private(set) UrlInterface $appUrl = new Url(
+            path: '/',
+        ),
         ?ConfigInterface $config = null,
         ?ContainerInterface $container = null,
     ) {
@@ -84,7 +87,7 @@ class ApplicationConfigurator extends AbstractConfigurator implements Applicatio
             appName: $appConfig->name,
             appVersion: $appConfig->version,
             appEnvironment: $appConfig->environment,
-            appUrl: $appConfig->url,
+            appUrl: self::parseAppUrl($appConfig->url),
             container: $container,
             config: $config,
         );
@@ -108,7 +111,7 @@ class ApplicationConfigurator extends AbstractConfigurator implements Applicatio
             appName: $appConfig->name,
             appVersion: $appConfig->version,
             appEnvironment: $appConfig->environment,
-            appUrl: $appConfig->url,
+            appUrl: self::parseAppUrl($appConfig->url),
             container: $container,
             config: $config,
         );
@@ -139,9 +142,11 @@ class ApplicationConfigurator extends AbstractConfigurator implements Applicatio
     }
 
     public function withAppUrl(
-        string $url,
+        UrlInterface|string $url,
     ): self {
-        $this->appUrl = $url;
+        $this->appUrl = $url instanceof UrlInterface
+            ? $url
+            : self::parseAppUrl($url);
 
         return $this;
     }
@@ -267,15 +272,6 @@ class ApplicationConfigurator extends AbstractConfigurator implements Applicatio
             $container->singleton(EventsManager::class);
         }
 
-        if (!$container->isBound(UrlInterface::class)) {
-            $container->singletonLazy(
-                UrlInterface::class,
-                fn (): UrlInterface => new Url(
-                    base: $this->appUrl,
-                ),
-            );
-        }
-
         if ($this->router !== null) {
             $container->singleton($this->router);
         } elseif ($this->routeFiles !== []) {
@@ -364,5 +360,16 @@ class ApplicationConfigurator extends AbstractConfigurator implements Applicatio
         $this->loadServiceFiles($container);
 
         return $kernel;
+    }
+
+    /**
+     * @throws UrlException
+     */
+    private static function parseAppUrl(
+        string $url,
+    ): UrlInterface {
+        return $url === ''
+            ? new Url(path: '/')
+            : Url::parse($url);
     }
 }

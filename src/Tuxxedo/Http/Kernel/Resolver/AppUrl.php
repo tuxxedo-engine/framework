@@ -16,10 +16,11 @@ namespace Tuxxedo\Http\Kernel\Resolver;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DependencyResolverInterface;
 use Tuxxedo\Http\Kernel\KernelInterface;
+use Tuxxedo\Http\Url\UrlInterface;
 use Tuxxedo\Reflection\ParameterReflectorInterface;
 
 /**
- * @implements DependencyResolverInterface<string>
+ * @implements DependencyResolverInterface<UrlInterface>
  */
 #[\Attribute(flags: \Attribute::TARGET_PARAMETER)]
 class AppUrl implements DependencyResolverInterface
@@ -27,7 +28,7 @@ class AppUrl implements DependencyResolverInterface
     public function resolve(
         ContainerInterface $container,
         ParameterReflectorInterface $parameter,
-    ): mixed {
+    ): UrlInterface {
         return $container->resolve(KernelInterface::class)->appUrl;
     }
 }

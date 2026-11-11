@@ -28,6 +28,7 @@ use Tuxxedo\Http\Kernel\Resolver\AppUrl;
 use Tuxxedo\Http\Kernel\Resolver\AppVersion;
 use Tuxxedo\Http\Kernel\Resolver\Config as ConfigAttr;
 use Tuxxedo\Http\Response\Response;
+use Tuxxedo\Http\Url\Url;
 use Tuxxedo\Reflection\ParameterReflectorInterface;
 use Tuxxedo\Router\StaticRouter;
 
@@ -37,7 +38,7 @@ class ResolverTest extends TestCase
         string $appName = '',
         string $appVersion = '',
         Environment $appProfile = Environment::PRODUCTION,
-        string $appUrl = '',
+        string $appUrl = '/',
         Config $config = new Config(),
     ): Container {
         $container = new Container();
@@ -54,7 +55,7 @@ class ResolverTest extends TestCase
                 appName: $appName,
                 appVersion: $appVersion,
                 appEnvironment: $appProfile,
-                appUrl: $appUrl,
+                appUrl: Url::parse($appUrl),
             ),
         );
 
@@ -155,7 +156,7 @@ class ResolverTest extends TestCase
             appUrl: 'https://tuxxedo.dev',
         );
 
-        self::assertSame('https://tuxxedo.dev', (new AppUrl())->resolve($container, $this->parameter()));
+        self::assertSame('https://tuxxedo.dev', (string) (new AppUrl())->resolve($container, $this->parameter()));
     }
 
     public function testConfigValueResolvesConfigPath(): void

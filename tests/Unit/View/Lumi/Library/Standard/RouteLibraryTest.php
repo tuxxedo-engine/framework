@@ -63,7 +63,7 @@ class RouteLibraryTest extends TestCase
             router: $router ?? new StaticRouter(
                 routes: [],
             ),
-            url: new Url($baseUrl),
+            appUrl: Url::parse($baseUrl),
         );
     }
 

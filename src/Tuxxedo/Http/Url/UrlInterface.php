@@ -13,13 +13,92 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Url;
 
-interface UrlInterface
+interface UrlInterface extends \Stringable
 {
-    public string $base {
+    public string $scheme {
         get;
     }
 
-    public function get(
+    public string $user {
+        get;
+    }
+
+    public string $password {
+        get;
+    }
+
+    public string $host {
+        get;
+    }
+
+    public ?int $port {
+        get;
+    }
+
+    public string $path {
+        get;
+    }
+
+    public string $query {
+        get;
+    }
+
+    public string $fragment {
+        get;
+    }
+
+    /**
+     * @throws UrlException
+     */
+    public function withScheme(
+        string $scheme,
+    ): static;
+
+    public function withUserInfo(
+        string $user,
+        string $password = '',
+    ): static;
+
+    /**
+     * @throws UrlException
+     */
+    public function withHost(
+        string $host,
+    ): static;
+
+    /**
+     * @throws UrlException
+     */
+    public function withPort(
+        ?int $port,
+    ): static;
+
+    public function withPath(
         string $path,
-    ): string;
+    ): static;
+
+    /**
+     * @param array<array-key, mixed>|string $query
+     */
+    public function withQuery(
+        array|string $query,
+    ): static;
+
+    public function withFragment(
+        string $fragment,
+    ): static;
+
+    /**
+     * @throws UrlException
+     */
+    public function resolve(
+        UrlInterface|string $reference,
+    ): static;
+
+    /**
+     * @throws UrlException
+     */
+    public function append(
+        string $path,
+    ): static;
 }

@@ -25,6 +25,8 @@ use Tuxxedo\Http\Response\ResponsableInterface;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Response\ResponseExceptionInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
+use Tuxxedo\Http\Url\Url;
+use Tuxxedo\Http\Url\UrlInterface;
 use Tuxxedo\Router\DispatchableRouteInterface;
 use Tuxxedo\Router\RouterInterface;
 
@@ -43,7 +45,9 @@ class Kernel implements KernelInterface
         public readonly string $appName = '',
         public readonly string $appVersion = '',
         public readonly Environment $appEnvironment = Environment::PRODUCTION,
-        public readonly string $appUrl = '',
+        public readonly UrlInterface $appUrl = new Url(
+            path: '/',
+        ),
     ) {
     }
 

@@ -16,6 +16,8 @@ namespace Tuxxedo\Application;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
 use Tuxxedo\Http\Kernel\KernelInterface;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
+use Tuxxedo\Http\Url\UrlException;
+use Tuxxedo\Http\Url\UrlInterface;
 use Tuxxedo\Router\RouterInterface;
 
 interface ApplicationConfiguratorInterface extends AbstractConfiguratorInterface
@@ -32,7 +34,7 @@ interface ApplicationConfiguratorInterface extends AbstractConfiguratorInterface
         get;
     }
 
-    public string $appUrl {
+    public UrlInterface $appUrl {
         get;
     }
 
@@ -85,8 +87,11 @@ interface ApplicationConfiguratorInterface extends AbstractConfiguratorInterface
         Environment $environment,
     ): self;
 
+    /**
+     * @throws UrlException
+     */
     public function withAppUrl(
-        string $url,
+        UrlInterface|string $url,
     ): self;
 
     public function withDefaultRouter(

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\View\Lumi\Library\Standard;
 
 use Tuxxedo\Http\HttpException;
+use Tuxxedo\Http\Kernel\Resolver\AppUrl;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Url\UrlInterface;
 use Tuxxedo\Router\DispatchableRoute;
@@ -26,7 +27,8 @@ class RouteLibrary
     public function __construct(
         private readonly RequestInterface $request,
         private readonly RouterInterface $router,
-        private readonly UrlInterface $url,
+        #[AppUrl]
+        private readonly UrlInterface $appUrl,
     ) {
     }
 
@@ -34,7 +36,7 @@ class RouteLibrary
     public function url(
         string $path,
     ): string {
-        return $this->url->get($path);
+        return (string) $this->appUrl->append($path);
     }
 
     /**

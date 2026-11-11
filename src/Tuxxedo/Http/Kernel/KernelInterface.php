@@ -21,6 +21,7 @@ use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
+use Tuxxedo\Http\Url\UrlInterface;
 use Tuxxedo\Router\RouterInterface;
 
 #[DefaultImplementation(class: Kernel::class, lifecycle: Lifecycle::SINGLETON)]
@@ -79,7 +80,7 @@ interface KernelInterface
         get;
     }
 
-    public string $appUrl {
+    public UrlInterface $appUrl {
         get;
     }
 

@@ -52,7 +52,6 @@ use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Http\Url\Url;
-use Tuxxedo\Http\Url\UrlInterface;
 use Tuxxedo\Mail\Config\MailManagerConfig;
 use Tuxxedo\Mail\MailConfiguratorInterface;
 use Tuxxedo\Mail\MailManager;
@@ -87,13 +86,13 @@ class ApplicationConfiguratorTest extends TestCase
             appName: 'MyApp',
             appVersion: '9.9.9',
             appEnvironment: Environment::DEVELOPMENT,
-            appUrl: 'https://my.app/',
+            appUrl: Url::parse('https://my.app/'),
         );
 
         self::assertSame('MyApp', $configurator->appName);
         self::assertSame('9.9.9', $configurator->appVersion);
         self::assertSame(Environment::DEVELOPMENT, $configurator->appEnvironment);
-        self::assertSame('https://my.app/', $configurator->appUrl);
+        self::assertSame('https://my.app/', (string) $configurator->appUrl);
     }
 
     public function testCreateFromConfigFilePopulatesAppMetadataFromConfig(): void
@@ -103,7 +102,7 @@ class ApplicationConfiguratorTest extends TestCase
         self::assertSame('TuxxedoTestApp', $configurator->appName);
         self::assertSame('1.2.3', $configurator->appVersion);
         self::assertSame(Environment::PRODUCTION, $configurator->appEnvironment);
-        self::assertSame('https://example.test/', $configurator->appUrl);
+        self::assertSame('https://example.test/', (string) $configurator->appUrl);
     }
 
     public function testCreateFromConfigFileInjectsContainerAndConfig(): void
@@ -136,7 +135,7 @@ class ApplicationConfiguratorTest extends TestCase
         self::assertSame('TuxxedoDirApp', $configurator->appName);
         self::assertSame('4.5.6', $configurator->appVersion);
         self::assertSame(Environment::DEVELOPMENT, $configurator->appEnvironment);
-        self::assertSame('https://example.dir/', $configurator->appUrl);
+        self::assertSame('https://example.dir/', (string) $configurator->appUrl);
     }
 
     public function testCreateFromConfigDirectoryInjectsContainerAndConfig(): void
@@ -203,6 +202,16 @@ class ApplicationConfiguratorTest extends TestCase
         self::assertSame($configurator, $result);
     }
 
+    public function testWithAppUrlAcceptsUrlsAndDefaultsToRoot(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $url = Url::parse('https://instance.test/');
+
+        self::assertSame('/', (string) $configurator->appUrl);
+        self::assertSame($url, $configurator->withAppUrl($url)->appUrl);
+        self::assertSame('/', (string) $configurator->withAppUrl('')->appUrl);
+    }
+
     public function testWithAppUrlUpdatesPropertyAndReturnsFluentSelf(): void
     {
         $configurator = new ApplicationConfigurator();
@@ -210,7 +219,7 @@ class ApplicationConfiguratorTest extends TestCase
             url: 'https://updated.test/',
         );
 
-        self::assertSame('https://updated.test/', $configurator->appUrl);
+        self::assertSame('https://updated.test/', (string) $configurator->appUrl);
         self::assertSame($configurator, $result);
     }
 
@@ -894,7 +903,7 @@ class ApplicationConfiguratorTest extends TestCase
             appName: 'MinimalApp',
             appVersion: '0.1.0',
             appEnvironment: $profile,
-            appUrl: 'https://minimal.test/',
+            appUrl: Url::parse('https://minimal.test/'),
             container: $container,
             config: new Config(),
         ))
@@ -920,7 +929,7 @@ class ApplicationConfiguratorTest extends TestCase
         self::assertSame('MinimalApp', $kernel->appName);
         self::assertSame('0.1.0', $kernel->appVersion);
         self::assertSame(Environment::PRODUCTION, $kernel->appEnvironment);
-        self::assertSame('https://minimal.test/', $kernel->appUrl);
+        self::assertSame('https://minimal.test/', (string) $kernel->appUrl);
     }
 
     public function testBuildPropagatesExplicitRouterToKernel(): void
@@ -1034,20 +1043,6 @@ class ApplicationConfiguratorTest extends TestCase
         $configurator->build();
 
         self::assertSame($container, $container->resolve(ContainerInterface::class));
-    }
-
-    public function testBuildRegistersLazyUrlBasedOnAppUrlWhenNoneProvided(): void
-    {
-        $configurator = $this->makeMinimalConfigurator();
-
-        $configurator->build();
-
-        /** @var Container $container */
-        $container = $configurator->container;
-        $url = $container->resolve(UrlInterface::class);
-
-        self::assertInstanceOf(Url::class, $url);
-        self::assertSame('https://minimal.test/', $url->base);
     }
 
     public function testBuildAttachesMiddlewareToKernel(): void
