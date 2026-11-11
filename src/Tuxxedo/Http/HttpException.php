@@ -162,11 +162,11 @@ class HttpException extends Exception implements ResponseCodeInterface, Response
         );
     }
 
-    public static function fromPayloadTooLarge(
+    public static function fromContentTooLarge(
         ?\Throwable $exception = null,
     ): self {
         return new self(
-            responseCode: ResponseCode::PAYLOAD_TOO_LARGE,
+            responseCode: ResponseCode::CONTENT_TOO_LARGE,
             previous: $exception,
         );
     }
@@ -216,20 +216,11 @@ class HttpException extends Exception implements ResponseCodeInterface, Response
         );
     }
 
-    public static function fromUnprocessableEntity(
-        ?\Throwable $exception = null,
-    ): self {
-        return new self(
-            responseCode: ResponseCode::UNPROCESSABLE_ENTITY,
-            previous: $exception,
-        );
-    }
-
     public static function fromUnprocessableContent(
         ?\Throwable $exception = null,
     ): self {
         return new self(
-            responseCode: ResponseCode::UNPROCESSABLE_ENTITY,
+            responseCode: ResponseCode::UNPROCESSABLE_CONTENT,
             previous: $exception,
         );
     }
@@ -302,6 +293,24 @@ class HttpException extends Exception implements ResponseCodeInterface, Response
     ): self {
         return new self(
             responseCode: ResponseCode::UNAVAILABLE_FOR_LEGAL_REASONS,
+            previous: $exception,
+        );
+    }
+
+    public static function fromNoResponse(
+        ?\Throwable $exception = null,
+    ): self {
+        return new self(
+            responseCode: ResponseCode::NO_RESPONSE,
+            previous: $exception,
+        );
+    }
+
+    public static function fromClientClosedRequest(
+        ?\Throwable $exception = null,
+    ): self {
+        return new self(
+            responseCode: ResponseCode::CLIENT_CLOSED_REQUEST,
             previous: $exception,
         );
     }
@@ -401,6 +410,96 @@ class HttpException extends Exception implements ResponseCodeInterface, Response
     ): self {
         return new self(
             responseCode: ResponseCode::NETWORK_AUTHENTICATION_REQUIRED,
+            previous: $exception,
+        );
+    }
+
+    public static function fromWebServerReturnedUnknownError(
+        ?\Throwable $exception = null,
+    ): self {
+        return new self(
+            responseCode: ResponseCode::WEB_SERVER_RETURNED_UNKNOWN_ERROR,
+            previous: $exception,
+        );
+    }
+
+    public static function fromWebServerIsDown(
+        ?\Throwable $exception = null,
+    ): self {
+        return new self(
+            responseCode: ResponseCode::WEB_SERVER_IS_DOWN,
+            previous: $exception,
+        );
+    }
+
+    public static function fromConnectionTimedOut(
+        ?\Throwable $exception = null,
+    ): self {
+        return new self(
+            responseCode: ResponseCode::CONNECTION_TIMED_OUT,
+            previous: $exception,
+        );
+    }
+
+    public static function fromOriginIsUnreachable(
+        ?\Throwable $exception = null,
+    ): self {
+        return new self(
+            responseCode: ResponseCode::ORIGIN_IS_UNREACHABLE,
+            previous: $exception,
+        );
+    }
+
+    public static function fromTimeoutOccurred(
+        ?\Throwable $exception = null,
+    ): self {
+        return new self(
+            responseCode: ResponseCode::A_TIMEOUT_OCCURRED,
+            previous: $exception,
+        );
+    }
+
+    public static function fromSslHandshakeFailed(
+        ?\Throwable $exception = null,
+    ): self {
+        return new self(
+            responseCode: ResponseCode::SSL_HANDSHAKE_FAILED,
+            previous: $exception,
+        );
+    }
+
+    public static function fromInvalidSslCertificate(
+        ?\Throwable $exception = null,
+    ): self {
+        return new self(
+            responseCode: ResponseCode::INVALID_SSL_CERTIFICATE,
+            previous: $exception,
+        );
+    }
+
+    public static function fromRailgunError(
+        ?\Throwable $exception = null,
+    ): self {
+        return new self(
+            responseCode: ResponseCode::RAILGUN_ERROR,
+            previous: $exception,
+        );
+    }
+
+    public static function fromNetworkReadTimeoutError(
+        ?\Throwable $exception = null,
+    ): self {
+        return new self(
+            responseCode: ResponseCode::NETWORK_READ_TIMEOUT_ERROR,
+            previous: $exception,
+        );
+    }
+
+    public static function fromNetworkConnectTimeoutError(
+        ?\Throwable $exception = null,
+    ): self {
+        return new self(
+            responseCode: ResponseCode::NETWORK_CONNECT_TIMEOUT_ERROR,
             previous: $exception,
         );
     }

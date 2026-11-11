@@ -19,6 +19,7 @@ enum ResponseCode: int
     case SWITCHING_PROTOCOLS = 101;
     case PROCESSING = 102;
     case EARLY_HINTS = 103;
+    case UPLOAD_RESUMPTION_SUPPORTED = 104;
     case OK = 200;
     case CREATED = 201;
     case ACCEPTED = 202;
@@ -51,13 +52,13 @@ enum ResponseCode: int
     case GONE = 410;
     case LENGTH_REQUIRED = 411;
     case PRECONDITION_FAILED = 412;
-    case PAYLOAD_TOO_LARGE = 413;
+    case CONTENT_TOO_LARGE = 413;
     case URI_TOO_LONG = 414;
     case UNSUPPORTED_MEDIA_TYPE = 415;
     case RANGE_NOT_SATISFIABLE = 416;
     case EXPECTATION_FAILED = 417;
     case MISDIRECTED_REQUEST = 421;
-    case UNPROCESSABLE_ENTITY = 422;
+    case UNPROCESSABLE_CONTENT = 422;
     case LOCKED = 423;
     case FAILED_DEPENDENCY = 424;
     case TOO_EARLY = 425;
@@ -65,7 +66,9 @@ enum ResponseCode: int
     case PRECONDITION_REQUIRED = 428;
     case TOO_MANY_REQUESTS = 429;
     case REQUEST_HEADER_FIELDS_TOO_LARGE = 431;
+    case NO_RESPONSE = 444;
     case UNAVAILABLE_FOR_LEGAL_REASONS = 451;
+    case CLIENT_CLOSED_REQUEST = 499;
     case INTERNAL_SERVER_ERROR = 500;
     case NOT_IMPLEMENTED = 501;
     case BAD_GATEWAY = 502;
@@ -77,6 +80,16 @@ enum ResponseCode: int
     case LOOP_DETECTED = 508;
     case NOT_EXTENDED = 510;
     case NETWORK_AUTHENTICATION_REQUIRED = 511;
+    case WEB_SERVER_RETURNED_UNKNOWN_ERROR = 520;
+    case WEB_SERVER_IS_DOWN = 521;
+    case CONNECTION_TIMED_OUT = 522;
+    case ORIGIN_IS_UNREACHABLE = 523;
+    case A_TIMEOUT_OCCURRED = 524;
+    case SSL_HANDSHAKE_FAILED = 525;
+    case INVALID_SSL_CERTIFICATE = 526;
+    case RAILGUN_ERROR = 527;
+    case NETWORK_READ_TIMEOUT_ERROR = 598;
+    case NETWORK_CONNECT_TIMEOUT_ERROR = 599;
 
     public function getStatusCode(): int
     {
@@ -90,6 +103,7 @@ enum ResponseCode: int
             self::SWITCHING_PROTOCOLS => 'Switching Protocols',
             self::PROCESSING => 'Processing',
             self::EARLY_HINTS => 'Early Hints',
+            self::UPLOAD_RESUMPTION_SUPPORTED => 'Upload Resumption Supported',
             self::OK => 'OK',
             self::CREATED => 'Created',
             self::ACCEPTED => 'Accepted',
@@ -122,13 +136,13 @@ enum ResponseCode: int
             self::GONE => 'Gone',
             self::LENGTH_REQUIRED => 'Length Required',
             self::PRECONDITION_FAILED => 'Precondition Failed',
-            self::PAYLOAD_TOO_LARGE => 'Payload Too Large',
+            self::CONTENT_TOO_LARGE => 'Content Too Large',
             self::URI_TOO_LONG => 'URI Too Long',
             self::UNSUPPORTED_MEDIA_TYPE => 'Unsupported Media Type',
             self::RANGE_NOT_SATISFIABLE => 'Range Not Satisfiable',
             self::EXPECTATION_FAILED => 'Expectation Failed',
             self::MISDIRECTED_REQUEST => 'Misdirected Request',
-            self::UNPROCESSABLE_ENTITY => 'Unprocessable Entity',
+            self::UNPROCESSABLE_CONTENT => 'Unprocessable Content',
             self::LOCKED => 'Locked',
             self::FAILED_DEPENDENCY => 'Failed Dependency',
             self::TOO_EARLY => 'Too Early',
@@ -136,7 +150,9 @@ enum ResponseCode: int
             self::PRECONDITION_REQUIRED => 'Precondition Required',
             self::TOO_MANY_REQUESTS => 'Too Many Requests',
             self::REQUEST_HEADER_FIELDS_TOO_LARGE => 'Request Header Fields Too Large',
+            self::NO_RESPONSE => 'No Response',
             self::UNAVAILABLE_FOR_LEGAL_REASONS => 'Unavailable For Legal Reasons',
+            self::CLIENT_CLOSED_REQUEST => 'Client Closed Request',
             self::INTERNAL_SERVER_ERROR => 'Internal Server Error',
             self::NOT_IMPLEMENTED => 'Not Implemented',
             self::BAD_GATEWAY => 'Bad Gateway',
@@ -148,6 +164,16 @@ enum ResponseCode: int
             self::LOOP_DETECTED => 'Loop Detected',
             self::NOT_EXTENDED => 'Not Extended',
             self::NETWORK_AUTHENTICATION_REQUIRED => 'Network Authentication Required',
+            self::WEB_SERVER_RETURNED_UNKNOWN_ERROR => 'Web Server Returned an Unknown Error',
+            self::WEB_SERVER_IS_DOWN => 'Web Server Is Down',
+            self::CONNECTION_TIMED_OUT => 'Connection Timed Out',
+            self::ORIGIN_IS_UNREACHABLE => 'Origin Is Unreachable',
+            self::A_TIMEOUT_OCCURRED => 'A Timeout Occurred',
+            self::SSL_HANDSHAKE_FAILED => 'SSL Handshake Failed',
+            self::INVALID_SSL_CERTIFICATE => 'Invalid SSL Certificate',
+            self::RAILGUN_ERROR => 'Railgun Error',
+            self::NETWORK_READ_TIMEOUT_ERROR => 'Network Read Timeout Error',
+            self::NETWORK_CONNECT_TIMEOUT_ERROR => 'Network Connect Timeout Error',
         };
     }
 }

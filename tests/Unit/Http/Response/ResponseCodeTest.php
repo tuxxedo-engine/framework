@@ -49,6 +49,12 @@ class ResponseCodeTest extends TestCase
         ];
 
         yield [
+            ResponseCode::UPLOAD_RESUMPTION_SUPPORTED,
+            104,
+            'Upload Resumption Supported',
+        ];
+
+        yield [
             ResponseCode::OK,
             200,
             'OK',
@@ -241,9 +247,9 @@ class ResponseCodeTest extends TestCase
         ];
 
         yield [
-            ResponseCode::PAYLOAD_TOO_LARGE,
+            ResponseCode::CONTENT_TOO_LARGE,
             413,
-            'Payload Too Large',
+            'Content Too Large',
         ];
 
         yield [
@@ -277,9 +283,9 @@ class ResponseCodeTest extends TestCase
         ];
 
         yield [
-            ResponseCode::UNPROCESSABLE_ENTITY,
+            ResponseCode::UNPROCESSABLE_CONTENT,
             422,
-            'Unprocessable Entity',
+            'Unprocessable Content',
         ];
 
         yield [
@@ -325,9 +331,21 @@ class ResponseCodeTest extends TestCase
         ];
 
         yield [
+            ResponseCode::NO_RESPONSE,
+            444,
+            'No Response',
+        ];
+
+        yield [
             ResponseCode::UNAVAILABLE_FOR_LEGAL_REASONS,
             451,
             'Unavailable For Legal Reasons',
+        ];
+
+        yield [
+            ResponseCode::CLIENT_CLOSED_REQUEST,
+            499,
+            'Client Closed Request',
         ];
 
         yield [
@@ -394,6 +412,66 @@ class ResponseCodeTest extends TestCase
             ResponseCode::NETWORK_AUTHENTICATION_REQUIRED,
             511,
             'Network Authentication Required',
+        ];
+
+        yield [
+            ResponseCode::WEB_SERVER_RETURNED_UNKNOWN_ERROR,
+            520,
+            'Web Server Returned an Unknown Error',
+        ];
+
+        yield [
+            ResponseCode::WEB_SERVER_IS_DOWN,
+            521,
+            'Web Server Is Down',
+        ];
+
+        yield [
+            ResponseCode::CONNECTION_TIMED_OUT,
+            522,
+            'Connection Timed Out',
+        ];
+
+        yield [
+            ResponseCode::ORIGIN_IS_UNREACHABLE,
+            523,
+            'Origin Is Unreachable',
+        ];
+
+        yield [
+            ResponseCode::A_TIMEOUT_OCCURRED,
+            524,
+            'A Timeout Occurred',
+        ];
+
+        yield [
+            ResponseCode::SSL_HANDSHAKE_FAILED,
+            525,
+            'SSL Handshake Failed',
+        ];
+
+        yield [
+            ResponseCode::INVALID_SSL_CERTIFICATE,
+            526,
+            'Invalid SSL Certificate',
+        ];
+
+        yield [
+            ResponseCode::RAILGUN_ERROR,
+            527,
+            'Railgun Error',
+        ];
+
+        yield [
+            ResponseCode::NETWORK_READ_TIMEOUT_ERROR,
+            598,
+            'Network Read Timeout Error',
+        ];
+
+        yield [
+            ResponseCode::NETWORK_CONNECT_TIMEOUT_ERROR,
+            599,
+            'Network Connect Timeout Error',
         ];
     }
 

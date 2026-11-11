@@ -34,7 +34,7 @@ readonly class MaxBodySize implements MiddlewareInterface
             $contentLength = $request->headers->int('Content-Length');
 
             if ($contentLength > $this->maxBytes) {
-                throw HttpException::fromPayloadTooLarge();
+                throw HttpException::fromContentTooLarge();
             }
         }
 
@@ -68,7 +68,7 @@ readonly class MaxBodySize implements MiddlewareInterface
             if ($bytesRead > $this->maxBytes) {
                 \fclose($stream);
 
-                throw HttpException::fromPayloadTooLarge();
+                throw HttpException::fromContentTooLarge();
             }
         }
 

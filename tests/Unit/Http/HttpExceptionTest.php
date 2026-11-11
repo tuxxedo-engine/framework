@@ -124,8 +124,8 @@ class HttpExceptionTest extends TestCase
         ];
 
         yield [
-            ResponseCode::PAYLOAD_TOO_LARGE,
-            HttpException::fromPayloadTooLarge(...),
+            ResponseCode::CONTENT_TOO_LARGE,
+            HttpException::fromContentTooLarge(...),
         ];
 
         yield [
@@ -154,12 +154,7 @@ class HttpExceptionTest extends TestCase
         ];
 
         yield [
-            ResponseCode::UNPROCESSABLE_ENTITY,
-            HttpException::fromUnprocessableEntity(...),
-        ];
-
-        yield [
-            ResponseCode::UNPROCESSABLE_ENTITY,
+            ResponseCode::UNPROCESSABLE_CONTENT,
             HttpException::fromUnprocessableContent(...),
         ];
 
@@ -201,6 +196,16 @@ class HttpExceptionTest extends TestCase
         yield [
             ResponseCode::UNAVAILABLE_FOR_LEGAL_REASONS,
             HttpException::fromUnavailableForLegalReasons(...),
+        ];
+
+        yield [
+            ResponseCode::NO_RESPONSE,
+            HttpException::fromNoResponse(...),
+        ];
+
+        yield [
+            ResponseCode::CLIENT_CLOSED_REQUEST,
+            HttpException::fromClientClosedRequest(...),
         ];
 
         yield [
@@ -256,6 +261,56 @@ class HttpExceptionTest extends TestCase
         yield [
             ResponseCode::NETWORK_AUTHENTICATION_REQUIRED,
             HttpException::fromNetworkAuthenticationRequired(...),
+        ];
+
+        yield [
+            ResponseCode::WEB_SERVER_RETURNED_UNKNOWN_ERROR,
+            HttpException::fromWebServerReturnedUnknownError(...),
+        ];
+
+        yield [
+            ResponseCode::WEB_SERVER_IS_DOWN,
+            HttpException::fromWebServerIsDown(...),
+        ];
+
+        yield [
+            ResponseCode::CONNECTION_TIMED_OUT,
+            HttpException::fromConnectionTimedOut(...),
+        ];
+
+        yield [
+            ResponseCode::ORIGIN_IS_UNREACHABLE,
+            HttpException::fromOriginIsUnreachable(...),
+        ];
+
+        yield [
+            ResponseCode::A_TIMEOUT_OCCURRED,
+            HttpException::fromTimeoutOccurred(...),
+        ];
+
+        yield [
+            ResponseCode::SSL_HANDSHAKE_FAILED,
+            HttpException::fromSslHandshakeFailed(...),
+        ];
+
+        yield [
+            ResponseCode::INVALID_SSL_CERTIFICATE,
+            HttpException::fromInvalidSslCertificate(...),
+        ];
+
+        yield [
+            ResponseCode::RAILGUN_ERROR,
+            HttpException::fromRailgunError(...),
+        ];
+
+        yield [
+            ResponseCode::NETWORK_READ_TIMEOUT_ERROR,
+            HttpException::fromNetworkReadTimeoutError(...),
+        ];
+
+        yield [
+            ResponseCode::NETWORK_CONNECT_TIMEOUT_ERROR,
+            HttpException::fromNetworkConnectTimeoutError(...),
         ];
     }
 

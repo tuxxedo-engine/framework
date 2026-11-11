@@ -206,7 +206,7 @@ readonly class MailController
         } catch (ValidationException $e) {
             return Response::text(
                 text: \join(\PHP_EOL, $this->formatViolations($e)),
-                responseCode: ResponseCode::UNPROCESSABLE_ENTITY,
+                responseCode: ResponseCode::UNPROCESSABLE_CONTENT,
             );
         }
 

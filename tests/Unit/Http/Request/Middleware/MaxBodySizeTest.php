@@ -163,7 +163,7 @@ class MaxBodySizeTest extends TestCase
         }
 
         self::assertInstanceOf(HttpException::class, $caught);
-        self::assertSame(ResponseCode::PAYLOAD_TOO_LARGE, $caught->responseCode);
+        self::assertSame(ResponseCode::CONTENT_TOO_LARGE, $caught->responseCode);
         self::assertSame(0, $next->callCount);
     }
 
@@ -249,7 +249,7 @@ class MaxBodySizeTest extends TestCase
         }
 
         self::assertInstanceOf(HttpException::class, $caught);
-        self::assertSame(ResponseCode::PAYLOAD_TOO_LARGE, $caught->responseCode);
+        self::assertSame(ResponseCode::CONTENT_TOO_LARGE, $caught->responseCode);
         self::assertSame(0, $next->callCount);
     }
 

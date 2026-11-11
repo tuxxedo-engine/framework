@@ -51,6 +51,9 @@ class Kernel implements KernelInterface
     ) {
     }
 
+    /**
+     * @param (\Closure(): MiddlewareInterface)|class-string<MiddlewareInterface>|MiddlewareInterface $middleware
+     */
     public function middleware(
         \Closure|string|MiddlewareInterface $middleware,
     ): static {
@@ -66,6 +69,10 @@ class Kernel implements KernelInterface
         return $this;
     }
 
+    /**
+     * @param class-string<\Throwable> $exceptionClass
+     * @param (\Closure(): ErrorHandlerInterface)|class-string<ErrorHandlerInterface>|ErrorHandlerInterface $handler
+     */
     public function whenException(
         string $exceptionClass,
         \Closure|string|ErrorHandlerInterface $handler,
@@ -83,6 +90,9 @@ class Kernel implements KernelInterface
         return $this;
     }
 
+    /**
+     * @param (\Closure(): ErrorHandlerInterface)|class-string<ErrorHandlerInterface>|ErrorHandlerInterface $handler
+     */
     public function defaultExceptionHandler(
         \Closure|string|ErrorHandlerInterface $handler,
     ): static {

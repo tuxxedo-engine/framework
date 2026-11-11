@@ -21,7 +21,7 @@ class ValidationException extends Exception implements PrefersResponseCodeInterf
 {
     public ?ResponseCode $responseCode {
         get {
-            return ResponseCode::UNPROCESSABLE_ENTITY;
+            return ResponseCode::UNPROCESSABLE_CONTENT;
         }
     }
 
