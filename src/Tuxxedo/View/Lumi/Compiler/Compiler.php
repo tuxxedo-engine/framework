@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Compiler;
 
-use Tuxxedo\Escaper\Escaper;
-use Tuxxedo\Escaper\EscaperInterface;
+use Tuxxedo\Text\Escaper\Escaper;
+use Tuxxedo\Text\Escaper\EscaperInterface;
 use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompiler;
 use Tuxxedo\View\Lumi\Compiler\Expression\ExpressionCompilerInterface;
 use Tuxxedo\View\Lumi\Compiler\Provider\CompilerProviderInterface;

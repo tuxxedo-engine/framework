@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\View\Lumi\Library\Standard;
 
-use Tuxxedo\Escaper\Escaper;
-use Tuxxedo\Escaper\EscaperInterface;
+use Tuxxedo\Text\Escaper\Escaper;
+use Tuxxedo\Text\Escaper\EscaperInterface;
 use Tuxxedo\View\Lumi\Library\Attribute\LumiFilter;
 
 class EscapeLibrary

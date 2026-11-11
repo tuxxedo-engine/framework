@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Escaper;
+namespace Tuxxedo\Text\Escaper;
 
 class Escaper implements EscaperInterface
 {

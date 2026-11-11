@@ -15,8 +15,8 @@ namespace Unit\View\Lumi\Highlight;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Escaper\Escaper;
-use Tuxxedo\Escaper\EscaperInterface;
+use Tuxxedo\Text\Escaper\Escaper;
+use Tuxxedo\Text\Escaper\EscaperInterface;
 use Tuxxedo\View\Lumi\Highlight\ColorSlot;
 use Tuxxedo\View\Lumi\Highlight\HighlightException;
 use Tuxxedo\View\Lumi\Highlight\Highlighter;

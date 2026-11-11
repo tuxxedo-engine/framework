@@ -23,7 +23,7 @@ use Fixture\View\Lumi\Compiler\Compiler\PostFooProvider;
 use Fixture\View\Lumi\RecordingOptimizer;
 use PHPUnit\Framework\TestCase;
 use Support\View\Lumi\Compiler\RecordingExpressionCompiler;
-use Tuxxedo\Escaper\Escaper;
+use Tuxxedo\Text\Escaper\Escaper;
 use Tuxxedo\View\Lumi\Compiler\Compiler;
 use Tuxxedo\View\Lumi\Compiler\CompilerException;
 use Tuxxedo\View\Lumi\Compiler\CompilerState;

@@ -11,11 +11,11 @@
 
 declare(strict_types=1);
 
-namespace Unit\Escaper;
+namespace Unit\Text\Escaper;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Escaper\Escaper;
+use Tuxxedo\Text\Escaper\Escaper;
 
 class EscaperTest extends TestCase
 {
