@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Response;
 
 use Tuxxedo\Http\CookieInterface;
-use Tuxxedo\Http\Response\Stream\StreamInterface;
+use Tuxxedo\Http\Stream\StreamInterface;
 
 class ResponseEmitter implements ResponseEmitterInterface
 {

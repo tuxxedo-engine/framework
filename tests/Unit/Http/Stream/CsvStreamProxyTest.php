@@ -11,12 +11,12 @@
 
 declare(strict_types=1);
 
-namespace Unit\Http\Response\Stream;
+namespace Unit\Http\Stream;
 
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Http\Response\PrefersHeadersInterface;
-use Tuxxedo\Http\Response\Stream\CsvStreamProxy;
-use Tuxxedo\Http\Response\Stream\StreamProxyInterface;
+use Tuxxedo\Http\Stream\CsvStreamProxy;
+use Tuxxedo\Http\Stream\StreamProxyInterface;
 
 class CsvStreamProxyTest extends TestCase
 {

@@ -20,10 +20,11 @@ use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\HttpVersion;
 use Tuxxedo\Http\Request\RequestInterface;
-use Tuxxedo\Http\Response\Stream\JsonStreamFormat;
-use Tuxxedo\Http\Response\Stream\SseEventInterface;
-use Tuxxedo\Http\Response\Stream\Stream;
-use Tuxxedo\Http\Response\Stream\StreamInterface;
+use Tuxxedo\Http\Stream\JsonStreamFormat;
+use Tuxxedo\Http\Stream\ResourceStream;
+use Tuxxedo\Http\Stream\SseEventInterface;
+use Tuxxedo\Http\Stream\Stream;
+use Tuxxedo\Http\Stream\StreamInterface;
 use Tuxxedo\Router\RouterInterface;
 use Tuxxedo\Temporal\InstantInterface;
 
@@ -295,7 +296,7 @@ class Response implements ResponseInterface, ResponsableInterface
                 autoFlush: $autoFlush,
             );
         } elseif (\is_resource($stream)) {
-            $body = Stream::fromResource(
+            $body = ResourceStream::fromResource(
                 resource: $stream,
                 autoFlush: $autoFlush,
                 chunkSize: $chunkSize,

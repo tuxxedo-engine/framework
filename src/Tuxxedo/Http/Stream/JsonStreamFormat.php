@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Http\Response\Stream;
+namespace Tuxxedo\Http\Stream;
 
 enum JsonStreamFormat
 {

@@ -11,14 +11,14 @@
 
 declare(strict_types=1);
 
-namespace Unit\Http\Response\Stream;
+namespace Unit\Http\Stream;
 
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Http\HttpException;
-use Tuxxedo\Http\Response\Stream\GeneratorStreamProxy;
-use Tuxxedo\Http\Response\Stream\JsonStreamFormat;
-use Tuxxedo\Http\Response\Stream\SseEvent;
-use Tuxxedo\Http\Response\Stream\Stream;
+use Tuxxedo\Http\Stream\GeneratorStreamProxy;
+use Tuxxedo\Http\Stream\JsonStreamFormat;
+use Tuxxedo\Http\Stream\SseEvent;
+use Tuxxedo\Http\Stream\Stream;
+use Tuxxedo\Http\Stream\StreamException;
 
 class StreamTest extends TestCase
 {
@@ -90,15 +90,7 @@ class StreamTest extends TestCase
 
     public function testGetSizeDelegatesToProxy(): void
     {
-        $resource = \fopen('php://memory', 'r+b');
-
-        self::assertIsResource($resource);
-
-        \fwrite($resource, 'hello world');
-
-        $stream = Stream::fromResource($resource);
-
-        self::assertSame(11, $stream->getSize());
+        self::assertNull(self::makeStream('hello')->getSize());
     }
 
     public function testGetSizeNullWhenClosed(): void
@@ -173,85 +165,45 @@ class StreamTest extends TestCase
         self::assertTrue($stream->autoFlush);
     }
 
-    public function testFromResource(): void
+    public function testCopyToWritesTheRemainingContent(): void
     {
-        $resource = \fopen('php://memory', 'r+b');
+        $path = \tempnam(\sys_get_temp_dir(), 'stream_copy_');
 
-        self::assertIsResource($resource);
-
-        \fwrite($resource, 'hello');
-        \rewind($resource);
-
-        $stream = Stream::fromResource($resource);
-
-        self::assertSame('hello', $stream->read());
-    }
-
-    public function testFromResourceAutoFlushDefaultIsFalse(): void
-    {
-        $resource = \fopen('php://memory', 'r+b');
-
-        self::assertIsResource($resource);
-
-        $stream = Stream::fromResource($resource);
-
-        self::assertFalse($stream->autoFlush);
-    }
-
-    public function testFromFileReadsContent(): void
-    {
-        $path = \tempnam(\sys_get_temp_dir(), 'engine_test_');
-
-        self::assertNotFalse($path);
-
-        \file_put_contents($path, 'hello from file');
+        self::assertIsString($path);
 
         try {
-            $stream = Stream::fromFile($path);
+            $stream = Stream::fromGenerator(
+                static function (): \Generator {
+                    yield 'foo';
+                    yield 'bar';
+                    yield 'baz';
+                },
+            );
 
-            self::assertSame('hello from file', $stream->getContents());
+            self::assertSame('foo', $stream->read());
+
+            $stream->copyTo($path);
+
+            self::assertSame('barbaz', \file_get_contents($path));
+            self::assertTrue($stream->eof());
         } finally {
             \unlink($path);
         }
     }
 
-    public function testFromFileAutoFlushDefaultIsFalse(): void
+    public function testCopyToUnwritablePathThrowsStreamException(): void
     {
-        $path = \tempnam(\sys_get_temp_dir(), 'engine_test_');
-
-        self::assertNotFalse($path);
-
-        \file_put_contents($path, '');
-
         try {
-            $stream = Stream::fromFile($path);
+            Stream::fromGenerator(
+                static function (): \Generator {
+                    yield 'x';
+                },
+            )->copyTo('/nonexistent/path/that/does/not/exist.txt');
 
-            self::assertFalse($stream->autoFlush);
-        } finally {
-            \unlink($path);
+            self::fail('Expected StreamException was not thrown');
+        } catch (StreamException $exception) {
+            self::assertStringContainsString('could not be opened for writing', $exception->getMessage());
         }
-    }
-
-    public function testFromFileInvalidPathThrowsHttpException(): void
-    {
-        self::expectException(HttpException::class);
-
-        Stream::fromFile('/nonexistent/path/that/does/not/exist.txt');
-    }
-
-    public function testFromTemporary(): void
-    {
-        $stream = Stream::fromTemporary();
-
-        self::assertFalse($stream->closed);
-        self::assertFalse($stream->autoFlush);
-    }
-
-    public function testFromTemporaryNullMaxMemory(): void
-    {
-        $stream = Stream::fromTemporary(maxMemory: null);
-
-        self::assertFalse($stream->closed);
     }
 
     public function testFromCsvWithClosure(): void

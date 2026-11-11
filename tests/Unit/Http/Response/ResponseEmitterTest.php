@@ -19,8 +19,8 @@ use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseEmitter;
-use Tuxxedo\Http\Response\Stream\Stream;
-use Tuxxedo\Http\Response\Stream\StreamProxyInterface;
+use Tuxxedo\Http\Stream\Stream;
+use Tuxxedo\Http\Stream\StreamProxyInterface;
 
 class ResponseEmitterTest extends TestCase
 {

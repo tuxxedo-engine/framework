@@ -18,7 +18,7 @@ use Tuxxedo\Http\CookieInterface;
 use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\HttpVersion;
-use Tuxxedo\Http\Response\Stream\StreamInterface;
+use Tuxxedo\Http\Stream\StreamInterface;
 use Tuxxedo\Temporal\InstantInterface;
 
 #[DefaultImplementation(class: Response::class)]

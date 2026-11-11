@@ -11,12 +11,12 @@
 
 declare(strict_types=1);
 
-namespace Unit\Http\Response\Stream;
+namespace Unit\Http\Stream;
 
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Http\Response\Stream\SseEvent;
-use Tuxxedo\Http\Response\Stream\SseEventInterface;
-use Tuxxedo\Http\Response\Stream\StreamException;
+use Tuxxedo\Http\Stream\SseEvent;
+use Tuxxedo\Http\Stream\SseEventInterface;
+use Tuxxedo\Http\Stream\StreamException;
 
 class SseEventTest extends TestCase
 {

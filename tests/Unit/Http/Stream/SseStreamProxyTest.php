@@ -11,14 +11,14 @@
 
 declare(strict_types=1);
 
-namespace Unit\Http\Response\Stream;
+namespace Unit\Http\Stream;
 
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Http\Response\PrefersHeadersInterface;
-use Tuxxedo\Http\Response\Stream\SseEvent;
-use Tuxxedo\Http\Response\Stream\SseEventInterface;
-use Tuxxedo\Http\Response\Stream\SseStreamProxy;
-use Tuxxedo\Http\Response\Stream\StreamProxyInterface;
+use Tuxxedo\Http\Stream\SseEvent;
+use Tuxxedo\Http\Stream\SseEventInterface;
+use Tuxxedo\Http\Stream\SseStreamProxy;
+use Tuxxedo\Http\Stream\StreamProxyInterface;
 
 class SseStreamProxyTest extends TestCase
 {

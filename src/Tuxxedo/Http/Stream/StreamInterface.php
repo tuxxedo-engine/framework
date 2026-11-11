@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Http\Response\Stream;
+namespace Tuxxedo\Http\Stream;
 
 use Tuxxedo\Http\Response\PrefersHeadersInterface;
 
@@ -32,4 +32,11 @@ interface StreamInterface extends PrefersHeadersInterface
 
     public function read(): ?string;
     public function getContents(): string;
+
+    /**
+     * @throws StreamException
+     */
+    public function copyTo(
+        string $path,
+    ): void;
 }

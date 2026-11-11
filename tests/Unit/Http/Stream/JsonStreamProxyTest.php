@@ -11,13 +11,13 @@
 
 declare(strict_types=1);
 
-namespace Unit\Http\Response\Stream;
+namespace Unit\Http\Stream;
 
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Http\Response\PrefersHeadersInterface;
-use Tuxxedo\Http\Response\Stream\JsonStreamFormat;
-use Tuxxedo\Http\Response\Stream\JsonStreamProxy;
-use Tuxxedo\Http\Response\Stream\StreamProxyInterface;
+use Tuxxedo\Http\Stream\JsonStreamFormat;
+use Tuxxedo\Http\Stream\JsonStreamProxy;
+use Tuxxedo\Http\Stream\StreamProxyInterface;
 
 class JsonStreamProxyTest extends TestCase
 {

@@ -11,9 +11,8 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Http\Response\Stream;
+namespace Tuxxedo\Http\Stream;
 
-use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Response\PrefersHeadersInterface;
 
 class Stream implements StreamInterface
@@ -106,85 +105,6 @@ class Stream implements StreamInterface
         );
     }
 
-    /**
-     * @param positive-int $chunkSize
-     *
-     * @throws HttpException
-     */
-    public static function fromFile(
-        string $path,
-        int $chunkSize = 8192,
-        bool $autoFlush = false,
-    ): static {
-        $resource = @\fopen($path, 'rb');
-
-        if ($resource === false) {
-            throw HttpException::fromInternalServerError();
-        }
-
-        return new static(
-            streamProxy: new ResourceStreamProxy(
-                resource: $resource,
-                chunkSize: $chunkSize,
-            ),
-            autoFlush: $autoFlush,
-        );
-    }
-
-    /**
-     * @param resource $resource
-     * @param positive-int $chunkSize
-     */
-    public static function fromResource(
-        mixed $resource,
-        int $chunkSize = 8192,
-        bool $autoFlush = false,
-    ): static {
-        return new static(
-            streamProxy: new ResourceStreamProxy(
-                resource: $resource,
-                chunkSize: $chunkSize,
-            ),
-            autoFlush: $autoFlush,
-        );
-    }
-
-    /**
-     * @param int|null $maxMemory
-     * @param positive-int $chunkSize
-     *
-     * @throws HttpException
-     */
-    public static function fromTemporary(
-        ?int $maxMemory = 1024 * 1024 * 2,
-        bool $autoFlush = false,
-        int $chunkSize = 8192,
-    ): static {
-        if ($maxMemory !== null) {
-            $resource = @\fopen(
-                \sprintf(
-                    'php://temp/maxmemory:%d',
-                    $maxMemory,
-                ),
-                'r+b',
-            );
-        } else {
-            $resource = @\fopen('php://temp', 'r+b');
-        }
-
-        if ($resource === false) {
-            throw HttpException::fromInternalServerError(); // @codeCoverageIgnore
-        }
-
-        return new static(
-            streamProxy: new ResourceStreamProxy(
-                resource: $resource,
-                chunkSize: $chunkSize,
-            ),
-            autoFlush: $autoFlush,
-        );
-    }
-
     public function close(): void
     {
         $this->streamProxy = null;
@@ -208,5 +128,26 @@ class Stream implements StreamInterface
     public function getContents(): string
     {
         return $this->streamProxy?->contents() ?? '';
+    }
+
+    /**
+     * @throws StreamException
+     */
+    public function copyTo(
+        string $path,
+    ): void {
+        $target = @\fopen($path, 'wb');
+
+        if ($target === false) {
+            throw StreamException::fromUnwritableFile($path);
+        }
+
+        try {
+            while (($chunk = $this->read()) !== null) {
+                \fwrite($target, $chunk);
+            }
+        } finally {
+            \fclose($target);
+        }
     }
 }

@@ -11,11 +11,11 @@
 
 declare(strict_types=1);
 
-namespace Unit\Http\Response\Stream;
+namespace Unit\Http\Stream;
 
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Http\Response\Stream\GeneratorStreamProxy;
-use Tuxxedo\Http\Response\Stream\StreamProxyInterface;
+use Tuxxedo\Http\Stream\GeneratorStreamProxy;
+use Tuxxedo\Http\Stream\StreamProxyInterface;
 
 class GeneratorStreamProxyTest extends TestCase
 {
