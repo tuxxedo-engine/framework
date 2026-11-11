@@ -630,6 +630,35 @@ class ConsoleConfiguratorTest extends TestCase
         self::assertNotEmpty($kernel->defaultExceptionHandlers);
     }
 
+    public function testBuildNarrowsClassStringsToContainerResolvingClosures(): void
+    {
+        $middleware = new RecordingCommandMiddleware();
+        $handler = new RecordingErrorHandler();
+
+        $kernel = ConsoleConfigurator::create()
+            ->withMiddleware(RecordingCommandMiddleware::class)
+            ->withExceptionHandler(
+                exceptionClass: \RuntimeException::class,
+                handler: RecordingErrorHandler::class,
+            )
+            ->withDefaultExceptionHandler(RecordingErrorHandler::class)
+            ->build();
+
+        $kernel->container->singleton($middleware);
+        $kernel->container->singleton($handler);
+
+        $resolvedMiddleware = $kernel->middleware[0];
+        $resolvedHandler = $kernel->exceptionHandlers[\RuntimeException::class][0];
+        $resolvedDefault = $kernel->defaultExceptionHandlers[0];
+
+        self::assertInstanceOf(\Closure::class, $resolvedMiddleware);
+        self::assertInstanceOf(\Closure::class, $resolvedHandler);
+        self::assertInstanceOf(\Closure::class, $resolvedDefault);
+        self::assertSame($middleware, $resolvedMiddleware());
+        self::assertSame($handler, $resolvedHandler());
+        self::assertSame($handler, $resolvedDefault());
+    }
+
     public function testBuildPropagatesMiddlewareToKernel(): void
     {
         $middleware = new RecordingCommandMiddleware();

@@ -108,9 +108,10 @@ class KernelPipelineTest extends TestCase
             commandClasses: [
                 SimpleCommand::class,
             ],
+            middleware: [
+                $recording,
+            ],
         );
-
-        $kernel->middleware($recording);
 
         $exitCode = $kernel->run(
             argv: [
@@ -127,17 +128,17 @@ class KernelPipelineTest extends TestCase
         );
     }
 
-    public function testGlobalMiddlewareRegisteredAsClassStringIsResolvedAndInvoked(): void
+    public function testGlobalMiddlewareRegisteredAsClosureIsResolvedAndInvoked(): void
     {
         $recording = new RecordingCommandMiddleware();
         $kernel = $this->makeKernel(
             commandClasses: [
                 SimpleCommand::class,
             ],
+            middleware: [
+                static fn (): CommandMiddlewareInterface => $recording,
+            ],
         );
-
-        $kernel->container->singleton($recording);
-        $kernel->middleware(RecordingCommandMiddleware::class);
 
         $exitCode = $kernel->run(
             argv: [
@@ -253,13 +254,12 @@ class KernelPipelineTest extends TestCase
             commandClasses: [
                 TaggingDescriptorMiddlewareCommand::class,
             ],
-        );
-
-        $kernel->middleware(
-            new TaggingCommandMiddleware(
-                tag: 'global',
-                sequence: $sequence,
-            ),
+            middleware: [
+                new TaggingCommandMiddleware(
+                    tag: 'global',
+                    sequence: $sequence,
+                ),
+            ],
         );
 
         $exitCode = $kernel->run(
@@ -294,9 +294,10 @@ class KernelPipelineTest extends TestCase
             commandClasses: [
                 SimpleCommand::class,
             ],
+            middleware: [
+                $halting,
+            ],
         );
-
-        $kernel->middleware($halting);
 
         $exitCode = $kernel->run(
             argv: [
@@ -311,9 +312,11 @@ class KernelPipelineTest extends TestCase
 
     /**
      * @param list<class-string> $commandClasses
+     * @param list<(\Closure(): CommandMiddlewareInterface)|CommandMiddlewareInterface> $middleware
      */
     private function makeKernel(
         array $commandClasses,
+        array $middleware = [],
     ): Kernel {
         $output = new ConsoleOutput(
             stdout: new StreamOutput(
@@ -364,6 +367,7 @@ class KernelPipelineTest extends TestCase
                 container: $this->container,
             ),
             output: $output,
+            middleware: $middleware,
         );
     }
 }

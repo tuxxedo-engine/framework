@@ -38,6 +38,7 @@ use Tuxxedo\Container\Container;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Debug\Config\DebugConfig;
+use Tuxxedo\Debug\DebugErrorHandler;
 use Tuxxedo\Env\Env;
 use Tuxxedo\Env\EnvInterface;
 use Tuxxedo\File\Storage\Local\Config\LocalStorageConfig;
@@ -545,7 +546,7 @@ class ApplicationConfiguratorTest extends TestCase
         self::assertNull($configurator->cacheManager);
     }
 
-    public function testWithMiddlewareWrapsInstanceInClosure(): void
+    public function testWithMiddlewareKeepsInstanceAsIs(): void
     {
         $configurator = new ApplicationConfigurator();
         $instance = new RecordingMiddleware();
@@ -555,8 +556,7 @@ class ApplicationConfiguratorTest extends TestCase
         );
 
         self::assertCount(1, $configurator->middleware);
-        self::assertInstanceOf(\Closure::class, $configurator->middleware[0]);
-        self::assertSame($instance, ($configurator->middleware[0])());
+        self::assertSame($instance, $configurator->middleware[0]);
     }
 
     public function testWithMiddlewareKeepsClosureAsIs(): void
@@ -628,7 +628,7 @@ class ApplicationConfiguratorTest extends TestCase
         self::assertSame($configurator, $result);
     }
 
-    public function testWithExceptionHandlerWrapsInstanceInClosure(): void
+    public function testWithExceptionHandlerKeepsInstanceAsIs(): void
     {
         $configurator = new ApplicationConfigurator();
         $handler = self::makeErrorHandler();
@@ -640,8 +640,7 @@ class ApplicationConfiguratorTest extends TestCase
 
         self::assertArrayHasKey(\RuntimeException::class, $configurator->exceptionHandlers);
         self::assertCount(1, $configurator->exceptionHandlers[\RuntimeException::class]);
-        self::assertInstanceOf(\Closure::class, $configurator->exceptionHandlers[\RuntimeException::class][0]);
-        self::assertSame($handler, ($configurator->exceptionHandlers[\RuntimeException::class][0])());
+        self::assertSame($handler, $configurator->exceptionHandlers[\RuntimeException::class][0]);
     }
 
     public function testWithExceptionHandlerKeepsClosureAsIs(): void
@@ -736,7 +735,7 @@ class ApplicationConfiguratorTest extends TestCase
         self::assertSame($configurator, $result);
     }
 
-    public function testWithDefaultExceptionHandlerWrapsInstanceInClosure(): void
+    public function testWithDefaultExceptionHandlerKeepsInstanceAsIs(): void
     {
         $configurator = new ApplicationConfigurator();
         $handler = self::makeErrorHandler();
@@ -746,8 +745,7 @@ class ApplicationConfiguratorTest extends TestCase
         );
 
         self::assertCount(1, $configurator->defaultExceptionHandlers);
-        self::assertInstanceOf(\Closure::class, $configurator->defaultExceptionHandlers[0]);
-        self::assertSame($handler, ($configurator->defaultExceptionHandlers[0])());
+        self::assertSame($handler, $configurator->defaultExceptionHandlers[0]);
     }
 
     public function testWithDefaultExceptionHandlerKeepsClosureAsIs(): void
@@ -1057,7 +1055,7 @@ class ApplicationConfiguratorTest extends TestCase
         $kernel = $configurator->build();
 
         self::assertCount(1, $kernel->middleware);
-        self::assertSame($middleware, ($kernel->middleware[0])());
+        self::assertSame($middleware, $kernel->middleware[0]);
     }
 
     public function testBuildAttachesMultipleMiddlewareToKernelInOrder(): void
@@ -1076,8 +1074,8 @@ class ApplicationConfiguratorTest extends TestCase
         $kernel = $configurator->build();
 
         self::assertCount(2, $kernel->middleware);
-        self::assertSame($first, ($kernel->middleware[0])());
-        self::assertSame($second, ($kernel->middleware[1])());
+        self::assertSame($first, $kernel->middleware[0]);
+        self::assertSame($second, $kernel->middleware[1]);
     }
 
     public function testBuildSkipsMiddlewareAttachmentWhenNoneRegistered(): void
@@ -1102,7 +1100,7 @@ class ApplicationConfiguratorTest extends TestCase
 
         self::assertArrayHasKey(\RuntimeException::class, $kernel->exceptionHandlers);
         self::assertCount(1, $kernel->exceptionHandlers[\RuntimeException::class]);
-        self::assertSame($handler, ($kernel->exceptionHandlers[\RuntimeException::class][0])());
+        self::assertSame($handler, $kernel->exceptionHandlers[\RuntimeException::class][0]);
     }
 
     public function testBuildAttachesDefaultExceptionHandlersToKernel(): void
@@ -1117,7 +1115,7 @@ class ApplicationConfiguratorTest extends TestCase
         $kernel = $configurator->build();
 
         self::assertCount(1, $kernel->defaultExceptionHandlers);
-        self::assertSame($handler, ($kernel->defaultExceptionHandlers[0])());
+        self::assertSame($handler, $kernel->defaultExceptionHandlers[0]);
     }
 
     public function testBuildPrependsDebugHandlerToDefaultExceptionHandlersWhenDebugConfigIsBound(): void
@@ -1146,7 +1144,35 @@ class ApplicationConfiguratorTest extends TestCase
         $kernel = $configurator->build();
 
         self::assertCount(2, $kernel->defaultExceptionHandlers);
-        self::assertSame($userHandler, ($kernel->defaultExceptionHandlers[1])());
+        self::assertInstanceOf(DebugErrorHandler::class, $kernel->defaultExceptionHandlers[0]);
+        self::assertSame($userHandler, $kernel->defaultExceptionHandlers[1]);
+    }
+
+    public function testBuildNarrowsClassStringsToContainerResolvingClosures(): void
+    {
+        $container = new Container();
+        $middleware = new RecordingMiddleware();
+        $handler = new RecordingErrorHandler();
+
+        $container->singleton($middleware);
+        $container->singleton($handler);
+
+        $kernel = $this->makeMinimalConfiguratorWithContainer($container)
+            ->withMiddleware(RecordingMiddleware::class)
+            ->withExceptionHandler(\RuntimeException::class, RecordingErrorHandler::class)
+            ->withDefaultExceptionHandler(RecordingErrorHandler::class)
+            ->build();
+
+        $resolvedMiddleware = $kernel->middleware[0];
+        $resolvedHandler = $kernel->exceptionHandlers[\RuntimeException::class][0];
+        $resolvedDefault = $kernel->defaultExceptionHandlers[0];
+
+        self::assertInstanceOf(\Closure::class, $resolvedMiddleware);
+        self::assertInstanceOf(\Closure::class, $resolvedHandler);
+        self::assertInstanceOf(\Closure::class, $resolvedDefault);
+        self::assertSame($middleware, $resolvedMiddleware());
+        self::assertSame($handler, $resolvedHandler());
+        self::assertSame($handler, $resolvedDefault());
     }
 
     public function testBuildSkipsDebugHandlerWhenDebugConfigIsNotBound(): void

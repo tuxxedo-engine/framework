@@ -55,21 +55,21 @@ interface ApplicationConfiguratorInterface extends AbstractConfiguratorInterface
     }
 
     /**
-     * @var array<(\Closure(): MiddlewareInterface)|class-string<MiddlewareInterface>>
+     * @var array<(\Closure(): MiddlewareInterface)|class-string<MiddlewareInterface>|MiddlewareInterface>
      */
     public array $middleware {
         get;
     }
 
     /**
-     * @var array<class-string<\Throwable>, array<(\Closure(): ErrorHandlerInterface)|class-string<ErrorHandlerInterface>>>
+     * @var array<class-string<\Throwable>, array<(\Closure(): ErrorHandlerInterface)|class-string<ErrorHandlerInterface>|ErrorHandlerInterface>>
      */
     public array $exceptionHandlers {
         get;
     }
 
     /**
-     * @var array<(\Closure(): ErrorHandlerInterface)|class-string<ErrorHandlerInterface>>
+     * @var array<(\Closure(): ErrorHandlerInterface)|class-string<ErrorHandlerInterface>|ErrorHandlerInterface>
      */
     public array $defaultExceptionHandlers {
         get;

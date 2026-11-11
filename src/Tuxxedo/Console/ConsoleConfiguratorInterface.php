@@ -72,21 +72,21 @@ interface ConsoleConfiguratorInterface extends AbstractConfiguratorInterface
     }
 
     /**
-     * @var list<\Closure|class-string<CommandMiddlewareInterface>|CommandMiddlewareInterface>
+     * @var list<(\Closure(): CommandMiddlewareInterface)|class-string<CommandMiddlewareInterface>|CommandMiddlewareInterface>
      */
     public array $middleware {
         get;
     }
 
     /**
-     * @var array<class-string<\Throwable>, list<\Closure|class-string<ConsoleErrorHandlerInterface>|ConsoleErrorHandlerInterface>>
+     * @var array<class-string<\Throwable>, list<(\Closure(): ConsoleErrorHandlerInterface)|class-string<ConsoleErrorHandlerInterface>|ConsoleErrorHandlerInterface>>
      */
     public array $exceptionHandlers {
         get;
     }
 
     /**
-     * @var list<\Closure|class-string<ConsoleErrorHandlerInterface>|ConsoleErrorHandlerInterface>
+     * @var list<(\Closure(): ConsoleErrorHandlerInterface)|class-string<ConsoleErrorHandlerInterface>|ConsoleErrorHandlerInterface>
      */
     public array $defaultExceptionHandlers {
         get;

@@ -28,6 +28,7 @@ use Tuxxedo\Console\Kernel\CommandDiscoverer;
 use Tuxxedo\Console\Kernel\CommandDispatcher;
 use Tuxxedo\Console\Kernel\CommandRegistry;
 use Tuxxedo\Console\Kernel\CommandRegistryInterface;
+use Tuxxedo\Console\Kernel\ConsoleErrorHandlerInterface;
 use Tuxxedo\Console\Kernel\Kernel;
 use Tuxxedo\Console\Output\ConsoleOutput;
 use Tuxxedo\Console\Output\DecorationMode;
@@ -173,10 +174,12 @@ class KernelExceptionTest extends TestCase
             returnedExitCode: ExitCode::CONFIG_ERROR,
         );
 
-        $kernel = $this->makeKernel();
-        $kernel->whenException(
-            exceptionClass: \RuntimeException::class,
-            handler: $handler,
+        $kernel = $this->makeKernel(
+            exceptionHandlers: [
+                \RuntimeException::class => [
+                    $handler,
+                ],
+            ],
         );
 
         $exitCode = $kernel->run(
@@ -191,17 +194,18 @@ class KernelExceptionTest extends TestCase
         self::assertSame(ExitCode::CONFIG_ERROR, $exitCode);
     }
 
-    public function testPerClassExceptionHandlerRegisteredAsClassStringIsResolvedAndInvoked(): void
+    public function testPerClassExceptionHandlerRegisteredAsClosureIsResolvedAndInvoked(): void
     {
         $handler = new RecordingErrorHandler(
             returnedExitCode: ExitCode::CONFIG_ERROR,
         );
 
-        $kernel = $this->makeKernel();
-        $kernel->container->singleton($handler);
-        $kernel->whenException(
-            exceptionClass: \RuntimeException::class,
-            handler: RecordingErrorHandler::class,
+        $kernel = $this->makeKernel(
+            exceptionHandlers: [
+                \RuntimeException::class => [
+                    static fn (): ConsoleErrorHandlerInterface => $handler,
+                ],
+            ],
         );
 
         $exitCode = $kernel->run(
@@ -215,15 +219,17 @@ class KernelExceptionTest extends TestCase
         self::assertSame(ExitCode::CONFIG_ERROR, $exitCode);
     }
 
-    public function testDefaultExceptionHandlerRegisteredAsClassStringIsResolvedAndInvoked(): void
+    public function testDefaultExceptionHandlerRegisteredAsClosureIsResolvedAndInvoked(): void
     {
         $handler = new RecordingErrorHandler(
             returnedExitCode: ExitCode::SOFTWARE_ERROR,
         );
 
-        $kernel = $this->makeKernel();
-        $kernel->container->singleton($handler);
-        $kernel->defaultExceptionHandler(RecordingErrorHandler::class);
+        $kernel = $this->makeKernel(
+            defaultExceptionHandlers: [
+                static fn (): ConsoleErrorHandlerInterface => $handler,
+            ],
+        );
 
         $exitCode = $kernel->run(
             argv: [
@@ -242,8 +248,11 @@ class KernelExceptionTest extends TestCase
             returnedExitCode: ExitCode::SOFTWARE_ERROR,
         );
 
-        $kernel = $this->makeKernel();
-        $kernel->defaultExceptionHandler($handler);
+        $kernel = $this->makeKernel(
+            defaultExceptionHandlers: [
+                $handler,
+            ],
+        );
 
         $exitCode = $kernel->run(
             argv: [
@@ -314,10 +323,16 @@ class KernelExceptionTest extends TestCase
         );
     }
 
+    /**
+     * @param array<class-string<\Throwable>, list<(\Closure(): ConsoleErrorHandlerInterface)|ConsoleErrorHandlerInterface>> $exceptionHandlers
+     * @param list<(\Closure(): ConsoleErrorHandlerInterface)|ConsoleErrorHandlerInterface> $defaultExceptionHandlers
+     */
     private function makeKernel(
         string $appName = '',
         bool $appNameHeaderEnabled = false,
         ?string $appNameHeaderLabel = null,
+        array $exceptionHandlers = [],
+        array $defaultExceptionHandlers = [],
     ): Kernel {
         $container = new Container();
 
@@ -373,6 +388,8 @@ class KernelExceptionTest extends TestCase
                 container: $container,
             ),
             output: $output,
+            exceptionHandlers: $exceptionHandlers,
+            defaultExceptionHandlers: $defaultExceptionHandlers,
             appName: $appName,
             appNameHeaderEnabled: $appNameHeaderEnabled,
             appNameHeaderLabel: $appNameHeaderLabel,

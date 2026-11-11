@@ -52,17 +52,17 @@ class ConsoleConfigurator extends AbstractConfigurator implements ConsoleConfigu
     public private(set) ?string $discoveryBaseNamespace = null;
 
     /**
-     * @var array<class-string<\Throwable>, list<\Closure|class-string<ConsoleErrorHandlerInterface>|ConsoleErrorHandlerInterface>>
+     * @var array<class-string<\Throwable>, list<(\Closure(): ConsoleErrorHandlerInterface)|class-string<ConsoleErrorHandlerInterface>|ConsoleErrorHandlerInterface>>
      */
     public private(set) array $exceptionHandlers = [];
 
     /**
-     * @var list<\Closure|class-string<ConsoleErrorHandlerInterface>|ConsoleErrorHandlerInterface>
+     * @var list<(\Closure(): ConsoleErrorHandlerInterface)|class-string<ConsoleErrorHandlerInterface>|ConsoleErrorHandlerInterface>
      */
     public private(set) array $defaultExceptionHandlers = [];
 
     /**
-     * @var list<\Closure|class-string<CommandMiddlewareInterface>|CommandMiddlewareInterface>
+     * @var list<(\Closure(): CommandMiddlewareInterface)|class-string<CommandMiddlewareInterface>|CommandMiddlewareInterface>
      */
     public private(set) array $middleware = [];
 
@@ -411,26 +411,68 @@ class ConsoleConfigurator extends AbstractConfigurator implements ConsoleConfigu
                     'appEnvironment' => $this->appEnvironment,
                     'appNameHeaderEnabled' => $this->appNameHeaderEnabled,
                     'appNameHeaderLabel' => $this->appNameHeaderLabel,
+                    'middleware' => self::narrowMiddleware($container, $this->middleware),
+                    'exceptionHandlers' => self::narrowExceptionHandlers($container, $this->exceptionHandlers),
+                    'defaultExceptionHandlers' => self::narrowErrorHandlers($container, $this->defaultExceptionHandlers),
                 ],
             ),
         );
 
-        $kernel = $container->resolve(KernelInterface::class);
+        return $container->resolve(KernelInterface::class);
+    }
 
-        foreach ($this->exceptionHandlers as $exceptionClass => $handlers) {
-            foreach ($handlers as $handler) {
-                $kernel->whenException($exceptionClass, $handler);
-            }
+    /**
+     * @param array<(\Closure(): CommandMiddlewareInterface)|class-string<CommandMiddlewareInterface>|CommandMiddlewareInterface> $middleware
+     * @return list<(\Closure(): CommandMiddlewareInterface)|CommandMiddlewareInterface>
+     */
+    private static function narrowMiddleware(
+        ContainerInterface $container,
+        array $middleware,
+    ): array {
+        $narrowed = [];
+
+        foreach ($middleware as $entry) {
+            $narrowed[] = \is_string($entry)
+                ? static fn (): CommandMiddlewareInterface => $container->resolve($entry)
+                : $entry;
         }
 
-        foreach ($this->defaultExceptionHandlers as $handler) {
-            $kernel->defaultExceptionHandler($handler);
+        return $narrowed;
+    }
+
+    /**
+     * @param array<(\Closure(): ConsoleErrorHandlerInterface)|class-string<ConsoleErrorHandlerInterface>|ConsoleErrorHandlerInterface> $handlers
+     * @return list<(\Closure(): ConsoleErrorHandlerInterface)|ConsoleErrorHandlerInterface>
+     */
+    private static function narrowErrorHandlers(
+        ContainerInterface $container,
+        array $handlers,
+    ): array {
+        $narrowed = [];
+
+        foreach ($handlers as $handler) {
+            $narrowed[] = \is_string($handler)
+                ? static fn (): ConsoleErrorHandlerInterface => $container->resolve($handler)
+                : $handler;
         }
 
-        foreach ($this->middleware as $middleware) {
-            $kernel->middleware($middleware);
+        return $narrowed;
+    }
+
+    /**
+     * @param array<class-string<\Throwable>, array<(\Closure(): ConsoleErrorHandlerInterface)|class-string<ConsoleErrorHandlerInterface>|ConsoleErrorHandlerInterface>> $exceptionHandlers
+     * @return array<class-string<\Throwable>, list<(\Closure(): ConsoleErrorHandlerInterface)|ConsoleErrorHandlerInterface>>
+     */
+    private static function narrowExceptionHandlers(
+        ContainerInterface $container,
+        array $exceptionHandlers,
+    ): array {
+        $narrowed = [];
+
+        foreach ($exceptionHandlers as $exceptionClass => $handlers) {
+            $narrowed[$exceptionClass] = self::narrowErrorHandlers($container, $handlers);
         }
 
-        return $kernel;
+        return $narrowed;
     }
 }

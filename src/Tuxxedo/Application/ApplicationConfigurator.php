@@ -204,10 +204,6 @@ class ApplicationConfigurator extends AbstractConfigurator implements Applicatio
     public function withMiddleware(
         \Closure|string|MiddlewareInterface $middleware,
     ): self {
-        if ($middleware instanceof MiddlewareInterface) {
-            $middleware = static fn (): MiddlewareInterface => $middleware;
-        }
-
         $this->middleware[] = $middleware;
 
         return $this;
@@ -224,10 +220,6 @@ class ApplicationConfigurator extends AbstractConfigurator implements Applicatio
         string $exceptionClass,
         \Closure|string|ErrorHandlerInterface $handler,
     ): self {
-        if ($handler instanceof ErrorHandlerInterface) {
-            $handler = static fn (): ErrorHandlerInterface => $handler;
-        }
-
         $this->exceptionHandlers[$exceptionClass] ??= [];
         $this->exceptionHandlers[$exceptionClass][] = $handler;
 
@@ -244,10 +236,6 @@ class ApplicationConfigurator extends AbstractConfigurator implements Applicatio
     public function withDefaultExceptionHandler(
         \Closure|string|ErrorHandlerInterface $handler,
     ): self {
-        if ($handler instanceof ErrorHandlerInterface) {
-            $handler = static fn (): ErrorHandlerInterface => $handler;
-        }
-
         $this->defaultExceptionHandlers[] = $handler;
 
         return $this;
@@ -312,50 +300,38 @@ class ApplicationConfigurator extends AbstractConfigurator implements Applicatio
 
         $container->singletonLazy(
             KernelInterface::class,
-            fn (ContainerInterface $container): KernelInterface => $container->resolve(
-                Kernel::class,
-                [
-                    'appName' => $this->appName,
-                    'appVersion' => $this->appVersion,
-                    'appEnvironment' => $this->appEnvironment,
-                    'appUrl' => $this->appUrl,
-                ],
-            ),
+            function (ContainerInterface $container): KernelInterface {
+                $defaultExceptionHandlers = $this->defaultExceptionHandlers;
+
+                if (
+                    $this->appEnvironment === Environment::DEVELOPMENT &&
+                    $container->isBound(DebugConfigInterface::class)
+                ) {
+                    $defaultExceptionHandlers = [
+                        new DebugErrorHandler(
+                            container: $container,
+                            config: $container->resolve(DebugConfigInterface::class),
+                        ),
+                        ...$defaultExceptionHandlers,
+                    ];
+                }
+
+                return $container->resolve(
+                    Kernel::class,
+                    [
+                        'appName' => $this->appName,
+                        'appVersion' => $this->appVersion,
+                        'appEnvironment' => $this->appEnvironment,
+                        'appUrl' => $this->appUrl,
+                        'middleware' => self::narrowMiddleware($container, $this->middleware),
+                        'exceptionHandlers' => self::narrowExceptionHandlers($container, $this->exceptionHandlers),
+                        'defaultExceptionHandlers' => self::narrowErrorHandlers($container, $defaultExceptionHandlers),
+                    ],
+                );
+            },
         );
 
         $kernel = $container->resolve(KernelInterface::class);
-
-        if (\sizeof($this->middleware) > 0) {
-            foreach ($this->middleware as $middleware) {
-                $kernel->middleware($middleware);
-            }
-        }
-
-        if (\sizeof($this->exceptionHandlers) > 0) {
-            foreach ($this->exceptionHandlers as $exceptionClass => $handlers) {
-                foreach ($handlers as $handler) {
-                    $kernel->whenException($exceptionClass, $handler);
-                }
-            }
-        }
-
-        if (
-            $this->appEnvironment === Environment::DEVELOPMENT &&
-            $container->isBound(DebugConfigInterface::class)
-        ) {
-            $kernel->defaultExceptionHandler(
-                handler: fn (): ErrorHandlerInterface => new DebugErrorHandler(
-                    container: $container,
-                    config: $container->resolve(DebugConfigInterface::class),
-                ),
-            );
-        }
-
-        if (\sizeof($this->defaultExceptionHandlers) > 0) {
-            foreach ($this->defaultExceptionHandlers as $handler) {
-                $kernel->defaultExceptionHandler($handler);
-            }
-        }
 
         $this->loadServiceFiles($container);
 
@@ -371,5 +347,60 @@ class ApplicationConfigurator extends AbstractConfigurator implements Applicatio
         return $url === ''
             ? new Url(path: '/')
             : Url::parse($url);
+    }
+
+    /**
+     * @param array<(\Closure(): MiddlewareInterface)|class-string<MiddlewareInterface>|MiddlewareInterface> $middleware
+     * @return list<(\Closure(): MiddlewareInterface)|MiddlewareInterface>
+     */
+    private static function narrowMiddleware(
+        ContainerInterface $container,
+        array $middleware,
+    ): array {
+        $narrowed = [];
+
+        foreach ($middleware as $entry) {
+            $narrowed[] = \is_string($entry)
+                ? static fn (): MiddlewareInterface => $container->resolve($entry)
+                : $entry;
+        }
+
+        return $narrowed;
+    }
+
+    /**
+     * @param array<(\Closure(): ErrorHandlerInterface)|class-string<ErrorHandlerInterface>|ErrorHandlerInterface> $handlers
+     * @return list<(\Closure(): ErrorHandlerInterface)|ErrorHandlerInterface>
+     */
+    private static function narrowErrorHandlers(
+        ContainerInterface $container,
+        array $handlers,
+    ): array {
+        $narrowed = [];
+
+        foreach ($handlers as $handler) {
+            $narrowed[] = \is_string($handler)
+                ? static fn (): ErrorHandlerInterface => $container->resolve($handler)
+                : $handler;
+        }
+
+        return $narrowed;
+    }
+
+    /**
+     * @param array<class-string<\Throwable>, array<(\Closure(): ErrorHandlerInterface)|class-string<ErrorHandlerInterface>|ErrorHandlerInterface>> $exceptionHandlers
+     * @return array<class-string<\Throwable>, list<(\Closure(): ErrorHandlerInterface)|ErrorHandlerInterface>>
+     */
+    private static function narrowExceptionHandlers(
+        ContainerInterface $container,
+        array $exceptionHandlers,
+    ): array {
+        $narrowed = [];
+
+        foreach ($exceptionHandlers as $exceptionClass => $handlers) {
+            $narrowed[$exceptionClass] = self::narrowErrorHandlers($container, $handlers);
+        }
+
+        return $narrowed;
     }
 }

@@ -20,11 +20,11 @@ use Tuxxedo\Http\Response\ResponseInterface;
 class MiddlewareNode implements MiddlewareInterface
 {
     /**
-     * @param \Closure(): MiddlewareInterface $current
+     * @param (\Closure(): MiddlewareInterface)|MiddlewareInterface $current
      */
     public function __construct(
         private readonly ContainerInterface $container,
-        private readonly \Closure $current,
+        private readonly \Closure|MiddlewareInterface $current,
         private readonly MiddlewareInterface $next,
     ) {
     }
@@ -33,7 +33,11 @@ class MiddlewareNode implements MiddlewareInterface
         RequestInterface $request,
         MiddlewareInterface $next,
     ): ResponseInterface {
-        return $this->container->call($this->current)->handle(
+        $current = $this->current instanceof \Closure
+            ? $this->container->call($this->current)
+            : $this->current;
+
+        return $current->handle(
             request: $request,
             next: $this->next,
         );

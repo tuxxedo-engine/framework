@@ -20,7 +20,6 @@ use Support\Http\Request\Context\StubBodyContext;
 use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
-use Support\Http\Request\Middleware\RecordingMiddleware;
 use Support\Http\Response\StubResponseEmitter;
 use Support\Serializer\SerializerManagerFactory;
 use Tuxxedo\Config\Config;
@@ -41,10 +40,18 @@ use Tuxxedo\Router\StaticRouter;
 
 class KernelTest extends TestCase
 {
+    /**
+     * @param list<(\Closure(): MiddlewareInterface)|MiddlewareInterface> $middleware
+     * @param array<class-string<\Throwable>, list<(\Closure(): ErrorHandlerInterface)|ErrorHandlerInterface>> $exceptionHandlers
+     * @param list<(\Closure(): ErrorHandlerInterface)|ErrorHandlerInterface> $defaultExceptionHandlers
+     */
     private function makeKernel(
         ?StubResponseEmitter $emitter = null,
         ?StubDispatcher $dispatcher = null,
         ?StaticRouter $router = null,
+        array $middleware = [],
+        array $exceptionHandlers = [],
+        array $defaultExceptionHandlers = [],
     ): Kernel {
         return new Kernel(
             container: new Container(),
@@ -54,6 +61,9 @@ class KernelTest extends TestCase
             router: $router ?? new StaticRouter(
                 routes: [],
             ),
+            middleware: $middleware,
+            exceptionHandlers: $exceptionHandlers,
+            defaultExceptionHandlers: $defaultExceptionHandlers,
         );
     }
 
@@ -92,19 +102,19 @@ class KernelTest extends TestCase
 
     public function testMiddlewareAddsClosure(): void
     {
-        $kernel = $this->makeKernel();
         $closure = static fn (): MiddlewareInterface => throw new \LogicException('stub');
-
-        $kernel->middleware($closure);
+        $kernel = $this->makeKernel(
+            middleware: [
+                $closure,
+            ],
+        );
 
         self::assertCount(1, $kernel->middleware);
         self::assertSame($closure, $kernel->middleware[0]);
     }
 
-    public function testMiddlewareWrapsInstanceInClosure(): void
+    public function testMiddlewareKeepsInstance(): void
     {
-        $kernel = $this->makeKernel();
-
         $instance = new class () implements MiddlewareInterface {
             public function handle(
                 RequestInterface $request,
@@ -114,56 +124,33 @@ class KernelTest extends TestCase
             }
         };
 
-        $kernel->middleware($instance);
+        $kernel = $this->makeKernel(
+            middleware: [
+                $instance,
+            ],
+        );
 
         self::assertCount(1, $kernel->middleware);
-        self::assertInstanceOf(\Closure::class, $kernel->middleware[0]);
-        self::assertSame($instance, ($kernel->middleware[0])());
+        self::assertSame($instance, $kernel->middleware[0]);
     }
 
-    public function testMiddlewareResolvesClassStringThroughContainer(): void
+    public function testExceptionHandlerRegistersClosure(): void
     {
-        $kernel = $this->makeKernel();
-        $instance = new RecordingMiddleware();
-
-        $kernel->container->singleton($instance);
-        $kernel->middleware(RecordingMiddleware::class);
-
-        self::assertCount(1, $kernel->middleware);
-        self::assertSame($instance, ($kernel->middleware[0])());
-    }
-
-    public function testMiddlewareReturnsSelf(): void
-    {
-        $kernel = $this->makeKernel();
-        $closure = static fn (): MiddlewareInterface => throw new \LogicException('stub');
-
-        self::assertSame($kernel, $kernel->middleware($closure));
-    }
-
-    public function testWhenExceptionRegistersHandler(): void
-    {
-        $kernel = $this->makeKernel();
         $closure = static fn (): ErrorHandlerInterface => throw new \LogicException('stub');
-
-        $kernel->whenException(\RuntimeException::class, $closure);
+        $kernel = $this->makeKernel(
+            exceptionHandlers: [
+                \RuntimeException::class => [
+                    $closure,
+                ],
+            ],
+        );
 
         self::assertArrayHasKey(\RuntimeException::class, $kernel->exceptionHandlers);
         self::assertCount(1, $kernel->exceptionHandlers[\RuntimeException::class]);
     }
 
-    public function testWhenExceptionReturnsSelf(): void
+    public function testExceptionHandlerKeepsInstance(): void
     {
-        $kernel = $this->makeKernel();
-        $closure = static fn (): ErrorHandlerInterface => throw new \LogicException('stub');
-
-        self::assertSame($kernel, $kernel->whenException(\RuntimeException::class, $closure));
-    }
-
-    public function testWhenExceptionWrapsInstanceInClosure(): void
-    {
-        $kernel = $this->makeKernel();
-
         $instance = new class () implements ErrorHandlerInterface {
             public function handle(
                 RequestInterface $request,
@@ -174,41 +161,27 @@ class KernelTest extends TestCase
             }
         };
 
-        $kernel->whenException(\RuntimeException::class, $instance);
+        $kernel = $this->makeKernel(
+            exceptionHandlers: [
+                \RuntimeException::class => [
+                    $instance,
+                ],
+            ],
+        );
 
-        $stored = $kernel->exceptionHandlers[\RuntimeException::class][0];
-
-        self::assertInstanceOf(\Closure::class, $stored);
-        self::assertSame($instance, $stored());
+        self::assertSame($instance, $kernel->exceptionHandlers[\RuntimeException::class][0]);
     }
 
-    public function testWhenExceptionResolvesClassStringThroughContainer(): void
+    public function testDefaultExceptionHandlerRegistersClosure(): void
     {
-        $kernel = $this->makeKernel();
-        $instance = new RecordingErrorHandler();
-
-        $kernel->container->singleton($instance);
-        $kernel->whenException(\RuntimeException::class, RecordingErrorHandler::class);
-
-        self::assertSame($instance, ($kernel->exceptionHandlers[\RuntimeException::class][0])());
-    }
-
-    public function testDefaultExceptionHandlerRegistersHandler(): void
-    {
-        $kernel = $this->makeKernel();
         $closure = static fn (): ErrorHandlerInterface => throw new \LogicException('stub');
-
-        $kernel->defaultExceptionHandler($closure);
+        $kernel = $this->makeKernel(
+            defaultExceptionHandlers: [
+                $closure,
+            ],
+        );
 
         self::assertCount(1, $kernel->defaultExceptionHandlers);
-    }
-
-    public function testDefaultExceptionHandlerReturnsSelf(): void
-    {
-        $kernel = $this->makeKernel();
-        $closure = static fn (): ErrorHandlerInterface => throw new \LogicException('stub');
-
-        self::assertSame($kernel, $kernel->defaultExceptionHandler($closure));
     }
 
     public function testRunDispatchesRouteAndEmitsResponse(): void
@@ -296,9 +269,13 @@ class KernelTest extends TestCase
                 result: new \RuntimeException('test'),
             ),
             router: $this->makeRouter(),
+            exceptionHandlers: [
+                \RuntimeException::class => [
+                    $handler,
+                ],
+            ],
         );
 
-        $kernel->whenException(\RuntimeException::class, $handler);
         $kernel->run($this->makeRequest());
 
         self::assertTrue($handler->called);
@@ -325,9 +302,43 @@ class KernelTest extends TestCase
             emitter: $emitter,
             dispatcher: new StubDispatcher(new Response(body: 'ok')),
             router: $this->makeRouter(),
+            middleware: [
+                $middleware,
+            ],
         );
 
-        $kernel->middleware($middleware);
+        $kernel->run($this->makeRequest());
+
+        self::assertTrue($middleware->called);
+        self::assertSame('ok', $emitter->lastResponse?->body);
+    }
+
+    public function testRunResolvesClosureMiddlewareThroughContainer(): void
+    {
+        $emitter = new StubResponseEmitter();
+
+        $middleware = new class () implements MiddlewareInterface {
+            public bool $called = false;
+
+            public function handle(
+                RequestInterface $request,
+                MiddlewareInterface $next,
+            ): ResponseInterface {
+                $this->called = true;
+
+                return $next->handle($request, $next);
+            }
+        };
+
+        $kernel = $this->makeKernel(
+            emitter: $emitter,
+            dispatcher: new StubDispatcher(new Response(body: 'ok')),
+            router: $this->makeRouter(),
+            middleware: [
+                static fn (): MiddlewareInterface => $middleware,
+            ],
+        );
+
         $kernel->run($this->makeRequest());
 
         self::assertTrue($middleware->called);
@@ -438,10 +449,8 @@ class KernelTest extends TestCase
         self::assertSame(ResponseCode::INTERNAL_SERVER_ERROR, $emitter->lastResponse?->responseCode);
     }
 
-    public function testDefaultExceptionHandlerWrapsInstance(): void
+    public function testDefaultExceptionHandlerKeepsInstance(): void
     {
-        $kernel = $this->makeKernel();
-
         $instance = new class () implements ErrorHandlerInterface {
             public function handle(
                 RequestInterface $request,
@@ -452,23 +461,14 @@ class KernelTest extends TestCase
             }
         };
 
-        $kernel->defaultExceptionHandler($instance);
+        $kernel = $this->makeKernel(
+            defaultExceptionHandlers: [
+                $instance,
+            ],
+        );
 
         self::assertCount(1, $kernel->defaultExceptionHandlers);
-        self::assertInstanceOf(\Closure::class, $kernel->defaultExceptionHandlers[0]);
-        self::assertSame($instance, ($kernel->defaultExceptionHandlers[0])());
-    }
-
-    public function testDefaultExceptionHandlerResolvesClassStringThroughContainer(): void
-    {
-        $kernel = $this->makeKernel();
-        $instance = new RecordingErrorHandler();
-
-        $kernel->container->singleton($instance);
-        $kernel->defaultExceptionHandler(RecordingErrorHandler::class);
-
-        self::assertCount(1, $kernel->defaultExceptionHandlers);
-        self::assertSame($instance, ($kernel->defaultExceptionHandlers[0])());
+        self::assertSame($instance, $kernel->defaultExceptionHandlers[0]);
     }
 
     public function testDefaultExceptionHandlerInstanceIsCalledOnException(): void
@@ -495,11 +495,34 @@ class KernelTest extends TestCase
                 result: new \RuntimeException('test'),
             ),
             router: $this->makeRouter(),
+            defaultExceptionHandlers: [
+                $handler,
+            ],
         );
 
-        $kernel->defaultExceptionHandler($handler);
         $kernel->run($this->makeRequest());
 
         self::assertTrue($handler->called);
+    }
+
+    public function testRunResolvesClosureHandlersThroughContainer(): void
+    {
+        $emitter = new StubResponseEmitter();
+        $handler = new RecordingErrorHandler();
+
+        $kernel = $this->makeKernel(
+            emitter: $emitter,
+            dispatcher: new StubDispatcher(
+                result: new \RuntimeException('test'),
+            ),
+            router: $this->makeRouter(),
+            defaultExceptionHandlers: [
+                static fn (): ErrorHandlerInterface => $handler,
+            ],
+        );
+
+        $kernel->run($this->makeRequest());
+
+        self::assertSame(1, $handler->callCount);
     }
 }

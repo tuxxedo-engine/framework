@@ -19,11 +19,11 @@ use Tuxxedo\Container\ContainerInterface;
 readonly class MiddlewareNode implements CommandMiddlewareInterface
 {
     /**
-     * @param \Closure(): CommandMiddlewareInterface $current
+     * @param (\Closure(): CommandMiddlewareInterface)|CommandMiddlewareInterface $current
      */
     public function __construct(
         private ContainerInterface $container,
-        private \Closure $current,
+        private \Closure|CommandMiddlewareInterface $current,
         private CommandMiddlewareInterface $next,
     ) {
     }
@@ -32,7 +32,11 @@ readonly class MiddlewareNode implements CommandMiddlewareInterface
         CommandInvocationInterface $invocation,
         CommandMiddlewareInterface $next,
     ): ExitCode {
-        return $this->container->call($this->current)->handle(
+        $current = $this->current instanceof \Closure
+            ? $this->container->call($this->current)
+            : $this->current;
+
+        return $current->handle(
             invocation: $invocation,
             next: $this->next,
         );

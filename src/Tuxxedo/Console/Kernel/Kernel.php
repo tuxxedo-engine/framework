@@ -30,14 +30,18 @@ class Kernel implements KernelInterface
 {
     private const MAX_PREVIOUS_DEPTH = 5;
 
-    public private(set) array $middleware = [];
-    public private(set) array $exceptionHandlers = [];
-    public private(set) array $defaultExceptionHandlers = [];
-
+    /**
+     * @param list<(\Closure(): CommandMiddlewareInterface)|CommandMiddlewareInterface> $middleware
+     * @param array<class-string<\Throwable>, list<(\Closure(): ConsoleErrorHandlerInterface)|ConsoleErrorHandlerInterface>> $exceptionHandlers
+     * @param list<(\Closure(): ConsoleErrorHandlerInterface)|ConsoleErrorHandlerInterface> $defaultExceptionHandlers
+     */
     public function __construct(
         public readonly ContainerInterface $container,
         public readonly CommandDispatcherInterface $dispatcher,
         public readonly ConsoleOutputInterface $output,
+        public readonly array $middleware = [],
+        public readonly array $exceptionHandlers = [],
+        public readonly array $defaultExceptionHandlers = [],
         public readonly string $appName = '',
         public readonly string $appVersion = '',
         public readonly Environment $appEnvironment = Environment::PRODUCTION,
@@ -46,52 +50,8 @@ class Kernel implements KernelInterface
     ) {
     }
 
-    public function middleware(
-        \Closure|string|CommandMiddlewareInterface $middleware,
-    ): static {
-        if (\is_string($middleware)) {
-            $container = $this->container;
-            $middleware = static fn (): CommandMiddlewareInterface => $container->resolve($middleware);
-        } elseif (!$middleware instanceof \Closure) {
-            $middleware = static fn (): CommandMiddlewareInterface => $middleware;
-        }
 
-        $this->middleware[] = $middleware;
 
-        return $this;
-    }
-
-    public function whenException(
-        string $exceptionClass,
-        \Closure|string|ConsoleErrorHandlerInterface $handler,
-    ): static {
-        if (\is_string($handler)) {
-            $container = $this->container;
-            $handler = static fn (): ConsoleErrorHandlerInterface => $container->resolve($handler);
-        } elseif (!$handler instanceof \Closure) {
-            $handler = static fn (): ConsoleErrorHandlerInterface => $handler;
-        }
-
-        $this->exceptionHandlers[$exceptionClass] ??= [];
-        $this->exceptionHandlers[$exceptionClass][] = $handler;
-
-        return $this;
-    }
-
-    public function defaultExceptionHandler(
-        \Closure|string|ConsoleErrorHandlerInterface $handler,
-    ): static {
-        if (\is_string($handler)) {
-            $container = $this->container;
-            $handler = static fn (): ConsoleErrorHandlerInterface => $container->resolve($handler);
-        } elseif (!$handler instanceof \Closure) {
-            $handler = static fn (): ConsoleErrorHandlerInterface => $handler;
-        }
-
-        $this->defaultExceptionHandlers[] = $handler;
-
-        return $this;
-    }
 
     public function run(
         array $argv,
@@ -258,7 +218,11 @@ class Kernel implements KernelInterface
         }
 
         foreach ($handlers as $handler) {
-            $exitCode = $this->container->call($handler)->handle(
+            if ($handler instanceof \Closure) {
+                $handler = $this->container->call($handler);
+            }
+
+            $exitCode = $handler->handle(
                 exception: $e,
                 output: $this->output,
                 exitCode: $exitCode,

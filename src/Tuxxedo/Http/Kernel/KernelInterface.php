@@ -36,14 +36,14 @@ interface KernelInterface
     }
 
     /**
-     * @var array<(\Closure(): MiddlewareInterface)>
+     * @var list<(\Closure(): MiddlewareInterface)|MiddlewareInterface>
      */
     public array $middleware {
         get;
     }
 
     /**
-     * @var array<class-string<\Throwable>, array<\Closure(): ErrorHandlerInterface>>
+     * @var array<class-string<\Throwable>, list<(\Closure(): ErrorHandlerInterface)|ErrorHandlerInterface>>
      */
     public array $exceptionHandlers {
         get;
@@ -62,7 +62,7 @@ interface KernelInterface
     }
 
     /**
-     * @var array<(\Closure(): ErrorHandlerInterface)>
+     * @var list<(\Closure(): ErrorHandlerInterface)|ErrorHandlerInterface>
      */
     public array $defaultExceptionHandlers {
         get;
@@ -84,28 +84,8 @@ interface KernelInterface
         get;
     }
 
-    /**
-     * @param (\Closure(): MiddlewareInterface)|class-string<MiddlewareInterface>|MiddlewareInterface $middleware
-     */
-    public function middleware(
-        \Closure|string|MiddlewareInterface $middleware,
-    ): static;
 
-    /**
-     * @param class-string<\Throwable> $exceptionClass
-     * @param (\Closure(): ErrorHandlerInterface)|class-string<ErrorHandlerInterface>|ErrorHandlerInterface $handler
-     */
-    public function whenException(
-        string $exceptionClass,
-        \Closure|string|ErrorHandlerInterface $handler,
-    ): static;
 
-    /**
-     * @param (\Closure(): ErrorHandlerInterface)|class-string<ErrorHandlerInterface>|ErrorHandlerInterface $handler
-     */
-    public function defaultExceptionHandler(
-        \Closure|string|ErrorHandlerInterface $handler,
-    ): static;
 
     public function run(
         ?RequestInterface $request = null,

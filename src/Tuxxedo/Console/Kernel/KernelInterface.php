@@ -46,48 +46,28 @@ interface KernelInterface
     }
 
     /**
-     * @var array<\Closure(): CommandMiddlewareInterface>
+     * @var list<(\Closure(): CommandMiddlewareInterface)|CommandMiddlewareInterface>
      */
     public array $middleware {
         get;
     }
 
     /**
-     * @var array<class-string<\Throwable>, array<\Closure(): ConsoleErrorHandlerInterface>>
+     * @var array<class-string<\Throwable>, list<(\Closure(): ConsoleErrorHandlerInterface)|ConsoleErrorHandlerInterface>>
      */
     public array $exceptionHandlers {
         get;
     }
 
     /**
-     * @var array<\Closure(): ConsoleErrorHandlerInterface>
+     * @var list<(\Closure(): ConsoleErrorHandlerInterface)|ConsoleErrorHandlerInterface>
      */
     public array $defaultExceptionHandlers {
         get;
     }
 
-    /**
-     * @param (\Closure(): CommandMiddlewareInterface)|class-string<CommandMiddlewareInterface>|CommandMiddlewareInterface $middleware
-     */
-    public function middleware(
-        \Closure|string|CommandMiddlewareInterface $middleware,
-    ): static;
 
-    /**
-     * @param class-string<\Throwable> $exceptionClass
-     * @param (\Closure(): ConsoleErrorHandlerInterface)|class-string<ConsoleErrorHandlerInterface>|ConsoleErrorHandlerInterface $handler
-     */
-    public function whenException(
-        string $exceptionClass,
-        \Closure|string|ConsoleErrorHandlerInterface $handler,
-    ): static;
 
-    /**
-     * @param (\Closure(): ConsoleErrorHandlerInterface)|class-string<ConsoleErrorHandlerInterface>|ConsoleErrorHandlerInterface $handler
-     */
-    public function defaultExceptionHandler(
-        \Closure|string|ConsoleErrorHandlerInterface $handler,
-    ): static;
 
     /**
      * @param list<string> $argv

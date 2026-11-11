@@ -32,16 +32,20 @@ use Tuxxedo\Router\RouterInterface;
 
 class Kernel implements KernelInterface
 {
-    public private(set) array $middleware = [];
-    public private(set) array $exceptionHandlers = [];
-    public private(set) array $defaultExceptionHandlers = [];
-
+    /**
+     * @param list<(\Closure(): MiddlewareInterface)|MiddlewareInterface> $middleware
+     * @param array<class-string<\Throwable>, list<(\Closure(): ErrorHandlerInterface)|ErrorHandlerInterface>> $exceptionHandlers
+     * @param list<(\Closure(): ErrorHandlerInterface)|ErrorHandlerInterface> $defaultExceptionHandlers
+     */
     final public function __construct(
         public readonly ContainerInterface $container,
         public readonly ConfigInterface $config,
         public readonly ResponseEmitterInterface $emitter,
         public readonly DispatcherInterface $dispatcher,
         public readonly RouterInterface $router,
+        public readonly array $middleware = [],
+        public readonly array $exceptionHandlers = [],
+        public readonly array $defaultExceptionHandlers = [],
         public readonly string $appName = '',
         public readonly string $appVersion = '',
         public readonly Environment $appEnvironment = Environment::PRODUCTION,
@@ -49,63 +53,6 @@ class Kernel implements KernelInterface
             path: '/',
         ),
     ) {
-    }
-
-    /**
-     * @param (\Closure(): MiddlewareInterface)|class-string<MiddlewareInterface>|MiddlewareInterface $middleware
-     */
-    public function middleware(
-        \Closure|string|MiddlewareInterface $middleware,
-    ): static {
-        if (\is_string($middleware)) {
-            $container = $this->container;
-            $middleware = static fn (): MiddlewareInterface => $container->resolve($middleware);
-        } elseif (!$middleware instanceof \Closure) {
-            $middleware = static fn (): MiddlewareInterface => $middleware;
-        }
-
-        $this->middleware[] = $middleware;
-
-        return $this;
-    }
-
-    /**
-     * @param class-string<\Throwable> $exceptionClass
-     * @param (\Closure(): ErrorHandlerInterface)|class-string<ErrorHandlerInterface>|ErrorHandlerInterface $handler
-     */
-    public function whenException(
-        string $exceptionClass,
-        \Closure|string|ErrorHandlerInterface $handler,
-    ): static {
-        if (\is_string($handler)) {
-            $container = $this->container;
-            $handler = static fn (): ErrorHandlerInterface => $container->resolve($handler);
-        } elseif (!$handler instanceof \Closure) {
-            $handler = static fn (): ErrorHandlerInterface => $handler;
-        }
-
-        $this->exceptionHandlers[$exceptionClass] ??= [];
-        $this->exceptionHandlers[$exceptionClass][] = $handler;
-
-        return $this;
-    }
-
-    /**
-     * @param (\Closure(): ErrorHandlerInterface)|class-string<ErrorHandlerInterface>|ErrorHandlerInterface $handler
-     */
-    public function defaultExceptionHandler(
-        \Closure|string|ErrorHandlerInterface $handler,
-    ): static {
-        if (\is_string($handler)) {
-            $container = $this->container;
-            $handler = static fn (): ErrorHandlerInterface => $container->resolve($handler);
-        } elseif (!$handler instanceof \Closure) {
-            $handler = static fn (): ErrorHandlerInterface => $handler;
-        }
-
-        $this->defaultExceptionHandlers[] = $handler;
-
-        return $this;
     }
 
     /**
@@ -154,7 +101,11 @@ class Kernel implements KernelInterface
         }
 
         foreach ($handlers as $handler) {
-            $response = $this->container->call($handler)->handle($request, $response, $e);
+            if ($handler instanceof \Closure) {
+                $handler = $this->container->call($handler);
+            }
+
+            $response = $handler->handle($request, $response, $e);
 
             if ($response instanceof ResponsableInterface) {
                 $response = $response->toResponse($this->container);
@@ -200,7 +151,7 @@ class Kernel implements KernelInterface
     }
 
     /**
-     * @param array<(\Closure(): MiddlewareInterface)> $middlewares
+     * @param array<(\Closure(): MiddlewareInterface)|MiddlewareInterface> $middlewares
      */
     private function pipeline(
         array $middlewares,
