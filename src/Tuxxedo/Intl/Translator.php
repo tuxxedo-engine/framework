@@ -17,10 +17,14 @@ use Tuxxedo\Intl\Config\IntlConfigInterface;
 use Tuxxedo\Intl\Loader\CachingLoader;
 use Tuxxedo\Intl\Loader\PhraseLoaderInterface;
 use Tuxxedo\Intl\Resolver\LocaleResolverInterface;
+use Tuxxedo\Text\Interpolator\Interpolator;
+use Tuxxedo\Text\Interpolator\InterpolatorInterface;
 
 class Translator implements TranslatorInterface
 {
     private readonly CachingLoader $loader;
+
+    private readonly InterpolatorInterface $interpolator;
 
     private readonly ?LocaleInterface $localeOverride;
 
@@ -59,6 +63,7 @@ class Translator implements TranslatorInterface
             loader: $loader,
         );
 
+        $this->interpolator = new Interpolator();
         $this->localeOverride = null;
     }
 
@@ -81,10 +86,12 @@ class Translator implements TranslatorInterface
             );
         }
 
-        return self::interpolate(
+        return $this->interpolator->interpolate(
             template: $value,
-            replacements: $replacements,
-            isolate: $effective->direction === LocaleDirection::RTL,
+            replacements: self::renderReplacements(
+                replacements: $replacements,
+                isolate: $effective->direction === LocaleDirection::RTL,
+            ),
         );
     }
 
@@ -134,10 +141,12 @@ class Translator implements TranslatorInterface
 
         $replacements['count'] ??= $count;
 
-        return self::interpolate(
+        return $this->interpolator->interpolate(
             template: $value,
-            replacements: $replacements,
-            isolate: $effective->direction === LocaleDirection::RTL,
+            replacements: self::renderReplacements(
+                replacements: $replacements,
+                isolate: $effective->direction === LocaleDirection::RTL,
+            ),
         );
     }
 
@@ -345,58 +354,24 @@ class Translator implements TranslatorInterface
 
     /**
      * @param array<string, scalar|null> $replacements
+     * @return array<string, string>
      */
-    private static function interpolate(
-        string $template,
+    private static function renderReplacements(
         array $replacements,
         bool $isolate,
-    ): string {
-        $length = \strlen($template);
-        $buffer = '';
-        $position = 0;
+    ): array {
+        $rendered = [];
 
-        while ($position < $length) {
-            $char = $template[$position];
+        foreach ($replacements as $name => $value) {
+            $string = $value === null
+                ? ''
+                : (string) $value;
 
-            if ($char === '\\' && $position + 1 < $length) {
-                $next = $template[$position + 1];
-
-                if ($next === '{' || $next === '}' || $next === '\\') {
-                    $buffer .= $next;
-                    $position += 2;
-
-                    continue;
-                }
-            }
-
-            if ($char === '{') {
-                $closing = \strpos($template, '}', $position + 1);
-
-                if ($closing !== false) {
-                    $name = \substr($template, $position + 1, $closing - $position - 1);
-
-                    if ($name !== '' && \array_key_exists($name, $replacements)) {
-                        $value = $replacements[$name];
-                        $position = $closing + 1;
-
-                        $string = $value === null
-                            ? ''
-                            : (string) $value;
-
-                        $buffer .= $isolate && $string !== ''
-                            ? "\u{2068}" . $string . "\u{2069}"
-                            : $string;
-
-                        continue;
-                    }
-                }
-            }
-
-            $buffer .= $char;
-
-            ++$position;
+            $rendered[$name] = $isolate && $string !== ''
+                ? "\u{2068}" . $string . "\u{2069}"
+                : $string;
         }
 
-        return $buffer;
+        return $rendered;
     }
 }
