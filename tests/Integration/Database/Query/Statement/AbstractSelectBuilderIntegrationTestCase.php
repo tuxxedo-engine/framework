@@ -652,6 +652,199 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
         );
     }
 
+    public function testWhereMatchesTranslatesWildcards(): void
+    {
+        $this->createUsersSchema();
+
+        foreach (
+            [
+                "('a%b', NULL)",
+                "('a_b', NULL)",
+                "('a!b', NULL)",
+                "('a*b', NULL)",
+                "('axb', NULL)",
+                "('ab', NULL)",
+                "('a§b', NULL)",
+            ] as $values
+        ) {
+            $this->connection->query(
+                sql: 'INSERT INTO users (name, email) VALUES ' . $values,
+                native: true,
+            );
+        }
+
+        self::assertEqualsCanonicalizing(
+            [
+                'a%b',
+                'a_b',
+                'a!b',
+                'a*b',
+                'axb',
+                'ab',
+                'a§b',
+            ],
+            $this->userNames(static fn (SelectStatementInterface $select): SelectStatementInterface => $select->whereMatches('name', 'a*')),
+        );
+
+        self::assertEqualsCanonicalizing(
+            [
+                'a%b',
+                'a_b',
+                'a!b',
+                'a*b',
+                'axb',
+                'a§b',
+            ],
+            $this->userNames(static fn (SelectStatementInterface $select): SelectStatementInterface => $select->whereMatches('name', 'a?b')),
+        );
+
+        foreach (
+            [
+                'a%b',
+                'a_b',
+                'a!b',
+            ] as $literal
+        ) {
+            self::assertSame(
+                [
+                    $literal,
+                ],
+                $this->userNames(static fn (SelectStatementInterface $select): SelectStatementInterface => $select->whereMatches('name', $literal)),
+            );
+        }
+
+        self::assertSame(
+            [
+                'a*b',
+            ],
+            $this->userNames(
+                static fn (SelectStatementInterface $select): SelectStatementInterface => $select->whereMatches(
+                    column: 'name',
+                    pattern: 'a*b',
+                    wildcard: '%',
+                    single: '_',
+                ),
+            ),
+        );
+
+        self::assertEqualsCanonicalizing(
+            [
+                'a%b',
+                'a_b',
+                'a!b',
+                'a*b',
+                'axb',
+                'a§b',
+            ],
+            $this->userNames(
+                static fn (SelectStatementInterface $select): SelectStatementInterface => $select->whereMatches(
+                    column: 'name',
+                    pattern: 'a§b',
+                    wildcard: '#',
+                    single: '§',
+                ),
+            ),
+        );
+
+        self::assertEqualsCanonicalizing(
+            [
+                'ab',
+            ],
+            $this->userNames(static fn (SelectStatementInterface $select): SelectStatementInterface => $select->whereNotMatches('name', 'a?b')),
+        );
+    }
+
+    public function testWhereMatchesConjunctions(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        self::assertSame(
+            [
+                'Another Bob post',
+                'Post by Alice',
+            ],
+            $this->titles(
+                static fn (SelectStatementInterface $select): SelectStatementInterface => $select
+                    ->whereMatches('posts.title', '*Alice')
+                    ->orWhereMatches('posts.title', 'Another * post'),
+            ),
+        );
+
+        self::assertSame(
+            [
+                'Post by Bob',
+            ],
+            $this->titles(
+                static fn (SelectStatementInterface $select): SelectStatementInterface => $select
+                    ->whereNotMatches('posts.title', '*Alice')
+                    ->whereNotMatches('posts.title', 'Another*'),
+            ),
+        );
+
+        self::assertSame(
+            [
+                'Another Bob post',
+                'Post by Bob',
+            ],
+            $this->titles(
+                static fn (SelectStatementInterface $select): SelectStatementInterface => $select
+                    ->where('posts.title', 'Another Bob post')
+                    ->orWhereNotMatches('posts.title', '* by Ali??'),
+            ),
+        );
+    }
+
+    public function testWhereMatchesRejectsInvalidWildcards(): void
+    {
+        foreach (
+            [
+                [
+                    '',
+                    '?',
+                ],
+                [
+                    '*',
+                    '',
+                ],
+                [
+                    '**',
+                    '?',
+                ],
+                [
+                    '*',
+                    '??',
+                ],
+                [
+                    '*',
+                    '*',
+                ],
+                [
+                    '§',
+                    '§',
+                ],
+            ] as [$wildcard, $single]
+        ) {
+            try {
+                $this->connection->select(
+                    table: 'users',
+                )
+                    ->whereMatches(
+                        column: 'name',
+                        pattern: 'a',
+                        wildcard: $wildcard,
+                        single: $single,
+                    );
+
+                self::fail('Expected SqlException for an invalid match wildcard');
+            } catch (SqlException $exception) {
+                self::assertStringContainsString('Match wildcards', $exception->getMessage());
+            }
+        }
+    }
+
     public function testJoinOnCallbackUsesWhereVocabulary(): void
     {
         $this->createUsersSchema();
@@ -720,7 +913,11 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
                                     ->whereStartsWith('posts.title', 'zz')
                                     ->orWhereStartsWith('posts.title', 'yy')
                                     ->whereColumnStartsWith('posts.title', 'users.email')
-                                    ->orWhereColumnStartsWith('posts.title', 'users.email');
+                                    ->orWhereColumnStartsWith('posts.title', 'users.email')
+                                    ->whereMatches('posts.title', 'zz?')
+                                    ->orWhereMatches('posts.title', 'yy*')
+                                    ->whereNotMatches('posts.title', '*')
+                                    ->orWhereNotMatches('posts.title', '*');
                             },
                         );
                 },
@@ -2863,6 +3060,22 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
                     ->selectAs('posts.title', 'name'),
             )
                 ->orderBy('posts.title'),
+        );
+    }
+
+    /**
+     * @param \Closure(SelectStatementInterface): SelectStatementInterface $configure
+     * @return list<string>
+     */
+    private function userNames(
+        \Closure $configure,
+    ): array {
+        return $this->names(
+            $configure(
+                $this->connection->select(
+                    table: 'users',
+                ),
+            ),
         );
     }
 }

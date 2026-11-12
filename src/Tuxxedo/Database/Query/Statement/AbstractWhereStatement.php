@@ -35,10 +35,10 @@ use Tuxxedo\Database\Query\Statement\Condition\FullTextCondition;
 use Tuxxedo\Database\Query\Statement\Condition\FullTextConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\GroupCondition;
 use Tuxxedo\Database\Query\Statement\Condition\GroupConditionInterface;
+use Tuxxedo\Database\Query\Statement\Condition\PatternCondition;
+use Tuxxedo\Database\Query\Statement\Condition\PatternConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\RawCondition;
 use Tuxxedo\Database\Query\Statement\Condition\RawConditionInterface;
-use Tuxxedo\Database\Query\Statement\Condition\StartsWithCondition;
-use Tuxxedo\Database\Query\Statement\Condition\StartsWithConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\SubqueryComparisonCondition;
 use Tuxxedo\Database\Query\Statement\Condition\SubqueryComparisonConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\SubqueryCondition;
@@ -53,7 +53,7 @@ use Tuxxedo\Database\SqlException;
 abstract class AbstractWhereStatement extends AbstractStatement implements WhereStatementInterface
 {
     /**
-     * @var list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|SubqueryComparisonCondition|ExistsCondition|GroupCondition|FullTextCondition|ColumnStartsWithCondition|StartsWithCondition>
+     * @var list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|SubqueryComparisonCondition|ExistsCondition|GroupCondition|FullTextCondition|ColumnStartsWithCondition|PatternCondition>
      */
     protected array $conditions = [];
 
@@ -152,7 +152,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     /**
-     * @param list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|SubqueryComparisonCondition|ExistsCondition|GroupCondition|FullTextCondition|ColumnStartsWithCondition|StartsWithCondition> $conditions
+     * @param list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|SubqueryComparisonCondition|ExistsCondition|GroupCondition|FullTextCondition|ColumnStartsWithCondition|PatternCondition> $conditions
      */
     private function renderConditions(
         array $conditions,
@@ -172,7 +172,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
     }
 
     private function renderConditionBody(
-        ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|SubqueryComparisonCondition|ExistsCondition|GroupCondition|FullTextCondition|ColumnStartsWithCondition|StartsWithCondition $condition,
+        ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|SubqueryComparisonCondition|ExistsCondition|GroupCondition|FullTextCondition|ColumnStartsWithCondition|PatternCondition $condition,
         DialectInterface $dialect,
     ): string {
         if ($condition instanceof BetweenConditionInterface) {
@@ -192,11 +192,15 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
             );
         }
 
-        if ($condition instanceof StartsWithConditionInterface) {
+        if ($condition instanceof PatternConditionInterface) {
             return \sprintf(
                 " %s %s %s ESCAPE '!'",
                 $dialect->qualifiedIdentifier($condition->identifier),
-                $dialect->conditionOperator(ConditionOperator::LIKE),
+                $dialect->conditionOperator(
+                    $condition->negated
+                        ? ConditionOperator::NOT_LIKE
+                        : ConditionOperator::LIKE,
+                ),
                 $condition->parameter,
             );
         }
@@ -740,6 +744,78 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         return $this;
     }
 
+    public function whereMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
+    ): static {
+        $this->conditions[] = $this->buildMatches(
+            column: $column,
+            pattern: $pattern,
+            wildcard: $wildcard,
+            single: $single,
+            conjunction: ConditionConjunction::AND,
+            negated: false,
+        );
+
+        return $this;
+    }
+
+    public function whereNotMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
+    ): static {
+        $this->conditions[] = $this->buildMatches(
+            column: $column,
+            pattern: $pattern,
+            wildcard: $wildcard,
+            single: $single,
+            conjunction: ConditionConjunction::AND,
+            negated: true,
+        );
+
+        return $this;
+    }
+
+    public function orWhereMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
+    ): static {
+        $this->conditions[] = $this->buildMatches(
+            column: $column,
+            pattern: $pattern,
+            wildcard: $wildcard,
+            single: $single,
+            conjunction: ConditionConjunction::OR,
+            negated: false,
+        );
+
+        return $this;
+    }
+
+    public function orWhereNotMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
+    ): static {
+        $this->conditions[] = $this->buildMatches(
+            column: $column,
+            pattern: $pattern,
+            wildcard: $wildcard,
+            single: $single,
+            conjunction: ConditionConjunction::OR,
+            negated: true,
+        );
+
+        return $this;
+    }
+
     public function whereBetween(
         string $column,
         string|int|float|bool $from,
@@ -1154,10 +1230,77 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
         string $column,
         string $prefix,
         ConditionConjunction $conjunction,
-    ): StartsWithCondition {
+    ): PatternCondition {
+        return $this->buildPattern(
+            column: $column,
+            pattern: self::escapePattern($prefix) . '%',
+            conjunction: $conjunction,
+            negated: false,
+        );
+    }
+
+    /**
+     * @throws SqlException
+     */
+    private function buildMatches(
+        string $column,
+        string $pattern,
+        string $wildcard,
+        string $single,
+        ConditionConjunction $conjunction,
+        bool $negated,
+    ): PatternCondition {
+        if (
+            \mb_strlen($wildcard, 'UTF-8') !== 1 ||
+            \mb_strlen($single, 'UTF-8') !== 1 ||
+            $wildcard === $single
+        ) {
+            throw SqlException::fromInvalidMatchWildcard(
+                wildcard: $wildcard,
+                single: $single,
+            );
+        }
+
+        $translated = '';
+
+        foreach (\mb_str_split($pattern, 1, 'UTF-8') as $character) {
+            $translated .= match ($character) {
+                $wildcard => '%',
+                $single => '_',
+                default => self::escapePattern($character),
+            };
+        }
+
+        return $this->buildPattern(
+            column: $column,
+            pattern: $translated,
+            conjunction: $conjunction,
+            negated: $negated,
+        );
+    }
+
+    private function buildPattern(
+        string $column,
+        string $pattern,
+        ConditionConjunction $conjunction,
+        bool $negated,
+    ): PatternCondition {
         $parameterKey = 'where_' . $this->nextParameterOffset();
 
-        $this->parameters[$parameterKey] = \str_replace(
+        $this->parameters[$parameterKey] = $pattern;
+
+        return new PatternCondition(
+            conjunction: $conjunction,
+            identifier: $column,
+            parameter: ':' . $parameterKey,
+            negated: $negated,
+        );
+    }
+
+    private static function escapePattern(
+        string $value,
+    ): string {
+        return \str_replace(
             [
                 '!',
                 '%',
@@ -1168,13 +1311,7 @@ abstract class AbstractWhereStatement extends AbstractStatement implements Where
                 '!%',
                 '!_',
             ],
-            $prefix,
-        ) . '%';
-
-        return new StartsWithCondition(
-            conjunction: $conjunction,
-            identifier: $column,
-            parameter: ':' . $parameterKey,
+            $value,
         );
     }
 

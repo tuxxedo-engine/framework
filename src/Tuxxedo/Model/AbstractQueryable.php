@@ -584,6 +584,62 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     #[\NoDiscard]
+    public function whereMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $pattern, $wildcard, $single): void {
+                $statement->whereMatches($column, $pattern, $wildcard, $single);
+            },
+        );
+    }
+
+    #[\NoDiscard]
+    public function whereNotMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $pattern, $wildcard, $single): void {
+                $statement->whereNotMatches($column, $pattern, $wildcard, $single);
+            },
+        );
+    }
+
+    #[\NoDiscard]
+    public function orWhereMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $pattern, $wildcard, $single): void {
+                $statement->orWhereMatches($column, $pattern, $wildcard, $single);
+            },
+        );
+    }
+
+    #[\NoDiscard]
+    public function orWhereNotMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
+    ): static {
+        return $this->extend(
+            criterion: static function (WhereStatementInterface $statement) use ($column, $pattern, $wildcard, $single): void {
+                $statement->orWhereNotMatches($column, $pattern, $wildcard, $single);
+            },
+        );
+    }
+
+    #[\NoDiscard]
     public function orderBy(
         string $column,
         OrderDirection|string $direction = OrderDirection::ASC,

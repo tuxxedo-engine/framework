@@ -158,6 +158,46 @@ interface WhereStatementInterface extends StatementInterface
         string $prefix,
     ): static;
 
+    /**
+     * @throws SqlException
+     */
+    public function whereMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
+    ): static;
+
+    /**
+     * @throws SqlException
+     */
+    public function whereNotMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
+    ): static;
+
+    /**
+     * @throws SqlException
+     */
+    public function orWhereMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
+    ): static;
+
+    /**
+     * @throws SqlException
+     */
+    public function orWhereNotMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
+    ): static;
+
     public function whereBetween(
         string $column,
         string|int|float|bool $from,

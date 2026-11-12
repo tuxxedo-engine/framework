@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Database\Query\Statement\Join;
 
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
+use Tuxxedo\Database\SqlException;
 
 interface JoinConditionInterface
 {
@@ -75,6 +76,46 @@ interface JoinConditionInterface
     public function orWhereStartsWith(
         string $column,
         string $prefix,
+    ): static;
+
+    /**
+     * @throws SqlException
+     */
+    public function whereMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
+    ): static;
+
+    /**
+     * @throws SqlException
+     */
+    public function whereNotMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
+    ): static;
+
+    /**
+     * @throws SqlException
+     */
+    public function orWhereMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
+    ): static;
+
+    /**
+     * @throws SqlException
+     */
+    public function orWhereNotMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
     ): static;
 
     /**

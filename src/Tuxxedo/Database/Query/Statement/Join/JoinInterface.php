@@ -20,8 +20,8 @@ use Tuxxedo\Database\Query\Statement\Condition\ConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\ExistsCondition;
 use Tuxxedo\Database\Query\Statement\Condition\FullTextCondition;
 use Tuxxedo\Database\Query\Statement\Condition\GroupCondition;
+use Tuxxedo\Database\Query\Statement\Condition\PatternCondition;
 use Tuxxedo\Database\Query\Statement\Condition\RawCondition;
-use Tuxxedo\Database\Query\Statement\Condition\StartsWithCondition;
 use Tuxxedo\Database\Query\Statement\Condition\SubqueryComparisonCondition;
 use Tuxxedo\Database\Query\Statement\Condition\SubqueryCondition;
 
@@ -40,7 +40,7 @@ interface JoinInterface
     }
 
     /**
-     * @var list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|SubqueryComparisonCondition|ExistsCondition|GroupCondition|FullTextCondition|ColumnStartsWithCondition|StartsWithCondition>
+     * @var list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|SubqueryComparisonCondition|ExistsCondition|GroupCondition|FullTextCondition|ColumnStartsWithCondition|PatternCondition>
      */
     public array $conditions {
         get;

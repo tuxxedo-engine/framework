@@ -177,6 +177,19 @@ class SqlException extends Exception
         );
     }
 
+    public static function fromInvalidMatchWildcard(
+        string $wildcard,
+        string $single,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Match wildcards must be two different single characters, got "%s" and "%s"',
+                $wildcard,
+                $single,
+            ),
+        );
+    }
+
     /**
      * @param class-string $dialect
      */

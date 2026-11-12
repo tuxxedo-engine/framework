@@ -124,6 +124,50 @@ class JoinCondition implements JoinConditionInterface
         return $this;
     }
 
+    public function whereMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
+    ): static {
+        $this->statement->whereMatches($column, $pattern, $wildcard, $single);
+
+        return $this;
+    }
+
+    public function whereNotMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
+    ): static {
+        $this->statement->whereNotMatches($column, $pattern, $wildcard, $single);
+
+        return $this;
+    }
+
+    public function orWhereMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
+    ): static {
+        $this->statement->orWhereMatches($column, $pattern, $wildcard, $single);
+
+        return $this;
+    }
+
+    public function orWhereNotMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
+    ): static {
+        $this->statement->orWhereNotMatches($column, $pattern, $wildcard, $single);
+
+        return $this;
+    }
+
     public function whereGroup(
         \Closure $callback,
     ): static {

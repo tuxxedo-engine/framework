@@ -16,7 +16,7 @@ namespace Tuxxedo\Database\Query\Statement\Condition;
 readonly class GroupCondition implements GroupConditionInterface
 {
     /**
-     * @param list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|SubqueryComparisonCondition|ExistsCondition|GroupCondition|FullTextCondition|ColumnStartsWithCondition|StartsWithCondition> $conditions
+     * @param list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|SubqueryComparisonCondition|ExistsCondition|GroupCondition|FullTextCondition|ColumnStartsWithCondition|PatternCondition> $conditions
      */
     public function __construct(
         public ConditionConjunction $conjunction,

@@ -294,6 +294,38 @@ interface QueryableInterface extends PagedInterface, \IteratorAggregate, \Counta
     ): static;
 
     #[\NoDiscard]
+    public function whereMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
+    ): static;
+
+    #[\NoDiscard]
+    public function whereNotMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
+    ): static;
+
+    #[\NoDiscard]
+    public function orWhereMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
+    ): static;
+
+    #[\NoDiscard]
+    public function orWhereNotMatches(
+        string $column,
+        string $pattern,
+        string $wildcard = '*',
+        string $single = '?',
+    ): static;
+
+    #[\NoDiscard]
     public function orderBy(
         string $column,
         OrderDirection|string $direction = OrderDirection::ASC,

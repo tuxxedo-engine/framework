@@ -20,15 +20,15 @@ use Tuxxedo\Database\Query\Statement\Condition\ConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\ExistsCondition;
 use Tuxxedo\Database\Query\Statement\Condition\FullTextCondition;
 use Tuxxedo\Database\Query\Statement\Condition\GroupCondition;
+use Tuxxedo\Database\Query\Statement\Condition\PatternCondition;
 use Tuxxedo\Database\Query\Statement\Condition\RawCondition;
-use Tuxxedo\Database\Query\Statement\Condition\StartsWithCondition;
 use Tuxxedo\Database\Query\Statement\Condition\SubqueryComparisonCondition;
 use Tuxxedo\Database\Query\Statement\Condition\SubqueryCondition;
 
 readonly class Join implements JoinInterface
 {
     /**
-     * @param list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|SubqueryComparisonCondition|ExistsCondition|GroupCondition|FullTextCondition|ColumnStartsWithCondition|StartsWithCondition> $conditions
+     * @param list<ConditionInterface|BetweenCondition|ColumnCondition|RawCondition|SubqueryCondition|SubqueryComparisonCondition|ExistsCondition|GroupCondition|FullTextCondition|ColumnStartsWithCondition|PatternCondition> $conditions
      */
     public function __construct(
         public JoinType $type,

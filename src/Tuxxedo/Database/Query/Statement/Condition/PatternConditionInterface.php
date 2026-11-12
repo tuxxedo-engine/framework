@@ -13,12 +13,21 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Statement\Condition;
 
-readonly class StartsWithCondition implements StartsWithConditionInterface
+interface PatternConditionInterface
 {
-    public function __construct(
-        public ConditionConjunction $conjunction,
-        public string $identifier,
-        public string $parameter,
-    ) {
+    public ConditionConjunction $conjunction {
+        get;
+    }
+
+    public string $identifier {
+        get;
+    }
+
+    public string $parameter {
+        get;
+    }
+
+    public bool $negated {
+        get;
     }
 }

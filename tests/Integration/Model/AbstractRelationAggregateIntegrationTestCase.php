@@ -720,6 +720,61 @@ abstract class AbstractRelationAggregateIntegrationTestCase extends AbstractMode
         );
     }
 
+    public function testMatchesFiltersOnModelQueries(): void
+    {
+        self::assertSame(
+            [
+                'empty',
+            ],
+            $this->labels(
+                $this->modelsManager
+                    ->query(AggregateOwner::class)
+                    ->whereMatches('label', '?MP*'),
+            ),
+        );
+
+        self::assertSame(
+            [
+                'one',
+                'empty',
+            ],
+            $this->labels(
+                $this->modelsManager
+                    ->query(AggregateOwner::class)
+                    ->whereNotMatches('label', 't*')
+                    ->orderBy('id'),
+            ),
+        );
+
+        self::assertSame(
+            [
+                'one',
+                'two',
+            ],
+            $this->labels(
+                $this->modelsManager
+                    ->query(AggregateOwner::class)
+                    ->where('label', 'one')
+                    ->orWhereMatches('label', 't?o')
+                    ->orderBy('id'),
+            ),
+        );
+
+        self::assertSame(
+            [
+                'one',
+                'two',
+            ],
+            $this->labels(
+                $this->modelsManager
+                    ->query(AggregateOwner::class)
+                    ->where('label', 'one')
+                    ->orWhereNotMatches('label', '*e*')
+                    ->orderBy('id'),
+            ),
+        );
+    }
+
     public function testModelJoinWithAliasAndOnCallback(): void
     {
         self::assertSame(
