@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Fixture\Serializer;
 
 use Tuxxedo\Serializer\Attribute\CaseStyle;
-use Tuxxedo\Serializer\KeyCase;
+use Tuxxedo\Text\KeyCase;
 
 #[CaseStyle(KeyCase::SNAKE)]
 class Contact

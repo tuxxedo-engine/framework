@@ -54,10 +54,10 @@ readonly class Double implements ColumnInterface, RuleProviderInterface
 
     public function toColumnType(
         CreateTableStatementInterface $statement,
-        string $propertyName,
+        string $columnName,
     ): TableColumnInterface {
         return $statement->double(
-            name: $this->name ?? $propertyName,
+            name: $this->name ?? $columnName,
             nullable: $this->nullable,
             primaryKey: $this->primaryKey,
             unique: $this->unique,

@@ -56,10 +56,10 @@ readonly class Varchar implements ColumnInterface, ColumnLengthInterface, RulePr
 
     public function toColumnType(
         CreateTableStatementInterface $statement,
-        string $propertyName,
+        string $columnName,
     ): TableColumnInterface {
         return $statement->varchar(
-            name: $this->name ?? $propertyName,
+            name: $this->name ?? $columnName,
             length: $this->length,
             nullable: $this->nullable,
             primaryKey: $this->primaryKey,

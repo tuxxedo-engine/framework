@@ -60,7 +60,7 @@ class ColumnTest extends TestCase
         try {
             $column->toColumnType(
                 statement: $statement,
-                propertyName: 'orphan',
+                columnName: 'orphan',
             );
 
             self::fail('Expected ModelException was not thrown');

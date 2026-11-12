@@ -62,6 +62,7 @@ use Tuxxedo\Model\Relation;
 use Tuxxedo\Model\RelationSubqueryInterface;
 use Tuxxedo\Reflection\ClassReflector;
 use Tuxxedo\Reflection\PropertyReflectorInterface;
+use Tuxxedo\Text\KeyCase;
 
 class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
 {
@@ -963,6 +964,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         \ReflectionClass $reflection,
     ): array {
         $names = [];
+        $columnCase = $this->getColumnCase($reflection);
 
         foreach ($reflection->getProperties() as $property) {
             $columnAttributes = $property->getAttributes(ColumnInterface::class, \ReflectionAttribute::IS_INSTANCEOF);
@@ -972,7 +974,11 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             }
 
             $columnAttribute = $columnAttributes[0]->newInstance();
-            $names[] = $columnAttribute->name ?? $property->getName();
+            $names[] = self::resolveColumnName(
+                name: $columnAttribute->name,
+                property: $property->getName(),
+                columnCase: $columnCase,
+            );
         }
 
         return $names;
@@ -1041,6 +1047,8 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         \ReflectionClass $reflection,
         string $columnName,
     ): bool {
+        $columnCase = $this->getColumnCase($reflection);
+
         foreach ($reflection->getProperties() as $property) {
             $columnAttributes = $property->getAttributes(ColumnInterface::class, \ReflectionAttribute::IS_INSTANCEOF);
 
@@ -1049,7 +1057,11 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             }
 
             $columnAttribute = $columnAttributes[0]->newInstance();
-            $name = $columnAttribute->name ?? $property->getName();
+            $name = self::resolveColumnName(
+                name: $columnAttribute->name,
+                property: $property->getName(),
+                columnCase: $columnCase,
+            );
 
             if ($name !== $columnName) {
                 continue;
@@ -1543,13 +1555,19 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             return \array_values($composite->columns);
         }
 
+        $columnCase = $this->getColumnCase($reflection);
+
         foreach ($reflection->getProperties() as $property) {
             foreach ($property->getAttributes(ColumnInterface::class, \ReflectionAttribute::IS_INSTANCEOF) as $columnAttribute) {
                 $column = $columnAttribute->newInstance();
 
                 if (\property_exists($column, 'primaryKey') && $column->primaryKey === true) {
                     return [
-                        $column->name ?? $property->getName(),
+                        self::resolveColumnName(
+                            name: $column->name,
+                            property: $property->getName(),
+                            columnCase: $columnCase,
+                        ),
                     ];
                 }
             }
@@ -1695,6 +1713,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         array &$identifiers,
     ): array {
         $columns = [];
+        $columnCase = $this->getColumnCase($class->reflector);
 
         foreach ($class->properties() as $property) {
             $propertyColumns = \iterator_to_array($property->getAttributes(ColumnInterface::class));
@@ -1712,7 +1731,11 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             }
 
             $columnAttribute = $propertyColumns[0];
-            $columnName = $columnAttribute->name ?? $property->name;
+            $columnName = self::resolveColumnName(
+                name: $columnAttribute->name,
+                property: $property->name,
+                columnCase: $columnCase,
+            );
             $columnPrimaryKey = \property_exists($columnAttribute, 'primaryKey') && $columnAttribute->primaryKey === true;
             $columnAutoIncrement = \property_exists($columnAttribute, 'autoIncrement') && $columnAttribute->autoIncrement === true;
             $columnUnique = \property_exists($columnAttribute, 'unique') && $columnAttribute->unique === true;
@@ -2046,9 +2069,36 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
     private function defaultAggregateAlias(
         string $property,
     ): string {
-        $snake = \preg_replace('/([a-z0-9])([A-Z])/', '$1_$2', $property);
+        return KeyCase::SNAKE->apply($property);
+    }
 
-        return \strtolower($snake ?? $property);
+    /**
+     * @param \ReflectionClass<object> $reflection
+     */
+    private function getColumnCase(
+        \ReflectionClass $reflection,
+    ): ?KeyCase {
+        foreach ($reflection->getAttributes(Table::class) as $attribute) {
+            return $attribute->newInstance()->columnCase;
+        }
+
+        return null;
+    }
+
+    private static function resolveColumnName(
+        ?string $name,
+        string $property,
+        ?KeyCase $columnCase,
+    ): string {
+        if ($name !== null) {
+            return $name;
+        }
+
+        if ($columnCase === null) {
+            return $property;
+        }
+
+        return $columnCase->apply($property);
     }
 
     /**

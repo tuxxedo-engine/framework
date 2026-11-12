@@ -57,10 +57,10 @@ readonly class Decimal implements ColumnInterface, ColumnPrecisionInterface, Rul
 
     public function toColumnType(
         CreateTableStatementInterface $statement,
-        string $propertyName,
+        string $columnName,
     ): TableColumnInterface {
         return $statement->decimal(
-            name: $this->name ?? $propertyName,
+            name: $this->name ?? $columnName,
             precision: $this->precision,
             scale: $this->scale,
             nullable: $this->nullable,

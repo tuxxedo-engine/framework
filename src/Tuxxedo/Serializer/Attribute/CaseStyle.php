@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Serializer\Attribute;
 
-use Tuxxedo\Serializer\KeyCase;
+use Tuxxedo\Text\KeyCase;
 
 #[\Attribute(flags: \Attribute::TARGET_CLASS)]
 class CaseStyle

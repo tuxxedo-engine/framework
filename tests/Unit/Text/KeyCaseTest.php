@@ -11,11 +11,11 @@
 
 declare(strict_types=1);
 
-namespace Unit\Serializer;
+namespace Unit\Text;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Serializer\KeyCase;
+use Tuxxedo\Text\KeyCase;
 
 class KeyCaseTest extends TestCase
 {

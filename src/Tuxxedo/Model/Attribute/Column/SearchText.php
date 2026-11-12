@@ -35,14 +35,14 @@ readonly class SearchText extends Text
 
     public function toColumnType(
         CreateTableStatementInterface $statement,
-        string $propertyName,
+        string $columnName,
     ): TableColumnInterface {
         $column = parent::toColumnType(
             statement: $statement,
-            propertyName: $propertyName,
+            columnName: $columnName,
         );
 
-        $statement->fullTextIndex($this->name ?? $propertyName);
+        $statement->fullTextIndex($this->name ?? $columnName);
 
         return $column;
     }

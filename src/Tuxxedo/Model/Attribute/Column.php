@@ -41,10 +41,10 @@ readonly class Column implements ColumnInterface
 
     public function toColumnType(
         CreateTableStatementInterface $statement,
-        string $propertyName,
+        string $columnName,
     ): TableColumnInterface {
         throw ModelException::fromUntypedColumnAttribute(
-            propertyName: $propertyName,
+            columnName: $columnName,
         );
     }
 }

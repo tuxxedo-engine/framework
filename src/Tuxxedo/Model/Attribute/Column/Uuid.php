@@ -75,10 +75,10 @@ readonly class Uuid implements ColumnInterface, ColumnLengthInterface, RuleProvi
 
     public function toColumnType(
         CreateTableStatementInterface $statement,
-        string $propertyName,
+        string $columnName,
     ): TableColumnInterface {
         return $statement->uuid(
-            name: $this->name ?? $propertyName,
+            name: $this->name ?? $columnName,
             nullable: $this->nullable,
             primaryKey: $this->primaryKey,
             unique: $this->unique,

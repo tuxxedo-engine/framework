@@ -413,7 +413,7 @@ class ColumnRuleProviderTest extends TestCase
 
         $column = (new Uuid())->toColumnType(
             statement: $statement,
-            propertyName: 'id',
+            columnName: 'id',
         );
 
         self::assertInstanceOf(UuidColumn::class, $column);
@@ -438,7 +438,7 @@ class ColumnRuleProviderTest extends TestCase
             default: '00000000-0000-0000-0000-000000000000',
         ))->toColumnType(
             statement: $statement,
-            propertyName: 'id',
+            columnName: 'id',
         );
 
         self::assertInstanceOf(UuidColumn::class, $column);
@@ -457,7 +457,7 @@ class ColumnRuleProviderTest extends TestCase
 
         $column = (new Ulid())->toColumnType(
             statement: $statement,
-            propertyName: 'id',
+            columnName: 'id',
         );
 
         self::assertInstanceOf(CharColumn::class, $column);
@@ -483,7 +483,7 @@ class ColumnRuleProviderTest extends TestCase
             default: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
         ))->toColumnType(
             statement: $statement,
-            propertyName: 'id',
+            columnName: 'id',
         );
 
         self::assertInstanceOf(CharColumn::class, $column);

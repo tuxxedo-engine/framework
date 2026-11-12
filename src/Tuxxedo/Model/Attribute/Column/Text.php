@@ -49,10 +49,10 @@ readonly class Text implements ColumnInterface, RuleProviderInterface
 
     public function toColumnType(
         CreateTableStatementInterface $statement,
-        string $propertyName,
+        string $columnName,
     ): TableColumnInterface {
         return $statement->text(
-            name: $this->name ?? $propertyName,
+            name: $this->name ?? $columnName,
             nullable: $this->nullable,
         );
     }

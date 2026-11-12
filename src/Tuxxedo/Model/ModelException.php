@@ -21,12 +21,12 @@ class ModelException extends Exception
      * @codeCoverageIgnore
      */
     public static function fromUntypedColumnAttribute(
-        string $propertyName,
+        string $columnName,
     ): self {
         return new self(
             message: \sprintf(
-                'Untyped #[Column] attribute on property "%s" cannot produce a SQL column type; use a typed subclass such as #[Column\\Integer] or #[Column\\Varchar]',
-                $propertyName,
+                'Untyped #[Column] attribute for column "%s" cannot produce a SQL column type; use a typed subclass such as #[Column\\Integer] or #[Column\\Varchar]',
+                $columnName,
             ),
         );
     }

@@ -536,7 +536,7 @@ class ModelsManager implements ModelsManagerInterface
         foreach ($metaData->columns as $column) {
             $column->attribute->toColumnType(
                 statement: $statement,
-                propertyName: $column->property,
+                columnName: $column->column,
             );
         }
 

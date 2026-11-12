@@ -75,10 +75,10 @@ readonly class Timestamp implements ColumnInterface, ColumnFormatInterface, Rule
 
     public function toColumnType(
         CreateTableStatementInterface $statement,
-        string $propertyName,
+        string $columnName,
     ): TableColumnInterface {
         return $statement->timestamp(
-            name: $this->name ?? $propertyName,
+            name: $this->name ?? $columnName,
             nullable: $this->nullable,
             primaryKey: $this->primaryKey,
             unique: $this->unique,

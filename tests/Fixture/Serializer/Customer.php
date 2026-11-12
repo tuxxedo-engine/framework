@@ -18,7 +18,7 @@ use Tuxxedo\Serializer\Attribute\Ignore;
 use Tuxxedo\Serializer\Attribute\ListOf;
 use Tuxxedo\Serializer\Attribute\MapOf;
 use Tuxxedo\Serializer\Attribute\Name;
-use Tuxxedo\Serializer\KeyCase;
+use Tuxxedo\Text\KeyCase;
 
 #[CaseStyle(KeyCase::SNAKE)]
 class Customer

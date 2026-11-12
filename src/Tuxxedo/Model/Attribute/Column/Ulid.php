@@ -65,10 +65,10 @@ class Ulid implements ColumnInterface, ColumnLengthInterface, RuleProviderInterf
 
     public function toColumnType(
         CreateTableStatementInterface $statement,
-        string $propertyName,
+        string $columnName,
     ): TableColumnInterface {
         return $statement->char(
-            name: $this->name ?? $propertyName,
+            name: $this->name ?? $columnName,
             length: $this->length,
             nullable: $this->nullable,
             primaryKey: $this->primaryKey,

@@ -25,6 +25,7 @@ use Fixture\Model\Post;
 use Fixture\Model\PostStatus;
 use Fixture\Model\Profile;
 use Fixture\Model\Role;
+use Fixture\Model\SnakeCaseProduct;
 use Fixture\Model\Tag;
 use Fixture\Model\User;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -684,5 +685,40 @@ class ReflectionMetaDataAdapterTest extends TestCase
             [],
             $meta->indexes,
         );
+    }
+
+    public function testColumnCaseAppliesToColumnsWithoutExplicitName(): void
+    {
+        $meta = $this->adapter->getModel(SnakeCaseProduct::class);
+        $columns = [];
+
+        foreach ($meta->columns as $column) {
+            $columns[$column->property] = $column->column;
+        }
+
+        self::assertSame(
+            [
+                'productId' => 'product_id',
+                'productLineId' => 'product_line_id',
+                'sku' => 'sku_code',
+            ],
+            $columns,
+        );
+
+        self::assertInstanceOf(
+            ModelPrimaryKeyInterface::class,
+            $meta->key,
+        );
+
+        self::assertSame('product_id', $meta->key->column);
+    }
+
+    public function testWithoutColumnCaseColumnsKeepPropertyNames(): void
+    {
+        $meta = $this->adapter->getModel(Country::class);
+
+        foreach ($meta->columns as $column) {
+            self::assertSame($column->property, $column->column);
+        }
     }
 }

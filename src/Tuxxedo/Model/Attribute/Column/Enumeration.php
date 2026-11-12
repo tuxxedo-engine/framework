@@ -60,10 +60,10 @@ readonly class Enumeration implements ColumnInterface, ColumnEnumInterface, Rule
 
     public function toColumnType(
         CreateTableStatementInterface $statement,
-        string $propertyName,
+        string $columnName,
     ): TableColumnInterface {
         return $statement->enumeration(
-            name: $this->name ?? $propertyName,
+            name: $this->name ?? $columnName,
             values: \array_map(
                 static fn (\UnitEnum $case): string => $case instanceof \BackedEnum
                     ? (string) $case->value

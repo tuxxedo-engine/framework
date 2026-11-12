@@ -23,9 +23,9 @@ use Tuxxedo\Serializer\Attribute\XmlAttribute;
 use Tuxxedo\Serializer\Attribute\XmlList;
 use Tuxxedo\Serializer\Attribute\XmlRoot;
 use Tuxxedo\Serializer\Attribute\XmlText;
-use Tuxxedo\Serializer\KeyCase;
 use Tuxxedo\Serializer\SerializerException;
 use Tuxxedo\Serializer\ValueConverterInterface;
+use Tuxxedo\Text\KeyCase;
 
 class MetaDataReader implements MetaDataReaderInterface
 {

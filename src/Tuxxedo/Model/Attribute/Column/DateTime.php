@@ -75,10 +75,10 @@ readonly class DateTime implements ColumnInterface, ColumnFormatInterface, RuleP
 
     public function toColumnType(
         CreateTableStatementInterface $statement,
-        string $propertyName,
+        string $columnName,
     ): TableColumnInterface {
         return $statement->dateTime(
-            name: $this->name ?? $propertyName,
+            name: $this->name ?? $columnName,
             nullable: $this->nullable,
             primaryKey: $this->primaryKey,
             unique: $this->unique,

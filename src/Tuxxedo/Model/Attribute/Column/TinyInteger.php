@@ -55,10 +55,10 @@ readonly class TinyInteger implements ColumnInterface, RuleProviderInterface
 
     public function toColumnType(
         CreateTableStatementInterface $statement,
-        string $propertyName,
+        string $columnName,
     ): TableColumnInterface {
         return $statement->tinyInteger(
-            name: $this->name ?? $propertyName,
+            name: $this->name ?? $columnName,
             nullable: $this->nullable,
             primaryKey: $this->primaryKey,
             autoIncrement: $this->autoIncrement,

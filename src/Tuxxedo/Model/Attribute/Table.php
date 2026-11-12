@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\Attribute;
 
+use Tuxxedo\Text\KeyCase;
+
 #[\Attribute(flags: \Attribute::TARGET_CLASS)]
 readonly class Table
 {
@@ -21,6 +23,7 @@ readonly class Table
      */
     public function __construct(
         public string $name,
+        public ?KeyCase $columnCase = null,
     ) {
     }
 }

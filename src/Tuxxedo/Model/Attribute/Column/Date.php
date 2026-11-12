@@ -70,10 +70,10 @@ readonly class Date implements ColumnInterface, ColumnFormatInterface, RuleProvi
 
     public function toColumnType(
         CreateTableStatementInterface $statement,
-        string $propertyName,
+        string $columnName,
     ): TableColumnInterface {
         return $statement->date(
-            name: $this->name ?? $propertyName,
+            name: $this->name ?? $columnName,
             nullable: $this->nullable,
             primaryKey: $this->primaryKey,
             unique: $this->unique,

@@ -20,6 +20,7 @@ use Fixture\Model\Country;
 use Fixture\Model\IdentifierAlreadyUnique;
 use Fixture\Model\PostStatus;
 use Fixture\Model\Setting;
+use Fixture\Model\SnakeCaseProduct;
 use Fixture\Model\Tag;
 use Fixture\Model\User;
 use Tuxxedo\Database\DatabaseException;
@@ -259,5 +260,30 @@ abstract class AbstractCreateTableIntegrationTestCase extends AbstractModelInteg
         self::assertEquals(1, $row['flag']);
         self::assertSame('ABC', $row['code']);
         self::assertSame('published', $row['status']);
+    }
+
+    public function testCreateTableAppliesColumnCase(): void
+    {
+        $this->modelsManager
+            ->createTable(SnakeCaseProduct::class)
+            ->execute();
+
+        $this->connection->insert(
+            table: 'snake_case_products',
+        )
+            ->set(column: 'product_line_id', value: 7)
+            ->set(column: 'sku_code', value: 'TX-1')
+            ->execute();
+
+        $row = $this->connection->select(
+            table: 'snake_case_products',
+        )
+            ->select('product_id', 'product_line_id', 'sku_code')
+            ->execute()
+            ->fetchAssoc();
+
+        self::assertEquals(7, $row['product_line_id']);
+        self::assertSame('TX-1', $row['sku_code']);
+        self::assertNotNull($row['product_id']);
     }
 }
