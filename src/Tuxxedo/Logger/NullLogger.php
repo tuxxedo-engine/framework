@@ -15,13 +15,8 @@ namespace Tuxxedo\Logger;
 
 class NullLogger extends AbstractLogger
 {
-    public function log(
-        string $message,
-        array $placeholders = [],
-        LogLevel $level = LogLevel::ERROR,
-    ): static {
-        parent::incrementByLogLevel($level);
-
-        return $this;
+    protected function writeRecord(
+        LogRecordInterface $record,
+    ): void {
     }
 }

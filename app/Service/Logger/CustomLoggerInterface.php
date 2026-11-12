@@ -15,15 +15,16 @@ namespace App\Service\Logger;
 
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
+use Tuxxedo\Logger\LogRecordInterface;
 use Tuxxedo\Logger\LoggerInterface;
 
 #[DefaultImplementation(class: CustomLogger::class, lifecycle: Lifecycle::SINGLETON)]
 interface CustomLoggerInterface extends LoggerInterface, \Countable
 {
     /**
-     * @var LogEntry[]
+     * @var list<LogRecordInterface>
      */
-    public array $entries {
+    public array $records {
         get;
     }
 

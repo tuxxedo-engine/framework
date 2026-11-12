@@ -32,10 +32,10 @@ class LoggerMiddleware implements MiddlewareInterface
         MiddlewareInterface $next,
     ): ResponseInterface {
         $this->container->resolve(CustomLoggerInterface::class)->log(
-            message: \sprintf(
-                'Middleware: %s',
-                static::class,
-            ),
+            message: 'Middleware: {class}',
+            context: [
+                'class' => static::class,
+            ],
         );
 
         return $next->handle($request, $next);

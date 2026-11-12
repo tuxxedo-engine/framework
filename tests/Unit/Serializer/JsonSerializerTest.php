@@ -16,6 +16,8 @@ namespace Unit\Serializer;
 use Fixture\Serializer\Address;
 use Fixture\Serializer\Customer;
 use Fixture\Serializer\EmptyObject;
+use Fixture\Serializer\Level;
+use Fixture\Serializer\Node;
 use Fixture\Serializer\Plain;
 use Fixture\Serializer\Priority;
 use Fixture\Serializer\Status;
@@ -26,6 +28,7 @@ use Tuxxedo\Serializer\ArraySerializer;
 use Tuxxedo\Serializer\JsonSerializer;
 use Tuxxedo\Serializer\SerializerException;
 use Tuxxedo\Serializer\SerializerInputException;
+use Tuxxedo\Temporal\Instant;
 use Tuxxedo\Validator\ValidationException;
 use Tuxxedo\Validator\Validator;
 
@@ -261,6 +264,94 @@ class JsonSerializerTest extends TestCase
         } catch (SerializerException $exception) {
             self::assertInstanceOf(\JsonException::class, $exception->getPrevious());
             self::assertStringContainsString('cannot be encoded as JSON', $exception->getMessage());
+        }
+    }
+
+    public function testEncodeValueEncodesArraysOfObjectsAndScalars(): void
+    {
+        self::assertSame(
+            '{"address":{"street":"A","city":"B"},"list":[1,2],"flag":true,"none":null}',
+            $this->serializer()->encodeValue(
+                [
+                    'address' => new Address('A', 'B'),
+                    'list' => [
+                        1,
+                        2,
+                    ],
+                    'flag' => true,
+                    'none' => null,
+                ],
+            ),
+        );
+    }
+
+    public function testEncodeValueEncodesScalars(): void
+    {
+        $serializer = $this->serializer();
+
+        self::assertSame('42', $serializer->encodeValue(42));
+        self::assertSame('"text"', $serializer->encodeValue('text'));
+        self::assertSame('null', $serializer->encodeValue(null));
+        self::assertSame('[]', $serializer->encodeValue([]));
+    }
+
+    public function testEncodeValueEncodesEnumsAndTemporalValues(): void
+    {
+        $instant = Instant::parse(input: '2026-01-01T12:00:00.000000+00:00');
+
+        self::assertSame(
+            '["active","EXPERT","' . $instant->toIso8601() . '"]',
+            $this->serializer()->encodeValue(
+                [
+                    Status::ACTIVE,
+                    Level::EXPERT,
+                    $instant,
+                ],
+            ),
+        );
+    }
+
+    public function testEncodeValueEncodesObject(): void
+    {
+        self::assertSame(
+            '{"street":"A","city":"B"}',
+            $this->serializer()->encodeValue(new Address('A', 'B')),
+        );
+    }
+
+    public function testEncodeValueRejectsCircularReferences(): void
+    {
+        $first = new Node();
+        $second = new Node();
+
+        $first->next = $second;
+        $second->next = $first;
+
+        try {
+            $this->serializer()->encodeValue(
+                [
+                    $first,
+                ],
+            );
+
+            self::fail('Expected SerializerException was not thrown');
+        } catch (SerializerException $exception) {
+            self::assertStringContainsString('Circular reference', $exception->getMessage());
+        }
+    }
+
+    public function testEncodeValueUnencodableValuesAreWrapped(): void
+    {
+        try {
+            $this->serializer()->encodeValue(
+                [
+                    'ratio' => \NAN,
+                ],
+            );
+
+            self::fail('Expected SerializerException was not thrown');
+        } catch (SerializerException $exception) {
+            self::assertInstanceOf(\JsonException::class, $exception->getPrevious());
         }
     }
 

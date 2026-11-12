@@ -15,52 +15,21 @@ namespace App\Service\Logger;
 
 use Tuxxedo\Container\DefaultLifecycle;
 use Tuxxedo\Container\Lifecycle;
-use Tuxxedo\Logger\AbstractLogger;
-use Tuxxedo\Logger\LogLevel;
-use Tuxxedo\Temporal\Instant;
+use Tuxxedo\Logger\Formatter\LineFormatter;
+use Tuxxedo\Logger\MemoryLogger;
 
 #[DefaultLifecycle(lifecycle: Lifecycle::SINGLETON)]
-class CustomLogger extends AbstractLogger implements CustomLoggerInterface
+class CustomLogger extends MemoryLogger implements CustomLoggerInterface
 {
-    /**
-     * @var LogEntry[]
-     */
-    public private(set) array $entries = [];
-
-    public function log(
-        string $message,
-        array $placeholders = [],
-        LogLevel $level = LogLevel::ERROR,
-    ): static {
-        $timestamp = Instant::now();
-
-        $this->entries[] = new LogEntry(
-            date: $timestamp->format('H:i:s j/n/Y'),
-            message: $this->formatter->format($message, $placeholders, $level, $timestamp),
-        );
-
-        parent::incrementByLogLevel($level);
-
-        return $this;
-    }
-
     public function all(): string
     {
+        $formatter = new LineFormatter();
         $list = '';
 
-        foreach ($this->entries as $entry) {
-            $list .= \sprintf(
-                "[%s] %s\n",
-                $entry->date,
-                $entry->message,
-            );
+        foreach ($this->records as $record) {
+            $list .= $formatter->format($record);
         }
 
         return $list;
-    }
-
-    public function count(): int
-    {
-        return \sizeof($this->entries);
     }
 }

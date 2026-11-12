@@ -11,13 +11,11 @@
 
 declare(strict_types=1);
 
-namespace App\Service\Logger;
+namespace Tuxxedo\Logger\Formatter;
 
-readonly class LogEntry
+enum UnencodableValueMode
 {
-    public function __construct(
-        public string $date,
-        public string $message,
-    ) {
-    }
+    case STRICT;
+    case MARKER;
+    case OMIT;
 }

@@ -168,6 +168,15 @@ abstract class AbstractSerializer
     }
 
     /**
+     * @throws SerializerException
+     */
+    protected function extractValue(
+        mixed $value,
+    ): mixed {
+        return $this->mapper->extractValue($value);
+    }
+
+    /**
      * @param iterable<object> $values
      * @return list<array<string, mixed>>
      *

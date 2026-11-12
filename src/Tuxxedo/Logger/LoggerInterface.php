@@ -13,6 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Logger;
 
+use Tuxxedo\Container\DefaultImplementation;
+use Tuxxedo\Container\Lifecycle;
+
+#[DefaultImplementation(class: NullLogger::class, lifecycle: Lifecycle::SINGLETON)]
 interface LoggerInterface
 {
     public int $total {
@@ -52,77 +56,110 @@ interface LoggerInterface
     }
 
     /**
-     * @param array<string, scalar> $placeholders
+     * @param literal-string $message
+     * @param array<string, mixed> $context
      */
     public function log(
         string $message,
-        array $placeholders = [],
+        array $context = [],
         LogLevel $level = LogLevel::ERROR,
+        ?\Throwable $exception = null,
     ): static;
 
     /**
-     * @param array<string, scalar> $placeholders
+     * @param literal-string $message
+     * @param array<string, mixed> $context
      */
     public function alert(
         string $message,
-        array $placeholders = [],
+        array $context = [],
+        ?\Throwable $exception = null,
     ): static;
 
     /**
-     * @param array<string, scalar> $placeholders
+     * @param literal-string $message
+     * @param array<string, mixed> $context
      */
     public function critical(
         string $message,
-        array $placeholders = [],
+        array $context = [],
+        ?\Throwable $exception = null,
     ): static;
 
     /**
-     * @param array<string, scalar> $placeholders
+     * @param literal-string $message
+     * @param array<string, mixed> $context
      */
     public function debug(
         string $message,
-        array $placeholders = [],
+        array $context = [],
+        ?\Throwable $exception = null,
     ): static;
 
     /**
-     * @param array<string, scalar> $placeholders
+     * @param literal-string $message
+     * @param array<string, mixed> $context
      */
     public function emergency(
         string $message,
-        array $placeholders = [],
+        array $context = [],
+        ?\Throwable $exception = null,
     ): static;
 
     /**
-     * @param array<string, scalar> $placeholders
+     * @param literal-string $message
+     * @param array<string, mixed> $context
      */
     public function error(
         string $message,
-        array $placeholders = [],
+        array $context = [],
+        ?\Throwable $exception = null,
     ): static;
 
     /**
-     * @param array<string, scalar> $placeholders
+     * @param literal-string $message
+     * @param array<string, mixed> $context
      */
     public function info(
         string $message,
-        array $placeholders = [],
+        array $context = [],
+        ?\Throwable $exception = null,
     ): static;
 
     /**
-     * @param array<string, scalar> $placeholders
+     * @param literal-string $message
+     * @param array<string, mixed> $context
      */
     public function notice(
         string $message,
-        array $placeholders = [],
+        array $context = [],
+        ?\Throwable $exception = null,
     ): static;
 
     /**
-     * @param array<string, scalar> $placeholders
+     * @param literal-string $message
+     * @param array<string, mixed> $context
      */
     public function warning(
         string $message,
-        array $placeholders = [],
+        array $context = [],
+        ?\Throwable $exception = null,
     ): static;
+
+    public function write(
+        LogRecordInterface $record,
+    ): void;
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    public function withContext(
+        array $context,
+    ): LoggerInterface;
+
+    public function withChannel(
+        string $channel,
+    ): LoggerInterface;
 
     public function getTotalByLogLevel(
         LogLevel $level,

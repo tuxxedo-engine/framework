@@ -15,6 +15,7 @@ namespace Unit\Logger;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Logger\Formatter\JsonFormatter;
 use Tuxxedo\Logger\LogLevel;
 use Tuxxedo\Logger\LoggerInterface;
 use Tuxxedo\Logger\SyslogLogger;
@@ -153,13 +154,13 @@ class SyslogLoggerTest extends TestCase
         self::assertSame(3, $logger->total);
     }
 
-    public function testLogWithPlaceholders(): void
+    public function testLogWithContext(): void
     {
         $logger = new SyslogLogger();
 
         $logger->log(
             message: 'User {name} logged in',
-            placeholders: [
+            context: [
                 'name' => 'Kalle',
             ],
         );
@@ -176,5 +177,16 @@ class SyslogLoggerTest extends TestCase
         }
 
         self::assertSame(\sizeof(LogLevel::cases()), $logger->total);
+    }
+
+    public function testLogWithFormatter(): void
+    {
+        $logger = new SyslogLogger(
+            formatter: new JsonFormatter(),
+        );
+
+        $logger->info('message');
+
+        self::assertSame(1, $logger->total);
     }
 }

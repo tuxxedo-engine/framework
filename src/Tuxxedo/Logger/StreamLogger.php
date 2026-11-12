@@ -13,19 +13,28 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Logger;
 
+use Tuxxedo\Logger\Formatter\LineFormatter;
+use Tuxxedo\Logger\Formatter\LogFormatterInterface;
+use Tuxxedo\Temporal\ClockInterface;
+
 class StreamLogger extends AbstractLogger
 {
+    private readonly LogFormatterInterface $formatter;
+
     /**
      * @param resource $stream
      */
     final public function __construct(
         private readonly mixed $stream,
         public bool $autoFlush = true,
-        ?LogMessageFormatter $formatter = null,
+        ?LogFormatterInterface $formatter = null,
+        ?ClockInterface $clock = null,
     ) {
         parent::__construct(
-            formatter: $formatter,
+            clock: $clock,
         );
+
+        $this->formatter = $formatter ?? new LineFormatter();
     }
 
     /**
@@ -35,6 +44,8 @@ class StreamLogger extends AbstractLogger
         string $file,
         bool $autoFlush = true,
         bool $append = true,
+        ?LogFormatterInterface $formatter = null,
+        ?ClockInterface $clock = null,
     ): static {
         $stream = @\fopen(
             filename: $file,
@@ -52,25 +63,21 @@ class StreamLogger extends AbstractLogger
         return new static(
             stream: $stream,
             autoFlush: $autoFlush,
+            formatter: $formatter,
+            clock: $clock,
         );
     }
 
-    public function log(
-        string $message,
-        array $placeholders = [],
-        LogLevel $level = LogLevel::ERROR,
-    ): static {
+    protected function writeRecord(
+        LogRecordInterface $record,
+    ): void {
         @\fwrite(
             $this->stream,
-            $this->formatter->format($message, $placeholders, $level),
+            $this->formatter->format($record),
         );
 
         if ($this->autoFlush) {
             @\fflush($this->stream);
         }
-
-        parent::incrementByLogLevel($level);
-
-        return $this;
     }
 }

@@ -53,6 +53,10 @@ use Tuxxedo\Http\Response\Response;
 use Tuxxedo\Http\Response\ResponseEmitterInterface;
 use Tuxxedo\Http\Response\ResponseInterface;
 use Tuxxedo\Http\Url\Url;
+use Tuxxedo\Logger\Config\MemoryLoggerConfig;
+use Tuxxedo\Logger\LoggerInterface;
+use Tuxxedo\Logger\MemoryLogger;
+use Tuxxedo\Logger\NullLogger;
 use Tuxxedo\Mail\Config\MailManagerConfig;
 use Tuxxedo\Mail\MailConfiguratorInterface;
 use Tuxxedo\Mail\MailManager;
@@ -544,6 +548,53 @@ class ApplicationConfiguratorTest extends TestCase
         $configurator->withDefaultCache();
 
         self::assertNull($configurator->cacheManager);
+    }
+
+    public function testWithLoggerSetsLoggerAndReturnsFluentSelf(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $logger = new MemoryLogger();
+
+        $result = $configurator->withLogger(
+            logger: $logger,
+        );
+
+        self::assertSame($logger, $configurator->logger);
+        self::assertSame($configurator, $result);
+    }
+
+    public function testWithLoggerClearsDefaultLoggerState(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $configurator->withDefaultLogger();
+
+        $configurator->withLogger(
+            logger: new MemoryLogger(),
+        );
+
+        self::assertFalse($configurator->useDefaultLogger);
+    }
+
+    public function testWithDefaultLoggerEnablesUseDefaultLoggerAndReturnsFluentSelf(): void
+    {
+        $configurator = new ApplicationConfigurator();
+
+        $result = $configurator->withDefaultLogger();
+
+        self::assertTrue($configurator->useDefaultLogger);
+        self::assertSame($configurator, $result);
+    }
+
+    public function testWithDefaultLoggerClearsExplicitLogger(): void
+    {
+        $configurator = new ApplicationConfigurator();
+        $configurator->withLogger(
+            logger: new MemoryLogger(),
+        );
+
+        $configurator->withDefaultLogger();
+
+        self::assertNull($configurator->logger);
     }
 
     public function testWithMiddlewareKeepsInstanceAsIs(): void
@@ -1598,6 +1649,74 @@ class ApplicationConfiguratorTest extends TestCase
         self::expectException(CacheException::class);
 
         $container->resolve(CacheManagerInterface::class);
+    }
+
+    public function testBuildRegistersExplicitLogger(): void
+    {
+        $logger = new MemoryLogger();
+        $configurator = $this->makeMinimalConfigurator()
+            ->withLogger(
+                logger: $logger,
+            );
+
+        $configurator->build();
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        self::assertSame(
+            $logger,
+            $container->resolve(LoggerInterface::class),
+        );
+    }
+
+    public function testBuildRegistersLoggerFromConfig(): void
+    {
+        $configurator = $this->makeMinimalConfigurator()
+            ->withDefaultLogger();
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        $container->singleton(new MemoryLoggerConfig());
+
+        $configurator->build();
+
+        self::assertInstanceOf(
+            MemoryLogger::class,
+            $container->resolve(LoggerInterface::class),
+        );
+    }
+
+    public function testBuildRegistersNullLoggerFromDefaultWithoutConfig(): void
+    {
+        $configurator = $this->makeMinimalConfigurator()
+            ->withDefaultLogger();
+
+        $configurator->build();
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        self::assertInstanceOf(
+            NullLogger::class,
+            $container->resolve(LoggerInterface::class),
+        );
+    }
+
+    public function testBuildFallsBackToNullLoggerWhenNotConfigured(): void
+    {
+        $configurator = $this->makeMinimalConfigurator();
+
+        $configurator->build();
+
+        /** @var Container $container */
+        $container = $configurator->container;
+
+        self::assertInstanceOf(
+            NullLogger::class,
+            $container->resolve(LoggerInterface::class),
+        );
     }
 
     public function testBuildDoesNotRegisterCacheWhenNotConfigured(): void

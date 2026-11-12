@@ -166,6 +166,18 @@ class ObjectMapper
     }
 
     /**
+     * @throws SerializerException
+     */
+    public function extractValue(
+        mixed $value,
+    ): mixed {
+        /** @var \WeakMap<object, true> $visited */
+        $visited = new \WeakMap();
+
+        return $this->encodeValue($value, $visited);
+    }
+
+    /**
      * @param class-string $className
      * @param list<ViolationInterface> $violations
      *

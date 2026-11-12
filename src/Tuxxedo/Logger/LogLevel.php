@@ -13,14 +13,20 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Logger;
 
-enum LogLevel
+enum LogLevel: int
 {
-    case ALERT;
-    case CRITICAL;
-    case DEBUG;
-    case EMERGENCY;
-    case ERROR;
-    case INFO;
-    case NOTICE;
-    case WARNING;
+    case EMERGENCY = 0;
+    case ALERT = 1;
+    case CRITICAL = 2;
+    case ERROR = 3;
+    case WARNING = 4;
+    case NOTICE = 5;
+    case INFO = 6;
+    case DEBUG = 7;
+
+    public function isAtLeast(
+        LogLevel $level,
+    ): bool {
+        return $this->value <= $level->value;
+    }
 }

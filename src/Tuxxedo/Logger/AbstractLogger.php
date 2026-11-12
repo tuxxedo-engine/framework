@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Logger;
 
+use Tuxxedo\Temporal\ClockInterface;
+use Tuxxedo\Temporal\SystemClock;
+
 abstract class AbstractLogger implements LoggerInterface
 {
     public protected(set) int $total = 0;
@@ -26,15 +29,26 @@ abstract class AbstractLogger implements LoggerInterface
     public protected(set) int $totalNotice = 0;
     public protected(set) int $totalWarning = 0;
 
-    protected readonly LogMessageFormatterInterface $formatter;
+    protected readonly ClockInterface $clock;
+
+    /**
+     * @var array<string, mixed>
+     */
+    protected array $context = [];
+
+    protected ?string $channel = null;
 
     public function __construct(
-        ?LogMessageFormatterInterface $formatter = null,
+        ?ClockInterface $clock = null,
     ) {
-        $this->formatter = $formatter ?? new LogMessageFormatter();
+        $this->clock = $clock ?? new SystemClock();
     }
 
-    protected function incrementByLogLevel(
+    abstract protected function writeRecord(
+        LogRecordInterface $record,
+    ): void;
+
+    private function incrementByLogLevel(
         LogLevel $level,
     ): void {
         $this->total++;
@@ -51,90 +65,161 @@ abstract class AbstractLogger implements LoggerInterface
         };
     }
 
+    public function log(
+        string $message,
+        array $context = [],
+        LogLevel $level = LogLevel::ERROR,
+        ?\Throwable $exception = null,
+    ): static {
+        $this->write(
+            record: new LogRecord(
+                message: $message,
+                level: $level,
+                timestamp: $this->clock->now(),
+                context: [
+                    ...$this->context,
+                    ...$context,
+                ],
+                channel: $this->channel,
+                exception: $exception,
+            ),
+        );
+
+        return $this;
+    }
+
     public function alert(
         string $message,
-        array $placeholders = [],
+        array $context = [],
+        ?\Throwable $exception = null,
     ): static {
         return $this->log(
             message: $message,
-            placeholders: $placeholders,
+            context: $context,
             level: LogLevel::ALERT,
+            exception: $exception,
         );
     }
 
     public function critical(
         string $message,
-        array $placeholders = [],
+        array $context = [],
+        ?\Throwable $exception = null,
     ): static {
         return $this->log(
             message: $message,
-            placeholders: $placeholders,
+            context: $context,
             level: LogLevel::CRITICAL,
+            exception: $exception,
         );
     }
 
     public function debug(
         string $message,
-        array $placeholders = [],
+        array $context = [],
+        ?\Throwable $exception = null,
     ): static {
         return $this->log(
             message: $message,
-            placeholders: $placeholders,
+            context: $context,
             level: LogLevel::DEBUG,
+            exception: $exception,
         );
     }
 
     public function emergency(
         string $message,
-        array $placeholders = [],
+        array $context = [],
+        ?\Throwable $exception = null,
     ): static {
         return $this->log(
             message: $message,
-            placeholders: $placeholders,
+            context: $context,
             level: LogLevel::EMERGENCY,
+            exception: $exception,
         );
     }
 
     public function error(
         string $message,
-        array $placeholders = [],
+        array $context = [],
+        ?\Throwable $exception = null,
     ): static {
         return $this->log(
             message: $message,
-            placeholders: $placeholders,
+            context: $context,
+            exception: $exception,
         );
     }
 
     public function info(
         string $message,
-        array $placeholders = [],
+        array $context = [],
+        ?\Throwable $exception = null,
     ): static {
         return $this->log(
             message: $message,
-            placeholders: $placeholders,
+            context: $context,
             level: LogLevel::INFO,
+            exception: $exception,
         );
     }
 
     public function notice(
         string $message,
-        array $placeholders = [],
+        array $context = [],
+        ?\Throwable $exception = null,
     ): static {
         return $this->log(
             message: $message,
-            placeholders: $placeholders,
+            context: $context,
             level: LogLevel::NOTICE,
+            exception: $exception,
         );
     }
 
     public function warning(
         string $message,
-        array $placeholders = [],
+        array $context = [],
+        ?\Throwable $exception = null,
     ): static {
         return $this->log(
             message: $message,
-            placeholders: $placeholders,
+            context: $context,
             level: LogLevel::WARNING,
+            exception: $exception,
+        );
+    }
+
+    public function write(
+        LogRecordInterface $record,
+    ): void {
+        $this->writeRecord($record);
+        $this->incrementByLogLevel($record->level);
+    }
+
+    public function withContext(
+        array $context,
+    ): LoggerInterface {
+        return new ChildLogger(
+            parent: $this,
+            context: [
+                ...$this->context,
+                ...$context,
+            ],
+            channel: $this->channel,
+            clock: $this->clock,
+        );
+    }
+
+    public function withChannel(
+        string $channel,
+    ): LoggerInterface {
+        return new ChildLogger(
+            parent: $this,
+            context: $this->context,
+            channel: $channel,
+            clock: $this->clock,
         );
     }
 

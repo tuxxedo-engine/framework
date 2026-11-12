@@ -22,21 +22,12 @@ use Tuxxedo\Intl\Source\HttpLocaleSource;
 use Tuxxedo\Intl\Source\LocaleSourceInterface;
 use Tuxxedo\Intl\Source\LocaleSourceRegistryInterface;
 use Tuxxedo\Intl\Source\SourcePriority;
-use Tuxxedo\Logger\LoggerInterface;
-use Tuxxedo\Logger\StreamLogger;
 
 return static function (
     ContainerInterface $container,
     EventsManagerInterface $eventsManager,
     LocaleSourceRegistryInterface $localeSources,
 ): void {
-    $container->singletonLazy(
-        StreamLogger::class,
-        static fn (): LoggerInterface => StreamLogger::createFromFile(
-            file: __DIR__ . '/file.log',
-        ),
-    );
-
     $eventsManager->registerSubscriber(UserSubscriber::class);
 
     $container->singletonLazy(

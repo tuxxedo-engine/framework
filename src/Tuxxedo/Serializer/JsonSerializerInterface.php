@@ -69,4 +69,11 @@ interface JsonSerializerInterface
     public function encodeList(
         iterable $values,
     ): string;
+
+    /**
+     * @throws SerializerException
+     */
+    public function encodeValue(
+        mixed $value,
+    ): string;
 }

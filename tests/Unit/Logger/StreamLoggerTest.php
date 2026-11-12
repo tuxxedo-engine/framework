@@ -15,10 +15,13 @@ namespace Unit\Logger;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Logger\Formatter\JsonFormatter;
 use Tuxxedo\Logger\LogLevel;
 use Tuxxedo\Logger\LoggerException;
 use Tuxxedo\Logger\LoggerInterface;
 use Tuxxedo\Logger\StreamLogger;
+use Tuxxedo\Temporal\FixedClock;
+use Tuxxedo\Temporal\Instant;
 
 class StreamLoggerTest extends TestCase
 {
@@ -154,14 +157,14 @@ class StreamLoggerTest extends TestCase
         self::assertStringContainsString('test', $output);
     }
 
-    public function testLogInterpolatesPlaceholders(): void
+    public function testLogInterpolatesContext(): void
     {
         $stream = $this->createMemoryStream();
         $logger = new StreamLogger($stream);
 
         $logger->log(
             message: 'User {name} logged in',
-            placeholders: [
+            context: [
                 'name' => 'Kalle',
             ],
         );
@@ -302,5 +305,71 @@ class StreamLoggerTest extends TestCase
         $output = $this->readStream($stream);
 
         self::assertStringContainsString('message', $output);
+    }
+
+    public function testLogWritesLineFormat(): void
+    {
+        $stream = $this->createMemoryStream();
+        $logger = new StreamLogger(
+            stream: $stream,
+            clock: new FixedClock(
+                instant: Instant::parse(input: '2026-01-01T12:00:00.000000+00:00'),
+            ),
+        );
+
+        $logger->info(
+            'Hello {name}',
+            [
+                'name' => 'Kalle',
+            ],
+        );
+
+        self::assertSame(
+            '[2026-01-01T12:00:00.000000+00:00] [INFO] Hello Kalle' . \PHP_EOL,
+            $this->readStream($stream),
+        );
+    }
+
+    public function testLogUsesGivenFormatter(): void
+    {
+        $stream = $this->createMemoryStream();
+        $logger = new StreamLogger(
+            stream: $stream,
+            formatter: new JsonFormatter(),
+        );
+
+        $logger->info('Hello');
+
+        $output = $this->readStream($stream);
+
+        self::assertStringStartsWith('{"timestamp":', $output);
+        self::assertStringEndsWith("\n", $output);
+    }
+
+    public function testCreateFromFilePassesFormatterAndClock(): void
+    {
+        $file = \tempnam(\sys_get_temp_dir(), 'tuxxedo_test_');
+
+        self::assertIsString($file);
+
+        try {
+            $logger = StreamLogger::createFromFile(
+                file: $file,
+                formatter: new JsonFormatter(),
+                clock: new FixedClock(
+                    instant: Instant::parse(input: '2026-01-01T12:00:00.000000+00:00'),
+                ),
+            );
+
+            $logger->info('Hello');
+
+            $contents = ($contents = \file_get_contents($file)) !== false
+                ? $contents
+                : '';
+
+            self::assertStringStartsWith('{"timestamp":"2026-01-01T12:00:00.000000+00:00"', $contents);
+        } finally {
+            \unlink($file);
+        }
     }
 }

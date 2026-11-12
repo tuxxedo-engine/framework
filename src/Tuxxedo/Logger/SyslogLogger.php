@@ -13,20 +13,30 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Logger;
 
+use Tuxxedo\Logger\Formatter\LogFormatterInterface;
+use Tuxxedo\Logger\Formatter\LogMessageInterpolator;
+use Tuxxedo\Logger\Formatter\LogMessageInterpolatorInterface;
+use Tuxxedo\Temporal\ClockInterface;
+
 class SyslogLogger extends AbstractLogger
 {
     private bool $opened = false;
+
+    private readonly LogMessageInterpolatorInterface $interpolator;
 
     final public function __construct(
         private readonly string $ident = 'tuxxedo',
         private readonly bool $persistent = false,
         private readonly int $facility = \LOG_USER,
         private readonly int $options = \LOG_PID | \LOG_ODELAY,
-        ?LogMessageFormatterInterface $formatter = null,
+        private readonly ?LogFormatterInterface $formatter = null,
+        ?ClockInterface $clock = null,
     ) {
         parent::__construct(
-            formatter: $formatter,
+            clock: $clock,
         );
+
+        $this->interpolator = new LogMessageInterpolator();
     }
 
     public function __destruct()
@@ -36,14 +46,9 @@ class SyslogLogger extends AbstractLogger
         }
     }
 
-    /**
-     * @param array<string, scalar> $placeholders
-     */
-    public function log(
-        string $message,
-        array $placeholders = [],
-        LogLevel $level = LogLevel::ERROR,
-    ): static {
+    protected function writeRecord(
+        LogRecordInterface $record,
+    ): void {
         if (!$this->opened) {
             @\openlog(
                 prefix: $this->ident,
@@ -55,8 +60,10 @@ class SyslogLogger extends AbstractLogger
         }
 
         @\syslog(
-            priority: $this->mapLogLevelToPriority($level),
-            message: $this->formatter->interpolate($message, $placeholders),
+            priority: $this->mapLogLevelToPriority($record->level),
+            message: $this->formatter !== null
+                ? \rtrim($this->formatter->format($record), "\r\n")
+                : $this->interpolator->interpolate($record),
         );
 
         if (!$this->persistent) {
@@ -64,10 +71,6 @@ class SyslogLogger extends AbstractLogger
 
             $this->opened = false;
         }
-
-        parent::incrementByLogLevel($level);
-
-        return $this;
     }
 
     private function mapLogLevelToPriority(

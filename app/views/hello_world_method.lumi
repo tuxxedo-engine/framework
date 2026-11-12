@@ -1,2 +1,2 @@
-{% set chained = logger.log(message: 'Logged with {feature}', placeholders: ['feature': 'named arguments']) %}
+{% set chained = logger.log(message: 'Logged with {feature}', context: ['feature': 'named arguments']) %}
 <pre>{{ chained.all() }}</pre>

@@ -18,6 +18,7 @@ use Tuxxedo\Env\Source\DotEnvSource;
 use Tuxxedo\Env\Source\ProcessEnvSource;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Kernel\ErrorHandlerInterface;
+use Tuxxedo\Logger\Http\LogErrorHandler;
 use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
 
 require_once __DIR__ . '/../vendor/autoload.php';
@@ -54,10 +55,12 @@ $builder = ApplicationConfigurator::createFromConfigDirectory(
             ->disableErrorReporting(),
     )
     ->withDefaultConnectionManager()
+    ->withDefaultLogger()
     ->withServiceFile($appDirectory . '/services.php')
     ->withExceptionHandler(
         HttpException::class,
         static fn (): ErrorHandlerInterface => new HttpErrorHandler(),
-    );
+    )
+    ->withDefaultExceptionHandler(LogErrorHandler::class);
 
 $builder->build()->run();

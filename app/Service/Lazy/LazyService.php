@@ -22,7 +22,7 @@ class LazyService implements LazyServiceInterface
     ) {
         $this->logger->info(
             message: 'Created {class}',
-            placeholders: [
+            context: [
                 'class' => $this::class,
             ],
         );

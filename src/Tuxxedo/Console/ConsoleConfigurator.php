@@ -40,6 +40,9 @@ use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Env\EnvInterface;
 use Tuxxedo\File\FileCollectionFactory;
 use Tuxxedo\File\FileException;
+use Tuxxedo\Logger\LoggerInterface;
+use Tuxxedo\Logger\StreamLogger;
+use Tuxxedo\Temporal\ClockInterface;
 
 class ConsoleConfigurator extends AbstractConfigurator implements ConsoleConfiguratorInterface
 {
@@ -328,6 +331,24 @@ class ConsoleConfigurator extends AbstractConfigurator implements ConsoleConfigu
         return $classes;
     }
 
+    protected function registerLogger(
+        ContainerInterface $container,
+    ): void {
+        if ($this->logger === null && !$this->useDefaultLogger) {
+            $container->singletonLazy(
+                LoggerInterface::class,
+                static fn (ContainerInterface $container): LoggerInterface => StreamLogger::createFromFile(
+                    file: 'php://stderr',
+                    clock: $container->resolve(ClockInterface::class),
+                ),
+            );
+
+            return;
+        }
+
+        parent::registerLogger($container);
+    }
+
     public function build(): KernelInterface
     {
         $output = ConsoleOutput::createFromStandardStreams();
@@ -375,6 +396,7 @@ class ConsoleConfigurator extends AbstractConfigurator implements ConsoleConfigu
         $this->registerStorage($container);
         $this->registerMailManager($container);
         $this->registerCache($container);
+        $this->registerLogger($container);
         $this->loadServiceFiles($container);
 
         $discoverer = new CommandDiscoverer(

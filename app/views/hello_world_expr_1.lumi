@@ -20,5 +20,5 @@
 {{ a.b | trim | upper }}
 {{ (firstName ~ ' ' ~ lastName) | trim | upper }}
 {{ '  xXx  ' | trim | lower | upper | lower | upper }}
-{{ logger.entries[0].message | trim | upper }}
+{{ logger.records[0].message | trim | upper }}
 {{ (users?.first?.nickname ?? ' php') | trim | upper }}

@@ -29,6 +29,8 @@ use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\File\Storage\Local\Config\LocalStorageConfigInterface;
 use Tuxxedo\File\Storage\Local\LocalStorage;
 use Tuxxedo\File\Storage\StorageInterface;
+use Tuxxedo\Logger\Config\LoggerConfigInterface;
+use Tuxxedo\Logger\LoggerInterface;
 use Tuxxedo\Mail\MailConfigurator;
 use Tuxxedo\Mail\MailConfiguratorInterface;
 use Tuxxedo\Mail\MailManagerInterface;
@@ -52,6 +54,8 @@ abstract class AbstractConfigurator implements AbstractConfiguratorInterface
     public private(set) ?\Closure $mailManagerCustomizer = null;
     public private(set) ?CacheManagerInterface $cacheManager = null;
     public private(set) bool $useDefaultCache = false;
+    public private(set) ?LoggerInterface $logger = null;
+    public private(set) bool $useDefaultLogger = false;
 
     /**
      * @var list<string>
@@ -175,6 +179,23 @@ abstract class AbstractConfigurator implements AbstractConfiguratorInterface
     {
         $this->useDefaultCache = true;
         $this->cacheManager = null;
+
+        return $this;
+    }
+
+    public function withLogger(
+        LoggerInterface $logger,
+    ): static {
+        $this->logger = $logger;
+        $this->useDefaultLogger = false;
+
+        return $this;
+    }
+
+    public function withDefaultLogger(): static
+    {
+        $this->useDefaultLogger = true;
+        $this->logger = null;
 
         return $this;
     }
@@ -332,6 +353,30 @@ abstract class AbstractConfigurator implements AbstractConfiguratorInterface
 
                 return $configurator->build();
             },
+        );
+    }
+
+    protected function registerLogger(
+        ContainerInterface $container,
+    ): void {
+        if ($this->logger !== null) {
+            $logger = $this->logger;
+
+            $container->singletonLazy(
+                LoggerInterface::class,
+                static fn (): LoggerInterface => $logger,
+            );
+
+            return;
+        }
+
+        if (!$this->useDefaultLogger) {
+            return;
+        }
+
+        $container->singletonLazy(
+            LoggerInterface::class,
+            static fn (ContainerInterface $container): LoggerInterface => $container->resolve(LoggerConfigInterface::class)->createLogger($container),
         );
     }
 

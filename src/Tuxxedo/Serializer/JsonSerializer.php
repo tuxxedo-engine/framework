@@ -109,6 +109,12 @@ class JsonSerializer extends AbstractSerializer implements JsonSerializerInterfa
         return $this->encodeJson($this->extractList($values));
     }
 
+    public function encodeValue(
+        mixed $value,
+    ): string {
+        return $this->encodeJson($this->extractValue($value));
+    }
+
     protected function casting(): Casting
     {
         return Casting::STRICT;
@@ -136,12 +142,10 @@ class JsonSerializer extends AbstractSerializer implements JsonSerializerInterfa
     }
 
     /**
-     * @param array<mixed> $data
-     *
      * @throws SerializerException
      */
     private function encodeJson(
-        array $data,
+        mixed $data,
     ): string {
         try {
             return \json_encode(

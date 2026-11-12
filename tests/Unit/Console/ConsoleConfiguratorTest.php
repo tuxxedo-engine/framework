@@ -46,6 +46,11 @@ use Tuxxedo\Env\Env;
 use Tuxxedo\Env\EnvInterface;
 use Tuxxedo\Intl\Config\IntlConfig;
 use Tuxxedo\Intl\Locale;
+use Tuxxedo\Logger\Config\MemoryLoggerConfig;
+use Tuxxedo\Logger\LoggerInterface;
+use Tuxxedo\Logger\MemoryLogger;
+use Tuxxedo\Logger\NullLogger;
+use Tuxxedo\Logger\StreamLogger;
 
 class ConsoleConfiguratorTest extends TestCase
 {
@@ -446,6 +451,79 @@ class ConsoleConfiguratorTest extends TestCase
         self::assertInstanceOf(
             CacheManager::class,
             $container->resolve(CacheManagerInterface::class),
+        );
+    }
+
+    private function makeLoggerContainer(): Container
+    {
+        $container = new Container();
+
+        $container->singleton(
+            new IntlConfig(
+                rootDirectory: \dirname(__DIR__, 3) . '/resources/intl',
+                defaultLocale: Locale::parse('en-US'),
+            ),
+        );
+
+        return $container;
+    }
+
+    public function testBuildDefaultsToStderrLogger(): void
+    {
+        $container = $this->makeLoggerContainer();
+
+        ConsoleConfigurator::create($container)->build();
+
+        self::assertInstanceOf(
+            StreamLogger::class,
+            $container->resolve(LoggerInterface::class),
+        );
+    }
+
+    public function testBuildRegistersExplicitLogger(): void
+    {
+        $container = $this->makeLoggerContainer();
+        $logger = new MemoryLogger();
+
+        ConsoleConfigurator::create($container)
+            ->withLogger(
+                logger: $logger,
+            )
+            ->build();
+
+        self::assertSame(
+            $logger,
+            $container->resolve(LoggerInterface::class),
+        );
+    }
+
+    public function testBuildRegistersLoggerFromConfig(): void
+    {
+        $container = $this->makeLoggerContainer();
+
+        $container->singleton(new MemoryLoggerConfig());
+
+        ConsoleConfigurator::create($container)
+            ->withDefaultLogger()
+            ->build();
+
+        self::assertInstanceOf(
+            MemoryLogger::class,
+            $container->resolve(LoggerInterface::class),
+        );
+    }
+
+    public function testBuildRegistersNullLoggerFromDefaultWithoutConfig(): void
+    {
+        $container = $this->makeLoggerContainer();
+
+        ConsoleConfigurator::create($container)
+            ->withDefaultLogger()
+            ->build();
+
+        self::assertInstanceOf(
+            NullLogger::class,
+            $container->resolve(LoggerInterface::class),
         );
     }
 

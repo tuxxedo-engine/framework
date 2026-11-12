@@ -27,4 +27,18 @@ class LoggerException extends Exception
             ),
         );
     }
+
+    public static function fromUnencodableValue(
+        string $key,
+        \Throwable $previous,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Unable to encode the log record value "%s": %s',
+                $key,
+                $previous->getMessage(),
+            ),
+            previous: $previous,
+        );
+    }
 }

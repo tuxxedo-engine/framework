@@ -18,6 +18,7 @@ use Tuxxedo\Config\ConfigInterface;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\File\Storage\StorageInterface;
+use Tuxxedo\Logger\LoggerInterface;
 use Tuxxedo\Mail\MailConfiguratorInterface;
 use Tuxxedo\Mail\MailManagerInterface;
 use Tuxxedo\View\Lumi\LumiConfiguratorInterface;
@@ -72,6 +73,14 @@ interface AbstractConfiguratorInterface
         get;
     }
 
+    public ?LoggerInterface $logger {
+        get;
+    }
+
+    public bool $useDefaultLogger {
+        get;
+    }
+
     /**
      * @var list<string>
      */
@@ -123,6 +132,12 @@ interface AbstractConfiguratorInterface
     ): static;
 
     public function withDefaultCache(): static;
+
+    public function withLogger(
+        LoggerInterface $logger,
+    ): static;
+
+    public function withDefaultLogger(): static;
 
     public function withServiceFile(
         string $file,

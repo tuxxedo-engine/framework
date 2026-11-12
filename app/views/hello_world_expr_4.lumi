@@ -11,8 +11,8 @@
 
 {{ printf('%d %d', (1 + 2), 3 ) }}
 
-{# set entry = logger.entries[0] #}
-{% set entry = first(logger.entries) %}
+{# set entry = logger.records[0] #}
+{% set entry = first(logger.records) %}
 
-{{ printf('%s %s', entry.date, entry.message) }}
+{{ printf('%s %s', entry.timestamp.toIso8601(), entry.message) }}
 </pre>
