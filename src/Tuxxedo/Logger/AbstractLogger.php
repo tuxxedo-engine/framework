@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Logger;
 
+use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Logger\Processor\LogProcessorInterface;
 use Tuxxedo\Temporal\ClockInterface;
 use Tuxxedo\Temporal\SystemClock;
 
@@ -38,10 +40,25 @@ abstract class AbstractLogger implements LoggerInterface
 
     protected ?string $channel = null;
 
+    /**
+     * @var list<LogProcessorInterface>
+     */
+    private readonly array $processors;
+
+    public readonly LogFailureMode $processorFailure;
+
+    /**
+     * @param list<LogProcessorInterface> $processors
+     */
     public function __construct(
+        protected readonly ContainerInterface $container,
         ?ClockInterface $clock = null,
+        array $processors = [],
+        LogFailureMode $processorFailure = LogFailureMode::MARKER,
     ) {
         $this->clock = $clock ?? new SystemClock();
+        $this->processors = $processors;
+        $this->processorFailure = $processorFailure;
     }
 
     abstract protected function writeRecord(
@@ -194,6 +211,39 @@ abstract class AbstractLogger implements LoggerInterface
     public function write(
         LogRecordInterface $record,
     ): void {
+        $failures = [];
+
+        foreach ($this->processors as $processor) {
+            try {
+                $record = $processor->process($this->container, $record);
+            } catch (\Throwable $exception) {
+                if ($this->processorFailure === LogFailureMode::STRICT) {
+                    throw LoggerException::fromProcessorFailure(
+                        processor: $processor::class,
+                        previous: $exception,
+                    );
+                }
+
+                $failures[] = $processor::class . ': ' . $exception->getMessage();
+            }
+        }
+
+        if ($failures !== [] && $this->processorFailure === LogFailureMode::MARKER) {
+            $existing = $record->extra['log.processor_failed'] ?? [];
+
+            $record = $record->withExtra(
+                'log.processor_failed',
+                [
+                    ...(
+                        \is_array($existing)
+                            ? \array_values($existing)
+                            : []
+                    ),
+                    ...$failures,
+                ],
+            );
+        }
+
         $this->writeRecord($record);
         $this->incrementByLogLevel($record->level);
     }
@@ -202,6 +252,7 @@ abstract class AbstractLogger implements LoggerInterface
         array $context,
     ): LoggerInterface {
         return new ChildLogger(
+            container: $this->container,
             parent: $this,
             context: [
                 ...$this->context,
@@ -216,6 +267,7 @@ abstract class AbstractLogger implements LoggerInterface
         string $channel,
     ): LoggerInterface {
         return new ChildLogger(
+            container: $this->container,
             parent: $this,
             context: $this->context,
             channel: $channel,

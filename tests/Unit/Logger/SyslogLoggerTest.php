@@ -15,6 +15,7 @@ namespace Unit\Logger;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Container\Container;
 use Tuxxedo\Logger\Formatter\JsonFormatter;
 use Tuxxedo\Logger\LogLevel;
 use Tuxxedo\Logger\LoggerInterface;
@@ -24,7 +25,9 @@ class SyslogLoggerTest extends TestCase
 {
     public function testConstructWithDefaults(): void
     {
-        $logger = new SyslogLogger();
+        $logger = new SyslogLogger(
+            container: new Container(),
+        );
 
         self::assertSame(0, $logger->total);
     }
@@ -32,6 +35,7 @@ class SyslogLoggerTest extends TestCase
     public function testConstructWithCustomOptions(): void
     {
         $logger = new SyslogLogger(
+            container: new Container(),
             ident: 'test_app',
             persistent: true,
             facility: \LOG_USER,
@@ -43,7 +47,9 @@ class SyslogLoggerTest extends TestCase
 
     public function testLogReturnsSelf(): void
     {
-        $logger = new SyslogLogger();
+        $logger = new SyslogLogger(
+            container: new Container(),
+        );
 
         self::assertSame($logger, $logger->log('test'));
     }
@@ -118,7 +124,9 @@ class SyslogLoggerTest extends TestCase
         LogLevel $level,
         \Closure $propertyReader,
     ): void {
-        $logger = new SyslogLogger();
+        $logger = new SyslogLogger(
+            container: new Container(),
+        );
 
         $logger->log(
             message: 'message',
@@ -132,6 +140,7 @@ class SyslogLoggerTest extends TestCase
     public function testNonPersistentClosesAfterEachLog(): void
     {
         $logger = new SyslogLogger(
+            container: new Container(),
             persistent: false,
         );
 
@@ -144,6 +153,7 @@ class SyslogLoggerTest extends TestCase
     public function testPersistentStaysOpen(): void
     {
         $logger = new SyslogLogger(
+            container: new Container(),
             persistent: true,
         );
 
@@ -156,7 +166,9 @@ class SyslogLoggerTest extends TestCase
 
     public function testLogWithContext(): void
     {
-        $logger = new SyslogLogger();
+        $logger = new SyslogLogger(
+            container: new Container(),
+        );
 
         $logger->log(
             message: 'User {name} logged in',
@@ -170,7 +182,9 @@ class SyslogLoggerTest extends TestCase
 
     public function testTotalReflectsAllLevels(): void
     {
-        $logger = new SyslogLogger();
+        $logger = new SyslogLogger(
+            container: new Container(),
+        );
 
         foreach (LogLevel::cases() as $level) {
             $logger->log('message', [], $level);
@@ -182,6 +196,7 @@ class SyslogLoggerTest extends TestCase
     public function testLogWithFormatter(): void
     {
         $logger = new SyslogLogger(
+            container: new Container(),
             formatter: new JsonFormatter(),
         );
 

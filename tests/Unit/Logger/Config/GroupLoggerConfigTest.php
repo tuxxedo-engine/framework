@@ -14,10 +14,13 @@ declare(strict_types=1);
 namespace Unit\Logger\Config;
 
 use PHPUnit\Framework\TestCase;
+use Support\Logger\Processor\ThrowingProcessor;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Logger\Config\GroupLoggerConfig;
 use Tuxxedo\Logger\Config\StreamLoggerConfig;
 use Tuxxedo\Logger\GroupLogger;
+use Tuxxedo\Logger\LogFailureMode;
+use Tuxxedo\Logger\LoggerException;
 use Tuxxedo\Temporal\FixedClock;
 use Tuxxedo\Temporal\Instant;
 
@@ -71,5 +74,23 @@ class GroupLoggerConfigTest extends TestCase
         ))->createLogger(new Container());
 
         self::assertInstanceOf(GroupLogger::class, $logger);
+    }
+
+    public function testPassesProcessorsAndFailureMode(): void
+    {
+        $logger = (new GroupLoggerConfig(
+            loggers: [],
+            processors: [
+                ThrowingProcessor::class,
+            ],
+            processorFailure: LogFailureMode::STRICT,
+        ))->createLogger(new Container());
+
+        self::assertInstanceOf(GroupLogger::class, $logger);
+        self::assertSame(LogFailureMode::STRICT, $logger->processorFailure);
+
+        self::expectException(LoggerException::class);
+
+        $logger->info('message');
     }
 }

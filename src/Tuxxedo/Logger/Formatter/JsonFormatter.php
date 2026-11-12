@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Logger\Formatter;
 
+use Tuxxedo\Logger\LogFailureMode;
 use Tuxxedo\Logger\LogRecordInterface;
 use Tuxxedo\Logger\LoggerException;
 use Tuxxedo\Serializer\JsonSerializer;
@@ -34,7 +35,7 @@ class JsonFormatter implements LogFormatterInterface
      */
     public function __construct(
         ?JsonSerializerInterface $serializer = null,
-        public readonly UnencodableValueMode $unencodable = UnencodableValueMode::MARKER,
+        public readonly LogFailureMode $unencodable = LogFailureMode::MARKER,
         ?LogMessageInterpolatorInterface $interpolator = null,
     ) {
         $this->serializer = $serializer ?? new JsonSerializer(
@@ -68,15 +69,34 @@ class JsonFormatter implements LogFormatterInterface
         try {
             return $this->serializer->encodeValue($data) . "\n";
         } catch (SerializerException) {
+            $failures = [];
+
             $data['context'] = $this->clean(
                 section: 'context',
                 values: $record->context,
+                failures: $failures,
             );
 
-            $data['extra'] = $this->clean(
+            $extra = $this->clean(
                 section: 'extra',
                 values: $record->extra,
+                failures: $failures,
             );
+
+            if ($failures !== [] && $this->unencodable === LogFailureMode::MARKER) {
+                $existing = $extra['log.unencodable'] ?? [];
+
+                $extra['log.unencodable'] = [
+                    ...(
+                        \is_array($existing)
+                            ? \array_values($existing)
+                            : []
+                    ),
+                    ...$failures,
+                ];
+            }
+
+            $data['extra'] = $extra;
 
             return $this->serializer->encodeValue($data) . "\n";
         }
@@ -84,6 +104,7 @@ class JsonFormatter implements LogFormatterInterface
 
     /**
      * @param array<string, mixed> $values
+     * @param list<string> $failures
      * @return array<string, mixed>
      *
      * @throws LoggerException
@@ -91,6 +112,7 @@ class JsonFormatter implements LogFormatterInterface
     private function clean(
         string $section,
         array $values,
+        array &$failures,
     ): array {
         $cleaned = [];
 
@@ -106,16 +128,14 @@ class JsonFormatter implements LogFormatterInterface
 
                 $cleaned[$key] = $value;
             } catch (SerializerException $exception) {
-                if ($this->unencodable === UnencodableValueMode::STRICT) {
+                if ($this->unencodable === LogFailureMode::STRICT) {
                     throw LoggerException::fromUnencodableValue(
                         key: $section . '.' . $key,
                         previous: $exception,
                     );
                 }
 
-                if ($this->unencodable === UnencodableValueMode::MARKER) {
-                    $cleaned[$key] = '[unencodable:' . \get_debug_type($value) . ']';
-                }
+                $failures[] = $section . '.' . $key;
             }
         }
 

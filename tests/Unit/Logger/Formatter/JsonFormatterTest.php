@@ -15,12 +15,16 @@ namespace Unit\Logger\Formatter;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Application\Environment;
+use Tuxxedo\Http\Method;
 use Tuxxedo\Logger\Formatter\JsonFormatter;
 use Tuxxedo\Logger\Formatter\LogFormat;
-use Tuxxedo\Logger\Formatter\UnencodableValueMode;
+use Tuxxedo\Logger\LogFailureMode;
 use Tuxxedo\Logger\LogLevel;
 use Tuxxedo\Logger\LogRecord;
 use Tuxxedo\Logger\LoggerException;
+use Tuxxedo\Logger\Processor\Info\AppInfo;
+use Tuxxedo\Logger\Processor\Info\HttpRequestInfo;
 use Tuxxedo\Serializer\JsonSerializer;
 use Tuxxedo\Serializer\SerializerException;
 use Tuxxedo\Temporal\Instant;
@@ -63,7 +67,7 @@ class JsonFormatterTest extends TestCase
 
     public function testDefaultsToMarker(): void
     {
-        self::assertSame(UnencodableValueMode::MARKER, (new JsonFormatter())->unencodable);
+        self::assertSame(LogFailureMode::MARKER, (new JsonFormatter())->unencodable);
     }
 
     public function testFormatsMinimalRecord(): void
@@ -229,24 +233,26 @@ class JsonFormatterTest extends TestCase
     }
 
     /**
-     * @return \Generator<array{0: UnencodableValueMode, 1: array<string, mixed>, 2: array<string, mixed>}>
+     * @return \Generator<array{0: LogFailureMode, 1: array<string, mixed>, 2: array<string, mixed>}>
      */
     public static function unencodableDataProvider(): \Generator
     {
         yield [
-            UnencodableValueMode::MARKER,
+            LogFailureMode::MARKER,
             [
                 'orderId' => 42,
-                'ratio' => '[unencodable:float]',
             ],
             [
                 'host.name' => 'localhost',
-                'load' => '[unencodable:float]',
+                'log.unencodable' => [
+                    'context.ratio',
+                    'extra.load',
+                ],
             ],
         ];
 
         yield [
-            UnencodableValueMode::OMIT,
+            LogFailureMode::OMIT,
             [
                 'orderId' => 42,
             ],
@@ -262,7 +268,7 @@ class JsonFormatterTest extends TestCase
      */
     #[DataProvider('unencodableDataProvider')]
     public function testUnencodableValues(
-        UnencodableValueMode $mode,
+        LogFailureMode $mode,
         array $context,
         array $extra,
     ): void {
@@ -292,7 +298,7 @@ class JsonFormatterTest extends TestCase
     {
         try {
             (new JsonFormatter(
-                unencodable: UnencodableValueMode::STRICT,
+                unencodable: LogFailureMode::STRICT,
             ))->format(
                 $this->createRecord(
                     context: [
@@ -307,5 +313,101 @@ class JsonFormatterTest extends TestCase
             self::assertStringContainsString('"context.ratio"', $exception->getMessage());
             self::assertInstanceOf(SerializerException::class, $exception->getPrevious());
         }
+    }
+
+    public function testMarkerAppendsToExistingUnencodableList(): void
+    {
+        $data = $this->decode(
+            (new JsonFormatter())->format(
+                $this->createRecord(
+                    context: [
+                        'ratio' => \NAN,
+                    ],
+                    extra: [
+                        'log.unencodable' => [
+                            'earlier',
+                        ],
+                    ],
+                ),
+            ),
+        );
+
+        self::assertSame([], $data['context']);
+        self::assertSame(
+            [
+                'log.unencodable' => [
+                    'earlier',
+                    'context.ratio',
+                ],
+            ],
+            $data['extra'],
+        );
+    }
+
+    public function testMarkerReplacesUnencodableKeyThatIsNotAList(): void
+    {
+        $data = $this->decode(
+            (new JsonFormatter())->format(
+                $this->createRecord(
+                    context: [
+                        'ratio' => \NAN,
+                    ],
+                    extra: [
+                        'log.unencodable' => 'not a list',
+                    ],
+                ),
+            ),
+        );
+
+        self::assertSame(
+            [
+                'log.unencodable' => [
+                    'context.ratio',
+                ],
+            ],
+            $data['extra'],
+        );
+    }
+
+    public function testEncodesInfoObjectsAsNestedObjects(): void
+    {
+        $data = $this->decode(
+            (new JsonFormatter())->format(
+                $this->createRecord(
+                    extra: [
+                        'app' => new AppInfo(
+                            name: 'Engine',
+                            version: '0.1.0',
+                            environment: Environment::TESTING,
+                        ),
+                        'http' => new HttpRequestInfo(
+                            method: Method::POST,
+                            path: '/orders/42/pay',
+                            host: 'localhost',
+                            clientIp: '127.0.0.1',
+                            route: null,
+                        ),
+                    ],
+                ),
+            ),
+        );
+
+        self::assertSame(
+            [
+                'app' => [
+                    'name' => 'Engine',
+                    'version' => '0.1.0',
+                    'environment' => 'TESTING',
+                ],
+                'http' => [
+                    'method' => 'POST',
+                    'path' => '/orders/42/pay',
+                    'host' => 'localhost',
+                    'clientIp' => '127.0.0.1',
+                    'route' => null,
+                ],
+            ],
+            $data['extra'],
+        );
     }
 }

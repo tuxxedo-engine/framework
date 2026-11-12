@@ -11,11 +11,13 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Logger\Formatter;
+namespace Tuxxedo\Logger\Processor\Info;
 
-enum UnencodableValueMode
+readonly class PhpInfo implements PhpInfoInterface
 {
-    case STRICT;
-    case MARKER;
-    case OMIT;
+    public function __construct(
+        public readonly string $version,
+        public readonly string $sapi,
+    ) {
+    }
 }

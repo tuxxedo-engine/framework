@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Logger;
 
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Temporal\ClockInterface;
 
 class ChildLogger extends AbstractLogger
@@ -21,12 +22,14 @@ class ChildLogger extends AbstractLogger
      * @param array<string, mixed> $context
      */
     public function __construct(
+        ContainerInterface $container,
         private readonly LoggerInterface $parent,
         array $context = [],
         ?string $channel = null,
         ?ClockInterface $clock = null,
     ) {
         parent::__construct(
+            container: $container,
             clock: $clock,
         );
 

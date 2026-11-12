@@ -18,13 +18,16 @@ use Tuxxedo\Logger\LoggerInterface;
 use Tuxxedo\Logger\NullLogger;
 use Tuxxedo\Temporal\ClockInterface;
 
-class NullLoggerConfig implements NullLoggerConfigInterface
+class NullLoggerConfig extends AbstractLoggerConfig implements NullLoggerConfigInterface
 {
     public function createLogger(
         ContainerInterface $container,
     ): LoggerInterface {
         return new NullLogger(
+            container: $container,
             clock: $container->resolve(ClockInterface::class),
+            processors: $this->createProcessors($container),
+            processorFailure: $this->processorFailure,
         );
     }
 }

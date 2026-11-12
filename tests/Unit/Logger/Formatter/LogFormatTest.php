@@ -17,7 +17,7 @@ use PHPUnit\Framework\TestCase;
 use Tuxxedo\Logger\Formatter\JsonFormatter;
 use Tuxxedo\Logger\Formatter\LineFormatter;
 use Tuxxedo\Logger\Formatter\LogFormat;
-use Tuxxedo\Logger\Formatter\UnencodableValueMode;
+use Tuxxedo\Logger\LogFailureMode;
 
 class LogFormatTest extends TestCase
 {
@@ -31,16 +31,16 @@ class LogFormatTest extends TestCase
         $formatter = LogFormat::JSON->createFormatter();
 
         self::assertInstanceOf(JsonFormatter::class, $formatter);
-        self::assertSame(UnencodableValueMode::MARKER, $formatter->unencodable);
+        self::assertSame(LogFailureMode::MARKER, $formatter->unencodable);
     }
 
     public function testJsonCreatesJsonFormatterWithGivenMode(): void
     {
         $formatter = LogFormat::JSON->createFormatter(
-            unencodable: UnencodableValueMode::OMIT,
+            unencodable: LogFailureMode::OMIT,
         );
 
         self::assertInstanceOf(JsonFormatter::class, $formatter);
-        self::assertSame(UnencodableValueMode::OMIT, $formatter->unencodable);
+        self::assertSame(LogFailureMode::OMIT, $formatter->unencodable);
     }
 }

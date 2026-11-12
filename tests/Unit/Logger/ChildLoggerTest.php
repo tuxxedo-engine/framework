@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Unit\Logger;
 
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Container\Container;
 use Tuxxedo\Logger\ChildLogger;
 use Tuxxedo\Logger\MemoryLogger;
 
@@ -21,8 +22,11 @@ class ChildLoggerTest extends TestCase
 {
     public function testWritesToParent(): void
     {
-        $parent = new MemoryLogger();
+        $parent = new MemoryLogger(
+            container: new Container(),
+        );
         $child = new ChildLogger(
+            container: new Container(),
             parent: $parent,
             context: [
                 'requestId' => 'abc',
@@ -39,7 +43,9 @@ class ChildLoggerTest extends TestCase
 
     public function testCountsOwnRecordsAndParentCountsAll(): void
     {
-        $parent = new MemoryLogger();
+        $parent = new MemoryLogger(
+            container: new Container(),
+        );
         $child = $parent->withChannel('payments');
 
         $parent->info('first');
@@ -55,9 +61,11 @@ class ChildLoggerTest extends TestCase
 
     public function testDefaultsToNoContextAndNoChannel(): void
     {
-        $parent = new MemoryLogger();
+        $parent = new MemoryLogger(
+            container: new Container(),
+        );
 
-        (new ChildLogger(parent: $parent))->info('message');
+        (new ChildLogger(container: new Container(), parent: $parent))->info('message');
 
         self::assertSame([], $parent->records[0]->context);
         self::assertNull($parent->records[0]->channel);

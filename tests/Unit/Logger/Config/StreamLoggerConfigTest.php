@@ -14,10 +14,11 @@ declare(strict_types=1);
 namespace Unit\Logger\Config;
 
 use PHPUnit\Framework\TestCase;
+use Support\Logger\Processor\ExtraProcessor;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Logger\Config\StreamLoggerConfig;
 use Tuxxedo\Logger\Formatter\LogFormat;
-use Tuxxedo\Logger\Formatter\UnencodableValueMode;
+use Tuxxedo\Logger\LogFailureMode;
 use Tuxxedo\Logger\LoggerException;
 use Tuxxedo\Logger\StreamLogger;
 use Tuxxedo\Temporal\FixedClock;
@@ -70,7 +71,7 @@ class StreamLoggerConfigTest extends TestCase
         self::assertTrue($config->append);
         self::assertTrue($config->autoFlush);
         self::assertSame(LogFormat::LINE, $config->format);
-        self::assertSame(UnencodableValueMode::MARKER, $config->unencodable);
+        self::assertSame(LogFailureMode::MARKER, $config->unencodable);
     }
 
     public function testCreatesLineLogger(): void
@@ -106,7 +107,7 @@ class StreamLoggerConfigTest extends TestCase
                 append: false,
                 autoFlush: false,
                 format: LogFormat::JSON,
-                unencodable: UnencodableValueMode::OMIT,
+                unencodable: LogFailureMode::OMIT,
             ))->createLogger($this->createContainer());
 
             self::assertInstanceOf(StreamLogger::class, $logger);
@@ -137,5 +138,30 @@ class StreamLoggerConfigTest extends TestCase
         (new StreamLoggerConfig(
             file: '/nonexistent/path/to/file.log',
         ))->createLogger($this->createContainer());
+    }
+
+    public function testPassesProcessorsAndFailureMode(): void
+    {
+        $file = $this->createFile();
+
+        try {
+            $logger = (new StreamLoggerConfig(
+                file: $file,
+                format: LogFormat::JSON,
+                processors: [
+                    ExtraProcessor::class,
+                ],
+                processorFailure: LogFailureMode::OMIT,
+            ))->createLogger($this->createContainer());
+
+            self::assertInstanceOf(StreamLogger::class, $logger);
+            self::assertSame(LogFailureMode::OMIT, $logger->processorFailure);
+
+            $logger->info('Hello');
+
+            self::assertStringContainsString('"extra":{"support.key":"value"}', $this->readFile($file));
+        } finally {
+            \unlink($file);
+        }
     }
 }

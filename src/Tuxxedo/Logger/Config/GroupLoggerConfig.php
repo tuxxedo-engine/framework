@@ -15,17 +15,26 @@ namespace Tuxxedo\Logger\Config;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Logger\GroupLogger;
+use Tuxxedo\Logger\LogFailureMode;
 use Tuxxedo\Logger\LoggerInterface;
+use Tuxxedo\Logger\Processor\LogProcessorInterface;
 use Tuxxedo\Temporal\ClockInterface;
 
-class GroupLoggerConfig implements GroupLoggerConfigInterface
+class GroupLoggerConfig extends AbstractLoggerConfig implements GroupLoggerConfigInterface
 {
     /**
      * @param list<LoggerConfigInterface> $loggers
+     * @param list<class-string<LogProcessorInterface>|LogProcessorInterface> $processors
      */
     public function __construct(
         public readonly array $loggers,
+        array $processors = [],
+        LogFailureMode $processorFailure = LogFailureMode::MARKER,
     ) {
+        parent::__construct(
+            processors: $processors,
+            processorFailure: $processorFailure,
+        );
     }
 
     public function createLogger(
@@ -38,8 +47,11 @@ class GroupLoggerConfig implements GroupLoggerConfigInterface
         }
 
         return new GroupLogger(
+            container: $container,
             loggers: $loggers,
             clock: $container->resolve(ClockInterface::class),
+            processors: $this->createProcessors($container),
+            processorFailure: $this->processorFailure,
         );
     }
 }

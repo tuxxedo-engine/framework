@@ -14,10 +14,12 @@ declare(strict_types=1);
 namespace Unit\Logger\Config;
 
 use PHPUnit\Framework\TestCase;
+use Support\Logger\Processor\ThrowingProcessor;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Logger\Config\SyslogLoggerConfig;
 use Tuxxedo\Logger\Formatter\LogFormat;
-use Tuxxedo\Logger\Formatter\UnencodableValueMode;
+use Tuxxedo\Logger\LogFailureMode;
+use Tuxxedo\Logger\LoggerException;
 use Tuxxedo\Logger\SyslogLogger;
 
 class SyslogLoggerConfigTest extends TestCase
@@ -31,7 +33,7 @@ class SyslogLoggerConfigTest extends TestCase
         self::assertSame(\LOG_USER, $config->facility);
         self::assertSame(\LOG_PID | \LOG_ODELAY, $config->options);
         self::assertNull($config->format);
-        self::assertSame(UnencodableValueMode::MARKER, $config->unencodable);
+        self::assertSame(LogFailureMode::MARKER, $config->unencodable);
     }
 
     public function testCreatesSyslogLoggerWithoutFormat(): void
@@ -59,5 +61,22 @@ class SyslogLoggerConfigTest extends TestCase
         $logger->info('message');
 
         self::assertSame(1, $logger->total);
+    }
+
+    public function testPassesProcessorsAndFailureMode(): void
+    {
+        $logger = (new SyslogLoggerConfig(
+            processors: [
+                ThrowingProcessor::class,
+            ],
+            processorFailure: LogFailureMode::STRICT,
+        ))->createLogger(new Container());
+
+        self::assertInstanceOf(SyslogLogger::class, $logger);
+        self::assertSame(LogFailureMode::STRICT, $logger->processorFailure);
+
+        self::expectException(LoggerException::class);
+
+        $logger->info('message');
     }
 }

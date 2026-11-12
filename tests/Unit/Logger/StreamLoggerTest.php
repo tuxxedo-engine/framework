@@ -15,6 +15,7 @@ namespace Unit\Logger;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Container\Container;
 use Tuxxedo\Logger\Formatter\JsonFormatter;
 use Tuxxedo\Logger\LogLevel;
 use Tuxxedo\Logger\LoggerException;
@@ -51,7 +52,7 @@ class StreamLoggerTest extends TestCase
     public function testConstructWithValidResource(): void
     {
         $stream = $this->createMemoryStream();
-        $logger = new StreamLogger($stream);
+        $logger = new StreamLogger(container: new Container(), stream: $stream);
 
         self::assertSame(0, $logger->total);
     }
@@ -63,7 +64,7 @@ class StreamLoggerTest extends TestCase
         self::assertIsString($file);
 
         try {
-            $logger = StreamLogger::createFromFile($file);
+            $logger = StreamLogger::createFromFile(container: new Container(), file: $file);
 
             self::assertInstanceOf(StreamLogger::class, $logger);
         } finally {
@@ -75,7 +76,7 @@ class StreamLoggerTest extends TestCase
     {
         self::expectException(LoggerException::class);
 
-        StreamLogger::createFromFile('/nonexistent/path/to/file.log');
+        StreamLogger::createFromFile(container: new Container(), file: '/nonexistent/path/to/file.log');
     }
 
     public function testCreateFromFileAppendMode(): void
@@ -87,7 +88,7 @@ class StreamLoggerTest extends TestCase
         try {
             \file_put_contents($file, 'existing content' . \PHP_EOL);
 
-            $logger = StreamLogger::createFromFile($file);
+            $logger = StreamLogger::createFromFile(container: new Container(), file: $file);
 
             $logger->log('new entry');
 
@@ -112,6 +113,7 @@ class StreamLoggerTest extends TestCase
             \file_put_contents($file, 'existing content' . \PHP_EOL);
 
             $logger = StreamLogger::createFromFile(
+                container: new Container(),
                 file: $file,
                 append: false,
             );
@@ -132,7 +134,7 @@ class StreamLoggerTest extends TestCase
     public function testLogWritesToStream(): void
     {
         $stream = $this->createMemoryStream();
-        $logger = new StreamLogger($stream);
+        $logger = new StreamLogger(container: new Container(), stream: $stream);
 
         $logger->log('Hello Engine');
 
@@ -144,7 +146,7 @@ class StreamLoggerTest extends TestCase
     public function testLogWritesLevelToStream(): void
     {
         $stream = $this->createMemoryStream();
-        $logger = new StreamLogger($stream);
+        $logger = new StreamLogger(container: new Container(), stream: $stream);
 
         $logger->log(
             message: 'test',
@@ -160,7 +162,7 @@ class StreamLoggerTest extends TestCase
     public function testLogInterpolatesContext(): void
     {
         $stream = $this->createMemoryStream();
-        $logger = new StreamLogger($stream);
+        $logger = new StreamLogger(container: new Container(), stream: $stream);
 
         $logger->log(
             message: 'User {name} logged in',
@@ -178,7 +180,7 @@ class StreamLoggerTest extends TestCase
     public function testLogReturnsSelf(): void
     {
         $stream = $this->createMemoryStream();
-        $logger = new StreamLogger($stream);
+        $logger = new StreamLogger(container: new Container(), stream: $stream);
 
         self::assertSame($logger, $logger->log('test'));
     }
@@ -254,7 +256,7 @@ class StreamLoggerTest extends TestCase
         \Closure $propertyReader,
     ): void {
         $stream = $this->createMemoryStream();
-        $logger = new StreamLogger($stream);
+        $logger = new StreamLogger(container: new Container(), stream: $stream);
 
         $logger->log(
             message: 'message',
@@ -268,7 +270,7 @@ class StreamLoggerTest extends TestCase
     public function testMultipleCallsAppendToStream(): void
     {
         $stream = $this->createMemoryStream();
-        $logger = new StreamLogger($stream);
+        $logger = new StreamLogger(container: new Container(), stream: $stream);
 
         $logger->log('first');
         $logger->log('second');
@@ -285,7 +287,7 @@ class StreamLoggerTest extends TestCase
     public function testAutoFlushDefault(): void
     {
         $stream = $this->createMemoryStream();
-        $logger = new StreamLogger($stream);
+        $logger = new StreamLogger(container: new Container(), stream: $stream);
 
         self::assertTrue($logger->autoFlush);
     }
@@ -294,6 +296,7 @@ class StreamLoggerTest extends TestCase
     {
         $stream = $this->createMemoryStream();
         $logger = new StreamLogger(
+            container: new Container(),
             stream: $stream,
             autoFlush: false,
         );
@@ -311,6 +314,7 @@ class StreamLoggerTest extends TestCase
     {
         $stream = $this->createMemoryStream();
         $logger = new StreamLogger(
+            container: new Container(),
             stream: $stream,
             clock: new FixedClock(
                 instant: Instant::parse(input: '2026-01-01T12:00:00.000000+00:00'),
@@ -334,6 +338,7 @@ class StreamLoggerTest extends TestCase
     {
         $stream = $this->createMemoryStream();
         $logger = new StreamLogger(
+            container: new Container(),
             stream: $stream,
             formatter: new JsonFormatter(),
         );
@@ -354,6 +359,7 @@ class StreamLoggerTest extends TestCase
 
         try {
             $logger = StreamLogger::createFromFile(
+                container: new Container(),
                 file: $file,
                 formatter: new JsonFormatter(),
                 clock: new FixedClock(

@@ -13,17 +13,28 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Logger;
 
+use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Logger\Processor\LogProcessorInterface;
 use Tuxxedo\Temporal\ClockInterface;
 
 class FilterLogger extends AbstractLogger
 {
+    /**
+     * @param list<LogProcessorInterface> $processors
+     */
     public function __construct(
+        ContainerInterface $container,
         public readonly LogLevel $minimum,
         private readonly LoggerInterface $logger,
         ?ClockInterface $clock = null,
+        array $processors = [],
+        LogFailureMode $processorFailure = LogFailureMode::MARKER,
     ) {
         parent::__construct(
+            container: $container,
             clock: $clock,
+            processors: $processors,
+            processorFailure: $processorFailure,
         );
     }
 

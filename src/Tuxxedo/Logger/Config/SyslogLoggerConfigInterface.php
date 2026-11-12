@@ -16,7 +16,7 @@ namespace Tuxxedo\Logger\Config;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Logger\Formatter\LogFormat;
-use Tuxxedo\Logger\Formatter\UnencodableValueMode;
+use Tuxxedo\Logger\LogFailureMode;
 
 #[DefaultImplementation(class: SyslogLoggerConfig::class, lifecycle: Lifecycle::SINGLETON)]
 interface SyslogLoggerConfigInterface extends LoggerConfigInterface
@@ -41,7 +41,7 @@ interface SyslogLoggerConfigInterface extends LoggerConfigInterface
         get;
     }
 
-    public UnencodableValueMode $unencodable {
+    public LogFailureMode $unencodable {
         get;
     }
 }

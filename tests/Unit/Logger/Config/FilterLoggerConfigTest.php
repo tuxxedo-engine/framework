@@ -14,11 +14,15 @@ declare(strict_types=1);
 namespace Unit\Logger\Config;
 
 use PHPUnit\Framework\TestCase;
+use Support\Logger\Processor\ThrowingProcessor;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Logger\Config\FilterLoggerConfig;
+use Tuxxedo\Logger\Config\MemoryLoggerConfig;
 use Tuxxedo\Logger\Config\StreamLoggerConfig;
 use Tuxxedo\Logger\FilterLogger;
+use Tuxxedo\Logger\LogFailureMode;
 use Tuxxedo\Logger\LogLevel;
+use Tuxxedo\Logger\LoggerException;
 use Tuxxedo\Temporal\FixedClock;
 use Tuxxedo\Temporal\Instant;
 
@@ -58,5 +62,26 @@ class FilterLoggerConfigTest extends TestCase
         } finally {
             \unlink($file);
         }
+    }
+
+    public function testPassesProcessorsAndFailureMode(): void
+    {
+        $logger = (new FilterLoggerConfig(
+            minimum: LogLevel::ERROR,
+            logger: new MemoryLoggerConfig(),
+            processors: [
+                ThrowingProcessor::class,
+            ],
+            processorFailure: LogFailureMode::STRICT,
+        ))->createLogger(new Container());
+
+        self::assertInstanceOf(FilterLogger::class, $logger);
+        self::assertSame(LogFailureMode::STRICT, $logger->processorFailure);
+
+        $logger->info('rejected before processors run');
+
+        self::expectException(LoggerException::class);
+
+        $logger->error('message');
     }
 }

@@ -16,12 +16,25 @@ namespace Tuxxedo\Logger\Config;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Container\Lifecycle;
+use Tuxxedo\Logger\LogFailureMode;
 use Tuxxedo\Logger\LoggerException;
 use Tuxxedo\Logger\LoggerInterface;
+use Tuxxedo\Logger\Processor\LogProcessorInterface;
 
 #[DefaultImplementation(class: NullLoggerConfig::class, lifecycle: Lifecycle::SINGLETON)]
 interface LoggerConfigInterface
 {
+    /**
+     * @var list<class-string<LogProcessorInterface>|LogProcessorInterface>
+     */
+    public array $processors {
+        get;
+    }
+
+    public LogFailureMode $processorFailure {
+        get;
+    }
+
     /**
      * @throws LoggerException
      */

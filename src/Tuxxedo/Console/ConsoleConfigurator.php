@@ -338,6 +338,7 @@ class ConsoleConfigurator extends AbstractConfigurator implements ConsoleConfigu
             $container->singletonLazy(
                 LoggerInterface::class,
                 static fn (ContainerInterface $container): LoggerInterface => StreamLogger::createFromFile(
+                    container: $container,
                     file: 'php://stderr',
                     clock: $container->resolve(ClockInterface::class),
                 ),

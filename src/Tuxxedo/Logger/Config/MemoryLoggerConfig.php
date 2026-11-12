@@ -18,13 +18,16 @@ use Tuxxedo\Logger\LoggerInterface;
 use Tuxxedo\Logger\MemoryLogger;
 use Tuxxedo\Temporal\ClockInterface;
 
-class MemoryLoggerConfig implements MemoryLoggerConfigInterface
+class MemoryLoggerConfig extends AbstractLoggerConfig implements MemoryLoggerConfigInterface
 {
     public function createLogger(
         ContainerInterface $container,
     ): LoggerInterface {
         return new MemoryLogger(
+            container: $container,
             clock: $container->resolve(ClockInterface::class),
+            processors: $this->createProcessors($container),
+            processorFailure: $this->processorFailure,
         );
     }
 }

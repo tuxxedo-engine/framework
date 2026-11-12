@@ -20,6 +20,7 @@ use Support\Http\Request\Context\StubHeaderContext;
 use Support\Http\Request\Context\StubInputContext;
 use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Serializer\SerializerManagerFactory;
+use Tuxxedo\Container\Container;
 use Tuxxedo\Http\Request\Request;
 use Tuxxedo\Http\Request\RequestInterface;
 use Tuxxedo\Http\Response\Response;
@@ -74,7 +75,9 @@ class LogErrorHandlerTest extends TestCase
         ResponseCode $responseCode,
         LogLevel $level,
     ): void {
-        $logger = new MemoryLogger();
+        $logger = new MemoryLogger(
+            container: new Container(),
+        );
         $exception = new \RuntimeException('failure');
         $response = new Response(
             responseCode: $responseCode,

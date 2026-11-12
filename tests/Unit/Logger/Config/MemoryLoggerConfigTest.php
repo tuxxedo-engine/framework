@@ -14,8 +14,10 @@ declare(strict_types=1);
 namespace Unit\Logger\Config;
 
 use PHPUnit\Framework\TestCase;
+use Support\Logger\Processor\ExtraProcessor;
 use Tuxxedo\Container\Container;
 use Tuxxedo\Logger\Config\MemoryLoggerConfig;
+use Tuxxedo\Logger\LogFailureMode;
 use Tuxxedo\Logger\MemoryLogger;
 use Tuxxedo\Temporal\FixedClock;
 use Tuxxedo\Temporal\Instant;
@@ -38,5 +40,46 @@ class MemoryLoggerConfigTest extends TestCase
         $logger->info('message');
 
         self::assertSame($clock->instant, $logger->records[0]->timestamp);
+    }
+
+    public function testResolvesProcessorsThroughContainer(): void
+    {
+        $logger = (new MemoryLoggerConfig(
+            processors: [
+                ExtraProcessor::class,
+            ],
+            processorFailure: LogFailureMode::OMIT,
+        ))->createLogger(new Container());
+
+        self::assertInstanceOf(MemoryLogger::class, $logger);
+        self::assertSame(LogFailureMode::OMIT, $logger->processorFailure);
+
+        $logger->info('message');
+
+        self::assertSame(['support.key' => 'value'], $logger->records[0]->extra);
+    }
+
+    public function testUsesProcessorInstancesAsGiven(): void
+    {
+        $processor = new ExtraProcessor('a', '1');
+        $logger = (new MemoryLoggerConfig(
+            processors: [
+                $processor,
+                ExtraProcessor::class,
+            ],
+        ))->createLogger(new Container());
+
+        self::assertInstanceOf(MemoryLogger::class, $logger);
+
+        $logger->info('message');
+
+        self::assertSame(1, $processor->callCount);
+        self::assertSame(
+            [
+                'a' => '1',
+                'support.key' => 'value',
+            ],
+            $logger->records[0]->extra,
+        );
     }
 }

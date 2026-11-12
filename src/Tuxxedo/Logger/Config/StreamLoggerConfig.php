@@ -15,26 +15,37 @@ namespace Tuxxedo\Logger\Config;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Logger\Formatter\LogFormat;
-use Tuxxedo\Logger\Formatter\UnencodableValueMode;
+use Tuxxedo\Logger\LogFailureMode;
 use Tuxxedo\Logger\LoggerInterface;
+use Tuxxedo\Logger\Processor\LogProcessorInterface;
 use Tuxxedo\Logger\StreamLogger;
 use Tuxxedo\Temporal\ClockInterface;
 
-class StreamLoggerConfig implements StreamLoggerConfigInterface
+class StreamLoggerConfig extends AbstractLoggerConfig implements StreamLoggerConfigInterface
 {
+    /**
+     * @param list<class-string<LogProcessorInterface>|LogProcessorInterface> $processors
+     */
     public function __construct(
         public readonly string $file,
         public readonly bool $append = true,
         public readonly bool $autoFlush = true,
         public readonly LogFormat $format = LogFormat::LINE,
-        public readonly UnencodableValueMode $unencodable = UnencodableValueMode::MARKER,
+        public readonly LogFailureMode $unencodable = LogFailureMode::MARKER,
+        array $processors = [],
+        LogFailureMode $processorFailure = LogFailureMode::MARKER,
     ) {
+        parent::__construct(
+            processors: $processors,
+            processorFailure: $processorFailure,
+        );
     }
 
     public function createLogger(
         ContainerInterface $container,
     ): LoggerInterface {
         return StreamLogger::createFromFile(
+            container: $container,
             file: $this->file,
             autoFlush: $this->autoFlush,
             append: $this->append,
@@ -42,6 +53,8 @@ class StreamLoggerConfig implements StreamLoggerConfigInterface
                 unencodable: $this->unencodable,
             ),
             clock: $container->resolve(ClockInterface::class),
+            processors: $this->createProcessors($container),
+            processorFailure: $this->processorFailure,
         );
     }
 }

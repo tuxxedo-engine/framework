@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Unit\Logger;
 
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Container\Container;
 use Tuxxedo\Logger\FilterLogger;
 use Tuxxedo\Logger\LogLevel;
 use Tuxxedo\Logger\LogRecordInterface;
@@ -23,8 +24,11 @@ class FilterLoggerTest extends TestCase
 {
     public function testPassesRecordsAtOrAboveMinimum(): void
     {
-        $inner = new MemoryLogger();
+        $inner = new MemoryLogger(
+            container: new Container(),
+        );
         $logger = new FilterLogger(
+            container: new Container(),
             minimum: LogLevel::WARNING,
             logger: $inner,
         );
@@ -50,8 +54,11 @@ class FilterLoggerTest extends TestCase
 
     public function testCountsOnlyPassedRecords(): void
     {
-        $inner = new MemoryLogger();
+        $inner = new MemoryLogger(
+            container: new Container(),
+        );
         $logger = new FilterLogger(
+            container: new Container(),
             minimum: LogLevel::ERROR,
             logger: $inner,
         );

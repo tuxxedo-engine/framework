@@ -483,7 +483,9 @@ class ConsoleConfiguratorTest extends TestCase
     public function testBuildRegistersExplicitLogger(): void
     {
         $container = $this->makeLoggerContainer();
-        $logger = new MemoryLogger();
+        $logger = new MemoryLogger(
+            container: new Container(),
+        );
 
         ConsoleConfigurator::create($container)
             ->withLogger(

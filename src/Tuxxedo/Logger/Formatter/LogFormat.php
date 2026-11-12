@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Logger\Formatter;
 
+use Tuxxedo\Logger\LogFailureMode;
 use Tuxxedo\Serializer\SerializerException;
 
 enum LogFormat
@@ -24,7 +25,7 @@ enum LogFormat
      * @throws SerializerException
      */
     public function createFormatter(
-        UnencodableValueMode $unencodable = UnencodableValueMode::MARKER,
+        LogFailureMode $unencodable = LogFailureMode::MARKER,
     ): LogFormatterInterface {
         return match ($this) { // @codeCoverageIgnore
             self::LINE => new LineFormatter(),

@@ -13,9 +13,11 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Logger;
 
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Logger\Formatter\LogFormatterInterface;
 use Tuxxedo\Logger\Formatter\LogMessageInterpolator;
 use Tuxxedo\Logger\Formatter\LogMessageInterpolatorInterface;
+use Tuxxedo\Logger\Processor\LogProcessorInterface;
 use Tuxxedo\Temporal\ClockInterface;
 
 class SyslogLogger extends AbstractLogger
@@ -24,16 +26,25 @@ class SyslogLogger extends AbstractLogger
 
     private readonly LogMessageInterpolatorInterface $interpolator;
 
+    /**
+     * @param list<LogProcessorInterface> $processors
+     */
     final public function __construct(
+        ContainerInterface $container,
         private readonly string $ident = 'tuxxedo',
         private readonly bool $persistent = false,
         private readonly int $facility = \LOG_USER,
         private readonly int $options = \LOG_PID | \LOG_ODELAY,
         private readonly ?LogFormatterInterface $formatter = null,
         ?ClockInterface $clock = null,
+        array $processors = [],
+        LogFailureMode $processorFailure = LogFailureMode::MARKER,
     ) {
         parent::__construct(
+            container: $container,
             clock: $clock,
+            processors: $processors,
+            processorFailure: $processorFailure,
         );
 
         $this->interpolator = new LogMessageInterpolator();

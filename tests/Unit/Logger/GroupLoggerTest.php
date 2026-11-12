@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Unit\Logger;
 
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Container\Container;
 use Tuxxedo\Logger\FilterLogger;
 use Tuxxedo\Logger\GroupLogger;
 use Tuxxedo\Logger\LogLevel;
@@ -23,9 +24,14 @@ class GroupLoggerTest extends TestCase
 {
     public function testWritesSameRecordToEveryLogger(): void
     {
-        $first = new MemoryLogger();
-        $second = new MemoryLogger();
+        $first = new MemoryLogger(
+            container: new Container(),
+        );
+        $second = new MemoryLogger(
+            container: new Container(),
+        );
         $logger = new GroupLogger(
+            container: new Container(),
             loggers: [
                 $first,
                 $second,
@@ -42,12 +48,18 @@ class GroupLoggerTest extends TestCase
 
     public function testFilteredLoggerInsideGroup(): void
     {
-        $all = new MemoryLogger();
-        $errors = new MemoryLogger();
+        $all = new MemoryLogger(
+            container: new Container(),
+        );
+        $errors = new MemoryLogger(
+            container: new Container(),
+        );
         $logger = new GroupLogger(
+            container: new Container(),
             loggers: [
                 $all,
                 new FilterLogger(
+                    container: new Container(),
                     minimum: LogLevel::ERROR,
                     logger: $errors,
                 ),
@@ -66,6 +78,7 @@ class GroupLoggerTest extends TestCase
     public function testEmptyGroupOnlyCounts(): void
     {
         $logger = new GroupLogger(
+            container: new Container(),
             loggers: [],
         );
 

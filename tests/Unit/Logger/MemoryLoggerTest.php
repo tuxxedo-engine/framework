@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Unit\Logger;
 
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Container\Container;
 use Tuxxedo\Logger\LogLevel;
 use Tuxxedo\Logger\MemoryLogger;
 
@@ -21,7 +22,9 @@ class MemoryLoggerTest extends TestCase
 {
     public function testStartsEmpty(): void
     {
-        $logger = new MemoryLogger();
+        $logger = new MemoryLogger(
+            container: new Container(),
+        );
 
         self::assertSame([], $logger->records);
         self::assertCount(0, $logger);
@@ -29,7 +32,9 @@ class MemoryLoggerTest extends TestCase
 
     public function testKeepsRecordsInOrder(): void
     {
-        $logger = new MemoryLogger();
+        $logger = new MemoryLogger(
+            container: new Container(),
+        );
 
         $logger->info('first');
         $logger->warning('second');

@@ -28,6 +28,20 @@ class LoggerException extends Exception
         );
     }
 
+    public static function fromProcessorFailure(
+        string $processor,
+        \Throwable $previous,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'The log processor "%s" failed: %s',
+                $processor,
+                $previous->getMessage(),
+            ),
+            previous: $previous,
+        );
+    }
+
     public static function fromUnencodableValue(
         string $key,
         \Throwable $previous,

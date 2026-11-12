@@ -13,8 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Logger;
 
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Logger\Formatter\LineFormatter;
 use Tuxxedo\Logger\Formatter\LogFormatterInterface;
+use Tuxxedo\Logger\Processor\LogProcessorInterface;
 use Tuxxedo\Temporal\ClockInterface;
 
 class StreamLogger extends AbstractLogger
@@ -23,29 +25,41 @@ class StreamLogger extends AbstractLogger
 
     /**
      * @param resource $stream
+     * @param list<LogProcessorInterface> $processors
      */
     final public function __construct(
+        ContainerInterface $container,
         private readonly mixed $stream,
         public bool $autoFlush = true,
         ?LogFormatterInterface $formatter = null,
         ?ClockInterface $clock = null,
+        array $processors = [],
+        LogFailureMode $processorFailure = LogFailureMode::MARKER,
     ) {
         parent::__construct(
+            container: $container,
             clock: $clock,
+            processors: $processors,
+            processorFailure: $processorFailure,
         );
 
         $this->formatter = $formatter ?? new LineFormatter();
     }
 
     /**
+     * @param list<LogProcessorInterface> $processors
+     *
      * @throws LoggerException
      */
     public static function createFromFile(
+        ContainerInterface $container,
         string $file,
         bool $autoFlush = true,
         bool $append = true,
         ?LogFormatterInterface $formatter = null,
         ?ClockInterface $clock = null,
+        array $processors = [],
+        LogFailureMode $processorFailure = LogFailureMode::MARKER,
     ): static {
         $stream = @\fopen(
             filename: $file,
@@ -61,10 +75,13 @@ class StreamLogger extends AbstractLogger
         }
 
         return new static(
+            container: $container,
             stream: $stream,
             autoFlush: $autoFlush,
             formatter: $formatter,
             clock: $clock,
+            processors: $processors,
+            processorFailure: $processorFailure,
         );
     }
 

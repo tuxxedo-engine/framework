@@ -22,7 +22,9 @@ class NullLoggerTest extends TestCase
 {
     public function testWriteOnlyCounts(): void
     {
-        $logger = new NullLogger();
+        $logger = new NullLogger(
+            container: new Container(),
+        );
 
         $logger->info('message');
         $logger->error('message');
@@ -32,9 +34,12 @@ class NullLoggerTest extends TestCase
 
     public function testIsDefaultImplementation(): void
     {
+        $container = new Container();
+        $container->singleton($container);
+
         self::assertInstanceOf(
             NullLogger::class,
-            (new Container())->resolve(LoggerInterface::class),
+            $container->resolve(LoggerInterface::class),
         );
     }
 }

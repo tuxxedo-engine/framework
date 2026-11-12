@@ -15,8 +15,15 @@ namespace Unit\Logger;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Support\Logger\Processor\ExtraProcessor;
+use Support\Logger\Processor\ThrowingProcessor;
+use Tuxxedo\Container\Container;
 use Tuxxedo\Logger\ChildLogger;
+use Tuxxedo\Logger\FilterLogger;
+use Tuxxedo\Logger\GroupLogger;
+use Tuxxedo\Logger\LogFailureMode;
 use Tuxxedo\Logger\LogLevel;
+use Tuxxedo\Logger\LoggerException;
 use Tuxxedo\Logger\LoggerInterface;
 use Tuxxedo\Logger\MemoryLogger;
 use Tuxxedo\Logger\NullLogger;
@@ -34,7 +41,9 @@ class AbstractLoggerTest extends TestCase
 
     public function testLogReturnsSelf(): void
     {
-        $logger = new NullLogger();
+        $logger = new NullLogger(
+            container: new Container(),
+        );
 
         self::assertSame($logger, $logger->log('test'));
     }
@@ -44,6 +53,7 @@ class AbstractLoggerTest extends TestCase
         $clock = $this->createClock();
         $exception = new \RuntimeException('failure');
         $logger = new MemoryLogger(
+            container: new Container(),
             clock: $clock,
         );
 
@@ -69,7 +79,9 @@ class AbstractLoggerTest extends TestCase
 
     public function testLogDefaultsToErrorLevel(): void
     {
-        $logger = new MemoryLogger();
+        $logger = new MemoryLogger(
+            container: new Container(),
+        );
 
         $logger->log('test');
 
@@ -78,7 +90,9 @@ class AbstractLoggerTest extends TestCase
 
     public function testIncrementsTotalCounter(): void
     {
-        $logger = new NullLogger();
+        $logger = new NullLogger(
+            container: new Container(),
+        );
 
         self::assertSame(0, $logger->total);
 
@@ -162,7 +176,9 @@ class AbstractLoggerTest extends TestCase
         LogLevel $level,
         \Closure $propertyReader,
     ): void {
-        $logger = new NullLogger();
+        $logger = new NullLogger(
+            container: new Container(),
+        );
 
         self::assertSame(0, $propertyReader($logger));
 
@@ -191,7 +207,9 @@ class AbstractLoggerTest extends TestCase
     public function testGetTotalByLogLevel(
         LogLevel $level,
     ): void {
-        $logger = new NullLogger();
+        $logger = new NullLogger(
+            container: new Container(),
+        );
 
         $logger->log(
             message: 'message',
@@ -272,7 +290,9 @@ class AbstractLoggerTest extends TestCase
         LogLevel $level,
     ): void {
         $exception = new \RuntimeException('failure');
-        $logger = new MemoryLogger();
+        $logger = new MemoryLogger(
+            container: new Container(),
+        );
 
         self::assertSame($logger, $caller($logger, $exception));
         self::assertSame(1, $logger->getTotalByLogLevel($level));
@@ -288,7 +308,9 @@ class AbstractLoggerTest extends TestCase
 
     public function testTotalReflectsAllLevels(): void
     {
-        $logger = new NullLogger();
+        $logger = new NullLogger(
+            container: new Container(),
+        );
 
         foreach (LogLevel::cases() as $level) {
             $logger->log(
@@ -302,8 +324,12 @@ class AbstractLoggerTest extends TestCase
 
     public function testWriteCountsRecord(): void
     {
-        $source = new MemoryLogger();
-        $logger = new MemoryLogger();
+        $source = new MemoryLogger(
+            container: new Container(),
+        );
+        $logger = new MemoryLogger(
+            container: new Container(),
+        );
 
         $source->info('message');
         $logger->write($source->records[0]);
@@ -314,7 +340,9 @@ class AbstractLoggerTest extends TestCase
 
     public function testWithContextReturnsChildLogger(): void
     {
-        $logger = new MemoryLogger();
+        $logger = new MemoryLogger(
+            container: new Container(),
+        );
         $child = $logger->withContext(
             [
                 'requestId' => 'abc',
@@ -327,7 +355,9 @@ class AbstractLoggerTest extends TestCase
 
     public function testWithContextMergesContextIntoRecords(): void
     {
-        $logger = new MemoryLogger();
+        $logger = new MemoryLogger(
+            container: new Container(),
+        );
 
         $logger
             ->withContext(
@@ -360,7 +390,9 @@ class AbstractLoggerTest extends TestCase
 
     public function testCallerContextWinsOverChildContext(): void
     {
-        $logger = new MemoryLogger();
+        $logger = new MemoryLogger(
+            container: new Container(),
+        );
 
         $logger
             ->withContext(
@@ -380,7 +412,9 @@ class AbstractLoggerTest extends TestCase
 
     public function testWithContextKeepsChannel(): void
     {
-        $logger = new MemoryLogger();
+        $logger = new MemoryLogger(
+            container: new Container(),
+        );
 
         $logger
             ->withChannel('payments')
@@ -397,7 +431,9 @@ class AbstractLoggerTest extends TestCase
 
     public function testWithChannelSetsChannelAndKeepsContext(): void
     {
-        $logger = new MemoryLogger();
+        $logger = new MemoryLogger(
+            container: new Container(),
+        );
 
         $logger
             ->withContext(
@@ -415,7 +451,9 @@ class AbstractLoggerTest extends TestCase
 
     public function testWithContextDoesNotChangeParent(): void
     {
-        $logger = new MemoryLogger();
+        $logger = new MemoryLogger(
+            container: new Container(),
+        );
 
         $logger
             ->withContext(
@@ -437,11 +475,279 @@ class AbstractLoggerTest extends TestCase
     {
         $clock = $this->createClock();
         $logger = new MemoryLogger(
+            container: new Container(),
             clock: $clock,
         );
 
         $logger->withChannel('payments')->info('message');
 
         self::assertSame($clock->instant, $logger->records[0]->timestamp);
+    }
+
+    public function testProcessorFailureDefaultsToMarker(): void
+    {
+        self::assertSame(LogFailureMode::MARKER, (new NullLogger(
+            container: new Container(),
+        ))->processorFailure);
+    }
+
+    public function testProcessorsRunInOrderAndLaterKeyWins(): void
+    {
+        $logger = new MemoryLogger(
+            container: new Container(),
+            processors: [
+                new ExtraProcessor('a', '1'),
+                new ExtraProcessor('b', '2'),
+                new ExtraProcessor('a', '3'),
+            ],
+        );
+
+        $logger->info('message');
+
+        self::assertSame(
+            [
+                'a' => '3',
+                'b' => '2',
+            ],
+            $logger->records[0]->extra,
+        );
+    }
+
+    public function testProcessorsRunOncePerRecord(): void
+    {
+        $processor = new ExtraProcessor();
+        $logger = new MemoryLogger(
+            container: new Container(),
+            processors: [
+                $processor,
+            ],
+        );
+
+        $logger->info('first');
+        $logger->info('second');
+
+        self::assertSame(2, $processor->callCount);
+    }
+
+    public function testMarkerKeepsLastGoodRecordAndRecordsFailure(): void
+    {
+        $logger = new MemoryLogger(
+            container: new Container(),
+            processors: [
+                new ExtraProcessor('a', '1'),
+                new ThrowingProcessor('boom'),
+                new ExtraProcessor('b', '2'),
+            ],
+        );
+
+        $logger->info('message');
+
+        self::assertSame(1, $logger->total);
+        self::assertSame(
+            [
+                'a' => '1',
+                'b' => '2',
+                'log.processor_failed' => [
+                    ThrowingProcessor::class . ': boom',
+                ],
+            ],
+            $logger->records[0]->extra,
+        );
+    }
+
+    public function testMarkerAppendsToExistingFailures(): void
+    {
+        $logger = new MemoryLogger(
+            container: new Container(),
+            processors: [
+                new ExtraProcessor(
+                    'log.processor_failed',
+                    [
+                        'earlier',
+                    ],
+                ),
+                new ThrowingProcessor('boom'),
+            ],
+        );
+
+        $logger->info('message');
+
+        self::assertSame(
+            [
+                'earlier',
+                ThrowingProcessor::class . ': boom',
+            ],
+            $logger->records[0]->extra['log.processor_failed'],
+        );
+    }
+
+    public function testMarkerReplacesFailureKeyThatIsNotAList(): void
+    {
+        $logger = new MemoryLogger(
+            container: new Container(),
+            processors: [
+                new ExtraProcessor('log.processor_failed', 'not a list'),
+                new ThrowingProcessor('boom'),
+            ],
+        );
+
+        $logger->info('message');
+
+        self::assertSame(
+            [
+                ThrowingProcessor::class . ': boom',
+            ],
+            $logger->records[0]->extra['log.processor_failed'],
+        );
+    }
+
+    public function testOmitKeepsLastGoodRecordSilently(): void
+    {
+        $logger = new MemoryLogger(
+            container: new Container(),
+            processors: [
+                new ExtraProcessor('a', '1'),
+                new ThrowingProcessor('boom'),
+                new ExtraProcessor('b', '2'),
+            ],
+            processorFailure: LogFailureMode::OMIT,
+        );
+
+        $logger->info('message');
+
+        self::assertSame(1, $logger->total);
+        self::assertSame(
+            [
+                'a' => '1',
+                'b' => '2',
+            ],
+            $logger->records[0]->extra,
+        );
+    }
+
+    public function testStrictThrowsAndWritesNothing(): void
+    {
+        $logger = new MemoryLogger(
+            container: new Container(),
+            processors: [
+                new ThrowingProcessor('boom'),
+            ],
+            processorFailure: LogFailureMode::STRICT,
+        );
+
+        try {
+            $logger->info('message');
+
+            self::fail('Expected LoggerException was not thrown');
+        } catch (LoggerException $exception) {
+            self::assertStringContainsString(ThrowingProcessor::class, $exception->getMessage());
+            self::assertStringContainsString('boom', $exception->getMessage());
+            self::assertInstanceOf(\RuntimeException::class, $exception->getPrevious());
+        }
+
+        self::assertSame([], $logger->records);
+        self::assertSame(0, $logger->total);
+    }
+
+    public function testGroupProcessorsApplyToEveryLoggerAndInnerOnlyToItself(): void
+    {
+        $first = new MemoryLogger(
+            container: new Container(),
+            processors: [
+                new ExtraProcessor('inner', '1'),
+            ],
+        );
+
+        $second = new MemoryLogger(
+            container: new Container(),
+        );
+        $logger = new GroupLogger(
+            container: new Container(),
+            loggers: [
+                $first,
+                $second,
+            ],
+            processors: [
+                new ExtraProcessor('group', '1'),
+            ],
+        );
+
+        $logger->info('message');
+
+        self::assertSame(
+            [
+                'group' => '1',
+                'inner' => '1',
+            ],
+            $first->records[0]->extra,
+        );
+        self::assertSame(['group' => '1'], $second->records[0]->extra);
+    }
+
+    public function testFailuresFromGroupAndInnerLoggerAreMerged(): void
+    {
+        $inner = new MemoryLogger(
+            container: new Container(),
+            processors: [
+                new ThrowingProcessor('inner'),
+            ],
+        );
+
+        $logger = new GroupLogger(
+            container: new Container(),
+            loggers: [
+                $inner,
+            ],
+            processors: [
+                new ThrowingProcessor('outer'),
+            ],
+        );
+
+        $logger->info('message');
+
+        self::assertSame(
+            [
+                ThrowingProcessor::class . ': outer',
+                ThrowingProcessor::class . ': inner',
+            ],
+            $inner->records[0]->extra['log.processor_failed'],
+        );
+    }
+
+    public function testFilterSkipsProcessorsForRejectedRecords(): void
+    {
+        $processor = new ExtraProcessor();
+        $logger = new FilterLogger(
+            container: new Container(),
+            minimum: LogLevel::ERROR,
+            logger: new MemoryLogger(
+                container: new Container(),
+            ),
+            processors: [
+                $processor,
+            ],
+        );
+
+        $logger->info('info');
+
+        self::assertSame(0, $processor->callCount);
+
+        $logger->error('error');
+
+        self::assertSame(1, $processor->callCount);
+    }
+
+    public function testChildRecordsRunParentProcessors(): void
+    {
+        $logger = new MemoryLogger(
+            container: new Container(),
+            processors: [
+                new ExtraProcessor('a', '1'),
+            ],
+        );
+
+        $logger->withChannel('payments')->info('message');
+
+        self::assertSame(['a' => '1'], $logger->records[0]->extra);
     }
 }

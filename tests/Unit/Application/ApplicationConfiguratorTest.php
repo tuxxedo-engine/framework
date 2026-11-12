@@ -553,7 +553,9 @@ class ApplicationConfiguratorTest extends TestCase
     public function testWithLoggerSetsLoggerAndReturnsFluentSelf(): void
     {
         $configurator = new ApplicationConfigurator();
-        $logger = new MemoryLogger();
+        $logger = new MemoryLogger(
+            container: new Container(),
+        );
 
         $result = $configurator->withLogger(
             logger: $logger,
@@ -569,7 +571,9 @@ class ApplicationConfiguratorTest extends TestCase
         $configurator->withDefaultLogger();
 
         $configurator->withLogger(
-            logger: new MemoryLogger(),
+            logger: new MemoryLogger(
+                container: new Container(),
+            ),
         );
 
         self::assertFalse($configurator->useDefaultLogger);
@@ -589,7 +593,9 @@ class ApplicationConfiguratorTest extends TestCase
     {
         $configurator = new ApplicationConfigurator();
         $configurator->withLogger(
-            logger: new MemoryLogger(),
+            logger: new MemoryLogger(
+                container: new Container(),
+            ),
         );
 
         $configurator->withDefaultLogger();
@@ -1653,7 +1659,9 @@ class ApplicationConfiguratorTest extends TestCase
 
     public function testBuildRegistersExplicitLogger(): void
     {
-        $logger = new MemoryLogger();
+        $logger = new MemoryLogger(
+            container: new Container(),
+        );
         $configurator = $this->makeMinimalConfigurator()
             ->withLogger(
                 logger: $logger,
