@@ -38,6 +38,7 @@ class InMemoryCacheDriver implements CacheDriverInterface
 
     public function __construct(
         ?ClockInterface $clock = null,
+        public readonly string $namespace = '',
     ) {
         $this->clock = $clock ?? new SystemClock();
     }
@@ -46,7 +47,9 @@ class InMemoryCacheDriver implements CacheDriverInterface
         ContainerInterface $container,
         CacheDriverConfigInterface $config,
     ): self {
-        return new self();
+        return new self(
+            namespace: $config->namespace,
+        );
     }
 
     private function live(

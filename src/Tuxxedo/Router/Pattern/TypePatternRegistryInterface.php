@@ -19,6 +19,13 @@ use Tuxxedo\Container\Lifecycle;
 #[DefaultImplementation(class: TypePatternRegistry::class, lifecycle: Lifecycle::SINGLETON)]
 interface TypePatternRegistryInterface
 {
+    /**
+     * @var array<string, TypePatternInterface>
+     */
+    public array $patterns {
+        get;
+    }
+
     public function has(string $name): bool;
 
     public function get(string $name): ?TypePatternInterface;

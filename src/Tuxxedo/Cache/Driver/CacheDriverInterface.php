@@ -20,6 +20,10 @@ use Tuxxedo\Temporal\DurationInterface;
 
 interface CacheDriverInterface
 {
+    public string $namespace {
+        get;
+    }
+
     /**
      * @throws CacheException
      */

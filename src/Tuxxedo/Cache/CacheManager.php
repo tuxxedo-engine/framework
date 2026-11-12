@@ -22,7 +22,7 @@ use Tuxxedo\Temporal\DurationInterface;
 class CacheManager implements CacheManagerInterface
 {
     /**
-     * @param array<array-key, CacheInterface> $scopes
+     * @param CacheInterface[] $scopes
      * @param list<array-key>|null $isolatedScopes
      */
     public function __construct(

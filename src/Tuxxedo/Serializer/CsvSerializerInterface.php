@@ -18,6 +18,14 @@ use Tuxxedo\Validator\ValidatorException;
 
 interface CsvSerializerInterface
 {
+    public string $separator {
+        get;
+    }
+
+    public string $enclosure {
+        get;
+    }
+
     /**
      * @template TClassName of object
      *

@@ -41,11 +41,25 @@ interface AbstractConfiguratorInterface
         get;
     }
 
+    /**
+     * @var (\Closure(LumiConfiguratorInterface $configurator): mixed)|null
+     */
+    public ?\Closure $lumiCustomizer {
+        get;
+    }
+
     public ?ConnectionManagerInterface $connectionManager {
         get;
     }
 
     public bool $useDefaultConnectionManager {
+        get;
+    }
+
+    /**
+     * @var (\Closure(ConnectionManagerInterface $manager): mixed)|null
+     */
+    public ?\Closure $connectionManagerCustomizer {
         get;
     }
 
@@ -62,6 +76,13 @@ interface AbstractConfiguratorInterface
     }
 
     public bool $useDefaultMailManager {
+        get;
+    }
+
+    /**
+     * @var (\Closure(MailConfiguratorInterface $configurator): mixed)|null
+     */
+    public ?\Closure $mailManagerCustomizer {
         get;
     }
 

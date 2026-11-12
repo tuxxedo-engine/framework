@@ -18,6 +18,10 @@ use Tuxxedo\Validator\ValidatorException;
 
 interface XmlSerializerInterface
 {
+    public ?string $indent {
+        get;
+    }
+
     /**
      * @template TClassName of object
      *

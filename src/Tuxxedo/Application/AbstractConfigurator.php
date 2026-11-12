@@ -43,15 +43,30 @@ abstract class AbstractConfigurator implements AbstractConfiguratorInterface
 {
     public private(set) ?LumiConfiguratorInterface $lumiConfigurator = null;
     public private(set) bool $useDefaultLumi = false;
+
+    /**
+     * @var (\Closure(LumiConfiguratorInterface $configurator): mixed)|null
+     */
     public private(set) ?\Closure $lumiCustomizer = null;
+
     public private(set) ?ConnectionManagerInterface $connectionManager = null;
     public private(set) bool $useDefaultConnectionManager = false;
+
+    /**
+     * @var (\Closure(ConnectionManagerInterface $manager): mixed)|null
+     */
     public private(set) ?\Closure $connectionManagerCustomizer = null;
+
     public private(set) ?StorageInterface $storage = null;
     public private(set) bool $useDefaultStorage = false;
     public private(set) ?MailManagerInterface $mailManager = null;
     public private(set) bool $useDefaultMailManager = false;
+
+    /**
+     * @var (\Closure(MailConfiguratorInterface $configurator): mixed)|null
+     */
     public private(set) ?\Closure $mailManagerCustomizer = null;
+
     public private(set) ?CacheManagerInterface $cacheManager = null;
     public private(set) bool $useDefaultCache = false;
     public private(set) ?LoggerInterface $logger = null;

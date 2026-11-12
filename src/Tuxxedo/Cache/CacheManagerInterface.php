@@ -15,6 +15,28 @@ namespace Tuxxedo\Cache;
 
 interface CacheManagerInterface extends CacheInterface
 {
+    public CacheInterface $root {
+        get;
+    }
+
+    /**
+     * @var CacheInterface[]
+     */
+    public array $scopes {
+        get;
+    }
+
+    public ?string $separator {
+        get;
+    }
+
+    /**
+     * @var list<array-key>|null
+     */
+    public ?array $isolatedScopes {
+        get;
+    }
+
     /**
      * @throws CacheException
      */

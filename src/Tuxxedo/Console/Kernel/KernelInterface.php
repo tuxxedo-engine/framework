@@ -45,6 +45,14 @@ interface KernelInterface
         get;
     }
 
+    public bool $appNameHeaderEnabled {
+        get;
+    }
+
+    public ?string $appNameHeaderLabel {
+        get;
+    }
+
     /**
      * @var list<(\Closure(): CommandMiddlewareInterface)|CommandMiddlewareInterface>
      */

@@ -15,6 +15,10 @@ namespace Tuxxedo\Http\Stream;
 
 interface ResourceStreamInterface extends StreamInterface
 {
+    public int $chunkSize {
+        get;
+    }
+
     /**
      * @throws StreamException
      */

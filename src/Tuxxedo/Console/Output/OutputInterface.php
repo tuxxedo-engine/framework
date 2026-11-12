@@ -27,6 +27,10 @@ interface OutputInterface
         get;
     }
 
+    public DecorationMode $decorationMode {
+        get;
+    }
+
     /**
      * @throws ConsoleException
      */

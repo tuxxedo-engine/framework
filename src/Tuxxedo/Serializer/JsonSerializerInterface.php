@@ -18,6 +18,14 @@ use Tuxxedo\Validator\ValidatorException;
 
 interface JsonSerializerInterface
 {
+    public int $flags {
+        get;
+    }
+
+    public int $depth {
+        get;
+    }
+
     /**
      * @template TClassName of object
      *

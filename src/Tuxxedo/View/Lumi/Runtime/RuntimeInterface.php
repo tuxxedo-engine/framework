@@ -84,6 +84,24 @@ interface RuntimeInterface
     }
 
     /**
+     * @var array<array<string, string|int|float|bool|null>>
+     */
+    public array $directivesStack {
+        get;
+    }
+
+    /**
+     * @var array<array<string, \Closure(array<string, mixed>): void>>
+     */
+    public array $blocksStack {
+        get;
+    }
+
+    public LumiViewRenderInterface $renderer {
+        get;
+    }
+
+    /**
      * @param class-string $className
      */
     public function resolveInstance(

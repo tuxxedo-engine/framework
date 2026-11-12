@@ -55,6 +55,10 @@ interface LoggerInterface
         get;
     }
 
+    public LogFailureMode $processorFailure {
+        get;
+    }
+
     /**
      * @param literal-string $message
      * @param array<string, mixed> $context

@@ -75,6 +75,13 @@ interface ApplicationConfiguratorInterface extends AbstractConfiguratorInterface
         get;
     }
 
+    /**
+     * @var list<string>
+     */
+    public array $routeFiles {
+        get;
+    }
+
     public function withAppName(
         string $name,
     ): self;

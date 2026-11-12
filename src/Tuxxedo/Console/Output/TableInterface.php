@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Console\Output;
 
 use Tuxxedo\Console\ConsoleException;
+use Tuxxedo\Console\Output\Style\Style;
 
 interface TableInterface
 {
@@ -28,6 +29,18 @@ interface TableInterface
      * @var list<list<string|StyledCell>>
      */
     public array $rows {
+        get;
+    }
+
+    public ?TableCharacterSet $characters {
+        get;
+    }
+
+    public ?Style $headerStyle {
+        get;
+    }
+
+    public ?Style $borderStyle {
         get;
     }
 
