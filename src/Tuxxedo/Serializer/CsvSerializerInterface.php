@@ -42,6 +42,22 @@ interface CsvSerializerInterface
     ): array;
 
     /**
+     * @template TClassName of object
+     *
+     * @param resource $stream
+     * @param class-string<TClassName> $className
+     * @return \Generator<int, TClassName>
+     *
+     * @throws SerializerException
+     * @throws ValidationException
+     * @throws ValidatorException
+     */
+    public function decodeStream(
+        mixed $stream,
+        string $className,
+    ): \Generator;
+
+    /**
      * @param iterable<object> $values
      *
      * @throws SerializerException

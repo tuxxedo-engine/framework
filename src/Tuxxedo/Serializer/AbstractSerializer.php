@@ -64,13 +64,14 @@ abstract class AbstractSerializer
     protected function hydrateObject(
         array $data,
         string $className,
+        string $path = '',
     ): object {
         $violations = [];
         $object = $this->mapper->hydrate(
             data: $data,
             className: $className,
             casting: $this->casting(),
-            path: '',
+            path: $path,
             violations: $violations,
         );
 
@@ -80,7 +81,7 @@ abstract class AbstractSerializer
 
         $this->validate(
             object: $object,
-            prefix: '',
+            prefix: $path,
             violations: $violations,
         );
 

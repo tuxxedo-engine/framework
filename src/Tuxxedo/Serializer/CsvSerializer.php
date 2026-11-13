@@ -63,42 +63,33 @@ class CsvSerializer extends AbstractSerializer implements CsvSerializerInterface
         }
 
         $handle = $this->buffer();
-        $header = null;
-        $data = [];
 
         try {
             \fwrite($handle, $csv);
             \rewind($handle);
 
-            while (($fields = $this->readRow($handle)) !== null) {
-                if ($fields === [null]) {
-                    continue;
-                }
-
-                if ($header === null) {
-                    $header = $fields;
-
-                    continue;
-                }
-
-                if (\sizeof($fields) !== \sizeof($header)) {
-                    throw SerializerInputException::fromCsvColumnCount(
-                        row: \sizeof($data),
-                        expected: \sizeof($header),
-                        actual: \sizeof($fields),
-                    );
-                }
-
-                $data[] = self::unflatten(
-                    header: $header,
-                    fields: $fields,
-                );
-            }
+            $data = \iterator_to_array(
+                iterator: $this->rows($handle),
+                preserve_keys: false,
+            );
         } finally {
             \fclose($handle);
         }
 
         return $this->hydrateList($data, $className);
+    }
+
+    public function decodeStream(
+        mixed $stream,
+        string $className,
+    ): \Generator {
+        foreach ($this->rows($stream) as $index => $row) {
+            yield $index => $this->hydrateObject(
+                data: $row,
+                className: $className,
+                path: (string) $index,
+            );
+        }
     }
 
     public function encode(
@@ -168,6 +159,76 @@ class CsvSerializer extends AbstractSerializer implements CsvSerializerInterface
         }
 
         return $handle;
+    }
+
+    /**
+     * @param resource $handle
+     * @return \Generator<int, array<mixed>>
+     *
+     * @throws SerializerInputException
+     */
+    private function rows(
+        mixed $handle,
+    ): \Generator {
+        $header = null;
+        $index = 0;
+
+        while (($fields = $this->readRow($handle)) !== null) {
+            if ($fields === [null]) {
+                continue;
+            }
+
+            if ($header === null) {
+                $header = $this->stripBom($fields);
+
+                continue;
+            }
+
+            if (\sizeof($fields) !== \sizeof($header)) {
+                throw SerializerInputException::fromCsvColumnCount(
+                    row: $index,
+                    expected: \sizeof($header),
+                    actual: \sizeof($fields),
+                );
+            }
+
+            yield $index++ => self::unflatten(
+                header: $header,
+                fields: $fields,
+            );
+        }
+    }
+
+    /**
+     * @param list<string|null> $header
+     * @return list<string|null>
+     */
+    private function stripBom(
+        array $header,
+    ): array {
+        $first = $header[0] ?? null;
+
+        if ($first === null || !\str_starts_with($first, self::BOM)) {
+            return $header;
+        }
+
+        $first = \substr($first, \strlen(self::BOM));
+
+        if (
+            \strlen($first) >= 2 &&
+            \str_starts_with($first, $this->enclosure) &&
+            \str_ends_with($first, $this->enclosure)
+        ) {
+            $first = \str_replace(
+                $this->enclosure . $this->enclosure,
+                $this->enclosure,
+                \substr($first, 1, -1),
+            );
+        }
+
+        $header[0] = $first;
+
+        return $header;
     }
 
     /**

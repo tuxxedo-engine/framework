@@ -64,6 +64,143 @@ class CsvSerializerTest extends TestCase
         self::assertSame([], $this->serializer()->decode("id,full_name\n", Contact::class));
     }
 
+    public function testDecodeStream(): void
+    {
+        $stream = self::stream(
+            "\xEF\xBB\xBF" .
+            "id;full_name;home_address.street;home_address.city\r\n" .
+            "7;\"Lovelace; Ada\nCountess\";Main 1;Prague\r\n" .
+            "\r\n" .
+            "8;Bob;;\r\n",
+        );
+
+        self::assertEquals(
+            [
+                0 => new Contact(
+                    id: 7,
+                    fullName: "Lovelace; Ada\nCountess",
+                    homeAddress: new Address('Main 1', 'Prague'),
+                ),
+                1 => new Contact(
+                    id: 8,
+                    fullName: 'Bob',
+                ),
+            ],
+            \iterator_to_array($this->serializer(separator: ';')->decodeStream($stream, Contact::class)),
+        );
+    }
+
+    public function testDecodeStreamEmptyInput(): void
+    {
+        self::assertSame([], \iterator_to_array($this->serializer()->decodeStream(self::stream(''), Contact::class)));
+        self::assertSame([], \iterator_to_array($this->serializer()->decodeStream(self::stream("id,full_name\n"), Contact::class)));
+    }
+
+    public function testDecodeStreamStripsBomBeforeAQuotedHeader(): void
+    {
+        $contacts = \iterator_to_array(
+            $this->serializer()->decodeStream(
+                self::stream("\xEF\xBB\xBF\"id\",full_name\n1,Ada\n"),
+                Contact::class,
+            ),
+        );
+
+        self::assertEquals(
+            [
+                new Contact(
+                    id: 1,
+                    fullName: 'Ada',
+                ),
+            ],
+            $contacts,
+        );
+    }
+
+    public function testDecodeStreamValidatesRowByRow(): void
+    {
+        $quantities = [];
+
+        try {
+            foreach (
+                $this->serializer()->decodeStream(
+                    self::stream("quantity\n1\n2\n-3\n4\n"),
+                    Validated::class,
+                ) as $row => $validated
+            ) {
+                $quantities[$row] = $validated->quantity;
+            }
+
+            self::fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $exception) {
+            self::assertSame(
+                [
+                    0 => 1,
+                    1 => 2,
+                ],
+                $quantities,
+            );
+
+            self::assertSame(
+                [
+                    '2.quantity',
+                ],
+                \array_keys(self::violations($exception)),
+            );
+        }
+    }
+
+    public function testDecodeStreamViolationPathsStartWithTheRowIndex(): void
+    {
+        try {
+            \iterator_to_array(
+                $this->serializer()->decodeStream(
+                    self::stream("id,full_name\n1,Ada\nx,Bob\n"),
+                    Contact::class,
+                ),
+            );
+
+            self::fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $exception) {
+            self::assertSame(
+                [
+                    '1.id' => 'validator.common.wrong-type',
+                ],
+                self::violations($exception),
+            );
+        }
+    }
+
+    public function testDecodeStreamRowsMustMatchTheHeader(): void
+    {
+        try {
+            \iterator_to_array(
+                $this->serializer()->decodeStream(
+                    self::stream("id,full_name\n1,Ada,extra\n"),
+                    Contact::class,
+                ),
+            );
+
+            self::fail('Expected SerializerException was not thrown');
+        } catch (SerializerException $exception) {
+            self::assertStringContainsString('row 0 has 3 fields, the header has 2', $exception->getMessage());
+        }
+    }
+
+    public function testDecodeStreamReadsFromTheCurrentPositionAndLeavesTheStreamOpen(): void
+    {
+        $stream = self::stream("ignored line\nid,full_name\n1,Ada\n");
+
+        \fgets($stream);
+
+        $contacts = \iterator_to_array($this->serializer()->decodeStream($stream, Contact::class));
+
+        self::assertCount(1, $contacts);
+        self::assertSame('Ada', $contacts[0]->fullName);
+        self::assertTrue(\is_resource($stream));
+
+        \fclose($stream);
+    }
+
     public function testEncode(): void
     {
         $csv = $this->serializer()->encode(
@@ -318,6 +455,22 @@ class CsvSerializerTest extends TestCase
             skipUnknownKeys: $skipUnknownKeys,
             separator: $separator,
         );
+    }
+
+    /**
+     * @return resource
+     */
+    private static function stream(
+        string $csv,
+    ): mixed {
+        $stream = \fopen('php://memory', 'r+');
+
+        self::assertIsResource($stream);
+
+        \fwrite($stream, $csv);
+        \rewind($stream);
+
+        return $stream;
     }
 
     /**
