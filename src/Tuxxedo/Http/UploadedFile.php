@@ -26,6 +26,12 @@ class UploadedFile implements UploadedFileInterface
         }
     }
 
+    public string $path {
+        get {
+            return $this->temporaryPath;
+        }
+    }
+
     private bool $isTrustedType = false;
 
     public function __construct(

@@ -65,6 +65,7 @@ interface BodyContextInterface
         ?string $key = null,
         ?array $only = null,
         bool $skipUnknownKeys = true,
+        bool $skipValidation = false,
         int $flags = 0,
     ): object;
 
@@ -85,6 +86,7 @@ interface BodyContextInterface
         ?string $key = null,
         ?array $only = null,
         bool $skipUnknownKeys = true,
+        bool $skipValidation = false,
         int $flags = 0,
     ): array;
 
@@ -105,6 +107,7 @@ interface BodyContextInterface
         ?string $key = null,
         ?array $only = null,
         bool $skipUnknownKeys = true,
+        bool $skipValidation = false,
     ): object;
 
     /**
@@ -124,6 +127,7 @@ interface BodyContextInterface
         ?string $key = null,
         ?array $only = null,
         bool $skipUnknownKeys = true,
+        bool $skipValidation = false,
     ): array;
 
     /**
@@ -140,6 +144,7 @@ interface BodyContextInterface
     public function csvMapList(
         string $className,
         bool $skipUnknownKeys = true,
+        bool $skipValidation = false,
         string $separator = ',',
         string $enclosure = '"',
     ): array;

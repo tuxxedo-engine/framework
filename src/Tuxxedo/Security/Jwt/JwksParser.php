@@ -13,12 +13,46 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Security\Jwt;
 
+use Tuxxedo\Http\Client\ClientRequest;
+use Tuxxedo\Http\Client\HttpClientException;
+use Tuxxedo\Http\Client\HttpClientInterface;
+use Tuxxedo\Http\Header;
+use Tuxxedo\Http\Method;
+use Tuxxedo\Http\Url\UrlException;
+use Tuxxedo\Http\Url\UrlInterface;
 use Tuxxedo\Security\Crypto\CryptoException;
 use Tuxxedo\Security\Jwt\Key\KeySet;
 use Tuxxedo\Security\Jwt\Key\KeySetInterface;
 
 class JwksParser
 {
+    /**
+     * @throws CryptoException
+     * @throws HttpClientException
+     * @throws JwtException
+     * @throws UrlException
+     */
+    public static function parseUrl(
+        HttpClientInterface $httpClient,
+        UrlInterface|string $url,
+    ): KeySetInterface {
+        $request = new ClientRequest(
+            method: Method::GET,
+            url: $url,
+            headers: [
+                new Header('Accept', 'application/jwk-set+json, application/json'),
+            ],
+        );
+
+        $response = $httpClient->send($request);
+
+        if ($response->statusCode < 200 || $response->statusCode > 299) {
+            throw HttpClientException::fromUnexpectedStatus($request, $response);
+        }
+
+        return self::parse($response->body->getRaw());
+    }
+
     /**
      * @throws CryptoException
      * @throws JwtException

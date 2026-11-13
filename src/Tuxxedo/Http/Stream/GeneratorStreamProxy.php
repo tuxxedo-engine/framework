@@ -25,6 +25,7 @@ class GeneratorStreamProxy implements StreamProxyInterface
      */
     public function __construct(
         \Closure|\Generator $generator,
+        private readonly ?int $size = null,
     ) {
         $this->inner = $generator instanceof \Closure
             ? $generator()
@@ -36,9 +37,9 @@ class GeneratorStreamProxy implements StreamProxyInterface
         return !$this->inner->valid();
     }
 
-    public function getSize(): null
+    public function getSize(): ?int
     {
-        return null;
+        return $this->size;
     }
 
     public function read(): ?string

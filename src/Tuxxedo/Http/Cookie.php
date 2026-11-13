@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http;
 
+use Tuxxedo\Http\Url\UrlInterface;
+use Tuxxedo\Temporal\InstantInterface;
+
 readonly class Cookie implements CookieInterface
 {
     /**
@@ -33,6 +36,69 @@ readonly class Cookie implements CookieInterface
             secure: $secure,
             sameSite: $sameSite,
         );
+    }
+
+    public static function tryFromSetCookie(
+        string $header,
+        UrlInterface $url,
+        InstantInterface $now,
+    ): ?static {
+        $parts = \explode(';', $header);
+        $pair = \array_shift($parts);
+        $equals = \strpos($pair, '=');
+
+        if ($equals === false) {
+            return null;
+        }
+
+        $name = \trim(\substr($pair, 0, $equals));
+        $value = \trim(\substr($pair, $equals + 1));
+
+        if (\preg_match('/^[!#$%&\'*+\-.^_`|~0-9A-Za-z]+$/', $name) !== 1) {
+            return null;
+        }
+
+        $attributes = [];
+
+        foreach ($parts as $part) {
+            $equals = \strpos($part, '=');
+
+            if ($equals === false) {
+                $attributes[\strtolower(\trim($part))] = '';
+
+                continue;
+            }
+
+            $attributes[\strtolower(\trim(\substr($part, 0, $equals)))] = \trim(\substr($part, $equals + 1));
+        }
+
+        $host = \strtolower($url->host);
+        $domain = \strtolower(\ltrim($attributes['domain'] ?? '', '.'));
+
+        if ($domain !== '' && $domain !== $host && !\str_ends_with($host, '.' . $domain)) {
+            return null;
+        }
+
+        $path = $attributes['path'] ?? '';
+
+        if (!\str_starts_with($path, '/')) {
+            $path = self::defaultPath($url->path);
+        }
+
+        try {
+            return new static(
+                name: $name,
+                value: $value,
+                expires: self::expires($attributes, $now),
+                path: $path,
+                domain: $domain,
+                secure: \array_key_exists('secure', $attributes),
+                httpOnly: \array_key_exists('httponly', $attributes),
+                sameSite: SameSite::tryFrom(\ucfirst(\strtolower($attributes['samesite'] ?? ''))) ?? SameSite::LAX,
+            );
+        } catch (CookieException) {
+            return null;
+        }
     }
 
     public function is(
@@ -134,6 +200,59 @@ readonly class Cookie implements CookieInterface
                 'sameSite' => $sameSite,
             ],
         );
+    }
+
+    /**
+     * @param array<string, string> $attributes
+     */
+    private static function expires(
+        array $attributes,
+        InstantInterface $now,
+    ): int {
+        $maxAge = $attributes['max-age'] ?? null;
+
+        if ($maxAge !== null && \preg_match('/^-?\d+$/', $maxAge) === 1) {
+            return (int) $maxAge > 0
+                ? $now->toUnixTimestamp() + (int) $maxAge
+                : 1;
+        }
+
+        $expires = $attributes['expires'] ?? null;
+
+        if ($expires === null) {
+            return 0;
+        }
+
+        foreach (
+            [
+                'D, d M Y H:i:s \G\M\T',
+                'D, d-M-Y H:i:s \G\M\T',
+            ] as $format
+        ) {
+            $date = \DateTimeImmutable::createFromFormat(
+                format: $format,
+                datetime: $expires,
+                timezone: new \DateTimeZone('UTC'),
+            );
+
+            if ($date !== false) {
+                return \max(1, $date->getTimestamp());
+            }
+        }
+
+        return 0;
+    }
+
+    private static function defaultPath(
+        string $path,
+    ): string {
+        $slash = \strrpos($path, '/');
+
+        if (!\str_starts_with($path, '/') || $slash === 0 || $slash === false) {
+            return '/';
+        }
+
+        return \substr($path, 0, $slash);
     }
 
     /**

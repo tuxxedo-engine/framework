@@ -111,6 +111,7 @@ class StubBodyContext implements BodyContextInterface
         ?string $key = null,
         ?array $only = null,
         bool $skipUnknownKeys = true,
+        bool $skipValidation = false,
         int $flags = 0,
     ): object {
         throw HttpException::fromInternalServerError();
@@ -121,6 +122,7 @@ class StubBodyContext implements BodyContextInterface
         ?string $key = null,
         ?array $only = null,
         bool $skipUnknownKeys = true,
+        bool $skipValidation = false,
         int $flags = 0,
     ): array {
         throw HttpException::fromInternalServerError();
@@ -131,6 +133,7 @@ class StubBodyContext implements BodyContextInterface
         ?string $key = null,
         ?array $only = null,
         bool $skipUnknownKeys = true,
+        bool $skipValidation = false,
     ): object {
         throw HttpException::fromInternalServerError();
     }
@@ -140,6 +143,7 @@ class StubBodyContext implements BodyContextInterface
         ?string $key = null,
         ?array $only = null,
         bool $skipUnknownKeys = true,
+        bool $skipValidation = false,
     ): array {
         throw HttpException::fromInternalServerError();
     }
@@ -147,6 +151,7 @@ class StubBodyContext implements BodyContextInterface
     public function csvMapList(
         string $className,
         bool $skipUnknownKeys = true,
+        bool $skipValidation = false,
         string $separator = ',',
         string $enclosure = '"',
     ): array {

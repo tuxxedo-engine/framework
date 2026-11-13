@@ -41,6 +41,7 @@
   },
   "suggest": {
     "ext-apcu": "For the APCu cache driver",
+    "ext-curl": "For the HTTP client",
     "ext-fileinfo": "For better file type detection in uploaded files",
     "ext-mysqli": "For database connections to mysql",
     "ext-openssl": "For crypto support in JWT, Email signing, and SMTP over TLS",

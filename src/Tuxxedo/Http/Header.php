@@ -32,6 +32,25 @@ readonly class Header implements HeaderInterface
         self::assertValidValue($value);
     }
 
+    /**
+     * @throws HttpException
+     */
+    public static function parse(
+        string $line,
+    ): static {
+        $line = \rtrim($line, "\r\n");
+        $colon = \strpos($line, ':');
+
+        if ($colon === false) {
+            throw HttpException::fromInternalServerError();
+        }
+
+        return new static(
+            name: \substr($line, 0, $colon),
+            value: \trim(\substr($line, $colon + 1), " \t"),
+        );
+    }
+
     public function is(
         string $name,
     ): bool {

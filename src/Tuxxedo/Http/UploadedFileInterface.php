@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http;
 
-use Tuxxedo\File\FileInterface;
+use Tuxxedo\File\PathFileInterface;
 
-interface UploadedFileInterface extends FileInterface
+interface UploadedFileInterface extends PathFileInterface
 {
     public string $name {
         get;

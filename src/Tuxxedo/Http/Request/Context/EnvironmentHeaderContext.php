@@ -36,15 +36,17 @@ class EnvironmentHeaderContext implements HeaderContextInterface
         }
 
         foreach ($_SERVER as $name => $value) {
-            if (
-                !\str_starts_with($name, 'HTTP_') ||
-                \str_starts_with($name, 'HTTP_COOKIE') ||
-                !\is_scalar($value)
-            ) {
+            if (\str_starts_with($name, 'HTTP_COOKIE') || !\is_scalar($value)) {
                 continue;
             }
 
-            $this->headers[\str_replace(' ', '-', \ucwords(\str_replace('_', ' ', \strtolower(\substr($name, 5)))))] = (string) $value;
+            if (\str_starts_with($name, 'HTTP_')) {
+                $name = \substr($name, 5);
+            } elseif ($name !== 'CONTENT_TYPE' && $name !== 'CONTENT_LENGTH') {
+                continue;
+            }
+
+            $this->headers[\str_replace(' ', '-', \ucwords(\str_replace('_', ' ', \strtolower($name))))] = (string) $value;
         }
 
         $this->lazilyLoaded = true;
@@ -196,9 +198,7 @@ class EnvironmentHeaderContext implements HeaderContextInterface
     public function enum(string $name, string $enum): object
     {
         if (!\enum_exists($enum)) {
-            // @codeCoverageIgnoreStart
-            throw HttpException::fromInternalServerError();
-            // @codeCoverageIgnoreEnd
+            throw HttpException::fromInternalServerError(); // @codeCoverageIgnore
         }
 
         $this->lazyLoad();

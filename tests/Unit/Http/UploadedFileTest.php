@@ -94,4 +94,9 @@ class UploadedFileTest extends TestCase
     {
         self::assertFalse($this->makeFile()->moveTo(\sys_get_temp_dir() . '/destination'));
     }
+
+    public function testPathIsTheTemporaryPath(): void
+    {
+        self::assertSame($this->tempFile, $this->makeFile($this->tempFile)->path);
+    }
 }

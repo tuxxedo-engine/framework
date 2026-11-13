@@ -125,8 +125,12 @@ class EnvironmentBodyContext implements BodyContextInterface
         ?string $key = null,
         ?array $only = null,
         bool $skipUnknownKeys = true,
+        bool $skipValidation = false,
     ): object {
-        return $this->serializerManager->xml($skipUnknownKeys)->decode(
+        return $this->serializerManager->xml(
+            skipUnknownKeys: $skipUnknownKeys,
+            skipValidation: $skipValidation,
+        )->decode(
             xml: $this->getRaw(),
             className: $className,
             key: $key,
@@ -139,8 +143,12 @@ class EnvironmentBodyContext implements BodyContextInterface
         ?string $key = null,
         ?array $only = null,
         bool $skipUnknownKeys = true,
+        bool $skipValidation = false,
     ): array {
-        return $this->serializerManager->xml($skipUnknownKeys)->decodeList(
+        return $this->serializerManager->xml(
+            skipUnknownKeys: $skipUnknownKeys,
+            skipValidation: $skipValidation,
+        )->decodeList(
             xml: $this->getRaw(),
             className: $className,
             key: $key,
@@ -151,11 +159,13 @@ class EnvironmentBodyContext implements BodyContextInterface
     public function csvMapList(
         string $className,
         bool $skipUnknownKeys = true,
+        bool $skipValidation = false,
         string $separator = ',',
         string $enclosure = '"',
     ): array {
         return $this->serializerManager->csv(
             skipUnknownKeys: $skipUnknownKeys,
+            skipValidation: $skipValidation,
             separator: $separator,
             enclosure: $enclosure,
         )->decode(
@@ -203,10 +213,12 @@ class EnvironmentBodyContext implements BodyContextInterface
         ?string $key = null,
         ?array $only = null,
         bool $skipUnknownKeys = true,
+        bool $skipValidation = false,
         int $flags = 0,
     ): object {
         return $this->serializerManager->json(
             skipUnknownKeys: $skipUnknownKeys,
+            skipValidation: $skipValidation,
             flags: $flags,
         )->decode(
             json: $this->getRaw(),
@@ -221,10 +233,12 @@ class EnvironmentBodyContext implements BodyContextInterface
         ?string $key = null,
         ?array $only = null,
         bool $skipUnknownKeys = true,
+        bool $skipValidation = false,
         int $flags = 0,
     ): array {
         return $this->serializerManager->json(
             skipUnknownKeys: $skipUnknownKeys,
+            skipValidation: $skipValidation,
             flags: $flags,
         )->decodeList(
             json: $this->getRaw(),

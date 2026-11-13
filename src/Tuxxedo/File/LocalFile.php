@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\File;
 
-class LocalFile implements FileInterface
+class LocalFile implements PathFileInterface
 {
     public ?int $size {
         get {

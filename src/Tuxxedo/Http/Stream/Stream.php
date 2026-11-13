@@ -43,10 +43,12 @@ class Stream implements StreamInterface
     public static function fromGenerator(
         \Closure|\Generator $generator,
         bool $autoFlush = true,
+        ?int $size = null,
     ): static {
         return new static(
             streamProxy: new GeneratorStreamProxy(
                 generator: $generator,
+                size: $size,
             ),
             autoFlush: $autoFlush,
         );

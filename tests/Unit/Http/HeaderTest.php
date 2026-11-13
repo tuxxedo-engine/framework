@@ -125,4 +125,41 @@ class HeaderTest extends TestCase
 
         $header->withValue("bad\x00byte");
     }
+
+    public function testParse(): void
+    {
+        $header = Header::parse("Content-Type: application/json\r\n");
+
+        self::assertSame('Content-Type', $header->name);
+        self::assertSame('application/json', $header->value);
+    }
+
+    public function testParseTrimsOptionalWhitespace(): void
+    {
+        self::assertSame('b', Header::parse("X-A: \t b \t")->value);
+    }
+
+    public function testParseAllowsEmptyValue(): void
+    {
+        self::assertSame('', Header::parse('X-Empty:')->value);
+    }
+
+    public function testParseSplitsOnFirstColon(): void
+    {
+        self::assertSame('https://api.example/a', Header::parse('Location: https://api.example/a')->value);
+    }
+
+    public function testParseThrowsWithoutColon(): void
+    {
+        $this->expectException(HttpException::class);
+
+        Header::parse('NotAHeader');
+    }
+
+    public function testParseThrowsForWhitespaceBeforeColon(): void
+    {
+        $this->expectException(HttpException::class);
+
+        Header::parse('X-A : b');
+    }
 }

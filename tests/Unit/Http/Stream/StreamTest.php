@@ -93,6 +93,18 @@ class StreamTest extends TestCase
         self::assertNull(self::makeStream('hello')->getSize());
     }
 
+    public function testFromGeneratorPassesTheSize(): void
+    {
+        $stream = Stream::fromGenerator(
+            generator: static function (): \Generator {
+                yield 'hello';
+            },
+            size: 5,
+        );
+
+        self::assertSame(5, $stream->getSize());
+    }
+
     public function testGetSizeNullWhenClosed(): void
     {
         $stream = self::makeStream('hello');

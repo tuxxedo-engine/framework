@@ -15,6 +15,7 @@ namespace Unit\Http\Url;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Http\HttpVersion;
 use Tuxxedo\Http\Url\Url;
 use Tuxxedo\Http\Url\UrlException;
 
@@ -411,5 +412,581 @@ class UrlTest extends TestCase
         self::assertSame('https://tuxxedo.dev/dynamic?page=admin#top', (string) $url->append('dynamic?page=admin#top'));
         self::assertSame('https://shop.example/app/args/x', (string) Url::parse('https://shop.example/app')->append('/args/x'));
         self::assertSame('/view/link', (string) new Url(path: '/')->append('view/link'));
+    }
+
+    public function testTemplate(): void
+    {
+        self::assertSame(
+            '/users/a%2Fb/posts/7?flag=1',
+            (string) Url::template(
+                '/users/{name}/posts/{id}?flag={flag}',
+                [
+                    'name' => 'a/b',
+                    'id' => 7,
+                    'flag' => true,
+                ],
+            ),
+        );
+
+        self::assertSame(
+            'https://api.example/x/0/HTTP%2F1.1/y',
+            (string) Url::template(
+                'https://api.example/x/{off}/{version}/{text}',
+                [
+                    'off' => false,
+                    'version' => HttpVersion::V1_1,
+                    'text' => new class () implements \Stringable {
+                        public function __toString(): string
+                        {
+                            return 'y';
+                        }
+                    },
+                ],
+            ),
+        );
+
+        self::assertSame('/static', (string) Url::template('/static', []));
+        self::assertSame(
+            '/a%20b/c%25',
+            (string) Url::template(
+                '{+path}',
+                [
+                    'path' => '/a%20b/c%',
+                ],
+            ),
+        );
+    }
+
+    /**
+     * @return \Generator<array{0: string, 1: string}>
+     */
+    public static function rfc6570DataProvider(): \Generator
+    {
+        yield [
+            '{var}',
+            'value',
+        ];
+
+        yield [
+            '{hello}',
+            'Hello%20World%21',
+        ];
+
+        yield [
+            '{half}',
+            '50%25',
+        ];
+
+        yield [
+            'O{empty}X',
+            'OX',
+        ];
+
+        yield [
+            'O{undef}X',
+            'OX',
+        ];
+
+        yield [
+            '{x,y}',
+            '1024,768',
+        ];
+
+        yield [
+            '{x,hello,y}',
+            '1024,Hello%20World%21,768',
+        ];
+
+        yield [
+            '?{x,empty}',
+            '?1024,',
+        ];
+
+        yield [
+            '?{x,undef}',
+            '?1024',
+        ];
+
+        yield [
+            '?{undef,y}',
+            '?768',
+        ];
+
+        yield [
+            '{var:3}',
+            'val',
+        ];
+
+        yield [
+            '{var:30}',
+            'value',
+        ];
+
+        yield [
+            '{list}',
+            'red,green,blue',
+        ];
+
+        yield [
+            '{list*}',
+            'red,green,blue',
+        ];
+
+        yield [
+            '{keys}',
+            'semi,%3B,dot,.,comma,%2C',
+        ];
+
+        yield [
+            '{keys*}',
+            'semi=%3B,dot=.,comma=%2C',
+        ];
+
+        yield [
+            '{+var}',
+            'value',
+        ];
+
+        yield [
+            '{+hello}',
+            'Hello%20World!',
+        ];
+
+        yield [
+            '{+half}',
+            '50%25',
+        ];
+
+        yield [
+            '{base}index',
+            'http%3A%2F%2Fexample.com%2Fhome%2Findex',
+        ];
+
+        yield [
+            '{+base}index',
+            'http://example.com/home/index',
+        ];
+
+        yield [
+            'O{+empty}X',
+            'OX',
+        ];
+
+        yield [
+            '{+path}/here',
+            '/foo/bar/here',
+        ];
+
+        yield [
+            'here?ref={+path}',
+            'here?ref=/foo/bar',
+        ];
+
+        yield [
+            'up{+path}{var}/here',
+            'up/foo/barvalue/here',
+        ];
+
+        yield [
+            '{+x,hello,y}',
+            '1024,Hello%20World!,768',
+        ];
+
+        yield [
+            '{+path,x}/here',
+            '/foo/bar,1024/here',
+        ];
+
+        yield [
+            '{+path:6}/here',
+            '/foo/b/here',
+        ];
+
+        yield [
+            '{+list}',
+            'red,green,blue',
+        ];
+
+        yield [
+            '{+keys}',
+            'semi,;,dot,.,comma,,',
+        ];
+
+        yield [
+            '{#var}',
+            '#value',
+        ];
+
+        yield [
+            '{#hello}',
+            '#Hello%20World!',
+        ];
+
+        yield [
+            '{#half}',
+            '#50%25',
+        ];
+
+        yield [
+            'foo{#undef}',
+            'foo',
+        ];
+
+        yield [
+            '{#x,hello,y}',
+            '#1024,Hello%20World!,768',
+        ];
+
+        yield [
+            '{#path:6}/here',
+            '#/foo/b/here',
+        ];
+
+        yield [
+            '{#list*}',
+            '#red,green,blue',
+        ];
+
+        yield [
+            '{#keys*}',
+            '#semi=;,dot=.,comma=,',
+        ];
+
+        yield [
+            '{.who}',
+            '.fred',
+        ];
+
+        yield [
+            '{.who,who}',
+            '.fred.fred',
+        ];
+
+        yield [
+            '{.half,who}',
+            '.50%25.fred',
+        ];
+
+        yield [
+            'www{.dom*}',
+            'www.example.com',
+        ];
+
+        yield [
+            'X{.var}',
+            'X.value',
+        ];
+
+        yield [
+            'X{.empty}',
+            'X.',
+        ];
+
+        yield [
+            'X{.undef}',
+            'X',
+        ];
+
+        yield [
+            'X{.var:3}',
+            'X.val',
+        ];
+
+        yield [
+            'X{.list}',
+            'X.red,green,blue',
+        ];
+
+        yield [
+            'X{.list*}',
+            'X.red.green.blue',
+        ];
+
+        yield [
+            'X{.keys*}',
+            'X.semi=%3B.dot=..comma=%2C',
+        ];
+
+        yield [
+            'X{.empty_keys}',
+            'X',
+        ];
+
+        yield [
+            '{/who}',
+            '/fred',
+        ];
+
+        yield [
+            '{/who,who}',
+            '/fred/fred',
+        ];
+
+        yield [
+            '{/half,who}',
+            '/50%25/fred',
+        ];
+
+        yield [
+            '{/who,dub}',
+            '/fred/me%2Ftoo',
+        ];
+
+        yield [
+            '{/var}',
+            '/value',
+        ];
+
+        yield [
+            '{/var,empty}',
+            '/value/',
+        ];
+
+        yield [
+            '{/var,undef}',
+            '/value',
+        ];
+
+        yield [
+            '{/var,x}/here',
+            '/value/1024/here',
+        ];
+
+        yield [
+            '{/var:1,var}',
+            '/v/value',
+        ];
+
+        yield [
+            '{/list}',
+            '/red,green,blue',
+        ];
+
+        yield [
+            '{/list*}',
+            '/red/green/blue',
+        ];
+
+        yield [
+            '{/list*,path:4}',
+            '/red/green/blue/%2Ffoo',
+        ];
+
+        yield [
+            '{/keys}',
+            '/semi,%3B,dot,.,comma,%2C',
+        ];
+
+        yield [
+            '{/keys*}',
+            '/semi=%3B/dot=./comma=%2C',
+        ];
+
+        yield [
+            '{;who}',
+            ';who=fred',
+        ];
+
+        yield [
+            '{;half}',
+            ';half=50%25',
+        ];
+
+        yield [
+            '{;empty}',
+            ';empty',
+        ];
+
+        yield [
+            '{;v,empty,who}',
+            ';v=6;empty;who=fred',
+        ];
+
+        yield [
+            '{;v,bar,who}',
+            ';v=6;who=fred',
+        ];
+
+        yield [
+            '{;x,y}',
+            ';x=1024;y=768',
+        ];
+
+        yield [
+            '{;x,y,empty}',
+            ';x=1024;y=768;empty',
+        ];
+
+        yield [
+            '{;x,y,undef}',
+            ';x=1024;y=768',
+        ];
+
+        yield [
+            '{;hello:5}',
+            ';hello=Hello',
+        ];
+
+        yield [
+            '{;list}',
+            ';list=red,green,blue',
+        ];
+
+        yield [
+            '{;list*}',
+            ';list=red;list=green;list=blue',
+        ];
+
+        yield [
+            '{;keys}',
+            ';keys=semi,%3B,dot,.,comma,%2C',
+        ];
+
+        yield [
+            '{;keys*}',
+            ';semi=%3B;dot=.;comma=%2C',
+        ];
+
+        yield [
+            '{?who}',
+            '?who=fred',
+        ];
+
+        yield [
+            '{?half}',
+            '?half=50%25',
+        ];
+
+        yield [
+            '{?x,y}',
+            '?x=1024&y=768',
+        ];
+
+        yield [
+            '{?x,y,empty}',
+            '?x=1024&y=768&empty=',
+        ];
+
+        yield [
+            '{?x,y,undef}',
+            '?x=1024&y=768',
+        ];
+
+        yield [
+            '{?var:3}',
+            '?var=val',
+        ];
+
+        yield [
+            '{?list}',
+            '?list=red,green,blue',
+        ];
+
+        yield [
+            '{?list*}',
+            '?list=red&list=green&list=blue',
+        ];
+
+        yield [
+            '{?keys}',
+            '?keys=semi,%3B,dot,.,comma,%2C',
+        ];
+
+        yield [
+            '{?keys*}',
+            '?semi=%3B&dot=.&comma=%2C',
+        ];
+
+        yield [
+            '{&who}',
+            '&who=fred',
+        ];
+
+        yield [
+            '{&half}',
+            '&half=50%25',
+        ];
+
+        yield [
+            '?fixed=yes{&x}',
+            '?fixed=yes&x=1024',
+        ];
+
+        yield [
+            '{&x,y,empty}',
+            '&x=1024&y=768&empty=',
+        ];
+
+        yield [
+            '{&var:3}',
+            '&var=val',
+        ];
+
+        yield [
+            '{&list}',
+            '&list=red,green,blue',
+        ];
+
+        yield [
+            '{&list*}',
+            '&list=red&list=green&list=blue',
+        ];
+
+        yield [
+            '{&keys}',
+            '&keys=semi,%3B,dot,.,comma,%2C',
+        ];
+
+        yield [
+            '{&keys*}',
+            '&semi=%3B&dot=.&comma=%2C',
+        ];
+    }
+
+    #[DataProvider('rfc6570DataProvider')]
+    public function testTemplateFollowsRfc6570(
+        string $template,
+        string $expected,
+    ): void {
+        self::assertSame(
+            $expected,
+            (string) Url::template(
+                $template,
+                [
+                    'count' => [
+                        'one',
+                        'two',
+                        'three',
+                    ],
+                    'dom' => [
+                        'example',
+                        'com',
+                    ],
+                    'dub' => 'me/too',
+                    'hello' => 'Hello World!',
+                    'half' => '50%',
+                    'var' => 'value',
+                    'who' => 'fred',
+                    'base' => 'http://example.com/home/',
+                    'path' => '/foo/bar',
+                    'list' => [
+                        'red',
+                        'green',
+                        'blue',
+                    ],
+                    'keys' => [
+                        'semi' => ';',
+                        'dot' => '.',
+                        'comma' => ',',
+                    ],
+                    'v' => '6',
+                    'x' => '1024',
+                    'y' => '768',
+                    'empty' => '',
+                    'empty_keys' => [],
+                    'undef' => null,
+                ],
+            ),
+        );
     }
 }

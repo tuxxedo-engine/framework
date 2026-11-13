@@ -103,6 +103,19 @@ class EnvironmentHeaderContextTest extends TestCase
         self::assertTrue($context->has('User-Agent'));
     }
 
+    public function testContentTypeAndLengthAreIncluded(): void
+    {
+        $_SERVER['CONTENT_TYPE'] = 'application/json';
+        $_SERVER['CONTENT_LENGTH'] = '12';
+        $_SERVER['CONTENT_OTHER'] = 'x';
+
+        $context = new EnvironmentHeaderContext();
+
+        self::assertCount(2, $context->all());
+        self::assertSame('application/json', $context->string('Content-Type'));
+        self::assertSame(12, $context->int('Content-Length'));
+    }
+
     public function testLazyLoadIsCachedAfterFirstCall(): void
     {
         $_SERVER['HTTP_USER_AGENT'] = 'Mozilla';

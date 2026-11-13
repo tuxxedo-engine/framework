@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Response;
 
+use Tuxxedo\Http\HttpException;
+
 enum ResponseCode: int
 {
     case CONTINUE = 100;
@@ -90,6 +92,19 @@ enum ResponseCode: int
     case RAILGUN_ERROR = 527;
     case NETWORK_READ_TIMEOUT_ERROR = 598;
     case NETWORK_CONNECT_TIMEOUT_ERROR = 599;
+
+    /**
+     * @throws HttpException
+     */
+    public static function resolve(
+        int $statusCode,
+    ): self {
+        if ($statusCode < 100 || $statusCode > 599) {
+            throw HttpException::fromInternalServerError();
+        }
+
+        return self::tryFrom($statusCode) ?? self::from(\intdiv($statusCode, 100) * 100);
+    }
 
     public function getStatusCode(): int
     {

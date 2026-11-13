@@ -14,8 +14,13 @@ declare(strict_types=1);
 namespace Unit\Security\Jwt;
 
 use PHPUnit\Framework\TestCase;
+use Support\Http\Client\AuthClient;
+use Support\Http\Client\ScriptedTransport;
 use Support\Security\Jwt\JwtKeyFixtures;
 use Support\Security\Jwt\OpensslKeyComponents;
+use Tuxxedo\Http\Client\ClientResponse;
+use Tuxxedo\Http\Client\HttpClientException;
+use Tuxxedo\Http\Client\HttpClientFailure;
 use Tuxxedo\Security\Jwt\Algorithm;
 use Tuxxedo\Security\Jwt\Constraint\SignedWith;
 use Tuxxedo\Security\Jwt\JwksParser;
@@ -372,5 +377,48 @@ class JwksParserTest extends TestCase
                 key: $set,
             ),
         );
+    }
+
+    public function testParseUrlFetchesTheKeySet(): void
+    {
+        $transport = new ScriptedTransport(
+            [
+                ClientResponse::text(
+                    $this->encodeJwks(
+                        keys: [
+                            $this->octJwk(
+                                kid: 'hmac-1',
+                            ),
+                        ],
+                    ),
+                ),
+            ],
+        );
+
+        $set = JwksParser::parseUrl(AuthClient::create($transport), 'https://idp.example/.well-known/jwks.json');
+
+        self::assertSame('hmac-1', $set->keys[0]->keyId);
+        self::assertSame('https://idp.example/.well-known/jwks.json', (string) $transport->requests[0]->url);
+        self::assertSame('application/jwk-set+json, application/json', AuthClient::header($transport->requests[0], 'Accept'));
+    }
+
+    public function testParseUrlThrowsOnUnexpectedStatus(): void
+    {
+        try {
+            JwksParser::parseUrl(
+                AuthClient::create(
+                    new ScriptedTransport(
+                        [
+                            ClientResponse::empty(404),
+                        ],
+                    ),
+                ),
+                'https://idp.example/jwks',
+            );
+
+            self::fail('Expected HttpClientException was not thrown');
+        } catch (HttpClientException $exception) {
+            self::assertSame(HttpClientFailure::STATUS, $exception->failure);
+        }
     }
 }

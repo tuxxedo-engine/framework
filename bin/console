@@ -14,11 +14,31 @@ declare(strict_types=1);
 
 use Tuxxedo\Application\Environment;
 use Tuxxedo\Console\ConsoleConfigurator;
+use Tuxxedo\Container\Container;
+use Tuxxedo\Env\Env;
+use Tuxxedo\Env\Source\DotEnvSource;
+use Tuxxedo\Env\Source\ProcessEnvSource;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+$envFile = __DIR__ . '/../console/.env.dev';
+$container = new Container();
+
+$container->singleton(
+    \is_file($envFile)
+        ? new Env(
+            new ProcessEnvSource(),
+            new DotEnvSource(
+                file: $envFile,
+            ),
+        )
+        : new Env(
+            new ProcessEnvSource(),
+        ),
+);
+
 exit(
-    ConsoleConfigurator::create()
+    ConsoleConfigurator::create($container)
         ->withAppName('engine-demo')
         ->withAppVersion('0.1.0')
         ->withAppEnvironment(Environment::DEVELOPMENT)

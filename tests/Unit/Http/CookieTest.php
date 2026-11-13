@@ -13,10 +13,13 @@ declare(strict_types=1);
 
 namespace Unit\Http;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Http\Cookie;
 use Tuxxedo\Http\CookieException;
 use Tuxxedo\Http\SameSite;
+use Tuxxedo\Http\Url\Url;
+use Tuxxedo\Temporal\Instant;
 
 class CookieTest extends TestCase
 {
@@ -190,5 +193,125 @@ class CookieTest extends TestCase
         $this->expectException(CookieException::class);
 
         $cookie->withSecure(false);
+    }
+
+    private static function fromSetCookie(
+        string $header,
+        string $url = 'https://www.example.com/account/settings',
+    ): ?Cookie {
+        return Cookie::tryFromSetCookie(
+            header: $header,
+            url: Url::parse($url),
+            now: Instant::fromUnixTimestamp(1_700_000_000),
+        );
+    }
+
+    public function testTryFromSetCookieReadsAttributes(): void
+    {
+        $cookie = self::fromSetCookie('id=a3fWa; Path=/; Secure; HttpOnly; SameSite=Strict');
+
+        self::assertNotNull($cookie);
+        self::assertSame('id', $cookie->name);
+        self::assertSame('a3fWa', $cookie->value);
+        self::assertSame('/', $cookie->path);
+        self::assertSame('', $cookie->domain);
+        self::assertSame(0, $cookie->expires);
+        self::assertTrue($cookie->secure);
+        self::assertTrue($cookie->httpOnly);
+        self::assertSame(SameSite::STRICT, $cookie->sameSite);
+    }
+
+    public function testTryFromSetCookieDefaults(): void
+    {
+        $cookie = self::fromSetCookie('id=a3fWa');
+
+        self::assertNotNull($cookie);
+        self::assertSame('/account', $cookie->path);
+        self::assertSame('', $cookie->domain);
+        self::assertSame(0, $cookie->expires);
+        self::assertFalse($cookie->secure);
+        self::assertFalse($cookie->httpOnly);
+        self::assertSame(SameSite::LAX, $cookie->sameSite);
+    }
+
+    public function testTryFromSetCookieKeepsQuotedValues(): void
+    {
+        self::assertSame('"b c"', self::fromSetCookie('a="b c"')?->value);
+    }
+
+    public function testTryFromSetCookieMaxAge(): void
+    {
+        self::assertSame(1_700_003_600, self::fromSetCookie('a=b; Max-Age=3600')?->expires);
+        self::assertSame(1, self::fromSetCookie('a=b; Max-Age=0')?->expires);
+        self::assertSame(1, self::fromSetCookie('a=b; Max-Age=-5')?->expires);
+        self::assertSame(0, self::fromSetCookie('a=b; Max-Age=soon')?->expires);
+    }
+
+    public function testTryFromSetCookieMaxAgeWinsOverExpires(): void
+    {
+        self::assertSame(1_700_000_060, self::fromSetCookie('a=b; Expires=Wed, 21 Oct 2015 07:28:00 GMT; Max-Age=60')?->expires);
+    }
+
+    public function testTryFromSetCookieExpires(): void
+    {
+        self::assertSame(1_445_412_480, self::fromSetCookie('a=b; Expires=Wed, 21 Oct 2015 07:28:00 GMT')?->expires);
+        self::assertSame(1_445_412_480, self::fromSetCookie('a=b; Expires=Wed, 21-Oct-2015 07:28:00 GMT')?->expires);
+        self::assertSame(0, self::fromSetCookie('a=b; Expires=tomorrow')?->expires);
+    }
+
+    public function testTryFromSetCookieDomain(): void
+    {
+        self::assertSame('example.com', self::fromSetCookie('a=b; Domain=.Example.com')?->domain);
+        self::assertSame('www.example.com', self::fromSetCookie('a=b; Domain=www.example.com')?->domain);
+        self::assertNull(self::fromSetCookie('a=b; Domain=other.com'));
+        self::assertNull(self::fromSetCookie('a=b; Domain=ample.com'));
+    }
+
+    /**
+     * @return \Generator<array{0: string, 1: string}>
+     */
+    public static function defaultPathDataProvider(): \Generator
+    {
+        yield [
+            'https://www.example.com',
+            '/',
+        ];
+
+        yield [
+            'https://www.example.com/',
+            '/',
+        ];
+
+        yield [
+            'https://www.example.com/a',
+            '/',
+        ];
+
+        yield [
+            'https://www.example.com/a/b',
+            '/a',
+        ];
+    }
+
+    #[DataProvider('defaultPathDataProvider')]
+    public function testTryFromSetCookieDefaultPath(
+        string $url,
+        string $expected,
+    ): void {
+        self::assertSame($expected, self::fromSetCookie('a=b; Path=relative', $url)?->path);
+    }
+
+    public function testTryFromSetCookieSameSite(): void
+    {
+        self::assertSame(SameSite::NONE, self::fromSetCookie('a=b; SameSite=none; Secure')?->sameSite);
+        self::assertSame(SameSite::LAX, self::fromSetCookie('a=b; SameSite=whatever')?->sameSite);
+        self::assertNull(self::fromSetCookie('a=b; SameSite=None'));
+    }
+
+    public function testTryFromSetCookieRejectsInvalidPairs(): void
+    {
+        self::assertNull(self::fromSetCookie('noequals'));
+        self::assertNull(self::fromSetCookie('=value'));
+        self::assertNull(self::fromSetCookie('bad name=value'));
     }
 }

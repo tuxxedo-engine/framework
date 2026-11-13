@@ -87,7 +87,7 @@ class GeneratorStreamProxyTest extends TestCase
         self::assertTrue($proxy->eof());
     }
 
-    public function testGetSizeAlwaysReturnsNull(): void
+    public function testGetSizeReturnsNullByDefault(): void
     {
         $proxy = self::makeProxy(
             static function (): \Generator {
@@ -96,6 +96,18 @@ class GeneratorStreamProxyTest extends TestCase
         );
 
         self::assertNull($proxy->getSize());
+    }
+
+    public function testGetSizeReturnsTheGivenSize(): void
+    {
+        $proxy = new GeneratorStreamProxy(
+            generator: static function (): \Generator {
+                yield 'hello';
+            },
+            size: 5,
+        );
+
+        self::assertSame(5, $proxy->getSize());
     }
 
     public function testReadReturnsChunksInOrder(): void

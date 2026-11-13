@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Unit\Http\Request\Context;
 
 use Fixture\Http\Request\Context\BodyContextFixture;
+use Fixture\Serializer\Validated;
 use PHPUnit\Framework\TestCase;
 use Support\Serializer\SerializerManagerFactory;
 use Tuxxedo\Http\HttpException;
@@ -475,5 +476,14 @@ class EnvironmentBodyContextTest extends TestCase
                 contentType: '',
             )->isText(),
         );
+    }
+
+    public function testSkipValidationIsPassedOn(): void
+    {
+        self::assertSame(-2, $this->makeContext('{"quantity":-2}')->jsonMap(Validated::class, skipValidation: true)->quantity);
+
+        $this->expectException(ValidationException::class);
+
+        $this->makeContext('{"quantity":-2}')->jsonMap(Validated::class);
     }
 }

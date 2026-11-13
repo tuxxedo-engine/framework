@@ -34,6 +34,24 @@ class Url implements UrlInterface
     }
 
     /**
+     * @param array<string, scalar|\Stringable|\BackedEnum|array<array-key, scalar|\Stringable|\BackedEnum>|null> $parameters
+     *
+     * @throws UrlException
+     */
+    public static function template(
+        string $template,
+        array $parameters,
+    ): static {
+        return static::parse(
+            (string) \preg_replace_callback(
+                '/\{([^{}]*)}/',
+                static fn (array $matches): string => self::expand($matches[1], $parameters),
+                $template,
+            ),
+        );
+    }
+
+    /**
      * @throws UrlException
      */
     public static function parse(
@@ -479,5 +497,179 @@ class Url implements UrlInterface
         if ($port !== null && ($port < 0 || $port > 65535)) {
             throw UrlException::fromInvalidPort((string) $port);
         }
+    }
+
+    /**
+     * @param array<string, scalar|\Stringable|\BackedEnum|array<array-key, scalar|\Stringable|\BackedEnum>|null> $parameters
+     */
+    private static function expand(
+        string $expression,
+        array $parameters,
+    ): string {
+        $operator = $expression !== '' && \str_contains('+#./;?&', $expression[0])
+            ? $expression[0]
+            : '';
+
+        [$first, $separator, $named, $ifEmpty, $reserved] = match ($operator) {
+            '+' => [
+                '',
+                ',',
+                false,
+                '',
+                true,
+            ],
+            '#' => [
+                '#',
+                ',',
+                false,
+                '',
+                true,
+            ],
+            '.' => [
+                '.',
+                '.',
+                false,
+                '',
+                false,
+            ],
+            '/' => [
+                '/',
+                '/',
+                false,
+                '',
+                false,
+            ],
+            ';' => [
+                ';',
+                ';',
+                true,
+                '',
+                false,
+            ],
+            '?' => [
+                '?',
+                '&',
+                true,
+                '=',
+                false,
+            ],
+            '&' => [
+                '&',
+                '&',
+                true,
+                '=',
+                false,
+            ],
+            default => [
+                '',
+                ',',
+                false,
+                '',
+                false,
+            ],
+        };
+
+        $parts = [];
+
+        foreach (\explode(',', \substr($expression, \strlen($operator))) as $specification) {
+            $prefix = null;
+            $explode = \str_ends_with($specification, '*');
+            $name = $explode
+                ? \substr($specification, 0, -1)
+                : $specification;
+
+            if (\str_contains($name, ':')) {
+                [$name, $length] = \explode(':', $name, 2);
+                $prefix = (int) $length;
+            }
+
+            $value = $parameters[$name] ?? null;
+
+            if ($value === null || $value === []) {
+                continue;
+            }
+
+            if (!\is_array($value)) {
+                $string = self::templateValue($value);
+
+                if ($prefix !== null && \preg_match('/^.{0,' . $prefix . '}/su', $string, $matches) === 1) {
+                    $string = $matches[0];
+                }
+
+                $encoded = self::templateEncode($string, $reserved);
+                $parts[] = match (true) {
+                    !$named => $encoded,
+                    $encoded === '' => $name . $ifEmpty,
+                    default => $name . '=' . $encoded,
+                };
+
+                continue;
+            }
+
+            $list = \array_is_list($value);
+
+            if (!$explode) {
+                $items = [];
+
+                foreach ($value as $key => $item) {
+                    if (!$list) {
+                        $items[] = self::templateEncode((string) $key, $reserved);
+                    }
+
+                    $items[] = self::templateEncode(self::templateValue($item), $reserved);
+                }
+
+                $parts[] = $named
+                    ? $name . '=' . \join(',', $items)
+                    : \join(',', $items);
+
+                continue;
+            }
+
+            foreach ($value as $key => $item) {
+                $encoded = self::templateEncode(self::templateValue($item), $reserved);
+                $label = $list
+                    ? $name
+                    : self::templateEncode((string) $key, $reserved);
+
+                $parts[] = match (true) {
+                    $list && !$named => $encoded,
+                    $encoded === '' && $named => $label . $ifEmpty,
+                    default => $label . '=' . $encoded,
+                };
+            }
+        }
+
+        return \sizeof($parts) > 0
+            ? $first . \join($separator, $parts)
+            : '';
+    }
+
+    private static function templateValue(
+        string|int|float|bool|\Stringable|\BackedEnum $value,
+    ): string {
+        return match (true) {
+            $value instanceof \BackedEnum => (string) $value->value,
+            $value === true => '1',
+            $value === false => '0',
+            default => (string) $value,
+        };
+    }
+
+    private static function templateEncode(
+        string $value,
+        bool $reserved,
+    ): string {
+        if (!$reserved) {
+            return \rawurlencode($value);
+        }
+
+        return (string) \preg_replace_callback(
+            '/%[0-9A-Fa-f]{2}|[^A-Za-z0-9\-._~:\/?#\[\]@!$&\'()*+,;=]/',
+            static fn (array $matches): string => \strlen($matches[0]) === 3
+                ? $matches[0]
+                : \rawurlencode($matches[0]),
+            $value,
+        );
     }
 }

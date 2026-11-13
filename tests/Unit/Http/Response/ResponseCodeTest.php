@@ -15,6 +15,7 @@ namespace Unit\Http\Response;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Response\ResponseCode;
 
 class ResponseCodeTest extends TestCase
@@ -483,5 +484,72 @@ class ResponseCodeTest extends TestCase
     ): void {
         self::assertSame($expectedStatusCode, $code->getStatusCode());
         self::assertSame($expectedStatusText, $code->getStatusText());
+    }
+
+    /**
+     * @return \Generator<array{0: int, 1: ResponseCode}>
+     */
+    public static function resolveDataProvider(): \Generator
+    {
+        yield [
+            200,
+            ResponseCode::OK,
+        ];
+
+        yield [
+            103,
+            ResponseCode::EARLY_HINTS,
+        ];
+
+        yield [
+            199,
+            ResponseCode::CONTINUE,
+        ];
+
+        yield [
+            299,
+            ResponseCode::OK,
+        ];
+
+        yield [
+            399,
+            ResponseCode::MULTIPLE_CHOICES,
+        ];
+
+        yield [
+            430,
+            ResponseCode::BAD_REQUEST,
+        ];
+
+        yield [
+            509,
+            ResponseCode::INTERNAL_SERVER_ERROR,
+        ];
+    }
+
+    #[DataProvider('resolveDataProvider')]
+    public function testResolve(
+        int $statusCode,
+        ResponseCode $expected,
+    ): void {
+        self::assertSame($expected, ResponseCode::resolve($statusCode));
+    }
+
+    public function testResolveThrowsOutsideTheValidRange(): void
+    {
+        foreach (
+            [
+                99,
+                600,
+            ] as $statusCode
+        ) {
+            try {
+                ResponseCode::resolve($statusCode);
+
+                self::fail('Expected HttpException was not thrown');
+            } catch (HttpException $exception) {
+                self::assertSame(ResponseCode::INTERNAL_SERVER_ERROR, $exception->responseCode);
+            }
+        }
     }
 }
