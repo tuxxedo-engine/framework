@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Request\Context;
 
 use Tuxxedo\Http\HttpException;
+use Tuxxedo\Http\Stream\StreamInterface;
 use Tuxxedo\Serializer\SerializerException;
 use Tuxxedo\Validator\ValidationException;
 use Tuxxedo\Validator\ValidatorException;
@@ -21,11 +22,9 @@ use Tuxxedo\Validator\ValidatorException;
 interface BodyContextInterface
 {
     /**
-     * @return resource
-     *
      * @throws HttpException
      */
-    public function getStream();
+    public function getStream(): StreamInterface;
 
     public function getRaw(): string;
 

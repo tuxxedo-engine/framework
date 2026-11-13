@@ -15,6 +15,7 @@ namespace Support\Http\Request\Context;
 
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Request\Context\BodyContextInterface;
+use Tuxxedo\Http\Stream\StreamInterface;
 
 class StubBodyContext implements BodyContextInterface
 {
@@ -24,7 +25,7 @@ class StubBodyContext implements BodyContextInterface
     ) {
     }
 
-    public function getStream()
+    public function getStream(): StreamInterface
     {
         throw HttpException::fromInternalServerError();
     }

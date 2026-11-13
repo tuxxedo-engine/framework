@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Request\Context;
 
 use Tuxxedo\Http\HttpException;
+use Tuxxedo\Http\Stream\ResourceStream;
+use Tuxxedo\Http\Stream\StreamInterface;
 use Tuxxedo\Serializer\SerializerManagerInterface;
 
 class EnvironmentBodyContext implements BodyContextInterface
@@ -43,7 +45,7 @@ class EnvironmentBodyContext implements BodyContextInterface
         return $value;
     }
 
-    public function getStream()
+    public function getStream(): StreamInterface
     {
         $stream = @\fopen($this->streamInputSource, 'r');
 
@@ -51,12 +53,12 @@ class EnvironmentBodyContext implements BodyContextInterface
             throw HttpException::fromInternalServerError();
         }
 
-        return $stream;
+        return ResourceStream::fromResource($stream);
     }
 
     public function getRaw(): string
     {
-        return \stream_get_contents($this->getStream());
+        return $this->getStream()->getContents();
     }
 
     public function isJson(): bool

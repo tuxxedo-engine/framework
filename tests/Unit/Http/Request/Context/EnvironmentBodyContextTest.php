@@ -52,7 +52,7 @@ class EnvironmentBodyContextTest extends TestCase
     {
         $stream = $this->makeContext('hello')->getStream();
 
-        self::assertSame('hello', \stream_get_contents($stream));
+        self::assertSame('hello', $stream->getContents());
     }
 
     public function testGetStreamThrowsForInvalidSource(): void
