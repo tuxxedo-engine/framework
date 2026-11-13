@@ -22,15 +22,6 @@ use Tuxxedo\Http\WeightedHeaderInterface;
 
 class StubHeaderContext implements HeaderContextInterface
 {
-    public ?string $preferredLanguage = null;
-
-    /**
-     * @var string[]
-     */
-    public array $preferredLanguages = [];
-
-    public string $userAgent = '';
-
     /**
      * @var array<string, string>
      */

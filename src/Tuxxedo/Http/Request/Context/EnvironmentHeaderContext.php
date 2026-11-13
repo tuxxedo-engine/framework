@@ -22,41 +22,6 @@ use Tuxxedo\Reflection\EnumHydrator;
 
 class EnvironmentHeaderContext implements HeaderContextInterface
 {
-    public ?string $preferredLanguage {
-        get {
-            return $this->preferredLanguages[0] ?? null;
-        }
-    }
-
-    /**
-     * @var string[]|null
-     */
-    private ?array $preferredLanguagesCache = null;
-
-    public array $preferredLanguages {
-        get {
-            if ($this->preferredLanguagesCache === null) {
-                /** @var string $header */
-                $header = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
-
-                if ($header === '') {
-                    return [];
-                }
-
-                $this->preferredLanguagesCache = (new WeightedHeader('Accept-Language', $header))->getWeightedOrder();
-            }
-
-            return $this->preferredLanguagesCache;
-        }
-    }
-
-    public string $userAgent {
-        get {
-            /** @var string */
-            return $_SERVER['HTTP_USER_AGENT'];
-        }
-    }
-
     /**
      * @var array<string, string>
      */

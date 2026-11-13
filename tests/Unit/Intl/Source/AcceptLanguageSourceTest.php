@@ -31,8 +31,13 @@ class AcceptLanguageSourceTest extends TestCase
     private function requestWithPreferredLanguages(
         array $preferredLanguages,
     ): Request {
-        $headers = new StubHeaderContext();
-        $headers->preferredLanguages = $preferredLanguages;
+        $headers = new StubHeaderContext(
+            $preferredLanguages !== []
+                ? [
+                    'Accept-Language' => \join(', ', $preferredLanguages),
+                ]
+                : [],
+        );
 
         return new Request(
             serializerManager: SerializerManagerFactory::create(),
@@ -244,13 +249,6 @@ class AcceptLanguageSourceTest extends TestCase
         );
 
         $first = $source->detect();
-
-        self::assertInstanceOf(StubHeaderContext::class, $request->headers);
-
-        $request->headers->preferredLanguages = [
-            'fi-FI',
-        ];
-
         $second = $source->detect();
 
         self::assertNotNull($first);

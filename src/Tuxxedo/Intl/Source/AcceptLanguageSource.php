@@ -31,7 +31,7 @@ class AcceptLanguageSource extends AbstractMemoizedLocaleSource
     {
         $supported = $this->supportedLocales();
 
-        foreach ($this->request->headers->preferredLanguages as $candidate) {
+        foreach ($this->request->preferredLanguages as $candidate) {
             try {
                 $locale = Locale::parse(
                     input: $candidate,

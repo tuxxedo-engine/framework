@@ -1111,4 +1111,134 @@ class RequestTest extends TestCase
 
         self::assertTrue($testable($request));
     }
+
+    public function testPreferredLanguagesReturnsEmptyArrayWhenHeaderMissing(): void
+    {
+        self::assertSame(
+            [],
+            $this->makeRequest()->preferredLanguages,
+        );
+    }
+
+    public function testPreferredLanguagesReturnsEmptyArrayWhenHeaderEmpty(): void
+    {
+        self::assertSame(
+            [],
+            $this->makeRequestWithHeader('Accept-Language', '')->preferredLanguages,
+        );
+    }
+
+    public function testPreferredLanguagesReturnsSingleLanguageWhenOnePresent(): void
+    {
+        self::assertSame(
+            [
+                'da-DK',
+            ],
+            $this->makeRequestWithHeader('Accept-Language', 'da-DK')->preferredLanguages,
+        );
+    }
+
+    public function testPreferredLanguagesPreservesPositionOrderForEqualWeights(): void
+    {
+        self::assertSame(
+            [
+                'da',
+                'sv',
+                'nb',
+            ],
+            $this->makeRequestWithHeader('Accept-Language', 'da, sv, nb')->preferredLanguages,
+        );
+    }
+
+    public function testPreferredLanguagesOrdersByWeightDescending(): void
+    {
+        self::assertSame(
+            [
+                'nb',
+                'sv',
+                'da',
+            ],
+            $this->makeRequestWithHeader('Accept-Language', 'da;q=0.5, sv;q=0.9, nb')->preferredLanguages,
+        );
+    }
+
+    public function testPreferredLanguagesExcludesNotAcceptableLanguages(): void
+    {
+        self::assertSame(
+            [
+                'nb',
+                'sv',
+            ],
+            $this->makeRequestWithHeader('Accept-Language', 'da;q=0, sv;q=0.5, nb')->preferredLanguages,
+        );
+    }
+
+    public function testPreferredLanguagesReturnsSameResultOnRepeatedReads(): void
+    {
+        $request = $this->makeRequestWithHeader('Accept-Language', 'da, sv');
+
+        self::assertSame(
+            $request->preferredLanguages,
+            $request->preferredLanguages,
+        );
+    }
+
+    public function testPreferredLanguageReturnsNullWhenHeaderMissing(): void
+    {
+        self::assertNull(
+            $this->makeRequest()->preferredLanguage,
+        );
+    }
+
+    public function testPreferredLanguageReturnsNullWhenHeaderEmpty(): void
+    {
+        self::assertNull(
+            $this->makeRequestWithHeader('Accept-Language', '')->preferredLanguage,
+        );
+    }
+
+    public function testPreferredLanguageReturnsOnlyLanguageWhenOnePresent(): void
+    {
+        self::assertSame(
+            'da-DK',
+            $this->makeRequestWithHeader('Accept-Language', 'da-DK')->preferredLanguage,
+        );
+    }
+
+    public function testPreferredLanguageReturnsTopWeightedLanguage(): void
+    {
+        self::assertSame(
+            'nb',
+            $this->makeRequestWithHeader('Accept-Language', 'da;q=0.5, sv;q=0.9, nb')->preferredLanguage,
+        );
+    }
+
+    public function testUserAgentReturnsUserAgentHeader(): void
+    {
+        self::assertSame(
+            'Mozilla/5.0 (X11; Linux x86_64) TuxedoTest/1.0',
+            $this->makeRequestWithHeader('User-Agent', 'Mozilla/5.0 (X11; Linux x86_64) TuxedoTest/1.0')->userAgent,
+        );
+    }
+
+    public function testUserAgentReturnsEmptyStringWhenHeaderMissing(): void
+    {
+        self::assertSame(
+            '',
+            $this->makeRequest()->userAgent,
+        );
+    }
+
+    private function makeRequestWithHeader(
+        string $name,
+        string $value,
+    ): Request {
+        return $this->makeRequest(
+            headers: new StubHeaderContext(
+                [
+                    $name => $value,
+                ],
+            ),
+        );
+    }
 }

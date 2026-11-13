@@ -95,6 +95,21 @@ interface RequestInterface
         get;
     }
 
+    public ?string $preferredLanguage {
+        get;
+    }
+
+    /**
+     * @var string[]
+     */
+    public array $preferredLanguages {
+        get;
+    }
+
+    public string $userAgent {
+        get;
+    }
+
     public function withRoute(
         DispatchableRouteInterface $route,
     ): static;

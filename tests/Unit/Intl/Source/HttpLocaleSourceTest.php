@@ -50,8 +50,13 @@ class HttpLocaleSourceTest extends TestCase
         ?string $cookieName = 'lang',
         bool $acceptLanguage = true,
     ): HttpLocaleSource {
-        $headers = new StubHeaderContext();
-        $headers->preferredLanguages = $preferredLanguages;
+        $headers = new StubHeaderContext(
+            $preferredLanguages !== []
+                ? [
+                    'Accept-Language' => \join(', ', $preferredLanguages),
+                ]
+                : [],
+        );
 
         return new HttpLocaleSource(
             request: new Request(

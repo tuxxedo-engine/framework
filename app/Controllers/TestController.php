@@ -129,7 +129,7 @@ readonly class TestController
                 'https' => $request->https,
                 'host' => $request->host,
                 'port' => $request->port,
-                'userAgent' => $request->headers->userAgent,
+                'userAgent' => $request->userAgent,
             ],
             prettyPrint: true,
         );

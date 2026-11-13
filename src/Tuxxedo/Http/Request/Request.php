@@ -24,6 +24,7 @@ use Tuxxedo\Http\Request\Context\EnvironmentUploadedFilesContext;
 use Tuxxedo\Http\Request\Context\HeaderContextInterface;
 use Tuxxedo\Http\Request\Context\InputContextInterface;
 use Tuxxedo\Http\Request\Context\UploadedFilesContextInterface;
+use Tuxxedo\Http\WeightedHeader;
 use Tuxxedo\Router\DispatchableRouteInterface;
 use Tuxxedo\Serializer\SerializerManagerInterface;
 use Tuxxedo\Temporal\ClockInterface;
@@ -45,6 +46,43 @@ class Request implements RequestInterface
     public readonly string $ipAddress;
 
     public readonly InstantInterface $receivedAt;
+
+    public ?string $preferredLanguage {
+        get {
+            return $this->preferredLanguages[0] ?? null;
+        }
+    }
+
+    /**
+     * @var string[]|null
+     */
+    private ?array $preferredLanguagesCache = null;
+
+    public array $preferredLanguages {
+        get {
+            if ($this->preferredLanguagesCache === null) {
+                $header = $this->headers->has('Accept-Language')
+                    ? $this->headers->string('Accept-Language')
+                    : '';
+
+                if ($header === '') {
+                    return [];
+                }
+
+                $this->preferredLanguagesCache = (new WeightedHeader('Accept-Language', $header))->getWeightedOrder();
+            }
+
+            return $this->preferredLanguagesCache;
+        }
+    }
+
+    public string $userAgent {
+        get {
+            return $this->headers->has('User-Agent')
+                ? $this->headers->string('User-Agent')
+                : '';
+        }
+    }
 
     public readonly InputContextInterface $cookies;
     public readonly InputContextInterface $get;
