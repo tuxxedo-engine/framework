@@ -240,6 +240,30 @@ class EnvironmentBodyContextTest extends TestCase
         self::assertSame('Jane', $result[1]->name);
     }
 
+    public function testCsvMapListMapsRows(): void
+    {
+        $result = $this->makeContext("name,age\nJohn,30\nJane,25\n")->csvMapList(BodyContextFixture::class);
+
+        self::assertCount(2, $result);
+        self::assertSame('John', $result[0]->name);
+        self::assertSame(30, $result[0]->age);
+        self::assertSame('Jane', $result[1]->name);
+        self::assertSame(25, $result[1]->age);
+    }
+
+    public function testCsvMapListUsesSeparatorAndEnclosure(): void
+    {
+        $result = $this->makeContext("name;age\n'Doe; John';30\n")->csvMapList(
+            className: BodyContextFixture::class,
+            separator: ';',
+            enclosure: "'",
+        );
+
+        self::assertCount(1, $result);
+        self::assertSame('Doe; John', $result[0]->name);
+        self::assertSame(30, $result[0]->age);
+    }
+
     private function makeContextWithContentType(
         string $contentType,
     ): EnvironmentBodyContext {
@@ -345,6 +369,37 @@ class EnvironmentBodyContextTest extends TestCase
                 serializerManager: SerializerManagerFactory::create(),
                 contentType: '',
             )->isXml(),
+        );
+    }
+
+    public function testIsCsvReturnsTrueForTextCsv(): void
+    {
+        self::assertTrue($this->makeContextWithContentType('text/csv')->isCsv());
+    }
+
+    public function testIsCsvReturnsTrueForApplicationCsv(): void
+    {
+        self::assertTrue($this->makeContextWithContentType('application/csv')->isCsv());
+    }
+
+    public function testIsCsvReturnsTrueWithCharsetParameter(): void
+    {
+        self::assertTrue($this->makeContextWithContentType('text/csv; charset=utf-8')->isCsv());
+    }
+
+    public function testIsCsvReturnsFalseForOtherMediaTypes(): void
+    {
+        self::assertFalse($this->makeContextWithContentType('text/plain')->isCsv());
+        self::assertFalse($this->makeContextWithContentType('application/json')->isCsv());
+    }
+
+    public function testIsCsvReturnsFalseForMissingContentType(): void
+    {
+        self::assertFalse(
+            new EnvironmentBodyContext(
+                serializerManager: SerializerManagerFactory::create(),
+                contentType: '',
+            )->isCsv(),
         );
     }
 

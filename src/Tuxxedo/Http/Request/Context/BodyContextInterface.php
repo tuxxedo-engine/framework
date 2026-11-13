@@ -34,6 +34,8 @@ interface BodyContextInterface
 
     public function isXml(): bool;
 
+    public function isCsv(): bool;
+
     public function isForm(): bool;
 
     public function isText(): bool;
@@ -122,5 +124,23 @@ interface BodyContextInterface
         ?string $key = null,
         ?array $only = null,
         bool $skipUnknownKeys = true,
+    ): array;
+
+    /**
+     * @template TClassName of object
+     *
+     * @param class-string<TClassName> $className
+     * @return list<TClassName>
+     *
+     * @throws HttpException
+     * @throws SerializerException
+     * @throws ValidationException
+     * @throws ValidatorException
+     */
+    public function csvMapList(
+        string $className,
+        bool $skipUnknownKeys = true,
+        string $separator = ',',
+        string $enclosure = '"',
     ): array;
 }

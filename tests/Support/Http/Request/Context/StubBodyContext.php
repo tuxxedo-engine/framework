@@ -64,6 +64,18 @@ class StubBodyContext implements BodyContextInterface
             \str_ends_with($mediaType, '+xml');
     }
 
+    public function isCsv(): bool
+    {
+        $mediaType = $this->mediaType();
+
+        if ($mediaType === null) {
+            return false;
+        }
+
+        return $mediaType === 'text/csv' ||
+            $mediaType === 'application/csv';
+    }
+
     public function isForm(): bool
     {
         $mediaType = $this->mediaType();
@@ -128,6 +140,15 @@ class StubBodyContext implements BodyContextInterface
         ?string $key = null,
         ?array $only = null,
         bool $skipUnknownKeys = true,
+    ): array {
+        throw HttpException::fromInternalServerError();
+    }
+
+    public function csvMapList(
+        string $className,
+        bool $skipUnknownKeys = true,
+        string $separator = ',',
+        string $enclosure = '"',
     ): array {
         throw HttpException::fromInternalServerError();
     }
