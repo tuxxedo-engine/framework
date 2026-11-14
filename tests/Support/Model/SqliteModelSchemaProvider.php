@@ -629,6 +629,45 @@ class SqliteModelSchemaProvider implements ModelSchemaProvider
             ')';
     }
 
+    public function pivotProductsSchemaSql(): string
+    {
+        return 'CREATE TABLE pivot_products (' .
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
+            'name TEXT NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function pivotCategoriesSchemaSql(): string
+    {
+        return 'CREATE TABLE pivot_categories (' .
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
+            'name TEXT NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function pivotCategoryProductSchemaSql(): string
+    {
+        return 'CREATE TABLE pivot_category_product (' .
+            'product_id INTEGER NOT NULL, ' .
+            'category_id INTEGER NOT NULL, ' .
+            'sort INTEGER NOT NULL DEFAULT 0, ' .
+            'priority INTEGER NOT NULL DEFAULT 1, ' .
+            'note TEXT NULL, ' .
+            'PRIMARY KEY (product_id, category_id)' .
+            ')';
+    }
+
+    public function pivotLabelablesSchemaSql(): string
+    {
+        return 'CREATE TABLE pivot_labelables (' .
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
+            'labelable_type TEXT NOT NULL, ' .
+            'labelable_id INTEGER NOT NULL, ' .
+            'category_id INTEGER NOT NULL, ' .
+            'weight INTEGER NOT NULL DEFAULT 0' .
+            ')';
+    }
+
     public function uuidV7OwnersSchemaSql(): string
     {
         return 'CREATE TABLE uuid_v7_owners (' .

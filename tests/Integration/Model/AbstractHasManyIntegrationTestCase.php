@@ -16,6 +16,7 @@ namespace Integration\Model;
 use Fixture\Model\Post;
 use Fixture\Model\User;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
+use Tuxxedo\Model\ModelException;
 use Tuxxedo\Model\Relation;
 
 abstract class AbstractHasManyIntegrationTestCase extends AbstractModelIntegrationTestCase
@@ -230,7 +231,7 @@ abstract class AbstractHasManyIntegrationTestCase extends AbstractModelIntegrati
 
         self::assertContains(
             $newPost,
-            $posts->pendingAdds,
+            \array_column($posts->pendingAdds, 'item'),
         );
     }
 
@@ -246,12 +247,12 @@ abstract class AbstractHasManyIntegrationTestCase extends AbstractModelIntegrati
 
         self::assertNotContains(
             $newPost,
-            $posts->pendingAdds,
+            \array_column($posts->pendingAdds, 'item'),
         );
 
         self::assertNotContains(
             $newPost,
-            $posts->pendingRemoves,
+            \array_column($posts->pendingRemoves, 'item'),
         );
     }
 
@@ -315,5 +316,43 @@ abstract class AbstractHasManyIntegrationTestCase extends AbstractModelIntegrati
             3,
             $alice->posts->count(),
         );
+    }
+
+    public function testKeysSyncAndPivotsRequireAPivotRelation(): void
+    {
+        $posts = $this->alicePosts();
+
+        $calls = [
+            'keys' => static function () use ($posts): void {
+                $posts->add(1);
+            },
+            'sync()' => static function () use ($posts): void {
+                $posts->sync([]);
+            },
+            'pivotFor()' => static function () use ($posts): void {
+                (void) $posts->pivotFor(new Post());
+            },
+            'pivot values' => static function () use ($posts): void {
+                $posts->add(
+                    item: new Post(),
+                    pivot: [
+                        'title' => 'x',
+                    ],
+                );
+            },
+        ];
+
+        foreach ($calls as $operation => $call) {
+            try {
+                $call();
+
+                self::fail('Expected ModelException for ' . $operation);
+            } catch (ModelException $exception) {
+                self::assertStringContainsString(
+                    'does not support ' . $operation,
+                    $exception->getMessage(),
+                );
+            }
+        }
     }
 }

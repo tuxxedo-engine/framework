@@ -34,19 +34,19 @@ class RelationTest extends TestCase
 
         self::assertContains(
             $item,
-            $relation->pendingRemoves,
+            \array_column($relation->pendingRemoves, 'item'),
         );
 
         $relation->add(item: $item);
 
         self::assertNotContains(
             $item,
-            $relation->pendingRemoves,
+            \array_column($relation->pendingRemoves, 'item'),
         );
 
         self::assertNotContains(
             $item,
-            $relation->pendingAdds,
+            \array_column($relation->pendingAdds, 'item'),
         );
     }
 

@@ -145,6 +145,14 @@ interface ModelSchemaProvider
 
     public function compositeTasksSchemaSql(): string;
 
+    public function pivotProductsSchemaSql(): string;
+
+    public function pivotCategoriesSchemaSql(): string;
+
+    public function pivotCategoryProductSchemaSql(): string;
+
+    public function pivotLabelablesSchemaSql(): string;
+
     public function uuidV7OwnersSchemaSql(): string;
 
     public function uuidV7ChildrenSchemaSql(): string;

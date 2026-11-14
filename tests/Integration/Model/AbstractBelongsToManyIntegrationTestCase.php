@@ -15,6 +15,7 @@ namespace Integration\Model;
 
 use Fixture\Model\Role;
 use Fixture\Model\User;
+use Tuxxedo\Model\ModelException;
 use Tuxxedo\Model\Relation;
 
 abstract class AbstractBelongsToManyIntegrationTestCase extends AbstractModelIntegrationTestCase
@@ -232,7 +233,7 @@ abstract class AbstractBelongsToManyIntegrationTestCase extends AbstractModelInt
 
         self::assertContains(
             $viewer,
-            $roles->pendingAdds,
+            \array_column($roles->pendingAdds, 'item'),
         );
     }
 
@@ -249,11 +250,11 @@ abstract class AbstractBelongsToManyIntegrationTestCase extends AbstractModelInt
 
         self::assertContains(
             $admin,
-            $roles->pendingRemoves,
+            \array_column($roles->pendingRemoves, 'item'),
         );
     }
 
-    public function testBelongsToManyAddThenRemoveCancelsPendingAdd(): void
+    public function testBelongsToManyAddThenRemoveKeepsTheRemoval(): void
     {
         $roles = $this->aliceRoles();
 
@@ -267,12 +268,12 @@ abstract class AbstractBelongsToManyIntegrationTestCase extends AbstractModelInt
 
         self::assertNotContains(
             $viewer,
-            $roles->pendingAdds,
+            \array_column($roles->pendingAdds, 'item'),
         );
 
-        self::assertNotContains(
+        self::assertContains(
             $viewer,
-            $roles->pendingRemoves,
+            \array_column($roles->pendingRemoves, 'item'),
         );
     }
 
@@ -341,5 +342,93 @@ abstract class AbstractBelongsToManyIntegrationTestCase extends AbstractModelInt
             0,
             $count,
         );
+    }
+
+    public function testSyncByKeysWithoutPivotModelWritesPivotRows(): void
+    {
+        $user = $this->modelsManager->fetchById(
+            class: User::class,
+            id: 1,
+        );
+
+        self::assertInstanceOf(Relation::class, $user->roles);
+
+        $user->roles->sync(
+            [
+                11,
+                12,
+            ],
+        );
+
+        $user->roles->add(11);
+
+        (void) $this->modelsManager->save($user);
+
+        $roleIds = [];
+
+        foreach ($this->aliceRoles() as $role) {
+            $roleIds[] = $role->id;
+        }
+
+        \sort($roleIds);
+
+        self::assertSame(
+            [
+                11,
+                12,
+            ],
+            $roleIds,
+        );
+    }
+
+    public function testRemoveByKeyWithoutPivotModelDeletesPivotRow(): void
+    {
+        $user = $this->modelsManager->fetchById(
+            class: User::class,
+            id: 1,
+        );
+
+        self::assertInstanceOf(Relation::class, $user->roles);
+
+        $user->roles->remove(10);
+
+        (void) $this->modelsManager->save($user);
+
+        self::assertSame(
+            1,
+            $this->aliceRoles()->count(),
+        );
+    }
+
+    public function testPivotValuesWithoutPivotModelAreRejected(): void
+    {
+        $roles = $this->aliceRoles();
+
+        try {
+            (void) $roles->pivotFor(10);
+
+            self::fail('Expected ModelException was not thrown');
+        } catch (ModelException $exception) {
+            self::assertStringContainsString(
+                'has no pivot model',
+                $exception->getMessage(),
+            );
+        }
+
+        try {
+            $roles->add(
+                item: 12,
+                pivot: [
+                    'sortOrder' => 1,
+                ],
+            );
+
+            self::fail('Expected ModelException was not thrown');
+        } catch (ModelException $exception) {
+            self::assertStringContainsString(
+                'has no pivot model',
+                $exception->getMessage(),
+            );
+        }
     }
 }

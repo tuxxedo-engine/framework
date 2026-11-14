@@ -383,14 +383,8 @@ class ModelsManager implements ModelsManagerInterface
         foreach ($metaData->relations as $relation) {
             $attribute = $relation->attribute;
 
-            if ($attribute instanceof BelongsToMany) {
-                $this->flushBelongsToManyPivotChanges($entity, $relation);
-
-                continue;
-            }
-
-            if ($attribute instanceof MorphToMany) {
-                $this->flushMorphToManyPivotChanges($entity, $metaData, $relation);
+            if ($attribute instanceof BelongsToMany || $attribute instanceof MorphToMany) {
+                $this->flushPivotChanges($entity, $metaData, $relation);
             }
         }
     }
@@ -908,25 +902,15 @@ class ModelsManager implements ModelsManagerInterface
             if ($attribute instanceof HasOneThrough || $attribute instanceof HasManyThrough) {
                 $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
 
-                if (
-                    $value instanceof RelationInterface &&
-                    (
-                        $value->pendingAdds !== [] ||
-                        $value->pendingRemoves !== []
-                    )
-                ) {
+                if ($value instanceof RelationInterface && $value->hasPendingChanges()) {
                     throw ModelException::fromImmutableRelation();
                 }
 
                 continue;
             }
 
-            if ($attribute instanceof BelongsToMany) {
-                $this->flushBelongsToManyPivotChanges($model, $relation);
-            }
-
-            if ($attribute instanceof MorphToMany) {
-                $this->flushMorphToManyPivotChanges($model, $metaData, $relation);
+            if ($attribute instanceof BelongsToMany || $attribute instanceof MorphToMany) {
+                $this->flushPivotChanges($model, $metaData, $relation);
             }
 
             if ($attribute->onSave !== CascadeAction::CASCADE) {
@@ -1026,7 +1010,7 @@ class ModelsManager implements ModelsManagerInterface
             return;
         }
 
-        $hasPending = $value->pendingAdds !== [] || $value->pendingRemoves !== [];
+        $hasPending = $value->hasPendingChanges();
 
         if (!$value->isMaterialized() && !$hasPending && !$forceMaterialize) {
             return;
@@ -1049,8 +1033,10 @@ class ModelsManager implements ModelsManagerInterface
         }
 
         if ($attribute->removeOrphan) {
-            foreach ($value->pendingRemoves as $item) {
-                (void) $this->delete($item);
+            foreach ($value->pendingRemoves as $entry) {
+                if ($entry['item'] !== null) {
+                    (void) $this->delete($entry['item']);
+                }
             }
         }
 
@@ -1074,7 +1060,7 @@ class ModelsManager implements ModelsManagerInterface
             return;
         }
 
-        $hasPending = $value->pendingAdds !== [] || $value->pendingRemoves !== [];
+        $hasPending = $value->hasPendingChanges();
 
         if (!$value->isMaterialized() && !$hasPending && !$forceMaterialize) {
             return;
@@ -1086,79 +1072,6 @@ class ModelsManager implements ModelsManagerInterface
                 forceMaterialize: $forceMaterialize,
             );
         }
-    }
-
-    private function flushBelongsToManyPivotChanges(
-        object $model,
-        ModelRelationInterface $relation,
-    ): void {
-        $attribute = $relation->attribute;
-
-        if (!$attribute instanceof BelongsToMany) {
-            return; // @codeCoverageIgnore
-        }
-
-        $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
-
-        if (!$value instanceof RelationInterface) {
-            return;
-        }
-
-        if ($value->pendingAdds === [] && $value->pendingRemoves === []) {
-            return;
-        }
-
-        $parentMetaData = $this->metaData->getModel($model::class);
-        $localKeyValues = $this->resolveOwnKeyValues($model, $parentMetaData);
-        $relatedMetaData = $this->metaData->getModel($relation->relatedClass);
-
-        $pivotSourceColumns = $relation->pivotSourceColumns;
-        $pivotTargetColumns = $relation->pivotTargetColumns;
-
-        if ($pivotSourceColumns === null || $pivotTargetColumns === null) {
-            // @codeCoverageIgnoreStart
-            throw ModelException::fromRelationNotFoundOnModel(
-                modelClass: $parentMetaData->model,
-                property: $relation->property,
-            );
-            // @codeCoverageIgnoreEnd
-        }
-
-        $localValueList = \array_values($localKeyValues);
-
-        foreach ($value->pendingRemoves as $item) {
-            $foreignKeyValues = \array_values($this->resolveOwnKeyValues($item, $relatedMetaData));
-
-            $statement = $this->connection->delete($attribute->table);
-
-            foreach ($pivotSourceColumns as $index => $pivotSourceColumn) {
-                $statement->where($pivotSourceColumn, $localValueList[$index]);
-            }
-
-            foreach ($pivotTargetColumns as $index => $pivotTargetColumn) {
-                $statement->where($pivotTargetColumn, $foreignKeyValues[$index]);
-            }
-
-            $statement->execute();
-        }
-
-        foreach ($value->pendingAdds as $item) {
-            $foreignKeyValues = \array_values($this->resolveOwnKeyValues($item, $relatedMetaData));
-
-            $statement = $this->connection->insert($attribute->table);
-
-            foreach ($pivotSourceColumns as $index => $pivotSourceColumn) {
-                $statement->set($pivotSourceColumn, $localValueList[$index]);
-            }
-
-            foreach ($pivotTargetColumns as $index => $pivotTargetColumn) {
-                $statement->set($pivotTargetColumn, $foreignKeyValues[$index]);
-            }
-
-            $statement->execute();
-        }
-
-        $value->clearPending();
     }
 
     private function cascadeSaveMorphToRelations(
@@ -1263,7 +1176,7 @@ class ModelsManager implements ModelsManagerInterface
             return;
         }
 
-        $hasPending = $value->pendingAdds !== [] || $value->pendingRemoves !== [];
+        $hasPending = $value->hasPendingChanges();
 
         if (!$value->isMaterialized() && !$hasPending && !$forceMaterialize) {
             return;
@@ -1285,8 +1198,10 @@ class ModelsManager implements ModelsManagerInterface
         }
 
         if ($attribute->removeOrphan) {
-            foreach ($value->pendingRemoves as $item) {
-                (void) $this->delete($item);
+            foreach ($value->pendingRemoves as $entry) {
+                if ($entry['item'] !== null) {
+                    (void) $this->delete($entry['item']);
+                }
             }
         }
 
@@ -1310,7 +1225,7 @@ class ModelsManager implements ModelsManagerInterface
             return;
         }
 
-        $hasPending = $value->pendingAdds !== [] || $value->pendingRemoves !== [];
+        $hasPending = $value->hasPendingChanges();
 
         if (!$value->isMaterialized() && !$hasPending && !$forceMaterialize) {
             return;
@@ -1324,85 +1239,179 @@ class ModelsManager implements ModelsManagerInterface
         }
     }
 
-    private function flushMorphToManyPivotChanges(
+    private function flushPivotChanges(
         object $model,
         ModelMetaDataInterface $parentMetaData,
         ModelRelationInterface $relation,
     ): void {
-        $attribute = $relation->attribute;
-
-        if (!$attribute instanceof MorphToMany) {
-            return; // @codeCoverageIgnore
-        }
-
         $value = PropertyReflector::createFromObject($model, $relation->property)->getValue($model);
 
         if (!$value instanceof RelationInterface) {
             return;
         }
 
-        if ($value->pendingAdds === [] && $value->pendingRemoves === []) {
+        $loadedPivots = $value->pivot !== null && $value->pivot->isLoaded()
+            ? $value->pivot->pivots()
+            : null;
+
+        if (!$value->hasPendingChanges() && $loadedPivots === null) {
             return;
         }
 
-        $localKeyValues = $this->resolveOwnKeyValues($model, $parentMetaData);
-        $relatedMetaData = $this->metaData->getModel($relation->relatedClass);
-        $typeValue = MorphTypeResolver::encode(
-            class: $parentMetaData->model,
-            typeMap: $attribute->typeMap,
+        $pivot = RelationPivot::createFromRelation(
+            manager: $this,
+            parentMetaData: $parentMetaData,
+            relation: $relation,
+            parentValues: \array_values($this->resolveOwnKeyValues($model, $parentMetaData)),
+            pivots: $loadedPivots,
         );
 
-        $pivotSourceColumns = $relation->pivotSourceColumns;
-        $pivotTargetColumns = $relation->pivotTargetColumns;
+        $existing = $value->pendingSync !== null || $value->pendingAdds !== []
+            ? $pivot->existing()
+            : [];
 
-        if ($pivotSourceColumns === null || $pivotTargetColumns === null) {
-            // @codeCoverageIgnoreStart
-            throw ModelException::fromRelationNotFoundOnModel(
-                modelClass: $parentMetaData->model,
-                property: $relation->property,
-            );
-            // @codeCoverageIgnoreEnd
+        $desired = [];
+        $deletes = [];
+
+        foreach ($value->pendingSync ?? [] as $entry) {
+            $key = $this->pivotEntryKey($pivot, $entry['item'], $entry['key']);
+
+            $desired[$pivot->hash($key)] = [
+                'key' => $key,
+                'pivot' => [],
+            ];
         }
 
-        $localValueList = \array_values($localKeyValues);
+        foreach ($value->pendingAdds as $entry) {
+            $key = $this->pivotEntryKey($pivot, $entry['item'], $entry['key']);
+            $hash = $pivot->hash($key);
 
-        foreach ($value->pendingRemoves as $item) {
-            $foreignKeyValues = \array_values($this->resolveOwnKeyValues($item, $relatedMetaData));
+            $desired[$hash] = [
+                'key' => $key,
+                'pivot' => [
+                    ...$desired[$hash]['pivot'] ?? [],
+                    ...$entry['pivot'],
+                ],
+            ];
+        }
 
-            $statement = $this->connection
-                ->delete($attribute->table)
-                ->where($attribute->typeColumn, $typeValue);
+        foreach ($value->pendingRemoves as $entry) {
+            $key = $this->pivotEntryKey($pivot, $entry['item'], $entry['key']);
+            $hash = $pivot->hash($key);
 
-            foreach ($pivotSourceColumns as $index => $pivotSourceColumn) {
-                $statement->where($pivotSourceColumn, $localValueList[$index]);
+            if (!isset($desired[$hash])) {
+                $deletes[$hash] = $key;
+            }
+        }
+
+        if ($value->pendingSync !== null) {
+            foreach ($existing as $hash => $key) {
+                if (!isset($desired[$hash])) {
+                    $deletes[$hash] = $key;
+                }
+            }
+        }
+
+        foreach ($deletes as $key) {
+            $statement = $this->connection->delete($pivot->table);
+
+            $this->wherePivotRow($statement, $pivot, $key);
+
+            $statement->execute();
+        }
+
+        foreach ($desired as $hash => $entry) {
+            if (isset($existing[$hash])) {
+                if ($entry['pivot'] !== []) {
+                    $pivot->fill($pivot->pivots()[$hash], $entry['pivot']);
+                }
+
+                continue;
             }
 
-            foreach ($pivotTargetColumns as $index => $pivotTargetColumn) {
-                $statement->where($pivotTargetColumn, $foreignKeyValues[$index]);
+            if ($pivot->pivotClass !== null) {
+                (void) $this->save($pivot->newPivot($entry['key'], $entry['pivot']));
+
+                continue;
+            }
+
+            $statement = $this->connection->insert($pivot->table);
+
+            foreach ($pivot->pivotSourceColumns as $index => $pivotSourceColumn) {
+                $statement->set($pivotSourceColumn, $pivot->parentValues[$index] ?? null);
+            }
+
+            if ($pivot->typeColumn !== null) {
+                $statement->set($pivot->typeColumn, $pivot->typeValue);
+            }
+
+            $targetValues = \array_values($entry['key']);
+
+            foreach ($pivot->pivotTargetColumns as $index => $pivotTargetColumn) {
+                $statement->set($pivotTargetColumn, $targetValues[$index]);
             }
 
             $statement->execute();
         }
 
-        foreach ($value->pendingAdds as $item) {
-            $foreignKeyValues = \array_values($this->resolveOwnKeyValues($item, $relatedMetaData));
-
-            $statement = $this->connection
-                ->insert($attribute->table)
-                ->set($attribute->typeColumn, $typeValue);
-
-            foreach ($pivotSourceColumns as $index => $pivotSourceColumn) {
-                $statement->set($pivotSourceColumn, $localValueList[$index]);
+        if ($pivot->isLoaded()) {
+            foreach ($pivot->pivots() as $hash => $pivotModel) {
+                if (!isset($deletes[$hash])) {
+                    (void) $this->save($pivotModel);
+                }
             }
-
-            foreach ($pivotTargetColumns as $index => $pivotTargetColumn) {
-                $statement->set($pivotTargetColumn, $foreignKeyValues[$index]);
-            }
-
-            $statement->execute();
         }
 
         $value->clearPending();
+    }
+
+    /**
+     * @param non-empty-array<string, string|int|float|bool>|null $key
+     * @return non-empty-array<string, string|int|float|bool>
+     *
+     * @throws ModelException
+     */
+    private function pivotEntryKey(
+        RelationPivotInterface $pivot,
+        ?object $item,
+        ?array $key,
+    ): array {
+        if ($key !== null) {
+            return $key;
+        }
+
+        if ($item !== null) {
+            $key = $pivot->keyOf($item);
+        }
+
+        return $key ?? throw ModelException::fromInvalidRelationKey(
+            relatedClass: $pivot->relatedClass,
+            expected: 'a saved model',
+            actual: 'a model without a key',
+        );
+    }
+
+    /**
+     * @param non-empty-array<string, string|int|float|bool> $key
+     */
+    private function wherePivotRow(
+        WhereStatementInterface $statement,
+        RelationPivotInterface $pivot,
+        array $key,
+    ): void {
+        foreach ($pivot->pivotSourceColumns as $index => $pivotSourceColumn) {
+            $statement->where($pivotSourceColumn, $pivot->parentValues[$index] ?? null);
+        }
+
+        if ($pivot->typeColumn !== null) {
+            $statement->where($pivot->typeColumn, $pivot->typeValue);
+        }
+
+        $targetValues = \array_values($key);
+
+        foreach ($pivot->pivotTargetColumns as $index => $pivotTargetColumn) {
+            $statement->where($pivotTargetColumn, $targetValues[$index]);
+        }
     }
 
     private function findPropertyForColumnOnMetadata(

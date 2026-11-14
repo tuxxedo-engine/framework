@@ -38,6 +38,8 @@ use Tuxxedo\Model\ModelException;
 use Tuxxedo\Model\ModelsManagerInterface;
 use Tuxxedo\Model\MorphTypeResolver;
 use Tuxxedo\Model\Relation;
+use Tuxxedo\Model\RelationPivot;
+use Tuxxedo\Model\RelationPivotInterface;
 use Tuxxedo\Reflection\PropertyReflector;
 
 class Hydrator implements HydratorInterface
@@ -342,6 +344,14 @@ class Hydrator implements HydratorInterface
         }
 
         $parentValues = $this->readTupleFromModel($model, $metaData, $parentPkColumns, $sourcePropertyNames);
+        $pivot = RelationPivot::createFromRelation(
+            manager: $manager,
+            parentMetaData: $metaData,
+            relation: $relation,
+            parentValues: $parentValues !== null
+                ? \array_values($parentValues)
+                : null,
+        );
 
         if ($parentValues === null) {
             PropertyReflector::createFromObject($model, $relation->property)->setValue(
@@ -350,6 +360,7 @@ class Hydrator implements HydratorInterface
                     values: [],
                     manager: $this->modelsManager,
                     modelClass: $relatedClass,
+                    pivot: $pivot,
                 ),
             );
 
@@ -375,6 +386,7 @@ class Hydrator implements HydratorInterface
                     parentValues: $parentValues,
                 );
             },
+            pivot: $pivot,
         );
 
         PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $relationInstance);
@@ -761,6 +773,14 @@ class Hydrator implements HydratorInterface
         }
 
         $parentValues = $this->readTupleFromModel($model, $metaData, $parentPkColumns, $sourcePropertyNames);
+        $pivot = RelationPivot::createFromRelation(
+            manager: $manager,
+            parentMetaData: $metaData,
+            relation: $relation,
+            parentValues: $parentValues !== null
+                ? \array_values($parentValues)
+                : null,
+        );
 
         if ($parentValues === null) {
             PropertyReflector::createFromObject($model, $relation->property)->setValue(
@@ -769,6 +789,7 @@ class Hydrator implements HydratorInterface
                     values: [],
                     manager: $this->modelsManager,
                     modelClass: $relatedClass,
+                    pivot: $pivot,
                 ),
             );
 
@@ -801,6 +822,7 @@ class Hydrator implements HydratorInterface
 
                 $statement->where($pivotTable . '.' . $pivotTypeColumn, $typeValue);
             },
+            pivot: $pivot,
         );
 
         PropertyReflector::createFromObject($model, $relation->property)->setValue($model, $relationInstance);
@@ -1627,11 +1649,16 @@ class Hydrator implements HydratorInterface
         $targetTuplesByHash = [];
         /** @var array<string, object> $targetsByHash */
         $targetsByHash = [];
+        /** @var array<string, array<string, object>> $pivotsByParent */
+        $pivotsByParent = [];
+        $pivotClass = $attribute->pivot;
 
         if (\sizeof($parentTuplesByHash) > 0) {
-            $pivotQuery = $manager->connection
-                ->select($pivotTable)
-                ->select(...$pivotSourceColumns, ...$pivotTargetColumns);
+            $pivotQuery = $manager->connection->select($pivotTable);
+
+            if ($pivotClass === null) {
+                $pivotQuery->select(...$pivotSourceColumns, ...$pivotTargetColumns);
+            }
 
             $this->applyCompositeTuplesFilter($pivotQuery, $parentPkColumns, $pivotSourceColumns, $parentTuplesByHash);
 
@@ -1668,6 +1695,13 @@ class Hydrator implements HydratorInterface
 
                 $targetHashesByParent[$parentHash][] = $targetHash;
                 $targetTuplesByHash[$targetHash] = $targetTuple;
+
+                if ($pivotClass !== null) {
+                    /** @var array<string, mixed> $pivotValues */
+                    $pivotValues = $row->properties;
+
+                    $pivotsByParent[$parentHash][$targetHash] = $this->hydrate($pivotClass, $pivotValues);
+                }
             }
 
             if (\sizeof($targetTuplesByHash) > 0) {
@@ -1694,6 +1728,7 @@ class Hydrator implements HydratorInterface
             $tuple = $this->readTupleFromModel($parent, $metaData, $parentPkColumns, $sourcePropertyNames);
             /** @var list<object> $prefetched */
             $prefetched = [];
+            $parentHash = null;
 
             if ($tuple !== null) {
                 $parentHash = RelationKeyTupleHasher::hash(\array_values($tuple));
@@ -1719,6 +1754,17 @@ class Hydrator implements HydratorInterface
                 parentValues: $tuple,
                 prefetched: $prefetched,
                 shaped: $shaped,
+                pivot: RelationPivot::createFromRelation(
+                    manager: $manager,
+                    parentMetaData: $metaData,
+                    relation: $relation,
+                    parentValues: $tuple !== null
+                        ? \array_values($tuple)
+                        : null,
+                    pivots: $pivotClass !== null
+                        ? $pivotsByParent[$parentHash ?? ''] ?? []
+                        : null,
+                ),
             );
 
             PropertyReflector::createFromObject($parent, $relation->property)->setValue($parent, $relationInstance);
@@ -1748,6 +1794,7 @@ class Hydrator implements HydratorInterface
         ?array $parentValues,
         array $prefetched,
         ?Relation $shaped = null,
+        ?RelationPivotInterface $pivot = null,
     ): Relation {
         if ($parentValues === null) {
             // @codeCoverageIgnoreStart
@@ -1755,6 +1802,7 @@ class Hydrator implements HydratorInterface
                 values: $prefetched,
                 manager: $manager,
                 modelClass: $relatedClass,
+                pivot: $pivot,
             );
             // @codeCoverageIgnoreEnd
         }
@@ -1775,6 +1823,7 @@ class Hydrator implements HydratorInterface
             },
             prefetched: $prefetched,
             shaped: $shaped,
+            pivot: $pivot,
         );
     }
 
@@ -2591,12 +2640,18 @@ class Hydrator implements HydratorInterface
         $targetTuplesByHash = [];
         /** @var array<string, object> $targetsByHash */
         $targetsByHash = [];
+        /** @var array<string, array<string, object>> $pivotsByParent */
+        $pivotsByParent = [];
+        $pivotClass = $attribute->pivot;
 
         if (\sizeof($parentTuplesByHash) > 0) {
             $pivotQuery = $manager->connection
                 ->select($pivotTable)
-                ->select(...$pivotSourceColumns, ...$pivotTargetColumns)
                 ->where($pivotTypeColumn, $typeValue);
+
+            if ($pivotClass === null) {
+                $pivotQuery->select(...$pivotSourceColumns, ...$pivotTargetColumns);
+            }
 
             $this->applyCompositeTuplesFilter($pivotQuery, $parentPkColumns, $pivotSourceColumns, $parentTuplesByHash);
 
@@ -2633,6 +2688,13 @@ class Hydrator implements HydratorInterface
 
                 $targetHashesByParent[$parentHash][] = $targetHash;
                 $targetTuplesByHash[$targetHash] = $targetTuple;
+
+                if ($pivotClass !== null) {
+                    /** @var array<string, mixed> $pivotValues */
+                    $pivotValues = $row->properties;
+
+                    $pivotsByParent[$parentHash][$targetHash] = $this->hydrate($pivotClass, $pivotValues);
+                }
             }
 
             if (\sizeof($targetTuplesByHash) > 0) {
@@ -2659,6 +2721,7 @@ class Hydrator implements HydratorInterface
             $tuple = $this->readTupleFromModel($parent, $metaData, $parentPkColumns, $sourcePropertyNames);
             /** @var list<object> $prefetched */
             $prefetched = [];
+            $parentHash = null;
 
             if ($tuple !== null) {
                 $parentHash = RelationKeyTupleHasher::hash(\array_values($tuple));
@@ -2686,6 +2749,17 @@ class Hydrator implements HydratorInterface
                 parentValues: $tuple,
                 prefetched: $prefetched,
                 shaped: $shaped,
+                pivot: RelationPivot::createFromRelation(
+                    manager: $manager,
+                    parentMetaData: $metaData,
+                    relation: $relation,
+                    parentValues: $tuple !== null
+                        ? \array_values($tuple)
+                        : null,
+                    pivots: $pivotClass !== null
+                        ? $pivotsByParent[$parentHash ?? ''] ?? []
+                        : null,
+                ),
             );
 
             PropertyReflector::createFromObject($parent, $relation->property)->setValue($parent, $relationInstance);
@@ -2717,6 +2791,7 @@ class Hydrator implements HydratorInterface
         ?array $parentValues,
         array $prefetched,
         ?Relation $shaped = null,
+        ?RelationPivotInterface $pivot = null,
     ): Relation {
         if ($parentValues === null) {
             // @codeCoverageIgnoreStart
@@ -2724,6 +2799,7 @@ class Hydrator implements HydratorInterface
                 values: $prefetched,
                 manager: $manager,
                 modelClass: $relatedClass,
+                pivot: $pivot,
             );
             // @codeCoverageIgnoreEnd
         }
@@ -2746,6 +2822,7 @@ class Hydrator implements HydratorInterface
             },
             prefetched: $prefetched,
             shaped: $shaped,
+            pivot: $pivot,
         );
     }
 
@@ -2882,6 +2959,7 @@ class Hydrator implements HydratorInterface
         \Closure $constrain,
         ?array $prefetched = null,
         ?Relation $shaped = null,
+        ?RelationPivotInterface $pivot = null,
     ): Relation {
         $manager = $this->modelsManager;
         $targetMetaData = $manager->metaData->getModel($relatedClass);
@@ -2935,6 +3013,7 @@ class Hydrator implements HydratorInterface
                 manager: $manager,
                 modelClass: $relatedClass,
                 statementBuilder: $statementBuilder,
+                pivot: $pivot,
             );
         }
 
@@ -2949,6 +3028,7 @@ class Hydrator implements HydratorInterface
             manager: $manager,
             modelClass: $relatedClass,
             statementBuilder: $statementBuilder,
+            pivot: $pivot,
         );
     }
 

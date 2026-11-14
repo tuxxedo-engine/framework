@@ -23,6 +23,7 @@ readonly class MorphToMany implements InversePolymorphicRelationInterface
      * @param string|non-empty-array<string> $idColumn
      * @param string|non-empty-array<string> $foreignKey
      * @param array<string, class-string>|null $typeMap
+     * @param class-string|null $pivot
      */
     public function __construct(
         public string $related,
@@ -31,6 +32,7 @@ readonly class MorphToMany implements InversePolymorphicRelationInterface
         public string|array $idColumn,
         public string|array $foreignKey,
         public ?array $typeMap = null,
+        public ?string $pivot = null,
         public CascadeAction $onSave = CascadeAction::NO_ACTION,
         public CascadeAction $onDelete = CascadeAction::NO_ACTION,
     ) {

@@ -15,7 +15,9 @@ namespace Fixture\Model;
 
 use Tuxxedo\Model\Attribute\Column\Integer;
 use Tuxxedo\Model\Attribute\Column\Varchar;
+use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
 use Tuxxedo\Model\Attribute\Table;
+use Tuxxedo\Model\Relation;
 
 #[Table(name: 'enum_keyed_tags')]
 class EnumKeyedTag
@@ -25,4 +27,16 @@ class EnumKeyedTag
 
     #[Varchar(length: 64)]
     public string $name = '';
+
+    /**
+     * @var Relation<EnumKeyedRecord>|null
+     */
+    #[BelongsToMany(
+        related: EnumKeyedRecord::class,
+        table: 'enum_keyed_record_tag',
+        localKey: 'tag_id',
+        foreignKey: 'record_status',
+        pivot: EnumKeyedRecordTag::class,
+    )]
+    public ?Relation $records = null;
 }

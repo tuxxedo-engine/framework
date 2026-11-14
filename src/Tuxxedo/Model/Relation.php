@@ -26,14 +26,19 @@ use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 class Relation extends AbstractQueryable implements RelationInterface
 {
     /**
-     * @var array<int, TModel>
+     * @var array<string, array{item: TModel|null, key: non-empty-array<string, string|int|float|bool>|null, pivot: array<string, mixed>}>
      */
     public private(set) array $pendingAdds = [];
 
     /**
-     * @var array<int, TModel>
+     * @var array<string, array{item: TModel|null, key: non-empty-array<string, string|int|float|bool>|null, pivot: array<string, mixed>}>
      */
     public private(set) array $pendingRemoves = [];
+
+    /**
+     * @var array<string, array{item: TModel|null, key: non-empty-array<string, string|int|float|bool>|null, pivot: array<string, mixed>}>|null
+     */
+    public private(set) ?array $pendingSync = null;
 
     /**
      * @param (\Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string|SelectStatementInterface, direction: OrderDirection}>, ?int, ?int): iterable<int, TModel>)|null $loaderBuilder
@@ -55,6 +60,7 @@ class Relation extends AbstractQueryable implements RelationInterface
         ?ModelsManagerInterface $manager = null,
         ?string $modelClass = null,
         ?\Closure $statementBuilder = null,
+        public readonly ?RelationPivotInterface $pivot = null,
     ) {
         parent::__construct(
             loaderBuilder: $loaderBuilder,
@@ -84,6 +90,7 @@ class Relation extends AbstractQueryable implements RelationInterface
         ?ModelsManagerInterface $manager = null,
         ?string $modelClass = null,
         ?\Closure $statementBuilder = null,
+        ?RelationPivotInterface $pivot = null,
     ): self {
         return new self(
             loaderBuilder: $loaderBuilder,
@@ -91,6 +98,7 @@ class Relation extends AbstractQueryable implements RelationInterface
             manager: $manager,
             modelClass: $modelClass,
             statementBuilder: $statementBuilder,
+            pivot: $pivot,
         );
     }
 
@@ -105,11 +113,13 @@ class Relation extends AbstractQueryable implements RelationInterface
         array $values,
         ?ModelsManagerInterface $manager = null,
         ?string $modelClass = null,
+        ?RelationPivotInterface $pivot = null,
     ): self {
         return new self(
             prefetched: $values,
             manager: $manager,
             modelClass: $modelClass,
+            pivot: $pivot,
         );
     }
 
@@ -136,6 +146,7 @@ class Relation extends AbstractQueryable implements RelationInterface
         ?ModelsManagerInterface $manager = null,
         ?string $modelClass = null,
         ?\Closure $statementBuilder = null,
+        ?RelationPivotInterface $pivot = null,
     ): self {
         return new self(
             loaderBuilder: $loaderBuilder,
@@ -148,6 +159,7 @@ class Relation extends AbstractQueryable implements RelationInterface
             manager: $manager,
             modelClass: $modelClass,
             statementBuilder: $statementBuilder,
+            pivot: $pivot,
         );
     }
 
@@ -174,47 +186,118 @@ class Relation extends AbstractQueryable implements RelationInterface
             manager: $this->manager,
             modelClass: $this->modelClass,
             statementBuilder: $this->statementBuilder,
+            pivot: $this->pivot,
         );
     }
 
-    /**
-     * @param TModel $item
-     */
     public function add(
-        object $item,
+        object|array|int|string $item,
+        array $pivot = [],
     ): void {
-        foreach ($this->pendingRemoves as $index => $existing) {
-            if ($existing === $item) {
-                unset($this->pendingRemoves[$index]);
+        if ($pivot !== []) {
+            $this->requirePivot('pivot values')->validatePivotValues($pivot);
+        }
 
+        $entry = $this->entryFor($item);
+        $identity = $entry['identity'];
+
+        if (isset($this->pendingRemoves[$identity])) {
+            unset($this->pendingRemoves[$identity]);
+
+            if ($this->pivot === null || $entry['key'] === null) {
                 return;
             }
         }
 
-        $this->pendingAdds[] = $item;
+        $this->pendingAdds[$identity] = [
+            'item' => $entry['item'] ?? $this->pendingAdds[$identity]['item'] ?? null,
+            'key' => $entry['key'],
+            'pivot' => [
+                ...$this->pendingAdds[$identity]['pivot'] ?? [],
+                ...$pivot,
+            ],
+        ];
     }
 
-    /**
-     * @param TModel $item
-     */
     public function remove(
-        object $item,
+        object|array|int|string $item,
     ): void {
-        foreach ($this->pendingAdds as $index => $existing) {
-            if ($existing === $item) {
-                unset($this->pendingAdds[$index]);
+        $entry = $this->entryFor($item);
+        $identity = $entry['identity'];
 
+        if (isset($this->pendingAdds[$identity])) {
+            unset($this->pendingAdds[$identity]);
+
+            if ($this->pivot === null) {
                 return;
             }
         }
 
-        $this->pendingRemoves[] = $item;
+        if ($this->pendingSync !== null) {
+            unset($this->pendingSync[$identity]);
+        }
+
+        if ($this->pivot !== null && $entry['key'] === null) {
+            return;
+        }
+
+        $this->pendingRemoves[$identity] = [
+            'item' => $entry['item'],
+            'key' => $entry['key'],
+            'pivot' => [],
+        ];
+    }
+
+    public function sync(
+        iterable $items,
+    ): void {
+        $this->requirePivot('sync()');
+
+        $sync = [];
+
+        foreach ($items as $item) {
+            $entry = $this->entryFor($item);
+
+            $sync[$entry['identity']] = [
+                'item' => $entry['item'],
+                'key' => $entry['key'],
+                'pivot' => [],
+            ];
+        }
+
+        $this->pendingSync = $sync;
+        $this->pendingAdds = [];
+        $this->pendingRemoves = [];
+    }
+
+    #[\NoDiscard]
+    public function pivotFor(
+        object|array|int|string $item,
+    ): ?object {
+        $pivot = $this->requirePivot('pivotFor()');
+        $key = $pivot->keyOf($item);
+
+        if ($key === null) {
+            return null;
+        }
+
+        return $pivot->pivots()[$pivot->hash($key)] ?? null;
+    }
+
+    public function hasPendingChanges(): bool
+    {
+        return $this->pendingAdds !== [] ||
+            $this->pendingRemoves !== [] ||
+            $this->pendingSync !== null;
     }
 
     public function clearPending(): void
     {
         $this->pendingAdds = [];
         $this->pendingRemoves = [];
+        $this->pendingSync = null;
+
+        $this->pivot?->reset();
     }
 
     /**
@@ -223,11 +306,7 @@ class Relation extends AbstractQueryable implements RelationInterface
     #[\NoDiscard]
     public function first(): ?object
     {
-        if (
-            $this->pendingAdds !== [] ||
-            $this->pendingRemoves !== [] ||
-            $this->prefetched !== null
-        ) {
+        if ($this->hasPendingChanges() || $this->prefetched !== null) {
             foreach ($this->materialize() as $item) {
                 return $item;
             }
@@ -259,27 +338,63 @@ class Relation extends AbstractQueryable implements RelationInterface
     {
         $base = $this->loadBase();
 
-        if ($this->pendingAdds === [] && $this->pendingRemoves === []) {
+        if (!$this->hasPendingChanges()) {
             return $base;
         }
 
-        $overlay = $base;
+        /** @var array<string, TModel|null> $items */
+        $items = [];
 
-        foreach ($this->pendingRemoves as $itemToRemove) {
-            foreach ($overlay as $index => $existing) {
-                if ($existing === $itemToRemove) {
-                    unset($overlay[$index]);
-                }
+        foreach ($base as $item) {
+            $items[$this->entryFor($item)['identity']] = $item;
+        }
+
+        if ($this->pendingSync !== null) {
+            $synced = [];
+
+            foreach ($this->pendingSync as $identity => $entry) {
+                $synced[$identity] = $items[$identity] ?? $entry['item'];
+            }
+
+            $items = $synced;
+        }
+
+        foreach ($this->pendingRemoves as $identity => $entry) {
+            unset($items[$identity]);
+        }
+
+        foreach ($this->pendingAdds as $identity => $entry) {
+            $items[$identity] ??= $entry['item'];
+        }
+
+        $missing = [];
+        $keysByHash = [];
+
+        foreach ($items as $identity => $item) {
+            $key = $this->pendingAdds[$identity]['key'] ?? $this->pendingSync[$identity]['key'] ?? null;
+
+            if ($item === null && $key !== null && $this->pivot !== null) {
+                $missing[$identity] = $key;
+                $keysByHash[$this->pivot->hash($key)] = $key;
             }
         }
 
-        $overlay = \array_values($overlay);
+        if ($keysByHash !== [] && $this->pivot !== null) {
+            $resolved = $this->pivot->resolve($keysByHash);
 
-        foreach ($this->pendingAdds as $itemToAdd) {
-            $overlay[] = $itemToAdd;
+            foreach ($missing as $identity => $key) {
+                /** @var TModel|null $target */
+                $target = $resolved[$this->pivot->hash($key)] ?? null;
+                $items[$identity] = $target;
+            }
         }
 
-        return $overlay;
+        return \array_values(
+            \array_filter(
+                $items,
+                static fn (?object $item): bool => $item !== null,
+            ),
+        );
     }
 
     /**
@@ -292,5 +407,59 @@ class Relation extends AbstractQueryable implements RelationInterface
         }
 
         return parent::loadBase();
+    }
+
+    /**
+     * @param TModel|\BackedEnum|array<string, int|string>|int|string $item
+     * @return array{identity: string, item: TModel|null, key: non-empty-array<string, string|int|float|bool>|null}
+     *
+     * @throws ModelException
+     */
+    private function entryFor(
+        object|array|int|string $item,
+    ): array {
+        if (\is_object($item) && !$item instanceof \BackedEnum) {
+            $key = $this->pivot?->keyOf($item);
+
+            /** @var TModel $item */
+            return [
+                'identity' => $key !== null
+                    ? 'k:' . $this->pivot->hash($key)
+                    : 'o:' . \spl_object_id($item),
+                'item' => $item,
+                'key' => $key,
+            ];
+        }
+
+        $pivot = $this->requirePivot('keys');
+        $key = $pivot->keyOf($item);
+
+        if ($key === null) {
+            // @codeCoverageIgnoreStart
+            throw ModelException::fromInvalidRelationKey(
+                relatedClass: $pivot->relatedClass,
+                expected: 'a key value',
+                actual: \get_debug_type($item),
+            );
+            // @codeCoverageIgnoreEnd
+        }
+
+        return [
+            'identity' => 'k:' . $pivot->hash($key),
+            'item' => null,
+            'key' => $key,
+        ];
+    }
+
+    /**
+     * @throws ModelException
+     */
+    private function requirePivot(
+        string $operation,
+    ): RelationPivotInterface {
+        return $this->pivot ?? throw ModelException::fromRelationRequiresPivot(
+            relatedClass: $this->modelClass ?? 'object',
+            operation: $operation,
+        );
     }
 }

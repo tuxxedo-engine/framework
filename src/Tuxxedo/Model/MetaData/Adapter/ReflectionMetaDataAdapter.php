@@ -792,6 +792,20 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 property: $property,
                 keyKind: 'foreignKey',
             );
+
+            $this->validatePivotClass(
+                modelClass: $modelClass,
+                property: $property,
+                pivotClass: $attribute->pivot,
+                table: $attribute->table,
+                keyColumns: [
+                    'typeColumn' => [
+                        $attribute->typeColumn,
+                    ],
+                    'idColumn' => $pivotSourceColumns,
+                    'foreignKey' => $pivotTargetColumns,
+                ],
+            );
         }
 
         if ($attribute->typeMap !== null) {
@@ -1481,6 +1495,17 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 keyKind: 'foreignKey',
             );
 
+            $this->validatePivotClass(
+                modelClass: $modelClass,
+                property: $property,
+                pivotClass: $attribute->pivot,
+                table: $attribute->table,
+                keyColumns: [
+                    'localKey' => $pivotSourceColumns,
+                    'foreignKey' => $pivotTargetColumns,
+                ],
+            );
+
             return [
                 null,
                 null,
@@ -1497,6 +1522,90 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             null,
         ];
         // @codeCoverageIgnoreEnd
+    }
+
+    /**
+     * @param class-string $modelClass
+     * @param class-string|null $pivotClass
+     * @param array<string, non-empty-list<string>> $keyColumns
+     *
+     * @throws ModelException
+     */
+    private function validatePivotClass(
+        string $modelClass,
+        string $property,
+        ?string $pivotClass,
+        string $table,
+        array $keyColumns,
+    ): void {
+        if ($pivotClass === null) {
+            return;
+        }
+
+        try {
+            $pivotReflection = new \ReflectionClass($pivotClass);
+
+            if (
+                $pivotReflection->isAbstract() ||
+                $pivotReflection->isTrait() ||
+                $pivotReflection->isInterface() ||
+                $pivotReflection->isEnum()
+            ) {
+                throw new \ReflectionException();
+            }
+        } catch (\ReflectionException) {
+            throw ModelException::fromInvalidPivotClass(
+                modelClass: $modelClass,
+                property: $property,
+                pivotClass: $pivotClass,
+            );
+        }
+
+        $tableAttributes = $pivotReflection->getAttributes(Table::class);
+
+        if (\sizeof($tableAttributes) === 0) {
+            throw ModelException::fromPivotClassNotAModel(
+                modelClass: $modelClass,
+                property: $property,
+                pivotClass: $pivotClass,
+            );
+        }
+
+        $pivotTable = $tableAttributes[0]->newInstance()->name;
+
+        if ($pivotTable !== $table) {
+            throw ModelException::fromPivotTableMismatch(
+                modelClass: $modelClass,
+                property: $property,
+                pivotClass: $pivotClass,
+                pivotTable: $pivotTable,
+                table: $table,
+            );
+        }
+
+        $pivotColumnNames = $this->getColumnNamesFromReflection($pivotReflection);
+
+        foreach ($keyColumns as $keyKind => $columns) {
+            foreach ($columns as $column) {
+                if (!\in_array($column, $pivotColumnNames, true)) {
+                    throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                        modelClass: $modelClass,
+                        property: $property,
+                        keyKind: $keyKind,
+                        keyValue: $column,
+                        referencedClass: $pivotClass,
+                    );
+                }
+            }
+        }
+
+        if ($this->resolveTargetKeyColumnsFromReflection($pivotReflection) === null) {
+            throw ModelException::fromRelationRequiresPrimaryKey(
+                modelClass: $modelClass,
+                property: $property,
+                side: 'pivot',
+            );
+        }
     }
 
     /**

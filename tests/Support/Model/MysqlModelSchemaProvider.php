@@ -629,6 +629,45 @@ class MysqlModelSchemaProvider implements ModelSchemaProvider
             ')';
     }
 
+    public function pivotProductsSchemaSql(): string
+    {
+        return 'CREATE TABLE pivot_products (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'name VARCHAR(100) NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function pivotCategoriesSchemaSql(): string
+    {
+        return 'CREATE TABLE pivot_categories (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'name VARCHAR(100) NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
+    public function pivotCategoryProductSchemaSql(): string
+    {
+        return 'CREATE TABLE pivot_category_product (' .
+            'product_id INT NOT NULL, ' .
+            'category_id INT NOT NULL, ' .
+            'sort INT NOT NULL DEFAULT 0, ' .
+            'priority INT NOT NULL DEFAULT 1, ' .
+            'note VARCHAR(100) NULL, ' .
+            'PRIMARY KEY (product_id, category_id)' .
+            ')';
+    }
+
+    public function pivotLabelablesSchemaSql(): string
+    {
+        return 'CREATE TABLE pivot_labelables (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'labelable_type VARCHAR(255) NOT NULL, ' .
+            'labelable_id INT NOT NULL, ' .
+            'category_id INT NOT NULL, ' .
+            'weight INT NOT NULL DEFAULT 0' .
+            ')';
+    }
+
     public function uuidV7OwnersSchemaSql(): string
     {
         return 'CREATE TABLE uuid_v7_owners (' .

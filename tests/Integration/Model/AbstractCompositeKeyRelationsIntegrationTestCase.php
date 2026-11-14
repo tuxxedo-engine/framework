@@ -22,6 +22,7 @@ use Fixture\Model\Composite\CompositeTag;
 use Fixture\Model\Composite\CompositeTask;
 use Fixture\Model\User;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
+use Tuxxedo\Model\ModelException;
 use Tuxxedo\Model\Relation;
 use Tuxxedo\Model\ValidationScope;
 
@@ -1361,5 +1362,217 @@ abstract class AbstractCompositeKeyRelationsIntegrationTestCase extends Abstract
         \sort($labels);
 
         return $labels;
+    }
+
+    /**
+     * @return Relation<CompositeTag>
+     */
+    private function ownerTags(
+        string $name,
+    ): Relation {
+        $owner = $this->modelsManager->fetchByCompositeKey(
+            class: CompositeOwner::class,
+            keys: [
+                'scope' => 'system',
+                'name' => $name,
+            ],
+        );
+
+        self::assertInstanceOf(Relation::class, $owner->tags);
+
+        return $owner->tags;
+    }
+
+    /**
+     * @param iterable<CompositeTag> $tags
+     * @return list<string>
+     */
+    private function tagLabels(
+        iterable $tags,
+    ): array {
+        $labels = [];
+
+        foreach ($tags as $tag) {
+            $labels[] = $tag->label;
+        }
+
+        \sort($labels);
+
+        return $labels;
+    }
+
+    public function testCompositeBelongsToManySyncByCompositeKeys(): void
+    {
+        $owner = $this->modelsManager->fetchByCompositeKey(
+            class: CompositeOwner::class,
+            keys: [
+                'scope' => 'system',
+                'name' => 'alpha',
+            ],
+        );
+
+        self::assertInstanceOf(Relation::class, $owner->tags);
+
+        $owner->tags->sync(
+            [
+                [
+                    'realm' => 'color',
+                    'code' => 'blue',
+                ],
+                [
+                    'code' => 'large',
+                    'realm' => 'size',
+                ],
+            ],
+        );
+
+        self::assertSame(
+            [
+                'Blue',
+                'Large',
+            ],
+            $this->tagLabels($owner->tags),
+        );
+
+        (void) $this->modelsManager->save($owner);
+
+        self::assertSame(
+            [
+                'Blue',
+                'Large',
+            ],
+            $this->tagLabels($this->ownerTags('alpha')),
+        );
+
+        self::assertSame(
+            [
+                'Blue',
+            ],
+            $this->tagLabels($this->ownerTags('beta')),
+        );
+    }
+
+    public function testCompositeBelongsToManySyncResolvesSeveralKeysBeforeSave(): void
+    {
+        $tags = $this->ownerTags('beta');
+
+        $tags->sync(
+            [
+                [
+                    'realm' => 'color',
+                    'code' => 'red',
+                ],
+                [
+                    'realm' => 'size',
+                    'code' => 'large',
+                ],
+            ],
+        );
+
+        self::assertSame(
+            [
+                'Large',
+                'Red',
+            ],
+            $this->tagLabels($tags),
+        );
+    }
+
+    public function testCompositeBelongsToManyRemoveByCompositeKey(): void
+    {
+        $owner = $this->modelsManager->fetchByCompositeKey(
+            class: CompositeOwner::class,
+            keys: [
+                'scope' => 'system',
+                'name' => 'alpha',
+            ],
+        );
+
+        self::assertInstanceOf(Relation::class, $owner->tags);
+
+        $owner->tags->remove(
+            [
+                'realm' => 'color',
+                'code' => 'red',
+            ],
+        );
+
+        (void) $this->modelsManager->save($owner);
+
+        self::assertSame(
+            [
+                'Large',
+            ],
+            $this->tagLabels($this->ownerTags('alpha')),
+        );
+    }
+
+    public function testCompositeMorphToManyAddByCompositeKey(): void
+    {
+        $owner = $this->modelsManager->fetchByCompositeKey(
+            class: CompositeOwner::class,
+            keys: [
+                'scope' => 'system',
+                'name' => 'beta',
+            ],
+        );
+
+        self::assertInstanceOf(Relation::class, $owner->morphTags);
+
+        $owner->morphTags->add(
+            [
+                'realm' => 'size',
+                'code' => 'large',
+            ],
+        );
+
+        $owner->morphTags->add(
+            [
+                'realm' => 'size',
+                'code' => 'large',
+            ],
+        );
+
+        (void) $this->modelsManager->save($owner);
+
+        $refetched = $this->modelsManager->fetchByCompositeKey(
+            class: CompositeOwner::class,
+            keys: [
+                'scope' => 'system',
+                'name' => 'beta',
+            ],
+        );
+
+        self::assertInstanceOf(Relation::class, $refetched->morphTags);
+        self::assertSame(2, $refetched->morphTags->count());
+    }
+
+    public function testCompositeKeyArraysMustNameEveryKeyColumn(): void
+    {
+        $tags = $this->ownerTags('alpha');
+
+        $items = [
+            [
+                'realm' => 'color',
+            ],
+            [
+                'realm' => 'color',
+                'label' => 'red',
+            ],
+            'red',
+        ];
+
+        foreach ($items as $item) {
+            try {
+                $tags->add($item);
+
+                self::fail('Expected ModelException for ' . \get_debug_type($item));
+            } catch (ModelException $exception) {
+                self::assertStringContainsString(
+                    'key columns "realm", "code"',
+                    $exception->getMessage(),
+                );
+            }
+        }
     }
 }

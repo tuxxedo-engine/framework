@@ -43,6 +43,11 @@ use Fixture\Model\Broken\InvalidThroughClass;
 use Fixture\Model\Broken\MultipleSoftDelete;
 use Fixture\Model\Broken\NoColumns;
 use Fixture\Model\Broken\NoTable;
+use Fixture\Model\Broken\PivotClassInvalid;
+use Fixture\Model\Broken\PivotClassNotAModel;
+use Fixture\Model\Broken\PivotMissingKeyColumn;
+use Fixture\Model\Broken\PivotTableMismatch;
+use Fixture\Model\Broken\PivotWithoutPrimaryKey;
 use Fixture\Model\Broken\PropertyWithTwoColumns;
 use Fixture\Model\Broken\PropertyWithTwoRelations;
 use Fixture\Model\Broken\RelatedClassNotAModel;
@@ -186,6 +191,46 @@ class ReflectionMetaDataAdapterValidationTest extends TestCase
         $this->assertRejectsModelWithMessage(
             modelClass: ThroughClassNotAModel::class,
             needle: 'through relation',
+        );
+    }
+
+    public function testRejectsInvalidPivotClass(): void
+    {
+        $this->assertRejectsModelWithMessage(
+            modelClass: PivotClassInvalid::class,
+            needle: 'references pivot',
+        );
+    }
+
+    public function testRejectsPivotClassLackingTableAttribute(): void
+    {
+        $this->assertRejectsModelWithMessage(
+            modelClass: PivotClassNotAModel::class,
+            needle: 'is not a model',
+        );
+    }
+
+    public function testRejectsPivotClassWithDifferentTable(): void
+    {
+        $this->assertRejectsModelWithMessage(
+            modelClass: PivotTableMismatch::class,
+            needle: 'uses table "other_links", but its pivot',
+        );
+    }
+
+    public function testRejectsPivotClassMissingKeyColumn(): void
+    {
+        $this->assertRejectsModelWithMessage(
+            modelClass: PivotMissingKeyColumn::class,
+            needle: 'references foreignKey "target_id"',
+        );
+    }
+
+    public function testRejectsPivotClassWithoutPrimaryKey(): void
+    {
+        $this->assertRejectsModelWithMessage(
+            modelClass: PivotWithoutPrimaryKey::class,
+            needle: 'requires the pivot model to define a primary key',
         );
     }
 

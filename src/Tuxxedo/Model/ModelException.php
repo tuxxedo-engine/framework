@@ -1254,4 +1254,125 @@ class ModelException extends Exception
             ),
         );
     }
+
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromInvalidPivotClass(
+        string $modelClass,
+        string $property,
+        string $pivotClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": relation on property "%s" references pivot "%s" which does not exist or is not a non-abstract class',
+                $modelClass,
+                $property,
+                $pivotClass,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     * @param class-string $pivotClass
+     */
+    public static function fromPivotClassNotAModel(
+        string $modelClass,
+        string $property,
+        string $pivotClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": relation on property "%s" references pivot "%s" which is not a model (missing #[Table] attribute)',
+                $modelClass,
+                $property,
+                $pivotClass,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $modelClass
+     * @param class-string $pivotClass
+     */
+    public static function fromPivotTableMismatch(
+        string $modelClass,
+        string $property,
+        string $pivotClass,
+        string $pivotTable,
+        string $table,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": relation on property "%s" uses table "%s", but its pivot "%s" maps to table "%s"',
+                $modelClass,
+                $property,
+                $table,
+                $pivotClass,
+                $pivotTable,
+            ),
+        );
+    }
+
+    public static function fromRelationRequiresPivot(
+        string $relatedClass,
+        string $operation,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Relation to "%s" does not support %s; only loaded belongs-to-many and morph-to-many relations do',
+                $relatedClass,
+                $operation,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $relatedClass
+     */
+    public static function fromRelationWithoutPivotModel(
+        string $relatedClass,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Relation to "%s" has no pivot model; declare one with pivot: on the relation attribute to read or write pivot values',
+                $relatedClass,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $pivotClass
+     */
+    public static function fromInvalidPivotProperty(
+        string $pivotClass,
+        string $property,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Pivot value "%s" is not a writable column on pivot "%s"; key columns are set by the relation',
+                $property,
+                $pivotClass,
+            ),
+        );
+    }
+
+    /**
+     * @param class-string $relatedClass
+     */
+    public static function fromInvalidRelationKey(
+        string $relatedClass,
+        string $expected,
+        string $actual,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid key for relation item "%s": expected %s, got %s',
+                $relatedClass,
+                $expected,
+                $actual,
+            ),
+        );
+    }
 }

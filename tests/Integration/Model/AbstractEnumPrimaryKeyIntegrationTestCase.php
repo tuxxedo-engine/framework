@@ -18,8 +18,10 @@ use Fixture\Model\EnumKeyedComment;
 use Fixture\Model\EnumKeyedEntry;
 use Fixture\Model\EnumKeyedNote;
 use Fixture\Model\EnumKeyedRecord;
+use Fixture\Model\EnumKeyedRecordTag;
 use Fixture\Model\EnumKeyedTag;
 use Fixture\Model\PostStatus;
+use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Model\Relation;
 use Tuxxedo\Model\ValidationScope;
 
@@ -434,6 +436,57 @@ abstract class AbstractEnumPrimaryKeyIntegrationTestCase extends AbstractModelIn
                     : $record->tags->count(),
             ),
         );
+    }
+
+    public function testBelongsToManyWritesEnumKeysThroughPivotModel(): void
+    {
+        $this->seedExtendedRelations();
+
+        $tag = $this->modelsManager->findFirst(
+            class: EnumKeyedTag::class,
+            criteria: static function (SelectStatementInterface $statement): void {
+                $statement->where('name', 'red');
+            },
+        );
+
+        self::assertNotNull($tag);
+        self::assertInstanceOf(Relation::class, $tag->records);
+
+        $tag->records->sync(
+            [
+                PostStatus::PUBLISHED,
+            ],
+        );
+
+        $statuses = [];
+
+        foreach ($tag->records as $record) {
+            $statuses[] = $record->status->value;
+        }
+
+        \sort($statuses);
+
+        self::assertSame(
+            [
+                'published',
+            ],
+            $statuses,
+        );
+
+        (void) $this->modelsManager->save($tag);
+
+        $refetched = $this->modelsManager->fetchById(
+            class: EnumKeyedTag::class,
+            id: $tag->id ?? 0,
+        );
+
+        self::assertInstanceOf(Relation::class, $refetched->records);
+
+        $pivot = $refetched->records->pivotFor(PostStatus::PUBLISHED);
+
+        self::assertInstanceOf(EnumKeyedRecordTag::class, $pivot);
+        self::assertSame(PostStatus::PUBLISHED, $pivot->recordStatus);
+        self::assertNull($refetched->records->pivotFor(PostStatus::DRAFT));
     }
 
     public function testMorphManyAndMorphOneByEnumKey(): void

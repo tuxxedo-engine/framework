@@ -295,6 +295,26 @@ abstract class AbstractModelIntegrationTestCase extends TestCase
         $this->executeSchema($this->schemaProvider->compositeTasksSchemaSql());
     }
 
+    protected function createPivotProductsTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->pivotProductsSchemaSql());
+    }
+
+    protected function createPivotCategoriesTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->pivotCategoriesSchemaSql());
+    }
+
+    protected function createPivotCategoryProductTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->pivotCategoryProductSchemaSql());
+    }
+
+    protected function createPivotLabelablesTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->pivotLabelablesSchemaSql());
+    }
+
     protected function createUuidV7OwnersTable(): void
     {
         $this->executeSchema($this->schemaProvider->uuidV7OwnersSchemaSql());

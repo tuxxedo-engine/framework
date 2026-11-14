@@ -37,9 +37,7 @@ class RelationLoadState
         }
 
         if ($value instanceof RelationInterface) {
-            return $value->isMaterialized() ||
-                $value->pendingAdds !== [] ||
-                $value->pendingRemoves !== [];
+            return $value->isMaterialized() || $value->hasPendingChanges();
         }
 
         if (!\is_object($value)) {
