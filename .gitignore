@@ -2,6 +2,7 @@
 /app/views/cache/*/
 /app/views/cache/*.php
 /app/*.log
+/console/*.log
 /test-coverage
 /vendor
 /.phpunit.cache

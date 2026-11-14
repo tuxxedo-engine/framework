@@ -24,6 +24,7 @@ class HttpClientException extends Exception implements PrefersResponseCodeInterf
         get {
             return match ($this->failure) {
                 HttpClientFailure::TIMEOUT => ResponseCode::GATEWAY_TIMEOUT,
+                HttpClientFailure::RATE_LIMITED => ResponseCode::SERVICE_UNAVAILABLE,
                 HttpClientFailure::AUTH => $this->response !== null
                     ? ResponseCode::BAD_GATEWAY
                     : ResponseCode::INTERNAL_SERVER_ERROR,
@@ -342,6 +343,19 @@ class HttpClientException extends Exception implements PrefersResponseCodeInterf
                 self::formatTarget($request),
             ),
             failure: HttpClientFailure::ABORTED,
+            request: $request,
+        );
+    }
+
+    public static function fromRateLimited(
+        ClientRequestInterface $request,
+    ): self {
+        return new self(
+            message: \sprintf(
+                '%s was refused because the client rate limit is exhausted',
+                self::formatTarget($request),
+            ),
+            failure: HttpClientFailure::RATE_LIMITED,
             request: $request,
         );
     }

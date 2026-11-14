@@ -97,7 +97,7 @@ readonly class TokenEndpoint
             tokenType: \is_string($tokenType) && $tokenType !== ''
                 ? $tokenType
                 : 'Bearer',
-            expiresAt: \is_int($expiresIn) || (\is_string($expiresIn) && \ctype_digit($expiresIn))
+            expiresAt: \is_int($expiresIn) || (\is_string($expiresIn) && \preg_match('/^\d+$/', $expiresIn) === 1)
                 ? $now->plus(Duration::fromSeconds(\max(0, (int) $expiresIn)))
                 : null,
             refreshToken: \is_string($newRefreshToken) && $newRefreshToken !== ''

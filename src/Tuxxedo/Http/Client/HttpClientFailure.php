@@ -27,4 +27,5 @@ enum HttpClientFailure
     case REQUEST;
     case AUTH;
     case ABORTED;
+    case RATE_LIMITED;
 }

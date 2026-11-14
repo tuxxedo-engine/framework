@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Console\Commands;
 
 use Console\GitHub\Commit;
+use Console\GitHub\ErrorLogMiddleware;
 use Console\GitHub\GitHubClient;
 use Console\GitHub\Issue;
 use Console\GitHub\PullRequest;
@@ -26,9 +27,12 @@ use Tuxxedo\Console\Output\ProgressBar;
 use Tuxxedo\Console\Output\ProgressBarTheme;
 use Tuxxedo\Console\Output\Style\Decoration;
 use Tuxxedo\Console\Output\Style\Style;
+use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Env\EnvInterface;
 use Tuxxedo\Http\Client\HttpClientException;
 use Tuxxedo\Http\Client\HttpClientInterface;
+use Tuxxedo\Http\Client\Middleware\ServerRateLimitMiddleware;
+use Tuxxedo\Logger\StreamLogger;
 use Tuxxedo\Temporal\InstantInterface;
 
 class GitHubCommand
@@ -40,10 +44,23 @@ class GitHubCommand
         OutputInterface $output,
         HttpClientInterface $http,
         EnvInterface $env,
+        ContainerInterface $container,
         #[Option(description: 'Repository as owner/name')]
         ?string $repo = null,
     ): ExitCode {
         $repo ??= $env->string('GITHUB_REPOSITORY', 'tuxxedo-engine/framework');
+        $http = $http->withMiddleware(new ServerRateLimitMiddleware());
+
+        if ($env->bool('GITHUB_LOG', false)) {
+            $http = $http->withMiddleware(
+                new ErrorLogMiddleware(
+                    StreamLogger::createFromFile(
+                        container: $container,
+                        file: __DIR__ . '/../gh.log',
+                    ),
+                ),
+            );
+        }
 
         $github = new GitHubClient(
             http: $http,

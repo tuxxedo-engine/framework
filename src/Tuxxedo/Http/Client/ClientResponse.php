@@ -83,6 +83,12 @@ class ClientResponse implements ClientResponseInterface
         }
     }
 
+    public bool $buffered {
+        get {
+            return \is_string($this->content);
+        }
+    }
+
     /**
      * @param HeaderInterface[] $headers
      */

@@ -173,6 +173,13 @@ class HttpClientExceptionTest extends TestCase
         ];
 
         yield [
+            static fn (): HttpClientException => HttpClientException::fromRateLimited(self::request()),
+            HttpClientFailure::RATE_LIMITED,
+            ResponseCode::SERVICE_UNAVAILABLE,
+            'GET https://api.example:8443/users/1 was refused because the client rate limit is exhausted',
+        ];
+
+        yield [
             static fn (): HttpClientException => HttpClientException::fromAborted(self::request()),
             HttpClientFailure::ABORTED,
             ResponseCode::INTERNAL_SERVER_ERROR,

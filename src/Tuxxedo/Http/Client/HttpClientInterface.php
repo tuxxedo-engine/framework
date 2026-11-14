@@ -698,6 +698,12 @@ interface HttpClientInterface
         AuthInterface ...$auth,
     ): static;
 
+    public function withMiddleware(
+        ClientMiddlewareInterface ...$middleware,
+    ): static;
+
+    public function withoutMiddleware(): static;
+
     public function withRules(
         HttpRulesInterface $rules,
     ): static;

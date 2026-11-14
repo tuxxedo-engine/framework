@@ -73,7 +73,7 @@ class SseReader
                 $event = $value;
             } elseif ($field === 'id' && !\str_contains($value, "\0")) {
                 $id = $value;
-            } elseif ($field === 'retry' && \ctype_digit($value) && (int) $value > 0) {
+            } elseif ($field === 'retry' && \preg_match('/^\d+$/', $value) === 1 && (int) $value > 0) {
                 $retry = (int) $value;
             }
         }

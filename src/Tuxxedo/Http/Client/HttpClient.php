@@ -111,9 +111,15 @@ class HttpClient implements HttpClientInterface
     private readonly array $rules;
 
     /**
+     * @var list<ClientMiddlewareInterface>
+     */
+    private readonly array $middleware;
+
+    /**
      * @param HeaderInterface[] $headers
      * @param array<string, mixed> $query
      * @param AuthInterface[] $auth
+     * @param ClientMiddlewareInterface[] $middleware
      *
      * @throws HttpClientException
      * @throws UrlException
@@ -125,6 +131,7 @@ class HttpClient implements HttpClientInterface
         private readonly array $query = [],
         array $auth = [],
         ?HttpRulesInterface $rules = null,
+        array $middleware = [],
         ?DurationInterface $connectTimeout = null,
         ?DurationInterface $timeout = null,
         ?DurationInterface $idleTimeout = null,
@@ -153,6 +160,7 @@ class HttpClient implements HttpClientInterface
             : $baseUrl;
 
         $this->auth = \array_values($auth);
+        $this->middleware = \array_values($middleware);
         $this->rules = $rules !== null
             ? [
                 $rules,
@@ -1318,6 +1326,30 @@ class HttpClient implements HttpClientInterface
         );
     }
 
+    public function withMiddleware(
+        ClientMiddlewareInterface ...$middleware,
+    ): static {
+        return clone (
+            $this,
+            [
+                'middleware' => [
+                    ...$this->middleware,
+                    ...\array_values($middleware),
+                ],
+            ],
+        );
+    }
+
+    public function withoutMiddleware(): static
+    {
+        return clone (
+            $this,
+            [
+                'middleware' => [],
+            ],
+        );
+    }
+
     public function withRules(
         HttpRulesInterface $rules,
     ): static {
@@ -1893,8 +1925,7 @@ class HttpClient implements HttpClientInterface
                 ? $this->authenticate($current)
                 : $current;
 
-            $result = $this->intercept($sending) ?? (yield $sending);
-            $result ??= HttpClientException::fromMissingTransportResult($sending);
+            $result = yield from $this->through($sending, 0);
 
             if ($result instanceof HttpClientException) {
                 $retry = $this->retryPolicy($current, $attempt, null);
@@ -1945,14 +1976,50 @@ class HttpClient implements HttpClientInterface
             return $result;
         }
 
-        return new ClientResponse(
-            content: $result->body->getStream(),
-            headers: $result->headers->all(),
-            statusCode: $result->statusCode,
-            httpVersion: $result->httpVersion,
-            info: ClientResponseInfo::chain($result->info, $previous),
-            serializerManager: $this->serializerManager,
-        );
+        return $this->adopt($result, ClientResponseInfo::chain($result->info, $previous));
+    }
+
+    /**
+     * @return \Generator<int, ClientRequestInterface|int, ClientResponseInterface|HttpClientException|null, ClientResponseInterface|HttpClientException>
+     *
+     * @throws HttpClientException
+     */
+    private function through(
+        ClientRequestInterface $request,
+        int $index,
+    ): \Generator {
+        if (!isset($this->middleware[$index])) {
+            $result = $this->intercept($request) ?? (yield $request);
+
+            return $result ?? HttpClientException::fromMissingTransportResult($request);
+        }
+
+        $middleware = $this->middleware[$index]->handle($request);
+        $result = null;
+
+        while ($middleware->valid()) {
+            $step = $middleware->current();
+
+            if ($step instanceof DurationInterface) {
+                yield self::microseconds($step);
+
+                $middleware->send(null);
+
+                continue;
+            }
+
+            $result = yield from $this->through($step, $index + 1);
+
+            $middleware->send($result);
+        }
+
+        $returned = $middleware->getReturn();
+
+        if ($returned instanceof ClientResponseInterface && $returned !== $result) {
+            return $this->adopt($returned);
+        }
+
+        return $returned ?? $result ?? HttpClientException::fromMissingTransportResult($request);
     }
 
     /**
@@ -1976,17 +2043,29 @@ class HttpClient implements HttpClientInterface
             return $faked;
         }
 
-        return new ClientResponse(
-            content: $faked->body->getStream(),
-            headers: $faked->headers->all(),
-            statusCode: $faked->statusCode,
-            httpVersion: $faked->httpVersion,
-            info: new ClientResponseInfo(
+        return $this->adopt(
+            $faked,
+            new ClientResponseInfo(
                 [
                     'url' => (string) $request->url,
                     'http_code' => $faked->statusCode,
                 ],
             ),
+        );
+    }
+
+    private function adopt(
+        ClientResponseInterface $response,
+        ?ClientResponseInfoInterface $info = null,
+    ): ClientResponseInterface {
+        return new ClientResponse(
+            content: $response->buffered
+                ? $response->body->getRaw()
+                : $response->body->getStream(),
+            headers: $response->headers->all(),
+            statusCode: $response->statusCode,
+            httpVersion: $response->httpVersion,
+            info: $info ?? $response->info,
             serializerManager: $this->serializerManager,
         );
     }

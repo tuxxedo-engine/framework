@@ -21,6 +21,10 @@ use Tuxxedo\Http\Response\ResponsableInterface;
 
 interface ClientResponseInterface extends ResponsableInterface
 {
+    public bool $buffered {
+        get;
+    }
+
     public int $statusCode {
         get;
     }

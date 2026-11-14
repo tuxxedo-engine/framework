@@ -22,7 +22,7 @@ $query = [];
 $parameter = static function (string $name, int $default) use ($query): int {
     $value = $query[$name] ?? null;
 
-    return \is_string($value) && \ctype_digit($value)
+    return \is_string($value) && \preg_match('/^\d+$/', $value) === 1
         ? (int) $value
         : $default;
 };

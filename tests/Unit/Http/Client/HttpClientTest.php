@@ -18,6 +18,7 @@ use Fixture\Serializer\Validated;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
+use Support\Http\Client\CallbackMiddleware;
 use Support\Http\Client\ScriptedTransport;
 use Support\Serializer\SerializerManagerFactory;
 use Tuxxedo\Container\Container;
@@ -2414,6 +2415,7 @@ class HttpClientTest extends TestCase
                 return [];
             }
         };
+
         $transport = new ScriptedTransport(
             [
                 self::response(),
@@ -2423,6 +2425,7 @@ class HttpClientTest extends TestCase
                 self::response(content: 'stored'),
             ],
         );
+
         $client = self::client($transport);
 
         $client->get('/x');
@@ -2454,6 +2457,7 @@ class HttpClientTest extends TestCase
                 HttpClientException::fromTimeout(new ClientRequest(Method::GET, '/x'), HttpClientTimeout::IDLE),
             ],
         );
+
         $client = self::client($transport)->withMaxDownloadSize(100);
         $deferred = $client->deferred();
 
@@ -2490,11 +2494,272 @@ class HttpClientTest extends TestCase
                 self::response(content: 'data'),
             ],
         );
+
         $client = self::client($transport);
         $pending = $client->deferred()->download('/x', \sys_get_temp_dir() . '/missing-' . \bin2hex(\random_bytes(4)) . '/file');
 
         $client->wait($pending);
 
         self::assertSame(HttpClientFailure::REQUEST, self::pendingFailure($pending));
+    }
+
+    public function testMiddlewareWrapsEachAttemptInOrder(): void
+    {
+        $log = [];
+        $outer = new CallbackMiddleware(
+            static function (ClientRequestInterface $request) use (&$log): \Generator {
+                $log[] = 'outer before';
+                $outcome = yield $request->withHeader(new Header('X-Outer', '1'));
+                $log[] = 'outer after ' . ($outcome instanceof ClientResponseInterface ? $outcome->statusCode : 'failure');
+            },
+        );
+
+        $inner = new CallbackMiddleware(
+            static function (ClientRequestInterface $request) use (&$log): \Generator {
+                $log[] = 'inner before ' . self::header($request, 'X-Outer');
+                yield $request->withHeader(new Header('X-Inner', '1'));
+                $log[] = 'inner after';
+            },
+        );
+
+        $transport = new ScriptedTransport(
+            [
+                self::response(503),
+                self::response(content: 'ok'),
+            ],
+        );
+
+        $response = self::client($transport)
+            ->withRetry(self::fastRetry())
+            ->withMiddleware($outer, $inner)
+            ->get('/x');
+
+        self::assertSame('ok', $response->body->getRaw());
+        self::assertSame('1', self::header($transport->requests[1], 'X-Outer'));
+        self::assertSame('1', self::header($transport->requests[1], 'X-Inner'));
+        self::assertSame(
+            [
+                'outer before',
+                'inner before 1',
+                'inner after',
+                'outer after 503',
+                'outer before',
+                'inner before 1',
+                'inner after',
+                'outer after 200',
+            ],
+            $log,
+        );
+    }
+
+    public function testMiddlewareCanReplaceOrShortCircuitTheOutcome(): void
+    {
+        $transport = new ScriptedTransport(
+            [
+                self::response(content: 'upstream'),
+            ],
+        );
+
+        $replace = new CallbackMiddleware(
+            static function (ClientRequestInterface $request): \Generator {
+                yield $request;
+
+                return ClientResponse::text('replaced');
+            },
+        );
+
+        $shortCircuit = new CallbackMiddleware(
+            static function (ClientRequestInterface $request): \Generator {
+                yield from [];
+
+                return ClientResponse::text('cached');
+            },
+        );
+
+        $client = self::client($transport);
+
+        $replaced = $client->withMiddleware($replace)->get('/x');
+        $cached = $client->withMiddleware($shortCircuit)->get('/x');
+
+        self::assertSame('replaced', $replaced->body->getRaw());
+        self::assertSame('cached', $cached->body->getRaw());
+        self::assertCount(1, $transport->requests);
+    }
+
+    public function testMiddlewareSeesFailuresAndItsOwnExceptionsAreNotRetried(): void
+    {
+        $failures = [];
+        $observer = new CallbackMiddleware(
+            static function (ClientRequestInterface $request) use (&$failures): \Generator {
+                $outcome = yield $request;
+
+                if ($outcome instanceof HttpClientException) {
+                    $failures[] = $outcome->failure;
+                }
+            },
+        );
+
+        $refusing = new CallbackMiddleware(
+            static function (ClientRequestInterface $request): \Generator {
+                yield from [];
+
+                throw HttpClientException::fromRateLimited($request);
+            },
+        );
+
+        $transport = new ScriptedTransport(
+            [
+                HttpClientException::fromTimeout(new ClientRequest(Method::GET, '/x'), HttpClientTimeout::IDLE),
+            ],
+        );
+
+        $client = self::client($transport);
+        $thrown = [];
+
+        foreach (
+            [
+                $observer,
+                $refusing,
+            ] as $middleware
+        ) {
+            try {
+                $client->withRetry(self::fastRetry(times: 3))->withMiddleware($middleware)->get('/x');
+            } catch (HttpClientException $exception) {
+                $thrown[] = $exception->failure;
+            }
+        }
+
+        self::assertSame(
+            [
+                HttpClientFailure::TIMEOUT,
+                HttpClientFailure::PROTOCOL,
+                HttpClientFailure::PROTOCOL,
+                HttpClientFailure::PROTOCOL,
+            ],
+            $failures,
+        );
+
+        self::assertSame(
+            [
+                HttpClientFailure::PROTOCOL,
+                HttpClientFailure::RATE_LIMITED,
+            ],
+            $thrown,
+        );
+
+        self::assertCount(4, $transport->requests);
+    }
+
+    public function testMiddlewareDelaysAndMissingOutcomes(): void
+    {
+        $transport = new ScriptedTransport(
+            [
+                self::response(content: 'late'),
+            ],
+        );
+
+        $delaying = new CallbackMiddleware(
+            static function (ClientRequestInterface $request): \Generator {
+                yield Duration::fromMicroseconds(1);
+                yield $request;
+            },
+        );
+
+        $silent = new CallbackMiddleware(
+            static function (ClientRequestInterface $request): \Generator {
+                yield from [];
+
+                return null;
+            },
+        );
+
+        $client = self::client($transport);
+
+        $late = $client->withMiddleware($delaying)->get('/x');
+
+        try {
+            $client->withMiddleware($silent)->get('/x');
+
+            self::fail('Expected HttpClientException was not thrown');
+        } catch (HttpClientException $exception) {
+            self::assertSame(HttpClientFailure::PROTOCOL, $exception->failure);
+        }
+
+        self::assertSame('late', $late->body->getRaw());
+        self::assertCount(1, $delaying->seen);
+    }
+
+    public function testWithoutMiddlewareAndConstructorMiddleware(): void
+    {
+        $transport = new ScriptedTransport(
+            [
+                self::response(),
+                self::response(),
+            ],
+        );
+
+        $header = new CallbackMiddleware(
+            static function (ClientRequestInterface $request): \Generator {
+                yield $request->withHeader(new Header('X-Mw', '1'));
+            },
+        );
+
+        $client = new HttpClient(
+            serializerManager: SerializerManagerFactory::create(),
+            baseUrl: 'https://api.example/v1',
+            middleware: [
+                $header,
+            ],
+            transport: $transport,
+        );
+
+        $client->get('/x');
+        $client->withoutMiddleware()->get('/x');
+
+        self::assertSame('1', self::header($transport->requests[0], 'X-Mw'));
+        self::assertNull(self::header($transport->requests[1], 'X-Mw'));
+    }
+
+    public function testMiddlewareDelaysDoNotBlockOtherPendings(): void
+    {
+        $transport = new ScriptedTransport(
+            [
+                self::response(content: 'fast'),
+                self::response(content: 'slow'),
+            ],
+        );
+
+        $client = self::client($transport)->withMiddleware(
+            new CallbackMiddleware(
+                static function (ClientRequestInterface $request): \Generator {
+                    if ($request->url->path === '/v1/slow') {
+                        yield Duration::fromMilliseconds(20);
+                    }
+
+                    yield $request;
+                },
+            ),
+        );
+
+        $order = [];
+
+        foreach (
+            $client->each(
+                [
+                    'slow' => $client->deferred()->get('/slow'),
+                    'fast' => $client->deferred()->get('/fast'),
+                ],
+            ) as $key => $pending
+        ) {
+            $order[] = $key;
+        }
+
+        self::assertSame(
+            [
+                'fast',
+                'slow',
+            ],
+            $order,
+        );
     }
 }
