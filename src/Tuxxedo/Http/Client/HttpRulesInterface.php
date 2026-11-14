@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Client;
 
+use Tuxxedo\Http\Client\Request\ClientRequestInterface;
+use Tuxxedo\Http\Client\Response\ClientResponseInterface;
+
 interface HttpRulesInterface
 {
     /**

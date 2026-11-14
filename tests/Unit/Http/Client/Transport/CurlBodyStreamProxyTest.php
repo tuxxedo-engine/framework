@@ -15,10 +15,10 @@ namespace Unit\Http\Client\Transport;
 
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Http\Client\ClientRequest;
 use Tuxxedo\Http\Client\HttpClientException;
 use Tuxxedo\Http\Client\HttpClientFailure;
 use Tuxxedo\Http\Client\HttpClientTimeout;
+use Tuxxedo\Http\Client\Request\ClientRequest;
 use Tuxxedo\Http\Client\Transport\CurlBodyStreamProxy;
 use Tuxxedo\Http\Client\Transport\CurlTransfer;
 use Tuxxedo\Http\Method;

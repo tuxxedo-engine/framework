@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Http\Client;
+namespace Tuxxedo\Http\Client\Request;
 
 use Tuxxedo\Http\Client\Body\RawBody;
 use Tuxxedo\Http\Client\Body\RequestBodyInterface;

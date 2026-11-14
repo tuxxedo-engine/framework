@@ -11,11 +11,11 @@
 
 declare(strict_types=1);
 
-namespace Unit\Http\Client;
+namespace Unit\Http\Client\Response;
 
 use Fixture\Http\Request\Context\InputContextEnum;
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Http\Client\ClientHeaderContext;
+use Tuxxedo\Http\Client\Response\ClientHeaderContext;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\WeightedHeader;

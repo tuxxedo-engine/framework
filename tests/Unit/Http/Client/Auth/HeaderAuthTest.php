@@ -17,7 +17,7 @@ use PHPUnit\Framework\TestCase;
 use Support\Http\Client\AuthClient;
 use Support\Http\Client\ScriptedTransport;
 use Tuxxedo\Http\Client\Auth\HeaderAuth;
-use Tuxxedo\Http\Client\ClientRequest;
+use Tuxxedo\Http\Client\Request\ClientRequest;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\Method;
 

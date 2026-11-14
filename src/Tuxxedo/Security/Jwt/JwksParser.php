@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Security\Jwt;
 
-use Tuxxedo\Http\Client\ClientRequest;
 use Tuxxedo\Http\Client\HttpClientException;
 use Tuxxedo\Http\Client\HttpClientInterface;
+use Tuxxedo\Http\Client\Request\ClientRequest;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Url\UrlException;

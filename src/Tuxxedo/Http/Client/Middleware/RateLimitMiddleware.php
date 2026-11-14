@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Client\Middleware;
 
 use Tuxxedo\Http\Client\ClientMiddlewareInterface;
-use Tuxxedo\Http\Client\ClientRequestInterface;
 use Tuxxedo\Http\Client\HttpClientException;
+use Tuxxedo\Http\Client\Request\ClientRequestInterface;
 use Tuxxedo\Temporal\ClockInterface;
 use Tuxxedo\Temporal\Duration;
 use Tuxxedo\Temporal\DurationInterface;

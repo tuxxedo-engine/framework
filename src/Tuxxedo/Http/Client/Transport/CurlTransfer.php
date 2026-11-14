@@ -15,11 +15,11 @@ namespace Tuxxedo\Http\Client\Transport;
 
 use Tuxxedo\Http\Client\ClientProgress;
 use Tuxxedo\Http\Client\ClientProgressInterface;
-use Tuxxedo\Http\Client\ClientRequestInterface;
-use Tuxxedo\Http\Client\ClientResponse;
-use Tuxxedo\Http\Client\ClientResponseInfo;
-use Tuxxedo\Http\Client\ClientResponseInterface;
 use Tuxxedo\Http\Client\HttpClientException;
+use Tuxxedo\Http\Client\Request\ClientRequestInterface;
+use Tuxxedo\Http\Client\Response\ClientResponse;
+use Tuxxedo\Http\Client\Response\ClientResponseInfo;
+use Tuxxedo\Http\Client\Response\ClientResponseInterface;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\StatusLine;

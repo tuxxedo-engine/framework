@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Client\Auth;
 
-use Tuxxedo\Http\Client\ClientResponseInterface;
 use Tuxxedo\Http\Client\HttpClientInterface;
+use Tuxxedo\Http\Client\Response\ClientResponseInterface;
 
 interface RefreshableAuthInterface extends AuthInterface
 {

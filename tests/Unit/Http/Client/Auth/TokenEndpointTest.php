@@ -18,9 +18,9 @@ use PHPUnit\Framework\TestCase;
 use Support\Http\Client\AuthClient;
 use Support\Http\Client\ScriptedTransport;
 use Tuxxedo\Http\Client\Auth\TokenEndpoint;
-use Tuxxedo\Http\Client\ClientResponse;
 use Tuxxedo\Http\Client\HttpClientException;
 use Tuxxedo\Http\Client\HttpClientFailure;
+use Tuxxedo\Http\Client\Response\ClientResponse;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Temporal\Instant;
 

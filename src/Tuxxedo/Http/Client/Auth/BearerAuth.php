@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Client\Auth;
 
-use Tuxxedo\Http\Client\ClientRequestInterface;
 use Tuxxedo\Http\Client\HttpClientInterface;
+use Tuxxedo\Http\Client\Request\ClientRequestInterface;
 use Tuxxedo\Http\Header;
 
 readonly class BearerAuth implements AuthInterface

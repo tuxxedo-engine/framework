@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Client;
 
+use Tuxxedo\Http\Client\Request\ClientRequestInterface;
+use Tuxxedo\Http\Client\Response\ClientResponseInterface;
 use Tuxxedo\Http\Client\Rules\Rule;
 use Tuxxedo\Http\Client\Rules\RuleAction;
 use Tuxxedo\Net\IpRangeList;

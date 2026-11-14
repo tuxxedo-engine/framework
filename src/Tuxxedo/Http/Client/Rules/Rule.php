@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Client\Rules;
 
-use Tuxxedo\Http\Client\ClientRequestInterface;
-use Tuxxedo\Http\Client\ClientResponseInterface;
 use Tuxxedo\Http\Client\HttpClientException;
+use Tuxxedo\Http\Client\Request\ClientRequestInterface;
+use Tuxxedo\Http\Client\Response\ClientResponseInterface;
 use Tuxxedo\Net\IpRangeList;
 use Tuxxedo\Net\IpRangeListInterface;
 use Tuxxedo\Net\NetException;

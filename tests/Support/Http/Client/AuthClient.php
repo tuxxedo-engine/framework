@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace Support\Http\Client;
 
 use Support\Serializer\SerializerManagerFactory;
-use Tuxxedo\Http\Client\ClientRequestInterface;
 use Tuxxedo\Http\Client\HttpClient;
+use Tuxxedo\Http\Client\Request\ClientRequestInterface;
 
 class AuthClient
 {

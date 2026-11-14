@@ -14,14 +14,14 @@ declare(strict_types=1);
 namespace Unit\Http\Client;
 
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Http\Client\ClientRequest;
-use Tuxxedo\Http\Client\ClientRequestInterface;
-use Tuxxedo\Http\Client\ClientResponse;
-use Tuxxedo\Http\Client\ClientResponseInterface;
 use Tuxxedo\Http\Client\HttpClientException;
 use Tuxxedo\Http\Client\HttpClientFailure;
 use Tuxxedo\Http\Client\HttpClientTimeout;
 use Tuxxedo\Http\Client\HttpRules;
+use Tuxxedo\Http\Client\Request\ClientRequest;
+use Tuxxedo\Http\Client\Request\ClientRequestInterface;
+use Tuxxedo\Http\Client\Response\ClientResponse;
+use Tuxxedo\Http\Client\Response\ClientResponseInterface;
 use Tuxxedo\Http\Method;
 
 class HttpRulesTest extends TestCase

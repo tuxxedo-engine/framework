@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Unit\Http\Client;
+namespace Unit\Http\Client\Request;
 
 use PHPUnit\Framework\TestCase;
 use Support\Http\Request\Context\StubHeaderContext;
@@ -20,7 +20,7 @@ use Support\Http\Request\Context\StubUploadedFilesContext;
 use Support\Serializer\SerializerManagerFactory;
 use Tuxxedo\Http\Client\Body\JsonBody;
 use Tuxxedo\Http\Client\Body\RawBody;
-use Tuxxedo\Http\Client\ClientRequest;
+use Tuxxedo\Http\Client\Request\ClientRequest;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpVersion;

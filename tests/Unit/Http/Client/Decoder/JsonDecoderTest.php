@@ -17,8 +17,8 @@ use Fixture\Http\Request\Context\BodyContextFixture;
 use Fixture\Serializer\Validated;
 use PHPUnit\Framework\TestCase;
 use Support\Serializer\SerializerManagerFactory;
-use Tuxxedo\Http\Client\ClientBodyContext;
 use Tuxxedo\Http\Client\Decoder\JsonDecoder;
+use Tuxxedo\Http\Client\Response\ClientBodyContext;
 use Tuxxedo\Validator\ValidationException;
 
 class JsonDecoderTest extends TestCase

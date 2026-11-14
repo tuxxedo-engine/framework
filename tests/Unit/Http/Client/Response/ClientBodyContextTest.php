@@ -11,13 +11,13 @@
 
 declare(strict_types=1);
 
-namespace Unit\Http\Client;
+namespace Unit\Http\Client\Response;
 
 use Fixture\Http\Request\Context\BodyContextFixture;
 use Fixture\Serializer\Validated;
 use PHPUnit\Framework\TestCase;
 use Support\Serializer\SerializerManagerFactory;
-use Tuxxedo\Http\Client\ClientBodyContext;
+use Tuxxedo\Http\Client\Response\ClientBodyContext;
 use Tuxxedo\Http\HttpException;
 use Tuxxedo\Http\Stream\ResourceStream;
 use Tuxxedo\Http\Stream\StreamInterface;

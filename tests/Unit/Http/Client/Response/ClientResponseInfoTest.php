@@ -11,14 +11,14 @@
 
 declare(strict_types=1);
 
-namespace Unit\Http\Client;
+namespace Unit\Http\Client\Response;
 
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Http\Client\ClientResponseHopInterface;
-use Tuxxedo\Http\Client\ClientResponseInfo;
-use Tuxxedo\Http\Client\ClientResponseInfoInterface;
-use Tuxxedo\Http\Client\ClientResponseTimings;
-use Tuxxedo\Http\Client\ClientResponseTimingsInterface;
+use Tuxxedo\Http\Client\Response\ClientResponseHopInterface;
+use Tuxxedo\Http\Client\Response\ClientResponseInfo;
+use Tuxxedo\Http\Client\Response\ClientResponseInfoInterface;
+use Tuxxedo\Http\Client\Response\ClientResponseTimings;
+use Tuxxedo\Http\Client\Response\ClientResponseTimingsInterface;
 use Tuxxedo\Http\Response\ResponseCode;
 use Tuxxedo\Http\Url\Url;
 use Tuxxedo\Http\Url\UrlInterface;

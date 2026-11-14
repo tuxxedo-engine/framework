@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Client;
 
+use Tuxxedo\Http\Client\Request\ClientRequestInterface;
+
 readonly class ClientProgress implements ClientProgressInterface
 {
     public function __construct(

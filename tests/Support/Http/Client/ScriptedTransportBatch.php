@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Support\Http\Client;
 
-use Tuxxedo\Http\Client\ClientRequestInterface;
+use Tuxxedo\Http\Client\Request\ClientRequestInterface;
 use Tuxxedo\Http\Client\Transport\TransportBatchInterface;
 use Tuxxedo\Http\Client\Transport\TransportOptionsInterface;
 

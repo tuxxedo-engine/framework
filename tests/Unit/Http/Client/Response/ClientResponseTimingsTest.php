@@ -11,10 +11,10 @@
 
 declare(strict_types=1);
 
-namespace Unit\Http\Client;
+namespace Unit\Http\Client\Response;
 
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Http\Client\ClientResponseTimings;
+use Tuxxedo\Http\Client\Response\ClientResponseTimings;
 use Tuxxedo\Temporal\Duration;
 use Tuxxedo\Temporal\DurationInterface;
 

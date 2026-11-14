@@ -15,7 +15,7 @@ namespace Unit\Http\Client\Rules;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Http\Client\ClientRequest;
+use Tuxxedo\Http\Client\Request\ClientRequest;
 use Tuxxedo\Http\Client\Rules\Rule;
 use Tuxxedo\Http\Client\Rules\RuleAction;
 use Tuxxedo\Http\Method;

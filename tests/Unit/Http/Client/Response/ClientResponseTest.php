@@ -11,14 +11,14 @@
 
 declare(strict_types=1);
 
-namespace Unit\Http\Client;
+namespace Unit\Http\Client\Response;
 
 use Fixture\Http\Request\Context\BodyContextFixture;
 use PHPUnit\Framework\TestCase;
 use Support\Serializer\SerializerManagerFactory;
 use Tuxxedo\Container\Container;
-use Tuxxedo\Http\Client\ClientResponse;
-use Tuxxedo\Http\Client\ClientResponseInfo;
+use Tuxxedo\Http\Client\Response\ClientResponse;
+use Tuxxedo\Http\Client\Response\ClientResponseInfo;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpVersion;

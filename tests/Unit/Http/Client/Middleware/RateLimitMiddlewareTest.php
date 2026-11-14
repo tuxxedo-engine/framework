@@ -15,10 +15,10 @@ namespace Unit\Http\Client\Middleware;
 
 use PHPUnit\Framework\TestCase;
 use Support\Temporal\ManualClock;
-use Tuxxedo\Http\Client\ClientRequest;
 use Tuxxedo\Http\Client\HttpClientException;
 use Tuxxedo\Http\Client\HttpClientFailure;
 use Tuxxedo\Http\Client\Middleware\RateLimitMiddleware;
+use Tuxxedo\Http\Client\Request\ClientRequest;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Temporal\Duration;
 use Tuxxedo\Temporal\DurationInterface;

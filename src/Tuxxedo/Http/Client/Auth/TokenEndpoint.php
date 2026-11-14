@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace Tuxxedo\Http\Client\Auth;
 
 use Tuxxedo\Http\Client\Body\FormBody;
-use Tuxxedo\Http\Client\ClientRequest;
 use Tuxxedo\Http\Client\HttpClientException;
 use Tuxxedo\Http\Client\HttpClientInterface;
+use Tuxxedo\Http\Client\Request\ClientRequest;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\Method;

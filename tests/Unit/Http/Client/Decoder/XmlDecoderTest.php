@@ -16,8 +16,8 @@ namespace Unit\Http\Client\Decoder;
 use Fixture\Http\Request\Context\BodyContextFixture;
 use PHPUnit\Framework\TestCase;
 use Support\Serializer\SerializerManagerFactory;
-use Tuxxedo\Http\Client\ClientBodyContext;
 use Tuxxedo\Http\Client\Decoder\XmlDecoder;
+use Tuxxedo\Http\Client\Response\ClientBodyContext;
 
 class XmlDecoderTest extends TestCase
 {

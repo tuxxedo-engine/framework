@@ -16,8 +16,8 @@ namespace Unit\Http\Client\Decoder;
 use Fixture\Http\Request\Context\BodyContextFixture;
 use PHPUnit\Framework\TestCase;
 use Support\Serializer\SerializerManagerFactory;
-use Tuxxedo\Http\Client\ClientBodyContext;
 use Tuxxedo\Http\Client\Decoder\CsvDecoder;
+use Tuxxedo\Http\Client\Response\ClientBodyContext;
 use Tuxxedo\Http\HttpException;
 
 class CsvDecoderTest extends TestCase

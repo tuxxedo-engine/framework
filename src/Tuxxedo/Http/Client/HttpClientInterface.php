@@ -21,6 +21,8 @@ use Tuxxedo\File\Storage\StorageInterface;
 use Tuxxedo\Http\Client\Auth\AuthInterface;
 use Tuxxedo\Http\Client\Body\RequestBodyInterface;
 use Tuxxedo\Http\Client\Decoder\ResponseDecoderInterface;
+use Tuxxedo\Http\Client\Request\ClientRequestInterface;
+use Tuxxedo\Http\Client\Response\ClientResponseInterface;
 use Tuxxedo\Http\HeaderInterface;
 use Tuxxedo\Http\HttpVersion;
 use Tuxxedo\Http\Method;

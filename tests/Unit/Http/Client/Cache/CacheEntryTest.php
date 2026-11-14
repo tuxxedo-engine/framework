@@ -16,7 +16,7 @@ namespace Unit\Http\Client\Cache;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Http\Client\Cache\CacheEntry;
-use Tuxxedo\Http\Client\ClientRequest;
+use Tuxxedo\Http\Client\Request\ClientRequest;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\HttpVersion;
 use Tuxxedo\Http\Method;

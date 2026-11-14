@@ -13,10 +13,10 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Http\Client\Transport;
 
-use Tuxxedo\Http\Client\ClientRequestInterface;
-use Tuxxedo\Http\Client\ClientResponseInterface;
 use Tuxxedo\Http\Client\HttpClientException;
 use Tuxxedo\Http\Client\HttpClientTimeout;
+use Tuxxedo\Http\Client\Request\ClientRequestInterface;
+use Tuxxedo\Http\Client\Response\ClientResponseInterface;
 use Tuxxedo\Http\HttpVersion;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Stream\Stream;

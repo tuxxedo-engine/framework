@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace Support\Http\Client;
 
 use Tuxxedo\Http\Client\ClientMiddlewareInterface;
-use Tuxxedo\Http\Client\ClientRequestInterface;
-use Tuxxedo\Http\Client\ClientResponseInterface;
 use Tuxxedo\Http\Client\HttpClientException;
+use Tuxxedo\Http\Client\Request\ClientRequestInterface;
+use Tuxxedo\Http\Client\Response\ClientResponseInterface;
 use Tuxxedo\Temporal\DurationInterface;
 
 class CallbackMiddleware implements ClientMiddlewareInterface

@@ -15,11 +15,11 @@ namespace Unit\Http\Client;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Tuxxedo\Http\Client\ClientRequest;
-use Tuxxedo\Http\Client\ClientResponse;
 use Tuxxedo\Http\Client\HttpClientException;
 use Tuxxedo\Http\Client\HttpClientFailure;
 use Tuxxedo\Http\Client\HttpClientTimeout;
+use Tuxxedo\Http\Client\Request\ClientRequest;
+use Tuxxedo\Http\Client\Response\ClientResponse;
 use Tuxxedo\Http\Header;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Response\ResponseCode;

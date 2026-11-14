@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace Console\GitHub;
 
 use Tuxxedo\Http\Client\ClientMiddlewareInterface;
-use Tuxxedo\Http\Client\ClientRequestInterface;
 use Tuxxedo\Http\Client\HttpClientException;
+use Tuxxedo\Http\Client\Request\ClientRequestInterface;
 use Tuxxedo\Logger\LoggerInterface;
 
 class ErrorLogMiddleware implements ClientMiddlewareInterface
