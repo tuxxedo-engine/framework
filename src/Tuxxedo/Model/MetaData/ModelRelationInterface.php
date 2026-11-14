@@ -78,4 +78,18 @@ interface ModelRelationInterface
     public ?array $pivotTargetColumns {
         get;
     }
+
+    /**
+     * @var non-empty-list<string>|null
+     */
+    public ?array $secondLocalKeyColumns {
+        get;
+    }
+
+    /**
+     * @var non-empty-list<string>|null
+     */
+    public ?array $secondKeyColumns {
+        get;
+    }
 }

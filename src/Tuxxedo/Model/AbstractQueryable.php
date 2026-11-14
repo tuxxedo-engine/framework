@@ -1872,23 +1872,31 @@ abstract class AbstractQueryable implements QueryableInterface
 
         if ($attribute instanceof HasManyThrough || $attribute instanceof HasOneThrough) {
             $throughMetaData = $manager->metaData->getModel($attribute->through);
+            $firstKeyColumns = $relation->foreignKeyColumns;
+            $localKeyColumns = $relation->referencedKeyColumns;
+            $secondLocalKeyColumns = $relation->secondLocalKeyColumns;
+            $secondKeyColumns = $relation->secondKeyColumns;
+
+            if (
+                $firstKeyColumns === null ||
+                $localKeyColumns === null ||
+                $secondLocalKeyColumns === null ||
+                $secondKeyColumns === null
+            ) {
+                // @codeCoverageIgnoreStart
+                throw ModelException::fromRelationNotFoundOnModel(
+                    modelClass: $parentMetaData->model,
+                    property: $relation->property,
+                );
+                // @codeCoverageIgnoreEnd
+            }
 
             return new ModelRelationLink(
                 target: $targetMetaData,
-                parentOn: [
-                    [
-                        $attribute->firstKey,
-                        $attribute->localKey ?? $this->requirePrimaryKeyColumn($parentMetaData),
-                    ],
-                ],
+                parentOn: $this->pairColumns($firstKeyColumns, $localKeyColumns),
                 throughTable: $throughMetaData->table,
                 throughMetaData: $throughMetaData,
-                throughOn: [
-                    [
-                        $attribute->secondLocalKey ?? $this->requirePrimaryKeyColumn($throughMetaData),
-                        $attribute->secondKey,
-                    ],
-                ],
+                throughOn: $this->pairColumns($secondLocalKeyColumns, $secondKeyColumns),
             );
         }
 
@@ -1995,19 +2003,6 @@ abstract class AbstractQueryable implements QueryableInterface
         );
     }
 
-    private function requirePrimaryKeyColumn(
-        ModelMetaDataInterface $metaData,
-    ): string {
-        if (!$metaData->key instanceof ModelPrimaryKeyInterface) {
-            // @codeCoverageIgnoreStart
-            throw ModelException::fromCantFetchWithoutPrimaryKey(
-                modelClass: $metaData->model,
-            );
-            // @codeCoverageIgnoreEnd
-        }
-
-        return $metaData->key->column;
-    }
 
     /**
      * @return non-empty-list<string>

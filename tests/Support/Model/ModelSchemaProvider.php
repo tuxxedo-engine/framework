@@ -141,6 +141,10 @@ interface ModelSchemaProvider
 
     public function compositeMorphTagsPivotSchemaSql(): string;
 
+    public function compositeProjectsSchemaSql(): string;
+
+    public function compositeTasksSchemaSql(): string;
+
     public function uuidV7OwnersSchemaSql(): string;
 
     public function uuidV7ChildrenSchemaSql(): string;

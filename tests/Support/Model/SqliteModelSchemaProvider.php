@@ -608,6 +608,27 @@ class SqliteModelSchemaProvider implements ModelSchemaProvider
             ')';
     }
 
+    public function compositeProjectsSchemaSql(): string
+    {
+        return 'CREATE TABLE composite_projects (' .
+            'space TEXT NOT NULL, ' .
+            'slug TEXT NOT NULL, ' .
+            'owner_scope TEXT NOT NULL, ' .
+            'owner_name TEXT NOT NULL, ' .
+            'PRIMARY KEY (space, slug)' .
+            ')';
+    }
+
+    public function compositeTasksSchemaSql(): string
+    {
+        return 'CREATE TABLE composite_tasks (' .
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, ' .
+            'project_space TEXT NOT NULL, ' .
+            'project_slug TEXT NOT NULL, ' .
+            'label TEXT NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
     public function uuidV7OwnersSchemaSql(): string
     {
         return 'CREATE TABLE uuid_v7_owners (' .

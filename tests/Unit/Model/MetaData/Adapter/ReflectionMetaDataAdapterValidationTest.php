@@ -25,7 +25,7 @@ use Fixture\Model\Broken\BulkDeleteChildBehavior;
 use Fixture\Model\Broken\BulkDeleteChildCascade;
 use Fixture\Model\Broken\BulkDeleteRequiresCascade;
 use Fixture\Model\Broken\CascadeBareTarget;
-use Fixture\Model\Broken\CompositeKeyThroughRelation;
+use Fixture\Model\Broken\CompositeKeyThroughArityMismatch;
 use Fixture\Model\Broken\CompositeKeyUnknownColumn;
 use Fixture\Model\Broken\DuplicatePrimaryKey;
 use Fixture\Model\Broken\HardParentSoftChildCascadeMismatch;
@@ -52,6 +52,8 @@ use Fixture\Model\Broken\SetNullBareTarget;
 use Fixture\Model\Broken\SetNullRequiresNullable;
 use Fixture\Model\Broken\SoftDeleteCascadeMismatch;
 use Fixture\Model\Broken\ThroughClassNotAModel;
+use Fixture\Model\Broken\ThroughCompositeSecondKeyArityMismatch;
+use Fixture\Model\Broken\ThroughFirstKeyMapMissingColumn;
 use Fixture\Model\Broken\ThroughFirstKeyUnknown;
 use Fixture\Model\Broken\ThroughHasNoColumns;
 use Fixture\Model\Broken\ThroughLocalKeyUnknown;
@@ -355,11 +357,27 @@ class ReflectionMetaDataAdapterValidationTest extends TestCase
         );
     }
 
-    public function testRejectsThroughOnCompositeKeyParent(): void
+    public function testRejectsThroughFirstKeyArityMismatchOnCompositeKeyParent(): void
     {
         $this->assertRejectsModelWithMessage(
-            modelClass: CompositeKeyThroughRelation::class,
-            needle: 'composite-key parent',
+            modelClass: CompositeKeyThroughArityMismatch::class,
+            needle: 'firstKey with 1 column(s) but the referenced parent key has 2 column(s)',
+        );
+    }
+
+    public function testRejectsThroughSecondKeyArityMismatchOnCompositeThroughModel(): void
+    {
+        $this->assertRejectsModelWithMessage(
+            modelClass: ThroughCompositeSecondKeyArityMismatch::class,
+            needle: 'secondKey with 1 column(s) but the referenced parent key has 2 column(s)',
+        );
+    }
+
+    public function testRejectsThroughFirstKeyMapMissingLocalKeyColumn(): void
+    {
+        $this->assertRejectsModelWithMessage(
+            modelClass: ThroughFirstKeyMapMissingColumn::class,
+            needle: 'parent column "name"',
         );
     }
 

@@ -19,7 +19,9 @@ use Fixture\Model\Composite\CompositeOwner;
 use Fixture\Model\Composite\CompositeOwnerHasManyChild;
 use Fixture\Model\Composite\CompositeOwnerHasOneChild;
 use Fixture\Model\Composite\CompositeTag;
+use Fixture\Model\Composite\CompositeTask;
 use Fixture\Model\User;
+use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Model\Relation;
 use Tuxxedo\Model\ValidationScope;
 
@@ -39,8 +41,77 @@ abstract class AbstractCompositeKeyRelationsIntegrationTestCase extends Abstract
         $this->createCompositeOwnerTagsPivotTable();
         $this->createCompositeMorphNotesTable();
         $this->createCompositeMorphTagsPivotTable();
+        $this->createCompositeProjectsTable();
+        $this->createCompositeTasksTable();
 
         $this->seedUser(id: 1, name: 'Alice');
+
+        foreach (
+            [
+                [
+                    'eng',
+                    'web',
+                    'alpha',
+                ],
+                [
+                    'eng',
+                    'api',
+                    'alpha',
+                ],
+                [
+                    'ops',
+                    'infra',
+                    'beta',
+                ],
+            ] as [$space, $slug, $ownerName]
+        ) {
+            $this->connection->insert(
+                table: 'composite_projects',
+            )
+                ->set(column: 'space', value: $space)
+                ->set(column: 'slug', value: $slug)
+                ->set(column: 'owner_scope', value: 'system')
+                ->set(column: 'owner_name', value: $ownerName)
+                ->execute();
+        }
+
+        foreach (
+            [
+                [
+                    'eng',
+                    'web',
+                    'Design',
+                ],
+                [
+                    'eng',
+                    'web',
+                    'Build',
+                ],
+                [
+                    'eng',
+                    'api',
+                    'Spec',
+                ],
+                [
+                    'ops',
+                    'infra',
+                    'Rack',
+                ],
+                [
+                    'ops',
+                    'api',
+                    'Wrong space',
+                ],
+            ] as [$space, $slug, $label]
+        ) {
+            $this->connection->insert(
+                table: 'composite_tasks',
+            )
+                ->set(column: 'project_space', value: $space)
+                ->set(column: 'project_slug', value: $slug)
+                ->set(column: 'label', value: $label)
+                ->execute();
+        }
 
         $this->seedCompositeOwner(
             scope: 'system',
@@ -1101,5 +1172,194 @@ abstract class AbstractCompositeKeyRelationsIntegrationTestCase extends Abstract
             ->whereHas(relationName: 'tags');
 
         self::assertSame(2, $withTags->count());
+    }
+
+    public function testHasManyThroughLazyLoadsAcrossCompositeHops(): void
+    {
+        $owner = $this->modelsManager->fetchByCompositeKey(
+            class: CompositeOwner::class,
+            keys: [
+                'scope' => 'system',
+                'name' => 'alpha',
+            ],
+        );
+
+        self::assertSame(
+            [
+                'Build',
+                'Design',
+                'Spec',
+            ],
+            self::taskLabels($owner->tasks ?? []),
+        );
+
+        self::assertSame(3, $owner->tasks?->count());
+    }
+
+    public function testHasManyThroughEagerLoadsPartitionedPerParent(): void
+    {
+        /** @var list<CompositeOwner> $owners */
+        $owners = \iterator_to_array($this->modelsManager->findAll(
+            class: CompositeOwner::class,
+            with: [
+                'tasks' => null,
+            ],
+        ), preserve_keys: false);
+
+        $byName = [];
+
+        foreach ($owners as $owner) {
+            $byName[$owner->name] = $owner;
+        }
+
+        self::assertSame(
+            [
+                'Build',
+                'Design',
+                'Spec',
+            ],
+            self::taskLabels($byName['alpha']->tasks ?? []),
+        );
+
+        self::assertSame(
+            [
+                'Rack',
+            ],
+            self::taskLabels($byName['beta']->tasks ?? []),
+        );
+    }
+
+    public function testHasManyThroughEagerLoadsEmptyWhenNoThroughRowsMatch(): void
+    {
+        $this->connection->delete(
+            table: 'composite_projects',
+        )->execute();
+
+        /** @var list<CompositeOwner> $owners */
+        $owners = \iterator_to_array($this->modelsManager->findAll(
+            class: CompositeOwner::class,
+            with: [
+                'tasks' => null,
+            ],
+        ), preserve_keys: false);
+
+        self::assertSame(2, \sizeof($owners));
+
+        foreach ($owners as $owner) {
+            self::assertSame([], self::taskLabels($owner->tasks ?? []));
+        }
+    }
+
+    public function testHasOneThroughLoadsLazilyAndEagerly(): void
+    {
+        $owner = $this->modelsManager->fetchByCompositeKey(
+            class: CompositeOwner::class,
+            keys: [
+                'scope' => 'system',
+                'name' => 'beta',
+            ],
+        );
+
+        self::assertInstanceOf(CompositeTask::class, $owner->firstTask);
+        self::assertSame('Rack', $owner->firstTask->label);
+
+        /** @var list<CompositeOwner> $owners */
+        $owners = \iterator_to_array($this->modelsManager->findAll(
+            class: CompositeOwner::class,
+            with: [
+                'firstTask' => null,
+            ],
+        ), preserve_keys: false);
+
+        foreach ($owners as $eagerOwner) {
+            self::assertInstanceOf(CompositeTask::class, $eagerOwner->firstTask);
+
+            if ($eagerOwner->name === 'beta') {
+                self::assertSame('Rack', $eagerOwner->firstTask->label);
+            } else {
+                self::assertContains(
+                    $eagerOwner->firstTask->label,
+                    [
+                        'Build',
+                        'Design',
+                        'Spec',
+                    ],
+                );
+            }
+        }
+    }
+
+    public function testWhereHasThroughMatchesBothCompositeHops(): void
+    {
+        $owners = $this->modelsManager
+            ->query(CompositeOwner::class)
+            ->whereHas(
+                relationName: 'tasks',
+                callback: static function (SelectStatementInterface $statement): void {
+                    $statement->where(
+                        column: 'label',
+                        value: 'Rack',
+                    );
+                },
+            );
+
+        self::assertSame(1, $owners->count());
+
+        $none = $this->modelsManager
+            ->query(CompositeOwner::class)
+            ->whereHas(
+                relationName: 'tasks',
+                callback: static function (SelectStatementInterface $statement): void {
+                    $statement->where(
+                        column: 'label',
+                        value: 'Wrong space',
+                    );
+                },
+            );
+
+        self::assertSame(0, $none->count());
+    }
+
+    public function testWithCountThroughCountsAcrossCompositeHops(): void
+    {
+        /** @var list<CompositeOwner> $owners */
+        $owners = \iterator_to_array($this->modelsManager
+            ->query(CompositeOwner::class)
+            ->withCount(relationName: 'tasks')
+            ->fetchAll(), preserve_keys: false);
+
+        $counts = [];
+
+        foreach ($owners as $owner) {
+            $counts[$owner->name] = $owner->tasksCount;
+        }
+
+        \ksort($counts);
+
+        self::assertSame(
+            [
+                'alpha' => 3,
+                'beta' => 1,
+            ],
+            $counts,
+        );
+    }
+
+    /**
+     * @param iterable<CompositeTask> $tasks
+     * @return list<string>
+     */
+    private static function taskLabels(
+        iterable $tasks,
+    ): array {
+        $labels = [];
+
+        foreach ($tasks as $task) {
+            $labels[] = $task->label;
+        }
+
+        \sort($labels);
+
+        return $labels;
     }
 }

@@ -13,11 +13,14 @@ declare(strict_types=1);
 
 namespace Fixture\Model\Composite;
 
+use Tuxxedo\Model\Attribute\Aggregate\CountAggregate;
 use Tuxxedo\Model\Attribute\Column\Varchar;
 use Tuxxedo\Model\Attribute\CompositeKey;
 use Tuxxedo\Model\Attribute\Relation\BelongsToMany;
 use Tuxxedo\Model\Attribute\Relation\HasMany;
+use Tuxxedo\Model\Attribute\Relation\HasManyThrough;
 use Tuxxedo\Model\Attribute\Relation\HasOne;
+use Tuxxedo\Model\Attribute\Relation\HasOneThrough;
 use Tuxxedo\Model\Attribute\Relation\MorphMany;
 use Tuxxedo\Model\Attribute\Relation\MorphToMany;
 use Tuxxedo\Model\Attribute\Table;
@@ -106,4 +109,46 @@ class CompositeOwner
         ],
     )]
     public ?Relation $morphTags = null;
+
+    /**
+     * @var Relation<CompositeTask>|null
+     */
+    #[HasManyThrough(
+        related: CompositeTask::class,
+        through: CompositeProject::class,
+        firstKey: [
+            'owner_scope',
+            'owner_name',
+        ],
+        secondKey: [
+            'project_space',
+            'project_slug',
+        ],
+    )]
+    public ?Relation $tasks = null;
+
+    #[HasOneThrough(
+        related: CompositeTask::class,
+        through: CompositeProject::class,
+        firstKey: [
+            'name' => 'owner_name',
+            'scope' => 'owner_scope',
+        ],
+        secondKey: [
+            'slug' => 'project_slug',
+            'space' => 'project_space',
+        ],
+        localKey: [
+            'scope' => 'scope',
+            'name' => 'name',
+        ],
+        secondLocalKey: [
+            'space' => 'space',
+            'slug' => 'slug',
+        ],
+    )]
+    public ?CompositeTask $firstTask = null;
+
+    #[CountAggregate(relation: 'tasks')]
+    public ?int $tasksCount = null;
 }

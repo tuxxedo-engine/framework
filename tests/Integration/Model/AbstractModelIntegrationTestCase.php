@@ -285,6 +285,16 @@ abstract class AbstractModelIntegrationTestCase extends TestCase
         $this->executeSchema($this->schemaProvider->compositeMorphTagsPivotSchemaSql());
     }
 
+    protected function createCompositeProjectsTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->compositeProjectsSchemaSql());
+    }
+
+    protected function createCompositeTasksTable(): void
+    {
+        $this->executeSchema($this->schemaProvider->compositeTasksSchemaSql());
+    }
+
     protected function createUuidV7OwnersTable(): void
     {
         $this->executeSchema($this->schemaProvider->uuidV7OwnersSchemaSql());

@@ -18,9 +18,9 @@ use Tuxxedo\Model\Attribute\CompositeKey;
 use Tuxxedo\Model\Attribute\Relation\HasOneThrough;
 use Tuxxedo\Model\Attribute\Table;
 
-#[Table(name: 'composite_key_through_relation')]
+#[Table(name: 'composite_key_through_arity_mismatch')]
 #[CompositeKey('scope', 'name')]
-class CompositeKeyThroughRelation
+class CompositeKeyThroughArityMismatch
 {
     #[Varchar(length: 64)]
     public string $scope = '';

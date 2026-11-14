@@ -608,6 +608,27 @@ class MysqlModelSchemaProvider implements ModelSchemaProvider
             ')';
     }
 
+    public function compositeProjectsSchemaSql(): string
+    {
+        return 'CREATE TABLE composite_projects (' .
+            'space VARCHAR(64) NOT NULL, ' .
+            'slug VARCHAR(64) NOT NULL, ' .
+            'owner_scope VARCHAR(64) NOT NULL, ' .
+            'owner_name VARCHAR(64) NOT NULL, ' .
+            'PRIMARY KEY (space, slug)' .
+            ')';
+    }
+
+    public function compositeTasksSchemaSql(): string
+    {
+        return 'CREATE TABLE composite_tasks (' .
+            'id INT AUTO_INCREMENT PRIMARY KEY, ' .
+            'project_space VARCHAR(64) NOT NULL, ' .
+            'project_slug VARCHAR(64) NOT NULL, ' .
+            'label VARCHAR(255) NOT NULL DEFAULT \'\'' .
+            ')';
+    }
+
     public function uuidV7OwnersSchemaSql(): string
     {
         return 'CREATE TABLE uuid_v7_owners (' .

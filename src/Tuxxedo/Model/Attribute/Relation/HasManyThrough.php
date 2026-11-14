@@ -24,14 +24,18 @@ readonly class HasManyThrough implements RelationInterface
     /**
      * @param class-string $related
      * @param class-string $through
+     * @param string|non-empty-array<string> $firstKey
+     * @param string|non-empty-array<string> $secondKey
+     * @param string|non-empty-array<string>|null $localKey
+     * @param string|non-empty-array<string>|null $secondLocalKey
      */
     public function __construct(
         public string $related,
         public string $through,
-        public string $firstKey,
-        public string $secondKey,
-        public ?string $localKey = null,
-        public ?string $secondLocalKey = null,
+        public string|array $firstKey,
+        public string|array $secondKey,
+        public string|array|null $localKey = null,
+        public string|array|null $secondLocalKey = null,
     ) {
         $this->onSave = CascadeAction::NO_ACTION;
         $this->onDelete = CascadeAction::NO_ACTION;

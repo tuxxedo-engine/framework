@@ -24,6 +24,8 @@ readonly class ModelRelation implements ModelRelationInterface
      * @param non-empty-list<string>|null $referencedKeyColumns
      * @param non-empty-list<string>|null $pivotSourceColumns
      * @param non-empty-list<string>|null $pivotTargetColumns
+     * @param non-empty-list<string>|null $secondLocalKeyColumns
+     * @param non-empty-list<string>|null $secondKeyColumns
      */
     public function __construct(
         public string $property,
@@ -37,6 +39,8 @@ readonly class ModelRelation implements ModelRelationInterface
         public ?array $referencedKeyColumns = null,
         public ?array $pivotSourceColumns = null,
         public ?array $pivotTargetColumns = null,
+        public ?array $secondLocalKeyColumns = null,
+        public ?array $secondKeyColumns = null,
     ) {
     }
 }

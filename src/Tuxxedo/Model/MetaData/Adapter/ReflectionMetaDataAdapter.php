@@ -262,17 +262,6 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
 
             $attribute = $relationAttributes[0];
 
-            if ($sourceCompositeKey !== null && (
-                $attribute instanceof HasOneThrough ||
-                $attribute instanceof HasManyThrough
-            )) {
-                throw ModelException::fromCompositeKeyRelationsUnsupported(
-                    modelClass: $class->name,
-                    property: $property->name,
-                    relationClass: $attribute::class,
-                );
-            }
-
             if ($attribute instanceof PolymorphicRelationInterface) {
                 $this->processPolymorphicRelation(
                     class: $class,
@@ -326,10 +315,10 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 );
             }
 
-            $foreignKeyColumns = null;
-            $referencedKeyColumns = null;
             $pivotSourceColumns = null;
             $pivotTargetColumns = null;
+            $secondLocalKeyColumns = null;
+            $secondKeyColumns = null;
 
             if ($attribute instanceof HasOneThrough || $attribute instanceof HasManyThrough) {
                 $throughClass = $attribute->through;
@@ -369,7 +358,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                     );
                 }
 
-                $this->validateThroughRelationKeys(
+                $normalized = $this->validateThroughRelationKeys(
                     modelClass: $class->name,
                     property: $property->name,
                     attribute: $attribute,
@@ -379,7 +368,13 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                     targetColumnNames: $targetColumnNames,
                     throughColumnNames: $throughColumnNames,
                     sourcePrimaryKey: $sourcePrimaryKey,
+                    sourceCompositeKey: $sourceCompositeKey,
                 );
+
+                $foreignKeyColumns = $normalized[0];
+                $referencedKeyColumns = $normalized[1];
+                $secondLocalKeyColumns = $normalized[2];
+                $secondKeyColumns = $normalized[3];
             } else {
                 $normalized = $this->validateRelationKeys(
                     modelClass: $class->name,
@@ -423,6 +418,8 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 referencedKeyColumns: $referencedKeyColumns,
                 pivotSourceColumns: $pivotSourceColumns,
                 pivotTargetColumns: $pivotTargetColumns,
+                secondLocalKeyColumns: $secondLocalKeyColumns,
+                secondKeyColumns: $secondKeyColumns,
             );
         }
 
@@ -1307,24 +1304,6 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         }
     }
 
-    /**
-     * @param \ReflectionClass<object> $reflection
-     */
-    private function hasPrimaryKeyFromReflection(
-        \ReflectionClass $reflection,
-    ): bool {
-        foreach ($reflection->getProperties() as $property) {
-            foreach ($property->getAttributes(ColumnInterface::class, \ReflectionAttribute::IS_INSTANCEOF) as $columnAttribute) {
-                $instance = $columnAttribute->newInstance();
-
-                if (\property_exists($instance, 'primaryKey') && $instance->primaryKey === true) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
 
     /**
      * @param class-string $modelClass
@@ -1583,6 +1562,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
      * @param string[] $sourceColumnNames
      * @param string[] $targetColumnNames
      * @param string[] $throughColumnNames
+     * @return array{non-empty-list<string>, non-empty-list<string>, non-empty-list<string>, non-empty-list<string>}
      *
      * @throws ModelException
      */
@@ -1596,62 +1576,126 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         array $targetColumnNames,
         array $throughColumnNames,
         ?ModelPrimaryKeyInterface $sourcePrimaryKey,
-    ): void {
-        if (!\in_array($attribute->firstKey, $throughColumnNames, true)) {
-            throw ModelException::fromRelationKeyReferencesUnknownColumn(
+        ?ModelCompositeKeyInterface $sourceCompositeKey,
+    ): array {
+        $localKeyColumns = $this->resolveThroughHopColumns(
+            value: $attribute->localKey,
+            keyColumns: $this->resolveSourceKeyColumns($sourcePrimaryKey, $sourceCompositeKey),
+            modelClass: $modelClass,
+            property: $property,
+            keyKind: 'localKey',
+            side: 'source',
+        );
+
+        $firstKeyColumns = RelationKeyNormalizer::toParentOrderedColumns(
+            value: $attribute->firstKey,
+            parentPkColumns: $localKeyColumns,
+            modelClass: $modelClass,
+            property: $property,
+            keyKind: 'firstKey',
+        );
+
+        $secondLocalKeyColumns = $this->resolveThroughHopColumns(
+            value: $attribute->secondLocalKey,
+            keyColumns: $this->resolveTargetKeyColumnsFromReflection($throughReflection),
+            modelClass: $modelClass,
+            property: $property,
+            keyKind: 'secondLocalKey',
+            side: 'through',
+        );
+
+        $secondKeyColumns = RelationKeyNormalizer::toParentOrderedColumns(
+            value: $attribute->secondKey,
+            parentPkColumns: $secondLocalKeyColumns,
+            modelClass: $modelClass,
+            property: $property,
+            keyKind: 'secondKey',
+        );
+
+        foreach (
+            [
+                [
+                    'localKey',
+                    $localKeyColumns,
+                    $sourceColumnNames,
+                    $modelClass,
+                ],
+                [
+                    'firstKey',
+                    $firstKeyColumns,
+                    $throughColumnNames,
+                    $attribute->through,
+                ],
+                [
+                    'secondLocalKey',
+                    $secondLocalKeyColumns,
+                    $throughColumnNames,
+                    $attribute->through,
+                ],
+                [
+                    'secondKey',
+                    $secondKeyColumns,
+                    $targetColumnNames,
+                    $relatedClass,
+                ],
+            ] as [$keyKind, $keyColumns, $columnNames, $referencedClass]
+        ) {
+            foreach ($keyColumns as $column) {
+                if (!\in_array($column, $columnNames, true)) {
+                    throw ModelException::fromRelationKeyReferencesUnknownColumn(
+                        modelClass: $modelClass,
+                        property: $property,
+                        keyKind: $keyKind,
+                        keyValue: $column,
+                        referencedClass: $referencedClass,
+                    );
+                }
+            }
+        }
+
+        return [
+            $firstKeyColumns,
+            $localKeyColumns,
+            $secondLocalKeyColumns,
+            $secondKeyColumns,
+        ];
+    }
+
+    /**
+     * @param string|non-empty-array<string>|null $value
+     * @param non-empty-list<string>|null $keyColumns
+     * @param class-string $modelClass
+     * @return non-empty-list<string>
+     *
+     * @throws ModelException
+     */
+    private function resolveThroughHopColumns(
+        string|array|null $value,
+        ?array $keyColumns,
+        string $modelClass,
+        string $property,
+        string $keyKind,
+        string $side,
+    ): array {
+        if ($value === null) {
+            return $keyColumns ?? throw ModelException::fromRelationRequiresPrimaryKey(
                 modelClass: $modelClass,
                 property: $property,
-                keyKind: 'firstKey',
-                keyValue: $attribute->firstKey,
-                referencedClass: $attribute->through,
+                side: $side,
             );
         }
 
-        if (!\in_array($attribute->secondKey, $targetColumnNames, true)) {
-            throw ModelException::fromRelationKeyReferencesUnknownColumn(
-                modelClass: $modelClass,
-                property: $property,
-                keyKind: 'secondKey',
-                keyValue: $attribute->secondKey,
-                referencedClass: $relatedClass,
-            );
+        if (\is_string($value) || \array_is_list($value) || $keyColumns === null) {
+            return RelationKeyNormalizer::toColumns($value);
         }
 
-        if ($attribute->localKey !== null && !\in_array($attribute->localKey, $sourceColumnNames, true)) {
-            throw ModelException::fromRelationKeyReferencesUnknownColumn(
-                modelClass: $modelClass,
-                property: $property,
-                keyKind: 'localKey',
-                keyValue: $attribute->localKey,
-                referencedClass: $modelClass,
-            );
-        }
-
-        if ($attribute->localKey === null && $sourcePrimaryKey === null) {
-            throw ModelException::fromRelationRequiresPrimaryKey(
-                modelClass: $modelClass,
-                property: $property,
-                side: 'source',
-            );
-        }
-
-        if ($attribute->secondLocalKey !== null && !\in_array($attribute->secondLocalKey, $throughColumnNames, true)) {
-            throw ModelException::fromRelationKeyReferencesUnknownColumn(
-                modelClass: $modelClass,
-                property: $property,
-                keyKind: 'secondLocalKey',
-                keyValue: $attribute->secondLocalKey,
-                referencedClass: $attribute->through,
-            );
-        }
-
-        if ($attribute->secondLocalKey === null && !$this->hasPrimaryKeyFromReflection($throughReflection)) {
-            throw ModelException::fromRelationRequiresPrimaryKey(
-                modelClass: $modelClass,
-                property: $property,
-                side: 'through',
-            );
-        }
+        return RelationKeyNormalizer::toParentOrderedColumns(
+            value: $value,
+            parentPkColumns: $keyColumns,
+            modelClass: $modelClass,
+            property: $property,
+            keyKind: $keyKind,
+        );
     }
 
     /**
