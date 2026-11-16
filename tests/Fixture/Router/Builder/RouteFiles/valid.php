@@ -16,13 +16,13 @@ use Tuxxedo\Router\Builder\RouteBuilderInterface;
 
 return static fn (RouteBuilderInterface $builder): array => $builder
     ->get(
-        uri: '/',
+        path: '/',
         controller: SimpleController::class,
         action: 'home',
         name: 'home',
     )
     ->get(
-        uri: '/about',
+        path: '/about',
         controller: SimpleController::class,
         action: 'about',
         name: 'about',

@@ -16,9 +16,6 @@ namespace Tuxxedo\Router;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\File\FileCollectionFactory;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
-use Tuxxedo\Router\Attribute\Argument;
-use Tuxxedo\Router\Attribute\ArgumentConsumerInterface;
-use Tuxxedo\Router\Attribute\Middleware;
 use Tuxxedo\Router\Attribute\Route as RouteAttr;
 use Tuxxedo\Router\Compiler\PathCompiler;
 use Tuxxedo\Router\Compiler\PathCompilerInterface;
@@ -28,7 +25,8 @@ use Tuxxedo\Router\Pattern\TypePatternRegistryInterface;
 class RouteDiscoverer implements RouteDiscovererInterface
 {
     public readonly TypePatternRegistryInterface $patterns;
-    private readonly PathCompilerInterface $pathCompiler;
+    private readonly RouteArgumentResolverInterface $argumentResolver;
+    private readonly RouteMiddlewareResolverInterface $middlewareResolver;
     private bool $hasDiscoveryRun = false;
 
     public function __construct(
@@ -38,10 +36,17 @@ class RouteDiscoverer implements RouteDiscovererInterface
         public readonly bool $strictMode = false,
         ?TypePatternRegistryInterface $patterns = null,
         ?PathCompilerInterface $pathCompiler = null,
+        ?RouteArgumentResolverInterface $argumentResolver = null,
+        ?RouteMiddlewareResolverInterface $middlewareResolver = null,
     ) {
         $this->patterns = $patterns ?? TypePatternRegistry::createDefault();
-        $this->pathCompiler = $pathCompiler ?? new PathCompiler(
-            patterns: $this->patterns,
+        $this->argumentResolver = $argumentResolver ?? new RouteArgumentResolver(
+            pathCompiler: $pathCompiler ?? new PathCompiler(
+                patterns: $this->patterns,
+            ),
+        );
+        $this->middlewareResolver = $middlewareResolver ?? new RouteMiddlewareResolver(
+            container: $this->container,
         );
     }
 
@@ -94,7 +99,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
                 continue;
             }
 
-            $baseMiddleware = $this->getMiddleware($reflector);
+            $baseMiddleware = $this->middlewareResolver->attributes($reflector);
             $controllerAttribute = $this->getControllerAttribute($reflector);
 
             foreach ($reflector->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
@@ -111,7 +116,7 @@ class RouteDiscoverer implements RouteDiscovererInterface
 
                 $middleware = \array_merge(
                     $baseMiddleware,
-                    $this->getMiddleware($method),
+                    $this->middlewareResolver->attributes($method),
                 );
 
                 foreach ($method->getAttributes(RouteAttr::class, \ReflectionAttribute::IS_INSTANCEOF) as $attribute) {
@@ -233,43 +238,21 @@ class RouteDiscoverer implements RouteDiscovererInterface
             $namedRoutes[] = $route->name;
         }
 
-        $compiled = $this->pathCompiler->compile(
-            path: $path,
-            prefix: $prefix,
-        );
-
-        if (\sizeof($compiled->argumentNodes) > 0) {
-            yield from $this->discoverRoutesWithArguments(
+        try {
+            $resolved = $this->argumentResolver->resolve(
                 path: $path,
-                regexPath: $compiled->regexPath,
-                middleware: $middleware,
-                nodes: $compiled->argumentNodes,
-                className: $reflector->getName(),
-                method: $method,
-                route: $route,
                 prefix: $prefix,
+                method: $method,
             );
-        } elseif (\sizeof($route->methods) > 0) {
-            $emittedMethods = [];
+        } catch (RouterException $exception) {
+            $this->handleError(
+                static fn (): RouterException => $exception,
+            );
 
-            foreach ($route->methods as $requestMethod) {
-                if (\in_array($requestMethod, $emittedMethods, true)) {
-                    continue;
-                }
+            return;
+        }
 
-                $emittedMethods[] = $requestMethod;
-
-                yield new Route(
-                    method: $requestMethod,
-                    path: $path,
-                    controller: $reflector->getName(),
-                    action: $method->getName(),
-                    name: $route->name,
-                    middleware: $middleware,
-                    priority: $route->priority,
-                );
-            }
-        } else {
+        if (\sizeof($route->methods) === 0) {
             yield new Route(
                 method: null,
                 path: $path,
@@ -278,31 +261,36 @@ class RouteDiscoverer implements RouteDiscovererInterface
                 name: $route->name,
                 middleware: $middleware,
                 priority: $route->priority,
+                regexPath: $resolved->regexPath,
+                arguments: $resolved->arguments,
+                stickyPrefix: $resolved->stickyPrefix,
+            );
+
+            return;
+        }
+
+        $emittedMethods = [];
+
+        foreach ($route->methods as $requestMethod) {
+            if (\in_array($requestMethod, $emittedMethods, true)) {
+                continue;
+            }
+
+            $emittedMethods[] = $requestMethod;
+
+            yield new Route(
+                method: $requestMethod,
+                path: $path,
+                controller: $reflector->getName(),
+                action: $method->getName(),
+                name: $route->name,
+                middleware: $middleware,
+                priority: $route->priority,
+                regexPath: $resolved->regexPath,
+                arguments: $resolved->arguments,
+                stickyPrefix: $resolved->stickyPrefix,
             );
         }
-    }
-
-    /**
-     * @param \ReflectionClass<object>|\ReflectionMethod $reflector
-     * @return array<\Closure(): MiddlewareInterface>
-     */
-    private function getMiddleware(
-        \ReflectionClass|\ReflectionMethod $reflector,
-    ): array {
-        $middleware = [];
-
-        /** @var \ReflectionAttribute<Middleware> $attribute */
-        foreach ($reflector->getAttributes(Middleware::class, \ReflectionAttribute::IS_INSTANCEOF) as $attribute) {
-            $middlewareInstance = $attribute->newInstance()->middleware;
-
-            if (\is_string($middlewareInstance)) {
-                $middleware[] = fn (): MiddlewareInterface => /** @var MiddlewareInterface */ $this->container->resolve($middlewareInstance);
-            } else {
-                $middleware[] = fn (): MiddlewareInterface => $middlewareInstance($this->container);
-            }
-        }
-
-        return $middleware;
     }
 
     /**
@@ -378,347 +366,5 @@ class RouteDiscoverer implements RouteDiscovererInterface
         }
 
         return false;
-    }
-
-    /**
-     * @param array<(\Closure(): MiddlewareInterface)> $middleware
-     * @param ArgumentNode[] $nodes
-     * @param class-string $className
-     * @return \Generator<RouteInterface>
-     */
-    private function discoverRoutesWithArguments(
-        string $path,
-        string $regexPath,
-        array $middleware,
-        array $nodes,
-        string $className,
-        \ReflectionMethod $method,
-        RouteAttr $route,
-        ?PrefixInterface $prefix = null,
-    ): \Generator {
-        $arguments = [];
-
-        foreach ($nodes as $node) {
-            $argument = $this->getRouteArgument(
-                node: $node,
-                method: $method,
-                prefix: $prefix,
-            );
-
-            if ($argument === null) {
-                return;
-            }
-
-            $arguments[] = $argument;
-        }
-
-        $names = \array_map(
-            static fn (ArgumentNode $node): string => $node->name,
-            $nodes,
-        );
-
-        if (\sizeof($names) !== \sizeof(\array_unique($names))) {
-            $this->handleError(
-                static fn (): RouterException => RouterException::fromNotAllArgumentNamesAreUnique(
-                    className: $className,
-                    method: $method->getName(),
-                    names: $names,
-                ),
-            );
-
-            return;
-        }
-
-        $enumArguments = [];
-
-        foreach ($arguments as $argument) {
-            if ($argument->enumClass !== null) {
-                $enumArguments[$argument->node->name] = $argument->enumClass;
-            }
-        }
-
-        if (\sizeof($enumArguments) > 0) {
-            $regexPath = $this->pathCompiler->compile(
-                path: $path,
-                prefix: $prefix,
-                enumArguments: $enumArguments,
-            )->regexPath;
-        }
-
-        $stickyPrefix = $prefix instanceof StickyPrefixInterface
-            ? $prefix::class
-            : null;
-
-        if (\sizeof($route->methods) > 0) {
-            $emittedMethods = [];
-
-            foreach ($route->methods as $requestMethod) {
-                if (\in_array($requestMethod, $emittedMethods, true)) {
-                    continue;
-                }
-
-                $emittedMethods[] = $requestMethod;
-
-                yield new Route(
-                    method: $requestMethod,
-                    path: $path,
-                    controller: $className,
-                    action: $method->getName(),
-                    name: $route->name,
-                    middleware: $middleware,
-                    priority: $route->priority,
-                    regexPath: $regexPath,
-                    arguments: $arguments,
-                    stickyPrefix: $stickyPrefix,
-                );
-            }
-        } else {
-            yield new Route(
-                method: null,
-                path: $path,
-                controller: $className,
-                action: $method->getName(),
-                name: $route->name,
-                middleware: $middleware,
-                priority: $route->priority,
-                regexPath: $regexPath,
-                arguments: $arguments,
-                stickyPrefix: $stickyPrefix,
-            );
-        }
-    }
-
-    private function countRouteArgumentConsumers(
-        \ReflectionMethod $method,
-        string $name,
-    ): int {
-        $count = 0;
-
-        foreach ($method->getParameters() as $parameter) {
-            $attributes = $parameter->getAttributes(
-                name: ArgumentConsumerInterface::class,
-                flags: \ReflectionAttribute::IS_INSTANCEOF,
-            );
-
-            foreach ($attributes as $attribute) {
-                /** @var ArgumentConsumerInterface $instance */
-                $instance = $attribute->newInstance();
-
-                if (\in_array($name, $instance->routeArguments, true)) {
-                    ++$count;
-
-                    break;
-                }
-            }
-        }
-
-        return $count;
-    }
-
-    private function getNamedParameter(
-        \ReflectionMethod $method,
-        string $name,
-    ): ?\ReflectionParameter {
-        foreach ($method->getParameters() as $parameter) {
-            if ($parameter->getName() === $name) {
-                return $parameter;
-            }
-
-            $parameterAttributes = $parameter->getAttributes(
-                name: Argument::class,
-                flags: \ReflectionAttribute::IS_INSTANCEOF,
-            );
-
-            if (\sizeof($parameterAttributes) === 0) {
-                continue;
-            }
-
-            /** @var Argument $instance */
-            $instance = $parameterAttributes[0]->newInstance();
-
-            if ($instance->label === $name) {
-                return $parameter;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * @param-out class-string<\UnitEnum>|null $enumClass
-     */
-    private function getNativeType(
-        \ReflectionMethod $method,
-        \ReflectionParameter $parameter,
-        bool &$allowsNull = false,
-        ?string &$enumClass = null,
-    ): ?string {
-        $enumClass = null;
-        $type = $parameter->getType();
-
-        if ($type === null) {
-            $this->handleError(
-                static fn (): RouterException => RouterException::fromHasNoType(
-                    className: $method->getDeclaringClass()->getName(),
-                    method: $method->getName(),
-                    parameter: $parameter->getName(),
-                ),
-            );
-
-            return null;
-        }
-
-        if ($type instanceof \ReflectionNamedType && $type->isBuiltin()) {
-            if ($type->getName() === 'object' || $type->getName() === 'array') {
-                $this->handleError(
-                    static fn (): RouterException => RouterException::fromUnsupportedNativeType(
-                        className: $method->getDeclaringClass()->getName(),
-                        method: $method->getName(),
-                        parameter: $parameter->getName(),
-                        type: $type->getName(),
-                    ),
-                );
-
-                return null;
-            }
-
-            $allowsNull = $type->allowsNull();
-
-            return $type->getName();
-        }
-
-        $typeName = $type instanceof \ReflectionNamedType
-            ? $type->getName()
-            : null;
-
-        if ($typeName !== null && \is_subclass_of($typeName, \UnitEnum::class)) {
-            $allowsNull = $type->allowsNull();
-            $enumClass = $typeName;
-
-            return $enumClass;
-        } elseif ($type->allowsNull()) {
-            return 'null';
-        }
-
-        $this->handleError(
-            static fn (): RouterException => RouterException::fromUnsupportedType(
-                className: $method->getDeclaringClass()->getName(),
-                method: $method->getName(),
-                parameter: $parameter->getName(),
-            ),
-        );
-
-        return null;
-    }
-
-    private function getRouteArgument(
-        ArgumentNode $node,
-        \ReflectionMethod $method,
-        ?PrefixInterface $prefix = null,
-    ): ?RouteArgumentInterface {
-        $parameter = $this->getNamedParameter($method, $node->name);
-
-        if ($parameter === null) {
-            $consumerCount = $this->countRouteArgumentConsumers(
-                method: $method,
-                name: $node->name,
-            );
-
-            if ($consumerCount > 1) {
-                $this->handleError(
-                    static fn (): RouterException => RouterException::fromRouteArgumentClaimedTwice(
-                        className: $method->getDeclaringClass()->getName(),
-                        method: $method->getName(),
-                        argument: $node->name,
-                    ),
-                );
-
-                return null;
-            }
-
-            if ($consumerCount === 1) {
-                return new RouteArgument(
-                    node: $node,
-                    mappedName: null,
-                    nativeType: 'string',
-                    allowsNull: false,
-                    defaultValue: null,
-                    resolverConsumed: true,
-                );
-            }
-
-            if ($node->prefixed) {
-                $defaultValue = $prefix instanceof PrefixDefaultsInterface
-                    ? $prefix->getDefaultValue($node->name)
-                    : null;
-
-                return new RouteArgument(
-                    node: $node,
-                    mappedName: null,
-                    nativeType: \get_debug_type($defaultValue),
-                    allowsNull: $defaultValue === null,
-                    defaultValue: $defaultValue,
-                    resolverConsumed: true,
-                );
-            }
-
-            $this->handleError(
-                static fn (): RouterException => RouterException::fromArgumentHasNoMatchingParameter(
-                    className: $method->getDeclaringClass()->getName(),
-                    method: $method->getName(),
-                    argument: $node->name,
-                ),
-            );
-
-            return null;
-        }
-
-        if (
-            $node->optional &&
-            !$parameter->isDefaultValueAvailable() &&
-            !($node->prefixed && $prefix instanceof PrefixDefaultsInterface)
-        ) {
-            $this->handleError(
-                static fn (): RouterException => RouterException::fromOptionalArgumentHasNoDefaultValue(
-                    className: $method->getDeclaringClass()->getName(),
-                    method: $method->getName(),
-                    parameter: $parameter->getName(),
-                ),
-            );
-
-            return null;
-        }
-
-        $allowsNull = false;
-        $enumClass = null;
-        $nativeType = $this->getNativeType(
-            method: $method,
-            parameter: $parameter,
-            allowsNull: $allowsNull,
-            enumClass: $enumClass,
-        );
-
-        if ($nativeType === null) {
-            return null;
-        }
-
-        if ($parameter->getName() !== $node->name) {
-            $mappedName = $parameter->getName();
-        }
-
-        return new RouteArgument(
-            node: $node,
-            mappedName: $mappedName ?? null,
-            nativeType: $nativeType,
-            allowsNull: $allowsNull,
-            defaultValue: $parameter->isDefaultValueAvailable()
-                ? $parameter->getDefaultValue()
-                : (
-                    $node->prefixed && $prefix instanceof PrefixDefaultsInterface
-                        ? $prefix->getDefaultValue($node->name)
-                        : null
-                ),
-            enumClass: $enumClass,
-        );
     }
 }

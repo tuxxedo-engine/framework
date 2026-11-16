@@ -15,22 +15,27 @@ namespace Tuxxedo\Router\Builder;
 
 use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
+use Tuxxedo\Router\PrefixInterface;
 use Tuxxedo\Router\RoutePriority;
 
 readonly class RouteDefinition
 {
     /**
+     * @param list<Method> $methods
      * @param class-string $controller
      * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
+     * @param class-string<PrefixInterface>|string|null $prefix
      */
     public function __construct(
-        public ?Method $method,
-        public string $uri,
+        public array $methods,
+        public string $path,
         public string $controller,
         public string $action,
         public ?string $name,
         public array $middleware,
         public RoutePriority $priority,
+        public ?string $prefix,
+        public bool $trailingSlash,
     ) {
     }
 }

@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Router\Builder;
 
+use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
+use Tuxxedo\Router\PrefixInterface;
 use Tuxxedo\Router\RoutePriority;
 
 interface RouteBuilderGroupInterface
@@ -21,154 +23,208 @@ interface RouteBuilderGroupInterface
     /**
      * @param class-string $controller
      * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
+     * @param class-string<PrefixInterface>|string|null $prefix
      */
     public function get(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static;
 
     /**
      * @param class-string $controller
      * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
+     * @param class-string<PrefixInterface>|string|null $prefix
      */
     public function post(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static;
 
     /**
      * @param class-string $controller
      * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
+     * @param class-string<PrefixInterface>|string|null $prefix
      */
     public function put(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static;
 
     /**
      * @param class-string $controller
      * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
+     * @param class-string<PrefixInterface>|string|null $prefix
      */
     public function patch(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static;
 
     /**
      * @param class-string $controller
      * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
+     * @param class-string<PrefixInterface>|string|null $prefix
      */
     public function delete(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static;
 
     /**
      * @param class-string $controller
      * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
+     * @param class-string<PrefixInterface>|string|null $prefix
      */
     public function options(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static;
 
     /**
      * @param class-string $controller
      * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
+     * @param class-string<PrefixInterface>|string|null $prefix
      */
     public function head(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static;
 
     /**
      * @param class-string $controller
      * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
+     * @param class-string<PrefixInterface>|string|null $prefix
      */
     public function connect(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static;
 
     /**
      * @param class-string $controller
      * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
+     * @param class-string<PrefixInterface>|string|null $prefix
      */
     public function trace(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static;
 
     /**
      * @param class-string $controller
      * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
+     * @param class-string<PrefixInterface>|string|null $prefix
      */
     public function query(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static;
 
     /**
      * @param class-string $controller
      * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
+     * @param class-string<PrefixInterface>|string|null $prefix
      */
     public function any(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
+    ): static;
+
+    /**
+     * @param list<Method> $methods
+     * @param class-string $controller
+     * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
+     * @param class-string<PrefixInterface>|string|null $prefix
+     */
+    public function match(
+        array $methods,
+        string $path,
+        string $controller,
+        string $action,
+        ?string $name = null,
+        array $middleware = [],
+        RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static;
 
     /**
      * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
      * @param \Closure(RouteBuilderGroupInterface): void $callback
+     * @param class-string<PrefixInterface>|string|null $prefix
      */
     public function group(
-        string $uri,
+        string $path,
         array $middleware,
         \Closure $callback,
         ?string $name = null,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static;
 }

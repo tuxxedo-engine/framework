@@ -15,6 +15,7 @@ namespace Tuxxedo\Router\Builder;
 
 use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
+use Tuxxedo\Router\PrefixInterface;
 use Tuxxedo\Router\RoutePriority;
 
 class RouteBuilderGroup implements RouteBuilderGroupInterface
@@ -22,263 +23,371 @@ class RouteBuilderGroup implements RouteBuilderGroupInterface
     /**
      * @param \Closure(RouteDefinition): void $sink
      * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
+     * @param class-string<PrefixInterface>|string|null $prefix
      */
     public function __construct(
         private readonly \Closure $sink,
-        private readonly string $prefix,
+        private readonly string $path,
         private readonly array $middleware,
         private readonly string $namePrefix = '',
+        private readonly ?string $prefix = null,
+        private readonly bool $trailingSlash = false,
     ) {
     }
 
+    public static function joinPath(
+        string $prefix,
+        string $child,
+    ): string {
+        if ($child === '') {
+            return $prefix;
+        }
+
+        return \rtrim($prefix, '/') . '/' . \ltrim($child, '/');
+    }
+
     public function get(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         $this->push(
-            method: Method::GET,
-            uri: $uri,
+            methods: [
+                Method::GET,
+            ],
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             middleware: $middleware,
             priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
 
         return $this;
     }
 
     public function post(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         $this->push(
-            method: Method::POST,
-            uri: $uri,
+            methods: [
+                Method::POST,
+            ],
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             middleware: $middleware,
             priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
 
         return $this;
     }
 
     public function put(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         $this->push(
-            method: Method::PUT,
-            uri: $uri,
+            methods: [
+                Method::PUT,
+            ],
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             middleware: $middleware,
             priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
 
         return $this;
     }
 
     public function patch(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         $this->push(
-            method: Method::PATCH,
-            uri: $uri,
+            methods: [
+                Method::PATCH,
+            ],
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             middleware: $middleware,
             priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
 
         return $this;
     }
 
     public function delete(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         $this->push(
-            method: Method::DELETE,
-            uri: $uri,
+            methods: [
+                Method::DELETE,
+            ],
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             middleware: $middleware,
             priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
 
         return $this;
     }
 
     public function options(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         $this->push(
-            method: Method::OPTIONS,
-            uri: $uri,
+            methods: [
+                Method::OPTIONS,
+            ],
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             middleware: $middleware,
             priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
 
         return $this;
     }
 
     public function head(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         $this->push(
-            method: Method::HEAD,
-            uri: $uri,
+            methods: [
+                Method::HEAD,
+            ],
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             middleware: $middleware,
             priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
 
         return $this;
     }
 
     public function connect(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         $this->push(
-            method: Method::CONNECT,
-            uri: $uri,
+            methods: [
+                Method::CONNECT,
+            ],
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             middleware: $middleware,
             priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
 
         return $this;
     }
 
     public function trace(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         $this->push(
-            method: Method::TRACE,
-            uri: $uri,
+            methods: [
+                Method::TRACE,
+            ],
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             middleware: $middleware,
             priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
 
         return $this;
     }
 
     public function query(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         $this->push(
-            method: Method::QUERY,
-            uri: $uri,
+            methods: [
+                Method::QUERY,
+            ],
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             middleware: $middleware,
             priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
 
         return $this;
     }
 
     public function any(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         $this->push(
-            method: null,
-            uri: $uri,
+            methods: [],
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             middleware: $middleware,
             priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
+        );
+
+        return $this;
+    }
+
+    public function match(
+        array $methods,
+        string $path,
+        string $controller,
+        string $action,
+        ?string $name = null,
+        array $middleware = [],
+        RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
+    ): static {
+        $this->push(
+            methods: $methods,
+            path: $path,
+            controller: $controller,
+            action: $action,
+            name: $name,
+            middleware: $middleware,
+            priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
 
         return $this;
     }
 
     public function group(
-        string $uri,
+        string $path,
         array $middleware,
         \Closure $callback,
         ?string $name = null,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         $nested = new RouteBuilderGroup(
             sink: $this->sink,
-            prefix: self::joinUri(
-                prefix: $this->prefix,
-                child: $uri,
+            path: self::joinPath(
+                prefix: $this->path,
+                child: $path,
             ),
             middleware: [
                 ...$this->middleware,
                 ...$middleware,
             ],
             namePrefix: $this->namePrefix . ($name ?? ''),
+            prefix: $prefix ?? $this->prefix,
+            trailingSlash: $trailingSlash || $this->trailingSlash,
         );
 
         $callback($nested);
@@ -287,17 +396,21 @@ class RouteBuilderGroup implements RouteBuilderGroupInterface
     }
 
     /**
+     * @param list<Method> $methods
      * @param class-string $controller
      * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
+     * @param class-string<PrefixInterface>|string|null $prefix
      */
     private function push(
-        ?Method $method,
-        string $uri,
+        array $methods,
+        string $path,
         string $controller,
         string $action,
         ?string $name,
         array $middleware,
         RoutePriority $priority,
+        ?string $prefix,
+        bool $trailingSlash,
     ): void {
         $resolvedName = $name !== null && $this->namePrefix !== ''
             ? $this->namePrefix . $name
@@ -305,10 +418,10 @@ class RouteBuilderGroup implements RouteBuilderGroupInterface
 
         ($this->sink)(
             new RouteDefinition(
-                method: $method,
-                uri: self::joinUri(
-                    prefix: $this->prefix,
-                    child: $uri,
+                methods: $methods,
+                path: self::joinPath(
+                    prefix: $this->path,
+                    child: $path,
                 ),
                 controller: $controller,
                 action: $action,
@@ -318,18 +431,9 @@ class RouteBuilderGroup implements RouteBuilderGroupInterface
                     ...$middleware,
                 ],
                 priority: $priority,
+                prefix: $prefix ?? $this->prefix,
+                trailingSlash: $trailingSlash || $this->trailingSlash,
             ),
         );
-    }
-
-    public static function joinUri(
-        string $prefix,
-        string $child,
-    ): string {
-        if ($child === '') {
-            return $prefix;
-        }
-
-        return \rtrim($prefix, '/') . '/' . \ltrim($child, '/');
     }
 }

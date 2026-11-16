@@ -15,20 +15,26 @@ namespace Unit\Router\Builder;
 
 use Fixture\Router\Builder\SimpleController;
 use Fixture\Router\Builder\UserController;
+use Fixture\Router\RouteDiscoverer\Discovery\ConsumerDuplicate\ConsumerDuplicateController;
 use Fixture\Router\RouteDiscoverer\Discovery\DuplicateArgument\DuplicateArgumentController;
 use Fixture\Router\RouteDiscoverer\Discovery\EnumArgument\EnumArgumentController;
 use Fixture\Router\RouteDiscoverer\Discovery\Labeled\LabeledController;
+use Fixture\Router\RouteDiscoverer\Discovery\Middleware\MiddlewareController;
 use Fixture\Router\RouteDiscoverer\Discovery\MissingParameter\MissingParameterController;
 use Fixture\Router\RouteDiscoverer\Discovery\MultiParam\MultiParamController;
 use Fixture\Router\RouteDiscoverer\Discovery\NoType\NoTypeController;
 use Fixture\Router\RouteDiscoverer\Discovery\NullableClassType\NullableClassTypeController;
 use Fixture\Router\RouteDiscoverer\Discovery\Optional\OptionalController;
 use Fixture\Router\RouteDiscoverer\Discovery\OptionalNoDefault\OptionalNoDefaultController;
+use Fixture\Router\RouteDiscoverer\Discovery\StickyPrefix\StickyPrefixController;
+use Fixture\Router\RouteDiscoverer\Discovery\TrailingSlash\TrailingController;
 use Fixture\Router\RouteDiscoverer\Discovery\UnionType\UnionTypeController;
 use Fixture\Router\RouteDiscoverer\Discovery\UnsupportedNativeType\UnsupportedNativeTypeController;
 use Fixture\Router\RouteDiscoverer\Discovery\UnsupportedType\UnsupportedTypeController;
 use Fixture\Router\RouteDiscoverer\Support\AnotherMiddleware;
 use Fixture\Router\RouteDiscoverer\Support\TestMiddleware;
+use Fixture\Router\RouteDiscoverer\Support\TestPrefixWithDefaults;
+use Fixture\Router\RouteDiscoverer\Support\TestStickyPrefix;
 use Fixture\Router\RouteDiscoverer\Support\TestStringEnum;
 use Fixture\Router\RouteDiscoverer\Support\TestUnitEnum;
 use PHPUnit\Framework\TestCase;
@@ -53,7 +59,7 @@ class RouteBuilderTest extends TestCase
     {
         $routes = $this->builder()
             ->get(
-                uri: '/',
+                path: '/',
                 controller: SimpleController::class,
                 action: 'home',
                 name: 'home',
@@ -66,7 +72,7 @@ class RouteBuilderTest extends TestCase
         self::assertSame(SimpleController::class, $routes[0]->controller);
         self::assertSame('home', $routes[0]->action);
         self::assertSame('home', $routes[0]->name);
-        self::assertSame('#^/$#', $routes[0]->regexPath);
+        self::assertNull($routes[0]->regexPath);
         self::assertSame(
             [],
             $routes[0]->arguments,
@@ -76,17 +82,17 @@ class RouteBuilderTest extends TestCase
     public function testEveryVerbEmitsRouteWithCorrespondingMethod(): void
     {
         $routes = $this->builder()
-            ->get(uri: '/g', controller: SimpleController::class, action: 'home')
-            ->post(uri: '/p', controller: SimpleController::class, action: 'home')
-            ->put(uri: '/u', controller: SimpleController::class, action: 'home')
-            ->patch(uri: '/a', controller: SimpleController::class, action: 'home')
-            ->delete(uri: '/d', controller: SimpleController::class, action: 'home')
-            ->options(uri: '/o', controller: SimpleController::class, action: 'home')
-            ->head(uri: '/h', controller: SimpleController::class, action: 'home')
-            ->connect(uri: '/c', controller: SimpleController::class, action: 'home')
-            ->trace(uri: '/t', controller: SimpleController::class, action: 'home')
-            ->query(uri: '/q', controller: SimpleController::class, action: 'home')
-            ->any(uri: '/x', controller: SimpleController::class, action: 'home')
+            ->get(path: '/g', controller: SimpleController::class, action: 'home')
+            ->post(path: '/p', controller: SimpleController::class, action: 'home')
+            ->put(path: '/u', controller: SimpleController::class, action: 'home')
+            ->patch(path: '/a', controller: SimpleController::class, action: 'home')
+            ->delete(path: '/d', controller: SimpleController::class, action: 'home')
+            ->options(path: '/o', controller: SimpleController::class, action: 'home')
+            ->head(path: '/h', controller: SimpleController::class, action: 'home')
+            ->connect(path: '/c', controller: SimpleController::class, action: 'home')
+            ->trace(path: '/t', controller: SimpleController::class, action: 'home')
+            ->query(path: '/q', controller: SimpleController::class, action: 'home')
+            ->any(path: '/x', controller: SimpleController::class, action: 'home')
             ->build();
 
         self::assertCount(11, $routes);
@@ -107,7 +113,7 @@ class RouteBuilderTest extends TestCase
     {
         $routes = $this->builder()
             ->get(
-                uri: '/users/{id:\d+}',
+                path: '/users/{id:\d+}',
                 controller: UserController::class,
                 action: 'show',
             )
@@ -123,9 +129,9 @@ class RouteBuilderTest extends TestCase
     public function testPriorityDefaultsToNormalAndCanBeOverridden(): void
     {
         $routes = $this->builder()
-            ->get(uri: '/a', controller: SimpleController::class, action: 'home')
+            ->get(path: '/a', controller: SimpleController::class, action: 'home')
             ->get(
-                uri: '/b',
+                path: '/b',
                 controller: SimpleController::class,
                 action: 'home',
                 priority: RoutePriority::HOT,
@@ -136,20 +142,20 @@ class RouteBuilderTest extends TestCase
         self::assertSame(RoutePriority::HOT, $routes[1]->priority);
     }
 
-    public function testGroupPrefixesChildUrisAndPassesGroupToCallback(): void
+    public function testGroupPrefixesChildPathsAndPassesGroupToCallback(): void
     {
         $routes = $this->builder()
             ->group(
-                uri: '/admin',
+                path: '/admin',
                 middleware: [],
                 callback: static function (RouteBuilderGroupInterface $group): void {
                     $group->get(
-                        uri: '',
+                        path: '',
                         controller: SimpleController::class,
                         action: 'home',
                     );
                     $group->post(
-                        uri: '/users',
+                        path: '/users',
                         controller: SimpleController::class,
                         action: 'about',
                     );
@@ -162,15 +168,15 @@ class RouteBuilderTest extends TestCase
         self::assertSame('/admin/users', $routes[1]->path);
     }
 
-    public function testChildUriWithoutLeadingSlashIsNormalised(): void
+    public function testChildPathWithoutLeadingSlashIsNormalised(): void
     {
         $routes = $this->builder()
             ->group(
-                uri: '/admin',
+                path: '/admin',
                 middleware: [],
                 callback: static function (RouteBuilderGroupInterface $group): void {
                     $group->get(
-                        uri: 'users',
+                        path: 'users',
                         controller: SimpleController::class,
                         action: 'home',
                     );
@@ -185,11 +191,11 @@ class RouteBuilderTest extends TestCase
     {
         $routes = $this->builder()
             ->group(
-                uri: '/admin/',
+                path: '/admin/',
                 middleware: [],
                 callback: static function (RouteBuilderGroupInterface $group): void {
                     $group->get(
-                        uri: '/users',
+                        path: '/users',
                         controller: SimpleController::class,
                         action: 'home',
                     );
@@ -204,15 +210,15 @@ class RouteBuilderTest extends TestCase
     {
         $routes = $this->builder()
             ->group(
-                uri: '/api',
+                path: '/api',
                 middleware: [],
                 callback: static function (RouteBuilderGroupInterface $outer): void {
                     $outer->group(
-                        uri: '/v1',
+                        path: '/v1',
                         middleware: [],
                         callback: static function (RouteBuilderGroupInterface $inner): void {
                             $inner->get(
-                                uri: '/status',
+                                path: '/status',
                                 controller: SimpleController::class,
                                 action: 'home',
                             );
@@ -229,13 +235,13 @@ class RouteBuilderTest extends TestCase
     {
         $routes = $this->builder()
             ->group(
-                uri: '/admin',
+                path: '/admin',
                 middleware: [
                     TestMiddleware::class,
                 ],
                 callback: static function (RouteBuilderGroupInterface $group): void {
                     $group->get(
-                        uri: '',
+                        path: '',
                         controller: SimpleController::class,
                         action: 'home',
                         middleware: [
@@ -261,7 +267,7 @@ class RouteBuilderTest extends TestCase
 
         $routes = $this->builder()
             ->get(
-                uri: '/x',
+                path: '/x',
                 controller: SimpleController::class,
                 action: 'home',
                 middleware: [
@@ -284,7 +290,7 @@ class RouteBuilderTest extends TestCase
         );
 
         $routes = $builder->get(
-            uri: '/x',
+            path: '/x',
             controller: SimpleController::class,
             action: 'home',
             middleware: [
@@ -305,11 +311,11 @@ class RouteBuilderTest extends TestCase
         );
     }
 
-    public function testJoinUriUsesPrefixVerbatimWhenChildIsEmptyString(): void
+    public function testJoinPathUsesPrefixVerbatimWhenChildIsEmptyString(): void
     {
         self::assertSame(
             '/admin',
-            RouteBuilderGroup::joinUri(
+            RouteBuilderGroup::joinPath(
                 prefix: '/admin',
                 child: '',
             ),
@@ -320,17 +326,17 @@ class RouteBuilderTest extends TestCase
     {
         $routes = $this->builder()
             ->group(
-                uri: '/admin',
+                path: '/admin',
                 middleware: [],
                 callback: static function (RouteBuilderGroupInterface $group): void {
                     $group->get(
-                        uri: '/dashboard',
+                        path: '/dashboard',
                         controller: SimpleController::class,
                         action: 'home',
                         name: 'dashboard',
                     );
                     $group->post(
-                        uri: '/users',
+                        path: '/users',
                         controller: SimpleController::class,
                         action: 'about',
                         name: 'users.create',
@@ -348,11 +354,11 @@ class RouteBuilderTest extends TestCase
     {
         $routes = $this->builder()
             ->group(
-                uri: '/admin',
+                path: '/admin',
                 middleware: [],
                 callback: static function (RouteBuilderGroupInterface $group): void {
                     $group->get(
-                        uri: '/dashboard',
+                        path: '/dashboard',
                         controller: SimpleController::class,
                         action: 'home',
                     );
@@ -368,11 +374,11 @@ class RouteBuilderTest extends TestCase
     {
         $routes = $this->builder()
             ->group(
-                uri: '/admin',
+                path: '/admin',
                 middleware: [],
                 callback: static function (RouteBuilderGroupInterface $group): void {
                     $group->get(
-                        uri: '/dashboard',
+                        path: '/dashboard',
                         controller: SimpleController::class,
                         action: 'home',
                         name: 'dashboard',
@@ -388,15 +394,15 @@ class RouteBuilderTest extends TestCase
     {
         $routes = $this->builder()
             ->group(
-                uri: '/api',
+                path: '/api',
                 middleware: [],
                 callback: static function (RouteBuilderGroupInterface $outer): void {
                     $outer->group(
-                        uri: '/v1',
+                        path: '/v1',
                         middleware: [],
                         callback: static function (RouteBuilderGroupInterface $inner): void {
                             $inner->get(
-                                uri: '/status',
+                                path: '/status',
                                 controller: SimpleController::class,
                                 action: 'home',
                                 name: 'status',
@@ -416,13 +422,13 @@ class RouteBuilderTest extends TestCase
     {
         $builder = $this->builder()
             ->get(
-                uri: '/a',
+                path: '/a',
                 controller: SimpleController::class,
                 action: 'home',
                 name: 'shared',
             )
             ->get(
-                uri: '/b',
+                path: '/b',
                 controller: SimpleController::class,
                 action: 'about',
                 name: 'shared',
@@ -442,12 +448,12 @@ class RouteBuilderTest extends TestCase
     {
         $routes = $this->builder()
             ->get(
-                uri: '/a',
+                path: '/a',
                 controller: SimpleController::class,
                 action: 'home',
             )
             ->get(
-                uri: '/b',
+                path: '/b',
                 controller: SimpleController::class,
                 action: 'about',
             )
@@ -462,17 +468,17 @@ class RouteBuilderTest extends TestCase
     {
         $builder = $this->builder()
             ->get(
-                uri: '/a',
+                path: '/a',
                 controller: SimpleController::class,
                 action: 'home',
                 name: 'dashboard',
             )
             ->group(
-                uri: '/admin',
+                path: '/admin',
                 middleware: [],
                 callback: static function (RouteBuilderGroupInterface $group): void {
                     $group->get(
-                        uri: '/panel',
+                        path: '/panel',
                         controller: SimpleController::class,
                         action: 'about',
                         name: 'dashboard',
@@ -493,15 +499,15 @@ class RouteBuilderTest extends TestCase
     {
         $routes = $this->builder()
             ->group(
-                uri: '/api',
+                path: '/api',
                 middleware: [],
                 callback: static function (RouteBuilderGroupInterface $outer): void {
                     $outer->group(
-                        uri: '/v1',
+                        path: '/v1',
                         middleware: [],
                         callback: static function (RouteBuilderGroupInterface $inner): void {
                             $inner->get(
-                                uri: '/status',
+                                path: '/status',
                                 controller: SimpleController::class,
                                 action: 'home',
                                 name: 'status',
@@ -519,7 +525,7 @@ class RouteBuilderTest extends TestCase
     public function testDuplicateArgumentNamesInPathThrows(): void
     {
         $builder = $this->builder()->get(
-            uri: '/items/{id}/{id}',
+            path: '/items/{id}/{id}',
             controller: DuplicateArgumentController::class,
             action: 'show',
         );
@@ -536,7 +542,7 @@ class RouteBuilderTest extends TestCase
     public function testArgumentWithNoMatchingParameterThrows(): void
     {
         $builder = $this->builder()->get(
-            uri: '/users/{id}',
+            path: '/users/{id}',
             controller: MissingParameterController::class,
             action: 'show',
         );
@@ -553,7 +559,7 @@ class RouteBuilderTest extends TestCase
     public function testOptionalArgumentWithoutParameterDefaultThrows(): void
     {
         $builder = $this->builder()->get(
-            uri: '/page/{?id}',
+            path: '/page/{?id}',
             controller: OptionalNoDefaultController::class,
             action: 'show',
         );
@@ -570,7 +576,7 @@ class RouteBuilderTest extends TestCase
     public function testOptionalArgumentWithParameterDefaultResolvesTheDefault(): void
     {
         $routes = $this->builder()->get(
-            uri: '/page/{?id}',
+            path: '/page/{?id}',
             controller: OptionalController::class,
             action: 'show',
         )->build();
@@ -583,7 +589,7 @@ class RouteBuilderTest extends TestCase
     public function testLabeledArgumentMapsPathNameToParameterName(): void
     {
         $routes = $this->builder()->get(
-            uri: '/users/{userId}',
+            path: '/users/{userId}',
             controller: LabeledController::class,
             action: 'show',
         )->build();
@@ -596,7 +602,7 @@ class RouteBuilderTest extends TestCase
     public function testParameterWithoutTypeThrows(): void
     {
         $builder = $this->builder()->get(
-            uri: '/values/{value}',
+            path: '/values/{value}',
             controller: NoTypeController::class,
             action: 'show',
         );
@@ -613,7 +619,7 @@ class RouteBuilderTest extends TestCase
     public function testArrayParameterTypeThrowsUnsupportedNative(): void
     {
         $builder = $this->builder()->get(
-            uri: '/values/{value}',
+            path: '/values/{value}',
             controller: UnsupportedNativeTypeController::class,
             action: 'show',
         );
@@ -630,7 +636,7 @@ class RouteBuilderTest extends TestCase
     public function testNonBuiltinNonNullableParameterThrowsUnsupportedType(): void
     {
         $builder = $this->builder()->get(
-            uri: '/items/{value}',
+            path: '/items/{value}',
             controller: UnsupportedTypeController::class,
             action: 'show',
         );
@@ -647,7 +653,7 @@ class RouteBuilderTest extends TestCase
     public function testUnionParameterThrowsUnsupportedType(): void
     {
         $builder = $this->builder()->get(
-            uri: '/items/{value}',
+            path: '/items/{value}',
             controller: UnionTypeController::class,
             action: 'show',
         );
@@ -664,7 +670,7 @@ class RouteBuilderTest extends TestCase
     public function testLaterParameterIsFoundAfterSkippingUnrelatedEarlierOnes(): void
     {
         $routes = $this->builder()->get(
-            uri: '/users/{id}/{page}',
+            path: '/users/{id}/{page}',
             controller: MultiParamController::class,
             action: 'show',
         )->build();
@@ -677,7 +683,7 @@ class RouteBuilderTest extends TestCase
     public function testNullableNonBuiltinParameterResolvesToNullNativeType(): void
     {
         $routes = $this->builder()->get(
-            uri: '/items/{value}',
+            path: '/items/{value}',
             controller: NullableClassTypeController::class,
             action: 'show',
         )->build();
@@ -689,7 +695,7 @@ class RouteBuilderTest extends TestCase
     public function testEnumParameterRecordsEnumClassAndConstrainsRegex(): void
     {
         $routes = $this->builder()->get(
-            uri: '/feeds/{feed}',
+            path: '/feeds/{feed}',
             controller: EnumArgumentController::class,
             action: 'feed',
         )->build();
@@ -703,7 +709,7 @@ class RouteBuilderTest extends TestCase
     public function testOptionalNullableEnumParameterAllowsNullAndConstrainsRegex(): void
     {
         $routes = $this->builder()->get(
-            uri: '/units/{?unit}',
+            path: '/units/{?unit}',
             controller: EnumArgumentController::class,
             action: 'unit',
         )->build();
@@ -716,7 +722,7 @@ class RouteBuilderTest extends TestCase
     public function testBuiltinParameterLeavesEnumClassNull(): void
     {
         $routes = $this->builder()->get(
-            uri: '/users/{id}',
+            path: '/users/{id}',
             controller: UserController::class,
             action: 'show',
         )->build();
@@ -729,20 +735,20 @@ class RouteBuilderTest extends TestCase
     {
         $routes = $this->builder()
             ->group(
-                uri: '/api',
+                path: '/api',
                 middleware: [],
                 callback: static function (RouteBuilderGroupInterface $group): void {
-                    $group->get(uri: '/g', controller: SimpleController::class, action: 'home');
-                    $group->post(uri: '/p', controller: SimpleController::class, action: 'home');
-                    $group->put(uri: '/u', controller: SimpleController::class, action: 'home');
-                    $group->patch(uri: '/a', controller: SimpleController::class, action: 'home');
-                    $group->delete(uri: '/d', controller: SimpleController::class, action: 'home');
-                    $group->options(uri: '/o', controller: SimpleController::class, action: 'home');
-                    $group->head(uri: '/h', controller: SimpleController::class, action: 'home');
-                    $group->connect(uri: '/c', controller: SimpleController::class, action: 'home');
-                    $group->trace(uri: '/t', controller: SimpleController::class, action: 'home');
-                    $group->query(uri: '/q', controller: SimpleController::class, action: 'home');
-                    $group->any(uri: '/x', controller: SimpleController::class, action: 'home');
+                    $group->get(path: '/g', controller: SimpleController::class, action: 'home');
+                    $group->post(path: '/p', controller: SimpleController::class, action: 'home');
+                    $group->put(path: '/u', controller: SimpleController::class, action: 'home');
+                    $group->patch(path: '/a', controller: SimpleController::class, action: 'home');
+                    $group->delete(path: '/d', controller: SimpleController::class, action: 'home');
+                    $group->options(path: '/o', controller: SimpleController::class, action: 'home');
+                    $group->head(path: '/h', controller: SimpleController::class, action: 'home');
+                    $group->connect(path: '/c', controller: SimpleController::class, action: 'home');
+                    $group->trace(path: '/t', controller: SimpleController::class, action: 'home');
+                    $group->query(path: '/q', controller: SimpleController::class, action: 'home');
+                    $group->any(path: '/x', controller: SimpleController::class, action: 'home');
                 },
             )
             ->build();
@@ -763,5 +769,144 @@ class RouteBuilderTest extends TestCase
         foreach ($routes as $route) {
             self::assertStringStartsWith('/api/', $route->path);
         }
+    }
+
+    public function testArgumentClaimedTwiceThrows(): void
+    {
+        $builder = $this->builder()->get(
+            path: '/users/{id}',
+            controller: ConsumerDuplicateController::class,
+            action: 'show',
+        );
+
+        try {
+            $builder->build();
+
+            self::fail('Expected RouterException was not thrown');
+        } catch (RouterException $exception) {
+            self::assertStringContainsString('claimed by more than one', $exception->getMessage());
+        }
+    }
+
+    public function testGroupPrefixAppliesAndInnermostPrefixWins(): void
+    {
+        $routes = $this->builder()->group(
+            path: '/a',
+            middleware: [],
+            callback: static function (RouteBuilderGroupInterface $group): void {
+                $group->group(
+                    path: '',
+                    middleware: [],
+                    callback: static function (RouteBuilderGroupInterface $group): void {
+                        $group->get(
+                            path: '/home',
+                            controller: StickyPrefixController::class,
+                            action: 'home',
+                        );
+                    },
+                    prefix: TestStickyPrefix::class,
+                );
+            },
+            prefix: TestPrefixWithDefaults::class,
+        )->build();
+
+        self::assertCount(1, $routes);
+        self::assertSame('/{tenant:[a-z]+}/a/home', $routes[0]->path);
+        self::assertSame(TestStickyPrefix::class, $routes[0]->stickyPrefix);
+        self::assertSame('tenant', $routes[0]->arguments[0]->node->name);
+        self::assertTrue($routes[0]->arguments[0]->node->prefixed);
+    }
+
+    public function testRoutePrefixOverridesGroupPrefix(): void
+    {
+        $routes = $this->builder()->group(
+            path: '',
+            middleware: [],
+            callback: static function (RouteBuilderGroupInterface $group): void {
+                $group->get(
+                    path: '/home',
+                    controller: StickyPrefixController::class,
+                    action: 'home',
+                    prefix: TestStickyPrefix::class,
+                );
+            },
+            prefix: '/api',
+        )->build();
+
+        self::assertSame('/{tenant:[a-z]+}/home', $routes[0]->path);
+        self::assertSame(TestStickyPrefix::class, $routes[0]->stickyPrefix);
+    }
+
+    public function testGroupTrailingSlashAddsAnUnnamedSlashVariant(): void
+    {
+        $routes = $this->builder()->group(
+            path: '/x',
+            middleware: [],
+            callback: static function (RouteBuilderGroupInterface $group): void {
+                $group->get(
+                    path: '/page',
+                    controller: TrailingController::class,
+                    action: 'page',
+                    name: 'page',
+                );
+            },
+            trailingSlash: true,
+        )->build();
+
+        self::assertCount(2, $routes);
+        self::assertSame('/x/page', $routes[0]->path);
+        self::assertSame('page', $routes[0]->name);
+        self::assertSame('/x/page/', $routes[1]->path);
+        self::assertNull($routes[1]->name);
+    }
+
+    public function testExplicitMiddlewareRunsBeforeAttributeMiddleware(): void
+    {
+        $routes = $this->builder()->get(
+            path: '/protected',
+            controller: MiddlewareController::class,
+            action: 'protected',
+            middleware: [
+                AnotherMiddleware::class,
+            ],
+        )->build();
+
+        self::assertSame(
+            [
+                AnotherMiddleware::class,
+                TestMiddleware::class,
+                AnotherMiddleware::class,
+            ],
+            \array_map(
+                static fn (\Closure $middleware): string => $middleware()::class,
+                $routes[0]->middleware,
+            ),
+        );
+    }
+
+    public function testGroupMatchEmitsOneRoutePerDistinctMethod(): void
+    {
+        $routes = $this->builder()->group(
+            path: '/forms',
+            middleware: [],
+            callback: static function (RouteBuilderGroupInterface $group): void {
+                $group->match(
+                    methods: [
+                        Method::GET,
+                        Method::POST,
+                        Method::GET,
+                    ],
+                    path: '/contact',
+                    controller: SimpleController::class,
+                    action: 'home',
+                );
+            },
+        )->build();
+
+        self::assertCount(2, $routes);
+        self::assertSame(Method::GET, $routes[0]->method);
+        self::assertSame(Method::POST, $routes[1]->method);
+        self::assertSame('/forms/contact', $routes[0]->path);
+        self::assertSame('/forms/contact', $routes[1]->path);
     }
 }

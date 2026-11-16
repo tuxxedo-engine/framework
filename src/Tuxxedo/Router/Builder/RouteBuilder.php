@@ -16,14 +16,18 @@ namespace Tuxxedo\Router\Builder;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Http\Method;
 use Tuxxedo\Http\Request\Middleware\MiddlewareInterface;
-use Tuxxedo\Router\ArgumentNode;
-use Tuxxedo\Router\Attribute\Argument;
 use Tuxxedo\Router\Compiler\PathCompiler;
 use Tuxxedo\Router\Compiler\PathCompilerInterface;
 use Tuxxedo\Router\Pattern\TypePatternRegistry;
+use Tuxxedo\Router\Pattern\TypePatternRegistryInterface;
+use Tuxxedo\Router\Prefix;
+use Tuxxedo\Router\PrefixInterface;
 use Tuxxedo\Router\Route;
-use Tuxxedo\Router\RouteArgument;
-use Tuxxedo\Router\RouteArgumentInterface;
+use Tuxxedo\Router\RouteArgumentResolver;
+use Tuxxedo\Router\RouteArgumentResolverInterface;
+use Tuxxedo\Router\RouteInterface;
+use Tuxxedo\Router\RouteMiddlewareResolver;
+use Tuxxedo\Router\RouteMiddlewareResolverInterface;
 use Tuxxedo\Router\RoutePriority;
 use Tuxxedo\Router\RouterException;
 
@@ -34,239 +38,340 @@ class RouteBuilder implements RouteBuilderInterface
      */
     private array $definitions = [];
 
-    private readonly PathCompilerInterface $pathCompiler;
+    private readonly RouteArgumentResolverInterface $argumentResolver;
+    private readonly RouteMiddlewareResolverInterface $middlewareResolver;
 
     public function __construct(
         private readonly ContainerInterface $container,
+        ?TypePatternRegistryInterface $patterns = null,
         ?PathCompilerInterface $pathCompiler = null,
+        ?RouteArgumentResolverInterface $argumentResolver = null,
+        ?RouteMiddlewareResolverInterface $middlewareResolver = null,
     ) {
-        $this->pathCompiler = $pathCompiler ?? new PathCompiler(
-            patterns: TypePatternRegistry::createDefault(),
+        $this->argumentResolver = $argumentResolver ?? new RouteArgumentResolver(
+            pathCompiler: $pathCompiler ?? new PathCompiler(
+                patterns: $patterns ?? TypePatternRegistry::createDefault(),
+            ),
+        );
+        $this->middlewareResolver = $middlewareResolver ?? new RouteMiddlewareResolver(
+            container: $this->container,
         );
     }
 
     public function get(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         return $this->addDefinition(
-            method: Method::GET,
-            uri: $uri,
+            methods: [
+                Method::GET,
+            ],
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             middleware: $middleware,
             priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
     }
 
     public function post(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         return $this->addDefinition(
-            method: Method::POST,
-            uri: $uri,
+            methods: [
+                Method::POST,
+            ],
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             middleware: $middleware,
             priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
     }
 
     public function put(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         return $this->addDefinition(
-            method: Method::PUT,
-            uri: $uri,
+            methods: [
+                Method::PUT,
+            ],
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             middleware: $middleware,
             priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
     }
 
     public function patch(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         return $this->addDefinition(
-            method: Method::PATCH,
-            uri: $uri,
+            methods: [
+                Method::PATCH,
+            ],
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             middleware: $middleware,
             priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
     }
 
     public function delete(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         return $this->addDefinition(
-            method: Method::DELETE,
-            uri: $uri,
+            methods: [
+                Method::DELETE,
+            ],
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             middleware: $middleware,
             priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
     }
 
     public function options(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         return $this->addDefinition(
-            method: Method::OPTIONS,
-            uri: $uri,
+            methods: [
+                Method::OPTIONS,
+            ],
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             middleware: $middleware,
             priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
     }
 
     public function head(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         return $this->addDefinition(
-            method: Method::HEAD,
-            uri: $uri,
+            methods: [
+                Method::HEAD,
+            ],
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             middleware: $middleware,
             priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
     }
 
     public function connect(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         return $this->addDefinition(
-            method: Method::CONNECT,
-            uri: $uri,
+            methods: [
+                Method::CONNECT,
+            ],
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             middleware: $middleware,
             priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
     }
 
     public function trace(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         return $this->addDefinition(
-            method: Method::TRACE,
-            uri: $uri,
+            methods: [
+                Method::TRACE,
+            ],
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             middleware: $middleware,
             priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
     }
 
     public function query(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         return $this->addDefinition(
-            method: Method::QUERY,
-            uri: $uri,
+            methods: [
+                Method::QUERY,
+            ],
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             middleware: $middleware,
             priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
     }
 
     public function any(
-        string $uri,
+        string $path,
         string $controller,
         string $action,
         ?string $name = null,
         array $middleware = [],
         RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         return $this->addDefinition(
-            method: null,
-            uri: $uri,
+            methods: [],
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             middleware: $middleware,
             priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
+        );
+    }
+
+    public function match(
+        array $methods,
+        string $path,
+        string $controller,
+        string $action,
+        ?string $name = null,
+        array $middleware = [],
+        RoutePriority $priority = RoutePriority::NORMAL,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
+    ): static {
+        return $this->addDefinition(
+            methods: $methods,
+            path: $path,
+            controller: $controller,
+            action: $action,
+            name: $name,
+            middleware: $middleware,
+            priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
     }
 
     public function group(
-        string $uri,
+        string $path,
         array $middleware,
         \Closure $callback,
         ?string $name = null,
+        ?string $prefix = null,
+        bool $trailingSlash = false,
     ): static {
         $group = new RouteBuilderGroup(
             sink: function (RouteDefinition $definition): void {
                 $this->definitions[] = $definition;
             },
-            prefix: $uri,
+            path: $path,
             middleware: $middleware,
             namePrefix: $name ?? '',
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
 
         $callback($group);
@@ -292,43 +397,127 @@ class RouteBuilder implements RouteBuilderInterface
                 $seenNames[$definition->name] = true;
             }
 
-            $compiled = $this->pathCompiler->compile(
-                path: $definition->uri,
+            $prefix = $this->prefix($definition->prefix);
+            $path = $prefix !== null
+                ? RouteBuilderGroup::joinPath(
+                    prefix: $prefix->path,
+                    child: $definition->path,
+                )
+                : $definition->path;
+
+            $method = new \ReflectionMethod(
+                objectOrMethod: $definition->controller,
+                method: $definition->action,
             );
 
-            $arguments = $this->resolveArguments(
-                controller: $definition->controller,
-                action: $definition->action,
-                nodes: $compiled->argumentNodes,
-            );
+            $middleware = [
+                ...$this->middlewareResolver->normalize($definition->middleware),
+                ...$this->middlewareResolver->attributes($method->getDeclaringClass()),
+                ...$this->middlewareResolver->attributes($method),
+            ];
 
-            $enumArguments = [];
-
-            foreach ($arguments as $argument) {
-                if ($argument->enumClass !== null) {
-                    $enumArguments[$argument->node->name] = $argument->enumClass;
-                }
-            }
-
-            if (\sizeof($enumArguments) > 0) {
-                $compiled = $this->pathCompiler->compile(
-                    path: $definition->uri,
-                    enumArguments: $enumArguments,
-                );
-            }
-
-            $routes[] = new Route(
-                method: $definition->method,
-                path: $definition->uri,
-                controller: $definition->controller,
-                action: $definition->action,
-                name: $definition->name,
-                middleware: $this->normalizeMiddleware(
-                    middleware: $definition->middleware,
+            $routes = [
+                ...$routes,
+                ...$this->routes(
+                    definition: $definition,
+                    name: $definition->name,
+                    path: $path,
+                    prefix: $prefix,
+                    method: $method,
+                    middleware: $middleware,
                 ),
+            ];
+
+            if ($definition->trailingSlash && !\str_ends_with($path, '/')) {
+                $routes = [
+                    ...$routes,
+                    ...$this->routes(
+                        definition: $definition,
+                        name: null,
+                        path: $path . '/',
+                        prefix: $prefix,
+                        method: $method,
+                        middleware: $middleware,
+                    ),
+                ];
+            }
+        }
+
+        return $routes;
+    }
+
+    /**
+     * @param class-string<PrefixInterface>|string|null $prefix
+     */
+    private function prefix(
+        ?string $prefix,
+    ): ?PrefixInterface {
+        if ($prefix === null) {
+            return null;
+        }
+
+        return \is_a($prefix, PrefixInterface::class, true)
+            ? $this->container->resolve($prefix)
+            : new Prefix($prefix);
+    }
+
+    /**
+     * @param list<\Closure(): MiddlewareInterface> $middleware
+     * @return list<RouteInterface>
+     *
+     * @throws RouterException
+     */
+    private function routes(
+        RouteDefinition $definition,
+        ?string $name,
+        string $path,
+        ?PrefixInterface $prefix,
+        \ReflectionMethod $method,
+        array $middleware,
+    ): array {
+        $resolved = $this->argumentResolver->resolve(
+            path: $path,
+            prefix: $prefix,
+            method: $method,
+        );
+
+        if (\sizeof($definition->methods) === 0) {
+            return [
+                new Route(
+                    method: null,
+                    path: $path,
+                    controller: $definition->controller,
+                    action: $definition->action,
+                    name: $name,
+                    middleware: $middleware,
+                    priority: $definition->priority,
+                    regexPath: $resolved->regexPath,
+                    arguments: $resolved->arguments,
+                    stickyPrefix: $resolved->stickyPrefix,
+                ),
+            ];
+        }
+
+        $routes = [];
+        $emittedMethods = [];
+
+        foreach ($definition->methods as $requestMethod) {
+            if (\in_array($requestMethod, $emittedMethods, true)) {
+                continue;
+            }
+
+            $emittedMethods[] = $requestMethod;
+            $routes[] = new Route(
+                method: $requestMethod,
+                path: $path,
+                controller: $definition->controller,
+                action: $definition->action,
+                name: $name,
+                middleware: $middleware,
                 priority: $definition->priority,
-                regexPath: $compiled->regexPath,
-                arguments: $arguments,
+                regexPath: $resolved->regexPath,
+                arguments: $resolved->arguments,
+                stickyPrefix: $resolved->stickyPrefix,
             );
         }
 
@@ -336,242 +525,34 @@ class RouteBuilder implements RouteBuilderInterface
     }
 
     /**
+     * @param list<Method> $methods
      * @param class-string $controller
      * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
+     * @param class-string<PrefixInterface>|string|null $prefix
      */
     private function addDefinition(
-        ?Method $method,
-        string $uri,
+        array $methods,
+        string $path,
         string $controller,
         string $action,
         ?string $name,
         array $middleware,
         RoutePriority $priority,
+        ?string $prefix,
+        bool $trailingSlash,
     ): static {
         $this->definitions[] = new RouteDefinition(
-            method: $method,
-            uri: $uri,
+            methods: $methods,
+            path: $path,
             controller: $controller,
             action: $action,
             name: $name,
             middleware: $middleware,
             priority: $priority,
+            prefix: $prefix,
+            trailingSlash: $trailingSlash,
         );
 
         return $this;
-    }
-
-    /**
-     * @param class-string $controller
-     * @param list<ArgumentNode> $nodes
-     * @return list<RouteArgumentInterface>
-     *
-     * @throws RouterException
-     */
-    private function resolveArguments(
-        string $controller,
-        string $action,
-        array $nodes,
-    ): array {
-        if (\sizeof($nodes) === 0) {
-            return [];
-        }
-
-        $names = \array_map(
-            static fn (ArgumentNode $node): string => $node->name,
-            $nodes,
-        );
-
-        if (\sizeof($names) !== \sizeof(\array_unique($names))) {
-            throw RouterException::fromNotAllArgumentNamesAreUnique(
-                className: $controller,
-                method: $action,
-                names: $names,
-            );
-        }
-
-        $reflection = new \ReflectionMethod(
-            objectOrMethod: $controller,
-            method: $action,
-        );
-
-        $arguments = [];
-
-        foreach ($nodes as $node) {
-            $arguments[] = $this->resolveArgument(
-                node: $node,
-                method: $reflection,
-            );
-        }
-
-        return $arguments;
-    }
-
-    /**
-     * @throws RouterException
-     */
-    private function resolveArgument(
-        ArgumentNode $node,
-        \ReflectionMethod $method,
-    ): RouteArgumentInterface {
-        $parameter = self::findNamedParameter(
-            method: $method,
-            name: $node->name,
-        );
-
-        if ($parameter === null) {
-            throw RouterException::fromArgumentHasNoMatchingParameter(
-                className: $method->getDeclaringClass()->getName(),
-                method: $method->getName(),
-                argument: $node->name,
-            );
-        }
-
-        if (
-            $node->optional &&
-            !$parameter->isDefaultValueAvailable()
-        ) {
-            throw RouterException::fromOptionalArgumentHasNoDefaultValue(
-                className: $method->getDeclaringClass()->getName(),
-                method: $method->getName(),
-                parameter: $parameter->getName(),
-            );
-        }
-
-        $allowsNull = false;
-        $enumClass = null;
-        $nativeType = $this->extractNativeType(
-            method: $method,
-            parameter: $parameter,
-            allowsNull: $allowsNull,
-            enumClass: $enumClass,
-        );
-
-        $mappedName = $parameter->getName() !== $node->name
-            ? $parameter->getName()
-            : null;
-
-        return new RouteArgument(
-            node: $node,
-            mappedName: $mappedName,
-            nativeType: $nativeType,
-            allowsNull: $allowsNull,
-            defaultValue: $parameter->isDefaultValueAvailable()
-                ? $parameter->getDefaultValue()
-                : null,
-            enumClass: $enumClass,
-        );
-    }
-
-    private static function findNamedParameter(
-        \ReflectionMethod $method,
-        string $name,
-    ): ?\ReflectionParameter {
-        foreach ($method->getParameters() as $parameter) {
-            if ($parameter->getName() === $name) {
-                return $parameter;
-            }
-
-            $parameterAttributes = $parameter->getAttributes(
-                name: Argument::class,
-                flags: \ReflectionAttribute::IS_INSTANCEOF,
-            );
-
-            if (\sizeof($parameterAttributes) === 0) {
-                continue;
-            }
-
-            /** @var Argument $instance */
-            $instance = $parameterAttributes[0]->newInstance();
-
-            if ($instance->label === $name) {
-                return $parameter;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * @param-out class-string<\UnitEnum>|null $enumClass
-     *
-     * @throws RouterException
-     */
-    private function extractNativeType(
-        \ReflectionMethod $method,
-        \ReflectionParameter $parameter,
-        bool &$allowsNull,
-        ?string &$enumClass,
-    ): string {
-        $enumClass = null;
-        $type = $parameter->getType();
-
-        if ($type === null) {
-            throw RouterException::fromHasNoType(
-                className: $method->getDeclaringClass()->getName(),
-                method: $method->getName(),
-                parameter: $parameter->getName(),
-            );
-        }
-
-        if ($type instanceof \ReflectionNamedType && $type->isBuiltin()) {
-            if ($type->getName() === 'object' || $type->getName() === 'array') {
-                throw RouterException::fromUnsupportedNativeType(
-                    className: $method->getDeclaringClass()->getName(),
-                    method: $method->getName(),
-                    parameter: $parameter->getName(),
-                    type: $type->getName(),
-                );
-            }
-
-            $allowsNull = $type->allowsNull();
-
-            return $type->getName();
-        }
-
-        $typeName = $type instanceof \ReflectionNamedType
-            ? $type->getName()
-            : null;
-
-        if ($typeName !== null && \is_subclass_of($typeName, \UnitEnum::class)) {
-            $allowsNull = $type->allowsNull();
-            $enumClass = $typeName;
-
-            return $enumClass;
-        }
-
-        if ($type->allowsNull()) {
-            return 'null';
-        }
-
-        throw RouterException::fromUnsupportedType(
-            className: $method->getDeclaringClass()->getName(),
-            method: $method->getName(),
-            parameter: $parameter->getName(),
-        );
-    }
-
-    /**
-     * @param list<class-string<MiddlewareInterface>|\Closure(): MiddlewareInterface> $middleware
-     * @return list<\Closure(): MiddlewareInterface>
-     */
-    private function normalizeMiddleware(
-        array $middleware,
-    ): array {
-        $normalized = [];
-        $container = $this->container;
-
-        foreach ($middleware as $entry) {
-            if ($entry instanceof \Closure) {
-                $normalized[] = $entry;
-
-                continue;
-            }
-
-            $className = $entry;
-            $normalized[] = static fn (): MiddlewareInterface => /** @var MiddlewareInterface */ $container->resolve($className);
-        }
-
-        return $normalized;
     }
 }

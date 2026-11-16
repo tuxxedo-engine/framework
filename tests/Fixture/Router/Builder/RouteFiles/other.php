@@ -16,7 +16,7 @@ use Tuxxedo\Router\Builder\RouteBuilderInterface;
 
 return static fn (RouteBuilderInterface $builder): array => $builder
     ->post(
-        uri: '/contact',
+        path: '/contact',
         controller: SimpleController::class,
         action: 'home',
     )
