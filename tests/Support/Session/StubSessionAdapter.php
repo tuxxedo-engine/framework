@@ -14,8 +14,6 @@ declare(strict_types=1);
 namespace Support\Session;
 
 use Tuxxedo\Session\SessionAdapterInterface;
-use Tuxxedo\Session\SessionException;
-use Tuxxedo\Session\SessionStartMode;
 
 class StubSessionAdapter implements SessionAdapterInterface
 {
@@ -34,26 +32,17 @@ class StubSessionAdapter implements SessionAdapterInterface
      * @param array<string, mixed> $data
      */
     public function __construct(
-        public readonly SessionStartMode $startMode = SessionStartMode::EXPLICIT,
         array $data = [],
         string $identifier = 'stub-session-id',
     ) {
         $this->data = $data;
         $this->identifier = $identifier;
-
-        if ($this->startMode === SessionStartMode::AUTO) {
-            $this->start();
-        }
     }
 
     private function startCheck(): void
     {
         if ($this->started) {
             return;
-        }
-
-        if ($this->startMode === SessionStartMode::EXPLICIT) {
-            throw SessionException::fromNotStarted();
         }
 
         $this->start();

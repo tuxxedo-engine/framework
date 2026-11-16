@@ -13,12 +13,20 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Session\Adapter;
 
+use Tuxxedo\Container\ContainerInterface;
+use Tuxxedo\Container\DefaultInitializer;
 use Tuxxedo\Http\SameSite;
 use Tuxxedo\Session\Config\SessionConfigInterface;
 use Tuxxedo\Session\SessionAdapterInterface;
 use Tuxxedo\Session\SessionException;
-use Tuxxedo\Session\SessionStartMode;
 
+#[DefaultInitializer(
+    static function (ContainerInterface $container): SessionAdapterInterface {
+        return PhpSessionAdapter::createFromConfig(
+            config: $container->resolve(SessionConfigInterface::class),
+        );
+    },
+)]
 class PhpSessionAdapter implements SessionAdapterInterface
 {
     private bool $started = false;
@@ -27,7 +35,6 @@ class PhpSessionAdapter implements SessionAdapterInterface
      * @throws SessionException
      */
     final public function __construct(
-        public readonly SessionStartMode $startMode,
         private readonly int $lifetime = 3600,
         private readonly string $path = '/',
         private readonly string $domain = '',
@@ -38,18 +45,12 @@ class PhpSessionAdapter implements SessionAdapterInterface
         if ($this->sameSite === SameSite::NONE && !$this->secure) {
             throw SessionException::fromSameSiteNoneRequiresSecure();
         }
-
-        if ($this->startMode === SessionStartMode::AUTO) {
-            $this->start();
-        }
     }
 
     public static function createFromConfig(
-        SessionStartMode $startMode,
         SessionConfigInterface $config,
     ): static {
         return new static(
-            startMode: $startMode,
             lifetime: $config->lifetime,
             path: $config->path,
             domain: $config->domain,
@@ -66,10 +67,6 @@ class PhpSessionAdapter implements SessionAdapterInterface
     {
         if ($this->started) {
             return;
-        }
-
-        if ($this->startMode === SessionStartMode::EXPLICIT) {
-            throw SessionException::fromNotStarted();
         }
 
         $this->start();

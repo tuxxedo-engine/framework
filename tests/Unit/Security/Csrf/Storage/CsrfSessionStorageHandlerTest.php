@@ -15,9 +15,10 @@ namespace Unit\Security\Csrf\Storage;
 
 use PHPUnit\Framework\TestCase;
 use Support\Session\StubSessionAdapter;
+use Tuxxedo\Container\Container;
 use Tuxxedo\Security\Csrf\Storage\CsrfSessionStorageHandler;
+use Tuxxedo\Security\Csrf\Storage\CsrfStorageHandlerInterface;
 use Tuxxedo\Session\Session;
-use Tuxxedo\Session\SessionStartMode;
 
 class CsrfSessionStorageHandlerTest extends TestCase
 {
@@ -29,7 +30,6 @@ class CsrfSessionStorageHandlerTest extends TestCase
     ): Session {
         return new Session(
             adapter: new StubSessionAdapter(
-                startMode: SessionStartMode::LAZY,
                 data: $data,
             ),
         );
@@ -156,6 +156,14 @@ class CsrfSessionStorageHandlerTest extends TestCase
         self::assertSame(
             'token-abc',
             $storage->get(),
+        );
+    }
+
+    public function testIsDefaultImplementation(): void
+    {
+        self::assertInstanceOf(
+            CsrfSessionStorageHandler::class,
+            (new Container())->resolve(CsrfStorageHandlerInterface::class),
         );
     }
 }

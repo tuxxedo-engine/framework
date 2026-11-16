@@ -13,15 +13,17 @@ declare(strict_types=1);
 
 namespace Integration\Session\Adapter;
 
+use Fixture\Session\Color;
 use PHPUnit\Framework\Attributes\PreserveGlobalState;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Container\Container;
 use Tuxxedo\Http\SameSite;
 use Tuxxedo\Session\Adapter\PhpSessionAdapter;
 use Tuxxedo\Session\Config\SessionConfig;
 use Tuxxedo\Session\Config\SessionConfigInterface;
+use Tuxxedo\Session\SessionAdapterInterface;
 use Tuxxedo\Session\SessionException;
-use Tuxxedo\Session\SessionStartMode;
 
 #[RunTestsInSeparateProcesses]
 #[PreserveGlobalState(false)]
@@ -42,37 +44,22 @@ class PhpSessionAdapterTest extends TestCase
     public function testCreateFromConfigBuildsAdapterFromConfigDirectives(): void
     {
         $adapter = PhpSessionAdapter::createFromConfig(
-            startMode: SessionStartMode::LAZY,
             config: $this->makeConfig(),
         );
 
-        self::assertSame(SessionStartMode::LAZY, $adapter->startMode);
         self::assertFalse($adapter->isStarted());
     }
 
-    public function testAutoStartModeStartsSessionInConstructor(): void
+    public function testIsStartedReturnsFalseBeforeFirstUse(): void
     {
-        $adapter = new PhpSessionAdapter(
-            startMode: SessionStartMode::AUTO,
-        );
-
-        self::assertTrue($adapter->isStarted());
-    }
-
-    public function testIsStartedReturnsFalseBeforeStartInExplicitMode(): void
-    {
-        $adapter = new PhpSessionAdapter(
-            startMode: SessionStartMode::EXPLICIT,
-        );
+        $adapter = new PhpSessionAdapter();
 
         self::assertFalse($adapter->isStarted());
     }
 
     public function testStartTransitionsAdapterToStartedState(): void
     {
-        $adapter = new PhpSessionAdapter(
-            startMode: SessionStartMode::EXPLICIT,
-        );
+        $adapter = new PhpSessionAdapter();
 
         $result = $adapter->start();
 
@@ -82,10 +69,9 @@ class PhpSessionAdapterTest extends TestCase
 
     public function testStartIsIdempotentWhenAlreadyStarted(): void
     {
-        $adapter = new PhpSessionAdapter(
-            startMode: SessionStartMode::AUTO,
-        );
+        $adapter = new PhpSessionAdapter();
 
+        $adapter->start();
         $adapter->start();
 
         self::assertTrue($adapter->isStarted());
@@ -93,9 +79,9 @@ class PhpSessionAdapterTest extends TestCase
 
     public function testStopMarksAdapterAsNotStarted(): void
     {
-        $adapter = new PhpSessionAdapter(
-            startMode: SessionStartMode::AUTO,
-        );
+        $adapter = new PhpSessionAdapter();
+
+        $adapter->start();
 
         $result = $adapter->stop();
 
@@ -105,9 +91,7 @@ class PhpSessionAdapterTest extends TestCase
 
     public function testStopIsNoOpWhenNotStarted(): void
     {
-        $adapter = new PhpSessionAdapter(
-            startMode: SessionStartMode::EXPLICIT,
-        );
+        $adapter = new PhpSessionAdapter();
 
         $result = $adapter->stop();
 
@@ -117,10 +101,9 @@ class PhpSessionAdapterTest extends TestCase
 
     public function testRestartStopsAndStartsAgain(): void
     {
-        $adapter = new PhpSessionAdapter(
-            startMode: SessionStartMode::AUTO,
-        );
+        $adapter = new PhpSessionAdapter();
 
+        $adapter->start();
         $adapter->restart();
 
         self::assertTrue($adapter->isStarted());
@@ -128,9 +111,7 @@ class PhpSessionAdapterTest extends TestCase
 
     public function testUnsetClearsAllValuesButKeepsSessionStarted(): void
     {
-        $adapter = new PhpSessionAdapter(
-            startMode: SessionStartMode::LAZY,
-        );
+        $adapter = new PhpSessionAdapter();
 
         $adapter->set('foo', 'bar');
         $adapter->set('baz', 'qux');
@@ -143,9 +124,7 @@ class PhpSessionAdapterTest extends TestCase
 
     public function testRegenerateIdentifierProducesNewIdentifierWithoutLosingStartedState(): void
     {
-        $adapter = new PhpSessionAdapter(
-            startMode: SessionStartMode::LAZY,
-        );
+        $adapter = new PhpSessionAdapter();
 
         $originalIdentifier = $adapter->getIdentifier();
 
@@ -159,44 +138,35 @@ class PhpSessionAdapterTest extends TestCase
         self::assertNotSame($originalIdentifier, $newIdentifier);
     }
 
-    public function testExplicitModeThrowsWhenAccessingBeforeStart(): void
+    public function testDataAccessStartsSessionLazily(): void
     {
-        $adapter = new PhpSessionAdapter(
-            startMode: SessionStartMode::EXPLICIT,
-        );
+        $adapter = new PhpSessionAdapter();
 
-        self::expectException(SessionException::class);
-
-        $adapter->has('foo');
+        self::assertFalse($adapter->has('foo'));
+        self::assertTrue($adapter->isStarted());
     }
 
     public function testSetTreatsUnitEnumValueAsItsName(): void
     {
-        $adapter = new PhpSessionAdapter(
-            startMode: SessionStartMode::LAZY,
-        );
+        $adapter = new PhpSessionAdapter();
 
-        $adapter->set('mode', SessionStartMode::LAZY);
+        $adapter->set('color', Color::RED);
 
-        self::assertSame('LAZY', $adapter->getRaw('mode'));
+        self::assertSame('RED', $adapter->getRaw('color'));
     }
 
-    public function testAutoModeAllowsDataAccessWithoutManualStart(): void
+    public function testDataAccessWorksWithoutManualStart(): void
     {
-        $adapter = new PhpSessionAdapter(
-            startMode: SessionStartMode::AUTO,
-        );
+        $adapter = new PhpSessionAdapter();
 
         $adapter->set('foo', 'bar');
 
         self::assertSame('bar', $adapter->getRaw('foo'));
     }
 
-    public function testExplicitModeAllowsDataAccessAfterManualStart(): void
+    public function testDataAccessWorksAfterManualStart(): void
     {
-        $adapter = new PhpSessionAdapter(
-            startMode: SessionStartMode::EXPLICIT,
-        );
+        $adapter = new PhpSessionAdapter();
 
         $adapter->start();
 
@@ -210,7 +180,6 @@ class PhpSessionAdapterTest extends TestCase
         $this->expectException(SessionException::class);
 
         new PhpSessionAdapter(
-            startMode: SessionStartMode::LAZY,
             sameSite: SameSite::NONE,
         );
     }
@@ -218,7 +187,6 @@ class PhpSessionAdapterTest extends TestCase
     public function testSameSiteNoneWithSecureIsAccepted(): void
     {
         $adapter = new PhpSessionAdapter(
-            startMode: SessionStartMode::LAZY,
             secure: true,
             sameSite: SameSite::NONE,
         );
@@ -233,5 +201,15 @@ class PhpSessionAdapterTest extends TestCase
         new SessionConfig(
             sameSite: SameSite::NONE,
         );
+    }
+
+    public function testIsDefaultImplementation(): void
+    {
+        $container = new Container();
+        $adapter = $container->resolve(SessionAdapterInterface::class);
+
+        self::assertInstanceOf(PhpSessionAdapter::class, $adapter);
+        self::assertFalse($adapter->isStarted());
+        self::assertSame($adapter, $container->resolve(SessionAdapterInterface::class));
     }
 }

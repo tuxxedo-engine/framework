@@ -17,10 +17,12 @@ use Fixture\Session\Color;
 use PHPUnit\Framework\Attributes\PreserveGlobalState;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\TestCase;
+use Support\Session\StubSessionAdapter;
+use Tuxxedo\Container\Container;
 use Tuxxedo\Session\Adapter\PhpSessionAdapter;
 use Tuxxedo\Session\Session;
 use Tuxxedo\Session\SessionException;
-use Tuxxedo\Session\SessionStartMode;
+use Tuxxedo\Session\SessionInterface;
 
 #[RunTestsInSeparateProcesses]
 #[PreserveGlobalState(false)]
@@ -29,9 +31,7 @@ class SessionTest extends TestCase
     private function makeSession(): Session
     {
         return new Session(
-            adapter: new PhpSessionAdapter(
-                startMode: SessionStartMode::LAZY,
-            ),
+            adapter: new PhpSessionAdapter(),
         );
     }
 
@@ -201,5 +201,25 @@ class SessionTest extends TestCase
         self::expectException(SessionException::class);
 
         $session->enum('color', Color::class);
+    }
+
+    public function testContainerDefaultsToPhpSessionAdapter(): void
+    {
+        $session = (new Container())->resolve(SessionInterface::class);
+
+        self::assertInstanceOf(PhpSessionAdapter::class, $session->adapter);
+    }
+
+    public function testContainerUsesBoundAdapter(): void
+    {
+        $adapter = new StubSessionAdapter();
+        $container = new Container();
+
+        $container->singleton($adapter);
+
+        self::assertSame(
+            $adapter,
+            $container->resolve(SessionInterface::class)->adapter,
+        );
     }
 }

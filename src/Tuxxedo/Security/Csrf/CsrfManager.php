@@ -15,13 +15,12 @@ namespace Tuxxedo\Security\Csrf;
 
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DefaultInitializer;
-use Tuxxedo\Security\Csrf\Storage\CsrfSessionStorageHandler;
 use Tuxxedo\Security\Csrf\Storage\CsrfStorageHandlerInterface;
 
 #[DefaultInitializer(
     static function (ContainerInterface $container): CsrfManagerInterface {
         return new CsrfManager(
-            storage: $container->resolve(CsrfSessionStorageHandler::class),
+            storage: $container->resolve(CsrfStorageHandlerInterface::class),
         );
     },
 )]

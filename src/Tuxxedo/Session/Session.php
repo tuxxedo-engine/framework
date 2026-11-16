@@ -16,15 +16,11 @@ namespace Tuxxedo\Session;
 use Tuxxedo\Container\ContainerInterface;
 use Tuxxedo\Container\DefaultInitializer;
 use Tuxxedo\Reflection\EnumHydrator;
-use Tuxxedo\Session\Config\SessionConfigInterface;
 
 #[DefaultInitializer(
     static function (ContainerInterface $container): SessionInterface {
         return new Session(
-            adapter: Adapter\PhpSessionAdapter::createFromConfig(
-                startMode: SessionStartMode::LAZY,
-                config: $container->resolve(SessionConfigInterface::class),
-            ),
+            adapter: $container->resolve(SessionAdapterInterface::class),
         );
     },
 )]

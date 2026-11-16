@@ -14,15 +14,12 @@ declare(strict_types=1);
 namespace Tuxxedo\Session;
 
 use Tuxxedo\Container\DefaultImplementation;
+use Tuxxedo\Container\Lifecycle;
 use Tuxxedo\Session\Adapter\PhpSessionAdapter;
 
-#[DefaultImplementation(class: PhpSessionAdapter::class)]
+#[DefaultImplementation(class: PhpSessionAdapter::class, lifecycle: Lifecycle::SINGLETON)]
 interface SessionAdapterInterface
 {
-    public SessionStartMode $startMode {
-        get;
-    }
-
     public function isStarted(): bool;
 
     /**

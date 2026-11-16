@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Security\Csrf\Storage;
 
+use Tuxxedo\Container\DefaultImplementation;
+
+#[DefaultImplementation(class: CsrfSessionStorageHandler::class)]
 interface CsrfStorageHandlerInterface
 {
     public function clear(): void;

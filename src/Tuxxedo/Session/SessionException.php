@@ -17,13 +17,6 @@ use Tuxxedo\Exception;
 
 class SessionException extends Exception
 {
-    public static function fromNotStarted(): self
-    {
-        return new self(
-            message: 'A session must be started to use this functionality',
-        );
-    }
-
     /**
      * @codeCoverageIgnore
      */

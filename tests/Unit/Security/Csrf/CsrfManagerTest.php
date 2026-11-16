@@ -15,7 +15,9 @@ namespace Unit\Security\Csrf;
 
 use PHPUnit\Framework\TestCase;
 use Support\Security\Csrf\Storage\StubCsrfStorageHandler;
+use Tuxxedo\Container\Container;
 use Tuxxedo\Security\Csrf\CsrfManager;
+use Tuxxedo\Security\Csrf\CsrfManagerInterface;
 
 class CsrfManagerTest extends TestCase
 {
@@ -165,5 +167,21 @@ class CsrfManagerTest extends TestCase
 
         self::assertNotSame('original-token', $token);
         self::assertSame($token, $storage->token);
+    }
+
+    public function testContainerUsesBoundStorage(): void
+    {
+        $container = new Container();
+
+        $container->singleton(
+            new StubCsrfStorageHandler(
+                token: 'bound-token',
+            ),
+        );
+
+        self::assertSame(
+            'bound-token',
+            $container->resolve(CsrfManagerInterface::class)->getToken(),
+        );
     }
 }
