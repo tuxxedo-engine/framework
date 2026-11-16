@@ -13,17 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\MetaData;
 
-use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Container\DefaultInitializer;
 use Tuxxedo\Model\MetaData\Adapter\MetaDataAdapterInterface;
 
-#[DefaultInitializer(
-    static function (ContainerInterface $container): MetaDataInterface {
-        return new MetaData(
-            adapter: $container->resolve(Adapter\ReflectionMetaDataAdapter::class),
-        );
-    },
-)]
 class MetaData implements MetaDataInterface
 {
     /**

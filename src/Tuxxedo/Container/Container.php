@@ -585,6 +585,18 @@ class Container implements ContainerInterface
             return $attributes[0]->newInstance()->initializer;
         }
 
+        $factories = $class->getAttributes(
+            name: DefaultFactory::class,
+            flags: \ReflectionAttribute::IS_INSTANCEOF,
+        );
+
+        if (\sizeof($factories) > 0) {
+            /** @var \Closure(): object */
+            $factory = $factories[0]->newInstance()->factory;
+
+            return static fn (ContainerInterface $container, array $arguments): object => $container->call($factory, $arguments);
+        }
+
         return null;
     }
 

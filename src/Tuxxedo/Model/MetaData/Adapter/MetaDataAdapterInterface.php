@@ -13,9 +13,11 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model\MetaData\Adapter;
 
+use Tuxxedo\Container\DefaultImplementation;
 use Tuxxedo\Model\MetaData\ModelMetaDataInterface;
 use Tuxxedo\Model\ModelException;
 
+#[DefaultImplementation(class: ReflectionMetaDataAdapter::class)]
 interface MetaDataAdapterInterface
 {
     /**

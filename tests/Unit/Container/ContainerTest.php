@@ -19,6 +19,8 @@ use Fixture\Container\CtorArgsService;
 use Fixture\Container\CtorNoArgsService;
 use Fixture\Container\CycleServiceA;
 use Fixture\Container\CycleServiceX;
+use Fixture\Container\DefaultServiceFive;
+use Fixture\Container\DefaultServiceFiveInterface;
 use Fixture\Container\DefaultServiceFourInterface;
 use Fixture\Container\DefaultServiceOne;
 use Fixture\Container\DefaultServiceOneInterface;
@@ -542,6 +544,11 @@ class ContainerTest extends TestCase
             DefaultServiceTwoInterface::class,
             DefaultServiceTwo::class,
         ];
+
+        yield [
+            DefaultServiceFiveInterface::class,
+            DefaultServiceFive::class,
+        ];
     }
 
     /**
@@ -604,6 +611,42 @@ class ContainerTest extends TestCase
         self::assertArrayHasKey('foo', $service->arguments);
         self::assertSame($service->arguments['foo'], 'bar');
         self::assertSame($service->arguments[0], 'void');
+    }
+
+    public function testDefaultFactoryResolvesFactoryParameters(): void
+    {
+        $container = new Container();
+
+        $service = $container->resolve(DefaultServiceFiveInterface::class);
+
+        self::assertTrue($service->dependency->ready);
+        self::assertSame('default', $service->name);
+    }
+
+    public function testDefaultFactoryWithArguments(): void
+    {
+        $container = new Container();
+
+        $service = $container->resolve(
+            DefaultServiceFiveInterface::class,
+            [
+                'name' => 'custom',
+            ],
+        );
+
+        self::assertSame('custom', $service->name);
+    }
+
+    public function testDefaultFactoryOnRegisteredClass(): void
+    {
+        $container = new Container();
+
+        $container->singleton(DefaultServiceFive::class);
+
+        $service = $container->resolve(DefaultServiceFiveInterface::class);
+
+        self::assertSame('default', $service->name);
+        self::assertSame($service, $container->resolve(DefaultServiceFive::class));
     }
 
     public function testDefaultImplementationNoAttribute(): void

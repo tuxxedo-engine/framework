@@ -15,9 +15,11 @@ namespace Unit\Router\Pattern;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tuxxedo\Container\Container;
 use Tuxxedo\Router\Pattern\TypePattern;
 use Tuxxedo\Router\Pattern\TypePatternInterface;
 use Tuxxedo\Router\Pattern\TypePatternRegistry;
+use Tuxxedo\Router\Pattern\TypePatternRegistryInterface;
 
 class TypePatternRegistryTest extends TestCase
 {
@@ -466,5 +468,13 @@ class TypePatternRegistryTest extends TestCase
         $matched = \preg_match('/^' . $pattern->regex . '$/', $value) === 1;
 
         self::assertSame($shouldMatch, $matched);
+    }
+
+    public function testIsDefaultImplementation(): void
+    {
+        $registry = (new Container())->resolve(TypePatternRegistryInterface::class);
+
+        self::assertInstanceOf(TypePatternRegistry::class, $registry);
+        self::assertTrue($registry->has('uuid'));
     }
 }

@@ -13,20 +13,13 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Session\Adapter;
 
-use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Container\DefaultInitializer;
+use Tuxxedo\Container\DefaultFactory;
 use Tuxxedo\Http\SameSite;
 use Tuxxedo\Session\Config\SessionConfigInterface;
 use Tuxxedo\Session\SessionAdapterInterface;
 use Tuxxedo\Session\SessionException;
 
-#[DefaultInitializer(
-    static function (ContainerInterface $container): SessionAdapterInterface {
-        return PhpSessionAdapter::createFromConfig(
-            config: $container->resolve(SessionConfigInterface::class),
-        );
-    },
-)]
+#[DefaultFactory(PhpSessionAdapter::createFromConfig(...))]
 class PhpSessionAdapter implements SessionAdapterInterface
 {
     private bool $started = false;

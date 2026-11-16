@@ -16,7 +16,11 @@ namespace Unit\Model\MetaData;
 use Fixture\Model\User;
 use PHPUnit\Framework\TestCase;
 use Support\Model\CountingMetaDataAdapter;
+use Tuxxedo\Container\Container;
+use Tuxxedo\Model\MetaData\Adapter\MetaDataAdapterInterface;
+use Tuxxedo\Model\MetaData\Adapter\ReflectionMetaDataAdapter;
 use Tuxxedo\Model\MetaData\MetaData;
+use Tuxxedo\Model\MetaData\MetaDataInterface;
 
 class MetaDataTest extends TestCase
 {
@@ -41,5 +45,13 @@ class MetaDataTest extends TestCase
             2,
             $adapter->calls,
         );
+    }
+
+    public function testIsDefaultImplementation(): void
+    {
+        $container = new Container();
+
+        self::assertInstanceOf(MetaData::class, $container->resolve(MetaDataInterface::class));
+        self::assertInstanceOf(ReflectionMetaDataAdapter::class, $container->resolve(MetaDataAdapterInterface::class));
     }
 }

@@ -13,17 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Session;
 
-use Tuxxedo\Container\ContainerInterface;
-use Tuxxedo\Container\DefaultInitializer;
 use Tuxxedo\Reflection\EnumHydrator;
 
-#[DefaultInitializer(
-    static function (ContainerInterface $container): SessionInterface {
-        return new Session(
-            adapter: $container->resolve(SessionAdapterInterface::class),
-        );
-    },
-)]
 class Session implements SessionInterface
 {
     public function __construct(
