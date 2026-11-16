@@ -11,9 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Tuxxedo\Security\Crypto\Der;
-
-use Tuxxedo\Security\Crypto\CryptoException;
+namespace Tuxxedo\Security\Crypto;
 
 class DerEncoder
 {

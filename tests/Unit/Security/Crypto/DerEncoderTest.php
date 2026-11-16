@@ -11,11 +11,11 @@
 
 declare(strict_types=1);
 
-namespace Unit\Security\Crypto\Der;
+namespace Unit\Security\Crypto;
 
 use PHPUnit\Framework\TestCase;
 use Tuxxedo\Security\Crypto\CryptoException;
-use Tuxxedo\Security\Crypto\Der\DerEncoder;
+use Tuxxedo\Security\Crypto\DerEncoder;
 
 class DerEncoderTest extends TestCase
 {

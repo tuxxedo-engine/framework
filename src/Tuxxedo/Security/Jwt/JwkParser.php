@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Security\Jwt;
 
 use Tuxxedo\Security\Crypto\CryptoException;
-use Tuxxedo\Security\Crypto\Der\DerEncoder;
+use Tuxxedo\Security\Crypto\DerEncoder;
 use Tuxxedo\Security\Jwt\Key\EcdsaPrivateKey;
 use Tuxxedo\Security\Jwt\Key\EcdsaPublicKey;
 use Tuxxedo\Security\Jwt\Key\EdDsaPrivateKey;
