@@ -1825,8 +1825,9 @@ class ModelsManager implements ModelsManagerInterface
         $parentMetaData = $this->metaData->getModel($model::class);
         $localKeyValues = $this->resolveOwnKeyValues($model, $parentMetaData);
         $pivotSourceColumns = $relation->pivotSourceColumns;
+        $pivotTable = $relation->pivotTable;
 
-        if ($pivotSourceColumns === null) {
+        if ($pivotSourceColumns === null || $pivotTable === null) {
             // @codeCoverageIgnoreStart
             throw ModelException::fromRelationNotFoundOnModel(
                 modelClass: $parentMetaData->model,
@@ -1836,7 +1837,7 @@ class ModelsManager implements ModelsManagerInterface
         }
 
         $localValueList = \array_values($localKeyValues);
-        $statement = $this->connection->delete($attribute->table);
+        $statement = $this->connection->delete($pivotTable);
 
         foreach ($pivotSourceColumns as $index => $pivotSourceColumn) {
             $statement->where($pivotSourceColumn, $localValueList[$index]);
@@ -2087,8 +2088,9 @@ class ModelsManager implements ModelsManagerInterface
         );
 
         $pivotSourceColumns = $relation->pivotSourceColumns;
+        $pivotTable = $relation->pivotTable;
 
-        if ($pivotSourceColumns === null) {
+        if ($pivotSourceColumns === null || $pivotTable === null) {
             // @codeCoverageIgnoreStart
             throw ModelException::fromRelationNotFoundOnModel(
                 modelClass: $parentMetaData->model,
@@ -2099,7 +2101,7 @@ class ModelsManager implements ModelsManagerInterface
 
         $localValueList = \array_values($localKeyValues);
         $statement = $this->connection
-            ->delete($attribute->table)
+            ->delete($pivotTable)
             ->where($attribute->typeColumn, $typeValue);
 
         foreach ($pivotSourceColumns as $index => $pivotSourceColumn) {

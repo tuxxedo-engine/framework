@@ -27,10 +27,10 @@ readonly class MorphToMany implements InversePolymorphicRelationInterface
      */
     public function __construct(
         public string $related,
-        public string $table,
         public string $typeColumn,
         public string|array $idColumn,
         public string|array $foreignKey,
+        public ?string $table = null,
         public ?array $typeMap = null,
         public ?string $pivot = null,
         public CascadeAction $onSave = CascadeAction::NO_ACTION,

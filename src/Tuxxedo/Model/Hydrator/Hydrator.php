@@ -323,8 +323,9 @@ class Hydrator implements HydratorInterface
         $targetPkColumns = $this->resolvePkColumns($targetMetaData);
         $pivotSourceColumns = $relation->pivotSourceColumns;
         $pivotTargetColumns = $relation->pivotTargetColumns;
+        $pivotTable = $relation->pivotTable;
 
-        if ($pivotSourceColumns === null || $pivotTargetColumns === null) {
+        if ($pivotSourceColumns === null || $pivotTargetColumns === null || $pivotTable === null) {
             // @codeCoverageIgnoreStart
             throw ModelException::fromRelationNotFoundOnModel(
                 modelClass: $metaData->model,
@@ -367,10 +368,7 @@ class Hydrator implements HydratorInterface
             return;
         }
 
-        /** @var BelongsToMany $attribute */
-        $attribute = $relation->attribute;
         $targetTable = $targetMetaData->table;
-        $pivotTable = $attribute->table;
 
         $relationInstance = $this->createConstrainedRelation(
             relatedClass: $relatedClass,
@@ -752,8 +750,9 @@ class Hydrator implements HydratorInterface
         $targetPkColumns = $this->resolvePkColumns($targetMetaData);
         $pivotSourceColumns = $relation->pivotSourceColumns;
         $pivotTargetColumns = $relation->pivotTargetColumns;
+        $pivotTable = $relation->pivotTable;
 
-        if ($pivotSourceColumns === null || $pivotTargetColumns === null) {
+        if ($pivotSourceColumns === null || $pivotTargetColumns === null || $pivotTable === null) {
             // @codeCoverageIgnoreStart
             throw ModelException::fromRelationNotFoundOnModel(
                 modelClass: $metaData->model,
@@ -803,7 +802,6 @@ class Hydrator implements HydratorInterface
             typeMap: $attribute->typeMap,
         );
         $targetTable = $targetMetaData->table;
-        $pivotTable = $attribute->table;
         $pivotTypeColumn = $attribute->typeColumn;
 
         $relationInstance = $this->createConstrainedRelation(
@@ -1597,8 +1595,9 @@ class Hydrator implements HydratorInterface
         $targetPkColumns = $this->resolvePkColumns($targetMetaData);
         $pivotSourceColumns = $relation->pivotSourceColumns;
         $pivotTargetColumns = $relation->pivotTargetColumns;
+        $pivotTable = $relation->pivotTable;
 
-        if ($pivotSourceColumns === null || $pivotTargetColumns === null) {
+        if ($pivotSourceColumns === null || $pivotTargetColumns === null || $pivotTable === null) {
             // @codeCoverageIgnoreStart
             throw ModelException::fromRelationNotFoundOnModel(
                 modelClass: $metaData->model,
@@ -1608,7 +1607,6 @@ class Hydrator implements HydratorInterface
         }
 
         $targetTable = $targetMetaData->table;
-        $pivotTable = $attribute->table;
 
         $sourcePropertyNames = [];
 
@@ -2583,8 +2581,9 @@ class Hydrator implements HydratorInterface
         $targetPkColumns = $this->resolvePkColumns($targetMetaData);
         $pivotSourceColumns = $relation->pivotSourceColumns;
         $pivotTargetColumns = $relation->pivotTargetColumns;
+        $pivotTable = $relation->pivotTable;
 
-        if ($pivotSourceColumns === null || $pivotTargetColumns === null) {
+        if ($pivotSourceColumns === null || $pivotTargetColumns === null || $pivotTable === null) {
             // @codeCoverageIgnoreStart
             throw ModelException::fromRelationNotFoundOnModel(
                 modelClass: $metaData->model,
@@ -2594,7 +2593,6 @@ class Hydrator implements HydratorInterface
         }
 
         $targetTable = $targetMetaData->table;
-        $pivotTable = $attribute->table;
         $pivotTypeColumn = $attribute->typeColumn;
         $typeValue = MorphTypeResolver::encode(
             class: $metaData->model,

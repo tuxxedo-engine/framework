@@ -64,11 +64,13 @@ class RelationPivot implements RelationPivotInterface
         $attribute = $relation->attribute;
         $pivotSourceColumns = $relation->pivotSourceColumns;
         $pivotTargetColumns = $relation->pivotTargetColumns;
+        $pivotTable = $relation->pivotTable;
 
         if (
             (!$attribute instanceof BelongsToMany && !$attribute instanceof MorphToMany) ||
             $pivotSourceColumns === null ||
-            $pivotTargetColumns === null
+            $pivotTargetColumns === null ||
+            $pivotTable === null
         ) {
             // @codeCoverageIgnoreStart
             throw ModelException::fromRelationNotFoundOnModel(
@@ -93,7 +95,7 @@ class RelationPivot implements RelationPivotInterface
             manager: $manager,
             relatedClass: $relation->relatedClass,
             pivotClass: $attribute->pivot,
-            table: $attribute->table,
+            table: $pivotTable,
             pivotSourceColumns: $pivotSourceColumns,
             pivotTargetColumns: $pivotTargetColumns,
             parentValues: $parentValues,

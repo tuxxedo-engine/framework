@@ -79,6 +79,10 @@ interface ModelRelationInterface
         get;
     }
 
+    public ?string $pivotTable {
+        get;
+    }
+
     /**
      * @var non-empty-list<string>|null
      */

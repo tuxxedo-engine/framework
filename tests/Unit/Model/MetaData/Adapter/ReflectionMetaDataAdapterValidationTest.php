@@ -47,6 +47,7 @@ use Fixture\Model\Broken\PivotClassInvalid;
 use Fixture\Model\Broken\PivotClassNotAModel;
 use Fixture\Model\Broken\PivotMissingKeyColumn;
 use Fixture\Model\Broken\PivotTableMismatch;
+use Fixture\Model\Broken\PivotTableRequired;
 use Fixture\Model\Broken\PivotWithoutPrimaryKey;
 use Fixture\Model\Broken\PropertyWithTwoColumns;
 use Fixture\Model\Broken\PropertyWithTwoRelations;
@@ -215,6 +216,14 @@ class ReflectionMetaDataAdapterValidationTest extends TestCase
         $this->assertRejectsModelWithMessage(
             modelClass: PivotTableMismatch::class,
             needle: 'uses table "other_links", but its pivot',
+        );
+    }
+
+    public function testRejectsPivotRelationWithoutTableOrPivotModel(): void
+    {
+        $this->assertRejectsModelWithMessage(
+            modelClass: PivotTableRequired::class,
+            needle: 'needs a pivot table',
         );
     }
 

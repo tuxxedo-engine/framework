@@ -34,7 +34,6 @@ class PivotProduct
      */
     #[BelongsToMany(
         related: PivotCategory::class,
-        table: 'pivot_category_product',
         localKey: 'product_id',
         foreignKey: 'category_id',
         pivot: PivotCategoryProduct::class,
@@ -46,7 +45,6 @@ class PivotProduct
      */
     #[MorphToMany(
         related: PivotCategory::class,
-        table: 'pivot_labelables',
         typeColumn: 'labelable_type',
         idColumn: 'labelable_id',
         foreignKey: 'category_id',

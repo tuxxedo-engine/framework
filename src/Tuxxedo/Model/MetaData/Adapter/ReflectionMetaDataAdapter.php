@@ -418,6 +418,11 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
                 referencedKeyColumns: $referencedKeyColumns,
                 pivotSourceColumns: $pivotSourceColumns,
                 pivotTargetColumns: $pivotTargetColumns,
+                pivotTable: $this->pivotTable(
+                    modelClass: $class->name,
+                    property: $property->name,
+                    attribute: $attribute,
+                ),
                 secondLocalKeyColumns: $secondLocalKeyColumns,
                 secondKeyColumns: $secondKeyColumns,
             );
@@ -562,6 +567,11 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
             referencedKeyColumns: $referencedKeyColumns,
             pivotSourceColumns: $pivotSourceColumns,
             pivotTargetColumns: $pivotTargetColumns,
+            pivotTable: $this->pivotTable(
+                modelClass: $class->name,
+                property: $property->name,
+                attribute: $attribute,
+            ),
         );
     }
 
@@ -1526,6 +1536,36 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
 
     /**
      * @param class-string $modelClass
+     *
+     * @throws ModelException
+     */
+    private function pivotTable(
+        string $modelClass,
+        string $property,
+        RelationAttributeInterface $attribute,
+    ): ?string {
+        if (!$attribute instanceof BelongsToMany && !$attribute instanceof MorphToMany) {
+            return null;
+        }
+
+        if ($attribute->table !== null) {
+            return $attribute->table;
+        }
+
+        if ($attribute->pivot === null) {
+            throw ModelException::fromPivotTableRequired(
+                modelClass: $modelClass,
+                property: $property,
+            );
+        }
+
+        return new ClassReflector(
+            reflector: new \ReflectionClass($attribute->pivot),
+        )->getAttribute(Table::class)->name;
+    }
+
+    /**
+     * @param class-string $modelClass
      * @param class-string|null $pivotClass
      * @param array<string, non-empty-list<string>> $keyColumns
      *
@@ -1535,7 +1575,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
         string $modelClass,
         string $property,
         ?string $pivotClass,
-        string $table,
+        ?string $table,
         array $keyColumns,
     ): void {
         if ($pivotClass === null) {
@@ -1573,7 +1613,7 @@ class ReflectionMetaDataAdapter implements MetaDataAdapterInterface
 
         $pivotTable = $tableAttributes[0]->newInstance()->name;
 
-        if ($pivotTable !== $table) {
+        if ($table !== null && $pivotTable !== $table) {
             throw ModelException::fromPivotTableMismatch(
                 modelClass: $modelClass,
                 property: $property,

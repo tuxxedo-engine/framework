@@ -39,6 +39,7 @@ readonly class ModelRelation implements ModelRelationInterface
         public ?array $referencedKeyColumns = null,
         public ?array $pivotSourceColumns = null,
         public ?array $pivotTargetColumns = null,
+        public ?string $pivotTable = null,
         public ?array $secondLocalKeyColumns = null,
         public ?array $secondKeyColumns = null,
     ) {

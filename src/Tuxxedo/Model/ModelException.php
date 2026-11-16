@@ -1315,6 +1315,22 @@ class ModelException extends Exception
         );
     }
 
+    /**
+     * @param class-string $modelClass
+     */
+    public static function fromPivotTableRequired(
+        string $modelClass,
+        string $property,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Invalid model class "%s": relation on property "%s" needs a pivot table; set table: or a pivot model with pivot:',
+                $modelClass,
+                $property,
+            ),
+        );
+    }
+
     public static function fromRelationRequiresPivot(
         string $relatedClass,
         string $operation,

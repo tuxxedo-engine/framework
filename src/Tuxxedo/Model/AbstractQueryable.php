@@ -1903,8 +1903,9 @@ abstract class AbstractQueryable implements QueryableInterface
         if ($attribute instanceof BelongsToMany || $attribute instanceof MorphToMany) {
             $pivotSourceColumns = $relation->pivotSourceColumns;
             $pivotTargetColumns = $relation->pivotTargetColumns;
+            $pivotTable = $relation->pivotTable;
 
-            if ($pivotSourceColumns === null || $pivotTargetColumns === null) {
+            if ($pivotSourceColumns === null || $pivotTargetColumns === null || $pivotTable === null) {
                 // @codeCoverageIgnoreStart
                 throw ModelException::fromRelationNotFoundOnModel(
                     modelClass: $parentMetaData->model,
@@ -1919,7 +1920,7 @@ abstract class AbstractQueryable implements QueryableInterface
             return new ModelRelationLink(
                 target: $targetMetaData,
                 parentOn: $this->pairColumns($pivotSourceColumns, $parentKeyColumns),
-                throughTable: $attribute->table,
+                throughTable: $pivotTable,
                 throughOn: $this->pairColumns($pivotTargetColumns, $targetKeyColumns),
                 filters: $attribute instanceof MorphToMany
                     ? [

@@ -26,9 +26,9 @@ readonly class BelongsToMany implements RelationInterface
      */
     public function __construct(
         public string $related,
-        public string $table,
         public string|array $localKey,
         public string|array $foreignKey,
+        public ?string $table = null,
         public ?string $pivot = null,
         public CascadeAction $onSave = CascadeAction::NO_ACTION,
         public CascadeAction $onDelete = CascadeAction::NO_ACTION,
