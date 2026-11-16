@@ -26,10 +26,14 @@ use Tuxxedo\Console\Input\ConfirmQuestion;
 use Tuxxedo\Console\Input\Message\MessageFormatterInterface;
 use Tuxxedo\Console\Input\Message\TranslatorMessageFormatter;
 use Tuxxedo\Console\Input\Questionnaire;
+use Tuxxedo\Console\Input\SecretQuestion;
+use Tuxxedo\Console\Input\SecretTheme;
 use Tuxxedo\Console\Input\StdinInput;
 use Tuxxedo\Console\Input\TextQuestion;
+use Tuxxedo\Console\Output\Color;
 use Tuxxedo\Console\Output\DecorationMode;
 use Tuxxedo\Console\Output\StreamOutput;
+use Tuxxedo\Console\Output\Style\Style;
 use Tuxxedo\Intl\Config\IntlConfig;
 use Tuxxedo\Intl\Loader\FlatFileLoader;
 use Tuxxedo\Intl\Locale;
@@ -651,15 +655,250 @@ class StdinInputTest extends TestCase
         );
     }
 
+    public function testSecretReadsPipedLineVerbatim(): void
+    {
+        $input = $this->makeInput(
+            lines: [
+                '  s3cret  ',
+            ],
+        );
+
+        self::assertSame(
+            '  s3cret  ',
+            $input->secret(
+                question: 'Token?',
+            ),
+        );
+
+        self::assertSame(
+            'Token? ',
+            $this->outputStream->bytes,
+        );
+    }
+
+    public function testSecretThrowsOnEofWhenPiped(): void
+    {
+        $input = $this->makeInput(
+            lines: [],
+        );
+
+        $this->expectException(ConsoleException::class);
+
+        $input->secret(
+            question: 'Token?',
+        );
+    }
+
+    public function testSecretThrowsOnEmptyPipedAnswer(): void
+    {
+        $input = $this->makeInput(
+            lines: [
+                '',
+            ],
+        );
+
+        $this->expectException(ConsoleException::class);
+
+        $input->secret(
+            question: 'Token?',
+        );
+    }
+
+    public function testSecretMasksEachCharacterOnTerminal(): void
+    {
+        $input = $this->makeInput(
+            lines: [
+                "p\u{e4}ss\n",
+            ],
+            isTerminal: true,
+        );
+
+        self::assertSame(
+            "p\u{e4}ss",
+            $input->secret(
+                question: 'Token?',
+            ),
+        );
+
+        self::assertSame(
+            'Token? ****' . \PHP_EOL,
+            $this->outputStream->bytes,
+        );
+    }
+
+    public function testSecretBackspaceRemovesLastCharacterAndErasesMask(): void
+    {
+        $input = $this->makeInput(
+            lines: [
+                "\x7fab\x7fc\x08d\n",
+            ],
+            isTerminal: true,
+        );
+
+        self::assertSame(
+            'ad',
+            $input->secret(
+                question: 'Token?',
+            ),
+        );
+
+        self::assertSame(
+            'Token? **' . "\x08 \x08" . '*' . "\x08 \x08" . '*' . \PHP_EOL,
+            $this->outputStream->bytes,
+        );
+    }
+
+    public function testSecretSkipsControlCharacters(): void
+    {
+        $input = $this->makeInput(
+            lines: [
+                "a\x01b\r",
+            ],
+            isTerminal: true,
+        );
+
+        self::assertSame(
+            'ab',
+            $input->secret(
+                question: 'Token?',
+            ),
+        );
+    }
+
+    public function testSecretHiddenThemeWritesNoMask(): void
+    {
+        $input = $this->makeInput(
+            lines: [
+                "xy\x7f\n",
+            ],
+            isTerminal: true,
+        );
+
+        self::assertSame(
+            'x',
+            $input->secret(
+                question: 'Token?',
+                theme: SecretTheme::hidden(),
+            ),
+        );
+
+        self::assertSame(
+            'Token? ' . \PHP_EOL,
+            $this->outputStream->bytes,
+        );
+    }
+
+    public function testSecretStyledMaskUsesThemeMask(): void
+    {
+        $input = $this->makeInput(
+            lines: [
+                "xy\x7f\n",
+            ],
+            isTerminal: true,
+        );
+
+        self::assertSame(
+            'x',
+            $input->secret(
+                question: 'Token?',
+                theme: new SecretTheme(
+                    mask: "\u{2022}",
+                    maskStyle: new Style(
+                        foreground: Color::GREEN,
+                    ),
+                ),
+            ),
+        );
+
+        self::assertSame(
+            "Token? \u{2022}\u{2022}\x08 \x08" . \PHP_EOL,
+            $this->outputStream->bytes,
+        );
+    }
+
+    public function testSecretThrowsOnEmptyAnswerOnTerminal(): void
+    {
+        $input = $this->makeInput(
+            lines: [
+                "\n",
+            ],
+            isTerminal: true,
+        );
+
+        $this->expectException(ConsoleException::class);
+
+        $input->secret(
+            question: 'Token?',
+        );
+    }
+
+    public function testSecretThrowsOnEofOnTerminal(): void
+    {
+        $input = $this->makeInput(
+            lines: [],
+            isTerminal: true,
+        );
+
+        $this->expectException(ConsoleException::class);
+
+        $input->secret(
+            question: 'Token?',
+        );
+    }
+
+    public function testSecretReturnsTypedCharactersWhenInputEndsWithoutEnter(): void
+    {
+        $input = $this->makeInput(
+            lines: [
+                'abc',
+            ],
+            isTerminal: true,
+        );
+
+        self::assertSame(
+            'abc',
+            $input->secret(
+                question: 'Token?',
+            ),
+        );
+    }
+
+    public function testAskRoutesSecretQuestion(): void
+    {
+        $input = $this->makeInput(
+            lines: [
+                'hunter2',
+            ],
+        );
+
+        self::assertSame(
+            [
+                'token' => 'hunter2',
+            ],
+            $input->ask(
+                new Questionnaire(
+                    questions: [
+                        new SecretQuestion(
+                            key: 'token',
+                            prompt: 'Token?',
+                        ),
+                    ],
+                ),
+            ),
+        );
+    }
+
     /**
      * @param list<string> $lines
      */
     private function makeInput(
         array $lines,
+        bool $isTerminal = false,
     ): StdinInput {
         return new StdinInput(
             stream: new ScriptedInputStream(
                 lines: $lines,
+                isTerminal: $isTerminal,
             ),
             output: $this->makeOutput(),
             messageFormatter: $this->makeMessageFormatter(),

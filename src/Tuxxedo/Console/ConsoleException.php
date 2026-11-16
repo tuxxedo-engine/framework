@@ -414,6 +414,17 @@ class ConsoleException extends Exception implements ExitCodeInterface, ExitCodeE
         );
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
+    public static function fromHiddenInputUnavailable(): self
+    {
+        return new self(
+            exitCode: ExitCode::IO_ERROR,
+            message: 'Hidden input is not available on this terminal',
+        );
+    }
+
     public static function fromEmptyChoiceList(): self
     {
         return new self(

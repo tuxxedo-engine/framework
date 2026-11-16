@@ -40,5 +40,12 @@ interface InputStreamInterface
      */
     public function readAll(): string;
 
+    /**
+     * @return \Generator<int, string>
+     *
+     * @throws ConsoleException
+     */
+    public function hiddenKeys(): \Generator;
+
     public function close(): void;
 }

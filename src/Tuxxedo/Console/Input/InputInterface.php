@@ -53,6 +53,14 @@ interface InputInterface
     ): bool;
 
     /**
+     * @throws ConsoleException
+     */
+    public function secret(
+        string $question,
+        ?SecretThemeInterface $theme = null,
+    ): string;
+
+    /**
      * @template TChoice
      *
      * @param list<TChoice> $choices

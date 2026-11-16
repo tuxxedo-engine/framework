@@ -69,6 +69,17 @@ class ScriptedInputStream implements InputStreamInterface
         return $remaining;
     }
 
+    public function hiddenKeys(): \Generator
+    {
+        if ($this->lines === []) {
+            return;
+        }
+
+        foreach (\mb_str_split(\array_shift($this->lines)) as $key) {
+            yield $key;
+        }
+    }
+
     public function close(): void
     {
         $this->closed = true;

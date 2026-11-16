@@ -80,6 +80,81 @@ class StdinInput implements InputInterface
         return $trimmed;
     }
 
+    public function secret(
+        string $question,
+        ?SecretThemeInterface $theme = null,
+    ): string {
+        $this->output->write($question . ' ');
+
+        if (!$this->stream->isTerminal) {
+            $answer = $this->stream->readLine();
+
+            if ($answer === null) {
+                throw ConsoleException::fromEofOnRequiredInput(
+                    formatter: $this->messageFormatter,
+                );
+            }
+
+            if ($answer === '') {
+                throw ConsoleException::fromEmptyAnswerNotAllowed(
+                    formatter: $this->messageFormatter,
+                );
+            }
+
+            return $answer;
+        }
+
+        $theme ??= SecretTheme::default();
+        $characters = [];
+        $ended = false;
+
+        foreach ($this->stream->hiddenKeys() as $key) {
+            if ($key === "\n" || $key === "\r") {
+                $ended = true;
+
+                break;
+            }
+
+            if ($key === "\x7f" || $key === "\x08") {
+                if ($characters !== []) {
+                    \array_pop($characters);
+
+                    $this->eraseMask(
+                        theme: $theme,
+                    );
+                }
+
+                continue;
+            }
+
+            if (\ord($key[0]) < 32) {
+                continue;
+            }
+
+            $characters[] = $key;
+
+            $this->writeMask(
+                theme: $theme,
+            );
+        }
+
+        $this->output->line();
+
+        if ($characters === [] && !$ended) {
+            throw ConsoleException::fromEofOnRequiredInput(
+                formatter: $this->messageFormatter,
+            );
+        }
+
+        if ($characters === []) {
+            throw ConsoleException::fromEmptyAnswerNotAllowed(
+                formatter: $this->messageFormatter,
+            );
+        }
+
+        return \join('', $characters);
+    }
+
     public function confirm(
         string $question,
         bool $default = false,
@@ -197,6 +272,13 @@ class StdinInput implements InputInterface
             );
         }
 
+        if ($question instanceof SecretQuestion) {
+            return $this->secret(
+                question: $question->prompt,
+                theme: $question->theme,
+            );
+        }
+
         if ($question instanceof ChoiceQuestion) {
             return $this->choose(
                 question: $question->prompt,
@@ -207,6 +289,32 @@ class StdinInput implements InputInterface
         throw ConsoleException::fromUnknownQuestionType(
             className: $question::class,
         );
+    }
+
+    private function writeMask(
+        SecretThemeInterface $theme,
+    ): void {
+        if ($theme->mask === '') {
+            return;
+        }
+
+        if ($theme->maskStyle !== null) {
+            $this->output->styled($theme->mask, $theme->maskStyle);
+
+            return;
+        }
+
+        $this->output->write($theme->mask);
+    }
+
+    private function eraseMask(
+        SecretThemeInterface $theme,
+    ): void {
+        if ($theme->mask === '') {
+            return;
+        }
+
+        $this->output->write(\str_repeat("\x08 \x08", \mb_strwidth($theme->mask)));
     }
 
     private function stringifyChoice(
