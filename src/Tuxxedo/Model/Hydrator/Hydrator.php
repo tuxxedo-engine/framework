@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tuxxedo\Model\Hydrator;
 
 use Tuxxedo\Database\Hydrator\HydratorInterface as DatabaseHydratorInterface;
+use Tuxxedo\Database\Query\FullText\FullTextRelevanceInterface;
 use Tuxxedo\Database\Query\Statement\CountStatementInterface;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
@@ -3209,7 +3210,7 @@ class Hydrator implements HydratorInterface
     }
 
     /**
-     * @param list<array{column: string|SelectStatementInterface, direction: OrderDirection}> $orderBy
+     * @param list<array{column: string|SelectStatementInterface|FullTextRelevanceInterface, direction: OrderDirection}> $orderBy
      */
     private static function applyOrderBy(
         SelectStatementInterface $statement,
@@ -3218,6 +3219,8 @@ class Hydrator implements HydratorInterface
         foreach ($orderBy as $spec) {
             if ($spec['column'] instanceof SelectStatementInterface) {
                 $statement->orderBySubquery($spec['column'], $spec['direction']);
+            } elseif ($spec['column'] instanceof FullTextRelevanceInterface) {
+                $statement->orderByFullTextRelevance($spec['column']->column, $spec['column']->search, $spec['direction']);
             } else {
                 $statement->orderBy($spec['column'], $spec['direction']);
             }

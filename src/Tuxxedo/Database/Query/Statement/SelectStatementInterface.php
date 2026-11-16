@@ -386,6 +386,16 @@ interface SelectStatementInterface extends WhereStatementInterface, SubqueryRend
         OrderDirection|string $direction = OrderDirection::ASC,
     ): static;
 
+    /**
+     * @throws DatabaseException
+     * @throws SqlException
+     */
+    public function orderByFullTextRelevance(
+        string $column,
+        string $search,
+        OrderDirection|string $direction = OrderDirection::DESC,
+    ): static;
+
     public function groupBy(
         string ...$columns,
     ): static;

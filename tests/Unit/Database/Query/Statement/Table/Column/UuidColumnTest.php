@@ -130,6 +130,16 @@ class UuidColumnTest extends TestCase
                 return '';
             }
 
+            public function fullTextRelevance(
+                string $column,
+                array $terms,
+            ): array {
+                return [
+                    'score' => '',
+                    'length' => '',
+                ];
+            }
+
             public function createFullTextIndex(
                 string $table,
                 string $name,

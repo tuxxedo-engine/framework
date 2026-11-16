@@ -262,4 +262,89 @@ abstract class AbstractFullTextBuilderIntegrationTestCase extends AbstractBuilde
             ),
         );
     }
+
+    public function testOrderByFullTextRelevanceRanksWholeWordsAndStartsFirst(): void
+    {
+        $this->createArticles();
+        $this->insertArticles();
+
+        self::assertSame(
+            [
+                'Mint Tea',
+                'Ice Mint',
+                'F-Line Cane Mint',
+                'Cool Minty',
+            ],
+            $this->titles(
+                $this->search('mint')->orderByFullTextRelevance(
+                    column: 'search_text',
+                    search: 'mint',
+                ),
+            ),
+        );
+    }
+
+    public function testOrderByFullTextRelevanceAscendingReversesBothKeys(): void
+    {
+        $this->createArticles();
+        $this->insertArticles();
+
+        self::assertSame(
+            [
+                'Cool Minty',
+                'F-Line Cane Mint',
+                'Ice Mint',
+                'Mint Tea',
+            ],
+            $this->titles(
+                $this->search('mint')->orderByFullTextRelevance(
+                    column: 'search_text',
+                    search: 'mint',
+                    direction: 'asc',
+                ),
+            ),
+        );
+    }
+
+    public function testOrderByFullTextRelevanceWithoutUsableTermsOrdersByLength(): void
+    {
+        $this->createArticles();
+
+        self::assertSame(
+            [
+                "L'moine",
+                'Ice Mint',
+                'Tabák Mix',
+                'F-Line Cane Mint',
+                'The Purple Stuff',
+            ],
+            $this->titles(
+                $this->connection->select(
+                    table: 'articles',
+                )
+                    ->orderByFullTextRelevance(
+                        column: 'search_text',
+                        search: 'mi',
+                    ),
+            ),
+        );
+    }
+
+    private function insertArticles(): void
+    {
+        $titles = [
+            6 => 'Mint Tea',
+            7 => 'Cool Minty',
+        ];
+
+        foreach ($titles as $id => $title) {
+            $this->connection->insert(
+                table: 'articles',
+            )
+                ->set(column: 'id', value: $id)
+                ->set(column: 'title', value: $title)
+                ->set(column: 'search_text', value: FullText::normalize($title))
+                ->execute();
+        }
+    }
 }

@@ -19,6 +19,7 @@ use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\SubqueryRenderableInterface;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
+use Tuxxedo\Database\SqlException;
 use Tuxxedo\Pagination\PagedInterface;
 
 /**
@@ -329,6 +330,16 @@ interface QueryableInterface extends PagedInterface, \IteratorAggregate, \Counta
     public function orderBy(
         string $column,
         OrderDirection|string $direction = OrderDirection::ASC,
+    ): static;
+
+    /**
+     * @throws SqlException
+     */
+    #[\NoDiscard]
+    public function orderByFullTextRelevance(
+        string $column,
+        string $search,
+        OrderDirection|string $direction = OrderDirection::DESC,
     ): static;
 
     #[\NoDiscard]

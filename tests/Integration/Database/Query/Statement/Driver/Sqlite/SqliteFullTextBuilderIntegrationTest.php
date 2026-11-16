@@ -73,4 +73,23 @@ class SqliteFullTextBuilderIntegrationTest extends AbstractBuilderIntegrationTes
             self::assertStringContainsString('does not support full-text search', $exception->getMessage());
         }
     }
+
+    public function testOrderByFullTextRelevanceIsUnsupported(): void
+    {
+        $this->createUsersSchema();
+
+        try {
+            $this->connection->select(
+                table: 'users',
+            )
+                ->orderByFullTextRelevance(
+                    column: 'name',
+                    search: 'alice',
+                );
+
+            self::fail('Expected SqlException');
+        } catch (SqlException $exception) {
+            self::assertStringContainsString('does not support full-text search', $exception->getMessage());
+        }
+    }
 }

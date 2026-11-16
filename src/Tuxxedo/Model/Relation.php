@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model;
 
+use Tuxxedo\Database\Query\FullText\FullTextRelevanceInterface;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
@@ -41,11 +42,11 @@ class Relation extends AbstractQueryable implements RelationInterface
     public private(set) ?array $pendingSync = null;
 
     /**
-     * @param (\Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string|SelectStatementInterface, direction: OrderDirection}>, ?int, ?int): iterable<int, TModel>)|null $loaderBuilder
+     * @param (\Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string|SelectStatementInterface|FullTextRelevanceInterface, direction: OrderDirection}>, ?int, ?int): iterable<int, TModel>)|null $loaderBuilder
      * @param (\Closure(list<\Closure(WhereStatementInterface): void>): int)|null $countBuilder
      * @param array<int, TModel>|null $prefetched
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
-     * @param list<array{column: string|SelectStatementInterface, direction: OrderDirection}> $orderBy
+     * @param list<array{column: string|SelectStatementInterface|FullTextRelevanceInterface, direction: OrderDirection}> $orderBy
      * @param ?class-string<TModel> $modelClass
      * @param (\Closure(list<\Closure(WhereStatementInterface): void>): SelectStatementInterface)|null $statementBuilder
      */
@@ -78,7 +79,7 @@ class Relation extends AbstractQueryable implements RelationInterface
     /**
      * @template TItem of object
      *
-     * @param \Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string|SelectStatementInterface, direction: OrderDirection}>, ?int, ?int): iterable<int, TItem> $loaderBuilder
+     * @param \Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string|SelectStatementInterface|FullTextRelevanceInterface, direction: OrderDirection}>, ?int, ?int): iterable<int, TItem> $loaderBuilder
      * @param \Closure(list<\Closure(WhereStatementInterface): void>): int $countBuilder
      * @param ?class-string<TItem> $modelClass
      * @param (\Closure(list<\Closure(WhereStatementInterface): void>): SelectStatementInterface)|null $statementBuilder
@@ -127,10 +128,10 @@ class Relation extends AbstractQueryable implements RelationInterface
      * @template TItem of object
      *
      * @param array<int, TItem> $prefetched
-     * @param \Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string|SelectStatementInterface, direction: OrderDirection}>, ?int, ?int): iterable<int, TItem> $loaderBuilder
+     * @param \Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string|SelectStatementInterface|FullTextRelevanceInterface, direction: OrderDirection}>, ?int, ?int): iterable<int, TItem> $loaderBuilder
      * @param \Closure(list<\Closure(WhereStatementInterface): void>): int $countBuilder
      * @param list<\Closure(WhereStatementInterface): void> $initialCriteriaStack
-     * @param list<array{column: string|SelectStatementInterface, direction: OrderDirection}> $initialOrderBy
+     * @param list<array{column: string|SelectStatementInterface|FullTextRelevanceInterface, direction: OrderDirection}> $initialOrderBy
      * @param ?class-string<TItem> $modelClass
      * @param (\Closure(list<\Closure(WhereStatementInterface): void>): SelectStatementInterface)|null $statementBuilder
      * @return self<TItem>
@@ -165,7 +166,7 @@ class Relation extends AbstractQueryable implements RelationInterface
 
     /**
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
-     * @param list<array{column: string|SelectStatementInterface, direction: OrderDirection}> $orderBy
+     * @param list<array{column: string|SelectStatementInterface|FullTextRelevanceInterface, direction: OrderDirection}> $orderBy
      */
     protected function cloneWith(
         array $criteriaStack,

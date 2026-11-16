@@ -13,9 +13,12 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Database\Query\Statement;
 
+use Tuxxedo\Database\DatabaseException;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Hydrator\HydratorInterface;
 use Tuxxedo\Database\Query\Dialect\DialectInterface;
+use Tuxxedo\Database\Query\FullText\FullTextRelevance;
+use Tuxxedo\Database\Query\FullText\FullTextRelevanceInterface;
 use Tuxxedo\Database\Query\Statement\Aggregate\AggregateFunction;
 use Tuxxedo\Database\Query\Statement\Condition\AggregateCondition;
 use Tuxxedo\Database\Query\Statement\Condition\AggregateConditionInterface;
@@ -52,7 +55,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
     private array $selectSubqueries = [];
 
     /**
-     * @var list<array{expression: string|SubqueryRenderableInterface, direction: OrderDirection}>
+     * @var list<array{expression: string|SubqueryRenderableInterface|FullTextRelevanceInterface, direction: OrderDirection}>
      */
     private array $orderBy = [];
 
@@ -205,6 +208,26 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
 
             foreach ($this->orderBy as $index => $entry) {
                 $expression = $entry['expression'];
+
+                if ($expression instanceof FullTextRelevanceInterface) {
+                    $relevance = $dialect->fullTextRelevance(
+                        column: $expression->column,
+                        terms: $expression->terms,
+                    );
+
+                    if ($expression->terms !== []) {
+                        $clauses[] = $dialect->orderTerm($relevance['score'], $entry['direction']);
+                    }
+
+                    $clauses[] = $dialect->orderTerm(
+                        $relevance['length'],
+                        $entry['direction'] === OrderDirection::DESC
+                            ? OrderDirection::ASC
+                            : OrderDirection::DESC,
+                    );
+
+                    continue;
+                }
 
                 if ($expression instanceof SubqueryRenderableInterface) {
                     $expression = '(' . $this->mergeSubquery(
@@ -815,6 +838,37 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
 
         $this->orderBy[] = [
             'expression' => $subquery,
+            'direction' => $direction,
+        ];
+
+        return $this;
+    }
+
+    public function orderByFullTextRelevance(
+        string $column,
+        string $search,
+        OrderDirection|string $direction = OrderDirection::DESC,
+    ): static {
+        if (\is_string($direction)) {
+            $direction = OrderDirection::fromInput($direction);
+        }
+
+        $connection = $this->connection;
+
+        if ($connection === null) {
+            throw DatabaseException::fromNoConnectionAvailable();
+        }
+
+        $connection->dialect->fullTextRelevance(
+            column: $column,
+            terms: [],
+        );
+
+        $this->orderBy[] = [
+            'expression' => new FullTextRelevance(
+                column: $column,
+                search: $search,
+            ),
             'direction' => $direction,
         ];
 

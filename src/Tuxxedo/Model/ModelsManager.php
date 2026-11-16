@@ -18,6 +18,7 @@ use Tuxxedo\Container\DefaultInitializer;
 use Tuxxedo\Database\ConnectionManagerInterface;
 use Tuxxedo\Database\Driver\ConnectionInterface;
 use Tuxxedo\Database\Hydrator\HydratorInterface as DatabaseHydratorInterface;
+use Tuxxedo\Database\Query\FullText\FullTextRelevanceInterface;
 use Tuxxedo\Database\Query\Statement\CountStatementInterface;
 use Tuxxedo\Database\Query\Statement\ExistsStatementInterface;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
@@ -2719,6 +2720,8 @@ class ModelsManager implements ModelsManagerInterface
                 foreach ($orderBy as $spec) {
                     if ($spec['column'] instanceof SelectStatementInterface) {
                         $statement->orderBySubquery($spec['column'], $spec['direction']);
+                    } elseif ($spec['column'] instanceof FullTextRelevanceInterface) {
+                        $statement->orderByFullTextRelevance($spec['column']->column, $spec['column']->search, $spec['direction']);
                     } else {
                         $statement->orderBy($spec['column'], $spec['direction']);
                     }

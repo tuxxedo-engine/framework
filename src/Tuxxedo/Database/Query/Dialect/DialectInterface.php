@@ -91,6 +91,17 @@ interface DialectInterface
     ): string;
 
     /**
+     * @param list<string> $terms
+     * @return array{score: string, length: string}
+     *
+     * @throws SqlException
+     */
+    public function fullTextRelevance(
+        string $column,
+        array $terms,
+    ): array;
+
+    /**
      * @param non-empty-list<string> $columns
      * @return list<StatementParserResultInterface>
      *

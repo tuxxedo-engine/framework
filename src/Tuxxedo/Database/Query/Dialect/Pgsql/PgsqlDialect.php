@@ -214,6 +214,38 @@ class PgsqlDialect implements DialectInterface
         );
     }
 
+    public function fullTextRelevance(
+        string $column,
+        array $terms,
+    ): array {
+        $identifier = $this->qualifiedIdentifier($column);
+        $padded = '(\' \' || ' . $identifier . ' || \' \')';
+        $leading = '(\' \' || ' . $identifier . ')';
+        $scores = [];
+
+        foreach ($terms as $term) {
+            $scores[] = \sprintf(
+                'CASE WHEN %1$s LIKE \'%% %3$s %%\' THEN 2 WHEN %2$s LIKE \'%% %3$s%%\' THEN 1 ELSE 0 END',
+                $padded,
+                $leading,
+                $term,
+            );
+
+            $scores[] = \sprintf(
+                'CASE WHEN %1$s LIKE \'%2$s%%\' THEN 1 ELSE 0 END',
+                $identifier,
+                $term,
+            );
+        }
+
+        return [
+            'score' => \sizeof($scores) > 0
+                ? '(' . \join(' + ', $scores) . ')'
+                : '0',
+            'length' => 'CHAR_LENGTH(' . $identifier . ')',
+        ];
+    }
+
     public function createFullTextIndex(
         string $table,
         string $name,

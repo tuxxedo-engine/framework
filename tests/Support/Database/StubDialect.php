@@ -150,6 +150,16 @@ class StubDialect implements DialectInterface
         return 'FULLTEXT(' . \join(', ', $columns) . ' : ' . \join(' ', $terms) . ')';
     }
 
+    public function fullTextRelevance(
+        string $column,
+        array $terms,
+    ): array {
+        return [
+            'score' => 'RELEVANCE(' . $column . ' : ' . \join(' ', $terms) . ')',
+            'length' => 'LENGTH(' . $column . ')',
+        ];
+    }
+
     public function createFullTextIndex(
         string $table,
         string $name,

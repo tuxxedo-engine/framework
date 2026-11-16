@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model;
 
+use Tuxxedo\Database\Query\FullText\FullTextRelevance;
+use Tuxxedo\Database\Query\FullText\FullTextRelevanceInterface;
 use Tuxxedo\Database\Query\Statement\Aggregate\AggregateFunction;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Join\JoinConditionInterface;
@@ -68,10 +70,10 @@ abstract class AbstractQueryable implements QueryableInterface
     }
 
     /**
-     * @param (\Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string|SelectStatementInterface, direction: OrderDirection}>, ?int, ?int): iterable<int, TModel>)|null $loaderBuilder
+     * @param (\Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string|SelectStatementInterface|FullTextRelevanceInterface, direction: OrderDirection}>, ?int, ?int): iterable<int, TModel>)|null $loaderBuilder
      * @param (\Closure(list<\Closure(WhereStatementInterface): void>): int)|null $countBuilder
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
-     * @param list<array{column: string|SelectStatementInterface, direction: OrderDirection}> $orderBy
+     * @param list<array{column: string|SelectStatementInterface|FullTextRelevanceInterface, direction: OrderDirection}> $orderBy
      * @param ?class-string<TModel> $modelClass
      * @param (\Closure(list<\Closure(WhereStatementInterface): void>): SelectStatementInterface)|null $statementBuilder
      */
@@ -90,7 +92,7 @@ abstract class AbstractQueryable implements QueryableInterface
 
     /**
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
-     * @param list<array{column: string|SelectStatementInterface, direction: OrderDirection}> $orderBy
+     * @param list<array{column: string|SelectStatementInterface|FullTextRelevanceInterface, direction: OrderDirection}> $orderBy
      */
     abstract protected function cloneWith(
         array $criteriaStack,
@@ -651,6 +653,32 @@ abstract class AbstractQueryable implements QueryableInterface
         $orderBy = $this->orderBy;
         $orderBy[] = [
             'column' => $column,
+            'direction' => $direction,
+        ];
+
+        return $this->cloneWith(
+            criteriaStack: $this->criteriaStack,
+            orderBy: $orderBy,
+            limit: $this->limit,
+            offset: $this->offset,
+        );
+    }
+
+    public function orderByFullTextRelevance(
+        string $column,
+        string $search,
+        OrderDirection|string $direction = OrderDirection::DESC,
+    ): static {
+        if (\is_string($direction)) {
+            $direction = OrderDirection::from($direction);
+        }
+
+        $orderBy = $this->orderBy;
+        $orderBy[] = [
+            'column' => new FullTextRelevance(
+                column: $column,
+                search: $search,
+            ),
             'direction' => $direction,
         ];
 

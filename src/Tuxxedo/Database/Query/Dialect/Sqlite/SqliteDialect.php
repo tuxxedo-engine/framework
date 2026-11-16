@@ -131,6 +131,15 @@ class SqliteDialect implements DialectInterface
         );
     }
 
+    public function fullTextRelevance(
+        string $column,
+        array $terms,
+    ): array {
+        throw SqlException::fromFullTextUnsupported(
+            dialect: self::class,
+        );
+    }
+
     public function createFullTextIndex(
         string $table,
         string $name,

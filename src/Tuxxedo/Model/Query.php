@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tuxxedo\Model;
 
+use Tuxxedo\Database\Query\FullText\FullTextRelevanceInterface;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
 use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
@@ -35,10 +36,10 @@ class Query extends AbstractQueryable
     private readonly ?\Closure $eagerLoader;
 
     /**
-     * @param (\Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string|SelectStatementInterface, direction: OrderDirection}>, ?int, ?int): iterable<int, TModel>)|null $loaderBuilder
+     * @param (\Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string|SelectStatementInterface|FullTextRelevanceInterface, direction: OrderDirection}>, ?int, ?int): iterable<int, TModel>)|null $loaderBuilder
      * @param (\Closure(list<\Closure(WhereStatementInterface): void>): int)|null $countBuilder
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
-     * @param list<array{column: string|SelectStatementInterface, direction: OrderDirection}> $orderBy
+     * @param list<array{column: string|SelectStatementInterface|FullTextRelevanceInterface, direction: OrderDirection}> $orderBy
      * @param array<string, (\Closure(Relation<object>): Relation<object>)|null>|null $with
      * @param (\Closure(list<object>, array<string, (\Closure(Relation<object>): Relation<object>)|null>): void)|null $eagerLoader
      * @param ?class-string<TModel> $modelClass
@@ -76,7 +77,7 @@ class Query extends AbstractQueryable
     /**
      * @template TItem of object
      *
-     * @param \Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string|SelectStatementInterface, direction: OrderDirection}>, ?int, ?int): iterable<int, TItem> $loaderBuilder
+     * @param \Closure(list<\Closure(WhereStatementInterface): void>, list<array{column: string|SelectStatementInterface|FullTextRelevanceInterface, direction: OrderDirection}>, ?int, ?int): iterable<int, TItem> $loaderBuilder
      * @param \Closure(list<\Closure(WhereStatementInterface): void>): int $countBuilder
      * @param (\Closure(list<object>, array<string, (\Closure(Relation<object>): Relation<object>)|null>): void)|null $eagerLoader
      * @param array<string, (\Closure(Relation<object>): Relation<object>)|null>|null $with
@@ -130,7 +131,7 @@ class Query extends AbstractQueryable
 
     /**
      * @param list<\Closure(WhereStatementInterface): void> $criteriaStack
-     * @param list<array{column: string|SelectStatementInterface, direction: OrderDirection}> $orderBy
+     * @param list<array{column: string|SelectStatementInterface|FullTextRelevanceInterface, direction: OrderDirection}> $orderBy
      */
     protected function cloneWith(
         array $criteriaStack,

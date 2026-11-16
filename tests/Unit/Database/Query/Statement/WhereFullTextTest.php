@@ -135,4 +135,17 @@ class WhereFullTextTest extends TestCase
                 search: 'mint',
             );
     }
+
+    public function testOrderByFullTextRelevanceWithoutConnectionThrows(): void
+    {
+        $this->expectException(DatabaseException::class);
+
+        (new SelectStatement(
+            table: 'articles',
+        ))
+            ->orderByFullTextRelevance(
+                column: 'search_text',
+                search: 'mint',
+            );
+    }
 }
