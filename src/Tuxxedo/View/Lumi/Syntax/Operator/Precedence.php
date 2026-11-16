@@ -16,6 +16,7 @@ namespace Tuxxedo\View\Lumi\Syntax\Operator;
 enum Precedence: int
 {
     case ACCESS = 80;
+    case FILTER = 75;
     case EXPONENTIATION = 70;
     case TIGHT = 60;
     case ADDITIVE = 50;

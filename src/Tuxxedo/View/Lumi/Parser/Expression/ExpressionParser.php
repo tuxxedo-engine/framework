@@ -82,7 +82,7 @@ class ExpressionParser implements ExpressionParserInterface
         while (!$stream->eof()) {
             $token = $stream->current();
 
-            if ($rightBindingPower >= $this->lbp($token)->value) {
+            if ($rightBindingPower >= $this->bindingPower($stream, $token)->value) {
                 break;
             }
 
@@ -392,6 +392,14 @@ class ExpressionParser implements ExpressionParserInterface
 
                 $stream->consume();
 
+                if ($operator === BinarySymbol::BITWISE_OR && !$stream->eof()) {
+                    $filter = $stream->current();
+
+                    if ($filter instanceof IdentifierToken) {
+                        return $this->parseFilter($stream, $left, $filter);
+                    }
+                }
+
                 $next = $operator->associativity() === Associativity::RIGHT
                     ? $operator->precedence()->value - 1
                     : $operator->precedence();
@@ -443,17 +451,6 @@ class ExpressionParser implements ExpressionParserInterface
                         );
                     }
 
-                    if (
-                        $right instanceof FunctionCallNode &&
-                        $right->name instanceof IdentifierNode
-                    ) {
-                        return new FilterCallNode(
-                            left: $left,
-                            name: $right->name->name,
-                            arguments: $right->arguments,
-                        );
-                    }
-
                     return new FilterOrBitwiseOrNode(
                         left: $left,
                         right: $right,
@@ -474,6 +471,59 @@ class ExpressionParser implements ExpressionParserInterface
             line: $token->line,
         );
         // @codeCoverageIgnoreEnd
+    }
+
+    private function bindingPower(
+        TokenStreamInterface $stream,
+        TokenInterface $token,
+    ): Precedence {
+        if (
+            $token instanceof OperatorToken &&
+            $token->op1 === BinarySymbol::BITWISE_OR->symbol() &&
+            $stream->peek() instanceof IdentifierToken
+        ) {
+            return Precedence::FILTER;
+        }
+
+        return $this->lbp($token);
+    }
+
+    /**
+     * @throws ParserException
+     */
+    private function parseFilter(
+        TokenStreamInterface $stream,
+        ExpressionNodeInterface $left,
+        IdentifierToken $name,
+    ): ExpressionNodeInterface {
+        $stream->consume();
+
+        if (
+            !$stream->eof() &&
+            $stream->currentIs(CharacterToken::class, CharacterSymbol::LEFT_PARENTHESIS->symbol())
+        ) {
+            $stream->consume();
+
+            $arguments = $this->parseArgumentList($stream);
+
+            $this->expectCharacter(
+                stream: $stream,
+                character: CharacterSymbol::RIGHT_PARENTHESIS,
+            );
+
+            return new FilterCallNode(
+                left: $left,
+                name: $name->op1,
+                arguments: $arguments,
+            );
+        }
+
+        return new FilterOrBitwiseOrNode(
+            left: $left,
+            right: new IdentifierNode(
+                name: $name->op1,
+            ),
+        );
     }
 
     private function lbp(

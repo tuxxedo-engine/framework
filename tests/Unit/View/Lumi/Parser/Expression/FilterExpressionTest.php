@@ -21,7 +21,10 @@ use Tuxxedo\View\Lumi\Syntax\Node\FilterCallNode;
 use Tuxxedo\View\Lumi\Syntax\Node\FilterOrBitwiseOrNode;
 use Tuxxedo\View\Lumi\Syntax\Node\GroupNode;
 use Tuxxedo\View\Lumi\Syntax\Node\MethodCallNode;
+use Tuxxedo\View\Lumi\Syntax\Node\PropertyAccessNode;
+use Tuxxedo\View\Lumi\Syntax\Node\UnaryOpNode;
 use Tuxxedo\View\Lumi\Syntax\Operator\BinarySymbol;
+use Tuxxedo\View\Lumi\Syntax\Operator\UnarySymbol;
 use Tuxxedo\View\Lumi\Syntax\Type;
 
 class FilterExpressionTest extends TestCase
@@ -225,11 +228,160 @@ class FilterExpressionTest extends TestCase
         self::assertInstanceOf(GroupNode::class, $node->right);
     }
 
-    public function testMethodCallRightIsFilterOrBitwiseOr(): void
+    public function testMethodCallAfterFilterAppliesToFilteredValue(): void
     {
         $node = $this->helper->parse('a | obj.meth(1)');
 
+        self::assertInstanceOf(MethodCallNode::class, $node);
+        self::assertSame('meth', $node->name);
+        self::assertInstanceOf(FilterOrBitwiseOrNode::class, $node->caller);
+
+        $this->assertIdentifierNode(
+            node: $node->caller->left,
+            expectedName: 'a',
+        );
+
+        $this->assertIdentifierNode(
+            node: $node->caller->right,
+            expectedName: 'obj',
+        );
+    }
+
+    public function testConcatAfterFilterAppliesToFilteredValue(): void
+    {
+        $node = $this->helper->parse('x | upper ~ \'y\'');
+
+        $this->assertBinaryOpNode(
+            node: $node,
+            expectedOperator: BinarySymbol::CONCAT,
+        );
+
+        self::assertInstanceOf(BinaryOpNode::class, $node);
+        self::assertInstanceOf(FilterOrBitwiseOrNode::class, $node->left);
+
+        $this->assertIdentifierNode(
+            node: $node->left->left,
+            expectedName: 'x',
+        );
+
+        $this->assertIdentifierNode(
+            node: $node->left->right,
+            expectedName: 'upper',
+        );
+
+        $this->assertLiteralNode(
+            node: $node->right,
+            expectedOperand: 'y',
+            expectedType: Type::STRING,
+        );
+    }
+
+    public function testAdditionAfterFilterAppliesToFilteredValue(): void
+    {
+        $node = $this->helper->parse('a | b + 1');
+
+        $this->assertBinaryOpNode(
+            node: $node,
+            expectedOperator: BinarySymbol::ADD,
+        );
+
+        self::assertInstanceOf(BinaryOpNode::class, $node);
+        self::assertInstanceOf(FilterOrBitwiseOrNode::class, $node->left);
+    }
+
+    public function testMultiplicationAfterFilterAppliesToFilteredValue(): void
+    {
+        $node = $this->helper->parse('a | b * 2');
+
+        $this->assertBinaryOpNode(
+            node: $node,
+            expectedOperator: BinarySymbol::MULTIPLY,
+        );
+
+        self::assertInstanceOf(BinaryOpNode::class, $node);
+        self::assertInstanceOf(FilterOrBitwiseOrNode::class, $node->left);
+    }
+
+    public function testPropertyAccessAfterFilterAppliesToFilteredValue(): void
+    {
+        $node = $this->helper->parse('x | lower.prop');
+
+        self::assertInstanceOf(PropertyAccessNode::class, $node);
+        self::assertSame('prop', $node->property);
+        self::assertInstanceOf(FilterOrBitwiseOrNode::class, $node->accessor);
+
+        $this->assertIdentifierNode(
+            node: $node->accessor->right,
+            expectedName: 'lower',
+        );
+    }
+
+    public function testFilterBindsTighterThanConcatOnItsLeft(): void
+    {
+        $node = $this->helper->parse('a ~ x | upper');
+
+        $this->assertBinaryOpNode(
+            node: $node,
+            expectedOperator: BinarySymbol::CONCAT,
+        );
+
+        self::assertInstanceOf(BinaryOpNode::class, $node);
+
+        $this->assertIdentifierNode(
+            node: $node->left,
+            expectedName: 'a',
+        );
+
+        self::assertInstanceOf(FilterOrBitwiseOrNode::class, $node->right);
+
+        $this->assertIdentifierNode(
+            node: $node->right->left,
+            expectedName: 'x',
+        );
+    }
+
+    public function testFilterBindsTighterThanUnaryNegation(): void
+    {
+        $node = $this->helper->parse('-x | abs');
+
+        $this->assertUnaryOpNode(
+            node: $node,
+            expectedOperator: UnarySymbol::NEGATE,
+        );
+
+        self::assertInstanceOf(UnaryOpNode::class, $node);
+        self::assertInstanceOf(FilterOrBitwiseOrNode::class, $node->operand);
+
+        $this->assertIdentifierNode(
+            node: $node->operand->right,
+            expectedName: 'abs',
+        );
+    }
+
+    public function testFilterCallWithArgumentsFollowedByOperator(): void
+    {
+        $node = $this->helper->parse('a | wrap(\'[\') ~ b');
+
+        $this->assertBinaryOpNode(
+            node: $node,
+            expectedOperator: BinarySymbol::CONCAT,
+        );
+
+        self::assertInstanceOf(BinaryOpNode::class, $node);
+        self::assertInstanceOf(FilterCallNode::class, $node->left);
+        self::assertSame('wrap', $node->left->name);
+
+        $this->assertIdentifierNode(
+            node: $node->right,
+            expectedName: 'b',
+        );
+    }
+
+    public function testGroupedRightKeepsBitwiseOrPrecedence(): void
+    {
+        $node = $this->helper->parse('a | (b + 1)');
+
         self::assertInstanceOf(FilterOrBitwiseOrNode::class, $node);
-        self::assertInstanceOf(MethodCallNode::class, $node->right);
+        self::assertInstanceOf(GroupNode::class, $node->right);
     }
 }

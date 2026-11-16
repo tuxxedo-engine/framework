@@ -293,27 +293,78 @@ class RangeExpressionTest extends TestCase
         );
     }
 
-    public function testFilterCallAppliesToWholeRange(): void
+    public function testFilterCallAppliesToGroupedRange(): void
     {
-        $node = $this->helper->parse('1..3 | join(\', \')');
+        $node = $this->helper->parse('(1..3) | join(\', \')');
 
         self::assertInstanceOf(FilterCallNode::class, $node);
         self::assertSame('join', $node->name);
         self::assertCount(1, $node->arguments);
+        self::assertInstanceOf(GroupNode::class, $node->left);
 
-        $this->assertRangeNode($node->left);
+        $this->assertRangeNode($node->left->operand);
     }
 
-    public function testBareFilterAppliesToWholeRange(): void
+    public function testBareFilterAppliesToGroupedRange(): void
     {
-        $node = $this->helper->parse('1..3 | length');
+        $node = $this->helper->parse('(1..3) | length');
 
         self::assertInstanceOf(FilterOrBitwiseOrNode::class, $node);
+        self::assertInstanceOf(GroupNode::class, $node->left);
 
-        $this->assertRangeNode($node->left);
+        $this->assertRangeNode($node->left->operand);
 
         $this->assertIdentifierNode(
             node: $node->right,
+            expectedName: 'length',
+        );
+    }
+
+    public function testFilterCallBindsToRangeEnd(): void
+    {
+        $node = $this->helper->parse('1..3 | join(\', \')');
+
+        [$start, $end] = $this->assertRangeNode($node);
+
+        $this->assertLiteralNode(
+            node: $start,
+            expectedOperand: '1',
+            expectedType: Type::INT,
+        );
+
+        self::assertInstanceOf(FilterCallNode::class, $end);
+        self::assertSame('join', $end->name);
+        self::assertCount(1, $end->arguments);
+
+        $this->assertLiteralNode(
+            node: $end->left,
+            expectedOperand: '3',
+            expectedType: Type::INT,
+        );
+    }
+
+    public function testBareFilterBindsToRangeEnd(): void
+    {
+        $node = $this->helper->parse('1..3 | length');
+
+        [$start, $end] = $this->assertRangeNode($node);
+
+        $this->assertLiteralNode(
+            node: $start,
+            expectedOperand: '1',
+            expectedType: Type::INT,
+        );
+
+        self::assertInstanceOf(FilterOrBitwiseOrNode::class, $end);
+
+        $this->assertLiteralNode(
+            node: $end->left,
+            expectedOperand: '3',
+            expectedType: Type::INT,
+        );
+
+        $this->assertIdentifierNode(
+            node: $end->right,
             expectedName: 'length',
         );
     }
