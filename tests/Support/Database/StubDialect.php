@@ -21,6 +21,7 @@ use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AlterOperationInterface;
+use Tuxxedo\Database\Query\Statement\Window\WindowFunction;
 
 class StubDialect implements DialectInterface
 {
@@ -126,6 +127,13 @@ class StubDialect implements DialectInterface
         OrderDirection $direction,
     ): string {
         return $expression . ' ' . $direction->name;
+    }
+
+    public function windowFunction(
+        WindowFunction $function,
+        array $arguments,
+    ): string {
+        return $function->value . '(' . \join(', ', $arguments) . ')';
     }
 
     public function startsWith(

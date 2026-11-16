@@ -21,6 +21,9 @@ use Tuxxedo\Database\Query\Statement\Join\JoinConditionInterface;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\SelectStatement;
 use Tuxxedo\Database\Query\Statement\SelectStatementInterface;
+use Tuxxedo\Database\Query\Statement\Window\FrameBound;
+use Tuxxedo\Database\Query\Statement\Window\WindowFunction;
+use Tuxxedo\Database\Query\Statement\Window\WindowInterface;
 use Tuxxedo\Database\SqlException;
 
 abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereClauseBuilderIntegrationTestCase
@@ -1106,6 +1109,495 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
                     ->orderBy('ranked.title'),
             ),
         );
+    }
+
+    public function testSelectRowNumberFiltersTopPerPartition(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        $ranked = $this->connection->select(
+            table: 'posts',
+        )
+            ->select('title')
+            ->selectRowNumber(
+                alias: 'rn',
+                over: static function (WindowInterface $window): void {
+                    $window->partitionBy('user_id')->orderBy('id', OrderDirection::DESC);
+                },
+            );
+
+        self::assertSame(
+            [
+                'Another Bob post',
+                'Post by Alice',
+            ],
+            $this->names(
+                $this->connection->selectFrom(
+                    subquery: $ranked,
+                    alias: 'ranked',
+                )
+                    ->selectAs('ranked.title', 'name')
+                    ->where('ranked.rn', 1)
+                    ->orderBy('ranked.title'),
+            ),
+        );
+    }
+
+    public function testSelectRankAndDenseRankDifferAfterTies(): void
+    {
+        $this->createNodesSchema();
+        $this->seedNodes();
+
+        $order = static function (WindowInterface $window): void {
+            $window->orderBy('parent_id');
+        };
+
+        self::assertSame(
+            [
+                'a|1|1',
+                'b|1|1',
+                'a1|3|2',
+                'a1x|4|3',
+                'loop1|6|5',
+                'loop2|5|4',
+            ],
+            $this->windowRows(
+                $this->connection->select(
+                    table: 'nodes',
+                )
+                    ->select('name')
+                    ->selectRank(
+                        alias: 'position',
+                        over: $order,
+                    )
+                    ->selectDenseRank(
+                        alias: 'dense',
+                        over: $order,
+                    )
+                    ->whereNotNull('parent_id')
+                    ->orderBy('id'),
+                [
+                    'name',
+                    'position',
+                    'dense',
+                ],
+            ),
+        );
+    }
+
+    public function testSelectSumRunningTotalWithRowsFrame(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        self::assertSame(
+            [
+                'Post by Alice|1',
+                'Post by Bob|2',
+                'Another Bob post|5',
+            ],
+            $this->windowRows(
+                $this->connection->select(
+                    table: 'posts',
+                )
+                    ->select('title')
+                    ->selectSum(
+                        column: 'id',
+                        alias: 'running',
+                        over: static function (WindowInterface $window): void {
+                            $window
+                                ->partitionBy('user_id')
+                                ->orderBy('id')
+                                ->rowsBetween(FrameBound::unboundedPreceding(), FrameBound::currentRow());
+                        },
+                    )
+                    ->orderBy('id'),
+                [
+                    'title',
+                    'running',
+                ],
+            ),
+        );
+    }
+
+    public function testSelectCountOverWholeResult(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        self::assertSame(
+            [
+                'Post by Alice|3',
+                'Post by Bob|3',
+                'Another Bob post|3',
+            ],
+            $this->windowRows(
+                $this->connection->select(
+                    table: 'posts',
+                )
+                    ->select('title')
+                    ->selectCount(
+                        alias: 'total',
+                        over: static function (WindowInterface $window): void {
+                        },
+                    )
+                    ->orderBy('id'),
+                [
+                    'title',
+                    'total',
+                ],
+            ),
+        );
+    }
+
+    public function testSelectLagAndLeadBindTheirDefault(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        $byId = static function (WindowInterface $window): void {
+            $window->orderBy('id');
+        };
+
+        self::assertSame(
+            [
+                'Post by Alice|none|Post by Bob',
+                'Post by Bob|Post by Alice|Another Bob post',
+                'Another Bob post|Post by Bob|none',
+            ],
+            $this->windowRows(
+                $this->connection->select(
+                    table: 'posts',
+                )
+                    ->select('title')
+                    ->selectLag(
+                        column: 'title',
+                        alias: 'previous',
+                        over: $byId,
+                        default: 'none',
+                    )
+                    ->selectLead(
+                        column: 'title',
+                        alias: 'next',
+                        over: $byId,
+                        default: 'none',
+                    )
+                    ->orderBy('id'),
+                [
+                    'title',
+                    'previous',
+                    'next',
+                ],
+            ),
+        );
+    }
+
+    public function testWindowDefaultParametersStayApartInsideSubquery(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        $previous = $this->connection->select(
+            table: 'posts',
+        )
+            ->select('title')
+            ->selectLag(
+                column: 'title',
+                alias: 'previous',
+                over: static function (WindowInterface $window): void {
+                    $window->orderBy('id');
+                },
+                default: 'none',
+            )
+            ->where('user_id', 1);
+
+        self::assertSame(
+            [
+                'Post by Alice',
+            ],
+            $this->names(
+                $this->connection->selectFrom(
+                    subquery: $previous,
+                    alias: 'p',
+                )
+                    ->selectAs('p.title', 'name')
+                    ->where('p.previous', 'none'),
+            ),
+        );
+    }
+
+    public function testSelectNtileSplitsRowsIntoBuckets(): void
+    {
+        $this->createNodesSchema();
+        $this->seedNodes();
+
+        self::assertSame(
+            [
+                'root|1',
+                'a|1',
+                'b|1',
+                'a1|2',
+                'a1x|2',
+                'loop1|3',
+                'loop2|3',
+            ],
+            $this->windowRows(
+                $this->connection->select(
+                    table: 'nodes',
+                )
+                    ->select('name')
+                    ->selectNtile(
+                        buckets: 3,
+                        alias: 'bucket',
+                        over: static function (WindowInterface $window): void {
+                            $window->orderBy('id');
+                        },
+                    )
+                    ->orderBy('id'),
+                [
+                    'name',
+                    'bucket',
+                ],
+            ),
+        );
+    }
+
+    public function testSelectFirstLastAndNthValue(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        $partition = static function (WindowInterface $window): void {
+            $window
+                ->partitionBy('user_id')
+                ->orderBy('id')
+                ->rowsBetween(FrameBound::unboundedPreceding(), FrameBound::unboundedFollowing());
+        };
+
+        self::assertSame(
+            [
+                'Post by Alice|Post by Alice|',
+                'Post by Bob|Another Bob post|Another Bob post',
+                'Post by Bob|Another Bob post|Another Bob post',
+            ],
+            $this->windowRows(
+                $this->connection->select(
+                    table: 'posts',
+                )
+                    ->selectFirstValue(
+                        column: 'title',
+                        alias: 'first',
+                        over: $partition,
+                    )
+                    ->selectLastValue(
+                        column: 'title',
+                        alias: 'last',
+                        over: $partition,
+                    )
+                    ->selectNthValue(
+                        column: 'title',
+                        n: 2,
+                        alias: 'second',
+                        over: $partition,
+                    )
+                    ->orderBy('id'),
+                [
+                    'first',
+                    'last',
+                    'second',
+                ],
+            ),
+        );
+    }
+
+    public function testSelectPercentRankAndCumeDist(): void
+    {
+        $this->createUsersSchema();
+        $this->seedUsers();
+        $this->createPostsSchema();
+        $this->seedPosts();
+
+        $partition = static function (WindowInterface $window): void {
+            $window->partitionBy('user_id')->orderBy('id');
+        };
+
+        self::assertSame(
+            [
+                '0|1',
+                '0|0.5',
+                '1|1',
+            ],
+            $this->windowRows(
+                $this->connection->select(
+                    table: 'posts',
+                )
+                    ->selectPercentRank(
+                        alias: 'percent',
+                        over: $partition,
+                    )
+                    ->selectCumeDist(
+                        alias: 'cumulative',
+                        over: $partition,
+                    )
+                    ->orderBy('id'),
+                [
+                    'percent',
+                    'cumulative',
+                ],
+            ),
+        );
+    }
+
+    public function testWindowOrderPutsNullsLast(): void
+    {
+        $this->createNodesSchema();
+        $this->seedNodes();
+
+        self::assertSame(
+            [
+                'root|7|7',
+            ],
+            $this->windowRows(
+                $this->connection->selectFrom(
+                    subquery: $this->connection->select(
+                        table: 'nodes',
+                    )
+                        ->select('name', 'parent_id')
+                        ->selectRowNumber(
+                            alias: 'ascending',
+                            over: static function (WindowInterface $window): void {
+                                $window->orderBy('parent_id')->orderBy('id');
+                            },
+                        )
+                        ->selectRowNumber(
+                            alias: 'descending',
+                            over: static function (WindowInterface $window): void {
+                                $window->orderBy('parent_id', 'desc')->orderBy('id');
+                            },
+                        ),
+                    alias: 'n',
+                )
+                    ->whereNull('n.parent_id'),
+                [
+                    'name',
+                    'ascending',
+                    'descending',
+                ],
+            ),
+        );
+    }
+
+    public function testSelectCountWithRangeFrameOffsets(): void
+    {
+        $this->createNodesSchema();
+        $this->seedNodes();
+
+        self::assertSame(
+            [
+                'root|2',
+                'a|3',
+                'b|3',
+                'a1|3',
+                'a1x|3',
+                'loop1|3',
+                'loop2|2',
+            ],
+            $this->windowRows(
+                $this->connection->select(
+                    table: 'nodes',
+                )
+                    ->select('name')
+                    ->selectCount(
+                        column: 'id',
+                        alias: 'nearby',
+                        over: static function (WindowInterface $window): void {
+                            $window
+                                ->orderBy('id')
+                                ->rangeBetween(FrameBound::preceding(1), FrameBound::following(1));
+                        },
+                    )
+                    ->orderBy('id'),
+                [
+                    'name',
+                    'nearby',
+                ],
+            ),
+        );
+    }
+
+    public function testWindowFunctionArgumentsAreValidated(): void
+    {
+        foreach (
+            [
+                'needs a column' => static fn (SelectStatementInterface $select): SelectStatementInterface => $select->selectWindow(WindowFunction::LAG),
+                'needs an argument' => static fn (SelectStatementInterface $select): SelectStatementInterface => $select->selectWindow(WindowFunction::NTILE),
+                'does not accept a column' => static fn (SelectStatementInterface $select): SelectStatementInterface => $select->selectWindow(WindowFunction::ROW_NUMBER, column: 'id'),
+                'does not accept an argument' => static fn (SelectStatementInterface $select): SelectStatementInterface => $select->selectWindow(WindowFunction::FIRST_VALUE, column: 'id', argument: 1),
+                'does not accept a default' => static fn (SelectStatementInterface $select): SelectStatementInterface => $select->selectWindow(WindowFunction::NTH_VALUE, column: 'id', argument: 1, default: 0),
+                'at least 1, 0 given' => static fn (SelectStatementInterface $select): SelectStatementInterface => $select->selectNtile(0),
+                'at least 0, -1 given' => static fn (SelectStatementInterface $select): SelectStatementInterface => $select->selectLag('id', offset: -1),
+                'cannot use DISTINCT over a window' => static fn (SelectStatementInterface $select): SelectStatementInterface => $select->selectCount(
+                    column: 'id',
+                    distinct: true,
+                    over: static function (WindowInterface $window): void {
+                    },
+                ),
+            ] as $message => $window
+        ) {
+            try {
+                $window(
+                    $this->connection->select(
+                        table: 'users',
+                    ),
+                );
+
+                self::fail('Expected SqlException: ' . $message);
+            } catch (SqlException $exception) {
+                self::assertStringContainsString($message, $exception->getMessage());
+            }
+        }
+    }
+
+    public function testWindowFrameIsValidated(): void
+    {
+        foreach (
+            [
+                'must not be negative, -1 given' => static fn (WindowInterface $window): mixed => FrameBound::preceding(-1),
+                'must not be negative, -2 given' => static fn (WindowInterface $window): mixed => FrameBound::following(-2),
+                'from CURRENT_ROW to PRECEDING is invalid' => static fn (WindowInterface $window): mixed => $window->rowsBetween(FrameBound::currentRow(), FrameBound::preceding(1)),
+                'from UNBOUNDED_FOLLOWING to UNBOUNDED_FOLLOWING is invalid' => static fn (WindowInterface $window): mixed => $window->rangeBetween(FrameBound::unboundedFollowing(), FrameBound::unboundedFollowing()),
+                'from UNBOUNDED_PRECEDING to UNBOUNDED_PRECEDING is invalid' => static fn (WindowInterface $window): mixed => $window->rowsBetween(FrameBound::unboundedPreceding(), FrameBound::unboundedPreceding()),
+                'from FOLLOWING to FOLLOWING is invalid' => static fn (WindowInterface $window): mixed => $window->rowsBetween(FrameBound::following(3), FrameBound::following(1)),
+            ] as $message => $frame
+        ) {
+            try {
+                $this->connection->select(
+                    table: 'users',
+                )
+                    ->selectRowNumber(
+                        over: static function (WindowInterface $window) use ($frame): void {
+                            $frame($window);
+                        },
+                    );
+
+                self::fail('Expected SqlException: ' . $message);
+            } catch (SqlException $exception) {
+                self::assertStringContainsString($message, $exception->getMessage());
+            }
+        }
     }
 
     public function testSelectFromKeepsParametersOfBothLevelsApart(): void
@@ -2986,6 +3478,31 @@ abstract class AbstractSelectBuilderIntegrationTestCase extends AbstractWhereCla
         }
 
         return $names;
+    }
+
+    /**
+     * @param list<string> $columns
+     * @return list<string>
+     */
+    private function windowRows(
+        SelectStatementInterface $statement,
+        array $columns,
+    ): array {
+        $rows = [];
+
+        foreach ($statement->execute() as $row) {
+            $values = [];
+
+            foreach ($columns as $column) {
+                /** @var string|int|float|null $value */
+                $value = $row->properties[$column];
+                $values[] = (string) $value;
+            }
+
+            $rows[] = \join('|', $values);
+        }
+
+        return $rows;
     }
 
     private function postCount(): SelectStatementInterface

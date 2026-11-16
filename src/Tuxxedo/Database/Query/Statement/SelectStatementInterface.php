@@ -21,6 +21,8 @@ use Tuxxedo\Database\Query\Statement\Aggregate\AggregateFunction;
 use Tuxxedo\Database\Query\Statement\Condition\BetweenOperator;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
+use Tuxxedo\Database\Query\Statement\Window\WindowFunction;
+use Tuxxedo\Database\Query\Statement\Window\WindowInterface;
 use Tuxxedo\Database\SqlException;
 
 interface SelectStatementInterface extends WhereStatementInterface, SubqueryRenderableInterface, WithStatementInterface
@@ -39,6 +41,8 @@ interface SelectStatementInterface extends WhereStatementInterface, SubqueryRend
     ): static;
 
     /**
+     * @param (\Closure(WindowInterface): void)|null $over
+     *
      * @throws SqlException
      */
     public function selectAggregate(
@@ -46,37 +50,200 @@ interface SelectStatementInterface extends WhereStatementInterface, SubqueryRend
         ?string $column = null,
         ?string $alias = null,
         bool $distinct = false,
+        ?\Closure $over = null,
     ): static;
 
     /**
+     * @param (\Closure(WindowInterface): void)|null $over
+     *
      * @throws SqlException
      */
     public function selectCount(
         ?string $column = null,
         ?string $alias = null,
         bool $distinct = false,
+        ?\Closure $over = null,
     ): static;
 
+    /**
+     * @param (\Closure(WindowInterface): void)|null $over
+     *
+     * @throws SqlException
+     */
     public function selectSum(
         string $column,
         ?string $alias = null,
         bool $distinct = false,
+        ?\Closure $over = null,
     ): static;
 
+    /**
+     * @param (\Closure(WindowInterface): void)|null $over
+     *
+     * @throws SqlException
+     */
     public function selectAvg(
         string $column,
         ?string $alias = null,
         bool $distinct = false,
+        ?\Closure $over = null,
     ): static;
 
+    /**
+     * @param (\Closure(WindowInterface): void)|null $over
+     *
+     * @throws SqlException
+     */
     public function selectMin(
         string $column,
         ?string $alias = null,
+        ?\Closure $over = null,
     ): static;
 
+    /**
+     * @param (\Closure(WindowInterface): void)|null $over
+     *
+     * @throws SqlException
+     */
     public function selectMax(
         string $column,
         ?string $alias = null,
+        ?\Closure $over = null,
+    ): static;
+
+    /**
+     * @param (\Closure(WindowInterface): void)|null $over
+     *
+     * @throws SqlException
+     */
+    public function selectWindow(
+        WindowFunction $function,
+        ?string $alias = null,
+        ?\Closure $over = null,
+        ?string $column = null,
+        ?int $argument = null,
+        string|int|float|bool|null $default = null,
+    ): static;
+
+    /**
+     * @param (\Closure(WindowInterface): void)|null $over
+     *
+     * @throws SqlException
+     */
+    public function selectRowNumber(
+        ?string $alias = null,
+        ?\Closure $over = null,
+    ): static;
+
+    /**
+     * @param (\Closure(WindowInterface): void)|null $over
+     *
+     * @throws SqlException
+     */
+    public function selectRank(
+        ?string $alias = null,
+        ?\Closure $over = null,
+    ): static;
+
+    /**
+     * @param (\Closure(WindowInterface): void)|null $over
+     *
+     * @throws SqlException
+     */
+    public function selectDenseRank(
+        ?string $alias = null,
+        ?\Closure $over = null,
+    ): static;
+
+    /**
+     * @param (\Closure(WindowInterface): void)|null $over
+     *
+     * @throws SqlException
+     */
+    public function selectPercentRank(
+        ?string $alias = null,
+        ?\Closure $over = null,
+    ): static;
+
+    /**
+     * @param (\Closure(WindowInterface): void)|null $over
+     *
+     * @throws SqlException
+     */
+    public function selectCumeDist(
+        ?string $alias = null,
+        ?\Closure $over = null,
+    ): static;
+
+    /**
+     * @param (\Closure(WindowInterface): void)|null $over
+     *
+     * @throws SqlException
+     */
+    public function selectNtile(
+        int $buckets,
+        ?string $alias = null,
+        ?\Closure $over = null,
+    ): static;
+
+    /**
+     * @param (\Closure(WindowInterface): void)|null $over
+     *
+     * @throws SqlException
+     */
+    public function selectLag(
+        string $column,
+        ?string $alias = null,
+        ?\Closure $over = null,
+        int $offset = 1,
+        string|int|float|bool|null $default = null,
+    ): static;
+
+    /**
+     * @param (\Closure(WindowInterface): void)|null $over
+     *
+     * @throws SqlException
+     */
+    public function selectLead(
+        string $column,
+        ?string $alias = null,
+        ?\Closure $over = null,
+        int $offset = 1,
+        string|int|float|bool|null $default = null,
+    ): static;
+
+    /**
+     * @param (\Closure(WindowInterface): void)|null $over
+     *
+     * @throws SqlException
+     */
+    public function selectFirstValue(
+        string $column,
+        ?string $alias = null,
+        ?\Closure $over = null,
+    ): static;
+
+    /**
+     * @param (\Closure(WindowInterface): void)|null $over
+     *
+     * @throws SqlException
+     */
+    public function selectLastValue(
+        string $column,
+        ?string $alias = null,
+        ?\Closure $over = null,
+    ): static;
+
+    /**
+     * @param (\Closure(WindowInterface): void)|null $over
+     *
+     * @throws SqlException
+     */
+    public function selectNthValue(
+        string $column,
+        int $n,
+        ?string $alias = null,
+        ?\Closure $over = null,
     ): static;
 
     /**

@@ -17,6 +17,8 @@ use Tuxxedo\Database\Query\FullText\FullText;
 use Tuxxedo\Database\Query\Statement\Aggregate\AggregateFunction;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AlterOperationInterface;
+use Tuxxedo\Database\Query\Statement\Window\FrameBoundKind;
+use Tuxxedo\Database\Query\Statement\Window\WindowFunction;
 use Tuxxedo\Exception;
 
 class SqlException extends Exception
@@ -162,6 +164,90 @@ class SqlException extends Exception
             message: \sprintf(
                 'Aggregate `%s` needs a column; only a plain COUNT may count rows without one',
                 $function->value,
+            ),
+        );
+    }
+
+    public static function fromDistinctWindowAggregate(
+        AggregateFunction $function,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Aggregate `%s` cannot use DISTINCT over a window',
+                $function->value,
+            ),
+        );
+    }
+
+    public static function fromNegativeFrameOffset(
+        int $offset,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Window frame offset must not be negative, %d given',
+                $offset,
+            ),
+        );
+    }
+
+    public static function fromInvalidWindowFrame(
+        FrameBoundKind $start,
+        FrameBoundKind $end,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Window frame from %s to %s is invalid; the start must not come after the end',
+                $start->name,
+                $end->name,
+            ),
+        );
+    }
+
+    public static function fromWindowFunctionRequiresColumn(
+        WindowFunction $function,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Window function `%s` needs a column',
+                $function->value,
+            ),
+        );
+    }
+
+    public static function fromWindowFunctionRequiresArgument(
+        WindowFunction $function,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Window function `%s` needs an argument',
+                $function->value,
+            ),
+        );
+    }
+
+    public static function fromWindowFunctionArgumentNotAccepted(
+        WindowFunction $function,
+        string $argument,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Window function `%s` does not accept %s',
+                $function->value,
+                $argument,
+            ),
+        );
+    }
+
+    public static function fromInvalidWindowFunctionArgument(
+        WindowFunction $function,
+        int $value,
+    ): self {
+        return new self(
+            message: \sprintf(
+                'Window function `%s` needs an argument of at least %d, %d given',
+                $function->value,
+                $function->minimumArgument(),
+                $value,
             ),
         );
     }

@@ -43,6 +43,7 @@ use Tuxxedo\Database\Query\Statement\Table\Operation\DropPrimaryKey;
 use Tuxxedo\Database\Query\Statement\Table\Operation\DropUnique;
 use Tuxxedo\Database\Query\Statement\Table\Operation\RenameColumn;
 use Tuxxedo\Database\Query\Statement\Table\Operation\RenameTable;
+use Tuxxedo\Database\Query\Statement\Window\WindowFunction;
 use Tuxxedo\Database\SqlException;
 
 class PgsqlDialect implements DialectInterface
@@ -171,6 +172,13 @@ class PgsqlDialect implements DialectInterface
         OrderDirection $direction,
     ): string {
         return $expression . ' ' . $direction->name . ' NULLS LAST';
+    }
+
+    public function windowFunction(
+        WindowFunction $function,
+        array $arguments,
+    ): string {
+        return $function->value . '(' . \join(', ', $arguments) . ')';
     }
 
     public function startsWith(

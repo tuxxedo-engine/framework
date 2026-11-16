@@ -27,6 +27,12 @@ use Tuxxedo\Database\Query\Statement\Condition\ConditionConjunction;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionInterface;
 use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
+use Tuxxedo\Database\Query\Statement\Window\FrameBoundInterface;
+use Tuxxedo\Database\Query\Statement\Window\FrameBoundKind;
+use Tuxxedo\Database\Query\Statement\Window\FrameUnit;
+use Tuxxedo\Database\Query\Statement\Window\Window;
+use Tuxxedo\Database\Query\Statement\Window\WindowFunction;
+use Tuxxedo\Database\Query\Statement\Window\WindowInterface;
 use Tuxxedo\Database\SqlException;
 
 class SelectStatement extends AbstractWhereStatement implements SelectStatementInterface
@@ -36,7 +42,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
     private ?SubqueryRenderableInterface $fromSubquery = null;
 
     /**
-     * @var list<array{kind: 'column'|'aggregate'|'raw', expression: string|null, function: AggregateFunction|null, distinct: bool, alias: string|null}>
+     * @var list<array{kind: 'column'|'aggregate'|'raw'|'window', expression: string|null, function: AggregateFunction|null, distinct: bool, alias: string|null, window: WindowInterface|null, windowFunction: WindowFunction|null, argument: int|null, default: string|null}>
      */
     private array $columns = [];
 
@@ -286,6 +292,10 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
                 'function' => null,
                 'distinct' => false,
                 'alias' => null,
+                'window' => null,
+                'windowFunction' => null,
+                'argument' => null,
+                'default' => null,
             ];
         }
 
@@ -302,6 +312,10 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
             'function' => null,
             'distinct' => false,
             'alias' => $alias,
+            'window' => null,
+            'windowFunction' => null,
+            'argument' => null,
+            'default' => null,
         ];
 
         return $this;
@@ -312,8 +326,15 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
         ?string $column = null,
         ?string $alias = null,
         bool $distinct = false,
+        ?\Closure $over = null,
     ): static {
         self::guardAggregateColumn($function, $column, $distinct);
+
+        if ($distinct && $over !== null) {
+            throw SqlException::fromDistinctWindowAggregate(
+                function: $function,
+            );
+        }
 
         $this->columns[] = [
             'kind' => 'aggregate',
@@ -321,6 +342,12 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
             'function' => $function,
             'distinct' => $distinct,
             'alias' => $alias,
+            'window' => $over !== null
+                ? self::window($over)
+                : null,
+            'windowFunction' => null,
+            'argument' => null,
+            'default' => null,
         ];
 
         return $this;
@@ -330,12 +357,14 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
         ?string $column = null,
         ?string $alias = null,
         bool $distinct = false,
+        ?\Closure $over = null,
     ): static {
         return $this->selectAggregate(
             function: AggregateFunction::COUNT,
             column: $column,
             alias: $alias,
             distinct: $distinct,
+            over: $over,
         );
     }
 
@@ -343,12 +372,14 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
         string $column,
         ?string $alias = null,
         bool $distinct = false,
+        ?\Closure $over = null,
     ): static {
         return $this->selectAggregate(
             function: AggregateFunction::SUM,
             column: $column,
             alias: $alias,
             distinct: $distinct,
+            over: $over,
         );
     }
 
@@ -356,34 +387,217 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
         string $column,
         ?string $alias = null,
         bool $distinct = false,
+        ?\Closure $over = null,
     ): static {
         return $this->selectAggregate(
             function: AggregateFunction::AVG,
             column: $column,
             alias: $alias,
             distinct: $distinct,
+            over: $over,
         );
     }
 
     public function selectMin(
         string $column,
         ?string $alias = null,
+        ?\Closure $over = null,
     ): static {
         return $this->selectAggregate(
             function: AggregateFunction::MIN,
             column: $column,
             alias: $alias,
+            over: $over,
         );
     }
 
     public function selectMax(
         string $column,
         ?string $alias = null,
+        ?\Closure $over = null,
     ): static {
         return $this->selectAggregate(
             function: AggregateFunction::MAX,
             column: $column,
             alias: $alias,
+            over: $over,
+        );
+    }
+
+    public function selectWindow(
+        WindowFunction $function,
+        ?string $alias = null,
+        ?\Closure $over = null,
+        ?string $column = null,
+        ?int $argument = null,
+        string|int|float|bool|null $default = null,
+    ): static {
+        self::guardWindowFunction($function, $column, $argument, $default);
+
+        $placeholder = null;
+
+        if ($default !== null) {
+            $parameterKey = 'window_' . \sizeof($this->columns);
+            $placeholder = ':' . $parameterKey;
+
+            $this->parameters[$parameterKey] = $default;
+        }
+
+        $this->columns[] = [
+            'kind' => 'window',
+            'expression' => $column,
+            'function' => null,
+            'distinct' => false,
+            'alias' => $alias,
+            'window' => self::window($over),
+            'windowFunction' => $function,
+            'argument' => $argument,
+            'default' => $placeholder,
+        ];
+
+        return $this;
+    }
+
+    public function selectRowNumber(
+        ?string $alias = null,
+        ?\Closure $over = null,
+    ): static {
+        return $this->selectWindow(
+            function: WindowFunction::ROW_NUMBER,
+            alias: $alias,
+            over: $over,
+        );
+    }
+
+    public function selectRank(
+        ?string $alias = null,
+        ?\Closure $over = null,
+    ): static {
+        return $this->selectWindow(
+            function: WindowFunction::RANK,
+            alias: $alias,
+            over: $over,
+        );
+    }
+
+    public function selectDenseRank(
+        ?string $alias = null,
+        ?\Closure $over = null,
+    ): static {
+        return $this->selectWindow(
+            function: WindowFunction::DENSE_RANK,
+            alias: $alias,
+            over: $over,
+        );
+    }
+
+    public function selectPercentRank(
+        ?string $alias = null,
+        ?\Closure $over = null,
+    ): static {
+        return $this->selectWindow(
+            function: WindowFunction::PERCENT_RANK,
+            alias: $alias,
+            over: $over,
+        );
+    }
+
+    public function selectCumeDist(
+        ?string $alias = null,
+        ?\Closure $over = null,
+    ): static {
+        return $this->selectWindow(
+            function: WindowFunction::CUME_DIST,
+            alias: $alias,
+            over: $over,
+        );
+    }
+
+    public function selectNtile(
+        int $buckets,
+        ?string $alias = null,
+        ?\Closure $over = null,
+    ): static {
+        return $this->selectWindow(
+            function: WindowFunction::NTILE,
+            alias: $alias,
+            over: $over,
+            argument: $buckets,
+        );
+    }
+
+    public function selectLag(
+        string $column,
+        ?string $alias = null,
+        ?\Closure $over = null,
+        int $offset = 1,
+        string|int|float|bool|null $default = null,
+    ): static {
+        return $this->selectWindow(
+            function: WindowFunction::LAG,
+            alias: $alias,
+            over: $over,
+            column: $column,
+            argument: $offset,
+            default: $default,
+        );
+    }
+
+    public function selectLead(
+        string $column,
+        ?string $alias = null,
+        ?\Closure $over = null,
+        int $offset = 1,
+        string|int|float|bool|null $default = null,
+    ): static {
+        return $this->selectWindow(
+            function: WindowFunction::LEAD,
+            alias: $alias,
+            over: $over,
+            column: $column,
+            argument: $offset,
+            default: $default,
+        );
+    }
+
+    public function selectFirstValue(
+        string $column,
+        ?string $alias = null,
+        ?\Closure $over = null,
+    ): static {
+        return $this->selectWindow(
+            function: WindowFunction::FIRST_VALUE,
+            alias: $alias,
+            over: $over,
+            column: $column,
+        );
+    }
+
+    public function selectLastValue(
+        string $column,
+        ?string $alias = null,
+        ?\Closure $over = null,
+    ): static {
+        return $this->selectWindow(
+            function: WindowFunction::LAST_VALUE,
+            alias: $alias,
+            over: $over,
+            column: $column,
+        );
+    }
+
+    public function selectNthValue(
+        string $column,
+        int $n,
+        ?string $alias = null,
+        ?\Closure $over = null,
+    ): static {
+        return $this->selectWindow(
+            function: WindowFunction::NTH_VALUE,
+            alias: $alias,
+            over: $over,
+            column: $column,
+            argument: $n,
         );
     }
 
@@ -539,6 +753,10 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
             'function' => null,
             'distinct' => false,
             'alias' => $alias,
+            'window' => null,
+            'windowFunction' => null,
+            'argument' => null,
+            'default' => null,
         ];
 
         return $this;
@@ -958,7 +1176,7 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
     }
 
     /**
-     * @param array{kind: 'column'|'aggregate'|'raw', expression: string|null, function: AggregateFunction|null, distinct: bool, alias: string|null} $column
+     * @param array{kind: 'column'|'aggregate'|'raw'|'window', expression: string|null, function: AggregateFunction|null, distinct: bool, alias: string|null, window: WindowInterface|null, windowFunction: WindowFunction|null, argument: int|null, default: string|null} $column
      */
     private function renderColumn(
         DialectInterface $dialect,
@@ -968,7 +1186,8 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
 
         $sql = match ($column['kind']) {
             'raw' => $expression,
-            'aggregate' => $this->renderAggregate($dialect, $column['function'] ?? AggregateFunction::COUNT, $column['expression'], $column['distinct']),
+            'aggregate' => $this->renderAggregate($dialect, $column['function'] ?? AggregateFunction::COUNT, $column['expression'], $column['distinct']) . $this->renderOver($dialect, $column['window']),
+            'window' => $this->renderWindowFunction($dialect, $column['windowFunction'] ?? WindowFunction::ROW_NUMBER, $column['expression'], $column['argument'], $column['default']) . $this->renderOver($dialect, $column['window']),
             'column' => $expression === '*'
                 ? '*'
                 : $dialect->qualifiedIdentifier($expression),
@@ -990,6 +1209,158 @@ class SelectStatement extends AbstractWhereStatement implements SelectStatementI
         }
 
         return $function->value . '(' . ($distinct ? 'DISTINCT ' : '') . $dialect->qualifiedIdentifier($column) . ')';
+    }
+
+    private function renderWindowFunction(
+        DialectInterface $dialect,
+        WindowFunction $function,
+        ?string $column,
+        ?int $argument,
+        ?string $default,
+    ): string {
+        $arguments = [];
+
+        if ($column !== null) {
+            $arguments[] = $dialect->qualifiedIdentifier($column);
+        }
+
+        if ($argument !== null || $default !== null) {
+            $arguments[] = (string) ($argument ?? 1);
+        }
+
+        if ($default !== null) {
+            $arguments[] = $default;
+        }
+
+        return $dialect->windowFunction($function, $arguments);
+    }
+
+    private function renderOver(
+        DialectInterface $dialect,
+        ?WindowInterface $window,
+    ): string {
+        if ($window === null) {
+            return '';
+        }
+
+        $clauses = [];
+
+        if (\sizeof($window->partitionColumns) > 0) {
+            $clauses[] = 'PARTITION BY ' . \join(
+                ', ',
+                \array_map(
+                    static fn (string $column): string => $dialect->qualifiedIdentifier($column),
+                    $window->partitionColumns,
+                ),
+            );
+        }
+
+        if (\sizeof($window->orderColumns) > 0) {
+            $singleKey = $window->frameUnit === FrameUnit::RANGE && (
+                $window->frameStart?->offset !== null ||
+                $window->frameEnd?->offset !== null
+            );
+
+            $terms = [];
+
+            foreach ($window->orderColumns as $order) {
+                $expression = $dialect->qualifiedIdentifier($order['column']);
+
+                $terms[] = $singleKey
+                    ? $expression . ' ' . $order['direction']->name
+                    : $dialect->orderTerm($expression, $order['direction']);
+            }
+
+            $clauses[] = 'ORDER BY ' . \join(', ', $terms);
+        }
+
+        if ($window->frameUnit !== null && $window->frameStart !== null && $window->frameEnd !== null) {
+            $clauses[] = \sprintf(
+                '%s BETWEEN %s AND %s',
+                $window->frameUnit->name,
+                self::renderFrameBound($window->frameStart),
+                self::renderFrameBound($window->frameEnd),
+            );
+        }
+
+        return ' OVER (' . \join(' ', $clauses) . ')';
+    }
+
+    private static function renderFrameBound(
+        FrameBoundInterface $bound,
+    ): string {
+        return match ($bound->kind) {
+            FrameBoundKind::UNBOUNDED_PRECEDING => 'UNBOUNDED PRECEDING',
+            FrameBoundKind::PRECEDING => ($bound->offset ?? 0) . ' PRECEDING',
+            FrameBoundKind::CURRENT_ROW => 'CURRENT ROW',
+            FrameBoundKind::FOLLOWING => ($bound->offset ?? 0) . ' FOLLOWING',
+            FrameBoundKind::UNBOUNDED_FOLLOWING => 'UNBOUNDED FOLLOWING',
+        };
+    }
+
+    /**
+     * @param (\Closure(WindowInterface): void)|null $over
+     */
+    private static function window(
+        ?\Closure $over,
+    ): WindowInterface {
+        $window = new Window();
+
+        if ($over !== null) {
+            $over($window);
+        }
+
+        return $window;
+    }
+
+    /**
+     * @throws SqlException
+     */
+    private static function guardWindowFunction(
+        WindowFunction $function,
+        ?string $column,
+        ?int $argument,
+        string|int|float|bool|null $default,
+    ): void {
+        if ($function->takesColumn() && $column === null) {
+            throw SqlException::fromWindowFunctionRequiresColumn(
+                function: $function,
+            );
+        }
+
+        if (!$function->takesColumn() && $column !== null) {
+            throw SqlException::fromWindowFunctionArgumentNotAccepted(
+                function: $function,
+                argument: 'a column',
+            );
+        }
+
+        if ($function->requiresArgument() && $argument === null) {
+            throw SqlException::fromWindowFunctionRequiresArgument(
+                function: $function,
+            );
+        }
+
+        if (!$function->takesArgument() && $argument !== null) {
+            throw SqlException::fromWindowFunctionArgumentNotAccepted(
+                function: $function,
+                argument: 'an argument',
+            );
+        }
+
+        if ($argument !== null && $argument < $function->minimumArgument()) {
+            throw SqlException::fromInvalidWindowFunctionArgument(
+                function: $function,
+                value: $argument,
+            );
+        }
+
+        if (!$function->takesDefault() && $default !== null) {
+            throw SqlException::fromWindowFunctionArgumentNotAccepted(
+                function: $function,
+                argument: 'a default',
+            );
+        }
     }
 
     /**

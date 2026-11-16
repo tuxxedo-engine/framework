@@ -18,6 +18,7 @@ use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
 use Tuxxedo\Database\Query\Statement\Table\Operation\AlterOperationInterface;
+use Tuxxedo\Database\Query\Statement\Window\WindowFunction;
 use Tuxxedo\Database\SqlException;
 
 interface DialectInterface
@@ -63,6 +64,14 @@ interface DialectInterface
     public function orderTerm(
         string $expression,
         OrderDirection $direction,
+    ): string;
+
+    /**
+     * @param list<string> $arguments
+     */
+    public function windowFunction(
+        WindowFunction $function,
+        array $arguments,
     ): string;
 
     public function startsWith(

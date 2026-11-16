@@ -23,6 +23,7 @@ use Tuxxedo\Database\Query\Statement\Condition\ConditionOperator;
 use Tuxxedo\Database\Query\Statement\Order\OrderDirection;
 use Tuxxedo\Database\Query\Statement\Table\Column\ColumnInterface;
 use Tuxxedo\Database\Query\Statement\Table\Column\UuidColumn;
+use Tuxxedo\Database\Query\Statement\Window\WindowFunction;
 
 class UuidColumnTest extends TestCase
 {
@@ -104,6 +105,13 @@ class UuidColumnTest extends TestCase
             public function orderTerm(
                 string $expression,
                 OrderDirection $direction,
+            ): string {
+                return '';
+            }
+
+            public function windowFunction(
+                WindowFunction $function,
+                array $arguments,
             ): string {
                 return '';
             }
