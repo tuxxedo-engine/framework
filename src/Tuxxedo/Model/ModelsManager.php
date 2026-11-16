@@ -1034,8 +1034,11 @@ class ModelsManager implements ModelsManagerInterface
 
         if ($attribute->removeOrphan) {
             foreach ($value->pendingRemoves as $entry) {
-                if ($entry['item'] !== null) {
-                    (void) $this->delete($entry['item']);
+                if (
+                    $entry->item !== null &&
+                    !$this->isNewModel($entry->item, $this->metaData->getModel($entry->item::class))
+                ) {
+                    (void) $this->delete($entry->item);
                 }
             }
         }
@@ -1199,8 +1202,11 @@ class ModelsManager implements ModelsManagerInterface
 
         if ($attribute->removeOrphan) {
             foreach ($value->pendingRemoves as $entry) {
-                if ($entry['item'] !== null) {
-                    (void) $this->delete($entry['item']);
+                if (
+                    $entry->item !== null &&
+                    !$this->isNewModel($entry->item, $this->metaData->getModel($entry->item::class))
+                ) {
+                    (void) $this->delete($entry->item);
                 }
             }
         }
@@ -1274,7 +1280,7 @@ class ModelsManager implements ModelsManagerInterface
         $deletes = [];
 
         foreach ($value->pendingSync ?? [] as $entry) {
-            $key = $this->pivotEntryKey($pivot, $entry['item'], $entry['key']);
+            $key = $this->pivotEntryKey($pivot, $entry->item, $entry->key);
 
             $desired[$pivot->hash($key)] = [
                 'key' => $key,
@@ -1283,20 +1289,20 @@ class ModelsManager implements ModelsManagerInterface
         }
 
         foreach ($value->pendingAdds as $entry) {
-            $key = $this->pivotEntryKey($pivot, $entry['item'], $entry['key']);
+            $key = $this->pivotEntryKey($pivot, $entry->item, $entry->key);
             $hash = $pivot->hash($key);
 
             $desired[$hash] = [
                 'key' => $key,
                 'pivot' => [
                     ...$desired[$hash]['pivot'] ?? [],
-                    ...$entry['pivot'],
+                    ...$entry->pivot,
                 ],
             ];
         }
 
         foreach ($value->pendingRemoves as $entry) {
-            $key = $this->pivotEntryKey($pivot, $entry['item'], $entry['key']);
+            $key = $this->pivotEntryKey($pivot, $entry->item, $entry->key);
             $hash = $pivot->hash($key);
 
             if (!isset($desired[$hash])) {

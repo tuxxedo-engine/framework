@@ -904,6 +904,101 @@ abstract class AbstractModelsManagerIntegrationTestCase extends AbstractModelInt
         );
     }
 
+    public function testRemoveOrphanDeletesSavedChildAddedThenRemoved(): void
+    {
+        $parent = new OrphanParent();
+        $parent->name = 'orphan-parent';
+
+        $saved = $this->modelsManager->save($parent);
+
+        self::assertNotNull(
+            $saved->id,
+        );
+
+        $this->seedOrphanChild(
+            id: 501,
+            parentId: $saved->id,
+            label: 'added-then-removed',
+        );
+
+        $fetched = $this->modelsManager->fetchById(
+            class: OrphanParent::class,
+            id: $saved->id,
+        );
+
+        $children = $fetched->children;
+
+        self::assertInstanceOf(
+            Relation::class,
+            $children,
+        );
+
+        $child = $children->first();
+
+        self::assertInstanceOf(
+            OrphanChild::class,
+            $child,
+        );
+
+        $children->add($child);
+        $children->remove($child);
+
+        (void) $this->modelsManager->save($fetched);
+
+        self::assertSame(
+            0,
+            $this->countRowsWhere(
+                table: 'orphan_children',
+                column: 'id',
+                value: 501,
+            ),
+        );
+    }
+
+    public function testRemoveOrphanSkipsUnsavedChildAddedThenRemoved(): void
+    {
+        $parent = new OrphanParent();
+        $parent->name = 'orphan-parent';
+
+        $saved = $this->modelsManager->save($parent);
+
+        self::assertNotNull(
+            $saved->id,
+        );
+
+        $fetched = $this->modelsManager->fetchById(
+            class: OrphanParent::class,
+            id: $saved->id,
+        );
+
+        $children = $fetched->children;
+
+        self::assertInstanceOf(
+            Relation::class,
+            $children,
+        );
+
+        $child = new OrphanChild();
+        $child->label = 'never-saved';
+
+        $children->add($child);
+        $children->remove($child);
+
+        (void) $this->modelsManager->save($fetched);
+
+        self::assertNull(
+            $child->id,
+        );
+        self::assertSame(
+            0,
+            $this->countRowsWhere(
+                table: 'orphan_children',
+                column: 'parent_id',
+                value: $saved->id,
+            ),
+        );
+    }
+
     public function testBelongsToCascadeOnDeleteRemovesParent(): void
     {
         $this->seedCascadeBtParent(

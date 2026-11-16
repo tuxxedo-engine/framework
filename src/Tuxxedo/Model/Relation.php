@@ -26,17 +26,17 @@ use Tuxxedo\Database\Query\Statement\WhereStatementInterface;
 class Relation extends AbstractQueryable implements RelationInterface
 {
     /**
-     * @var array<string, array{item: TModel|null, key: non-empty-array<string, string|int|float|bool>|null, pivot: array<string, mixed>}>
+     * @var array<string, PendingRelationEntryInterface<TModel>>
      */
     public private(set) array $pendingAdds = [];
 
     /**
-     * @var array<string, array{item: TModel|null, key: non-empty-array<string, string|int|float|bool>|null, pivot: array<string, mixed>}>
+     * @var array<string, PendingRelationEntryInterface<TModel>>
      */
     public private(set) array $pendingRemoves = [];
 
     /**
-     * @var array<string, array{item: TModel|null, key: non-empty-array<string, string|int|float|bool>|null, pivot: array<string, mixed>}>|null
+     * @var array<string, PendingRelationEntryInterface<TModel>>|null
      */
     public private(set) ?array $pendingSync = null;
 
@@ -200,23 +200,18 @@ class Relation extends AbstractQueryable implements RelationInterface
 
         $entry = $this->entryFor($item);
         $identity = $entry['identity'];
+        $pending = $this->pendingAdds[$identity] ?? null;
 
-        if (isset($this->pendingRemoves[$identity])) {
-            unset($this->pendingRemoves[$identity]);
+        unset($this->pendingRemoves[$identity]);
 
-            if ($this->pivot === null || $entry['key'] === null) {
-                return;
-            }
-        }
-
-        $this->pendingAdds[$identity] = [
-            'item' => $entry['item'] ?? $this->pendingAdds[$identity]['item'] ?? null,
-            'key' => $entry['key'],
-            'pivot' => [
-                ...$this->pendingAdds[$identity]['pivot'] ?? [],
+        $this->pendingAdds[$identity] = new PendingRelationEntry(
+            item: $entry['item'] ?? $pending?->item,
+            key: $entry['key'],
+            pivot: [
+                ...$pending->pivot ?? [],
                 ...$pivot,
             ],
-        ];
+        );
     }
 
     public function remove(
@@ -225,13 +220,7 @@ class Relation extends AbstractQueryable implements RelationInterface
         $entry = $this->entryFor($item);
         $identity = $entry['identity'];
 
-        if (isset($this->pendingAdds[$identity])) {
-            unset($this->pendingAdds[$identity]);
-
-            if ($this->pivot === null) {
-                return;
-            }
-        }
+        unset($this->pendingAdds[$identity]);
 
         if ($this->pendingSync !== null) {
             unset($this->pendingSync[$identity]);
@@ -241,11 +230,10 @@ class Relation extends AbstractQueryable implements RelationInterface
             return;
         }
 
-        $this->pendingRemoves[$identity] = [
-            'item' => $entry['item'],
-            'key' => $entry['key'],
-            'pivot' => [],
-        ];
+        $this->pendingRemoves[$identity] = new PendingRelationEntry(
+            item: $entry['item'],
+            key: $entry['key'],
+        );
     }
 
     public function sync(
@@ -258,11 +246,10 @@ class Relation extends AbstractQueryable implements RelationInterface
         foreach ($items as $item) {
             $entry = $this->entryFor($item);
 
-            $sync[$entry['identity']] = [
-                'item' => $entry['item'],
-                'key' => $entry['key'],
-                'pivot' => [],
-            ];
+            $sync[$entry['identity']] = new PendingRelationEntry(
+                item: $entry['item'],
+                key: $entry['key'],
+            );
         }
 
         $this->pendingSync = $sync;
@@ -353,7 +340,7 @@ class Relation extends AbstractQueryable implements RelationInterface
             $synced = [];
 
             foreach ($this->pendingSync as $identity => $entry) {
-                $synced[$identity] = $items[$identity] ?? $entry['item'];
+                $synced[$identity] = $items[$identity] ?? $entry->item;
             }
 
             $items = $synced;
@@ -364,14 +351,14 @@ class Relation extends AbstractQueryable implements RelationInterface
         }
 
         foreach ($this->pendingAdds as $identity => $entry) {
-            $items[$identity] ??= $entry['item'];
+            $items[$identity] ??= $entry->item;
         }
 
         $missing = [];
         $keysByHash = [];
 
         foreach ($items as $identity => $item) {
-            $key = $this->pendingAdds[$identity]['key'] ?? $this->pendingSync[$identity]['key'] ?? null;
+            $key = $this->pendingAdds[$identity]->key ?? $this->pendingSync[$identity]->key ?? null;
 
             if ($item === null && $key !== null && $this->pivot !== null) {
                 $missing[$identity] = $key;

@@ -20,7 +20,7 @@ use Tuxxedo\Model\Relation;
 
 class RelationTest extends TestCase
 {
-    public function testAddCancelsMatchingPendingRemove(): void
+    public function testAddAfterRemoveKeepsTheAdd(): void
     {
         $item = new Post();
 
@@ -44,7 +44,7 @@ class RelationTest extends TestCase
             \array_column($relation->pendingRemoves, 'item'),
         );
 
-        self::assertNotContains(
+        self::assertContains(
             $item,
             \array_column($relation->pendingAdds, 'item'),
         );

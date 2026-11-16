@@ -235,7 +235,7 @@ abstract class AbstractHasManyIntegrationTestCase extends AbstractModelIntegrati
         );
     }
 
-    public function testHasManyRelationRemoveAfterAddCancelsPendingAdd(): void
+    public function testHasManyRelationRemoveAfterAddKeepsTheRemoval(): void
     {
         $posts = $this->alicePosts();
 
@@ -250,7 +250,7 @@ abstract class AbstractHasManyIntegrationTestCase extends AbstractModelIntegrati
             \array_column($posts->pendingAdds, 'item'),
         );
 
-        self::assertNotContains(
+        self::assertContains(
             $newPost,
             \array_column($posts->pendingRemoves, 'item'),
         );

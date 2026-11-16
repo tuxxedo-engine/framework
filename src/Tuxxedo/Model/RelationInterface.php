@@ -21,21 +21,21 @@ namespace Tuxxedo\Model;
 interface RelationInterface extends QueryableInterface
 {
     /**
-     * @var array<string, array{item: TModel|null, key: non-empty-array<string, string|int|float|bool>|null, pivot: array<string, mixed>}>
+     * @var array<string, PendingRelationEntryInterface<TModel>>
      */
     public array $pendingAdds {
         get;
     }
 
     /**
-     * @var array<string, array{item: TModel|null, key: non-empty-array<string, string|int|float|bool>|null, pivot: array<string, mixed>}>
+     * @var array<string, PendingRelationEntryInterface<TModel>>
      */
     public array $pendingRemoves {
         get;
     }
 
     /**
-     * @var array<string, array{item: TModel|null, key: non-empty-array<string, string|int|float|bool>|null, pivot: array<string, mixed>}>|null
+     * @var array<string, PendingRelationEntryInterface<TModel>>|null
      */
     public ?array $pendingSync {
         get;
