@@ -356,6 +356,96 @@ abstract class AbstractCacheDriverIntegrationTestCase extends TestCase
         self::assertFalse($this->cache->has('missing'));
     }
 
+    public function testTakeReturnsValueAndRemovesKey(): void
+    {
+        $this->cache->set(
+            key: 'token',
+            value: 'abc',
+        );
+
+        self::assertSame(
+            'abc',
+            $this->cache->string(
+                key: 'token',
+                take: true,
+            ),
+        );
+
+        self::assertFalse($this->cache->has('token'));
+    }
+
+    public function testSecondTakeReadsAsNull(): void
+    {
+        $this->cache->set(
+            key: 'token',
+            value: 'abc',
+        );
+
+        self::assertSame(
+            'abc',
+            $this->cache->string(
+                key: 'token',
+                take: true,
+            ),
+        );
+
+        self::assertNull(
+            $this->cache->string(
+                key: 'token',
+                take: true,
+            ),
+        );
+    }
+
+    public function testTakeMissingKeyReadsAsNull(): void
+    {
+        self::assertNull(
+            $this->cache->string(
+                key: 'missing',
+                take: true,
+            ),
+        );
+    }
+
+    public function testTakeKeepsIntType(): void
+    {
+        $this->cache->set(
+            key: 'visits',
+            value: -42,
+        );
+
+        self::assertSame(
+            -42,
+            $this->cache->int(
+                key: 'visits',
+                take: true,
+            ),
+        );
+    }
+
+    public function testTakeKeepsArray(): void
+    {
+        $value = [
+            'name' => 'Kalle',
+            3 => 'three',
+        ];
+
+        $this->cache->set(
+            key: 'labels',
+            value: $value,
+        );
+
+        self::assertSame(
+            $value,
+            $this->cache->arrayOfString(
+                key: 'labels',
+                take: true,
+            ),
+        );
+
+        self::assertFalse($this->cache->has('labels'));
+    }
+
     public function testClearOnlyRemovesOwnPrefix(): void
     {
         $reports = $this->createCache(

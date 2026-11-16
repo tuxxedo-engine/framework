@@ -69,7 +69,12 @@ class Cache implements CacheInterface
      */
     private function read(
         string $key,
+        bool $take = false,
     ): int|float|string|bool|array|object|null {
+        if ($take) {
+            return $this->driver->take($this->key($key));
+        }
+
         return $this->driver->fetch($this->key($key));
     }
 
@@ -80,8 +85,9 @@ class Cache implements CacheInterface
      */
     private function readArray(
         string $key,
+        bool $take = false,
     ): ?array {
-        $value = $this->read($key);
+        $value = $this->read($key, $take);
 
         if ($value === null) {
             return null;
@@ -222,8 +228,9 @@ class Cache implements CacheInterface
 
     public function string(
         string $key,
+        bool $take = false,
     ): ?string {
-        $value = $this->read($key);
+        $value = $this->read($key, $take);
 
         if ($value !== null && !\is_string($value)) {
             throw CacheException::fromTypeMismatch(
@@ -238,8 +245,9 @@ class Cache implements CacheInterface
 
     public function int(
         string $key,
+        bool $take = false,
     ): ?int {
-        $value = $this->read($key);
+        $value = $this->read($key, $take);
 
         if ($value !== null && !\is_int($value)) {
             throw CacheException::fromTypeMismatch(
@@ -254,8 +262,9 @@ class Cache implements CacheInterface
 
     public function float(
         string $key,
+        bool $take = false,
     ): ?float {
-        $value = $this->read($key);
+        $value = $this->read($key, $take);
 
         if ($value !== null && !\is_float($value)) {
             throw CacheException::fromTypeMismatch(
@@ -270,8 +279,9 @@ class Cache implements CacheInterface
 
     public function bool(
         string $key,
+        bool $take = false,
     ): ?bool {
-        $value = $this->read($key);
+        $value = $this->read($key, $take);
 
         if ($value !== null && !\is_bool($value)) {
             throw CacheException::fromTypeMismatch(
@@ -287,10 +297,11 @@ class Cache implements CacheInterface
     public function enum(
         string $key,
         string $enum,
+        bool $take = false,
     ): ?object {
         $this->assertEnum($key, $enum);
 
-        $value = $this->read($key);
+        $value = $this->read($key, $take);
 
         if ($value === null) {
             return null;
@@ -305,8 +316,9 @@ class Cache implements CacheInterface
 
     public function arrayOfString(
         string $key,
+        bool $take = false,
     ): ?array {
-        $values = $this->readArray($key);
+        $values = $this->readArray($key, $take);
 
         if ($values === null) {
             return null;
@@ -325,8 +337,9 @@ class Cache implements CacheInterface
 
     public function arrayOfInt(
         string $key,
+        bool $take = false,
     ): ?array {
-        $values = $this->readArray($key);
+        $values = $this->readArray($key, $take);
 
         if ($values === null) {
             return null;
@@ -345,8 +358,9 @@ class Cache implements CacheInterface
 
     public function arrayOfFloat(
         string $key,
+        bool $take = false,
     ): ?array {
-        $values = $this->readArray($key);
+        $values = $this->readArray($key, $take);
 
         if ($values === null) {
             return null;
@@ -365,8 +379,9 @@ class Cache implements CacheInterface
 
     public function arrayOfBool(
         string $key,
+        bool $take = false,
     ): ?array {
-        $values = $this->readArray($key);
+        $values = $this->readArray($key, $take);
 
         if ($values === null) {
             return null;
@@ -386,10 +401,11 @@ class Cache implements CacheInterface
     public function arrayOfEnum(
         string $key,
         string $enum,
+        bool $take = false,
     ): ?array {
         $this->assertEnum($key, $enum);
 
-        $values = $this->readArray($key);
+        $values = $this->readArray($key, $take);
 
         if ($values === null) {
             return null;
@@ -411,8 +427,9 @@ class Cache implements CacheInterface
     public function object(
         string $key,
         string $class,
+        bool $take = false,
     ): ?object {
-        $value = $this->read($key);
+        $value = $this->read($key, $take);
 
         if ($value === null) {
             return null;
@@ -432,8 +449,9 @@ class Cache implements CacheInterface
     public function mapTo(
         string $key,
         string $className,
+        bool $take = false,
     ): ?object {
-        $values = $this->readArray($key);
+        $values = $this->readArray($key, $take);
 
         if ($values === null) {
             return null;
@@ -445,8 +463,9 @@ class Cache implements CacheInterface
     public function mapToArrayOf(
         string $key,
         string $className,
+        bool $take = false,
     ): ?array {
-        $values = $this->readArray($key);
+        $values = $this->readArray($key, $take);
 
         if ($values === null) {
             return null;

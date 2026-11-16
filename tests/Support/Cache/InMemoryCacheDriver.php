@@ -110,6 +110,16 @@ class InMemoryCacheDriver implements CacheDriverInterface
         return $this->live($key) ? $this->entries[$key]['value'] : null;
     }
 
+    public function take(
+        string $key,
+    ): int|float|string|bool|array|object|null {
+        $value = $this->fetch($key);
+
+        unset($this->entries[$key]);
+
+        return $value;
+    }
+
     public function exists(
         string $key,
     ): bool {

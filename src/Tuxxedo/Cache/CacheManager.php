@@ -132,111 +132,124 @@ class CacheManager implements CacheManagerInterface
 
     public function string(
         string $key,
+        bool $take = false,
     ): ?string {
         [$cache, $scopedKey] = $this->route($key);
 
-        return $cache->string($scopedKey);
+        return $cache->string($scopedKey, $take);
     }
 
     public function int(
         string $key,
+        bool $take = false,
     ): ?int {
         [$cache, $scopedKey] = $this->route($key);
 
-        return $cache->int($scopedKey);
+        return $cache->int($scopedKey, $take);
     }
 
     public function float(
         string $key,
+        bool $take = false,
     ): ?float {
         [$cache, $scopedKey] = $this->route($key);
 
-        return $cache->float($scopedKey);
+        return $cache->float($scopedKey, $take);
     }
 
     public function bool(
         string $key,
+        bool $take = false,
     ): ?bool {
         [$cache, $scopedKey] = $this->route($key);
 
-        return $cache->bool($scopedKey);
+        return $cache->bool($scopedKey, $take);
     }
 
     public function enum(
         string $key,
         string $enum,
+        bool $take = false,
     ): ?object {
         [$cache, $scopedKey] = $this->route($key);
 
-        return $cache->enum($scopedKey, $enum);
+        return $cache->enum($scopedKey, $enum, $take);
     }
 
     public function arrayOfString(
         string $key,
+        bool $take = false,
     ): ?array {
         [$cache, $scopedKey] = $this->route($key);
 
-        return $cache->arrayOfString($scopedKey);
+        return $cache->arrayOfString($scopedKey, $take);
     }
 
     public function arrayOfInt(
         string $key,
+        bool $take = false,
     ): ?array {
         [$cache, $scopedKey] = $this->route($key);
 
-        return $cache->arrayOfInt($scopedKey);
+        return $cache->arrayOfInt($scopedKey, $take);
     }
 
     public function arrayOfFloat(
         string $key,
+        bool $take = false,
     ): ?array {
         [$cache, $scopedKey] = $this->route($key);
 
-        return $cache->arrayOfFloat($scopedKey);
+        return $cache->arrayOfFloat($scopedKey, $take);
     }
 
     public function arrayOfBool(
         string $key,
+        bool $take = false,
     ): ?array {
         [$cache, $scopedKey] = $this->route($key);
 
-        return $cache->arrayOfBool($scopedKey);
+        return $cache->arrayOfBool($scopedKey, $take);
     }
 
     public function arrayOfEnum(
         string $key,
         string $enum,
+        bool $take = false,
     ): ?array {
         [$cache, $scopedKey] = $this->route($key);
 
-        return $cache->arrayOfEnum($scopedKey, $enum);
+        return $cache->arrayOfEnum($scopedKey, $enum, $take);
     }
 
     public function object(
         string $key,
         string $class,
+        bool $take = false,
     ): ?object {
         [$cache, $scopedKey] = $this->route($key);
 
-        return $cache->object($scopedKey, $class);
+        return $cache->object($scopedKey, $class, $take);
     }
 
     public function mapTo(
         string $key,
         string $className,
+        bool $take = false,
     ): ?object {
         [$cache, $scopedKey] = $this->route($key);
 
-        return $cache->mapTo($scopedKey, $className);
+        return $cache->mapTo($scopedKey, $className, $take);
     }
 
     public function mapToArrayOf(
         string $key,
         string $className,
+        bool $take = false,
     ): ?array {
         [$cache, $scopedKey] = $this->route($key);
 
-        return $cache->mapToArrayOf($scopedKey, $className);
+        return $cache->mapToArrayOf($scopedKey, $className, $take);
     }
 
     public function set(

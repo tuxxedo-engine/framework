@@ -331,6 +331,35 @@ class RedisCacheDriver implements CacheDriverInterface
         );
     }
 
+    public function take(
+        string $key,
+    ): int|float|string|bool|array|object|null {
+        return $this->guard(
+            operation: 'take',
+            key: $key,
+            callback: function () use ($key): int|float|string|bool|array|object|null {
+                $redis = $this->redis();
+                $fullKey = $this->namespace . $key;
+
+                $redis->multi();
+                $redis->get($fullKey);
+                $redis->unlink($fullKey);
+
+                $results = $redis->exec();
+                $payload = \is_array($results) ? ($results[0] ?? false) : false;
+
+                if (!\is_string($payload)) {
+                    return null;
+                }
+
+                return $this->decode(
+                    key: $key,
+                    payload: $payload,
+                );
+            },
+        );
+    }
+
     public function exists(
         string $key,
     ): bool {

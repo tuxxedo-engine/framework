@@ -32,6 +32,7 @@ interface CacheInterface
      */
     public function string(
         string $key,
+        bool $take = false,
     ): ?string;
 
     /**
@@ -39,6 +40,7 @@ interface CacheInterface
      */
     public function int(
         string $key,
+        bool $take = false,
     ): ?int;
 
     /**
@@ -46,6 +48,7 @@ interface CacheInterface
      */
     public function float(
         string $key,
+        bool $take = false,
     ): ?float;
 
     /**
@@ -53,6 +56,7 @@ interface CacheInterface
      */
     public function bool(
         string $key,
+        bool $take = false,
     ): ?bool;
 
     /**
@@ -66,6 +70,7 @@ interface CacheInterface
     public function enum(
         string $key,
         string $enum,
+        bool $take = false,
     ): ?object;
 
     /**
@@ -75,6 +80,7 @@ interface CacheInterface
      */
     public function arrayOfString(
         string $key,
+        bool $take = false,
     ): ?array;
 
     /**
@@ -84,6 +90,7 @@ interface CacheInterface
      */
     public function arrayOfInt(
         string $key,
+        bool $take = false,
     ): ?array;
 
     /**
@@ -93,6 +100,7 @@ interface CacheInterface
      */
     public function arrayOfFloat(
         string $key,
+        bool $take = false,
     ): ?array;
 
     /**
@@ -102,6 +110,7 @@ interface CacheInterface
      */
     public function arrayOfBool(
         string $key,
+        bool $take = false,
     ): ?array;
 
     /**
@@ -115,6 +124,7 @@ interface CacheInterface
     public function arrayOfEnum(
         string $key,
         string $enum,
+        bool $take = false,
     ): ?array;
 
     /**
@@ -128,6 +138,7 @@ interface CacheInterface
     public function object(
         string $key,
         string $class,
+        bool $take = false,
     ): ?object;
 
     /**
@@ -143,6 +154,7 @@ interface CacheInterface
     public function mapTo(
         string $key,
         string $className,
+        bool $take = false,
     ): ?object;
 
     /**
@@ -158,6 +170,7 @@ interface CacheInterface
     public function mapToArrayOf(
         string $key,
         string $className,
+        bool $take = false,
     ): ?array;
 
     /**

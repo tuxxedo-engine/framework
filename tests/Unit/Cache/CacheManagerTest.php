@@ -568,6 +568,24 @@ class CacheManagerTest extends TestCase
         self::assertCount(1, $profiles ?? []);
     }
 
+    public function testTakeRoutesToScope(): void
+    {
+        $this->manager->scope('reports')->set(
+            key: 'token',
+            value: 'abc',
+        );
+
+        self::assertSame(
+            'abc',
+            $this->manager->string(
+                key: 'reports:token',
+                take: true,
+            ),
+        );
+
+        self::assertFalse($this->manager->scope('reports')->has('token'));
+    }
+
     public function testAddRoutesToScope(): void
     {
         (void) $this->manager->add(

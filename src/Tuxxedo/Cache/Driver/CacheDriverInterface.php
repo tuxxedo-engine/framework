@@ -42,6 +42,15 @@ interface CacheDriverInterface
     ): int|float|string|bool|array|object|null;
 
     /**
+     * @return int|float|string|bool|array<mixed>|object|null
+     *
+     * @throws CacheException
+     */
+    public function take(
+        string $key,
+    ): int|float|string|bool|array|object|null;
+
+    /**
      * @throws CacheException
      */
     public function exists(

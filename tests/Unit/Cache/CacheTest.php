@@ -1065,4 +1065,132 @@ class CacheTest extends TestCase
 
         self::assertNull($this->cache->string('name'));
     }
+
+    public function testStringWithTakeReturnsValueAndRemovesKey(): void
+    {
+        $this->cache->set(
+            key: 'token',
+            value: 'abc',
+        );
+
+        self::assertSame(
+            'abc',
+            $this->cache->string(
+                key: 'token',
+                take: true,
+            ),
+        );
+
+        self::assertFalse($this->cache->has('token'));
+    }
+
+    public function testStringWithoutTakeKeepsKey(): void
+    {
+        $this->cache->set(
+            key: 'token',
+            value: 'abc',
+        );
+
+        self::assertSame('abc', $this->cache->string('token'));
+        self::assertTrue($this->cache->has('token'));
+    }
+
+    public function testSecondTakeReturnsNull(): void
+    {
+        $this->cache->set(
+            key: 'token',
+            value: 'abc',
+        );
+
+        self::assertSame(
+            'abc',
+            $this->cache->string(
+                key: 'token',
+                take: true,
+            ),
+        );
+
+        self::assertNull(
+            $this->cache->string(
+                key: 'token',
+                take: true,
+            ),
+        );
+    }
+
+    public function testTakeReturnsNullOnMiss(): void
+    {
+        self::assertNull(
+            $this->cache->string(
+                key: 'missing',
+                take: true,
+            ),
+        );
+    }
+
+    public function testArrayOfStringWithTakeReturnsValueAndRemovesKey(): void
+    {
+        $this->cache->set(
+            key: 'tags',
+            value: [
+                'php',
+                'cache',
+            ],
+        );
+
+        self::assertSame(
+            [
+                'php',
+                'cache',
+            ],
+            $this->cache->arrayOfString(
+                key: 'tags',
+                take: true,
+            ),
+        );
+
+        self::assertFalse($this->cache->has('tags'));
+    }
+
+    public function testMapToWithTakeReturnsValueAndRemovesKey(): void
+    {
+        $this->cache->set(
+            key: 'profile',
+            value: [
+                'name' => 'Kalle',
+                'age' => 40,
+            ],
+        );
+
+        $profile = $this->cache->mapTo(
+            key: 'profile',
+            className: Profile::class,
+            take: true,
+        );
+
+        self::assertInstanceOf(Profile::class, $profile);
+        self::assertSame('Kalle', $profile->name);
+        self::assertFalse($this->cache->has('profile'));
+    }
+
+    public function testTakeRemovesKeyOnTypeMismatch(): void
+    {
+        $this->cache->set(
+            key: 'token',
+            value: 42,
+        );
+
+        try {
+            $this->cache->string(
+                key: 'token',
+                take: true,
+            );
+
+            self::fail('Expected CacheException');
+        } catch (CacheException $exception) {
+            self::assertStringContainsString('expected string, found int', $exception->getMessage());
+        }
+
+        self::assertFalse($this->cache->has('token'));
+    }
 }

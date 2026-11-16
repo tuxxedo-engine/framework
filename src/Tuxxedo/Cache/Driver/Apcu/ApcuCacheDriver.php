@@ -159,6 +159,18 @@ class ApcuCacheDriver implements CacheDriverInterface
         return $value;
     }
 
+    public function take(
+        string $key,
+    ): int|float|string|bool|array|object|null {
+        $value = $this->fetch($key);
+
+        if ($value === null || \apcu_delete($this->namespace . $key) !== true) {
+            return null;
+        }
+
+        return $value;
+    }
+
     public function exists(
         string $key,
     ): bool {
