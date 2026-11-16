@@ -64,6 +64,7 @@ class SerializerManager implements SerializerManagerInterface
         bool $skipValidation = false,
         string $separator = ',',
         string $enclosure = '"',
+        bool $bom = false,
     ): CsvSerializerInterface {
         return new CsvSerializer(
             validator: $this->validator,
@@ -71,6 +72,7 @@ class SerializerManager implements SerializerManagerInterface
             skipValidation: $skipValidation,
             separator: $separator,
             enclosure: $enclosure,
+            bom: $bom,
             metaData: $this->metaData,
         );
     }

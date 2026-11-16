@@ -26,6 +26,10 @@ interface CsvSerializerInterface
         get;
     }
 
+    public bool $bom {
+        get;
+    }
+
     /**
      * @template TClassName of object
      *

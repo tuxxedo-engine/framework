@@ -263,6 +263,47 @@ class CsvSerializerTest extends TestCase
         self::assertSame('', $this->serializer()->encode([]));
     }
 
+    public function testEncodeWritesBomWhenEnabled(): void
+    {
+        $csv = $this->serializer(
+            bom: true,
+        )->encode(
+            [
+                new Contact(
+                    id: 2,
+                    fullName: 'Bob',
+                ),
+            ],
+        );
+
+        self::assertSame(
+            "\xEF\xBB\xBF" .
+            "id,full_name,phone,active,balance,status,home_address\n" .
+            "2,Bob,,1,0,active,\n",
+            $csv,
+        );
+
+        self::assertEquals(
+            [
+                new Contact(
+                    id: 2,
+                    fullName: 'Bob',
+                ),
+            ],
+            $this->serializer()->decode($csv, Contact::class),
+        );
+    }
+
+    public function testEncodeEmptyListWritesNoBom(): void
+    {
+        self::assertSame(
+            '',
+            $this->serializer(
+                bom: true,
+            )->encode([]),
+        );
+    }
+
     public function testRoundTrip(): void
     {
         $contacts = [
@@ -439,21 +480,25 @@ class CsvSerializerTest extends TestCase
         $csv = new SerializerManager(new Validator(new Container()))->csv(
             separator: ';',
             enclosure: "'",
+            bom: true,
         );
 
         self::assertInstanceOf(CsvSerializer::class, $csv);
         self::assertSame(';', $csv->separator);
         self::assertSame("'", $csv->enclosure);
+        self::assertTrue($csv->bom);
     }
 
     private function serializer(
         bool $skipUnknownKeys = true,
         string $separator = ',',
+        bool $bom = false,
     ): CsvSerializer {
         return new CsvSerializer(
             validator: new Validator(new Container()),
             skipUnknownKeys: $skipUnknownKeys,
             separator: $separator,
+            bom: $bom,
         );
     }
 

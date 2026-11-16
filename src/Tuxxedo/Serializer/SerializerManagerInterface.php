@@ -47,6 +47,7 @@ interface SerializerManagerInterface
         bool $skipValidation = false,
         string $separator = ',',
         string $enclosure = '"',
+        bool $bom = false,
     ): CsvSerializerInterface;
 
     /**

@@ -30,6 +30,7 @@ class CsvSerializer extends AbstractSerializer implements CsvSerializerInterface
         bool $skipValidation = false,
         public readonly string $separator = ',',
         public readonly string $enclosure = '"',
+        public readonly bool $bom = false,
         ?MetaDataReaderInterface $metaData = null,
     ) {
         if (\strlen($separator) !== 1) {
@@ -134,7 +135,11 @@ class CsvSerializer extends AbstractSerializer implements CsvSerializerInterface
 
             \rewind($handle);
 
-            return (string) \stream_get_contents($handle);
+            $csv = (string) \stream_get_contents($handle);
+
+            return $this->bom
+                ? self::BOM . $csv
+                : $csv;
         } finally {
             \fclose($handle);
         }
